@@ -291,7 +291,7 @@ def upload_document(folder, file):
 
 
 def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampData, stampformat: str,
-                                custom_stamp_model_content: str = None):
+                                custom_stamp_model_content: Optional[str] = None):
     """
     Uploads the file and makes a stamped version of it into the same folder.
     :param d: Document info.

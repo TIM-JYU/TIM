@@ -87,14 +87,14 @@ def csv_response(data, dialect='excel', delimiter=','):
     return Response(stream_with_context(iter_csv(data, dialect, delimiter)), mimetype='text/plain')
 
 
-def error_generic(error, code, template='error.html'):
+def error_generic(error: str, code: int, template='error.html'):
     if 'text/html' in request.headers.get("Accept", ""):
         return render_template(template,
-                               message=error.description,
+                               message=error,
                                code=code,
                                status=http.client.responses[code]), code
     else:
-        return json_response({'error': error.description}, code)
+        return json_response({'error': error}, code)
 
 
 def get_grid_modules():

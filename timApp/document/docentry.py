@@ -184,7 +184,7 @@ def create_document_and_block(owner_group, desc: Optional[str] = None):
 
 
 def get_documents(include_nonpublic: bool = False,
-                  filter_folder: str = None,
+                  filter_folder: Optional[str] = None,
                   search_recursively: bool = True,
                   filter_user: Optional[UserType] = None,
                   custom_filter=None,

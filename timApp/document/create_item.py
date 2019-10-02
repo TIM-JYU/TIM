@@ -1,10 +1,10 @@
-from typing import List, Generator, Tuple, Union
+from typing import List, Generator, Tuple, Union, Optional
 
 from werkzeug.exceptions import abort
 
 from timApp.auth.accesshelper import grant_access_to_session_users, reset_request_access_cache, get_doc_or_abort, \
     verify_edit_access
-from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group, get_current_user_group_object
+from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group_object
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.document.docentry import DocEntry, get_documents, create_document_and_block
 from timApp.document.docinfo import DocInfo
@@ -13,7 +13,6 @@ from timApp.document.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_N
 from timApp.document.translation.translation import Translation, add_tr_entry
 from timApp.folder.folder import Folder
 from timApp.item.block import copy_default_rights, BlockType
-from timApp.item.item import Item
 from timApp.item.tag import TagType, Tag
 from timApp.item.validation import validate_item_and_create_intermediate_folders, ItemValidationRule
 from timApp.tim_app import app
@@ -82,7 +81,7 @@ def do_create_item(
     return item
 
 
-def apply_template(item: DocInfo, template_name: str = None):
+def apply_template(item: DocInfo, template_name: Optional[str] = None):
     templates = get_templates_for_folder(item.parent)
     matched_templates = None
     if template_name:
@@ -126,8 +125,8 @@ def create_or_copy_item(
         item_path: str,
         item_type: BlockType,
         item_title: str,
-        copy_id: int = None,
-        template_name: str = None,
+        copy_id: Optional[int] = None,
+        template_name: Optional[str] = None,
         use_template: bool = True,
         copy_uploads: bool = True,
 ):

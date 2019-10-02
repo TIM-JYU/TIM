@@ -8,7 +8,7 @@ from selenium.webdriver.support.select import Select
 from timApp.answer.answer import Answer
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text, find_by_ngmodel, find_all_by_ngmodel, \
-    find_by_ngclick, ignore_timeout
+    find_by_ngclick
 
 ChoiceList = List[Tuple[str, str]]
 ElementList = List[WebElement]
@@ -17,7 +17,7 @@ ElementList = List[WebElement]
 def create_yaml(field_type: str,
                 question_type: str,
                 choices: ChoiceList,
-                points_str: str = None,
+                points_str: Optional[str] = None,
                 headers=None,
                 matrix_type=None):
     headers = headers or []

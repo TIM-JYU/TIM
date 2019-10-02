@@ -68,7 +68,7 @@ def get_group_prefix(g: UserGroup):
     return None
 
 
-def get_potential_groups(u: User, course_filter: str=None) -> List[UserGroup]:
+def get_potential_groups(u: User, course_filter: Optional[str]=None) -> List[UserGroup]:
     """Returns all the Sisu groups that the user shall have access to."""
     sisu_group_memberships = u.groups_dyn.join(UserGroup).join(ScimUserGroup).with_entities(UserGroup).all()
     ug_filter = true()

@@ -18,7 +18,7 @@ from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_latest_answers_query, get_common_answers, save_answer, get_all_answers, \
     valid_answers_query, valid_taskid_filter
-from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access
+from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access, AccessDenied
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
     verify_view_access, get_plugin_from_request
@@ -106,7 +106,6 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
     :param anr: answer number from answer browser, 0 = newest
     :return: HTML to be used in iframe
     """
-    timdb = get_timdb()
     try:
         tid = TaskId.parse(task_id_ext)
     except PluginException as e:
@@ -151,20 +150,23 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
     if vals:
         answer_call_data['markup']['fielddata'] = vals.get('fielddata', {})
 
-    plugin_response = call_plugin_answer(plugintype, answer_call_data)
-    try:
-        jsonresp = json.loads(plugin_response)
-    except ValueError:
-        return json_response({'error': 'The plugin response was not a valid JSON string. The response was: ' +
-                                       plugin_response}, 400)
-    except PluginException:
-        return json_response({'error': 'The plugin response took too long'}, 400)
+    jsonresp = call_plugin_answer_and_parse(answer_call_data, plugintype)
 
     if 'iframehtml' not in jsonresp:
         return json_response({'error': 'The key "iframehtml" is missing in plugin response.'}, 400)
     result = jsonresp['iframehtml']
     db.session.commit()
     return result
+
+
+def call_plugin_answer_and_parse(answer_call_data, plugintype):
+    plugin_response = call_plugin_answer(plugintype, answer_call_data)
+    try:
+        jsonresp = json.loads(plugin_response)
+    except ValueError as e:
+        raise PluginException(
+            'The plugin response was not a valid JSON string. The response was: ' + plugin_response) from e
+    return jsonresp
 
 
 def get_useranswers_for_task(user: User, task_ids: List[TaskId], answer_map):
@@ -359,10 +361,7 @@ def send_email(args: SendEmailModel):
 
 @answers.route("/multiSendEmail/<task_id_ext>/", methods=['POST'])
 def multisendemail(task_id_ext: str):
-    try:
-        tid = TaskId.parse(task_id_ext)
-    except PluginException as e:
-        return abort(400, f'Task id error: {e}')
+    tid = TaskId.parse(task_id_ext)
     d = get_doc_or_abort(tid.doc_id)
     verify_teacher_access(d)
     mail_from = get_current_user_object().email
@@ -391,10 +390,7 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     """
 
-    try:
-        tid = TaskId.parse(task_id_ext)
-    except PluginException as e:
-        return abort(400, f'Task id error: {e}')
+    tid = TaskId.parse(task_id_ext)
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
 
@@ -408,30 +404,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     should_save_answer = answer_browser_data.get('saveAnswer', True) and tid.task_name
 
     if tid.is_points_ref:
-        verify_teacher_access(d)
-        given_points = answerdata.get(ptype.get_content_field_name())
-        if given_points is not None:
-            try:
-                given_points = float(given_points)
-            except ValueError:
-                return abort(400, 'Points must be a number.')
-        a = curr_user.answers.filter_by(task_id=tid.doc_task).order_by(Answer.id.desc()).first()
-        if a:
-            a.points = given_points
-            s = None
-        else:
-            a = Answer(
-                content=json.dumps({ptype.get_content_field_name(): ''}),
-                points=given_points,
-                task_id=tid.doc_task,
-                users_all=[curr_user],
-                valid=True,
-            )
-            db.session.add(a)
-            db.session.flush()
-            s = a.id
-        db.session.commit()
-        return json_response({'savedNew': s, 'web': {'result': 'points saved'}})
+        return handle_points_ref(answerdata, curr_user, d, ptype, tid)
 
     if save_teacher:
         verify_teacher_access(d)
@@ -452,35 +425,35 @@ def post_answer(plugintype: str, task_id_ext: str):
         if answer_id is not None:
             answer = Answer.query.get(answer_id)
             if not answer:
-                return abort(404, f'Answer not found: {answer_id}')
+                raise PluginException(f'Answer not found: {answer_id}')
             expected_task_id = answer.task_id
             if expected_task_id != tid.doc_task:
-                return abort(400, 'Task ids did not match')
+                raise PluginException('Task ids did not match')
 
             # Later on, we may call users.append, but we don't want to modify the users of the existing
             # answer. Therefore, we make a copy of the user list so that SQLAlchemy no longer associates
             # the user list with the answer.
             users = list(answer.users_all)
             if not users:
-                return abort(400, 'No users found for the specified answer')
+                raise PluginException('No users found for the specified answer')
             if user_id not in (u.id for u in users):
-                return abort(400, 'userId is not associated with answer_id')
+                raise PluginException('userId is not associated with answer_id')
         elif user_id and user_id != curr_user.id and False: # TODO: Vesa's hack to no need for belong teachers group
             teacher_group = UserGroup.get_teachers_group()
             if curr_user not in teacher_group.users:
-                abort(403, 'Permission denied: you are not in teachers group.')
+                raise PluginException('Permission denied: you are not in teachers group.')
         if user_id:
             ctx_user = User.query.get(user_id)
             if not ctx_user:
-                abort(404, f'User {user_id} not found')
+                raise PluginException(f'User {user_id} not found')
             users = [ctx_user]  # TODO: Vesa's hack to save answer to student
     try:
         plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite, context_user=ctx_user)
     except (PluginException, TimDbException) as e:
-        return abort(400, str(e))
+        raise PluginException(str(e))
 
     if plugin.type != plugintype:
-        abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
+        raise PluginException(f'Plugin type mismatch: {plugin.type} != {plugintype}')
 
     upload = None
 
@@ -498,11 +471,11 @@ def post_answer(plugintype: str, task_id_ext: str):
             block = Block.query.filter((Block.description == trimmed_file) &
                                        (Block.type_id == BlockType.Upload.value)).first()
             if block is None:
-                abort(400, f'Non-existent upload: {trimmed_file}')
+                raise PluginException(f'Non-existent upload: {trimmed_file}')
             verify_view_access(block, message="You don't have permission to touch this file.")
             upload = AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first()
             # if upload.answer_id is not None:
-            #    abort(400, f'File was already uploaded: {file}')
+            #    raise PluginException(f'File was already uploaded: {file}')
 
     # Load old answers
 
@@ -510,74 +483,15 @@ def post_answer(plugintype: str, task_id_ext: str):
         users = [User.query.get(u['id']) for u in get_session_users()]
 
     old_answers = get_common_answers(users, tid)
-    try:
-        valid, _ = plugin.is_answer_valid(len(old_answers), {})
-    except PluginException as e:
-        return abort(400, str(e))
+    valid, _ = plugin.is_answer_valid(len(old_answers), {})
     info = plugin.get_info(users, len(old_answers), look_answer=is_teacher and not save_teacher, valid=valid)
 
     # Get the newest answer (state). Only for logged in users.
     state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
 
-    if plugin.type == 'jsrunner':
-        s = JsRunnerMarkupSchema()
-        try:
-            # noinspection PyTypeChecker
-            runnermarkup: JsRunnerMarkupModel = s.load(plugin.values)
-        except ValidationError as e:
-            return abort(400, str(e))
-        try:
-            # noinspection PyTypeChecker
-            runner_req: JsRunnerAnswerModel = JsRunnerAnswerSchema().load(request.get_json())
-        except ValidationError as e:
-            return abort(400, str(e))
-        groupnames = runnermarkup.groups
-        if groupnames is missing:
-            groupnames = [runnermarkup.group]
-        g = UserGroup.query.filter(UserGroup.name.in_(groupnames))
-        found_groups = g.all()
-        req_groups = runner_req.input.groups
-        # Check if groups given as request arg can be considered as subset of groups given in markup
-        if req_groups:
-            all_req_groups = UserGroup.query.filter(UserGroup.name.in_(req_groups)).all()
-            if not curr_user.has_edit_access(d):
-                user_set = set()
-                for g in all_req_groups:
-                    members = g.users.all()
-                    user_set.update(members)
-                for u in user_set:  # type: User
-                    u_within_jsrunner_groups = False
-                    for fg in found_groups:
-                        if fg in u.groups:
-                            u_within_jsrunner_groups = True
-                            break
-                    if not u_within_jsrunner_groups:
-                        abort(403, f'Given groups are not associated with the original groups.')
-            groupnames = req_groups
-            found_groups = all_req_groups
-        not_found_groups = sorted(list(set(groupnames) - set(g.name for g in found_groups)))
-        if not_found_groups:
-            abort(404, f'The following groups were not found: {", ".join(not_found_groups)}')
-        if runner_req.input.paramComps:  # TODO: add paramComps to the interface, so no need to manipulate source code
-            preprg = runnermarkup.preprogram or ''
-            plugin.values["preprogram"] = f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
-
-        siw = runnermarkup.showInView
-
-        if not runnermarkup.selectIncludeUsers and runnermarkup.includeUsers != runner_req.input.includeUsers:
-            abort(403, 'Not allowed to select includeUsers option.')
-
-        answerdata['data'], answerdata['aliases'], _, _ = get_fields_and_users(
-            runnermarkup.fields,
-            found_groups,
-            d,
-            get_current_user_object(),
-            allow_non_teacher=siw,
-            member_filter_type=runner_req.input.includeUsers,
-        )
-        answerdata.pop('paramComps', None)  # This isn't needed by jsrunner server, so don't send it.
-        if runnermarkup.program is missing:
-            abort(400, "Attribute 'program' is required.")
+    preprocessor = answer_call_preprocessors.get(plugin.type)
+    if preprocessor:
+        preprocessor(answerdata, curr_user, d, plugin)
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,
@@ -585,28 +499,17 @@ def post_answer(plugintype: str, task_id_ext: str):
                         'taskID': tid.doc_task,
                         'info': info}
 
-    plugin_response = call_plugin_answer(plugintype, answer_call_data)
-    try:
-        jsonresp = json.loads(plugin_response)
-    except ValueError:
-        return json_response({'error': 'The plugin response was not a valid JSON string. The response was: ' +
-                                       plugin_response}, 400)
-    except PluginException:
-        return json_response({'error': 'The plugin response took too long'}, 400)
+    jsonresp = call_plugin_answer_and_parse(answer_call_data, plugintype)
 
-    if 'web' not in jsonresp:
-        # jsonresp["web"] = { 'error': plugin_response }
-        # return json_response({'error': 'The key "web" is missing in plugin response.'}, 400)
-        return json_response({'error': plugin_response, 'web': ''}, 400)
-    result = {'web': jsonresp['web']}
+    web = jsonresp.get('web')
+    if web is None:
+        raise PluginException('Missing "web" in plugin response.')
+    result = {'web': web}
 
     # if plugin.type == 'jsrunner' or plugin.type == 'tableForm' or plugin.type == 'importData':
     if 'savedata' in jsonresp:
-        siw = answer_call_data.get("markup",{}).get("showInView", False)
-        handle_jsrunner_response(jsonresp, result, d, allow_non_teacher = siw)
-        db.session.commit()
-        if 'save' not in jsonresp: # plugin may also hope some things to be saved
-            return json_response(result)
+        siw = answer_call_data.get("markup", {}).get("showInView", False)
+        handle_jsrunner_response(jsonresp, d, allow_non_teacher=siw)
 
     def add_reply(obj, key, run_markdown=False):
         if key not in plugin.values:
@@ -683,7 +586,94 @@ def post_answer(plugintype: str, task_id_ext: str):
     return json_response(result)
 
 
-def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allow_non_teacher = False):
+def preprocess_jsrunner_answer(answerdata: Dict[str, Any], curr_user: User, d: DocInfo, plugin: Plugin):
+    """Executed before the actual jsrunner answer route is called.
+    This is required to fetch the requested data from the database."""
+
+    s = JsRunnerMarkupSchema()
+    # noinspection PyTypeChecker
+    runnermarkup: JsRunnerMarkupModel = s.load(plugin.values)
+    # noinspection PyTypeChecker
+    runner_req: JsRunnerAnswerModel = JsRunnerAnswerSchema().load(request.get_json())
+    groupnames = runnermarkup.groups
+    if groupnames is missing:
+        groupnames = [runnermarkup.group]
+    g = UserGroup.query.filter(UserGroup.name.in_(groupnames))
+    found_groups = g.all()
+    req_groups = runner_req.input.groups
+    # Check if groups given as request arg can be considered as subset of groups given in markup
+    if req_groups:
+        all_req_groups = UserGroup.query.filter(UserGroup.name.in_(req_groups)).all()
+        if not curr_user.has_edit_access(d):
+            user_set = set()
+            for g in all_req_groups:
+                members = g.users.all()
+                user_set.update(members)
+            for u in user_set:  # type: User
+                u_within_jsrunner_groups = False
+                for fg in found_groups:
+                    if fg in u.groups:
+                        u_within_jsrunner_groups = True
+                        break
+                if not u_within_jsrunner_groups:
+                    raise PluginException(f'Given groups are not associated with the original groups.')
+        groupnames = req_groups
+        found_groups = all_req_groups
+    not_found_groups = sorted(list(set(groupnames) - set(g.name for g in found_groups)))
+    if not_found_groups:
+        raise PluginException(f'The following groups were not found: {", ".join(not_found_groups)}')
+    if runner_req.input.paramComps:  # TODO: add paramComps to the interface, so no need to manipulate source code
+        preprg = runnermarkup.preprogram or ''
+        plugin.values["preprogram"] = f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
+    siw = runnermarkup.showInView
+    if not runnermarkup.selectIncludeUsers and runnermarkup.includeUsers != runner_req.input.includeUsers:
+        raise AccessDenied('Not allowed to select includeUsers option.')
+    answerdata['data'], answerdata['aliases'], _, _ = get_fields_and_users(
+        runnermarkup.fields,
+        found_groups,
+        d,
+        get_current_user_object(),
+        allow_non_teacher=siw,
+        member_filter_type=runner_req.input.includeUsers,
+    )
+    answerdata.pop('paramComps', None)  # This isn't needed by jsrunner server, so don't send it.
+    if runnermarkup.program is missing:
+        raise PluginException("Attribute 'program' is required.")
+
+
+answer_call_preprocessors = {
+    'jsrunner': preprocess_jsrunner_answer
+}
+
+
+def handle_points_ref(answerdata: Dict[str, Any], curr_user: User, d: DocInfo, ptype: PluginType, tid: TaskId):
+    verify_teacher_access(d)
+    given_points = answerdata.get(ptype.get_content_field_name())
+    if given_points is not None:
+        try:
+            given_points = float(given_points)
+        except ValueError:
+            return abort(400, 'Points must be a number.')
+    a = curr_user.answers.filter_by(task_id=tid.doc_task).order_by(Answer.id.desc()).first()
+    if a:
+        a.points = given_points
+        s = None
+    else:
+        a = Answer(
+            content=json.dumps({ptype.get_content_field_name(): ''}),
+            points=given_points,
+            task_id=tid.doc_task,
+            users_all=[curr_user],
+            valid=True,
+        )
+        db.session.add(a)
+        db.session.flush()
+        s = a.id
+    db.session.commit()
+    return json_response({'savedNew': s, 'web': {'result': 'points saved'}})
+
+
+def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_teacher = False):
     # TODO: Might need to rewrite this function for optimization
     save_obj = jsonresp.get('savedata')
     ignore_missing = jsonresp.get('ignoreMissing', False)

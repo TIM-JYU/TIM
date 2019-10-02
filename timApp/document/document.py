@@ -57,15 +57,15 @@ class Document:
 
         self.preload_option = preload_option
         # Used to cache paragraphs in memory on request so the pars don't have to be read from disk in every for loop
-        self.par_cache: List[DocParagraph] = None
+        self.par_cache: Optional[List[DocParagraph]] = None
         # List of par ids - it is much faster to load only ids and sometimes full pars are not needed
-        self.par_ids: List[str] = None
+        self.par_ids: Optional[List[str]] = None
         # List of corresponding hashes
-        self.par_hashes: List[str] = None
+        self.par_hashes: Optional[List[str]] = None
         # Whether par_cache is incomplete - this is the case when insert_temporary_pars is called with PreloadOption.none
         self.is_incomplete_cache: bool = False
         # Whether the document exists on disk.
-        self.__exists: bool = None
+        self.__exists: Optional[bool] = None
         # Cache for the original document.
         self.source_doc: Optional['Document'] = None
         # Cache for document settings.
@@ -85,7 +85,7 @@ class Document:
         # List of preamble pars if they have been inserted
         self.preamble_pars = None
 
-        self.route = '';
+        self.route = ''
 
     @classmethod
     def get_default_files_root(cls):

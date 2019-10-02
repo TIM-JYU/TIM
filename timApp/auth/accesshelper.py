@@ -15,7 +15,6 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, dereference_pars
 from timApp.folder.folder import Folder
-from timApp.item.block import Block
 from timApp.item.item import Item, ItemBase
 from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
 from timApp.plugin.pluginexception import PluginException
@@ -29,7 +28,7 @@ from timApp.util.flask.requesthelper import get_option
 from timApp.util.utils import get_current_time
 
 
-def get_doc_or_abort(doc_id: int, msg: str = None):
+def get_doc_or_abort(doc_id: int, msg: Optional[str] = None):
     d = DocEntry.find_by_id(doc_id)
     if not d:
         abort(404, msg or 'Document not found')
@@ -333,3 +332,7 @@ def can_see_par_source(u: User, p: DocParagraph):
     if not p.is_plugin() and not p.has_plugins():
         return True
     return False
+
+
+class AccessDenied(Exception):
+    pass

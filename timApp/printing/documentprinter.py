@@ -274,7 +274,7 @@ class DocumentPrinter:
         self._content = content
         return content
 
-    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False, path: str = None):
+    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False, path: Optional[str] = None):
         """
         Converts the document to latex and returns the converted document as a bytearray
         :param target_format: The target file format

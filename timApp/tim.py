@@ -4,7 +4,6 @@ import time
 import traceback
 
 import requests
-import werkzeug.exceptions as ex
 from flask import Response
 from flask import g, abort, flash
 from flask import redirect
@@ -14,6 +13,7 @@ from flask import session
 from flask_assets import Environment
 from flask_wtf.csrf import generate_csrf
 from markupsafe import Markup
+from marshmallow import ValidationError
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
 from timApp.admin.global_notification import global_notification
@@ -21,7 +21,7 @@ from timApp.admin.routes import admin_bp
 from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access, \
-    ItemLockedException, get_doc_or_abort
+    ItemLockedException, get_doc_or_abort, AccessDenied
 from timApp.auth.login import login_page, logout
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     logged_in, current_user_in_lecture
@@ -49,6 +49,7 @@ from timApp.markdown.dumboclient import DumboHTMLException
 from timApp.note.routes import notes
 from timApp.notification.notify import notify, send_email
 from timApp.plugin.importdata.importData import importData_plugin
+from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.routes import plugin_bp
 from timApp.plugin.tableform.tableForm import tableForm_plugin
@@ -150,7 +151,7 @@ def inject_bookmarks() -> dict:
 
 @app.errorhandler(400)
 def bad_request(error):
-    return error_generic(error, 400)
+    return error_generic(error.description, 400)
 
 
 @app.errorhandler(422)
@@ -158,36 +159,42 @@ def bad_request(error):
     msgs = error.data.get('messages')
     if msgs:
         error.description = str(msgs)
-    return error_generic(error, 422)
+    return error_generic(error.description, 422)
 
 
-# noinspection PyClassHasNoInit
-class Forbidden(ex.HTTPException):
-    code = 403
-    description = "Sorry, you don't have permission to use this resource."
+@app.errorhandler(AccessDenied)
+def access_denied(error):
+    return error_generic(str(error), 403)
 
 
-ex._aborter.mapping[403] = Forbidden
+@app.errorhandler(PluginException)
+def access_denied(error):
+    return error_generic(str(error), 400)
 
 
-@app.errorhandler(Forbidden)
+@app.errorhandler(ValidationError)
+def access_denied(error):
+    return error_generic(str(error), 400)
+
+
+@app.errorhandler(403)
 def forbidden(error):
-    return error_generic(error, 403)
+    return error_generic(error.description, 403)
 
 
 @app.errorhandler(JSONException)
 def already_exists(error: JSONException):
-    return error_generic(error, error.code)
+    return error_generic(error.description, error.code)
 
 
 @app.errorhandler(ItemAlreadyExistsException)
 def already_exists(error: ItemAlreadyExistsException):
-    return error_generic(Forbidden(description=str(error)), 403)
+    return error_generic(str(error), 403)
 
 
 @app.errorhandler(DumboHTMLException)
 def handle_dumbo_html_except(error: DumboHTMLException):
-    return error_generic(error, 400, template='dumbo_html_error.html')
+    return error_generic(error.description, 400, template='dumbo_html_error.html')
 
 
 @app.errorhandler(500)
@@ -213,7 +220,7 @@ Exception happened on {get_current_time()} at {request.url}
                mail_from=app.config['WUFF_EMAIL'],
                reply_to=f'{app.config["ERROR_EMAIL"]},{u.email}',
                msg=message)
-    return error_generic(error, 500)
+    return error_generic(error.description, 500)
 
 
 @app.route('/empty')
@@ -241,24 +248,24 @@ def handle_user_not_found(error):
     if error.user_id == session['user_id']:
         flash(f'Your user id ({error.user_id}) was not found in the database. Clearing session automatically.')
         return logout()
-    return error_generic(error, 500)
+    return error_generic(error.description, 500)
 
 
 @app.errorhandler(503)
 def service_unavailable(error):
-    return error_generic(error, 503)
+    return error_generic(error.description, 503)
 
 
 @app.errorhandler(413)
 def entity_too_large(error):
     error.description = 'Your file is too large to be uploaded. ' +\
         f'Maximum size is {app.config["MAX_CONTENT_LENGTH"] / 1024 / 1024} MB.'
-    return error_generic(error, 413)
+    return error_generic(error.description, 413)
 
 
 @app.errorhandler(404)
 def not_found(error):
-    return error_generic(error, 404)
+    return error_generic(error.description, 404)
 
 
 @app.route("/ping")

@@ -32,7 +32,6 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
-from timApp.util.answerutil import task_ids_to_strlist
 from timApp.util.get_fields import get_fields_and_users
 from timApp.util.rndutils import get_simple_hash_from_par_and_user
 from timApp.util.timtiming import taketime
@@ -101,7 +100,7 @@ class PluginPlacement:
         """   TODO: this did not help very much
         if self.is_block_plugin:
             idx = next(iter(self.plugins))
-            p = self.plugins[idx];
+            p = self.plugins[idx]
             return p.get_final_output().strip()
         """
         sorted_ranges = sorted(chain(self.plugins.keys(), self.errors.keys()), key=lambda r: r[0], reverse=True)
@@ -169,7 +168,7 @@ class PluginPlacement:
                 if plugin_name in WANT_FIELDS and 'fields' in vals and user:
                     data, aliases, field_names, _ = get_fields_and_users(
                         vals['fields'],
-                        [user.personal_group_prop],
+                        [user.get_personal_group()],
                         block.doc.docinfo,
                         get_current_user_object(),
                         add_missing_fields=True,

@@ -1,17 +1,25 @@
 from typing import List, Optional
 
 from timApp.auth.accesshelper import has_view_access
+from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.exceptions import ValidationException
 from timApp.util.flask.requesthelper import verify_json_params
-from timApp.document.docentry import DocEntry
 
 
 class EditRequest:
-    def __init__(self, doc: Document, area_start: str = None, area_end: str = None, par: str = None, text: str = None,
-                 next_par_id: str = None, preview: bool = False, forced_classes: Optional[List[str]] = None,
-                 mark_translated: bool=None):
+    def __init__(
+            self, doc: Document,
+            area_start: Optional[str] = None,
+            area_end: Optional[str] = None,
+            par: Optional[str] = None,
+            text: Optional[str] = None,
+            next_par_id: Optional[str] = None,
+            preview: bool = False,
+            forced_classes: Optional[List[str]] = None,
+            mark_translated: Optional[bool] = None,
+    ):
         self.forced_classes = forced_classes or []
         self.doc = doc
         self.preview = preview

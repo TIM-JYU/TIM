@@ -152,7 +152,7 @@ class KorppiEmailException(Exception):
 
 @login_page.errorhandler(KorppiEmailException)
 def already_exists(error: KorppiEmailException):
-    return error_generic(error, 400, template='korppi_email_error.html')
+    return error_generic(error.description, 400, template='korppi_email_error.html')
 
 
 @oid.after_login
@@ -193,7 +193,7 @@ def set_user_to_session(user: User):
             flash(f'{user.real_name} is already logged in.')
             return
         other_users = session.get('other_users', dict())
-        other_users[str(user.id)] = user
+        other_users[str(user.id)] = user.to_json()
         session['other_users'] = other_users
     else:
         session['user_id'] = user.id

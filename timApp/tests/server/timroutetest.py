@@ -25,6 +25,7 @@ from timApp.document.document import Document
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
+from timApp.item.routes import create_item_direct, CreateItemModel
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.sqa import db
@@ -554,9 +555,16 @@ class TimRouteTest(TimDbTest):
         """
         return self.json_post('/logout', json_data={'user_id': user_id})
 
-    def login(self, email: str=None, passw: str=None, username: Optional[str] = None, force: bool = False,
-              clear_last_doc: bool = True,
-              add: bool = False, **kwargs):
+    def login(
+            self,
+            email: Optional[str] = None,
+            passw: Optional[str] = None,
+            username: Optional[str] = None,
+            force: bool = False,
+            clear_last_doc: bool = True,
+            add: bool = False,
+            **kwargs,
+    ):
         """Logs a user in.
 
         :param username: The username of the user.
@@ -617,19 +625,42 @@ class TimRouteTest(TimDbTest):
             self.__class__.doc_num += 1
         if title is None:
             title = 'document ' + str(self.doc_num)
-        resp = self.json_post('/createItem', {
-            'item_path': path,
-            'item_type': 'document',
-            'item_title': title,
-            **({'copy': copy_from} if copy_from else {}),
-            **({'template': template} if template else {}),
-            **({'cite': cite} if cite else {})
-        }, expect_status=expect_status, **kwargs)
-        if expect_status != 200:
-            return None
-        self.assertIsInstance(resp['id'], int)
-        self.assertEqual(path, resp['path'])
-        de = DocEntry.find_by_path(path)
+
+        # Optimization: during server tests, creating a document is a very frequent operation, so we just call
+        # the route function directly if we're not testing anything.
+        if expect_status != 200 or 'expect_content' in kwargs:
+            data = {
+                'item_path': path,
+                'item_type': 'document',
+                'item_title': title,
+                **({'copy': copy_from} if copy_from else {}),
+                **({'template': template} if template else {}),
+                **({'cite': cite} if cite else {})
+            }
+            resp = self.json_post(
+                '/createItem',
+                data,
+                expect_status=expect_status,
+                **kwargs,
+            )
+            if expect_status != 200:
+                return None
+            self.assertIsInstance(resp['id'], int)
+            self.assertEqual(path, resp['path'])
+            de = DocEntry.find_by_path(path)
+        else:
+            de = create_item_direct(CreateItemModel(
+                item_path=path,
+                item_type='document',
+                item_title=title,
+                copy=copy_from,
+                template=template,
+                cite=cite,
+            ))
+            # TODO this isn't really correct but gives equivalent behavior compared to the True branch.
+            #  The modifier should be corrected to be the current user in the True branch after
+            #  calling DocEntry.find_by_path. After that, some tests need to be corrected.
+            de.document.modifier_group_id = 0
         doc = de.document
         self.init_doc(doc, from_file, initial_par, settings)
         return de
@@ -762,7 +793,7 @@ class TimRouteTest(TimDbTest):
 
     def create_plugin_json(self, d: DocInfo,
                            task_name: str,
-                           par_id: str = None,
+                           par_id: Optional[str] = None,
                            markup=None,
                            state=None,
                            toplevel=None,

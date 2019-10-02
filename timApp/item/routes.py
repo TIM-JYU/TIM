@@ -49,7 +49,7 @@ from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
-from timApp.util.flask.requesthelper import get_option, verify_json_params
+from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
 from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
@@ -590,11 +590,26 @@ def index_redirect():
     return redirect('/view')
 
 
+@dataclass
+class CreateItemModel:
+    item_path: str
+    item_type: str
+    item_title: str
+    cite: Optional[int] = None
+    copy: Optional[int] = None
+    template: Optional[str] = None
+    use_template: bool = True
+
+
 @view_page.route("/createItem", methods=["POST"])
-def create_item_route():
-    item_path, item_type, item_title = verify_json_params('item_path', 'item_type', 'item_title')
-    cite_id, copy_id, template_name, use_template = verify_json_params('cite', 'copy', 'template', 'use_template',
-                                                                       require=False)
+@use_model(CreateItemModel)
+def create_item_route(m: CreateItemModel):
+    return json_response(create_item_direct(m))
+
+
+def create_item_direct(m: CreateItemModel):
+    item_path, item_type, item_title = m.item_path, m.item_type, m.item_title
+    cite_id, copy_id, template_name, use_template = m.cite, m.copy, m.template, m.use_template
 
     if use_template is None:
         use_template = True
@@ -605,7 +620,7 @@ def create_item_route():
         item = create_or_copy_item(item_path, BlockType.Document if item_type == 'document' else BlockType.Folder,
                                    item_title, copy_id, template_name, use_template)
     db.session.commit()
-    return json_response(item)
+    return item
 
 
 @view_page.route("/items/<int:item_id>")

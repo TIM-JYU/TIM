@@ -59,7 +59,7 @@ class PluginTest(TimRouteTest):
         self.post_answer(plugin_type, task_id_ext_wrong, [True, False, False],
                          expect_status=400,
                          json_key='error',
-                         expect_content=f'Task id error: Invalid field access: {par_id}x')
+                         expect_content=f'Invalid field access: {par_id}x')
 
         wrongname = 'mmcqexamplez'
         self.post_answer(plugin_type, str(doc.id) + '.' + wrongname, [True, False, False],
@@ -784,15 +784,15 @@ choices:
 """)
         par = d.document.get_paragraphs()[0]
         self.post_answer('mmcq', f'{d.id}.t1.1.{par.get_id()}', [],
-                         expect_content='Task id error: Task name can only have characters a-z, 0-9, "_" and "-".',
+                         expect_content='Task name can only have characters a-z, 0-9, "_" and "-".',
                          json_key='error', expect_status=400)
 
         # TODO These two need better error messages.
         self.post_answer('mmcq', f't1.1.{par.get_id()}', [],
-                         expect_content='Task id error: Task name can only have characters a-z, 0-9, "_" and "-".',
+                         expect_content='Task name can only have characters a-z, 0-9, "_" and "-".',
                          json_key='error', expect_status=400)
         self.post_answer('mmcq', f'{par.get_id()}', [],
-                         expect_content='Task id error: The format of task id is invalid. Missing doc id.',
+                         expect_content='The format of task id is invalid. Missing doc id.',
                          json_key='error', expect_status=400)
         r = self.get(d.url, as_tree=True)
         self.assert_content(r, [
@@ -1316,7 +1316,7 @@ print(x == '%%username%%')
             user_input=uinput2,
             teacher=True,
             user_id=999,
-            expect_status=404,
+            expect_status=400,
             expect_content='User 999 not found',
             json_key='error',
         )

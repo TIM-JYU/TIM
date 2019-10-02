@@ -13,8 +13,8 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.document.docinfo import DocInfo
 from timApp.document.timjsonencoder import TimJsonEncoder
-from timApp.folder.folder import Folder
 from timApp.folder.createopts import FolderCreationOptions
+from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
@@ -30,7 +30,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember, membership_current, membership_deleted
 from timApp.user.userutils import grant_access, get_access_type_id, \
     create_password_hash, check_password_hash, check_password_hash_old
-from timApp.util.utils import remove_path_special_chars, cached_property, get_current_time, fin_timezone
+from timApp.util.utils import remove_path_special_chars, cached_property, get_current_time
 
 ItemOrBlock = Union[ItemBase, Block]
 maxdate = datetime.max.replace(tzinfo=timezone.utc)
@@ -260,10 +260,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             real_name: str,
             email: str,
             password: str = '',
-            uid: int = None,
-            origin: UserOrigin = None,
-            given_name = None,
-            last_name=None,
+            uid: Optional[int] = None,
+            origin: Optional[UserOrigin] = None,
+            given_name: Optional[str] = None,
+            last_name: Optional[str] = None,
     ) -> 'User':
         """Creates a new user with the specified name.
 

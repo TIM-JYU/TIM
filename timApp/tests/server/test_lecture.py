@@ -1,6 +1,7 @@
 import datetime
 import json
 from time import sleep
+from typing import Optional
 
 import dateutil.parser
 
@@ -17,8 +18,15 @@ from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
 
 class LectureTest(TimRouteTest):
 
-    def get_updates(self, doc_id: int, msg_id: int, use_questions: bool = None, curr_q: int = None, curr_p: int = None,
-                    **kwargs):
+    def get_updates(
+            self,
+            doc_id: int,
+            msg_id: int,
+            use_questions: Optional[bool] = None,
+            curr_q: Optional[int] = None,
+            curr_p: Optional[int] = None,
+            **kwargs,
+    ):
         return self.get('/getUpdates', query_string=dict(c=msg_id,
                                                          d=doc_id,
                                                          m=True,

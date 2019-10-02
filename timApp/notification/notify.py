@@ -24,7 +24,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import verify_json_params, is_testing, is_localhost
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.util.logger import log_error, log_warning
+from timApp.util.logger import log_error
 from timApp.util.utils import get_current_time, seq_to_str
 
 notify = Blueprint('notify',
@@ -65,7 +65,7 @@ def get_user_notify_settings():
     return json_response(nots)
 
 
-def get_current_user_notifications(limit: int = None):
+def get_current_user_notifications(limit: Optional[int] = None):
     q = (Notification.query.filter_by(user_id=get_current_user_id()).options(
         joinedload(Notification.block)
             .joinedload(Block.docentries)

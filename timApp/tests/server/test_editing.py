@@ -253,6 +253,7 @@ class EditTest(TimRouteTest):
         self.json_post(f'/unwrap_area/{d.id}/a')
 
     def test_download(self):
+        self.login_test1()
         d = self.create_doc(initial_par="test")
         par_id = d.document.get_paragraphs()[0].get_id()
         self.get(f'/download/{d.id}', expect_content=f"""
