@@ -111,6 +111,16 @@ export async function toggleViewRange(docId: number, pieceSize: number) {
     }
 }
 
+export function getCurrentViewRange() {
+    const b = new URL(document.location.href).searchParams.get("b");
+    const e = new URL(document.location.href).searchParams.get("e");
+    if (b != null && e != null) {
+        return {b: +b, e: +e};
+    } else {
+        return undefined;
+    }
+}
+
 /*
  * Dialog displaying view range options.
  */

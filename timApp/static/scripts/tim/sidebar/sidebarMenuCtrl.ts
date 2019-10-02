@@ -14,13 +14,8 @@ import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
 import {
-    getPieceSize,
-    getViewRange,
-    partitionDocument,
-    setPieceSize,
+    getCurrentViewRange, IViewRange,
     showViewRangeEditDialog, toggleViewRange,
-    unpartitionDocument,
-    unsetPieceSize,
 } from "../item/viewRangeEditDialog";
 import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
 import {ITemplateParams, showPrintDialog} from "../printing/printCtrl";
@@ -83,6 +78,7 @@ export class SidebarMenuCtrl implements IController {
     private linkedGroups: IDocument[] = [];
     private item?: DocumentOrFolder;
     private sisugroupPath?: string;
+    private currentViewRange?: IViewRange;
 
     constructor() {
         const g = someglobals();
@@ -106,7 +102,6 @@ export class SidebarMenuCtrl implements IController {
         this.lastTab = this.active;
         this.storage = $localStorage.$default({
             consent: undefined,
-            partitionDocuments: null,
             pieceSize: null,
         });
 
@@ -471,16 +466,17 @@ export class SidebarMenuCtrl implements IController {
      * Partition or unpartition document from 0 to user defined piece size.
      */
     private async toggleViewRange() {
-        // TODO: Add component for navigating parts.
         if (!(this.vctrl && this.item)) {
             return;
         }
         void toggleViewRange(this.item.id, this.pieceSizeSetting);
+        this.currentViewRange = getCurrentViewRange();
     }
 
     private openViewRangeMenu() {
         if (this.item) {
             void showViewRangeEditDialog(this.item);
+            this.currentViewRange = getCurrentViewRange();
         }
     }
 
@@ -505,6 +501,7 @@ export class SidebarMenuCtrl implements IController {
         if (this.storage.pieceSize != null) {
             this.pieceSizeSetting = +this.storage.pieceSize;
         }
+         this.currentViewRange = getCurrentViewRange();
     }
 }
 
@@ -554,9 +551,8 @@ timApp.component("timSidebarMenu", {
         </div>
         <div ng-if="$ctrl.users.isLoggedIn() && $ctrl.vctrl && !$ctrl.vctrl.item.isFolder">
             <h5>Document settings</h5>
-            <a ng-if="!$ctrl.partitionDocumentsSetting" ng-click="$ctrl.toggleViewRange()">Show page in parts</a>
-            <a ng-if="$ctrl.partitionDocumentsSetting" ng-click="$ctrl.toggleViewRange()">Show whole page</a>
-            <a style="display: inline-block" ng-click="$ctrl.openViewRangeMenu()">
+            <a title="Toggle between showing full and partitioned document" ng-click="$ctrl.toggleViewRange()">Show page in {{ $ctrl.currentViewRange ? 'full' : 'parts' }}</a>
+            <a style="display: inline-block" ng-click="$ctrl.openViewRangeMenu()" title="Open document partitioning settings">
                 <span class="glyphicon glyphicon-cog"></span>
             </a>
             <button ng-if="$ctrl.vctrl.item.rights.editable"

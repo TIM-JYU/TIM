@@ -199,7 +199,7 @@ timApp.component("timHeader", {
         </li>
         <li class="active">{{ ::$ctrl.item.title }}</li>
     </ol>
-    <view-range-navigation item="$ctrl.item"></view-range-navigation>
+    <view-range-navigation ng-if="!$ctrl.item.isFolder" item="$ctrl.item"></view-range-navigation>
 </div>
 `,
 });
