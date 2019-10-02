@@ -75,12 +75,15 @@ timApp.component("viewRangeNavigation", {
     template: `
     <div class="view-range-container" ng-if="$ctrl.currentRange">
         <div class="view-range-buttons">
-            <a ng-if="$ctrl.currentRange.b > 0" uib-tooltip="Navigate to part {{$ctrl.prevRange.b}} - {{$ctrl.prevRange.e}}"
-                ng-click="$ctrl.move($ctrl.prevRange, false)">Previous part</a>
+            <a ng-if="$ctrl.currentRange.b > 0" ng-click="$ctrl.move($ctrl.prevRange, false)"
+                uib-tooltip="Navigate to part {{$ctrl.prevRange.b}} - {{$ctrl.prevRange.e}}">Previous part</a>
             <span ng-if="$ctrl.currentRange.b > 0 && $ctrl.currentRange.e < $ctrl.nextRange.e">|</span>
-            <a ng-if="$ctrl.currentRange.e < $ctrl.nextRange.e" uib-tooltip="Navigate to part {{$ctrl.nextRange.b}} - {{$ctrl.nextRange.e}}"
+            <a ng-if="$ctrl.currentRange.e < $ctrl.nextRange.e"
+                uib-tooltip="Navigate to part {{$ctrl.nextRange.b}} - {{$ctrl.nextRange.e}}"
                 ng-click="$ctrl.move($ctrl.nextRange, true)">Next part</a>
-            <a style="display: inline-block" ng-click="$ctrl.openViewRangeMenu()" uib-tooltip="Open document partitioning settings">
+            <a ng-if="$ctrl.currentRange.b > 0 || $ctrl.currentRange.e < $ctrl.nextRange.e"
+                style="display: inline-block" ng-click="$ctrl.openViewRangeMenu()"
+                uib-tooltip="Open document partitioning settings">
                 <span class="glyphicon glyphicon-cog"></span>
             </a>
         </div>
