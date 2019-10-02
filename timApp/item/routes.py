@@ -292,6 +292,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
         view_range = None
     start_index = max(view_range[0], 0) if view_range else 0
 
+    # TODO: If view range is set in cookie, load using its range in case there isn't view_range.
+
     doc, xs = get_document(doc_info, view_range)
     g.doc = doc
 
@@ -787,9 +789,12 @@ def set_piece_size(args: SetViewRangeModel):
 def get_viewrange(doc_id, index, forwards):
     taketime("route view begin")
     current_set_size = get_piece_size_from_cookie(request)
-    doc_info = DocEntry.find_by_id(doc_id)
-    view_range = decide_view_range(doc_info, current_set_size, index, forwards > 0)
+    if not current_set_size:
+        return abort(400, "Piece size not found!")
     try:
+        doc_info = DocEntry.find_by_id(doc_id)
+        view_range = decide_view_range(doc_info, current_set_size, index, forwards > 0)
+        last_index = len(doc_info.document.get_paragraphs())-1
         return json_response({'b': view_range[0], 'e': view_range[1]})
     except Exception as e:
         print(e)
@@ -825,10 +830,9 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     # TODO: Clean prints.
     # print(preferred_set_size, index, forwards)
     # TODO: Better way to get number of pars?
-    document_length = len(doc_info.document.get_paragraphs())
     if forwards:
         b = index
-        e = min(preferred_set_size + index, document_length - 1)
+        e = min(preferred_set_size + index, len(doc_info.document.get_paragraphs()))
     else:
         b = max(index - preferred_set_size, 0)
         e = index

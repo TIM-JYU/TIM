@@ -57,11 +57,11 @@ timApp.component("viewRangeNavigation", {
     template: `
     <div class="view-range-container" ng-if="$ctrl.currentRange">
         <div class="view-range-buttons">
-            <button ng-disabled="$ctrl.currentRange.b <= 0" class="timButton btn-sm"
-                ng-click="$ctrl.move($ctrl.prevRange, false)">Previous part</button>
-            <span ng-if="$ctrl.currentRange">[{{$ctrl.currentRange.b}}, {{$ctrl.currentRange.e}}]</span>
-            <button ng-disabled="$ctrl.currentRange.e >= $ctrl.lastIndex"  class="timButton btn-sm"
-                ng-click="$ctrl.move($ctrl.nextRange, true)">Next part</button>
+            <a ng-if="$ctrl.currentRange.b > 0" uib-tooltip="Navigate to part {{$ctrl.prevRange.b}} - {{$ctrl.prevRange.e}}"
+                ng-click="$ctrl.move($ctrl.prevRange, false)">Previous part</a>
+            <span ng-if="$ctrl.currentRange.b > 0 && $ctrl.currentRange.e < $ctrl.nextRange.e">|</span>
+            <a ng-if="$ctrl.currentRange.e < $ctrl.nextRange.e" uib-tooltip="Navigate to part {{$ctrl.nextRange.b}} - {{$ctrl.nextRange.e}}"
+                ng-click="$ctrl.move($ctrl.nextRange, true)">Next part</a>
         </div>
     </div>
     `,

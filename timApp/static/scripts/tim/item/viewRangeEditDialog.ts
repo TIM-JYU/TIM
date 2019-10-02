@@ -171,7 +171,14 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
         this.saveValues();
         if (this.partitionDocumentsSetting) {
             await setPieceSize(this.viewRangeSetting);
-            const range = await getViewRange(this.resolve.params.id, 0, true);
+            const b = new URL(document.location.href).searchParams.get("b");
+            let beginIndex = 0;
+            console.log(b);
+            if (b)  {
+                // TODO: Handle case when b is not a number.
+                beginIndex = +b;
+            }
+            const range = await getViewRange(this.resolve.params.id, beginIndex, true);
             if (range) {
                 partitionDocument(range.b, range.e);
             }
