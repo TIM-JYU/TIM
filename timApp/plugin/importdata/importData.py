@@ -224,19 +224,27 @@ def answer(args: ImportDataAnswerModel):
     rows = []
     wrong = 0
     wrongs = ""
+    users = {}
     for r in data:
         if not r:
             continue
         parts = r.split(separator)
         u = None
+        first_time = False
         error = ": unknown name"
         if len(parts) >= 3:
-            u = User.get_by_name(parts[0])
+            uname = parts[0]
+            u = users.get(uname, -1)
+            if u == -1:
+                u = User.get_by_name(uname)
+                users[uname] = u
+                first_time = True
         else:
             error = ": too few parts"
         if not u:
-            wrong += 1
-            wrongs += "\n" + r + error
+            if first_time:
+                wrong += 1
+                wrongs += "\n" + r + error
             continue
         uid = u.id
         ur = { 'user': uid, 'fields': {}}
