@@ -263,7 +263,7 @@ class TimTest(TimRouteTest):
             current_app.config['WTF_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE']
             self.create_doc(expect_status=400,
                             expect_content='The CSRF token is missing.',
-                            json_key='error')
+                            )
             self.json_post('/tape/multihtml/', [])
             self.json_post('/qst/multihtml/', [])
             self.json_post('/timTable/multihtml/', [])

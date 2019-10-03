@@ -58,13 +58,11 @@ class PluginTest(TimRouteTest):
         self.check_failed_answer(resp)
         self.post_answer(plugin_type, task_id_ext_wrong, [True, False, False],
                          expect_status=400,
-                         json_key='error',
                          expect_content=f'Invalid field access: {par_id}x')
 
         wrongname = 'mmcqexamplez'
         self.post_answer(plugin_type, str(doc.id) + '.' + wrongname, [True, False, False],
                          expect_status=400,
-                         json_key='error',
                          expect_content='Task not found in the document: mmcqexamplez')
 
         doc.document.set_settings({'global_plugin_attrs': {'all': {'answerLimit': 2}}})
@@ -696,7 +694,7 @@ deadline:
         self.post_answer(p.type, p.task_id.doc_task, [],
                          expect_status=400,
                          expect_content='Invalid date format: 15',
-                         json_key='error')
+                         )
         p = Plugin.from_paragraph(d.document.get_paragraphs()[1])
         self.post_answer(p.type, p.task_id.doc_task, [])
 
@@ -785,15 +783,16 @@ choices:
         par = d.document.get_paragraphs()[0]
         self.post_answer('mmcq', f'{d.id}.t1.1.{par.get_id()}', [],
                          expect_content='Task name can only have characters a-z, 0-9, "_" and "-".',
-                         json_key='error', expect_status=400)
+                         expect_status=400,
+                         )
 
         # TODO These two need better error messages.
         self.post_answer('mmcq', f't1.1.{par.get_id()}', [],
                          expect_content='Task name can only have characters a-z, 0-9, "_" and "-".',
-                         json_key='error', expect_status=400)
+                         expect_status=400)
         self.post_answer('mmcq', f'{par.get_id()}', [],
                          expect_content='The format of task id is invalid. Missing doc id.',
-                         json_key='error', expect_status=400)
+                         expect_status=400)
         r = self.get(d.url, as_tree=True)
         self.assert_content(r, [
             'Plugin mmcq error: Invalid field access: 1',
@@ -1107,7 +1106,6 @@ needed_len: 6
         r = self.post_answer('pali', f'{d.id}.t.points',
                              user_input={'userword': 'hi'},
                              expect_status=400,
-                             json_key='error',
                              expect_content='Points must be a number.')
 
         r = self.get(d.url, as_tree=True)
@@ -1171,7 +1169,6 @@ needed_len: 6
             self.post_answer(
                 'pali', f'{d.id}.t', user_input={'userword': '2'},
                 expect_status=403,
-                json_key='error',
                 expect_content='This task/field t is readonly and thus only writable for teachers.',
             )
             self.post_answer('pali', f'{d.id}.t::readonly', user_input={'userword': '3'}, expect_status=403)
@@ -1206,7 +1203,6 @@ initword: a""")
             },
             expect_status=400,
             expect_content='Non-existent answer',
-            json_key='error',
         )
         # not found because of wrong hint
         self.get(
@@ -1218,7 +1214,6 @@ initword: a""")
             },
             expect_status=400,
             expect_content='Task not found in the document: t (potentially because of wrong block id hint)',
-            json_key='error',
         )
         self.get(
             '/getState',
@@ -1231,7 +1226,6 @@ initword: a""")
             },
             expect_status=400,
             expect_content='Task not found in the document: t (potentially because of wrong block id hint)',
-            json_key='error',
         )
 
     def test_plugin_empty_markup(self):
@@ -1291,7 +1285,6 @@ print(x == '%%username%%')
             teacher=True,
             user_id=self.test_user_1.id,
             # expect_status=403,
-            # json_key='error',
             # expect_content='Permission denied: you are not in teachers group.'
         )
 
@@ -1318,7 +1311,6 @@ print(x == '%%username%%')
             user_id=999,
             expect_status=400,
             expect_content='User 999 not found',
-            json_key='error',
         )
 
     def test_invalid_global_attrs(self):

@@ -826,7 +826,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             bccme: this.emailbccme,
         });
         this.emailMsg = "Sent"; // JSON.stringify(response);
-        return;
     }
 
     // tslint:disable-next-line

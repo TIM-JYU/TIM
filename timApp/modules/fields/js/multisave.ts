@@ -7,7 +7,9 @@ import {ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {showMessageDialog} from "tim/ui/dialog";
+import {Users} from "tim/user/userService";
 import {$http} from "tim/util/ngimport";
+import {to} from "tim/util/utils";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize"]);
 export const moduleDefs = [multisaveApp];
@@ -114,7 +116,6 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             this.sendEmailTim();
             return;
         }
-        const w: any = window;
         // TODO: iPad do not like ;
         let  addrs = this.emaillist.replace(/\n/g, ",");
         let bcc = "";
@@ -124,7 +125,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         }
         if ( this.emailbccme ) {
             if ( bcc ) { bcc += ","; }
-            bcc += w.current_user.email;
+            bcc += Users.getCurrent().email;
         }
         window.location.href = "mailto:" + addrs
               + "?" + "subject=" + this.emailsubject
@@ -290,7 +291,7 @@ multisaveApp.component("multisaveRunner", {
         <p>
         <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox" ng-model="$ctrl.emailbcc">BCC</label>&nbsp;
         <label title="Send also a copy for me"><input type="checkbox" ng-model="$ctrl.emailbccme" >BCC also for me</label>&nbsp;
-        <label title="Send using TIM.  Every mail is send as a personal mail."><input type="checkbox" ng-model="$ctrl.emailtim" >use TIM to send</label>&nbsp;
+        <label title="Send using TIM. Every mail is sent as a personal mail."><input type="checkbox" ng-model="$ctrl.emailtim" >use TIM to send</label>&nbsp;
         </p>
         <p>Subject: <input ng-model="$ctrl.emailsubject" size="60"></p>
         <p>eMail content:</p>
@@ -298,7 +299,7 @@ multisaveApp.component("multisaveRunner", {
         <p>
         <button class="timButton"
                 ng-click="$ctrl.sendEmail()">
-                Lähetä
+                Send
         </button>
         <span class="savedtext" ng-if="$ctrl.emailMsg">Sent!</span>
         </p>

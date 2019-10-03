@@ -1,28 +1,24 @@
 # -*- coding: utf-8 -*-
 
 import time
-import traceback
 
 import requests
 from flask import Response
-from flask import g, abort, flash
+from flask import g, abort
 from flask import redirect
 from flask import render_template
 from flask import request
 from flask import session
 from flask_assets import Environment
 from flask_wtf.csrf import generate_csrf
-from markupsafe import Markup
-from marshmallow import ValidationError
-from werkzeug.contrib.profiler import ProfilerMiddleware
+from werkzeug.middleware.profiler import ProfilerMiddleware
 
 from timApp.admin.global_notification import global_notification
 from timApp.admin.routes import admin_bp
 from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
-from timApp.auth.accesshelper import verify_edit_access, verify_view_access, \
-    ItemLockedException, get_doc_or_abort, AccessDenied
-from timApp.auth.login import login_page, logout
+from timApp.auth.accesshelper import verify_edit_access
+from timApp.auth.login import login_page
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     logged_in, current_user_in_lecture
 from timApp.bookmark.bookmarks import Bookmarks
@@ -31,13 +27,12 @@ from timApp.document.course.routes import course_blueprint
 from timApp.document.course.validate import is_course
 from timApp.document.create_item import get_templates_for_folder
 from timApp.document.docentry import DocEntry
-from timApp.document.document import Document
 from timApp.document.editing.routes import edit_page
 from timApp.document.editing.routes_clipboard import clipboard
 from timApp.document.minutes.routes import minutes_blueprint
 from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
-from timApp.folder.folder import Folder
+from timApp.errorhandlers import register_errorhandlers
 from timApp.gamification.generateMap import generateMap
 from timApp.item.block import Block
 from timApp.item.manage import manage_page
@@ -45,11 +40,9 @@ from timApp.item.routes import view_page
 from timApp.item.routes_tags import tags_blueprint
 from timApp.item.tag import Tag, GROUP_TAG_PREFIX
 from timApp.lecture.routes import lecture_routes
-from timApp.markdown.dumboclient import DumboHTMLException
 from timApp.note.routes import notes
-from timApp.notification.notify import notify, send_email
+from timApp.notification.notify import notify
 from timApp.plugin.importdata.importData import importData_plugin
-from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.routes import plugin_bp
 from timApp.plugin.tableform.tableForm import tableForm_plugin
@@ -61,69 +54,72 @@ from timApp.readmark.routes import readings
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
 from timApp.tim_app import app, default_secret
-from timApp.timdb.exceptions import ItemAlreadyExistsException
-from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import NoSuchUserException
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
-from timApp.util.flask.requesthelper import get_request_message, JSONException
-from timApp.util.flask.responsehelper import json_response, ok_response, error_generic, text_response
+from timApp.util.flask.requesthelper import get_request_message
+from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.routes_static import static_bp
 from timApp.util.flask.search import search_routes
-from timApp.util.logger import log_info, log_error, log_debug, log_warning
-from timApp.util.utils import get_current_time
+from timApp.util.logger import log_info, log_debug, log_warning
 from timApp.velp.annotation import annotations
 from timApp.velp.velp import velps
 
 cache.init_app(app)
 
-app.register_blueprint(generateMap)
-app.register_blueprint(settings_page)
-app.register_blueprint(manage_page)
-app.register_blueprint(qst_plugin)
-app.register_blueprint(timMenu_plugin)
-app.register_blueprint(timTable_plugin)
-app.register_blueprint(tableForm_plugin)
-app.register_blueprint(importData_plugin)
-app.register_blueprint(tape_plugin)
-app.register_blueprint(edit_page)
-app.register_blueprint(view_page)
-app.register_blueprint(login_page)
-app.register_blueprint(answers)
-app.register_blueprint(velps)
-app.register_blueprint(annotations)
-app.register_blueprint(groups)
-app.register_blueprint(search_routes)
-app.register_blueprint(upload)
-app.register_blueprint(notes)
-app.register_blueprint(readings)
-app.register_blueprint(lecture_routes)
-app.register_blueprint(clipboard)
-app.register_blueprint(notify)
-app.register_blueprint(bookmarks)
-app.register_blueprint(global_notification)
-app.register_blueprint(static_bp)
-app.register_blueprint(print_blueprint)
-app.register_blueprint(minutes_blueprint)
-app.register_blueprint(tr_bp)
-app.register_blueprint(doc_bp)
-app.register_blueprint(admin_bp)
-app.register_blueprint(plugin_bp)
-app.register_blueprint(tags_blueprint)
-app.register_blueprint(course_blueprint)
-app.register_blueprint(scim)
-app.register_blueprint(feedback)
-app.register_blueprint(sisu)
+for bp in [
+    admin_bp,
+    annotations,
+    answers,
+    bookmarks,
+    clipboard,
+    course_blueprint,
+    doc_bp,
+    edit_page,
+    feedback,
+    generateMap,
+    global_notification,
+    groups,
+    lecture_routes,
+    login_page,
+    manage_page,
+    minutes_blueprint,
+    notes,
+    notify,
+    plugin_bp,
+    print_blueprint,
+    readings,
+    scim,
+    search_routes,
+    settings_page,
+    sisu,
+    static_bp,
+    tags_blueprint,
+    tr_bp,
+    upload,
+    velps,
+    view_page,
+
+    # plugins
+    importData_plugin,
+    qst_plugin,
+    tableForm_plugin,
+    tape_plugin,
+    timMenu_plugin,
+    timTable_plugin,
+]:
+    app.register_blueprint(bp)
+
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 assets = Environment(app)
 
+register_errorhandlers(app)
 
 @app.context_processor
 def inject_custom_css() -> dict:
@@ -149,123 +145,9 @@ def inject_bookmarks() -> dict:
     return dict(bookmarks=Bookmarks(User.query.get(get_current_user_id())).as_dict())
 
 
-@app.errorhandler(400)
-def bad_request(error):
-    return error_generic(error.description, 400)
-
-
-@app.errorhandler(422)
-def bad_request(error):
-    msgs = error.data.get('messages')
-    if msgs:
-        error.description = str(msgs)
-    return error_generic(error.description, 422)
-
-
-@app.errorhandler(AccessDenied)
-def access_denied(error):
-    return error_generic(str(error), 403)
-
-
-@app.errorhandler(PluginException)
-def access_denied(error):
-    return error_generic(str(error), 400)
-
-
-@app.errorhandler(ValidationError)
-def access_denied(error):
-    return error_generic(str(error), 400)
-
-
-@app.errorhandler(403)
-def forbidden(error):
-    return error_generic(error.description, 403)
-
-
-@app.errorhandler(JSONException)
-def already_exists(error: JSONException):
-    return error_generic(error.description, error.code)
-
-
-@app.errorhandler(ItemAlreadyExistsException)
-def already_exists(error: ItemAlreadyExistsException):
-    return error_generic(str(error), 403)
-
-
-@app.errorhandler(DumboHTMLException)
-def handle_dumbo_html_except(error: DumboHTMLException):
-    return error_generic(error.description, 400, template='dumbo_html_error.html')
-
-
-@app.errorhandler(500)
-def internal_error(error):
-    log_error(get_request_message(500, include_body=True))
-    help_email = app.config['HELP_EMAIL']
-    error.description = Markup('Something went wrong with the server, sorry. '
-                               'TIM developers have been notified about this. '
-                               'If the problem persists, please send email to '
-                               f'<a href="mailto:{help_email}">{help_email}</a>.')
-    tb = traceback.format_exc()
-    message = f"""
-Exception happened on {get_current_time()} at {request.url}
-
-{get_request_message(500, include_body=True)}
-
-{tb}
-""".strip()
-    db.session.rollback()
-    u = get_current_user_object()
-    send_email(rcpt=app.config['ERROR_EMAIL'],
-               subject=f'{app.config["TIM_HOST"]}: Error at {request.path} ({u.name})',
-               mail_from=app.config['WUFF_EMAIL'],
-               reply_to=f'{app.config["ERROR_EMAIL"]},{u.email}',
-               msg=message)
-    return error_generic(error.description, 500)
-
-
 @app.route('/empty')
 def empty_response_route():
     return Response('', mimetype='text/plain')
-
-
-@app.errorhandler(ItemLockedException)
-def item_locked(error: ItemLockedException):
-    item = DocEntry.find_by_id(error.access.block_id)
-    is_folder = False
-    if not item:
-        is_folder = True
-        item = Folder.get_by_id(error.access.block_id)
-    if not item:
-        abort(404)
-    return render_template('duration_unlock.html',
-                           item=item,
-                           item_type='folder' if is_folder else 'document',
-                           access=error.access), 403
-
-
-@app.errorhandler(NoSuchUserException)
-def handle_user_not_found(error):
-    if error.user_id == session['user_id']:
-        flash(f'Your user id ({error.user_id}) was not found in the database. Clearing session automatically.')
-        return logout()
-    return error_generic(error.description, 500)
-
-
-@app.errorhandler(503)
-def service_unavailable(error):
-    return error_generic(error.description, 503)
-
-
-@app.errorhandler(413)
-def entity_too_large(error):
-    error.description = 'Your file is too large to be uploaded. ' +\
-        f'Maximum size is {app.config["MAX_CONTENT_LENGTH"] / 1024 / 1024} MB.'
-    return error_generic(error.description, 413)
-
-
-@app.errorhandler(404)
-def not_found(error):
-    return error_generic(error.description, 404)
 
 
 @app.route("/ping")
@@ -291,25 +173,6 @@ def get_templates():
     verify_edit_access(d)
     templates = get_templates_for_folder(d.parent)
     return json_response(templates)
-
-
-@app.route("/index/<int:doc_id>")
-def get_index(doc_id):
-    d = get_doc_or_abort(doc_id)
-    verify_view_access(d)
-    index = Document(doc_id).get_index()
-    if not index:
-        return json_response({'empty': True})
-    else:
-        return render_template('partials/content.html',
-                               headers=index)
-
-
-@app.route("/getServerTime", methods=['GET'])
-def get_server_time():
-    t2 = int(time.time() * 1000)
-    t1 = int(request.args.get('t1'))
-    return json_response({'t1': t1, 't2': t2, 't3': int(time.time() * 1000)})
 
 
 def update_user_course_bookmarks():

@@ -1,7 +1,7 @@
 """Answer-related routes."""
 import json
 import re
-from typing import Union, List, Tuple, Dict, Optional, Any
+from typing import Union, List, Tuple, Dict, Optional, Any, Callable
 
 from dataclasses import dataclass, field
 from flask import Blueprint
@@ -41,7 +41,6 @@ from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
-from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -312,11 +311,14 @@ class RefFrom:
     par: str
 
 
+AnswerData = Dict[str, Any]
+
+
 @dataclass
 class JsRunnerAnswerModel:
     input: JsRunnerInputModel
     ref_from: Optional[RefFrom] = None
-    abData: Union[Dict[str, Any], Missing] = missing
+    abData: Union[AnswerData, Missing] = missing
 
 
 JsRunnerAnswerSchema = class_schema(JsRunnerAnswerModel)
@@ -586,7 +588,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     return json_response(result)
 
 
-def preprocess_jsrunner_answer(answerdata: Dict[str, Any], curr_user: User, d: DocInfo, plugin: Plugin):
+def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocInfo, plugin: Plugin):
     """Executed before the actual jsrunner answer route is called.
     This is required to fetch the requested data from the database."""
 
@@ -641,12 +643,12 @@ def preprocess_jsrunner_answer(answerdata: Dict[str, Any], curr_user: User, d: D
         raise PluginException("Attribute 'program' is required.")
 
 
-answer_call_preprocessors = {
-    'jsrunner': preprocess_jsrunner_answer
+answer_call_preprocessors: Dict[str, Callable[[AnswerData, User, DocInfo, Plugin], None]] = {
+    'jsrunner': preprocess_jsrunner_answer,
 }
 
 
-def handle_points_ref(answerdata: Dict[str, Any], curr_user: User, d: DocInfo, ptype: PluginType, tid: TaskId):
+def handle_points_ref(answerdata: AnswerData, curr_user: User, d: DocInfo, ptype: PluginType, tid: TaskId):
     verify_teacher_access(d)
     given_points = answerdata.get(ptype.get_content_field_name())
     if given_points is not None:

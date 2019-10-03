@@ -675,7 +675,6 @@ class ScimTest(TimRouteTest):
             ],
             expect_status=400,
             expect_content='Usergroup must contain at least one digit and one letter and must not have special chars: "teachers"' ,
-            json_key='error',
         )
 
         r = self.json_post(
@@ -737,7 +736,6 @@ class ScimTest(TimRouteTest):
             ],
             expect_status=403,
             expect_content="Item with a same name already exists.",
-            json_key='error',
         )
 
         # Make sure there won't be duplicate mails for responsible teachers.
@@ -844,7 +842,6 @@ class ScimTest(TimRouteTest):
             f'/groups/removemember/{ug.name}', {'names': ['abc']},
             expect_status=400,
             expect_content='Cannot remove not-manually-added users from Sisu groups.',
-            json_key='error',
         )
         self.json_post(
             f'/groups/removemember/{ug.name}', {'names': ['anon@example.com']}
@@ -863,7 +860,6 @@ class ScimTest(TimRouteTest):
             ],
             expect_status=403,
             expect_content=f"You don't have access to all the requested groups: {seq_to_str(no_access_expected)}",
-            json_key='error',
         )
 
     def check_potential_groups(self, uname: str, expected):

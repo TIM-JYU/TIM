@@ -36,7 +36,6 @@ class FolderTest(TimRouteTest):
             f'/folders/{f2.id}',
             expect_status=400,
             expect_content='Folder is already deleted.',
-            json_key='error',
         )
         self.get(f'/folders/{f2.id}', expect_status=404)
         d2 = DocEntry.find_by_path(doc_path)
@@ -347,7 +346,6 @@ class FolderCopyTest(TimRouteTest):
             f'/copy/{a.id}',
             {'destination': self.get_personal_item_path('b'), 'exclude': ''},
             expect_content='Document already exists at path users/test-user-2/b/d1',
-            json_key='error',
             expect_status=403,
         )
 

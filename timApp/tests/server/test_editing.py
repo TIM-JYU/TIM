@@ -25,11 +25,11 @@ class EditTest(TimRouteTest):
                          expect_content={'error': f'Paragraph {invalid_par} does not exist'})
         self.get(f'/getBlock/{d.id}/{invalid_par}', expect_status=404,
                  expect_content='Paragraph not found. It may have been deleted.',
-                 json_key='error')
+                 )
         self.get(f'/getBlock/{d.id}/{par_id}', query_string={'area_start': par_id, 'area_end': invalid_par},
                  expect_status=404,
                  expect_content='Area not found. It may have been deleted.',
-                 json_key='error')
+                 )
 
     def test_duplicate_task_ids(self):
         self.login_test1()
@@ -103,7 +103,7 @@ class EditTest(TimRouteTest):
                         'original': orig_text},
                        expect_status=400,
                        expect_content=f'Multiple areas with same name noticed in paragraph {par_ids[2]}\nDuplicate area end noticed in paragraph {par_ids[3]}',
-                       json_key='error')
+                       )
         self.json_post(f'/update/{d.id}',
                        {'fulltext': f"""
 #- {{id={par_ids[0]}}}
@@ -112,7 +112,7 @@ class EditTest(TimRouteTest):
                         'original': orig_text},
                        expect_status=400,
                        expect_content=f'Duplicate paragraph id noticed in paragraph {par_ids[0]}',
-                       json_key='error')
+                       )
         self.json_post(f'/update/{d.id}',
                        {'fulltext': f"""
 #- {{id=xxxx}}
@@ -120,7 +120,7 @@ class EditTest(TimRouteTest):
                         'original': orig_text},
                        expect_status=400,
                        expect_content=f'Invalid paragraph id noticed in paragraph xxxx',
-                       json_key='error')
+                       )
         self.json_post(f'/update/{d.id}',
                        {'fulltext': """
 ```
@@ -129,7 +129,7 @@ class EditTest(TimRouteTest):
                         'original': orig_text},
                        expect_status=400,
                        expect_contains=f'Attributes at end of code block noticed in paragraph ',
-                       json_key='error')
+                       )
 
     def test_new_from_help_par(self):
         self.login_test1()
@@ -215,8 +215,13 @@ class EditTest(TimRouteTest):
 
         self.login_test2()
         self.post_par(d.document, 'asd', par1.get_id())
-        self.post_par(d.document, 'testing', par_manage.get_id(), expect_status=403, json_key='error',
-                      expect_content=f'Only users with manage access can edit this paragraph ({par_manage.get_id()}).')
+        self.post_par(
+            d.document,
+            'testing',
+            par_manage.get_id(),
+            expect_status=403,
+            expect_content=f'Only users with manage access can edit this paragraph ({par_manage.get_id()}).',
+        )
         self.update_whole_doc(d, '', expect_status=403)
         self.post_area(d, '', par1.get_id(), par3.get_id(), expect_status=403)
         self.delete_area(d, par1.get_id(), par3.get_id(), expect_status=403)

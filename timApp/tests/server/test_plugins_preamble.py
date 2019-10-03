@@ -83,7 +83,6 @@ choices:
         # The plugin is a reference, so it exists only in the original document.
         self.post_answer(plug.type, f'{d.id}.t', [True],
                          expect_status=400,
-                         json_key='error',
                          expect_content='Plugin not found',
                          )
 

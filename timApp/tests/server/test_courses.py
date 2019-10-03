@@ -68,7 +68,6 @@ class CoursesTest(TimRouteTest):
             f'/bookmarks/addCourse', {'path': d.path, 'require_group': True},
             expect_status=400,
             expect_content='Document is not tagged as a course',
-            json_key='error',
         )
 
         d = DocEntry.find_by_id(d.id)
@@ -78,5 +77,4 @@ class CoursesTest(TimRouteTest):
             f'/bookmarks/addCourse', {'path': d.path, 'require_group': True},
             expect_status=400,
             expect_content='Course does not allow manual enrollment.',
-            json_key='error',
         )

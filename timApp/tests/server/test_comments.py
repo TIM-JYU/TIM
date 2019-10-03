@@ -67,7 +67,7 @@ class CommentTest(NotifyTestBase):
         self.get('/note/999',
                  expect_status=404,
                  expect_content='Comment not found. It may have been deleted.',
-                 json_key='error')
+                 )
 
     def test_nonexistent_note_post(self):
         self.login_test1()
@@ -78,7 +78,7 @@ class CommentTest(NotifyTestBase):
                           par=DocParagraph.create(d.document, par_id='x'),
                           expect_status=404,
                           expect_content=f'Document {d.id}: Paragraph not found: x',
-                          json_key='error')
+                          )
 
     def test_note_notify(self):
         self.login_test1()
@@ -152,7 +152,7 @@ class CommentTest(NotifyTestBase):
         self.post_comment(par, public=True, text='test',
                           expect_status=403,
                           expect_content='Only private comments can be posted on this document.',
-                          json_key='error')
+                          )
         c = self.post_comment(par, public=False, text='test')
         self.json_post('/editNote', {'id': get_note_id_from_json(c),
                                      'text': 'edited',

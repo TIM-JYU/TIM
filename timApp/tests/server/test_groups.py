@@ -52,7 +52,6 @@ class GroupTest(TimRouteTest):
                 self.get(
                     f'/groups/usergroups/{t1}',
                     expect_status=403,
-                    json_key='error',
                     expect_content='This action requires administrative rights.',
                 )
                 self.get(

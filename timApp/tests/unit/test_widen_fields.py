@@ -1,12 +1,9 @@
 from unittest import TestCase
+
 from timApp.util.utils import widen_fields, get_alias
 
 
-class TestWiden_fields(TestCase):
-    def test_comparesame(self):
-        pass
-        #  self.assertEqual(True, compare_same("cat", "cat", 0), "t0")
-
+class TestWidenFields(TestCase):
     def test_widen_fields(self):
         s1 = ["d1"]
         e1 = ["d1"]
@@ -70,8 +67,9 @@ class TestWiden_fields(TestCase):
     def test_widen_fields10(self):
         r1 = widen_fields("d:cbfield(1,2)")
         self.assertEqual(["d1:cbfield", "d2:cbfield"], r1, "Not same extra : case")
-    ##############################################################
-class Testget_alias(TestCase):
+
+
+class TestgetAlias(TestCase):
 
     def test_get_name1(self):
         self.assertEqual("d", get_alias("d"), "Not same in pure name")
@@ -81,10 +79,12 @@ class Testget_alias(TestCase):
         self.assertEqual("d3", get_alias("543.d3.points"), "Not same with docid and points")
 
     def test_get_name3(self):
-        self.assertEqual("t", get_alias("189279.t(1,4).points[2018-04-06 15:66:94, 2019-06-05 12:12:12]"), "Not same in complex version")
+        self.assertEqual("t", get_alias("189279.t(1,4).points[2018-04-06 15:66:94, 2019-06-05 12:12:12]"),
+                         "Not same in complex version")
 
     def test_get_name4(self):
-        self.assertEqual("t3", get_alias("189279.t3.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]"), "Not same with points and date")
+        self.assertEqual("t3", get_alias("189279.t3.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]"),
+                         "Not same with points and date")
 
     def test_get_name5(self):
         self.assertEqual("t3", get_alias("189279.t3.[2018-04-06 15:66:94, 2019-06-05 12:12:12]"), "Not same with date")

@@ -1,11 +1,9 @@
 from unittest import TestCase
+
 from timApp.plugin.plugin import find_inline_plugins_from_str
 
-class TestFind_inline_plugins(TestCase):
-    def test_comparesame(self):
-        pass
-        #  self.assertEqual(True, compare_same("cat", "cat", 0), "t0")
 
+class TestFindInlinePlugins(TestCase):
     def test_find_inline_plugins1(self):
         #               1         2         3         4         5         6         7         8
         #     0123456789012345678901234567890123456 78901234567890123456789012345678901234567890
@@ -14,7 +12,9 @@ class TestFind_inline_plugins(TestCase):
         r1 = find_inline_plugins_from_str(s1)
         for p_task_id, p_yaml, p_range, md in r1:
             self.assertEqual("yhtpisteet2", p_task_id.s, "Not same task_id")
-            self.assertEqual(" autosave: true, inputstem: Pisteet yhteensä, verticalkeys: true, header: '*kana*', stem: '[Puh]{.red}'", p_yaml, "Not same yaml")
+            self.assertEqual(
+                " autosave: true, inputstem: Pisteet yhteensä, verticalkeys: true, header: '*kana*', stem: '[Puh]{.red}'",
+                p_yaml, "Not same yaml")
             self.assertEqual("(7, 125)", str(p_range), "Not same range")
 
     def test_find_inline_plugins2(self):

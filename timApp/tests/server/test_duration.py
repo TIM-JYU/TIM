@@ -57,11 +57,9 @@ class DurationTest(TimRouteTest):
         err_msg_too_late = f'You cannot unlock this item anymore (deadline expired {humanize_datetime(now_minus_minutes)}).'
         self.get(d.url_relative,
                  expect_status=403,
-                 json_key='error',
                  expect_contains=[err_msg_too_early])
         self.get(d.url_relative, query_string={'unlock': 'true'},
                  expect_status=403,
-                 json_key='error',
                  expect_contains=[err_msg_too_early])
 
         grant_access(self.test_user_2.get_personal_group(), d, 'view',
@@ -69,11 +67,9 @@ class DurationTest(TimRouteTest):
                      duration_to=now_minus_minutes)
         self.get(d.url_relative,
                  expect_status=403,
-                 json_key='error',
                  expect_contains=[err_msg_too_late])
         self.get(d.url_relative, query_string={'unlock': 'true'},
                  expect_status=403,
-                 json_key='error',
                  expect_contains=[err_msg_too_late])
 
         grant_access(self.test_user_2.get_personal_group(), d, 'view',

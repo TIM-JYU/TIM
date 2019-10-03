@@ -1,5 +1,7 @@
 from unittest import TestCase
+
 from timApp.markdown.markdownconverter import genfields, gfrange
+
 
 class TestGenfields(TestCase):
     def test_genfields(self):

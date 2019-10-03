@@ -13,23 +13,23 @@ class PrintingTest(TimRouteTest):
     def test_print_invalid_request(self):
         self.login_test1()
         d = self.create_doc()
-        self.json_post(f'/print/x', expect_status=404, expect_content='Document not found', json_key='error')
-        self.json_post(f'/print/{d.path}', expect_status=400, expect_content='No filetype selected.', json_key='error')
+        self.json_post(f'/print/x', expect_status=404, expect_content='Document not found')
+        self.json_post(f'/print/{d.path}', expect_status=400, expect_content='No filetype selected.')
         self.json_post(f'/print/{d.path}', {}, expect_status=400, expect_content='No filetype selected.',
-                       json_key='error')
+                       )
         self.json_post(f'/print/{d.path}', {'fileType': 'x'}, expect_status=400,
-                       expect_content='No template doc selected.', json_key='error')
+                       expect_content='No template doc selected.')
         self.json_post(f'/print/{d.path}', {'fileType': 'x', 'templateDocId': 'x'}, expect_status=400,
-                       expect_content='No value for printPluginsUserCode submitted.', json_key='error')
+                       expect_content='No value for printPluginsUserCode submitted.')
         self.json_post(f'/print/{d.path}', {'fileType': 'x', 'templateDocId': 99, 'printPluginsUserCode': False},
                        expect_status=400,
-                       expect_content="The supplied parameter 'fileType' is invalid.", json_key='error')
+                       expect_content="The supplied parameter 'fileType' is invalid.")
         self.json_post(f'/print/{d.path}', {'fileType': 'latex', 'templateDocId': 'x', 'printPluginsUserCode': False},
                        expect_status=400,
-                       expect_content='Invalid template doc id', json_key='error')
+                       expect_content='Invalid template doc id')
         self.json_post(f'/print/{d.path}', {'fileType': 'latex', 'templateDocId': 99, 'printPluginsUserCode': False},
                        expect_status=400,
-                       expect_content='There is no template with id 99', json_key='error')
+                       expect_content='There is no template with id 99')
 
         self.login_test2()
         self.json_post(f'/print/{d.path}', expect_status=403)

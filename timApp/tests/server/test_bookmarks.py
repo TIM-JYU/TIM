@@ -156,7 +156,6 @@ class BookmarkTest2(BookmarkTestBase):
             params,
             expect_status=400,
             expect_content='Document is not tagged as a course',
-            json_key='error',
         )
         d = self.refresh(d)
         d.block.tags.append(Tag(type=TagType.CourseCode, name='XXXX111'))
@@ -166,7 +165,6 @@ class BookmarkTest2(BookmarkTestBase):
             params,
             expect_status=400,
             expect_content='Course does not allow manual enrollment.',
-            json_key='error',
         )
         d.document.set_settings({'course_allow_manual_enroll': True})
         self.json_post(
@@ -174,7 +172,6 @@ class BookmarkTest2(BookmarkTestBase):
             params,
             expect_status=400,
             expect_content='Document does not have associated course group',
-            json_key='error',
         )
         d.document.add_setting('group', 'testcourse')
         self.json_post(
@@ -182,7 +179,6 @@ class BookmarkTest2(BookmarkTestBase):
             params,
             expect_status=400,
             expect_content='The specified course group "testcourse" does not exist.',
-            json_key='error',
         )
         UserGroup.create('testcourse')
         db.session.commit()
@@ -191,7 +187,6 @@ class BookmarkTest2(BookmarkTestBase):
             params,
             expect_status=400,
             expect_content='Document group setting not found in tags.',
-            json_key='error',
         )
         d = self.refresh(d)
         d.block.tags.append(Tag(type=TagType.Regular, name='group:testcourse'))
@@ -201,7 +196,6 @@ class BookmarkTest2(BookmarkTestBase):
             params,
             expect_status=400,
             expect_content='Some of the document owners does not have edit access to the course group "testcourse".',
-            json_key='error',
         )
         nd = self.create_doc()
         ug = UserGroup.get_by_name('testcourse')

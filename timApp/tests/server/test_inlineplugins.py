@@ -130,7 +130,6 @@ Hi {#t3#} $x$
             task_id=f'{d.id}.t5',
             user_input={'userword': 'aaaaaa'},
             expect_status=400,
-            json_key='error',
             expect_content='Task not found in the document: t5',
         )
 

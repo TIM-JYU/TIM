@@ -58,9 +58,9 @@ class TestSignUp(TimRouteTest):
              'email': email,
              'password': test_pw,
              'passconfirm': test_pw},
-            expect_contains='Wrong temporary password. Please re-check your email to see the password.',
+            expect_content='Wrong temporary password. Please re-check your email to see the password.',
             expect_status=400,
-            json_key='error')
+        )
 
         self.json_post(
             '/altsignup',
@@ -88,8 +88,7 @@ class TestSignUp(TimRouteTest):
              'token': test_pws[-1],
              'password': test_pw,
              'passconfirm': 'somepwd1232'},
-            expect_contains='Passwords do not match.',
-            json_key='error',
+            expect_content='Passwords do not match.',
             expect_status=400)
         self.assertFalse(self.is_logged_in)
 
@@ -105,8 +104,7 @@ class TestSignUp(TimRouteTest):
              'token': test_pws[-1],
              'password': 'test',
              'passconfirm': 'test'},
-            expect_contains='A password should contain at least 10 characters.',
-            json_key='error',
+            expect_content='A password should contain at least 10 characters.',
             expect_status=400,
         )
         self.assertFalse(self.is_logged_in)
@@ -123,8 +121,7 @@ class TestSignUp(TimRouteTest):
              'token': 'asdasd',
              'password': test_pw,
              'passconfirm': test_pw},
-            expect_contains='Wrong temporary password. Please re-check your email to see the password.',
-            json_key='error',
+            expect_content='Wrong temporary password. Please re-check your email to see the password.',
             expect_status=400,
         )
         self.assertFalse(self.is_logged_in)
@@ -305,8 +302,8 @@ class TestSignUp(TimRouteTest):
         self.login(email='a@example.com', passw='somepass', force=True,
                    expect_status=403,
                    expect_content=basic_error,
-                   json_key='error')
+                   )
         self.login(email='a@jyu.fi', passw='somepass', force=True,
                    expect_status=403,
                    expect_content=jyu_error,
-                   json_key='error')
+                   )

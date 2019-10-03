@@ -221,6 +221,8 @@ class TimRouteTest(TimDbTest):
         resp_data = resp.get_data(as_text=is_textual)
         if not is_textual:
             return resp_data
+        if expect_status >= 400 and json_key is None and (isinstance(expect_content, str) or isinstance(expect_contains, str)):
+            json_key = 'error'
         if as_tree:
             if json_key is not None:
                 resp_data = json.loads(resp_data)[json_key]

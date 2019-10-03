@@ -77,7 +77,6 @@ class JsRunnerTest(JsRunnerTestBase):
                 d,
                 expect_content=e,
                 expect_status=s,
-                json_key='error' if s >= 400 else None,
             )
 
 
@@ -252,7 +251,6 @@ program: ''
                 d,
                 expect_content=e,
                 expect_status=s,
-                json_key='error' if s >= 400 else None,
             )
 
     def test_multiple_documents(self):
@@ -366,7 +364,6 @@ tools.setString("{d.id}.t", "hi");
             d2,
             expect_content=f'Missing teacher access for document {d.id}',
             expect_status=403,
-            json_key='error',
         )
         d2 = self.create_jsrun(f"""
 group: testuser2
@@ -379,7 +376,6 @@ tools.setString("{d.id}.t", "hi");
             d2,
             expect_content=f'Missing teacher access for document {d.id}',
             expect_status=403,
-            json_key='error',
         )
 
         # Can write own answer to another doc via jsrunner if teacher access there
@@ -406,7 +402,6 @@ tools.setString("{d.id}.t", "hi_ext");
             d2,
             expect_content=f'Missing teacher access for document {d.id}',
             expect_status=403,
-            json_key='error',
         )
         self.test_user_2.grant_access(d, 'view')
         self.do_jsrun(
@@ -462,7 +457,6 @@ showInView: true
             d2,
             expect_content=f'Missing teacher access for document {d2.id}',
             expect_status=403,
-            json_key='error',
         )
         self.do_jsrun(
             d3,
@@ -694,7 +688,6 @@ program: |!!
                 d,
                 expect_content=e,
                 expect_status=s,
-                json_key='error' if s >= 400 else None,
             )
         d.document.set_settings(
             {
@@ -711,7 +704,6 @@ program: |!!
             d,
             expect_content='Unknown tally field: x. Valid tally fields are: total_points, velp_points, task_points, task_count, velped_task_count, 1st, 2nd and 3rd.',
             expect_status=400,
-            json_key='error',
         )
 
     def test_deleted_users(self):
@@ -761,7 +753,6 @@ tools.print(tools.getLeaveDate());
             user_input={'includeUsers': 'current'},
             expect_status=403,
             expect_content='Not allowed to select includeUsers option.',
-            json_key='error',
         )
         self.do_jsrun(
             d,
@@ -775,7 +766,6 @@ tools.print(tools.getLeaveDate());
             user_input={'includeUsers': 'current'},
             expect_status=403,
             expect_content='Not allowed to select includeUsers option.',
-            json_key='error',
         )
         self.do_jsrun(
             d,
