@@ -36,11 +36,14 @@ class ImportDataMarkupModel(GenericMarkupModel):
     borders: Union[bool, Missing, None] = missing
     docid: Union[int, Missing, None] = missing
     fields: Union[List[str], Missing] = missing
+    fieldsReqExps: Union[List[str], Missing] = missing
     loadButtonText: Union[str, Missing, None] = missing
     open: Union[bool, Missing, None] = missing
     placeholder: Union[str, Missing, None] = missing
     prefilter: Union[str, Missing, None] = missing
     separator: Union[str, Missing, None] = missing
+    userprefix: Union[str, Missing, None] = missing
+    userIdField: Union[int, Missing, None] = missing
     upload: Union[bool, Missing, None] = missing
     uploadstem: Union[str, Missing, None] = missing
     url: Union[str, Missing, None] = missing
@@ -48,6 +51,7 @@ class ImportDataMarkupModel(GenericMarkupModel):
     usefields: Union[bool, Missing, None] = missing
     useseparator: Union[bool, Missing, None] = missing
     useurl: Union[bool, Missing, None] = missing
+    ignoreMissing: Union[bool, Missing, None] = missing
 
 
 @dataclass
@@ -192,9 +196,17 @@ def answer(args: ImportDataAnswerModel):
     sdata = args.input.data
     defaultseparator = args.markup.separator or ";"
     separator = args.input.separator or defaultseparator
+    fieldsReqExps = args.markup.fieldsReqExps
+    userIdField = args.markup.userIdField or -1
     data = sdata.split("\n")
     output = ""
     field_names = args.input.fields
+    """
+    if separator != ',' and field_names:
+        for i in range(0, len(field_names)):
+            fn = field_names[i]
+            fn = fn.replace(separator, ';')
+    """
     data = convert_data(data, field_names, separator)
     if args.markup.prefilter:
         params = {'code': args.markup.prefilter, 'data': data}
@@ -241,7 +253,8 @@ def answer(args: ImportDataAnswerModel):
 
     if wrong:
         wrongs = "\nWrong lines: " + str(wrong) + "\n" + wrongs
-    jsonresp = { 'savedata': rows,
+    jsonresp = { 'ignoreMissing': args.markup.ignoreMissing,
+                 'savedata': rows,
                  'web' : { 'result': output + "Imported " + str(len(rows)) + wrongs} }
 
     save = {}

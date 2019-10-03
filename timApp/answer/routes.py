@@ -686,6 +686,8 @@ def post_answer(plugintype: str, task_id_ext: str):
 def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allow_non_teacher = False):
     # TODO: Might need to rewrite this function for optimization
     save_obj = jsonresp.get('savedata')
+    ignore_missing = jsonresp.get('ignoreMissing', False)
+    ignore_fields = {}
     if not save_obj:
         return
     tasks = set()
@@ -706,12 +708,19 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
     curr_user = get_current_user_object()
     for task in tasks:
         t_id = TaskId.parse(task, require_doc_id=False, allow_block_hint=False, allow_custom_field=True)
+        if ignore_fields.get(t_id.doc_task, False):
+            continue
         dib = doc_map[t_id.doc_id]
         # TODO: Return case-specific abort messages
         if not (curr_user.has_teacher_access(dib) or (allow_non_teacher and t_id.doc_id == current_doc.id) or (curr_user.has_view_access(dib) and dib.document.get_own_settings().get("allow_external_jsrunner", False))):
             return abort(403, f'Missing teacher access for document {dib.id}')
         try:
             plugin = verify_task_access(dib, t_id, AccessType.view, TaskIdAccess.ReadWrite)  # , context_user=ctx_user)
+        except (TaskNotFoundException) as e:
+            if ignore_missing:
+                ignore_fields[t_id.doc_task] = True
+                continue
+            return abort(400, str(e))
         except (PluginException, TimDbException) as e:
             return abort(400, str(e))
 
@@ -744,6 +753,8 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
         task_map = {}
         for key, value in user_fields.items():
             task_id = TaskId.parse(key, require_doc_id=False, allow_block_hint=False, allow_custom_field=True)
+            if ignore_fields.get(task_id.doc_task, False):
+                continue
             field = task_id.field
             if field is None:
                 field = task_content_name_map[task_id.doc_task]
@@ -754,6 +765,8 @@ def handle_jsrunner_response(jsonresp, result, current_doc: DocInfo = None, allo
                 task_map[task_id.doc_task][field] = value
         for taskid, contents in task_map.items():
             task_id = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
+            if ignore_fields.get(task_id.doc_task, False):
+                continue
             an: Answer = get_latest_answers_query(task_id, [u]).first()
             points = None
             content = {}
