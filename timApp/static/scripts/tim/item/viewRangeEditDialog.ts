@@ -53,7 +53,7 @@ export function partitionDocument(b: number, e: number) {
 export async function unsetPieceSize() {
     const r = await to($http.get<number>(`/viewrange/unset/piecesize`));
     if (!r.ok) {
-        console.error("Failed to remove view range cookie: " + r);
+        console.error("Failed to remove view range cookie!");
     }
 }
 
@@ -61,7 +61,7 @@ export async function setPieceSize(pieceSize: number) {
     const data = {pieceSize: pieceSize};
     const r = await to($http.post(`/viewrange/set/piecesize`, data));
     if (!r.ok) {
-        console.error("Failed to set view range cookie: " + r);
+        console.error("Failed to set view range cookie!");
     }
 }
 
@@ -145,7 +145,7 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
     private partitionDocumentsSetting: boolean = false;
     private viewRangeSetting: number = 20;
     private storage: ngStorage.StorageService & {
-        pieceSize: null | string,
+        pieceSize: null | number,
     };
 
     constructor(protected element: IRootElementService, protected scope: IScope) {
@@ -178,7 +178,7 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
      * Save new values to local storage.
      */
     private saveValues() {
-        this.storage.pieceSize = this.viewRangeSetting.toString();
+        this.storage.pieceSize = this.viewRangeSetting;
     }
 
     /*
@@ -198,7 +198,6 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
             const b = new URL(document.location.href).searchParams.get("b");
             let beginIndex = 0;
             if (b)  {
-                // TODO: Handle case when b is not a number.
                 beginIndex = +b;
             }
             const range = await getViewRange(this.resolve.params.id, beginIndex, true);
@@ -229,26 +228,22 @@ registerDialogComponent(ViewRangeEditController,
     <dialog-body>
         <div>
             <h4>{{$ctrl.header}}</h4>
-            <p>Toggle showing documents in smaller parts and edit the step size.</p>
-            <div>
-                <label class="footerLabel">Enable partitioning documents
-                    <input type="checkbox" ng-model="$ctrl.partitionDocumentsSetting">
-                </label>
-            </div>
+            <span>Toggle showing documents in smaller parts and edit the number of paragraphs shown per part.</span>
             <br>
-            <label>Number of paragraphs shown per part:
-            <input ng-model="$ctrl.viewRangeSetting" type="number" min="1"
-                        title="Enter how many paragraphs are shown at a time">
-            </label>
+            <br>
+            <label title="Enable partitioning TIM documents">Enable partitioning documents: <input type="checkbox"
+                ng-model="$ctrl.partitionDocumentsSetting"></label>
+            <br>
+            <label title="Enter how many paragraphs are shown at a time">Piece size: <input
+                ng-model="$ctrl.viewRangeSetting" type="number" min="1"></label>
         </div>
         <br>
-        <div ng-cloak class="alert alert-warning">
-            <span class="glyphicon glyphicon-exclamation-sign"></span> Note: the page may reload if changes are saved.
-        </div>
+        <tim-alert severity="info">Note: the page may reload when the changes are saved.</tim-alert>
     </dialog-body>
     <dialog-footer>
-        <button style="float: left;" title="Return default settings" class="timButton" ng-click="$ctrl.returnDefaults()">Return defaults</button>
-        <button class="timButton" title="Quit and reload page with chosen settings" ng-click="$ctrl.ok()">Ok</button>
+        <button style="float: left;" title="Return default settings" class="timButton"
+            ng-click="$ctrl.returnDefaults()">Return defaults</button>
+        <button class="timButton" title="Quit and save changes" ng-click="$ctrl.ok()">Ok</button>
         <button class="timButton" title="Quit and discard changes" ng-click="$ctrl.dismiss()">Cancel</button>
     </dialog-footer>
 </tim-dialog>

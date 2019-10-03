@@ -69,7 +69,7 @@ export class SidebarMenuCtrl implements IController {
     // undefined means that the user has not acknowledged anything yet
     private storage: ngStorage.StorageService & {
         consent: null | undefined | number,
-        pieceSize: null | string,
+        pieceSize: null | number,
     };
     private currentRelevance?: number;
     private showRelevance: boolean = true;

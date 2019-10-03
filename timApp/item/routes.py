@@ -779,6 +779,7 @@ def unset_piece_size():
 class SetViewRangeModel:
     pieceSize: int
 
+
 @view_page.route('/viewrange/set/piecesize', methods=["POST"])
 @use_args(class_schema(SetViewRangeModel)())
 def set_piece_size(args: SetViewRangeModel):

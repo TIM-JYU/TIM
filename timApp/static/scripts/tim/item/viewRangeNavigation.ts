@@ -14,6 +14,7 @@ import {
     IViewRange,
     partitionDocument,
     showViewRangeEditDialog,
+    unpartitionDocument,
 } from "./viewRangeEditDialog";
 
 class ViewRangeNavigation implements IController {
@@ -66,6 +67,13 @@ class ViewRangeNavigation implements IController {
     private openViewRangeMenu() {
         void showViewRangeEditDialog(this.item);
         this.currentRange = getCurrentViewRange();
+    }
+
+    /**
+     * Remove partitioning and reload full document.
+     */
+    private async close() {
+        await unpartitionDocument();
     }
 }
 
