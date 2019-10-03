@@ -25,6 +25,8 @@ class ViewRangeNavigation implements IController {
 
     async $onInit() {
         // TODO: Handle user manually entering view range into the URL.
+        // TODO: Get results for both instances of the component on page with same call.
+        // TODO: Nav component disappears if partitioning is done noly via URL params (i.e. disabled on other tab & reloaded).
         void this.getRanges();
     }
 

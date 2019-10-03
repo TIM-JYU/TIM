@@ -6,6 +6,7 @@ import {IRootElementService, IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {documentglobals} from "../util/globals";
 import {$http, $localStorage} from "../util/ngimport";
 import {markAsUsed, to} from "../util/utils";
 import {IItem} from "./IItem";
@@ -16,11 +17,21 @@ markAsUsed(focusMe);
 export const viewRangeRegExp = new RegExp("\&b=\\d+\&e=\\d+");
 export const viewRangeCookieRegExp = new RegExp("r=\\d+;");
 
+export interface IViewRange {
+    b: number;
+    e: number;
+}
+
 /**
- * Disable document partitioning by reloading. Preserves other params.
+ * Disable document partitioning by reloading.
  */
-export function unpartitionDocument() {
-    document.location.search = document.location.search.replace(viewRangeRegExp, "");
+export async function unpartitionDocument() {
+    await unsetPieceSize();
+    if (!viewRangeRegExp.test(document.location.search)) {
+        location.reload();
+    } else {
+        document.location.search = document.location.search.replace(viewRangeRegExp, "");
+    }
 }
 
 /**
@@ -42,7 +53,7 @@ export function partitionDocument(b: number, e: number) {
 export async function unsetPieceSize() {
     const r = await to($http.get<number>(`/viewrange/unset/piecesize`));
     if (!r.ok) {
-        console.log("Failed to remove view range cookie: " + r);
+        console.error("Failed to remove view range cookie: " + r);
     }
 }
 
@@ -50,7 +61,7 @@ export async function setPieceSize(pieceSize: number) {
     const data = {pieceSize: pieceSize};
     const r = await to($http.post(`/viewrange/set/piecesize`, data));
     if (!r.ok) {
-        console.log("Failed to set view range cookie: " + r);
+        console.error("Failed to set view range cookie: " + r);
     }
 }
 
@@ -62,31 +73,30 @@ export async function getPieceSize() {
     }
     // Convert to null since +string is 0 if string to integer conversion fails.
     if (cookie == null || value == 0) {
-        return null;
+        return undefined;
     } else {
         return value;
     }
 }
 
-export interface IViewRange {
-    b: number;
-    e: number;
-}
-
 /**
- * Get view range from the document. Depends on starting index, direction, and document's size, areas and
- * @param docId
- * @param index
- * @param forwards
+ * Get next or previous view range indices for the document.
+ * These depend on starting index, direction, and document size.
+ * @param docId Document id.
+ * @param index Begin (or end, if fetching previous range) index.
+ * @param forwards True if next piece, false if previous.
  */
 export async function getViewRange(docId: number, index: number, forwards: boolean) {
+    if (!index) {
+        index = 0;
+    }
     let forwardsInt = 1;
     if (!forwards) {
         forwardsInt = 0;
     }
     const r = await to($http.get<IViewRange>(`/viewrange/get/${docId}/${index}/${forwardsInt}`));
     if (!r.ok) {
-        console.log(r.result.data);
+        return undefined;
     } else {
         return r.result.data;
     }
@@ -94,28 +104,32 @@ export async function getViewRange(docId: number, index: number, forwards: boole
 
 /**
  * Toggle document partitioning with part starting from index 0.
- * @param docId
+ * @param docId Document id.
  * @param pieceSize Size of the document part.
  */
 export async function toggleViewRange(docId: number, pieceSize: number) {
-    const currentViewRange = await getPieceSize();
-    if (currentViewRange && currentViewRange > 0) {
-        void unsetPieceSize(); // Waiting for this isn't necessary?
-        unpartitionDocument();
+    const currentViewRange = await getCurrentViewRange();
+    if (currentViewRange) {
+        await unpartitionDocument();
     } else {
         await setPieceSize(pieceSize);
         const range = await getViewRange(docId, 0, true);
         if (range) {
             partitionDocument(range.b, range.e);
+        } else {
+            await unpartitionDocument();
         }
     }
 }
 
+/**
+ * Get currently active view range (if it exists) from document variables.
+ */
 export function getCurrentViewRange() {
-    const b = new URL(document.location.href).searchParams.get("b");
-    const e = new URL(document.location.href).searchParams.get("e");
-    if (b != null && e != null) {
-        return {b: +b, e: +e};
+    const viewRange = documentglobals().current_view_range;
+    const pieceSize = getPieceSize();
+    if (viewRange && pieceSize) {
+        return viewRange;
     } else {
         return undefined;
     }
@@ -183,7 +197,6 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
             await setPieceSize(this.viewRangeSetting);
             const b = new URL(document.location.href).searchParams.get("b");
             let beginIndex = 0;
-            console.log(b);
             if (b)  {
                 // TODO: Handle case when b is not a number.
                 beginIndex = +b;
@@ -193,8 +206,7 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
                 partitionDocument(range.b, range.e);
             }
         } else {
-            await unsetPieceSize();
-            unpartitionDocument();
+            await unpartitionDocument();
         }
         this.dismiss();
     }

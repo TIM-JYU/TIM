@@ -286,13 +286,21 @@ def view(item_path, template_name, usergroup=None, route="view"):
     if get_option(request, 'login', False) and not logged_in():
         return redirect_to_login()
 
+    # TODO: Disable URL param partitioning without piece size cookie (to avoid problems with tabs and reloads).
+    # TODO: OR: show navigation even without piece size, but only on that document.
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
     except (ValueError, TypeError):
         view_range = None
-    start_index = max(view_range[0], 0) if view_range else 0
+    piece_size = get_piece_size_from_cookie(request)
+    if piece_size and not view_range:
+        view_range = decide_view_range(doc_info, piece_size)
+    try:
+        view_range_dict = {'b': view_range[0], 'e': view_range[1]}
+    except (ValueError, TypeError):
+        view_range_dict = None
 
-    # TODO: If view range is set in cookie, load using its range in case there isn't view_range.
+    start_index = max(view_range[0], 0) if view_range else 0
 
     doc, xs = get_document(doc_info, view_range)
     g.doc = doc
@@ -480,6 +488,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            word_list=word_list,
                            memo_minutes=doc_settings.memo_minutes(),
                            linked_groups=linked_groups,
+                           current_view_range=view_range_dict,
                            )
 
 
@@ -794,10 +803,8 @@ def get_viewrange(doc_id, index, forwards):
     try:
         doc_info = DocEntry.find_by_id(doc_id)
         view_range = decide_view_range(doc_info, current_set_size, index, forwards > 0)
-        last_index = len(doc_info.document.get_paragraphs())-1
         return json_response({'b': view_range[0], 'e': view_range[1]})
     except Exception as e:
-        print(e)
         return abort(400, get_error_message(e))
 
 
@@ -827,15 +834,16 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
     :return:
     """
-    # TODO: Clean prints.
-    # print(preferred_set_size, index, forwards)
-    # TODO: Better way to get number of pars?
+    par_count = len(doc_info.document.get_paragraphs())
     if forwards:
         b = index
-        e = min(preferred_set_size + index, len(doc_info.document.get_paragraphs()))
+        e = min(preferred_set_size + index, par_count)
+        if min_set_size_modifier*preferred_set_size > par_count-e:
+            e = par_count
     else:
         b = max(index - preferred_set_size, 0)
         e = index
+        if min_set_size_modifier*preferred_set_size > b:
+            b = 0
     # TODO: Don't cut areas.
-    # TODO: Add the rest of document if it's smaller than given fraction of the piece size.
     return b, e
