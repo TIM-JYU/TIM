@@ -151,10 +151,21 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
      *   plugin in the same document
      */
     async save() {
-
-        if ( this.attrs.destCourse ) {
-           await showMessageDialog("Does not work yet.  Hope it works in October...");
-           return;
+        if (this.attrs.destCourse) {
+            await showMessageDialog("Does not work yet.  Hope it works in October...");
+            if (1) {
+                return;
+            }
+            const r = await to($http.post("/postGrades", {
+                destCourse: this.attrs.destCourse,
+                docId: this.vctrl.item.id,
+            }));
+            if (r.ok) {
+                await showMessageDialog("Grades were sent successfully to Sisu.");
+            } else {
+                await showMessageDialog(r.result.data.error);
+            }
+            return;
         }
 
         if (this.attrs.emailMode) {

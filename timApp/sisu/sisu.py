@@ -2,6 +2,7 @@ from textwrap import dedent
 from typing import List, Optional, Dict, Union
 
 import click
+import requests
 from dataclasses import dataclass
 from flask import Blueprint, abort, current_app
 from flask.cli import AppGroup
@@ -11,6 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from webargs.flaskparser import use_args
 
 from marshmallow_dataclass import class_schema
+from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import apply_template
@@ -26,8 +28,10 @@ from timApp.timdb.sqa import db
 from timApp.user.groups import validate_groupname, update_group_doc_settings, add_group_infofield_template
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_sisu_groups_by_filter
+from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location
+from timApp.util.get_fields import get_fields_and_users
+from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time
 
 sisu = Blueprint('sisu',
                  __name__,
@@ -261,3 +265,80 @@ def send_course_group_mail(p: SisuDisplayName, u: User):
                 """).strip(),
         mail_from=app.config['NOREPLY_EMAIL'],
     )
+
+
+@dataclass
+class PostGradesModel:
+    destCourse: str
+    docId: int
+
+
+@sisu.route('/sendGrades', methods=['post'])
+@use_model(PostGradesModel)
+def post_grades_route(m: PostGradesModel):
+    return json_response(send_grades_to_sisu(
+        m.destCourse,
+        get_current_user_object(),
+        get_doc_or_abort(m.docId),
+    ))
+
+
+class IncorrectSettings(Exception):
+    pass
+
+
+class SisuError(Exception):
+    pass
+
+
+def send_grades_to_sisu(sisu_id: str, teacher: User, doc: DocInfo):
+    request_data = get_sisu_assessments(sisu_id, teacher, doc)
+    r = requests.post(f'http://nginx/assessments/{sisu_id}', json=request_data)
+    if r.status_code != 200 and False:
+        raise SisuError(r.text)
+    return {'sent_grades': request_data}
+
+
+def get_sisu_assessments(sisu_id: str, teacher: User, doc: DocInfo):
+    teachers_group = UserGroup.get_teachers_group()
+    if teacher not in teachers_group.users:
+        raise AccessDenied('User is not a TIM teacher')
+    pot_groups = get_potential_groups(teacher)
+    responsible_teachers_group = f'{sisu_id}-responsible-teachers'
+    if responsible_teachers_group not in (g.external_id.external_id for g in pot_groups):
+        raise AccessDenied(f'User is not a responsible teacher of the course {sisu_id}')
+    if not teacher.has_teacher_access(doc):
+        raise AccessDenied('User does not have teacher access to the document')
+    doc_settings = doc.document.get_settings()
+    try:
+        usergroup = doc_settings.group()
+    except ValueError as e:
+        raise IncorrectSettings(str(e)) from e
+    if not usergroup:
+        raise IncorrectSettings('Document must have group setting')
+    ug = UserGroup.get_by_name(usergroup)
+    if not ug:
+        raise IncorrectSettings(f'Usergroup {usergroup} not found')
+    users, _, _, _ = get_fields_and_users(
+        ['grade', 'credit'],
+        [ug],
+        doc,
+        teacher,
+    )
+    curr_time = get_current_time().strftime('%Y-%m-%d')
+    return [{
+        'completionDate': curr_time,
+        **fields_to_assessment(r, doc),
+    } for r in users]
+
+
+def fields_to_assessment(r, doc: DocInfo):
+    result = {
+        'gradeId': str(r['fields'][f'{doc.id}.grade']),
+        'userName': r['user'].name,
+    }
+    credit = r['fields'].get('credit')
+    if credit is not None:
+        result['completionCredits'] = credit
+    # TODO: Sisu accepts also 'privateComment' field.
+    return result

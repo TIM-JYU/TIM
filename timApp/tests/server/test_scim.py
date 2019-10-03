@@ -1,15 +1,18 @@
+import json
 from operator import itemgetter
 from typing import List
 
+from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.notification.notify import sent_mails_in_testing
 from timApp.sisu.scim import SISU_GROUP_PREFIX
+from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserOrigin
 from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX
-from timApp.util.utils import seq_to_str
+from timApp.util.utils import seq_to_str, get_current_time
 
 a = ('t', 'pass')
 
@@ -882,3 +885,92 @@ def scim_error(msg: str, code=422):
             'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
             'status': str(code)},
     )
+
+
+class SendGradeTest(TimRouteTest):
+    def test_send_grades(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.test_user_2.answers.append(Answer(task_id=f'{d.id}.grade', content=json.dumps({'c': 5}), valid=True))
+        self.test_user_2.answers.append(Answer(task_id=f'{d.id}.credit', content=json.dumps({'c': 3}), valid=True))
+        self.test_user_3.answers.append(Answer(task_id=f'{d.id}.grade', content=json.dumps({'c': 4}), valid=True))
+        self.test_user_3.answers.append(Answer(task_id=f'{d.id}.credit', content=json.dumps({'c': 2}), valid=True))
+        db.session.commit()
+        self.json_post(
+            '/sisu/sendGrades',
+            {
+                'destCourse': 'jy-CUR-1234',
+                'docId': d.id,
+            },
+            expect_status=403,
+            expect_content='User is not a TIM teacher'
+        )
+        t = UserGroup.get_teachers_group()
+        t.users.append(self.test_user_1)
+        db.session.commit()
+        self.json_post(
+            '/sisu/sendGrades',
+            {
+                'destCourse': 'jy-CUR-1234',
+                'docId': d.id,
+            },
+            expect_status=403,
+            expect_content='User is not a responsible teacher of the course jy-CUR-1234'
+        )
+        ug = UserGroup.create('course1234')
+        ug.external_id = ScimUserGroup(external_id='jy-CUR-1234-responsible-teachers')
+        ug.users.append(self.test_user_1)
+        db.session.commit()
+        self.json_post(
+            '/sisu/sendGrades',
+            {
+                'destCourse': 'jy-CUR-1234',
+                'docId': d.id,
+            },
+            expect_status=400,
+            expect_content='Document must have group setting'
+        )
+        ug = UserGroup.create('students1234')
+        db.session.commit()
+        d.document.add_setting('group', 'studentz1234')
+        self.json_post(
+            '/sisu/sendGrades',
+            {
+                'destCourse': 'jy-CUR-1234',
+                'docId': d.id,
+            },
+            expect_status=400,
+            expect_content='Usergroup studentz1234 not found'
+        )
+        d.document.add_setting('group', 'students1234')
+        self.json_post(
+            '/sisu/sendGrades',
+            {
+                'destCourse': 'jy-CUR-1234',
+                'docId': d.id,
+            },
+            expect_content={'sent_grades': []}
+        )
+        ug = UserGroup.get_by_name('students1234')
+        ug.users.append(self.test_user_2)
+        ug.users.append(self.test_user_3)
+        db.session.commit()
+        expected_date = get_current_time().strftime('%Y-%m-%d')
+        self.assertRegex(expected_date, r'\d{4}-\d{2}-\d{2}')
+        self.json_post(
+            '/sisu/sendGrades',
+            {
+                'destCourse': 'jy-CUR-1234',
+                'docId': d.id,
+            },
+            expect_content={
+                'sent_grades': [
+                    {'completionDate': expected_date,
+                     'gradeId': '5',
+                     'userName': 'testuser2'},
+                    {'completionDate': expected_date,
+                     'gradeId': '4',
+                     'userName': 'testuser3'},
+                ],
+            }
+        )
