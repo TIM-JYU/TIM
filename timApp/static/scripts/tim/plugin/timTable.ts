@@ -449,7 +449,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     private task: boolean = false;
     private taskid?: string;
     // private hideSaveButton?: boolean = false;
-    private hiddenRows: number[] = [];
+    // private hiddenRows: number[] = [];
     // private lockCellCount: boolean = false;
     // private saveCallBack: () => void;
     private isRunning: boolean = false;
@@ -633,9 +633,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
             this.viewctrl.addTable(this, parId);
         }
         if (this.disabled) { return; }
-        document.addEventListener("keyup", this.keyUpTable);
-        document.addEventListener("keydown", this.keyDownTable);
-        document.addEventListener("keypress", this.keyPressTable);
         // document.addEventListener("click", this.onClick);
         onClick("body", ($this, e) => {
             this.onClick(e);
@@ -659,32 +656,57 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * Removes listener and cleans up
      */
     $onDestroy() {
+        this.removeEventListeners();
+        // document.removeEventListener("click", this.onClick);
+    }
+
+    private eventListenersActive: boolean = false;
+
+    private removeEventListeners()  {
+        if ( !this.eventListenersActive ) { return; }
+        this.eventListenersActive = false;
         document.removeEventListener("keyup", this.keyUpTable);
         document.removeEventListener("keydown", this.keyDownTable);
         document.removeEventListener("keypress", this.keyPressTable);
         // document.removeEventListener("click", this.onClick);
     }
 
-    private hideToolbar() {
+    private addEventListeners() {
+        if ( this.eventListenersActive ) { return; }
+        this.eventListenersActive = true;
+        document.addEventListener("keyup", this.keyUpTable);
+        document.addEventListener("keydown", this.keyDownTable);
+        document.addEventListener("keypress", this.keyPressTable);
+        // document.addEventListener("click", this.onClick);
+    }
+
+    private removeListenersAndCloseEditor() {
+        this.removeEventListeners();
         this.closeSmallEditor();
+    }
+
+    private hideToolbar() {
+        this.removeListenersAndCloseEditor();
         hideToolbar(this);
     }
 
     private openToolbar() {
-            if (this.isInEditMode() && isToolbarEnabled() && !this.hide.toolbar) {
-                openTableEditorToolbar({
-                    callbacks: {
-                        setCell: (val) => this.setCell(val),
-                        addToTemplates: () => this.addToTemplates(),
-                        addColumn: (offset) => this.addColumnFromToolbar(offset),
-                        addRow: (offset) => this.addRowFromToolbar(offset),
-                        removeColumn: () => this.removeColumnFromToolbar(),
-                        removeRow: () => this.removeRowFromToolbar(),
-                    }, activeTable: this,
-                });
-            }
+        this.addEventListeners();
+        if (this.isInEditMode() && isToolbarEnabled() && !this.hide.toolbar) {
+            openTableEditorToolbar({
+                callbacks: {
+                    setCell: (val) => this.setCell(val),
+                    addToTemplates: () => this.addToTemplates(),
+                    addColumn: (offset) => this.addColumnFromToolbar(offset),
+                    addRow: (offset) => this.addRowFromToolbar(offset),
+                    removeColumn: () => this.removeColumnFromToolbar(),
+                    removeRow: () => this.removeRowFromToolbar(),
+                }, activeTable: this,
+            });
+        }
     }
 
+    // private onClick = (e: MouseEvent) => {
     private onClick(e: JQuery.Event) {
         if (this.mouseInTable) {
             if (this.isInEditMode() && isToolbarEnabled() && !this.hide.toolbar) {
@@ -696,6 +718,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 }
             }
         } else {
+            if ( !this.eventListenersActive ) { return; }  // No need to look anything when allready inactive
             const target = e.target;
 
             if (target) {
@@ -712,6 +735,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
                 // Do not hide the toolbar if the user clicks on another TimTable
                 if ($(target).parents(".timTableTable").length > 0) {
+                    this.removeListenersAndCloseEditor();
                     return;
                 }
             }
@@ -1042,7 +1066,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             },
         };
 
-        const p = params;
+        // const p = params;
         /*
         const r = await to($http<{
             // web: {stackResult: StackResult},
@@ -1658,7 +1682,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
         // if (!this.mouseInTable) return;
         // TODO: Check properly if table has focus when preventing default tab behavior
-        if (this.currentCell == undefined) { return; }
+        if ( !this.isSomeCellBeingEdited() ) { return; }
         if ( isKeyCode(ev, KEY_TAB) ) {
             ev.preventDefault();
         }
@@ -1679,7 +1703,9 @@ export class TimTableController extends DestroyScope implements IController, ITi
         // this.shiftDown = ev.shiftKey;
         this.shiftDown = ev.shiftKey;
 
-        if (this.mouseInTable) { this.doKeyUpTable(ev); }
+        if ( this.isSomeCellBeingEdited() ) { return; }  // if active, then the smalleditor has listener
+        // if (this.mouseInTable) { }
+        this.doKeyUpTable(ev);
     }
 
     private doKeyUpTable(ev: KeyboardEvent) {
@@ -1730,7 +1756,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if (isKeyCode(ev, KEY_TAB)) {
             ev.preventDefault();
             if (this.currentCell != undefined) {
-                const curRow = this.permTableToScreen[this.currentCell.row];
+                // const curRow = this.permTableToScreen[this.currentCell.row];
                 if (ev.shiftKey) {
                     this.doCellMovement(Direction.Left);
                     this.disableStartCell();
@@ -3193,16 +3219,14 @@ timApp.component("timTable", {
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent"><!--
      --><span class="inlineEditorButtons" style="position: absolute; width: max-content" ng-show="!$ctrl.hide.editorButtons && $ctrl.isSomeCellBeingEdited()" ><!--
-         --><button class="timButton buttonOpenBigEditor"
-                ng-click="$ctrl.openBigEditor()" class="timButton"><span class="glyphicon glyphicon-pencil"></span>
+         --><button class="timButton buttonOpenBigEditor timButton"
+                ng-click="$ctrl.openBigEditor()" ><span class="glyphicon glyphicon-pencil"></span>
              </button><!--
-         --><button class="timButton buttonCloseSmallEditor"
-                ng-click="$ctrl.cancelEdit()"
-                class="timButton"><span class="glyphicon glyphicon-remove"></span>
+         --><button class="timButton buttonCloseSmallEditor timButton"
+                ng-click="$ctrl.cancelEdit()"><span class="glyphicon glyphicon-remove"></span>
             </button><!--
-         --><button class="timButton buttonAcceptEdit"
-                 ng-click="$ctrl.saveAndCloseSmallEditor()"
-                 class="timButton"><span class="glyphicon glyphicon-ok"></span>
+         --><button class="timButton buttonAcceptEdit timButton"
+                 ng-click="$ctrl.saveAndCloseSmallEditor()" ><span class="glyphicon glyphicon-ok"></span>
             </button>
          </span>
     </div>
