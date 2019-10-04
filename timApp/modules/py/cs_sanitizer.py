@@ -144,12 +144,3 @@ def tim_sanitize(s):
     if not s:
         return s
     return bleach.clean(s, TIM_SAFE_TAGS, TIM_SAFE_ATTRS_MAP, protocols=TIM_SAFE_PROTOCOLS, styles=TIM_SAFE_STYLES)
-
-STACK_ILLEGAL_WORDS=['SCRIPT', 'IFRAME']
-
-# This is not enoug, see: https://docs.microsoft.com/en-us/previous-versions/msp-n-p/ff649310(v=pandp.10)#potentially-dangerous-html-tags
-def check_not_script(s):
-    sunesc = html.unescape(str(s)).upper()
-    for w in STACK_ILLEGAL_WORDS:
-        if sunesc.find(w) >= 0:
-            raise RuntimeError('Do not use word ' + w +'!')

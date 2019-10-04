@@ -1,8 +1,16 @@
 import json
-import html
-from cs_sanitizer import check_not_script
-from languages import Language
+
 import requests
+
+from cs_sanitizer import tim_sanitize
+from languages import Language
+
+
+def do_jsxgraph_replace(q):
+    q = q.replace('[[jsxgraph ', '[[jsxgraphapi ')
+    q = q.replace('[[jsxgraph]]', '[[jsxgraphapi]]')
+    q = q.replace('[[/jsxgraph]]', '[[/jsxgraphapi]]')
+    return q
 
 
 class Stack(Language):
@@ -50,15 +58,14 @@ class Stack(Language):
         nosave = self.query.jso.get('input', {}).get('nosave', False)
         stack_data["seed"] = userseed
         q = stack_data.get("question", "")
-        if not isinstance(q, str):
-            q = json.dumps(q)
-            stack_data["question"] = q
 
-        if not self.query.jso.get('markup').get('stackjsx') and q.find("[[jsxgraph") >= 0:  # make jsxgraph replace
-            q = q.replace('[[jsxgraph ', '[[jsxgraphapi ')
-            q = q.replace('[[jsxgraph]]', '[[jsxgraphapi]]')
-            q = q.replace('[[/jsxgraph]]', '[[/jsxgraphapi]]')
-            stack_data["question"] = q
+        if not self.query.jso.get('markup').get('stackjsx'):
+            if isinstance(q, str):
+                stack_data["question"] = do_jsxgraph_replace(q)
+            else:
+                q_html = stack_data["question"]["question_html"]
+                if q_html:
+                    stack_data["question"]["question_html"] = do_jsxgraph_replace(q_html)
 
         if nosave or get_task:
             stack_data['score'] = False
@@ -73,14 +80,12 @@ class Stack(Language):
             save = result["save"]
             save["seed"] = userseed
 
-        for key in stack_data:
-            s = stack_data[key]
-            if True:  # TODO: here maybe a list of checked fields
-                try:
-                    check_not_script(s)
-                except Exception as e:
-                    result['nosave'] = True
-                    return 1, "", str(e) + " " + str(key) + ": " + html.escape(str(s)), ""
+        sanitize_dict(stack_data)
+
+        # TODO: Couldn't stack server accept dict directly in 'question'?
+        if isinstance(q, dict):
+            q = json.dumps(q)
+            stack_data["question"] = q
 
         r = requests.post(url=url, data=json.dumps(stack_data))  # json.dumps(data_to_send, cls=TimJsonEncoder))
         # r = requests.get(url="http://stack-test-container/api/endpoint.html")
@@ -107,3 +112,9 @@ class Stack(Language):
         return 0, r.get('yaml'), "", ""
 
 
+def sanitize_dict(d):
+    for k, v in d.items():
+        if isinstance(v, str):
+            d[k] = tim_sanitize(v)
+        elif isinstance(v, dict):
+            sanitize_dict(v)
