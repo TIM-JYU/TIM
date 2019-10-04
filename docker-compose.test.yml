@@ -1,4 +1,4 @@
-version: "3"
+version: "3.7"
 services:
  tim:
   depends_on:
@@ -16,8 +16,11 @@ services:
  chrome:
   image: selenium/standalone-chrome:3.141.59-uranium
   tmpfs:
-   - /tmp
    - /home/seluser
+   - /run/supervisor
+   - /tmp
+   - /var/log/supervisor
+  read_only: true
  nginx:
   image: timimages/local_nginx_dev:compose
   build:
@@ -39,5 +42,7 @@ services:
   depends_on:
    - nginx
   tmpfs:
-   - /tmp/doctest_files
+   - /tmp
+   - /tim_files
   working_dir: /service/timApp
+  read_only: true

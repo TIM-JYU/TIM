@@ -1,4 +1,4 @@
-version: "3"
+version: "3.7"
 services:
  tim:
   image: timimages/tim:${TIM_IMAGE_TAG}
@@ -32,6 +32,12 @@ services:
   networks:
    - db
    - default
+  read_only: true
+  tmpfs:
+   - /root
+   - /tmp
+   - /var/cache
+   - /var/log
  timagent:
   image: timimages/timagent
   build:
@@ -41,6 +47,7 @@ services:
     TIM_IMAGE_TAG: ${TIM_IMAGE_TAG}
   command: sleep infinity
   restart: unless-stopped
+  read_only: true
  postgresql:
   image: postgres:11
   volumes:
@@ -49,6 +56,10 @@ services:
   restart: unless-stopped
   networks:
    - db
+  read_only: true
+  tmpfs:
+   - /run/postgresql
+   - /tmp
  csplugin:
   image: timimages/cs3:rust
   build: ./timApp/modules/cs
@@ -69,6 +80,7 @@ services:
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
   user: root
   restart: unless-stopped
+  read_only: true
  haskellplugins:
   image: timimages/haskellplugins:latest
   build:
@@ -79,6 +91,7 @@ services:
   working_dir: /Haskell
   command: ./startAll.sh
   restart: unless-stopped
+  read_only: true
  showfile:
   image: timimages/svn:bionic
   build: ./timApp/modules/svn
@@ -88,6 +101,9 @@ services:
   working_dir: /svn
   command: ./startAll.sh
   restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp
  imagex:
   image: timimages/cs3:rust
   volumes:
@@ -96,6 +112,7 @@ services:
   working_dir: /imagex
   command: ./startAll.sh
   restart: unless-stopped
+  read_only: true
  pali:
   image: timimages/tim:${TIM_IMAGE_TAG}
   build: ./timApp/modules/pali
@@ -107,6 +124,7 @@ services:
     PYTHONPATH: /pali:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
+  read_only: true
  fields:
   image: timimages/tim:${TIM_IMAGE_TAG}
   build: ./timApp/modules/fields
@@ -118,6 +136,7 @@ services:
    PYTHONPATH: /fields:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
+  read_only: true
  jsrunner:
   image: timimages/tim:${TIM_IMAGE_TAG}
   #build: ./timApp/modules/multisave
@@ -127,6 +146,10 @@ services:
   working_dir: /timApp/modules/jsrunner
   command: ./startAll.sh
   restart: unless-stopped
+  read_only: true
+  tmpfs:
+   - /root/.npm
+   - /root/.config
  drag:
   image: timimages/tim:${TIM_IMAGE_TAG}
   volumes:
@@ -137,6 +160,7 @@ services:
    PYTHONPATH: /drag:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
+  read_only: true
  feedback:
   image: timimages/tim:${TIM_IMAGE_TAG}
   volumes:
@@ -147,10 +171,12 @@ services:
    PYTHONPATH: /feedback:/py:/usr/local/lib/python3.6/dist-packages
   command: ./startAll.sh
   restart: unless-stopped
+  read_only: true
  uploader:
   image: villet/uploaderplugin:13_10_16_15
   command: ${UPLOADER_COMMAND}
   restart: unless-stopped
+  read_only: true
  nginx:
   image: timimages/local_nginx:compose
   build:
@@ -163,6 +189,10 @@ services:
    - ./timApp/modules/cs/generated:/csgenerated:ro
    - ./timApp/static:/static:ro
   restart: unless-stopped
+  read_only: true
+  tmpfs:
+   - /var/cache/nginx
+   - /run
  dumbo:
   image: timimages/dumbo:${TIM_IMAGE_TAG}
   build:
@@ -178,9 +208,11 @@ services:
   logging:
    driver: none
   restart: unless-stopped
+  read_only: true
  redis:
   image: redis
   restart: unless-stopped
+  read_only: true
  celery:
   image: timimages/tim:${TIM_IMAGE_TAG}
   command: celery -A timApp.tim_celery.celery worker -B --concurrency 4
@@ -202,6 +234,9 @@ services:
   networks:
    - db
    - default
+  read_only: true
+  tmpfs:
+   - /tmp
  stack-api-server:
   build: ./stack
   image: timimages/stack

@@ -1,12 +1,14 @@
-version: "3"
+version: "3.7"
 services:
  tim:
   depends_on:
-   - ts-watcher
+   - ts
+  tmpfs:
+   - /run
  nginx:
   ports:
    - "${NGINX_PORT}:80"
- ts-watcher:
+ ts:
   image: timimages/tim:${TIM_IMAGE_TAG}
   volumes:
    - .:/service
@@ -14,6 +16,7 @@ services:
   working_dir: /service/timApp/static/scripts
   command: jspm bundle tim/main - "(tim/main - [tim/**/*])" build/tim.js -wm
   restart: unless-stopped
+  read_only: true
  pali:
   environment:
     SHOW_TEMPLATES: "False"

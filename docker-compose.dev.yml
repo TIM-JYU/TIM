@@ -1,14 +1,23 @@
-version: "3"
+version: "3.7"
+x-common-agent:
+ &common-agent
+ tmpfs:
+  - /run/sshd
+  - /home/agent/.pycharm_helpers
+x-common-root:
+ &common-root
+ tmpfs:
+  - /run/sshd
+  - /root/.pycharm_helpers
 services:
  tim:
+  << : *common-root
   command: /usr/sbin/sshd -D
   ports:
    - "49999:22"
   depends_on:
    - postgresql-test
    - chrome
-  tmpfs:
-   - /tmp
  postgresql:
   ports:
    - "5432:5432"
@@ -20,6 +29,7 @@ services:
    - /var/lib/postgresql/data
   restart: unless-stopped
  imagex:
+  << : *common-root
   image: timimages/cs3sudo:rust
   volumes:
    - ./timApp/modules/imagex:/imagex:ro
@@ -29,30 +39,32 @@ services:
   ports:
    - "49995:22"
  pali:
+  << : *common-root
   command: ${PALI_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49997:22"
  fields:
- # image: timimages/cs3sudo:rust
- # build:
- #  context: ./timApp/modules/cs
- #  dockerfile: DockerfileS
+  << : *common-root
   command: ${TEXTFIELD_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49990:22"
  jsrunner:
+  << : *common-root
   command: ${JSRUNNER_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49951:22"
  drag:
+  << : *common-root
   command: ${DRAG_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49980:22"
  feedback:
+  << : *common-root
   command: ${FEEDBACK_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49978:22"
  csplugin:
+  << : *common-agent
   image: timimages/cs3sudo:rust
   build:
    context: ./timApp/modules/cs
@@ -61,6 +73,7 @@ services:
   ports:
    - "49998:22"
  stack-api-server:
+  << : *common-root
   image: timimages/stack-debug
   build:
     context: ./stack
@@ -80,6 +93,7 @@ services:
   ports:
    - "49992:22"
  showfile:
+  << : *common-agent
   image: timimages/cs3sudo:rust
   build:
    context: ./timApp/modules/cs
@@ -94,11 +108,14 @@ services:
  chrome:
   image: selenium/standalone-chrome:3.141.59-uranium
   tmpfs:
-   - /tmp
    - /home/seluser
+   - /run/supervisor
+   - /tmp
+   - /var/log/supervisor
   volumes:
    - /dev/shm:/dev/shm
   restart: unless-stopped
+  read_only: true
  nginx:
   image: timimages/local_nginx_dev:compose
   build:
