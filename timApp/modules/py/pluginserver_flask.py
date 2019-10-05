@@ -77,6 +77,10 @@ class GenericMarkupModel:
     Hidden keys are never sent to browser.
     """
 
+    texprint: Union[str, None, Missing] = missing
+    texbeforeprint: Union[str, None, Missing] = missing
+    texafterprint: Union[str, None, Missing] = missing
+    texprint: Union[str, None, Missing] = missing
     answerLimit: Union[int, Missing] = missing
     button: Union[str, None, Missing] = missing
     buttonText: Union[str, None, Missing] = missing
