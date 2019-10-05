@@ -3118,7 +3118,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             const rowElement = table.children("tbody").last().children("tr").eq(sr + this.rowDelta);
             // rowElement.css(this.stylingForRow(rowIndex));
             for (const [cellIndex, cell] of this.cellDataMatrix[rowIndex].entries()) {
-                console.log(cell);
+                // console.log(cell);
                 if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
                     return; // we should never be able to get here
                 }
