@@ -71,7 +71,7 @@ interface Words {
 const goalTableWords: Words = {
     btnText :  { fi: "Tallenna", en: "Save"},
     editText:  { fi: "Muokkaa", en: "Modify"},
-    goalText:  { fi: "Osattava asia", en: "Learning goals"},
+    goalText:  { fi: "Osattava asia", en: "Learning outcomes"},
     editTitle: { fi: "Ruksi jotta voit siirellä", en: "Check this to move items"},
 };
 const scaleValueWords: Word[] = [
@@ -156,7 +156,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
         }
         if ( this.attrs.bloom ) {
             if ( this.attrs.lang === "en") {
-                this.bloomText = "(learning goals by Bloom's taxonomy: ";
+                this.bloomText = "(learning outcomes by Bloom's taxonomy: ";
             } else {
                 this.bloomText = "(osaamisen taso sovelletulla Bloomin asteikolla: ";
             }
