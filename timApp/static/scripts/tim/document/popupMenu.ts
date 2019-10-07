@@ -119,6 +119,10 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
         return fDesc === this.vctrl.$storage.defaultAction ? "checked" : "";
     }
 
+    getInputTitle(f: IMenuFunctionEntry) {
+        return `Set "${f.desc}" as the default action for double-click`;
+    }
+
     clicked(f: IMenuFunctionEntry) {
         if (!this.p.save) {
             return;
@@ -174,7 +178,7 @@ registerDialogComponent(PopupMenuController,
                        ng-checked="$ctrl.getChecked(f.desc)"
                        ng-click="$ctrl.clicked(f)"
                        style="margin: 5px 0 5px 15px;"
-                       title="Set this button as the default action for double-click"
+                       title="{{ $ctrl.getInputTitle(f) }}"
                        type="radio">
             </div>
 
