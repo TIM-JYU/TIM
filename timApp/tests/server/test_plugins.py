@@ -1115,7 +1115,7 @@ needed_len: 6
                                                       'look_answer': False,
                                                       'max_answers': None, 'user_id': 'testuser1', 'valid': True}, )
         self.assert_same_html(r.cssselect('.parContent')[1], f"""
-<div class="parContent" id="t.points">
+<div tabindex="0" class="parContent" id="t.points">
     <tim-plugin-loader type="full" answer-id="{aid}" class="pluginpali" task-id="{d.id}.t.points">
     <div id="{d.id}.t.points" data-plugin="/pali"><pali-runner json="{self.make_base64(expected_json)}"></pali-runner></div>
     </tim-plugin-loader>

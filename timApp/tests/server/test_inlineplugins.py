@@ -31,7 +31,7 @@ Hi {#t3#} $x$
         )
         self.assert_same_html(e, f"""
 <div class="par" id="Lm7y6R7n5XIb" t="MHgyN2U5NDhhMA==" attrs='{{"defaultplugin": "pali"}}'>
-<div class="parContent">
+<div tabindex="0" class="parContent">
                 <em>Hello</em> <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1"><span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali">
                 <pali-runner json="{self.make_base64(
         expected_json)}"></pali-runner></span></tim-plugin-loader>, <span class="error">Plugin nonexistent error: Plugin does not exist.</span> and <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t2"><span id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali"><pali-runner json="{self.make_base64(
@@ -68,7 +68,7 @@ Hi {#t3#} $x$
         )
         self.assert_same_html(e, f"""
 <div class="par" id="Lm7y6R7n5XIb" t="MHgyN2U5NDhhMA==" attrs='{{"defaultplugin": "pali"}}'>
-<div class="parContent">
+<div tabindex="0" class="parContent">
 <em>Hello</em>
 <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1">
 <span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali">
@@ -90,7 +90,7 @@ Hi {#t3#} $x$
         )
         self.assert_same_html(r.cssselect('.par')[1], f"""
 <div class="par" id="spOMcE20X2aX" t="LTB4MTk4ZmYxOTQ=" attrs='{{"defaultplugin": "pali", "math_type": "svg"}}'>
-<div class="parContent">
+<div tabindex="0" class="parContent">
                 Hi
 <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t3">
 <span id="{d.id}.t3.spOMcE20X2aX" data-plugin="/pali">
@@ -113,7 +113,7 @@ Hi {#t3#} $x$
         )
         self.assert_same_html(r.cssselect('.par')[2], f"""
 <div class="par" id="Se0s8FDLbhOp" t="LTB4NGU3YzFkYWM=" attrs='{{"defaultplugin": "pali"}}'>
-<div class="parContent">
+<div tabindex="0" class="parContent">
 <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t4">
 <span id="{d.id}.t4.Se0s8FDLbhOp" data-plugin="/pali">
 <pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
@@ -142,7 +142,7 @@ Hi {#t3#} $x$
         r = self.get(d.url, as_tree=True)
         # Make sure Dumbo won't escape plugin's error HTML.
         self.assert_same_html(r.cssselect('.parContent')[0], f"""
-<div class="parContent">
+<div tabindex="0" class="parContent">
     <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t5">
     <span id="{d.id}.t5.a3Xuyg1PF1l1" data-plugin="/pali">
         <div class="pluginError">
@@ -197,7 +197,7 @@ a {#x initword: #} b
         """)
         r = self.get(d.url, as_tree=True)
         self.assert_same_html(r.cssselect('.parContent')[0], f"""
-<div class="parContent">
+<div tabindex="0" class="parContent">
     a
     <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.x">
     <span id="{d.id}.x.a3Xuyg1PF1l1" data-plugin="/pali">

@@ -19,7 +19,7 @@ class QuestionTest(TimLiveServer, TimRouteTest):
          t="{pars[0].get_hash()}"
          attrs="{{&#34;plugin&#34;: &#34;qst&#34;, &#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test1&#34;}}">
         <a href="#test1" title="Permlink" class="headerlink">#</a>
-        <div class="parContent" id="test1">
+        <div tabindex="0" class="parContent" id="test1">
             <tim-plugin-loader type="full" task-id="{d.id}.test1" class="pluginqst" answer-id="">
             <div id="{d.id}.test1.{first_id}" data-plugin="/qst">
                 <qst-runner json='{{"anonymous": true, "current_user_id": "testuser1", "doLazy": false, "info": null, "markup": {{"answerFieldType": "radio", "headers": [], "isTask": false, "questionText": "What day is it today?", "questionTitle": "Today", "questionType": "radio-vertical", "rows": ["Monday", "Wednesday", "Friday"], "timeLimit": 90}}, "preview": false, "review": false, "show_result": false, "state": null, "targetFormat": "latex", "taskID": "{d.id}.test1", "taskIDExt": "{d.id}.test1.{first_id}", "userPrint": false, "user_id": "testuser1", "viewmode": true}}'></qst-runner>
@@ -45,7 +45,7 @@ class QuestionTest(TimLiveServer, TimRouteTest):
                  t="{pars[2].get_hash()}"
                  attrs="{{&#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test3&#34;}}" ng-non-bindable>
                 <a href="#{'test3'}" title="Permlink" class="headerlink">#</a>
-                <div class="parContent" id="{'test3'}">
+                <div tabindex="0" class="parContent" id="{'test3'}">
                     <pre><code>
 json:
   answerFieldType: radio

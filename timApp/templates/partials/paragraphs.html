@@ -113,20 +113,20 @@
 
         {%- if not t.html -%}
             {%- if t.md -%}
-                <div class="parContent mdcontent"{% if task_id %} id="{{ task_id }}"{% endif %}>
+                <div tabindex="0" class="parContent mdcontent"{% if task_id %} id="{{ task_id }}"{% endif %}>
                 {{ t.md|escape }}
                 </div>
             {%- elif t.attrs_str -%}
-                <div class="parContent mdcontent"{% if task_id %} id="{{ task_id }}"{% endif %}>
+                <div tabindex="0" class="parContent mdcontent"{% if task_id %} id="{{ task_id }}"{% endif %}>
                 {{ t.attrs_str|escape }}
                 </div>
             {%- else -%}
-                <div class="parContent mdcontent"{% if task_id %} id="{{ task_id }}"{% endif %}>
+                <div tabindex="0" class="parContent mdcontent"{% if task_id %} id="{{ task_id }}"{% endif %}>
                     (hidden paragraph)
                 </div>
             {%- endif -%}
         {%- else -%}
-            <div class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
+            <div tabindex="0" class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
                 {{ t.html|safe }}
             </div>
                 {%- if t.authorinfo -%}
