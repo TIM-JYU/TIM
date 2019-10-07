@@ -16,7 +16,7 @@ from timApp.sisu.sisu import IncorrectSettings, SisuError
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.user.userutils import NoSuchUserException
-from timApp.util.flask.requesthelper import JSONException, get_request_message
+from timApp.util.flask.requesthelper import JSONException, get_request_message, RouteException
 from timApp.util.flask.responsehelper import error_generic
 from timApp.util.logger import log_error
 from timApp.util.utils import get_current_time
@@ -42,6 +42,10 @@ def register_errorhandlers(app: Flask):
     @app.errorhandler(SisuError)
     def handle_validation_error(error):
         return error_generic(str(error), 400)
+
+    @app.errorhandler(RouteException)
+    def handle_json_exception(error: RouteException):
+        return error_generic(error.description, error.code)
 
     @app.errorhandler(JSONException)
     def handle_json_exception(error: JSONException):

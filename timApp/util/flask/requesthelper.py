@@ -138,6 +138,10 @@ def get_request_message(status_code=None, include_body=False):
     return f'{msg}\n\n{pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True))}'
 
 
+class RouteException(HTTPException):
+    code = 400
+
+
 class JSONException(HTTPException):
     code = 400
 

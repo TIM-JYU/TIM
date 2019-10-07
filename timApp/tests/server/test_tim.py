@@ -18,8 +18,6 @@ link_selector = CSSSelector('a')
 class TimTest(TimRouteTest):
 
     def test_activities(self):
-        timdb = self.get_db()
-
         self.login_test1(force=True)
 
         # Make sure user's personal folder exists
@@ -45,11 +43,17 @@ class TimTest(TimRouteTest):
         self.json_put(f'/permissions/add/{doc_id}/{"Anonymous users"}/{"view"}',
                       {'type': 'always'}, expect_content=self.ok_resp)
         self.json_put(
-            f'/permissions/add/{doc_id_list[1]}/{"Logged-in users"}/{"view"}', {'type': 'always'}, expect_content=self.ok_resp)
+            f'/permissions/add/{doc_id_list[1]}/{"Logged-in users"}/{"view"}',
+            {'type': 'always'},
+            expect_content=self.ok_resp)
         self.json_put(
-            f'/permissions/add/{doc_id_list[2]}/{"testuser2"}/{"view"}', {'type': 'always'}, expect_content=self.ok_resp)
+            f'/permissions/add/{doc_id_list[2]}/{"testuser2"}/{"view"}',
+            {'type': 'always'},
+            expect_content=self.ok_resp)
         self.json_put(
-            f'/permissions/add/{doc_id_list[3]}/{"testuser2"}/{"edit"}', {'type': 'always'}, expect_content=self.ok_resp)
+            f'/permissions/add/{doc_id_list[3]}/{"testuser2"}/{"edit"}',
+            {'type': 'always'},
+            expect_content=self.ok_resp)
         doc = Document(doc_id)
         doc.add_paragraph('Hello')
         pars = doc.get_paragraphs()
@@ -151,11 +155,19 @@ class TimTest(TimRouteTest):
         for view_id in viewable_docs - teacher_right_docs:
             self.get(f'/view/{view_id}')
             self.get('/teacher/' + str(view_id), expect_status=302)
-            self.json_put(f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}', {'type': 'always'}, expect_status=403)
+            self.json_put(
+                f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}',
+                {'type': 'always'},
+                expect_status=403,
+            )
         for view_id in teacher_right_docs:
             self.get(f'/view/{view_id}')
             self.get(f'/teacher/{view_id}')
-            self.json_put(f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}', {'type': 'always'}, expect_status=403)
+            self.json_put(
+                f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}',
+                {'type': 'always'},
+                expect_status=403,
+            )
 
     def test_same_heading_as_par(self):
         self.login_test1()
@@ -244,12 +256,29 @@ class TimTest(TimRouteTest):
     def test_teacher_nonexistent_group(self):
         self.login_test1()
         d = self.create_doc()
-        r = self.get(f'/teacher/{d.path}',
-                 query_string={'group': 'nonexistent'})
+        r = self.get(
+            f'/teacher/{d.path}',
+            query_string={'group': 'nonexistent'})
         self.assertIn('User group nonexistent not found', r)
 
     def test_ping(self):
         self.get('/ping')
+
+    def test_getproxy(self):
+        self.login_test1()
+        self.get('/getproxy', expect_status=422)
+        self.get('/getproxy', query_string={'url': 'hxxp'}, expect_status=400, expect_content='Unknown URL scheme')
+        self.get('/getproxy', query_string={'url': 'http://'}, expect_status=400,
+                 expect_content='URL domain not whitelisted: ')
+        self.get('/getproxy', query_string={'url': 'http://x'}, expect_status=400,
+                 expect_content='URL domain not whitelisted: x')
+        self.get('/getproxy', query_string={'url': 'https://x'}, expect_status=400,
+                 expect_content='URL domain not whitelisted: x')
+        self.get('/getproxy', query_string={'url': 'https://jyu.fi'}, expect_status=400,
+                 expect_content='URL domain not whitelisted: jyu.fi')
+        self.get('/getproxy', query_string={'url': 'http://users.jyu.fi'}, expect_status=400,
+                 expect_content='URL domain not whitelisted: users.jyu.fi')
+        self.get('/getproxy', query_string={'url': 'https://korppi.jyu.fi'})
 
     def test_par_info(self):
         self.login_test1()

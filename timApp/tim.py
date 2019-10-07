@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import time
+from urllib.parse import urlparse
 
 import requests
+from dataclasses import dataclass
 from flask import Response
 from flask import g, abort
 from flask import redirect
@@ -11,13 +13,14 @@ from flask import request
 from flask import session
 from flask_assets import Environment
 from flask_wtf.csrf import generate_csrf
+from requests.exceptions import MissingSchema, InvalidURL
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
 from timApp.admin.global_notification import global_notification
 from timApp.admin.routes import admin_bp
 from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
-from timApp.auth.accesshelper import verify_edit_access
+from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
 from timApp.auth.login import login_page
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     logged_in, current_user_in_lecture
@@ -61,7 +64,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
-from timApp.util.flask.requesthelper import get_request_message
+from timApp.util.flask.requesthelper import get_request_message, use_model, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.routes_static import static_bp
 from timApp.util.flask.search import search_routes
@@ -155,10 +158,26 @@ def ping():
     return ok_response()
 
 
+@dataclass
+class GetProxyModel:
+    url: str
+
+
 @app.route("/getproxy")
-def getproxy():
-    url = request.args.get('url')
-    r = requests.request('get', url)
+@use_model(GetProxyModel)
+def getproxy(m: GetProxyModel):
+    verify_logged_in()
+    parsed = urlparse(m.url)
+    if not parsed.scheme:
+        raise RouteException('Unknown URL scheme')
+    if parsed.scheme not in ('http', 'https'):
+        raise RouteException(f'URL scheme not allowed: {parsed.scheme}')
+    if parsed.netloc not in app.config['PROXY_WHITELIST']:
+        raise RouteException(f'URL domain not whitelisted: {parsed.netloc}')
+    try:
+        r = requests.get(m.url)
+    except (MissingSchema, InvalidURL):
+        raise RouteException('Invalid URL')
 
     text = r.content
     return text_response(text, r.status_code)
