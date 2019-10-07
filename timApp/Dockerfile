@@ -140,7 +140,7 @@ git+git://github.com/miracle2k/webassets.git \
 gunicorn \
 humanize \
 isodate \
-libsass \
+libsass==0.19.2 \
 lxml \
 marshmallow \
 marshmallow-enum \
