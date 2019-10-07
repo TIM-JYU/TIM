@@ -1,6 +1,6 @@
 {% set editline = '' %}
 {%- if item.rights.editable or item.rights.can_comment -%}
-    {%- set editline = '<div class="editline" title="Click to edit this paragraph"></div>' -%}
+    {%- set editline = '<div class="editline" tabindex="0" title="Click to edit this paragraph"></div>' -%}
 {%- endif -%}
 
 {%- macro start_area(t, areas, attrs) -%}

@@ -392,17 +392,22 @@ export function getPageXY(e: JQuery.Event) {
     if (!(
         "pageX" in e) || (
         e.pageX == 0 && e.pageY == 0)) {
-        const originalEvent = e.originalEvent as TouchEvent;
-        if (originalEvent.touches.length) {
+        if (!(window as unknown as Record<string, unknown>).TouchEvent) {
+            return {X: e.pageX, Y: e.pageY};
+        }
+        if (!(e instanceof TouchEvent)) {
+            return {X: e.pageX, Y: e.pageY};
+        }
+        if (e.touches.length) {
             return {
-                X: originalEvent.touches[0].pageX,
-                Y: originalEvent.touches[0].pageY,
+                X: e.touches[0].pageX,
+                Y: e.touches[0].pageY,
             };
         }
-        if (originalEvent.changedTouches.length) {
+        if (e.changedTouches.length) {
             return {
-                X: originalEvent.changedTouches[0].pageX,
-                Y: originalEvent.changedTouches[0].pageY,
+                X: e.changedTouches[0].pageX,
+                Y: e.changedTouches[0].pageY,
             };
         }
         // return null;

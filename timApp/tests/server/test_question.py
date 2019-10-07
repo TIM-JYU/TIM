@@ -26,7 +26,7 @@ class QuestionTest(TimLiveServer, TimRouteTest):
             </div>
             </tim-plugin-loader>
         </div>
-        <div class="editline" title="Click to edit this paragraph"></div>
+        <div class="editline" tabindex="0" title="Click to edit this paragraph"></div>
         <div class="readline"
              title="Click to mark this paragraph as read"></div>
     </div>
@@ -60,7 +60,7 @@ json:
   timeLimit: 90
 points: '2:1'</code></pre>
                 </div>
-                <div class="editline" title="Click to edit this paragraph"></div>
+                <div class="editline" tabindex="0" title="Click to edit this paragraph"></div>
                 <div class="readline"
                      title="Click to mark this paragraph as read"></div>
             </div>

@@ -1,4 +1,5 @@
 import $ from "jquery";
+import {KEY_ENTER} from "../util/keycodes";
 import {$document, $log} from "../util/ngimport";
 import {Coords, dist} from "../util/utils";
 import {EDITOR_CLASS_DOT} from "./parhelpers";
@@ -67,6 +68,15 @@ export function onClick(className: string,
             func($(e.currentTarget as HTMLElement), downEvent);
             downEvent = undefined;
         }
+    });
+
+    // When the element has focus, allow clicking by pressing Enter.
+    $document.on("keypress", className, (e: JQuery.Event) => {
+        const kbE = e.originalEvent as KeyboardEvent;
+        if (kbE.keyCode != KEY_ENTER) {
+            return;
+        }
+        func($(e.currentTarget as HTMLElement), e);
     });
 }
 
