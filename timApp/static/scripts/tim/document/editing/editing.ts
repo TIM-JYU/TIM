@@ -624,12 +624,12 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Close table editor", show: parEditable && timTableEditMode === true},
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.cutPar(e, p),
-                    desc: "Cut paragraph",
+                    desc: "Cut",
                     show: documentglobals().editMode === "par" && parEditable,
                 },
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.copyPar(e, p),
-                    desc: "Copy paragraph",
+                    desc: "Copy",
                     show: documentglobals().editMode !== "area" && par != null && !isHelpPar(par),
                 },
                 // {func: (e, par) => this.cutArea(e, par), desc: 'Cut area', show: $window.editMode === 'area'},
