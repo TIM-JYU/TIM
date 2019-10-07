@@ -4,81 +4,26 @@
  */
 
 import {IController} from "angular";
-import {Binding} from "tim/util/utils";
-import {IItem} from "./IItem";
-
+import {Require} from "tim/util/utils";
 import {timApp} from "../app";
+import {ViewCtrl} from "../document/viewctrl";
+import {IRangeData} from "../document/viewRangeInfo";
 import {
-    getCurrentViewRange, getParCount,
-    getViewRange,
     IViewRange,
     partitionDocument,
     showViewRangeEditDialog,
     unpartitionDocument,
 } from "./viewRangeEditDialog";
 
-export interface IRangeData {
-   range?: IViewRange;
-   name: string;
-}
-
 class ViewRangeNavigation implements IController {
     static $inject = ["$element", "$scope"];
-    private item!: Binding<IItem, "<">;
-    private ranges: IRangeData[] = [];
-    private lastIndex?: number;
+    private vctrl!: Require<ViewCtrl>;
+    private ranges?: IRangeData[] = [];
 
     async $onInit() {
-        // TODO: Handle user manually entering view range into the URL.
-        // TODO: Get results for both instances of the component on page with same call.
-        // TODO: Nav component disappears if partitioning is done only via URL params (i.e. disabled on other tab & reloaded).
-        this.lastIndex = await getParCount(this.item.id); // TODO: Better way to get this?
-        if (!this.lastIndex) {
-            return;
+        if (this.vctrl && this.vctrl.viewRangeInfo) {
+            this.ranges = this.vctrl.viewRangeInfo.ranges;
         }
-        this.ranges = await this.getRanges(this.item.id, this.lastIndex);
-    }
-
-    /**
-     * Get current view range and get first, next, previous, and last ranges based on it.
-     */
-    private async getRanges(docId: number, lastIndex: number) {
-        const currentRange = getCurrentViewRange();
-        const ranges = [];
-        if (currentRange) {
-            let nextRange = await getViewRange(docId, currentRange.e, true);
-            let prevRange = await getViewRange(docId, currentRange.b, false);
-            let firstRange = await getViewRange(docId, 0, true);
-            let lastRange = await getViewRange(docId, lastIndex, false);
-            // Remove redundant range links and add others to a list.
-            if (prevRange && prevRange.b == 0) {
-                firstRange = prevRange;
-                prevRange = undefined;
-            }
-            if (nextRange && nextRange.e == this.lastIndex) {
-                lastRange = nextRange;
-                nextRange = undefined;
-            }
-            if (currentRange.b == 0) {
-                firstRange = undefined;
-            }
-            if (currentRange.e == this.lastIndex) {
-                lastRange = undefined;
-            }
-            if (firstRange) {
-                ranges.push({range: firstRange, name: "First"});
-            }
-            if (prevRange) {
-                ranges.push({range: prevRange, name: "Previous"});
-            }
-            if (nextRange) {
-                ranges.push({range: nextRange, name: "Next"});
-            }
-            if (lastRange) {
-                ranges.push({range: lastRange, name: "Last"});
-            }
-        }
-        return ranges;
     }
 
     /**
@@ -89,14 +34,14 @@ class ViewRangeNavigation implements IController {
         if (targetRange) {
             partitionDocument(targetRange.b, targetRange.e, true);
         }
-        void this.getRanges();
+        // void this.getRanges();
     }
 
     /**
      * Opens dialog for editing view range settings.
      */
     private openViewRangeMenu() {
-        void showViewRangeEditDialog(this.item);
+        void showViewRangeEditDialog(this.vctrl.item);
         // this.currentRange = getCurrentViewRange();
     }
 
@@ -109,10 +54,10 @@ class ViewRangeNavigation implements IController {
 }
 
 timApp.component("viewRangeNavigation", {
-    bindings: {
-        item: "<",
-    },
     controller: ViewRangeNavigation,
+    require: {
+        vctrl: "^timView",
+    },
     template: `
     <div class="view-range-container" ng-if="$ctrl.ranges">
         <div class="view-range-buttons">

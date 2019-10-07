@@ -41,6 +41,7 @@ import {IDocSettings} from "./IDocSettings";
 import {PopupMenuController} from "./popupMenu";
 import {RefPopupHandler} from "./refpopup";
 import {initSlideView} from "./slide";
+import {ViewRangeInfo} from "./viewRangeInfo";
 import {IMenuFunctionEntry} from "./viewutils";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar);
@@ -163,6 +164,7 @@ export class ViewCtrl implements IController {
     public parmenuHandler: ParmenuHandler;
     public refpopupHandler: RefPopupHandler;
     public popupmenu?: PopupMenuController;
+    public viewRangeInfo: ViewRangeInfo;
 
     public bookmarksCtrl: BookmarksController | undefined;
 
@@ -226,6 +228,7 @@ export class ViewCtrl implements IController {
         this.notesHandler = new NotesHandler(sc, this);
         this.parmenuHandler = new ParmenuHandler(sc, this);
         this.refpopupHandler = new RefPopupHandler(sc, this);
+        this.viewRangeInfo = new ViewRangeInfo(this);
         if (!this.isSlideView()) {
             initReadings(this);
         } else {
@@ -420,7 +423,7 @@ export class ViewCtrl implements IController {
         }, Math.max(1000 * this.liveUpdates, 1000));
     }
 
-    $onInit() {
+    async $onInit() {
         vctrlInstance = this;
         this.scope.$watchGroup([
             () => this.lectureMode,
@@ -441,6 +444,7 @@ export class ViewCtrl implements IController {
         });
         this.reviewCtrl.loadDocumentAnnotations();
         this.editingHandler.insertHelpPar();
+        await this.viewRangeInfo.loadRanges(this.item.id);
         // window.onbeforeunload = () => {
         //     const dirty = this.checkUnSavedTimComponents();
         //     if ( dirty ) { return "You have unsaved tasks!"; }  // IE shows this message
