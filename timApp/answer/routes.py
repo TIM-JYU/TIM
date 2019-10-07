@@ -11,6 +11,7 @@ from flask import request
 from marshmallow import validates_schema, ValidationError
 from marshmallow.utils import _Missing as Missing, missing
 from sqlalchemy import func
+from sqlalchemy.orm import lazyload
 from webargs.flaskparser import use_args
 
 from pluginserver_flask import GenericMarkupModel
@@ -1294,8 +1295,14 @@ def get_task_users(task_id):
         hide_names = True
 
     usergroup = request.args.get('group')
-    q = User.query.join(Answer, User.answers).filter_by(task_id=task_id).join(UserGroup, User.groups).order_by(
-        User.real_name.asc())
+    q = (
+        User.query
+            .options(lazyload(User.groups))
+            .join(Answer, User.answers)
+            .filter_by(task_id=task_id)
+            .join(UserGroup, User.groups)
+            .order_by(User.real_name.asc())
+    )
     if usergroup is not None:
         q = q.filter(UserGroup.name.in_([usergroup]))
     users = q.all()
