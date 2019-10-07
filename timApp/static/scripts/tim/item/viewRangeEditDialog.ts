@@ -14,7 +14,7 @@ import {IItem} from "./IItem";
 markAsUsed(focusMe);
 
 // TODO: Are b and e always in the same order?
-export const viewRangeRegExp = new RegExp("\&b=\\d+\&e=\\d+");
+export const viewRangeRegExp = new RegExp("\&b=\\d+\&e=\\d+\(&preamble=(true|false)|)");
 export const viewRangeCookieRegExp = new RegExp("r=\\d+;");
 
 export interface IViewRange {
@@ -39,10 +39,11 @@ export async function unpartitionDocument() {
  * otherwise add to url parameters.
  * @param b First shown par index.
  * @param e Last shown par index.
+ * @param loadPreamble Load preamble at the beginning of each part.
  */
-export function partitionDocument(b: number, e: number) {
+export function partitionDocument(b: number, e: number, loadPreamble: boolean) {
     const allParams = document.location.search;
-    const newParams = `&b=${b}&e=${e}`;
+    const newParams = `&b=${b}&e=${e}&preamble=${loadPreamble}`;
     if (viewRangeRegExp.test(allParams)) {
         document.location.search = document.location.search.replace(viewRangeRegExp, newParams);
     } else {
@@ -115,7 +116,7 @@ export async function toggleViewRange(docId: number, pieceSize: number) {
         await setPieceSize(pieceSize);
         const range = await getViewRange(docId, 0, true);
         if (range) {
-            partitionDocument(range.b, range.e);
+            partitionDocument(range.b, range.e, true);
         } else {
             await unpartitionDocument();
         }
@@ -202,7 +203,7 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
             }
             const range = await getViewRange(this.resolve.params.id, beginIndex, true);
             if (range) {
-                partitionDocument(range.b, range.e);
+                partitionDocument(range.b, range.e, true);
             }
         } else {
             await unpartitionDocument();

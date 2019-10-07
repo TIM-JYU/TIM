@@ -299,7 +299,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
         view_range_dict = {'b': view_range[0], 'e': view_range[1]}
     except (ValueError, TypeError):
         view_range_dict = None
-
+    load_preamble = request.args.get('preamble') == 'true'
     start_index = max(view_range[0], 0) if view_range else 0
 
     doc, xs = get_document(doc_info, view_range)
@@ -314,7 +314,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     current_user = get_current_user_object() if logged_in() else None
     doc_settings = doc.get_settings(current_user)
 
-    if not view_range:
+    if load_preamble or not view_range:
         try:
             preamble_pars = doc.insert_preamble_pars()
         except PreambleException as e:

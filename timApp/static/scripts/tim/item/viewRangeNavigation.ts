@@ -56,7 +56,7 @@ class ViewRangeNavigation implements IController {
             return;
         }
         if (targetRange) {
-            partitionDocument(targetRange.b, targetRange.e);
+            partitionDocument(targetRange.b, targetRange.e, true);
         }
         void this.getRanges();
     }
