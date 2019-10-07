@@ -822,6 +822,13 @@ def get_piece_size_from_cookie(request: Request) -> Optional[int]:
         return None
 
 
+@view_page.route('/viewrange/parCount/<int:doc_id>')
+def get_par_count(doc_id):
+    d = get_doc_or_abort(doc_id)
+    par_count = len(d.document.get_paragraphs())
+    return json_response({'parCount': par_count})
+
+
 def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0,
                        forwards: bool = True, min_set_size_modifier: float = 0.5) -> Optional[Range]:
     """

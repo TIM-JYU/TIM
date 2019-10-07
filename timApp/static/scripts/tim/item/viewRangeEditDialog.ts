@@ -35,6 +35,19 @@ export async function unpartitionDocument() {
 }
 
 /**
+ * Get document par count. Requires view rights.
+ * @param docId Document id.
+ */
+export async function getParCount(docId: number) {
+    const r = await to($http.get<{parCount: number}>(`/viewrange/parCount/${docId}`));
+    if (!r.ok) {
+        return undefined;
+    } else {
+        return r.result.data.parCount;
+    }
+}
+
+/**
  * Partition document by reloading. If there's existing partitioning, replace it,
  * otherwise add to url parameters.
  * @param b First shown par index.
