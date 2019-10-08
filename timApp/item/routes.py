@@ -286,20 +286,20 @@ def view(item_path, template_name, usergroup=None, route="view"):
     if get_option(request, 'login', False) and not logged_in():
         return redirect_to_login()
 
-    # TODO: Disable URL param partitioning without piece size cookie (to avoid problems with tabs and reloads).
-    # TODO: OR: show navigation even without piece size, but only on that document.
+    load_preamble = False
+    piece_size = get_piece_size_from_cookie(request)
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
+        load_preamble = request.args.get('preamble') == 'true'
     except (ValueError, TypeError):
         view_range = None
-    piece_size = get_piece_size_from_cookie(request)
     if piece_size and not view_range:
         view_range = decide_view_range(doc_info, piece_size)
+        load_preamble = True # If partitioning without URL-param, true is default.
     try:
         view_range_dict = {'b': view_range[0], 'e': view_range[1]}
     except (ValueError, TypeError):
         view_range_dict = None
-    load_preamble = request.args.get('preamble') == 'true'
     start_index = max(view_range[0], 0) if view_range else 0
 
     doc, xs = get_document(doc_info, view_range)
