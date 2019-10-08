@@ -314,7 +314,14 @@ def view(item_path, template_name, usergroup=None, route="view"):
     current_user = get_current_user_object() if logged_in() else None
     doc_settings = doc.get_settings(current_user)
 
-    if load_preamble or not view_range:
+    if load_preamble:
+        try:
+            preamble_pars = doc.insert_preamble_pars("includeInParts")
+        except PreambleException as e:
+            flash(e)
+        else:
+            xs = preamble_pars + xs
+    elif not view_range:
         try:
             preamble_pars = doc.insert_preamble_pars()
         except PreambleException as e:

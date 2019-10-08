@@ -90,6 +90,14 @@ class DocInfo(Item):
             self._preamble_docs = self._get_preamble_docs_impl(preamble_setting) if isinstance(preamble_setting, str) else []
         return self._preamble_docs
 
+    def get_preamble_pars_with_class(self, class_name: str):
+        """
+        Get preamble pars that have the given class.
+        :param class_name: Class name to filter pars with.
+        :return: Filtered pars from the preamble document.
+        """
+        return get_pars_with_class_from_docs(self.get_preamble_docs(), class_name)
+
     def get_preamble_pars(self) -> Generator[DocParagraph, None, None]:
         return get_non_settings_pars_from_docs(self.get_preamble_docs())
 
@@ -161,6 +169,20 @@ def get_non_settings_pars_from_docs(docs: Iterable[DocInfo]) -> Generator[DocPar
     for d in docs:
         for p in d.document:
             if not p.is_setting() or p.is_area():
+                yield p
+
+
+def get_pars_with_class_from_docs(docs: Iterable[DocInfo], class_name: str) -> Generator[DocParagraph, None, None]:
+    """
+    Loads all non-settings pars with given class.
+    :param docs: Document.
+    :param class_name: Name of the class to include in preamble.
+    :return: Pars that have the chosen class.
+    """
+    for d in docs:
+        for p in d.document:
+            classes = p.get_attr("classes")
+            if classes and class_name in classes and not p.is_setting() or p.is_area():
                 yield p
 
 
