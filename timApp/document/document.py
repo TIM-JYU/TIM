@@ -1057,10 +1057,10 @@ class Document:
                 self.par_ids.append(par_id)
                 self.par_hashes.append(t)
 
-    def insert_preamble_pars(self, class_name: Optional[str] = None):
+    def insert_preamble_pars(self, class_names: Optional[List[str]] = None):
         """
         Add preamble pars.
-        :param class_name: Optional filtering of pars with a class name string.
+        :param class_names: Optionally include only pars with a class included this list of class names.
         :return: Preamble pars.
         """
         if self.preamble_included:
@@ -1069,11 +1069,11 @@ class Document:
 
         # We must clone the preamble pars because they may be used in the context of multiple documents.
         # See the test test_preamble_ref.
-        if not class_name:
+        if not class_names:
             pars = [p.clone() for p in self.get_docinfo().get_preamble_pars()]
         else:
-            # Filter pars with a class name.
-            pars = [p.clone() for p in self.get_docinfo().get_preamble_pars_with_class(class_name)]
+            # Filter pars with class names.
+            pars = [p.clone() for p in self.get_docinfo().get_preamble_pars_with_class(class_names)]
         current_ids = set(self.par_ids)
         preamble_ids = set(p.get_id() for p in pars)
         if len(pars) != len(preamble_ids):

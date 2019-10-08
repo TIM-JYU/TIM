@@ -90,13 +90,13 @@ class DocInfo(Item):
             self._preamble_docs = self._get_preamble_docs_impl(preamble_setting) if isinstance(preamble_setting, str) else []
         return self._preamble_docs
 
-    def get_preamble_pars_with_class(self, class_name: str):
+    def get_preamble_pars_with_class(self, class_names: List[str]):
         """
-        Get preamble pars that have the given class.
-        :param class_name: Class name to filter pars with.
+        Get preamble pars with any one of the given classes.
+        :param class_names: Class name list.
         :return: Filtered pars from the preamble document.
         """
-        return get_pars_with_class_from_docs(self.get_preamble_docs(), class_name)
+        return get_pars_with_class_from_docs(self.get_preamble_docs(), class_names)
 
     def get_preamble_pars(self) -> Generator[DocParagraph, None, None]:
         return get_non_settings_pars_from_docs(self.get_preamble_docs())
@@ -172,18 +172,20 @@ def get_non_settings_pars_from_docs(docs: Iterable[DocInfo]) -> Generator[DocPar
                 yield p
 
 
-def get_pars_with_class_from_docs(docs: Iterable[DocInfo], class_name: str) -> Generator[DocParagraph, None, None]:
+def get_pars_with_class_from_docs(docs: Iterable[DocInfo], class_names: List[str]) -> Generator[DocParagraph, None, None]:
     """
-    Loads all non-settings pars with given class.
+    Loads all non-settings pars that have any one of the given classes.
     :param docs: Document.
-    :param class_name: Name of the class to include in preamble.
-    :return: Pars that have the chosen class.
+    :param class_names: List of class names.
+    :return: Pars that have any of the filtering class names.
     """
     for d in docs:
         for p in d.document:
             classes = p.get_attr("classes")
-            if classes and class_name in classes and not p.is_setting() or p.is_area():
-                yield p
+            if classes:
+                for name in class_names:
+                    if name in classes and not p.is_setting() or p.is_area():
+                        yield p
 
 
 def move_document(d: DocInfo, destination):

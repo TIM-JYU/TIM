@@ -314,13 +314,18 @@ def view(item_path, template_name, usergroup=None, route="view"):
     current_user = get_current_user_object() if logged_in() else None
     doc_settings = doc.get_settings(current_user)
 
+    # Load special class preamble pars.
     if load_preamble:
         try:
-            preamble_pars = doc.insert_preamble_pars("includeInParts")
+            if view_range[0] == 0:
+                preamble_pars = doc.insert_preamble_pars(["includeInFirstPart", "includeInParts"])
+            else:
+                preamble_pars = doc.insert_preamble_pars(["includeInParts"])
         except PreambleException as e:
             flash(e)
         else:
             xs = preamble_pars + xs
+    # Load all normal preamble pars.
     elif not view_range:
         try:
             preamble_pars = doc.insert_preamble_pars()
