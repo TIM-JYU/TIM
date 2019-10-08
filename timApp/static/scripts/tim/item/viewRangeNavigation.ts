@@ -59,7 +59,7 @@ timApp.component("viewRangeNavigation", {
         vctrl: "^timView",
     },
     template: `
-    <div class="view-range-container" ng-if="$ctrl.ranges">
+    <div class="view-range-container" ng-if="$ctrl.ranges && $ctrl.ranges.length > 0">
         <div class="view-range-buttons">
             <span ng-repeat="r in $ctrl.ranges">
                 <a ng-if="r.range" ng-click="$ctrl.move(r.range)"
