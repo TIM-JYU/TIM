@@ -233,11 +233,11 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         assert_msg = f'Screenshots did not match (diff value is {result}); ' \
                      f'failed screenshot saved to screenshots/{f}{fail_suffix} ' \
                      f'and difference to screenshots/{f}{fail_suffix}_DIFF'
-        new_screenshots = 0 # change here 1 for generating new screenshots
+        new_screenshots = 0  # change here 1 for generating new screenshots
         if new_screenshots == 0:
             self.assertTrue(self.skip_screenshot_tests, msg=assert_msg)  # for normal run
         else:
-            self.assertTrue(self.skip_screenshot_tests or True, msg=assert_msg) # for making new screenshots
+            self.assertTrue(self.skip_screenshot_tests or True, msg=assert_msg)  # for making new screenshots
 
     def should_not_exist(self, css_selector: str):
         """Asserts that the current document should not contain any elements that match the specified CSS selector.
