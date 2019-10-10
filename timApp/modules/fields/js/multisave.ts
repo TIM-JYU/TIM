@@ -382,7 +382,7 @@ multisaveApp.component("multisaveRunner", {
     <div ng-if="$ctrl.attrs.destCourse">
         <div class="checkbox">
             <label><input type="checkbox" ng-model="$ctrl.dryRun">
-                Only see what would be sent
+                Only see what would be sent, so don't actually send anything
             </label>
         </div>
         <div class="checkbox">
@@ -390,6 +390,7 @@ multisaveApp.component("multisaveRunner", {
                 If some assessments have errors, send still the ones that are ok
             </label>
         </div>
+        <p>Sending assessments to Sisu will overwrite the data in Sisu's assessment view.</p>
     </div>
     <button class="timButton"
             ng-disabled="$ctrl.saving"
