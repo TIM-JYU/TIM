@@ -353,7 +353,7 @@ menu: |!!
 ```
 """,
 """
-``` {plugin="timMenu" .hidden-print}
+``` {plugin="timMenu" .hidden-print .includeInParts}
 topMenu: true
 topMenuTriggerHeight: 200
 menu: |!!
