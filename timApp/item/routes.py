@@ -223,6 +223,18 @@ def get_module_ids(js_paths: List[str]):
         yield jsfile.lstrip('/').rstrip('.js')
 
 
+def partition_texts(texts, view_range):
+    i = 0
+    partitioned = []
+    for text in texts:
+        if i >= view_range[1]:
+            break
+        if i >= view_range[0]:
+            partitioned.append(text)
+        i += 1
+    return partitioned
+
+
 def view(item_path, template_name, usergroup=None, route="view"):
     taketime("view begin", zero=True)
 
@@ -302,7 +314,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
         view_range_dict = None
     start_index = max(view_range[0], 0) if view_range else 0
 
-    doc, xs = get_document(doc_info, view_range)
+    doc, xs = get_document(doc_info) # View range partitioning is done after forming the index.
     g.doc = doc
 
     doc.route = route
@@ -429,6 +441,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
     )
 
     index = get_index_from_html_list(t['html'] for t in texts)
+    if view_range:
+        texts = partition_texts(texts, view_range)
 
     if hide_names_in_teacher() or should_hide_names:
         for entry in user_list:
@@ -822,6 +836,29 @@ def get_viewrange(doc_id, index, forwards):
         return abort(400, get_error_message(e))
 
 
+def get_index_with_header_id(doc_info, header_id):
+    pars = doc_info.document.get_paragraphs()
+    for i, par in enumerate(pars):
+        if f'id="{header_id}"' in par.get_html():
+            return i
+    return None
+
+
+@view_page.route('/viewrange/getWithHeaderId/<int:doc_id>/<string:header_id>')
+def get_viewrange_with_header_id(doc_id, header_id):
+    current_set_size = get_piece_size_from_cookie(request)
+    if not current_set_size:
+        return abort(400, "Piece size not found!")
+    try:
+        doc_info = DocEntry.find_by_id(doc_id)
+        index = get_index_with_header_id(doc_info, header_id)
+        view_range = decide_view_range(doc_info, current_set_size, index, True)
+        return json_response({'b': view_range[0], 'e': view_range[1]})
+    except Exception as e:
+        print(e)
+        return abort(400, get_error_message(e))
+
+
 def get_piece_size_from_cookie(request: Request) -> Optional[int]:
     """
     Reads piece size from cookie, if it exists.
@@ -855,7 +892,7 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
     :return:
     """
-    par_count = len(doc_info.document.get_paragraphs())
+    par_count = len(doc_info.document.insert_preamble_pars().get_paragraphs())
     if forwards:
         b = index
         e = min(preferred_set_size + index, par_count)

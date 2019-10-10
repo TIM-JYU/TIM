@@ -14,7 +14,7 @@ import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
 import {
-    getCurrentViewRange, IViewRange,
+    getCurrentViewRange, getViewRangeWithHeaderId, IViewRange, partitionDocument,
     showViewRangeEditDialog, toggleViewRange,
 } from "../item/viewRangeEditDialog";
 import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
@@ -33,6 +33,7 @@ export interface IHeader {
     id: string;
     level: number;
     text: string;
+    parIndex: number;
 }
 
 export interface IHeaderDisplayIndexItem {
@@ -503,6 +504,21 @@ export class SidebarMenuCtrl implements IController {
         }
          this.currentViewRange = getCurrentViewRange();
     }
+
+    /**
+     *
+     * @param $event
+     * @param headerId
+     */
+    private async headerClicked($event: Event, headerId: string) {
+        if (this.currentViewRange && this.vctrl) {
+            const headerRange = await getViewRangeWithHeaderId(this.vctrl.docId, headerId);
+            if (headerRange) {
+                partitionDocument(headerRange.b, headerRange.e, true);
+            }
+        }
+        $event.stopPropagation();
+    }
 }
 
 timApp.component("timSidebarMenu", {
@@ -662,11 +678,12 @@ timApp.component("timSidebarMenu", {
         <ul class="subexp">
             <li ng-class="$ctrl.headerClass(h)" ng-repeat="h in ::$ctrl.displayIndex"
                 ng-click="h.closed = !h.closed">
-                <a class="a{{::h.h1.level}}" href="#{{::h.h1.id}}" target="_self" ng-click="$event.stopPropagation()">
+                <a class="a{{::h.h1.level}}" href="#{{::h.h1.id}}" target="_self" ng-click="$ctrl.headerClicked($event, h.h1.id)">
                     {{::h.h1.text}}</a>
                 <ul class="list-unstyled" ng-if="!h.closed" ng-click="$event.stopPropagation()">
                     <li class="basic" ng-repeat="h2 in h.h2List">
-                        <a class="a{{::h2.level}}" href="#{{::h2.id}}" target="_self">{{::h2.text}}</a>
+                        <a class="a{{::h2.level}}" href="#{{::h2.id}}" ng-click="$ctrl.headerClicked($event, h2.id)"
+                            target="_self">{{::h2.text}}</a>
                     </li>
                 </ul>
             </li>
