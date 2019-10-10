@@ -13,10 +13,7 @@ import {IRelevanceResponse} from "../item/relevanceEdit";
 import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
-import {
-    getCurrentViewRange, getViewRangeWithHeaderId, IViewRange, partitionDocument,
-    showViewRangeEditDialog, toggleViewRange,
-} from "../item/viewRangeEditDialog";
+import {showViewRangeEditDialog} from "../item/viewRangeEditDialog";
 import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
 import {ITemplateParams, showPrintDialog} from "../printing/printCtrl";
 import {showConsentDialog} from "../ui/consent";
@@ -28,6 +25,14 @@ import {Users, UserService} from "../user/userService";
 import {someglobals} from "../util/globals";
 import {$http, $localStorage} from "../util/ngimport";
 import {IOkResponse, Require, to} from "../util/utils";
+
+import {
+    getCurrentViewRange,
+    getViewRangeWithHeaderId,
+    IViewRange,
+    partitionDocument,
+    toggleViewRange,
+} from "../document/viewRangeInfo";
 
 export interface IHeader {
     id: string;

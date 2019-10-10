@@ -7,13 +7,8 @@ import {IController} from "angular";
 import {Require} from "tim/util/utils";
 import {timApp} from "../app";
 import {ViewCtrl} from "../document/viewctrl";
-import {IRangeData} from "../document/viewRangeInfo";
-import {
-    IViewRange,
-    partitionDocument,
-    showViewRangeEditDialog,
-    unpartitionDocument,
-} from "./viewRangeEditDialog";
+import {IRangeData, IViewRange, partitionDocument, unpartitionDocument} from "../document/viewRangeInfo";
+import {showViewRangeEditDialog} from "./viewRangeEditDialog";
 
 class ViewRangeNavigation implements IController {
     static $inject = ["$element", "$scope"];
