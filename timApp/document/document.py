@@ -1064,7 +1064,7 @@ class Document:
         :return: Preamble pars.
         """
         if self.preamble_included:
-            return
+            return self.preamble_pars
         self.ensure_pars_loaded()
 
         # We must clone the preamble pars because they may be used in the context of multiple documents.
