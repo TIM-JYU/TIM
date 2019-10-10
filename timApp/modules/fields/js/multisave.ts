@@ -45,6 +45,28 @@ const multisaveAll = t.intersection([
     }),
 ]);
 
+interface IAssessment {
+    completionCredits?: number;
+    completionDate: string;
+    gradeId: "1" | "2" | "3" | "4" | "5" | "HYV" | "HYL" | "HT" | "TT";
+    privateComment?: string;
+    userName: string;
+}
+
+interface IAssessmentError {
+    message: string;
+    assessment: IAssessment;
+}
+
+interface IAssessmentExt extends IAssessment {
+    error?: string;
+}
+
+interface IGradeResponse {
+    sent_assessments: IAssessment[];
+    assessment_errors: IAssessmentError[];
+}
+
 export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMarkup>, t.TypeOf<typeof multisaveAll>, typeof multisaveAll> {
     private isSaved = false;
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
@@ -58,6 +80,13 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     private emailbccme: boolean = true;
     private emailtim: boolean = true;
     private emailMsg: string = "";
+    private assessments?: IAssessmentExt[];
+    private gridOptions?: uiGrid.IGridOptionsOf<IAssessmentExt>;
+    private partial: boolean = false;
+    private dryRun: boolean = false;
+    private saving: boolean = false;
+    private lastPartial?: boolean;
+    private lastDryRun?: boolean;
 
     getDefaultMarkup() {
         return {};
@@ -142,6 +171,13 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         this.showEmailForm = !this.showEmailForm;
     }
 
+    okAssessments() {
+        if (!this.assessments) {
+            return 0;
+        }
+        return this.assessments.reduce((n, x) => n + (x.error === undefined ? 1 : 0), 0);
+    }
+
     /**
      * Calls the save method of all ITimComponent plugins that match the given attributes
      * - Save all plugins defined in "fields" attribute that match the given regexp
@@ -152,16 +188,69 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
      */
     async save() {
         if (this.attrs.destCourse) {
-            await showMessageDialog("Does not work yet.  Hope it works in October...");
-            if (1) {
-                return;
-            }
-            const r = await to($http.post("/postGrades", {
+            this.saving = true;
+            this.lastPartial = this.partial;
+            this.lastDryRun = this.dryRun;
+            this.assessments = undefined;
+            const r = await to($http.post<IGradeResponse>("/sisu/sendGrades", {
                 destCourse: this.attrs.destCourse,
                 docId: this.vctrl.item.id,
+                partial: this.partial,
+                dryRun: this.dryRun,
             }));
+            this.saving = false;
             if (r.ok) {
-                await showMessageDialog("Grades were sent successfully to Sisu.");
+                this.assessments = [
+                    ...r.result.data.sent_assessments,
+                    ...r.result.data.assessment_errors.map((a) => ({...a.assessment, error: a.message})),
+                ];
+                this.gridOptions = {
+                    columnDefs: [
+                        {
+                            field: "userName",
+                            name: "Username",
+                            allowCellFocus: false,
+                            width: 140,
+                        },
+                        {
+                            field: "gradeId",
+                            name: "Grade",
+                            allowCellFocus: false,
+                            width: 60,
+                        },
+                        {
+                            field: "completionDate",
+                            name: "Completion date",
+                            allowCellFocus: false,
+                            width: 140,
+                        },
+                        {
+                            field: "completionCredits",
+                            name: "Credits",
+                            allowCellFocus: false,
+                            width: 70,
+                        },
+                        {
+                            field: "privateComment",
+                            name: "Comment",
+                            allowCellFocus: false,
+                            cellTooltip: true,
+                        },
+                        {
+                            field: "error",
+                            name: "Error?",
+                            allowCellFocus: false,
+                            sort: {direction: "asc"},
+                            cellTooltip: true,
+                        },
+                    ],
+                    data: this.assessments,
+                    enableHorizontalScrollbar: false,
+                    enableSorting: true,
+                    enableRowSelection: false,
+                    enableFiltering: true,
+                    enableColumnMenus: false,
+                };
             } else {
                 await showMessageDialog(r.result.data.error);
             }
@@ -290,11 +379,35 @@ multisaveApp.component("multisaveRunner", {
 <span class="no-popup-menu">
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
+    <div ng-if="$ctrl.attrs.destCourse">
+        <div class="checkbox">
+            <label><input type="checkbox" ng-model="$ctrl.dryRun">
+                Only see what would be sent
+            </label>
+        </div>
+        <div class="checkbox">
+            <label><input type="checkbox" ng-model="$ctrl.partial">
+                If some assessments have errors, send still the ones that are ok
+            </label>
+        </div>
+    </div>
     <button class="timButton"
+            ng-disabled="$ctrl.saving"
             ng-if="!$ctrl.showEmailForm && $ctrl.buttonText()"
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}
     </button>
+    <div ng-if="$ctrl.assessments">
+        <p>
+            {{ $ctrl.okAssessments() }} assessments {{ $ctrl.lastDryRun ? 'would be' : 'were' }} sent to Sisu.
+            {{ $ctrl.assessments.length - $ctrl.okAssessments() }} assessments with errors {{ $ctrl.lastDryRun ? 'would be' : 'were' }} rejected.
+        </p>
+        <div style="font-size: small"
+             ui-grid="$ctrl.gridOptions"
+             ui-grid-auto-resize
+             ui-grid-cellNav>
+        </div>
+    </div>
     <p class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</p>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
         <p class="closeButton" ng-click="$ctrl.toggleEmailForm()"></p>

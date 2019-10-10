@@ -11,6 +11,7 @@
 .settings
 .stack-work/
 .webassets-cache/
+/certs/
 /Dumbo/**/*.iml
 /Dumbo/cache/
 /Dumbo/out/

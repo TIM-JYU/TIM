@@ -81,3 +81,5 @@ MIN_PASSWORD_LENGTH = 10
 PROXY_WHITELIST = [
     'korppi.jyu.fi',
 ]
+SISU_ASSESSMENTS_URL = 'https://s2s.apitest.jyu.fi/assessments/'
+SISU_CERT_PATH = '/service/certs/sisu.pem'

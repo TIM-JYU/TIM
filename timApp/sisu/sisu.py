@@ -1,10 +1,11 @@
 from textwrap import dedent
+from textwrap import dedent
 from typing import List, Optional, Dict, Union
 
 import click
 import requests
 from dataclasses import dataclass
-from flask import Blueprint, abort, current_app
+from flask import Blueprint, abort, current_app, request
 from flask.cli import AppGroup
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import any_, true
@@ -23,9 +24,10 @@ from timApp.item.validation import ItemValidationRule, validate_item_and_create_
 from timApp.notification.notify import send_email
 from timApp.sisu.parse_display_name import SisuDisplayName, parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
-from timApp.tim_app import app
+from timApp.tim_app import app, csrf
 from timApp.timdb.sqa import db
-from timApp.user.groups import validate_groupname, update_group_doc_settings, add_group_infofield_template
+from timApp.user.groups import validate_groupname, update_group_doc_settings, add_group_infofield_template, \
+    verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_sisu_groups_by_filter
 from timApp.util.flask.requesthelper import use_model
@@ -72,7 +74,7 @@ def get_group_prefix(g: UserGroup):
     return None
 
 
-def get_potential_groups(u: User, course_filter: Optional[str]=None) -> List[UserGroup]:
+def get_potential_groups(u: User, course_filter: Optional[str] = None) -> List[UserGroup]:
     """Returns all the Sisu groups that the user shall have access to."""
     sisu_group_memberships = u.groups_dyn.join(UserGroup).join(ScimUserGroup).with_entities(UserGroup).all()
     ug_filter = true()
@@ -89,6 +91,7 @@ def get_potential_groups(u: User, course_filter: Optional[str]=None) -> List[Use
 class GroupCreateModel:
     externalId: str
     name: Union[str, _Missing] = missing
+
 
 GroupCreateSchema = class_schema(GroupCreateModel)
 
@@ -185,7 +188,7 @@ def create_groups_route(args: List[GroupCreateModel]):
 def create_sisu_document(
         item_path: str,
         item_title: str,
-        owner_group: UserGroup=None,
+        owner_group: UserGroup = None,
 ) -> DocInfo:
     validate_item_and_create_intermediate_folders(
         item_path,
@@ -197,6 +200,7 @@ def create_sisu_document(
 
 
 sisu_cli = AppGroup('sisu')
+
 
 @sisu_cli.command('createdocs')
 def create_docs():
@@ -271,6 +275,8 @@ def send_course_group_mail(p: SisuDisplayName, u: User):
 class PostGradesModel:
     destCourse: str
     docId: int
+    dryRun: bool
+    partial: bool
 
 
 @sisu.route('/sendGrades', methods=['post'])
@@ -280,6 +286,8 @@ def post_grades_route(m: PostGradesModel):
         m.destCourse,
         get_current_user_object(),
         get_doc_or_abort(m.docId),
+        partial=m.partial,
+        dry_run=m.dryRun,
     ))
 
 
@@ -291,34 +299,105 @@ class SisuError(Exception):
     pass
 
 
-def send_grades_to_sisu(sisu_id: str, teacher: User, doc: DocInfo):
-    request_data = get_sisu_assessments(sisu_id, teacher, doc)
-    r = requests.post(f'http://nginx/assessments/{sisu_id}', json=request_data)
-    if r.status_code != 200 and False:
-        raise SisuError(r.text)
-    return {'sent_grades': request_data}
+@dataclass
+class PostAssessmentsErrorValue:
+    code: int
+    reason: str
+
+
+@dataclass
+class PostAssessmentsBody:
+    assessments: Dict[int, Dict[str, PostAssessmentsErrorValue]]
+
+
+@dataclass
+class PostAssessmentsResponse:
+    body: Optional[PostAssessmentsBody] = None
+    error: Optional[PostAssessmentsErrorValue] = None
+
+
+PostAssessmentsResponseSchema = class_schema(PostAssessmentsResponse)
+
+
+@csrf.exempt
+@sisu.route('/assessments/<sisuid>', methods=['post'])
+def mock_assessments(sisuid):
+    ok_names = {'us-1'}
+    j = request.get_json()
+    assessments = j['assessments']
+    partial = j['partial']
+    return json_response({'body': {
+        'assessments': {str(i): {'userName': {'code': 40001, 'reason': 'Some reason.'}}
+                        for i, a in enumerate(assessments) if a['userName'] not in ok_names},
+    }}, status_code=207 if partial else 400)
+
+
+def send_grades_to_sisu(
+        sisu_id: str,
+        teacher: User,
+        doc: DocInfo,
+        partial: bool,
+        dry_run: bool,
+):
+    assessments = get_sisu_assessments(sisu_id, teacher, doc)
+    url = f'{app.config["SISU_ASSESSMENTS_URL"]}{sisu_id}'
+    r = requests.post(
+        url,
+        json={
+            'assessments': assessments,
+            'partial': partial,
+            'dry_run': dry_run,
+        },
+        cert=app.config['SISU_CERT_PATH'],
+    )
+    # noinspection PyTypeChecker
+    pr: PostAssessmentsResponse = PostAssessmentsResponseSchema().load(r.json())
+    if pr.error:
+        raise SisuError(pr.error.reason)
+    invalid_assessments = set(n for n in pr.body.assessments.keys())
+    ok_assessments = [a for i, a in enumerate(assessments) if i not in invalid_assessments]
+    return {
+        'sent_assessments': ok_assessments if r.status_code < 400 else [],
+        'assessment_errors': [
+            {
+                'message': ", ".join(x.reason for x in v.values()),
+                'assessment': assessments[k],
+            }
+            for k, v in pr.body.assessments.items()
+        ],
+    }
 
 
 def get_sisu_assessments(sisu_id: str, teacher: User, doc: DocInfo):
     teachers_group = UserGroup.get_teachers_group()
     if teacher not in teachers_group.users:
-        raise AccessDenied('User is not a TIM teacher')
-    pot_groups = get_potential_groups(teacher)
+        raise AccessDenied('You are not a TIM teacher.')
+    pot_groups = get_potential_groups(teacher, course_filter=sisu_id)
     responsible_teachers_group = f'{sisu_id}-responsible-teachers'
     if responsible_teachers_group not in (g.external_id.external_id for g in pot_groups):
-        raise AccessDenied(f'User is not a responsible teacher of the course {sisu_id}')
+        raise AccessDenied(f'You are not a responsible teacher of the course {sisu_id}.')
     if not teacher.has_teacher_access(doc):
-        raise AccessDenied('User does not have teacher access to the document')
+        raise AccessDenied('You do not have teacher access to the document.')
     doc_settings = doc.document.get_settings()
     try:
         usergroup = doc_settings.group()
     except ValueError as e:
         raise IncorrectSettings(str(e)) from e
     if not usergroup:
-        raise IncorrectSettings('Document must have group setting')
+        raise IncorrectSettings('The document must have "group" setting that indicates the student group name.')
     ug = UserGroup.get_by_name(usergroup)
     if not ug:
-        raise IncorrectSettings(f'Usergroup {usergroup} not found')
+        raise IncorrectSettings(f'Usergroup "{usergroup}" not found.')
+    if not verify_group_view_access(ug, require=False):
+        raise AccessDenied(f'You do not have access to the group "{usergroup}".')
+    if not ug.external_id:
+        raise IncorrectSettings(f'The group "{usergroup}" is not a Sisu group.')
+    if not ug.external_id.is_student:
+        raise IncorrectSettings(f'The group "{usergroup}" is not a Sisu student group.')
+    if ug.external_id.course_id != sisu_id:
+        raise IncorrectSettings(
+            f'The associated course id "{ug.external_id.course_id}" '
+            f'of the group "{usergroup}" does not match the course setting "{sisu_id}".')
     users, _, _, _ = get_fields_and_users(
         ['grade', 'credit'],
         [ug],
@@ -333,8 +412,9 @@ def get_sisu_assessments(sisu_id: str, teacher: User, doc: DocInfo):
 
 
 def fields_to_assessment(r, doc: DocInfo):
+    grade = r['fields'].get(f'{doc.id}.grade')
     result = {
-        'gradeId': str(r['fields'][f'{doc.id}.grade']),
+        'gradeId': str(grade) if grade is not None else None,
         'userName': r['user'].name,
     }
     credit = r['fields'].get('credit')

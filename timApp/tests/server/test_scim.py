@@ -1,6 +1,8 @@
 import json
 from operator import itemgetter
-from typing import List
+from typing import List, Dict, Any
+
+import responses
 
 from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
@@ -9,6 +11,7 @@ from timApp.notification.notify import sent_mails_in_testing
 from timApp.sisu.scim import SISU_GROUP_PREFIX
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserOrigin
 from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX
@@ -677,7 +680,7 @@ class ScimTest(TimRouteTest):
                 {'externalId': 'jy-CUR-4668-jy-studysubgroup-9515-teachers', 'name': 'teachers'},
             ],
             expect_status=400,
-            expect_content='Usergroup must contain at least one digit and one letter and must not have special chars: "teachers"' ,
+            expect_content='Usergroup must contain at least one digit and one letter and must not have special chars: "teachers"',
         )
 
         r = self.json_post(
@@ -896,26 +899,26 @@ class SendGradeTest(TimRouteTest):
         self.test_user_3.answers.append(Answer(task_id=f'{d.id}.grade', content=json.dumps({'c': 4}), valid=True))
         self.test_user_3.answers.append(Answer(task_id=f'{d.id}.credit', content=json.dumps({'c': 2}), valid=True))
         db.session.commit()
+        grade_params = {
+            'destCourse': 'jy-CUR-1234',
+            'docId': d.id,
+            'partial': False,
+            'dryRun': False,
+        }
         self.json_post(
             '/sisu/sendGrades',
-            {
-                'destCourse': 'jy-CUR-1234',
-                'docId': d.id,
-            },
+            grade_params,
             expect_status=403,
-            expect_content='User is not a TIM teacher'
+            expect_content='You are not a TIM teacher.'
         )
         t = UserGroup.get_teachers_group()
         t.users.append(self.test_user_1)
         db.session.commit()
         self.json_post(
             '/sisu/sendGrades',
-            {
-                'destCourse': 'jy-CUR-1234',
-                'docId': d.id,
-            },
+            grade_params,
             expect_status=403,
-            expect_content='User is not a responsible teacher of the course jy-CUR-1234'
+            expect_content='You are not a responsible teacher of the course jy-CUR-1234.'
         )
         ug = UserGroup.create('course1234')
         ug.external_id = ScimUserGroup(external_id='jy-CUR-1234-responsible-teachers')
@@ -923,33 +926,73 @@ class SendGradeTest(TimRouteTest):
         db.session.commit()
         self.json_post(
             '/sisu/sendGrades',
-            {
-                'destCourse': 'jy-CUR-1234',
-                'docId': d.id,
-            },
+            grade_params,
             expect_status=400,
-            expect_content='Document must have group setting'
+            expect_content='The document must have "group" setting that indicates the student group name.'
         )
         ug = UserGroup.create('students1234')
         db.session.commit()
         d.document.add_setting('group', 'studentz1234')
         self.json_post(
             '/sisu/sendGrades',
-            {
-                'destCourse': 'jy-CUR-1234',
-                'docId': d.id,
-            },
+            grade_params,
             expect_status=400,
-            expect_content='Usergroup studentz1234 not found'
+            expect_content='Usergroup "studentz1234" not found.'
         )
         d.document.add_setting('group', 'students1234')
+
         self.json_post(
             '/sisu/sendGrades',
+            grade_params,
+            expect_content='You do not have access to the group "students1234".',
+            expect_status=403,
+        )
+
+        ug = UserGroup.get_by_name('students1234')
+        ug.admin_doc = self.create_doc().block
+        db.session.commit()
+
+        self.json_post(
+            '/sisu/sendGrades',
+            grade_params,
+            expect_content='The group "students1234" is not a Sisu group.',
+            expect_status=400,
+        )
+
+        ug = UserGroup.get_by_name('students1234')
+        ug.external_id = ScimUserGroup(external_id='jy-CUR-9999-teachers')
+        db.session.commit()
+
+        self.json_post(
+            '/sisu/sendGrades',
+            grade_params,
+            expect_content='The group "students1234" is not a Sisu student group.',
+            expect_status=400,
+        )
+
+        ug = UserGroup.get_by_name('students1234')
+        ug.external_id.external_id = 'jy-CUR-9999-students'
+        db.session.commit()
+
+        self.json_post(
+            '/sisu/sendGrades',
+            grade_params,
+            expect_content='The associated course id "jy-CUR-9999" of the group "students1234" '
+                           'does not match the course setting "jy-CUR-1234".',
+            expect_status=400,
+        )
+
+        ug = UserGroup.get_by_name('students1234')
+        ug.external_id.external_id = 'jy-CUR-1234-students'
+        db.session.commit()
+
+        self.check_send_grade_result(
+            grade_params,
             {
-                'destCourse': 'jy-CUR-1234',
-                'docId': d.id,
+                'sent_assessments': [],
+                'assessment_errors': [],
             },
-            expect_content={'sent_grades': []}
+            {'body': {'assessments': {}}}
         )
         ug = UserGroup.get_by_name('students1234')
         ug.users.append(self.test_user_2)
@@ -957,14 +1000,10 @@ class SendGradeTest(TimRouteTest):
         db.session.commit()
         expected_date = get_current_time().strftime('%Y-%m-%d')
         self.assertRegex(expected_date, r'\d{4}-\d{2}-\d{2}')
-        self.json_post(
-            '/sisu/sendGrades',
+        self.check_send_grade_result(
+            grade_params,
             {
-                'destCourse': 'jy-CUR-1234',
-                'docId': d.id,
-            },
-            expect_content={
-                'sent_grades': [
+                'sent_assessments': [
                     {'completionDate': expected_date,
                      'gradeId': '5',
                      'userName': 'testuser2'},
@@ -972,5 +1011,116 @@ class SendGradeTest(TimRouteTest):
                      'gradeId': '4',
                      'userName': 'testuser3'},
                 ],
-            }
+                'assessment_errors': [],
+            },
+            {'body': {'assessments': {}}}
         )
+        self.check_send_grade_result(
+            grade_params,
+            {
+                'assessment_errors': [
+                    {
+                        'assessment': {
+                            'completionDate': expected_date,
+                            'gradeId': '4',
+                            'userName': 'testuser3',
+                        },
+                        'message': 'Voimassaolevaa opinto-oikeutta ei löytynyt.',
+                    },
+                ],
+                'sent_assessments': []},
+            {'body': {'assessments': {
+                '1': {'userName': {'code': 400003, 'reason': 'Voimassaolevaa opinto-oikeutta ei löytynyt.'}}}}},
+            400,
+        )
+        self.check_send_grade_result(
+            {
+                **grade_params,
+                'partial': True,
+            },
+            {
+                'sent_assessments': [
+                    {
+                        'completionDate': expected_date,
+                        'gradeId': '5',
+                        'userName': 'testuser2',
+                    },
+                ],
+                'assessment_errors': [
+                    {
+                        'message': 'Voimassaolevaa opinto-oikeutta ei löytynyt',
+                        'assessment': {
+                            'userName': 'testuser3',
+                            'completionDate': expected_date,
+                            'gradeId': '4',
+                        },
+                    },
+                ],
+            },
+            {'body': {'assessments': {
+                '1': {'userName': {'code': 400003, 'reason': 'Voimassaolevaa opinto-oikeutta ei löytynyt'}}}}},
+            207,
+        )
+        self.check_send_grade_result(
+            {
+                **grade_params,
+                'partial': True,
+            },
+            {
+                'error': 'Sertifikaatilla ei oikeutta lähettää suorituksia toteutukseen',
+            },
+            {'error': {'code': 40301, 'reason': 'Sertifikaatilla ei oikeutta lähettää suorituksia toteutukseen'}},
+            mock_sisu_status=403,
+            expect_status=400,
+        )
+
+        ug = UserGroup.get_by_name('students1234')
+        u, _ = User.create_with_group(name='sisuuser', real_name='Sisu User', email='sisuuser@example.com')
+        ug.users.append(u)
+        db.session.commit()
+        self.check_send_grade_result(
+            grade_params,
+            {
+                'sent_assessments': [
+                    {'completionDate': expected_date,
+                     'gradeId': '5',
+                     'userName': 'testuser2'},
+                    {'completionDate': expected_date,
+                     'gradeId': '4',
+                     'userName': 'testuser3'},
+                ],
+                'assessment_errors': [
+                    {
+                        'message': 'Virhe lähetyksen muodossa',
+                        'assessment': {
+                            'userName': 'sisuuser',
+                            'completionDate': expected_date,
+                            'gradeId': None,
+                        },
+                    },
+                ],
+            },
+            {'body': {'assessments': {'2': {'gradeId': {'code': 40001, 'reason': 'Virhe lähetyksen muodossa'}}}}}
+        )
+
+    def check_send_grade_result(
+            self,
+            grade_params: Dict[str, Any],
+            expect_content: Dict[str, Any],
+            mock_sisu_response: Dict[str, Any],
+            mock_sisu_status=200,
+            expect_status=200,
+    ):
+        with responses.RequestsMock() as m:
+            m.add(
+                'POST',
+                f'{app.config["SISU_ASSESSMENTS_URL"]}{grade_params["destCourse"]}',
+                body=json.dumps(mock_sisu_response),
+                status=mock_sisu_status,
+            )
+            self.json_post(
+                '/sisu/sendGrades',
+                grade_params,
+                expect_content=expect_content,
+                expect_status=expect_status,
+            )

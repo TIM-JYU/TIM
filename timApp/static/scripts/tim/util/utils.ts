@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import moment from "moment";
 import {$timeout} from "./ngimport";
 
-const blacklist = new Set(["name", "title"]);
+const blacklist = new Set(["name", "title", "completionDate"]);
 const UnknownRecord = t.record(t.string, t.unknown);
 
 // adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html

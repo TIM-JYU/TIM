@@ -86,7 +86,7 @@ fields:
 - 
 ```""", """
 ``` {plugin="multisave"}
-buttonText: "Send grade and credits to Sisu"
+buttonText: "Send assessments to Sisu"
 destCourse: jy-CUR-xxxx  # change to the course Sisu-id
 showInView: false
 ```"""]
