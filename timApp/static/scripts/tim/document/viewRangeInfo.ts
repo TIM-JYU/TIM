@@ -185,7 +185,7 @@ export class ViewRangeInfo {
         if (!parCount) {
             return;
         }
-        this.lastIndex = parCount.pars + parCount.preambles;
+        this.lastIndex = parCount.pars; // + parCount.preambles;
         if (currentRange && this.lastIndex) {
             let firstRange;
             let lastRange;
@@ -200,6 +200,7 @@ export class ViewRangeInfo {
                 lastRange = await getViewRange(docId, this.lastIndex, false);
             }
             // Remove redundant range links and add others to a list.
+            /*
             if (prevRange && prevRange.b == 0) {
                 firstRange = prevRange;
                 prevRange = undefined;
@@ -207,7 +208,7 @@ export class ViewRangeInfo {
             if (nextRange && nextRange.e == this.lastIndex) {
                 lastRange = nextRange;
                 nextRange = undefined;
-            }
+            }*/
             if (firstRange) {
                 this.ranges.push({range: firstRange, name: "First"});
             }

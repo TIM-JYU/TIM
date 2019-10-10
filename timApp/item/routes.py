@@ -223,13 +223,17 @@ def get_module_ids(js_paths: List[str]):
         yield jsfile.lstrip('/').rstrip('.js')
 
 
-def partition_texts(texts, view_range):
+def partition_texts(texts, view_range: Range, preamble_count):
     i = 0
     partitioned = []
+    b = view_range[0]
+    e = view_range[1]
+    if b == 0:
+        e = e + preamble_count
     for text in texts:
-        if i >= view_range[1]:
+        if i >= e:
             break
-        if i >= view_range[0]:
+        if i >= b:
             partitioned.append(text)
         i += 1
     return partitioned
@@ -325,7 +329,6 @@ def view(item_path, template_name, usergroup=None, route="view"):
     teacher_or_see_answers = route in ('teacher', 'answers')
     current_user = get_current_user_object() if logged_in() else None
     doc_settings = doc.get_settings(current_user)
-
     if load_preamble:
         try:
             if view_range[0] == 0:
@@ -333,11 +336,14 @@ def view(item_path, template_name, usergroup=None, route="view"):
                 preamble_pars = doc.insert_preamble_pars()
             else:
                 # Load only special class preamble pars in parts after the first.
-                preamble_pars = doc.insert_preamble_pars(["includeInParts"])
+                preamble_pars = None
+                # TODO: Take this into account in partitioning and re-enable.
+                # preamble_pars = doc.insert_preamble_pars(["includeInParts"])
         except PreambleException as e:
             flash(e)
         else:
-            xs = preamble_pars + xs
+            if preamble_pars:
+                xs = preamble_pars + xs
     # Load all normal preamble pars.
     elif not view_range:
         try:
@@ -442,7 +448,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     index = get_index_from_html_list(t['html'] for t in texts)
     if view_range:
-        texts = partition_texts(texts, view_range)
+        preamble_count = get_preamble_count(doc_info)
+        texts = partition_texts(texts, view_range, preamble_count)
 
     if hide_names_in_teacher() or should_hide_names:
         for entry in user_list:
@@ -833,6 +840,7 @@ def get_viewrange(doc_id, index, forwards):
         view_range = decide_view_range(doc_info, current_set_size, index, forwards > 0)
         return json_response({'b': view_range[0], 'e': view_range[1]})
     except Exception as e:
+        print(e)
         return abort(400, get_error_message(e))
 
 
@@ -872,11 +880,17 @@ def get_piece_size_from_cookie(request: Request) -> Optional[int]:
         return None
 
 
+def get_preamble_count(d: DocInfo) -> int:
+    preambles = d.document.insert_preamble_pars()
+    return len(preambles) if preambles else 0
+
+
 @view_page.route('/viewrange/parCount/<int:doc_id>')
 def get_par_count(doc_id):
-    d = get_doc_or_abort(doc_id)
-    par_count = len(d.document.get_paragraphs())
-    return json_response({'parCount': par_count})
+    doc_info = get_doc_or_abort(doc_id)
+    non_preamble_count = len(doc_info.document.get_paragraphs())
+    preamble_count = get_preamble_count(doc_info)
+    return json_response({'pars': non_preamble_count, 'preambles': preamble_count})
 
 
 def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0,
@@ -892,7 +906,10 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
     :return:
     """
-    par_count = len(doc_info.document.insert_preamble_pars().get_paragraphs())
+    non_preamble_par_count = len(doc_info.document.get_paragraphs())
+    preamble_count = get_preamble_count(doc_info)
+    par_count = non_preamble_par_count
+
     if forwards:
         b = index
         e = min(preferred_set_size + index, par_count)

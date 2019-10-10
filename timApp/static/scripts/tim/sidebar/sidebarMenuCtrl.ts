@@ -516,6 +516,7 @@ export class SidebarMenuCtrl implements IController {
      * @param headerId
      */
     private async headerClicked($event: Event, headerId: string) {
+        // TODO: Get element by id; if not found, go to the followin if.
         if (this.currentViewRange && this.vctrl) {
             const headerRange = await getViewRangeWithHeaderId(this.vctrl.docId, headerId);
             if (headerRange) {
