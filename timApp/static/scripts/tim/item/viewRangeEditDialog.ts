@@ -14,7 +14,7 @@ import {IItem} from "./IItem";
 markAsUsed(focusMe);
 
 // TODO: Are b and e always in the same order?
-export const viewRangeRegExp = new RegExp("\&b=\\d+\&e=\\d+\(&preamble=(true|false)|)");
+export const viewRangeRegExp = new RegExp("b=\\d+\&e=\\d+\(&preamble=(true|false)|)");
 export const viewRangeCookieRegExp = new RegExp("r=\\d+;");
 
 export interface IViewRange {
@@ -56,7 +56,7 @@ export async function getParCount(docId: number) {
  */
 export function partitionDocument(b: number, e: number, loadPreamble: boolean) {
     const allParams = document.location.search;
-    const newParams = `&b=${b}&e=${e}&preamble=${loadPreamble}`;
+    const newParams = `b=${b}&e=${e}&preamble=${loadPreamble}`;
     if (viewRangeRegExp.test(allParams)) {
         document.location.search = document.location.search.replace(viewRangeRegExp, newParams);
     } else {
@@ -109,6 +109,20 @@ export async function getViewRange(docId: number, index: number, forwards: boole
         forwardsInt = 0;
     }
     const r = await to($http.get<IViewRange>(`/viewrange/get/${docId}/${index}/${forwardsInt}`));
+    if (!r.ok) {
+        return undefined;
+    } else {
+        return r.result.data;
+    }
+}
+
+/**
+ *
+ * @param docId
+ * @param headerId
+ */
+export async function getViewRangeWithHeaderId(docId: number, headerId: string) {
+    const r = await to($http.get<IViewRange>(`/viewrange/getWithHeaderId/${docId}/${headerId}`));
     if (!r.ok) {
         return undefined;
     } else {
