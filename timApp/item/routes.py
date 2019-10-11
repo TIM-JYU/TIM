@@ -224,16 +224,21 @@ def get_module_ids(js_paths: List[str]):
 
 
 def partition_texts(texts, view_range: Range, preamble_count):
+    """
+    Partition document with preambles taken into account.
+    :param texts: List of processed paragraphs.
+    :param view_range: Range of normal paragraphs to include.
+    :param preamble_count: Number of preamble paragraphs to insert.
+    :return: List of included paragraphs.
+    """
     i = 0
     partitioned = []
-    b = view_range[0]
-    e = view_range[1]
-    if b == 0:
-        e = e + preamble_count
+    b = view_range[0] + preamble_count
+    e = view_range[1] + preamble_count
     for text in texts:
         if i >= e:
             break
-        if i >= b:
+        if i < preamble_count or i >= b:
             partitioned.append(text)
         i += 1
     return partitioned
@@ -329,6 +334,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     teacher_or_see_answers = route in ('teacher', 'answers')
     current_user = get_current_user_object() if logged_in() else None
     doc_settings = doc.get_settings(current_user)
+    preamble_pars = []
     if load_preamble:
         try:
             if view_range[0] == 0:
@@ -336,9 +342,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                 preamble_pars = doc.insert_preamble_pars()
             else:
                 # Load only special class preamble pars in parts after the first.
-                preamble_pars = None
-                # TODO: Take this into account in partitioning and re-enable.
-                # preamble_pars = doc.insert_preamble_pars(["includeInParts"])
+                preamble_pars = doc.insert_preamble_pars(["includeInParts"])
         except PreambleException as e:
             flash(e)
         else:
@@ -448,7 +452,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     index = get_index_from_html_list(t['html'] for t in texts)
     if view_range:
-        preamble_count = get_preamble_count(doc_info)
+        preamble_count = len(preamble_pars) # get_preamble_count(doc_info)
+        print(preamble_count)
         texts = partition_texts(texts, view_range, preamble_count)
 
     if hide_names_in_teacher() or should_hide_names:
