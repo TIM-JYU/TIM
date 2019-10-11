@@ -334,7 +334,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     teacher_or_see_answers = route in ('teacher', 'answers')
     current_user = get_current_user_object() if logged_in() else None
     doc_settings = doc.get_settings(current_user)
-    preamble_pars = []
+    preamble_pars = [] # Used later to get partitioning with preambles included correct.
     if load_preamble:
         try:
             if view_range[0] == 0:
@@ -452,8 +452,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     index = get_index_from_html_list(t['html'] for t in texts)
     if view_range:
-        preamble_count = len(preamble_pars) # get_preamble_count(doc_info)
-        print(preamble_count)
+        preamble_count = len(preamble_pars) # Includes either only special class preambles, or all of them if b=0.
         texts = partition_texts(texts, view_range, preamble_count)
 
     if hide_names_in_teacher() or should_hide_names:
@@ -845,11 +844,16 @@ def get_viewrange(doc_id, index, forwards):
         view_range = decide_view_range(doc_info, current_set_size, index, forwards > 0)
         return json_response({'b': view_range[0], 'e': view_range[1]})
     except Exception as e:
-        print(e)
         return abort(400, get_error_message(e))
 
 
 def get_index_with_header_id(doc_info, header_id):
+    """
+    Returns first index containing the given HTML header id.
+    :param doc_info: Document.
+    :param header_id: HTML header id.
+    :return: Index of the corresponding paragraph or None if not found.
+    """
     pars = doc_info.document.get_paragraphs()
     for i, par in enumerate(pars):
         if f'id="{header_id}"' in par.get_html():
@@ -859,6 +863,12 @@ def get_index_with_header_id(doc_info, header_id):
 
 @view_page.route('/viewrange/getWithHeaderId/<int:doc_id>/<string:header_id>')
 def get_viewrange_with_header_id(doc_id, header_id):
+    """
+    Route for getting suitable view range for index links.
+    :param doc_id: Document id.
+    :param header_id: Header id (HTML-attribute id, not the paragraph id).
+    :return: View range starting from the header paragraph.
+    """
     current_set_size = get_piece_size_from_cookie(request)
     if not current_set_size:
         return abort(400, "Piece size not found!")
@@ -868,7 +878,6 @@ def get_viewrange_with_header_id(doc_id, header_id):
         view_range = decide_view_range(doc_info, current_set_size, index, True)
         return json_response({'b': view_range[0], 'e': view_range[1]})
     except Exception as e:
-        print(e)
         return abort(400, get_error_message(e))
 
 
@@ -886,6 +895,11 @@ def get_piece_size_from_cookie(request: Request) -> Optional[int]:
 
 
 def get_preamble_count(d: DocInfo) -> int:
+    """
+    Get the amount of preambles in the document.
+    :param d: Document.
+    :return: Preamble count; zero if none were found.
+    """
     preambles = d.document.insert_preamble_pars()
     return len(preambles) if preambles else 0
 
@@ -901,28 +915,35 @@ def get_par_count(doc_id):
 def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0,
                        forwards: bool = True, min_set_size_modifier: float = 0.5) -> Optional[Range]:
     """
-    Decide begin and end indices of paragraph set based on preferred size, areas and number of remaining paragraphs.
-    If set_size is 50 and modifier 0.5, this will combine neighboring set if its size is 25 or less.
+    Decide begin and end indices of paragraph set based on preferred size.
+    Attempts to avoid making the current part shorter than the piece size due to proximity to begin or end
+    of the document. Also combines remaining paragraphs at the start or end, if they'd be smaller than allowed.
+    For example: With set_size = 50 and modifier = 0.5 this will combine neighboring set if its size is 25 or less.
 
     :param doc_info: Document.
     :param preferred_set_size: User defined set size. May change depending on document.
-    :param index:
+    :param index: Begin or end index (depending on direction).
     :param forwards: Begin index is the start index if true, end index if false (i.e. True = next, False = previous).
     :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
-    :return:
+    :return: Adjusted indices for view range.
     """
-    non_preamble_par_count = len(doc_info.document.get_paragraphs())
-    preamble_count = get_preamble_count(doc_info)
-    par_count = non_preamble_par_count
-
+    par_count = len(doc_info.document.get_paragraphs())
     if forwards:
         b = index
         e = min(preferred_set_size + index, par_count)
+        # Avoid too short range when the start index is near the end of the document.
+        if (e - b) < preferred_set_size:
+            b = max(min(e - preferred_set_size, b), 0)
+        # Round the end index to last index when the remaining part is short.
         if min_set_size_modifier*preferred_set_size > par_count-e:
             e = par_count
     else:
         b = max(index - preferred_set_size, 0)
         e = index
+        # Avoid too short range when the end index is near the beginning of the document.
+        if (e - b) < preferred_set_size:
+            e = min(e + preferred_set_size, par_count)
+        # Round the start index to zero when the remaining part is short.
         if min_set_size_modifier*preferred_set_size > b:
             b = 0
     # TODO: Don't cut areas.
