@@ -170,8 +170,6 @@ export class ViewRangeInfo {
 
     constructor(view: ViewCtrl) {
         // TODO: Handle user manually entering view range into the URL.
-        // TODO: Get results for both instances of the component on page with same call.
-        // TODO: Nav component disappears if partitioning is done only via URL params (i.e. disabled on other tab & reloaded).
         this.vctrl = view;
     }
 
@@ -200,7 +198,6 @@ export class ViewRangeInfo {
                 lastRange = await getViewRange(docId, this.lastIndex, false);
             }
             // Remove redundant range links and add others to a list.
-            /*
             if (prevRange && prevRange.b == 0) {
                 firstRange = prevRange;
                 prevRange = undefined;
@@ -208,7 +205,7 @@ export class ViewRangeInfo {
             if (nextRange && nextRange.e == this.lastIndex) {
                 lastRange = nextRange;
                 nextRange = undefined;
-            }*/
+            }
             if (firstRange) {
                 this.ranges.push({range: firstRange, name: "First"});
             }

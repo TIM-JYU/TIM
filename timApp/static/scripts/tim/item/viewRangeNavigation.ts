@@ -17,6 +17,7 @@ class ViewRangeNavigation implements IController {
 
     async $onInit() {
         if (this.vctrl && this.vctrl.viewRangeInfo) {
+            // Ranges come from document specific ViewRangeInfo to avoid duplicate requests.
             this.ranges = this.vctrl.viewRangeInfo.ranges;
         }
     }
