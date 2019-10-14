@@ -382,15 +382,15 @@ multisaveApp.component("multisaveRunner", {
     <div ng-if="$ctrl.attrs.destCourse">
         <div class="checkbox">
             <label><input type="checkbox" ng-model="$ctrl.dryRun">
-                Only see what would be sent, so don't actually send anything
+                Vain esikatsele, älä lähetä mitään
             </label>
         </div>
         <div class="checkbox">
             <label><input type="checkbox" ng-model="$ctrl.partial">
-                If some assessments have errors, send still the ones that are ok
+                Jos jotkut arvioinnit ovat virheellisiä, lähetä silti ehjät
             </label>
         </div>
-        <p>Sending assessments to Sisu will overwrite the data in Sisu's assessment view.</p>
+        <p>Arviointien lähettäminen Sisuun ylikirjoittaa Sisun arviointinäkymän tiedot.</p>
     </div>
     <button class="timButton"
             ng-disabled="$ctrl.saving"
@@ -400,8 +400,8 @@ multisaveApp.component("multisaveRunner", {
     </button>
     <div ng-if="$ctrl.assessments">
         <p>
-            {{ $ctrl.okAssessments() }} assessments {{ $ctrl.lastDryRun ? 'would be' : 'were' }} sent to Sisu.
-            {{ $ctrl.assessments.length - $ctrl.okAssessments() }} assessments with errors {{ $ctrl.lastDryRun ? 'would be' : 'were' }} rejected.
+            {{ $ctrl.okAssessments() }} arviointia {{ $ctrl.lastDryRun ? 'lähetettäisiin' : 'lähetettiin' }} Sisuun.
+            {{ $ctrl.assessments.length - $ctrl.okAssessments() }} virheellistä arviointia {{ $ctrl.lastDryRun ? 'torjuttaisiin' : 'torjuttiin' }}.
         </p>
         <div style="font-size: small"
              ui-grid="$ctrl.gridOptions"

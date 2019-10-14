@@ -86,8 +86,8 @@ fields:
 - 
 ```""", """
 ``` {plugin="multisave"}
-buttonText: "Send assessments to Sisu"
-destCourse: jy-CUR-xxxx  # change to the course Sisu-id
+buttonText: "Lähetä arvioinnit Sisuun"
+destCourse: jy-CUR-xxxx  # tähän kurssin Sisu-id
 showInView: false
 ```"""]
     return jsonify({
