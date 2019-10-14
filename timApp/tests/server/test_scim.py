@@ -1,6 +1,6 @@
 import json
 from operator import itemgetter
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 import responses
 
@@ -1033,11 +1033,12 @@ class SendGradeTest(TimRouteTest):
                 '1': {'userName': {'code': 400003, 'reason': 'Voimassaolevaa opinto-oikeutta ei löytynyt.'}}}}},
             400,
         )
+        grade_params_partial = {
+            **grade_params,
+            'partial': True,
+        }
         self.check_send_grade_result(
-            {
-                **grade_params,
-                'partial': True,
-            },
+            grade_params_partial,
             {
                 'sent_assessments': [
                     {
@@ -1062,10 +1063,7 @@ class SendGradeTest(TimRouteTest):
             207,
         )
         self.check_send_grade_result(
-            {
-                **grade_params,
-                'partial': True,
-            },
+            grade_params_partial,
             {
                 'error': 'Sertifikaatilla ei oikeutta lähettää suorituksia toteutukseen',
             },
@@ -1077,40 +1075,66 @@ class SendGradeTest(TimRouteTest):
         ug = UserGroup.get_by_name('students1234')
         u, _ = User.create_with_group(name='sisuuser', real_name='Sisu User', email='sisuuser@example.com')
         ug.users.append(u)
+        u, _ = User.create_with_group(name='sisuuser2', real_name='Sisu User', email='sisuuser2@example.com')
+        ug.users.append(u)
         db.session.commit()
         self.check_send_grade_result(
             grade_params,
-            {
-                'sent_assessments': [
-                    {'completionDate': expected_date,
-                     'gradeId': '5',
-                     'userName': 'testuser2'},
-                    {'completionDate': expected_date,
-                     'gradeId': '4',
-                     'userName': 'testuser3'},
-                ],
-                'assessment_errors': [
-                    {
-                        'message': 'Virhe lähetyksen muodossa',
-                        'assessment': {
-                            'userName': 'sisuuser',
-                            'completionDate': expected_date,
-                            'gradeId': None,
-                        },
-                    },
-                ],
-            },
-            {'body': {'assessments': {'2': {'gradeId': {'code': 40001, 'reason': 'Virhe lähetyksen muodossa'}}}}}
+            {'assessment_errors': [{'assessment': {'completionDate': expected_date,
+                                                   'gradeId': None,
+                                                   'userName': 'sisuuser'},
+                                    'message': 'gradeId: Field may not be null.'},
+                                   {'assessment': {'completionDate': expected_date,
+                                                   'gradeId': None,
+                                                   'userName': 'sisuuser2'},
+                                    'message': 'gradeId: Field may not be null.'}],
+             'sent_assessments': []},
+            # The Sisu API sends only one format error.
+            mock_sisu_response=None,
+            # {'body': {'assessments': {'2': {'gradeId': {'code': 40001, 'reason': 'Virhe lähetyksen muodossa'}}}}},
+            mock_sisu_status=400,
+            expect_status=200,
+        )
+
+        self.check_send_grade_result(
+            grade_params_partial,
+            {'assessment_errors': [{'assessment': {'completionDate': expected_date,
+                                                   'gradeId': '4',
+                                                   'userName': 'testuser3'},
+                                    'message': 'Ilmoittautumista toteutukseen ei löytynyt'},
+                                   {'assessment': {'completionDate': expected_date,
+                                                   'gradeId': None,
+                                                   'userName': 'sisuuser'},
+                                    'message': 'gradeId: Field may not be null.'},
+                                   {'assessment': {'completionDate': expected_date,
+                                                   'gradeId': None,
+                                                   'userName': 'sisuuser2'},
+                                    'message': 'gradeId: Field may not be null.'}],
+             'sent_assessments': [{'completionDate': expected_date,
+                                   'gradeId': '5',
+                                   'userName': 'testuser2'}]},
+            {'body': {'assessments': {
+                '1': {'userName': {'code': 40002, 'reason': 'Ilmoittautumista toteutukseen ei löytynyt'}}}}},
+            mock_sisu_status=207,
+            expect_status=200,
         )
 
     def check_send_grade_result(
             self,
             grade_params: Dict[str, Any],
             expect_content: Dict[str, Any],
-            mock_sisu_response: Dict[str, Any],
+            mock_sisu_response: Optional[Dict[str, Any]],
             mock_sisu_status=200,
             expect_status=200,
     ):
+        if mock_sisu_response is None:
+            self.json_post(
+                '/sisu/sendGrades',
+                grade_params,
+                expect_content=expect_content,
+                expect_status=expect_status,
+            )
+            return
         with responses.RequestsMock() as m:
             m.add(
                 'POST',

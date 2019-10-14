@@ -1,3 +1,5 @@
+import json
+from pprint import pformat
 from textwrap import dedent
 from textwrap import dedent
 from typing import List, Optional, Dict, Union
@@ -7,6 +9,7 @@ import requests
 from dataclasses import dataclass
 from flask import Blueprint, abort, current_app, request
 from flask.cli import AppGroup
+from marshmallow import validates, ValidationError
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import any_, true
 from sqlalchemy.exc import IntegrityError
@@ -33,6 +36,7 @@ from timApp.user.usergroup import UserGroup, get_sisu_groups_by_filter
 from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.get_fields import get_fields_and_users
+from timApp.util.logger import log_info
 from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time
 
 sisu = Blueprint('sisu',
@@ -319,6 +323,25 @@ class PostAssessmentsResponse:
 PostAssessmentsResponseSchema = class_schema(PostAssessmentsResponse)
 
 
+@dataclass
+class Assessment:
+    userName: str
+    gradeId: str
+    completionDate: str
+    completionCredits: Optional[int] = None
+    privateComment: Optional[str] = None
+
+    @validates('gradeId')
+    def validate_grade(self, value):
+        if value == '':
+            raise ValidationError('Cannot be empty')
+        if value not in ('1', '2', '3', '4', '5', 'HYV', 'HYL', 'HT', 'TT'):
+            raise ValidationError(f'Cannot be "{value}"')
+
+
+AssessmentSchema = class_schema(Assessment)
+
+
 @csrf.exempt
 @sisu.route('/assessments/<sisuid>', methods=['post'])
 def mock_assessments(sisuid):
@@ -340,7 +363,28 @@ def send_grades_to_sisu(
         dry_run: bool,
 ):
     assessments = get_sisu_assessments(sisu_id, teacher, doc)
+    validation_errors = []
+    invalid_assessments_indices = set()
+    try:
+        # noinspection PyTypeChecker
+        AssessmentSchema(many=True).load(assessments)
+    except ValidationError as e:
+        validation_errors = [
+            {
+                'assessment': assessments[i],
+                'message': ", ".join(x + ": " + ", ".join(y) for x, y in a.items()),
+            }
+            for i, a in e.messages.items()
+        ]
+        if not partial:
+            return {
+                'sent_assessments': [],
+                'assessment_errors': validation_errors,
+            }
+        invalid_assessments_indices = {i for i in e.messages.keys()}
+        assessments = [a for i, a in enumerate(assessments) if i not in invalid_assessments_indices]
     url = f'{app.config["SISU_ASSESSMENTS_URL"]}{sisu_id}'
+    # log_info(json.dumps(assessments, indent=4))
     r = requests.post(
         url,
         json={
@@ -350,21 +394,23 @@ def send_grades_to_sisu(
         },
         cert=app.config['SISU_CERT_PATH'],
     )
+    # log_info(json.dumps(r.json(), indent=4))
     # noinspection PyTypeChecker
     pr: PostAssessmentsResponse = PostAssessmentsResponseSchema().load(r.json())
     if pr.error:
         raise SisuError(pr.error.reason)
-    invalid_assessments = set(n for n in pr.body.assessments.keys())
+    invalid_assessments = set(n for n in pr.body.assessments.keys()) | invalid_assessments_indices
     ok_assessments = [a for i, a in enumerate(assessments) if i not in invalid_assessments]
+    errs = [
+        {
+            'message': ", ".join(x.reason for x in v.values()),
+            'assessment': assessments[k],
+        }
+        for k, v in pr.body.assessments.items()
+    ]
     return {
         'sent_assessments': ok_assessments if r.status_code < 400 else [],
-        'assessment_errors': [
-            {
-                'message': ", ".join(x.reason for x in v.values()),
-                'assessment': assessments[k],
-            }
-            for k, v in pr.body.assessments.items()
-        ],
+        'assessment_errors': errs + validation_errors,
     }
 
 
