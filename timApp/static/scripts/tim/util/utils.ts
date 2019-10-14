@@ -395,19 +395,20 @@ export function getPageXY(e: JQuery.Event) {
         if (!(window as unknown as Record<string, unknown>).TouchEvent) {
             return {X: e.pageX, Y: e.pageY};
         }
-        if (!(e instanceof TouchEvent)) {
+        const o = e.originalEvent;
+        if (!(o instanceof TouchEvent)) {
             return {X: e.pageX, Y: e.pageY};
         }
-        if (e.touches.length) {
+        if (o.touches.length) {
             return {
-                X: e.touches[0].pageX,
-                Y: e.touches[0].pageY,
+                X: o.touches[0].pageX,
+                Y: o.touches[0].pageY,
             };
         }
-        if (e.changedTouches.length) {
+        if (o.changedTouches.length) {
             return {
-                X: e.changedTouches[0].pageX,
-                Y: e.changedTouches[0].pageY,
+                X: o.changedTouches[0].pageX,
+                Y: o.changedTouches[0].pageY,
             };
         }
         // return null;
