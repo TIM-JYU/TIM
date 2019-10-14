@@ -1,5 +1,5 @@
 import * as t from "io-ts";
-import {GenericPluginMarkup, GenericPluginTopLevelFields, withDefault} from "tim/plugin/attributes";
+import {GenericPluginMarkup, getTopLevelFields, withDefault} from "tim/plugin/attributes";
 
 // t.brand causes problems, so we use the deprecated refinement for now.
 export const Max1000 = t.refinement(
@@ -46,8 +46,8 @@ export interface IJsRunnerMarkup extends t.TypeOf<typeof JsrunnerMarkup> {
 }
 
 export const JsrunnerAll = t.intersection([
-    GenericPluginTopLevelFields,
-    t.type({markup: JsrunnerMarkup}),
+    getTopLevelFields(JsrunnerMarkup),
+    t.type({}),
 ]);
 
 export interface IError {

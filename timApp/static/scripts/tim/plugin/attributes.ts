@@ -31,12 +31,46 @@ export const GenericPluginMarkup = t.partial({
     stem: nullable(t.string),
     hideBrowser: t.boolean,
     forceBrowser: t.boolean,
+    useCurrentUser: t.boolean,
 });
 
 export const Info = nullable(t.type({
     // TODO add the rest of the fields
     earlier_answers: t.Integer,
 }));
+
+export function getTopLevelFields<M extends IGenericPluginMarkup>(m: t.Type<M>) {
+    return t.intersection([
+        t.partial({
+            access: t.keyof({
+                readonly: null,
+                readwrite: null,
+            }),
+            state: t.unknown,
+        }),
+        t.type({
+            info: Info,
+            preview: t.boolean,
+            markup: m,
+        }),
+    ]);
+}
+
+const PaliMarkup = t.intersection([
+    t.partial({
+        initword: t.string,
+        inputplaceholder: nullable(t.string),
+        inputstem: t.string,
+    }),
+    GenericPluginMarkup,
+    t.type({
+        // all withDefaults should come here; NOT in t.partial
+        autoupdate: withDefault(t.number, 500),
+        cols: withDefault(t.number, 20),
+    }),
+]);
+
+const UnknownTopLevel = getTopLevelFields(GenericPluginMarkup);
 
 export const GenericPluginTopLevelFields = t.intersection([
     t.partial({
@@ -52,7 +86,7 @@ export const GenericPluginTopLevelFields = t.intersection([
     }),
 ]);
 
-export interface IGenericPluginTopLevelFields<MarkupType> extends t.TypeOf<typeof GenericPluginTopLevelFields> {
+export interface IGenericPluginTopLevelFields<MarkupType extends IGenericPluginMarkup> extends t.TypeOf<typeof UnknownTopLevel> {
     markup: MarkupType;
 }
 

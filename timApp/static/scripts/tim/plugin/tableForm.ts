@@ -13,7 +13,7 @@ import {IDocument} from "../item/IItem";
 import {showInputDialog} from "../ui/inputDialog";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
-import {GenericPluginMarkup, GenericPluginTopLevelFields, nullable, withDefault} from "./attributes";
+import {GenericPluginMarkup, getTopLevelFields, nullable, withDefault} from "./attributes";
 import "./tableForm.css";
 import {
     CellAttrToSave,
@@ -103,8 +103,8 @@ const TableFormAll = t.intersection([
         rows: Rows,
         styles: Styles,
     }),
-    GenericPluginTopLevelFields,
-    t.type({markup: TableFormMarkup}),
+    getTopLevelFields(TableFormMarkup),
+    t.type({}),
 ]);
 
 const realNameColumn = "A";

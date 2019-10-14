@@ -20,6 +20,7 @@ import {BookmarksController} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
+import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "../plugin/attributes";
 import {TableFormController} from "../plugin/tableForm";
 import {TaskId} from "../plugin/taskid";
 import {TimTableController} from "../plugin/timTable";
@@ -45,13 +46,14 @@ import {IMenuFunctionEntry} from "./viewutils";
 markAsUsed(ngs, popupMenu, interceptor, helpPar);
 
 export interface ITimComponent {
+    attrsall?: IGenericPluginTopLevelFields<IGenericPluginMarkup>; // TimTable does not have attrsall - that's why it's optional.
     getName: () => string | undefined;
     getContent: () => string | undefined;
     getContentArray?: () => string[] | undefined;
     getAreas: () => string[];
     getTaskId: () => TaskId | undefined;
     belongsToArea: (area: string) => boolean;
-     // TODO: isForm could be integrated to supporstSetAnswer (sSA true if fieldplugin and form/form_mode)
+     // TODO: isForm could be integrated to supportsSetAnswer (supportsSetAnswer would be true if fieldplugin and form/form_mode)
     isForm: () => boolean;
     isUnSaved: (userChange?: boolean) => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;

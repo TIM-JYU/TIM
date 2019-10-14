@@ -1,12 +1,11 @@
-// TODO: Fix any types in this file.
-/* tslint:disable:no-any no-unsafe-any */
 import {IController, IRootElementService, IScope, ITranscludeFunction} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {dereferencePar, getParId} from "../document/parhelpers";
-import {ViewCtrl} from "../document/viewctrl";
+import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
+import {IGenericPluginMarkup} from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
@@ -90,11 +89,12 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                 this.loadPlugin();
             }
         }
-        if ( this.pluginMarkup().hideBrowser ) {
+        const m = this.pluginMarkup();
+        if ( m && m.hideBrowser ) {
             this.hideBrowser = true;
             this.showPlaceholder = false;
         }
-        if ( this.pluginMarkup().forceBrowser ) { this.forceBrowser = true; }
+        if ( m && m.forceBrowser ) { this.forceBrowser = true; }
 
         this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
     }
@@ -121,42 +121,25 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         return taskId && taskId.slice(-1) !== "."; // TODO should check more accurately
     }
 
-    private pluginMarkupCache: any | null = null;
-    private pluginObjectCache: any | null = null;
-
-    public pluginObject(): any {
-        if ( this.pluginObjectCache != null ) { return this.pluginObjectCache; }
-        // TODO: Refactor
-        this.pluginObjectCache = {};
+    public pluginObject(): ITimComponent | undefined {
         if (!this.viewctrl || !this.taskId) {
-            return this.pluginObjectCache;
+            return undefined;
         }
-        const c: any = this.viewctrl.getTimComponentByName(this.taskId);
-        if (!c) {
-            return this.pluginObjectCache;
-        }
-        this.pluginObjectCache = c;
-        return this.pluginObjectCache;
+        return this.viewctrl.getTimComponentByName(this.taskId);
     }
 
-    // Make a fake markup so it can be used wiyhout if's
-    public pluginMarkup(): any {
-        if ( this.pluginMarkupCache != null ) { return this.pluginMarkupCache; }
-        // TODO: Refactor
-        this.pluginMarkupCache = {};
-        const c: any = this.pluginObject();
+    public pluginMarkup(): IGenericPluginMarkup | undefined {
+        const c = this.pluginObject();
         if (!c) {
-            return this.pluginMarkupCache;
+            return undefined;
         }
-        const a: any = c.attrsall;
-        if (a && a.markup) {
-            this.pluginMarkupCache = a.markup;
-        }
-        return this.pluginMarkupCache;
+        const a = c.attrsall;
+        return a && a.markup;
     }
 
-    public isUseCurrentUser(): boolean {
-        return this.pluginMarkup().useCurrentUser;
+    public isUseCurrentUser() {
+        const m = this.pluginMarkup();
+        return m != null && m.useCurrentUser;
     }
 
     public isGlobal(): boolean {
@@ -853,9 +836,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
         let uid = 0;
         if ( this.user ) { uid = this.user.id; }
         // TODO: refactor to use pluginMarkup()
-        const c: any = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
+        const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
         if ( !c ) { return uid; }
-        const a: any = c.attrsall;
+        const a = c.attrsall;
         if ( a && a.markup && a.markup.useCurrentUser) {
             this.user = Users.getCurrent();  // TODO: looks bad when function has a side effect?
             return Users.getCurrent().id;
@@ -863,25 +846,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return uid;
     }
 
-    private pluginMarkupCache: any | null = null;
-
-    // Make a fake markup so it can be used wiyhout if's
-    public pluginMarkup(): any {
-        if ( this.pluginMarkupCache != null ) { return this.pluginMarkupCache; }
-        // TODO: Refactor
-        this.pluginMarkupCache = {};
+    public pluginMarkup(): IGenericPluginMarkup | undefined {
         if (!this.viewctrl || !this.taskId) {
-            return this.pluginMarkupCache;
+            return undefined;
         }
-        const c: any = this.viewctrl.getTimComponentByName(this.taskId); // TODO: why here is no split?
+        const c = this.viewctrl.getTimComponentByName(this.taskId); // TODO: why here is no split?
         if (!c) {
-            return this.pluginMarkupCache;
+            return undefined;
         }
-        const a: any = c.attrsall;
-        if (a && a.markup) {
-            this.pluginMarkupCache = a.markup;
-        }
-        return this.pluginMarkupCache;
+        const a = c.attrsall;
+        return a && a.markup;
     }
 
     public isGlobal() {
@@ -890,8 +864,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     public forceBrowser() {
-        // TODO: Refactor
-        return this.pluginMarkup().forceBrowser;
+        const m = this.pluginMarkup();
+        return m && m.forceBrowser;
     }
 
     /* Return user answers, null = do not care */

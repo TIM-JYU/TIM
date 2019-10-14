@@ -3,19 +3,10 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {
-    GenericPluginMarkup,
-    GenericPluginTopLevelFields,
-    nullable,
-    withDefault,
-} from "tim/plugin/attributes";
-import {
-    PluginBase,
-    pluginBindings,
-} from "tim/plugin/util";
+import {GenericPluginMarkup, getTopLevelFields, nullable, withDefault} from "tim/plugin/attributes";
+import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
-import {valueDefu} from "tim/util/utils";
+import {to, valueDefu} from "tim/util/utils";
 
 const paliApp = angular.module("paliApp", ["ngSanitize"]);
 export const moduleDefs = [paliApp];
@@ -34,9 +25,8 @@ const PaliMarkup = t.intersection([
     }),
 ]);
 const PaliAll = t.intersection([
-    GenericPluginTopLevelFields,
+    getTopLevelFields(PaliMarkup),
     t.type({
-        markup: PaliMarkup,
         state: nullable(t.type({userword: t.string})),
     }),
 ]);
