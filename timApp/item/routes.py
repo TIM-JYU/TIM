@@ -318,12 +318,19 @@ def view(item_path, template_name, usergroup=None, route="view"):
         view_range = decide_view_range(doc_info, piece_size)
         load_preamble = True # If partitioning without URL-param, true is default.
     try:
-        view_range_dict = {'b': view_range[0], 'e': view_range[1]}
+        view_range_dict = {'b': view_range[0], 'e': view_range[1], 'name': "Current"}
     except (ValueError, TypeError):
         view_range_dict = None
     start_index = max(view_range[0], 0) if view_range else 0
 
-    doc, xs = get_document(doc_info) # View range partitioning is done after forming the index.
+    # TODO: Check table of contents hash from cache.
+    preamble_has_changed = True
+    if preamble_has_changed:
+        doc, xs = get_document(doc_info, None) # View range partitioning is done after forming the index.
+    else:
+        # TODO: Take preamble pars into account in this!
+        doc, xs = get_document(doc_info, view_range)
+    par_count = len(xs)
     g.doc = doc
 
     doc.route = route
@@ -334,7 +341,10 @@ def view(item_path, template_name, usergroup=None, route="view"):
     teacher_or_see_answers = route in ('teacher', 'answers')
     current_user = get_current_user_object() if logged_in() else None
     doc_settings = doc.get_settings(current_user)
-    preamble_pars = [] # Used later to get partitioning with preambles included correct.
+
+    # Used later to get partitioning with preambles included correct.
+    # Includes either only special class preambles, or all of them if b=0.
+    preamble_count = 0
     if load_preamble:
         try:
             if view_range[0] == 0:
@@ -348,6 +358,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
         else:
             if preamble_pars:
                 xs = preamble_pars + xs
+                preamble_count = len(preamble_pars)
     # Load all normal preamble pars.
     elif not view_range:
         try:
@@ -356,6 +367,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
             flash(e)
         else:
             xs = preamble_pars + xs
+            preamble_count = len(preamble_pars)
 
     # Preload htmls here to make dereferencing faster
     try:
@@ -451,8 +463,9 @@ def view(item_path, template_name, usergroup=None, route="view"):
     )
 
     index = get_index_from_html_list(t['html'] for t in texts)
-    if view_range:
-        preamble_count = len(preamble_pars) # Includes either only special class preambles, or all of them if b=0.
+
+    # If preamble is the same, partitioning will be done earlier.
+    if view_range and preamble_has_changed:
         texts = partition_texts(texts, view_range, preamble_count)
 
     if hide_names_in_teacher() or should_hide_names:
@@ -489,6 +502,40 @@ def view(item_path, template_name, usergroup=None, route="view"):
         js_paths.append('angular-ui-grid')
         angular_module_names += get_grid_modules()
     taketime("before render")
+    nav_ranges = []
+    if view_range:
+        piece_size = get_piece_size_from_cookie(request)
+        first_range = decide_view_range(
+            doc_info,
+            preferred_set_size=piece_size,
+            index=0,
+            par_count=par_count,
+            forwards=True
+        )
+        previous_range = decide_view_range(
+            doc_info,
+            preferred_set_size=piece_size,
+            index=view_range[0],
+            par_count=par_count,
+            forwards=False
+        )
+        next_range = decide_view_range(
+            doc_info,
+            preferred_set_size=piece_size,
+            index=view_range[1],
+            par_count=par_count,
+            forwards=True
+        )
+        last_range = decide_view_range(doc_info,
+            preferred_set_size=piece_size,
+            index=par_count,
+            par_count=par_count,
+            forwards=False
+        )
+        nav_ranges = [{'b': first_range[0], 'e': first_range[1], 'name': "First"},
+                      {'b': previous_range[0], 'e': previous_range[1], 'name': "Previous"},
+                      {'b': next_range[0], 'e': next_range[1], 'name': "Next"},
+                      {'b': last_range[0], 'e': last_range[1], 'name': "Last"}]
 
     return render_template(template_name,
                            access=access,
@@ -527,6 +574,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                            memo_minutes=doc_settings.memo_minutes(),
                            linked_groups=linked_groups,
                            current_view_range=view_range_dict,
+                           nav_ranges=nav_ranges,
                            )
 
 
@@ -841,7 +889,7 @@ def get_viewrange(doc_id, index, forwards):
         return abort(400, "Piece size not found!")
     try:
         doc_info = DocEntry.find_by_id(doc_id)
-        view_range = decide_view_range(doc_info, current_set_size, index, forwards > 0)
+        view_range = decide_view_range(doc_info, current_set_size, index, forwards=forwards > 0)
         return json_response({'b': view_range[0], 'e': view_range[1]})
     except Exception as e:
         return abort(400, get_error_message(e))
@@ -875,7 +923,7 @@ def get_viewrange_with_header_id(doc_id, header_id):
     try:
         doc_info = DocEntry.find_by_id(doc_id)
         index = get_index_with_header_id(doc_info, header_id)
-        view_range = decide_view_range(doc_info, current_set_size, index, True)
+        view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
         return json_response({'b': view_range[0], 'e': view_range[1]})
     except Exception as e:
         return abort(400, get_error_message(e))
@@ -912,7 +960,7 @@ def get_par_count(doc_id):
     return json_response({'pars': non_preamble_count, 'preambles': preamble_count})
 
 
-def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0,
+def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0, par_count: Optional[int] = None,
                        forwards: bool = True, min_set_size_modifier: float = 0.5) -> Optional[Range]:
     """
     Decide begin and end indices of paragraph set based on preferred size.
@@ -923,11 +971,13 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     :param doc_info: Document.
     :param preferred_set_size: User defined set size. May change depending on document.
     :param index: Begin or end index (depending on direction).
+    :param par_count: Paragraph count, if it is available.
     :param forwards: Begin index is the start index if true, end index if false (i.e. True = next, False = previous).
     :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
     :return: Adjusted indices for view range.
     """
-    par_count = len(doc_info.document.get_paragraphs())
+    if not par_count:
+        par_count = len(doc_info.document.get_paragraphs())
     if forwards:
         b = index
         e = min(preferred_set_size + index, par_count)

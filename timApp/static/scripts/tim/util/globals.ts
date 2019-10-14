@@ -56,7 +56,8 @@ export interface IDocumentGlobals extends IItemGlobals {
     velpMode: boolean;
     wordList: string[];
     linked_groups: IGroupWithSisuPath[] | null;
-    current_view_range: IViewRange | null;
+    current_view_range?: IViewRange | null;
+    nav_ranges?: IViewRange[];
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {

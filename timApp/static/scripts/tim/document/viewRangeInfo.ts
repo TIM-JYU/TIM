@@ -3,11 +3,6 @@ import {$http} from "../util/ngimport";
 import {to} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
 
-export interface IRangeData {
-   range?: IViewRange;
-   name: string;
-}
-
 // TODO: Are b and e always in the same order?
 export const viewRangeRegExp = new RegExp("b=\\d+\&e=\\d+\(&preamble=(true|false)|)");
 export const viewRangeCookieRegExp = new RegExp("r=\\d+;");
@@ -15,6 +10,7 @@ export const viewRangeCookieRegExp = new RegExp("r=\\d+;");
 export interface IViewRange {
     b: number;
     e: number;
+    name?: string;
 }
 
 export interface IParCount {
@@ -150,21 +146,8 @@ export function getCurrentViewRange() {
     }
 }
 
-/**
- * Get document par count. Requires view rights.
- * @param docId Document id.
- */
-export async function getParCount(docId: number) {
-    const r = await to($http.get<IParCount>(`/viewrange/parCount/${docId}`));
-    if (!r.ok) {
-        return undefined;
-    } else {
-        return r.result.data;
-    }
-}
-
 export class ViewRangeInfo {
-    public ranges?: IRangeData[];
+    public ranges?: IViewRange[];
     public lastIndex?: number;
     private vctrl: ViewCtrl;
 
@@ -174,50 +157,41 @@ export class ViewRangeInfo {
     }
 
     /**
-     * Get current view range and get first, next, previous, and last ranges based on it.
+     * Get view ranges for nav component and duplicates and those pointing to current range.
      */
     public async loadRanges(docId: number) {
-        this.ranges = [];
-        const currentRange = getCurrentViewRange();
-        const parCount = await getParCount(this.vctrl.item.id);
-        if (!parCount) {
+        const ranges = documentglobals().nav_ranges;
+        const current = getCurrentViewRange();
+        if (!current || !ranges || ranges.length != 4) {
             return;
         }
-        this.lastIndex = parCount.pars; // + parCount.preambles;
-        if (currentRange && this.lastIndex) {
-            let firstRange;
-            let lastRange;
-            let nextRange;
-            let prevRange;
-            if (currentRange.b != 0) {
-                firstRange = await getViewRange(docId, 0, true);
-                prevRange = await getViewRange(docId, currentRange.b, false);
+        const first = ranges[0];
+        const previous = ranges[1];
+        const next = ranges[2];
+        const last = ranges[3];
+        const filteredRanges = [];
+        this.lastIndex = ranges[3].e;
+
+        // Remove redundant range links and add others.
+        if (this.lastIndex) {
+            if (current.b != 0) {
+                if (previous.b == 0) {
+                    filteredRanges.push(first);
+                } else {
+                    filteredRanges.push(first);
+                    filteredRanges.push(previous);
+                }
             }
-            if (currentRange.e != this.lastIndex) {
-                nextRange = await getViewRange(docId, currentRange.e, true);
-                lastRange = await getViewRange(docId, this.lastIndex, false);
-            }
-            // Remove redundant range links and add others to a list.
-            if (prevRange && prevRange.b == 0) {
-                firstRange = prevRange;
-                prevRange = undefined;
-            }
-            if (nextRange && nextRange.e == this.lastIndex) {
-                lastRange = nextRange;
-                nextRange = undefined;
-            }
-            if (firstRange) {
-                this.ranges.push({range: firstRange, name: "First"});
-            }
-            if (prevRange) {
-                this.ranges.push({range: prevRange, name: "Previous"});
-            }
-            if (nextRange) {
-                this.ranges.push({range: nextRange, name: "Next"});
-            }
-            if (lastRange) {
-                this.ranges.push({range: lastRange, name: "Last"});
+            if (current.e != this.lastIndex) {
+                if (next.e == this.lastIndex) {
+                    filteredRanges.push(last);
+                } else {
+                    filteredRanges.push(next);
+                    filteredRanges.push(last);
+                }
             }
         }
+
+        this.ranges = filteredRanges;
     }
 }

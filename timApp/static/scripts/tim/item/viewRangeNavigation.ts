@@ -7,13 +7,13 @@ import {IController} from "angular";
 import {Require} from "tim/util/utils";
 import {timApp} from "../app";
 import {ViewCtrl} from "../document/viewctrl";
-import {IRangeData, IViewRange, partitionDocument, unpartitionDocument} from "../document/viewRangeInfo";
+import {IViewRange, partitionDocument, unpartitionDocument} from "../document/viewRangeInfo";
 import {showViewRangeEditDialog} from "./viewRangeEditDialog";
 
 class ViewRangeNavigation implements IController {
     static $inject = ["$element", "$scope"];
     private vctrl!: Require<ViewCtrl>;
-    private ranges?: IRangeData[] = [];
+    private ranges?: IViewRange[] = [];
 
     async $onInit() {
         if (this.vctrl && this.vctrl.viewRangeInfo) {
@@ -58,9 +58,9 @@ timApp.component("viewRangeNavigation", {
     <div class="view-range-container" ng-if="$ctrl.ranges && $ctrl.ranges.length > 0">
         <div class="view-range-buttons">
             <span ng-repeat="r in $ctrl.ranges">
-                <a ng-if="r.range" ng-click="$ctrl.move(r.range)"
-                    uib-tooltip="Navigate to part {{r.range.b}} - {{r.range.e}}">{{r.name}} part</a>
-                <span ng-if="!$last && r.range">|</span>
+                <a ng-if="r" ng-click="$ctrl.move(r)"
+                    uib-tooltip="Navigate to part {{r.b}} - {{r.e}}">{{r.name}} part</a>
+                <span ng-if="!$last && r">|</span>
             </span>
             <a style="display: inline-block" ng-click="$ctrl.openViewRangeMenu()"
                 uib-tooltip="Open document partitioning settings">
