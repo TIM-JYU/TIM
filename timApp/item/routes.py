@@ -879,7 +879,7 @@ def set_piece_size(args: SetViewRangeModel):
     """
     piece_size = args.pieceSize
     if not piece_size or piece_size < 1:
-        piece_size = DEFAULT_VIEWRANGE
+        return abort(400, "Invalid piece size")
     resp = make_response()
     resp.set_cookie(key="r", value=str(piece_size))
     return resp

@@ -29,6 +29,7 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
     private item!: IItem;
     private partitionDocumentsSetting: boolean = false;
     private viewRangeSetting: number = 20;
+    private errorMessage?: string;
     private storage: ngStorage.StorageService & {
         pieceSize: null | number,
     };
@@ -77,6 +78,11 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
      * Saves view range settings and quits.
      */
     private async ok() {
+        this.errorMessage = undefined;
+        if (!this.viewRangeSetting || this.viewRangeSetting < 1) {
+            this.errorMessage = "Piece size needs to be an integer greater than zero.";
+            return;
+        }
         this.saveValues();
         if (this.partitionDocumentsSetting) {
             await setPieceSize(this.viewRangeSetting);
@@ -123,6 +129,7 @@ registerDialogComponent(ViewRangeEditController,
                 ng-model="$ctrl.viewRangeSetting" type="number" min="1"></label>
         </div>
         <br>
+        <tim-alert ng-if="$ctrl.errorMessage" severity="warning">{{$ctrl.errorMessage}}</tim-alert>
         <tim-alert severity="info">Note: the page may reload when the changes are saved.</tim-alert>
     </dialog-body>
     <dialog-footer>
