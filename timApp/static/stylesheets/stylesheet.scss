@@ -1328,13 +1328,11 @@ p.closeButton::before {
   }
 }
 
-div:focus {
+.parContent:focus {
+    box-shadow: -3px 0 lightblue;
     outline: none;
-    border-left: #f7f7f7 solid 3px;
 }
 
-div.editline:focus {
+.editline:focus {
     outline: lightblue solid 2px;
-    border-left: #f7f7f7 solid 3px;
 }
-
