@@ -13,11 +13,6 @@ export interface IViewRange {
     name?: string;
 }
 
-export interface IParCount {
-    pars: number;
-    preambles: number;
-}
-
 /**
  * Disable document partitioning by reloading.
  */
@@ -159,7 +154,7 @@ export class ViewRangeInfo {
     /**
      * Get view ranges for nav component and duplicates and those pointing to current range.
      */
-    public async loadRanges(docId: number) {
+    public async loadRanges() {
         const ranges = documentglobals().nav_ranges;
         const current = getCurrentViewRange();
         if (!current || !ranges || ranges.length != 4) {
