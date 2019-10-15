@@ -85,6 +85,7 @@ export class SidebarMenuCtrl implements IController {
     private item?: DocumentOrFolder;
     private sisugroupPath?: string;
     private currentViewRange?: IViewRange;
+    private hashlessUrl?: string;
 
     constructor() {
         const g = someglobals();
@@ -144,6 +145,7 @@ export class SidebarMenuCtrl implements IController {
         if (this.item && !this.item.isFolder) {
             this.loadViewRangeSettings();
         }
+        this.hashlessUrl = `${document.location.origin}${document.location.pathname}${document.location.search}`;
         // await this.processConsent();
     }
 
@@ -469,7 +471,7 @@ export class SidebarMenuCtrl implements IController {
     }
 
     /**
-     * Partition or unpartition document from 0 to user defined piece size.
+     * Partition or unpartition document (starting from the beginning) using user defined piece size.
      */
     private async toggleViewRange() {
         if (!(this.vctrl && this.item)) {
@@ -479,6 +481,9 @@ export class SidebarMenuCtrl implements IController {
         this.currentViewRange = getCurrentViewRange();
     }
 
+    /**
+     * Open dialog for editing view range settings.
+     */
     private openViewRangeMenu() {
         if (this.item) {
             void showViewRangeEditDialog(this.item);
@@ -503,6 +508,9 @@ export class SidebarMenuCtrl implements IController {
         redirectToItem(doc);
     }
 
+    /**
+     * Get piece size from local storage and current view range from document globals.
+     */
     private async loadViewRangeSettings() {
         if (this.storage.pieceSize != null) {
             this.pieceSizeSetting = +this.storage.pieceSize;
@@ -511,13 +519,15 @@ export class SidebarMenuCtrl implements IController {
     }
 
     /**
-     *
-     * @param $event
-     * @param headerId
+     * Handles clicking index header links. If view range is set, load corresponding part.
+     * If partitioning is not in use or the header is in the current part, jump to its
+     * location normally.
+     * @param $event Event.
+     * @param headerId Header id (HTML) from the link.
      */
     private async headerClicked($event: Event, headerId: string) {
-        // TODO: Get element by id; if not found, go to the followin if.
-        if (this.currentViewRange && this.vctrl) {
+        const isInCurrentPart = document.getElementById(headerId);
+        if (!isInCurrentPart && this.currentViewRange && this.vctrl) {
             const headerRange = await getViewRangeWithHeaderId(this.vctrl.docId, headerId);
             if (headerRange) {
                 partitionDocument(headerRange.b, headerRange.e, true);
@@ -684,11 +694,11 @@ timApp.component("timSidebarMenu", {
         <ul class="subexp">
             <li ng-class="$ctrl.headerClass(h)" ng-repeat="h in ::$ctrl.displayIndex"
                 ng-click="h.closed = !h.closed">
-                <a class="a{{::h.h1.level}}" href="#{{::h.h1.id}}" target="_self" ng-click="$ctrl.headerClicked($event, h.h1.id)">
+                <a class="a{{::h.h1.level}}" href="{{::$ctrl.hashlessUrl}}#{{::h.h1.id}}" target="_self" ng-click="$ctrl.headerClicked($event, h.h1.id)">
                     {{::h.h1.text}}</a>
                 <ul class="list-unstyled" ng-if="!h.closed" ng-click="$event.stopPropagation()">
                     <li class="basic" ng-repeat="h2 in h.h2List">
-                        <a class="a{{::h2.level}}" href="#{{::h2.id}}" ng-click="$ctrl.headerClicked($event, h2.id)"
+                        <a class="a{{::h2.level}}" href="{{::$ctrl.hashlessUrl}}#{{::h2.id}}" ng-click="$ctrl.headerClicked($event, h2.id)"
                             target="_self">{{::h2.text}}</a>
                     </li>
                 </ul>
