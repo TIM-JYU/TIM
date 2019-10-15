@@ -1060,7 +1060,7 @@ class Document:
     def insert_preamble_pars(self, class_names: Optional[List[str]] = None):
         """
         Add preamble pars.
-        :param class_names: Optionally include only pars with a class included this list of class names.
+        :param class_names: Optionally include only pars any of the listed classes.
         :return: Preamble pars.
         """
         if self.preamble_included:
@@ -1072,7 +1072,7 @@ class Document:
         if not class_names:
             pars = [p.clone() for p in self.get_docinfo().get_preamble_pars()]
         else:
-            # Filter pars with class names.
+            # Get pars with the any of the filter class names.
             pars = [p.clone() for p in self.get_docinfo().get_preamble_pars_with_class(class_names)]
         current_ids = set(self.par_ids)
         preamble_ids = set(p.get_id() for p in pars)

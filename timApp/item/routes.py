@@ -57,6 +57,7 @@ from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
 
 DEFAULT_RELEVANCE = 10
 DEFAULT_VIEWRANGE = 20
+INCLUDE_IN_PARTS_CLASS_NAME = "includeInParts" # Preamble pars with this class get inserted to each doc part.
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -352,7 +353,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
                 preamble_pars = doc.insert_preamble_pars()
             else:
                 # Load only special class preamble pars in parts after the first.
-                preamble_pars = doc.insert_preamble_pars(["includeInParts"])
+                preamble_pars = doc.insert_preamble_pars([INCLUDE_IN_PARTS_CLASS_NAME])
         except PreambleException as e:
             flash(e)
         else:
@@ -519,6 +520,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
             par_count=par_count,
             forwards=False
         )
+
         next_range = decide_view_range(
             doc_info,
             preferred_set_size=piece_size,
@@ -532,10 +534,12 @@ def view(item_path, template_name, usergroup=None, route="view"):
             par_count=par_count,
             forwards=False
         )
-        nav_ranges = [{'b': first_range[0], 'e': first_range[1], 'name': "First"},
-                      {'b': previous_range[0], 'e': previous_range[1], 'name': "Previous"},
-                      {'b': next_range[0], 'e': next_range[1], 'name': "Next"},
-                      {'b': last_range[0], 'e': last_range[1], 'name': "Last"}]
+        # If any are missing, there's something wrong with the partitioning.
+        if first_range and previous_range and next_range and last_range:
+            nav_ranges = [{'b': first_range[0], 'e': first_range[1], 'name': "First"},
+                          {'b': previous_range[0], 'e': previous_range[1], 'name': "Previous"},
+                          {'b': next_range[0], 'e': next_range[1], 'name': "Next"},
+                          {'b': last_range[0], 'e': last_range[1], 'name': "Last"}]
 
     return render_template(template_name,
                            access=access,
@@ -887,12 +891,11 @@ def get_viewrange(doc_id, index, forwards):
     current_set_size = get_piece_size_from_cookie(request)
     if not current_set_size:
         return abort(400, "Piece size not found!")
-    try:
-        doc_info = DocEntry.find_by_id(doc_id)
-        view_range = decide_view_range(doc_info, current_set_size, index, forwards=forwards > 0)
-        return json_response({'b': view_range[0], 'e': view_range[1]})
-    except Exception as e:
-        return abort(400, get_error_message(e))
+    doc_info = get_doc_or_abort(doc_id)
+    verify_view_access(doc_info)
+    view_range = decide_view_range(doc_info, current_set_size, index, forwards=forwards > 0)
+    return json_response({'b': view_range[0],'e': view_range[1]}) if view_range \
+        else abort(400, "Failed to get view range")
 
 
 def get_index_with_header_id(doc_info, header_id):
@@ -919,14 +922,15 @@ def get_viewrange_with_header_id(doc_id, header_id):
     """
     current_set_size = get_piece_size_from_cookie(request)
     if not current_set_size:
-        return abort(400, "Piece size not found!")
-    try:
-        doc_info = DocEntry.find_by_id(doc_id)
-        index = get_index_with_header_id(doc_info, header_id)
-        view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
-        return json_response({'b': view_range[0], 'e': view_range[1]})
-    except Exception as e:
-        return abort(400, get_error_message(e))
+        return abort(404, "Partitioning piece size not found")
+    doc_info = get_doc_or_abort(doc_id)
+    verify_view_access(doc_info)
+    index = get_index_with_header_id(doc_info, header_id)
+    if not index:
+        return abort(404, f"Header '{header_id}' not found in the document '{doc_info.short_name}'!")
+    view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
+    return json_response({'b': view_range[0], 'e': view_range[1]}) if view_range \
+        else abort(400, "Failed to get the view range")
 
 
 def get_piece_size_from_cookie(request: Request) -> Optional[int]:
@@ -938,7 +942,7 @@ def get_piece_size_from_cookie(request: Request) -> Optional[int]:
     r = request.cookies.get("r")
     try:
         return int(r)
-    except:
+    except (TypeError, ValueError):
         return None
 
 
@@ -949,15 +953,7 @@ def get_preamble_count(d: DocInfo) -> int:
     :return: Preamble count; zero if none were found.
     """
     preambles = d.document.insert_preamble_pars()
-    return len(preambles) if preambles else 0
-
-
-@view_page.route('/viewrange/parCount/<int:doc_id>')
-def get_par_count(doc_id):
-    doc_info = get_doc_or_abort(doc_id)
-    non_preamble_count = len(doc_info.document.get_paragraphs())
-    preamble_count = get_preamble_count(doc_info)
-    return json_response({'pars': non_preamble_count, 'preambles': preamble_count})
+    return len(preambles)
 
 
 def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0, par_count: Optional[int] = None,
@@ -978,23 +974,27 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     """
     if not par_count:
         par_count = len(doc_info.document.get_paragraphs())
-    if forwards:
-        b = index
-        e = min(preferred_set_size + index, par_count)
-        # Avoid too short range when the start index is near the end of the document.
-        if (e - b) < preferred_set_size:
-            b = max(min(e - preferred_set_size, b), 0)
-        # Round the end index to last index when the remaining part is short.
-        if min_set_size_modifier*preferred_set_size > par_count-e:
-            e = par_count
+    try:
+        if forwards:
+            b = index
+            e = min(preferred_set_size + index, par_count)
+            # Avoid too short range when the start index is near the end of the document.
+            if (e - b) < preferred_set_size:
+                b = max(min(e - preferred_set_size, b), 0)
+            # Round the end index to last index when the remaining part is short.
+            if min_set_size_modifier*preferred_set_size > par_count-e:
+                e = par_count
+        else:
+            b = max(index - preferred_set_size, 0)
+            e = index
+            # Avoid too short range when the end index is near the beginning of the document.
+            if (e - b) < preferred_set_size:
+                e = min(e + preferred_set_size, par_count)
+            # Round the start index to zero when the remaining part is short.
+            if min_set_size_modifier*preferred_set_size > b:
+                b = 0
+        # TODO: Don't cut areas.
+    except TypeError:
+        return None
     else:
-        b = max(index - preferred_set_size, 0)
-        e = index
-        # Avoid too short range when the end index is near the beginning of the document.
-        if (e - b) < preferred_set_size:
-            e = min(e + preferred_set_size, par_count)
-        # Round the start index to zero when the remaining part is short.
-        if min_set_size_modifier*preferred_set_size > b:
-            b = 0
-    # TODO: Don't cut areas.
-    return b, e
+        return b, e

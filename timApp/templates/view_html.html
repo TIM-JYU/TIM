@@ -105,7 +105,7 @@
     <p style="visibility: hidden;"><span class="math inline">\({{dtm}}\)</span></p>
     {% endif %}
     <div class="paragraphs" ng-click="$ctrl.notesHandler.setNotePadge($event)" >
-        <view-range-navigation ng-if="!$ctrl.item.isFolder"></view-range-navigation>
+        <view-range-navigation></view-range-navigation>
         <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="$ctrl.showRefresh">
             <p>The page has been modified since the last reload. Refresh now?</p>
             <button class="timButton" ng-click="$ctrl.reload()">Refresh</button>
@@ -154,7 +154,7 @@
             <velp-selection ng-if="$ctrl.showVelpSelection()">
             </velp-selection>
         {% endif %}
-        <view-range-navigation ng-if="!$ctrl.item.isFolder"></view-range-navigation>
+        <view-range-navigation></view-range-navigation>
     </div>
     <tim-template-list ng-if="$ctrl.item.rights.editable" ng-show="$ctrl.isEmptyDocument()" doc="$ctrl.item"></tim-template-list>
     <bootstrap-panel ng-if="$ctrl.item.rights.manage" ng-show="$ctrl.isEmptyDocument()"
