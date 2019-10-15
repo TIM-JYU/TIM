@@ -72,6 +72,13 @@ seeanswers_access_set = {t.value for t in [
     AccessType.manage,
 ]}
 
+copy_access_set = {t.value for t in [
+    AccessType.copy,
+    AccessType.edit,
+    AccessType.owner,
+    AccessType.manage,
+]}
+
 SCIM_USER_NAME = ':scimuser'
 
 class Consent(Enum):
@@ -522,6 +529,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     def has_seeanswers_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
         return self.has_some_access(i, seeanswers_access_set)
+
+    def has_copy_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+        return self.has_some_access(i, copy_access_set)
 
     def has_ownership(self, i: ItemOrBlock, allow_admin: bool = True) -> Optional[BlockAccess]:
         return self.has_some_access(i, owner_access_set, allow_admin)

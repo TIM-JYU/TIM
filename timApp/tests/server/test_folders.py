@@ -84,6 +84,7 @@ class FolderTest(TimRouteTest):
                                   'rights': {'browse_own_answers': True,
                                              'can_comment': True,
                                              'can_mark_as_read': True,
+                                             'copy': True,
                                              'editable': True,
                                              'manage': True,
                                              'owner': True,
@@ -102,6 +103,7 @@ class FolderTest(TimRouteTest):
                                   'rights': {'browse_own_answers': True,
                                              'can_comment': True,
                                              'can_mark_as_read': True,
+                                             'copy': True,
                                              'editable': True,
                                              'manage': True,
                                              'owner': True,
@@ -124,6 +126,7 @@ class FolderTest(TimRouteTest):
                                   'rights': {'browse_own_answers': False,
                                              'can_comment': False,
                                              'can_mark_as_read': False,
+                                             'copy': False,
                                              'editable': False,
                                              'manage': False,
                                              'owner': False,
@@ -349,6 +352,37 @@ class FolderCopyTest(TimRouteTest):
             expect_status=403,
         )
 
+    def test_copy_permission(self):
+        self.login_test1()
+        d = self.create_doc(self.get_personal_item_path('perm/a'))
+        d = self.create_doc(self.get_personal_item_path('perm/b'))
+        f = d.parent
+        grant_access(self.test_user_2.get_personal_group(), f, 'view')
+        self.login_test2()
+        self.json_post(
+            f'/copy/{f.id}',
+            {'destination': self.get_personal_item_path('perm'), 'exclude': ''},
+            expect_content='Missing copy access to folder users/test-user-1/perm',
+            expect_status=403,
+        )
+        grant_access(self.test_user_2.get_personal_group(), f, 'copy')
+        self.json_post(
+            f'/copy/{f.id}',
+            {'destination': self.get_personal_item_path('perm'), 'exclude': ''},
+            expect_content='Missing copy access to document users/test-user-1/perm/a',
+            expect_status=403,
+        )
+        self.login_test1()
+        d = DocEntry.find_by_path(self.get_personal_item_path('perm/a'))
+        grant_access(self.test_user_2.get_personal_group(), d, 'copy')
+        d = DocEntry.find_by_path(self.get_personal_item_path('perm/b'))
+        grant_access(self.test_user_2.get_personal_group(), d, 'copy')
+        self.login_test2()
+        self.json_post(
+            f'/copy/{f.id}',
+            {'destination': self.get_personal_item_path('perm'), 'exclude': ''},
+        )
+
     def test_copy_regression(self):
         self.login_test1()
         _ = self.create_doc(self.get_personal_item_path('x/templates/b'))
@@ -400,6 +434,7 @@ class FolderContentTest(TimRouteTest):
                      'rights': {'browse_own_answers': True,
                                 'can_comment': True,
                                 'can_mark_as_read': True,
+                                'copy': False,
                                 'editable': False,
                                 'manage': False,
                                 'owner': False,

@@ -106,6 +106,11 @@ def verify_teacher_access(b: ItemOrBlock, require=True, message=None, check_dura
     return abort_if_not_access_and_required(u.has_teacher_access(b), b.id, 'teacher', require, message, check_duration)
 
 
+def verify_copy_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
+    u = get_current_user_object()
+    return abort_if_not_access_and_required(u.has_copy_access(b), b.id, 'copy', require, message, check_duration)
+
+
 def verify_seeanswers_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
     u = get_current_user_object()
     return abort_if_not_access_and_required(u.has_seeanswers_access(b), b.id, 'see answers', require, message,
@@ -219,6 +224,7 @@ def get_rights(d: ItemBase):
     return {'editable': bool(u.has_edit_access(d)),
             'can_mark_as_read': bool(logged_in() and u.has_view_access(d)),
             'can_comment': bool(logged_in() and u.has_view_access(d)),
+            'copy': bool(logged_in() and u.has_copy_access(d)),
             'browse_own_answers': logged_in(),
             'teacher': bool(u.has_teacher_access(d)),
             'see_answers': bool(u.has_seeanswers_access(d)),
@@ -325,7 +331,7 @@ def del_attr_if_exists(obj, attr_name: str):
 
 def can_see_par_source(u: User, p: DocParagraph):
     d = p.doc.get_docinfo()
-    if u.has_edit_access(d):
+    if u.has_copy_access(d):
         return True
     if not u.has_view_access(d):
         return False

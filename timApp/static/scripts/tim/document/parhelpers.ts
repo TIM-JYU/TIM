@@ -1,6 +1,7 @@
 import $ from "jquery";
 import {getActiveDocument} from "tim/document/document";
 import {IItem} from "../item/IItem";
+import {RightNames} from "../user/IRights";
 import {isInViewport} from "../util/utils";
 
 export type Paragraph = JQuery;
@@ -220,15 +221,15 @@ export function isActionablePar(par: Paragraph) {
 
 export function canEditPar(item: IItem, par: JQuery) {
     const attrs = getParAttributes(par);
-    const right = item.rights[attrs.edit];
-    if (right == null) {
+    const edit = attrs.edit;
+    if (!RightNames.is(edit)) {
         return item.rights.editable;
     }
-    return right;
+    return item.rights[edit];
 }
 
 export function canSeeSource(item: IItem, par: Paragraph) {
-    if (item.rights.editable) {
+    if (item.rights.copy) {
         return true;
     }
     const attrs = getParAttributes(par);

@@ -27,7 +27,7 @@
 </div>
 <div class="margin rights-list" ng-repeat="type in $ctrl.accessTypes" ng-if="!$ctrl.massMode">
     <a ng-click="$ctrl.showAddRightFn(type)"
-       title="Click to add {{ type.name }} right to some usergroup">{{ type.name }} right</a><span
+       title="Click to add {{ type.name }} right to some usergroup">{{ type.name }}</a><span
         ng-show="filtered.length > 0"> ({{ filtered.length }})</span>:
     <span ng-show="filtered.length == 0">none</span>
 

@@ -98,6 +98,7 @@ def initialize_database(create_docs=True):
         sess.add(AccessTypeModel(id=4, name='manage'))
         sess.add(AccessTypeModel(id=5, name='see answers'))
         sess.add(AccessTypeModel(id=6, name='owner'))
+        sess.add(AccessTypeModel(id=7, name='copy'))
 
         create_special_usergroups(sess)
         anon_group = UserGroup.get_anonymous_group()

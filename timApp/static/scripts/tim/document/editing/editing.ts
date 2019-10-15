@@ -8,9 +8,10 @@ import {showMessageDialog} from "../../ui/dialog";
 import {documentglobals} from "../../util/globals";
 import {$compile, $http, $timeout} from "../../util/ngimport";
 import {empty, isMobileDevice, to} from "../../util/utils";
+import {showDiffDialog} from "../diffDialog";
 import {onClick} from "../eventhandlers";
 import {
-    canEditPar,
+    canEditPar, canSeeSource,
     createNewPar,
     getElementByParId,
     getFirstParId,
@@ -244,9 +245,8 @@ export class EditingHandler {
             initialText = options.texts.initialText;
             cursorPos = initialText.indexOf(CURSOR);
             initialText = initialText.replace(CURSOR, "");
-        } else if (options.showDelete && parId !== "HELP_PAR") {
-            const r = await to($http.get<{text: string}>(`/getBlock/${this.viewctrl.docId}/${parId}`,
-                {params: extraData}));
+        } else if (options.showDelete && parId !== "HELP_PAR" && parId) {
+            const r = await this.getBlock(parId, extraData);
             if (r.ok) {
                 initialText = r.result.data.text;
             } else {
@@ -316,6 +316,11 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         this.currentEditor = await inst.dialogInstance.promise;
         await to(inst.result);
         this.viewctrl.editing = false;
+    }
+
+    private async getBlock(parId: string, extraData?: IExtraData) {
+        return await to($http.get<{text: string}>(`/getBlock/${this.viewctrl.docId}/${parId}`,
+            {params: extraData}));
     }
 
     findSettingsPars() {
@@ -598,6 +603,28 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.notesHandler.showNoteWindow(e, p),
                     desc: "Comment/note",
                     show: this.viewctrl.item.rights.can_comment && par != null && !isHelpPar(par),
+                },
+                {
+                    func: async (e: JQuery.Event, p: Paragraph) => {
+                        const parId = getParId(p);
+                        if (!parId) {
+                            await showMessageDialog("Could not get paragraph id");
+                            return;
+                        }
+                        const r = await this.getBlock(parId);
+                        if (r.ok) {
+                            const text = r.result.data.text;
+                            await showDiffDialog({
+                                left: text,
+                                right: text,
+                                title: "Source",
+                            });
+                        } else {
+                            await showMessageDialog("Failed to get paragraph markdown");
+                        }
+                    },
+                    desc: "View source",
+                    show: par != null && !isHelpPar(par) && canSeeSource(this.viewctrl.item, par),
                 },
                 {
                     func: (e, p) => {

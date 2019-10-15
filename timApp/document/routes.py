@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from flask import Response, abort, request, Blueprint
 from webargs.flaskparser import use_args
 
-from timApp.auth.accesshelper import get_doc_or_abort, verify_edit_access, can_see_par_source
+from timApp.auth.accesshelper import get_doc_or_abort, verify_edit_access, can_see_par_source, verify_copy_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
@@ -22,7 +22,7 @@ doc_bp = Blueprint('document',
 @doc_bp.route('/download/<int:doc_id>')
 def download_document(doc_id):
     d = get_doc_or_abort(doc_id)
-    verify_edit_access(d)
+    verify_copy_access(d)
     return return_doc_content(d.document)
 
 
@@ -91,7 +91,7 @@ def get_block_2(args: GetBlockModel):
     area_start = args.area_start
     area_end = args.area_end
     if area_start and area_end:
-        verify_edit_access(d)
+        verify_copy_access(d)
         try:
             section = d.document.export_section(area_start, area_end)
         except TimDbException as e:

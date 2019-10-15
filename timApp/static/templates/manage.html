@@ -269,7 +269,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">Other actions</div>
         <div class="panel-body">
-            <a ng-show="$ctrl.item.rights.editable" class="timButton"
+            <a ng-show="$ctrl.item.rights.copy" class="timButton"
                href="/download/{{ $ctrl.item.id }}">Download document markdown</a>
             <button class="timButton" ng-click="$ctrl.markAllAsRead()">Mark document as read</button>
             <button ng-show="$ctrl.item.rights.owner" class="btn btn-danger"
@@ -351,7 +351,7 @@
             </form>
         </div>
     </div>
-    <bootstrap-panel title="Copy contents" ng-if="$ctrl.item.rights.editable">
+    <bootstrap-panel title="Copy contents" ng-if="$ctrl.item.rights.copy">
         <tim-copy-folder item="$ctrl.item"></tim-copy-folder>
     </bootstrap-panel>
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">

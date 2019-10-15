@@ -46,6 +46,7 @@ class CoursesTest(TimRouteTest):
                                                                         'rights': {'browse_own_answers': True,
                                                                                    'can_comment': True,
                                                                                    'can_mark_as_read': True,
+                                                                                   'copy': True,
                                                                                    'editable': True,
                                                                                    'manage': True,
                                                                                    'owner': True,

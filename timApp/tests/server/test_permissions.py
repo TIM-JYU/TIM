@@ -65,12 +65,15 @@ class PermissionTest(TimRouteTest):
             rights = self.get(f'/permissions/get/{i.id}')
             i = Item.find_by_id(i.id)
             self.assertEqual(rights['accesstypes'],
-                             [{'id': 1, 'name': 'view'},
-                              {'id': 2, 'name': 'edit'},
-                              {'id': 3, 'name': 'teacher'},
-                              {'id': 4, 'name': 'manage'},
-                              {'id': 5, 'name': 'see answers'},
-                              {'id': 6, 'name': 'owner'}])
+                             [
+                                 {'id': 1, 'name': 'view'},
+                                 {'id': 2, 'name': 'edit'},
+                                 {'id': 3, 'name': 'teacher'},
+                                 {'id': 4, 'name': 'manage'},
+                                 {'id': 5, 'name': 'see answers'},
+                                 {'id': 6, 'name': 'owner'},
+                                 {'id': 7, 'name': 'copy'},
+                             ])
             self.assertEqual(convert_to_old_format(rights['grouprights']),
                              [{'access_name': 'owner',
                                'access_type': 6,

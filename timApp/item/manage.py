@@ -16,7 +16,7 @@ from webargs.flaskparser import use_args
 
 from marshmallow_dataclass import class_schema
 from timApp.auth.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
-    verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort
+    verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort, verify_copy_access, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel
 from timApp.auth.sessioninfo import get_current_user_group_object
@@ -452,7 +452,7 @@ def change_title(item_id):
 
 def get_copy_folder_params(folder_id):
     f = get_folder_or_abort(folder_id)
-    verify_manage_access(f)
+    verify_copy_access(f, message=f'Missing copy access to folder {f.path}')
     dest, exclude = verify_json_params('destination', 'exclude')
     compiled = get_pattern(exclude)
     if path_includes(dest, f.path):
@@ -511,14 +511,18 @@ def enum_items(folder: Folder, exclude_re) -> Generator[Item, None, None]:
 def copy_folder(f_from: Folder, f_to: Folder, user_who_copies: User, exclude_re):
     db.session.flush()
     if not user_who_copies.can_write_to_folder(f_to):
-        abort(403, f'Missing edit access to folder {f_to.path}')
+        raise AccessDenied(f'Missing edit access to folder {f_to.path}')
+    if not user_who_copies.has_copy_access(f_from):
+        raise AccessDenied(f'Missing copy access to folder {f_from.path}')
     folder_opts = FolderCreationOptions(get_templates_rights_from_parent=False)
     for d in f_from.get_all_documents(include_subdirs=False):
         if exclude_re.search(d.path):
             continue
+        if not user_who_copies.has_copy_access(d):
+            raise AccessDenied(f'Missing copy access to document {d.path}')
         nd_path = join_location(f_to.path, d.short_name)
         if DocEntry.find_by_path(nd_path):
-            abort(403, f'Document already exists at path {nd_path}')
+            raise AccessDenied(f'Document already exists at path {nd_path}')
         nd = DocEntry.create(
             nd_path,
             title=d.title,

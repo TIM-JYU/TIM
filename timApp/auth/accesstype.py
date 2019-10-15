@@ -8,3 +8,4 @@ class AccessType(enum.Enum):
     manage = 4
     see_answers = 5
     owner = 6
+    copy = 7
