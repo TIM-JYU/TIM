@@ -37,6 +37,7 @@ maxdate = datetime.max.replace(tzinfo=timezone.utc)
 
 view_access_set = {t.value for t in [
     AccessType.view,
+    AccessType.copy,
     AccessType.edit,
     AccessType.owner,
     AccessType.teacher,
