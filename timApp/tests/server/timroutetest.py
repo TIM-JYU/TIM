@@ -67,6 +67,21 @@ def get_content(element: HtmlElement, selector: str = '.parContent') -> List[str
     return [r.text_content().strip() for r in element.cssselect(selector)]
 
 
+def get_cookie_value(resp, key: str) -> Optional[str]:
+    """
+    Get value of the cookie with given key.
+    :param resp: Response.
+    :param key: Cookie key.
+    :return: Cookie value as string, or None if not found.
+    """
+    cookies = resp.headers.getlist('Set-Cookie')
+    for cookie in cookies:
+        matches = re.findall(f"{key}=\d+;", cookie)
+        if len(matches) > 0:
+            return re.findall(f"{key}=\d+;", cookie)[0].replace(f"{key}=", "", 1)[0:-1]
+    return None
+
+
 class TimRouteTest(TimDbTest):
     """A base class for running tests for TIM routes."""
     doc_num = 1
@@ -89,6 +104,7 @@ class TimRouteTest(TimDbTest):
             expect_content: Union[None, str, Dict, List] = None,
             expect_contains: Union[None, str, List[str], Dict] = None,
             expect_xpath: Optional[str] = None,
+            expect_cookie: Optional[Tuple[str, Optional[str]]] = None,
             json_key: Optional[str] = None,
             headers: Optional[List[Tuple[str, str]]] = None,
             auth: Optional[BasicAuthParams] = None,
@@ -105,6 +121,7 @@ class TimRouteTest(TimDbTest):
                             expect_content=expect_content,
                             expect_contains=expect_contains,
                             expect_xpath=expect_xpath,
+                            expect_cookie=expect_cookie,
                             json_key=json_key,
                             headers=headers,
                             auth=auth,
@@ -171,6 +188,7 @@ class TimRouteTest(TimDbTest):
                 expect_contains: Union[None, str, List[str]] = None,
                 expect_mimetype: Optional[str] = None,
                 expect_xpath: Optional[str] = None,
+                expect_cookie: Optional[Tuple[str, Optional[str]]] = None,
                 json_key: Optional[str] = None,
                 headers: Optional[List[Tuple[str, str]]] = None,
                 xhr=True,
@@ -194,6 +212,7 @@ class TimRouteTest(TimDbTest):
         :param expect_xpath: The expected XPath expression that must match at least one element in the response tree.
            This parameter can also be used for JSON responses as long as json_key is provided and the data in that key
            is HTML.
+        :param expect_cookie: Cookie key and value as a tuple. The value can be None to check if cookie doesn't exist.
         :param json_key: The expected key that is found in the returned JSON data. Any other data is discarded.
         :param headers: Custom headers for the request.
         :param kwargs: Custom parameters to be passed to test client's 'open' method. Can be, for example,
@@ -219,6 +238,9 @@ class TimRouteTest(TimDbTest):
             self.assertEqual(expect_mimetype, resp.mimetype)
         if is_redirect(resp) and expect_content is not None:
             self.assertEqual(expect_content, remove_prefix(resp.location, LOCALHOST))
+        if expect_cookie is not None:
+            print(get_cookie_value(resp, expect_cookie[0]))
+            self.assertEqual(expect_cookie[1], get_cookie_value(resp, expect_cookie[0]))
         resp_data = resp.get_data(as_text=is_textual)
         if not is_textual:
             return resp_data
@@ -333,6 +355,7 @@ class TimRouteTest(TimDbTest):
                   expect_content: Union[None, str, Dict, List] = None,
                   expect_contains: Union[None, str, List[str], Dict] = None,
                   expect_xpath: Optional[str] = None,
+                  expect_cookie: Optional[Tuple[str, Optional[str]]] = None,
                   json_key: Optional[str] = None,
                   headers: Optional[List[Tuple[str, str]]] = None,
                   auth: Optional[BasicAuthParams]=None,
@@ -353,6 +376,7 @@ class TimRouteTest(TimDbTest):
                              expect_content=expect_content,
                              expect_contains=expect_contains,
                              expect_xpath=expect_xpath,
+                             expect_cookie=expect_cookie,
                              json_key=json_key,
                              headers=headers,
                              auth=auth,
@@ -367,6 +391,7 @@ class TimRouteTest(TimDbTest):
                  expect_content: Union[None, str, Dict, List] = None,
                  expect_contains: Union[None, str, List[str]] = None,
                  expect_xpath: Optional[str] = None,
+                 expect_cookie: Optional[Tuple[str, Optional[str]]] = None,
                  json_key: Optional[str] = None,
                  headers: Optional[List[Tuple[str, str]]] = None,
                  auth: Optional[BasicAuthParams] = None,
@@ -389,6 +414,7 @@ class TimRouteTest(TimDbTest):
                             expect_content=expect_content,
                             expect_contains=expect_contains,
                             expect_xpath=expect_xpath,
+                            expect_cookie=expect_cookie,
                             json_key=json_key,
                             headers=headers,
                             auth=auth,
