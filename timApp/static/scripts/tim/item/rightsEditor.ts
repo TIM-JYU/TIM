@@ -184,7 +184,7 @@ class RightsEditorController implements IController {
     }
 
     private async getItemsAndPreprocess() {
-        return (await this.getItems()).filter((i) => !isVelpGroupItem(i)).map((i) => ({
+        return (await this.getItems()).map((i) => ({
             ...i,
             relPath: this.relPath(i),
             rightsStr: this.formatRights(i),
