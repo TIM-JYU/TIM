@@ -239,7 +239,6 @@ class TimRouteTest(TimDbTest):
         if is_redirect(resp) and expect_content is not None:
             self.assertEqual(expect_content, remove_prefix(resp.location, LOCALHOST))
         if expect_cookie is not None:
-            print(get_cookie_value(resp, expect_cookie[0]))
             self.assertEqual(expect_cookie[1], get_cookie_value(resp, expect_cookie[0]))
         resp_data = resp.get_data(as_text=is_textual)
         if not is_textual:
