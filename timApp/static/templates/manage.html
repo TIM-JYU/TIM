@@ -176,7 +176,7 @@
     </div>
     <div ng-if="$ctrl.item.rights.manage" class="panel panel-default">
         <div class="panel-heading">
-            Translations and copies (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in
+            Translations (see <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#translations">help in
             Finnish</a>)
         </div>
         <div class="panel-body">
@@ -218,17 +218,19 @@
                             ng-click="$ctrl.createTranslation()">Create
                     </button>
                 </uib-tab>
-                <uib-tab heading="Create a cited copy">
-                    <create-item item-type="document" item-location="{{ $ctrl.item.location }}"
-                                 params="$ctrl.citeParams"></create-item>
-                </uib-tab>
-                <uib-tab heading="Create a copy">
-                    <create-item item-type="document" item-location="{{ $ctrl.item.location }}"
-                                 params="$ctrl.copyParams"></create-item>
-                </uib-tab>
+<!--                <uib-tab heading="Create a cited copy">-->
+<!--                    <create-item item-type="document" item-location="{{ $ctrl.item.location }}"-->
+<!--                                 params="$ctrl.citeParams"></create-item>-->
+<!--                </uib-tab>-->
             </uib-tabset>
         </div>
     </div>
+
+    <bootstrap-panel ng-if="$ctrl.item.rights.copy" title="Copy this document">
+        <create-item item-type="document"
+                     item-location="{{ $ctrl.item.location }}"
+                     params="$ctrl.copyParams"></create-item>
+    </bootstrap-panel>
 
     <div ng-if="$ctrl.item.rights.editable" class="panel panel-default">
         <div class="panel-heading">Edit the full document</div>
