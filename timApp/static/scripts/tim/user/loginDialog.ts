@@ -8,10 +8,11 @@ import * as onEnter from "tim/ui/onEnter";
 import {saveCurrentScreenPar} from "../document/parhelpers";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {LOGIN_DEFAULT_LANGUAGE} from "../ui/language";
-import {$http} from "../util/ngimport";
+import {$http, $timeout} from "../util/ngimport";
 import {capitalizeFirstLetter, IOkResponse, markAsUsed, to, ToReturn} from "../util/utils";
 import {IUser} from "./IUser";
 import {Users} from "./userService";
+import {createWayfElement} from "./wayf";
 
 interface INameResponse {
     status: "name";
@@ -114,6 +115,15 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
                 return "Log in";
             }
         }
+    }
+
+    async $postLink() {
+        const elem = await createWayfElement();
+        if (!elem) {
+            return;
+        }
+        await $timeout();
+        this.element.find(".haka").append(elem);
     }
 
     logout = (user: IUser, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
@@ -320,6 +330,9 @@ registerDialogComponent(LoginDialogController,
             <p class="text-center text-smaller"><a href="/view/tim/ongelmia-kirjautumisessa">Problems logging
                 in?</a></p>
             <img class="center-block" ng-show="$ctrl.korppiLoading" src="/static/images/loading.gif">
+            <hr>
+            <div class="haka">
+            </div>
             <hr>
             <p class="text-center">
                 Others, please log in with your TIM account:
