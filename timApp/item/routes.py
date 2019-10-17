@@ -960,7 +960,7 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
                        forwards: bool = True, min_set_size_modifier: float = 0.5) -> Optional[Range]:
     """
     Decide begin and end indices of paragraph set based on preferred size.
-    Attempts to avoid making the current part shorter than the piece size due to proximity to begin or end
+    Avoids making the current part shorter than the piece size due to proximity to begin or end
     of the document. Also combines remaining paragraphs at the start or end, if they'd be smaller than allowed.
     For example: With set_size = 50 and modifier = 0.5 this will combine neighboring set if its size is 25 or less.
 
@@ -975,23 +975,24 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     if not par_count:
         par_count = len(doc_info.document.get_paragraphs())
     try:
+        min_piece_size = round(min_set_size_modifier * preferred_set_size)
         if forwards:
             b = index
             e = min(preferred_set_size + index, par_count)
             # Avoid too short range when the start index is near the end of the document.
-            if (e - b) < preferred_set_size:
-                b = max(min(e - preferred_set_size, b), 0)
+            if (e - b) <= min_piece_size:
+                b = max(min(e - min_piece_size, b), 0)
             # Round the end index to last index when the remaining part is short.
-            if min_set_size_modifier*preferred_set_size > par_count-e:
+            if par_count-e <= min_piece_size:
                 e = par_count
         else:
             b = max(index - preferred_set_size, 0)
             e = index
             # Avoid too short range when the end index is near the beginning of the document.
-            if (e - b) < preferred_set_size:
-                e = min(e + preferred_set_size, par_count)
+            if (e - b) <= min_piece_size:
+                e = min(e + min_piece_size, par_count)
             # Round the start index to zero when the remaining part is short.
-            if min_set_size_modifier*preferred_set_size > b:
+            if b <= min_piece_size:
                 b = 0
         # TODO: Don't cut areas.
     except TypeError:
