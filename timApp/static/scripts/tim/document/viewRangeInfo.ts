@@ -167,10 +167,10 @@ export class ViewRangeInfo {
         const filteredRanges = [];
         this.lastIndex = ranges[3].e;
 
-        // Remove redundant range links and add others.
+        // Remove unnecessary ranges.
         if (this.lastIndex) {
             if (current.b != 0) {
-                if (previous.b == 0) {
+                if (this.isOverlappingRange(first, previous, true, false)) {
                     filteredRanges.push(first);
                 } else {
                     filteredRanges.push(first);
@@ -178,15 +178,39 @@ export class ViewRangeInfo {
                 }
             }
             if (current.e != this.lastIndex) {
-                if (next.e == this.lastIndex) {
-                    filteredRanges.push(last);
+                if (this.isOverlappingRange(next, last, false, true)) {
+                    next.name = last.name;
+                    filteredRanges.push(next);
                 } else {
                     filteredRanges.push(next);
                     filteredRanges.push(last);
                 }
             }
         }
-
         this.ranges = filteredRanges;
+    }
+
+    /**
+     * Check whether the range B is contained within range A.
+     * @param rangeA Range that may be greater.
+     * @param rangeB Range that may be lesser.
+     * @param lockBeginIndex Begin index needs to be same.
+     * @param lockEndIndex End index needs to be same.
+     * @returns True if range A contains range B within set limits.
+     */
+    public isOverlappingRange(rangeA: IViewRange, rangeB: IViewRange, lockBeginIndex: boolean, lockEndIndex: boolean) {
+        let beginOk = false;
+        let endOk = false;
+        if (lockBeginIndex) {
+            beginOk = (rangeA.b == rangeB.b);
+        } else {
+            beginOk = (rangeA.b <= rangeB.b);
+        }
+        if (lockEndIndex) {
+            endOk = (rangeA.e == rangeB.e);
+        } else {
+            endOk = (rangeA.e >= rangeB.e);
+        }
+        return beginOk && endOk;
     }
 }
