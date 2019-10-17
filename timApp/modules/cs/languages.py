@@ -980,7 +980,7 @@ class SimCir(Language):
 class Sage(Language):
 
     def runner_name(self):
-        return "sage-runner"
+        return "cs-sage-runner"
 
 
 def get_by_id(jso, item_id, default=None):
