@@ -1,5 +1,5 @@
 from timApp.tests.server.timroutetest import TimRouteTest
-
+from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
 
 class DocPartitionTest(TimRouteTest):
 
@@ -55,7 +55,7 @@ class DocPartitionTest(TimRouteTest):
         # No partitioning.
         tree = self.get(f"view/{d.path}", as_tree=True)
         pars = tree.cssselect('.parContent > p')
-        self.assertEqual(len(pars), 10)
+        self.assertEqual(10, len(pars))
 
         self.json_post(url=f'/viewrange/set/piecesize',
                        json_data={'pieceSize': 5},
@@ -65,13 +65,13 @@ class DocPartitionTest(TimRouteTest):
         # Partitioning on, no URL parameters.
         tree = self.get(f"view/{d.path}", as_tree=True)
         pars = tree.cssselect('.parContent > p')
-        self.assertEqual(len(pars), 5)
+        self.assertEqual(5, len(pars))
         self.assertIn('2', pars[1].text)
 
         # Partitioning with URL parameters, mid-document range.
         tree = self.get(f"view/{d.path}?b=2&e=6", as_tree=True)
         pars = tree.cssselect('.parContent > p')
-        self.assertEqual(len(pars), 4)
+        self.assertEqual(4, len(pars))
         self.assertIn('3', pars[0].text)
         self.assertIn('6', pars[3].text)
 
@@ -114,18 +114,70 @@ class DocPartitionTest(TimRouteTest):
 
         tree = self.get(f"view/{d.path}?b=3&e=14", as_tree=True)
         pars = tree.cssselect('.parContent > p')
-        self.assertEqual(len(pars), 0)
+        self.assertEqual(0, len(pars))
 
 
     def test_partitioning_with_preambles(self):
-        # TODO: Normal preamble pars.
-        pass
+        self.make_admin(self.test_user_1)
+        self.login_test1()
+        self.json_post(url=f'/viewrange/set/piecesize',
+                       json_data={'pieceSize': 5},
+                       expect_cookie=('r','5'),
+                       expect_status=200)
+        d = self.create_doc(
+            initial_par=["1","Kissa","3","4","5","6","Koira","8","9","10"])
+        d_preamble = self.create_doc(
+            path=self.get_personal_item_path(f'{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/preamble'),
+            initial_par=["Preamble par 1", "Preamble par 2"])
 
-    
+        # Partitioning on, no URL parameters.
+        tree = self.get(f"view/{d.path}", as_tree=True)
+        pars = tree.cssselect('.parContent > p')
+        self.assertEqual(7, len(pars))
+        self.assertIn('Preamble paragraph 1', pars[0].text)
+        self.assertIn('Kissa', pars[3].text)
+
+        # Partitioning with URL parameters, starting from doc beginning.
+        tree = self.get(f"view/{d.path}?b=0&e=6&preamble=true", as_tree=True)
+        pars = tree.cssselect('.parContent > p')
+        self.assertEqual(8, len(pars))
+        self.assertIn('Preamble par 1', pars[0].text)
+        self.assertIn('Kissa', pars[3].text)
+
+        # Partitioning with URL parameters, starting from mid-document.
+        tree = self.get(f"view/{d.path}?b=6&e=10&preamble=true", as_tree=True)
+        pars = tree.cssselect('.parContent > p')
+        self.assertEqual(4, len(pars))
+        self.assertIn(pars[0].text, 'Koira')
+
+
     def test_partitioning_with_special_class_preambles(self):
-        # TODO: 'includeInParts' class in preamble pars.
-        pass
+        self.make_admin(self.test_user_1)
+        self.login_test1()
+        self.json_post(url=f'/viewrange/set/piecesize',
+                       json_data={'pieceSize': 5},
+                       expect_cookie=('r','5'),
+                       expect_status=200)
+        d = self.create_doc(initial_par=["1","Kissa","3","4","5","6","Koira","8","9","10"])
+        d_preamble = self.create_doc(
+            path=self.get_personal_item_path(f'{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/preamble'),
+            initial_par=["Preamble par 1", "Preamble par 2", """
+#- {.includeInParts}
+Preamble par 3
+"""])
 
+        # Partitioning on, no URL parameters; all pars should be included.
+        tree = self.get(f"view/{d.path}", as_tree=True)
+        pars = tree.cssselect('.parContent > p')
+        self.assertEqual(8, len(pars))
+        self.assertIn('Preamble par 1', pars[0].text)
+        self.assertIn('Kissa', pars[4].text)
+
+        # Partitioning with URL parameters, starting from mid-document; special par should be included.
+        tree = self.get(f"view/{d.path}?b=6&e=10&preamble=true", as_tree=True)
+        pars = tree.cssselect('.parContent > p')
+        self.assertEqual(5, len(pars))
+        self.assertIn(pars[0].text, 'Preamble par 3')
 
     def test_partitioning_range(self):
         # TODO: Range check not implemented yet.
