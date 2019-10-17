@@ -444,7 +444,7 @@ export class ViewCtrl implements IController {
         });
         this.reviewCtrl.loadDocumentAnnotations();
         this.editingHandler.insertHelpPar();
-        await this.viewRangeInfo.loadRanges(this.item.id);
+        await this.viewRangeInfo.loadRanges();
         // window.onbeforeunload = () => {
         //     const dirty = this.checkUnSavedTimComponents();
         //     if ( dirty ) { return "You have unsaved tasks!"; }  // IE shows this message
