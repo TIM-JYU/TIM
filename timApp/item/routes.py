@@ -886,7 +886,7 @@ def set_piece_size(args: SetViewRangeModel):
 
 
 @view_page.route('/viewrange/get/<int:doc_id>/<int:index>/<int:forwards>')
-def get_viewrange(doc_id, index, forwards):
+def get_viewrange(doc_id: int, index: int, forwards: int):
     taketime("route view begin")
     current_set_size = get_piece_size_from_cookie(request)
     if not current_set_size:
@@ -898,7 +898,7 @@ def get_viewrange(doc_id, index, forwards):
         else abort(400, "Failed to get view range")
 
 
-def get_index_with_header_id(doc_info, header_id):
+def get_index_with_header_id(doc_info: DocInfo, header_id: str) -> Optional[int]:
     """
     Returns first index containing the given HTML header id.
     :param doc_info: Document.
@@ -907,13 +907,19 @@ def get_index_with_header_id(doc_info, header_id):
     """
     pars = doc_info.document.get_paragraphs()
     for i, par in enumerate(pars):
-        if f'id="{header_id}"' in par.get_html():
-            return i
+        if par:
+            try:
+                par_html = par.get_html()
+            except AssertionError:
+                continue
+            else:
+                if par_html and f'id="{header_id}"' in par_html:
+                    return i
     return None
 
 
 @view_page.route('/viewrange/getWithHeaderId/<int:doc_id>/<string:header_id>')
-def get_viewrange_with_header_id(doc_id, header_id):
+def get_viewrange_with_header_id(doc_id: int, header_id: str):
     """
     Route for getting suitable view range for index links.
     :param doc_id: Document id.
@@ -926,7 +932,7 @@ def get_viewrange_with_header_id(doc_id, header_id):
     doc_info = get_doc_or_abort(doc_id)
     verify_view_access(doc_info)
     index = get_index_with_header_id(doc_info, header_id)
-    if not index:
+    if index is None:
         return abort(404, f"Header '{header_id}' not found in the document '{doc_info.short_name}'!")
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
     return json_response({'b': view_range[0], 'e': view_range[1]}) if view_range \
