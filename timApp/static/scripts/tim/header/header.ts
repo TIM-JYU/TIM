@@ -48,9 +48,11 @@ class HeaderController implements IController {
     private translations?: IDocument[];
     private crumbs?: unknown;
     private docSettings?: IDocSettings;
+    private hideLinks?: boolean;
 
     $onInit() {
         const g = someglobals();
+        this.hideLinks = "hideLinks" in g ? g.hideLinks : false;
         this.crumbs = "breadcrumbs" in g ? g.breadcrumbs : undefined;
         this.translations = "translations" in g ? g.translations : [];
         this.docSettings = "docSettings" in g ? g.docSettings : undefined;
