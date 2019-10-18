@@ -141,7 +141,7 @@
         {% else %}
             <div id="pars" {% if velp_mode or teacher_mode %}ng-click="$ctrl.reviewCtrl.selectText($event)"{% endif %}>
                 {% include 'partials/paragraphs.html' %}
-                <div class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
+                <div ng-cloak class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
                      ng-class="{'height-35': $ctrl.editing}">
                     {% set btntext = doc_settings.add_par_button_text() %}
                     {% if btntext %}
