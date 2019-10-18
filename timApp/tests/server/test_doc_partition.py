@@ -63,13 +63,34 @@ class DocPartitionTest(TimRouteTest):
         tree = self.get(d.url, as_tree=True)
         self.assert_content(tree, ["1","2","3","4","5"])
 
+        # Check ranges for navigation links:
+        self.assert_js_variable(tree, "nav_ranges", [
+            {"b": 0, "e": 5, "name": "First"},
+            {"b": 0, "e": 2, "name": "Previous"},
+            {"b": 5, "e": 10, "name": "Next"},
+            {"b": 5, "e": 10, "name": "Last"}])
+
         # Partitioning with URL parameters, mid-document range.
         tree = self.get(d.url, query_string={'b': 2, 'e': 6}, as_tree=True)
         self.assert_content(tree, ["3", "4", "5", "6"])
 
+        # Check ranges for navigation links:
+        self.assert_js_variable(tree, "nav_ranges", [
+            {"b": 0, "e": 5, "name": "First"},
+            {"b": 0, "e": 4, "name": "Previous"},
+            {"b": 6, "e": 10, "name": "Next"},
+            {"b": 5, "e": 10, "name": "Last"}])
+
         # Partitioning with URL parameters, whole document range.
         tree = self.get(d.url, query_string={'b': 0, 'e': 10}, as_tree=True)
         self.assert_content(tree, ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
+
+        # Check ranges for navigation links:
+        self.assert_js_variable(tree, "nav_ranges", [
+            {"b": 0, "e": 5, "name": "First"},
+            {"b": 0, "e": 2, "name": "Previous"},
+            {"b": 8, "e": 10, "name": "Next"},
+            {"b": 5, "e": 10, "name": "Last"}])
 
 
     def test_partitioning_document_with_overflowing_range(self):

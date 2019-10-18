@@ -704,6 +704,22 @@ class TimRouteTest(TimDbTest):
             self.assertIsInstance(f['id'], int)
         return f
 
+    def assert_js_variable(self, element: HtmlElement, variable_name: str, expect_content: Any):
+        """
+        Check a JavaScript variable from view_html.html.
+        :param element: HTML-tree.
+        :param variable_name: Variable name as it's in the <script>.
+        :param expect_content: Expected content.
+        :return: None; raises error if variable was not found or content didn't match.
+        """
+        variables = element.cssselect('script[class="global-vars"]')[0].text
+        # '\s*' are zero or more whitespaces, '(.*)' is variable content between '=' and ';'.
+        matches = re.findall(f"{variable_name}\s*=\s*(.*);", variables)
+        if matches:
+            self.assertEqual(expect_content, eval(matches[0]))
+        else:
+            raise AssertionError(f"'{variable_name}' not found")
+
     def assert_elements_equal(self, e1, e2):
         try:
             self.assertEqual(e1.tag, e2.tag)
