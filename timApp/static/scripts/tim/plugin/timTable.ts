@@ -246,7 +246,7 @@ export interface TimTable {
 
 interface Rng {
     range?: number[] | number | string;
-    validrange?: number[];
+    validrange?: readonly number[];
     def?: Record<string, string>;
 }
 
@@ -472,15 +472,13 @@ export class TimTableController extends DestroyScope implements IController, ITi
     public sortSymbols: string[] = [" ▼", "", " ▲" ];
     public sortRing: number[] = [];
     // ["🢓", "", "🢑"];  // this small does not work in iPad/Android
-    public originalHiddenRows: number[] = [];
+    private currentHiddenRows: number[] = [];
     private rowDelta = 0;
     private colDelta = 0;
     private cbFilter: boolean = false;
     private filterRow: boolean = false;
     private maxRows: string = "2000em";
     private maxCols: string = "auto";
-    private totalrows: number = 0;
-    private visiblerows: string = "";
     private permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
     private edited: boolean = false;
@@ -637,14 +635,20 @@ export class TimTableController extends DestroyScope implements IController, ITi
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
-        let hl = 0;
-        if ( this.data.hiddenRows ) {
-            this.originalHiddenRows = this.data.hiddenRows.slice();
-            hl = this.data.hiddenRows.length;
-        }
-        this.totalrows = this.cellDataMatrix.length;
-        if ( hl > 0 ) { this.visiblerows = "" + (this.totalrows - hl); }
+        this.currentHiddenRows = (this.data.hiddenRows || []).slice();
         this.setStyles();
+    }
+
+    totalRows() {
+        return this.cellDataMatrix.length;
+    }
+
+    hiddenRowCount() {
+        return this.currentHiddenRows.length;
+    }
+
+    visibleRowCount() {
+        return this.totalRows() - this.hiddenRowCount();
     }
 
     $doCheck() {
@@ -763,7 +767,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if ( rowi == -1 ) {
             const b = this.cbAllFilter;
             for (let i = 0; i < this.cellDataMatrix.length; i++) {
-                if ( this.data.hiddenRows && this.data.hiddenRows.includes(i) ) { continue; }
+                if ( this.currentHiddenRows.includes(i) ) { continue; }
                 this.cbs[i] = b;
             }
         }
@@ -777,7 +781,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     private countCBs(rowi: number) {
         let n = 0;
         for (let i = 0; i < this.cellDataMatrix.length; i++) {
-            if ( this.data.hiddenRows && this.data.hiddenRows.includes(i) ) { continue; }
+            if ( this.currentHiddenRows.includes(i) ) { continue; }
             if ( this.cbs[i] ) { n++; }
         }
         if ( this.data.cbCallBack ) { this.data.cbCallBack(this.cbs, n, rowi); }
@@ -811,7 +815,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     public getCheckedRows(startFrom: number, visible: boolean) {
         const crows = [];
         for (let i = startFrom; i < this.cellDataMatrix.length; i++) {
-            if ( this.data.hiddenRows && this.data.hiddenRows.includes(i) && visible ) { continue; }
+            if ( this.currentHiddenRows.includes(i) && visible ) { continue; }
             if ( this.cbs[i] ) {
                 crows.push(TimTableController.rowToList(this.cellDataMatrix[i]));
             }
@@ -858,12 +862,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         this.disableStartCell();
         // TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
         // this.saveAndCloseSmallEditor();
-        if (this.originalHiddenRows) { this.data.hiddenRows = this.originalHiddenRows.slice(); } else { this.data.hiddenRows = []; }
-
-        this.totalrows = this.cellDataMatrix.length;
-        this.visiblerows = "";
-        let hl = this.data.hiddenRows.length;
-        if ( hl > 0 ) { this.visiblerows += (this.totalrows - hl); }
+        this.currentHiddenRows = (this.data.hiddenRows || []).slice();
 
         let isFilter = false;
         const regs = [];
@@ -882,12 +881,10 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if ( !this.cbFilter && !isFilter ) { return; }
 
         for (let i = 0; i < this.cellDataMatrix.length; i++) {
-            if ( this.cbFilter && !this.cbs[i] ) { this.data.hiddenRows.push(i); continue; }
+            if ( this.cbFilter && !this.cbs[i] ) { this.currentHiddenRows.push(i); continue; }
             if ( TimTableController.isMatch(regs, cmpfltrs, this.cellDataMatrix[i])) { continue; }
-            this.data.hiddenRows.push(i);
+            this.currentHiddenRows.push(i);
         }
-        hl = this.data.hiddenRows.length;
-        if ( hl > 0 ) { this.visiblerows += (this.totalrows - hl); }
         this.countCBs(-1);
     }
 
@@ -1191,7 +1188,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
         for (let sy = sy1; sy <= sy2; sy++) {
             const y = this.permTable[sy];
-            if ( (this.data.hiddenRows && this.data.hiddenRows.includes(y)) ) { continue; }
+            if ( (this.currentHiddenRows.includes(y)) ) { continue; }
             for (let sx = sx1; sx <= sx2; sx++) {
                 if ( (this.data.hiddenColumns && this.data.hiddenColumns.includes(sx)) ) { continue; }
                 srows[sy] = true;
@@ -1870,7 +1867,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 /*
                 Stop iterating if cell is not in hiddenRows/hiddenColumns and is not locked
                  */
-                if (!(this.data.hiddenRows && this.data.hiddenRows.includes(nextCellCoords.row))
+                if (!(this.currentHiddenRows.includes(nextCellCoords.row))
                     && !(this.data.hiddenColumns && this.data.hiddenColumns.includes(nextCellCoords.col))
                     && !(this.data.lockedCells && this.data.lockedCells.includes(colnumToLetters(nextCellCoords.col) + (nextCellCoords.row + 1)))) {
                     break;
@@ -2249,7 +2246,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             const rown = this.cellDataMatrix.length;
             const coln = this.cellDataMatrix[0].length;
             for (const dr of defrange) {
-                const r = dr.validrange || this.checkRange(dr);
+                const r = dr.validrange || this.checkRange(dr.range);
                 dr.validrange = r;
                 if (this.checkIndex2(r, rown, coln, rowi, coli)) {
                     this.applyStyle(styles, dr.def, columnStyles);
@@ -2307,7 +2304,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @param n max value
      * @param def in case no item
      */
-    private static toIndex(r: number[], i: number, n: number, def: number) {
+    private static toIndex(r: readonly number[], i: number, n: number, def: number) {
         if (r.length <= i) {
             return def;
         }
@@ -2330,8 +2327,8 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * To prevent another check, mark it checked.
      * @param dr default range to check
      */
-    private checkRange(dr: Rng): number[] | undefined {
-        const r = dr.range;
+    private checkRange(dr: readonly number[] | number | string | undefined): readonly number[] | undefined {
+        const r = dr;
         if (!r) {
             return;
         }
@@ -2364,7 +2361,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @param rowi index to check
      * @param coli index to check
      */
-    private checkIndex2(r: number[] | undefined, rown: number, coln: number, rowi: number, coli: number): boolean {
+    private checkIndex2(r: readonly number[] | undefined, rown: number, coln: number, rowi: number, coli: number): boolean {
         if (!r) {
             return false;
         }
@@ -2394,7 +2391,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @param n max_value
      * @param index index to check
      */
-    private checkIndex(r: number[] | undefined, n: number, index: number): boolean {
+    private checkIndex(r: readonly number[] | undefined, n: number, index: number): boolean {
         if (!r) {
             return false;
         }
@@ -2427,7 +2424,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if (defrange) {
             const n = this.cellDataMatrix[0].length;
             for (const dr of defrange) {
-                const r = dr.validrange || this.checkRange(dr);
+                const r = dr.validrange || this.checkRange(dr.range);
                 dr.validrange = r;
                 if (this.checkIndex(r, n, index)) {
                     this.applyStyle(styles, dr.def, columnStyles);
@@ -2458,7 +2455,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if (defrange) { // todo: do all this on init
             const n = this.cellDataMatrix.length;
             for (const dr of defrange) {
-                const r = dr.validrange || this.checkRange(dr);
+                const r = dr.validrange || this.checkRange(dr.range);
                 dr.validrange = r;
                 if (this.checkIndex(r, n, rowi)) {
                     this.applyStyle(styles, dr.def, rowStyles);
@@ -2941,8 +2938,8 @@ export class TimTableController extends DestroyScope implements IController, ITi
      */
     private showRow(index: number) {
         // TODO: Change to use proper type
-        // return this.data.hiddenRows.includes(this.data.table.rows[index]);
-        return (!this.data.hiddenRows || !this.data.hiddenRows.includes(index));
+        // return this.currentHiddenRows.includes(this.data.table.rows[index]);
+        return !this.currentHiddenRows.includes(index);
     }
 
     // noinspection JSUnusedLocalSymbols
@@ -3166,7 +3163,7 @@ timApp.component("timTable", {
             <td class="nrcolumn totalnr" ng-if="::$ctrl.data.nrColumn"
                 ng-click="$ctrl.clearFilters()"
                 title="Click to show all"
-                ">{{$ctrl.totalrows}}</td>
+                ">{{$ctrl.totalRows()}}</td>
             <td ng-if="::$ctrl.data.cbColumn"><input type="checkbox" ng-model="$ctrl.cbAllFilter"
              ng-change="$ctrl.updateCBs(-1)" title="Check for all visible rows"> </td>
             <td class="headers"
@@ -3180,7 +3177,7 @@ timApp.component("timTable", {
         </thead>
         <tbody>
         <tr ng-if="$ctrl.filterRow" ng-init="irowi = 2"> <!-- Filter row -->
-            <td class="nrcolumn totalnr" ng-if="::$ctrl.data.nrColumn" >{{$ctrl.visiblerows}}</td>
+            <td class="nrcolumn totalnr" ng-if="::$ctrl.data.nrColumn" ><span ng-if="$ctrl.hiddenRowCount()">{{$ctrl.visibleRowCount()}}</span></td>
             <td ng-if="::$ctrl.data.cbColumn"><input type="checkbox" ng-model="$ctrl.cbFilter" ng-change="$ctrl.updateFilter()" title="Check to show only checked rows"> </td>
 
             <td ng-class=""

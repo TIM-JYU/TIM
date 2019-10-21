@@ -166,6 +166,10 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.element[0];
     }
 
+    isPreview() {
+        return this.pluginMeta.isPreview();
+    }
+
     getAreas(): string[] {
         const returnList: string[] = [];
         const parents = this.element.parents(".area");

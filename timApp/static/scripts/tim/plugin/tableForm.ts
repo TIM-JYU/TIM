@@ -317,23 +317,15 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     }
 
     /**
-     * Checks whether plugin is viewed through "preview"-screen
-     * TODO: Generic: move and import.
-     */
-    isPreview() {
-        return this.element.parents(".previewcontent").length > 0;
-    }
-
-    /**
      * Clears tableForm rows and fetches new data to be put into rows
      * Basically just a reset
      */
     public async updateTable() {
         if ( this.attrsall.markup.sisugroups ) { return; }
         // TODO: Save before reset?
-        type requestParams = ({
+        type TableFetchResponse = ({
             aliases: Record<string, string>,
-            fields: string[];
+            fields: string[],
             realnamemap: Record<string, string>,
             membershipmap: Record<string, string>,
             emailmap: Record<string, string>,
@@ -346,14 +338,14 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             return;
         }
         if (this.isPreview()) {
-            prom = $http.get <requestParams>("/tableForm/fetchTableDataPreview?" + $httpParamSerializer({
+            prom = $http.get<TableFetchResponse>("/tableForm/fetchTableDataPreview?" + $httpParamSerializer({
                 taskid: tid.docTask(),
                 fields: this.attrs.fields,
                 groups: this.attrs.groups,
                 removeDocIds: this.attrs.removeDocIds,
             }));
         } else {
-            prom = $http.get <requestParams>("/tableForm/fetchTableData?" + $httpParamSerializer({
+            prom = $http.get<TableFetchResponse>("/tableForm/fetchTableData?" + $httpParamSerializer({
                 taskid: tid.docTask(),
             }));
         }
@@ -379,8 +371,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         if (timtab) {
             timtab.reInitialize(false);
         }
-        // console.log("debug");
-
     }
 
     /**
