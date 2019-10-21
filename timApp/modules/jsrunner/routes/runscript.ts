@@ -15,7 +15,6 @@ const RunScriptInput = t.intersection([t.type({
 function numberLines(s: string, delta: number): string {
     const lines = s.split("\n");
     let result = "";
-// tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < lines.length; i++) {
         const space = (i + delta < 10) ? "0" : "";
         result += space + (i + delta) + ": " + lines[i] + "\n";
