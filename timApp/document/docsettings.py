@@ -59,7 +59,7 @@ def add_url_macros(yaml_vals):
         if fu:
             # request = par.doc.docinfo.request
 
-            # TODO: if allready value and urlmacros.get(fu) then old value wins
+            # TODO: if already value and urlmacros.get(fu) then old value wins
             urlvalue = request.args.get(fu, urlmacros.get(fu))
             if urlvalue:
                 try:

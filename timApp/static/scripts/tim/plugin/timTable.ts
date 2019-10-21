@@ -718,7 +718,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 }
             }
         } else {
-            if ( !this.eventListenersActive ) { return; }  // No need to look anything when allready inactive
+            if ( !this.eventListenersActive ) { return; }  // No need to look anything when already inactive
             const target = e.target;
 
             if (target) {

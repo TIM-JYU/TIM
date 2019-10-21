@@ -47,7 +47,7 @@ function findParentElementFromScript(scriptId, parentTopSelector, parentDivSelec
 
 
 function ServerSyncValues(parentElement, iframeSelector, prefix, debugName, dname, options)  {
-    // Create an communication object for iframe that is allready on the document.
+    // Create an communication object for iframe that is already on the document.
     // parentElement:  element that is used to find inputs
     // iframeSelector: selector fo find iframe
     // prefix: prefiese for inputs // TODO: make search more general?

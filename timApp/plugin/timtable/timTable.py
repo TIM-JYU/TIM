@@ -753,7 +753,7 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
     if cell_data_to_save:
         tim_table_save_multi_cell_value(cell_data_to_save, doc_id, par_id, False)
     save_plugin(plug)
-    return prepare_for_and_call_dumbo(plug)  # Do we need this because the table is allready ok???
+    return prepare_for_and_call_dumbo(plug)  # Do we need this because the table is already ok???
 
 
 def set_value_to_table(plug, row_id, col_id, value):

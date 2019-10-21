@@ -50,7 +50,7 @@ type RunnerResult =
  */
 function runner(d: IRunnerData): RunnerResult {
 
-    // TODO: This is allready in runscipt, but does not allow with 2 params???
+    // TODO: This is already in runscipt, but does not allow with 2 params???
     // And for some reason it is not found if it is outside this function???
     function numberLines2(s: string, delta: number): string {
         if ( !s ) { return ""; }
