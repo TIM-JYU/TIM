@@ -271,6 +271,8 @@ def load_index(folder_path: Path(), file_name: str) -> Optional[str]:
         with (folder_path / file_name).open("r") as file:
             contents = json.load(file)
             return contents
+    except FileNotFoundError:
+        return None
     except Exception as e:
         log_error(get_error_message(e))
         return None
@@ -1028,7 +1030,6 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
     :return: Adjusted indices for view range.
     """
-    print(index, forwards)
     if not par_count:
         par_count = len(doc_info.document.get_paragraphs())
     try:
