@@ -1,11 +1,12 @@
 """Routes for document view."""
 import time
 import traceback
+from pathlib import Path
 from typing import Tuple, Union, Optional, List
 
 import attr
 from dataclasses import dataclass
-from flask import Blueprint, render_template, make_response, Request, abort
+from flask import Blueprint, render_template, make_response, Request, abort, json
 from flask import current_app
 from flask import flash
 from flask import g
@@ -51,6 +52,7 @@ from timApp.user.users import get_rights_holders_all
 from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
 from timApp.util.logger import log_error
+from timApp.util.pdftools import temp_folder_default_path
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message
 from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
@@ -245,6 +247,47 @@ def partition_texts(texts, view_range: Range, preamble_count):
     return partitioned
 
 
+def get_doc_version_hash(doc_info: DocInfo) -> str:
+    """
+    Gets version numbers from document and its preambles and creates a hash from them.
+    :param doc_info: Document.
+    :return: Version number hash as a string.
+    """
+    version = str(doc_info.document.get_version())
+    for preamble in doc_info.get_preamble_docs():
+        version += str(preamble.document.get_version())
+    return str(hash(version))
+
+
+def load_index(folder_path: Path(), file_name: str) -> Optional[str]:
+    """
+    Load headers from a file.
+    :param folder_path: Cache folder path.
+    :param file_name: File name.
+    :return: Parsed contents or None.
+    """
+    # TODO: Utf-8?
+    try:
+        with (folder_path / file_name).open("r") as file:
+            contents = json.load(file)
+            return contents
+    except Exception as e:
+        log_error(get_error_message(e))
+        return None
+
+
+def save_index(index, folder_path: Path(), file_name: str):
+    """
+    Save document header data as json.
+    :param index: Headers.
+    :param folder_path: Save folder path.
+    :param file_name: File name.
+    """
+    folder_path.mkdir(parents=True, exist_ok=True)
+    with (folder_path / file_name).open("w") as f:
+        json.dump(index, f)
+
+
 def view(item_path, template_name, usergroup=None, route="view"):
     taketime("view begin", zero=True)
 
@@ -323,14 +366,20 @@ def view(item_path, template_name, usergroup=None, route="view"):
     except (ValueError, TypeError):
         view_range_dict = None
     start_index = max(view_range[0], 0) if view_range else 0
-
-    # TODO: Check table of contents hash from cache.
-    preamble_has_changed = True
-    if preamble_has_changed:
-        doc, xs = get_document(doc_info, None) # View range partitioning is done after forming the index.
-    else:
-        # TODO: Take preamble pars into account in this!
+    index_cache_folder = temp_folder_default_path / "indexcache" / str(doc_info.id)
+    index = None
+    contents_have_changed = False
+    if view_range:
+        doc_hash = get_doc_version_hash(doc_info)
+        index = load_index(index_cache_folder, f"{doc_hash}.json")
+    if index:
+        # If cached header is up to date, partition document here.
         doc, xs = get_document(doc_info, view_range)
+    else:
+        # Otherwise the partitioning is done after forming the index.
+        contents_have_changed = True
+        doc, xs = get_document(doc_info, None)
+
     par_count = len(xs)
     g.doc = doc
 
@@ -462,11 +511,13 @@ def view(item_path, template_name, usergroup=None, route="view"):
         do_lazy=do_lazy,
         load_plugin_states=not hide_answers,
     )
+    if not index:
+        index = get_index_from_html_list(t['html'] for t in texts)
+        doc_hash = get_doc_version_hash(doc_info)
+        save_index(index, index_cache_folder, f"{doc_hash}.json")
 
-    index = get_index_from_html_list(t['html'] for t in texts)
-
-    # If preamble is the same, partitioning will be done earlier.
-    if view_range and preamble_has_changed:
+    # If index was in cache, partitioning will be done earlier.
+    if view_range and contents_have_changed:
         texts = partition_texts(texts, view_range, preamble_count)
 
     if hide_names_in_teacher() or should_hide_names:
@@ -540,7 +591,6 @@ def view(item_path, template_name, usergroup=None, route="view"):
                           {'b': previous_range[0], 'e': previous_range[1], 'name': "Previous"},
                           {'b': next_range[0], 'e': next_range[1], 'name': "Next"},
                           {'b': last_range[0], 'e': last_range[1], 'name': "Last"}]
-
     return render_template(template_name,
                            access=access,
                            hide_links=should_hide_links(doc_settings, rights),
