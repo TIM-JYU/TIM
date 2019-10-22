@@ -2,6 +2,7 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {showMessageDialog} from "../../ui/dialog";
 import {documentglobals} from "../../util/globals";
+import {$timeout} from "../../util/ngimport";
 import {EditPosition, EditType} from "../editing/editing";
 import {getParId, Paragraph} from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
@@ -67,16 +68,19 @@ export class QuestionHandler {
         this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddBelow, par: par});
     }
 
-    processQuestions() {
+    async processQuestions() {
         const questions = $(".questionPar");
-        let n = 1;
-        let separator = ")";
         if (this.showQuestions()) {
+            let n = 1;
+            let separator = ")";
+            await $timeout();
             for (let i = 0; i < questions.length; i++) {
                 const par = questions.eq(i);
                 const questionChildren = par.children();
                 const questionNumber = questionChildren.find(".questionNumber");
-                // var questionTitle = getParAttributes(par).question;
+                if (questionNumber.length === 0) {
+                    continue;
+                }
                 let questionTitle = questionNumber[0].innerHTML;
                 if (questionTitle.length > 10) {
                     questionTitle = questionTitle.substr(0, 10) + "\r\n...";

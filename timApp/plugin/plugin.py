@@ -451,6 +451,8 @@ class Plugin:
     def get_answerbrowser_type(self):
         if self.is_cached():
             return None
+        if self.par.is_question():
+            return None
         # Some plugins don't have answers but they may still need to be loaded lazily.
         # We sometimes want answerbrowser for graphviz too, so we don't exclude it here.
         if self.type.startswith('show') or self.type in NO_ANSWERBROWSER_PLUGINS:
