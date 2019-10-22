@@ -375,12 +375,13 @@ def view(item_path, template_name, usergroup=None, route="view"):
     if index:
         # If cached header is up to date, partition document here.
         doc, xs = get_document(doc_info, view_range)
+        # TODO: A faster way to get preambles + doc pars count.
+        par_count = len(doc_info.get_preamble_docs()) + len(doc_info.document.get_paragraphs())
     else:
         # Otherwise the partitioning is done after forming the index.
         contents_have_changed = True
         doc, xs = get_document(doc_info, None)
-
-    par_count = len(xs)
+        par_count = len(xs)
     g.doc = doc
 
     doc.route = route
@@ -585,12 +586,11 @@ def view(item_path, template_name, usergroup=None, route="view"):
             par_count=par_count,
             forwards=False
         )
-        # If any are missing, there's something wrong with the partitioning.
-        if first_range and previous_range and next_range and last_range:
-            nav_ranges = [{'b': first_range[0], 'e': first_range[1], 'name': "First"},
-                          {'b': previous_range[0], 'e': previous_range[1], 'name': "Previous"},
-                          {'b': next_range[0], 'e': next_range[1], 'name': "Next"},
-                          {'b': last_range[0], 'e': last_range[1], 'name': "Last"}]
+        nav_ranges = [{'b': first_range[0], 'e': first_range[1], 'name': "First"},
+                      {'b': previous_range[0], 'e': previous_range[1], 'name': "Previous"},
+                      {'b': next_range[0], 'e': next_range[1], 'name': "Next"},
+                      {'b': last_range[0], 'e': last_range[1], 'name': "Last"}]
+
     return render_template(template_name,
                            access=access,
                            hide_links=should_hide_links(doc_settings, rights),
@@ -1028,6 +1028,7 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
     :return: Adjusted indices for view range.
     """
+    print(index, forwards)
     if not par_count:
         par_count = len(doc_info.document.get_paragraphs())
     try:
