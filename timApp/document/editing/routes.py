@@ -1,4 +1,5 @@
 """Routes for editing a document."""
+import re
 from typing import List, Optional
 
 from flask import Blueprint, render_template
@@ -6,6 +7,7 @@ from flask import abort
 from flask import current_app
 from flask import request
 
+from timApp.admin.associate_old_uploads import upload_regexes
 from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access, get_rights, get_doc_or_abort, \
     verify_teacher_access, verify_manage_access, verify_ownership, verify_seeanswers_access
@@ -18,6 +20,7 @@ from timApp.document.exceptions import ValidationException, ValidationWarning
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.version import Version
 from timApp.markdown.markdownconverter import md_to_html
+from timApp.upload.uploadedfile import UploadedFile
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
@@ -119,7 +122,7 @@ def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_befo
     doc = docentry.document_as_current_user
     chg = doc.get_changelog()
     notify_doc_watchers(docentry, '', NotificationType.DocModified, old_version=ver_before)
-    duplicates = check_duplicates(pars, doc, timdb)
+    duplicates = check_duplicates(pars, doc)
     db.session.commit()
     return json_response({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
 
@@ -129,9 +132,9 @@ def rename_task_ids():
     timdb = get_timdb()
     doc_id, duplicates = verify_json_params('docId', 'duplicates')
     manage_view = verify_json_params('manageView', require=False, default=False)
-    docentry = get_doc_or_abort(doc_id)
-    verify_edit_access(docentry)
-    doc = docentry.document_as_current_user
+    docinfo = get_doc_or_abort(doc_id)
+    verify_edit_access(docinfo)
+    doc = docinfo.document_as_current_user
     ver_before = doc.get_version()
     pars = []
     old_pars = doc.get_paragraphs()
@@ -177,10 +180,10 @@ def rename_task_ids():
 
     if not manage_view:
         return par_response(pars,
-                            doc,
+                            docinfo,
                             update_cache=current_app.config['IMMEDIATE_PRELOAD'])
     else:
-        return manage_response(docentry, pars, timdb, ver_before)
+        return manage_response(docinfo, pars, timdb, ver_before)
 
 
 @edit_page.route("/postParagraphQ/", methods=['POST'])
@@ -226,7 +229,7 @@ def verify_par_edit_access(par: DocParagraph):
         verify_ownership(d, message=message)
 
 
-def modify_paragraph_common(doc_id, md, par_id, par_next_id):
+def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: Optional[str]):
     docinfo = get_doc_or_abort(doc_id)
     verify_edit_access(docinfo)
 
@@ -296,7 +299,7 @@ def modify_paragraph_common(doc_id, md, par_id, par_next_id):
     notify_doc_watchers(docinfo, md, NotificationType.ParModified, par=pars[0] if pars else None,
                         old_version=edit_request.old_doc_version)
     return par_response(pars,
-                        doc,
+                        docinfo,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
                         edit_request=edit_request,
                         edit_result=edit_result)
@@ -327,27 +330,47 @@ def preview_paragraphs(doc_id):
 
     """
     text, = verify_json_params('text')
+    docinfo = get_doc_or_abort(doc_id)
     rjson = request.get_json()
     if not rjson.get('isComment'):
-        doc = Document(doc_id)
+        doc = docinfo.document
         edit_request = EditRequest.from_request(doc, preview=True)
         try:
             blocks = edit_request.get_pars()
-            return par_response(blocks, doc, edit_request=edit_request)
+            return par_response(blocks, docinfo, edit_request=edit_request)
         except Exception as e:
             err_html = get_error_html(e)
             blocks = [DocParagraph.create(doc=doc, md='', html=err_html)]
-            return par_response(blocks, doc)
+            return par_response(blocks, docinfo)
     else:
         return json_response({'texts': md_to_html(text), 'js': [], 'css': []})
 
 
-def par_response(pars,
-                 doc,
+def update_associated_uploads(pars: List[DocParagraph], doc: DocInfo):
+    for p in pars:
+        md = p.get_markdown()
+        for r in upload_regexes:
+            c = re.compile(r, re.DOTALL)
+            for m in c.finditer(md):
+                u_id = m.group('id')
+                name = m.group('name')
+                up = UploadedFile.get_by_id_and_filename(int(u_id), name)
+                if not up:
+                    continue
+                if not verify_manage_access(up, check_parents=True, require=False):
+                    continue
+                if up.block in doc.children:
+                    continue
+                doc.children.append(up.block)
+
+
+def par_response(pars: List[DocParagraph],
+                 docu: DocInfo,
                  update_cache=False,
                  edit_request: Optional[EditRequest]=None,
                  edit_result: Optional[DocumentEditResult]=None):
     current_user = get_current_user_object()
+    doc = docu.document
     new_doc_version = doc.get_version()
     if update_cache:
         changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(include_preamble=True),
@@ -378,11 +401,12 @@ def par_response(pars,
     trdiff = None
     # Do not check for duplicates for preview because the operation is heavy
     if not preview:
-        duplicates = check_duplicates(pars, doc, get_timdb())
+        duplicates = check_duplicates(pars, doc)
         if edit_request and logged_in():
             bms = Bookmarks(get_current_user_object())
             d = DocEntry.find_by_id(doc.doc_id)
             if d is not None:
+                update_associated_uploads(pars, docu)
                 bms.add_bookmark('Last edited',
                                  d.title,
                                  d.url_relative,
@@ -535,7 +559,7 @@ def check_and_rename_pluginnamehere(blocks: List[DocParagraph], doc: Document):
 
 
 # Check new paragraphs with plugins for duplicate task ids
-def check_duplicates(pars, doc, timdb):
+def check_duplicates(pars, doc):
     duplicates = []
     all_pars = None # cache all_pars
     for par in pars:
@@ -627,7 +651,7 @@ def add_paragraph():
     return add_paragraph_common(md, doc_id, par_next_id)
 
 
-def add_paragraph_common(md, doc_id, par_next_id):
+def add_paragraph_common(md: str, doc_id: int, par_next_id: Optional[str]):
     docinfo = get_doc_or_abort(doc_id)
     verify_edit_access(docinfo)
     doc = docinfo.document_as_current_user
@@ -658,7 +682,7 @@ def add_paragraph_common(md, doc_id, par_next_id):
         notify_doc_watchers(docinfo, md, NotificationType.ParAdded, par=pars[0],
                             old_version=edit_request.old_doc_version)
     return par_response(pars,
-                        doc,
+                        docinfo,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
                         edit_result=edit_result,
                         edit_request=edit_request)
@@ -672,10 +696,10 @@ def delete_paragraph(doc_id):
     :return: A JSON object containing the version of the new document.
 
     """
-    docentry = get_doc_or_abort(doc_id)
-    verify_edit_access(docentry)
+    docinfo = get_doc_or_abort(doc_id)
+    verify_edit_access(docinfo)
     area_start, area_end = verify_json_params('area_start', 'area_end', require=False)
-    doc = docentry.document_as_current_user
+    doc = docinfo.document_as_current_user
     version_before = doc.get_version()
     if area_end and area_start:
         for p in (area_start, area_end):
@@ -697,11 +721,11 @@ def delete_paragraph(doc_id):
         edit_result = DocumentEditResult(deleted=[par])
 
     if not edit_result.empty:
-        docentry.update_last_modified()
-    synchronize_translations(docentry, edit_result)
-    notify_doc_watchers(docentry, md, NotificationType.ParDeleted, old_version=version_before)
+        docinfo.update_last_modified()
+    synchronize_translations(docinfo, edit_result)
+    notify_doc_watchers(docinfo, md, NotificationType.ParDeleted, old_version=version_before)
     return par_response([],
-                        doc,
+                        docinfo,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
                         edit_result=edit_result)
 
@@ -715,7 +739,8 @@ def get_updated_pars(doc_id):
     """
     d = get_doc_or_abort(doc_id)
     verify_view_access(d)
-    return par_response([], Document(doc_id, preload_option=PreloadOption.all), update_cache=True)
+    d.document.preload_option = PreloadOption.all
+    return par_response([], d, update_cache=True)
 
 
 @edit_page.route("/name_area/<int:doc_id>/<area_name>", methods=["POST"])

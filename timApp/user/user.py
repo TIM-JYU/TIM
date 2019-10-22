@@ -80,6 +80,16 @@ copy_access_set = {t.value for t in [
     AccessType.manage,
 ]}
 
+access_sets = {
+    AccessType.copy: copy_access_set,
+    AccessType.edit: edit_access_set,
+    AccessType.manage: manage_access_set,
+    AccessType.owner: owner_access_set,
+    AccessType.see_answers: seeanswers_access_set,
+    AccessType.teacher: teacher_access_set,
+    AccessType.view: view_access_set,
+}
+
 SCIM_USER_NAME = ':scimuser'
 
 class Consent(Enum):
@@ -515,6 +525,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             if (a.accessible_from or maxdate) <= now < (a.accessible_to or maxdate):
                 return a
         return None
+
+    def has_access(self, i: ItemOrBlock, access: AccessType) -> Optional[BlockAccess]:
+        return self.has_some_access(i, access_sets[access])
 
     def has_view_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
         return self.has_some_access(i, view_access_set)

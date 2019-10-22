@@ -100,6 +100,21 @@ class UploadTest(TimRouteTest):
         db.session.commit()
         self.get(f'/images/{j}', expect_status=403)
 
+    def test_upload_and_paste_to_other(self):
+        self.login_test1()
+        di, j = self.create_doc_with_image()
+        self.login_test2()
+        d = self.create_doc()
+        self.new_par(d.document, f'test ![image](/images/{j})')
+        d = DocEntry.find_by_id(d.id)
+        self.assertEqual(0, len(d.children))
+
+        self.login_test1()
+        d = self.create_doc()
+        self.new_par(d.document, f'test ![image](/images/{j})')
+        d = DocEntry.find_by_id(d.id)
+        self.assertEqual(1, len(d.children))
+
     def create_doc_with_image(self):
         d = self.create_doc()
         d_id = d.id
@@ -145,7 +160,7 @@ texprint: "- %%selitys%% ([LIITE %%liiteNro%% / lista %%lista%%](%%server+linkki
                 attachmentParams=json.dumps(["30.1.2019", "", "Tutkinnot 2018", "A", "3", "", True]),
             )
         file_id = int(r['file'].split('/')[0])
-        pdf = UploadedFile.find_by_id_and_type(file_id, BlockType.File)
+        pdf = UploadedFile.find_by_id(file_id)
         pdf = StampedPDF(pdf.block)
         self.assertEqual(15985, len(pdf.data))
         self.assertGreater(len(pdf.data), file_len)

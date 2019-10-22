@@ -23,12 +23,12 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import get_access_type_id, grant_access
+from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.utils import get_current_time
 
 
-def get_doc_or_abort(doc_id: int, msg: Optional[str] = None):
+def get_doc_or_abort(doc_id: int, msg: Optional[str] = None) -> DocInfo:
     d = DocEntry.find_by_id(doc_id)
     if not d:
         abort(404, msg or 'Document not found')
@@ -62,59 +62,53 @@ def verify_admin_no_ret(require=True):
 
 
 def verify_edit_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
+    return verify_access(b, AccessType.edit, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
+
+
+def verify_manage_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
+    return verify_access(b, AccessType.manage, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
+
+
+def verify_access(
+        b: ItemOrBlock,
+        access_type: AccessType,
+        require: bool = True,
+        message: Optional[str] = None,
+        check_duration=False,
+        check_parents=False,
+):
     u = get_current_user_object()
-    has_access = u.has_edit_access(b)
+    has_access = u.has_access(b, access_type)
     if not has_access and check_parents:
         # Only uploaded files and images have a parent so far.
-        has_access = any(u.has_edit_access(p) for p in b.parents)
-    return abort_if_not_access_and_required(u.has_edit_access(b), b.id, 'edit', require, message,
-                                            check_duration)
-
-
-def verify_manage_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
-    u = get_current_user_object()
-    return abort_if_not_access_and_required(u.has_manage_access(b), b.id, 'manage', require, message,
-                                            check_duration)
-
-
-def verify_access(b: ItemOrBlock, access_type: AccessType, require: bool = True, message: Optional[str] = None):
-    u = get_current_user_object()
-    if access_type == AccessType.view:
-        return abort_if_not_access_and_required(u.has_view_access(b), b.id, access_type, require, message)
-    elif access_type == AccessType.edit:
-        return abort_if_not_access_and_required(u.has_edit_access(b), b.id, access_type, require, message)
-    elif access_type == AccessType.see_answers:
-        return abort_if_not_access_and_required(u.has_seeanswers_access(b), b.id, access_type, require, message)
-    elif access_type == AccessType.teacher:
-        return abort_if_not_access_and_required(u.has_teacher_access(b), b.id, access_type, require, message)
-    elif access_type == AccessType.manage:
-        return abort_if_not_access_and_required(u.has_manage_access(b), b.id, access_type, require, message)
-    abort(400, 'Bad request - unknown access type')
+        for x in (u.has_access(p, access_type) for p in b.parents):
+            if x:
+                has_access = x
+                break
+    return abort_if_not_access_and_required(
+        has_access,
+        b.id,
+        access_type,
+        require,
+        message,
+        check_duration=check_duration,
+    )
 
 
 def verify_view_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
-    u = get_current_user_object()
-    has_access = u.has_view_access(b)
-    if not has_access and check_parents:
-        # Only uploaded files and images have a parent so far.
-        has_access = any(u.has_view_access(p) for p in b.parents)
-    return abort_if_not_access_and_required(has_access, b.id, 'view', require, message, check_duration)
+    return verify_access(b, AccessType.view, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
 
 
-def verify_teacher_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
-    u = get_current_user_object()
-    return abort_if_not_access_and_required(u.has_teacher_access(b), b.id, 'teacher', require, message, check_duration)
+def verify_teacher_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
+    return verify_access(b, AccessType.teacher, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
 
 
-def verify_copy_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
-    u = get_current_user_object()
-    return abort_if_not_access_and_required(u.has_copy_access(b), b.id, 'copy', require, message, check_duration)
+def verify_copy_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
+    return verify_access(b, AccessType.copy, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
 
 
-def verify_seeanswers_access(b: ItemOrBlock, require=True, message=None, check_duration=False):
-    u = get_current_user_object()
-    return abort_if_not_access_and_required(u.has_seeanswers_access(b), b.id, 'see answers', require, message,
-                                            check_duration)
+def verify_seeanswers_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
+    return verify_access(b, AccessType.see_answers, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
 
 
 class ItemLockedException(Exception):
@@ -127,7 +121,7 @@ class ItemLockedException(Exception):
 
 def abort_if_not_access_and_required(access_obj: BlockAccess,
                                      block_id: int,
-                                     access_type,
+                                     access_type: AccessType,
                                      require=True,
                                      message=None,
                                      check_duration=False):
@@ -135,11 +129,11 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
         return access_obj
     if check_duration:
         ba = BlockAccess.query.filter_by(block_id=block_id,
-                                         type=get_access_type_id(access_type),
+                                         type=access_type.value,
                                          usergroup_id=get_current_user_group()).first()
         if ba is None:
             ba_group: BlockAccess = BlockAccess.query.filter_by(block_id=block_id,
-                                                                type=get_access_type_id(access_type)).filter(
+                                                                type=access_type.value).filter(
                 BlockAccess.usergroup_id.in_(get_current_user_object().get_groups().with_entities(UserGroup.id))
             ).first()
             if ba_group is not None:
@@ -238,10 +232,8 @@ def verify_logged_in():
         abort(403, "You have to be logged in to perform this action.")
 
 
-def verify_ownership(b: ItemOrBlock, require=True, message=None, check_duration=False):
-    u = get_current_user_object()
-    return abort_if_not_access_and_required(u.has_ownership(b), b.id, 'owner', require, message,
-                                            check_duration)
+def verify_ownership(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
+    return verify_access(b, AccessType.owner, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
 
 
 def verify_read_marking_right(b: ItemOrBlock):

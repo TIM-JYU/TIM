@@ -47,11 +47,14 @@ class UploadedFile(ItemBase):
         self._block = b
 
     @staticmethod
-    def find_by_id_and_type(block_id: int, block_type: BlockType) -> Optional['UploadedFile']:
-        b = Block.query.filter_by(id=block_id, type_id=block_type.value).first()
+    def find_by_id(block_id: int) -> Optional['UploadedFile']:
+        b: Optional[Block] = Block.query.get(block_id)
         if not b:
             return None
-        return CLASS_MAPPING[block_type](b)
+        klass = CLASS_MAPPING.get(BlockType(b.type_id))
+        if not klass:
+            return None
+        return klass(b)
 
     @staticmethod
     def get_by_url(url: str) -> Optional['UploadedFile']:
@@ -75,7 +78,7 @@ class UploadedFile(ItemBase):
         :param filename: File name, which may contain "_stamped".
         :return: UploadedFile, StampedPDF, or None, if neither was found.
         """
-        f = UploadedFile.find_by_id_and_type(file_id, BlockType.File)
+        f = UploadedFile.find_by_id(file_id)
         if not f:
             return None
         if filename != f.filename:

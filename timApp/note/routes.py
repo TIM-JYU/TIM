@@ -60,9 +60,9 @@ def post_note():
     for tag in KNOWN_TAGS:
         if sent_tags.get(tag):
             tags.append(tag)
-    docentry = get_doc_or_abort(doc_id)
-    verify_comment_right(docentry)
-    doc = docentry.document
+    docinfo = get_doc_or_abort(doc_id)
+    verify_comment_right(docinfo)
+    doc = docinfo.document
     check_note_access_ok(is_public, doc)
     try:
         par = doc.get_paragraph(par_id)
@@ -81,9 +81,9 @@ def post_note():
     db.session.add(n)
 
     if is_public:
-        notify_doc_watchers(docentry, note_text, NotificationType.CommentAdded, par)
+        notify_doc_watchers(docinfo, note_text, NotificationType.CommentAdded, par)
     return par_response([doc.get_paragraph(par_id)],
-                        doc)
+                        docinfo)
 
 
 @notes.route("/editNote", methods=['POST'])
@@ -121,7 +121,7 @@ def edit_note():
         notify_doc_watchers(d, note_text, NotificationType.CommentModified, par)
     doc = d.document
     return par_response([doc.get_paragraph(par_id)],
-                        doc)
+                        d)
 
 
 @notes.route("/deleteNote", methods=['POST'])
@@ -141,4 +141,4 @@ def delete_note():
         notify_doc_watchers(d, note.content, NotificationType.CommentDeleted, par)
     doc = d.document
     return par_response([doc.get_paragraph(paragraph_id)],
-                        doc)
+                        d)

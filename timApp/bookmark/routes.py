@@ -17,6 +17,7 @@ bookmarks = Blueprint('bookmarks',
                       __name__,
                       url_prefix='/bookmarks')
 
+
 @dataclass
 class WithBookmarks:
     bookmarks: Bookmarks

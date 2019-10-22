@@ -9,9 +9,9 @@ from timApp.upload.uploadedfile import UploadedFile
 from timApp.user.usergroup import UserGroup
 
 upload_regexes = [
-    r'\[[^\[\]]*\]\(/(files|images)/(\d+)/([^()]+)\)',  # normal images and links
-    r'"/(files|images)/(\d+)/([^"]+)"',  # relative path in quotes
-    r'(?::|src=) *"?/(files|images)/(\d+)/([^"\n]+)"?'  # in plugin markdown, e.g. "file: /images/123456/a.jpg"
+    r'\[[^\[\]]*\]\(/(?P<type>files|images)/(?P<id>\d+)/(?P<name>[^()]+)\)',  # normal images and links
+    r'"/(?P<type>files|images)/(?P<id>\d+)/(?P<name>[^"]+)"',  # relative path in quotes
+    r'(?::|src=) *"?/(?P<type>files|images)/(?P<id>\d+)/(?P<name>[^"\n]+)"?'  # in plugin markdown, e.g. "file: /images/123456/a.jpg"
 ]
 
 
@@ -50,8 +50,8 @@ def associate_document(d, search_opt, del_anon=None):
     found = 0
     for r in search(d, search_opt, use_exported=False):
         found = r.num_pars_found
-        kind, up_id, filename = r.match.group(1), int(r.match.group(2)), r.match.group(3)
-        up = UploadedFile.find_by_id_and_type(up_id, BlockType.File if kind == 'files' else BlockType.Image)
+        kind, up_id, filename = r.match.group('type'), int(r.match.group('id')), r.match.group('name')
+        up = UploadedFile.find_by_id(up_id)
         if not up:
             print(f'Upload not found: {up_id}/{filename}')
             continue

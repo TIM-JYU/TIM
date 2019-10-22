@@ -263,7 +263,7 @@ def restamp_attachments(args: RestampModel):
             stamp_data.file = attachment_folder / attachment_path.parts[-2] / attachment_path.parts[-1].replace("_stamped","")
         except IndexError:
             abort(400, f'Invalid attachment url: "{attachment_path}"')
-        file = UploadedFile.find_by_id_and_type(attachment_path.parts[-2], BlockType.File)
+        file = UploadedFile.find_by_id(attachment_path.parts[-2])
         if not file:
             abort(400, f'Attachment not found: "{attachment_path}"')
 
@@ -354,7 +354,7 @@ def get_file(file_id, file_filename):
 
 @upload.route('/images/<int:image_id>/<image_filename>')
 def get_image(image_id, image_filename):
-    f = UploadedFile.find_by_id_and_type(image_id, BlockType.Image)
+    f = UploadedFile.find_by_id(image_id)
     if not f:
         abort(404, 'Image not found')
     verify_view_access(f, check_parents=True)

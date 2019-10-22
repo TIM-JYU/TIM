@@ -1,5 +1,5 @@
 """Routes for the clipboard."""
-
+from dataclasses import dataclass
 from flask import Blueprint, request
 from flask import abort
 from flask import current_app
@@ -8,6 +8,7 @@ from flask import g
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort
 from timApp.auth.accesshelper import verify_view_access, verify_edit_access
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, par_list_to_text
 from timApp.document.editing.clipboard import Clipboard
@@ -29,27 +30,36 @@ clipboard = Blueprint('clipboard',
                       url_prefix='')  # TODO: Better URL prefix.
 
 
+@dataclass
+class WithDocData:
+    doc_id: int
+    docentry: DocInfo
+
+
+wd: WithDocData = g
+
+
 @clipboard.url_value_preprocessor
 def pull_doc_id(endpoint, values):
     if current_app.url_map.is_endpoint_expecting(endpoint, 'doc_id'):
         doc_id = values['doc_id']
         if doc_id is None:
             abort(400)
-        g.doc_id = doc_id
-        g.docentry = get_doc_or_abort(doc_id)
-        if not g.docentry:
+        wd.doc_id = doc_id
+        wd.docentry = get_doc_or_abort(doc_id)
+        if not wd.docentry:
             abort(404)
 
 
 @clipboard.route('/clipboard/cut/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
 def cut_to_clipboard(doc_id, from_par, to_par):
     verify_logged_in()
-    verify_edit_access(g.docentry)
+    verify_edit_access(wd.docentry)
 
     (area_name,) = verify_json_params('area_name', require=False)
 
     timdb = get_timdb()
-    doc: Document = g.docentry.document_as_current_user
+    doc: Document = wd.docentry.document_as_current_user
     version_before = doc.get_version()
     clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     try:
@@ -58,10 +68,10 @@ def cut_to_clipboard(doc_id, from_par, to_par):
         pars = clip.cut_pars(doc, from_par, to_par, area_name)
     except TimDbException as e:
         return abort(400, str(e))
-    g.docentry.update_last_modified()
+    wd.docentry.update_last_modified()
     db.session.commit()
-    synchronize_translations(g.docentry, DocumentEditResult(deleted=pars))
-    notify_doc_watchers(g.docentry, par_list_to_text(pars), NotificationType.ParDeleted, old_version=version_before)
+    synchronize_translations(wd.docentry, DocumentEditResult(deleted=pars))
+    notify_doc_watchers(wd.docentry, par_list_to_text(pars), NotificationType.ParDeleted, old_version=version_before)
     db.session.commit()
     return json_response({'doc_ver': doc.get_version(), 'pars': [{'id': p.get_id()} for p in pars]})
 
@@ -69,13 +79,13 @@ def cut_to_clipboard(doc_id, from_par, to_par):
 @clipboard.route('/clipboard/copy/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
 def copy_to_clipboard(doc_id, from_par, to_par):
     verify_logged_in()
-    verify_view_access(g.docentry)
+    verify_view_access(wd.docentry)
 
     (area_name, ref_doc_id) = verify_json_params('area_name', 'ref_doc_id', require=False)
     ref_doc = Document(ref_doc_id) if ref_doc_id is not None and ref_doc_id != doc_id else None
 
     timdb = get_timdb()
-    doc = g.docentry.document_as_current_user
+    doc = wd.docentry.document_as_current_user
     clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     try:
         clip.copy_pars(doc, from_par, to_par, area_name, ref_doc, disable_ref=False)
@@ -88,12 +98,12 @@ def copy_to_clipboard(doc_id, from_par, to_par):
 @clipboard.route('/clipboard/paste/<int:doc_id>', methods=['POST'])
 def paste_from_clipboard(doc_id):
     verify_logged_in()
-    verify_edit_access(g.docentry)
+    verify_edit_access(wd.docentry)
 
     (par_before, par_after, as_ref) = verify_json_params('par_before', 'par_after', 'as_ref', require=False, default='')
 
     timdb = get_timdb()
-    doc = g.docentry.document_as_current_user
+    doc = wd.docentry.document_as_current_user
     version_before = doc.get_version()
     clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     meta = clip.read_metadata()
@@ -135,25 +145,25 @@ def paste_from_clipboard(doc_id):
             pass
 
     edit_result = DocumentEditResult(added=pars)
-    synchronize_translations(g.docentry, edit_result)
+    synchronize_translations(wd.docentry, edit_result)
     notify_doc_watchers(
-        g.docentry,
+        wd.docentry,
         par_list_to_text(pars),
         NotificationType.ParAdded,
         old_version=version_before,
         par=pars[0],
     )
-    return par_response(pars, doc, edit_result=edit_result)
+    return par_response(pars, wd.docentry, edit_result=edit_result)
 
 
 # TODO unused route?
 @clipboard.route('/clipboard/deletesrc/<int:doc_id>', methods=['POST'])
 def delete_from_source(doc_id):
     verify_logged_in()
-    verify_edit_access(g.docentry)
+    verify_edit_access(wd.docentry)
 
     timdb = get_timdb()
-    doc = g.docentry.document_as_current_user
+    doc = wd.docentry.document_as_current_user
     clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     pars = clip.read(as_ref=True, force_parrefs=True)
     if not pars:
@@ -180,7 +190,7 @@ def show_clipboard():
 
     clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
     pars = [DocParagraph.from_dict(doc, par) for par in clip.read() or []]
-    return par_response(pars, doc)
+    return par_response(pars, d)
 
 
 @clipboard.route('/clipboardstatus', methods=['GET'])
