@@ -1,12 +1,11 @@
 """Routes for document view."""
 import time
 import traceback
-from pathlib import Path
 from typing import Tuple, Union, Optional, List
 
 import attr
 from dataclasses import dataclass
-from flask import Blueprint, render_template, make_response, Request, abort, json
+from flask import Blueprint, render_template, make_response, abort
 from flask import current_app
 from flask import flash
 from flask import g
@@ -14,7 +13,7 @@ from flask import redirect
 from flask import request
 from flask import session
 from webargs.flaskparser import use_args
-from lxml import html
+
 
 from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
@@ -37,6 +36,8 @@ from timApp.folder.folder_view import try_return_folder
 from timApp.item.block import BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.item.item import Item
+from timApp.item.partitioning import get_piece_size_from_cookie, decide_view_range, get_doc_version_hash, load_index, \
+    INCLUDE_IN_PARTS_CLASS_NAME, save_index, partition_texts, get_index_with_header_id
 from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
 from timApp.markdown.htmlSanitize import sanitize_html
@@ -59,8 +60,6 @@ from timApp.util.utils import get_error_message
 from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
 
 DEFAULT_RELEVANCE = 10
-DEFAULT_VIEWRANGE = 20
-INCLUDE_IN_PARTS_CLASS_NAME = "includeInParts" # Preamble pars with this class get inserted to each doc part.
 
 view_page = Blueprint('view_page',
                       __name__,
@@ -225,69 +224,6 @@ def show_time(s):
 def get_module_ids(js_paths: List[str]):
     for jsfile in js_paths:
         yield jsfile.lstrip('/').rstrip('.js')
-
-
-def partition_texts(texts, view_range: Range, preamble_count):
-    """
-    Partition document with preambles taken into account.
-    :param texts: List of processed paragraphs.
-    :param view_range: Range of normal paragraphs to include.
-    :param preamble_count: Number of preamble paragraphs to insert.
-    :return: List of included paragraphs.
-    """
-    i = 0
-    partitioned = []
-    b = view_range[0] + preamble_count
-    e = view_range[1] + preamble_count
-    for text in texts:
-        if i >= e:
-            break
-        if i < preamble_count or i >= b:
-            partitioned.append(text)
-        i += 1
-    return partitioned
-
-
-def get_doc_version_hash(doc_info: DocInfo) -> str:
-    """
-    Gets version numbers from document and its preambles and creates a hash from them.
-    :param doc_info: Document.
-    :return: Version number hash as a string.
-    """
-    version = str(doc_info.document.get_version())
-    for preamble in doc_info.get_preamble_docs():
-        version += str(preamble.document.get_version())
-    return str(hash(version))
-
-
-def load_index(folder_path: Path(), file_name: str) -> Optional[str]:
-    """
-    Load headers from a file.
-    :param folder_path: Cache folder path.
-    :param file_name: File name.
-    :return: Parsed contents or None.
-    """
-    try:
-        with (folder_path / file_name).open("r", encoding='utf-8') as file:
-            contents = json.load(file)
-            return contents
-    except FileNotFoundError:
-        return None
-    except Exception as e:
-        log_error(get_error_message(e))
-        return None
-
-
-def save_index(index, folder_path: Path(), file_name: str):
-    """
-    Save document header data as json.
-    :param index: Headers.
-    :param folder_path: Save folder path.
-    :param file_name: File name.
-    """
-    folder_path.mkdir(parents=True, exist_ok=True)
-    with (folder_path / file_name).open("w", encoding='utf-8') as f:
-        json.dump(index, f)
 
 
 def view(item_path, template_name, usergroup=None, route="view"):
@@ -951,27 +887,6 @@ def get_viewrange(doc_id: int, index: int, forwards: int):
         else abort(400, "Failed to get view range")
 
 
-def get_index_with_header_id(doc_info: DocInfo, header_id: str) -> Optional[int]:
-    """
-    Returns first index containing the given HTML header id.
-    :param doc_info: Document.
-    :param header_id: HTML header id.
-    :return: Index of the corresponding paragraph or None if not found.
-    """
-    pars = doc_info.document.get_paragraphs()
-    for i, par in enumerate(pars):
-        if par:
-            try:
-                par_elements = html.fragment_fromstring(par.get_html(), create_parent=True)
-                for element in par_elements.iterdescendants():
-                    html_id = element.attrib.get("id")
-                    if html_id and header_id == html_id:
-                        return i
-            except AssertionError:
-                continue
-    return None
-
-
 @view_page.route('/viewrange/getWithHeaderId/<int:doc_id>/<string:header_id>')
 def get_viewrange_with_header_id(doc_id: int, header_id: str):
     """
@@ -991,71 +906,3 @@ def get_viewrange_with_header_id(doc_id: int, header_id: str):
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
     return json_response({'b': view_range[0], 'e': view_range[1]}) if view_range \
         else abort(400, "Failed to get the view range")
-
-
-def get_piece_size_from_cookie(request: Request) -> Optional[int]:
-    """
-    Reads piece size from cookie, if it exists.
-    :param request: Request.
-    :return: Piece size integer or None, if cookie not found.
-    """
-    r = request.cookies.get("r")
-    try:
-        return int(r)
-    except (TypeError, ValueError):
-        return None
-
-
-def get_preamble_count(d: DocInfo) -> int:
-    """
-    Get the amount of preambles in the document.
-    :param d: Document.
-    :return: Preamble count; zero if none were found.
-    """
-    preambles = d.document.insert_preamble_pars()
-    return len(preambles)
-
-
-def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0, par_count: Optional[int] = None,
-                       forwards: bool = True, min_set_size_modifier: float = 0.5) -> Optional[Range]:
-    """
-    Decide begin and end indices of paragraph set based on preferred size.
-    Avoids making the current part shorter than the piece size due to proximity to begin or end
-    of the document. Also combines remaining paragraphs at the start or end, if they'd be smaller than allowed.
-    For example: With set_size = 50 and modifier = 0.5 this will combine neighboring set if its size is 25 or less.
-
-    :param doc_info: Document.
-    :param preferred_set_size: User defined set size. May change depending on document.
-    :param index: Begin or end index (depending on direction).
-    :param par_count: Paragraph count, if it is available.
-    :param forwards: Begin index is the start index if true, end index if false (i.e. True = next, False = previous).
-    :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
-    :return: Adjusted indices for view range.
-    """
-    if not par_count:
-        par_count = len(doc_info.document.get_paragraphs())
-    try:
-        min_piece_size = round(min_set_size_modifier * preferred_set_size)
-        if forwards:
-            b = index
-            e = min(preferred_set_size + index, par_count)
-            # Avoid too short range when the start index is near the end of the document.
-            if (e - b) <= min_piece_size:
-                b = max(min(e - min_piece_size, b), 0)
-            # Round the end index to last index when the remaining part is short.
-            if par_count-e <= min_piece_size:
-                e = par_count
-        else:
-            b = max(index - preferred_set_size, 0)
-            e = index
-            # Avoid too short range when the end index is near the beginning of the document.
-            if (e - b) <= min_piece_size:
-                e = min(e + min_piece_size, par_count)
-            # Round the start index to zero when the remaining part is short.
-            if b <= min_piece_size:
-                b = 0
-        # TODO: Don't cut areas.
-    except TypeError:
-        return None
-    else:
-        return b, e
