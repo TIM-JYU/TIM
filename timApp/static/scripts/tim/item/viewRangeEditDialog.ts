@@ -122,7 +122,7 @@ registerDialogComponent(ViewRangeEditController,
             <span>Toggle showing documents in smaller parts and edit the number of paragraphs shown per part.</span>
             <br>
             <br>
-            <label title="Enable partitioning TIM documents">Enable partitioning documents: <input type="checkbox"
+            <label title="Enable partitioning TIM documents">Enable partitioning documents (requires cookies): <input type="checkbox"
                 ng-model="$ctrl.partitionDocumentsSetting"></label>
             <br>
             <label title="Enter how many paragraphs are shown at a time">Piece size: <input

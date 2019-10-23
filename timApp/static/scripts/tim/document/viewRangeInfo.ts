@@ -178,7 +178,7 @@ export class ViewRangeInfo {
                 }
             }
             if (current.e != this.lastIndex) {
-                if (this.isOverlappingRange(next, last, false, true)) {
+                if (this.isOverlappingRange(last, next, false, true)) {
                     next.name = last.name;
                     filteredRanges.push(next);
                 } else {
