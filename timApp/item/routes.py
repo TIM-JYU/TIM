@@ -14,6 +14,7 @@ from flask import redirect
 from flask import request
 from flask import session
 from webargs.flaskparser import use_args
+from lxml import html
 
 from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
@@ -266,9 +267,8 @@ def load_index(folder_path: Path(), file_name: str) -> Optional[str]:
     :param file_name: File name.
     :return: Parsed contents or None.
     """
-    # TODO: Utf-8?
     try:
-        with (folder_path / file_name).open("r") as file:
+        with (folder_path / file_name).open("r", encoding='utf-8') as file:
             contents = json.load(file)
             return contents
     except FileNotFoundError:
@@ -286,7 +286,7 @@ def save_index(index, folder_path: Path(), file_name: str):
     :param file_name: File name.
     """
     folder_path.mkdir(parents=True, exist_ok=True)
-    with (folder_path / file_name).open("w") as f:
+    with (folder_path / file_name).open("w", encoding='utf-8') as f:
         json.dump(index, f)
 
 
@@ -799,6 +799,7 @@ def set_blockrelevance(item_id: int):
         abort(404, 'Item not found')
     verify_manage_access(i)
 
+    # TODO: Use dataclass.
     relevance_value, = verify_json_params('value')
     # If block has existing relevance, delete it before adding the new one.
     blockrelevance = i.relevance
@@ -961,12 +962,13 @@ def get_index_with_header_id(doc_info: DocInfo, header_id: str) -> Optional[int]
     for i, par in enumerate(pars):
         if par:
             try:
-                par_html = par.get_html()
+                par_elements = html.fragment_fromstring(par.get_html(), create_parent=True)
+                for element in par_elements.iterdescendants():
+                    html_id = element.attrib.get("id")
+                    if html_id and header_id == html_id:
+                        return i
             except AssertionError:
                 continue
-            else:
-                if par_html and f'id="{header_id}"' in par_html:
-                    return i
     return None
 
 
