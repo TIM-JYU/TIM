@@ -7,7 +7,7 @@ import {Moment} from "moment";
 import {ICourseSettings, IItem, ISubjectList, ITag, TagType} from "../../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
 import {$http} from "../../util/ngimport";
-import {to} from "../../util/utils";
+import {dateFormat, to} from "../../util/utils";
 
 const groupTagPrefix = "group:";
 
@@ -31,7 +31,7 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
         super(element, scope);
         this.datePickerOptions = {
             defaultDate: "",
-            format: "D.M.YYYY HH:mm:ss",
+            format: dateFormat,
             showTodayButton: true,
         };
     }

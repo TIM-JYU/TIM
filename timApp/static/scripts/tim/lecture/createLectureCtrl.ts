@@ -4,7 +4,7 @@ import {getItem, IItem} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {DurationChoice} from "../ui/durationPicker";
 import {$http} from "../util/ngimport";
-import {to} from "../util/utils";
+import {dateFormat, to} from "../util/utils";
 import {ILecture, ILectureFormParams, ILectureOptions} from "./lecturetypes";
 
 /**
@@ -63,7 +63,7 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
         };
 
         this.dateTimeOptions = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: dateFormat,
             showTodayButton: true,
         };
         this.startTime = moment();

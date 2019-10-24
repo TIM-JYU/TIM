@@ -29,7 +29,7 @@ from timApp.tim_app import csrf
 from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.responsehelper import csv_response, json_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter, StringToMembershipFilter
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter
 from timApp.util.utils import get_boolean, fin_timezone
 
 
@@ -263,6 +263,7 @@ def gen_csv(args: GenerateCSVModel):
             data[ycoord + y_offset].append(row.get(field))
     return csv_response(data, 'excel', separator)
 
+
 @tableForm_plugin.route('/fetchTableData')
 def fetch_rows():
     # r = {}
@@ -278,9 +279,10 @@ def fetch_rows():
     r = tableform_get_fields(plug.values.get("fields",[]), plug.values.get("groups", []),
                              doc, curr_user, plug.values.get("removeDocIds", True),
                              plug.values.get("showInView"),
-                             group_filter_type = StringToMembershipFilter(plug.values.get("includeUsers")),
+                             group_filter_type=MembershipFilter(plug.values.get("includeUsers")),
                              )
     return json_response(r, headers={"No-Date-Conversion": "true"})
+
 
 @tableForm_plugin.route('/fetchTableDataPreview')
 def fetch_rows_preview():

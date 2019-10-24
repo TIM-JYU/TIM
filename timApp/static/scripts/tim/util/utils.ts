@@ -549,3 +549,5 @@ export function copyToClipboard(s: string) {
     }
     document.execCommand("copy");
 }
+
+export const dateFormat = "D.M.YYYY HH:mm:ss";

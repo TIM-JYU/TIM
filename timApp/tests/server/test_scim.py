@@ -905,6 +905,19 @@ class SendGradeTest(TimRouteTest):
             'partial': False,
             'dryRun': False,
         }
+        grade_params_dryrun = {
+            'destCourse': 'jy-CUR-1234',
+            'docId': d.id,
+            'partial': False,
+            'dryRun': True,
+        }
+        grade_params_dryrun_filter = {
+            'destCourse': 'jy-CUR-1234',
+            'docId': d.id,
+            'partial': False,
+            'dryRun': True,
+            'filterUsers': ['testuser2'],
+        }
         grade_params_custom_group = {
             'destCourse': 'jy-CUR-1234',
             'docId': d.id,
@@ -1005,6 +1018,7 @@ class SendGradeTest(TimRouteTest):
             {
                 'sent_assessments': [],
                 'assessment_errors': [],
+                'default_selection': [],
             },
             {'body': {'assessments': {}}}
         )
@@ -1014,21 +1028,99 @@ class SendGradeTest(TimRouteTest):
         db.session.commit()
         expected_date = get_current_time().strftime('%Y-%m-%d')
         self.assertRegex(expected_date, r'\d{4}-\d{2}-\d{2}')
+
+        self.check_send_grade_result(
+            grade_params_dryrun,
+            {
+                'sent_assessments': [
+                    {'completionDate': None,
+                     'gradeId': '5',
+                     'completionCredits': 3,
+                     'userName': 'testuser2'},
+                    {'completionDate': None,
+                     'gradeId': '4',
+                     'completionCredits': 2,
+                     'userName': 'testuser3'},
+                ],
+                'assessment_errors': [],
+                'default_selection': ['testuser2', 'testuser3'],
+            },
+            {'body': {'assessments': {}}}
+        )
+
+        # Make sure dry run doesn't modify anything
+        self.check_send_grade_result(
+            grade_params_dryrun,
+            {
+                'sent_assessments': [
+                    {'completionDate': None,
+                     'gradeId': '5',
+                     'completionCredits': 3,
+                     'userName': 'testuser2'},
+                    {'completionDate': None,
+                     'gradeId': '4',
+                     'completionCredits': 2,
+                     'userName': 'testuser3'},
+                ],
+                'assessment_errors': [],
+                'default_selection': ['testuser2', 'testuser3'],
+            },
+            {'body': {'assessments': {}}}
+        )
+
+        self.check_send_grade_result(
+            grade_params_dryrun_filter,
+            {
+                'sent_assessments': [
+                    {'completionDate': None,
+                     'gradeId': '5',
+                     'completionCredits': 3,
+                     'userName': 'testuser2'},
+                ],
+                'assessment_errors': [],
+                'default_selection': ['testuser2'],
+            },
+            {'body': {'assessments': {}}}
+        )
+
         self.check_send_grade_result(
             grade_params,
             {
                 'sent_assessments': [
                     {'completionDate': expected_date,
                      'gradeId': '5',
+                     'completionCredits': 3,
                      'userName': 'testuser2'},
                     {'completionDate': expected_date,
                      'gradeId': '4',
+                     'completionCredits': 2,
                      'userName': 'testuser3'},
                 ],
                 'assessment_errors': [],
+                'default_selection': [],
             },
             {'body': {'assessments': {}}}
         )
+
+        self.check_send_grade_result(
+            grade_params_dryrun,
+            {
+                'sent_assessments': [
+                    {'completionDate': expected_date,
+                     'gradeId': '5',
+                     'completionCredits': 3,
+                     'userName': 'testuser2'},
+                    {'completionDate': expected_date,
+                     'gradeId': '4',
+                     'completionCredits': 2,
+                     'userName': 'testuser3'},
+                ],
+                'assessment_errors': [],
+                'default_selection': [],
+            },
+            {'body': {'assessments': {}}}
+        )
+
         self.check_send_grade_result(
             grade_params,
             {
@@ -1037,12 +1129,15 @@ class SendGradeTest(TimRouteTest):
                         'assessment': {
                             'completionDate': expected_date,
                             'gradeId': '4',
+                            'completionCredits': 2,
                             'userName': 'testuser3',
                         },
                         'message': 'Voimassaolevaa opinto-oikeutta ei löytynyt.',
                     },
                 ],
-                'sent_assessments': []},
+                'sent_assessments': [],
+                'default_selection': [],
+            },
             {'body': {'assessments': {
                 '1': {'userName': {'code': 400003, 'reason': 'Voimassaolevaa opinto-oikeutta ei löytynyt.'}}}}},
             400,
@@ -1058,6 +1153,7 @@ class SendGradeTest(TimRouteTest):
                     {
                         'completionDate': expected_date,
                         'gradeId': '5',
+                        'completionCredits': 3,
                         'userName': 'testuser2',
                     },
                 ],
@@ -1066,11 +1162,13 @@ class SendGradeTest(TimRouteTest):
                         'message': 'Voimassaolevaa opinto-oikeutta ei löytynyt',
                         'assessment': {
                             'userName': 'testuser3',
+                            'completionCredits': 2,
                             'completionDate': expected_date,
                             'gradeId': '4',
                         },
                     },
                 ],
+                'default_selection': [],
             },
             {'body': {'assessments': {
                 '1': {'userName': {'code': 400003, 'reason': 'Voimassaolevaa opinto-oikeutta ei löytynyt'}}}}},
@@ -1102,7 +1200,9 @@ class SendGradeTest(TimRouteTest):
                                                    'gradeId': None,
                                                    'userName': 'sisuuser2'},
                                     'message': 'gradeId: Field may not be null.'}],
-             'sent_assessments': []},
+             'sent_assessments': [],
+             'default_selection': [],
+             },
             # The Sisu API sends only one format error.
             mock_sisu_response=None,
             # {'body': {'assessments': {'2': {'gradeId': {'code': 40001, 'reason': 'Virhe lähetyksen muodossa'}}}}},
@@ -1114,19 +1214,23 @@ class SendGradeTest(TimRouteTest):
             grade_params_partial,
             {'assessment_errors': [{'assessment': {'completionDate': expected_date,
                                                    'gradeId': '4',
+                                                   'completionCredits': 2,
                                                    'userName': 'testuser3'},
                                     'message': 'Ilmoittautumista toteutukseen ei löytynyt'},
-                                   {'assessment': {'completionDate': expected_date,
+                                   {'assessment': {'completionDate': None,
                                                    'gradeId': None,
                                                    'userName': 'sisuuser'},
                                     'message': 'gradeId: Field may not be null.'},
-                                   {'assessment': {'completionDate': expected_date,
+                                   {'assessment': {'completionDate': None,
                                                    'gradeId': None,
                                                    'userName': 'sisuuser2'},
                                     'message': 'gradeId: Field may not be null.'}],
              'sent_assessments': [{'completionDate': expected_date,
                                    'gradeId': '5',
-                                   'userName': 'testuser2'}]},
+                                   'completionCredits': 3,
+                                   'userName': 'testuser2'}],
+             'default_selection': [],
+             },
             {'body': {'assessments': {
                 '1': {'userName': {'code': 40002, 'reason': 'Ilmoittautumista toteutukseen ei löytynyt'}}}}},
             mock_sisu_status=207,

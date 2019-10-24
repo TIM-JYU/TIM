@@ -28,6 +28,7 @@ import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQue
 import * as imagex from "tim/plugin/imagex";
 import * as importData from "tim/plugin/importData";
 import * as qstController from "tim/plugin/qstController";
+import moment from "tim/plugin/reexports/moment";
 import * as tableForm from "tim/plugin/tableForm";
 import * as tape from "tim/plugin/tape";
 import * as timMenuController from "tim/plugin/timMenuController";
@@ -36,6 +37,7 @@ import * as pluginUtil from "tim/plugin/util";
 import * as searchBox from "tim/search/searchBox";
 import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrapPanel";
+import * as loadingIndicator from "tim/ui/loadingIndicator";
 import * as markupError from "tim/ui/markuperror";
 import * as loginMenu from "tim/user/loginMenu";
 import * as settingsCtrl from "tim/user/settingsCtrl";
@@ -66,9 +68,11 @@ markAsUsed(
     lectureInfoController,
     lectureMenu,
     loadMap,
+    loadingIndicator,
     loginMenu,
     manageCtrl,
     markupError,
+    moment,
     pareditor,
     pluginUtil,
     qstController,

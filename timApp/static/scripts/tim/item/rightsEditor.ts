@@ -2,7 +2,7 @@ import {IController, IScope} from "angular";
 import moment, {Duration, Moment} from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
-import {Binding, markAsUsed, to} from "tim/util/utils";
+import {Binding, dateFormat, markAsUsed, to} from "tim/util/utils";
 import {showMessageDialog} from "../ui/dialog";
 import {durationTypes} from "../ui/durationPicker";
 import {IGroup} from "../user/IUser";
@@ -90,21 +90,21 @@ class RightsEditorController implements IController {
         this.selectedRight = null;
         this.showActiveOnly = true;
         this.datePickerOptionsFrom = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: dateFormat,
             defaultDate: moment(),
             showTodayButton: true,
         };
         this.datePickerOptionsTo = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: dateFormat,
             defaultDate: moment(),
             showTodayButton: true,
         };
         this.datePickerOptionsDurationFrom = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: dateFormat,
             showTodayButton: true,
         };
         this.datePickerOptionsDurationTo = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: dateFormat,
             showTodayButton: true,
         };
     }

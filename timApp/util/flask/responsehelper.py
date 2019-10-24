@@ -104,4 +104,5 @@ def get_grid_modules():
         "ui.grid.selection",
         "ui.grid.exporter",
         "ui.grid.autoResize",
+        "ui.grid.saveState",
     ]

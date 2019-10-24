@@ -1,6 +1,4 @@
-import json
-from pprint import pformat
-from textwrap import dedent
+from datetime import date, datetime
 from textwrap import dedent
 from typing import List, Optional, Dict, Union
 
@@ -16,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from webargs.flaskparser import use_args
 
 from marshmallow_dataclass import class_schema
+from timApp.answer.routes import handle_jsrunner_response
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
@@ -36,7 +35,6 @@ from timApp.user.usergroup import UserGroup, get_sisu_groups_by_filter
 from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.get_fields import get_fields_and_users
-from timApp.util.logger import log_info
 from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time
 
 sisu = Blueprint('sisu',
@@ -281,6 +279,8 @@ class PostGradesModel:
     docId: int
     dryRun: bool
     partial: bool
+    filterUsers: Optional[List[str]] = None
+    completionDate: Optional[datetime] = None
     group: Optional[str] = None
 
 
@@ -294,6 +294,8 @@ def post_grades_route(m: PostGradesModel):
         partial=m.partial,
         dry_run=m.dryRun,
         group=m.group,
+        filter_users=m.filterUsers,
+        completion_date=m.completionDate.date() if m.completionDate else None,
     ))
 
 
@@ -363,11 +365,18 @@ def send_grades_to_sisu(
         doc: DocInfo,
         partial: bool,
         dry_run: bool,
+        completion_date: Optional[date],
+        filter_users: Optional[List[str]],
         group: Optional[str],
 ):
-    assessments = get_sisu_assessments(sisu_id, teacher, doc, group)
+    assessments = get_sisu_assessments(sisu_id, teacher, doc, group, filter_users)
+    if not completion_date:
+        completion_date = get_current_time().date()
+    missing_completion_date_users = {a['userName'] for a in assessments if not a.get('completionDate')}
+    for a in assessments:
+        if not a.get('completionDate'):
+            a['completionDate'] = completion_date.isoformat()
     validation_errors = []
-    invalid_assessments_indices = set()
     try:
         # noinspection PyTypeChecker
         AssessmentSchema(many=True).load(assessments)
@@ -382,6 +391,7 @@ def send_grades_to_sisu(
         if not partial:
             return {
                 'sent_assessments': [],
+                'default_selection': [],
                 'assessment_errors': validation_errors,
             }
         invalid_assessments_indices = {i for i in e.messages.keys()}
@@ -404,6 +414,22 @@ def send_grades_to_sisu(
         raise SisuError(pr.error.reason)
     invalid_assessments = set(n for n in pr.body.assessments.keys())
     ok_assessments = [a for i, a in enumerate(assessments) if i not in invalid_assessments]
+    if not dry_run and r.status_code < 400:
+        ok_users = set(a['userName'] for a in ok_assessments)
+        user_map = {u.name: u for u in User.query.filter(User.name.in_(missing_completion_date_users))}
+        handle_jsrunner_response(
+            {
+                'savedata': [
+                    {'fields': {f'{doc.id}.completionDate': a['completionDate']}, 'user': user_map[a['userName']].id}
+                    for a in ok_assessments if a['userName'] in user_map
+                ],
+                'allowMissing': True,
+            },
+            current_doc=doc,
+            allow_non_teacher=False,
+        )
+        missing_completion_date_users -= ok_users
+        db.session.commit()
     errs = [
         {
             'message': ", ".join(x.reason for x in v.values()),
@@ -411,9 +437,15 @@ def send_grades_to_sisu(
         }
         for k, v in pr.body.assessments.items()
     ]
+    all_errors = errs + validation_errors
+    error_users = set(a['assessment']['userName'] for a in all_errors)
+    for a in assessments + [a['assessment'] for a in validation_errors]:
+        if a['userName'] in missing_completion_date_users:
+            a['completionDate'] = None
     return {
         'sent_assessments': ok_assessments if r.status_code < 400 else [],
-        'assessment_errors': errs + validation_errors,
+        'assessment_errors': all_errors,
+        'default_selection': sorted(list(missing_completion_date_users - error_users)),
     }
 
 
@@ -422,6 +454,7 @@ def get_sisu_assessments(
         teacher: User,
         doc: DocInfo,
         group: Optional[str],
+        filter_users: Optional[List[str]],
 ):
     teachers_group = UserGroup.get_teachers_group()
     if teacher not in teachers_group.users:
@@ -456,16 +489,13 @@ def get_sisu_assessments(
             f'The associated course id "{ug.external_id.course_id}" '
             f'of the group "{usergroup}" does not match the course setting "{sisu_id}".')
     users, _, _, _ = get_fields_and_users(
-        ['grade', 'credit'],
+        ['grade', 'credit', 'completionDate'],
         [ug],
         doc,
         teacher,
+        user_filter=User.name.in_(filter_users) if filter_users else None,
     )
-    curr_time = get_current_time().strftime('%Y-%m-%d')
-    return [{
-        'completionDate': curr_time,
-        **fields_to_assessment(r, doc),
-    } for r in users]
+    return [fields_to_assessment(r, doc) for r in users]
 
 
 def fields_to_assessment(r, doc: DocInfo):
@@ -474,8 +504,11 @@ def fields_to_assessment(r, doc: DocInfo):
         'gradeId': str(grade) if grade is not None else None,
         'userName': r['user'].name,
     }
-    credit = r['fields'].get('credit')
+    credit = r['fields'].get(f'{doc.id}.credit')
     if credit is not None:
         result['completionCredits'] = credit
+    cdate = r['fields'].get(f'{doc.id}.completionDate')
+    if cdate is not None:
+        result['completionDate'] = cdate
     # TODO: Sisu accepts also 'privateComment' field.
     return result

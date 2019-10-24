@@ -3,7 +3,7 @@ import {ngStorage} from "ngstorage";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {$http, $httpParamSerializer, $localStorage} from "../util/ngimport";
-import {to} from "../util/utils";
+import {dateFormat, to} from "../util/utils";
 
 interface IFBOptions<T> {
     period: "whenever" | "sincelast" | "day" | "week" | "month" | "other";
@@ -42,9 +42,6 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
     async $onInit() {
         super.$onInit();
         const options = this.resolve.params;
-        moment.locale("en", {
-            week: {dow: 1, doy: 4}, // This sets Monday as the first day of the week.
-        });
         this.showSort = options.allTasks;
         const defs = {
             period: "whenever",
@@ -61,8 +58,6 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
         this.storage = $localStorage.$default({
             feedbackAnswersOptions: defs,
         });
-
-        const dateFormat = "D.M.YYYY HH:mm:ss";
 
         this.options = {
             ...this.storage.feedbackAnswersOptions,

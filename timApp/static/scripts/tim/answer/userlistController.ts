@@ -5,6 +5,7 @@ import uiGrid, {IFilterOptions, IGridColumnOf, IGridRowOf} from "ui-grid";
 import {ViewCtrl} from "../document/viewctrl";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {IUser, IUserListEntry} from "../user/IUser";
+import {withComparatorFilters} from "../util/comparatorfilter";
 import {$timeout} from "../util/ngimport";
 import {Binding, copyToClipboard, getURLParameter, markAsUsed, Require} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
@@ -21,14 +22,6 @@ export interface IExportOptions {
     velpPointField: string;
     taskPointField: string;
     copy: boolean;
-}
-
-function filterFn(term: string, cellValue: string, row: IGridRowOf<unknown>, column: IGridColumnOf<unknown>) {
-    try {
-        return new RegExp(term, "i").test(cellValue);
-    } catch {
-        return false;
-    }
 }
 
 const sortLang = "fi";
@@ -72,7 +65,7 @@ export class UserListController implements IController {
             }
         }
 
-        const columns: Array<uiGrid.IColumnDefOf<IUserListEntry>> = [
+        const columns: Array<uiGrid.IColumnDefOf<IUserListEntry>> = withComparatorFilters([
             {
                 field: "user.real_name",
                 name: "Full name",
@@ -125,14 +118,7 @@ export class UserListController implements IController {
                 headerTooltip: true,
                 maxWidth: smallFieldWidth,
             },
-        ];
-        for (const c of columns) {
-            const f: IFixedFilterOptions = {
-                condition: filterFn,
-                rawTerm: true, // Required for RegExp to work.
-            };
-            c.filter = f;
-        }
+        ]);
         this.instantUpdate = this.viewctrl.docSettings.form_mode || false;
 
         this.gridOptions = {

@@ -2,6 +2,7 @@ import {IRootElementService, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
+import {dateFormat} from "../../util/utils";
 
 timApp.directive("noPeriod", () => (scope, element, attrs) => {
     const keyCode = [190, 188, 110];
@@ -43,7 +44,7 @@ class NameAreaController extends DialogController<{}, {areaName: string, options
             hlevel: 0,
         };
         this.datePickerOptions = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: dateFormat,
             showTodayButton: true,
         };
     }

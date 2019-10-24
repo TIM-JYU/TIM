@@ -2,7 +2,7 @@ import moment, {Moment} from "moment";
 import {ngStorage} from "ngstorage";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http, $httpParamSerializer, $localStorage} from "../util/ngimport";
-import {to} from "../util/utils";
+import {dateFormat, to} from "../util/utils";
 
 interface IOptions<T> {
     age: string;
@@ -37,9 +37,6 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
     async $onInit() {
         super.$onInit();
         const options = this.resolve.params;
-        moment.locale("en", {
-            week: {dow: 1, doy: 4}, // set Monday as the first day of the week
-        });
         this.showSort = options.allTasks;
 
         const defs = {
@@ -64,12 +61,12 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
             consent: "any",
         };
         this.datePickerOptionsFrom = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: dateFormat,
             defaultDate: moment(this.options.periodFrom),
             showTodayButton: true,
         };
         this.datePickerOptionsTo = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: dateFormat,
             defaultDate: moment(this.options.periodTo),
             showTodayButton: true,
         };

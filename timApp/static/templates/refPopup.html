@@ -1,7 +1,5 @@
 <div class="refPopup">
-    <span ng-show="!$ctrl.loaded">
-        Loading...
-    </span>
+    <tim-loading ng-if="!$ctrl.loaded"></tim-loading>
 
     <span ng-show="$ctrl.error">
         <label>ERROR:</label> {{ $ctrl.error }}

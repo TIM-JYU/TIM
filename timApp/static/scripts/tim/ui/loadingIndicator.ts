@@ -1,5 +1,5 @@
 import {timApp} from "../app";
 
 timApp.component("timLoading", {
-    template: `<img src="/static/images/loading.gif">`,
+    template: `<i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>`,
 });

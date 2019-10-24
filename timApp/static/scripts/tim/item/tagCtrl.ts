@@ -10,7 +10,7 @@ import {TEACHERS_GROUPNAME} from "../user/IUser";
 import {userBelongsToGroupOrIsAdmin} from "../user/userService";
 import {KEY_ENTER} from "../util/keycodes";
 import {$http} from "../util/ngimport";
-import {markAsUsed, to} from "../util/utils";
+import {dateFormat, markAsUsed, to} from "../util/utils";
 import {IItem, ITag, tagStyleClass, TagType} from "./IItem";
 
 markAsUsed(focusMe);
@@ -38,7 +38,7 @@ export class TagController extends DialogController<{ params: IItem }, {}> {
     constructor(protected element: IRootElementService, protected scope: IScope) {
         super(element, scope);
         this.datePickerOptions = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: dateFormat,
             defaultDate: "",
             showTodayButton: true,
         };

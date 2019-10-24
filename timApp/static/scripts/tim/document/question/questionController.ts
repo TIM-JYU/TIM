@@ -9,7 +9,7 @@ import {
     makePreview,
     minimizeJson,
 } from "tim/document/question/dynamicAnswerSheet";
-import {getStorage, markAsUsed, setStorage, to} from "tim/util/utils";
+import {dateFormat, getStorage, markAsUsed, setStorage, to} from "tim/util/utils";
 import {ParCompiler} from "../../editor/parCompiler";
 import {
     IAskedJsonJson,
@@ -156,7 +156,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         super(element, scope);
 
         this.dateTimeOptions = {
-            format: "D.M.YYYY HH:mm:ss",
+            format: dateFormat,
             showTodayButton: true,
         };
 

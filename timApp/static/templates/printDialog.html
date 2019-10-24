@@ -108,8 +108,7 @@
             </label>
         </div>
         <button class="btn timButton" ng-click="$ctrl.create()">
-        <span ng-show="$ctrl.loading"><i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
-        Creating</span>
+            <span ng-show="$ctrl.loading"><tim-loading></tim-loading> Creating</span>
             <span ng-hide="$ctrl.loading">Create</span>
         </button>
         <div id="print-success" ng-show="$ctrl.docUrl && !$ctrl.errormsg" class="alert alert-success">

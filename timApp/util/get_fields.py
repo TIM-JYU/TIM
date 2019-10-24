@@ -25,7 +25,6 @@ from timApp.plugin.taskid import TaskId
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
-from timApp.util.answerutil import task_ids_to_strlist
 from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
 
 
@@ -92,13 +91,6 @@ class MembershipFilter(Enum):
     Current = 'current'
     Deleted = 'deleted'
 
-def StringToMembershipFilter(s):
-    if s == "all":
-        return MembershipFilter.All
-    if s == "deleted":
-        return MembershipFilter.Deleted
-    return MembershipFilter.Current
-
 
 member_filter_relation_map = {
     MembershipFilter.All: User.groups_dyn,
@@ -116,9 +108,11 @@ def get_fields_and_users(
         add_missing_fields: bool = False,
         allow_non_teacher: bool = False,
         member_filter_type: MembershipFilter = MembershipFilter.Current,
+        user_filter=None,
 ):
     """
     Return fielddata, aliases, field_names
+    :param user_filter: Additional filter to use.
     :param member_filter_type: Whether to use all, current or deleted users in groups.
     :param u_fields: list of fields to be used
     :param requested_groups: requested user groups to be used
@@ -127,7 +121,6 @@ def get_fields_and_users(
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
     :param add_missing_fields: return estimated field even if it wasn't given previously
     :param allow_non_teacher: can be used also for non techers if othre rights matches
-    :param valid_only: find only valid answers
     :return: fielddata, aliases, field_names
     """
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
@@ -233,6 +226,8 @@ def get_fields_and_users(
 
     group_id_set = set(ug.id for ug in groups)
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
+    if user_filter is not None:
+        group_filter = group_filter & user_filter
     join_relation = member_filter_relation_map[member_filter_type]
     tally_field_values = get_tally_field_values(d, doc_map, group_filter, join_relation, tally_fields)
     sub = []

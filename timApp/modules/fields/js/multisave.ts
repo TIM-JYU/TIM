@@ -1,14 +1,16 @@
 /**
  * Defines the client-side implementation of a plugin that calls other plugins' save methods.
  */
-import angular, {INgModelOptions} from "angular";
+import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
+import moment from "tim/plugin/reexports/moment";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {showMessageDialog} from "tim/ui/dialog";
 import {Users} from "tim/user/userService";
-import {$http} from "tim/util/ngimport";
+import {withComparatorFilters} from "tim/util/comparatorfilter";
+import {$http, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize"]);
@@ -66,11 +68,18 @@ interface IAssessmentExt extends IAssessment {
 interface IGradeResponse {
     sent_assessments: IAssessment[];
     assessment_errors: IAssessmentError[];
+    default_selection: string[];
+}
+
+function getAssessments(data: IGradeResponse) {
+    return [
+        ...data.sent_assessments,
+        ...data.assessment_errors.map((a) => ({...a.assessment, error: a.message})),
+    ];
 }
 
 export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMarkup>, t.TypeOf<typeof multisaveAll>, typeof multisaveAll> {
     private isSaved = false;
-    private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
     private savedFields: number = 0;
     private showEmailForm: boolean = false;
@@ -83,11 +92,16 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     private emailMsg: string = "";
     private assessments?: IAssessmentExt[];
     private gridOptions?: uiGrid.IGridOptionsOf<IAssessmentExt>;
-    private partial: boolean = false;
-    private dryRun: boolean = false;
-    private saving: boolean = false;
-    private lastPartial?: boolean;
-    private lastDryRun?: boolean;
+    private loading: boolean = false;
+    private dateOptions: EonasdanBootstrapDatetimepicker.SetOptions = {
+        format: "D.M.YYYY",
+        defaultDate: moment(),
+        allowInputToggle: true,
+    };
+    private completionDate?: moment.Moment;
+    private grid?: uiGrid.IGridApiOf<IAssessmentExt>;
+    private okAssessments?: number;
+    private errAssessments?: number;
 
     getDefaultMarkup() {
         return {};
@@ -172,11 +186,137 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         this.showEmailForm = !this.showEmailForm;
     }
 
-    okAssessments() {
-        if (!this.assessments) {
+    async callSendGrades(opts: {
+        completionDate?: moment.Moment,
+        dryRun: boolean,
+        filterUsers?: string[],
+        partial: boolean,
+    }) {
+        if (!this.attrs.destCourse) {
+            return;
+        }
+        this.loading = true;
+        const r = await to($http.post<IGradeResponse>("/sisu/sendGrades", {
+            completionDate: opts.completionDate,
+            destCourse: this.attrs.destCourse,
+            docId: this.vctrl.item.id,
+            dryRun: opts.dryRun,
+            filterUsers: opts.filterUsers,
+            group: this.attrs.group,
+            partial: opts.partial,
+        }));
+        this.loading = false;
+        if (!r.ok) {
+            await showMessageDialog(r.result.data.error);
+            return;
+        }
+        return r.result.data;
+    }
+
+    async sendAssessments() {
+        if (!this.grid || !this.assessments) {
+            return;
+        }
+        const data = await this.callSendGrades({
+            partial: true,
+            dryRun: false,
+            completionDate: this.completionDate,
+            filterUsers: this.grid.selection.getSelectedRows().map((r) => r.userName),
+        });
+        if (!data) {
+            return;
+        }
+        this.okAssessments = data.sent_assessments.length;
+        this.errAssessments = data.assessment_errors.length;
+        const all = getAssessments(data);
+        const indexMap = new Map<string, number>();
+        this.assessments.forEach((a, i) => indexMap.set(a.userName, i));
+        const state = this.grid.saveState.save();
+        for (const a of all) {
+            const index = indexMap.get(a.userName);
+            if (index !== undefined) {
+                this.assessments[index] = a;
+            } else {
+                console.warn(`sendAssessments returned a user that did not exist in preview: ${a.userName}`);
+            }
+        }
+        await $timeout();
+        this.grid.saveState.restore(this.grid.grid.appScope!, state);
+    }
+
+    numSelectedAssessments() {
+        if (!this.grid) {
             return 0;
         }
-        return this.assessments.reduce((n, x) => n + (x.error === undefined ? 1 : 0), 0);
+        return this.grid.selection.getSelectedRows().length;
+    }
+
+    async previewAssessments() {
+        this.assessments = undefined;
+        const data = await this.callSendGrades({partial: true, dryRun: true});
+        if (!data) {
+            return;
+        }
+        this.assessments = getAssessments(data);
+        const defaults = new Set(data.default_selection);
+        this.gridOptions = {
+            onRegisterApi: async (grid) => {
+                this.grid = grid;
+                await $timeout();
+                for (const row of grid.core.getVisibleRows(grid.grid)) {
+                    if (defaults.has(row.entity.userName)) {
+                        row.setSelected(true);
+                    }
+                }
+            },
+            columnDefs: withComparatorFilters([
+                {
+                    field: "userName",
+                    name: "Username",
+                    allowCellFocus: false,
+                    width: 140,
+                },
+                {
+                    field: "gradeId",
+                    name: "Grade",
+                    allowCellFocus: false,
+                    width: 60,
+                    filter: {term: "."},
+                },
+                {
+                    field: "completionDate",
+                    name: "Completion date",
+                    allowCellFocus: false,
+                    width: 140,
+                },
+                {
+                    field: "completionCredits",
+                    name: "Credits",
+                    allowCellFocus: false,
+                    width: 70,
+                },
+                {
+                    field: "privateComment",
+                    name: "Comment",
+                    allowCellFocus: false,
+                    cellTooltip: true,
+                },
+                {
+                    field: "error",
+                    name: "Error?",
+                    allowCellFocus: false,
+                    sort: {direction: "asc"},
+                    cellTooltip: true,
+                },
+            ]),
+            data: this.assessments,
+            enableColumnMenus: false,
+            enableFiltering: true,
+            enableFullRowSelection: true,
+            enableGridMenu: true,
+            enableHorizontalScrollbar: false,
+            enableSorting: true,
+        };
     }
 
     /**
@@ -188,77 +328,6 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
      *   plugin in the same document
      */
     async save() {
-        if (this.attrs.destCourse) {
-            this.saving = true;
-            this.lastPartial = this.partial;
-            this.lastDryRun = this.dryRun;
-            this.assessments = undefined;
-            const r = await to($http.post<IGradeResponse>("/sisu/sendGrades", {
-                destCourse: this.attrs.destCourse,
-                docId: this.vctrl.item.id,
-                group: this.attrs.group,
-                partial: this.partial,
-                dryRun: this.dryRun,
-            }));
-            this.saving = false;
-            if (r.ok) {
-                this.assessments = [
-                    ...r.result.data.sent_assessments,
-                    ...r.result.data.assessment_errors.map((a) => ({...a.assessment, error: a.message})),
-                ];
-                this.gridOptions = {
-                    columnDefs: [
-                        {
-                            field: "userName",
-                            name: "Username",
-                            allowCellFocus: false,
-                            width: 140,
-                        },
-                        {
-                            field: "gradeId",
-                            name: "Grade",
-                            allowCellFocus: false,
-                            width: 60,
-                        },
-                        {
-                            field: "completionDate",
-                            name: "Completion date",
-                            allowCellFocus: false,
-                            width: 140,
-                        },
-                        {
-                            field: "completionCredits",
-                            name: "Credits",
-                            allowCellFocus: false,
-                            width: 70,
-                        },
-                        {
-                            field: "privateComment",
-                            name: "Comment",
-                            allowCellFocus: false,
-                            cellTooltip: true,
-                        },
-                        {
-                            field: "error",
-                            name: "Error?",
-                            allowCellFocus: false,
-                            sort: {direction: "asc"},
-                            cellTooltip: true,
-                        },
-                    ],
-                    data: this.assessments,
-                    enableHorizontalScrollbar: false,
-                    enableSorting: true,
-                    enableRowSelection: false,
-                    enableFiltering: true,
-                    enableColumnMenus: false,
-                };
-            } else {
-                await showMessageDialog(r.result.data.error);
-            }
-            return;
-        }
-
         if (this.attrs.emailMode) {
             this.toggleEmailForm();
             return;
@@ -382,53 +451,72 @@ multisaveApp.component("multisaveRunner", {
     <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <div ng-if="$ctrl.attrs.destCourse">
-        <div class="checkbox">
-            <label><input type="checkbox" ng-model="$ctrl.dryRun">
-                Vain esikatsele, älä lähetä mitään
-            </label>
-        </div>
-        <div class="checkbox">
-            <label><input type="checkbox" ng-model="$ctrl.partial">
-                Jos jotkut arvioinnit ovat virheellisiä, lähetä silti ehjät
-            </label>
-        </div>
-        <p>Arviointien lähettäminen Sisuun ylikirjoittaa Sisun arviointinäkymän tiedot.</p>
+        <button class="timButton"
+                ng-disabled="$ctrl.loading"
+                ng-click="$ctrl.previewAssessments()">
+            Esikatsele arviointeja
+        </button>
+        <tim-loading ng-if="$ctrl.loading && !$ctrl.assessments"></tim-loading>
     </div>
-    <button class="timButton"
-            ng-disabled="$ctrl.saving"
-            ng-if="!$ctrl.showEmailForm && $ctrl.buttonText()"
-            ng-click="$ctrl.save()">
-        {{::$ctrl.buttonText()}}
-    </button>
     <div ng-if="$ctrl.assessments">
-        <p>
-            {{ $ctrl.okAssessments() }} arviointia {{ $ctrl.lastDryRun ? 'lähetettäisiin' : 'lähetettiin' }} Sisuun.
-            {{ $ctrl.assessments.length - $ctrl.okAssessments() }} virheellistä arviointia {{ $ctrl.lastDryRun ? 'torjuttaisiin' : 'torjuttiin' }}.
-        </p>
+        <p>Arviointien lähettäminen Sisuun ylikirjoittaa Sisun arviointinäkymän tiedot.</p>
+        Suorituspäivä:
+        <div class="input-group date" datetimepicker ng-model="$ctrl.completionDate"
+             data-options="$ctrl.dateOptions">
+            <input type="text"
+                   class="form-control"/>
+            <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+        </div>
         <div style="font-size: small"
              ui-grid="$ctrl.gridOptions"
+             ui-grid-selection
+             ui-grid-save-state
              ui-grid-auto-resize
              ui-grid-cellNav>
         </div>
+        <p>{{ $ctrl.numSelectedAssessments() }} arviointia valittu.</p>
+        <button class="timButton"
+                ng-disabled="$ctrl.loading || $ctrl.numSelectedAssessments() === 0"
+                ng-click="$ctrl.sendAssessments()">
+            Lähetä valitut Sisuun
+        </button>
+        <tim-loading ng-if="$ctrl.loading"></tim-loading>
+        <p ng-if="$ctrl.okAssessments != null && !$ctrl.loading">
+            {{ $ctrl.okAssessments }} arviointia lähetettiin Sisuun.
+            {{ $ctrl.errAssessments }} virheellistä arviointia torjuttiin.
+        </p>
     </div>
+    <button class="timButton"
+            ng-disabled="$ctrl.loading"
+            ng-if="!$ctrl.showEmailForm && $ctrl.buttonText() && !$ctrl.attrs.destCourse"
+            ng-click="$ctrl.save()">
+        {{::$ctrl.buttonText()}}
+    </button>
     <p class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</p>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
         <p class="closeButton" ng-click="$ctrl.toggleEmailForm()"></p>
-        <p><textarea id="emaillist" ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea><p>
+        <p><textarea ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea>
         <p>
-        <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox" ng-model="$ctrl.emailbcc">BCC</label>&nbsp;
-        <label title="Send also a copy for me"><input type="checkbox" ng-model="$ctrl.emailbccme" >BCC also for me</label>&nbsp;
-        <label title="Send using TIM. Every mail is sent as a personal mail."><input type="checkbox" ng-model="$ctrl.emailtim" >use TIM to send</label>&nbsp;
+        <p>
+            <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox"
+                                                                                               ng-model="$ctrl.emailbcc">BCC</label>&nbsp;
+            <label title="Send also a copy for me"><input type="checkbox"
+                                                          ng-model="$ctrl.emailbccme">BCC also for me</label>&nbsp;
+            <label title="Send using TIM. Every mail is sent as a personal mail."><input type="checkbox"
+                                                                                         ng-model="$ctrl.emailtim">use
+                TIM to send</label>&nbsp;
         </p>
         <p>Subject: <input ng-model="$ctrl.emailsubject" size="60"></p>
         <p>eMail content:</p>
-        <p><textarea id="emaillist" ng-model="$ctrl.emailbody" rows="10" cols="70"></textarea></p>
+        <p><textarea ng-model="$ctrl.emailbody" rows="10" cols="70"></textarea></p>
         <p>
-        <button class="timButton"
-                ng-click="$ctrl.sendEmail()">
+            <button class="timButton"
+                    ng-click="$ctrl.sendEmail()">
                 Send
-        </button>
-        <span class="savedtext" ng-if="$ctrl.emailMsg">Sent!</span>
+            </button>
+            <span class="savedtext" ng-if="$ctrl.emailMsg">Sent!</span>
         </p>
     </div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>

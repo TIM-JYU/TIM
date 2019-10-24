@@ -676,15 +676,16 @@ def handle_points_ref(answerdata: AnswerData, curr_user: User, d: DocInfo, ptype
     return json_response({'savedNew': s, 'web': {'result': 'points saved'}})
 
 
-def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_teacher = False):
-    # TODO: Might need to rewrite this function for optimization
+def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_teacher: bool = False):
     save_obj = jsonresp.get('savedata')
     ignore_missing = jsonresp.get('ignoreMissing', False)
+    allow_missing = jsonresp.get('allowMissing', False)
     ignore_fields = {}
     if not save_obj:
         return
     tasks = set()
     doc_map: Dict[int, DocInfo] = {}
+    user_map: Dict[int, User] = {u.id: u for u in User.query.filter(User.id.in_(x['user'] for x in save_obj)).all()}
     for item in save_obj:
         task_u = item['fields']
         for tid in task_u.keys():
@@ -709,39 +710,34 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
             return abort(403, f'Missing teacher access for document {dib.id}')
         try:
             plugin = verify_task_access(dib, t_id, AccessType.view, TaskIdAccess.ReadWrite)  # , context_user=ctx_user)
-        except (TaskNotFoundException) as e:
-            if ignore_missing:
-                ignore_fields[t_id.doc_task] = True
-                continue
-            return abort(400, str(e))
+        except TaskNotFoundException as e:
+            if not allow_missing:
+                if ignore_missing:
+                    ignore_fields[t_id.doc_task] = True
+                    continue
+                return abort(400, str(e))
+            plugin = PluginType('textfield')  # assuming textfield type for fields that are not in the document
         except (PluginException, TimDbException) as e:
             return abort(400, str(e))
 
-        if t_id.task_name == "grade" or t_id.task_name == "credit":
+        # TODO this 'if' seems unnecessary
+        if t_id.task_name in ('grade', 'credit', 'completionDate'):
             task_content_name_map[task] = 'c'
             continue
-        try:
-            if t_id.field  and t_id.field != "points" and t_id.field != "styles":
-                if plugin.type == "numericfield" or plugin.type == "textfield":
-                    if t_id.field != plugin.get_content_field_name():
-                        return abort(400, f'Error saving to {task}: {t_id.field} is not an accepted field.')
-                task_content_name_map[task] = t_id.field
-            else:
-                # plug = find_plugin_from_document(dib.document, t_id, curr_user)
-                content_field = plugin.get_content_field_name()
-                task_content_name_map[task] = content_field
-        except TaskNotFoundException as e:
-            #task_display = t_id.doc_task if t_id.doc_id != current_doc.id else t_id.task_name
-            #if not result['web'].get('error', None):
-            #    result['web']['error'] = 'Errors:\n'
-            #result['web']['error'] += f"Task not found: {task_display}\n"
-            #task_content_name_map[task] = 'ignore'
-            #continue
-            task_content_name_map[task] = "c"
+
+        if t_id.field and t_id.field != "points" and t_id.field != "styles":
+            if plugin.type == "numericfield" or plugin.type == "textfield":
+                if t_id.field != plugin.get_content_field_name():
+                    return abort(400, f'Error saving to {task}: {t_id.field} is not an accepted field.')
+            task_content_name_map[task] = t_id.field
+        else:
+            task_content_name_map[task] = plugin.get_content_field_name()
 
     for user in save_obj:
         u_id = user['user']
-        u = User.get_by_id(u_id)
+        u = user_map.get(u_id)
+        if not u:
+            return abort(400, f'User id {u_id} not found')
         user_fields = user['fields']
         task_map = {}
         for key, value in user_fields.items():
@@ -806,6 +802,9 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
                             else:
                                 content[field] = value
                             # Ensure that there's always a content field even when setting styles to empty answer
+
+                            # TODO: this line is definitely wrong because the 'task' variable
+                            #  does not exist in this loop.
                             prev_content_value = content.get(task_content_name_map[task], None)
                             if prev_content_value is None:
                                 content[task_content_name_map[task]] = None
@@ -838,48 +837,6 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
                 saver=curr_user,
             )
             db.session.add(ans)
-        # for key, value in user_fields.items():
-        #     content_field = task_content_name_map[key]
-        #     if content_field == 'ignore':
-        #         continue
-        #     task_id = TaskId.parse(key, False, False, True)
-        #     an: Answer = get_latest_answers_query(task_id, [u]).first()
-        #     points = None
-        #     content = json.dumps({content_field: None})
-        #     if task_id.field == 'points':
-        #         if value == "":
-        #             value = None
-        #         else:
-        #             try:
-        #                 value = float(value)
-        #             except ValueError:
-        #                 if not result['web'].get('error', None):
-        #                     result['web']['error'] = 'Errors:\n'
-        #                 result['web']['error'] += f"Value {value} is not valid point value for task {task_id.task_name}\n"
-        #                 continue
-        #         points = value
-        #     else:
-        #         content = json.dumps({content_field: value})
-        #     if an:
-        #         an_content = json.loads(an.content)
-        #         if task_id.field == 'points':
-        #             if an.points == points:
-        #                 continue
-        #         else:
-        #             if an_content.get(content_field) == value:
-        #                 continue
-        #             an_content[content_field] = value
-        #             points = an.points
-        #         content = json.dumps(an_content)
-        #     ans = Answer(
-        #         content=content,
-        #         points=points,
-        #         task_id=task_id.doc_task,
-        #         users=[u],
-        #         valid=True,
-        #         saver=curr_user,
-        #     )
-        #     db.session.add(ans)
 
 
 def get_hidden_name(user_id):
