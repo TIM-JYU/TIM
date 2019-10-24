@@ -281,6 +281,7 @@ class PostGradesModel:
     docId: int
     dryRun: bool
     partial: bool
+    group: Optional[str] = None
 
 
 @sisu.route('/sendGrades', methods=['post'])
@@ -292,6 +293,7 @@ def post_grades_route(m: PostGradesModel):
         get_doc_or_abort(m.docId),
         partial=m.partial,
         dry_run=m.dryRun,
+        group=m.group,
     ))
 
 
@@ -361,8 +363,9 @@ def send_grades_to_sisu(
         doc: DocInfo,
         partial: bool,
         dry_run: bool,
+        group: Optional[str],
 ):
-    assessments = get_sisu_assessments(sisu_id, teacher, doc)
+    assessments = get_sisu_assessments(sisu_id, teacher, doc, group)
     validation_errors = []
     invalid_assessments_indices = set()
     try:
@@ -414,7 +417,12 @@ def send_grades_to_sisu(
     }
 
 
-def get_sisu_assessments(sisu_id: str, teacher: User, doc: DocInfo):
+def get_sisu_assessments(
+        sisu_id: str,
+        teacher: User,
+        doc: DocInfo,
+        group: Optional[str],
+):
     teachers_group = UserGroup.get_teachers_group()
     if teacher not in teachers_group.users:
         raise AccessDenied('You are not a TIM teacher.')
@@ -425,12 +433,15 @@ def get_sisu_assessments(sisu_id: str, teacher: User, doc: DocInfo):
     if not teacher.has_teacher_access(doc):
         raise AccessDenied('You do not have teacher access to the document.')
     doc_settings = doc.document.get_settings()
-    try:
-        usergroup = doc_settings.group()
-    except ValueError as e:
-        raise IncorrectSettings(str(e)) from e
-    if not usergroup:
-        raise IncorrectSettings('The document must have "group" setting that indicates the student group name.')
+    if group is None:
+        try:
+            usergroup = doc_settings.group()
+        except ValueError as e:
+            raise IncorrectSettings(str(e)) from e
+        if not usergroup:
+            raise IncorrectSettings('The document must have "group" setting that indicates the student group name.')
+    else:
+        usergroup = group
     ug = UserGroup.get_by_name(usergroup)
     if not ug:
         raise IncorrectSettings(f'Usergroup "{usergroup}" not found.')

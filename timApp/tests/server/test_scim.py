@@ -905,6 +905,13 @@ class SendGradeTest(TimRouteTest):
             'partial': False,
             'dryRun': False,
         }
+        grade_params_custom_group = {
+            'destCourse': 'jy-CUR-1234',
+            'docId': d.id,
+            'partial': False,
+            'dryRun': False,
+            'group': 'customgroup',
+        }
         self.json_post(
             '/sisu/sendGrades',
             grade_params,
@@ -946,6 +953,13 @@ class SendGradeTest(TimRouteTest):
             grade_params,
             expect_content='You do not have access to the group "students1234".',
             expect_status=403,
+        )
+
+        self.json_post(
+            '/sisu/sendGrades',
+            grade_params_custom_group,
+            expect_content='Usergroup "customgroup" not found.',
+            expect_status=400,
         )
 
         ug = UserGroup.get_by_name('students1234')

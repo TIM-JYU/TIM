@@ -31,6 +31,7 @@ class MultisaveMarkupModel(GenericMarkupModel):
     emailRecipients: Union[List[str], Missing] = missing
     emailSubject: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
+    group: Union[str, Missing] = missing  # for destCourse
     jumplink: Union[str, Missing, None] = missing
     jumptarget: Union[str, Missing, None] = missing
     tags: Union[List[str], Missing] = missing

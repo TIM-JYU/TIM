@@ -23,6 +23,7 @@ const multisaveMarkup = t.intersection([
         emailSubject: t.string,
         fields: t.array(t.string),
         followid: t.string,
+        group: t.string,
         jumplink: t.string,
         jumptarget: t.string,
         destCourse: t.string,
@@ -195,6 +196,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             const r = await to($http.post<IGradeResponse>("/sisu/sendGrades", {
                 destCourse: this.attrs.destCourse,
                 docId: this.vctrl.item.id,
+                group: this.attrs.group,
                 partial: this.partial,
                 dryRun: this.dryRun,
             }));
