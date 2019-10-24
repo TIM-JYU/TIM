@@ -402,7 +402,7 @@ def send_grades_to_sisu(
     pr: PostAssessmentsResponse = PostAssessmentsResponseSchema().load(r.json())
     if pr.error:
         raise SisuError(pr.error.reason)
-    invalid_assessments = set(n for n in pr.body.assessments.keys()) | invalid_assessments_indices
+    invalid_assessments = set(n for n in pr.body.assessments.keys())
     ok_assessments = [a for i, a in enumerate(assessments) if i not in invalid_assessments]
     errs = [
         {
