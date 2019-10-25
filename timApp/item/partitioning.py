@@ -123,22 +123,21 @@ def get_preamble_count(d: DocInfo) -> int:
 def get_document_areas(doc: DocInfo) -> List[Range]:
     """
     Get a list of areas in the document.
+    Note: Areas inside areas are ignored.
     :param doc: Document.
     :return: List of area ranges.
     """
-    # TODO: Can areas overlap?
     pars = doc.document.get_paragraphs()
     areas = []
-    first = None
+    area = {'index': None, 'name': None}
     for i, par in enumerate(pars):
-        if par.is_area():
-            if not first:
-                first = i
-            else:
-                areas.append((first, i))
-                first = None
-    if first is not None:
-        areas.append((first, len(pars)))
+        area_begin = par.get_attr('area')
+        area_end = par.get_attr('area_end')
+        if area['name'] is None and area_begin is not None:
+            area = {'index': i, 'name': area_begin}
+        if area_end is not None and area_end == area['name']:
+            areas.append((area['index'], i))
+            area = {'index': None, 'name': None}
     return areas
 
 
