@@ -8,9 +8,8 @@ from timApp.util.logger import log_error
 from timApp.util.utils import Range, get_error_message
 from lxml import html
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
-DEFAULT_VIEWRANGE = 20
 INCLUDE_IN_PARTS_CLASS_NAME = "includeInParts" # Preamble pars with this class get inserted to each doc part.
 
 
@@ -121,8 +120,53 @@ def get_preamble_count(d: DocInfo) -> int:
     return len(preambles)
 
 
+def get_document_areas(doc: DocInfo) -> List[Range]:
+    """
+    Get a list of areas in the document.
+    :param doc: Document.
+    :return: List of area ranges.
+    """
+    # TODO: Can areas overlap?
+    pars = doc.document.get_paragraphs()
+    areas = []
+    first = None
+    for i, par in enumerate(pars):
+        if par.is_area():
+            if not first:
+                first = i
+            else:
+                areas.append((first, i))
+                first = None
+    if first is not None:
+        areas.append((first, len(pars)))
+    return areas
+
+
+def adjust_to_areas(areas: List[Range], b: int, e: int) -> Range:
+    """
+    Ensure range doesn't cut any areas.
+    :param areas: List of areas.
+    :param b: Begin index.
+    :param e: End index.
+    :return: b and e adjusted to ranges.
+    """
+    for area in areas:
+        area_b = area[0]
+        area_e = area[1]
+        if area_b <= b <= area_e <= e:
+            # Don't return, since e may possibly still cut a later area.
+            b, e = area_b, e
+        elif b <= area_b <= e <= area_e:
+            return b, area_e
+        elif area_b <= b <= e <= area_e:
+            # If range is wholly inside the area, return area.
+            return area_b, area_e
+    return b, e
+
+
 def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0, par_count: Optional[int] = None,
-                       forwards: bool = True, min_set_size_modifier: float = 0.5) -> Optional[Range]:
+                      forwards: bool = True, areas: Optional[List[Range]] = None,
+                      min_set_size_modifier: float = 0.5) -> Optional[Range]:
     """
     Decide begin and end indices of paragraph set based on preferred size.
     Avoids making the current part shorter than the piece size due to proximity to begin or end
@@ -134,11 +178,14 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     :param index: Begin or end index (depending on direction).
     :param par_count: Paragraph count, if it is available.
     :param forwards: Begin index is the start index if true, end index if false (i.e. True = next, False = previous).
+    :param areas: List of known areas.
     :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
     :return: Adjusted indices for view range.
     """
     if not par_count:
         par_count = len(doc_info.document.get_paragraphs())
+    if areas is None: # An empty area list is a separate case.
+        areas = get_document_areas(doc_info)
     try:
         min_piece_size = round(min_set_size_modifier * preferred_set_size)
         if forwards:
@@ -159,8 +206,7 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
             # Round the start index to zero when the remaining part is short.
             if b <= min_piece_size:
                 b = 0
-        # TODO: Don't cut areas.
     except TypeError:
         return None
     else:
-        return b, e
+        return adjust_to_areas(areas, b, e)

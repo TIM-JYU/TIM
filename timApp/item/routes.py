@@ -37,7 +37,7 @@ from timApp.item.block import BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.item.item import Item
 from timApp.item.partitioning import get_piece_size_from_cookie, decide_view_range, get_doc_version_hash, load_index, \
-    INCLUDE_IN_PARTS_CLASS_NAME, save_index, partition_texts, get_index_with_header_id
+    INCLUDE_IN_PARTS_CLASS_NAME, save_index, partition_texts, get_index_with_header_id, get_document_areas
 from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
 from timApp.markdown.htmlSanitize import sanitize_html
@@ -291,13 +291,16 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     load_preamble = False
     piece_size = get_piece_size_from_cookie(request)
+    areas = None
+    if piece_size:
+        areas = get_document_areas(doc_info)
     try:
         view_range = parse_range(request.args.get('b'), request.args.get('e'))
         load_preamble = request.args.get('preamble') == 'true'
     except (ValueError, TypeError):
         view_range = None
     if piece_size and not view_range:
-        view_range = decide_view_range(doc_info, piece_size)
+        view_range = decide_view_range(doc_info, piece_size, areas=areas)
         load_preamble = True # If partitioning without URL-param, true is default.
     try:
         view_range_dict = {'b': view_range[0], 'e': view_range[1], 'name': "Current"}
@@ -501,14 +504,16 @@ def view(item_path, template_name, usergroup=None, route="view"):
             preferred_set_size=piece_size,
             index=0,
             par_count=par_count,
-            forwards=True
+            forwards=True,
+            areas=areas
         )
         previous_range = decide_view_range(
             doc_info,
             preferred_set_size=piece_size,
             index=view_range[0],
             par_count=par_count,
-            forwards=False
+            forwards=False,
+            areas=areas
         )
 
         next_range = decide_view_range(
@@ -516,13 +521,15 @@ def view(item_path, template_name, usergroup=None, route="view"):
             preferred_set_size=piece_size,
             index=view_range[1],
             par_count=par_count,
-            forwards=True
+            forwards=True,
+            areas=areas
         )
         last_range = decide_view_range(doc_info,
             preferred_set_size=piece_size,
             index=par_count,
             par_count=par_count,
-            forwards=False
+            forwards=False,
+            areas=areas
         )
         nav_ranges = [{'b': first_range[0], 'e': first_range[1], 'name': "First"},
                       {'b': previous_range[0], 'e': previous_range[1], 'name': "Previous"},
