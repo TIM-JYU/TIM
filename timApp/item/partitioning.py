@@ -26,6 +26,13 @@ def partition_texts(texts, view_range: Range, preamble_count):
     b = view_range[0] + preamble_count
     e = view_range[1] + preamble_count
     for text in texts:
+        # Areas take two slots in texts, so adjust the indices.
+        if text.get('start_areas') or text.get('end_areas'):
+            if i <= b:
+                b += 1
+                e += 1
+            else:
+                e += 1
         if i >= e:
             break
         if i < preamble_count or i >= b:
