@@ -151,7 +151,8 @@ def adjust_to_areas(areas: List[Range], b: int, e: int) -> Range:
     """
     for area in areas:
         area_b = area[0]
-        area_e = area[1]
+        # TODO: Check if all ranges related to partitioning use same logic (i.e. is end index included or not).
+        area_e = area[1]+1 # Include area end in the range.
         if area_b <= b <= area_e <= e:
             # Don't return, since e may possibly still cut a later area.
             b, e = area_b, e
