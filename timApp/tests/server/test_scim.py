@@ -979,11 +979,14 @@ class SendGradeTest(TimRouteTest):
         ug.admin_doc = self.create_doc().block
         db.session.commit()
 
-        self.json_post(
-            '/sisu/sendGrades',
+        self.check_send_grade_result(
             grade_params,
-            expect_content='The group "students1234" is not a Sisu group.',
-            expect_status=400,
+            {
+                'sent_assessments': [],
+                'assessment_errors': [],
+                'default_selection': [],
+            },
+            {'body': {'assessments': {}}}
         )
 
         ug = UserGroup.get_by_name('students1234')

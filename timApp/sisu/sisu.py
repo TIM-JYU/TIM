@@ -480,14 +480,15 @@ def get_sisu_assessments(
         raise IncorrectSettings(f'Usergroup "{usergroup}" not found.')
     if not verify_group_view_access(ug, require=False):
         raise AccessDenied(f'You do not have access to the group "{usergroup}".')
-    if not ug.external_id:
-        raise IncorrectSettings(f'The group "{usergroup}" is not a Sisu group.')
-    if not ug.external_id.is_student:
-        raise IncorrectSettings(f'The group "{usergroup}" is not a Sisu student group.')
-    if ug.external_id.course_id != sisu_id:
-        raise IncorrectSettings(
-            f'The associated course id "{ug.external_id.course_id}" '
-            f'of the group "{usergroup}" does not match the course setting "{sisu_id}".')
+
+    # The group doesn't have to be a Sisu group, but if it is, perform a couple of checks.
+    if ug.external_id:
+        if not ug.external_id.is_student:
+            raise IncorrectSettings(f'The group "{usergroup}" is not a Sisu student group.')
+        if ug.external_id.course_id != sisu_id:
+            raise IncorrectSettings(
+                f'The associated course id "{ug.external_id.course_id}" '
+                f'of the group "{usergroup}" does not match the course setting "{sisu_id}".')
     users, _, _, _ = get_fields_and_users(
         ['grade', 'credit', 'completionDate'],
         [ug],
