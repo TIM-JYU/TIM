@@ -35,7 +35,7 @@ from timApp.user.usergroup import UserGroup, get_sisu_groups_by_filter
 from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.get_fields import get_fields_and_users
-from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time
+from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time, fin_timezone
 
 sisu = Blueprint('sisu',
                  __name__,
@@ -295,7 +295,7 @@ def post_grades_route(m: PostGradesModel):
         dry_run=m.dryRun,
         group=m.group,
         filter_users=m.filterUsers,
-        completion_date=m.completionDate.date() if m.completionDate else None,
+        completion_date=m.completionDate.astimezone(fin_timezone).date() if m.completionDate else None,
     ))
 
 

@@ -905,6 +905,15 @@ class SendGradeTest(TimRouteTest):
             'partial': False,
             'dryRun': False,
         }
+        custom_date = '2019-10-29'
+        grade_params_compl_date = {
+            'destCourse': 'jy-CUR-1234',
+            'docId': d.id,
+            'partial': False,
+            'dryRun': False,
+            'completionDate': '2019-10-28T22:00:00.000Z',
+            'filterUsers': ['testuser2'],
+        }
         grade_params_dryrun = {
             'destCourse': 'jy-CUR-1234',
             'docId': d.id,
@@ -1029,8 +1038,8 @@ class SendGradeTest(TimRouteTest):
         ug.users.append(self.test_user_2)
         ug.users.append(self.test_user_3)
         db.session.commit()
-        expected_date = get_current_time().strftime('%Y-%m-%d')
-        self.assertRegex(expected_date, r'\d{4}-\d{2}-\d{2}')
+        current_date = get_current_time().strftime('%Y-%m-%d')
+        self.assertRegex(current_date, r'\d{4}-\d{2}-\d{2}')
 
         self.check_send_grade_result(
             grade_params_dryrun,
@@ -1087,16 +1096,30 @@ class SendGradeTest(TimRouteTest):
         )
 
         self.check_send_grade_result(
-            grade_params,
+            grade_params_compl_date,
             {
                 'sent_assessments': [
-                    {'completionDate': expected_date,
+                    {'completionDate': custom_date,
                      'gradeId': '5',
                      'completionCredits': 3,
                      'userName': 'testuser2'},
-                    {'completionDate': expected_date,
+                ],
+                'assessment_errors': [],
+                'default_selection': [],
+            },
+            {'body': {'assessments': {}}}
+        )
+        self.check_send_grade_result(
+            grade_params,
+            {
+                'sent_assessments': [
+                    {'completionCredits': 3,
+                     'completionDate': custom_date,
+                     'gradeId': '5',
+                     'userName': 'testuser2'},
+                    {'completionCredits': 2,
+                     'completionDate': '2019-10-28',
                      'gradeId': '4',
-                     'completionCredits': 2,
                      'userName': 'testuser3'},
                 ],
                 'assessment_errors': [],
@@ -1109,11 +1132,11 @@ class SendGradeTest(TimRouteTest):
             grade_params_dryrun,
             {
                 'sent_assessments': [
-                    {'completionDate': expected_date,
+                    {'completionDate': custom_date,
                      'gradeId': '5',
                      'completionCredits': 3,
                      'userName': 'testuser2'},
-                    {'completionDate': expected_date,
+                    {'completionDate': current_date,
                      'gradeId': '4',
                      'completionCredits': 2,
                      'userName': 'testuser3'},
@@ -1130,7 +1153,7 @@ class SendGradeTest(TimRouteTest):
                 'assessment_errors': [
                     {
                         'assessment': {
-                            'completionDate': expected_date,
+                            'completionDate': current_date,
                             'gradeId': '4',
                             'completionCredits': 2,
                             'userName': 'testuser3',
@@ -1154,7 +1177,7 @@ class SendGradeTest(TimRouteTest):
             {
                 'sent_assessments': [
                     {
-                        'completionDate': expected_date,
+                        'completionDate': custom_date,
                         'gradeId': '5',
                         'completionCredits': 3,
                         'userName': 'testuser2',
@@ -1166,7 +1189,7 @@ class SendGradeTest(TimRouteTest):
                         'assessment': {
                             'userName': 'testuser3',
                             'completionCredits': 2,
-                            'completionDate': expected_date,
+                            'completionDate': current_date,
                             'gradeId': '4',
                         },
                     },
@@ -1195,11 +1218,11 @@ class SendGradeTest(TimRouteTest):
         db.session.commit()
         self.check_send_grade_result(
             grade_params,
-            {'assessment_errors': [{'assessment': {'completionDate': expected_date,
+            {'assessment_errors': [{'assessment': {'completionDate': current_date,
                                                    'gradeId': None,
                                                    'userName': 'sisuuser'},
                                     'message': 'gradeId: Field may not be null.'},
-                                   {'assessment': {'completionDate': expected_date,
+                                   {'assessment': {'completionDate': current_date,
                                                    'gradeId': None,
                                                    'userName': 'sisuuser2'},
                                     'message': 'gradeId: Field may not be null.'}],
@@ -1215,7 +1238,7 @@ class SendGradeTest(TimRouteTest):
 
         self.check_send_grade_result(
             grade_params_partial,
-            {'assessment_errors': [{'assessment': {'completionDate': expected_date,
+            {'assessment_errors': [{'assessment': {'completionDate': current_date,
                                                    'gradeId': '4',
                                                    'completionCredits': 2,
                                                    'userName': 'testuser3'},
@@ -1228,7 +1251,7 @@ class SendGradeTest(TimRouteTest):
                                                    'gradeId': None,
                                                    'userName': 'sisuuser2'},
                                     'message': 'gradeId: Field may not be null.'}],
-             'sent_assessments': [{'completionDate': expected_date,
+             'sent_assessments': [{'completionDate': custom_date,
                                    'gradeId': '5',
                                    'completionCredits': 3,
                                    'userName': 'testuser2'}],
