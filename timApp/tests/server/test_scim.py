@@ -787,6 +787,47 @@ class ScimTest(TimRouteTest):
         self.assertIn(UserGroup.get_teachers_group(), User.get_by_name('urt-1').groups)
         self.assertNotIn(UserGroup.get_teachers_group(), User.get_by_name('us-1').groups)
 
+    def test_same_display_name(self):
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': 'jy-CUR-6565-jy-studysubgroup-1234-students',
+                'displayName': 'ITKP109 2020-09-09--2020-12-20: Opiskelijaryhmä',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['abc']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': 'jy-CUR-6565-jy-studysubgroup-1235-students',
+                'displayName': 'ITKP109 2020-09-09--2020-12-20: Opiskelijaryhmä',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['abc']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        ug = UserGroup.get_by_external_id('jy-CUR-6565-jy-studysubgroup-1235-students')
+        self.assertEqual('itkp109-200909-opiskelijaryhma-1', ug.name)
+
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': 'jy-CUR-6565-jy-studysubgroup-1236-students',
+                'displayName': 'ITKP109 2020-09-09--2020-12-20: Opiskelijaryhmä',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['abc']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        ug = UserGroup.get_by_external_id('jy-CUR-6565-jy-studysubgroup-1236-students')
+        self.assertEqual('itkp109-200909-opiskelijaryhma-2', ug.name)
+
     def test_scim_group_manual_member_update(self):
         eid = 'jy-CUR-7777-teachers'
         self.json_post(

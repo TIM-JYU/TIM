@@ -214,8 +214,12 @@ def post_group(args: SCIMGroupModel):
         ug.name = derived_name
     else:
         if UserGroup.get_by_name(derived_name):
-            raise SCIMException(409, f'The group name "{derived_name}" '
-                                     f'derived from display name "{args.displayName}" already exists.')
+            disambiguator = 1
+            while UserGroup.get_by_name(f'{derived_name}-{disambiguator}'):
+                disambiguator += 1
+            derived_name = f'{derived_name}-{disambiguator}'
+            # raise SCIMException(409, f'The group name "{derived_name}" '
+            #                          f'derived from display name "{args.displayName}" already exists.')
         ug = UserGroup(name=derived_name, display_name=args.displayName)
         db.session.add(ug)
     update_users(ug, args)
