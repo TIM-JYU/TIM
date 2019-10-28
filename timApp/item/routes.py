@@ -303,7 +303,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
         view_range = decide_view_range(doc_info, piece_size, areas=areas)
         load_preamble = True # If partitioning without URL-param, true is default.
     try:
-        view_range_dict = {'b': view_range[0], 'e': view_range[1], 'name': "Current"}
+        view_range_dict = {'b': view_range[0], 'e': view_range[1], 'name': 'Current'}
     except (ValueError, TypeError):
         view_range_dict = None
     start_index = max(view_range[0], 0) if view_range else 0
@@ -531,10 +531,12 @@ def view(item_path, template_name, usergroup=None, route="view"):
             forwards=False,
             areas=areas
         )
-        nav_ranges = [{'b': first_range[0], 'e': first_range[1], 'name': "First"},
-                      {'b': previous_range[0], 'e': previous_range[1], 'name': "Previous"},
-                      {'b': next_range[0], 'e': next_range[1], 'name': "Next"},
-                      {'b': last_range[0], 'e': last_range[1], 'name': "Last"}]
+        # TODO: Find out if it's better to raise an error when any of these is None.
+        if first_range and previous_range and next_range and last_range:
+            nav_ranges = [{'b': first_range[0], 'e': first_range[1], 'name': 'First'},
+                          {'b': previous_range[0], 'e': previous_range[1], 'name': 'Previous'},
+                          {'b': next_range[0], 'e': next_range[1], 'name': 'Next'},
+                          {'b': last_range[0], 'e': last_range[1], 'name': 'Last'}]
 
     return render_template(template_name,
                            access=access,
@@ -890,7 +892,7 @@ def get_viewrange(doc_id: int, index: int, forwards: int):
     doc_info = get_doc_or_abort(doc_id)
     verify_view_access(doc_info)
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=forwards > 0)
-    return json_response({'b': view_range[0],'e': view_range[1]}) if view_range \
+    return json_response({'b': view_range[0], 'e': view_range[1]}) if view_range \
         else abort(400, "Failed to get view range")
 
 
