@@ -276,10 +276,11 @@ def fetch_rows():
     except TaskNotFoundException:
         return abort(404, f'Table not found: {tid}')
     # debug = plug.values
+    include_users = plug.values.get("includeUsers")
     r = tableform_get_fields(plug.values.get("fields",[]), plug.values.get("groups", []),
                              doc, curr_user, plug.values.get("removeDocIds", True),
                              plug.values.get("showInView"),
-                             group_filter_type=MembershipFilter(plug.values.get("includeUsers")),
+                             group_filter_type=MembershipFilter(include_users or 'current'),
                              )
     return json_response(r, headers={"No-Date-Conversion": "true"})
 
