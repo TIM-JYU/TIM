@@ -716,7 +716,7 @@ class TimRouteTest(TimDbTest):
         # '\s*' are zero or more whitespaces, '(.*)' is variable content between '=' and ';'.
         matches = re.findall(f"{variable_name}\s*=\s*(.*);", variables)
         if matches:
-            self.assertEqual(expect_content, eval(matches[0]))
+            self.assertEqual(expect_content, json.loads(matches[0]))
         else:
             raise AssertionError(f"'{variable_name}' not found")
 

@@ -15,6 +15,7 @@ from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.tim_app import csrf
+from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
 
 
 @dataclass
@@ -352,8 +353,8 @@ menu: |!!
 !!
 ```
 """,
-"""
-``` {plugin="timMenu" .hidden-print .includeInParts}
+f"""
+``` {{plugin="timMenu" .hidden-print .{INCLUDE_IN_PARTS_CLASS_NAME}}}
 topMenu: true
 topMenuTriggerHeight: 200
 menu: |!!

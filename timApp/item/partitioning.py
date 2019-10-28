@@ -1,11 +1,10 @@
 """
 Functions related to document partitioning.
 """
-from flask import json, Request
 
+from flask import json, Request
 from timApp.document.docinfo import DocInfo
-from timApp.util.logger import log_error
-from timApp.util.utils import Range, get_error_message
+from timApp.util.utils import Range
 from lxml import html
 from pathlib import Path
 from typing import Optional, List
@@ -64,10 +63,7 @@ def load_index(folder_path: Path(), file_name: str) -> Optional[str]:
         with (folder_path / file_name).open("r", encoding='utf-8') as file:
             contents = json.load(file)
             return contents
-    except FileNotFoundError:
-        return None
-    except Exception as e:
-        log_error(get_error_message(e))
+    except (FileNotFoundError, ValueError, IOError, TypeError):
         return None
 
 
@@ -90,17 +86,14 @@ def get_index_with_header_id(doc_info: DocInfo, header_id: str) -> Optional[int]
     :param header_id: HTML header id.
     :return: Index of the corresponding paragraph or None if not found.
     """
-    pars = doc_info.document.get_paragraphs()
+    pars = doc_info.document.get_dereferenced_paragraphs()
     for i, par in enumerate(pars):
         if par:
-            try:
-                par_elements = html.fragment_fromstring(par.get_html(), create_parent=True)
-                for element in par_elements.iterdescendants():
-                    html_id = element.attrib.get("id")
-                    if html_id and header_id == html_id:
-                        return i
-            except AssertionError:
-                continue
+            par_elements = html.fragment_fromstring(par.get_html(), create_parent=True)
+            for element in par_elements.iterdescendants():
+                html_id = element.attrib.get("id")
+                if html_id and header_id == html_id:
+                    return i
     return None
 
 
@@ -189,30 +182,27 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     :return: Adjusted indices for view range.
     """
     if not par_count:
+        # Assume get_paragraphs() won't return None.
         par_count = len(doc_info.document.get_paragraphs())
     if areas is None: # An empty area list is a separate case.
         areas = get_document_areas(doc_info)
-    try:
-        min_piece_size = round(min_set_size_modifier * preferred_set_size)
-        if forwards:
-            b = index
-            e = min(preferred_set_size + index, par_count)
-            # Avoid too short range when the start index is near the end of the document.
-            if (e - b) <= min_piece_size:
-                b = max(min(e - min_piece_size, b), 0)
-            # Round the end index to last index when the remaining part is short.
-            if par_count-e <= min_piece_size:
-                e = par_count
-        else:
-            b = max(index - preferred_set_size, 0)
-            e = index
-            # Avoid too short range when the end index is near the beginning of the document.
-            if (e - b) <= min_piece_size:
-                e = min(e + min_piece_size, par_count)
-            # Round the start index to zero when the remaining part is short.
-            if b <= min_piece_size:
-                b = 0
-    except TypeError:
-        return None
+    min_piece_size = round(min_set_size_modifier * preferred_set_size)
+    if forwards:
+        b = index
+        e = min(preferred_set_size + index, par_count)
+        # Avoid too short range when the start index is near the end of the document.
+        if (e - b) <= min_piece_size:
+            b = max(min(e - min_piece_size, b), 0)
+        # Round the end index to last index when the remaining part is short.
+        if par_count-e <= min_piece_size:
+            e = par_count
     else:
-        return adjust_to_areas(areas, b, e)
+        b = max(index - preferred_set_size, 0)
+        e = index
+        # Avoid too short range when the end index is near the beginning of the document.
+        if (e - b) <= min_piece_size:
+            e = min(e + min_piece_size, par_count)
+        # Round the start index to zero when the remaining part is short.
+        if b <= min_piece_size:
+            b = 0
+    return adjust_to_areas(areas, b, e)

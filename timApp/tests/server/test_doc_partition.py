@@ -1,5 +1,5 @@
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
+from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
 
 class DocPartitionTest(TimRouteTest):
 
@@ -153,8 +153,8 @@ class DocPartitionTest(TimRouteTest):
                        expect_status=200)
         d = self.create_doc(path=self.get_personal_item_path(f'2/test'),
                             initial_par=["1","Kissa","3","4","5","6","Koira","8","9","10"])
-        self.create_preamble_for(d, initial_par=["Preamble par 1", "Preamble par 2", """
-#- {.includeInParts}
+        self.create_preamble_for(d, initial_par=["Preamble par 1", "Preamble par 2", f"""
+#- {{.{INCLUDE_IN_PARTS_CLASS_NAME}}}
 Preamble par 3"""])
         # Partitioning on, no URL parameters; all pars should be included.
         tree = self.get(d.url, as_tree=True)
@@ -170,5 +170,9 @@ Preamble par 3"""])
 
 
     def test_partitioning_range(self):
-        # TODO: Range check not implemented yet.
-        pass
+        self.login_test1()
+        self.json_post(url=f'/viewrange/set/piecesize',
+                       json_data={'pieceSize': 5},
+                       expect_cookie=('r', '5'),
+                       expect_status=200)
+    # TODO: Test areas + preambles & areas.
