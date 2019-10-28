@@ -100,7 +100,7 @@ export function withComparatorFilters<T>(params: Array<uiGrid.IColumnDefOf<T>>) 
         column: uiGrid.IGridColumnOf<T>,
     ) => {
         if (cellValue == null) {
-            return searchTerm === "";
+            return searchTerm === "" || searchTerm === "=";
         }
         cellValue = cellValue.toString();
         const comp = ComparatorFilter.makeNumFilter(searchTerm);
