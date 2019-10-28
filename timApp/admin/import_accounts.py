@@ -30,10 +30,10 @@ def import_accounts(file: str, password: str) -> Tuple[List[User], List[User]]:
                                                   password_hash=pwhash)
                     added.append(u)
                 else:
-                    u.update_info(name, real_name=row[1], email=email, password=password)
+                    u.update_info(name, real_name=row[1], email=email, password_hash=pwhash)
                     existing.append(u)
             else:
-                u.update_info(name, real_name=row[1], email=email, password=password)
+                u.update_info(name, real_name=row[1], email=email, password_hash=pwhash)
                 existing.append(u)
     timdb.commit()
     return added, existing

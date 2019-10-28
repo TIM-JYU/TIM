@@ -487,9 +487,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             real_name: str,
             email: str,
             password: Optional[str] = None,
+            password_hash: Optional[str] = None,
             given_name: Optional[str]=None,
             last_name: Optional[str]=None,
     ):
+        assert password is None or password_hash is None, 'Cannot pass both password and password_hash'
         if self.name != name:
             group = self.get_personal_group()
             self.name = name
@@ -501,6 +503,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         self.email = email
         if password:
             self.pass_ = create_password_hash(password)
+        elif password_hash:
+            self.pass_ = password_hash
 
     def has_some_access(self, i: ItemOrBlock, vals: Set[int], allow_admin: bool = True) -> Optional[BlockAccess]:
         if allow_admin and self.is_admin:
