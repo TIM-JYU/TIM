@@ -12,6 +12,7 @@ import {Users} from "tim/user/userService";
 import {withComparatorFilters} from "tim/util/comparatorfilter";
 import {$http, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import {IUser} from "../../../static/scripts/tim/user/IUser";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize"]);
 export const moduleDefs = [multisaveApp];
@@ -53,7 +54,7 @@ interface IAssessment {
     completionDate: string;
     gradeId: "1" | "2" | "3" | "4" | "5" | "HYV" | "HYL" | "HT" | "TT";
     privateComment?: string;
-    userName: string;
+    user: IUser;
 }
 
 interface IAssessmentError {
@@ -221,7 +222,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             partial: true,
             dryRun: false,
             completionDate: this.completionDate,
-            filterUsers: this.grid.selection.getSelectedRows().map((r) => r.userName),
+            filterUsers: this.grid.selection.getSelectedRows().map((r) => r.user.name),
         });
         if (!data) {
             return;
@@ -230,14 +231,14 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         this.errAssessments = data.assessment_errors.length;
         const all = getAssessments(data);
         const indexMap = new Map<string, number>();
-        this.assessments.forEach((a, i) => indexMap.set(a.userName, i));
+        this.assessments.forEach((a, i) => indexMap.set(a.user.name, i));
         const state = this.grid.saveState.save();
         for (const a of all) {
-            const index = indexMap.get(a.userName);
+            const index = indexMap.get(a.user.name);
             if (index !== undefined) {
                 this.assessments[index] = a;
             } else {
-                console.warn(`sendAssessments returned a user that did not exist in preview: ${a.userName}`);
+                console.warn(`sendAssessments returned a user that did not exist in preview: ${a.user.name}`);
             }
         }
         await $timeout();
@@ -264,14 +265,20 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
                 this.grid = grid;
                 await $timeout();
                 for (const row of grid.core.getVisibleRows(grid.grid)) {
-                    if (defaults.has(row.entity.userName)) {
+                    if (defaults.has(row.entity.user.name)) {
                         row.setSelected(true);
                     }
                 }
             },
             columnDefs: withComparatorFilters([
                 {
-                    field: "userName",
+                    field: "user.real_name",
+                    name: "Full name",
+                    allowCellFocus: false,
+                    width: 200,
+                },
+                {
+                    field: "user.name",
                     name: "Username",
                     allowCellFocus: false,
                     width: 140,
@@ -300,6 +307,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
                     name: "Comment",
                     allowCellFocus: false,
                     cellTooltip: true,
+                    visible: false,
                 },
                 {
                     field: "error",

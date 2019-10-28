@@ -1,10 +1,10 @@
 from datetime import date, datetime
 from textwrap import dedent
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Dict, Union, Any
 
 import click
 import requests
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from flask import Blueprint, abort, current_app, request
 from flask.cli import AppGroup
 from marshmallow import validates, ValidationError
@@ -343,6 +343,30 @@ class Assessment:
             raise ValidationError(f'Cannot be "{value}"')
 
 
+@dataclass
+class CandidateAssessment:
+    user: User
+    gradeId: Any
+    completionDate: Any
+    completionCredits: Any = None
+    privateComment: Any = None
+
+    def to_sisu_json(self):
+        result = {
+            'userName': self.user.name,
+            'gradeId': self.gradeId,
+            'completionDate': self.completionDate,
+        }
+        if self.completionCredits:
+            result['completionCredits'] = self.completionCredits
+        if self.privateComment:
+            result['privateComment'] = self.privateComment
+        return result
+
+    def to_json(self):
+        return asdict(self)
+
+
 AssessmentSchema = class_schema(Assessment)
 
 
@@ -372,14 +396,14 @@ def send_grades_to_sisu(
     assessments = get_sisu_assessments(sisu_id, teacher, doc, group, filter_users)
     if not completion_date:
         completion_date = get_current_time().date()
-    missing_completion_date_users = {a['userName'] for a in assessments if not a.get('completionDate')}
+    missing_completion_date_users = {a.user.name for a in assessments if not a.completionDate}
     for a in assessments:
-        if not a.get('completionDate'):
-            a['completionDate'] = completion_date.isoformat()
+        if not a.completionDate:
+            a.completionDate = completion_date.isoformat()
     validation_errors = []
     try:
         # noinspection PyTypeChecker
-        AssessmentSchema(many=True).load(assessments)
+        AssessmentSchema(many=True).load([a.to_sisu_json() for a in assessments])
     except ValidationError as e:
         validation_errors = [
             {
@@ -401,7 +425,7 @@ def send_grades_to_sisu(
     r = requests.post(
         url,
         json={
-            'assessments': assessments,
+            'assessments': [a.to_sisu_json() for a in assessments],
             'partial': partial,
             'dry_run': dry_run,
         },
@@ -415,13 +439,13 @@ def send_grades_to_sisu(
     invalid_assessments = set(n for n in pr.body.assessments.keys())
     ok_assessments = [a for i, a in enumerate(assessments) if i not in invalid_assessments]
     if not dry_run and r.status_code < 400:
-        ok_users = set(a['userName'] for a in ok_assessments)
+        ok_users = set(a.user.name for a in ok_assessments)
         user_map = {u.name: u for u in User.query.filter(User.name.in_(missing_completion_date_users))}
         handle_jsrunner_response(
             {
                 'savedata': [
-                    {'fields': {f'{doc.id}.completionDate': a['completionDate']}, 'user': user_map[a['userName']].id}
-                    for a in ok_assessments if a['userName'] in user_map
+                    {'fields': {f'{doc.id}.completionDate': a.completionDate}, 'user': user_map[a.user.name].id}
+                    for a in ok_assessments if a.user.name in user_map
                 ],
                 'allowMissing': True,
             },
@@ -438,10 +462,10 @@ def send_grades_to_sisu(
         for k, v in pr.body.assessments.items()
     ]
     all_errors = errs + validation_errors
-    error_users = set(a['assessment']['userName'] for a in all_errors)
+    error_users = set(a['assessment'].user.name for a in all_errors)
     for a in assessments + [a['assessment'] for a in validation_errors]:
-        if a['userName'] in missing_completion_date_users:
-            a['completionDate'] = None
+        if a.user.name in missing_completion_date_users:
+            a.completionDate = None
     return {
         'sent_assessments': ok_assessments if r.status_code < 400 else [],
         'assessment_errors': all_errors,
@@ -455,7 +479,7 @@ def get_sisu_assessments(
         doc: DocInfo,
         group: Optional[str],
         filter_users: Optional[List[str]],
-):
+) -> List[CandidateAssessment]:
     teachers_group = UserGroup.get_teachers_group()
     if teacher not in teachers_group.users:
         raise AccessDenied('You are not a TIM teacher.')
@@ -499,17 +523,14 @@ def get_sisu_assessments(
     return [fields_to_assessment(r, doc) for r in users]
 
 
-def fields_to_assessment(r, doc: DocInfo):
+def fields_to_assessment(r, doc: DocInfo) -> CandidateAssessment:
     grade = r['fields'].get(f'{doc.id}.grade')
-    result = {
-        'gradeId': str(grade) if grade is not None else None,
-        'userName': r['user'].name,
-    }
-    credit = r['fields'].get(f'{doc.id}.credit')
-    if credit is not None:
-        result['completionCredits'] = credit
-    cdate = r['fields'].get(f'{doc.id}.completionDate')
-    if cdate is not None:
-        result['completionDate'] = cdate
+    u = r['user']
     # TODO: Sisu accepts also 'privateComment' field.
+    result = CandidateAssessment(
+        gradeId= str(grade) if grade is not None else None,
+        user=u,
+        completionDate=r['fields'].get(f'{doc.id}.completionDate'),
+        completionCredits=r['fields'].get(f'{doc.id}.credit'),
+    )
     return result
