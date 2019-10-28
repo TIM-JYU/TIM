@@ -277,11 +277,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             name: str,
             real_name: str,
             email: str,
-            password: str = '',
+            password: Optional[str] = None,
             uid: Optional[int] = None,
             origin: Optional[UserOrigin] = None,
             given_name: Optional[str] = None,
             last_name: Optional[str] = None,
+            password_hash: Optional[str]=None,
     ) -> 'User':
         """Creates a new user with the specified name.
 
@@ -292,8 +293,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         :returns: The id of the newly created user.
 
         """
-
-        p_hash = create_password_hash(password) if password != '' else ''
+        assert password is None or password_hash is None, 'Cannot pass both password and password_hash'
+        p_hash = create_password_hash(password) if password is not None else (password_hash or '')
         # noinspection PyArgumentList
         user = User(
             id=uid,
@@ -316,14 +317,17 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                           is_admin: bool = False,
                           origin: UserOrigin = None,
                           uid: Optional[int] = None,
-                          given_name = None,
-                          last_name=None,
+                          given_name: Optional[str] = None,
+                          last_name: Optional[str] = None,
+                          password_hash: Optional[str] = None,
                           ):
+        assert password is None or password_hash is None, 'Cannot pass both password and password_hash'
         user = User.create(
             name,
             real_name,
             email,
-            password=password or '',
+            password=password,
+            password_hash=password_hash,
             given_name=given_name,
             last_name=last_name,
             uid=uid,
