@@ -287,7 +287,7 @@ class PostGradesModel:
 @sisu.route('/sendGrades', methods=['post'])
 @use_model(PostGradesModel)
 def post_grades_route(m: PostGradesModel):
-    return json_response(send_grades_to_sisu(
+    result = json_response(send_grades_to_sisu(
         m.destCourse,
         get_current_user_object(),
         get_doc_or_abort(m.docId),
@@ -297,6 +297,9 @@ def post_grades_route(m: PostGradesModel):
         filter_users=m.filterUsers,
         completion_date=m.completionDate.astimezone(fin_timezone).date() if m.completionDate else None,
     ))
+    if not m.dryRun:
+        db.session.commit()
+    return result
 
 
 class IncorrectSettings(Exception):
@@ -463,7 +466,6 @@ def send_grades_to_sisu(
             allow_non_teacher=False,
         )
         users_to_update = set()
-        db.session.commit()
     errs = [
         {
             'message': ", ".join(x.reason for x in v.values()),
