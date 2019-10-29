@@ -50,10 +50,10 @@ const multisaveAll = t.intersection([
 ]);
 
 interface IAssessment {
-    completionCredits?: number;
-    completionDate: string;
-    gradeId: "1" | "2" | "3" | "4" | "5" | "HYV" | "HYL" | "HT" | "TT";
-    privateComment?: string;
+    completionCredits?: unknown;
+    completionDate: unknown;
+    gradeId: unknown;
+    privateComment?: unknown;
     user: IUser;
 }
 
@@ -75,7 +75,13 @@ interface IGradeResponse {
 function getAssessments(data: IGradeResponse) {
     return [
         ...data.sent_assessments,
-        ...data.assessment_errors.map((a) => ({...a.assessment, error: a.message})),
+        ...data.assessment_errors.map((a) => ({
+            ...a.assessment,
+
+            // Don't show error message for missing grades because it's obvious.
+            // But don't set it to null either so that the isRowSelectable check still works.
+            error: a.assessment.gradeId ? a.message : "",
+        })),
     ];
 }
 
@@ -317,6 +323,10 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
                     cellTooltip: true,
                 },
             ]),
+            isRowSelectable: (row) => {
+                const a = (row as unknown as uiGrid.IGridRowOf<IAssessmentExt>).entity;
+                return a.error == null;
+            },
             data: this.assessments,
             enableColumnMenus: false,
             enableFiltering: true,
@@ -468,6 +478,7 @@ multisaveApp.component("multisaveRunner", {
     </div>
     <div ng-if="$ctrl.assessments">
         <p>Arviointien lähettäminen Sisuun ylikirjoittaa Sisun arviointinäkymän tiedot.</p>
+        <p>Taulukosta voi valita lähetettäväksi vain ehjiä arviointeja eli niitä, joissa on arvosana ja ei virhettä.</p>
         Suorituspäivä:
         <div class="input-group date" datetimepicker ng-model="$ctrl.completionDate"
              data-options="$ctrl.dateOptions">
