@@ -331,7 +331,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             data: this.assessments,
             enableColumnMenus: false,
             enableFiltering: true,
-            enableFullRowSelection: true,
+            enableFullRowSelection: false,
             enableGridMenu: true,
             enableHorizontalScrollbar: false,
             enableSorting: true,
