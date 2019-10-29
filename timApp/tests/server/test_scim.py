@@ -1090,10 +1090,12 @@ class SendGradeTest(TimRouteTest):
                   'id': 4,
                   'name': 'testuser3',
                   'real_name': 'Test user 3'}
+        t2id = test_2['id']
+        t3id = test_3['id']
         self.check_send_grade_result(
             grade_params_dryrun,
             {'assessment_errors': [],
-             'default_selection': ['testuser2', 'testuser3'],
+             'default_selection': [t2id, t3id],
              'sent_assessments': [
                  {'completionCredits': 3,
                   'completionDate': None,
@@ -1112,7 +1114,7 @@ class SendGradeTest(TimRouteTest):
         self.check_send_grade_result(
             grade_params_dryrun,
             {'assessment_errors': [],
-             'default_selection': ['testuser2', 'testuser3'],
+             'default_selection': [t2id, t3id],
              'sent_assessments': [
                  {'completionCredits': 3,
                   'completionDate': None,
@@ -1130,7 +1132,7 @@ class SendGradeTest(TimRouteTest):
         self.check_send_grade_result(
             grade_params_dryrun_filter,
             {'assessment_errors': [],
-             'default_selection': ['testuser2'],
+             'default_selection': [t2id],
              'sent_assessments': [
                  {'completionCredits': 3,
                   'completionDate': None,
@@ -1161,7 +1163,7 @@ class SendGradeTest(TimRouteTest):
         self.check_send_grade_result(
             grade_params_dryrun,
             {'assessment_errors': [],
-             'default_selection': ['testuser3'],
+             'default_selection': [t3id],
              'sent_assessments': [
                  {'completionCredits': 3,
                   'completionDate': current_date,

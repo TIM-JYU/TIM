@@ -69,7 +69,7 @@ interface IAssessmentExt extends IAssessment {
 interface IGradeResponse {
     sent_assessments: IAssessment[];
     assessment_errors: IAssessmentError[];
-    default_selection: string[];
+    default_selection: number[];
 }
 
 function getAssessments(data: IGradeResponse) {
@@ -271,7 +271,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
                 this.grid = grid;
                 await $timeout();
                 for (const row of grid.core.getVisibleRows(grid.grid)) {
-                    if (defaults.has(row.entity.user.name)) {
+                    if (defaults.has(row.entity.user.id)) {
                         row.setSelected(true);
                     }
                 }

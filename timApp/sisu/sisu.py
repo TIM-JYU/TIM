@@ -402,7 +402,7 @@ def send_grades_to_sisu(
     assessments = get_sisu_assessments(sisu_id, teacher, doc, group, filter_users)
     if not completion_date:
         completion_date = get_current_time().date()
-    users_to_update = {a.user.name for a in assessments if a.is_new_or_changed()}
+    users_to_update = {a.user.id for a in assessments if a.is_new_or_changed()}
     completion_date_iso = completion_date.isoformat()
     validation_errors = []
     try:
@@ -472,7 +472,7 @@ def send_grades_to_sisu(
         for k, v in pr.body.assessments.items()
     ]
     all_errors = errs + validation_errors
-    error_users = set(a['assessment'].user.name for a in all_errors)
+    error_users = set(a['assessment'].user.id for a in all_errors)
     return {
         'sent_assessments': ok_assessments if r.status_code < 400 else [],
         'assessment_errors': all_errors,
