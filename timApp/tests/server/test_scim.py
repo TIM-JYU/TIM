@@ -973,7 +973,7 @@ class SendGradeTest(TimRouteTest):
             'docId': d.id,
             'partial': False,
             'dryRun': False,
-            'group': 'customgroup',
+            'groups': ['customgroup'],
         }
         self.json_post(
             '/sisu/sendGrades',
@@ -1007,7 +1007,7 @@ class SendGradeTest(TimRouteTest):
             '/sisu/sendGrades',
             grade_params,
             expect_status=400,
-            expect_content='Usergroup "studentz1234" not found.'
+            expect_content='Usergroup studentz1234 not found.'
         )
         d.document.add_setting('group', 'students1234')
 
@@ -1021,7 +1021,7 @@ class SendGradeTest(TimRouteTest):
         self.json_post(
             '/sisu/sendGrades',
             grade_params_custom_group,
-            expect_content='Usergroup "customgroup" not found.',
+            expect_content='Usergroup customgroup not found.',
             expect_status=400,
         )
 

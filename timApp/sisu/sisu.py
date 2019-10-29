@@ -281,7 +281,7 @@ class PostGradesModel:
     partial: bool
     filterUsers: Optional[List[str]] = None
     completionDate: Optional[datetime] = None
-    group: Optional[str] = None
+    groups: Optional[List[str]] = None
 
 
 @sisu.route('/sendGrades', methods=['post'])
@@ -293,7 +293,7 @@ def post_grades_route(m: PostGradesModel):
         get_doc_or_abort(m.docId),
         partial=m.partial,
         dry_run=m.dryRun,
-        group=m.group,
+        groups=m.groups,
         filter_users=m.filterUsers,
         completion_date=m.completionDate.astimezone(fin_timezone).date() if m.completionDate else None,
     ))
@@ -400,9 +400,9 @@ def send_grades_to_sisu(
         dry_run: bool,
         completion_date: Optional[date],
         filter_users: Optional[List[str]],
-        group: Optional[str],
+        groups: Optional[List[str]],
 ):
-    assessments = get_sisu_assessments(sisu_id, teacher, doc, group, filter_users)
+    assessments = get_sisu_assessments(sisu_id, teacher, doc, groups, filter_users)
     if not completion_date:
         completion_date = get_current_time().date()
     users_to_update = {a.user.id for a in assessments if a.is_new_or_changed()}
@@ -486,7 +486,7 @@ def get_sisu_assessments(
         sisu_id: str,
         teacher: User,
         doc: DocInfo,
-        group: Optional[str],
+        groups: Optional[List[str]],
         filter_users: Optional[List[str]],
 ) -> List[CandidateAssessment]:
     teachers_group = UserGroup.get_teachers_group()
@@ -499,32 +499,37 @@ def get_sisu_assessments(
     if not teacher.has_teacher_access(doc):
         raise AccessDenied('You do not have teacher access to the document.')
     doc_settings = doc.document.get_settings()
-    if group is None:
+    if groups is None:
         try:
-            usergroup = doc_settings.group()
+            groupsetting = doc_settings.group()
         except ValueError as e:
             raise IncorrectSettings(str(e)) from e
-        if not usergroup:
+        if not groupsetting:
             raise IncorrectSettings('The document must have "group" setting that indicates the student group name.')
+        usergroups = [groupsetting]
     else:
-        usergroup = group
-    ug = UserGroup.get_by_name(usergroup)
-    if not ug:
-        raise IncorrectSettings(f'Usergroup "{usergroup}" not found.')
-    if not verify_group_view_access(ug, require=False):
-        raise AccessDenied(f'You do not have access to the group "{usergroup}".')
+        usergroups = groups
+    ugs = UserGroup.query.filter(UserGroup.name.in_(usergroups)).all()
+    requested = set(usergroups)
+    found = set(ug.name for ug in ugs)
+    not_found_gs = requested - found
+    if not_found_gs:
+        raise IncorrectSettings(f'Usergroup {seq_to_str(sorted(list(not_found_gs)))} not found.')
+    for ug in ugs:
+        if not verify_group_view_access(ug, require=False):
+            raise AccessDenied(f'You do not have access to the group "{ug.name}".')
 
-    # The group doesn't have to be a Sisu group, but if it is, perform a couple of checks.
-    if ug.external_id:
-        if not ug.external_id.is_student:
-            raise IncorrectSettings(f'The group "{usergroup}" is not a Sisu student group.')
-        if ug.external_id.course_id != sisu_id:
-            raise IncorrectSettings(
-                f'The associated course id "{ug.external_id.course_id}" '
-                f'of the group "{usergroup}" does not match the course setting "{sisu_id}".')
+        # The group doesn't have to be a Sisu group, but if it is, perform a couple of checks.
+        if ug.external_id:
+            if not ug.external_id.is_student:
+                raise IncorrectSettings(f'The group "{ug.name}" is not a Sisu student group.')
+            if ug.external_id.course_id != sisu_id:
+                raise IncorrectSettings(
+                    f'The associated course id "{ug.external_id.course_id}" '
+                    f'of the group "{ug.name}" does not match the course setting "{sisu_id}".')
     users, _, _, _ = get_fields_and_users(
         ['grade', 'credit', 'completionDate', 'sentGrade'],
-        [ug],
+        ugs,
         doc,
         teacher,
         user_filter=User.name.in_(filter_users) if filter_users else None,
@@ -538,7 +543,7 @@ def fields_to_assessment(r, doc: DocInfo) -> CandidateAssessment:
     u = r['user']
     # TODO: Sisu accepts also 'privateComment' field.
     result = CandidateAssessment(
-        gradeId= str(grade) if grade is not None else None,
+        gradeId=str(grade) if grade is not None else None,
         user=u,
         completionDate=fields.get(f'{doc.id}.completionDate'),
         completionCredits=fields.get(f'{doc.id}.credit'),
