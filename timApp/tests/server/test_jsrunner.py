@@ -1,7 +1,6 @@
 """Server tests for jsrunner plugin."""
 import json
 from datetime import datetime, timezone
-from typing import List
 
 import requests
 
@@ -10,18 +9,11 @@ from timApp.document.docinfo import DocInfo
 from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
-from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 
 
 class JsRunnerTestBase(TimRouteTest):
-    def verify_content(self, task: str, content_field: str, content, u: User, expected_count=1):
-        anss: List[Answer] = u.answers.filter_by(task_id=task).order_by(Answer.answered_on.desc()).all()
-        self.assertEqual(expected_count, len(anss))
-        first = anss[0]
-        self.assertEqual(content, first.content_as_json[content_field])
-        return first
 
     def create_jsrun(self, md):
         return self.create_doc(initial_par=rf"""
@@ -171,7 +163,7 @@ tools.setString("t1", "a");
         self.do_jsrun(
             d,
         )
-        self.verify_content(f'{d.id}.t1', 'c', 'a', self.test_user_1, expected_count=1)
+        self.verify_answer_content(f'{d.id}.t1', 'c', 'a', self.test_user_1, expected_count=1)
 
     def test_print_nonascii(self):
         d = self.create_jsrun("""
@@ -223,16 +215,16 @@ tools.setString("{d2.id}.t2", "noalias2");
         self.do_jsrun(
             d,
         )
-        self.verify_content(f'{d1.id}.t1', 'c', 'al1', self.test_user_1)
-        self.verify_content(f'{d1.id}.t2', 'c', 'al2', self.test_user_1)
-        self.verify_content(f'{d2.id}.t1', 'c', 'al3', self.test_user_1)
-        self.verify_content(f'{d2.id}.t2', 'c', 'noalias2', self.test_user_1)
-        self.verify_content(f'{d.id}.t1', 'c', 1, self.test_user_1)
-        self.verify_content(f'{d.id}.t2', 'c', 'noalias', self.test_user_1)
+        self.verify_answer_content(f'{d1.id}.t1', 'c', 'al1', self.test_user_1)
+        self.verify_answer_content(f'{d1.id}.t2', 'c', 'al2', self.test_user_1)
+        self.verify_answer_content(f'{d2.id}.t1', 'c', 'al3', self.test_user_1)
+        self.verify_answer_content(f'{d2.id}.t2', 'c', 'noalias2', self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t1', 'c', 1, self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t2', 'c', 'noalias', self.test_user_1)
         self.do_jsrun(
             d,
         )
-        self.verify_content(f'{d.id}.t1', 'c', 2, self.test_user_1, expected_count=2)
+        self.verify_answer_content(f'{d.id}.t1', 'c', 2, self.test_user_1, expected_count=2)
 
     def test_invalid_aliases(self):
         invalid_yamls = [
@@ -284,12 +276,12 @@ tools.setString("t2", "f");
         self.do_jsrun(
             d,
         )
-        self.verify_content(f'{d1.id}.t1', 'c', 'a', self.test_user_1)
-        self.verify_content(f'{d1.id}.t2', 'c', 'b', self.test_user_1)
-        self.verify_content(f'{d2.id}.t1', 'c', 'c', self.test_user_1)
-        self.verify_content(f'{d2.id}.t2', 'c', 'd', self.test_user_1)
-        self.verify_content(f'{d.id}.t1', 'c', 'e', self.test_user_1)
-        self.verify_content(f'{d.id}.t2', 'c', 'f', self.test_user_1)
+        self.verify_answer_content(f'{d1.id}.t1', 'c', 'a', self.test_user_1)
+        self.verify_answer_content(f'{d1.id}.t2', 'c', 'b', self.test_user_1)
+        self.verify_answer_content(f'{d2.id}.t1', 'c', 'c', self.test_user_1)
+        self.verify_answer_content(f'{d2.id}.t2', 'c', 'd', self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t1', 'c', 'e', self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t2', 'c', 'f', self.test_user_1)
 
     def test_setters_and_getters(self):
         d = self.create_jsrun("""
@@ -334,17 +326,17 @@ group: testuser1
             d,
             expect_content={"web": {"output": "", "errors": [], "outdata": {}, }},
         )
-        self.verify_content(f'{d.id}.t01', 'c', 2, self.test_user_1)
-        self.verify_content(f'{d.id}.t02', 'c', 2.1, self.test_user_1)
-        self.verify_content(f'{d.id}.t03', 'c', 2, self.test_user_1)
-        self.verify_content(f'{d.id}.t04', 'c', 2.1, self.test_user_1)
-        self.verify_content(f'{d.id}.t08', 'c', 2, self.test_user_1)
-        self.verify_content(f'{d.id}.t13', 'c', 2, self.test_user_1)
-        self.verify_content(f'{d.id}.t17', 'c', '', self.test_user_1)
-        self.verify_content(f'{d.id}.t18', 'c', 'a', self.test_user_1)
-        self.verify_content(f'{d.id}.t19', 'c', '1', self.test_user_1)
-        self.verify_content(f'{d.id}.t20', 'c', '1', self.test_user_1)
-        self.verify_content(f'{d.id}.t21', 'c', '1.6', self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t01', 'c', 2, self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t02', 'c', 2.1, self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t03', 'c', 2, self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t04', 'c', 2.1, self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t08', 'c', 2, self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t13', 'c', 2, self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t17', 'c', '', self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t18', 'c', 'a', self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t19', 'c', '1', self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t20', 'c', '1', self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t21', 'c', '1.6', self.test_user_1)
 
     def test_rights(self):
         d = self.create_doc(initial_par="""
@@ -383,7 +375,7 @@ tools.setString("{d.id}.t", "hi");
         self.do_jsrun(
             d2,
         )
-        a = self.verify_content(f'{d.id}.t', 'c', 'hi', self.test_user_2)
+        a = self.verify_answer_content(f'{d.id}.t', 'c', 'hi', self.test_user_2)
         self.test_user_2.remove_access(d.id, 'teacher')
         db.session.commit()
 
@@ -407,7 +399,7 @@ tools.setString("{d.id}.t", "hi_ext");
         self.do_jsrun(
             d2,
         )
-        a = self.verify_content(f'{d.id}.t', 'c', 'hi_ext', self.test_user_2, expected_count=2)
+        a = self.verify_answer_content(f'{d.id}.t', 'c', 'hi_ext', self.test_user_2, expected_count=2)
 
         d2 = self.create_jsrun(f"""
 group: testuser1
@@ -420,13 +412,13 @@ tools.setString("t", "hi");
         self.do_jsrun(
             d2,
         )
-        a = self.verify_content(f'{d2.id}.t', 'c', 'hi', self.test_user_2)
+        a = self.verify_answer_content(f'{d2.id}.t', 'c', 'hi', self.test_user_2)
         self.test_user_2.groups.append(UserGroup.get_teachers_group())
         db.session.commit()
         self.do_jsrun(
             d2,
         )
-        a = self.verify_content(f'{d2.id}.t', 'c', 'hi', self.test_user_1, expected_count=1)
+        a = self.verify_answer_content(f'{d2.id}.t', 'c', 'hi', self.test_user_1, expected_count=1)
         self.assertEqual(self.test_user_2, a.saver)
 
         # Can use jsrunner for own group in another doc if view access and showInView: true
@@ -461,7 +453,7 @@ showInView: true
         self.do_jsrun(
             d3,
         )
-        a = self.verify_content(f'{d3.id}.t', 'c', 'hi', self.test_user_2)
+        a = self.verify_answer_content(f'{d3.id}.t', 'c', 'hi', self.test_user_2)
 
     def test_runscript(self):
         runscript_url = 'http://jsrunner:5000/runScript'
@@ -799,27 +791,27 @@ tools.setString("t2", tools.getString("t2", "") + "=" + tools.getRealName());
             d,
             expect_content={'web': {'errors': [], 'output': '', 'outdata': {}}},
         )
-        self.verify_content(f'{d.id}.t1', 'c', '-Test user 1', self.test_user_1)
-        self.verify_content(f'{d.id}.t2', 'c', '=Test user 1', self.test_user_1)
-        self.verify_content(f'{d.id}.t1', 'c', '-Test user 2', self.test_user_2)
-        self.verify_content(f'{d.id}.t2', 'c', '=Test user 2', self.test_user_2)
+        self.verify_answer_content(f'{d.id}.t1', 'c', '-Test user 1', self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t2', 'c', '=Test user 1', self.test_user_1)
+        self.verify_answer_content(f'{d.id}.t1', 'c', '-Test user 2', self.test_user_2)
+        self.verify_answer_content(f'{d.id}.t2', 'c', '=Test user 2', self.test_user_2)
         self.do_jsrun(
             d,
             expect_content={'web': {'errors': [], 'output': '', 'outdata': {}}},
         )
-        self.verify_content(f'{d.id}.t1', 'c', '-Test user 1-Test user 1', self.test_user_1, expected_count=2)
-        self.verify_content(f'{d.id}.t2', 'c', '=Test user 1=Test user 1', self.test_user_1, expected_count=2)
-        self.verify_content(f'{d.id}.t1', 'c', '-Test user 2-Test user 2', self.test_user_2, expected_count=2)
-        self.verify_content(f'{d.id}.t2', 'c', '=Test user 2=Test user 2', self.test_user_2, expected_count=2)
+        self.verify_answer_content(f'{d.id}.t1', 'c', '-Test user 1-Test user 1', self.test_user_1, expected_count=2)
+        self.verify_answer_content(f'{d.id}.t2', 'c', '=Test user 1=Test user 1', self.test_user_1, expected_count=2)
+        self.verify_answer_content(f'{d.id}.t1', 'c', '-Test user 2-Test user 2', self.test_user_2, expected_count=2)
+        self.verify_answer_content(f'{d.id}.t2', 'c', '=Test user 2=Test user 2', self.test_user_2, expected_count=2)
         self.do_jsrun(
             d,
             expect_content={'web': {'errors': [], 'output': '', 'outdata': {}}},
         )
-        self.verify_content(f'{d.id}.t1', 'c', '-Test user 1-Test user 1-Test user 1', self.test_user_1,
-                            expected_count=3)
-        self.verify_content(f'{d.id}.t2', 'c', '=Test user 1=Test user 1=Test user 1', self.test_user_1,
-                            expected_count=3)
-        self.verify_content(f'{d.id}.t1', 'c', '-Test user 2-Test user 2-Test user 2', self.test_user_2,
-                            expected_count=3)
-        self.verify_content(f'{d.id}.t2', 'c', '=Test user 2=Test user 2=Test user 2', self.test_user_2,
-                            expected_count=3)
+        self.verify_answer_content(f'{d.id}.t1', 'c', '-Test user 1-Test user 1-Test user 1', self.test_user_1,
+                                   expected_count=3)
+        self.verify_answer_content(f'{d.id}.t2', 'c', '=Test user 1=Test user 1=Test user 1', self.test_user_1,
+                                   expected_count=3)
+        self.verify_answer_content(f'{d.id}.t1', 'c', '-Test user 2-Test user 2-Test user 2', self.test_user_2,
+                                   expected_count=3)
+        self.verify_answer_content(f'{d.id}.t2', 'c', '=Test user 2=Test user 2=Test user 2', self.test_user_2,
+                                   expected_count=3)

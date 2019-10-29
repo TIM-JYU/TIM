@@ -17,6 +17,7 @@ from lxml import html
 from lxml.html import HtmlElement
 
 import timApp.tim
+from timApp.answer.answer import Answer
 from timApp.auth.login import log_in_as_anonymous
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -843,6 +844,13 @@ class TimRouteTest(TimDbTest):
                  },
                  **kwargs,
                  )
+
+    def verify_answer_content(self, task: str, content_field: str, content, u: User, expected_count=1):
+        anss: List[Answer] = u.answers.filter_by(task_id=task).order_by(Answer.answered_on.desc()).all()
+        self.assertEqual(expected_count, len(anss))
+        first = anss[0]
+        self.assertEqual(content, first.content_as_json[content_field])
+        return first
 
 
 if __name__ == '__main__':

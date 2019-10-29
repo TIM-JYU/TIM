@@ -1155,6 +1155,27 @@ class SendGradeTest(TimRouteTest):
             },
             {'body': {'assessments': {}}}
         )
+        self.verify_answer_content(f'{d.id}.grade', 'c', 5, self.test_user_2)
+        self.verify_answer_content(f'{d.id}.sentGrade', 'c', '5', self.test_user_2)
+
+        self.check_send_grade_result(
+            grade_params_dryrun,
+            {'assessment_errors': [],
+             'default_selection': ['testuser3'],
+             'sent_assessments': [
+                 {'completionCredits': 3,
+                  'completionDate': current_date,
+                  'gradeId': '5',
+                  'privateComment': None,
+                  'user': test_2},
+                 {'completionCredits': 2,
+                  'completionDate': None,
+                  'gradeId': '4',
+                  'privateComment': None,
+                  'user': test_3}]},
+            {'body': {'assessments': {}}}
+        )
+
         self.check_send_grade_result(
             grade_params,
             {
@@ -1175,6 +1196,11 @@ class SendGradeTest(TimRouteTest):
             },
             {'body': {'assessments': {}}}
         )
+
+        self.verify_answer_content(f'{d.id}.grade', 'c', 5, self.test_user_2)
+        self.verify_answer_content(f'{d.id}.sentGrade', 'c', '5', self.test_user_2)
+        self.verify_answer_content(f'{d.id}.grade', 'c', 4, self.test_user_3)
+        self.verify_answer_content(f'{d.id}.sentGrade', 'c', '4', self.test_user_3)
 
         self.check_send_grade_result(
             grade_params_dryrun,
@@ -1281,13 +1307,13 @@ class SendGradeTest(TimRouteTest):
             grade_params,
             {'assessment_errors': [
                 {'assessment': {'completionCredits': None,
-                                'completionDate': current_date,
+                                'completionDate': None,
                                 'gradeId': None,
                                 'privateComment': None,
                                 'user': sisuuser},
                  'message': 'gradeId: Field may not be null.'},
                 {'assessment': {'completionCredits': None,
-                                'completionDate': current_date,
+                                'completionDate': None,
                                 'gradeId': None,
                                 'privateComment': None,
                                 'user': sisuuser2},
