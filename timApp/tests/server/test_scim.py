@@ -1166,7 +1166,7 @@ class SendGradeTest(TimRouteTest):
              'default_selection': [t3id],
              'sent_assessments': [
                  {'completionCredits': 3,
-                  'completionDate': current_date,
+                  'completionDate': custom_date,
                   'gradeId': '5',
                   'privateComment': None,
                   'user': test_2},
@@ -1183,7 +1183,7 @@ class SendGradeTest(TimRouteTest):
             {
                 'sent_assessments': [
                     {'completionCredits': 3,
-                     'completionDate': custom_date,
+                     'completionDate': current_date,
                      'gradeId': '5',
                      'privateComment': None,
                      'user': test_2},
@@ -1208,7 +1208,7 @@ class SendGradeTest(TimRouteTest):
             grade_params_dryrun,
             {
                 'sent_assessments': [
-                    {'completionDate': custom_date,
+                    {'completionDate': current_date,
                      'gradeId': '5',
                      'completionCredits': 3,
                      'privateComment': None,
@@ -1256,7 +1256,7 @@ class SendGradeTest(TimRouteTest):
             {
                 'sent_assessments': [
                     {
-                        'completionDate': custom_date,
+                        'completionDate': current_date,
                         'gradeId': '5',
                         'completionCredits': 3,
                         'privateComment': None,
@@ -1352,7 +1352,7 @@ class SendGradeTest(TimRouteTest):
                  'message': 'gradeId: Field may not be null.'}],
                 'default_selection': [],
                 'sent_assessments': [{'completionCredits': 3,
-                                      'completionDate': '2019-10-29',
+                                      'completionDate': current_date,
                                       'gradeId': '5',
                                       'privateComment': None,
                                       'user': test_2}]},
