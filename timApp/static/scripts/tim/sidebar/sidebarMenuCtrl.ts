@@ -587,7 +587,7 @@ timApp.component("timSidebarMenu", {
             <a style="display: inline-block" ng-click="$ctrl.openViewRangeMenu()" title="Open document partitioning settings">
                 <span class="glyphicon glyphicon-cog"></span>
             </a>
-            <button ng-if="$ctrl.vctrl.item.rights.editable"
+            <button ng-if="$ctrl.vctrl.item.rights.editable && !$ctrl.currentViewRange"
                     class="timButton btn-block"
                     ng-click="$ctrl.vctrl.editingHandler.editSettingsPars()">Edit settings
             </button>

@@ -145,7 +145,7 @@
                 <div ng-cloak class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
                      ng-class="{'height-35': $ctrl.editing}">
                     {% set btntext = doc_settings.add_par_button_text() %}
-                    {% if btntext %}
+                    {% if btntext and not nav_ranges %}
                         <button class="addBottom timButton">{{ btntext }}</button>
                     {% endif %}
                 </div>
