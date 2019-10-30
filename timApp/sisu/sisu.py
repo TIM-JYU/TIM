@@ -468,7 +468,7 @@ def send_grades_to_sisu(
         users_to_update = set()
     errs = [
         {
-            'message': ", ".join(x.reason for x in v.values()),
+            'message': 'Sisu: ' + ', '.join(x.reason for x in v.values()),
             'assessment': assessments[k],
         }
         for k, v in pr.body.assessments.items()

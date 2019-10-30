@@ -1237,7 +1237,7 @@ class SendGradeTest(TimRouteTest):
                             'privateComment': None,
                             'user': test_3,
                         },
-                        'message': 'Voimassaolevaa opinto-oikeutta ei löytynyt.',
+                        'message': 'Sisu: Voimassaolevaa opinto-oikeutta ei löytynyt.',
                     },
                 ],
                 'sent_assessments': [],
@@ -1265,7 +1265,7 @@ class SendGradeTest(TimRouteTest):
                 ],
                 'assessment_errors': [
                     {
-                        'message': 'Voimassaolevaa opinto-oikeutta ei löytynyt',
+                        'message': 'Sisu: Voimassaolevaa opinto-oikeutta ei löytynyt',
                         'assessment': {
                             'user': test_3,
                             'completionCredits': 2,
@@ -1337,7 +1337,7 @@ class SendGradeTest(TimRouteTest):
                                 'gradeId': '4',
                                 'privateComment': None,
                                 'user': test_3},
-                 'message': 'Ilmoittautumista toteutukseen ei löytynyt'},
+                 'message': 'Sisu: Ilmoittautumista toteutukseen ei löytynyt'},
                 {'assessment': {'completionCredits': None,
                                 'completionDate': None,
                                 'gradeId': None,
