@@ -326,7 +326,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             ]),
             isRowSelectable: (row) => {
                 const a = (row as unknown as uiGrid.IGridRowOf<IAssessmentExt>).entity;
-                return a.error == null;
+                return a.gradeId != null;
             },
             data: this.assessments,
             enableColumnMenus: false,
@@ -479,7 +479,7 @@ multisaveApp.component("multisaveRunner", {
     </div>
     <div ng-if="$ctrl.assessments">
         <p>Arviointien lähettäminen Sisuun ylikirjoittaa Sisun arviointinäkymän tiedot.</p>
-        <p>Taulukosta voi valita lähetettäväksi vain ehjiä arviointeja eli niitä, joissa on arvosana ja ei virhettä.</p>
+        <p>Taulukosta voi valita lähetettäväksi vain niitä arviointeja, joissa on arvosana.</p>
         Suorituspäivä:
         <div class="input-group date" datetimepicker ng-model="$ctrl.completionDate"
              data-options="$ctrl.dateOptions">
