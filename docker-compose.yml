@@ -221,6 +221,7 @@ services:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
    - ${FILES_ROOT}:/tim_files
+   - cache:/cache
   working_dir: /service/timApp
   depends_on:
    - postgresql
