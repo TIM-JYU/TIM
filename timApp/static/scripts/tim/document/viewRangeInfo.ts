@@ -1,11 +1,7 @@
 import {documentglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
-import {to} from "../util/utils";
+import {getCookie, to} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
-
-// TODO: Are b and e always in the same order?
-export const viewRangeRegExp = new RegExp("b=\\d+\&e=\\d+\(&preamble=(true|false)|)");
-export const viewRangeCookieRegExp = new RegExp("r=\\d+;");
 
 export interface IViewRange {
     b: number;
@@ -13,15 +9,34 @@ export interface IViewRange {
     name?: string;
 }
 
+function getCurrentPartitionURLParams() {
+    const params = new URLSearchParams(document.location.search);
+    const b = params.get("b");
+    const e = params.get("e");
+    const preamble = params.get("preamble");
+    if (b == null || e == null || preamble == null) {
+        return undefined;
+    }
+    return params;
+}
+
+function setURLSearchParams(params: URLSearchParams) {
+    document.location.search = params.toString();
+}
+
 /**
  * Disable document partitioning by reloading.
  */
 export async function unpartitionDocument() {
     await unsetPieceSize();
-    if (!viewRangeRegExp.test(document.location.search)) {
+    const params = getCurrentPartitionURLParams();
+    if (!params) {
         location.reload();
     } else {
-        document.location.search = document.location.search.replace(viewRangeRegExp, "");
+        params.delete("b");
+        params.delete("e");
+        params.delete("preamble");
+        setURLSearchParams(params);
     }
 }
 
@@ -33,13 +48,11 @@ export async function unpartitionDocument() {
  * @param loadPreamble Load preamble at the beginning of each part.
  */
 export function partitionDocument(b: number, e: number, loadPreamble: boolean) {
-    const allParams = document.location.search;
-    const newParams = `b=${b}&e=${e}&preamble=${loadPreamble}`;
-    if (viewRangeRegExp.test(allParams)) {
-        document.location.search = document.location.search.replace(viewRangeRegExp, newParams);
-    } else {
-        document.location.search += `${newParams}`;
-    }
+    const params = new URLSearchParams(document.location.search);
+    params.set("b", b.toString());
+    params.set("e", e.toString());
+    params.set("preamble", loadPreamble.toString());
+    setURLSearchParams(params);
 }
 
 export async function unsetPieceSize() {
@@ -58,10 +71,10 @@ export async function setPieceSize(pieceSize: number) {
 }
 
 export async function getPieceSize() {
-    const cookie = document.cookie.match(viewRangeCookieRegExp);
+    const cookie = getCookie("r");
     let value = 0;
     if (cookie != null) {
-        value = +cookie[0].replace(/[^\d-]/g, "");
+        value = +cookie;
     }
     // Convert to null since +string is 0 if string to integer conversion fails.
     if (cookie == null || value == 0) {
@@ -154,7 +167,7 @@ export class ViewRangeInfo {
     /**
      * Get view ranges for nav component and duplicates and those pointing to current range.
      */
-    public async loadRanges() {
+    public loadRanges() {
         const ranges = documentglobals().nav_ranges;
         const current = getCurrentViewRange();
         if (!current || !ranges || ranges.length != 4) {

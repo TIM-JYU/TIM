@@ -3,14 +3,14 @@
  */
 
 import {IRootElementService, IScope} from "angular";
+import {IItem} from "../item/IItem";
 import {
     getPieceSize,
     getViewRange,
     partitionDocument,
     setPieceSize,
     unpartitionDocument,
-} from "../document/viewRangeInfo";
-import {IItem} from "./IItem";
+} from "./viewRangeInfo";
 
 import {ngStorage} from "ngstorage";
 import * as focusMe from "tim/ui/focusMe";
@@ -98,13 +98,13 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
         } else {
             await unpartitionDocument();
         }
-        this.dismiss();
+        this.close({});
     }
 
     /**
-     * Saves view range settings.
+     * Resets view range settings to defaults.
      */
-    private returnDefaults() {
+    private resetDefaults() {
         this.viewRangeSetting = 20;
         this.partitionDocumentsSetting = false;
     }
@@ -118,24 +118,21 @@ registerDialogComponent(ViewRangeEditController,
     </dialog-header>
     <dialog-body>
         <div>
-            <h4>{{$ctrl.header}}</h4>
-            <span>Toggle showing documents in smaller parts and edit the number of paragraphs shown per part.</span>
-            <br>
-            <br>
-            <label title="Enable partitioning TIM documents">Enable partitioning documents (requires cookies): <input type="checkbox"
-                ng-model="$ctrl.partitionDocumentsSetting"></label>
-            <br>
-            <label title="Enter how many paragraphs are shown at a time">Piece size: <input
+            <p>Toggle showing documents in smaller parts and edit the number of paragraphs shown per part.</p>
+            <div class="checkbox">
+                <label><input type="checkbox" ng-model="$ctrl.partitionDocumentsSetting">Enable partitioning documents</label>
+            </div>
+            <label title="Enter how many paragraphs are shown at a time">Piece size: <input class="form-control"
                 ng-model="$ctrl.viewRangeSetting" type="number" min="1"></label>
         </div>
         <br>
         <tim-alert ng-if="$ctrl.errorMessage" severity="warning">{{$ctrl.errorMessage}}</tim-alert>
-        <tim-alert severity="info">Note: the page may reload when the changes are saved.</tim-alert>
+        <tim-alert severity="info">The page may reload when the changes are saved.</tim-alert>
     </dialog-body>
     <dialog-footer>
-        <button style="float: left;" title="Return default settings" class="timButton"
-            ng-click="$ctrl.returnDefaults()">Return defaults</button>
-        <button class="timButton" title="Quit and save changes" ng-click="$ctrl.ok()">Ok</button>
+        <button title="Return default settings" class="timButton pull-left"
+            ng-click="$ctrl.resetDefaults()">Reset defaults</button>
+        <button class="timButton" title="Quit and save changes" ng-click="$ctrl.ok()">OK</button>
         <button class="timButton" title="Quit and discard changes" ng-click="$ctrl.dismiss()">Cancel</button>
     </dialog-footer>
 </tim-dialog>
@@ -143,5 +140,5 @@ registerDialogComponent(ViewRangeEditController,
     });
 
 export async function showViewRangeEditDialog(d: IItem) {
-    return await showDialog(ViewRangeEditController, {params: () => d}).result;
+    return showDialog(ViewRangeEditController, {params: () => d}).result;
 }

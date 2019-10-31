@@ -8,12 +8,12 @@ import {getActiveDocument} from "../document/document";
 import {IDocSettings} from "../document/IDocSettings";
 import {showMergePdfDialog} from "../document/minutes/mergePdfCtrl";
 import {ViewCtrl} from "../document/viewctrl";
-import {DocumentOrFolder, IDocument, isRootFolder, ITag, redirectToItem} from "../item/IItem";
+import {showViewRangeEditDialog} from "../document/viewRangeEditDialog";
+import {DocumentOrFolder, IDocument, isRootFolder, redirectToItem} from "../item/IItem";
 import {IRelevanceResponse} from "../item/relevanceEdit";
 import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
-import {showViewRangeEditDialog} from "../item/viewRangeEditDialog";
 import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
 import {ITemplateParams, showPrintDialog} from "../printing/printCtrl";
 import {showConsentDialog} from "../ui/consent";
@@ -85,7 +85,7 @@ export class SidebarMenuCtrl implements IController {
     private item?: DocumentOrFolder;
     private sisugroupPath?: string;
     private currentViewRange?: IViewRange;
-    private hashlessUrl?: string;
+    private hashlessUrl: string;
 
     constructor() {
         const g = someglobals();
@@ -117,6 +117,7 @@ export class SidebarMenuCtrl implements IController {
         if ("linked_groups" in g && g.linked_groups != null) {
             this.updateLinkedGroups(g.linked_groups);
         }
+        this.hashlessUrl = `${document.location.origin}${document.location.pathname}${document.location.search}`;
     }
 
     private updateLinkedGroups(groups: IGroupWithSisuPath[]) {
@@ -145,7 +146,6 @@ export class SidebarMenuCtrl implements IController {
         if (this.item && !this.item.isFolder) {
             this.loadViewRangeSettings();
         }
-        this.hashlessUrl = `${document.location.origin}${document.location.pathname}${document.location.search}`;
         // await this.processConsent();
     }
 

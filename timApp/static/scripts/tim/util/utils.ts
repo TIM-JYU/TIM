@@ -551,3 +551,8 @@ export function copyToClipboard(s: string) {
 }
 
 export const dateFormat = "D.M.YYYY HH:mm:ss";
+
+export function getCookie(name: string) {
+    const a = `; ${document.cookie}`.match(`;\\s*${name}=([^;]+)`);
+    return a ? a[1] : undefined;
+}

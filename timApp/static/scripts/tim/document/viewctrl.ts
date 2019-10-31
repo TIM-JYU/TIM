@@ -141,8 +141,8 @@ export class ViewCtrl implements IController {
     // TODO: Possibly redundant since same thing can be achieved by just using the array version
     private timComponents: Map<string, ITimComponent> = new Map();
     // Array to keep reference to possible duplicated fields
-    private timComponentArrays: Map<string, [ITimComponent]> = new Map();
-    private timComponentTags: Map<string, [string]> = new Map();
+    private timComponentArrays: Map<string, ITimComponent[]> = new Map();
+    private timComponentTags: Map<string, string[]> = new Map();
     private userChangeListeners: Map<string, IUserChanged> = new Map();
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
@@ -423,7 +423,7 @@ export class ViewCtrl implements IController {
         }, Math.max(1000 * this.liveUpdates, 1000));
     }
 
-    async $onInit() {
+    $onInit() {
         vctrlInstance = this;
         this.scope.$watchGroup([
             () => this.lectureMode,
@@ -444,7 +444,7 @@ export class ViewCtrl implements IController {
         });
         this.reviewCtrl.loadDocumentAnnotations();
         this.editingHandler.insertHelpPar();
-        await this.viewRangeInfo.loadRanges();
+        this.viewRangeInfo.loadRanges();
         // window.onbeforeunload = () => {
         //     const dirty = this.checkUnSavedTimComponents();
         //     if ( dirty ) { return "You have unsaved tasks!"; }  // IE shows this message
@@ -533,7 +533,7 @@ export class ViewCtrl implements IController {
         }
     }
 
-    public getTimComponentArray(name: string): [ITimComponent] | undefined {
+    public getTimComponentArray(name: string): ITimComponent[] | undefined {
         if (!name) {
             return undefined;
         }
