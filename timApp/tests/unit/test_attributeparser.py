@@ -38,6 +38,7 @@ class AttributeParserTest(unittest.TestCase):
                              'taskId': 'asd',
                              'plugin': 'csPlugin'
                          }, 4)
+        self.check_valid('{.red} ', {'classes': ['red']}, 0)
 
     def check_valid(self, string, expected, expected_index=0):
         ap = AttributeParser()
@@ -64,6 +65,7 @@ class AttributeParserTest(unittest.TestCase):
         self.check_invalid('{#task1 #task2}')  # Only 1 task id allowed
         self.check_invalid('\\')
         self.check_invalid('{a=b c=')
+        self.check_invalid('([test]{.red})')
 
     def test_brace(self):
         self.check_valid(r'# Hey {Hey {math_type=svg math_preamble="\\usetikzlibrary{shapes}"}',

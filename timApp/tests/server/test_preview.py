@@ -5,7 +5,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 class PreviewTest(TimRouteTest):
     def test_translation_invalid_ref(self):
         self.login_test1()
-        d = self.create_doc(initial_par="""#- {rd=9999 rp=xxxx}'""")
+        d = self.create_doc(initial_par="""#- {rd=9999 rp=xxxx}""")
         t = self.create_translation(d)
         p = t.document.get_paragraphs()[0]
         md = f'#- {{r="tr" rp="{p.get_attr("rp")}"}}\n'

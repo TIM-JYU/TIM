@@ -43,6 +43,7 @@ class AttributeParser:
                 break
             if self.try_parse_attr_list_end_char():
                 end_found = True
+                self.get_char()
                 break
             token = self.try_parse_hash()
             if token:
@@ -62,7 +63,8 @@ class AttributeParser:
                 continue
             break
         if end_found:
-            return tokens
+            self.eat_whitespace()
+            return None if self.has_chars() else tokens
         else:
             return None
 
@@ -81,7 +83,7 @@ class AttributeParser:
         find_pos = self.current_pos + 1
         i = self.str.find(' ', find_pos)
         i2 = self.str.find(self.attr_list_end_char(), find_pos)
-        if i < 0:
+        if 0 <= i2 < i or i < 0:
             i = i2
         if i < 0:
             return None
