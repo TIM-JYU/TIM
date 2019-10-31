@@ -12,21 +12,21 @@ from alembic.runtime.environment import EnvironmentContext
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 
+from timApp.admin.migrate_to_postgre import perform_migration
+from timApp.auth.auth_models import AccessTypeModel
+from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
+from timApp.document.documents import import_document_from_file
+from timApp.printing.documentprinter import DocumentPrinter
+from timApp.tim_app import app
+from timApp.timdb.dbaccess import get_files_path
+from timApp.timdb.sqa import db, get_tim_main_engine
+from timApp.timdb.timdb import TimDb
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import create_special_usergroups
 from timApp.util.logger import log_info, enable_loggers, log_error, log_warning
-from timApp.admin.migrate_to_postgre import perform_migration
-from timApp.printing.documentprinter import DocumentPrinter
-from timApp.tim_app import app
-from timApp.document.documents import import_document_from_file
-from timApp.document.docentry import DocEntry
-from timApp.user.user import User
-from timApp.timdb.sqa import db, get_tim_main_engine
-from timApp.auth.auth_models import AccessTypeModel
-from timApp.timdb.timdb import TimDb
-from timApp.user.userutils import get_anon_group_id
 from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
@@ -70,10 +70,7 @@ def database_has_tables():
 
 
 def initialize_database(create_docs=True):
-    files_root_path = app.config['FILES_PATH']
-    Document.default_files_root = files_root_path
-    DocParagraph.default_files_root = files_root_path
-    DocumentPrinter.default_files_root = files_root_path
+    files_root_path = get_files_path()
     was_created = postgre_create_database(app.config['DB_HOST'], app.config['TIM_NAME'])
     log_info(f'Database {app.config["TIM_NAME"]} {"was created" if was_created else "exists"}.')
     timdb = TimDb(files_root_path=files_root_path)
@@ -82,11 +79,6 @@ def initialize_database(create_docs=True):
         log_info('Initial data already exists, skipping DB initialization.')
     else:
         db.create_all()
-        old_db = app.config['OLD_SQLITE_DATABASE']
-        if old_db and os.path.exists(old_db):
-            perform_migration(app.config['OLD_SQLITE_DATABASE'], app.config['DATABASE'])
-            timdb.close()
-            return
         if not app.config['TESTING']:
             with app.app_context():
                 flask_migrate.stamp()

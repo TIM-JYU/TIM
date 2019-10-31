@@ -23,11 +23,11 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.routes import get_document_relevance
 from timApp.item.tag import Tag
-from timApp.tim_app import app
+from timApp.timdb.dbaccess import get_files_path
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
-from timApp.util.utils import get_error_message
+from timApp.util.utils import get_error_message, cache_folder_path
 
 search_routes = Blueprint('search',
                           __name__,
@@ -38,9 +38,10 @@ MIN_QUERY_LENGTH = 3  # For word and title search. Tags have no limitations.
 MIN_WHOLE_WORDS_QUERY_LENGTH = 1  # For whole word search.
 PREVIEW_LENGTH = 40  # Before and after the search word separately.
 PREVIEW_MAX_LENGTH = 160
-PROCESSED_CONTENT_FILE_NAME = "content_all_processed.log"
-PROCESSED_TITLE_FILE_NAME = "titles_all_processed.log"
-RAW_CONTENT_FILE_NAME = "all.log"
+SEARCH_CACHE_FOLDER = cache_folder_path / 'searchcache'
+PROCESSED_CONTENT_FILE_PATH = SEARCH_CACHE_FOLDER / "content_all_processed.log"
+PROCESSED_TITLE_FILE_PATH = SEARCH_CACHE_FOLDER / "titles_all_processed.log"
+RAW_CONTENT_FILE_PATH = SEARCH_CACHE_FOLDER / "all.log"
 DEFAULT_RELEVANCE = 10
 
 
@@ -455,27 +456,25 @@ def create_search_files(remove_deleted_pars=True):
     :return: Status code and a message confirming success of file creation.
     """
 
-    dir_path = Path(app.config['FILES_PATH']) / 'pars'
-    raw_file_name = RAW_CONTENT_FILE_NAME
-    content_file_name = PROCESSED_CONTENT_FILE_NAME
-    title_file_name = PROCESSED_TITLE_FILE_NAME
-    temp_content_file_name = f"temp_{content_file_name}"
-    temp_title_file_name = f"temp_{title_file_name}"
+    temp_content_file_name = SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_CONTENT_FILE_PATH.name}"
+    temp_title_file_name = SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_TITLE_FILE_PATH.name}"
+    f: Path = RAW_CONTENT_FILE_PATH.parent
+    f.mkdir(exist_ok=True)
 
     try:
-        subprocess.Popen(f'grep -R "" --include="current" . > {raw_file_name} 2>&1',
-                         cwd=dir_path,
+        subprocess.Popen(f'grep -R "" --include="current" . > {RAW_CONTENT_FILE_PATH} 2>&1',
+                         cwd=(get_files_path() / 'pars'),
                          shell=True).communicate()
     except Exception as e:
-        return 400, f"Failed to create preliminary file {dir_path / raw_file_name}: {get_error_message(e)}"
+        return 400, f"Failed to create preliminary file {RAW_CONTENT_FILE_PATH}: {get_error_message(e)}"
     try:
-        raw_file = open(dir_path / raw_file_name, "r", encoding='utf-8')
+        raw_file = RAW_CONTENT_FILE_PATH.open("r", encoding='utf-8')
     except FileNotFoundError:
-        return 400, f"Failed to open preliminary file {dir_path / raw_file_name}"
+        return 400, f"Failed to open preliminary file {RAW_CONTENT_FILE_PATH}"
     try:
-        with raw_file, open(
-                dir_path / temp_content_file_name, "w+", encoding='utf-8') as temp_content_file, open(
-                dir_path / temp_title_file_name, "w+", encoding='utf-8') as temp_title_file:
+        with raw_file, \
+             temp_content_file_name.open("w+", encoding='utf-8') as temp_content_file, \
+                temp_title_file_name.open("w+", encoding='utf-8') as temp_title_file:
 
             current_doc, current_pars = -1, []
 
@@ -516,16 +515,15 @@ def create_search_files(remove_deleted_pars=True):
             temp_content_file.flush()
             temp_title_file.flush()
             os.fsync(temp_content_file)
-            # noinspection PyTypeChecker
             os.fsync(temp_title_file)
 
-        os.rename(str(dir_path / temp_content_file_name), str(dir_path / content_file_name))
-        os.rename(str(dir_path / temp_title_file_name), str(dir_path / title_file_name))
+        temp_content_file_name.rename(PROCESSED_CONTENT_FILE_PATH)
+        temp_title_file_name.rename(PROCESSED_TITLE_FILE_PATH)
 
         return 200, f"Combined and processed paragraph files created to " \
-                    f"{dir_path / content_file_name} and {dir_path / title_file_name}"
+                    f"{PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH}"
     except:
-        return 400, "Creating files to {dir_path / content_file_name} and {dir_path / title_file_name} failed!"
+        return 400, f"Creating files to {PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH} failed!"
 
 
 @search_routes.route("createContentFile")
@@ -811,9 +809,8 @@ def search():
     :return: Document paragraph search results with total result count.
     """
     # If the file containing all TIM content doesn't exists, give warning immediately.
-    dir_path = Path(app.config['FILES_PATH']) / 'pars'
-    content_search_file_name = PROCESSED_CONTENT_FILE_NAME
-    title_search_file_name = PROCESSED_TITLE_FILE_NAME
+    content_search_file_path = PROCESSED_CONTENT_FILE_PATH
+    title_search_file_path = PROCESSED_TITLE_FILE_PATH
     (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
     max_results = get_option(request, 'maxResults', default=1000000, cast=int)
     max_doc_results = get_option(request, 'maxDocResults', default=10000, cast=int)
@@ -825,10 +822,10 @@ def search():
     ignore_relevance = get_option(request, 'ignoreRelevance', default=False, cast=bool)
     timeout = get_option(request, 'timeout', default=120, cast=int)
 
-    if search_content and not Path(dir_path / content_search_file_name).exists():
-        abort(404, f"Combined content file '{content_search_file_name}' not found, unable to perform content search!")
-    if search_titles and not Path(dir_path / title_search_file_name).exists():
-        abort(404, f"Combined title file '{title_search_file_name}' not found, unable to perform title search!")
+    if search_content and not content_search_file_path.exists():
+        abort(404, f"Combined content file '{content_search_file_path}' not found, unable to perform content search!")
+    if search_titles and not title_search_file_path.exists():
+        abort(404, f"Combined title file '{title_search_file_path}' not found, unable to perform title search!")
 
     start_time = time.time()
 
@@ -861,8 +858,7 @@ def search():
 
     if search_content:
         try:
-            s = subprocess.Popen(cmd + [content_search_file_name],
-                                 cwd=dir_path,
+            s = subprocess.Popen(cmd + [content_search_file_path],
                                  stdout=subprocess.PIPE)
             content_output_str = s.communicate()[0].decode('utf-8').strip()
             content_output = content_output_str.splitlines()
@@ -871,8 +867,7 @@ def search():
 
     if search_titles:
         try:
-            s = subprocess.Popen(cmd + [title_search_file_name],
-                                 cwd=dir_path,
+            s = subprocess.Popen(cmd + [title_search_file_path],
                                  stdout=subprocess.PIPE)
             title_output_str = s.communicate()[0].decode('utf-8').strip()
             title_output = title_output_str.splitlines()

@@ -1,15 +1,15 @@
 import os
+import re
 from pathlib import Path
 from typing import Optional, NamedTuple, Union
 
-import re
-from flask import current_app
 from werkzeug.utils import secure_filename
 
 from timApp.answer.answer_models import AnswerUpload
 from timApp.document.docinfo import DocInfo
 from timApp.item.block import insert_block, Block, BlockType
 from timApp.item.item import ItemBase
+from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -34,7 +34,7 @@ def get_storage_path(block_type: BlockType):
     :param block_type: The block type.
     :return: The storage path.
     """
-    return (Path(current_app.config['FILES_PATH'])
+    return (get_files_path()
             / 'blocks'
             / DIR_MAPPING[block_type])
 

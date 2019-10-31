@@ -868,7 +868,7 @@ def get_color(item, key: str, default_color=None, default_color_html=None) -> (s
     :return: Tuple with the color-code / name and whether its in hex or not.
     """
     # Normal LaTex doesn't recognize some html colors,
-    # so they need to be defined in the tex-file (colors.txt in timApp/static/tex).
+    # so they need to be defined in the tex file (colors.txt in timApp/static/tex).
     color = default_color
     color_html = default_color_html
     try:

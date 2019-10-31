@@ -11,26 +11,12 @@ class ClipboardTest(TimDbTest):
 
     def setUp(self):
         super(ClipboardTest, self).setUp()
-        db = self.get_db()
-        self.clipboard = Clipboard(db.files_root_path)
+        self.clipboard = Clipboard()
         self.clipboard.clear_all()
 
     def test_empty(self):
         clip = self.clipboard.get(self.test_user_1)
         self.assertIsNone(clip.read())
-
-    def test_readwrite(self):
-        text = 'kappale tekstiä'
-        attrs = {'a': '1', 'b': '2'}
-        par = {'id': random_id(), 'md': text, 't': hashfunc(text, attrs), 'attrs': attrs}
-
-        clip = self.clipboard.get(self.test_user_1)
-        clip.write([par])
-        read_pars = clip.read()
-
-        self.assertEqual(len(read_pars), 1)
-        self.assertEqual(read_pars[0]['md'], par['md'])
-        self.assertDictEqual(read_pars[0]['attrs'], par['attrs'])
 
     def test_persistence(self):
         text = 'kappale tekstiä'
@@ -60,7 +46,6 @@ class ClipboardTest(TimDbTest):
         self.assertDictEqual(read_pars[0]['attrs'], par['attrs'])
 
     def test_copy(self):
-        db = self.get_db()
         doc = DocEntry.create('Lähdedokumentti', UserGroup.get_anonymous_group()).document
 
         pars = [doc.add_paragraph(f'Kappale {i}', attrs={'kappale': str(i)}) for i in range(0, 10)]
@@ -80,7 +65,6 @@ class ClipboardTest(TimDbTest):
         pars = [{'id': random_id(), 'md': f'Kappale 1.{i}', 'attrs': {'kappale': str(i)}} for i in range(0, 1)]
         clip.write(pars)
 
-        db = self.get_db()
         doc = DocEntry.create('Kohdedokumentti', UserGroup.get_anonymous_group()).document
         dest_pars = [doc.add_paragraph(f'Kohdekappale {i}', attrs={'kkappale': str(i)}) for i in range(0, 10)]
 
@@ -123,7 +107,6 @@ class ClipboardTest(TimDbTest):
 
 def test_paste_ref(self):
     clip = self.clipboard.get(1)
-    db = self.get_db()
 
     src_doc = DocEntry.create('Lähdedokumentti', 2).document
     dest_doc = DocEntry.create('Kohdedokumentti', 1).document

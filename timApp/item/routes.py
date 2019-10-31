@@ -14,7 +14,6 @@ from flask import request
 from flask import session
 from webargs.flaskparser import use_args
 
-
 from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
@@ -54,9 +53,8 @@ from timApp.user.users import get_rights_holders_all
 from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
 from timApp.util.logger import log_error
-from timApp.util.pdftools import temp_folder_default_path
 from timApp.util.timtiming import taketime
-from timApp.util.utils import get_error_message
+from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
 
 DEFAULT_RELEVANCE = 10
@@ -307,7 +305,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     except (ValueError, TypeError):
         view_range_dict = None
     start_index = max(view_range[0], 0) if view_range else 0
-    index_cache_folder = temp_folder_default_path / "indexcache" / str(doc_info.id)
+    index_cache_folder = cache_folder_path / "indexcache" / str(doc_info.id)
     index = None
     contents_have_changed = False
     if view_range:

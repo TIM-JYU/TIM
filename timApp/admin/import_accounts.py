@@ -2,14 +2,14 @@ import csv
 import sys
 from typing import Tuple, List
 
-from timApp.tim_app import app
-from timApp.user.user import User
+from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.timdb import TimDb
+from timApp.user.user import User
 from timApp.user.userutils import create_password_hash
 
 
 def import_accounts(file: str, password: str) -> Tuple[List[User], List[User]]:
-    timdb = TimDb(files_root_path=app.config['FILES_PATH'])
+    timdb = TimDb(files_root_path=get_files_path())
     existing = []
     added = []
     with open(file) as csvfile:

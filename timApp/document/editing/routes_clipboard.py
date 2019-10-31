@@ -19,7 +19,6 @@ from timApp.note.notes import move_notes
 from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
 from timApp.readmark.readings import copy_readings
-from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, get_option
@@ -58,10 +57,9 @@ def cut_to_clipboard(doc_id, from_par, to_par):
 
     (area_name,) = verify_json_params('area_name', require=False)
 
-    timdb = get_timdb()
     doc: Document = wd.docentry.document_as_current_user
     version_before = doc.get_version()
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
+    clip = Clipboard().get(get_current_user_object())
     try:
         for p in doc.get_section(from_par, to_par):
             verify_par_edit_access(p)
@@ -84,9 +82,8 @@ def copy_to_clipboard(doc_id, from_par, to_par):
     (area_name, ref_doc_id) = verify_json_params('area_name', 'ref_doc_id', require=False)
     ref_doc = Document(ref_doc_id) if ref_doc_id is not None and ref_doc_id != doc_id else None
 
-    timdb = get_timdb()
     doc = wd.docentry.document_as_current_user
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
+    clip = Clipboard().get(get_current_user_object())
     try:
         clip.copy_pars(doc, from_par, to_par, area_name, ref_doc, disable_ref=False)
     except TimDbException as e:
@@ -102,10 +99,9 @@ def paste_from_clipboard(doc_id):
 
     (par_before, par_after, as_ref) = verify_json_params('par_before', 'par_after', 'as_ref', require=False, default='')
 
-    timdb = get_timdb()
     doc = wd.docentry.document_as_current_user
     version_before = doc.get_version()
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
+    clip = Clipboard().get(get_current_user_object())
     meta = clip.read_metadata()
     was_cut = meta.get('last_action') == 'cut'
 
@@ -162,9 +158,8 @@ def delete_from_source(doc_id):
     verify_logged_in()
     verify_edit_access(wd.docentry)
 
-    timdb = get_timdb()
     doc = wd.docentry.document_as_current_user
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
+    clip = Clipboard().get(get_current_user_object())
     pars = clip.read(as_ref=True, force_parrefs=True)
     if not pars:
         return json_response({'doc_ver': doc.get_version(), 'pars': []})
@@ -179,7 +174,6 @@ def delete_from_source(doc_id):
 @clipboard.route('/clipboard', methods=['GET'])
 def show_clipboard():
     verify_logged_in()
-    timdb = get_timdb()
 
     doc_id = get_option(request, 'doc_id', default=None, cast=int)
     if doc_id is None:
@@ -188,7 +182,7 @@ def show_clipboard():
     verify_view_access(d)
     doc = d.document
 
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
+    clip = Clipboard().get(get_current_user_object())
     pars = [DocParagraph.from_dict(doc, par) for par in clip.read() or []]
     return par_response(pars, d)
 
@@ -196,7 +190,6 @@ def show_clipboard():
 @clipboard.route('/clipboardstatus', methods=['GET'])
 def get_clipboard_status():
     verify_logged_in()
-    timdb = get_timdb()
-    clip = Clipboard(timdb.files_root_path).get(get_current_user_object())
+    clip = Clipboard().get(get_current_user_object())
     status = clip.read_metadata()
     return json_response(status)

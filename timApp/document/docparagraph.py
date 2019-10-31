@@ -34,20 +34,15 @@ class DocParagraph:
     """Represents a paragraph that is associated with a :class:`Document`. See :doc:`docparagraph` for more info.
     """
 
-    default_files_root = '/tim_files'
-
-    def __init__(self, doc, files_root: Optional[str] = None):
+    def __init__(self, doc):
         """Constructs a DocParagraph.
 
         :param doc: The Document object to which this paragraph is connected.
-        :param files_root: The location of the data store for this paragraph, or None to use the default data store.
-
         """
         self.doc: DocumentType = doc
-        self.prev_deref: 'DocParagraph' = None
+        self.prev_deref: Optional['DocParagraph'] = None
         self.ref_doc = None
         self.original = None
-        self.files_root = self.get_default_files_root() if files_root is None else files_root
         self.html_sanitized = False
         self.html = None
         self.final_dict = None
@@ -88,8 +83,7 @@ class DocParagraph:
                md: str = '',
                par_hash: Optional[str] = None,
                html: Optional[str] = None,
-               attrs: Optional[Dict] = None,
-               files_root: Optional[str] = None) -> 'DocParagraph':
+               attrs: Optional[Dict] = None) -> 'DocParagraph':
         """Creates a DocParagraph from the given parameters.
 
         :param doc: The Document object to which this paragraph is connected.
@@ -98,11 +92,10 @@ class DocParagraph:
         :param par_hash: The hash for the paragraph or None if it should be computed.
         :param html: The HTML for the paragraph or None if it should be generated based on markdown.
         :param attrs: The attributes for the paragraph.
-        :param files_root: The location of the data store for this paragraph, or None to use the default data store.
         :return: The created DocParagraph.
 
         """
-        par = DocParagraph(doc, files_root)
+        par = DocParagraph(doc)
         par.html = html
         par.__data = {
             'id': random_id() if par_id is None else par_id,
@@ -128,19 +121,17 @@ class DocParagraph:
         return create_reference(doc, doc_id=self.get_doc_id(), par_id=self.get_id(), r=r, add_rd=add_rd)
 
     @staticmethod
-    def create_area_reference(doc, area_name: str, r: Optional[str] = None, rd: Optional[int] = None,
-                              files_root: Optional[str] = None) -> 'DocParagraph':
+    def create_area_reference(doc, area_name: str, r: Optional[str] = None, rd: Optional[int] = None) -> 'DocParagraph':
         """Creates an area reference paragraph.
 
         :param area_name: The name of the area.
-        :param files_root: The location of the data store for the paragraph, or None to use the default data store.
         :param doc: The Document object in which the reference paragraph will reside.
         :param r: The kind of the reference.
         :param add_rd: If True, sets the rd attribute for the reference paragraph.
         :return: The created DocParagraph.
 
         """
-        par = DocParagraph.create(doc, files_root=files_root)
+        par = DocParagraph.create(doc)
         par.set_attr('r', r)
         par.set_attr('rd', doc.doc_id if rd is None else rd)
         par.set_attr('ra', area_name)
@@ -150,16 +141,15 @@ class DocParagraph:
         return par
 
     @classmethod
-    def from_dict(cls, doc, d: Dict, files_root: Optional[str] = None) -> 'DocParagraph':
+    def from_dict(cls, doc, d: Dict) -> 'DocParagraph':
         """Creates a paragraph from a dictionary.
 
         :param doc: The Document object in which the paragraph will reside.
         :param d: The dictionary.
-        :param files_root: The location of the data store for the paragraph, or None to use the default data store.
         :return: The created DocParagraph.
 
         """
-        par = DocParagraph(doc, files_root)
+        par = DocParagraph(doc)
         par.__data = dict(d)
         if 'attrs' not in par.__data:
             par.__data['attrs'] = {}
@@ -186,36 +176,33 @@ class DocParagraph:
         return doc_macros
 
     @classmethod
-    def get_latest(cls, doc, par_id: str, files_root: Optional[str] = None) -> 'DocParagraph':
+    def get_latest(cls, doc, par_id: str) -> 'DocParagraph':
         """Retrieves the latest paragraph version from the data store.
 
         :param doc: The Document object for which to retrieve the paragraph.
         :param par_id: The paragraph id.
-        :param files_root: The location of the data store for the paragraph, or None to use the default data store.
         :return: The retrieved DocParagraph.
 
         """
-        froot = cls.get_default_files_root() if files_root is None else files_root
         try:
-            t = os.readlink(cls._get_path(doc, par_id, 'current', froot))
-            return cls.get(doc, par_id, t, files_root=froot)
+            t = os.readlink(cls._get_path(doc, par_id, 'current'))
+            return cls.get(doc, par_id, t)
         except FileNotFoundError:
             doc._raise_not_found(par_id)
 
     @classmethod
-    def get(cls, doc, par_id: str, t: str, files_root: Optional[str] = None) -> 'DocParagraph':
+    def get(cls, doc, par_id: str, t: str) -> 'DocParagraph':
         """Retrieves a specific paragraph version from the data store.
 
         :param doc: The Document object for which to retrieve the paragraph.
         :param par_id: The paragraph id.
         :param t: The paragraph hash.
-        :param files_root: The location of the data store for the paragraph, or None to use the default data store.
         :return: The retrieved DocParagraph.
 
         """
         try:
-            with open(cls._get_path(doc, par_id, t, files_root), 'r') as f:
-                return cls.from_dict(doc, json.loads(f.read()), files_root=files_root)
+            with open(cls._get_path(doc, par_id, t), 'r') as f:
+                return cls.from_dict(doc, json.loads(f.read()))
         except FileNotFoundError:
             doc._raise_not_found(par_id)
 
@@ -224,36 +211,31 @@ class DocParagraph:
         return self.__data.__iter__()
 
     @classmethod
-    def get_default_files_root(cls):
-        """Returns the default data store location for paragraphs."""
-        return cls.default_files_root
-
-    @classmethod
-    def _get_path(cls, doc, par_id: str, t: str, files_root: Optional[str] = None) -> str:
+    def _get_path(cls, doc, par_id: str, t: str) -> str:
         """Returns the filesystem location for a specific paragraph version.
 
         :param doc: The Document object in which the paragraph resides.
         :param par_id: The paragraph id.
         :param t: The paragraph hash.
-        :param files_root: The location of the data store for the paragraph, or None to use the default data store.
         :return: The filesystem location for the paragraph.
 
         """
-        froot = cls.get_default_files_root() if files_root is None else files_root
-        return os.path.join(froot, 'pars', str(doc.doc_id), par_id, t)
+        from timApp.timdb.dbaccess import get_files_path
+        froot = get_files_path()
+        return (froot / 'pars' / str(doc.doc_id) / par_id / t).as_posix()
 
     @classmethod
-    def _get_base_path(cls, doc, par_id: str, files_root: Optional[str] = None) -> str:
+    def _get_base_path(cls, doc, par_id: str) -> str:
         """Returns the filesystem location for the versions of a given paragraph.
 
         :param doc: The Document object in which the paragraph resides.
         :param par_id: The paragraph id.
-        :param files_root: The location of the data store for the paragraph, or None to use the default data store.
         :return: The filesystem location for the versions of the paragraph.
 
         """
-        froot = cls.get_default_files_root() if files_root is None else files_root
-        return os.path.join(froot, 'pars', str(doc.doc_id), par_id)
+        from timApp.timdb.dbaccess import get_files_path
+        froot = get_files_path()
+        return (froot / 'pars' / str(doc.doc_id) / par_id).as_posix()
 
     def dict(self) -> Dict:
         """Returns the internal data dictionary."""
@@ -835,11 +817,11 @@ class DocParagraph:
 
     def get_base_path(self) -> str:
         """Returns the filesystem path for the versions of this paragraph."""
-        return self._get_base_path(self.doc, self.get_id(), files_root=self.files_root)
+        return self._get_base_path(self.doc, self.get_id())
 
     def get_path(self) -> str:
         """Returns the filesystem path for this paragraph."""
-        return self._get_path(self.doc, self.__data['id'], self.__data['t'], files_root=self.files_root)
+        return self._get_path(self.doc, self.__data['id'], self.__data['t'])
 
     def __read(self) -> bool:
         if not os.path.isfile(self.get_path()):
@@ -864,7 +846,7 @@ class DocParagraph:
 
     def set_latest(self):
         """Updates the 'current' symlink to point to this paragraph version."""
-        linkpath = self._get_path(self.doc, self.get_id(), 'current', files_root=self.files_root)
+        linkpath = self._get_path(self.doc, self.get_id(), 'current')
         if linkpath == self.get_hash():
             return
         if os.path.islink(linkpath) or os.path.isfile(linkpath):

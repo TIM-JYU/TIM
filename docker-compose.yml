@@ -20,6 +20,7 @@ services:
    - ${LOG_DIR}:/service/tim_logs
    - ${FILES_ROOT}:/tim_files
    - /opt/jspm_cache:/root/.jspm
+   - cache:/cache
   working_dir: /service/timApp
   command: python3 launch.py --with-gunicorn
   environment:
@@ -253,5 +254,6 @@ services:
    BROWSER_URL: ${BROWSER_URL}
 volumes:
  data11:
+ cache:
 networks:
  db:

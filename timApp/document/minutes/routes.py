@@ -269,11 +269,9 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
                 abort(404, f"Missing file: {pdf}")
 
         # Create folders when necessary.
-        if not merged_file_folder.exists():
-            merged_file_folder.mkdir()
-        destination_folder = merged_file_folder / str(d.document.doc_id)
-        if not destination_folder.exists():
-            destination_folder.mkdir()
+        merged_file_folder.mkdir(exist_ok=True)
+        destination_folder = merged_file_folder / str(d.id)
+        destination_folder.mkdir(exist_ok=True)
 
         # Uses document name as the base for the merged file name and tmp as folder.
         # Hash is there to avoid mixup with different file selections in same document.

@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 import tempfile
+from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 
 from flask import current_app
@@ -25,6 +26,7 @@ from timApp.document.randutils import hashfunc
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.document.yamlblock import strip_code_block
 from timApp.folder.folder import Folder
+from timApp.markdown.htmlSanitize import sanitize_html
 from timApp.markdown.markdownconverter import expand_macros, create_environment
 from timApp.plugin.plugin import get_value, PluginWrap
 from timApp.plugin.plugin import parse_plugin_values_macros
@@ -33,13 +35,12 @@ from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
+from timApp.timdb.dbaccess import get_files_path
 from timApp.user.user import User
+from timApp.util.utils import cache_folder_path
 
-FILES_ROOT = '/tim_files'
-DEFAULT_PRINTING_FOLDER = os.path.join(FILES_ROOT, 'printed_documents')
-TEMPORARY_PRINTING_FOLDER = os.path.join(DEFAULT_PRINTING_FOLDER, 'tmp')
-TEMPLATES_FOLDER = os.path.join(TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME)
-DEFAULT_TEMPLATE_NAME = 'Default'
+DEFAULT_PRINTING_FOLDER = cache_folder_path / 'printed_documents'
+TEMPLATES_FOLDER = Path(TEMPLATE_FOLDER_NAME) / PRINT_FOLDER_NAME
 TEX_MACROS_KEY = "texmacros"
 
 
@@ -274,7 +275,7 @@ class DocumentPrinter:
         self._content = content
         return content
 
-    def write_to_format(self, target_format: PrintFormat, plugins_user_print: bool = False, path: Optional[str] = None):
+    def write_to_format(self, target_format: PrintFormat, path: Path, plugins_user_print: bool = False):
         """
         Converts the document to latex and returns the converted document as a bytearray
         :param target_format: The target file format
@@ -283,11 +284,7 @@ class DocumentPrinter:
         :return: Converted document as bytearray
         """
 
-        if path is None:
-            raise PrintingError("The path name should be given")
-
-        with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file, \
-                tempfile.NamedTemporaryFile(suffix='.' + target_format.value, delete=True) as output_file:
+        with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file:
 
             if self._template_to_use:
                 template_content = DocumentPrinter.parse_template_content(doc_to_print=self._doc_entry,
@@ -297,25 +294,13 @@ class DocumentPrinter:
 
             if template_content is None:
                 raise PrintingError(
-                    "The content in the template document %s is not valid." % self._template_to_use.path)
+                    f"The content in the template document {self._template_to_use.path} is not valid.")
 
             top_level = 'section'
             if re.search("^\\\\documentclass\[[^\n]*(book|report)\}", template_content, flags=re.S):
                 top_level = 'chapter'
 
             src = self.get_content(plugins_user_print=plugins_user_print, target_format=target_format)
-            removethis = ''
-            '''
-            if self.texplain:
-                i = src.find('\\documentclass')
-                if  (0 <= i) and (i < 20):
-                    template_content = '$body$\n'
-                else:                          # cludge to force pandoc to handle text as LaTeX
-                    removethis = 'REMOVETHIS'  # otherwise it will change for example % to \%
-                    src = '\\begin{document} % ' + removethis + '\n' + \
-                        src + \
-                        '\n\\end{document} % ' + removethis
-            '''
 
             templbyte = bytearray(template_content, encoding='utf-8')
             # template_file.write(templbyte) # for some reason does not write small files
@@ -349,57 +334,45 @@ class DocumentPrinter:
                             texfile = self._doc_entry.document.docinfo.location + '/' + texfile
                         texfiles.append(self.urlroot + texfile + '?file_type=latex&template_doc_id=0')
 
-            # TODO: add also variables from texpandocvariables document setting, but this may leed to security hole???
+            # TODO: add also variables from texpandocvariables document setting, but this may lead to security hole?
             try:
-                tim_convert_text(source=src,
-                                 from_format=from_format,
-                                 to=target_format.value,
-                                 outputfile=path,  # output_file.name,
-                                 extra_args=['--template=' + template_file.name,
-                                             '--variable=TTrue:1',
-                                             '--variable=T1:1',
-                                             '--top-level-division=' + top_level,
-                                             '--atx-headers',
-                                             '--metadata=pagetitle:""',
-                                             # '--verbose',  # this gives non UTF8 results sometimes
-                                             '-Mtexdocid=' + str(self._doc_entry.document.doc_id),
-                                             ],
-                                 filters=filters,
-                                 removethis=removethis,
-                                 texfiles=texfiles
-                                 )
-                # template_file.seek(0)
-                # output_bytes = bytearray(output_file.read())
+                tim_convert_text(
+                    source=src,
+                    from_format=from_format,
+                    to=target_format.value,
+                    outputfile=path.absolute().as_posix(),  # output_file.name,
+                    extra_args=['--template=' + template_file.name,
+                                '--variable=TTrue:1',
+                                '--variable=T1:1',
+                                '--top-level-division=' + top_level,
+                                '--atx-headers',
+                                '--metadata=pagetitle:""',
+                                # '--verbose',  # this gives non UTF8 results sometimes
+                                '-Mtexdocid=' + str(self._doc_entry.document.doc_id),
+                                ],
+                    filters=filters,
+                    texfiles=texfiles,
+                )
             except LaTeXError as ex:
                 raise LaTeXError(ex.value)
             except Exception as ex:
-                # TODO: logging of errors
-                # Might be a good idea to log these?
-                # might also be a good idea to separate between errors that should be shown to the user, and
-                # ones that only get written to the log file.
+                raise PrintingError(f'<pre>{sanitize_html(str(ex))}</pre>')
 
-                # TODO: selection of errors that should be routed to the UI
-
-                raise PrintingError('<pre>' + str(ex) + '</pre>')
-                # finally:
-                #    os.remove(template_file.name)
-
-    def get_print_path(self, file_type: PrintFormat, temp: bool = True, plugins_user_print: bool = False) -> str:
+    def get_print_path(self, file_type: PrintFormat, plugins_user_print: bool = False) -> Path:
         """
         Formulates the printing path for the given document
 
         :param file_type: File format for the output
-        :param temp:
         :param plugins_user_print: should print user answers
         :return:
         """
 
         print_hash = self.hash_doc_print(plugins_user_print=plugins_user_print)
 
-        path = os.path.join(DEFAULT_PRINTING_FOLDER,
-                            str(self._doc_entry.id),
-                            str(self.get_template_id()),
-                            str(print_hash) + "." + file_type.value)
+        path = (DEFAULT_PRINTING_FOLDER /
+                str(self._doc_entry.id) /
+                str(self.get_template_id()) /
+                str(print_hash + "." + file_type.value))
 
         return path
 
@@ -479,9 +452,6 @@ class DocumentPrinter:
 
         templates_list = user_templates_list + default_templates_list
 
-        # if doc_entry.document.get_settings().is_texplain():  # does not work because no block entry
-        #    templates_list.append({'id': -1, 'path': 'empty', 'origin': 'doctree', 'name': 'empty'})
-
         return templates_list
 
     @staticmethod
@@ -535,7 +505,7 @@ class DocumentPrinter:
 
     def get_printed_document_path_from_db(self, file_type: PrintFormat, plugins_user_print: bool = False) -> \
             Optional[str]:
-        existing_print = PrintedDoc.query. \
+        existing_print: Optional[PrintedDoc] = PrintedDoc.query. \
             filter_by(doc_id=self._doc_entry.id,
                       template_doc_id=self.get_template_id(),
                       file_type=file_type.value,
@@ -559,7 +529,7 @@ def number_lines(s: str, start: int = 1):
 
 
 # ------------------------ copied from pypandoc / Juho Vepsäläinen ---------------------------------
-# use own version, because the original fall down if scandinavian chars in erros messages
+# Use own version because the original breaks if there are non-ASCII chars in error messages
 
 def tim_convert_text(source, to, from_format, extra_args=(), encoding='utf-8',
                      outputfile=None, filters=None, removethis=None, texfiles=None):
@@ -633,7 +603,7 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
             f = ['--filter=' + x for x in filters]
             args.extend(f)
         try:  # Hack because images in mmcqs is not found
-            os.symlink("/tim_files/blocks/images", "/images")
+            Path('/images').symlink_to(get_files_path() / 'blocks/images')
         except:
             pass
         p = subprocess.Popen(
@@ -646,15 +616,14 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
         # something else than 'None' indicates that the process already terminated
         if not (p.returncode is None):
             raise RuntimeError(
-                'Pandoc died with exitcode "%s" before receiving input: %s' % (p.returncode,
-                                                                               p.stderr.read())
+                f'Pandoc died with exitcode "{p.returncode}" before receiving input: {p.stderr.read()}'
             )
 
         try:
             bsource = cast_bytes(source, encoding='utf-8')
         except (UnicodeDecodeError, UnicodeEncodeError):
             # assume that it is already a utf-8 encoded string
-            pass
+            bsource = source
         try:
             stdout, stderr = p.communicate(bsource if string_input else None)
         except OSError:
@@ -770,15 +739,16 @@ def get_file(latex_file, fileurl, new_env):
         cwd=filedir,
         env=new_env)
 
-    if not (p.returncode is None):
+    code = p.returncode
+    if code is not None:
         raise RuntimeError(
-            'Get file died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
+            f'Get file died with exitcode "{code}" before receiving input: {p.stderr.read()}'
         )
 
-    stdout, stderr = p.communicate(None)
+    stdout, stderr = p.communicate()
     stdout = _decode_result(stdout)
     stderr = _decode_result(stderr)
     if p.returncode > 0:
         raise RuntimeError(
-            'Get file %s failed: "%s": %s %s' % (fileurl, p.returncode, stdout, stderr)
+            f'Get file {fileurl} failed: "{p.returncode}": {stdout} {stderr}'
         )

@@ -28,12 +28,12 @@ from timApp.item.validation import validate_item_and_create_intermediate_folders
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
-from timApp.tim_app import app
+from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import PluginUpload, PluginUploadInfo, UploadedFile
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
-    PdfError, stamp_pdfs, create_new_tex_file, restamp_pdfs, stamp_model_default_path
+    PdfError, stamp_pdfs, create_tex_file, stamp_model_default_path
 
 upload = Blueprint('upload',
                    __name__,
@@ -58,8 +58,8 @@ DOC_EXTENSIONS = ['txt', 'md', 'markdown']
 PIC_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif']
 ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 
-# The folder for stamped and original pdf-files.
-default_attachment_folder = Path(app.config['FILES_PATH']) / "blocks/files"
+# The folder for stamped and original pdf files.
+default_attachment_folder = get_files_path() / "blocks/files"
 
 WHITELIST_MIMETYPES = {
     'application/pdf',
@@ -270,11 +270,12 @@ def restamp_attachments(args: RestampModel):
         verify_edit_access(file, check_parents=True)
         stamp_data_list.append(stamp_data)
 
-    stamp_model_path = create_new_tex_file(custom_stamp_model_content) if custom_stamp_model_content else stamp_model_default_path
-    output = restamp_pdfs(
+    stamp_model_path = create_tex_file(custom_stamp_model_content) if custom_stamp_model_content else stamp_model_default_path
+    stamp_pdfs(
         stamp_data_list,
         stamp_text_format=stamp_format,
-        stamp_model_path=stamp_model_path)[0]
+        stamp_model_path=stamp_model_path,
+    )
 
     return ok_response()
 
@@ -311,11 +312,10 @@ def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampDat
 
     stamp_data.file = attachment_folder / f"{f.id}/{f.filename}"
 
-    stamp_model_path = create_new_tex_file(
+    stamp_model_path = create_tex_file(
         custom_stamp_model_content) if custom_stamp_model_content else stamp_model_default_path
     output = stamp_pdfs(
         [stamp_data],
-        dir_path=(Path(attachment_folder) / f"{f.id}/"),
         stamp_text_format=stampformat,
         stamp_model_path=stamp_model_path)[0]
 

@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import List, Optional, Tuple, Union, Dict, Any, Sequence
 
 import base64
@@ -322,3 +323,5 @@ def get_alias(name):
 
 
 fin_timezone = pytz.timezone('Europe/Helsinki')
+temp_folder_path = Path('/tmp')
+cache_folder_path = Path('/cache')

@@ -17,11 +17,11 @@ from timApp.timdb.timdb import TimDb
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.filemodehelper import change_permission_and_retry
-from timApp.util.utils import del_content, remove_prefix
+from timApp.util.utils import del_content, remove_prefix, temp_folder_path
 
 
 class TimDbTest(unittest.TestCase):
-    test_files_path = '/tmp/doctest_files'
+    test_files_path = temp_folder_path / 'doctest_files'
     db_path = app.config['DATABASE']
     i = 0
     create_docs = False
@@ -31,16 +31,16 @@ class TimDbTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        if os.path.exists(cls.test_files_path):
+        if cls.test_files_path.exists():
             # Safety mechanism
-            assert cls.test_files_path != '/tim_files'
+            assert cls.test_files_path.as_posix() != '/tim_files'
             del_content(cls.test_files_path, onerror=change_permission_and_retry)
             for f in glob.glob('/tmp/heading_cache_*'):
                 os.remove(f)
             for f in glob.glob('/tmp/tim_auto_macros_*'):
                 os.remove(f)
         else:
-            os.mkdir(cls.test_files_path)
+            cls.test_files_path.mkdir()
         # Safety mechanism to make sure we are not wiping some production database
         assert app.config['SQLALCHEMY_DATABASE_URI'].endswith('-test'), \
             ('Wrong test db URI. This probably means that '

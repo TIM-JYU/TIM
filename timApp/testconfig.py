@@ -16,7 +16,6 @@ LOG_LEVEL = logging.ERROR
 LOG_LEVEL_STDOUT = logging.ERROR
 LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
 TESTING = True
-OLD_SQLITE_DATABASE = None
 SQLALCHEMY_DATABASE_URI = DATABASE
 
 # Webassets seems to have a weird bug that it cannot find the cache files if the paths are not default,

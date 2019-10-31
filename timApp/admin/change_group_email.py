@@ -1,11 +1,11 @@
-from timApp.tim_app import app
+from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.timdb.timdb import TimDb
 from timApp.user.usergroup import UserGroup
 
 
 def change_email():
-    timdb = TimDb(app.config['FILES_PATH'])
+    timdb = TimDb(get_files_path())
     # print("You're changing email of every member of given group to [USERNAME]@[GIVEN_EMAIL]")
     print("Changing emails of mallikurssinryhma1")
     while True:

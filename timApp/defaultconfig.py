@@ -30,7 +30,6 @@ LIBSASS_INCLUDES = ["static/scripts/jspm_packages/github/twbs/bootstrap-sass@3.3
                     "static"]
 TIM_NAME = os.environ.get('COMPOSE_PROJECT_NAME', 'tim')
 TIM_HOST = os.environ.get('TIM_HOST', 'http://localhost')
-OLD_SQLITE_DATABASE = '/tim_files/tim.db'
 DB_HOST = 'postgresql'
 DATABASE = f"postgresql://postgres@{DB_HOST}:5432/{TIM_NAME}"
 SASS_GEN_PATH = Path('generated')

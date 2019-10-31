@@ -3,13 +3,14 @@ import shutil
 from os.path import isfile
 from typing import List
 
-from timApp.tim_app import app
-from timApp.item.block import Block, BlockType
 from timApp.document.docentry import DocEntry
-from timApp.folder.folder import Folder
 from timApp.document.translation.translation import Translation
-from timApp.user.usergroup import UserGroup
+from timApp.folder.folder import Folder
+from timApp.item.block import Block, BlockType
+from timApp.tim_app import app
+from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 
 
 def fix_orphans_without_docentry():
@@ -35,7 +36,7 @@ def fix_orphans_without_docentry():
 def move_docs_without_block():
     """Moves all documents from tim_files/docs to tim_files/orphans that don't have a Block entry in database."""
     with app.test_request_context():
-        files_root = app.config['FILES_PATH']
+        files_root = get_files_path()
         docs_folder = os.path.join(files_root, 'docs')
         pars_folder = os.path.join(files_root, 'pars')
         doc_folders = [f for f in os.listdir(docs_folder) if not isfile(f)]

@@ -6,7 +6,7 @@ import unittest
 
 from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
-from timApp.document.documents import delete_document, import_document_from_file
+from timApp.document.documents import import_document_from_file
 from timApp.document.documentwriter import DocumentWriter
 from timApp.document.exceptions import DocExistsError
 from timApp.document.randutils import random_paragraph
@@ -26,13 +26,11 @@ class DocumentTest(TimDbTest):
     def test_document_create(self):
         d = self.create_doc().document
         self.assertTrue(d.exists())
-        self.assertEqual(d.doc_id + 1, Document.get_next_free_id())
         self.assertEqual((0, 0), d.get_version())
         self.assertListEqual([], d.get_changelog().entries)
 
         d = self.create_doc().document
         self.assertTrue(d.exists())
-        self.assertEqual(d.doc_id + 1, Document.get_next_free_id())
         self.assertEqual((0, 0), d.get_version())
         self.assertListEqual([], d.get_changelog().entries)
 
@@ -185,20 +183,6 @@ class DocumentTest(TimDbTest):
             self.assertNotEqual(par2_hash, par2_mod.get_hash())
             self.assertEqual((10, i + 3), d.get_version())
             self.assertEqual(13 + i, len(d.get_changelog().entries))
-
-    def test_document_remove(self):
-        free = Document.get_next_free_id()
-        db = self.get_db()
-        docs = [self.create_doc().document for i in range(1, 5)]
-
-        self.assertLess(free, Document.get_next_free_id())
-
-        with self.assertRaises(DocExistsError):
-            Document.remove(doc_id=0)
-
-        for d in docs:
-            delete_document(d.doc_id)
-            self.assertFalse(Document.doc_exists(doc_id=d.doc_id))
 
     def test_update(self):
         random.seed(0)

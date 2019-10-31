@@ -1,28 +1,25 @@
 """
-Stamping and merging pdf-files with pdftk and pdflatex.
+Stamping and merging pdf files with pdftk and pdflatex.
 Visa Naukkarinen
 """
 import uuid
+from os import remove
 from pathlib import Path
-from subprocess import Popen, PIPE, run as subprocess_run
-from os import remove, path as os_path
-from typing import Union, List
-from urllib import request as url_request
-from urllib.error import HTTPError
 from re import escape as re_escape, compile as re_compile
+from subprocess import Popen, PIPE, run as subprocess_run
+from typing import Union, List, Optional
 
 from flask import current_app
 
 import timApp.plugin.plugin
-
-# Default parameter values:
 from timApp.auth.accesshelper import verify_view_access
 from timApp.document.docparagraph import DocParagraph
+from timApp.timdb.dbaccess import get_files_path
 from timApp.upload.uploadedfile import UploadedFile
 from timApp.util.logger import log_error
+from timApp.util.utils import temp_folder_path, cache_folder_path
 
-temp_folder_default_path = Path("/tmp")
-merged_file_folder = temp_folder_default_path / Path("merged_attachments")
+merged_file_folder = cache_folder_path / "merged_attachments"
 stamp_model_default_path = Path("static/tex/stamp_model.tex")
 # Default format for stamp text.
 default_stamp_format = "Kokous {date}\n\nLIITE {attachment} lista {issue}"
@@ -45,7 +42,7 @@ class PdfError(Exception):
 
 class ModelStampMissingError(PdfError):
     """
-    Raised if model tex-file for creating stamps can't be found.
+    Raised if model tex file for creating stamps can't be found.
     """
 
     def __init__(self, file_path: Path = Path("")):
@@ -60,7 +57,7 @@ class ModelStampMissingError(PdfError):
 
 class ModelStampInvalidError(PdfError):
     """
-    Raised if model tex-file for creating stamps is broken.
+    Raised if model tex file for creating stamps is broken.
     """
 
     def __init__(self, file_path: Path = Path("")):
@@ -315,21 +312,19 @@ def escape_tex(text: str):
     return tex_escape_re.sub(lambda match: tex_escapes[match.group()], text)
 
 
-def test_pdf(pdf_path: str, timeout_seconds: int = pdfmerge_timeout) -> str:
+def test_pdf(pdf_path: Path, timeout_seconds: int = pdfmerge_timeout) -> str:
     """
-    Test pdf-file suitability for pdftk.
+    Test pdf file suitability for pdftk.
     :param pdf_path: Pdf to test.
     :param timeout_seconds: Timeout after which error is raised.
     :return: Return error message (empty string if no error).
     """
-    if is_url(pdf_path):
-       return "Error: Attachment link is an URL; please upload the file to TIM"
-    if not ".pdf" in pdf_path:
+    if pdf_path.suffix != '.pdf':
         return "Error: Attachment is not a PDF file"
-    if not Path(pdf_path).exists():
+    if not pdf_path.exists():
         return "Error: file not found; try reuploading it"
-    test_output_path = Path(timApp.util.pdftools.temp_folder_default_path) / f"pdftk_test.pdf"
-    args = ["pdftk"] + [pdf_path] + ["cat", "output", test_output_path.absolute().as_posix()]
+    test_output_path = temp_folder_path / f"pdftk_test.pdf"
+    args = ["pdftk", pdf_path, "cat", "output", test_output_path.absolute().as_posix()]
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = p.communicate(timeout=timeout_seconds)
     return parse_error(err.decode(encoding='utf-8'))
@@ -376,7 +371,7 @@ def merge_pdfs(pdf_file_list: List[UploadedFile], output_path: Path):
     call_popen(args, pdfmerge_timeout)
 
 
-def parse_tim_url(par_file: str) -> str:
+def parse_tim_url(par_file: str) -> Optional[Path]:
     """
     Parses TIM-links to point to the corresponding file on the server.
     Note: Changes in upload folder need to be updated here as well.
@@ -385,10 +380,12 @@ def parse_tim_url(par_file: str) -> str:
     """
     domain = current_app.config['TIM_HOST']
     if par_file.startswith("/files/"):
-        par_file = "/tim_files/blocks" + par_file
+        path = get_files_path() / ("blocks" + par_file)
+        return path
     elif par_file.startswith(f"{domain}/files"):
-        par_file = "/tim_files/blocks" + par_file.replace(domain, "")
-    return par_file
+        path = get_files_path() / ("blocks" + par_file.replace(domain, ""))
+        return path
+    return None
 
 
 def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment]:
@@ -404,8 +401,12 @@ def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment
             par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
             par_data = par_plugin.values
             par_file = par_data["file"]
-            par_file = parse_tim_url(par_file)
-            error_message = test_pdf(par_file)
+            file_path = parse_tim_url(par_file)
+            if file_path:
+                error_message = test_pdf(file_path)
+                par_file = file_path.as_posix()
+            else:
+                error_message = 'Error: Invalid PDF URL'
             selected = not error_message
             par_str = str(par)
             # Find macro name and unselect "unknown"- (bugged) and "perusliite"-attachments.
@@ -416,8 +417,8 @@ def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment
                 macro_name = "perusliite"
                 selected = False
             # File check and GUI link require different paths.
-            par_file = par_file.replace("tim_files/blocks/", "")
-            pdf_list.append(Attachment(par_file, error=error_message, macro=macro_name, selected=selected))
+            link = par_file.replace("tim_files/blocks/", "")
+            pdf_list.append(Attachment(link, error=error_message, macro=macro_name, selected=selected))
     return pdf_list
 
 
@@ -476,15 +477,15 @@ def create_stamp(
         text: str,
         remove_pdflatex_files: bool = False) -> Path:
     """
-    Creates a stamp pdf-file with given text into temp folder.
-    :param model_path: Model stamp tex-file's complete path; contains
+    Creates a stamp pdf file with given text into temp folder.
+    :param model_path: Model stamp tex file's complete path; contains
            '%TEXT_HERE' to locate the stamp text area.
     :param work_dir: The folder where stamp output and temp files will be.
     :param stamp_name: Name of the stamp and temp files (no file extension needed).
     :param text: LaTeX-escaped text displayed in the stamp.
     :param remove_pdflatex_files: If true, newly created .aux, .log, .out and
            .tex files will be deleted.
-    :return: Complete path of the created stamp pdf-file.
+    :return: Complete path of the created stamp pdf file.
     """
     stamp = work_dir / f"{stamp_name}.tex"
     try:
@@ -583,7 +584,7 @@ def remove_temp_files(
     for ext in ext_list:
         try:
             file_to_remove = dir_path / f"{temp_file_name}.{ext}"
-            remove(file_to_remove.absolute().as_posix())
+            file_to_remove.unlink()
         # Removes the rest of files even if some are missing.
         except FileNotFoundError:
             continue
@@ -602,39 +603,9 @@ def check_stamp_data_validity(stamp_data_list: List[AttachmentStampData]) -> Non
         item.validate()
 
 
-def is_url(string: str) -> bool:
+def create_tex_file(content: str, folder: Path = temp_folder_path) -> Path:
     """
-    Simple test to see if str is an url.
-    :param string: String to test.
-    :return: True if url, false if not.
-    """
-    # TODO: Check special cases like ftp?
-    if string.startswith("http://") or string.startswith("https://"):
-        return True
-    else:
-        return False
-
-
-def download_file_from_url(
-        url: str,
-        output_dir: Path = temp_folder_default_path) -> Path:
-    """
-    Downloads a file from url, keeps the filename same.
-    :param url: File url.
-    :param output_dir: Download folder.
-    :return: Path of the saved file.
-    """
-    try:
-        output_path = output_dir / os_path.basename(url)
-        url_request.urlretrieve(url, output_path.absolute().as_posix())
-        return output_path
-    except HTTPError:
-        raise AttachmentNotFoundError(url)
-
-
-def create_new_tex_file(content: str, folder: Path = temp_folder_default_path) -> Path:
-    """
-    Creates tex-file with random name and input content.
+    Creates tex file with random name and input content.
     :param content: LaTeX content in string.format.
     :param folder: Folder where new file will be added.
     :return: Path-object for the new file.
@@ -647,24 +618,19 @@ def create_new_tex_file(content: str, folder: Path = temp_folder_default_path) -
 
 def stamp_pdfs(
         stamp_data: List[AttachmentStampData],
-        dir_path: Path = temp_folder_default_path,
         stamp_model_path: Path = stamp_model_default_path,
         stamp_text_format: str = default_stamp_format) -> List[Path]:
     """
     Creates new stamps and stamps the corresponding pdfs based on
     the data in a list of AttachmentStampData objects.
     :param stamp_data: List of objects containing pdf-paths and stamp-attributes.
-    :param dir_path: Folder for temp files.
-    :param stamp_model_path: Tex-file to be used as model for stamps.
+    :param stamp_model_path: Tex file to be used as model for stamps.
     :param stamp_text_format: Formatting for stamp text, with attributes:
             file, date, attachment and issue.
     :return: List of stamped pdf paths.
     """
-    stamped_pdfs = []
 
-    # Check if temp-folder exists and is a folder:
-    if not (dir_path.exists() and dir_path.is_dir()):
-        raise TempFolderNotFoundError(dir_path)
+    stamped_pdfs = []
     # Check if model stamp exists.
     if not stamp_model_path.exists():
         raise ModelStampMissingError(stamp_model_path)
@@ -672,6 +638,7 @@ def stamp_pdfs(
     check_stamp_data_validity(stamp_data)
 
     for item in stamp_data:
+        dir_path: Path = item.file.parent
         # Names and paths of new files to use as params.
         item_basename = item.file.stem
         item_stamp_name_no_ext = item_basename + "_stamp"
@@ -680,58 +647,11 @@ def stamp_pdfs(
         item_stamped_path = dir_path / item_stamped_name
 
         create_stamp(stamp_model_path,
-                     Path(dir_path),
+                     dir_path,
                      item_stamp_name_no_ext,
                      get_stamp_text(item, stamp_text_format),
                      remove_pdflatex_files=True)
-        stamp_pdf(Path(item.file),
-                  item_stamp_path,
-                  item_stamped_path,
-                  remove_stamp=True)
-
-        stamped_pdfs.append(item_stamped_path)
-
-    return stamped_pdfs
-
-def restamp_pdfs(
-        stamp_data: List[AttachmentStampData],
-        stamp_model_path: Path = stamp_model_default_path,
-        stamp_text_format: str = default_stamp_format) -> List[Path]:
-    """
-    Update stamps for a list of attachments.
-    :param stamp_data: List of objects containing pdf-paths (non-stamped) and stamp-attributes.
-    :param stamp_model_path: Tex-file to be used as model for stamps.
-    :param stamp_text_format: Formatting for stamp text, with attributes:
-            file, date, attachment and issue.
-    :return: List of stamped pdf paths.
-    """
-    stamped_pdfs = []
-    # Check if model stamp exists.
-    if not stamp_model_path.exists():
-        raise ModelStampMissingError(stamp_model_path)
-    # Checks multiple potential problems and raises error if invalid.
-    check_stamp_data_validity(stamp_data)
-
-    for item in stamp_data:
-        current_attachment_folder = item.file.parent
-        # Check if current folder exists and is a folder:
-        if not (current_attachment_folder.exists() and current_attachment_folder.is_dir()):
-            raise TempFolderNotFoundError(current_attachment_folder)
-
-
-        # Names and paths of new files to use as params.
-        item_basename = item.file.stem
-        item_stamp_name_no_ext = item_basename + "_stamp"
-        item_stamp_path = current_attachment_folder / f"{item_stamp_name_no_ext}.pdf"
-        item_stamped_name = item_basename + "_stamped.pdf"
-        item_stamped_path = current_attachment_folder / item_stamped_name
-
-        create_stamp(stamp_model_path,
-                     Path(current_attachment_folder),
-                     item_stamp_name_no_ext,
-                     get_stamp_text(item, stamp_text_format),
-                     remove_pdflatex_files=True)
-        stamp_pdf(Path(item.file),
+        stamp_pdf(item.file,
                   item_stamp_path,
                   item_stamped_path,
                   remove_stamp=True)

@@ -1,6 +1,6 @@
 import json
-import os
 import shutil
+from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 from timApp.auth.accesshelper import can_see_par_source
@@ -9,57 +9,55 @@ from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentwriter import DocumentWriter
 from timApp.document.randutils import random_id
+from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
 
 
 class Clipboard:
 
-    def __init__(self, files_root: str):
-        self.files_root = files_root
-
-    def get_path(self):
-        return os.path.join(self.files_root, 'clipboard')
+    def get_path(self) -> Path:
+        return get_files_path() / 'clipboard'
 
     def get(self, user: User):
         return Clipboard.UserClipboard(self, user)
 
     def clear_all(self):
         path = self.get_path()
-        if os.path.exists(path):
+        if path.exists():
             shutil.rmtree(path)
 
     class UserClipboard:
 
         def __init__(self, parent: 'Clipboard', user: User):
             self.user = user
-            self.path = os.path.join(parent.get_path(), str(self.user.id))
+            self.path = parent.get_path() / str(self.user.id)
 
-        def get_metafilename(self) -> str:
-            return os.path.join(self.path, 'metadata')
+        def get_metafilename(self) -> Path:
+            return self.path / 'metadata'
 
-        def get_clipfilename(self) -> str:
-            return os.path.join(self.path, 'content')
+        def get_clipfilename(self) -> Path:
+            return self.path / 'content'
 
-        def get_reffilename(self) -> str:
-            return os.path.join(self.path, 'ref-content')
+        def get_reffilename(self) -> Path:
+            return self.path / 'ref-content'
 
-        def get_parreffilename(self) -> str:
-            return os.path.join(self.path, 'ref-parcontent')
+        def get_parreffilename(self) -> Path:
+            return self.path / 'ref-parcontent'
 
         def clear(self):
             for name in (self.get_clipfilename(), self.get_reffilename(), self.get_parreffilename(), self.get_metafilename()):
-                if os.path.isfile(name):
-                    os.remove(name)
+                if name.is_file():
+                    name.unlink()
 
         def clear_refs(self):
             for name in (self.get_reffilename(), self.get_parreffilename()):
-                if os.path.isfile(name):
-                    os.remove(name)
+                if name.is_file():
+                    name.unlink()
 
-        def read_metadata(self) -> Dict[str, str]:
+        def read_metadata(self) -> Dict[str, Any]:
             try:
-                with open(self.get_metafilename(), 'rt', encoding='utf-8') as metafile:
+                with self.get_metafilename().open('rt', encoding='utf-8') as metafile:
                     metadata = json.loads(metafile.read())
                 metadata['empty'] = False
                 return metadata
@@ -74,17 +72,17 @@ class Clipboard:
             else:
                 clipfilename = self.get_clipfilename()
 
-            if not os.path.isfile(clipfilename):
+            if not clipfilename.is_file():
                 return None
-            with open(clipfilename, 'rt', encoding='utf-8') as clipfile:
+            with clipfilename.open('rt', encoding='utf-8') as clipfile:
                 content = clipfile.read()
             dp = DocumentParser(content)
             dp.validate_structure().raise_if_has_critical_issues()
             return dp.get_blocks()
 
         def write_metadata(self, **kwargs):
-            os.makedirs(self.path, exist_ok=True)
-            with open(self.get_metafilename(), 'wt', encoding='utf-8') as metafile:
+            self.path.mkdir(exist_ok=True, parents=True)
+            with self.get_metafilename().open('wt', encoding='utf-8') as metafile:
                 metafile.write(json.dumps(kwargs))
 
         def update_metadata(self, **kwargs):
@@ -93,23 +91,23 @@ class Clipboard:
             self.write_metadata(**metadata)
 
         def write(self, pars: List[Dict[str, Any]]):
-            os.makedirs(self.path, exist_ok=True)
+            self.path.mkdir(exist_ok=True, parents=True)
             text = DocumentWriter(pars).get_text()
-            with open(self.get_clipfilename(), 'wt', encoding='utf-8') as clipfile:
+            with self.get_clipfilename().open('wt', encoding='utf-8') as clipfile:
                 clipfile.write(text)
 
         def write_refs(self, pars: List[DocParagraph], area_name: Optional[str]):
-            os.makedirs(self.path, exist_ok=True)
+            self.path.mkdir(exist_ok=True, parents=True)
             ref_pars = [p.create_reference(p.doc).dict() for p in pars]
             reftext = DocumentWriter(ref_pars).get_text()
-            with open(self.get_parreffilename(), 'wt', encoding='utf-8') as reffile:
+            with self.get_parreffilename().open('wt', encoding='utf-8') as reffile:
                 reffile.write(reftext)
 
             if area_name and len(pars) > 0:
-                os.makedirs(self.path, exist_ok=True)
+                self.path.mkdir(exist_ok=True, parents=True)
                 ref_pars = [DocParagraph.create_area_reference(pars[0].doc, area_name).dict()]
                 reftext = DocumentWriter(ref_pars).get_text()
-                with open(self.get_reffilename(), 'wt', encoding='utf-8') as reffile:
+                with self.get_reffilename().open('wt', encoding='utf-8') as reffile:
                     reffile.write(reftext)
             else:
                 shutil.copy(self.get_parreffilename(), self.get_reffilename())

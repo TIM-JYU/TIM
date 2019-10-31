@@ -3,6 +3,7 @@ import os
 import shutil
 from datetime import datetime
 from difflib import SequenceMatcher
+from pathlib import Path
 from tempfile import mkstemp
 from time import time
 from typing import List, Optional, Set, Tuple, Union, Iterable, Generator, Dict
@@ -26,7 +27,7 @@ from timApp.document.version import Version
 from timApp.document.yamlblock import YamlBlock
 from timApp.timdb.exceptions import TimDbException, PreambleException, InvalidReferenceException
 from timApp.timtypes import DocInfoType
-from timApp.util.utils import get_error_html, trim_markdown
+from timApp.util.utils import get_error_html, trim_markdown, temp_folder_path, cache_folder_path
 
 if TYPE_CHECKING:
     from timApp.user.user import User
@@ -42,15 +43,11 @@ def par_list_to_text(sect: List[DocParagraph], export_hashes=False):
 
 
 class Document:
-    default_files_root = '/tim_files'
-
     def __init__(self,
-                 doc_id: Optional[int]=None,
-                 files_root: Optional[str] = None,
+                 doc_id: int,
                  modifier_group_id: Optional[int] = 0,
                  preload_option: PreloadOption = PreloadOption.none):
-        self.doc_id = doc_id if doc_id is not None else Document.get_next_free_id(files_root)
-        self.files_root = self.get_default_files_root() if not files_root else files_root
+        self.doc_id = doc_id
         self.modifier_group_id = modifier_group_id
         self.version = None
         self.user = None
@@ -87,10 +84,6 @@ class Document:
 
         self.route = ''
 
-    @classmethod
-    def get_default_files_root(cls):
-        return cls.default_files_root
-
     def is_viewmode(self):
         if self.route == "view":
             return True
@@ -101,8 +94,12 @@ class Document:
         return False
 
     @classmethod
-    def get_documents_dir(cls, files_root: str = default_files_root) -> str:
-        return os.path.join(files_root, 'docs')
+    def get_documents_dir(cls) -> Path:
+        from timApp.timdb.dbaccess import get_files_path
+        return get_files_path() / 'docs'
+
+    def get_doc_dir(self):
+        return self.get_documents_dir() / str(self.doc_id)
 
     def __repr__(self):
         return f'Document(id={self.doc_id})'
@@ -114,8 +111,8 @@ class Document:
             return CacheIterator(self.par_cache.__iter__())
 
     @classmethod
-    def __get_largest_file_number(cls, path: str, default=None) -> int:
-        if not os.path.exists(path):
+    def __get_largest_file_number(cls, path: Path, default=None) -> int:
+        if not path.exists():
             return default
 
         largest = -1
@@ -127,18 +124,7 @@ class Document:
         return largest if largest > -1 else default
 
     @classmethod
-    def doc_exists(cls, doc_id: int, files_root: Optional[str] = None) -> bool:
-        """Checks if a document id exists.
-
-        :param doc_id: Document id.
-        :return: Boolean.
-
-        """
-        froot = cls.get_default_files_root() if files_root is None else files_root
-        return os.path.exists(os.path.join(cls.get_documents_dir(froot), str(doc_id)))
-
-    @classmethod
-    def version_exists(cls, doc_id: int, doc_ver: Version, files_root: Optional[str] = None) -> bool:
+    def version_exists(cls, doc_id: int, doc_ver: Version) -> bool:
         """Checks if a document version exists.
 
         :param doc_id: Document id.
@@ -146,8 +132,7 @@ class Document:
         :return: Boolean.
 
         """
-        froot = cls.get_default_files_root() if files_root is None else files_root
-        return os.path.isfile(os.path.join(cls.get_documents_dir(froot), str(doc_id), str(doc_ver[0]), str(doc_ver[1])))
+        return (cls.get_documents_dir() / str(doc_id) / str(doc_ver[0]) / str(doc_ver[1])).is_file()
 
     def __update_par_map(self):
         self.par_map = {}
@@ -288,16 +273,16 @@ class Document:
         return settings
 
     def create(self, ignore_exists: bool = False):
-        path = os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
-        if not os.path.exists(path):
-            os.makedirs(path, exist_ok=True)
+        path = self.get_doc_dir()
+        if not path.exists():
+            path.mkdir(exist_ok=True, parents=True)
             self.__exists = None
         elif not ignore_exists:
             raise DocExistsError(self.doc_id)
 
     def exists(self) -> bool:
         if self.__exists is None:
-            self.__exists = Document.doc_exists(self.doc_id, self.files_root)
+            self.__exists = self.get_doc_dir().exists()
         return self.__exists
 
     def export_markdown(self, export_hashes: bool = False, export_ids=True) -> str:
@@ -344,30 +329,18 @@ class Document:
         return blocks, vr
 
     @classmethod
-    def remove(cls, doc_id: int, files_root: Optional[str] = None, ignore_exists=False):
+    def remove(cls, doc_id: int, ignore_exists=False):
         """Removes the whole document.
 
         :param doc_id: Document id to remove.
         :return:
 
         """
-        froot = cls.get_default_files_root() if files_root is None else files_root
-        if cls.doc_exists(doc_id, files_root=froot):
-            shutil.rmtree(os.path.join(cls.get_documents_dir(froot), str(doc_id)))
-            # todo: remove all paragraph links
+        d = Document(doc_id)
+        if d.exists():
+            shutil.rmtree(d.get_doc_dir())
         elif not ignore_exists:
             raise DocExistsError(doc_id)
-
-    @classmethod
-    def get_next_free_id(cls, files_root: Optional[str] = None) -> int:
-        """Gets the next free document id.
-
-        :return:
-
-        """
-        froot = cls.get_default_files_root() if files_root is None else files_root
-        res = 1 + cls.__get_largest_file_number(cls.get_documents_dir(froot), default=0)
-        return res
 
     def get_version(self) -> Version:
         """Gets the latest version of the document as a major-minor tuple.
@@ -377,9 +350,9 @@ class Document:
         """
         if self.version is not None:
             return self.version
-        basedir = os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
+        basedir = self.get_doc_dir()
         major = self.__get_largest_file_number(basedir, default=0)
-        minor = 0 if major < 1 else self.__get_largest_file_number(os.path.join(basedir, str(major)), default=0)
+        minor = 0 if major < 1 else self.__get_largest_file_number(basedir / str(major), default=0)
         self.version = major, minor
         return major, minor
 
@@ -391,29 +364,25 @@ class Document:
         from timApp.document.documentversion import DocumentVersion
         return DocumentVersion(doc_id=self.doc_id,
                                doc_ver=version if version else self.get_version(),
-                               files_root=self.files_root,
                                modifier_group_id=self.modifier_group_id)
 
-    def get_document_path(self) -> str:
-        return os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id))
-
-    def get_version_path(self, ver: Optional[Version]=None) -> str:
+    def get_version_path(self, ver: Optional[Version]=None) -> Path:
         version = self.get_version() if ver is None else ver
-        return os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id), str(version[0]), str(version[1]))
+        return self.get_documents_dir() / str(self.doc_id) / str(version[0]) / str(version[1])
 
-    def get_refs_dir(self, ver: Optional[Version]=None) -> str:
+    def get_refs_dir(self, ver: Optional[Version]=None) -> Path:
         version = self.get_version() if ver is None else ver
-        return os.path.join(self.files_root, 'refs', str(self.doc_id), str(version[0]), str(version[1]))
+        return cache_folder_path / 'refs' / str(self.doc_id) / str(version[0]) / str(version[1])
 
-    def get_reflist_filename(self, ver: Optional[Version]=None) -> str:
-        return os.path.join(self.get_refs_dir(ver), 'reflist_to')
+    def get_reflist_filename(self, ver: Optional[Version]=None) -> Path:
+        return self.get_refs_dir(ver) / 'reflist_to'
 
-    def getlogfilename(self) -> str:
-        return os.path.join(self.get_document_path(), 'changelog')
+    def getlogfilename(self) -> Path:
+        return self.get_doc_dir() / 'changelog'
 
     def __write_changelog(self, ver: Version, operation: str, par_id: str, op_params: Optional[dict] = None):
         logname = self.getlogfilename()
-        src = open(logname, 'r') if os.path.exists(logname) else None
+        src = logname.open('r') if logname.exists() else None
         destfd, tmpname = mkstemp()
         dest = os.fdopen(destfd, 'w')
 
@@ -450,13 +419,13 @@ class Document:
         while ver_exists:
             old_ver = ver
             ver = (old_ver[0] + 1, 0) if increment_major else (old_ver[0], old_ver[1] + 1)
-            ver_exists = os.path.isfile(self.get_version_path(ver))
+            ver_exists = (self.get_version_path(ver)).is_file()
         if increment_major:
-            os.mkdir(os.path.join(self.get_documents_dir(self.files_root), str(self.doc_id), str(ver[0])))
+            (self.get_documents_dir() / str(self.doc_id) / str(ver[0])).mkdir()
         if old_ver[0] > 0:
             shutil.copyfile(self.get_version_path(old_ver), self.get_version_path(ver))
         else:
-            with open(self.get_version_path(ver), 'w'):
+            with self.get_version_path(ver).open('w'):
                 pass
         self.__write_changelog(ver, op, par_id, op_params)
         self.version = ver
@@ -525,7 +494,7 @@ class Document:
             idx = self.par_ids.index(par_id)
         except ValueError:
             return self._raise_not_found(par_id)
-        fetched = DocParagraph.get(self, self.par_ids[idx], self.par_hashes[idx], self.files_root)
+        fetched = DocParagraph.get(self, self.par_ids[idx], self.par_hashes[idx])
         self.single_par_cache[par_id] = fetched
         return fetched
 
@@ -548,10 +517,10 @@ class Document:
         new_ver = self.__increment_version('Added', p.get_id(), increment_major=True)
         old_path = self.get_version_path(old_ver)
         new_path = self.get_version_path(new_ver)
-        if os.path.exists(old_path):
+        if old_path.exists():
             shutil.copyfile(old_path, new_path)
 
-        with open(new_path, 'a') as f:
+        with new_path.open('a') as f:
             f.write(p.get_id() + '/' + p.get_hash())
             f.write('\n')
         return p
@@ -574,8 +543,7 @@ class Document:
             doc=self,
             par_id=par_id,
             md=text,
-            attrs=attrs,
-            files_root=self.files_root
+            attrs=attrs
         )
         return self.add_paragraph_obj(p)
 
@@ -590,8 +558,8 @@ class Document:
         new_ver = self.__increment_version('Deleted', par_id, increment_major=True)
         self.__update_metadata([], old_ver, new_ver)
 
-        with open(self.get_version_path(old_ver), 'r') as f_src:
-            with open(self.get_version_path(new_ver), 'w') as f:
+        with self.get_version_path(old_ver).open('r') as f_src:
+            with self.get_version_path(new_ver).open('w') as f:
                 while True:
                     line = f_src.readline()
                     if not line:
@@ -620,8 +588,7 @@ class Document:
             doc=self,
             par_id=par_id,
             md=text,
-            attrs=attrs,
-            files_root=self.files_root
+            attrs=attrs
         )
         return self.insert_paragraph_obj(p, insert_before_id=insert_before_id, insert_after_id=insert_after_id)
 
@@ -643,7 +610,7 @@ class Document:
                                                'after_id': insert_after_id})
 
         new_line = p.get_id() + '/' + p.get_hash() + '\n'
-        with open(self.get_version_path(old_ver), 'r') as f_src, open(self.get_version_path(new_ver), 'w') as f:
+        with self.get_version_path(old_ver).open('r') as f_src, self.get_version_path(new_ver).open('w') as f:
             while True:
                 line = f_src.readline()
                 if not line:
@@ -674,8 +641,7 @@ class Document:
             md=new_text,
             doc=self,
             par_id=par_id,
-            attrs=new_attrs,
-            files_root=self.files_root
+            attrs=new_attrs
         )
         return self.modify_paragraph_obj(par_id, p)
 
@@ -683,7 +649,7 @@ class Document:
         if not self.has_paragraph(par_id):
             raise KeyError(f'No paragraph {par_id} in document {self.doc_id} version {self.get_version()}')
 
-        p_src = DocParagraph.get_latest(self, par_id, files_root=self.files_root)
+        p_src = DocParagraph.get_latest(self, par_id)
         p.set_id(par_id)
         new_hash = p.get_hash()
         p.store()
@@ -698,7 +664,7 @@ class Document:
         old_line_start = f'{par_id}/'
         old_line_legacy = f'{par_id}\n'
         new_line = f'{par_id}/{new_hash}\n'
-        with open(self.get_version_path(old_ver), 'r') as f_src, open(self.get_version_path(new_ver), 'w') as f:
+        with self.get_version_path(old_ver).open('r') as f_src, self.get_version_path(new_ver).open('w') as f:
             while True:
                 line = f_src.readline()
                 if not line:
@@ -869,11 +835,11 @@ class Document:
     def get_changelog(self, max_entries: int = 100) -> Changelog:
         log = Changelog()
         logname = self.getlogfilename()
-        if not os.path.isfile(logname):
+        if not logname.is_file():
             return Changelog()
 
         lc = max_entries
-        with open(logname, 'r') as f:
+        with logname.open('r') as f:
             while lc != 0:
                 line = f.readline()
                 if not line:
@@ -931,7 +897,7 @@ class Document:
         source = self
         if ver is not None:
             from timApp.document.documentversion import DocumentVersion
-            source = DocumentVersion(self.doc_id, ver, self.files_root)
+            source = DocumentVersion(self.doc_id, ver)
             source.docinfo = self.docinfo
 
         for p in source:
@@ -948,20 +914,20 @@ class Document:
                             pass
         return refs
 
-    def __load_reflist(self, reflist_name: str) -> Set[int]:
-        with open(reflist_name, 'r') as reffile:
+    def __load_reflist(self, reflist_name: Path) -> Set[int]:
+        with reflist_name.open('r') as reffile:
             return set(json.loads(reffile.read()))
 
-    def __save_reflist(self, reflist_name: str, reflist: Set[int]):
-        reflist_dir = os.path.dirname(reflist_name)
-        os.makedirs(reflist_dir, exist_ok=True)
+    def __save_reflist(self, reflist_name: Path, reflist: Set[int]):
+        f: Path = reflist_name.parent
+        f.mkdir(exist_ok=True, parents=True)
 
-        with open(reflist_name, 'w') as reffile:
+        with reflist_name.open('w') as reffile:
             reffile.write(json.dumps(list(reflist)))
 
     def get_referenced_document_ids(self, ver: Optional[Version]=None) -> Set[int]:
         reflist_name = self.get_reflist_filename(ver)
-        if os.path.isfile(reflist_name):
+        if reflist_name.is_file():
             reflist = self.__load_reflist(reflist_name)
         else:
             reflist = self.calculate_referenced_document_ids(ver)
@@ -995,7 +961,7 @@ class Document:
 
     def get_latest_version(self):
         from timApp.document.documentversion import DocumentVersion
-        return DocumentVersion(self.doc_id, self.get_version(), self.files_root, self.modifier_group_id, self.preload_option)
+        return DocumentVersion(self.doc_id, self.get_version(), self.modifier_group_id, self.preload_option)
 
     def get_docinfo(self) -> DocInfoType:
         if self.docinfo is None:
@@ -1042,9 +1008,9 @@ class Document:
     def _load_par_ids(self):
         self.par_ids = []
         self.par_hashes = []
-        if not os.path.exists(self.get_version_path()):
+        if not self.get_version_path().exists():
             return
-        with open(self.get_version_path(), 'r', encoding='UTF-8') as f:
+        with self.get_version_path().open('r', encoding='UTF-8') as f:
             while True:
                 line = f.readline()
                 if not line:
@@ -1184,7 +1150,7 @@ class DocParagraphIter:
         self.doc = doc
         self.next_index = 0
         name = doc.get_version_path(doc.get_version())
-        self.f = open(name, 'r') if os.path.isfile(name) else None
+        self.f = name.open('r') if name.is_file() else None
 
     def __enter__(self):
         return self
@@ -1210,12 +1176,12 @@ class DocParagraphIter:
                     cached = self.doc.single_par_cache.get(par_id)
                     if self.doc.single_par_cache.get(par_id):
                         return cached
-                    fetched = DocParagraph.get(self.doc, par_id, t, self.doc.files_root)
+                    fetched = DocParagraph.get(self.doc, par_id, t)
                     self.doc.single_par_cache[par_id] = fetched
                     return fetched
                 else:
                     # Line contains just par_id, use the latest t
-                    return DocParagraph.get_latest(self.doc, line.replace('\n', ''), self.doc.files_root)
+                    return DocParagraph.get_latest(self.doc, line.replace('\n', ''))
 
     def close(self):
         if self.f:

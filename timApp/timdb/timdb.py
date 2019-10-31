@@ -1,6 +1,6 @@
 """Defines the TimDb database class."""
-import os
 import time
+from pathlib import Path
 from time import sleep
 
 from timApp.timdb.sqa import db
@@ -25,7 +25,7 @@ class TimDb:
     """
     instances = 0
 
-    def __init__(self, files_root_path: str,
+    def __init__(self, files_root_path: Path,
                  current_user_name: str = 'Anonymous',
                  route_path: str = ''):
         """Initializes TimDB with the specified files root path, SQLAlchemy session and user name.
@@ -36,15 +36,15 @@ class TimDb:
         :param route_path: Path for the route requesting the db
 
         """
-        self.files_root_path = os.path.abspath(files_root_path)
+        self.files_root_path = files_root_path
         self.route_path = route_path
         self.current_user_name = current_user_name
 
-        self.blocks_path = os.path.join(self.files_root_path, 'blocks')
+        self.blocks_path = self.files_root_path / 'blocks'
         for path in [self.blocks_path]:
-            if not os.path.exists(path):
+            if not path.exists():
                 log_info(f'Creating directory: {path}')
-                os.makedirs(path)
+                path.mkdir(parents=True, exist_ok=False)
         self.reset_attrs()
 
     def reset_attrs(self):

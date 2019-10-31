@@ -4,6 +4,7 @@ Routes for printing a document
 import os
 import shutil
 import tempfile
+from pathlib import Path
 from typing import Optional
 
 from flask import Blueprint, send_file
@@ -15,7 +16,8 @@ from flask import request
 
 from timApp.auth import sessioninfo
 from timApp.auth.accesshelper import verify_view_access
-from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError, TEX_MACROS_KEY
+from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError, TEX_MACROS_KEY, \
+    DEFAULT_PRINTING_FOLDER
 from timApp.printing.printsettings import PrintFormat
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response
@@ -174,7 +176,7 @@ def print_document(doc_path):
         abort(400, str(err))  # TODO: maybe there's a better error code?
 
     # print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
-
+    db.session.commit()
     return json_response({'success': True, 'url': print_access_url}, status_code=201)
 
 
@@ -267,9 +269,6 @@ def get_printed_document(doc_path):
 
     mime = get_mimetype_for_format(print_type)
 
-    if mime is None:
-        abort(400, "An unexpected error occurred.")
-
     if not line:
         response = make_response(send_file(filename_or_fp=cached, mimetype=mime))
     else:  # show LaTeX with line numbers
@@ -302,7 +301,7 @@ def get_printed_document(doc_path):
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '-1'
-
+    db.session.commit()
     return response
 
 
@@ -320,17 +319,7 @@ def get_templates(doc_path):
     return json_response({'templates': templates, 'doctemplate' : ''})
 
 
-@print_blueprint.route("/hash/<path:doc_path>", methods=['GET'])
-def get_hash(doc_path):
-    doc = g.doc_entry
-    user = g.user
-    template_doc = DocEntry.find_by_id(50)  # TODO: what 50???
-
-    printer = DocumentPrinter(doc_entry=doc, template_to_use=template_doc)
-    return printer.hash_doc_print(plugins_user_print=True)
-
-
-def get_mimetype_for_format(file_type: PrintFormat):
+def get_mimetype_for_format(file_type: PrintFormat) -> str:
     if file_type == PrintFormat.PDF:
         return 'application/pdf'
     elif file_type == PrintFormat.HTML:
@@ -394,17 +383,15 @@ def create_printed_doc(doc_entry: DocEntry,
     printer = DocumentPrinter(doc_entry=doc_entry,
                               template_to_use=template_doc,
                               urlroot=urlroot)
-    path = printer.get_print_path(temp=temp,
-                                  file_type=file_type,
+    path = printer.get_print_path(file_type=file_type,
                                   plugins_user_print=plugins_user_print)
-    if os.path.exists(path):
-        os.remove(path)
+    if path.exists():
+        path.unlink()
 
-    folder = os.path.split(path)[0]  # gets only the head of the head, tail -tuple
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    folder: Path = path.parent
+    folder.mkdir(parents=True, exist_ok=True)
     try:
-        printer.write_to_format(target_format=file_type, plugins_user_print=plugins_user_print, path=path)
+        printer.write_to_format(target_format=file_type, path=path, plugins_user_print=plugins_user_print)
         pdferror = None
     except LaTeXError as err:
         pdferror = err.value
@@ -414,12 +401,11 @@ def create_printed_doc(doc_entry: DocEntry,
     p_doc = PrintedDoc(doc_id=doc_entry.document.doc_id,
                        template_doc_id=printer.get_template_id(),
                        version=printer.hash_doc_print(plugins_user_print=plugins_user_print),
-                       path_to_file=path,
+                       path_to_file=path.as_posix(),
                        file_type=file_type.value,
                        temp=temp)
 
     db.session.add(p_doc)
-    db.session.commit()
 
     if pdferror:
         raise LaTeXError(pdferror)

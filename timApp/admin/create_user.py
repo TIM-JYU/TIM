@@ -1,12 +1,12 @@
-from timApp.tim_app import app
-from timApp.user.user import User
-from timApp.user.usergroup import UserGroup
+from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.timdb.timdb import TimDb
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 
 
 def query_admin():
-    timdb = TimDb(app.config['FILES_PATH'])
+    timdb = TimDb(get_files_path())
     while True:
         username = input("Username: ")
         user = User.query.filter_by(name=username).first()

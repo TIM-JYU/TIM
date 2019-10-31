@@ -103,7 +103,7 @@ not header x
         params_url = {'file_type': 'latex', 'template_doc_id': t.id, 'plugins_user_code': False, 'force': True}
         r = self.get(d.url, as_tree=True)
         self.assertTrue(r.cssselect('.parContent table'))
-        r = self.get(f'/print/{d.path}', query_string=params_url)
+        r = self.get_no_warn(f'/print/{d.path}', query_string=params_url)
         self.assertEqual(r"""
 \hypertarget{first}{%
 \section{1. first}\label{first}}
@@ -131,7 +131,7 @@ not header & x\tabularnewline
         """.strip(), r)
         d.document.add_setting('texmacros', {'texautonumber': 1})
         self.get(d.url, as_tree=True)
-        r = self.get(f'/print/{d.path}', query_string=params_url)
+        r = self.get_no_warn(f'/print/{d.path}', query_string=params_url)
         no_numbers = r"""
 \hypertarget{first}{%
 \section{first}\label{first}}
@@ -160,7 +160,7 @@ not header & x\tabularnewline
         self.assertEqual(no_numbers.strip(), r)
         d.document.set_settings({})
         self.get(d.url, as_tree=True)
-        r = self.get(f'/print/{d.path}', query_string=params_url)
+        r = self.get_no_warn(f'/print/{d.path}', query_string=params_url)
         self.assertEqual(no_numbers.strip(), r)
 
     def create_empty_print_template(self):

@@ -44,5 +44,6 @@ services:
   tmpfs:
    - /tmp
    - /tim_files
+   - /cache
   working_dir: /service/timApp
   read_only: true
