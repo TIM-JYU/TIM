@@ -228,6 +228,7 @@ def get_printed_document(doc_path):
         except Exception as err:
             return abort(400, str(err))
 
+    db.session.commit()
     cached = check_print_cache(doc_entry=doc,
                                template=template_doc,
                                file_type=print_type,
@@ -301,7 +302,6 @@ def get_printed_document(doc_path):
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '-1'
-    db.session.commit()
     return response
 
 
