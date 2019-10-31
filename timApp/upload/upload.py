@@ -11,7 +11,6 @@ import magic
 from dataclasses import dataclass
 from flask import Blueprint, request, send_file, Response
 from flask import abort
-from webargs.flaskparser import use_args
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
@@ -25,12 +24,12 @@ from timApp.document.documents import import_document
 from timApp.item.block import Block
 from timApp.item.block import BlockType
 from timApp.item.validation import validate_item_and_create_intermediate_folders, validate_uploaded_document_content
-from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import PluginUpload, PluginUploadInfo, UploadedFile
+from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
     PdfError, stamp_pdfs, create_tex_file, stamp_model_default_path
@@ -240,7 +239,7 @@ class RestampModel:
 
 
 @upload.route('/upload/restamp', methods=['POST'])
-@use_args(class_schema(RestampModel)())
+@use_model(RestampModel)
 def restamp_attachments(args: RestampModel):
     """
     Route for updating stamps for one or more uploaded attachments.

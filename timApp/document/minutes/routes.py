@@ -6,24 +6,19 @@ from pathlib import Path
 from typing import List
 from urllib.parse import urlencode
 
+from dataclasses import dataclass
 from flask import Blueprint, send_file
 from flask import abort
 
-from webargs.flaskparser import use_args
-from dataclasses import dataclass
-
-from marshmallow_dataclass import class_schema
-
-
 from timApp.auth.accesshelper import verify_manage_access, verify_edit_access, get_doc_or_abort
 from timApp.document.create_item import create_or_copy_item, create_document
+from timApp.document.docentry import DocEntry
 from timApp.document.docsettings import DocSettings
 from timApp.item.block import BlockType
-from timApp.upload.uploadedfile import UploadedFile
-from timApp.util.flask.requesthelper import verify_json_params
-from timApp.util.flask.responsehelper import safe_redirect, json_response
-from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
+from timApp.upload.uploadedfile import UploadedFile
+from timApp.util.flask.requesthelper import verify_json_params, use_model
+from timApp.util.flask.responsehelper import safe_redirect, json_response
 from timApp.util.pdftools import merged_file_folder, merge_pdfs, get_attachments_from_pars
 from timApp.util.utils import get_error_message
 
@@ -247,7 +242,7 @@ class MergeAttachmentsModel:
 
 
 @minutes_blueprint.route('/mergeAttachments', methods=['POST'])
-@use_args(class_schema(MergeAttachmentsModel)())
+@use_model(MergeAttachmentsModel)
 def merge_selected_attachments(args: MergeAttachmentsModel):
     """
     A route for merging a list of urls.
@@ -285,7 +280,7 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
 
 
 @minutes_blueprint.route('/openMergedAttachment')
-@use_args(class_schema(MergeAttachmentsModel)())
+@use_model(MergeAttachmentsModel)
 def open_merged_file(args: MergeAttachmentsModel):
     """
     Open a merged file.

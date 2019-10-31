@@ -12,9 +12,7 @@ from flask import g
 from flask import redirect
 from flask import request
 from flask import session
-from webargs.flaskparser import use_args
 
-from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access
@@ -172,7 +170,7 @@ class ItemWithRights:
 
 
 @view_page.route("/getItems")
-@use_args(class_schema(GetItemsModel)())
+@use_model(GetItemsModel)
 def items_route(args: GetItemsModel):
     if args.folder is not None:
         f = Folder.find_by_path(args.folder)
@@ -867,7 +865,7 @@ class SetViewRangeModel:
 
 
 @view_page.route('/viewrange/set/piecesize', methods=["POST"])
-@use_args(class_schema(SetViewRangeModel)())
+@use_model(SetViewRangeModel)
 def set_piece_size(args: SetViewRangeModel):
     """
     Add cookie for user defined view range (if isn't set, doc won't be partitioned).

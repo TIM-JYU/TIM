@@ -12,9 +12,7 @@ from flask import redirect
 from flask import request
 from isodate import Duration
 from isodate import parse_duration
-from webargs.flaskparser import use_args
 
-from marshmallow_dataclass import class_schema
 from timApp.auth.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
     verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort, verify_copy_access, AccessDenied
 from timApp.auth.accesstype import AccessType
@@ -24,17 +22,17 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document, find_free_name
-from timApp.folder.folder import Folder, path_includes
 from timApp.folder.createopts import FolderCreationOptions
+from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType, Block
 from timApp.item.item import Item, copy_rights
 from timApp.item.validation import validate_item, validate_item_and_create_intermediate_folders, has_special_chars
 from timApp.timdb.sqa import db
 from timApp.user.user import User, ItemOrBlock
 from timApp.user.usergroup import UserGroup
-from timApp.user.users import remove_access, remove_default_access, get_default_rights_holders, get_rights_holders
+from timApp.user.users import remove_default_access, get_default_rights_holders, get_rights_holders
 from timApp.user.userutils import grant_access, grant_default_access, get_access_type_id
-from timApp.util.flask.requesthelper import verify_json_params, get_option
+from timApp.util.flask.requesthelper import verify_json_params, get_option, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
 from timApp.util.utils import remove_path_special_chars, split_location, join_location, get_current_time, \
     split_by_semicolon
@@ -120,7 +118,7 @@ class PermissionEditModel:
 
 
 @manage_page.route("/permissions/edit", methods=["put"])
-@use_args(class_schema(PermissionEditModel)())
+@use_model(PermissionEditModel)
 def edit_permissions(args: PermissionEditModel):
     groups = UserGroup.query.filter(UserGroup.name.in_(args.groups)).all()
     nonexistent = set(args.groups) - set(g.name for g in groups)
