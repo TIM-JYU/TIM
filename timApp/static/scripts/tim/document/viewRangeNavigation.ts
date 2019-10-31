@@ -8,15 +8,15 @@ import {Require} from "tim/util/utils";
 import {timApp} from "../app";
 import {ViewCtrl} from "./viewctrl";
 import {showViewRangeEditDialog} from "./viewRangeEditDialog";
-import {IViewRange, partitionDocument, unpartitionDocument} from "./viewRangeInfo";
+import {IViewRange, partitionDocument} from "./viewRangeInfo";
 
 class ViewRangeNavigation implements IController {
     static $inject = ["$element", "$scope"];
     private vctrl!: Require<ViewCtrl>;
-    private ranges?: IViewRange[] = [];
+    private ranges: IViewRange[] = [];
 
     async $onInit() {
-        if (this.vctrl && this.vctrl.viewRangeInfo) {
+        if (this.vctrl && this.vctrl.viewRangeInfo && this.vctrl.viewRangeInfo.ranges) {
             // Ranges come from document specific ViewRangeInfo to avoid duplicate requests.
             this.ranges = this.vctrl.viewRangeInfo.ranges;
         }
@@ -40,13 +40,6 @@ class ViewRangeNavigation implements IController {
         void showViewRangeEditDialog(this.vctrl.item);
         // this.currentRange = getCurrentViewRange();
     }
-
-    /**
-     * Remove partitioning and reload full document.
-     */
-    private async close() {
-        await unpartitionDocument();
-    }
 }
 
 timApp.component("viewRangeNavigation", {
@@ -55,18 +48,18 @@ timApp.component("viewRangeNavigation", {
         vctrl: "^timView",
     },
     template: `
-    <div class="view-range-container" ng-if="$ctrl.ranges && $ctrl.ranges.length > 0">
-        <div class="view-range-buttons">
-            <span ng-repeat="r in $ctrl.ranges">
-                <a ng-if="r" ng-click="$ctrl.move(r)"
-                    uib-tooltip="Navigate to part {{r.b}} - {{r.e}}">{{r.name}} part</a>
-                <span ng-if="!$last && r">|</span>
-            </span>
-            <a style="display: inline-block" ng-click="$ctrl.openViewRangeMenu()"
-                uib-tooltip="Open document partitioning settings">
-                <span class="glyphicon glyphicon-cog"></span>
-            </a>
-        </div>
+<div class="view-range-container" ng-if="$ctrl.ranges && $ctrl.ranges.length > 0">
+    <div class="view-range-buttons">
+        <span ng-repeat="r in $ctrl.ranges">
+            <a ng-if="r" ng-click="$ctrl.move(r)"
+                uib-tooltip="Navigate to part {{r.b}} - {{r.e}}">{{r.name}} part</a>
+            <span ng-if="!$last && r">|</span>
+        </span>
+        <a style="display: inline-block" ng-click="$ctrl.openViewRangeMenu()"
+            uib-tooltip="Open document partitioning settings">
+            <span class="glyphicon glyphicon-cog"></span>
+        </a>
     </div>
+</div>
     `,
 });
