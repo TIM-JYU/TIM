@@ -505,13 +505,16 @@ class DocumentPrinter:
 
     def get_printed_document_path_from_db(self, file_type: PrintFormat, plugins_user_print: bool = False) -> \
             Optional[str]:
-        existing_print: Optional[PrintedDoc] = PrintedDoc.query. \
-            filter_by(doc_id=self._doc_entry.id,
-                      template_doc_id=self.get_template_id(),
-                      file_type=file_type.value,
-                      version=self.hash_doc_print(plugins_user_print=plugins_user_print)). \
-            first()
-
+        existing_print: Optional[PrintedDoc] = (
+            PrintedDoc.query
+                .filter_by(
+                doc_id=self._doc_entry.id,
+                template_doc_id=self.get_template_id(),
+                file_type=file_type.value,
+                version=self.hash_doc_print(plugins_user_print=plugins_user_print))
+                .order_by(PrintedDoc.id.desc())
+                .first()
+        )
         if existing_print is None or not os.path.exists(existing_print.path_to_file):
             return None
 
