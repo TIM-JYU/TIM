@@ -376,21 +376,8 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
-    /**
-     * Choose header style class based on its contents and close state.
-     * @param header Header containing h1 and possibly h2 list.
-     * @returns {string} Header class.
-     */
-    private headerClass(header: IHeaderDisplayIndexItem) {
-        if (header.h2List.length > 0) {
-            if (header.closed) {
-                return "exp";
-            } else {
-                return "col";
-            }
-        } else {
-            return "basic";
-        }
+    private hasSubHeadings(header: IHeaderDisplayIndexItem) {
+        return header.h2List.length > 0;
     }
 
     /**
@@ -691,12 +678,16 @@ timApp.component("timSidebarMenu", {
         </uib-tab-heading>
         <h5>Index <a href="#" title="Go to top" class="pull-right">Go to top</a></h5>
         <ul class="subexp">
-            <li ng-class="$ctrl.headerClass(h)" ng-repeat="h in ::$ctrl.displayIndex"
-                ng-click="h.closed = !h.closed">
+            <li ng-repeat="h in ::$ctrl.displayIndex">
+                <a class="exptoggle" ng-if="$ctrl.hasSubHeadings(h)">
+                    <i ng-if="h.closed" class="glyphicon glyphicon-plus" ng-click="h.closed = !h.closed"></i>
+                    <i ng-if="!h.closed" class="glyphicon glyphicon-minus" ng-click="h.closed = !h.closed"></i>
+                </a>
+                <i style="visibility: hidden" ng-if="!$ctrl.hasSubHeadings(h)" class="glyphicon glyphicon-plus"></i>
                 <a class="a{{::h.h1.level}}" href="{{::$ctrl.hashlessUrl}}#{{::h.h1.id}}" target="_self" ng-click="$ctrl.headerClicked($event, h.h1.id)">
                     {{::h.h1.text}}</a>
                 <ul class="list-unstyled" ng-if="!h.closed" ng-click="$event.stopPropagation()">
-                    <li class="basic" ng-repeat="h2 in h.h2List">
+                    <li ng-repeat="h2 in h.h2List">
                         <a class="a{{::h2.level}}" href="{{::$ctrl.hashlessUrl}}#{{::h2.id}}" ng-click="$ctrl.headerClicked($event, h2.id)"
                             target="_self">{{::h2.text}}</a>
                     </li>

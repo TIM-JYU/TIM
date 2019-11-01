@@ -60,8 +60,16 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
             padding-left: 13px;
 
             &.subexp {
-                display: block;
-                padding-left: 20px;
+                padding-left: 0;
+                list-style-type: none;
+
+                ul {
+                    padding-left: 25px;
+                }
+
+                a.exptoggle:hover {
+                    text-decoration: none;
+                }
 
                 a.a3 {
                     position: relative;
@@ -73,18 +81,4 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
             }
         }
     }
-}
-
-.col ul {
-    padding-left: 10px !important;
-}
-
-li.exp {
-    list-style-image: url("#{$asset-path}/images/plus.png");
-    cursor: pointer;
-}
-
-li.col {
-    list-style-image: url("#{$asset-path}/images/minus.png");
-    cursor: pointer;
 }
