@@ -38,7 +38,6 @@ export interface IHeader {
     id: string;
     level: number;
     text: string;
-    parIndex: number;
 }
 
 export interface IHeaderDisplayIndexItem {
