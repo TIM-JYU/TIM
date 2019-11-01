@@ -26,6 +26,19 @@ export interface IExportOptions {
 
 const sortLang = "fi";
 
+function numericSort(a: number | null, b: number | null) {
+    if (a === b) {
+        return 0;
+    }
+    if (a === null) {
+        return -1;
+    }
+    if (b === null) {
+        return 1;
+    }
+    return Math.sign(a - b);
+}
+
 export class UserListController implements IController {
     static $inject = ["$scope", "$element"];
     private gridOptions?: uiGrid.IGridOptionsOf<IUserListEntry> & {gridMenuCustomItems: unknown};
@@ -94,6 +107,7 @@ export class UserListController implements IController {
                 headerTooltip: true,
                 maxWidth: smallFieldWidth,
                 visible: anyAnnotations,
+                sortingAlgorithm: numericSort,
             },
             {
                 field: "velped_task_count",
@@ -110,6 +124,7 @@ export class UserListController implements IController {
                 headerTooltip: true,
                 maxWidth: smallFieldWidth,
                 visible: anyAnnotations,
+                sortingAlgorithm: numericSort,
             },
             {
                 field: "total_points",
@@ -117,6 +132,7 @@ export class UserListController implements IController {
                 cellTooltip: true,
                 headerTooltip: true,
                 maxWidth: smallFieldWidth,
+                sortingAlgorithm: numericSort,
             },
         ]);
         this.instantUpdate = this.viewctrl.docSettings.form_mode || false;
