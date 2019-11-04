@@ -260,3 +260,13 @@ Lorem ipsum.
 
 #-""")
         self.get(d.url)
+
+    def test_formatted_heading(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+# test ([test]{.red}) {#test}
+        """)
+        self.assertEqual(
+            [({'id': 'test-test', 'level': 1, 'text': 'test (test)'}, [])],
+            d.document.get_index(),
+        )

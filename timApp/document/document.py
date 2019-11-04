@@ -1116,7 +1116,7 @@ class Document:
 
 def add_index_entry(index_table, current_headers, header):
     level = int(header.tag[1:])
-    current = {'id': header.get('id'), 'text': header.text, 'level': level}
+    current = {'id': header.get('id'), 'text': header.text_content(), 'level': level}
     if level == 1:
         if current_headers is not None:
             index_table.append(current_headers)
