@@ -494,7 +494,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
     taketime("before render")
     nav_ranges = []
     if view_range:
-        piece_size = get_piece_size_from_cookie(request)
+        piece_size = get_piece_size_from_cookie(request) or 20
         first_range = decide_view_range(
             doc_info,
             preferred_set_size=piece_size,

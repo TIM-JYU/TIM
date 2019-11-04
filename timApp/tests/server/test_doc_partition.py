@@ -17,6 +17,11 @@ class DocPartitionTest(TimRouteTest):
                  expect_cookie=('r', None),
                  expect_status=200)
 
+    def test_no_preferred_size(self):
+        self.login_test1()
+        self.get(url=f'/viewrange/unset/piecesize')
+        d = self.create_doc()
+        self.get(d.url, query_string={'b': 0, 'e': 0})
 
     def test_calculating_part_indices(self):
         self.login_test1()
