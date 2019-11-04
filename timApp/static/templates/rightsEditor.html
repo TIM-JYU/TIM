@@ -35,6 +35,7 @@
         <li ng-repeat="right in filtered = ($ctrl.grouprights | filter: {type: type.id}:true | filter: $ctrl.obsoleteFilterFn | orderBy: ['usergroup.personal_user.real_name', 'usergroup.name'])">
             <span ng-show="!$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></span>
             <s ng-show="$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></s>
+            <a title="Send email to this user" ng-if="right.usergroup.personal_user" href="mailto:{{right.usergroup.personal_user.email}}"><i class="glyphicon glyphicon-envelope"></i></a>
             <i ng-show="$ctrl.showClock(right)"
                class="glyphicon glyphicon-time"></i>
             <span class="label label-success"
