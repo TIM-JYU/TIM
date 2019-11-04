@@ -51,7 +51,8 @@ timApp.component("viewRangeNavigation", {
 <div class="view-range-container" ng-if="$ctrl.ranges && $ctrl.ranges.length > 0">
     <div class="view-range-buttons">
         <span ng-repeat="r in $ctrl.ranges">
-            <a ng-if="r" ng-click="$ctrl.move(r)"
+            <span ng-if="r.disabled">{{r.name}} part</span>
+            <a ng-if="!r.disabled" ng-click="$ctrl.move(r)"
                 uib-tooltip="Navigate to part {{r.b}} - {{r.e}}">{{r.name}} part</a>
             <span ng-if="!$last && r">|</span>
         </span>
