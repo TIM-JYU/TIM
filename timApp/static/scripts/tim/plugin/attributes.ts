@@ -56,35 +56,7 @@ export function getTopLevelFields<M extends IGenericPluginMarkup>(m: t.Type<M>) 
     ]);
 }
 
-const PaliMarkup = t.intersection([
-    t.partial({
-        initword: t.string,
-        inputplaceholder: nullable(t.string),
-        inputstem: t.string,
-    }),
-    GenericPluginMarkup,
-    t.type({
-        // all withDefaults should come here; NOT in t.partial
-        autoupdate: withDefault(t.number, 500),
-        cols: withDefault(t.number, 20),
-    }),
-]);
-
 const UnknownTopLevel = getTopLevelFields(GenericPluginMarkup);
-
-export const GenericPluginTopLevelFields = t.intersection([
-    t.partial({
-        access: t.keyof({
-            readonly: null,
-            readwrite: null,
-        }),
-        state: t.unknown,
-    }),
-    t.type({
-        info: Info,
-        preview: t.boolean,
-    }),
-]);
 
 export interface IGenericPluginTopLevelFields<MarkupType extends IGenericPluginMarkup> extends t.TypeOf<typeof UnknownTopLevel> {
     markup: MarkupType;
