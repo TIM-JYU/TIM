@@ -295,7 +295,6 @@ cbfieldApp.component("cbfieldRunner", {
                ng-model="$ctrl.userword"
                ng-change="$ctrl.autoSave()"
                ng-disabled="::$ctrl.readonly"
-               ng-readonly="::$ctrl.freadonly"
                ng-model-options="::$ctrl.modelOpts"
                uib-tooltip="{{ $ctrl.errormessage }}"
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
