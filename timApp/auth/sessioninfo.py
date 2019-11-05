@@ -16,7 +16,8 @@ def get_current_user_object() -> User:
         u = User.query.get(curr_id)
         if u is None:
             if curr_id != 0:
-                session['user_id'] = 0
+                curr_id = 0
+                session['user_id'] = curr_id
                 u = User.query.get(curr_id)
         if not u:
             raise Exception(dedent(f"""
