@@ -328,7 +328,7 @@ rbfieldApp.component("rbfieldRunner", {
                class="form-control"
                ng-model="$ctrl.userword"
                ng-change="$ctrl.autoSave()"
-               ng-disabled="::$ctrl.isReadOnly()"
+               ng-disabled="::$ctrl.readonly"
                ng-model-options="::$ctrl.modelOpts"
                ng-readonly="::$ctrl.readonly"
                uib-tooltip="{{ $ctrl.errormessage }}"
