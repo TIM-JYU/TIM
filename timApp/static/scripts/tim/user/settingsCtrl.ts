@@ -6,7 +6,7 @@ import {showMessageDialog} from "../ui/dialog";
 import {settingsglobals} from "../util/globals";
 import {$http, $timeout} from "../util/ngimport";
 import {IOkResponse, to} from "../util/utils";
-import {Users} from "./userService";
+import {IFullUser} from "./IUser";
 
 export interface ISettings {
     css_combined: string;
@@ -36,8 +36,10 @@ export class SettingsCtrl implements IController {
     private consent: ConsentType | undefined;
     private storageClear = false;
     private allNotificationsFetched = false;
+    private user: IFullUser;
 
     constructor() {
+        this.user = settingsglobals().current_user;
         this.settings = settingsglobals().userPrefs;
         this.cssFiles = settingsglobals().css_files;
         this.notifications = settingsglobals().notifications;
@@ -48,7 +50,7 @@ export class SettingsCtrl implements IController {
     }
 
     $onInit() {
-        this.consent = Users.getCurrent().consent;
+        this.consent = this.user.consent;
     }
 
     $doCheck() {
@@ -207,6 +209,12 @@ timApp.component("timSettings", {
     <bootstrap-panel title="Other settings">
         <button class="btn btn-default" ng-click="$ctrl.clearLocalStorage()">Clear local settings storage</button>
         <span ng-if="$ctrl.storageClear">Local storage cleared.</span>
+    </bootstrap-panel>
+    <bootstrap-panel title="Your account information">
+        <p>Id: {{$ctrl.user.id}}</p>
+        <p>Username: {{$ctrl.user.name}}</p>
+        <p>Full name: {{$ctrl.user.real_name}}</p>
+        <p>Email: {{$ctrl.user.email}}</p>
     </bootstrap-panel>
 <!--    <bootstrap-panel title="Consent">
         <tim-consent-choice consent="$ctrl.consent"></tim-consent-choice>
