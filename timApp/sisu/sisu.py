@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from json import JSONDecodeError
 from textwrap import dedent
 from typing import List, Optional, Dict, Union, Any
 
@@ -35,6 +36,7 @@ from timApp.user.usergroup import UserGroup, get_sisu_groups_by_filter
 from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.get_fields import get_fields_and_users
+from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time, fin_timezone
 
 sisu = Blueprint('sisu',
@@ -440,7 +442,11 @@ def send_grades_to_sisu(
     )
     # log_info(json.dumps(r.json(), indent=4))
     # noinspection PyTypeChecker
-    pr: PostAssessmentsResponse = PostAssessmentsResponseSchema().load(r.json())
+    try:
+        pr: PostAssessmentsResponse = PostAssessmentsResponseSchema().load(r.json())
+    except JSONDecodeError:
+        log_warning(f'Sisu returned invalid JSON: {r.text}')
+        raise SisuError('Connection to Sisu is currently not working (Sisu gave an unexpected error).')
     if pr.error:
         raise SisuError(pr.error.reason)
     invalid_assessments = set(n for n in pr.body.assessments.keys())
