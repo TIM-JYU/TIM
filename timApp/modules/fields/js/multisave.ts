@@ -505,7 +505,10 @@ multisaveApp.component("multisaveRunner", {
         <tim-loading ng-if="$ctrl.loading"></tim-loading>
         <p ng-if="$ctrl.okAssessments != null && !$ctrl.loading">
             {{ $ctrl.okAssessments }} arviointia lähetettiin Sisuun.
-            {{ $ctrl.errAssessments }} virheellistä arviointia torjuttiin.
+            <span ng-if="$ctrl.errAssessments > 0">{{ $ctrl.errAssessments }} virheellistä arviointia torjuttiin.</span>
+            Voit vahvistaa arvioinnit
+            <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{$ctrl.attrs.destCourse}}/evaluation/verification">
+            Sisussa</a>.
         </p>
     </div>
     <button class="timButton"
