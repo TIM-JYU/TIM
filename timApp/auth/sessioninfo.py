@@ -1,6 +1,7 @@
+from textwrap import dedent
 from typing import Dict, List
 
-from flask import session, g, request
+from flask import session, g, request, current_app
 
 from timApp.user.user import User
 
@@ -11,12 +12,19 @@ def get_current_user():
 
 def get_current_user_object() -> User:
     if not hasattr(g, 'user'):
-        while True:
-            u = User.query.get(get_current_user_id())
-            if u is None:
+        curr_id = get_current_user_id()
+        u = User.query.get(curr_id)
+        if u is None:
+            if curr_id != 0:
                 session['user_id'] = 0
-            else:
-                break
+                u = User.query.get(curr_id)
+        if not u:
+            raise Exception(dedent(f"""
+            Database has no users; you need to re-initialize it:
+            ./dc stop -t 0 tim celery postgresql
+            docker volume rm {current_app.config['TIM_NAME']}_data11
+            delete tim_files folder
+            ./up.sh""").strip())
         g.user = u
     return g.user
 
