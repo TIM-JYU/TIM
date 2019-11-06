@@ -19,7 +19,10 @@ var pluginTrendlineLinear = {
                 yScale = chartInstance.scales[axis];
             if ( xScale && yScale ) break;
         }
-        let ctx = chartInstance.chart.ctx;
+        let ctx = chartInstance.ctx;
+        if ( !ctx && chartInstance.chart)
+            ctx = chartInstance.chart.ctx;
+        if ( !ctx ) return;
 
         chartInstance.data.datasets.forEach(function(dataset, index) {
             if (dataset.trendlineLinear && chartInstance.isDatasetVisible(index)) {
