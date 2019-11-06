@@ -346,8 +346,8 @@ class Assessment:
             raise ValidationError('Cannot be empty')
         if value not in ('0', '1', '2', '3', '4', '5', 'HYV', 'HYL', 'HT', 'TT'):
             raise ValidationError(f'Cannot be "{value}"')
-        if value == 'HYL':
-            raise ValidationError('Sisu interface currently does not accept HYL grade')
+        # if value == 'HYL':
+        #     raise ValidationError('Sisu interface currently does not accept HYL grade')
 
 
 @dataclass
