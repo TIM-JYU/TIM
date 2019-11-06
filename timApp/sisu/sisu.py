@@ -344,7 +344,7 @@ class Assessment:
     def validate_grade(self, value):
         if value == '':
             raise ValidationError('Cannot be empty')
-        if value not in ('1', '2', '3', '4', '5', 'HYV', 'HYL', 'HT', 'TT'):
+        if value not in ('0', '1', '2', '3', '4', '5', 'HYV', 'HYL', 'HT', 'TT'):
             raise ValidationError(f'Cannot be "{value}"')
 
 
