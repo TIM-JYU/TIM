@@ -359,14 +359,21 @@ class CandidateAssessment:
     privateComment: Any = None
     sentGrade: Any = None
 
-    def to_sisu_json(self, completion_date: Optional[str]=None):
+    def to_sisu_json(
+            self,
+            completion_date: Optional[str] = None,
+            ensure_int_credit: bool = False,
+    ):
         result = {
             'userName': self.user.name,
             'gradeId': self.gradeId,
             'completionDate': completion_date or self.completionDate,
         }
         if self.completionCredits:
-            result['completionCredits'] = self.completionCredits
+            c = self.completionCredits
+            if ensure_int_credit:
+                c = int(c)
+            result['completionCredits'] = c
         if self.privateComment:
             result['privateComment'] = self.privateComment
         return result
@@ -394,6 +401,15 @@ def mock_assessments(sisuid):
         'assessments': {str(i): {'userName': {'code': 40001, 'reason': 'Some reason.'}}
                         for i, a in enumerate(assessments) if a['userName'] not in ok_names},
     }}, status_code=207 if partial else 400)
+
+
+def call_sisu_assessments(sisu_id: str, json: Dict[str, Any]):
+    url = f'{app.config["SISU_ASSESSMENTS_URL"]}{sisu_id}'
+    return requests.post(
+        url,
+        json=json,
+        cert=app.config['SISU_CERT_PATH'],
+    )
 
 
 def send_grades_to_sisu(
@@ -431,16 +447,17 @@ def send_grades_to_sisu(
             }
         invalid_assessments_indices = {i for i in e.messages.keys()}
         assessments = [a for i, a in enumerate(assessments) if i not in invalid_assessments_indices]
-    url = f'{app.config["SISU_ASSESSMENTS_URL"]}{sisu_id}'
     # log_info(json.dumps(assessments, indent=4))
-    r = requests.post(
-        url,
+    r = call_sisu_assessments(
+        sisu_id,
         json={
-            'assessments': [a.to_sisu_json(completion_date=completion_date_iso) for a in assessments],
+            'assessments': [a.to_sisu_json(
+                completion_date=completion_date_iso,
+                ensure_int_credit=True,
+            ) for a in assessments],
             'partial': partial,
             'dry_run': dry_run,
         },
-        cert=app.config['SISU_CERT_PATH'],
     )
     # log_info(json.dumps(r.json(), indent=4))
     # noinspection PyTypeChecker

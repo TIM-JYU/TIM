@@ -1,6 +1,8 @@
 import json
 from operator import itemgetter
 from typing import List, Dict, Any, Optional
+from unittest import mock
+from unittest.mock import Mock
 
 import responses
 
@@ -10,6 +12,7 @@ from timApp.document.docentry import DocEntry
 from timApp.notification.notify import sent_mails_in_testing
 from timApp.sisu.scim import SISU_GROUP_PREFIX
 from timApp.sisu.scimusergroup import ScimUserGroup
+from timApp.sisu.sisu import call_sisu_assessments
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
@@ -931,7 +934,87 @@ def scim_error(msg: str, code=422):
     )
 
 
-class SendGradeTest(TimRouteTest):
+class SendGradeTestBase(TimRouteTest):
+    def check_send_grade_result(
+            self,
+            grade_params: Dict[str, Any],
+            expect_content: Dict[str, Any],
+            mock_sisu_response: Optional[Dict[str, Any]],
+            mock_sisu_status=200,
+            expect_status=200,
+    ):
+        if mock_sisu_response is None:
+            self.json_post(
+                '/sisu/sendGrades',
+                grade_params,
+                expect_content=expect_content,
+                expect_status=expect_status,
+            )
+            return
+        with responses.RequestsMock() as m:
+            m.add(
+                'POST',
+                f'{app.config["SISU_ASSESSMENTS_URL"]}{grade_params["destCourse"]}',
+                body=json.dumps(mock_sisu_response),
+                status=mock_sisu_status,
+            )
+            self.json_post(
+                '/sisu/sendGrades',
+                grade_params,
+                expect_content=expect_content,
+                expect_status=expect_status,
+            )
+
+
+class StrCreditTest(SendGradeTestBase):
+    def test_str_credit(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.test_user_2.answers.append(Answer(task_id=f'{d.id}.grade', content=json.dumps({'c': 5}), valid=True))
+        self.test_user_2.answers.append(Answer(task_id=f'{d.id}.credit', content=json.dumps({'c': '5'}), valid=True))
+        grade_params = {
+            'destCourse': 'jy-CUR-1234',
+            'docId': d.id,
+            'partial': False,
+            'dryRun': False,
+        }
+        t = UserGroup.get_teachers_group()
+        t.users.append(self.test_user_1)
+        ug = UserGroup.create('course1234')
+        ug.external_id = ScimUserGroup(external_id='jy-CUR-1234-responsible-teachers')
+        ug.users.append(self.test_user_1)
+        ug = UserGroup.create('students1234')
+        ug.users.append(self.test_user_2)
+        d.document.add_setting('group', 'students1234')
+        ug = UserGroup.get_by_name('students1234')
+        ug.admin_doc = self.create_doc().block
+        db.session.commit()
+        current_date = get_current_time().strftime('%Y-%m-%d')
+        with mock.patch('timApp.sisu.sisu.call_sisu_assessments', wraps=call_sisu_assessments) as m:  # type: Mock
+            self.check_send_grade_result(
+                grade_params,
+                {'assessment_errors': [],
+                 'default_selection': [],
+                 'sent_assessments': [
+                     {'completionCredits': '5',
+                      'completionDate': current_date,
+                      'gradeId': '5',
+                      'privateComment': None,
+                      'user': {'email': 'test2@example.com',
+                               'id': 3,
+                               'name': 'testuser2',
+                               'real_name': 'Test user 2'}}]},
+                {'body': {'assessments': {}}}
+            )
+        m.assert_called_with(
+            'jy-CUR-1234',
+            json={'assessments': [
+                {'userName': 'testuser2', 'gradeId': '5', 'completionDate': '2019-11-06', 'completionCredits': 5}],
+                  'partial': False, 'dry_run': False},
+        )
+
+
+class SendGradeTest(SendGradeTestBase):
     def test_send_grades(self):
         self.login_test1()
         d = self.create_doc()
@@ -1361,33 +1444,3 @@ class SendGradeTest(TimRouteTest):
             mock_sisu_status=207,
             expect_status=200,
         )
-
-    def check_send_grade_result(
-            self,
-            grade_params: Dict[str, Any],
-            expect_content: Dict[str, Any],
-            mock_sisu_response: Optional[Dict[str, Any]],
-            mock_sisu_status=200,
-            expect_status=200,
-    ):
-        if mock_sisu_response is None:
-            self.json_post(
-                '/sisu/sendGrades',
-                grade_params,
-                expect_content=expect_content,
-                expect_status=expect_status,
-            )
-            return
-        with responses.RequestsMock() as m:
-            m.add(
-                'POST',
-                f'{app.config["SISU_ASSESSMENTS_URL"]}{grade_params["destCourse"]}',
-                body=json.dumps(mock_sisu_response),
-                status=mock_sisu_status,
-            )
-            self.json_post(
-                '/sisu/sendGrades',
-                grade_params,
-                expect_content=expect_content,
-                expect_status=expect_status,
-            )
