@@ -1009,7 +1009,7 @@ class StrCreditTest(SendGradeTestBase):
         m.assert_called_with(
             'jy-CUR-1234',
             json={'assessments': [
-                {'userName': 'testuser2', 'gradeId': '5', 'completionDate': '2019-11-06', 'completionCredits': 5}],
+                {'userName': 'testuser2', 'gradeId': '5', 'completionDate': current_date, 'completionCredits': 5}],
                   'partial': False, 'dry_run': False},
         )
 
