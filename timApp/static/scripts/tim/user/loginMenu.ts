@@ -1,6 +1,7 @@
 import {IController} from "angular";
 import {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
+import {Lang} from "../ui/language";
 import {$localStorage} from "../util/ngimport";
 import {showLoginDialog} from "./loginDialog";
 import {Users} from "./userService";
@@ -10,7 +11,7 @@ import {Users} from "./userService";
  * depending on whether the user is logged in.
  */
 class LoginMenuController implements IController {
-    private storage: ngStorage.StorageService & {language: null | string};
+    private storage: ngStorage.StorageService & {language: null | Lang};
 
     constructor() {
         this.storage = $localStorage.$default({language: null});
@@ -18,8 +19,8 @@ class LoginMenuController implements IController {
 
     isLoggedIn = () => Users.isLoggedIn();
 
-    openLoginDialog(lang: string) {
-        void showLoginDialog({showSignup: false, addingToSession: false, language: lang});
+    openLoginDialog(lang: Lang) {
+        void showLoginDialog({showSignup: false, addingToSession: false});
     }
 }
 

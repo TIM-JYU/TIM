@@ -21,7 +21,7 @@ from timApp.admin.routes import admin_bp
 from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
 from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
-from timApp.auth.haka import haka
+from timApp.auth.saml import saml
 from timApp.auth.login import login_page
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     logged_in, current_user_in_lecture
@@ -88,7 +88,7 @@ for bp in [
     generateMap,
     global_notification,
     groups,
-    haka,
+    saml,
     lecture_routes,
     login_page,
     manage_page,

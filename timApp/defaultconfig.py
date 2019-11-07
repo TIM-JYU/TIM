@@ -82,10 +82,12 @@ PROXY_WHITELIST = [
 ]
 SISU_ASSESSMENTS_URL = 'https://s2s.apitest.jyu.fi/assessments/'
 SISU_CERT_PATH = '/service/certs/sisu.pem'
-SAML_PATH = '/service/timApp/auth/saml'
 
+SAML_PATH = '/service/timApp/auth/saml/dev'
 HAKA_METADATA_URL = 'https://haka.funet.fi/metadata/haka_test_metadata_signed.xml'
 HAKA_METADATA_CERT_URL = 'https://wiki.eduuni.fi/download/attachments/27297886/haka_testi_2018_sha2.crt?version=1&modificationDate=1525431417507&api=v2'
 
+# In production, copy these to prodconfig.py and remove the "_PROD" suffix.
+SAML_PATH_PROD = '/service/timApp/auth/saml/prod'
 HAKA_METADATA_URL_PROD = 'https://haka.funet.fi/metadata/haka-metadata.xml'
 HAKA_METADATA_CERT_URL_PROD = 'https://wiki.eduuni.fi/download/attachments/27297775/haka-sign-v4.pem?version=1&modificationDate=1511941560853&api=v2'

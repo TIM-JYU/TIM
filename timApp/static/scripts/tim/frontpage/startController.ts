@@ -6,7 +6,7 @@ import {timApp} from "../app";
 import {showCourseListDialog} from "../document/course/courseListDialogCtrl";
 import {ICourseSettings} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
-import {FRONT_PAGE_DEFAULT_LANGUAGE} from "../ui/language";
+import {FRONT_PAGE_DEFAULT_LANGUAGE, Lang, language} from "../ui/language";
 import {showLoginDialog} from "../user/loginDialog";
 import {Users} from "../user/userService";
 import {genericglobals} from "../util/globals";
@@ -18,9 +18,9 @@ markAsUsed(createItem);
 export class StartCtrl implements IController {
     private creatingNew: boolean;
     private docListOpen: boolean;
-    private language: string = FRONT_PAGE_DEFAULT_LANGUAGE; // Language to use.
+    private language: Lang = FRONT_PAGE_DEFAULT_LANGUAGE; // Language to use.
     private bookmarks = {}; // For My courses.
-    private storage: ngStorage.StorageService & {language: null | string};
+    private storage: ngStorage.StorageService & {language: null | Lang};
 
     constructor() {
         this.creatingNew = false;
@@ -61,6 +61,7 @@ export class StartCtrl implements IController {
                 }
                 break;
         }
+        language.lang = this.language;
     }
 
     getCurrentUserFolderPath() {
@@ -87,14 +88,15 @@ export class StartCtrl implements IController {
      * Currently supported: fi, en.
      * @param changeTo New language abbreviation.
      */
-    changeLanguage(changeTo: string) {
+    changeLanguage(changeTo: Lang) {
         this.language = changeTo;
         this.storage.language = changeTo;
+        language.lang = changeTo;
     }
 
     openLoginDialog(signup: boolean) {
         if (!this.isLoggedIn()) {
-            void showLoginDialog({showSignup: signup, addingToSession: false, language: this.language});
+            void showLoginDialog({showSignup: signup, addingToSession: false});
         } else {
             void showMessageDialog(`You are already logged in`);
         }
@@ -110,6 +112,10 @@ export class StartCtrl implements IController {
             return;
         }
         void showMessageDialog(`Course settings not found: ${r.result.data.error}`);
+    }
+
+    notFinnish() {
+        return this.language != "fi";
     }
 }
 
@@ -210,68 +216,34 @@ timApp.component("timStart", {
             </div>
         </div>
     </div>
-    <!-- English -->
-    <div ng-switch="$ctrl.language" ng-cloak>
-        <div ng-switch-default>
-            <div class="row">
-                <div class="col-md-7 col-md-offset-3">
-                    <h4>What is TIM?</h4>
-                    <p>TIM is a document-based cloud service for producing interactive materials.</p>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3 col-md-offset-3">
-                    <h4>TIM</h4>
-                    <ul class="list-unstyled">
-                        <li><a href="/view/tim/TIM-esittely/en">Introduction</a></li>
-                        <li><a href="/view/tim/TIM-ohjeet">User guide</a><sup> (F)</sup></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h4>Examples <sup>(F)</sup></h4>
-                    <ul class="list-unstyled">
-                        <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista">TIM's possibilities</a></li>
-                        <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/Eri-ohjelmointikielia">
-                                Programming languages</a></li>
-                        <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/muita-esimerkkeja">
-                                Usage in different subjects</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-4 col-md-offset-4 text-muted text-center">
-                    <sup>(F)</sup> in Finnish
-                </div>
-            </div>
+    <div class="row">
+        <div class="col-md-7 col-md-offset-3">
+            <h4>{{ 'What is TIM?' | tr }}</h4>
+            <p>{{ 'TIM is a document-based cloud service for producing interactive materials.' | tr }}</p>
         </div>
-        <!-- Finnish -->
-        <div ng-switch-when="fi">
-            <div class="row">
-                <div class="col-md-8 col-md-offset-3">
-                    <h4>Mikä on TIM?</h4>
-                    <p>TIM on dokumenttipohjainen pilvipalvelu interaktiivisten materiaalien tuottamiseksi.</p>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3 col-md-offset-3">
-                    <h4>TIM</h4>
-                    <ul class="list-unstyled">
-                        <li><a href="/view/tim/TIM-esittely">Esittely</a></li>
-                        <li><a href="/view/tim/TIM-ohjeet">Ohjeet</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h4>Esimerkkejä</h4>
-                    <ul class="list-unstyled">
-                        <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista">
-                            TIMin mahdollisuuksia</a></li>
-                        <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/Eri-ohjelmointikielia">
-                            Ohjelmointikieliä</a></li>
-                        <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/muita-esimerkkeja">
-                            Käyttö eri oppiaineissa</a></li>
-                    </ul>
-                </div>
-            </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3 col-md-offset-3">
+            <h4>TIM</h4>
+            <ul class="list-unstyled">
+                <li><a href="/view/tim/TIM-esittely/en">{{ 'Introduction' | tr }}</a></li>
+                <li><a href="/view/tim/TIM-ohjeet">{{ 'User guide' | tr }}</a><sup ng-if="$ctrl.notFinnish()"> (F)</sup></li>
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h4>{{ 'Examples' | tr }} <sup ng-if="$ctrl.notFinnish()">(F)</sup></h4>
+            <ul class="list-unstyled">
+                <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista">{{ "TIM's possibilities" | tr }}</a></li>
+                <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/Eri-ohjelmointikielia">
+                        {{ 'Programming languages' | tr }}</a></li>
+                <li><a ng-if="$ctrl.isLoggedIn()" href="/view/tim/muita-esimerkkeja">
+                        {{ 'Usage in different subjects' | tr }}</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="row" ng-if="$ctrl.notFinnish()">
+        <div class="col-md-4 col-md-offset-4 text-muted text-center">
+            <sup>(F)</sup> in Finnish
         </div>
     </div>
     `,

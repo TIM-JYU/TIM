@@ -59,12 +59,7 @@ def logout():
         group.pop(str(user_id), None)
         session['other_users'] = group
     else:
-        session.pop('user_id', None)
-        session.pop('came_from', None)
-        session.pop('last_doc', None)
-        session.pop('anchor', None)
-        session.pop('other_users', None)
-        session.pop('adding_user', None)
+        session.clear()
     return login_response()
 
 

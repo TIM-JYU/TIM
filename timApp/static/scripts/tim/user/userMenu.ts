@@ -1,5 +1,6 @@
 import {IController} from "angular";
 import {timApp} from "tim/app";
+import {Lang} from "../ui/language";
 import {Binding} from "../util/utils";
 import {IUser} from "./IUser";
 import {showLoginDialog} from "./loginDialog";
@@ -13,7 +14,7 @@ class UserMenuController implements IController {
     static component = "userMenu";
     static $inject = ["$element", "$scope"] as const;
     private loggingout: boolean;
-    public language!: Binding<string, "@">;
+    public language!: Binding<Lang, "@">;
 
     constructor() {
         this.loggingout = false;
@@ -28,7 +29,7 @@ class UserMenuController implements IController {
      * Add another user to the session using login dialog.
      */
     addUser() {
-        void showLoginDialog({showSignup: false, addingToSession: true, language: this.language});
+        void showLoginDialog({showSignup: false, addingToSession: true});
     }
 
     logout = (user: IUser, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
