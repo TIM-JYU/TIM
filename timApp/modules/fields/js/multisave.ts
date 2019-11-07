@@ -478,8 +478,10 @@ multisaveApp.component("multisaveRunner", {
         <tim-loading ng-if="$ctrl.loading && !$ctrl.assessments"></tim-loading>
     </div>
     <div ng-if="$ctrl.assessments">
-        <p>Arviointien lähettäminen Sisuun ylikirjoittaa Sisun arviointinäkymän tiedot.
+        <p>
         <span class="red">
+            Arviointien lähettäminen Sisuun tyhjentää Sisusta KAIKKI vahvistamattomat arvioinnit (myös ne, joita ei
+            tässä lähetyksessä lähetetä).
             Tästä syystä uutta Sisuun lähetystä EI SAA tehdä ennen kuin aikaisemmin lähetetyt on Sisussa vahvistettu.
             Sisussa vahvistettua arvosanaa ei voi enää muuttaa.
         </span>
