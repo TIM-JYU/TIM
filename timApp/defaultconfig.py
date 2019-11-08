@@ -86,8 +86,10 @@ SISU_CERT_PATH = '/service/certs/sisu.pem'
 SAML_PATH = '/service/timApp/auth/saml/dev'
 HAKA_METADATA_URL = 'https://haka.funet.fi/metadata/haka_test_metadata_signed.xml'
 HAKA_METADATA_CERT_URL = 'https://wiki.eduuni.fi/download/attachments/27297886/haka_testi_2018_sha2.crt?version=1&modificationDate=1525431417507&api=v2'
+HAKA_METADATA_FINGERPRINT = 'a5956f3e3ad011be4a5f7ac549ac49d1a31fd65c'
 
 # In production, copy these to prodconfig.py and remove the "_PROD" suffix.
 SAML_PATH_PROD = '/service/timApp/auth/saml/prod'
 HAKA_METADATA_URL_PROD = 'https://haka.funet.fi/metadata/haka-metadata.xml'
 HAKA_METADATA_CERT_URL_PROD = 'https://wiki.eduuni.fi/download/attachments/27297775/haka-sign-v4.pem?version=1&modificationDate=1511941560853&api=v2'
+HAKA_METADATA_FINGERPRINT_PROD = '6212391dfbd2874425a7fdd5ac8dd0bd5cd50d2f'

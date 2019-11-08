@@ -23,12 +23,18 @@ saml = Blueprint('saml',
                  url_prefix='/saml')
 
 
+class FingerPrintException(Exception):
+    pass
+
+
 @return_false_on_exception
 def validate_node_sign(signature_node, elem, cert=None, fingerprint=None, fingerprintalg='sha1', validatecert=False,
                        debug=False):
     """
-    Same as OneLogin_Saml2_Utils.validate_node_sign but without the empty Reference URI handling.
-    Haka metadata validation does not work with it.
+    Same as OneLogin_Saml2_Utils.validate_node_sign but with the following changes:
+
+    * The empty Reference URI handling has been removed (Haka metadata validation does not work with it).
+    * If the certificate fingerprint does not match, an exception is raised.
     """
     if (cert is None or cert == '') and fingerprint:
         x509_certificate_nodes = OneLogin_Saml2_XML.query(signature_node,
@@ -41,6 +47,8 @@ def validate_node_sign(signature_node, elem, cert=None, fingerprint=None, finger
                                                                                      fingerprintalg)
             if fingerprint == x509_fingerprint_value:
                 cert = x509_cert_value_formatted
+            else:
+                raise FingerPrintException(f'Expected certificate fingerprint {fingerprint} but got {x509_fingerprint_value}')
 
     if cert is None or cert == '':
         raise OneLogin_Saml2_Error(
@@ -62,7 +70,7 @@ def validate_node_sign(signature_node, elem, cert=None, fingerprint=None, finger
         dsig_ctx.verify(signature_node)
     except Exception as err:
         raise OneLogin_Saml2_ValidationError(
-            'Signature validation failed. SAML Response rejected. %s',
+            'Signature validation failed. %s',
             OneLogin_Saml2_ValidationError.INVALID_SIGNATURE,
             str(err)
         )
@@ -78,12 +86,16 @@ def init_saml_auth(req, entity_id: str) -> OneLogin_Saml2_Auth:
     idp_data = OneLogin_Saml2_IdPMetadataParser.parse(idp_metadata_xml, entity_id=entity_id)
     if 'idp' not in idp_data:
         raise RouteException(f'IdP not found from Haka metadata: {entity_id}')
-    if not OneLogin_Saml2_Utils.validate_metadata_sign(
-            idp_metadata_xml,
-            validatecert=True,
-            fingerprint='a5956f3e3ad011be4a5f7ac549ac49d1a31fd65c',
-    ):
-        raise RouteException('Failed to validate Haka metadata')
+    try:
+        if not OneLogin_Saml2_Utils.validate_metadata_sign(
+                idp_metadata_xml,
+                validatecert=True,
+                fingerprint=app.config['HAKA_METADATA_FINGERPRINT'],
+                raise_exceptions=True,
+        ):
+            raise RouteException('Failed to validate Haka metadata')
+    except (FingerPrintException, OneLogin_Saml2_ValidationError) as e:
+        raise RouteException(f'Failed to validate Haka metadata: {e}')
     saml_path = app.config['SAML_PATH']
     osett = OneLogin_Saml2_Settings(custom_base_path=saml_path, sp_validation_only=True)
     sp = osett.get_sp_data()
