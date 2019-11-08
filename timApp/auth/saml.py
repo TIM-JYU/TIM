@@ -89,7 +89,7 @@ def init_saml_auth(req, entity_id: str) -> OneLogin_Saml2_Auth:
     try:
         if not OneLogin_Saml2_Utils.validate_metadata_sign(
                 idp_metadata_xml,
-                validatecert=True,
+                validatecert=False,
                 fingerprint=app.config['HAKA_METADATA_FINGERPRINT'],
                 raise_exceptions=True,
         ):
