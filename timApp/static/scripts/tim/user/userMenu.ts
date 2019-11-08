@@ -1,7 +1,6 @@
 import {IController} from "angular";
 import {timApp} from "tim/app";
-import {Lang} from "../ui/language";
-import {Binding} from "../util/utils";
+import {tr} from "../ui/language";
 import {IUser} from "./IUser";
 import {showLoginDialog} from "./loginDialog";
 import {Users} from "./userService";
@@ -14,7 +13,6 @@ class UserMenuController implements IController {
     static component = "userMenu";
     static $inject = ["$element", "$scope"] as const;
     private loggingout: boolean;
-    public language!: Binding<Lang, "@">;
 
     constructor() {
         this.loggingout = false;
@@ -44,87 +42,48 @@ class UserMenuController implements IController {
             this.logout(this.getCurrentUser());
         }
     }
+
+    tr(s: string) {
+        return tr(s);
+    }
 }
 
 timApp.component("userMenu", {
-    bindings: {
-        language: "@",
-    },
     controller: UserMenuController,
     template: `
-    <div ng-switch="$ctrl.language" ng-cloak>
-    <!-- English -->
-    <div ng-switch-default>
-    <div class="btn-group margin-4" uib-dropdown on-toggle="$ctrl.toggled(open)">
-        <button type="button" title="You're logged in" class="btn btn-primary" uib-dropdown-toggle>
-        {{ $ctrl.getCurrentUser().real_name }} <span
-            ng-if="$ctrl.getSessionUsers().length > 0">and {{ $ctrl.getSessionUsers().length }} <ng-pluralize
-            count="$ctrl.getSessionUsers().length"
-            when="{'1': 'other',
-                     'other': 'others'}">
-        </ng-pluralize></span> <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu"
-        uib-dropdown-menu
-        role="menu"
-        aria-labelledby="single-button">
-        <li role="menuitem"><a ng-href="/view/{{ $ctrl.getCurrentUser().folder.path }}">My documents</a></li>
-        <li role="menuitem"><a
-                ng-click="$ctrl.addUser()"
-                href="#">Add a user to this session...</a></li>
-        <li class="divider"></li>
-        <li ng-if="!$ctrl.loggingout" role="menuitem">
-            <a ng-click="$ctrl.beginLogout($event)" href="#">Log <span
-                    ng-if="$ctrl.getSessionUsers().length > 0">everyone</span>
-                out<span ng-if="$ctrl.isKorppi()">...</span></a>
-        </li>
-        <li ng-if="$ctrl.loggingout" role="menuitem">
-            <a ng-click="$ctrl.logout($ctrl.getCurrentUser(), true)" href="#">Log out (TIM + Korppi)</a>
-        </li>
-        <li ng-if="$ctrl.loggingout" role="menuitem">
-            <a ng-click="$ctrl.logout($ctrl.getCurrentUser(), false)" href="#">Log out (TIM only)</a>
-        </li>
-        <li role="menuitem" ng-repeat="u in $ctrl.getSessionUsers()"><a ng-click="$ctrl.logout(u)"
-                                                                        href="#">Log {{ u.real_name }} out</a></li>
-        </ul>
-    </div>
-    </div>
-    <!-- Finnish -->
-    <div ng-switch-when="fi">
-    <div class="btn-group margin-4" uib-dropdown on-toggle="$ctrl.toggled(open)">
-        <button type="button" title="Olet kirjautunut sisään" class="btn btn-primary" uib-dropdown-toggle>
-        {{ $ctrl.getCurrentUser().real_name }} <span
-            ng-if="$ctrl.getSessionUsers().length > 0">ja {{ $ctrl.getSessionUsers().length }} <ng-pluralize
-            count="$ctrl.getSessionUsers().length"
-            when="{'1': 'muu', 'other': 'muuta'}">
-        </ng-pluralize></span> <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu"
-        uib-dropdown-menu
-        role="menu"
-        aria-labelledby="single-button">
-        <li role="menuitem"><a ng-href="/view/{{ $ctrl.getCurrentUser().folder.path }}">Omat dokumentit</a></li>
-        <li role="menuitem"><a
-                ng-click="$ctrl.addUser()"
-                href="#">Lisää käyttäjä istuntoon...</a></li>
-        <li class="divider"></li>
-        <li ng-if="!$ctrl.loggingout" role="menuitem">
-            <a ng-click="$ctrl.beginLogout($event)" href="#">
-            <span ng-if="$ctrl.getSessionUsers().length > 0">Kirjaa ulos kaikki käyttäjät</span>
-            <span ng-if="$ctrl.getSessionUsers().length == 0">Kirjaudu ulos</span><span
-            ng-if="$ctrl.isKorppi()">...</span></a>
-        </li>
-        <li ng-if="$ctrl.loggingout" role="menuitem">
-            <a ng-click="$ctrl.logout($ctrl.getCurrentUser(), true)" href="#">Kirjaudu ulos (TIM + Korppi)</a>
-        </li>
-        <li ng-if="$ctrl.loggingout" role="menuitem">
-            <a ng-click="$ctrl.logout($ctrl.getCurrentUser(), false)" href="#">Kirjaudu ulos (vain TIM)</a>
-        </li>
-        <li role="menuitem" ng-repeat="u in $ctrl.getSessionUsers()"><a ng-click="$ctrl.logout(u)"
-                                                                        href="#">Kirjaa ulos {{ u.real_name }}</a></li>
-        </ul>
-    </div>
-    </div>
-    </div>
+<div class="btn-group margin-4" uib-dropdown on-toggle="$ctrl.toggled(open)">
+    <button type="button" title="{{ 'You\\'re logged in' | tr }}" class="btn btn-primary" uib-dropdown-toggle>
+    {{ $ctrl.getCurrentUser().real_name }} <span
+        ng-if="$ctrl.getSessionUsers().length > 0">{{ 'and' | tr }} {{ $ctrl.getSessionUsers().length }} <ng-pluralize
+        count="$ctrl.getSessionUsers().length"
+        when="{'1': $ctrl.tr('other'),
+                 'other': $ctrl.tr('others')}">
+    </ng-pluralize></span> <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu"
+    uib-dropdown-menu
+    role="menu"
+    aria-labelledby="single-button">
+    <li role="menuitem"><a ng-href="/view/{{ $ctrl.getCurrentUser().folder.path }}">{{ 'My documents' | tr }}</a></li>
+    <li role="menuitem"><a
+            ng-click="$ctrl.addUser()"
+            href="#">{{ 'Add a user to this session' | tr }}...</a></li>
+    <li class="divider"></li>
+    <li ng-if="!$ctrl.loggingout" role="menuitem">
+        <a ng-click="$ctrl.beginLogout($event)" href="#">{{ 'Log' | tr:{self: $ctrl.getSessionUsers().length === 0} }} <span
+                ng-if="$ctrl.getSessionUsers().length > 0">{{ 'everyone' | tr }}</span>
+            {{ 'out' | tr }}<span ng-if="$ctrl.isKorppi()">...</span></a>
+    </li>
+    <li ng-if="$ctrl.loggingout" role="menuitem">
+        <a ng-click="$ctrl.logout($ctrl.getCurrentUser(), true)" href="#">{{ 'Log out' | tr }} (TIM + Korppi)</a>
+    </li>
+    <li ng-if="$ctrl.loggingout" role="menuitem">
+        <a ng-click="$ctrl.logout($ctrl.getCurrentUser(), false)" href="#">{{ 'Log out' | tr }} ({{ 'TIM only' | tr }})</a>
+    </li>
+    <li role="menuitem" ng-repeat="u in $ctrl.getSessionUsers()">
+        <a ng-click="$ctrl.logout(u)" href="#">{{ 'Log' | tr:{self: false} }} {{ u.real_name }} {{ 'out' | tr }}</a>
+    </li>
+    </ul>
+</div>
     `,
 });
