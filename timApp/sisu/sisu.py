@@ -378,8 +378,12 @@ class CandidateAssessment:
             result['privateComment'] = self.privateComment
         return result
 
+    @property
+    def is_fail_grade(self):
+        return self.gradeId in ('HYL', '0')
+
     def is_new_or_changed(self):
-        return not self.sentGrade or self.gradeId != self.sentGrade
+        return (not self.sentGrade or self.gradeId != self.sentGrade) and not self.is_fail_grade
 
     def to_json(self):
         r = asdict(self)

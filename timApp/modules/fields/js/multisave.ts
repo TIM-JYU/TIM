@@ -294,8 +294,8 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
                     field: "gradeId",
                     name: "Grade",
                     allowCellFocus: false,
-                    width: 60,
-                    filter: {term: "."},
+                    width: 65,
+                    filter: {term: ">0"},
                 },
                 {
                     field: "completionDate",
