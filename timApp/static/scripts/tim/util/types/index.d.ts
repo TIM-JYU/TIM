@@ -49,3 +49,4 @@ declare module "mathjax" {
     const MathJax: jax.IMathJax;
     export = MathJax;
 }
+declare module "url-search-params-polyfill";

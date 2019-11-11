@@ -227,6 +227,7 @@ SystemJS.config({
     "tslib": "npm:tslib@1.9.3",
     "typescript": "npm:typescript@3.5.1",
     "url": "npm:jspm-nodelibs-url@0.2.1",
+    "url-search-params-polyfill": "npm:url-search-params-polyfill@7.0.0",
     "util": "npm:jspm-nodelibs-util@0.2.2",
     "vm": "npm:jspm-nodelibs-vm@0.2.1"
   },

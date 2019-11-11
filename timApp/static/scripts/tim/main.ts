@@ -47,6 +47,7 @@ import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
 import * as annotation from "tim/velp/annotation";
 import * as reviewController from "tim/velp/reviewController";
 import * as velpSelection from "tim/velp/velpSelection";
+import * as urlPolyfill from "url-search-params-polyfill";
 import {ParCompiler} from "./editor/parCompiler";
 import {genericglobals} from "./util/globals";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
@@ -93,6 +94,7 @@ markAsUsed(
     timMenuController,
     timTable,
     tableForm,
+    urlPolyfill,
     userlistController,
     userMenu,
     velpSelection,

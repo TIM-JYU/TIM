@@ -83,7 +83,8 @@
       "rangyinputs": "github:jigargosar/rangyinputs@^1.2.0",
       "reveal.js": "npm:reveal.js@^3.8.0",
       "text": "github:systemjs/plugin-text@^0.0.9",
-      "ts": "github:frankwallis/plugin-typescript@^9.0.0"
+      "ts": "github:frankwallis/plugin-typescript@^9.0.0",
+      "url-search-params-polyfill": "npm:url-search-params-polyfill@^7.0.0"
     },
     "devDependencies": {
       "core-js": "npm:core-js@^1.1.4",
