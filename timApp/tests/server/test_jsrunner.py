@@ -765,6 +765,36 @@ tools.print(tools.getLeaveDate());
             expect_content={'web': {'errors': [], 'outdata': {}, 'output': 'undefined\n1262304000\n'}},
         )
 
+    def test_collaborators(self):
+        d = self.create_jsrun("""
+fields:
+ - a
+group: collabs
+program: |!!
+tools.print(tools.getRealName());
+tools.print(tools.getString("a"));
+!!""")
+        d.document.add_text("""
+#- {plugin=textfield #a}
+        """)
+        ug = UserGroup.create('collabs')
+        ug.users.append(self.test_user_1)
+        ug.users.append(self.test_user_2)
+        a = Answer(content=json.dumps({'c': 'test'}), valid=True, task_id=f'{d.id}.a')
+        self.test_user_1.answers.append(a)
+        self.test_user_2.answers.append(a)
+        ug.admin_doc = self.create_doc().block
+        db.session.commit()
+        self.do_jsrun(
+            d,
+            expect_content={
+                'web': {'errors': [],
+                        'outdata': {},
+                        'output': 'Test user 1\ntest\nTest user 2\ntest\n',
+                        },
+            },
+        )
+
 
 class JsRunnerGroupTest(JsRunnerTestBase):
     def test_jsrunner_group(self):

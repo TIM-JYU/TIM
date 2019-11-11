@@ -244,9 +244,9 @@ def get_fields_and_users(
                 .with_entities(func.max(Answer.id), User.id)
                 .all()
         )
-    aid_uid_map = {}
+    aid_uid_map = defaultdict(list)
     for aid, uid in sub:
-        aid_uid_map[aid] = uid
+        aid_uid_map[aid].append(uid)
     q = (
         User.query
             .join(UserGroup, join_relation)
@@ -264,7 +264,8 @@ def get_fields_and_users(
     answs = Answer.query.filter(Answer.id.in_(aid for aid, _ in sub)).all()
     answers_with_users: List[Tuple[int, Optional[Answer]]] = []
     for a in answs:
-        answers_with_users.append((aid_uid_map[a.id], a))
+        for uid in aid_uid_map[a.id]:
+            answers_with_users.append((uid, a))
     missing_users = set(u.id for u in users) - set(uid for uid, _ in answers_with_users)
     for mu in missing_users:
         answers_with_users.append((mu, None))
