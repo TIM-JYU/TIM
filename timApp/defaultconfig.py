@@ -6,6 +6,9 @@ from pathlib import Path
 
 from celery.schedules import crontab
 
+# NOTE: If you are a different organization (other than JYU), please don't modify this file directly.
+# This avoids merge conflicts. Override the values with prodconfig.py instead.
+
 ALLOWED_DOCUMENT_UPLOAD_MIMETYPES = ['text/plain']
 COMPRESS_DEBUG = True
 COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript']
@@ -93,3 +96,5 @@ SAML_PATH_PROD = '/service/timApp/auth/saml/prod'
 HAKA_METADATA_URL_PROD = 'https://haka.funet.fi/metadata/haka-metadata.xml'
 HAKA_METADATA_CERT_URL_PROD = 'https://wiki.eduuni.fi/download/attachments/27297775/haka-sign-v4.pem?version=1&modificationDate=1511941560853&api=v2'
 HAKA_METADATA_FINGERPRINT_PROD = '6212391dfbd2874425a7fdd5ac8dd0bd5cd50d2f'
+
+HOME_ORGANIZATION = 'jyu.fi'

@@ -14,7 +14,10 @@ from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from onelogin.saml2.utils import OneLogin_Saml2_Utils, return_false_on_exception
 from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
 
+from timApp.auth.login import create_or_update_user, set_user_to_session
 from timApp.tim_app import app, csrf
+from timApp.timdb.sqa import db
+from timApp.user.user import UserInfo, UserOrigin
 from timApp.util.flask.requesthelper import use_model, RouteException
 from timApp.util.flask.responsehelper import json_response
 
@@ -178,6 +181,14 @@ class TimRequestedAttributes:
     def preferred_language(self):
         return self.get_attribute_by_friendly_name('preferredLanguage')
 
+    @property
+    def derived_username(self):
+        eppn = self.edu_person_principal_name
+        uname, org = eppn.split('@')
+        if org == app.config['HOME_ORGANIZATION']:
+            return uname
+        return f'{org}:{uname}'
+
     def to_json(self):
         return {
             'cn': self.cn,
@@ -211,17 +222,27 @@ def acs():
     auth.process_response(request_id=request_id)
     errors = auth.get_errors()
     if not auth.is_authenticated():
-        raise RouteException('Was not authenticated')
-    if not errors:
-        session.pop('requestID', None)
-        self_url = request.url
-        rs = request.form.get('RelayState')
-        if rs and self_url != rs:
-            return redirect(auth.redirect_to(rs))
-        timattrs = TimRequestedAttributes(auth)
-        return json_response(timattrs)
-    else:
-        return json_response({'errors': errors})
+        raise RouteException('Authentication failed. Please contact tim@jyu.fi if the problem persists.')
+    if errors:
+        raise RouteException(str(errors))
+    session.pop('requestID', None)
+    timattrs = TimRequestedAttributes(auth)
+    user = create_or_update_user(
+        UserInfo(
+            username=timattrs.derived_username,
+            full_name=f'{timattrs.sn} {timattrs.given_name}',
+            email=timattrs.mail,
+            given_name=timattrs.given_name,
+            last_name=timattrs.sn,
+            origin=UserOrigin.Haka,
+        )
+    )
+    db.session.commit()
+    set_user_to_session(user)
+    self_url = request.url
+    rs = request.form.get('RelayState')
+    if rs and self_url != rs:
+        return redirect(auth.redirect_to(rs))
 
 
 @saml.route('')
