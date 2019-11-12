@@ -54,8 +54,9 @@
         var docSettings = {{ doc_settings.get_dict().values|tojson }};  //TODO: show only for edit right
         var index = {{ headers|tojson }};
         var hideLinks = {{ hide_links|tojson }};
-        var translations = {{ translations|tojson }};
         var hideTopButtons = {{ hide_top_buttons|tojson }};
+        var parsOnly = {{ pars_only|tojson }};
+        var translations = {{ translations|tojson }};
         var current_view_range = {{ current_view_range|tojson }};
         var nav_ranges = {{ nav_ranges|tojson }};
     </script>

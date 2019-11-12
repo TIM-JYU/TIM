@@ -534,10 +534,12 @@ def view(item_path, template_name, usergroup=None, route="view"):
                           {'b': next_range[0], 'e': next_range[1], 'name': 'Next'},
                           {'b': last_range[0], 'e': last_range[1], 'name': 'Last'}]
 
+    pars_only = get_option(request, 'pars_only', default=False)
     return render_template(template_name,
                            access=access,
                            hide_links=should_hide_links(doc_settings, rights),
                            hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
+                           pars_only=pars_only,
                            show_unpublished_bg=show_unpublished_bg,
                            route=route,
                            edit_mode=edit_mode,

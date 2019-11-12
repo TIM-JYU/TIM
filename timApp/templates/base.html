@@ -90,120 +90,98 @@ depends=(
 {% block body %}
 <{% block mainctrl %}div{% endblock %}>
     <div ng-init="$ctrl = $parent.$ctrl" class="container-fluid">
-        <div>
-            <div class="row hidden-print">
-                <div class="col-lg-{{ col_1_lg }}
-                            col-md-{{ col_1_md }}
-                            col-xs-{{ col_1_xs }}
-                            col-sm-{{ col_1_sm }}">
-                    <div class="left-fixed-side">
-                        <tim-sidebar-menu></tim-sidebar-menu>
-                    </div>
+        <div class="row hidden-print" ng-if="!$ctrl.parsOnly" ng-cloak>
+            <div class="col-lg-{{ col_1_lg }}
+                        col-md-{{ col_1_md }}
+                        col-xs-{{ col_1_xs }}
+                        col-sm-{{ col_1_sm }}">
+                <div class="left-fixed-side">
+                    <tim-sidebar-menu></tim-sidebar-menu>
                 </div>
-                <div class="col-lg-{{ col_2_lg }}
-                            col-md-{{ col_2_md }}
-                            col-xs-{{ col_2_xs }}
-                            col-sm-{{ col_2_sm }}">
-                    <div class="siteheader">
-                        <div class="hidden-lg hidden-md hamburger-placeholder pull-left" style="width: 27px; height: 1px"></div>
-                        {% if not hide_links %}
-                            <a href="/">
-                        {% endif %}
-                            <img alt="TIM - The Interactive Material." class="pull-left fullheight"
-                                 src="{{ url_for('static', filename='images/tim-logo.svg') }}"
-                                 title="TIM"/>
-                        {% if not hide_links %}
-                            </a>
-                        {% endif %}
-                        {% if not hide_top_buttons %}
-                        {% if session.user_id %}
-                        <div style="padding-top:4px;" class="pull-right">
-                            <span class="timButton" ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
-                                  title="Display search panel">
-                                <i class="glyphicon glyphicon-search"></i>
-                            </span>
-                        </div>
-                        {% else %}
-                        <div style="padding-top:4px;" class="pull-right">
-                            <span class="timButton" ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
-                                  title="Display search panel">
-                                <i class="glyphicon glyphicon-search"></i>
-                            </span>
-                        </div>
-                        {% endif %}
-                        {% endif %}
-                        <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
-                             src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
-                        <div>
-                            <bootstrap-panel ng-cloak ng-if="$ctrl.displaySearch" show-close="true"
-                                             class="search-panel" title="TIM document search"
-                                             close-fn="$ctrl.displaySearch = !$ctrl.displaySearch">
-                                    <search-box></search-box>
-                            </bootstrap-panel>
-                        </div>
-                        {% if not hide_top_buttons %}
-                        <div class="text-center text-nowrap">
-                            <login-menu></login-menu>
-                        </div>
-                        {% endif %}
+            </div>
+            <div class="col-lg-{{ col_2_lg }}
+                        col-md-{{ col_2_md }}
+                        col-xs-{{ col_2_xs }}
+                        col-sm-{{ col_2_sm }}">
+                <div class="siteheader">
+                    <div class="hidden-lg hidden-md hamburger-placeholder pull-left" style="width: 27px; height: 1px"></div>
+                    <a ng-if="!$ctrl.hideLinks" href="/"><tim-logo></tim-logo></a>
+                    <tim-logo ng-if="$ctrl.hideLinks"></tim-logo>
+                    <div ng-if="!$ctrl.hideTopButtons" style="padding-top:4px;" class="pull-right">
+                        <span class="timButton" ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
+                              title="Display search panel">
+                            <i class="glyphicon glyphicon-search"></i>
+                        </span>
                     </div>
-                </div>
-                <div class="col-lg-{{ col_3_lg }}
-                            col-md-{{ col_3_md }}
-                            col-xs-{{ col_3_xs }}
-                            col-sm-{{ col_3_sm }}">
-                    <div class="right-fixed-side">
-                        {% block rightside %}{% endblock %}
+                    <img alt="Jyväskylän yliopisto" class="pull-right" height="42"
+                         src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
+                    <div>
+                        <bootstrap-panel ng-cloak ng-if="$ctrl.displaySearch" show-close="true"
+                                         class="search-panel" title="TIM document search"
+                                         close-fn="$ctrl.displaySearch = !$ctrl.displaySearch">
+                                <search-box></search-box>
+                        </bootstrap-panel>
+                    </div>
+                    <div ng-if="!$ctrl.hideTopButtons" class="text-center text-nowrap">
+                        <login-menu></login-menu>
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
-                            col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
-                            col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
-                            col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
-                    {% if global_notification %}
-                        <div class="global-notification alert alert-info">
-                            <i class="glyphicon glyphicon-info-sign"></i> {{ global_notification|safe }}
-                        </div>
-                    {% endif %}
-                    {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-info">
-                                    <i class="glyphicon glyphicon-info-sign"></i> {{ message }}
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
+            <div class="col-lg-{{ col_3_lg }}
+                        col-md-{{ col_3_md }}
+                        col-xs-{{ col_3_xs }}
+                        col-sm-{{ col_3_sm }}">
+                <div class="right-fixed-side">
+                    {% block rightside %}{% endblock %}
                 </div>
             </div>
-            <div class="row">
-                <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
-                            col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
-                            col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
-                            col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
-                    <div id="header" class="hidden-print">
-                        <tim-header></tim-header>
+        </div>
+        <div class="row" ng-if="!$ctrl.parsOnly" ng-cloak>
+            <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
+                        col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
+                        col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
+                        col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
+                {% if global_notification %}
+                    <div class="global-notification alert alert-info">
+                        <i class="glyphicon glyphicon-info-sign"></i> {{ global_notification|safe }}
                     </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
-                            col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
-                            col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
-                            col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
-                    <div class="row">
-                        <div class="col-lg-{{ col_m_lg }} col-lg-offset-{{ (12 - col_m_lg) // 2 }}
-                                    col-md-{{ col_m_md }} col-md-offset-{{ (12 - col_m_md) // 2 }}
-                                    col-xs-{{ col_m_xs }} col-xs-offset-{{ (12 - col_m_xs) // 2 }}
-                                    col-sm-{{ col_m_sm }} col-sm-offset-{{ (12 - col_m_sm) // 2 }}">
-                            <div class="material">
-                                {% if lecture_assets %}
-                                    <tim-lecture-menu></tim-lecture-menu>
-                                {% endif %}
-                                {% block content %}{% endblock %}
+                {% endif %}
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-info">
+                                <i class="glyphicon glyphicon-info-sign"></i> {{ message }}
                             </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+        <div class="row" ng-if="!$ctrl.parsOnly" ng-cloak>
+            <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
+                        col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
+                        col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
+                        col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
+                <div id="header" class="hidden-print">
+                    <tim-header></tim-header>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
+                        col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
+                        col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
+                        col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
+                <div class="row">
+                    <div class="col-lg-{{ col_m_lg }} col-lg-offset-{{ (12 - col_m_lg) // 2 }}
+                                col-md-{{ col_m_md }} col-md-offset-{{ (12 - col_m_md) // 2 }}
+                                col-xs-{{ col_m_xs }} col-xs-offset-{{ (12 - col_m_xs) // 2 }}
+                                col-sm-{{ col_m_sm }} col-sm-offset-{{ (12 - col_m_sm) // 2 }}">
+                        <div class="material">
+                            {% if lecture_assets %}
+                                <tim-lecture-menu></tim-lecture-menu>
+                            {% endif %}
+                            {% block content %}{% endblock %}
                         </div>
                     </div>
                 </div>
@@ -211,6 +189,7 @@ depends=(
         </div>
     </div>
 </{{ self.mainctrl() }}>
+{% if not pars_only %}
     <footer class="footer hidden-print">
         <div class="container-fluid">
             <div class="row">
@@ -218,31 +197,30 @@ depends=(
                             col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
                             col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
                             col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
-                    {% block footer %}
-                        <div class="row">
-                            <div class="col-xs-6">
-                                <p class="smallNote">TIM last updated:
-                                    {% if hide_links %}
-                                        {{config.GIT_LATEST_COMMIT_TIMESTAMP}}
-                                        <br>Problems and questions: {{config.HELP_EMAIL}}
-                                    {% else %}
-                                        <a href="/view/tim/muutoshistoria">{{config.GIT_LATEST_COMMIT_TIMESTAMP}}</a>
-                                        <br>Problems and questions: <a href="mailto:{{config.HELP_EMAIL}}">{{config.HELP_EMAIL}}</a>
-                                    {% endif %}
-                                    {% if config.GIT_BRANCH != 'master' %}(branch: {{config.GIT_BRANCH}}){% endif %}
-                                </p>
-                            </div>
-                            <div class="col-xs-6 text-right smallNote">
-                                {% if not hide_links %}
-                                    <a href="/view/tim/Rekisteriseloste">Tietosuojalauseke, rekisteriseloste ja kerätyt tiedot</a>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <p class="smallNote">TIM last updated:
+                                {% if hide_links %}
+                                    {{config.GIT_LATEST_COMMIT_TIMESTAMP}}
+                                    <br>Problems and questions: {{config.HELP_EMAIL}}
+                                {% else %}
+                                    <a href="/view/tim/muutoshistoria">{{config.GIT_LATEST_COMMIT_TIMESTAMP}}</a>
+                                    <br>Problems and questions: <a href="mailto:{{config.HELP_EMAIL}}">{{config.HELP_EMAIL}}</a>
                                 {% endif %}
-                            </div>
+                                {% if config.GIT_BRANCH != 'master' %}(branch: {{config.GIT_BRANCH}}){% endif %}
+                            </p>
                         </div>
-                    {% endblock %}
+                        <div class="col-xs-6 text-right smallNote">
+                            {% if not hide_links %}
+                                <a href="/view/tim/Rekisteriseloste">Tietosuojalauseke, rekisteriseloste ja kerätyt tiedot</a>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </footer>
+{% endif %}
 {% endblock %}
 <div class="device-xs visible-xs-block"></div>
 <div class="device-sm visible-sm-block"></div>

@@ -39,6 +39,7 @@ import * as searchBox from "tim/search/searchBox";
 import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrapPanel";
 import * as loadingIndicator from "tim/ui/loadingIndicator";
+import * as logo from "tim/ui/logo";
 import * as markupError from "tim/ui/markuperror";
 import * as loginMenu from "tim/user/loginMenu";
 import * as settingsCtrl from "tim/user/settingsCtrl";
@@ -72,6 +73,7 @@ markAsUsed(
     loadMap,
     loadingIndicator,
     loginMenu,
+    logo,
     manageCtrl,
     markupError,
     moment,

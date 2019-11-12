@@ -179,11 +179,17 @@ export class ViewCtrl implements IController {
 
     // Form-mode related attributes.
     private formTaskInfosLoaded = false;
+    private hideLinks: boolean;
+    private hideTopButtons: boolean;
+    private parsOnly: boolean;
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
         const dg = documentglobals();
         this.noBrowser = dg.noBrowser;
+        this.hideLinks = dg.hideLinks;
+        this.hideTopButtons = dg.hideTopButtons;
+        this.parsOnly = dg.parsOnly;
         this.docId = dg.item.id;
         this.docVersion = dg.docVersion;
         this.item = dg.item;
@@ -350,7 +356,7 @@ export class ViewCtrl implements IController {
 
     // noinspection JSUnusedGlobalSymbols (used in view_html.html)
     showVelpSelection() {
-        return this.reviewCtrl.velpMode || (this.teacherMode && this.docSettings.show_velps);
+        return (this.reviewCtrl.velpMode || (this.teacherMode && this.docSettings.show_velps)) && !this.parsOnly;
     }
 
     startLiveUpdates() {

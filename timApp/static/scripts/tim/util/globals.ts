@@ -30,6 +30,7 @@ export interface IFolderGlobals extends IItemGlobals {
 }
 
 export interface IDocumentGlobals extends IItemGlobals {
+    parsOnly: boolean;
     users: IUserListEntry[];
     startIndex: number;
     docVersion: [number, number];
