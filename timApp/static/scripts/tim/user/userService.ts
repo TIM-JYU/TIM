@@ -32,7 +32,7 @@ export class UserService {
     }
 
     public isKorppi(): boolean {
-        return this.current.name.indexOf("@") < 0 && !this.current.name.startsWith("testuser");
+        return this.current.groups.find((g) => g.name === "Korppi users") != null;
     }
 
     public async logout(user: IUser, logoutFromKorppi = false) {
