@@ -68,7 +68,7 @@ timApp.component("hakaLogin", {
         <select class="form-control"
                 style="margin-top: 6px;"
                 ng-model="$ctrl.selectedIdp"
-                ng-options="idp as $ctrl.getName(idp) for idp in $ctrl.idps">
+                ng-options="idp as $ctrl.getName(idp) for idp in $ctrl.idps | orderBy:$ctrl.getName">
             <option value="" disabled>{{ 'Select your home organisation...' | tr }}</option>
         </select></label>
     <button ng-disabled="!$ctrl.selectedIdp"
