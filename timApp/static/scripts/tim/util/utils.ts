@@ -396,7 +396,7 @@ export function getPageXY(e: JQuery.Event) {
             return {X: e.pageX, Y: e.pageY};
         }
         const o = e.originalEvent;
-        if (!(o instanceof TouchEvent)) {
+        if (!(isTouchEvent(o))) {
             return {X: e.pageX, Y: e.pageY};
         }
         if (o.touches.length) {
@@ -488,7 +488,7 @@ export const StringOrNumber = t.union([t.string, t.number]);
 
 export type MouseOrTouch = MouseEvent | Touch;
 
-export function isTouchEvent(e: MouseOrTouch | TouchEvent): e is TouchEvent {
+export function isTouchEvent(e: MouseOrTouch | TouchEvent | Event): e is TouchEvent {
     return (window as ExtendedWindow).TouchEvent && e instanceof TouchEvent;
 }
 

@@ -90,7 +90,7 @@ depends=(
 {% block body %}
 <{% block mainctrl %}div{% endblock %}>
     <div ng-init="$ctrl = $parent.$ctrl" class="container-fluid">
-        {% if lecture_assets %}<tim-lecture><div ng-init="lctrl = $parent.$ctrl">{% else %}<div>{% endif %}
+        <div>
             <div class="row hidden-print">
                 <div class="col-lg-{{ col_1_lg }}
                             col-md-{{ col_1_md }}
@@ -208,7 +208,7 @@ depends=(
                     </div>
                 </div>
             </div>
-        {% if lecture_assets %}</div></tim-lecture>{% else %}</div>{% endif %}
+        </div>
     </div>
 </{{ self.mainctrl() }}>
     <footer class="footer hidden-print">

@@ -33,6 +33,8 @@ import {
     partitionDocument,
     toggleViewRange,
 } from "../document/viewRangeInfo";
+import {LectureController} from "../lecture/lectureController";
+import {showLectureWall} from "../lecture/lectureWall";
 
 export interface IHeader {
     id: string;
@@ -62,6 +64,7 @@ export class SidebarMenuCtrl implements IController {
     private active: number;
     private lastTab: number;
     private vctrl?: Require<ViewCtrl>;
+    private lctrl!: LectureController;
     private bookmarks: {};
     private documentMemoMinutes: string | undefined;
     private docSettings?: IDocSettings;
@@ -136,6 +139,7 @@ export class SidebarMenuCtrl implements IController {
 
     async $onInit() {
         const g = someglobals();
+        this.lctrl = this.vctrl && this.vctrl.lectureCtrl || LectureController.createAndInit(this.vctrl);
         this.documentMemoMinutes = "memoMinutes" in g ? g.memoMinutes : undefined;
         this.docSettings = "docSettings" in g ? g.docSettings : undefined;
         void this.getCurrentRelevance();
@@ -146,6 +150,10 @@ export class SidebarMenuCtrl implements IController {
             this.loadViewRangeSettings();
         }
         // await this.processConsent();
+    }
+
+    $doCheck() {
+        void this.lctrl.refreshWall();
     }
 
     private async processConsent() {
@@ -526,7 +534,6 @@ export class SidebarMenuCtrl implements IController {
 timApp.component("timSidebarMenu", {
     controller: SidebarMenuCtrl,
     require: {
-        lctrl: "?^timLecture",
         vctrl: "?^timView",
     },
     template: `<div class="btn btn-default btn-sm pull-left" ng-click="$ctrl.showSidebar()" title="Show menu"

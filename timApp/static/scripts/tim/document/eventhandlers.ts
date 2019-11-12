@@ -1,13 +1,13 @@
 import $ from "jquery";
 import {KEY_ENTER} from "../util/keycodes";
 import {$document, $log} from "../util/ngimport";
-import {Coords, dist} from "../util/utils";
+import {Coords, dist, isTouchEvent} from "../util/utils";
 import {EDITOR_CLASS_DOT} from "./parhelpers";
 
 function fixPageCoords(e: JQuery.Event) {
     if (!("pageX" in e) || (e.pageX === 0 && e.pageY === 0)) {
         const originalEvent = e.originalEvent;
-        if (originalEvent instanceof TouchEvent) {
+        if (isTouchEvent(originalEvent)) {
             e.pageX = originalEvent.touches[0].pageX;
             e.pageY = originalEvent.touches[0].pageY;
         }

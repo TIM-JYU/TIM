@@ -1,4 +1,4 @@
-<uib-accordion ng-if="$ctrl.lctrl.lectureSettings.inLecture || $ctrl.lctrl.lectureSettings.lectureMode">
+<uib-accordion ng-if="$ctrl.lctrl.lectureViewOrInLecture()">
     <div uib-accordion-group class="panel-default" is-open="$ctrl.isOpen">
         <uib-accordion-heading>
             {{ $ctrl.isOpen ? 'Hide' : 'Show' }} lecture info

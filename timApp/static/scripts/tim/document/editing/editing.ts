@@ -482,7 +482,6 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
             {
                 transcludeControllers: {
                     timView: {instance: this.viewctrl},
-                    ...(this.viewctrl.lectureCtrl != null ? {timLecture: {instance: this.viewctrl.lectureCtrl}} : {}),
                 },
             }));
         if (documentglobals().editMode === "area") {
@@ -686,7 +685,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.questionHandler.addQuestion(e, p),
                     desc: "Create lecture question",
-                    show: this.viewctrl.lectureMode && this.viewctrl.item.rights.editable,
+                    show: this.viewctrl.lectureCtrl.lectureSettings.lectureMode && this.viewctrl.item.rights.editable,
                 },
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.areaHandler.startArea(e, p),

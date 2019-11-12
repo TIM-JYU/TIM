@@ -16,7 +16,7 @@ export class QuestionHandler {
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
-        if (view.lectureMode) {
+        if (view.lectureCtrl.lectureSettings.lectureMode) {
             this.noQuestionAutoNumbering = documentglobals().noQuestionAutoNumbering;
         }
     }
@@ -111,7 +111,7 @@ export class QuestionHandler {
     }
 
     showQuestions() {
-        return (this.viewctrl.item.rights.teacher && (this.viewctrl.lectureMode || this.viewctrl.inLecture)) ||
+        return (this.viewctrl.item.rights.teacher && this.viewctrl.lectureCtrl.lectureViewOrInLecture()) ||
             (documentglobals().editMode && this.viewctrl.item.rights.editable);
     }
 }

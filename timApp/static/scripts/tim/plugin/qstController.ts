@@ -5,6 +5,7 @@ import {IController, IRootElementService} from "angular";
 import {timApp as qstApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
+import {ViewCtrl} from "../document/viewctrl";
 import {LectureController} from "../lecture/lectureController";
 import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
 import {showQuestionAskDialog} from "../lecture/questionAskController";
@@ -30,7 +31,8 @@ class QstController implements IController {
     private result?: string;
     private taskId?: string;
     private errors: string[];
-    private lctrl?: LectureController;
+    private vctrl?: ViewCtrl;
+    private lctrl!: LectureController;
     private isLecturer: boolean = false;
     private preclass: string;
     private plugin?: string;
@@ -53,6 +55,7 @@ class QstController implements IController {
     }
 
     public $onInit() {
+        this.lctrl = this.vctrl && this.vctrl.lectureCtrl || LectureController.createAndInit(this.vctrl);
         this.isLecturer = (this.lctrl && this.lctrl.isLecturer) || false;
         this.attrs = JSON.parse(this.json) as IQstAttributes;
         // console.log(this.attrs);
@@ -198,7 +201,7 @@ qstApp.component("qstRunner", {
     bindings: pluginBindings,
     controller: QstController,
     require: {
-        lctrl: "?^timLecture",
+        vctrl: "?^timView",
     },
     template: `
 <div class="csRunDiv qst no-popup-menu" ng-if="$ctrl.isTask()">

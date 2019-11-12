@@ -119,8 +119,6 @@ export class ViewCtrl implements IController {
 
     static $inject = ["$scope"];
 
-    public lectureMode: boolean;
-    public inLecture: boolean;
     public item: IDocument;
     public docId: number;
 
@@ -155,7 +153,7 @@ export class ViewCtrl implements IController {
     private oldWidth: number;
     public defaultAction: IMenuFunctionEntry | undefined;
     public reviewCtrl: ReviewController;
-    public lectureCtrl?: LectureController;
+    public lectureCtrl: LectureController;
     public questionHandler: QuestionHandler;
     public areaHandler: AreaHandler;
     public clipboardHandler: ClipboardHandler;
@@ -194,8 +192,6 @@ export class ViewCtrl implements IController {
         this.group = dg.group;
         this.teacherMode = dg.teacherMode;
         this.velpMode = dg.velpMode;
-        this.lectureMode = dg.lectureMode;
-        this.inLecture = dg.in_lecture;
         this.scope = sc;
 
         this.document = new Document(this.docId);
@@ -221,6 +217,7 @@ export class ViewCtrl implements IController {
             }
         });
 
+        this.lectureCtrl = LectureController.createAndInit(this);
         this.questionHandler = new QuestionHandler(sc, this);
         this.areaHandler = new AreaHandler(sc, this);
         this.clipboardHandler = new ClipboardHandler(sc, this);
@@ -426,7 +423,7 @@ export class ViewCtrl implements IController {
     $onInit() {
         vctrlInstance = this;
         this.scope.$watchGroup([
-            () => this.lectureMode,
+            () => this.lectureCtrl.lectureSettings.lectureMode,
             () => this.selection.start,
             () => this.selection.end,
             () => this.editing,

@@ -11,11 +11,9 @@
  * @copyright 2015 Timppa project authors
  */
 
-import {IController, IScope} from "angular";
 import ifvisible from "ifvisible.js";
 import moment from "moment";
-import {timApp} from "tim/app";
-import {clone, getURLParameter, markAsUsed, Require, setStorage, to} from "tim/util/utils";
+import {clone, getURLParameter, markAsUsed, setStorage, to} from "tim/util/utils";
 import {ViewCtrl} from "../document/viewctrl";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
@@ -72,10 +70,9 @@ enum LectureEndingDialogState {
 
 const AUTOJOIN_CODE = "autojoin";
 
-// TODO: Painike, josta voisi hakea kysymyksiä.
-// TODO: Button, to get questions and wall.
-export class LectureController implements IController {
-    static $inject = ["$scope"];
+let lectureControllerInstance: LectureController | undefined;
+
+export class LectureController {
     public isLecturer: boolean;
     public lecture: ILecture | undefined;
     public lectures: ILecture[];
@@ -86,10 +83,9 @@ export class LectureController implements IController {
     private lecturerTable: ILecturePerson[];
     private newMessagesAmount: number;
     private newMessagesAmountText: string;
-    private scope: IScope;
     private showPoll: boolean;
     private studentTable: ILecturePerson[];
-    viewctrl: Require<ViewCtrl | undefined>;
+    viewctrl?: ViewCtrl;
     private wallMessages: ILectureMessage[];
     private wallName: string;
     private wallInstance: IModalInstance<LectureWallController> | undefined;
@@ -97,8 +93,8 @@ export class LectureController implements IController {
     // So this field should NOT be updated in the poll method.
     lastQuestion: IAskedQuestion | undefined;
 
-    constructor(scope: IScope) {
-        this.scope = scope;
+    constructor(vctrl: ViewCtrl | undefined) {
+        this.viewctrl = vctrl;
         this.wallName = "Wall";
         this.newMessagesAmount = 0;
         this.newMessagesAmountText = "";
@@ -114,7 +110,7 @@ export class LectureController implements IController {
 
         const g = someglobals();
         this.lectureSettings = {
-            inLecture: false,
+            inLecture: "in_lecture" in g ? g.in_lecture : false,
             lectureMode: "lectureMode" in g ? g.lectureMode : false,
             useAnswers: true,
             useQuestions: true,
@@ -122,19 +118,26 @@ export class LectureController implements IController {
         };
     }
 
-    async $onInit() {
-        if (this.viewctrl) {
-            this.viewctrl.lectureCtrl = this;
+    lectureViewOrInLecture() {
+        return this.lectureSettings.lectureMode || this.lectureSettings.inLecture;
+    }
+
+    static createAndInit(vctrl: ViewCtrl | undefined) {
+        if (lectureControllerInstance) {
+            return lectureControllerInstance;
         }
+        const l = new LectureController(vctrl);
+        l.init();
+        lectureControllerInstance = l;
+        return l;
+    }
+
+    async init() {
         await this.checkIfInLecture();
         void this.startLongPolling();
     }
 
-    $postLink() {
-
-    }
-
-    async $doCheck() {
+    async refreshWall() {
         if (!this.lecture) {
             return;
         }
@@ -323,15 +326,6 @@ export class LectureController implements IController {
         });
         const answer = response.data;
         this.showLectureView(answer);
-    }
-
-    /**
-     * Change the usage of wall. Used as lectureWall close callback function.
-     * @param wallUsage Whether wall should be displayed or not.
-     */
-    changeUsingWall(wallUsage: boolean) {
-        this.lectureSettings.useWall = wallUsage;
-        this.scope.$apply();
     }
 
     /**
@@ -680,12 +674,3 @@ export class LectureController implements IController {
         }
     }
 }
-
-timApp.component("timLecture", {
-    controller: LectureController,
-    require: {
-        viewctrl: "?^timView",
-    },
-    template: "<div ng-transclude></div>",
-    transclude: true,
-});
