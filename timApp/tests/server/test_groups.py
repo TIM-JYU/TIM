@@ -1,7 +1,7 @@
 from timApp.document.docentry import DocEntry
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
-from timApp.user.user import User
+from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 
 
@@ -22,7 +22,7 @@ class GroupTest(TimRouteTest):
             t3 = names[2]
             t4 = names[3]
             t5 = f't5{is_admin}'
-            users_and_groups = [User.create_with_group(name, name, email=name + '@example.com') for name in names]
+            users_and_groups = [User.create_with_group(UserInfo(username=name, full_name=name, email=name + '@example.com')) for name in names]
             db.session.flush()
             t1gid = users_and_groups[0][1].id
             uids = [u.id for u, g in users_and_groups]

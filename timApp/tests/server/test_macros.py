@@ -6,7 +6,7 @@ from timApp.plugin.plugin import Plugin
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID
 from timApp.tests.server.timroutetest import TimRouteTest, get_content
 from timApp.timdb.sqa import db
-from timApp.user.user import User
+from timApp.user.user import User, UserInfo
 from timApp.user.userutils import grant_view_access
 from timApp.util.utils import decode_csplugin
 
@@ -156,11 +156,11 @@ globalmacros:
 
     def test_usermacros_no_xss(self):
         script = '<script>alert("hi")</script>'
-        u, _ = User.create_with_group(
-            name=script,
-            real_name=script,
+        u, _ = User.create_with_group(UserInfo(
+            username=script,
+            full_name=script,
             email=script,
-        )
+        ))
         db.session.commit()
         self.login(username=script)
         d = self.create_doc(initial_par='macros: %%username%% %%realname%% %%useremail%% %%doctitle%%', title=script)

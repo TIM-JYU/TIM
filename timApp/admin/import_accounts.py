@@ -4,7 +4,7 @@ from typing import Tuple, List
 
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.timdb import TimDb
-from timApp.user.user import User
+from timApp.user.user import User, UserInfo
 from timApp.user.userutils import create_password_hash
 
 
@@ -24,16 +24,16 @@ def import_accounts(file: str, password: str) -> Tuple[List[User], List[User]]:
             if u is None:
                 u = User.get_by_email(email)
                 if not u:
-                    u, _ = User.create_with_group(name=name,
-                                                  real_name=row[1],
+                    u, _ = User.create_with_group(UserInfo(username=name,
+                                                  full_name=row[1],
                                                   email=email,
-                                                  password_hash=pwhash)
+                                                  password_hash=pwhash))
                     added.append(u)
                 else:
-                    u.update_info(name, real_name=row[1], email=email, password_hash=pwhash)
+                    u.update_info(UserInfo(username=name, full_name=row[1], email=email, password_hash=pwhash))
                     existing.append(u)
             else:
-                u.update_info(name, real_name=row[1], email=email, password_hash=pwhash)
+                u.update_info(UserInfo(username=name, full_name=row[1], email=email, password_hash=pwhash))
                 existing.append(u)
     timdb.commit()
     return added, existing

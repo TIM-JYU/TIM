@@ -1,7 +1,7 @@
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.timdb.timdb import TimDb
-from timApp.user.user import User
+from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 
 
@@ -39,7 +39,15 @@ Password: {password}
 Admin: {isadmin}""")
             yesno = input('Is this correct? y/n/quit: ')
             if yesno == 'y':
-                User.create_with_group(username, realname, email, password, is_admin=isadmin)
+                User.create_with_group(
+                    UserInfo(
+                        username=username,
+                        full_name=realname,
+                        email=email,
+                        password=password,
+                    ),
+                    is_admin=isadmin,
+                )
                 print('UserAccount ', username, " created")
                 print('Use ', username, " and password you entered to login.")
                 break

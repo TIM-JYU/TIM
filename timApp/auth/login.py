@@ -25,7 +25,7 @@ from timApp.tim_app import oid
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
-from timApp.user.user import User, UserOrigin
+from timApp.user.user import User, UserOrigin, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import create_anonymous_user
 from timApp.user.userutils import create_password_hash, check_password_hash
@@ -85,32 +85,28 @@ def login_with_korppi():
 
 
 def create_or_update_user(
-        email: Optional[str],
-        real_name: Optional[str],
-        user_name: str,
-        origin: UserOrigin,
+        info: UserInfo,
         group_to_add: UserGroup=None,
         allow_finding_by_email=True,
 ):
-    user: User = User.query.filter_by(name=user_name).first()
+    user: User = User.query.filter_by(name=info.username).first()
 
     if user is None:
         # Try email
-        user: User = User.query.filter_by(email=email).first()
-        if user is not None and email \
+        user: User = User.query.filter_by(email=info.email).first()
+        if user is not None and info.email \
                 and (allow_finding_by_email == True
                      or (user.is_email_user and allow_finding_by_email == 'EmailUsersOnly')):
             # Two possibilities here:
-            # 1) An email user signs in using Korppi for the first time. We update the user's username and personal
+            # 1) An email user signs in using some other way for the first time. We update the user's username and personal
             # usergroup.
-            # 2) Korppi username has been changed (rare but it can happen).
-            # In this case, we must not re-add the user to the Korppi group.
-            user.update_info(name=user_name, real_name=real_name, email=email)
+            # 2) Username has been changed (rare but it can happen).
+            user.update_info(info)
         else:
-            user, _ = User.create_with_group(user_name, real_name, email, origin=origin)
+            user, _ = User.create_with_group(info)
     else:
-        if real_name and email:
-            user.update_info(name=user_name, real_name=real_name, email=email)
+        if info.email:
+            user.update_info(info)
     if group_to_add and group_to_add not in user.groups:
         user.groups.append(group_to_add)
     return user
@@ -174,7 +170,10 @@ def openid_success_handler(resp: KorppiOpenIDResponse):
     if not resp.lastname:
         return abort(400, 'Missing lastname')
     fullname = f'{resp.lastname} {resp.firstname}'
-    user = create_or_update_user(resp.email, fullname, username, UserOrigin.Korppi, UserGroup.get_korppi_group())
+    user = create_or_update_user(
+        UserInfo(email=resp.email, full_name=fullname, username=username, origin=UserOrigin.Korppi),
+        group_to_add=UserGroup.get_korppi_group(),
+    )
     db.session.commit()
     set_user_to_session(user)
     return finish_login()
@@ -322,12 +321,20 @@ def alt_signup_after():
         if not user.is_email_user:
             real_name = user.real_name
 
-        user.update_info(username, real_name, email, password=password)
+        user.update_info(UserInfo(username=username, full_name=real_name, email=email, password=password))
     else:
         if User.get_by_name(username) is not None:
             return abort(400, 'User name already exists. Please try another one.')
         success_status = 'registered'
-        user, _ = User.create_with_group(username, real_name, email, password=password, origin=UserOrigin.Email)
+        user, _ = User.create_with_group(
+            UserInfo(
+                username=username,
+                full_name=real_name,
+                email=email,
+                password=password,
+                origin=UserOrigin.Email,
+            )
+        )
         db.session.flush()
         user_id = user.id
 

@@ -4,7 +4,7 @@ from timApp.auth.login import test_pws, create_or_update_user
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
-from timApp.user.user import User, UserOrigin
+from timApp.user.user import User, UserOrigin, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import create_password_hash
 
@@ -150,10 +150,12 @@ class TestSignUp(TimRouteTest):
     def create_or_update_test_user(self, username='johmadoe', real_name='Doe John Matt',
                                    email='john.m.doe@student.jyu.fi'):
         u = create_or_update_user(
-            email,
-            real_name,
-            username,
-            origin=UserOrigin.Korppi,
+            UserInfo(
+                email=email,
+                full_name=real_name,
+                username=username,
+                origin=UserOrigin.Korppi,
+            ),
             group_to_add=UserGroup.get_korppi_group(),
         )
         db.session.commit()

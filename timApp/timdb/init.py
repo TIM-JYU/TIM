@@ -1,7 +1,6 @@
 """Initializes the TIM database."""
 
 import logging
-import os
 import sys
 import time
 
@@ -12,18 +11,14 @@ from alembic.runtime.environment import EnvironmentContext
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 
-from timApp.admin.migrate_to_postgre import perform_migration
 from timApp.auth.auth_models import AccessTypeModel
 from timApp.document.docentry import DocEntry
-from timApp.document.docparagraph import DocParagraph
-from timApp.document.document import Document
 from timApp.document.documents import import_document_from_file
-from timApp.printing.documentprinter import DocumentPrinter
 from timApp.tim_app import app
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db, get_tim_main_engine
 from timApp.timdb.timdb import TimDb
-from timApp.user.user import User
+from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import create_special_usergroups
 from timApp.util.logger import log_info, enable_loggers, log_error, log_warning
@@ -100,9 +95,11 @@ def initialize_database(create_docs=True):
             '$2b$04$ajl88D949ur6IF0OE7ZU2OLojkZiOwU5JtUkGTcBnwUi6W7ZIfXPe',  # test3pass
         ]
         for i in range(1, 4):
-            u, _ = User.create_with_group(f'testuser{i}',
-                                          f'Test user {i}',
-                                          f'test{i}@example.com')
+            u, _ = User.create_with_group(UserInfo(
+                username=f'testuser{i}',
+                full_name=f'Test user {i}',
+                email=f'test{i}@example.com',
+            ))
             u.pass_ = precomputed_hashes[i - 1]
         if create_docs:
             DocEntry.create('testaus-1', anon_group, title='Testaus 1')

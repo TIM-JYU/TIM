@@ -6,7 +6,7 @@ from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_USERNAMES
-from timApp.user.user import User
+from timApp.user.user import User, UserInfo
 
 
 class SearchTest(TimRouteTest):
@@ -34,7 +34,7 @@ class MergeTest(TimRouteTest):
         self.login_test1()
         with self.assertRaises(BadRequest):
             do_merge('testuser1', 'testuser1')
-        User.create_with_group('someguy', 'Some Guy', 'some.guy@example.com')
+        User.create_with_group(UserInfo(username='someguy', full_name='Some Guy', email='some.guy@example.com'))
         db.session.commit()
         with self.assertRaises(BadRequest):
             do_merge('testuser1', 'someguy')

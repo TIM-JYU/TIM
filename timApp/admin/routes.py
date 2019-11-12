@@ -9,12 +9,11 @@ from flask.cli import AppGroup
 
 from timApp.auth.accesshelper import verify_admin
 from timApp.auth.accesstype import AccessType
-from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document
 from timApp.item.block import Block, BlockType
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
-from timApp.user.user import User
+from timApp.user.user import User, UserInfo
 from timApp.util.flask.responsehelper import safe_redirect, json_response
 
 admin_bp = Blueprint('admin',
@@ -165,7 +164,7 @@ def do_soft_delete(name):
     d_suffix = '_deleted'
     if u.name.endswith(d_suffix) or u.email.endswith(d_suffix):
         return abort(400, 'User is already soft-deleted.')
-    u.update_info(name=u.name + d_suffix, email=u.email + d_suffix, real_name=u.real_name)
+    u.update_info(UserInfo(username=u.name + d_suffix, email=u.email + d_suffix, full_name=u.real_name))
     db.session.commit()
 
 

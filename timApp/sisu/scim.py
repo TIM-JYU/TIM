@@ -15,7 +15,7 @@ from timApp.sisu.sisu import refresh_sisu_grouplist_doc, send_course_group_mail
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
-from timApp.user.user import User, UserOrigin, last_name_to_first, SCIM_USER_NAME
+from timApp.user.user import User, UserOrigin, last_name_to_first, SCIM_USER_NAME, UserInfo
 from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX
 from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import load_data_from_req, JSONException
@@ -340,34 +340,34 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
                     if user_email and user != user_email:
                         # TODO: Could probably merge users here automatically.
                         raise SCIMException(422, f'Users {user.name} and {user_email.name} must be merged because of conflicting emails.')
-                user.update_info(
-                    name=u.value,
-                    real_name=name_to_use,
+                user.update_info(UserInfo(
+                    username=u.value,
+                    full_name=name_to_use,
                     email=u.email,
                     last_name=u.name.familyName,
                     given_name=u.name.givenName,
-                )
+                ))
             else:
                 user = existing_accounts_by_email_dict.get(u.email)
                 if user:
                     if not user.is_email_user:
                         raise SCIMException(422, f'Key (email)=({user.email}) already exists. Conflicting username is: {u.value}')
-                    user.update_info(
-                        name=u.value,
-                        real_name=name_to_use,
+                    user.update_info(UserInfo(
+                        username=u.value,
+                        full_name=name_to_use,
                         email=u.email,
                         last_name=u.name.familyName,
                         given_name=u.name.givenName,
-                    )
+                    ))
                 else:
-                    user, _ = User.create_with_group(
-                        u.value,
-                        name_to_use,
-                        u.email,
+                    user, _ = User.create_with_group(UserInfo(
+                        username=u.value,
+                        full_name=name_to_use,
+                        email=u.email,
                         origin=UserOrigin.Sisu,
                         last_name=u.name.familyName,
                         given_name=u.name.givenName,
-                    )
+                    ))
             added = user.add_to_group(ug, added_by=scimuser)
             if added:
                 added_users.add(user)

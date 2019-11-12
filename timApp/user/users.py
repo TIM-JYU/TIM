@@ -10,7 +10,7 @@ from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, \
     LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME, TEACHERS_GROUPNAME, GROUPADMIN_GROUPNAME
-from timApp.user.user import User
+from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_access_type_id, get_default_right_document
 
@@ -96,6 +96,6 @@ def create_anonymous_user(name: str, real_name: str) -> User:
     """
 
     next_id = User.query.with_entities(func.min(User.id)).scalar() - 1
-    u, _ = User.create_with_group(uid=next_id, name=name + str(abs(next_id)), real_name=real_name)
+    u, _ = User.create_with_group(UserInfo(username=name + str(abs(next_id)), full_name=real_name), uid=next_id)
     db.session.add(u)
     return u

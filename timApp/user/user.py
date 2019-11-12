@@ -1,9 +1,10 @@
 import json
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import List
+from typing import List, Tuple
 from typing import Optional, Union, Set
 
+from dataclasses import dataclass
 from sqlalchemy.orm import Query, joinedload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -111,6 +112,21 @@ class UserOrigin(Enum):
     Facebook = 7
     Google = 8
     Twitter = 9
+
+
+@dataclass
+class UserInfo:
+    username: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    given_name: Optional[str] = None
+    last_name: Optional[str] = None
+    origin: Optional[UserOrigin] = None
+    password: Optional[str] = None
+    password_hash: Optional[str] = None
+
+    def __post_init__(self):
+        assert self.password is None or self.password_hash is None, 'Cannot pass both password and password_hash to UserInfo'
 
 
 def last_name_to_first(full_name: Optional[str]):
@@ -273,67 +289,25 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return self.real_name if self.real_name is not None else '(real_name is null)'
 
     @staticmethod
-    def create(
-            name: str,
-            real_name: str,
-            email: str,
-            password: Optional[str] = None,
+    def create_with_group(
+            info: UserInfo,
+            is_admin: bool = False,
             uid: Optional[int] = None,
-            origin: Optional[UserOrigin] = None,
-            given_name: Optional[str] = None,
-            last_name: Optional[str] = None,
-            password_hash: Optional[str]=None,
-    ) -> 'User':
-        """Creates a new user with the specified name.
-
-        :param email: The email address of the user.
-        :param name: The name of the user to be created.
-        :param real_name: The real name of the user.
-        :param password: The password for the user (not used on Korppi login).
-        :returns: The id of the newly created user.
-
-        """
-        assert password is None or password_hash is None, 'Cannot pass both password and password_hash'
-        p_hash = create_password_hash(password) if password is not None else (password_hash or '')
+    ) -> Tuple['User', UserGroup]:
+        p_hash = create_password_hash(info.password) if info.password is not None else (info.password_hash or '')
         # noinspection PyArgumentList
         user = User(
             id=uid,
-            name=name,
-            real_name=real_name,
-            last_name=last_name,
-            given_name=given_name,
-            email=email,
+            name=info.username,
+            real_name=info.full_name,
+            last_name=info.last_name,
+            given_name=info.given_name,
+            email=info.email,
             pass_=p_hash,
-            origin=origin,
+            origin=info.origin,
         )
         db.session.add(user)
-        return user
-
-    @staticmethod
-    def create_with_group(name: str,
-                          real_name: Optional[str] = None,
-                          email: Optional[str] = None,
-                          password: Optional[str] = None,
-                          is_admin: bool = False,
-                          origin: UserOrigin = None,
-                          uid: Optional[int] = None,
-                          given_name: Optional[str] = None,
-                          last_name: Optional[str] = None,
-                          password_hash: Optional[str] = None,
-                          ):
-        assert password is None or password_hash is None, 'Cannot pass both password and password_hash'
-        user = User.create(
-            name,
-            real_name,
-            email,
-            password=password,
-            password_hash=password_hash,
-            given_name=given_name,
-            last_name=last_name,
-            uid=uid,
-            origin=origin,
-        )
-        group = UserGroup.create(name)
+        group = UserGroup.create(info.username)
         user.groups.append(group)
         if is_admin:
             user.groups.append(UserGroup.get_admin_group())
@@ -478,33 +452,30 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def get_scimuser():
         u = User.get_by_name(SCIM_USER_NAME)
         if not u:
-            u, _ = User.create_with_group(name=SCIM_USER_NAME, real_name='Scim User', email='scimuser@example.com')
+            u, _ = User.create_with_group(UserInfo(
+                username=SCIM_USER_NAME,
+                full_name='Scim User',
+                email='scimuser@example.com',
+            ))
         return u
 
     def update_info(
             self,
-            name: str,
-            real_name: str,
-            email: str,
-            password: Optional[str] = None,
-            password_hash: Optional[str] = None,
-            given_name: Optional[str]=None,
-            last_name: Optional[str]=None,
+            info: UserInfo,
     ):
-        assert password is None or password_hash is None, 'Cannot pass both password and password_hash'
-        if self.name != name:
+        if self.name != info.username:
             group = self.get_personal_group()
-            self.name = name
-            group.name = name
-        if given_name and last_name:
-            self.given_name = given_name
-            self.last_name = last_name
-        self.real_name = real_name
-        self.email = email
-        if password:
-            self.pass_ = create_password_hash(password)
-        elif password_hash:
-            self.pass_ = password_hash
+            self.name = info.username
+            group.name = info.username
+        if info.given_name and info.last_name:
+            self.given_name = info.given_name
+            self.last_name = info.last_name
+        self.real_name = info.full_name
+        self.email = info.email
+        if info.password:
+            self.pass_ = create_password_hash(info.password)
+        elif info.password_hash:
+            self.pass_ = info.password_hash
 
     def has_some_access(self, i: ItemOrBlock, vals: Set[int], allow_admin: bool = True) -> Optional[BlockAccess]:
         if allow_admin and self.is_admin:

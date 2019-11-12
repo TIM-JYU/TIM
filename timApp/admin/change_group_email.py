@@ -1,6 +1,9 @@
+from typing import List
+
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.timdb.timdb import TimDb
+from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 
 
@@ -12,7 +15,7 @@ def change_email():
         # groupname = input("Input group to edit: ")
         groupname = "mallikurssinryhma1"
         group = UserGroup.query.filter_by(name="mallikurssinryhma1").first()
-        users = group.users
+        users: List[User] = group.users
         new_email = input("Input new email suffix: ")
         print("New values:")
         for user in users:
@@ -26,7 +29,13 @@ def change_email():
                 if "@malli" not in user.name:
                     continue
                 uprefix = str(user.name).replace("@malli", "")
-                user.update_info(user.name, user.real_name, uprefix + "@" + new_email)
+                user.update_info(
+                    UserInfo(
+                        username=user.name,
+                        full_name=user.real_name,
+                        email=uprefix + "@" + new_email,
+                    )
+                )
             break
         elif yesno == 'q' or yesno == 'quit':
             timdb.close()

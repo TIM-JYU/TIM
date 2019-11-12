@@ -4,7 +4,7 @@ from datetime import timedelta
 from timApp.item.block import insert_block, BlockType, Block
 from timApp.tests.db.timdbtest import TimDbTest, TEST_USER_1_ID
 from timApp.timdb.sqa import db
-from timApp.user.user import User, last_name_to_first, last_name_to_last
+from timApp.user.user import User, last_name_to_first, last_name_to_last, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import remove_access
 from timApp.user.userutils import grant_access
@@ -26,10 +26,8 @@ class UserTest(TimDbTest):
     def test_create_user(self):
         anon_group = UserGroup.get_anonymous_group()
         name, real_name, email, password = ['test', 'John Doe', 'john@example.com', '0123456789abcdef']
-        user = User.create(name, real_name, email, password)
-        g = UserGroup.create(name)
+        user, g = User.create_with_group(UserInfo(username=name, full_name=real_name, email=email, password=password))
         g2 = UserGroup.create('dummy')
-        user.groups.append(g)
 
         test_block = insert_block(block_type=BlockType.Document, description='test', owner_groups=[g2])
         test_block_2 = insert_block(block_type=BlockType.Document, description='test', owner_groups=[g])

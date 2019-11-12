@@ -16,7 +16,7 @@ from timApp.sisu.sisu import call_sisu_assessments
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
-from timApp.user.user import User, UserOrigin
+from timApp.user.user import User, UserOrigin, UserInfo
 from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX
 from timApp.util.utils import seq_to_str, get_current_time
 
@@ -410,8 +410,12 @@ class ScimTest(TimRouteTest):
             **scim_error("Key (email)=(zzz@example.com) already exists. Conflicting username is: someone2"),
         )
 
-        User.create_with_group(name='xxx@example.com', real_name='Some Guy', email='xxx@example.com',
-                               origin=UserOrigin.Email)
+        User.create_with_group(UserInfo(
+            username='xxx@example.com',
+            full_name='Some Guy',
+            email='xxx@example.com',
+            origin=UserOrigin.Email,
+        ))
         db.session.commit()
         # Email user can be upgraded
         self.json_post(
@@ -849,9 +853,12 @@ class ScimTest(TimRouteTest):
         self.assertEqual('User', abc.given_name)
         self.assertEqual('abc', abc.last_name)
         self.assertEqual('User abc', abc.pretty_full_name)
-        u, _ = User.create_with_group('anon@example.com', 'Anon User', 'anon@example.com', origin=UserOrigin.Email)
-        u2, _ = User.create_with_group('mameikal', 'Matti Meikäläinen', 'mameikal@example.com',
-                                       origin=UserOrigin.Korppi)
+        u, _ = User.create_with_group(
+            UserInfo(username='anon@example.com', full_name='Anon User', email='anon@example.com',
+                     origin=UserOrigin.Email))
+        u2, _ = User.create_with_group(
+            UserInfo(username='mameikal', full_name='Matti Meikäläinen', email='mameikal@example.com',
+                     origin=UserOrigin.Korppi))
         self.make_admin(u)
         self.login(username=u.name)
         ug = UserGroup.get_by_external_id('jy-CUR-7777-teachers')
@@ -1375,9 +1382,9 @@ class SendGradeTest(SendGradeTestBase):
         )
 
         ug = UserGroup.get_by_name('students1234')
-        u, _ = User.create_with_group(name='sisuuser', real_name='Sisu User', email='sisuuser@example.com')
+        u, _ = User.create_with_group(UserInfo(username='sisuuser', full_name='Sisu User', email='sisuuser@example.com'))
         ug.users.append(u)
-        u, _ = User.create_with_group(name='sisuuser2', real_name='Sisu User', email='sisuuser2@example.com')
+        u, _ = User.create_with_group(UserInfo(username='sisuuser2', full_name='Sisu User', email='sisuuser2@example.com'))
         ug.users.append(u)
         db.session.commit()
         sisuuser = {'email': 'sisuuser@example.com',
