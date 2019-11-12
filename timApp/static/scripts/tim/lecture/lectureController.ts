@@ -140,6 +140,8 @@ export class LectureController implements IController {
         }
         if (this.lectureSettings.useWall && !this.wallInstance) {
             this.wallInstance = showLectureWall(this.wallMessages);
+            await to(this.wallInstance.result);
+            this.lectureSettings.useWall = false;
         } else if (!this.lectureSettings.useWall) {
             this.closeLectureWallIfOpen();
         }
