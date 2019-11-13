@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+from typing import Optional
 from urllib.parse import urlparse
 
 import requests
@@ -163,6 +164,7 @@ def ping():
 @dataclass
 class GetProxyModel:
     url: str
+    auth_token: Optional[str] = None
 
 
 @app.route("/getproxy")
@@ -176,13 +178,15 @@ def getproxy(m: GetProxyModel):
         raise RouteException(f'URL scheme not allowed: {parsed.scheme}')
     if parsed.netloc not in app.config['PROXY_WHITELIST']:
         raise RouteException(f'URL domain not whitelisted: {parsed.netloc}')
+    headers = {}
+    if m.auth_token:
+        headers['Authorization'] = f'Token {m.auth_token}'
     try:
-        r = requests.get(m.url)
+        r = requests.get(m.url, headers=headers)
     except (MissingSchema, InvalidURL):
         raise RouteException('Invalid URL')
 
-    text = r.content
-    return text_response(text, r.status_code)
+    return json_response({'data': r.text, 'status_code': r.status_code})
 
 
 @app.route("/getTemplates")

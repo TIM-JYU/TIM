@@ -7,7 +7,6 @@ import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
-/* import "./importData.css"; */
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 
 const importDataApp = angular.module("importDataApp", ["ngSanitize"]);
@@ -18,7 +17,6 @@ const ImportDataMarkup = t.intersection([
     t.partial({
         beforeOpen: t.string,
         buttonBottom: t.boolean,
-        // srchtml: t.string,
         message: t.string,
         width: t.number,
         height: t.number,
@@ -43,9 +41,7 @@ const ImportDataMarkup = t.intersection([
         beforeOpen: withDefault(t.string, "+ Open import"),
         placeholder: withDefault(t.string, "Put here content to import"),
         showInView: withDefault(t.boolean, false),
-        // autoplay: withDefault(t.boolean, true),
-        // file: t.string,
-        // open: withDefault(t.boolean, false),
+        useurltoken: withDefault(t.boolean, false),
     }),
 ]);
 const ImportDataAll = t.intersection([
@@ -83,6 +79,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
     private separator: string = ";";
     private visible: number = -1;
     private fields: string = "";
+    private urlToken: string = "";
 
     getDefaultMarkup() {
         return {};
@@ -120,17 +117,25 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         this.error = {};
         this.result = "";
 
-        const url = "/getproxy?url=" + this.url;
-        // TODO: TIMiin oma proxy!
-        const r = await to($http<{
-            data?: string,
-        }>({method: "GET", url: url, timeout: 20000},
+        const r = await to($http.get<{
+            data: string,
+            status_code: number,
+        }>("/getproxy", {
+                params: {
+                    url: this.url,
+                    auth_token: this.urlToken,
+                },
+            },
         ));
         if (!r.ok) {
-            this.error.message = r.result.data.toString();
+            this.error.message = r.result.data.error;
             return;
         }
-        this.importText = r.result.data.toString();
+        if (r.result.data.status_code >= 400) {
+            this.error.message = r.result.data.data;
+            return;
+        }
+        this.importText = r.result.data.data;
     }
 
     onFileSelect(file: File) {
@@ -244,10 +249,15 @@ timApp.component("importdataRunner", {
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <div class="importDataInner">
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
-    <div ng-if="::$ctrl.attrs.useurl" class="form-inline small">
-        <div class="form-group small"> {{::$ctrl.attrs.urlstem}}
-            <input ng-model="$ctrl.url" size="50">
-            <button ng-if="$ctrl.url" class="timButton" ng-click="$ctrl.pickFromWWW()">{{::$ctrl.attrs.loadButtonText}}</button>
+    <div ng-if="::$ctrl.attrs.useurl" class="form-inline">
+        <div class="form-group form-group-sm">
+            <label for="url" class="small">{{::$ctrl.attrs.urlstem}}</label>
+            <input id="url" class="form-control" ng-model="$ctrl.url" size="50">
+            <span ng-if="$ctrl.attrs.useurltoken">
+                <label for="urltoken" class="small">Auth token:</label>
+                <input id="urltoken" class="form-control" ng-model="$ctrl.urlToken">
+            </span>
+            <button ng-if="$ctrl.url" class="timButton btn-sm" ng-click="$ctrl.pickFromWWW()">{{::$ctrl.attrs.loadButtonText}}</button>
         </div>
     </div>
     <div ng-if="::$ctrl.attrs.upload" class="form-inline small">
@@ -259,9 +269,9 @@ timApp.component("importdataRunner", {
     </div>
     <p class="form-inline small" ng-if="$ctrl.attrs.useseparator">{{$ctrl.attrs.separatorstem}}<input ng-model="$ctrl.separator" size="5"/></p>
     <p>Fields:</p>
-    <p><textarea id="fieldsText" ng-if="$ctrl.attrs.usefields" ng-model="$ctrl.fields" placeholder="fields" rows="7" cols="30"></textarea></p>
+    <p><textarea class="form-control" ng-if="$ctrl.attrs.usefields" ng-model="$ctrl.fields" placeholder="fields" rows="7" cols="30"></textarea></p>
     <p></p>
-    <p><textarea id="importText" ng-model="$ctrl.importText" ng-attr-placeholder="{{$ctrl.attrs.placeholder}}" rows="10" cols="50"></textarea></p>
+    <p><textarea class="form-control" ng-model="$ctrl.importText" ng-attr-placeholder="{{$ctrl.attrs.placeholder}}" rows="10" cols="50"></textarea></p>
     <button class="timButton"  ng-disabled="$ctrl.isRunning" ng-click="$ctrl.doImport()">
         {{::$ctrl.buttonText()}}
     </button>

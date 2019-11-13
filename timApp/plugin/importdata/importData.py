@@ -51,6 +51,7 @@ class ImportDataMarkupModel(GenericMarkupModel):
     usefields: Union[bool, Missing, None] = missing
     useseparator: Union[bool, Missing, None] = missing
     useurl: Union[bool, Missing, None] = missing
+    useurltoken: Union[bool, Missing, None] = missing
     ignoreMissing: Union[bool, Missing, None] = missing
 
 
