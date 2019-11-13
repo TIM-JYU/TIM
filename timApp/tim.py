@@ -312,9 +312,6 @@ def close_db_appcontext(e):
 
 
 def init_app():
-    with app.app_context():
-        cache.clear()
-
     if app.config['PROFILE']:
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',), restrictions=[100])
 

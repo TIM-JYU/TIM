@@ -18,6 +18,7 @@ from timApp.auth.login import create_or_update_user, set_user_to_session
 from timApp.tim_app import app, csrf
 from timApp.timdb.sqa import db
 from timApp.user.user import UserInfo, UserOrigin
+from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import use_model, RouteException
 from timApp.util.flask.responsehelper import json_response
 
@@ -110,6 +111,7 @@ def init_saml_auth(req, entity_id: str) -> OneLogin_Saml2_Auth:
     return auth
 
 
+@cache.cached(timeout=3600 * 24)
 def get_haka_metadata() -> str:
     idp_metadata_xml = OneLogin_Saml2_IdPMetadataParser.get_metadata(app.config['HAKA_METADATA_URL'])
     return idp_metadata_xml
