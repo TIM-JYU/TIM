@@ -80,6 +80,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
     private visible: number = -1;
     private fields: string = "";
     private urlToken: string = "";
+    private fetchingData = false;
 
     getDefaultMarkup() {
         return {};
@@ -117,6 +118,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         this.error = {};
         this.result = "";
 
+        this.fetchingData = true;
         const r = await to($http.get<{
             data: string,
             status_code: number,
@@ -127,6 +129,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
                 },
             },
         ));
+        this.fetchingData = false;
         if (!r.ok) {
             this.error.message = r.result.data.error;
             return;
@@ -242,51 +245,60 @@ timApp.component("importdataRunner", {
     },
     template: `
 <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
-<div ng-cloak ng-class="{'csRunDiv': ($ctrl.attrs.borders && $ctrl.isOpen)}" class="importDataDiv no-popup-menu" ng-if="::$ctrl.isVisible()">
-  <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen" ng-click="$ctrl.isOpen = true"></p>
-  <div ng-if="$ctrl.isOpen">
-    <p class="closeButton" ng-click="$ctrl.isOpen = false" />
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <div class="importDataInner">
-    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
-    <div ng-if="::$ctrl.attrs.useurl" class="form-inline">
-        <div class="form-group form-group-sm">
-            <label for="url" class="small">{{::$ctrl.attrs.urlstem}}</label>
-            <input id="url" class="form-control" ng-model="$ctrl.url" size="50">
-            <span ng-if="$ctrl.attrs.useurltoken">
-                <label for="urltoken" class="small">Auth token:</label>
-                <input id="urltoken" class="form-control" ng-model="$ctrl.urlToken">
-            </span>
-            <button ng-if="$ctrl.url" class="timButton btn-sm" ng-click="$ctrl.pickFromWWW()">{{::$ctrl.attrs.loadButtonText}}</button>
+<div ng-cloak ng-class="{'csRunDiv': ($ctrl.attrs.borders && $ctrl.isOpen)}" class="importDataDiv no-popup-menu"
+     ng-if="::$ctrl.isVisible()">
+    <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen" ng-click="$ctrl.isOpen = true"></p>
+    <div ng-if="$ctrl.isOpen">
+        <p class="closeButton" ng-click="$ctrl.isOpen = false"/>
+        <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
+        <div class="importDataInner">
+            <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
+            <div ng-if="::$ctrl.attrs.useurl" class="form">
+                <div class="form-group form-group-sm">
+                    <label for="url" class="small">{{::$ctrl.attrs.urlstem}}</label>
+                    <input id="url" class="form-control" ng-model="$ctrl.url" size="50">
+                </div>
+                <div ng-if="$ctrl.attrs.useurltoken" class="form-group form-group-sm">
+                    <label for="urltoken" class="small">Auth token:</label>
+                    <input id="urltoken" class="form-control" ng-model="$ctrl.urlToken">
+                </div>
+                <button ng-disabled="$ctrl.fetchingData || !$ctrl.url"
+                        class="timButton btn-sm"
+                        ng-click="$ctrl.pickFromWWW()">{{::$ctrl.attrs.loadButtonText}}
+                </button>
+                <tim-loading ng-if="$ctrl.fetchingData"></tim-loading>
+            </div>
+            <div ng-if="::$ctrl.attrs.upload" class="form-inline small">
+                <div class="form-group small"> {{::$ctrl.attrs.uploadstem}}
+                    <input type="file" ngf-select="$ctrl.onFileSelect($file)">
+                </div>
+                <div class="error" ng-show="$ctrl.fileError" ng-bind="$ctrl.fileError"></div>
+                <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
+            </div>
+            <p class="form-inline small" ng-if="$ctrl.attrs.useseparator">{{$ctrl.attrs.separatorstem}}<input
+                    ng-model="$ctrl.separator" size="5"/></p>
+            <p>Fields:</p>
+            <p><textarea class="form-control" ng-if="$ctrl.attrs.usefields" ng-model="$ctrl.fields" placeholder="fields"
+                         rows="7" cols="30"></textarea></p>
+            <p></p>
+            <p><textarea class="form-control" ng-model="$ctrl.importText"
+                         ng-attr-placeholder="{{$ctrl.attrs.placeholder}}" rows="10" cols="50"></textarea></p>
+            <button class="timButton" ng-disabled="$ctrl.isRunning" ng-click="$ctrl.doImport()">
+                {{::$ctrl.buttonText()}}
+            </button>
+            <tim-loading ng-if="$ctrl.isRunning"></tim-loading>
+            <div ng-if="$ctrl.error.message">
+                <p class="closeButton" ng-click="$ctrl.error = ''"/>
+                <importdata-error ng-if="$ctrl.error" e="$ctrl.error"></importdata-error>
+                <importdata-error ng-repeat="err in $ctrl.scriptErrors" e="err"></importdata-error>
+            </div>
+            <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
+            <pre ng-if="$ctrl.output">{{$ctrl.output}}</pre>
+            <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
+            <p></p>
         </div>
-    </div>
-    <div ng-if="::$ctrl.attrs.upload" class="form-inline small">
-        <div class="form-group small"> {{::$ctrl.attrs.uploadstem}}
-            <input type="file" ngf-select="$ctrl.onFileSelect($file)">
-        </div>
-        <div class="error" ng-show="$ctrl.fileError" ng-bind="$ctrl.fileError"></div>
-        <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
-    </div>
-    <p class="form-inline small" ng-if="$ctrl.attrs.useseparator">{{$ctrl.attrs.separatorstem}}<input ng-model="$ctrl.separator" size="5"/></p>
-    <p>Fields:</p>
-    <p><textarea class="form-control" ng-if="$ctrl.attrs.usefields" ng-model="$ctrl.fields" placeholder="fields" rows="7" cols="30"></textarea></p>
-    <p></p>
-    <p><textarea class="form-control" ng-model="$ctrl.importText" ng-attr-placeholder="{{$ctrl.attrs.placeholder}}" rows="10" cols="50"></textarea></p>
-    <button class="timButton"  ng-disabled="$ctrl.isRunning" ng-click="$ctrl.doImport()">
-        {{::$ctrl.buttonText()}}
-    </button>
-    <div ng-if="$ctrl.error.message">
-        <p class="closeButton" ng-click="$ctrl.error = ''" />
-        <importdata-error ng-if="$ctrl.error" e="$ctrl.error"></importdata-error>
-        <importdata-error ng-repeat="err in $ctrl.scriptErrors" e="err"></importdata-error>
-    </div>
-    <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <pre ng-if="$ctrl.output">{{$ctrl.output}}</pre>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-    <p></p>
-    </div>
 
-  </div>
+    </div>
 </div>
 `,
 });
