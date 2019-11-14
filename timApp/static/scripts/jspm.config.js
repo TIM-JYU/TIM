@@ -79,6 +79,9 @@ SystemJS.config({
     },
     "/jsrunner": {
       "defaultExtension": "js"
+    },
+    "/field": {
+      "defaultExtension": "js"
     }
   },
   meta: {
