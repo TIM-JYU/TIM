@@ -282,7 +282,7 @@ class PostGradesModel:
     dryRun: bool
     partial: bool
     filterUsers: Optional[List[str]] = None
-    includeUsers: MembershipFilter = field(default=MembershipFilter.Current, metadata={'by_value': True})
+    includeUsers: MembershipFilter = field(default=MembershipFilter.All, metadata={'by_value': True})
     completionDate: Optional[datetime] = None
     groups: Optional[List[str]] = None
 
