@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Union, Any
 
 import click
 import requests
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from flask import Blueprint, abort, current_app, request
 from flask.cli import AppGroup
 from marshmallow import validates, ValidationError
@@ -35,7 +35,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_sisu_groups_by_filter
 from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.get_fields import get_fields_and_users
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter
 from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time, fin_timezone
 
@@ -282,6 +282,7 @@ class PostGradesModel:
     dryRun: bool
     partial: bool
     filterUsers: Optional[List[str]] = None
+    includeUsers: MembershipFilter = field(default=MembershipFilter.Current, metadata={'by_value': True})
     completionDate: Optional[datetime] = None
     groups: Optional[List[str]] = None
 
@@ -298,6 +299,7 @@ def post_grades_route(m: PostGradesModel):
         groups=m.groups,
         filter_users=m.filterUsers,
         completion_date=m.completionDate.astimezone(fin_timezone).date() if m.completionDate else None,
+        membership_filter=m.includeUsers,
     ))
     if not m.dryRun:
         db.session.commit()
@@ -425,8 +427,9 @@ def send_grades_to_sisu(
         completion_date: Optional[date],
         filter_users: Optional[List[str]],
         groups: Optional[List[str]],
+        membership_filter: MembershipFilter,
 ):
-    assessments = get_sisu_assessments(sisu_id, teacher, doc, groups, filter_users)
+    assessments = get_sisu_assessments(sisu_id, teacher, doc, groups, filter_users, membership_filter)
     if not completion_date:
         completion_date = get_current_time().date()
     users_to_update = {a.user.id for a in assessments if a.is_new_or_changed()}
@@ -517,6 +520,7 @@ def get_sisu_assessments(
         doc: DocInfo,
         groups: Optional[List[str]],
         filter_users: Optional[List[str]],
+        membership_filter: MembershipFilter,
 ) -> List[CandidateAssessment]:
     teachers_group = UserGroup.get_teachers_group()
     if teacher not in teachers_group.users:
@@ -562,6 +566,7 @@ def get_sisu_assessments(
         doc,
         teacher,
         user_filter=User.name.in_(filter_users) if filter_users else None,
+        member_filter_type=membership_filter,
     )
     return [fields_to_assessment(r, doc) for r in users]
 

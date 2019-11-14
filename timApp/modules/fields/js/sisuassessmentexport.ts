@@ -1,5 +1,6 @@
 import angular from "angular";
 import * as t from "io-ts";
+import {IncludeUsersOption} from "tim/plugin/attributes";
 import moment from "tim/plugin/reexports/moment";
 import {showMessageDialog} from "tim/ui/dialog";
 import {IUser} from "tim/user/IUser";
@@ -62,7 +63,8 @@ class SisuAssessmentExportController {
     private loading: boolean = false;
     private destCourse!: Binding<string, "<">;
     private docId!: Binding<number, "<">;
-    private group?: t.TypeOf<typeof GroupType>;
+    private group?: Binding<t.TypeOf<typeof GroupType>, "<">;
+    private includeUsers?: Binding<t.TypeOf<typeof IncludeUsersOption>, "<">;
 
     async callSendGrades(opts: {
         completionDate?: moment.Moment,
@@ -83,6 +85,7 @@ class SisuAssessmentExportController {
             filterUsers: opts.filterUsers,
             groups: groups,
             partial: opts.partial,
+            includeUsers: this.includeUsers,
         }));
         this.loading = false;
         if (!r.ok) {
@@ -215,6 +218,7 @@ Sisu.component("sisuAssessmentExport", {
         destCourse: "<",
         docId: "<",
         group: "<",
+        includeUsers: "<",
     },
     controller: SisuAssessmentExportController,
     template: `

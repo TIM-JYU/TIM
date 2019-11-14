@@ -25,16 +25,19 @@ class MultisaveMarkupModel(GenericMarkupModel):
     areas: Union[List[str], Missing] = missing
     autoUpdateDuplicates: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
-    destCourse: Union[str, Missing] = missing
     emailMode: Union[bool, Missing] = missing
     emailPreMsg: Union[str, Missing, None] = missing
     emailRecipients: Union[List[str], Missing] = missing
     emailSubject: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
-    group: Union[str, List[str], Missing] = missing  # for destCourse
     jumplink: Union[str, Missing, None] = missing
     jumptarget: Union[str, Missing, None] = missing
     tags: Union[List[str], Missing] = missing
+
+    # Sisu export-related fields; TODO: Should be a separate plugin.
+    destCourse: Union[str, Missing] = missing
+    group: Union[str, List[str], Missing] = missing  # for destCourse
+    includeUsers: Union[str, Missing] = missing  # TODO: Should be MembershipFilter, but cannot import
 
 
 @dataclass

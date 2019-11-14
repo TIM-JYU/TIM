@@ -1,17 +1,12 @@
 import * as t from "io-ts";
-import {GenericPluginMarkup, getTopLevelFields, withDefault} from "tim/plugin/attributes";
+import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, withDefault} from "tim/plugin/attributes";
+export {IncludeUsersOption} from "tim/plugin/attributes";
 
 // t.brand causes problems, so we use the deprecated refinement for now.
 export const Max1000 = t.refinement(
     t.number,
     (n) => n >= 0 && n <= 1000,
 );
-
-export const IncludeUsersOption = t.keyof({
-    all: null,
-    current: null,
-    deleted: null,
-});
 
 export const JsrunnerMarkup = t.intersection([
     t.partial({

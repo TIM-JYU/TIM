@@ -4,7 +4,7 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
+import {GenericPluginMarkup, IncludeUsersOption, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {Users} from "tim/user/userService";
 import {$http} from "tim/util/ngimport";
@@ -26,6 +26,7 @@ const multisaveMarkup = t.intersection([
         jumplink: t.string,
         jumptarget: t.string,
         destCourse: t.string,
+        includeUsers: IncludeUsersOption,
     }),
     GenericPluginMarkup,
     t.type({
@@ -265,6 +266,7 @@ multisaveApp.component("multisaveRunner", {
     <sisu-assessment-export ng-if="$ctrl.attrs.destCourse"
                             doc-id="$ctrl.vctrl.item.id"
                             dest-course="$ctrl.attrs.destCourse"
+                            include-users="$ctrl.attrs.includeUsers"
                             group="$ctrl.attrs.group">
     </sisu-assessment-export>
     <button class="timButton"

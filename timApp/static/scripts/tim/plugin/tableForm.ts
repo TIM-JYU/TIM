@@ -13,7 +13,7 @@ import {IDocument} from "../item/IItem";
 import {showInputDialog} from "../ui/inputDialog";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
-import {GenericPluginMarkup, getTopLevelFields, nullable, withDefault} from "./attributes";
+import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, nullable, withDefault} from "./attributes";
 import "./tableForm.css";
 import {
     CellAttrToSave,
@@ -73,7 +73,7 @@ const TableFormMarkup = t.intersection([
         autoUpdateTables: withDefault(t.boolean, true),
         fontSize: withDefault(t.string, "smaller"),
         fixedColor: withDefault(t.string, "#f0f0f0"),
-        includeUsers: withDefault(t.keyof({current: null, all: null, deleted: null}), "current"),
+        includeUsers: withDefault(IncludeUsersOption, "current"),
         saveStyles: withDefault(t.boolean, true),
         removeDocIds: withDefault(t.boolean, true),
         taskBorders: withDefault(t.boolean, false),
