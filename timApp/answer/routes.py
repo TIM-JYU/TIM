@@ -42,6 +42,7 @@ from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
+from timApp.tim_app import get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -346,7 +347,7 @@ def send_email(args: SendEmailModel):
     """
     rcpts, msg, subject, bccme = args.rcpts, args.msg, args.subject, args.bccme
     curr_user = get_current_user_object()
-    if curr_user not in UserGroup.get_teachers_group().users and curr_user not in UserGroup.get_korppi_group().users:
+    if curr_user not in UserGroup.get_teachers_group().users and curr_user not in get_home_organization_group().users:
         abort(403, "Sorry, you don't have permission to use this resource.")
     curr_user = get_current_user_object()
     if bccme:

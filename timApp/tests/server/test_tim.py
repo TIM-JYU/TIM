@@ -8,6 +8,7 @@ from timApp.document.document import Document
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.note.notes import get_notes
 from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
+from timApp.tim_app import get_home_organization_group
 from timApp.user.user import Consent
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_view_access, grant_access
@@ -251,7 +252,7 @@ class TimTest(TimRouteTest):
     def test_teacher(self):
         self.login_test1()
         d = self.create_doc()
-        self.get(f'/teacher/{d.path}', query_string={'group': 'Korppi users'})
+        self.get(f'/teacher/{d.path}', query_string={'group': get_home_organization_group().name})
 
     def test_answers_no_crash(self):
         """Don't crash if anonymous user opens answers view."""

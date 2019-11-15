@@ -176,15 +176,24 @@
         <button ng-show="$ctrl.editingRight()" class="timButton" type="submit">Save</button>
         <button class="btn btn-default" type="button" ng-disabled="$ctrl.addDisabled()" ng-if="!$ctrl.massMode" ng-click="$ctrl.cancel()">Cancel</button>
         <span ng-show="$ctrl.addingRight && !$ctrl.groupName">
-        <button class="timButton" type="button" ng-disabled="$ctrl.addDisabled()" ng-click="$ctrl.addOrEditPermission('Korppi users', $ctrl.accessType)">
-            {{$ctrl.addOrRemove()}} Korppi users
-        </button>
         <button class="timButton" type="button" ng-disabled="$ctrl.addDisabled()" ng-click="$ctrl.addOrEditPermission('Logged-in users', $ctrl.accessType)">
             {{$ctrl.addOrRemove()}} logged-in users
         </button>
         <button class="timButton" type="button" ng-disabled="$ctrl.addDisabled()" ng-click="$ctrl.addOrEditPermission('Anonymous users', $ctrl.accessType)">
             {{$ctrl.addOrRemove()}} anonymous users
         </button>
+            <div class="form-inline" style="margin-top: 5px; margin-bottom: 5px">
+                <select class="form-control"
+                        ng-model="$ctrl.selectedOrg"
+                        ng-options="g as g.name for g in $ctrl.orgs">
+                <option value="" disabled>Add organization...</option>
+            </select>
+            <button class="timButton"
+                    type="button"
+                    ng-disabled="$ctrl.addDisabled() || !$ctrl.selectedOrg"
+                    ng-click="$ctrl.addOrEditPermission($ctrl.selectedOrg.name, $ctrl.accessType)">
+                {{$ctrl.addOrRemove()}} {{ $ctrl.selectedOrg.name }}
+            </button></div>
         </span>
     </form>
 </div>

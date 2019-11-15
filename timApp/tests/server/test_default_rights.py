@@ -9,8 +9,8 @@ from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.folder.folder import Folder
 from timApp.item.block import BlockType
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
-from timApp.user.special_group_names import KORPPI_GROUPNAME
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import get_rights_holders, get_default_rights_holders
 from timApp.user.userutils import grant_default_access, default_right_paths
@@ -24,7 +24,7 @@ class DefaultRightTest(TimRouteTest):
         docentry = DocEntry.query.filter_by(id=doc.doc_id).one()
         folder: Folder = docentry.parent
         folder_owner_id = folder.owners[0].id
-        kg = UserGroup.get_korppi_group()
+        kg = get_home_organization_group()
         korppi_id = kg.id
         users_folder = Folder.find_by_path('users')
         db.session.commit()
@@ -90,7 +90,7 @@ class DefaultRightTest(TimRouteTest):
                 new_item_rights = get_rights_holders(new_doc.doc_id)
                 expected_default_rights.append(
                     {'gid': korppi_id,
-                     'name': KORPPI_GROUPNAME,
+                     'name': kg.name,
                      'access_type': 1,
                      'fullname': None,
                      'access_name': 'view',

@@ -28,7 +28,7 @@ export abstract class DialogController<T, Ret> implements IController {
         this.modalInstance.dialogInstance.resolve(this);
         this.draggable.setModal(this.modalInstance);
         this.draggable.setCloseFn(() => this.dismiss());
-        this.draggable.setCaption(this.getTitle());
+        this.draggable.setCaptionCb(() => this.getTitle());
         this.draggable.setDragClickFn(() => bringToFront(this.scope));
         this.draggable.setInitialLayout(this.getInitialVisibility());
         bringToFront(this.scope);

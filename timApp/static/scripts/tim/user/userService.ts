@@ -31,10 +31,6 @@ export class UserService {
         return this.group;
     }
 
-    public isKorppi(): boolean {
-        return this.current.groups.find((g) => g.name === "Korppi users") != null;
-    }
-
     public async logout(user: IUser, logoutFromKorppi = false) {
         const r = await to($http.post<ILoginResponse>("/logout", {user_id: user.id}));
         if (!r.ok) {

@@ -9,21 +9,24 @@
                 <rights-editor
                         item-id="$ctrl.item.id"
                         url-root="permissions"
-                        access-types="$ctrl.accessTypes">
+                        access-types="$ctrl.accessTypes"
+                        orgs="$ctrl.orgs">
                 </rights-editor>
             </uib-tab>
             <uib-tab ng-if="$ctrl.item.isFolder" heading="Default rights for new documents">
                 <rights-editor
                         item-id="$ctrl.item.id"
                         url-root="defaultPermissions/document"
-                        access-types="$ctrl.accessTypes">
+                        access-types="$ctrl.accessTypes"
+                        orgs="$ctrl.orgs">
                 </rights-editor>
             </uib-tab>
             <uib-tab ng-if="$ctrl.item.isFolder" heading="Default rights for new folders">
                 <rights-editor
                         item-id="$ctrl.item.id"
                         url-root="defaultPermissions/folder"
-                        access-types="$ctrl.accessTypes">
+                        access-types="$ctrl.accessTypes"
+                        orgs="$ctrl.orgs">
                 </rights-editor>
             </uib-tab>
             <uib-tab ng-if="$ctrl.item.isFolder" heading="Rights of subitems">
@@ -32,7 +35,8 @@
                 <rights-editor
                         item-id="$ctrl.item.id"
                         mass-mode="true"
-                        access-types="$ctrl.accessTypes">
+                        access-types="$ctrl.accessTypes"
+                        orgs="$ctrl.orgs">
                 </rights-editor>
             </uib-tab>
         </uib-tabset>

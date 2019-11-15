@@ -838,7 +838,6 @@ def get_velp_groups_from_tree(document_id: int):
     doc_velp_path = velp_groups_path + "/" + doc_name
     user = get_current_user_object()
     personal_velps_path = user.get_personal_folder().path + "/" + velp_group_folder
-    # owner_group_id = 3  # TODO: Choose owner group correctly, now uses All Korppi users
 
     velp_groups: List[DocEntry] = []
 

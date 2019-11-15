@@ -21,7 +21,7 @@ from timApp.auth.sessioninfo import get_other_users, get_session_users_ids, get_
     get_current_user_object
 from timApp.korppi.openid import KorppiOpenIDResponse
 from timApp.notification.notify import send_email
-from timApp.tim_app import oid
+from timApp.tim_app import oid, get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
@@ -172,7 +172,7 @@ def openid_success_handler(resp: KorppiOpenIDResponse):
     fullname = f'{resp.lastname} {resp.firstname}'
     user = create_or_update_user(
         UserInfo(email=resp.email, full_name=fullname, username=username, origin=UserOrigin.Korppi),
-        group_to_add=UserGroup.get_korppi_group(),
+        group_to_add=get_home_organization_group(),
     )
     db.session.commit()
     set_user_to_session(user)
@@ -345,8 +345,11 @@ def alt_signup_after():
     return json_response({'status': success_status})
 
 
-def is_possibly_jyu_account(email_or_username: str):
-    return bool(re.fullmatch('[a-z]{2,8}|.+@([a-z]+.)*jyu\.fi', email_or_username))
+def is_possibly_home_org_account(email_or_username: str):
+    return bool(re.fullmatch(
+        '[a-z]{2,8}|.+@([a-z]+\.)*' + re.escape(current_app.config['HOME_ORGANIZATION']),
+        email_or_username,
+    ))
 
 
 @login_page.route("/altlogin", methods=['POST'])
@@ -378,8 +381,9 @@ def alt_login():
         check_password_hash('', '$2b$12$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu')
 
     error_msg = "Email address or password did not match."
-    if is_possibly_jyu_account(email_or_username):
-        error_msg += " You might not have a TIM account. JYU members can log in using Korppi."
+    home_org = current_app.config['HOME_ORGANIZATION']
+    if is_possibly_home_org_account(email_or_username):
+        error_msg += f" You might not have a TIM account. {home_org} members can use the {home_org} login button."
     if is_xhr(request):
         return abort(403, error_msg)
     else:

@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 import xmlsec
 from dataclasses import dataclass, field
-from flask import request, redirect, session, make_response, Blueprint, Request
+from flask import request, redirect, session, make_response, Blueprint, Request, url_for
 from lxml import etree
 from lxml.cssselect import CSSSelector
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
@@ -18,6 +18,7 @@ from timApp.auth.login import create_or_update_user, set_user_to_session
 from timApp.tim_app import app, csrf
 from timApp.timdb.sqa import db
 from timApp.user.user import UserInfo, UserOrigin
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import use_model, RouteException
 from timApp.util.flask.responsehelper import json_response
@@ -52,7 +53,8 @@ def validate_node_sign(signature_node, elem, cert=None, fingerprint=None, finger
             if fingerprint == x509_fingerprint_value:
                 cert = x509_cert_value_formatted
             else:
-                raise FingerPrintException(f'Expected certificate fingerprint {fingerprint} but got {x509_fingerprint_value}')
+                raise FingerPrintException(
+                    f'Expected certificate fingerprint {fingerprint} but got {x509_fingerprint_value}')
 
     if cert is None or cert == '':
         raise OneLogin_Saml2_Error(
@@ -111,9 +113,14 @@ def init_saml_auth(req, entity_id: str) -> OneLogin_Saml2_Auth:
     return auth
 
 
-@cache.cached(timeout=3600 * 24)
+
 def get_haka_metadata() -> str:
-    idp_metadata_xml = OneLogin_Saml2_IdPMetadataParser.get_metadata(app.config['HAKA_METADATA_URL'])
+    return get_haka_metadata_from_url(app.config['HAKA_METADATA_URL'])
+
+
+@cache.memoize(timeout=3600 * 24)
+def get_haka_metadata_from_url(url: str) -> str:
+    idp_metadata_xml = OneLogin_Saml2_IdPMetadataParser.get_metadata(url)
     return idp_metadata_xml
 
 
@@ -184,9 +191,16 @@ class TimRequestedAttributes:
         return self.get_attribute_by_friendly_name('preferredLanguage')
 
     @property
+    def eppn_parts(self):
+        return self.edu_person_principal_name.split('@')
+
+    @property
+    def org(self):
+        return self.eppn_parts[1]
+
+    @property
     def derived_username(self):
-        eppn = self.edu_person_principal_name
-        uname, org = eppn.split('@')
+        uname, org = self.eppn_parts
         if org == app.config['HOME_ORGANIZATION']:
             return uname
         return f'{org}:{uname}'
@@ -216,19 +230,27 @@ def sso(m: SSOData):
 @csrf.exempt
 @saml.route('/acs', methods=['post'])
 def acs():
-    auth = prepare_and_init(session['entityID'])
+    entity_id = session.get('entityID')
+    if not entity_id:
+        raise RouteException('entityID not in session')
+    auth = prepare_and_init(entity_id)
     request_id = session.get('requestID')
     if not request_id:
         raise RouteException('requestID missing from session')
 
-    auth.process_response(request_id=request_id)
+    try:
+        auth.process_response(request_id=request_id)
+    except Exception as e:
+        raise RouteException(f'Error processing SAML response: {str(e)}')
     errors = auth.get_errors()
     if not auth.is_authenticated():
-        raise RouteException('Authentication failed. Please contact tim@jyu.fi if the problem persists.')
+        raise RouteException(
+            f'Authentication failed: {auth.get_last_error_reason()} (Please contact {app.config["HELP_EMAIL"]} if the problem persists.)')
     if errors:
         raise RouteException(str(errors))
     session.pop('requestID', None)
     timattrs = TimRequestedAttributes(auth)
+    org_group = UserGroup.get_organization_group(timattrs.org)
     user = create_or_update_user(
         UserInfo(
             username=timattrs.derived_username,
@@ -237,14 +259,18 @@ def acs():
             given_name=timattrs.given_name,
             last_name=timattrs.sn,
             origin=UserOrigin.Haka,
-        )
+        ),
+        group_to_add=org_group,
     )
+    haka = UserGroup.get_haka_group()
+    if haka not in user.groups:
+        user.groups.append(haka)
     db.session.commit()
     set_user_to_session(user)
-    self_url = request.url
     rs = request.form.get('RelayState')
-    if rs and self_url != rs:
+    if rs:
         return redirect(auth.redirect_to(rs))
+    return redirect(url_for('start_page'))
 
 
 @saml.route('')
@@ -285,8 +311,17 @@ def get_idps():
                 'value': n.text,
                 'lang': n.attrib['{http://www.w3.org/XML/1998/namespace}lang'],
             })
+        scopes = []
+        nsmap = idp.nsmap
+        nsmap.pop(None)
+        for n in CSSSelector(
+                'shibmd|Scope',
+                namespaces=nsmap,
+        )(idp):
+            scopes.append(n.text)
         feed.append({
             'entityID': idp.getparent().attrib['entityID'],
-            'DisplayNames': names,
+            'displayNames': names,
+            'scopes': scopes,
         })
     return json_response(feed)

@@ -42,3 +42,5 @@ SCIM_USERNAME = 't'
 SCIM_PASSWORD = 'pass'
 SISU_CERT_PATH = None
 HOME_ORGANIZATION = 'jyu.fi'
+
+SAML_PATH = '/service/timApp/auth/saml/test'

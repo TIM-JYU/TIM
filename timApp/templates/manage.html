@@ -1,11 +1,10 @@
-{% extends obj_name + ".html" %}
-{% set is_folder = obj_name == 'folder' %}
+{% extends 'item.html' %}
 {% block title %}{{ item.title }} - Manage{% endblock %}
 {% block head %}
     {{ super() }}
     <script>
         var accessTypes = {{access_types|tojson}};
-        var objName = {{obj_name|capitalize|tojson}};
+        var orgs = {{orgs|tojson}};
     </script>
 {% endblock %}
 {% block content %}

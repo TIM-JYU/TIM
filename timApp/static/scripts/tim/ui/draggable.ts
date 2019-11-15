@@ -25,7 +25,7 @@ function getPixels(s: string) {
 const draggableTemplate = `
 <div class="draghandle drag"
      ng-class="{'attached': !d.canDrag()}" ng-mousedown="d.dragClick(); $event.preventDefault()">
-    <p class="drag" ng-show="d.caption" ng-bind="d.caption"></p>
+    <p class="drag" ng-show="d.getCaption()" ng-bind="d.getCaption()"></p>
     <i ng-show="d.detachable"
        ng-click="d.toggleDetach()"
        title="{{ d.canDrag() ? 'Attach' : 'Detach' }}"
@@ -130,6 +130,7 @@ export class DraggableController implements IController {
     private modal?: IModalInstanceService;
     private layoutReady = $q.defer();
     private resizeCallback?: ResizeCallback;
+    private captionCb?: () => string;
 
     constructor(private scope: IScope, private element: IRootElementService) {
     }
@@ -155,8 +156,12 @@ export class DraggableController implements IController {
         return this.layoutReady.promise;
     }
 
-    setCaption(caption: string) {
-        this.caption = caption;
+    getCaption() {
+        return this.caption || (this.captionCb ? this.captionCb() : "Dialog");
+    }
+
+    setCaptionCb(cb: () => string) {
+        this.captionCb = cb;
     }
 
     async makeHeightAutomatic() {

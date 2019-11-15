@@ -82,6 +82,7 @@ class RightsEditorController implements IController {
     private msg?: string;
     private severity?: "danger" | "success";
     private loading = false;
+    private orgs?: IGroup[];
 
     constructor(scope: IScope) {
         this.scope = scope;
@@ -127,6 +128,12 @@ class RightsEditorController implements IController {
     async $onInit() {
         if (this.accessTypes) {
             this.accessType = this.accessTypes[0];
+        }
+        if (!this.orgs) {
+            const r = await to($http.get<IGroup[]>("/groups/getOrgs"));
+            if (r.ok) {
+                this.orgs = r.result.data;
+            }
         }
         if (!this.massMode) {
             this.getPermissions();
@@ -462,6 +469,7 @@ timApp.component("rightsEditor", {
         accessTypes: "<?",
         itemId: "<?",
         massMode: "<?",
+        orgs: "<?",
         urlRoot: "@?",
     },
     controller: RightsEditorController,

@@ -34,33 +34,22 @@ export class StartCtrl implements IController {
     }
 
     /**
-     * Pick the page language from urlPathName or localstorage, otherwise use default.
-     * Currently supported: fi, en.
+     * Pick the page language from URL pathname or localstorage, otherwise use default.
      */
     setLanguage() {
         const urlPathName: string = window.location.pathname;
         switch (urlPathName) {
             case "/fi":
                 this.language = "fi";
-                // Save to localstorage so the language is remembered when using start page without urlPathName.
-                this.storage.language = "fi";
                 break;
             case "/en":
                 this.language = "en";
-                this.storage.language = "en";
                 break;
-            // For a new language add another case here and button and translations into HTML.
             default:
-                // Try local storage, otherwise use default language.
-                if (this.storage.language) {
-                    this.language = this.storage.language;
-                } else {
-                    this.language = FRONT_PAGE_DEFAULT_LANGUAGE;
-                    // Save to storage here so top bar login is the same language.
-                    this.storage.language = this.language;
-                }
+                this.language = this.storage.language || FRONT_PAGE_DEFAULT_LANGUAGE;
                 break;
         }
+        this.storage.language = this.language;
         language.lang = this.language;
     }
 
@@ -161,68 +150,33 @@ timApp.component("timStart", {
             </a>
         </div>
         <div class="col-md-4">
-            <div ng-switch="$ctrl.language" ng-cloak>
-                <!-- English -->
-                <div ng-switch-default>
-                    <h3>Get started</h3>
-                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(false)" type="button"
-                        class="timButton margin-4" title="Log in with Korppi or TIM">Log in</button>
-                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(true)" type="button"
-                        class="timButton margin-4"
-                        title="Create a TIM account (for those who aren't staff or Korppi-users)">Sign up</button>
-                    <ul class="list-unstyled">
-                        <li ng-if="$ctrl.isLoggedIn()" class="h5">
-                            <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">My documents</a>
-                        </li>
-                        <li class="h5"><a href="/view/">All documents</a></li>
-                        <li class="h5">
-                            <a ng-click="$ctrl.openCourseListDialog()" href="#">Available courses</a>
-                        </li>
-                        <li ng-if="$ctrl.isLoggedIn()" class="h5">
-                            <a ng-click="$ctrl.enableCreate()" href="#">Create a new document</a>
-                        </li>
-                    </ul>
-                    <bootstrap-panel ng-if="$ctrl.creatingNew"
-                                     title="Create a new document"
-                                     show-close="true"
-                                     close-fn="$ctrl.cancelCreate()">
-                        <create-item item-title="My document"
-                                     item-location="{{$ctrl.getCurrentUserFolderPath()}}"
-                                     item-type="document">
-                        </create-item>
-                    </bootstrap-panel>
-                </div>
-                <!-- Finnish -->
-                <div ng-switch-when="fi">
-                    <h3>Aloitus</h3>
-                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(false)" type="button"
-                        class="timButton margin-4" title="Kirjaudu sisään Korppi- tai TIM-tunnuksilla">Kirjaudu</button>
-                    <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(true)" type="button"
-                        class="timButton margin-4"
-                        title="Luo TIM-tili (jos et ole Korppi-käyttäjä tai henkilökunnan jäsen)">Luo TIM-tili</button>
-                    <ul class="list-unstyled">
-                        <li ng-if="$ctrl.isLoggedIn()" class="h5">
-                            <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">Omat dokumentit</a>
-                        </li>
-                        <li class="h5"><a href="/view/">Kaikki dokumentit</a></li>
-                        <li class="h5">
-                            <a ng-click="$ctrl.openCourseListDialog()" href="#">Saatavilla olevat kurssit</a>
-                        </li>
-                        <li ng-if="$ctrl.isLoggedIn()" class="h5">
-                            <a ng-click="$ctrl.enableCreate()" href="#">Luo uusi dokumentti</a>
-                        </li>
-                    </ul>
-                    <bootstrap-panel ng-if="$ctrl.creatingNew"
-                                     title="Create a new document"
-                                     show-close="true"
-                                     close-fn="$ctrl.cancelCreate()">
-                        <create-item item-title="My document"
-                                     item-location="{{$ctrl.getCurrentUserFolderPath()}}"
-                                     item-type="document">
-                        </create-item>
-                    </bootstrap-panel>
-                </div>
-            </div>
+            <h3>{{ 'Get started' | tr }}</h3>
+            <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(false)" type="button"
+                class="timButton margin-4" title="{{ 'Log in' | tr }}">{{ 'Log in' | tr }}</button>
+            <button ng-if="!$ctrl.isLoggedIn()" ng-click="$ctrl.openLoginDialog(true)" type="button"
+                class="timButton margin-4"
+                title="{{ 'Create a TIM account' | tr }}">{{ 'Sign up' | tr }}</button>
+            <ul class="list-unstyled">
+                <li ng-if="$ctrl.isLoggedIn()" class="h5">
+                    <a href="/view/{{$ctrl.getCurrentUserFolderPath()}}">{{ 'My documents' | tr }}</a>
+                </li>
+                <li class="h5"><a href="/view/">{{ 'All documents' | tr }}</a></li>
+                <li class="h5">
+                    <a ng-click="$ctrl.openCourseListDialog()" href="#">{{ 'Available courses' | tr }}</a>
+                </li>
+                <li ng-if="$ctrl.isLoggedIn()" class="h5">
+                    <a ng-click="$ctrl.enableCreate()" href="#">{{ 'Create a new document' | tr }}</a>
+                </li>
+            </ul>
+            <bootstrap-panel ng-if="$ctrl.creatingNew"
+                             title="{{ 'Create a new document' | tr }}"
+                             show-close="true"
+                             close-fn="$ctrl.cancelCreate()">
+                <create-item item-title="My document"
+                             item-location="{{$ctrl.getCurrentUserFolderPath()}}"
+                             item-type="document">
+                </create-item>
+            </bootstrap-panel>
         </div>
     </div>
     <div class="row">

@@ -30,6 +30,7 @@ depends=(
             <script src="/static/scripts/build/tim.js"></script>
         {% endif %}
         <script>
+            var homeOrganization = {{ config.HOME_ORGANIZATION|tojson }};
             var IS_TESTING = {{ config.TESTING|tojson }};
             var ANGULARMODULES = {{ (jsMods or [])|tojson }};
             var JSMODULES = {{ (js or [])|tojson }};

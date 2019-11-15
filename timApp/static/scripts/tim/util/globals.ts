@@ -17,6 +17,7 @@ export interface IGenericGlobals {
     JSMODULES: string[];
     item?: DocumentOrFolder;
     userPrefs: ISettings;
+    homeOrganization: string;
 }
 
 export interface IItemGlobals extends IGenericGlobals {
@@ -72,8 +73,8 @@ export interface ISlideGlobals extends IDocumentGlobals {
 }
 
 export interface IManageGlobals extends IGenericGlobals {
+    orgs: IGroup[];
     accessTypes: Array<{}>;
-    objName: "folder" | "document";
     item: IFullDocument | IFolder;
 }
 

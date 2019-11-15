@@ -6,10 +6,10 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
-from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
+from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists
 from timApp.user.scimentity import SCIMEntity
-from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LARGE_GROUPS, KORPPI_GROUPNAME, LOGGED_IN_GROUPNAME, \
-    ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME
+from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LOGGED_IN_GROUPNAME, \
+    ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME, SPECIAL_GROUPS
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember, membership_current
 
@@ -21,6 +21,9 @@ def tim_group_to_scim(tim_group: str):
     if not tim_group.startswith(SISU_GROUP_PREFIX):
         raise Exception(f"Group {tim_group} is not a Sisu group")
     return tim_group[len(SISU_GROUP_PREFIX):]
+
+
+ORG_GROUP_SUFFIX = ' users'
 
 
 class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
@@ -109,7 +112,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return self.name == ANONYMOUS_GROUPNAME
 
     def is_large(self) -> bool:
-        return self.name in LARGE_GROUPS
+        return self.name.endswith(ORG_GROUP_SUFFIX)
 
     def to_json(self):
         r = {
@@ -166,8 +169,26 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return UserGroup.query.filter_by(name=GROUPADMIN_GROUPNAME).one()
 
     @staticmethod
-    def get_korppi_group() -> 'UserGroup':
-        return UserGroup.query.filter_by(name=KORPPI_GROUPNAME).one()
+    def get_organization_group(org: str) -> 'UserGroup':
+        gname = org + ORG_GROUP_SUFFIX
+        ug = UserGroup.get_by_name(gname)
+        if not ug:
+            ug = UserGroup.create(gname)
+            db.session.add(ug)
+        return ug
+
+    @staticmethod
+    def get_haka_group() -> 'UserGroup':
+        haka_group_name = 'Haka users'
+        ug = UserGroup.get_by_name(haka_group_name)
+        if not ug:
+            ug = UserGroup.create(haka_group_name)
+            db.session.add(ug)
+        return ug
+
+    @staticmethod
+    def get_organizations() -> List['UserGroup']:
+        return UserGroup.query.filter(UserGroup.name.endswith(' users') & UserGroup.name.notin_(SPECIAL_GROUPS)).all()
 
     @staticmethod
     def get_teachers_group() -> 'UserGroup':

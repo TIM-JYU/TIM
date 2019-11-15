@@ -49,6 +49,11 @@ def get_uid_gid(groupname, usernames) -> Tuple[UserGroup, List[User]]:
     return group, users
 
 
+@groups.route('/getOrgs')
+def get_organizations():
+    return json_response(UserGroup.get_organizations())
+
+
 @groups.route('/show/<groupname>')
 def show_members(groupname):
     ug = UserGroup.get_by_name(groupname)

@@ -4,6 +4,7 @@ import {IChangelogEntry, IManageResponse} from "../document/editing/edittypes";
 import {isManageResponse, showRenameDialog} from "../document/editing/pluginRenameForm";
 import * as copyFolder from "../folder/copyFolder";
 import {showMessageDialog} from "../ui/dialog";
+import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
 import {manageglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
@@ -28,6 +29,7 @@ export class PermCtrl implements IController {
     private translations: Array<IItem & {old_title: string}> = [];
     private newTranslation: {language: string, title: string};
     private accessTypes: Array<{}>;
+    private orgs: IGroup[];
     private item: IFullDocument | IFolder;
     private newName?: string;
     private oldFolderName?: string;
@@ -53,8 +55,9 @@ export class PermCtrl implements IController {
     constructor() {
         this.newTranslation = {language: "", title: ""};
         this.accessTypes = manageglobals().accessTypes;
+        this.orgs = manageglobals().orgs;
         this.item = manageglobals().item;
-        this.objName = manageglobals().objName;
+        this.objName = this.item.isFolder ? "Folder" : "Document";
         this.newFolderName = this.item.location;
         this.newAlias = {location: this.newFolderName};
 

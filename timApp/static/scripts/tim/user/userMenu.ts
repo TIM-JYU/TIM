@@ -32,15 +32,8 @@ class UserMenuController implements IController {
 
     logout = (user: IUser, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
 
-    isKorppi = () => Users.isKorppi(); // Used in html.
-
     beginLogout($event: Event) {
-        if (Users.isKorppi()) {
-            this.loggingout = true;
-            $event.stopPropagation();
-        } else {
-            this.logout(this.getCurrentUser());
-        }
+        this.logout(this.getCurrentUser());
     }
 
     tr(s: string) {
@@ -72,13 +65,7 @@ timApp.component("userMenu", {
     <li ng-if="!$ctrl.loggingout" role="menuitem">
         <a ng-click="$ctrl.beginLogout($event)" href="#">{{ 'Log' | tr:{self: $ctrl.getSessionUsers().length === 0} }} <span
                 ng-if="$ctrl.getSessionUsers().length > 0">{{ 'everyone' | tr }}</span>
-            {{ 'out' | tr }}<span ng-if="$ctrl.isKorppi()">...</span></a>
-    </li>
-    <li ng-if="$ctrl.loggingout" role="menuitem">
-        <a ng-click="$ctrl.logout($ctrl.getCurrentUser(), true)" href="#">{{ 'Log out' | tr }} (TIM + Korppi)</a>
-    </li>
-    <li ng-if="$ctrl.loggingout" role="menuitem">
-        <a ng-click="$ctrl.logout($ctrl.getCurrentUser(), false)" href="#">{{ 'Log out' | tr }} ({{ 'TIM only' | tr }})</a>
+            {{ 'out' | tr }}
     </li>
     <li role="menuitem" ng-repeat="u in $ctrl.getSessionUsers()">
         <a ng-click="$ctrl.logout(u)" href="#">{{ 'Log' | tr:{self: false} }} {{ u.real_name }} {{ 'out' | tr }}</a>

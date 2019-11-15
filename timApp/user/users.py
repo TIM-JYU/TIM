@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 from timApp.auth.auth_models import BlockAccess
 from timApp.item.block import Block, BlockType
 from timApp.timdb.sqa import db
-from timApp.user.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, KORPPI_GROUPNAME, \
+from timApp.user.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, \
     LOGGED_IN_GROUPNAME, \
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME, TEACHERS_GROUPNAME, GROUPADMIN_GROUPNAME
 from timApp.user.user import User, UserInfo
@@ -72,7 +72,6 @@ def create_special_usergroups(sess):
     logged = User(name=LOGGED_IN_USERNAME)
     anon_group = UserGroup(name=ANONYMOUS_GROUPNAME)
     logged_group = UserGroup(id=0, name=LOGGED_IN_GROUPNAME)
-    korppi_group = UserGroup(name=KORPPI_GROUPNAME)
     admin_group = UserGroup(name=ADMIN_GROUPNAME)
     teachers_group = UserGroup(name=TEACHERS_GROUPNAME)
     groupadmin_group = UserGroup(name=GROUPADMIN_GROUPNAME)
@@ -80,7 +79,6 @@ def create_special_usergroups(sess):
     logged.groups.append(logged_group)
     sess.add(anon)
     sess.add(logged)
-    sess.add(korppi_group)
     sess.add(admin_group)
     sess.add(teachers_group)
     sess.add(groupadmin_group)

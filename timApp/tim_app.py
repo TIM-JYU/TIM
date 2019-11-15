@@ -191,3 +191,7 @@ def print_schema(bind: Optional[str]=None):
     sys.stdout.flush()
 
 # print_schema()
+
+
+def get_home_organization_group() -> UserGroup:
+    return UserGroup.get_organization_group(app.config['HOME_ORGANIZATION'])

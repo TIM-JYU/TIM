@@ -19,7 +19,7 @@ from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db, get_tim_main_engine
 from timApp.timdb.timdb import TimDb
 from timApp.user.user import User, UserInfo
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import UserGroup, ORG_GROUP_SUFFIX
 from timApp.user.users import create_special_usergroups
 from timApp.util.logger import log_info, enable_loggers, log_error, log_warning
 from timApp.util.utils import EXAMPLE_DOCS_PATH
@@ -88,6 +88,7 @@ def initialize_database(create_docs=True):
         sess.add(AccessTypeModel(id=7, name='copy'))
 
         create_special_usergroups(sess)
+        sess.add(UserGroup.create(app.config['HOME_ORGANIZATION'] + ORG_GROUP_SUFFIX))
         anon_group = UserGroup.get_anonymous_group()
         precomputed_hashes = [
             '$2b$04$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu',  # test1pass

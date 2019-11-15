@@ -54,19 +54,21 @@ def manage(path):
 
     verify_view_access(item)
 
-    access_types = AccessTypeModel.query.all()
     is_folder = isinstance(item, Folder)
     if not is_folder:
         item.serialize_content = True
         item.changelog_length = get_option(request, 'history', 100)
 
-    return render_template('manage_folder.html' if is_folder else 'manage_document.html',
-                           route='manage',
-                           translations=item.translations if not is_folder else None,
-                           item=item,
-                           js=['angular-ui-grid'],
-                           jsMods=get_grid_modules(),
-                           access_types=access_types)
+    return render_template(
+        'manage.html',
+        route='manage',
+        translations=item.translations if not is_folder else None,
+        item=item,
+        js=['angular-ui-grid'],
+        jsMods=get_grid_modules(),
+        orgs=UserGroup.get_organizations(),
+        access_types=AccessTypeModel.query.all(),
+    )
 
 
 @manage_page.route("/changelog/<int:doc_id>/<int:length>")
@@ -305,7 +307,11 @@ def get_permissions(item_id):
     i = get_item_or_abort(item_id)
     verify_manage_access(i)
     grouprights = get_rights_holders(item_id)
-    return json_response({'grouprights': grouprights, 'accesstypes': AccessTypeModel.query.all()})
+    return json_response({
+        'grouprights': grouprights,
+        'accesstypes': AccessTypeModel.query.all(),
+        'orgs': UserGroup.get_organizations(),
+    })
 
 
 @manage_page.route("/defaultPermissions/<object_type>/get/<int:folder_id>")

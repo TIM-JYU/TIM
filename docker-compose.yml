@@ -15,6 +15,7 @@ services:
    - uploader
    - dumbo
    - feedback
+   - redis
   volumes:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
