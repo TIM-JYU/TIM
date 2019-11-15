@@ -107,7 +107,7 @@ depends=(
                     <div class="hidden-lg hidden-md hamburger-placeholder pull-left" style="width: 27px; height: 1px"></div>
                     <a ng-if="!$ctrl.hideLinks" href="/"><tim-logo></tim-logo></a>
                     <tim-logo ng-if="$ctrl.hideLinks"></tim-logo>
-                    <div ng-if="!$ctrl.hideTopButtons" style="padding-top:4px;" class="pull-right">
+                    <div ng-show="!$ctrl.hideTopButtons" style="padding-top:4px;" class="pull-right">
                         <span class="timButton" ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
                               title="Display search panel">
                             <i class="glyphicon glyphicon-search"></i>
