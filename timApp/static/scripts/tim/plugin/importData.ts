@@ -3,8 +3,9 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
+import {ngStorage} from "ngstorage";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
+import {$http, $localStorage} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
@@ -81,6 +82,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
     private fields: string = "";
     private urlToken: string = "";
     private fetchingData = false;
+    private storage!: ngStorage.StorageService & {importToken: null | string; importUrl: null | string};
 
     getDefaultMarkup() {
         return {};
@@ -95,8 +97,13 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         this.isOpen = this.attrs.open;
         const aa = this.attrsall;
         const state = aa.state;
+        this.storage = $localStorage.$default({
+            importUrl: null,
+            importToken: null,
+        });
         this.separator = (state && state.separator) || this.attrs.separator;
-        this.url = (state && state.url) || this.attrs.url;
+        this.url = (state && state.url) || this.storage.importUrl || this.attrs.url;
+        this.urlToken = this.storage.importToken || "";
         this.fields = ((state && state.fields) || this.attrs.fields || []).join("\n");
     }
 
@@ -138,6 +145,8 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
             this.error.message = r.result.data.data;
             return;
         }
+        this.storage.importToken = this.urlToken;
+        this.storage.importUrl = this.url;
         this.importText = r.result.data.data;
     }
 
