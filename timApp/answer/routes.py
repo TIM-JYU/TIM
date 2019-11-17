@@ -283,6 +283,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     postprogram: Union[str, Missing] = missing
     preprogram: Union[str, Missing] = missing
     program: Union[str, Missing] = missing
+    overrideGrade: bool = False
     showInView: bool = False
     timeout: Union[int, Missing] = missing
     updateFields: Union[List[str], Missing] = missing
@@ -631,6 +632,9 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
     siw = runnermarkup.showInView
     if not runnermarkup.selectIncludeUsers and runnermarkup.includeUsers != runner_req.input.includeUsers:
         raise AccessDenied('Not allowed to select includeUsers option.')
+
+    ensure_grade_and_credit(runnermarkup.program, runnermarkup.fields)
+
     answerdata['data'], answerdata['aliases'], _, _ = get_fields_and_users(
         runnermarkup.fields,
         found_groups,
@@ -642,6 +646,23 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
     answerdata.pop('paramComps', None)  # This isn't needed by jsrunner server, so don't send it.
     if runnermarkup.program is missing:
         raise PluginException("Attribute 'program' is required.")
+
+
+def ensure_grade_and_credit(prg, flds):
+    if prg.find('grade') >= 0 or prg.find('Grade'):  # add grade to fields if missing
+        grade_found = False
+        credit_found = False
+        for fld in flds:
+            if fld.startswith('grade'):
+                grade_found = True
+            if fld.startswith('credit'):
+                credit_found = True
+            if grade_found and credit_found:
+                break
+        if not grade_found:
+            flds.append('grade')
+        if not credit_found:
+            flds.append('credit')
 
 
 answer_call_preprocessors: Dict[str, Callable[[AnswerData, User, DocInfo, Plugin], None]] = {

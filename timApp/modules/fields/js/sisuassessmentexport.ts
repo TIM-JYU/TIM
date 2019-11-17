@@ -176,6 +176,7 @@ class SisuAssessmentExportController {
                     name: "Completion date",
                     allowCellFocus: false,
                     width: 140,
+                    filter: {term: "="},
                 },
                 {
                     field: "completionCredits",

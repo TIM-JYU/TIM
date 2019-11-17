@@ -25,6 +25,7 @@ export const JsrunnerMarkup = t.intersection([
         program: t.string,
         preprogram: t.string,
         postprogram: t.string,
+        overrideGrade: t.boolean,
         timeout: Max1000,
         open: t.boolean,
         showInView: t.boolean,

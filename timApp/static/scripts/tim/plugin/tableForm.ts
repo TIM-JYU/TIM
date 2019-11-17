@@ -447,6 +447,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 }
             }
 
+            // TODO: Check if any value changed.  If not do not call reInitialize
             for (const f of tableFields) {
                 for (let y = 0; y < this.rowKeys.length; y++) {
                     if (styles && !angular.equals(styles, {})) {
@@ -460,6 +461,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 }
             }
             const timtab = this.getTimTable();
+            // if ( this.viewctrl ) { return; } // for test purposes that why styles are lost
             if (timtab) {
                 timtab.reInitialize(false);
             }

@@ -777,7 +777,6 @@ export class Tools extends ToolsBase {
     }
 
     getInt(fieldName: unknown, defa: unknown = 0): number {
-        const f = ensureStringFieldName(fieldName);
         const def = ensureIntDefault(defa);
         // const s = this.normalizeAndGet(f);
         const s = this.getDouble(fieldName, def);
@@ -944,12 +943,18 @@ export class Tools extends ToolsBase {
         return grade;
     }
 
+    isBetter(gv1: unknown, gv2: unknown) {
+        if ( gv1 == undefined ) { return false; }
+        const st1 = String(gv1).toLowerCase();
+        const st2 = String(gv2).toLowerCase();
+        if ( st1 === "" ) { return false; }
+        if ( st1 === "hyl" ) { return false; }
+        return st1 > st2;
+    }
+
     saveGrade(gradeVal: unknown, points: unknown = this.markup.defaultPoints) {
-        const d = this.markup.gradeField || "grade";
-        const fn = this.checkAliasAndNormalize(d);
-        this.result[fn] = gradeVal;
-        const c = this.markup.creditField || "credit";
-        const fnc = this.checkAliasAndNormalize(c);
+        const gf = this.markup.gradeField || "grade";
+        const cf = this.markup.creditField || "credit";
         let p;
         if (points !== undefined) {
             p = ensureNumberLikeValue(points);
@@ -957,8 +962,26 @@ export class Tools extends ToolsBase {
                 throw new Error("points is not integer.");
             }
         } else {
-            p = 0;
+            p = -1;
         }
+        if ( !this.markup.overrideGrade ) {
+            const oldGrade = this.getValue(gf);
+            if ( this.isBetter(oldGrade, gradeVal) ) {
+                this.print(this.getRealName() + ": not changing grade " + oldGrade + " to " + gradeVal + "\n");
+                return;
+            }
+            const oldPoints = this.getDouble(cf, -1);
+            if ( oldPoints > p ) {
+                this.print(this.getRealName() + ": not changing credit " + oldPoints + " to " + points + "\n");
+                return;
+            }
+        }
+        const fng = this.checkAliasAndNormalize(gf);
+        // this.println(this.getRealName() + ": " + gradeVal);
+        this.result[fng] = gradeVal;
+        if ( !points ) { return; }
+        const fnc = this.checkAliasAndNormalize(cf);
+        if ( p < 0 ) { p = ""; }
         this.result[fnc] = p;
     }
 
