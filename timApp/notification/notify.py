@@ -178,13 +178,13 @@ def multi_send_email_impl(
                     send_extra = ''
                     if rcp == bcc:
                         send_extra = extra
-                    if reply_to:
-                        mime_msg.add_header('Reply-To', reply_to)
-                    mime_msg = MIMEText(msg)  # + flask_app.config['MAIL_SIGNATURE'])
+                    mime_msg = MIMEText(msg + send_extra)  # + flask_app.config['MAIL_SIGNATURE'])
                     mime_msg['Subject'] = subject
                     mime_msg['From'] = mail_from
                     mime_msg['Bcc'] = bccmail
                     mime_msg['To'] = rcp
+                    if reply_to:
+                        mime_msg.add_header('Reply-To', reply_to)
                     s.sendmail(mail_from, [rcp, bccmail], mime_msg.as_string() )
                 except (smtplib.SMTPSenderRefused,
                         smtplib.SMTPRecipientsRefused,
