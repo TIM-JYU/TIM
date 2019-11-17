@@ -164,6 +164,13 @@ def multi_send_email_impl(
     with flask_app.app_context():
         s = smtplib.SMTP(flask_app.config['MAIL_HOST'])
         rcpts = rcpt.split(";")
+        bccmail = bcc
+        extra = ''
+        if bcc:
+            if len(rcpts) > 3:
+                rcpts.append(bcc)
+                bccmail = ''
+                extra = "\n\n" + "\n".join(rcpts)
         try:
             for rcp in rcpts:
                 try:
@@ -171,11 +178,14 @@ def multi_send_email_impl(
                     mime_msg = MIMEText(msg)  # + flask_app.config['MAIL_SIGNATURE'])
                     mime_msg['Subject'] = subject
                     mime_msg['From'] = mail_from
-                    mime_msg['Bcc'] = bcc
+                    mime_msg['Bcc'] = bccmail
+                    send_extra = ''
+                    if rcp == bcc:
+                        send_extra = extra
                     if reply_to:
                         mime_msg.add_header('Reply-To', reply_to)
                     mime_msg['To'] = rcp
-                    s.sendmail(mail_from, [rcp, bcc], mime_msg.as_string())
+                    s.sendmail(mail_from, [rcp, bccmail], mime_msg.as_string() + send_extra)
                 except (smtplib.SMTPSenderRefused,
                         smtplib.SMTPRecipientsRefused,
                         smtplib.SMTPHeloError,

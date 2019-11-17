@@ -716,6 +716,7 @@ table:
         - border: 10px solid red
           cell: Visa
         - backgroundColor: blue
+          border: 10px solid red
           cell: Visa
         - cell: kk
           colspan: 2

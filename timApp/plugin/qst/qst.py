@@ -739,6 +739,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
 def create_points_table(points):
     points_table = []
     if points and points != '':
+        points = str(points)
         points_split = points.split('|')
         for row in points_split:
             row_points = row.split(';')

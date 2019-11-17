@@ -649,6 +649,8 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
 
 
 def ensure_grade_and_credit(prg, flds):
+    if not prg:
+        return
     if prg.find('grade') >= 0 or prg.find('Grade'):  # add grade to fields if missing
         grade_found = False
         credit_found = False
