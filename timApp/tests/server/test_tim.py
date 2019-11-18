@@ -10,7 +10,7 @@ from timApp.note.notes import get_notes
 from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
 from timApp.user.user import Consent
 from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import grant_view_access
+from timApp.user.userutils import grant_view_access, grant_access
 
 link_selector = CSSSelector('a')
 
@@ -252,6 +252,15 @@ class TimTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         self.get(f'/teacher/{d.path}', query_string={'group': 'Korppi users'})
+
+    def test_answers_no_crash(self):
+        """Don't crash if anonymous user opens answers view."""
+        self.login_test1()
+        d = self.create_doc(initial_par="""#- {#t plugin=textfield}""")
+        self.post_answer('textfield', f'{d.id}.t', user_input={'c': 'x'})
+        grant_access(UserGroup.get_anonymous_group(), d, 'see answers')
+        self.logout()
+        self.get(f'/answers/{d.path}')
 
     def test_teacher_nonexistent_group(self):
         self.login_test1()

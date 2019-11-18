@@ -460,7 +460,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     if hide_names_in_teacher() or should_hide_names:
         for entry in user_list:
-            if entry['user'].id != current_user.id:
+            if not current_user or entry['user'].id != current_user.id:
                 entry['user'].hide_name = True
 
     settings = get_user_settings()
