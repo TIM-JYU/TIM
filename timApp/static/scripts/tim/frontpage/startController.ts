@@ -117,6 +117,15 @@ export class StartCtrl implements IController {
     notFinnish() {
         return this.language != "fi";
     }
+
+    getIntroLink() {
+        const link = "/view/tim/TIM-esittely";
+        if (this.notFinnish()) {
+            return link + "/en";
+        } else {
+            return link;
+        }
+    }
 }
 
 timApp.component("timStart", {
@@ -226,7 +235,7 @@ timApp.component("timStart", {
         <div class="col-md-3 col-md-offset-3">
             <h4>TIM</h4>
             <ul class="list-unstyled">
-                <li><a href="/view/tim/TIM-esittely/en">{{ 'Introduction' | tr }}</a></li>
+                <li><a href="{{ $ctrl.getIntroLink() }}">{{ 'Introduction' | tr }}</a></li>
                 <li><a href="/view/tim/TIM-ohjeet">{{ 'User guide' | tr }}</a><sup ng-if="$ctrl.notFinnish()"> (F)</sup></li>
             </ul>
         </div>
