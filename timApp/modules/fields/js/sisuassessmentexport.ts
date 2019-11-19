@@ -48,6 +48,74 @@ function getAssessments(data: IGradeResponse) {
 
 export const Sisu = angular.module("sisuModule", []);
 
+async function getFakeData(opts: ISendGradeOptions): Promise<{data: IGradeResponse}> {
+    await $timeout(500);
+    const d = opts.completionDate;
+    return {
+        data: {
+            sent_assessments: [
+                {
+                    completionDate: "",
+                    gradeId: "4",
+                    user: {
+                        id: -1,
+                        name: "akuankka1",
+                        real_name: "Ankka Aku 1",
+                        email: "akuankka1@example.com",
+                    },
+                },
+                {
+                    completionDate: "",
+                    gradeId: "3",
+                    user: {
+                        id: -2,
+                        name: "akuankka2",
+                        real_name: "Ankka Aku 2",
+                        email: "akuankka2@example.com",
+                    },
+                },
+                {
+                    completionDate: "",
+                    gradeId: null,
+                    user: {
+                        id: -3,
+                        name: "akuankka3",
+                        real_name: "Ankka Aku 3",
+                        email: "akuankka3@example.com",
+                    },
+                },
+            ].filter((u) => opts.filterUsers === undefined || opts.filterUsers.includes(u.user.name))
+                .map((u) => (d ? {
+                    ...u,
+                    completionDate: d.format("YYYY-MM-DD"),
+                } : u)),
+            default_selection: opts.dryRun ? [-1, -2] : [],
+            assessment_errors: [
+                {
+                    assessment: {
+                        completionDate: "",
+                        gradeId: "0",
+                        user: {
+                            id: -4,
+                            name: "akuankka4",
+                            real_name: "Ankka Aku 4",
+                            email: "akuankka4@example.com",
+                        },
+                    },
+                    message: "Sisu: Ilmoittautumista toteutukseen ei löytynyt",
+                },
+            ].filter((u) => opts.filterUsers === undefined || opts.filterUsers.includes(u.assessment.user.name)),
+        },
+    };
+}
+
+interface ISendGradeOptions {
+    completionDate?: moment.Moment;
+    dryRun: boolean;
+    filterUsers?: string[];
+    partial: boolean;
+}
+
 class SisuAssessmentExportController {
     private assessments?: IAssessmentExt[];
     private gridOptions?: uiGrid.IGridOptionsOf<IAssessmentExt>;
@@ -65,19 +133,15 @@ class SisuAssessmentExportController {
     private docId!: Binding<number, "<">;
     private group?: Binding<t.TypeOf<typeof GroupType>, "<">;
     private includeUsers?: Binding<t.TypeOf<typeof IncludeUsersOption>, "<">;
+    private testOnly?: Binding<boolean, "<">;
 
-    async callSendGrades(opts: {
-        completionDate?: moment.Moment,
-        dryRun: boolean,
-        filterUsers?: string[],
-        partial: boolean,
-    }) {
+    async callSendGrades(opts: ISendGradeOptions) {
         if (!this.destCourse) {
             return;
         }
         this.loading = true;
         const groups: string[] | undefined = t.string.is(this.group) ? [this.group] : this.group;
-        const r = await to($http.post<IGradeResponse>("/sisu/sendGrades", {
+        const r = this.testOnly ? await to(getFakeData(opts)) : await to($http.post<IGradeResponse>("/sisu/sendGrades", {
             completionDate: opts.completionDate,
             destCourse: this.destCourse,
             docId: this.docId,
@@ -220,6 +284,7 @@ Sisu.component("sisuAssessmentExport", {
         docId: "<",
         group: "<",
         includeUsers: "<",
+        testOnly: "<",
     },
     controller: SisuAssessmentExportController,
     template: `
@@ -241,6 +306,7 @@ Sisu.component("sisuAssessmentExport", {
     </span>
     </p>
     <p>Taulukosta voi valita lähetettäväksi vain niitä arviointeja, joissa on arvosana.</p>
+    <p ng-if="$ctrl.testOnly"><i>Tämä plugin on vain demo. Arvosanojen lähettäminen ei oikeasti tee mitään.</i></p>
     Suorituspäivä:
     <div class="input-group date" datetimepicker ng-model="$ctrl.completionDate"
          data-options="$ctrl.dateOptions">

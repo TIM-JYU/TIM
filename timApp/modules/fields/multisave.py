@@ -38,7 +38,7 @@ class MultisaveMarkupModel(GenericMarkupModel):
     destCourse: Union[str, Missing] = missing
     group: Union[str, List[str], Missing] = missing  # for destCourse
     includeUsers: Union[str, Missing] = missing  # TODO: Should be MembershipFilter, but cannot import
-
+    testOnly: Union[bool, Missing] = missing
 
 @dataclass
 class MultisaveInputModel:

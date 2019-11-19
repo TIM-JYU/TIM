@@ -27,6 +27,7 @@ const multisaveMarkup = t.intersection([
         jumptarget: t.string,
         destCourse: t.string,
         includeUsers: IncludeUsersOption,
+        testOnly: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -267,6 +268,7 @@ multisaveApp.component("multisaveRunner", {
                             doc-id="$ctrl.vctrl.item.id"
                             dest-course="$ctrl.attrs.destCourse"
                             include-users="$ctrl.attrs.includeUsers"
+                            test-only="$ctrl.attrs.testOnly"
                             group="$ctrl.attrs.group">
     </sisu-assessment-export>
     <button class="timButton"
