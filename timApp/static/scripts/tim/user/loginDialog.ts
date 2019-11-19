@@ -249,7 +249,7 @@ registerDialogComponent(LoginDialogController,
     <div class="col-sm-12">
     <form ng-submit="$ctrl.loginWithEmail()" ng-show="!$ctrl.showSignup">
         <p class="text-center">
-            {{ 'Members from universities and organizations, please use Haka to log in.' | tr }}
+            {{ 'Members from universities and other Haka organizations, please use Haka to log in.' | tr }}
         </p>
         <haka-login ng-if="$ctrl.idps.length > 0"
                     idps="$ctrl.idps"

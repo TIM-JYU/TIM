@@ -56,7 +56,7 @@ const translations: Record<string, {fi: string | {default: string, [index: strin
     "You're logged in": {fi: "Olet kirjautunut sisään"},
     "Your information was updated successfully.": {fi: "Tietosi päivitettiin onnistuneesti."},
     "Your name": {fi: "Nimesi"},
-    "Members from universities and organizations, please use Haka to log in.": {fi: "Yliopistojen ja organisaatioiden jäsenet, kirjautukaa Hakalla."},
+    "Members from universities and other Haka organizations, please use Haka to log in.": {fi: "Yliopistojen ja muiden Haka-organisaatioiden jäsenet, kirjautukaa Hakalla."},
 };
 
 export type Lang = "fi" | "en";
