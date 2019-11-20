@@ -190,9 +190,9 @@ export class ViewCtrl implements IController {
         this.hideLinks = dg.hideLinks;
         this.hideTopButtons = dg.hideTopButtons;
         this.parsOnly = dg.parsOnly;
-        this.docId = dg.item.id;
+        this.docId = dg.curr_item.id;
         this.docVersion = dg.docVersion;
-        this.item = dg.item;
+        this.item = dg.curr_item;
         this.startIndex = dg.startIndex;
         this.users = dg.users;
         this.group = dg.group;

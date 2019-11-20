@@ -91,7 +91,7 @@ export class SidebarMenuCtrl implements IController {
 
     constructor() {
         const g = someglobals();
-        this.item = g.item;
+        this.item = g.curr_item;
         this.currentLecturesList = [];
         this.futureLecturesList = [];
         this.pastLecturesList = [];

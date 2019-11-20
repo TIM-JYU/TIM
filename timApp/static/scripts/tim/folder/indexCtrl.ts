@@ -18,7 +18,7 @@ class IndexCtrl implements IController {
     constructor() {
         const fg = folderglobals();
         this.itemList = fg.items;
-        this.item = fg.item;
+        this.item = fg.curr_item;
         this.canCreate = Users.isLoggedIn();
     }
 

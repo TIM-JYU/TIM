@@ -17,7 +17,7 @@ async function refresh(rv: IFixedReveal) {
     if (1 === 1) { // suppress "unreachable code" warning
         return; // TODO: think this so that things are paired
     }
-    const item: IItem = documentglobals().item;
+    const item: IItem = documentglobals().curr_item;
     while (true) {
         const r = await to($http.get<null | ISlideStatus>("/getslidestatus", {
             cache: false,
@@ -62,7 +62,7 @@ async function updateSlideStatus(h: number, v: number, f: number) {
         return;
     }
     receiving = false;
-    const item: IItem = documentglobals().item;
+    const item: IItem = documentglobals().curr_item;
     const r = await to($http.post<IOkResponse>("/setslidestatus", {
         doc_id: item.id,
         indexf: f,
@@ -79,7 +79,7 @@ async function updateSlideStatus(h: number, v: number, f: number) {
 function initReveal(rv: IFixedReveal) {
     // Full list of configuration options available here:
     // https://github.com/hakimel/reveal.js#configuration
-    const item: IItem = documentglobals().item;
+    const item: IItem = documentglobals().curr_item;
     const hasManage = item.rights.manage;
     const pluginPath = "/static/scripts/jspm_packages/npm/reveal.js@3.8.0/plugin";
 

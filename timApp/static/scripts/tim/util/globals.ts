@@ -15,19 +15,19 @@ export interface IGenericGlobals {
     bookmarks: IBookmarkGroup[];
     ANGULARMODULES: unknown[];
     JSMODULES: string[];
-    item?: DocumentOrFolder;
+    curr_item?: DocumentOrFolder;
     userPrefs: ISettings;
     homeOrganization: string;
 }
 
 export interface IItemGlobals extends IGenericGlobals {
     breadcrumbs: unknown[];
-    item: DocumentOrFolder;
+    curr_item: DocumentOrFolder;
 }
 
 export interface IFolderGlobals extends IItemGlobals {
     items: IItem[];
-    item: IFolder;
+    curr_item: IFolder;
 }
 
 export interface IDocumentGlobals extends IItemGlobals {
@@ -35,7 +35,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     users: IUserListEntry[];
     startIndex: number;
     docVersion: [number, number];
-    item: IDocument;
+    curr_item: IDocument;
     noBrowser: boolean;
     allowMove: boolean; // TODO this doesn't come from server and should be removed from globals
     group: IGroup;
@@ -75,7 +75,7 @@ export interface ISlideGlobals extends IDocumentGlobals {
 export interface IManageGlobals extends IGenericGlobals {
     orgs: IGroup[];
     accessTypes: Array<{}>;
-    item: IFullDocument | IFolder;
+    curr_item: IFullDocument | IFolder;
 }
 
 export interface ISettingsGlobals extends IGenericGlobals {

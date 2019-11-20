@@ -130,7 +130,7 @@ export class SearchBoxCtrl implements IController {
     private errorMessage: string | undefined; // Message displayed only in search panel.
     private focusMe: boolean = true;
     private loading: boolean = false; // Display loading icon.
-    private item?: DocumentOrFolder = someglobals().item;
+    private item?: DocumentOrFolder = someglobals().curr_item;
     private storage: ngStorage.StorageService & {
         maxDocResultsStorage: null | string,
         relevanceThresholdStorage: null | string,

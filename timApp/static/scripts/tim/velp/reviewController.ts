@@ -47,7 +47,7 @@ export class ReviewController {
         this.scope = vctrl.scope;
         this.annotationsAdded = false;
         this.velpMode = documentglobals().velpMode;
-        this.item = documentglobals().item;
+        this.item = documentglobals().curr_item;
         this.annotations = [];
         this.annotationids = {0: 0};
         this.zIndex = 1;

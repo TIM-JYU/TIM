@@ -115,7 +115,7 @@ class RightsEditorController implements IController {
     }
 
     relPath(item: IItemWithRights) {
-        return item.path.slice(itemglobals().item.path.length + 1);
+        return item.path.slice(itemglobals().curr_item.path.length + 1);
     }
 
     accessTypeById(id: number) {

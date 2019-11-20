@@ -39,7 +39,7 @@ interface IItemLink {
 class HeaderController implements IController {
     // To show a button that adds the document to bookmark folder 'My courses'.
     private taggedAsCourse = false;
-    private item?: DocumentOrFolder = genericglobals().item;
+    private item?: DocumentOrFolder = genericglobals().curr_item;
     private bookmarked: boolean = false;
     private bookmarks: IBookmarkGroup[] = [];
     private viewctrl?: ViewCtrl;

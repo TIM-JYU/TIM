@@ -56,7 +56,7 @@ export class PermCtrl implements IController {
         this.newTranslation = {language: "", title: ""};
         this.accessTypes = manageglobals().accessTypes;
         this.orgs = manageglobals().orgs;
-        this.item = manageglobals().item;
+        this.item = manageglobals().curr_item;
         this.objName = this.item.isFolder ? "Folder" : "Document";
         this.newFolderName = this.item.location;
         this.newAlias = {location: this.newFolderName};
