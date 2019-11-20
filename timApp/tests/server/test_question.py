@@ -41,9 +41,9 @@ class QuestionTest(TimLiveServer, TimRouteTest):
             <div class="par"
                  id="{pars[2].get_id()}"
                  t="{pars[2].get_hash()}"
-                 attrs="{{&#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test3&#34;}}" ng-non-bindable>
+                 attrs="{{&#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test3&#34;}}">
                 <a href="#{'test3'}" title="Permlink" class="headerlink">#</a>
-                <div tabindex="0" class="parContent" id="{'test3'}">
+                <div ng-non-bindable tabindex="0" class="parContent" id="{'test3'}">
                     <pre><code>
 json:
   answerFieldType: radio

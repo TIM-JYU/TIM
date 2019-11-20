@@ -202,7 +202,7 @@ class PreambleTest3(PreambleTestBase):
                                 'macro e is jänis', ])
 
         self.assertEqual(len(e.cssselect('.preamble')), 3)
-        self.assertEqual(len(e.cssselect('.parlink')), 0)
+        self.assertEqual(len(e.cssselect('tim-par-ref')), 0)
 
     def test_multiple_preamble(self):
         self.login_test2()

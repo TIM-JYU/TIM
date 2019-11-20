@@ -38,13 +38,13 @@ import {PendingCollection} from "./editing/edittypes";
 import * as helpPar from "./editing/helpPar";
 import {onClick} from "./eventhandlers";
 import {IDocSettings} from "./IDocSettings";
+import {ParRefController} from "./parRef";
 import {PopupMenuController} from "./popupMenu";
-import {RefPopupHandler} from "./refpopup";
 import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
 import {IMenuFunctionEntry} from "./viewutils";
 
-markAsUsed(ngs, popupMenu, interceptor, helpPar);
+markAsUsed(ngs, popupMenu, interceptor, helpPar, ParRefController);
 
 export interface ITimComponent {
     attrsall?: IGenericPluginTopLevelFields<IGenericPluginMarkup>; // TimTable does not have attrsall - that's why it's optional.
@@ -160,7 +160,6 @@ export class ViewCtrl implements IController {
     public editingHandler: EditingHandler;
     public notesHandler: NotesHandler;
     public parmenuHandler: ParmenuHandler;
-    public refpopupHandler: RefPopupHandler;
     public popupmenu?: PopupMenuController;
     public viewRangeInfo: ViewRangeInfo;
 
@@ -230,7 +229,6 @@ export class ViewCtrl implements IController {
         this.editingHandler = new EditingHandler(sc, this);
         this.notesHandler = new NotesHandler(sc, this);
         this.parmenuHandler = new ParmenuHandler(sc, this);
-        this.refpopupHandler = new RefPopupHandler(sc, this);
         this.viewRangeInfo = new ViewRangeInfo(this);
         if (!this.isSlideView()) {
             initReadings(this);

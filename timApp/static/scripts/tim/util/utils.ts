@@ -1,6 +1,7 @@
 import angular, {IHttpResponse, IPromise} from "angular";
 import * as t from "io-ts";
 import moment from "moment";
+import {IGroup} from "../user/IUser";
 import {$timeout} from "./ngimport";
 
 const blacklist = new Set(["name", "title", "completionDate"]);
@@ -555,4 +556,8 @@ export const dateFormat = "D.M.YYYY HH:mm:ss";
 export function getCookie(name: string) {
     const a = `; ${document.cookie}`.match(`;\\s*${name}=([^;]+)`);
     return a ? a[1] : undefined;
+}
+
+export function getGroupDesc(group: IGroup) {
+    return group.personal_user ? group.personal_user.real_name + " (" + group.name + ")" : group.name;
 }

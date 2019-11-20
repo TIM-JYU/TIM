@@ -114,6 +114,11 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     def is_large(self) -> bool:
         return self.name.endswith(ORG_GROUP_SUFFIX)
 
+    def load_personal_user(self):
+        """If this is a personal usergroup, loads the user object to personal_user attribute."""
+        from timApp.user.user import User
+        self.personal_user = User.get_by_name(self.name)
+
     def to_json(self):
         r = {
             'id': self.id,

@@ -2,7 +2,7 @@ import {IController, IScope} from "angular";
 import moment, {Duration, Moment} from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
-import {Binding, dateFormat, markAsUsed, to} from "tim/util/utils";
+import {Binding, dateFormat, getGroupDesc, markAsUsed, to} from "tim/util/utils";
 import {showMessageDialog} from "../ui/dialog";
 import {durationTypes} from "../ui/durationPicker";
 import {IGroup} from "../user/IUser";
@@ -304,7 +304,7 @@ class RightsEditorController implements IController {
     }
 
     getGroupDesc(group: IRight) {
-        return group.usergroup.personal_user ? group.usergroup.personal_user.real_name + " (" + group.usergroup.name + ")" : group.usergroup.name;
+        return getGroupDesc(group.usergroup);
     }
 
     shouldShowBeginTime(group: IRight) {

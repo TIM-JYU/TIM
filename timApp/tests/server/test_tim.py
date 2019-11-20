@@ -293,8 +293,9 @@ class TimTest(TimRouteTest):
     def test_par_info(self):
         self.login_test1()
         d = self.create_doc(initial_par='testing')
-        self.get(f'/par_info/{d.id}/{d.document.get_paragraphs()[0].get_id()}',
-                 expect_content={'doc_author': 'Test user 1 (testuser1)', 'doc_name': d.title})
+        r = self.get(f'/par_info/{d.id}/{d.document.get_paragraphs()[0].get_id()}')
+        self.assertEqual(d.title, r['item']['title'])
+        self.assertEqual(None, r['par_name'])
 
     def test_csrf(self):
         try:

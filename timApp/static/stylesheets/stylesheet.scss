@@ -753,14 +753,14 @@ p.caption {
     }
 }
 
-.parlink {
+tim-par-ref {
     float: right;
     position: absolute;
     top: 0;
     right: -15px;
 
-    &.deleted {
-        color: red;
+    .tooltip-inner {
+        max-width: 50vw;
     }
 }
 
@@ -908,24 +908,6 @@ input[type="file"] {
         min-height: 50px;
         min-width: 200px;
     }
-}
-
-.refPopup {
-    position: relative;
-    white-space: nowrap;
-    margin: 0;
-    background-color: #f8f8ff;
-    z-index: 100;
-    font-size: 12px;
-}
-
-.refPopup span {
-    padding: 3px;
-    display: table;
-}
-
-.refPopup label {
-    font-weight: bold;
 }
 
 .questionButton {

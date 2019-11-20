@@ -129,24 +129,15 @@ def slide_document(doc_name):
 
 @view_page.route("/par_info/<int:doc_id>/<par_id>")
 def par_info(doc_id, par_id):
-    info = {}
-
     doc = get_doc_or_abort(doc_id)
-    info['doc_name'] = doc.title
-
-    if doc.owners:
-        group: UserGroup = doc.owners[0]  # TODO handle multiple owners
-        users = group.users
-        if len(users) == 1:
-            info['doc_author'] = f'{users[0].real_name} ({group.name})'
-        else:
-            info['doc_author'] = group.name
-
+    verify_view_access(doc)
+    for o in doc.owners:
+        o.load_personal_user()
     par_name = doc.document.get_closest_paragraph_title(par_id)
-    if par_name is not None:
-        info['par_name'] = par_name
-
-    return json_response(info)
+    return json_response({
+        'item': doc,
+        'par_name': par_name,
+    })
 
 
 @dataclass
