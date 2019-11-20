@@ -10,7 +10,7 @@ export interface IViewRange {
     disabled?: boolean;
 }
 
-function getCurrentPartitionURLParams() {
+export function getCurrentPartitionURLParams() {
     const params = new URLSearchParams(document.location.search);
     const b = params.get("b");
     const e = params.get("e");

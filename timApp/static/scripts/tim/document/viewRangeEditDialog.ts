@@ -5,6 +5,7 @@
 import {IRootElementService, IScope} from "angular";
 import {IItem} from "../item/IItem";
 import {
+    getCurrentPartitionURLParams,
     getPieceSize,
     getViewRange,
     partitionDocument,
@@ -86,7 +87,8 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
         this.saveValues();
         if (this.partitionDocumentsSetting) {
             await setPieceSize(this.viewRangeSetting);
-            const b = new URL(document.location.href).searchParams.get("b");
+            const params = getCurrentPartitionURLParams();
+            const b = params ? params.get("b") : undefined;
             let beginIndex = 0;
             if (b)  {
                 beginIndex = +b;
