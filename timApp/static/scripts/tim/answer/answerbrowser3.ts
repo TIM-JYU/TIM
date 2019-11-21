@@ -208,12 +208,16 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     unDimPlugin() {
-        this.getPluginElement().css("opacity", "1");
+        const e = this.getPluginElement();
+        e.css("opacity", "1");
+        e.removeClass("hidden-print");
     }
 
     dimPlugin() {
         if (!this.isInFormMode()) {
-            this.getPluginElement().css("opacity", "0.3");
+            const e = this.getPluginElement();
+            e.css("opacity", "0.3");
+            e.addClass("hidden-print");
         }
     }
 
