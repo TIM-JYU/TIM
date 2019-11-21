@@ -39,3 +39,7 @@ class ScimUserGroup(db.Model):
     @property
     def is_student(self):
         return self.external_id.endswith('-students')
+
+    @property
+    def is_administrative_person(self):
+        return self.external_id.endswith('-administrative-persons')

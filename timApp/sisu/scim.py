@@ -380,7 +380,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
     refresh_sisu_grouplist_doc(ug)
 
     # Possibly just checking is_responsible_teacher could be enough.
-    if ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup:
+    if (ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup) or ug.external_id.is_administrative_person:
         tg = UserGroup.get_teachers_group()
         for u in added_users:
             if tg not in u.groups:

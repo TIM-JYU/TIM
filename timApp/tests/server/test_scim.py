@@ -774,7 +774,34 @@ class ScimTest(TimRouteTest):
                     '\n'
                     'Dokumentissa on ohjeet ryhmien käyttämiseen TIMissä.\n'
                     '\n'
-                    'Tämä viesti tulee kaikille kurssin vastuuopettajille.',
+                    'Tämä viesti tulee kaikille kurssin vastuuopettajille ja '
+                    'hallintohenkilöille.',
+             'rcpt': 'uap-1@example.com',
+             'reply_to': noreply,
+             'subject': 'Kurssin ITKP102 Sisu-ryhmät on kopioitu TIMiin'},
+            {'mail_from': noreply,
+             'msg': 'Kurssin ITKP102 Sisussa olevat ryhmät on kopioitu TIMiin. Ne '
+                    'löytyvät dokumentista:\n'
+                    '\n'
+                    'http://localhost/view/groups/2019/itkp102/09/sisugroups\n'
+                    '\n'
+                    'Dokumentissa on ohjeet ryhmien käyttämiseen TIMissä.\n'
+                    '\n'
+                    'Tämä viesti tulee kaikille kurssin vastuuopettajille ja '
+                    'hallintohenkilöille.',
+             'rcpt': 'uap-2@example.com',
+             'reply_to': noreply,
+             'subject': 'Kurssin ITKP102 Sisu-ryhmät on kopioitu TIMiin'},
+            {'mail_from': noreply,
+             'msg': 'Kurssin ITKP102 Sisussa olevat ryhmät on kopioitu TIMiin. Ne '
+                    'löytyvät dokumentista:\n'
+                    '\n'
+                    'http://localhost/view/groups/2019/itkp102/09/sisugroups\n'
+                    '\n'
+                    'Dokumentissa on ohjeet ryhmien käyttämiseen TIMissä.\n'
+                    '\n'
+                    'Tämä viesti tulee kaikille kurssin vastuuopettajille ja '
+                    'hallintohenkilöille.',
              'rcpt': 'urt-1@example.com',
              'reply_to': noreply,
              'subject': 'Kurssin ITKP102 Sisu-ryhmät on kopioitu TIMiin'},
@@ -786,7 +813,8 @@ class ScimTest(TimRouteTest):
                     '\n'
                     'Dokumentissa on ohjeet ryhmien käyttämiseen TIMissä.\n'
                     '\n'
-                    'Tämä viesti tulee kaikille kurssin vastuuopettajille.',
+                    'Tämä viesti tulee kaikille kurssin vastuuopettajille ja '
+                    'hallintohenkilöille.',
              'rcpt': 'urt-2@example.com',
              'reply_to': noreply,
              'subject': 'Kurssin ITKP102 Sisu-ryhmät on kopioitu TIMiin'}],
@@ -1017,7 +1045,7 @@ class StrCreditTest(SendGradeTestBase):
             'jy-CUR-1234',
             json={'assessments': [
                 {'userName': 'testuser2', 'gradeId': '5', 'completionDate': current_date, 'completionCredits': 5}],
-                  'partial': False, 'dry_run': False},
+                'partial': False, 'dry_run': False},
         )
 
 
@@ -1382,9 +1410,11 @@ class SendGradeTest(SendGradeTestBase):
         )
 
         ug = UserGroup.get_by_name('students1234')
-        u, _ = User.create_with_group(UserInfo(username='sisuuser', full_name='Sisu User', email='sisuuser@example.com'))
+        u, _ = User.create_with_group(
+            UserInfo(username='sisuuser', full_name='Sisu User', email='sisuuser@example.com'))
         ug.users.append(u)
-        u, _ = User.create_with_group(UserInfo(username='sisuuser2', full_name='Sisu User', email='sisuuser2@example.com'))
+        u, _ = User.create_with_group(
+            UserInfo(username='sisuuser2', full_name='Sisu User', email='sisuuser2@example.com'))
         ug.users.append(u)
         db.session.commit()
         sisuuser = {'email': 'sisuuser@example.com',
