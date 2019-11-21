@@ -205,6 +205,19 @@ class SisuAssessmentExportController {
         }
         this.assessments = getAssessments(data);
         const defaults = new Set(data.default_selection);
+        const hasNumericGrades = this.assessments.find(
+            (a) => t.number.is(a.gradeId) || (t.string.is(a.gradeId) && !isNaN(parseInt(a.gradeId, 10))),
+        );
+        const hasNonNumericGrades = this.assessments.find(
+            (a) => t.string.is(a.gradeId) && a.gradeId === "HYV",
+        );
+        let defaultFilter = ">0";
+        if (hasNonNumericGrades) {
+            defaultFilter = "HYV";
+            if (hasNumericGrades) {
+                defaultFilter = ".";
+            }
+        }
         this.gridOptions = {
             onRegisterApi: async (grid) => {
                 this.grid = grid;
@@ -233,7 +246,7 @@ class SisuAssessmentExportController {
                     name: "Grade",
                     allowCellFocus: false,
                     width: 65,
-                    filter: {term: ">0"},
+                    filter: {term: defaultFilter},
                 },
                 {
                     field: "completionDate",
