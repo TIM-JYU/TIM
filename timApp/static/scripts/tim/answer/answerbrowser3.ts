@@ -426,35 +426,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
         await this.loadInfo();
     }
 
-    changeAnswerFromState(html: string, reviewHtml: string) {
-        if (this.selectedAnswer == null || !this.user) {
-            return;
-        }
-        this.unDimPlugin();
-        this.updatePoints();
-        const par = this.element.parents(".par");
-        const ids = dereferencePar(par);
-        if (!ids) {
-            return;
-        }
-        if (this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review) {
-
-            this.loadedAnswer.id = this.selectedAnswer.id;
-            this.loadedAnswer.review = this.review;
-            if (this.answerListener) {
-                this.answerListener(this.selectedAnswer);
-            } else {
-                void loadPlugin(html, this.loader.getPluginElement(), this.scope, this.viewctrl);
-            }
-            // if (this.review) { //No review implemented for this version yet
-            //     this.reviewHtml = r.result.data.reviewHtml;
-            //     await $timeout();
-            // }
-        }
-        this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
-
-    }
-
     private unDimPlugin() {
         this.loader.unDimPlugin();
     }
@@ -560,55 +531,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 await $timeout();
             }
         }
-        this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
-    }
-
-    // TODO: as in changeAnswer() until the request part
-    stateRequestPrep() {
-        if (this.selectedAnswer == null || !this.user) {
-            return;
-        }
-        this.unDimPlugin();
-        this.updatePoints();
-        const par = this.element.parents(".par");
-        const ids = dereferencePar(par);
-        if (!ids) {
-            return;
-        }
-        const parParams = {
-            doc_id: ids[0],
-            par_id: ids[1],
-            ref_from_doc_id: this.viewctrl.docId,
-            ref_from_par_id: getParId(par),
-        };
-        const params = {
-            ...parParams,
-            answer_id: this.selectedAnswer.id,
-            review: this.review,
-            user_id: this.user.id,
-        };
-        return params;
-    }
-
-    async continueFromStateReq(html: string, reviewHtml: string) {
-        if (this.selectedAnswer == null) { return; }
-        const par = this.element.parents(".par");
-        const ids = dereferencePar(par);
-        if (!ids) {
-            return;
-        }
-        this.loadedAnswer.id = this.selectedAnswer.id;
-        this.loadedAnswer.review = this.review;
-        if (this.answerListener) {
-            this.answerListener(this.selectedAnswer);
-        } else {
-            void loadPlugin(html, this.loader.getPluginElement(), this.scope, this.viewctrl);
-        }
-        if (this.review) {
-            this.reviewHtml = reviewHtml;
-            await $timeout();
-        }
-
         this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
     }
 
