@@ -1,4 +1,4 @@
-import {IController, IRootElementService, IScope, ITranscludeFunction} from "angular";
+import {IController, IScope, ITranscludeFunction} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
@@ -69,7 +69,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     public showPlaceholder = true;
     public abLoad = $q.defer<AnswerBrowserController | null>();
 
-    constructor(private element: IRootElementService, private scope: IScope, private transclude: ITranscludeFunction) {
+    constructor(private element: JQLite, private scope: IScope, private transclude: ITranscludeFunction) {
         super(scope, element);
         transclude((clone, _) => {
             const c = clone!.filter("[data-plugin]");
@@ -311,7 +311,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private reviewHtml?: string;
     private answerListener?: AnswerCallback;
 
-    constructor(private scope: IScope, private element: IRootElementService) {
+    constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
         this.loading = 0;
     }

@@ -1,4 +1,4 @@
-import angular, {IPromise, IRootElementService, IScope} from "angular";
+import angular, {IPromise, IScope} from "angular";
 import * as colorpicker from "angular-bootstrap-colorpicker";
 import ngSanitize from "angular-sanitize";
 import deepmerge from "deepmerge";
@@ -1562,7 +1562,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         this.dt.draw();
     }
 
-    constructor(scope: IScope, element: IRootElementService) {
+    constructor(scope: IScope, element: JQLite) {
         super(scope, element);
         this.muokattu = false;
         this.result = "";

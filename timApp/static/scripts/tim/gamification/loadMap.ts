@@ -2,7 +2,7 @@ import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 import {Tile} from "./tile";
 
-import {IController, IRootElementService} from "angular";
+import {IController} from "angular";
 import {timApp} from "../app";
 
 export interface ITileSet {
@@ -128,7 +128,7 @@ export class GamificationMapCtrl implements IController {
     private errorMessage: string | undefined;
     private loading = false;
 
-    constructor(protected element: IRootElementService) {
+    constructor(protected element: JQLite) {
     }
 
     $onInit() {

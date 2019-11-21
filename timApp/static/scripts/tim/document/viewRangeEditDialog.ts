@@ -2,7 +2,7 @@
  * Dialog showing view range menu.
  */
 
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import {IItem} from "../item/IItem";
 import {
     getCurrentPartitionURLParams,
@@ -35,7 +35,7 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
         pieceSize: null | number,
     };
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
         this.storage = $localStorage.$default({
             pieceSize: null,

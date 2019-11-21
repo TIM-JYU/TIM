@@ -1,4 +1,4 @@
-import {IChangesObject, IController, IOnChangesObject, IRootElementService, IScope} from "angular";
+import {IChangesObject, IController, IOnChangesObject, IScope} from "angular";
 import Chart, {ChartData} from "chart.js";
 import $ from "jquery";
 import {timApp} from "tim/app";
@@ -307,10 +307,10 @@ class ChartController implements IController {
         },
     ];
     private scope: IScope;
-    private element: IRootElementService;
+    private element: JQLite;
     private textAnswers: string[] = [];
 
-    constructor(scope: IScope, element: IRootElementService) {
+    constructor(scope: IScope, element: JQLite) {
         this.isText = false;
         this.charts = ["bar", "horizontalBar"];
         this.chartIndex = qstChartIndex;

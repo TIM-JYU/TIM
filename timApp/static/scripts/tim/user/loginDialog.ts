@@ -2,7 +2,7 @@
  * Dialog for log in and sign up.
  */
 
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import * as onEnter from "tim/ui/onEnter";
 import {saveCurrentScreenPar} from "../document/parhelpers";
@@ -73,7 +73,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
     private homeOrg = genericglobals().homeOrganization;
     private idps: IDiscoveryFeedEntry[] = [];
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
         this.loginForm = {email: "", password: ""};
         this.loggingout = false;

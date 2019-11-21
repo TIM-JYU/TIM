@@ -1,4 +1,4 @@
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import moment from "moment";
 import * as chart from "tim/lecture/showChartDirective";
 import {markAsUsed, to} from "tim/util/utils";
@@ -24,7 +24,7 @@ export class StatisticsToQuestionController extends DialogController<{params: IS
     private ended = false;
     private lastFetch = moment({year: 1900});
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
     }
 

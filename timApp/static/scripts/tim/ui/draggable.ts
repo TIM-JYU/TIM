@@ -1,4 +1,4 @@
-import {IController, IRootElementService, IScope} from "angular";
+import {IController, IScope} from "angular";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import * as t from "io-ts";
 import {timApp} from "tim/app";
@@ -132,7 +132,7 @@ export class DraggableController implements IController {
     private resizeCallback?: ResizeCallback;
     private captionCb?: () => string;
 
-    constructor(private scope: IScope, private element: IRootElementService) {
+    constructor(private scope: IScope, private element: JQLite) {
     }
 
     isModal() {

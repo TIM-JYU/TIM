@@ -1,5 +1,5 @@
 import {Ace} from "ace";
-import angular, {IRootElementService, IScope} from "angular";
+import angular, {IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
@@ -221,7 +221,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private perusliiteMacroStringEnd = ")%%";
     private lastKnownDialogHeight?: number;
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
         this.storage = localStorage;
 

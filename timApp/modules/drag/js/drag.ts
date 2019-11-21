@@ -1,7 +1,7 @@
 /**
  * Defines the client-side implementation of a drag plugin.
  */
-import angular, {IRootElementService, IScope} from "angular";
+import angular, {IScope} from "angular";
 import drag from "angular-drag-and-drop-lists";
 import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
@@ -63,7 +63,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
 
     constructor(
         protected scope: IScope,
-        protected element: IRootElementService,
+        protected element: JQLite,
     ) {
         super(scope, element);
     }

@@ -2,7 +2,7 @@
  * Controller and HTML template for tag dialog.
  */
 
-import {IFormController, IRootElementService, IScope} from "angular";
+import {IFormController, IScope} from "angular";
 import {Moment} from "moment";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
@@ -35,7 +35,7 @@ export class TagController extends DialogController<{ params: IItem }, {}> {
     private allUnusedTags?: ITag[]; // List of existing tag names not used in the doc.
     private datePickerOptions: EonasdanBootstrapDatetimepicker.SetOptions;
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
         this.datePickerOptions = {
             format: dateFormat,

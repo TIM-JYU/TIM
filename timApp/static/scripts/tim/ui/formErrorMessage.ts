@@ -1,15 +1,15 @@
-import {IController, IFormController, INgModelController, IRootElementService} from "angular";
+import {IController, IFormController, INgModelController} from "angular";
 import {timApp} from "tim/app";
 import {$timeout} from "../util/ngimport";
 
 class ErrorStateCtrl implements IController {
     static $inject = ["$element"];
     private lastInvalid = false;
-    private element: IRootElementService;
+    private element: JQLite;
     public for: INgModelController | undefined;
     private formCtrl: IFormController | undefined;
 
-    constructor(element: IRootElementService) {
+    constructor(element: JQLite) {
         this.element = element;
     }
 

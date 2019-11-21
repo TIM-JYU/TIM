@@ -2,7 +2,7 @@
  * Controller and HTML template for search results dialog.
  */
 
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import {ITag, TagType} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {IDocSearchResult, ITagSearchResult, SearchBoxCtrl} from "./searchBox";
@@ -39,7 +39,7 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCt
 
     private orderByOption = this.sortingOptions[0];
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
     }
 

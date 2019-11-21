@@ -1,4 +1,4 @@
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import moment, {Moment} from "moment";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
 import {fetchAskedQuestion, showQuestionEditDialog} from "../document/question/questionController";
@@ -71,7 +71,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     private questionEnded: boolean = false;
     private answer?: AnswerTable;
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
         this.updateAnswer = this.updateAnswer.bind(this);
     }

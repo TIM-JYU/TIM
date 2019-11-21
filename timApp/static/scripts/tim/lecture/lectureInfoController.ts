@@ -1,4 +1,4 @@
-import {IController, IRootElementService} from "angular";
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as showChart from "tim/lecture/showChartDirective";
 import {markAsUsed} from "tim/util/utils";
@@ -28,7 +28,7 @@ markAsUsed(showChart);
 
 export class LectureInfoController implements IController {
     static $inject = ["$element"];
-    private element: IRootElementService;
+    private element: JQLite;
     private lecture: ILecture;
     private inLecture: boolean;
     private isLecturer: boolean;
@@ -40,7 +40,7 @@ export class LectureInfoController implements IController {
     private answerMap: {[index: number]: IQuestionAnswer[]} = {};
     private messages: ILectureMessage[] = [];
 
-    constructor(element: IRootElementService) {
+    constructor(element: JQLite) {
         const g = lectureinfoglobals();
         this.inLecture = g.inLecture;
         this.lecture = g.lecture;

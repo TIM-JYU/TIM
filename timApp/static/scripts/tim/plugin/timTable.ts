@@ -30,7 +30,7 @@
 // TODO: Save favorites
 // TODO: TableForm does not suppers md:
 
-import angular, {IController, IRootElementService, IScope} from "angular";
+import angular, {IController, IScope} from "angular";
 import * as t from "io-ts";
 import {getParId} from "tim/document/parhelpers";
 import {timApp} from "../app";
@@ -428,7 +428,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     private addRowButtonText: string = "";
     private pluginMeta: PluginMeta;
 
-    constructor(private scope: IScope, private element: IRootElementService) {
+    constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
         this.pluginMeta = new PluginMeta(element);
         // if ( !this.data.hide ) this.data.hide = {};

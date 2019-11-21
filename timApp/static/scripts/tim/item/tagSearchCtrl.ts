@@ -2,7 +2,7 @@
  * Controller and HTML template for tag search dialog.
  */
 
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
@@ -25,7 +25,7 @@ export class TagSearchController extends DialogController<{}, {}> {
     private exactMatch = false;
     private storage: ngStorage.StorageService & {searchOptionStorage: null | boolean[]};
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
         this.storage = $localStorage.$default({
             searchOptionStorage: null,

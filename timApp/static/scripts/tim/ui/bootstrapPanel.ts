@@ -1,16 +1,16 @@
-import {IController, IRootElementService} from "angular";
+import {IController} from "angular";
 import {timApp} from "tim/app";
 import {Binding} from "../util/utils";
 
 class BootstrapPanelController implements IController {
     static $inject = ["$element"];
-    private element: IRootElementService;
+    private element: JQLite;
     private closeFn?: Binding<() => void, "&">;
     private show: Binding<boolean | undefined, "<">;
     private showClose: Binding<boolean | undefined, "<">;
     private title: Binding<string | undefined, "<">;
 
-    constructor(element: IRootElementService) {
+    constructor(element: JQLite) {
         this.element = element;
     }
 

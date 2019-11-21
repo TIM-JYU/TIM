@@ -2,7 +2,7 @@
  * Controller and HTML template for consent dialog.
  */
 
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {markAsUsed} from "../util/utils";
 import * as ccheckbox from "./consentChoice";
@@ -20,7 +20,7 @@ export class ConsentController extends DialogController<{params: {showDataCollec
     static component = "timConsent" as const;
     private consent: ConsentType | null = null;
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
     }
 

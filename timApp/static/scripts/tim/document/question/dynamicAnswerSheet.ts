@@ -1,4 +1,4 @@
-import {IChangesObject, IController, IOnChangesObject, IRootElementService} from "angular";
+import {IChangesObject, IController, IOnChangesObject} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {ParCompiler} from "../../editor/parCompiler";
@@ -220,7 +220,7 @@ type MatrixElement = string | number;
 
 class AnswerSheetController implements IController {
     static $inject = ["$element"];
-    private element: IRootElementService;
+    private element: JQLite;
     private questiondata?: Binding<IPreviewParams, "<">;
     private json!: IAskedJsonJson; // TODO decide if undefined should be valid
     private processed!: IProcessedHeaders; // TODO decide if undefined should be valid
@@ -231,7 +231,7 @@ class AnswerSheetController implements IController {
     private disabled?: boolean;
     private onAnswerChange!: Binding<() => ((at: AnswerTable) => void) | undefined, "&">;
 
-    constructor(element: IRootElementService) {
+    constructor(element: JQLite) {
         this.element = element;
     }
 

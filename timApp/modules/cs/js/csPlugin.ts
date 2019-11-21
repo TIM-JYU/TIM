@@ -1,5 +1,5 @@
 import {Ace} from "ace";
-import angular, {IController, IRootElementService, IScope} from "angular";
+import angular, {IController, IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
 import {CellInfo} from "sagecell";
@@ -900,7 +900,7 @@ class CsController extends CsBase implements ITimComponent {
     private editorText: string[] = [];
     private rows: number = 1;
 
-    constructor(scope: IScope, element: IRootElementService) {
+    constructor(scope: IScope, element: JQLite) {
         super(scope, element);
         this.errors = [];
         this.taunoOn = false;
@@ -3072,7 +3072,7 @@ class CsConsoleController extends CsBase implements IController {
     // path: string;
     // type: string;
 
-    constructor(scope: IScope, element: IRootElementService) {
+    constructor(scope: IScope, element: JQLite) {
         super(scope, element);
         this.examples = [];
         this.history = [];

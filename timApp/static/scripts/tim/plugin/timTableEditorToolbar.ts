@@ -1,4 +1,4 @@
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {HideValues, IToolbarTemplate, TimTableController} from "./timTable";
 
@@ -31,7 +31,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
 
     readonly DEFAULT_CELL_BGCOLOR = "FFFF00"; // "yellow"; // "#EEEEEE";
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
         instance = this;
     }

@@ -1,7 +1,7 @@
 /**
  * Controller for checking PDF-attachment validity and merging them.
  */
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import {IItem} from "../../item/IItem";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {$http} from "../../util/ngimport";
@@ -38,7 +38,7 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
     private errorMessage?: string;
     private mergedUrl?: string; // Link to file opening route with merge data as params.
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
     }
 

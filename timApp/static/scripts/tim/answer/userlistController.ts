@@ -1,4 +1,4 @@
-import {IAngularEvent, IController, IRootElementService, IScope} from "angular";
+import {IAngularEvent, IController, IScope} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import uiGrid, {IFilterOptions, IGridColumnOf, IGridRowOf} from "ui-grid";
@@ -48,7 +48,7 @@ export class UserListController implements IController {
     private viewctrl!: Require<ViewCtrl>;
     private preventedChange = false;
 
-    constructor(private scope: IScope, private element: IRootElementService) {
+    constructor(private scope: IScope, private element: JQLite) {
     }
 
     $onInit() {

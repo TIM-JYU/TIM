@@ -2,7 +2,7 @@
  * Dialog showing relevance editing component.
  */
 
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {markAsUsed} from "../util/utils";
@@ -18,7 +18,7 @@ export class RelevanceEditController extends DialogController<{ params: IItem },
     static $inject = ["$element", "$scope"] as const;
     private item!: IItem;
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
     }
 

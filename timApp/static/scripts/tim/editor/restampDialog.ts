@@ -2,7 +2,7 @@
  * Controller and HTML template for attachment restamping dialog.
  */
 
-import {IPromise, IRootElementService, IScope} from "angular";
+import {IPromise, IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
@@ -32,7 +32,7 @@ export class RestampDialogController extends DialogController<{params: IStamping
     private errorMessage?: string;
     private successMessage?: string;
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
     }
 

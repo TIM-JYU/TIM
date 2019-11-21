@@ -1,4 +1,4 @@
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import * as answerSheet from "tim/document/question/dynamicAnswerSheet";
 import {markAsUsed} from "tim/util/utils";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
@@ -64,7 +64,7 @@ export class QuestionPreviewController extends DialogController<{params: Questio
     static $inject = ["$element", "$scope"] as const;
     private questiondata?: IPreviewParams;
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
     }
 

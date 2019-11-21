@@ -1,4 +1,4 @@
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import {IItem} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
@@ -40,7 +40,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}> {
     private forceRefresh: boolean = false;
     private removeOldImages: boolean = false;
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
         this.storage = $localStorage.$default({
             timPrintingTemplateId: null,

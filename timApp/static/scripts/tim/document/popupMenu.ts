@@ -1,4 +1,4 @@
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import $ from "jquery";
 import {watchEditMode} from "tim/document/editing/editmode";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
@@ -37,7 +37,7 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
     };
     private p!: IPopupParams;
 
-    constructor(element: IRootElementService, scope: IScope) {
+    constructor(element: JQLite, scope: IScope) {
         super(element, scope);
         this.editState = documentglobals().editMode;
     }

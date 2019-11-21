@@ -1,7 +1,7 @@
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 
 export abstract class DestroyScope {
-    constructor(scope: IScope, element: IRootElementService) {
+    constructor(scope: IScope, element: JQLite) {
         element.on("$destroy", () => {
             this.$onDestroy();
             scope.$destroy();

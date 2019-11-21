@@ -1,4 +1,4 @@
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import {timApp} from "../app";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {KEY_ENTER} from "../util/keycodes";
@@ -15,7 +15,7 @@ export class LectureWallController extends DialogController<{params: {messages: 
     private modalBody: HTMLElement | undefined;
     private msgCount = 0;
 
-    constructor(element: IRootElementService, protected scope: IScope) {
+    constructor(element: JQLite, protected scope: IScope) {
         super(element, scope);
     }
 

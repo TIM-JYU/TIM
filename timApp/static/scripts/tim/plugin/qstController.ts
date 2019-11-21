@@ -1,7 +1,7 @@
 /**
  * Created by vesal on 28.12.2016.
  */
-import {IController, IRootElementService} from "angular";
+import {IController} from "angular";
 import {timApp as qstApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
@@ -46,7 +46,7 @@ class QstController implements IController {
     private newAnswer: AnswerTable = [];
     private pluginMeta: PluginMeta;
 
-    constructor(private element: IRootElementService) {
+    constructor(private element: JQLite) {
         this.pluginMeta = new PluginMeta(element);
         this.updateAnswer = this.updateAnswer.bind(this);
         this.errors = [];

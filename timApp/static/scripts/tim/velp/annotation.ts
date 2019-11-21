@@ -9,7 +9,7 @@
  * @copyright 2016 Timber project members
  */
 
-import {IController, IRootElementService, IScope} from "angular";
+import {IController, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as focusme from "tim/ui/focusMe";
 import {ViewCtrl} from "../document/viewctrl";
@@ -54,7 +54,7 @@ export class AnnotationController extends DestroyScope implements IController {
     public annotation!: IAnnotationCoordless; // $onInit
     private prefix = "x";
 
-    constructor(private scope: IScope, public element: IRootElementService) {
+    constructor(private scope: IScope, public element: JQLite) {
         super(scope, element);
         this.ctrlDown = false;
         this.newcomment = "";

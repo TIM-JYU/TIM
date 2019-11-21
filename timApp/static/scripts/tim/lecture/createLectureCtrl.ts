@@ -1,4 +1,4 @@
-import angular, {IFormController, IRootElementService, IScope} from "angular";
+import angular, {IFormController, IScope} from "angular";
 import moment from "moment";
 import {getItem, IItem} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
@@ -51,7 +51,7 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
     private form!: IFormController; // initialized in the template
     private submittingLecture = false;
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
         this.showEarlyJoin = true;
         this.useDate = false;

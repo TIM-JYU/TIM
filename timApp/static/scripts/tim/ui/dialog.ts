@@ -1,4 +1,4 @@
-import {IController, IDeferred, IPromise, IRootElementService, IScope, ITranscludeFunction} from "angular";
+import {IController, IDeferred, IPromise, IScope, ITranscludeFunction} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "../app";
@@ -21,7 +21,7 @@ export abstract class DialogController<T, Ret> implements IController {
 
     protected abstract getTitle(): string;
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
     }
 
     $onInit() {
@@ -86,7 +86,7 @@ class MessageDialogController extends DialogController<{message: string}, {}> {
     static $inject = ["$element", "$scope"] as const;
     static readonly component = "timMessageDialog";
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
     }
 
@@ -104,7 +104,7 @@ class MessageDialogController extends DialogController<{message: string}, {}> {
 }
 
 interface IServiceMap {
-    $element: IRootElementService;
+    $element: JQLite;
     $scope: IScope;
 }
 

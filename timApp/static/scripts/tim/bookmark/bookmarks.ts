@@ -1,4 +1,4 @@
-import {IController, IFormController, IRootElementService, IScope} from "angular";
+import {IController, IFormController, IScope} from "angular";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
 import {Binding, clone, markAsUsed, to} from "tim/util/utils";
@@ -189,7 +189,7 @@ class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark
     private includeParams?: boolean;
     private includeHash?: boolean;
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
     }
 

@@ -1,4 +1,4 @@
-import {IController, IRootElementService, IScope} from "angular";
+import {IController, IScope} from "angular";
 import {timApp} from "../app";
 import {Binding} from "../util/utils";
 
@@ -318,7 +318,7 @@ function scrollElementVisibleInParent(el: Element, par: Element, extraY: number)
 export class TapeController implements IController {
     static $inject = ["$scope", "$element"]; // do not remove this even PyCharm says it is not used
 
-    constructor(protected scope: IScope, protected element: IRootElementService) {
+    constructor(protected scope: IScope, protected element: JQLite) {
         this.state = new TapeState();
         this.possibleCommandList = [new Input(), new Output(), new Add(), new Sub(),
             new CopyTo(), new CopyFrom(), new DefineLabel(), new Jump("JUMP", "j"), new JumpIfZero(), new JumpIfNeg()];

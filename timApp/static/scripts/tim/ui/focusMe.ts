@@ -1,11 +1,11 @@
 // from https://stackoverflow.com/a/14837021
-import {IAttributes, IRootElementService, IScope} from "angular";
+import {IAttributes, IScope} from "angular";
 import {timApp} from "tim/app";
 import {$parse, $timeout} from "../util/ngimport";
 
 timApp.directive("focusMe", [() => {
     return {
-        link(scope: IScope, element: IRootElementService, attrs: IAttributes) {
+        link(scope: IScope, element: JQLite, attrs: IAttributes) {
             const model = $parse(attrs.focusMe as string);
             scope.$watch(model, (value) => {
                 if (value === true) {

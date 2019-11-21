@@ -1,4 +1,4 @@
-import {IController, IRootElementService, IScope} from "angular";
+import {IController, IScope} from "angular";
 import {Type} from "io-ts/lib";
 import {Binding} from "../util/utils";
 import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "./attributes";
@@ -23,7 +23,7 @@ export function getDefaults<MarkupType extends IGenericPluginMarkup,
 
 export class PluginMeta {
     constructor(
-        private element: IRootElementService,
+        private element: JQLite,
         private preview = false,
         private plugintype?: string,
         private taskid?: string,
@@ -129,7 +129,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
 
     constructor(
         protected scope: IScope,
-        protected element: IRootElementService) {
+        protected element: JQLite) {
         this.attrsall = getDefaults(this.getAttributeType(), this.getDefaultMarkup());
         this.pluginMeta = new PluginMeta(element, this.attrsall.preview);
     }

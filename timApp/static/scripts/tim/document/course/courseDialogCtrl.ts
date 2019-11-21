@@ -2,7 +2,7 @@
  * Dialog for tagging course meta data including course code and subject.
  */
 
-import {IFormController, IRootElementService, IScope} from "angular";
+import {IFormController, IScope} from "angular";
 import {Moment} from "moment";
 import {ICourseSettings, IItem, ISubjectList, ITag, TagType} from "../../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
@@ -27,7 +27,7 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
     private currentSubject: ITag | undefined;
     private studentGroupName = "";
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
         this.datePickerOptions = {
             defaultDate: "",

@@ -1,4 +1,4 @@
-import {IController, IRootElementService} from "angular";
+import {IController} from "angular";
 import {timApp} from "../../app";
 import {$http} from "../../util/ngimport";
 import {Require, to} from "../../util/utils";
@@ -57,7 +57,7 @@ timApp.component("timSettingsPar", {
         private showSettingsYaml = false;
         private yaml?: string;
 
-        constructor(private element: IRootElementService) {
+        constructor(private element: JQLite) {
 
         }
 

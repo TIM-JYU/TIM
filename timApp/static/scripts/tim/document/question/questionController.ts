@@ -1,4 +1,4 @@
-import {IFormController, IRootElementService, IScope} from "angular";
+import {IFormController, IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
 import moment from "moment";
@@ -152,7 +152,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private qst = false;
     private pluginMarkup: IGenericPluginMarkup = {};
 
-    constructor(element: IRootElementService, protected scope: IScope) {
+    constructor(element: JQLite, protected scope: IScope) {
         super(element, scope);
 
         this.dateTimeOptions = {

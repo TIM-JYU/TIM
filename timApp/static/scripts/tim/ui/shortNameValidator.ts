@@ -1,11 +1,11 @@
-import {IAttributes, IController, INgModelController, IRootElementService, IScope} from "angular";
+import {IAttributes, IController, INgModelController, IScope} from "angular";
 import {timApp} from "tim/app";
 import {slugify} from "../util/slugify";
 
 timApp.directive("timShortName", [() => {
     return {
         require: "?ngModel",
-        link(scope: IScope, elm: IRootElementService, attrs: IAttributes, c: IController | undefined) {
+        link(scope: IScope, elm: JQLite, attrs: IAttributes, c: IController | undefined) {
             if (c) {
                 const ctrl = c as INgModelController;
                 ctrl.$validators.timShortName = (modelValue: string, viewValue: string) => {
@@ -22,7 +22,7 @@ timApp.directive("timShortName", [() => {
 timApp.directive("timLocation", [() => {
     return {
         require: "?ngModel",
-        link(scope: IScope, elm: IRootElementService, attrs: IAttributes, c: IController | undefined) {
+        link(scope: IScope, elm: JQLite, attrs: IAttributes, c: IController | undefined) {
             if (c) {
                 const ctrl = c as INgModelController;
                 ctrl.$validators.timLocation = (modelValue: string, viewValue: string) => {

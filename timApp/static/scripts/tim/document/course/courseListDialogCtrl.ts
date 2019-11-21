@@ -2,7 +2,7 @@
  * Dialog for displaying active courses grouped by their subjects.
  */
 
-import {IRootElementService, IScope} from "angular";
+import {IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import {getCourseCode, ICourseSettings, ISubjectList, ITaggedItem, tagIsExpired, TagType} from "../../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
@@ -34,7 +34,7 @@ export class CourseListDialogController extends DialogController<{ params: ICour
     private toggleCollapseAll: boolean = false;
     private filterText: string = "";
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
+    constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
         this.storage = $localStorage.$default({
             subjectsStorage: null,
