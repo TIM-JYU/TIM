@@ -901,6 +901,27 @@ class ScimTest(TimRouteTest):
         d = DocEntry.find_by_path('groups/2020/itkp222/09/sisugroups')
         self.assertEqual(3, len(d.document.get_paragraphs()))
 
+        self.json_post(
+            f'/scim/Groups', {
+                'externalId': 'jy-CUR-4546-administrative-persons',
+                'displayName': 'ITKP222 2020-09-19--2020-12-20: Rooli - administrative-person',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'Userz {u}z', 'email': f'{u}@example.com'} for u in ['abcadmin']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        d = DocEntry.find_by_path('groups/2020/itkp222/09/sisugroups')
+        expected_set = {'itkp222-200909-teachers', 'itkp222-200919-teachers', 'itkp222-200919-administrative-persons'}
+        rights_set = set([x.usergroup.name for x in d.block.accesses])
+        self.assertEqual(expected_set, rights_set)
+        self.assertEqual(expected_set, set([x.usergroup.name for x in d.block.parent.block.accesses]))
+        self.assertEqual(expected_set, set([x.usergroup.name for x in d.block.parent.parent.block.accesses]))
+        year_folder = d.block.parent.parent.parent
+        self.assertEqual('2020', year_folder.title)
+        self.assertIn('teachers', [x.usergroup.name for x in year_folder.block.accesses])
+
     def test_scim_group_manual_member_update(self):
         eid = 'jy-CUR-7777-teachers'
         self.json_post(

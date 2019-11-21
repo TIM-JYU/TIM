@@ -258,6 +258,11 @@ def refresh_sisu_grouplist_doc(ug: UserGroup):
             d.document.set_settings(settings_to_set)
         else:
             d.block.add_rights([ug], AccessType.owner)
+            p1 = d.block.parent
+            p2 = p1.parent
+            p1.block.add_rights([ug], AccessType.owner)
+            p2.block.add_rights([ug], AccessType.owner)
+            p2.parent.block.add_rights([UserGroup.get_teachers_group()], AccessType.view)
             s = d.document.get_settings()
             g_attrs = s.global_plugin_attrs()
             has_sisu_attr = False
