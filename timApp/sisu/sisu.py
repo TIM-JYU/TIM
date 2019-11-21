@@ -526,9 +526,9 @@ def get_sisu_assessments(
     if teacher not in teachers_group.users:
         raise AccessDenied('You are not a TIM teacher.')
     pot_groups = get_potential_groups(teacher, course_filter=sisu_id)
-    responsible_teachers_group = f'{sisu_id}-responsible-teachers'
-    if responsible_teachers_group not in (g.external_id.external_id for g in pot_groups):
-        raise AccessDenied(f'You are not a responsible teacher of the course {sisu_id}.')
+    if not any(g.external_id.course_id == sisu_id and
+               (g.external_id.is_responsible_teacher or g.external_id.is_administrative_person) for g in pot_groups):
+        raise AccessDenied(f'You are neither a responsible teacher nor an administrative person of the course {sisu_id}.')
     if not teacher.has_teacher_access(doc):
         raise AccessDenied('You do not have teacher access to the document.')
     doc_settings = doc.document.get_settings()

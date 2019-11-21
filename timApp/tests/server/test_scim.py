@@ -1106,7 +1106,7 @@ class SendGradeTest(SendGradeTestBase):
             '/sisu/sendGrades',
             grade_params,
             expect_status=403,
-            expect_content='You are not a responsible teacher of the course jy-CUR-1234.'
+            expect_content='You are neither a responsible teacher nor an administrative person of the course jy-CUR-1234.'
         )
         ug = UserGroup.create('course1234')
         ug.external_id = ScimUserGroup(external_id='jy-CUR-1234-responsible-teachers')
