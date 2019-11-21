@@ -863,6 +863,44 @@ class ScimTest(TimRouteTest):
         ug = UserGroup.get_by_external_id('jy-CUR-6565-jy-studysubgroup-1236-students')
         self.assertEqual('itkp109-200909-opiskelijaryhma-2', ug.name)
 
+    def test_scim_overlapping_displaynames(self):
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': 'jy-CUR-4545-teachers',
+                'displayName': 'ITKP222 2020-09-09--2020-12-20: Rooli - teacher',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['abc']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': 'jy-CUR-4546-teachers',
+                'displayName': 'ITKP222 2020-09-19--2020-12-20: Rooli - teacher',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['abc']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        d = DocEntry.find_by_path('groups/2020/itkp222/09/sisugroups')
+        self.assertEqual(3, len(d.document.get_paragraphs()))
+        self.json_put(
+            f'/scim/Groups/jy-CUR-4546-teachers', {
+                'externalId': 'jy-CUR-4546-teachers',
+                'displayName': 'ITKP222 2020-09-19--2020-12-20: Rooli - teacher',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'Userz {u}z', 'email': f'{u}@example.com'} for u in ['abc']
+                ]),
+            },
+            auth=a,
+        )
+        d = DocEntry.find_by_path('groups/2020/itkp222/09/sisugroups')
+        self.assertEqual(3, len(d.document.get_paragraphs()))
+
     def test_scim_group_manual_member_update(self):
         eid = 'jy-CUR-7777-teachers'
         self.json_post(

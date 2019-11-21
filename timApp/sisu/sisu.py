@@ -25,6 +25,8 @@ from timApp.document.docinfo import DocInfo
 from timApp.item.block import Block, BlockType
 from timApp.item.validation import ItemValidationRule, validate_item_and_create_intermediate_folders, validate_item
 from timApp.notification.notify import send_email
+from timApp.plugin.plugin import Plugin
+from timApp.plugin.pluginexception import PluginException
 from timApp.sisu.parse_display_name import SisuDisplayName, parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.tim_app import app, csrf
@@ -238,23 +240,70 @@ def refresh_sisu_grouplist_doc(ug: UserGroup):
         gn = parse_sisu_group_display_name(ug.display_name)
         p = gn.sisugroups_doc_path
         d = DocEntry.find_by_path(p)
+        settings_to_set = {
+            'global_plugin_attrs': {
+                'all': {
+                    'sisugroups': ug.external_id.course_id,
+                }
+            },
+            'macros': {
+                'course': gn.coursecode_and_time,
+            },
+            'preamble': 'sisugroups',
+        }
         if not d:
             d = create_sisu_document(p, f'Sisu groups for course {gn.coursecode.upper()}', owner_group=ug)
             admin_id = UserGroup.get_admin_group().id
             d.document.modifier_group_id = admin_id
-            d.document.set_settings({
-                'global_plugin_attrs': {
-                    'all': {
-                        'sisugroups': ug.external_id.course_id,
-                    }
-                },
-                'macros': {
-                    'course': gn.coursecode_and_time,
-                },
-                'preamble': 'sisugroups',
-            })
+            d.document.set_settings(settings_to_set)
         else:
             d.block.add_rights([ug], AccessType.owner)
+            s = d.document.get_settings()
+            g_attrs = s.global_plugin_attrs()
+            has_sisu_attr = False
+            valid_settings = False
+            if isinstance(g_attrs, dict):
+                a = g_attrs.get('all')
+                if isinstance(a, dict):
+                    sisugroups = a.get('sisugroups')
+                    if sisugroups == ug.external_id.course_id:
+                        has_sisu_attr = True
+                    valid_settings = isinstance(sisugroups, str)
+            if has_sisu_attr:
+                return
+            if not valid_settings:
+                d.document.set_settings(settings_to_set)
+            else:
+                for p in d.document.get_paragraphs():
+                    if not p.is_plugin():
+                        continue
+                    try:
+                        plug = Plugin.from_paragraph(p)
+                    except PluginException:
+                        continue
+                    if plug.values.get('sisugroups') == ug.external_id.course_id:
+                        return
+                d.document.modifier_group_id = UserGroup.get_admin_group().id
+                d.document.add_text(f"""
+# Sisu groups for course {gn.coursecode_and_time}
+
+``` {{#table_extra plugin="tableForm"}}
+sisugroups: {ug.external_id.course_id}
+table: true
+showInView: true
+report: false
+maxRows: 40em
+realnames: true
+buttonText:
+autosave: true
+cbColumn: true
+nrColumn: true
+filterRow: true
+hide:
+  toolbar: 1
+  editorButtons: 1
+```
+                """)
 
 
 def send_course_group_mail(p: SisuDisplayName, u: User):
