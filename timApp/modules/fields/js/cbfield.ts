@@ -118,7 +118,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         } else {
             try {
                 this.userword = CbfieldController.makeBoolean(content.c as string);
-            } catch (TypeError) {
+            } catch (e) {
                 this.userword = false;
                 ok = false;
                 message = "Couldn't find related content (\"c\")";

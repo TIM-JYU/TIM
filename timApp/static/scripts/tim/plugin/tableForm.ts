@@ -976,7 +976,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 }
                 try {
                     replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
-                } catch (TypeError) {
+                } catch (e) {
                     replyRows[this.userLocations[numberPlace]] = {};
                     replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
                 }

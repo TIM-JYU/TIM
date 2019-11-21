@@ -134,7 +134,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         } else {
             try {
                 this.userword = content.c as string;
-            } catch (TypeError) {
+            } catch (e) {
                 this.userword = "";
                 ok = false;
                 message = "Couldn't find related content (\"c\")";
