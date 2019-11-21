@@ -291,7 +291,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private loading: number;
     private viewctrl!: Require<ViewCtrl>;
     private user: IUser | undefined;
-    private fetchedUser: number = 0; // IUser | undefined;
+    private fetchedUser: IUser | undefined;
     private saveTeacher: boolean = false;
     private users: IUser[] | undefined;
     private answers: IAnswer[] = [];
@@ -418,7 +418,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     async changeUserAndAnswers(user: IUser, answers: IAnswer[]) {
         // let needsAnswerChange = false;
         this.user = user;
-        this.fetchedUser = this.user ? this.user.id : 0;
+        this.fetchedUser = this.user;
         this.answers = answers;
         this.updateFiltered();
         this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
@@ -832,18 +832,18 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    private getUserOrCurrentUserForAnswers(taskId: string) {
-        let uid = 0;
-        if ( this.user ) { uid = this.user.id; }
+    private getUserOrCurrentUserForAnswers(taskId: string): IUser | undefined {
+        let user: IUser | undefined;
+        if ( this.user ) { user = this.user; }
         // TODO: refactor to use pluginMarkup()
         const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
-        if ( !c ) { return uid; }
+        if ( !c ) { return user; }
         const a = c.attrsall;
         if ( a && a.markup && a.markup.useCurrentUser) {
             this.user = Users.getCurrent();  // TODO: looks bad when function has a side effect?
-            return Users.getCurrent().id;
+            return Users.getCurrent();
         }
-        return uid;
+        return user;
     }
 
     public pluginMarkup(): IGenericPluginMarkup | undefined {
@@ -870,13 +870,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     /* Return user answers, null = do not care */
     private async getAnswers() {
-        const uid = this.getUserOrCurrentUserForAnswers(this.taskId);
-        if (!uid) {
+        const user = this.getUserOrCurrentUserForAnswers(this.taskId);
+        if (!user) {
             return undefined;
         }
         this.loading++;
 
-        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${uid}`, {
+        const r = await to($http.get<IAnswer[]>(`/answers/${this.taskId}/${user.id}`, {
             params: {
                 _: Date.now(),
             },
@@ -887,7 +887,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.showError(r.result);
             return undefined;
         }
-        this.fetchedUser = uid;
+        this.fetchedUser = user;
         return r.result.data;
     }
 
@@ -896,7 +896,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     hasUserChanged() {
-        return (this.user || {id: null}).id !== this.fetchedUser;
+        return (this.user || {id: null}).id !== (this.fetchedUser || {id: null}).id;
     }
 
     dimPlugin() {
