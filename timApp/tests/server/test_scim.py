@@ -901,6 +901,19 @@ class ScimTest(TimRouteTest):
         d = DocEntry.find_by_path('groups/2020/itkp222/09/sisugroups')
         self.assertEqual(3, len(d.document.get_paragraphs()))
 
+        self.json_put(
+            f'/scim/Groups/jy-CUR-4545-teachers', {
+                'externalId': 'jy-CUR-4545-teachers',
+                'displayName': 'ITKP222 2020-09-09--2020-12-20: Rooli - teacher',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'Userz {u}z', 'email': f'{u}@example.com'} for u in ['abc']
+                ]),
+            },
+            auth=a,
+        )
+        d = DocEntry.find_by_path('groups/2020/itkp222/09/sisugroups')
+        self.assertEqual(3, len(d.document.get_paragraphs()))
+
         self.json_post(
             f'/scim/Groups', {
                 'externalId': 'jy-CUR-4546-administrative-persons',
