@@ -1,9 +1,10 @@
 import os
 import shutil
 from pprint import pprint
-from typing import List
+from typing import List, Optional
 
 import click
+from dataclasses import dataclass
 from flask import flash, url_for, Blueprint, abort
 from flask.cli import AppGroup
 
@@ -14,6 +15,8 @@ from timApp.item.block import Block, BlockType
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
+from timApp.user.usergroup import UserGroup
+from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import safe_redirect, json_response
 
 admin_bp = Blueprint('admin',
@@ -21,9 +24,20 @@ admin_bp = Blueprint('admin',
                      url_prefix='')
 
 
+@dataclass
+class ExceptionRouteModel:
+    db_error: bool = False
+
+
 @admin_bp.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])
-def throw_ex():
+@use_model(ExceptionRouteModel)
+def throw_ex(m: ExceptionRouteModel):
     verify_admin()
+    if m.db_error:
+        db.session.add(UserGroup(name='test'))
+        db.session.add(UserGroup(name='test'))
+        db.session.flush()
+        raise Exception('Flush should have raised an exception!')
     raise Exception('This route throws an exception intentionally for testing purposes.')
 
 
