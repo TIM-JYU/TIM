@@ -213,20 +213,25 @@ def post_group(args: SCIMGroupModel):
     if deleted_group:
         log_info(f'Restoring deleted group: {derived_name}')
         ug = deleted_group
-        ug.name = derived_name
+        ug.name = disambiguate_name(derived_name)
     else:
-        if UserGroup.get_by_name(derived_name):
-            disambiguator = 1
-            while UserGroup.get_by_name(f'{derived_name}-{disambiguator}'):
-                disambiguator += 1
-            derived_name = f'{derived_name}-{disambiguator}'
-            # raise SCIMException(409, f'The group name "{derived_name}" '
-            #                          f'derived from display name "{args.displayName}" already exists.')
+        derived_name = disambiguate_name(derived_name)
         ug = UserGroup(name=derived_name, display_name=args.displayName)
         db.session.add(ug)
     update_users(ug, args)
     db.session.commit()
     return json_response(group_scim(ug), status_code=201)
+
+
+def disambiguate_name(derived_name: str) -> str:
+    if UserGroup.get_by_name(derived_name):
+        disambiguator = 1
+        while UserGroup.get_by_name(f'{derived_name}-{disambiguator}'):
+            disambiguator += 1
+        derived_name = f'{derived_name}-{disambiguator}'
+        # raise SCIMException(409, f'The group name "{derived_name}" '
+        #                          f'derived from display name "{args.displayName}" already exists.')
+    return derived_name
 
 
 @scim.route('/Groups/<group_id>')
