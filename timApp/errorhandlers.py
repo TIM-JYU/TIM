@@ -111,6 +111,8 @@ def register_errorhandlers(app: Flask):
 
     @app.errorhandler(500)
     def handle_500(error):
+        # NOTE: Rollback must be the first operation here. Otherwise any db access might fail.
+        db.session.rollback()
         log_error(get_request_message(500, include_body=True))
         help_email = app.config['HELP_EMAIL']
         error.description = Markup(
@@ -126,7 +128,6 @@ Exception happened on {get_current_time()} at {request.url}
 
 {tb}
     """.strip()
-        db.session.rollback()
         u = get_current_user_object()
         send_email(rcpt=app.config['ERROR_EMAIL'],
                    subject=f'{app.config["TIM_HOST"]}: Error at {request.path} ({u.name})',
