@@ -6,7 +6,7 @@ import {Binding, dateFormat, getGroupDesc, markAsUsed, to} from "tim/util/utils"
 import {showMessageDialog} from "../ui/dialog";
 import {durationTypes} from "../ui/durationPicker";
 import {IGroup} from "../user/IUser";
-import {itemglobals} from "../util/globals";
+import {genericglobals, itemglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {IItem} from "./IItem";
 
@@ -83,6 +83,7 @@ class RightsEditorController implements IController {
     private severity?: "danger" | "success";
     private loading = false;
     private orgs?: IGroup[];
+    private selectedOrg?: IGroup;
 
     constructor(scope: IScope) {
         this.scope = scope;
@@ -134,6 +135,9 @@ class RightsEditorController implements IController {
             if (r.ok) {
                 this.orgs = r.result.data;
             }
+        }
+        if (this.orgs) {
+            this.selectedOrg = this.orgs.find((o) => o.name === genericglobals().homeOrganization + " users");
         }
         if (!this.massMode) {
             this.getPermissions();
