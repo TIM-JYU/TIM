@@ -20,7 +20,7 @@ from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFI
 from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import load_data_from_req, JSONException
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.logger import log_warning
+from timApp.util.logger import log_warning, log_info
 from timApp.util.utils import remove_path_special_chars
 
 scim = Blueprint('scim',
@@ -200,6 +200,7 @@ def derive_scim_group_name(s: str):
 @scim.route('/Groups', methods=['post'])
 @use_args(SCIMGroupModelSchema(), locations=("json",))
 def post_group(args: SCIMGroupModel):
+    log_info(f'/Groups externalId: {args.externalId}')
     gname = scim_group_to_tim(args.externalId)
     ug = try_get_group_by_scim(args.externalId)
     if ug:
@@ -210,6 +211,7 @@ def post_group(args: SCIMGroupModel):
     deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{args.externalId}')
     derived_name = derive_scim_group_name(args.displayName)
     if deleted_group:
+        log_info(f'Restoring deleted group: {derived_name}')
         ug = deleted_group
         ug.name = derived_name
     else:
