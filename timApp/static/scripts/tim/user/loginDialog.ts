@@ -225,6 +225,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
     public beginSignup() {
         this.showSignup = true;
         this.focusEmail = true;
+        this.url = "";
         if (this.loginForm.email) {
             this.email = this.loginForm.email;
         }
