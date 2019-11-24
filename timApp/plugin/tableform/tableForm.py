@@ -428,6 +428,8 @@ fields:
  - d1=demo1     # List your fields here, = for alias
 table: true
 report: false
+openButtonText: Avaa taulukko # text for open the table if closed as default
+open: true 
 maxRows: 40em     # max height for the table before scrollbar 
 realnames: true   # Show full name in 2nd column, true or false
 buttonText:       # Name your save button here
@@ -436,7 +438,7 @@ cbColumn: true    # show checkboxes
 nrColumn: true    # show numbers
 filterRow: true   # show filters 
 singleLine: true  #
-emailUsersButtonText: "Lähetä sähköpostia valituille" # jos halutaan lähettää sähköpostia 
+emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email 
 ```""", """
 ``` {#tableForm_table_report plugin="tableForm"}
 groups: 
@@ -445,12 +447,19 @@ fields:
  - d1=demo1     # List your fields here, = for alias
 table: true
 report: true
-maxRows: 40em   # max height for the table before scrollbar 
-realnames: true # Show full name in 2nd column, true or false
-buttonText:     # Name your save table button here
-autosave: true  # autosave, true or false
-separator: ";"  # Define your report value separator here, ";" by default
-anonNames: true # To show or hide user (and full) names in report, true or false
+openButtonText: Avaa taulukko # text for open the table if closed as default
+open: true 
+maxRows: 40em     # max height for the table before scrollbar 
+realnames: true   # Show full name in 2nd column, true or false
+buttonText:       # Name your save button here
+autosave: true    # autosave, true or false
+cbColumn: true    # show checkboxes
+nrColumn: true    # show numbers
+filterRow: true   # show filters 
+singleLine: true  #
+emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email 
+separator: ";"  # Define your value separator here, ";" as default
+anonNames: false # To show or hide user (and full) names in report, true or false
 reportButton: "Name your generate report button here"
 ```""", """
 ``` {#tableForm_report plugin="tableForm"}
@@ -461,7 +470,7 @@ fields:
 table: false
 report: true
 separator: ";"  # Define your value separator here, ";" as default
-anonNames: true # To show or hide user (and full) names in report, true or false
+anonNames: false # To show or hide user (and full) names in report, true or false
 reportButton: "Name your generate report button here"
 ```"""]
     editor_tabs = [

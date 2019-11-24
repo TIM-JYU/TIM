@@ -742,6 +742,10 @@ export class Tools extends ToolsBase {
         return this.data.user.real_name;
     }
 
+    getStudentName(): string {  // alias for Korppi compatibility
+        return this.getRealName();
+    }
+
     getUserName(): string {
         return this.data.user.name;
     }

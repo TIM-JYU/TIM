@@ -50,17 +50,17 @@ router.get("/", (req, res, next) => {
                 text: "Fields",
                 items: [
                     {
-                        text: "JSRunner",
+                        text: "Functions",
                         items: [
                             {
                                 data: templates[0].trim(),
-                                text: "JavaScript runner",
-                                expl: "Add basic JavaScript runner task",
+                                text: "JavaScript runner for functions",
+                                expl: "Add basic JavaScript runner task to make functions",
                             },
                             {
                                 data: templates[1].trim(),
                                 text: "Extended JavaScript runner",
-                                expl: "Add extended JavaScript runner task",
+                                expl: "Add extended JavaScript runner task to make functions",
                             },
                             {
                                 data: templates[2].trim(),
