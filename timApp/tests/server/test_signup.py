@@ -157,6 +157,8 @@ class TestSignUp(TimRouteTest):
                 })
             self.get('/')  # refresh session
             self.assertIsNotNone(NewUser.query.get(allowed_email))
+        NewUser.query.delete()
+        db.session.commit()
 
     def test_signup(self):
         email = 'testingsignup@example.com'
