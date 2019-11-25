@@ -246,7 +246,7 @@ def alt_signup(m: AltSignupModel):
 
     # Real users should never submit the url parameter.
     # It is meant for catching bots.
-    if m.url:
+    if m.url and not (email_or_username.endswith('.fi') or email_or_username.endswith('@gmail.com')):
         log_warning(f'Bot registration attempt: {email_or_username}, URL: {m.url}')
         fail = True
 

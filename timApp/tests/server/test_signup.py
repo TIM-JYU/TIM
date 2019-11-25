@@ -148,6 +148,16 @@ class TestSignUp(TimRouteTest):
         self.get('/')  # refresh session
         self.assertIsNone(NewUser.query.get(bot_email))
 
+        for allowed_email in ('test@jyu.fi', 'test@gmail.com'):
+            self.json_post(
+                '/altsignup',
+                {
+                    'email': allowed_email,
+                    'url': 'http://www.example.com',
+                })
+            self.get('/')  # refresh session
+            self.assertIsNotNone(NewUser.query.get(allowed_email))
+
     def test_signup(self):
         email = 'testingsignup@example.com'
         self.json_post(
