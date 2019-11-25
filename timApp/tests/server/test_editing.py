@@ -1,6 +1,7 @@
 from lxml import html
 from lxml.html import HtmlElement
 
+from timApp.auth.accesstype import AccessType
 from timApp.document.docparagraph import DocParagraph
 from timApp.plugin.plugin import Plugin
 from timApp.tests.browser.browsertest import BrowserTest
@@ -211,7 +212,7 @@ class EditTest(TimRouteTest):
         par_manage = pars[1]
         par3 = pars[2]
         self.post_par(d.document, '#- {edit=manage}\ntest', par_manage.get_id())
-        self.test_user_2.grant_access(d, 'edit')
+        self.test_user_2.grant_access(d, AccessType.edit)
 
         self.login_test2()
         self.post_par(d.document, 'asd', par1.get_id())
@@ -245,7 +246,7 @@ class EditTest(TimRouteTest):
                        expect_status=403)
         self.json_post(f'/unwrap_area/{d.id}/a', expect_status=403)
 
-        self.test_user_2.grant_access(d, 'manage')
+        self.test_user_2.grant_access(d, AccessType.manage)
         self.post_par(d.document, '#- {edit=manage}\nedited', par1.get_id())
         self.update_whole_doc(d, d.document.export_markdown() + 'new')
         self.post_area(

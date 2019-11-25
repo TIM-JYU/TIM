@@ -5,6 +5,8 @@
         {% if access.unlockable %}
             You are about to access a time-limited {{ item_type }}.
             After you click Unlock, your access to this {{ item_type }} will be removed in {{ access.duration | timtimedelta }}.
+        {% elif access.require_confirm %}
+            You can unlock this item only after your permission is confirmed.
         {% elif access.duration_expired %}
             You cannot unlock this item anymore (deadline expired {{ access.duration_to | timreldatetime }}).
         {% elif access.duration_future %}

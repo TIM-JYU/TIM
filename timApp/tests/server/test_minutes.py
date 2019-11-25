@@ -1,4 +1,5 @@
 from timApp.admin.replace_in_documents import perform_replace, ReplaceArguments
+from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME, PREAMBLE_FOLDER_NAME
 from timApp.tests.browser.browsertest import BrowserTest
@@ -30,7 +31,7 @@ class MinutesCreation(TimRouteTest):
         self.assertTrue(d2.document.get_settings().memo_minutes() == "minutes")
 
         # Files should not get copied to minutes document.
-        self.test_user_2.grant_access(d2, 'view')
+        self.test_user_2.grant_access(d2, AccessType.view)
         self.login_test2()
         self.get(f'/images/{image_path}', expect_status=403)
 

@@ -158,7 +158,7 @@ def copy_default_rights(item, item_type: BlockType):
     for d in default_rights:
         grant_access(d.usergroup,
                      item,
-                     d.atype.name,
+                     d.atype.to_enum(),
                      commit=False,
                      accessible_from=d.accessible_from,
                      accessible_to=d.accessible_to,

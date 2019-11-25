@@ -4,6 +4,7 @@ from lxml import html
 from lxml.cssselect import CSSSelector
 from lxml.html import HtmlElement
 
+from timApp.auth.accesstype import AccessType
 from timApp.document.docparagraph import DocParagraph
 from timApp.notification.notify import process_pending_notifications, sent_mails_in_testing
 from timApp.tests.server.test_notify import NotifyTestBase
@@ -83,8 +84,8 @@ class CommentTest(NotifyTestBase):
     def test_note_notify(self):
         self.login_test1()
         d = self.create_doc(initial_par='test')
-        self.test_user_2.grant_access(d, 'view')
-        self.test_user_3.grant_access(d, 'edit')
+        self.test_user_2.grant_access(d, AccessType.view)
+        self.test_user_3.grant_access(d, AccessType.edit)
         par = d.document.get_paragraphs()[0]
         self.post_comment(par, True, 'hi')
         self.login_test2()

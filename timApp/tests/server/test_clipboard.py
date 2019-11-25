@@ -1,5 +1,6 @@
 import random
 
+from timApp.auth.accesstype import AccessType
 from timApp.document.docparagraph import DocParagraph
 from timApp.readmark.readings import mark_read, get_readings
 from timApp.readmark.readparagraphtype import ReadParagraphType
@@ -199,7 +200,7 @@ Document:
 #- {plugin=csPlugin}
 stem: x
         """)
-        self.test_user_2.grant_access(d, 'view')
+        self.test_user_2.grant_access(d, AccessType.view)
         self.login_test2()
         par = d.document.get_paragraphs()[0]
         self.copy(d, par, par)

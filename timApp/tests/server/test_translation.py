@@ -1,5 +1,6 @@
 from unittest.mock import patch, Mock
 
+from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
@@ -254,7 +255,7 @@ b
         self.check_outofdate_count(t, 1)
 
         t = Translation.find_by_id(t.id)
-        self.test_user_2.grant_access(t, 'view')
+        self.test_user_2.grant_access(t, AccessType.view)
 
         # only editors should see the outofdate messages
         self.login_test2()

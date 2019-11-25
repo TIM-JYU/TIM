@@ -28,47 +28,50 @@
 <div class="margin rights-list" ng-repeat="type in $ctrl.accessTypes" ng-if="!$ctrl.massMode">
     <a ng-click="$ctrl.showAddRightFn(type)"
        title="Click to add {{ type.name }} right to some usergroup">{{ type.name }}</a><span
-        ng-show="filtered.length > 0"> ({{ filtered.length }})</span>:
-    <span ng-show="filtered.length == 0">none</span>
+        ng-if="filtered.length > 0"> ({{ filtered.length }})</span>:
+    <span ng-if="filtered.length == 0">none</span>
 
     <ul>
         <li ng-repeat="right in filtered = ($ctrl.grouprights | filter: {type: type.id}:true | filter: $ctrl.obsoleteFilterFn | orderBy: ['usergroup.personal_user.real_name', 'usergroup.name'])">
-            <span ng-show="!$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></span>
-            <s ng-show="$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></s>
+            <span ng-if="!$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></span>
+            <s ng-if="$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></s>
             <a title="Send email to this user" ng-if="right.usergroup.personal_user" href="mailto:{{right.usergroup.personal_user.email}}"><i class="glyphicon glyphicon-envelope"></i></a>
-            <i ng-show="$ctrl.showClock(right)"
-               class="glyphicon glyphicon-time"></i>
             <span class="label label-success"
                   uib-tooltip="{{ right.accessible_from | timdate }}"
-                  ng-show="$ctrl.shouldShowBeginTime(right)">Begins {{ right.accessible_from | timreldate }}</span>
+                  ng-if="$ctrl.shouldShowBeginTime(right)">Begins {{ right.accessible_from | timreldate }}</span>
             <span class="label label-info"
-                  ng-show="$ctrl.shouldShowDuration(right)"
+                  ng-if="$ctrl.shouldShowDuration(right)"
                   uib-tooltip="{{ right.duration | timpreciseduration }}">Duration: {{ right.duration | timduration }}</span>
             <span class="label label-warning"
                   uib-tooltip="{{ right.accessible_to | timdate }}"
-                  ng-show="$ctrl.shouldShowEndTime(right)">Ends {{ right.accessible_to | timreldate }}</span>
+                  ng-if="$ctrl.shouldShowEndTime(right)">Ends {{ right.accessible_to | timreldate }}</span>
             <span class="label label-danger"
                   uib-tooltip="{{ right.accessible_to | timdate }}"
-                  ng-show="$ctrl.shouldShowEndedTime(right)">Ended {{ right.accessible_to | timreldate }}</span>
+                  ng-if="$ctrl.shouldShowEndedTime(right)">Ended {{ right.accessible_to | timreldate }}</span>
             <span class="label label-success"
                   uib-tooltip="{{ right.duration_from | timdate }}"
-                  ng-show="$ctrl.shouldShowUnlockable(right)">Unlockable {{ right.duration_from | timreldate }}</span>
+                  ng-if="$ctrl.shouldShowUnlockable(right)">Unlockable {{ right.duration_from | timreldate }}</span>
             <span class="label label-warning"
                   uib-tooltip="{{ right.duration_to | timdate }}"
-                  ng-show="$ctrl.shouldShowNotUnlockable(right)">No longer unlockable {{ right.duration_to | timreldate }}</span>
+                  ng-if="$ctrl.shouldShowNotUnlockable(right)">No longer unlockable {{ right.duration_to | timreldate }}</span>
             <span class="label label-danger"
                   uib-tooltip="{{ right.duration_to | timdate }}"
-                  ng-show="$ctrl.shouldShowNotUnlockableAnymore(right)">No longer unlockable since {{ right.duration_to | timreldate }}</span>
-            <a class="btn btn-default btn-xs" ng-click="$ctrl.removeConfirm(right, type.name)">remove</a>
-            <a ng-show="$ctrl.selectedRight !== right" class="btn btn-default btn-xs" ng-click="$ctrl.editRight(right)">edit</a>
-            <span ng-show="selectedRight === right" class="label label-primary">Editing</span>
-            <a ng-show="$ctrl.selectedRight === right" class="btn btn-default btn-xs" ng-click="$ctrl.expireRight(right)">expire</a>
+                  ng-if="$ctrl.shouldShowNotUnlockableAnymore(right)">No longer unlockable since {{ right.duration_to | timreldate }}</span>
+            <button class="btn btn-default btn-xs" ng-click="$ctrl.removeConfirm(right, type.name)">remove</button>
+            <button ng-if="$ctrl.selectedRight !== right" class="btn btn-default btn-xs" ng-click="$ctrl.editRight(right)">edit</button>
+            <span ng-if="$ctrl.selectedRight === right" class="label label-primary">Editing</span>
+            <button ng-if="right.require_confirm" class="btn btn-success btn-xs" ng-click="$ctrl.confirmRight(right)">confirm</button>
+            <tim-loading ng-if="$ctrl.loadingRight === right && $ctrl.loading"></tim-loading>
         </li>
     </ul>
 </div>
-<button class="timButton" ng-show="!$ctrl.addingRight && !$ctrl.editingRight()" ng-click="$ctrl.showAddRightFn($ctrl.accessType)">Add right...
+<button class="timButton" ng-if="!$ctrl.addingRight && !$ctrl.editingRight()" ng-click="$ctrl.showAddRightFn($ctrl.accessType)">Add right...
 </button>
-<div ng-show="$ctrl.addingRight || $ctrl.editingRight()" class="rights-list">
+<div ng-show="$ctrl.addingRight || $ctrl.editingRight()" class="rights-list" id="editSection">
+    <p ng-if="$ctrl.selectedRight">
+        Editing {{$ctrl.accessTypeById($ctrl.selectedRight.type).name}} right for: {{$ctrl.getGroupDesc($ctrl.selectedRight)}}
+        <button class="btn btn-default btn-xs" ng-click="$ctrl.expireRight($ctrl.selectedRight)">expire</button>
+    </p>
     <form ng-submit="$ctrl.addOrEditPermission($ctrl.groupName, $ctrl.accessType)">
         <div class="row" ng-show="$ctrl.addingRight">
             <div class="form-group col-md-6 input-group-sm">
@@ -141,13 +144,13 @@
                         </div>
                     </div>
                     <tim-duration-picker amount="$ctrl.durOpt.durationAmount"
-                                         ng-show="$ctrl.timeOpt.type == 'duration'"
+                                         ng-show="$ctrl.durationSelected()"
                                          type="$ctrl.durOpt.durationType">
                     </tim-duration-picker>
-                    <div class="form-group" ng-show="$ctrl.timeOpt.type == 'duration'">
+                    <div class="form-group" ng-show="$ctrl.durationSelected()">
                         <div class="col-md-12">Duration unlockable from:
                             <div class="input-group date" datetimepicker ng-model="$ctrl.timeOpt.durationFrom"
-                                 data-options="datePickerOptionsDurationFrom">
+                                 data-options="$ctrl.datePickerOptionsDurationFrom">
                                 <input type="text"
                                        class="form-control"
                                        placeholder="Leave blank for no restriction"/>
@@ -157,7 +160,7 @@
                             </div>
                             to
                             <div class="input-group date" datetimepicker ng-model="$ctrl.timeOpt.durationTo"
-                                 data-options="datePickerOptionsDurationTo">
+                                 data-options="$ctrl.datePickerOptionsDurationTo">
                                 <input type="text"
                                        class="form-control"
                                        placeholder="Leave blank for no restriction"/>
@@ -167,7 +170,11 @@
                             </div>
                         </div>
                     </div>
+
                 </fieldset>
+                <div ng-show="$ctrl.durationSelected()" class="checkbox">
+                    <label><input type="checkbox" ng-model="$ctrl.requireConfirm">Require confirmation</label>
+                </div>
             </div>
         </div>
         <button ng-show="$ctrl.addingRight" class="timButton" type="submit" ng-disabled="!$ctrl.groupName || $ctrl.addDisabled()">
@@ -195,6 +202,7 @@
                 {{$ctrl.addOrRemove()}} {{ $ctrl.selectedOrg.name }}
             </button></div>
         </span>
+        <tim-loading ng-if="$ctrl.loading"></tim-loading>
     </form>
 </div>
 <tim-alert ng-if="$ctrl.msg" severity="{{$ctrl.severity}}">

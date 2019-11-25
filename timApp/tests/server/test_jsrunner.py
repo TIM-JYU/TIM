@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import requests
 
 from timApp.answer.answer import Answer
+from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import DocInfo
 from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -342,7 +343,7 @@ group: testuser1
         d = self.create_doc(initial_par="""
 #- {plugin=textfield #t}
         """)
-        self.test_user_2.grant_access(d, 'view')
+        self.test_user_2.grant_access(d, AccessType.view)
         self.login_test2()
         d2 = self.create_jsrun(f"""
 group: testuser2
@@ -371,7 +372,7 @@ tools.setString("{d.id}.t", "hi");
         )
 
         # Can write own answer to another doc via jsrunner if teacher access there
-        self.test_user_2.grant_access(d, 'teacher')
+        self.test_user_2.grant_access(d, AccessType.teacher)
         self.do_jsrun(
             d2,
         )
@@ -395,7 +396,7 @@ tools.setString("{d.id}.t", "hi_ext");
             expect_content=f'Missing teacher access for document {d.id}',
             expect_status=403,
         )
-        self.test_user_2.grant_access(d, 'view')
+        self.test_user_2.grant_access(d, AccessType.view)
         self.do_jsrun(
             d2,
         )
@@ -432,7 +433,7 @@ tools.setString("t", "hi");
 !!
         """)
         d2.document.add_text('#- {#t plugin=textfield}')
-        self.test_user_2.grant_access(d2, 'view')
+        self.test_user_2.grant_access(d2, AccessType.view)
         d3 = self.create_jsrun(f"""
 groups: []
 fields:
@@ -443,7 +444,7 @@ tools.setString("t", "hi");
 showInView: true
         """)
         d3.document.add_text('#- {#t plugin=textfield}')
-        self.test_user_2.grant_access(d3, 'view')
+        self.test_user_2.grant_access(d3, AccessType.view)
         self.login_test2()
         self.do_jsrun(
             d2,

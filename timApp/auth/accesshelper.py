@@ -303,7 +303,7 @@ def grant_access_to_session_users(i: ItemOrBlock):
     for u in get_other_users_as_list():
         grant_access(User.get_by_id(int(u['id'])).get_personal_group(),
                      i,
-                     'manage',
+                     AccessType.manage,
                      commit=False)
 
 

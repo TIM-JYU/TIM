@@ -18,7 +18,7 @@ class FolderTest(TimRouteTest):
         self.get(f'/manage/{f["path"]}')
         self.login_test2()
         self.get(f'/manage/{f["path"]}', expect_status=403)
-        grant_access(self.test_user_2.get_personal_group(), Folder.get_by_id(f['id']), 'manage')
+        grant_access(self.test_user_2.get_personal_group(), Folder.get_by_id(f['id']), AccessType.manage)
         self.get(f'/manage/{f["path"]}')
 
     def test_folder_delete(self):
@@ -70,7 +70,7 @@ class FolderTest(TimRouteTest):
         # Create another folder and give access to anonymous users
         fname2 = self.get_personal_item_path('testing2')
         f3 = self.create_folder(fname2)
-        grant_access(UserGroup.get_anonymous_group(), Folder.get_by_id(f3['id']), 'view')
+        grant_access(UserGroup.get_anonymous_group(), Folder.get_by_id(f3['id']), AccessType.view)
         t1g = self.get_test_user_1_group_id()
         self.get('/getItems', query_string={'folder': user_folder},
                  expect_content=[{'name': 'testing1',
@@ -213,9 +213,9 @@ class FolderCopyTest(TimRouteTest):
         f2 = Folder.find_by_path(self.get_personal_item_path('a/f2'))
 
         t2g = self.test_user_2.get_personal_group()
-        grant_access(t2g, f1, 'view', commit=False)
-        grant_access(t2g, f2, 'edit', commit=False)
-        grant_access(t2g, d2, 'teacher', commit=False)
+        grant_access(t2g, f1, AccessType.view, commit=False)
+        grant_access(t2g, f2, AccessType.edit, commit=False)
+        grant_access(t2g, d2, AccessType.teacher, commit=False)
         db.session.commit()
         d1.document.add_paragraph('hello')
         f2d1.document.add_paragraph('hi')
@@ -357,7 +357,7 @@ class FolderCopyTest(TimRouteTest):
         d = self.create_doc(self.get_personal_item_path('perm/a'))
         d = self.create_doc(self.get_personal_item_path('perm/b'))
         f = d.parent
-        grant_access(self.test_user_2.get_personal_group(), f, 'view')
+        grant_access(self.test_user_2.get_personal_group(), f, AccessType.view)
         self.login_test2()
         self.json_post(
             f'/copy/{f.id}',
@@ -365,7 +365,7 @@ class FolderCopyTest(TimRouteTest):
             expect_content='Missing copy access to folder users/test-user-1/perm',
             expect_status=403,
         )
-        grant_access(self.test_user_2.get_personal_group(), f, 'copy')
+        grant_access(self.test_user_2.get_personal_group(), f, AccessType.copy)
         self.json_post(
             f'/copy/{f.id}',
             {'destination': self.get_personal_item_path('perm'), 'exclude': ''},
@@ -374,9 +374,9 @@ class FolderCopyTest(TimRouteTest):
         )
         self.login_test1()
         d = DocEntry.find_by_path(self.get_personal_item_path('perm/a'))
-        grant_access(self.test_user_2.get_personal_group(), d, 'copy')
+        grant_access(self.test_user_2.get_personal_group(), d, AccessType.copy)
         d = DocEntry.find_by_path(self.get_personal_item_path('perm/b'))
-        grant_access(self.test_user_2.get_personal_group(), d, 'copy')
+        grant_access(self.test_user_2.get_personal_group(), d, AccessType.copy)
         self.login_test2()
         self.json_post(
             f'/copy/{f.id}',

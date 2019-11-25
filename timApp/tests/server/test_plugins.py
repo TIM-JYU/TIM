@@ -12,6 +12,7 @@ from lxml.html import HtmlElement
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule
 from timApp.answer.pointsumrule import PointSumRule, PointType
+from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.randutils import random_id
 from timApp.plugin.plugin import Plugin, find_plugin_from_document
@@ -142,7 +143,7 @@ class PluginTest(TimRouteTest):
                                      "reason.&quot;}],&quot;trueText&quot;:null,&quot;buttonText&quot;:null,&quot;correctText&quot;:null}}'></mmcq>",
                              'reviewHtml': None}, j)
 
-        grant_access(UserGroup.get_anonymous_group(), doc, 'view')
+        grant_access(UserGroup.get_anonymous_group(), doc, AccessType.view)
 
         tree = self.get(f'/view/{doc.id}', as_tree=True, query_string={'lazy': False})
         plugs = tree.cssselect(mmcq_xpath)
@@ -276,7 +277,7 @@ class PluginTest(TimRouteTest):
         self.get(ur['file'], expect_status=403, expect_content=self.permission_error)
 
         # until the 'see answers' right is granted for the document
-        grant_access(self.current_group(), d, 'see answers')
+        grant_access(self.current_group(), d, AccessType.see_answers)
         self.get_no_warn(ur['file'], expect_content=file_content)
 
     def do_plugin_upload(self, doc, file_content, filename, task_id, task_name, expect_version=1):
@@ -436,9 +437,9 @@ class PluginTest(TimRouteTest):
         self.check_save_points(TEST_USER_2_ID, answer_id2, None, 400, point_format_error)
         self.check_save_points(TEST_USER_2_ID, answer_id2, '', 400, point_format_error)
 
-        grant_access(self.test_user_2.get_personal_group(), d, 'see answers')
+        grant_access(self.test_user_2.get_personal_group(), d, AccessType.see_answers)
         self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
-        grant_access(self.test_user_2.get_personal_group(), d, 'teacher')
+        grant_access(self.test_user_2.get_personal_group(), d, AccessType.teacher)
         self.check_save_points(TEST_USER_1_ID, answer_id, 1, 200, self.ok_resp)
 
     def test_point_sum_rule(self):
@@ -923,7 +924,7 @@ needed_len: 6
         test2_json_substr = '"user": {"email": "test2@example.com"'
 
         # but someone with only 'see answers' can only see his own
-        grant_access(self.test_user_2.get_personal_group(), d.block, 'see answers')
+        grant_access(self.test_user_2.get_personal_group(), d.block, AccessType.see_answers)
         self.login_test2()
         self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
         a = self.post_answer(plugin_type='pali', task_id=task_id, user_input={'userword': 'aaaaaa', 'paliOK': True})
@@ -1176,7 +1177,7 @@ needed_len: 6
             self.assert_plugin_json(
                 r.cssselect('.parContent pali-runner')[0],
                 self.create_plugin_json(d, 't', toplevel={'access': 'readonly'}, par_id='SSYigUyqdb7p',))
-            grant_access(self.test_user_2.get_personal_group(), d, 'teacher')
+            grant_access(self.test_user_2.get_personal_group(), d, AccessType.teacher)
             r = self.get(d.url, as_tree=True)
             self.assert_plugin_json(
                 r.cssselect('.parContent pali-runner')[0],
@@ -1259,7 +1260,7 @@ print(x == '%%username%%')
         """)
         a = self.post_answer('csPlugin', f'{d.id}.py', user_input=uinput)
         self.assertEqual('True\n', a['web']['console'])
-        self.test_user_2.grant_access(d, 'view')
+        self.test_user_2.grant_access(d, AccessType.view)
         self.login_test2()
         uinput2 = {**uinput, "usercode": f"x = 'testuser2'"}
         a = self.post_answer('csPlugin', f'{d.id}.py', user_input=uinput2)
@@ -1276,7 +1277,7 @@ print(x == '%%username%%')
         )
         self.assertEqual('True\n', a['web']['console'])
 
-        self.test_user_2.grant_access(d, 'teacher')
+        self.test_user_2.grant_access(d, AccessType.teacher)
         self.login_test2()
         self.post_answer(
             'csPlugin',

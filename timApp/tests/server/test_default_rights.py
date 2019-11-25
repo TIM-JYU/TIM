@@ -28,11 +28,11 @@ class DefaultRightTest(TimRouteTest):
         korppi_id = kg.id
         users_folder = Folder.find_by_path('users')
         db.session.commit()
-        grant_default_access([kg], users_folder.id, 'view',
+        grant_default_access([kg], users_folder.id, AccessType.view,
                              BlockType.Document)
         db.session.commit()
         # Make sure an exception won't be thrown if trying to add a right again
-        acs = grant_default_access([kg], users_folder.id, 'view',
+        acs = grant_default_access([kg], users_folder.id, AccessType.view,
                                    BlockType.Document)
         db.session.commit()
         anon_id = UserGroup.get_anonymous_group().id
@@ -45,9 +45,18 @@ class DefaultRightTest(TimRouteTest):
             self.assertIsNone(rights_doc)
 
             self.json_put(
-                f'/defaultPermissions/{obj_type_str}/add/{folder.id}/{"Anonymous users;testuser2"}/{"view"}',
-                {'type': 'always'},
-                expect_content=self.ok_resp)
+                f'/defaultPermissions/add',
+                {
+                    'time': {
+                        'type': 'always',
+                    },
+                    'item_type': obj_type_str,
+                    'type': 'view',
+                    'id': folder.id,
+                    'groups': ['Anonymous users', 'testuser2'],
+                    'confirm': None,
+                },
+                expect_content={'not_exist': []})
 
             def_rights = self.get(f'/defaultPermissions/{obj_type_str}/get/{folder.id}',
                                   expect_status=200)
@@ -109,8 +118,15 @@ class DefaultRightTest(TimRouteTest):
             new_item_rights = [right for right in new_item_rights if right['access_name'] != 'owner']
             self.assertListEqual(sorted(expected_default_rights, key=itemgetter('gid', 'access_type')),
                                  sorted(new_item_rights, key=itemgetter('gid', 'access_type')))
-            self.json_put(f'/defaultPermissions/{obj_type_str}/remove/{folder.id}/{UserGroup.get_anonymous_group().id}/{"view"}',
-                          expect_content=self.ok_resp)
+            self.json_put(
+                f'/defaultPermissions/remove',
+                {
+                    'id': folder.id,
+                    'type': 'view',
+                    'group': UserGroup.get_anonymous_group().id,
+                    'item_type': obj_type_str,
+                },
+                expect_content=self.ok_resp)
             def_rights = get_default_rights_holders(folder.id, obj_type)
             expected_default_rights = [r for r in expected_default_rights if r['gid'] not in (anon_id, korppi_id)]
             self.assertEqual(expected_default_rights, convert_to_old_format(def_rights))

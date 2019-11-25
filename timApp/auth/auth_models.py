@@ -1,3 +1,4 @@
+from timApp.auth.accesstype import AccessType
 from timApp.timdb.sqa import db, include_if_loaded
 from timApp.util.utils import get_current_time
 
@@ -16,6 +17,9 @@ class AccessTypeModel(db.Model):
     def __json__(self):
         return ['id', 'name']
 
+    def to_enum(self):
+        return AccessType(self.id)
+
 
 class BlockAccess(db.Model):
     """A single permission. Relates a UserGroup with a Block along with an AccessType."""
@@ -28,6 +32,7 @@ class BlockAccess(db.Model):
     duration = db.Column(db.Interval)
     duration_from = db.Column(db.DateTime(timezone=True))
     duration_to = db.Column(db.DateTime(timezone=True))
+    require_confirm = db.Column(db.Boolean)
 
     block = db.relationship('Block', back_populates='accesses')
     usergroup = db.relationship('UserGroup', back_populates='accesses')
@@ -43,7 +48,11 @@ class BlockAccess(db.Model):
 
     @property
     def unlockable(self):
-        return self.accessible_from is None and self.duration is not None and not self.duration_future and not self.duration_expired
+        return (self.accessible_from is None and
+                self.duration is not None and
+                not self.duration_future and
+                not self.duration_expired and
+                not self.require_confirm)
 
     @property
     def duration_future(self):
@@ -85,5 +94,6 @@ class BlockAccess(db.Model):
             'duration': self.duration,
             'duration_from': self.duration_from,
             'duration_to': self.duration_to,
+            'require_confirm': self.require_confirm,
             **include_if_loaded('usergroup', self),
         }

@@ -4,6 +4,7 @@ import unittest
 from flask import current_app
 from lxml.cssselect import CSSSelector
 
+from timApp.auth.accesstype import AccessType
 from timApp.document.document import Document
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.note.notes import get_notes
@@ -41,20 +42,49 @@ class TimTest(TimRouteTest):
                 'item_title': 'document ' + n
             }, expect_contains={'id': doc_id_list[idx], 'path': doc_names[idx]})
             doc_ids.add(doc_id_list[idx])
-        self.json_put(f'/permissions/add/{doc_id}/{"Anonymous users"}/{"view"}',
-                      {'type': 'always'}, expect_content=self.ok_resp)
+        self.json_put(f'/permissions/add',
+                      {
+                          'time': {
+                              'type': 'always',
+                          },
+                          'confirm': False,
+                          'groups': ['Anonymous users'],
+                          'type': 'view',
+                          'id': doc_id,
+                      })
         self.json_put(
-            f'/permissions/add/{doc_id_list[1]}/{"Logged-in users"}/{"view"}',
-            {'type': 'always'},
-            expect_content=self.ok_resp)
+            f'/permissions/add',
+            {
+                'time': {
+                    'type': 'always',
+                },
+                'confirm': False,
+                'groups': ['Logged-in users'],
+                'type': 'view',
+                'id': doc_id_list[1],
+            })
         self.json_put(
-            f'/permissions/add/{doc_id_list[2]}/{"testuser2"}/{"view"}',
-            {'type': 'always'},
-            expect_content=self.ok_resp)
+            f'/permissions/add',
+            {
+                'time': {
+                    'type': 'always',
+                },
+                'confirm': False,
+                'groups': ['testuser2'],
+                'type': 'view',
+                'id': doc_id_list[2],
+            })
         self.json_put(
-            f'/permissions/add/{doc_id_list[3]}/{"testuser2"}/{"edit"}',
-            {'type': 'always'},
-            expect_content=self.ok_resp)
+            f'/permissions/add',
+            {
+                'time': {
+                    'type': 'always',
+                },
+                'confirm': False,
+                'groups': ['testuser2'],
+                'type': 'edit',
+                'id': doc_id_list[3],
+            })
         doc = Document(doc_id)
         doc.add_paragraph('Hello')
         pars = doc.get_paragraphs()
@@ -133,8 +163,16 @@ class TimTest(TimRouteTest):
         self.get(f'/note/{test2_note_id}', expect_contains=comment_of_test2, json_key='text')
         teacher_right_docs = {doc_id_list[3]}
         for i in teacher_right_docs:
-            self.json_put(f'/permissions/add/{i}/{"testuser2"}/{"teacher"}',
-                          {'type': 'always'}, expect_content=self.ok_resp)
+            self.json_put(f'/permissions/add',
+                          {
+                              'time': {
+                                  'type': 'always',
+                              },
+                              'confirm': False,
+                              'groups': ['testuser2'],
+                              'type': 'teacher',
+                              'id': i,
+                          })
 
         self.json_post('/deleteNote', {'id': test2_note_id,
                                        'docId': doc_id,
@@ -157,16 +195,32 @@ class TimTest(TimRouteTest):
             self.get(f'/view/{view_id}')
             self.get('/teacher/' + str(view_id), expect_status=302)
             self.json_put(
-                f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}',
-                {'type': 'always'},
+                f'/permissions/add',
+                {
+                    'time': {
+                        'type': 'always',
+                    },
+                    'confirm': False,
+                    'groups': ['testuser2'],
+                    'type': 'teacher',
+                    'id': view_id,
+                },
                 expect_status=403,
             )
         for view_id in teacher_right_docs:
             self.get(f'/view/{view_id}')
             self.get(f'/teacher/{view_id}')
             self.json_put(
-                f'/permissions/add/{view_id}/{"testuser2"}/{"teacher"}',
-                {'type': 'always'},
+                f'/permissions/add',
+                {
+                    'time': {
+                        'type': 'always',
+                    },
+                    'confirm': False,
+                    'groups': ['testuser2'],
+                    'type': 'teacher',
+                    'id': view_id,
+                },
                 expect_status=403,
             )
 
@@ -259,7 +313,7 @@ class TimTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(initial_par="""#- {#t plugin=textfield}""")
         self.post_answer('textfield', f'{d.id}.t', user_input={'c': 'x'})
-        grant_access(UserGroup.get_anonymous_group(), d, 'see answers')
+        grant_access(UserGroup.get_anonymous_group(), d, AccessType.see_answers)
         self.logout()
         self.get(f'/answers/{d.path}')
 

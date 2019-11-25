@@ -1,4 +1,5 @@
 """Server tests for user-specific document rendering."""
+from timApp.auth.accesstype import AccessType
 from timApp.tests.server.timroutetest import TimRouteTest
 
 
@@ -21,10 +22,10 @@ anyone
         d.document.modify_paragraph_obj(p.get_id(), p)
         self.assert_content(self.get(d.url, as_tree=True), ['a', 'testuser1 only edited', 'anyone'])
 
-        self.test_user_2.grant_access(d, 'view')
+        self.test_user_2.grant_access(d, AccessType.view)
         self.login_test2()
         self.assert_content(self.get(d.url, as_tree=True), ['a', 'anyone'])
-        self.test_user_2.grant_access(d, 'edit')
+        self.test_user_2.grant_access(d, AccessType.edit)
         self.assert_content(self.get(d.url, as_tree=True), ['a', 'anyone'])  # TODO shouldn't editors always see everything?
         p = d.document.get_paragraphs()[1]
         p.set_attr('visible', "%%'testuser2'|belongs%%")

@@ -536,7 +536,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return self.has_edit_access(f)
 
     def grant_access(self, block: ItemOrBlock,
-                     access_type: str,
+                     access_type: AccessType,
                      accessible_from: Optional[datetime] = None,
                      accessible_to: Optional[datetime] = None,
                      duration_from: Optional[datetime] = None,

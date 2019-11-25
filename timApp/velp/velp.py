@@ -720,7 +720,7 @@ def create_velp_group(doc_id: int) -> Dict:
                 # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
                 # function.
                 if not right.atype.name == 'view':
-                    grant_access(right.usergroup, velp_group_doc, right.atype.name, commit=False)
+                    grant_access(right.usergroup, velp_group_doc, right.atype.to_enum(), commit=False)
         else:
             return abort(400, "Velp group with same name and location exists already.")
 
@@ -780,7 +780,7 @@ def create_default_velp_group(doc_id: int):
             # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
             # function.
             if not right.atype.name == 'view':
-                grant_access(right.usergroup, velp_group, right.atype.name, commit=False)
+                grant_access(right.usergroup, velp_group, right.atype.to_enum(), commit=False)
 
     else:
         default = DocEntry.find_by_path(new_group_path)

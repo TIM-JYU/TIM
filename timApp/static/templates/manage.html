@@ -8,7 +8,6 @@
             <uib-tab heading="Rights for this {{ $ctrl.objName }}">
                 <rights-editor
                         item-id="$ctrl.item.id"
-                        url-root="permissions"
                         access-types="$ctrl.accessTypes"
                         orgs="$ctrl.orgs">
                 </rights-editor>
@@ -16,7 +15,7 @@
             <uib-tab ng-if="$ctrl.item.isFolder" heading="Default rights for new documents">
                 <rights-editor
                         item-id="$ctrl.item.id"
-                        url-root="defaultPermissions/document"
+                        default-item="document"
                         access-types="$ctrl.accessTypes"
                         orgs="$ctrl.orgs">
                 </rights-editor>
@@ -24,7 +23,7 @@
             <uib-tab ng-if="$ctrl.item.isFolder" heading="Default rights for new folders">
                 <rights-editor
                         item-id="$ctrl.item.id"
-                        url-root="defaultPermissions/folder"
+                        default-item="folder"
                         access-types="$ctrl.accessTypes"
                         orgs="$ctrl.orgs">
                 </rights-editor>

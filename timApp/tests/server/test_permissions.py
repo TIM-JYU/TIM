@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.item.item import Item
 from timApp.tests.server.test_default_rights import convert_to_old_format
@@ -15,14 +16,28 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         self.assertTrue(self.current_user.has_ownership(d))
-        self.json_put(f'/permissions/add/{d.id}/{"testuser1"}/{"owner"}',
-                      {'from': get_current_time() + timedelta(days=1),
-                       'type': 'range'},
-                      expect_status=403, expect_content={'error': 'You cannot remove ownership from yourself.'})
+        self.json_put(
+            f'/permissions/add',
+            {
+                'time': {
+                    'from': get_current_time() + timedelta(days=1),
+                    'type': 'range',
+                },
+                'id': d.id,
+                'type': 'owner',
+                'groups': ['testuser1'],
+                'confirm': False,
+            },
+            expect_status=403, expect_content={'error': 'You cannot remove ownership from yourself.'})
         db.session.remove()
         d = DocEntry.find_by_id(d.id)
         self.assertTrue(self.current_user.has_ownership(d))
-        self.json_put(f'/permissions/remove/{d.id}/{self.get_test_user_1_group_id()}/{"owner"}',
+        self.json_put(f'/permissions/remove',
+                      {
+                          'id': d.id,
+                          'type': 'owner',
+                          'group': self.get_test_user_1_group_id(),
+                      },
                       expect_status=403)
         db.session.remove()
         d = DocEntry.find_by_id(d.id)
@@ -32,36 +47,89 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         docid = d.id
-        self.test_user_2.grant_access(d, 'manage')
+        self.test_user_2.grant_access(d, AccessType.manage)
         self.login_test2()
-        self.json_put(f'/permissions/add/{docid}/testuser2/owner',
-                      {'from': get_current_time(),
-                       'type': 'always'},
-                      expect_status=403)
+        self.json_put(
+            f'/permissions/add',
+            {
+                'time': {
+                    'from': get_current_time(),
+                    'type': 'always',
+                },
+                'id': docid,
+                'type': 'owner',
+                'groups': ['testuser2'],
+                'confirm': False,
+            },
+            expect_status=403)
 
     def test_cannot_change_owner_of_personal_folder(self):
         self.login_test1()
         f = self.current_user.get_personal_folder()
-        self.json_put(f'/permissions/add/{f.id}/{"testuser2"}/{"owner"}', {},
-                      expect_status=403,
-                      expect_content={'error': 'You cannot add owners to your personal folder.'})
+        self.json_put(
+            f'/permissions/add',
+            {
+                'id': f.id,
+                'type': 'owner',
+                'groups': ['testuser2'],
+                'time': {
+                    'type': 'always',
+                },
+                'confirm': False,
+            }, expect_status=403,
+            expect_content={'error': 'You cannot add owners to your personal folder.'},
+        )
 
     def test_trim_whitespace(self):
         self.login_test1()
         f = self.current_user.get_personal_folder()
-        self.json_put(f'/permissions/add/{f.id}/{"testuser2  ; testuser3 "}/{"view"}',
-                      {'from': get_current_time(),
-                       'type': 'always'})
+        self.json_put(
+            f'/permissions/add',
+            {
+                'time': {
+                    'from': get_current_time(),
+                    'type': 'always',
+                },
+                'id': f.id,
+                'type': 'view',
+                'groups': ['testuser2', 'testuser3'],
+                'confirm': False,
+            })
         f = self.current_user.get_personal_folder()
         self.assertTrue(self.test_user_2.has_view_access(f))
         self.assertTrue(self.test_user_3.has_view_access(f))
 
+    def test_nonexistent_user(self):
+        self.login_test1()
+        f = self.create_doc()
+        self.json_put(
+            f'/permissions/add',
+            {
+                'time': {
+                    'from': get_current_time(),
+                    'type': 'always',
+                },
+                'id': f.id,
+                'type': 'view',
+                'groups': ['testuser2', 'testuserx'],
+                'confirm': False,
+            }, expect_content={'not_exist': ['testuserx']})
+
     def test_permissions_get(self):
         self.login_test1()
         for i in (self.current_user.get_personal_folder(), self.create_doc()):
-            self.json_put(f'/permissions/add/{i.id}/testuser2/view',
-                          {'from': get_current_time(),
-                           'type': 'always'})
+            self.json_put(
+                f'/permissions/add',
+                {
+                    'time': {
+                        'from': get_current_time(),
+                        'type': 'always',
+                    },
+                    'id': i.id,
+                    'type': 'view',
+                    'groups': ['testuser2'],
+                    'confirm': False,
+                })
             rights = self.get(f'/permissions/get/{i.id}')
             i = Item.find_by_id(i.id)
             self.assertEqual(rights['accesstypes'],
@@ -101,13 +169,26 @@ class PermissionTest(TimRouteTest):
     def test_logged_in_right(self):
         self.login_test1()
         d = self.create_doc()
-        self.json_put(f'/permissions/add/{d.id}/Logged-in users/view',
-                      {'from': get_current_time(),
-                       'type': 'always'})
+        self.json_put(
+            f'/permissions/add',
+            {
+                'time': {
+                    'from': get_current_time(),
+                    'type': 'always',
+                },
+                'id': d.id,
+                'type': 'view',
+                'groups': ['Logged-in users'],
+                'confirm': False,
+            })
         self.login_test2()
         self.get(d.url)
         self.login_test1()
-        self.json_put(f'/permissions/remove/{d.id}/{UserGroup.get_logged_in_group().id}/view')
+        self.json_put(f'/permissions/remove', {
+            'id': d.id,
+            'type': 'view',
+            'group': UserGroup.get_logged_in_group().id,
+        })
         self.login_test2()
         self.get(d.url, expect_status=403)
 
@@ -134,6 +215,7 @@ class PermissionTest(TimRouteTest):
                 'time': {
                     'type': 'always',
                 },
+                'confirm': False,
             },
             expect_status=403,
         )
@@ -148,6 +230,7 @@ class PermissionTest(TimRouteTest):
                 'time': {
                     'type': 'always',
                 },
+                'confirm': False,
             },
         )
         t1_f = self.test_user_1.get_personal_folder()
@@ -168,6 +251,7 @@ class PermissionTest(TimRouteTest):
                 'time': {
                     'type': 'always',
                 },
+                'confirm': False,
             },
         )
         t1_f = self.test_user_1.get_personal_folder()
@@ -189,6 +273,7 @@ class PermissionTest(TimRouteTest):
                 'time': {
                     'type': 'always',
                 },
+                'confirm': False,
             },
         )
         t1_f = self.test_user_1.get_personal_folder()
@@ -213,6 +298,7 @@ class PermissionTest(TimRouteTest):
                 'time': {
                     'type': 'always',
                 },
+                'confirm': False,
             },
             expect_status=403
         )
@@ -226,6 +312,7 @@ class PermissionTest(TimRouteTest):
                 'time': {
                     'type': 'always',
                 },
+                'confirm': False,
             },
             expect_status=422,
         )
@@ -239,6 +326,7 @@ class PermissionTest(TimRouteTest):
                 'time': {
                     'type': 'always',
                 },
+                'confirm': False,
             },
             expect_status=400,
         )
@@ -258,6 +346,7 @@ class PermissionTest(TimRouteTest):
                 'time': {
                     'type': 'always',
                 },
+                'confirm': False,
             },
             expect_status=403
         )
@@ -271,6 +360,7 @@ class PermissionTest(TimRouteTest):
                 'time': {
                     'type': 'always',
                 },
+                'confirm': False,
             },
             expect_status=403
         )

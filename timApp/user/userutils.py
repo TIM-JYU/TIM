@@ -4,6 +4,7 @@ from typing import Optional, List, Union
 
 import bcrypt
 
+from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.folder.folder import Folder
@@ -13,6 +14,7 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, \
     ANONYMOUS_USERNAME
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
 
 ANON_USER_ID = None
@@ -68,7 +70,7 @@ def grant_edit_access(group, block):
 
     """
 
-    grant_access(group, block, 'edit')
+    grant_access(group, block, AccessType.edit)
 
 
 def grant_view_access(group, block):
@@ -79,20 +81,22 @@ def grant_view_access(group, block):
 
     """
 
-    grant_access(group, block, 'view')
+    grant_access(group, block, AccessType.view)
 
 
 def grant_access(group,
                  block: Union[ItemBase, Block],
-                 access_type: str,
+                 access_type: AccessType,
                  accessible_from: Optional[datetime] = None,
                  accessible_to: Optional[datetime] = None,
                  duration_from: Optional[datetime] = None,
                  duration_to: Optional[datetime] = None,
                  duration: Optional[timedelta] = None,
+                 require_confirm: Optional[bool] = None,
                  commit: bool = True) -> BlockAccess:
     """Grants access to a group for a block.
 
+    :param require_confirm: Whether this access needs to be later confirmed by someone with manage access.
     :param duration_from: The optional start time for duration unlock.
     :param duration_to: The optional end time for duration unlock.
     :param accessible_from: The optional start time for the permission.
@@ -110,8 +114,7 @@ def grant_access(group,
         # the delta is to ease testing; the clocks of container and PostgreSQL are not perfectly in sync
         accessible_from = get_current_time() - timedelta(milliseconds=50)
 
-    access_id = get_access_type_id(access_type)
-    assert access_id is not None
+    access_id = access_type.value
     block = block if isinstance(block, Block) else block.block
     for b in group.accesses:  # type: BlockAccess
         if b.type == access_id and b.block_id == block.id:
@@ -120,16 +123,20 @@ def grant_access(group,
             b.duration = duration
             b.duration_from = duration_from
             b.duration_to = duration_to
+            b.require_confirm = require_confirm
             if commit:
                 db.session.commit()
             return b
-    ba = BlockAccess(block_id=block.id,
-                     type=access_id,
-                     accessible_from=accessible_from,
-                     accessible_to=accessible_to,
-                     duration_from=duration_from,
-                     duration_to=duration_to,
-                     duration=duration)
+    ba = BlockAccess(
+        block_id=block.id,
+        type=access_id,
+        accessible_from=accessible_from,
+        accessible_to=accessible_to,
+        duration_from=duration_from,
+        duration_to=duration_to,
+        duration=duration,
+        require_confirm=require_confirm,
+    )
     group.accesses.append(ba)
     if commit:
         db.session.commit()
@@ -173,9 +180,9 @@ def get_default_right_document(folder_id, object_type: BlockType, create_if_not_
     return doc
 
 
-def grant_default_access(groups,
+def grant_default_access(groups: List[UserGroup],
                          folder_id: int,
-                         access_type: str,
+                         access_type: AccessType,
                          object_type: BlockType,
                          accessible_from: Optional[datetime] = None,
                          accessible_to: Optional[datetime] = None,

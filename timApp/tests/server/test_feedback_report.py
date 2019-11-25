@@ -1,3 +1,4 @@
+from timApp.auth.accesstype import AccessType
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.userutils import grant_access
 
@@ -67,7 +68,7 @@ Test user 1,testuser1,right,aaaaaa,aaaaaa,correct!,0.0,0.{d}
     def test_grant_permission(self):
         self.login_test3()
         d = self.create_doc()
-        grant_access(self.test_user_1.get_personal_group(), d, 'teacher')
+        grant_access(self.test_user_1.get_personal_group(), d, AccessType.teacher)
         d_path = d.path
         self.login_test1()
         self.get(f'/feedback/report/{d_path}')
