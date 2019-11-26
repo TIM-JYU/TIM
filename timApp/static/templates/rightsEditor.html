@@ -80,6 +80,7 @@
                 <div class="input-group">
                     <input ng-show="!$ctrl.listMode" id="groupName" class="form-control" type="text" ng-model="$ctrl.groupName"
                            focus-me="$ctrl.focusEditor"
+                           ng-focus="$event.target.select()"
                            placeholder="{{ $ctrl.getPlaceholder() }}">
                     <textarea ng-show="$ctrl.listMode" id="groupNameList" class="form-control" type="text"
                               ng-model="$ctrl.groupName"
