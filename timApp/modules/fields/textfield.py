@@ -157,23 +157,23 @@ errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
                             },
                             {
                                 'data': "%% 'd;dsum' | gfrange(1,5,'cols: 5') %%\n",
-                                'text': 'Joukko kenttiä',
-                                'expl': 'Valmis joukko samannimisiä kenttä',
+                                'text': 'Joukko numeroituja kenttiä',
+                                'expl': 'Valmis joukko samannimisiä numeroituja kenttiä',
                             },
                             {
                                 'data': "{#tf1#}",
                                 'text': 'Tekstikenttä (inline, autosave)',
-                                'expl': 'Luo kenttä jonka syötteet ovat tekstiä',
+                                'expl': 'Luo kenttä jonka syöte on tekstiä',
                             },
                             {
                                 'data': templates[0].strip(),
                                 'text': 'Tekstikenttä (laajennettu)',
-                                'expl': 'Luo kenttä jonka syötteet ovat tekstiä',
+                                'expl': 'Luo kenttä jonka syöte on tekstiä',
                             },
                             {
                                 'data': "{#tf2 readOnlyStyle: plaintext #}",
                                 'text': 'Label kenttä (inline, read only)',
-                                'expl': 'Luo kenttä jonka syötteitä käyttäjä ei voi muokata',
+                                'expl': 'Luo kenttä jonka syötettä käyttäjä ei voi muokata',
                             },
                             {
                                 'data': "{#username showname: 1, inputstem: 'Nimi: '#}",

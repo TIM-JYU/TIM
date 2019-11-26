@@ -190,6 +190,8 @@ validinput: '^\d{0,3}(\.\d{0,3})?$' # käyttäjäsyötteen rajoitin, tyhjä = ei
 errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
 ```""", """#- {defaultplugin="numericfield" readonly="view" .fieldCell}
 %% 'd=;dsum=summa' | gfrange(1,5,'cols: 3') %%
+```""", """#- {defaultplugin="numericfield" readonly="view" .fieldCell}
+%% 'ht=Harhoitustyö;osa=Osasuoritus' |  gfields('cols: 3')  %%
 """, ]
     return jsonify({
         "js": ["/field/js/build/numericfield.js"],
@@ -226,17 +228,22 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
                             {
                                 'data': templates[0].strip(),
                                 'text': 'Numeerinen kenttä (laajennettu)',
-                                'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
+                                'expl': 'Luo kenttä jonka syöte ovat vain numero',
                             },
                             {
                                 'data': "{#nf3 autosave: false, readOnlyStyle: plaintext #}",
                                 'text': 'Label kenttä (read only)',
-                                'expl': 'Luo kenttä jonka syötteitä käyttäjä ei voi muokata',
+                                'expl': 'Luo kenttä jonka syötettä käyttäjä ei voi muokata',
                             },
                             {
                                 'data': templates[1].strip() + '\n',
-                                'text': 'Joukko numeerisia kenttiä ja summa',
-                                'expl': 'Lohko jossa joukko numeerisia kenttiä ja niiden summa',
+                                'text': 'Joukko numeroituja numeerisia kenttiä ja summa',
+                                'expl': 'Lohko jossa joukko numeroituja numeerisia kenttiä ja niiden summa',
+                            },
+                            {
+                                'data': templates[2].strip() + '\n',
+                                'text': 'Joukko erikseen nimettyjä numeerisia kenttiä',
+                                'expl': 'Lohko jossa eri tavoin nimettyjä numeerisia kenttiä',
                             },
                         ],
                     },

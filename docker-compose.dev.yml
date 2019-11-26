@@ -4,6 +4,7 @@ x-common-agent:
  tmpfs:
   - /run/sshd
   - /home/agent/.pycharm_helpers
+  - /root/.pycharm_helpers
 x-common-root:
  &common-root
  tmpfs:

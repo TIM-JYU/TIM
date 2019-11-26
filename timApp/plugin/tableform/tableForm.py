@@ -429,6 +429,7 @@ fields:
 table: true
 report: false
 openButtonText: Avaa taulukko # text for open the table if closed as default
+hideButtonText: Sulje taulukko # tex for closing the table
 open: true 
 maxRows: 40em     # max height for the table before scrollbar 
 realnames: true   # Show full name in 2nd column, true or false
@@ -448,6 +449,7 @@ fields:
 table: true
 report: true
 openButtonText: Avaa taulukko # text for open the table if closed as default
+hideButtonText: Sulje taulukko # tex for closing the table
 open: true 
 maxRows: 40em     # max height for the table before scrollbar 
 realnames: true   # Show full name in 2nd column, true or false
