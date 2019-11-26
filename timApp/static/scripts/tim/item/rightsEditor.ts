@@ -7,6 +7,7 @@ import {showMessageDialog} from "../ui/dialog";
 import {durationTypes} from "../ui/durationPicker";
 import {IGroup} from "../user/IUser";
 import {genericglobals, itemglobals} from "../util/globals";
+import {KEY_SPACE} from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
 import {IItem} from "./IItem";
 
@@ -213,6 +214,12 @@ class RightsEditorController implements IController {
         this.addingRight = true;
         this.focusEditor = true;
         e.preventDefault();
+    }
+
+    handleKeyPress(type: IAccessType, e: KeyboardEvent) {
+        if (e.charCode === KEY_SPACE) {
+            this.showAddRightFn(type, e);
+        }
     }
 
     async removeConfirm(group: IRight, type: string) {

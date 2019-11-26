@@ -28,6 +28,7 @@
 <div class="margin rights-list" ng-repeat="type in $ctrl.accessTypes" ng-if="!$ctrl.massMode">
     <a ng-click="$ctrl.showAddRightFn(type, $event)"
        href="#"
+       ng-keypress="$ctrl.handleKeyPress(type, $event)"
        title="Click to add {{ type.name }} right to some usergroup">{{ type.name }}</a>
     <span ng-if="filtered.length > 0"> ({{ filtered.length }})</span>:
     <span ng-if="filtered.length == 0">none</span>

@@ -17,6 +17,7 @@ export const KEY_UP = 38;
 export const KEY_Y = 89;
 export const KEY_F2 = 113;
 export const KEY_CTRL = 17;
+export const KEY_SPACE = 32;
 
 export function isArrowKey(ev: KeyboardEvent) {
     // const keyCode = getKeyCode(ev);
