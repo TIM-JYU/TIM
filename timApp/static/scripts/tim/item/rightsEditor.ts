@@ -46,7 +46,7 @@ function isVelpGroupItem(i: IItemWithRights) {
 }
 
 class RightsEditorController implements IController {
-    static $inject = ["$scope"];
+    static $inject = ["$scope", "$element"];
     private durOpt: {
         durationType: moment.unitOfTime.Base,
         durationAmount: number,
@@ -74,7 +74,6 @@ class RightsEditorController implements IController {
     private itemId: Binding<number | undefined, "<">;
     private listMode: boolean = false;
     private groupName: string | undefined;
-    private scope: IScope;
     private gridOptions?: uiGrid.IGridOptionsOf<IItemWithRights>;
     private massOption = MassOption.Add;
     private grid?: uiGrid.IGridApiOf<IItemWithRights>;
@@ -88,8 +87,7 @@ class RightsEditorController implements IController {
     private defaultItem?: string;
     private loadingRight?: IRight;
 
-    constructor(scope: IScope) {
-        this.scope = scope;
+    constructor(private scope: IScope, private element: JQLite) {
         this.timeOpt = {type: "always"};
         this.durOpt = {durationType: "hours", durationAmount: 4};
         this.selectedRight = null;
@@ -209,11 +207,12 @@ class RightsEditorController implements IController {
         return row.entity.path;
     }
 
-    showAddRightFn(type: IAccessType) {
+    showAddRightFn(type: IAccessType, e: Event) {
         this.accessType = type;
         this.selectedRight = null;
         this.addingRight = true;
         this.focusEditor = true;
+        e.preventDefault();
     }
 
     async removeConfirm(group: IRight, type: string) {
@@ -336,13 +335,14 @@ class RightsEditorController implements IController {
             this.loading = false;
             if (r.ok) {
                 this.showNotExistWarning(r.result.data);
-                this.getPermissions();
+                await this.getPermissions();
                 this.cancel();
             } else {
                 await showMessageDialog(r.result.data.error);
             }
         }
-
+        await $timeout();
+        this.element.find(".rights-list a").first().focus();
     }
 
     private showNotExistWarning(r: IPermissionEditResponse) {
