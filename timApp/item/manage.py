@@ -208,6 +208,8 @@ def confirm_permission(m: PermissionRemoveModel):
     ).first()
     if not ba:
         raise RouteException('Right not found.')
+    if not ba.require_confirm:
+        raise RouteException('Right does not require confirmation or it was already confirmed.')
     ba.require_confirm = False
     if not ba.duration:
         ba.accessible_from = get_current_time()

@@ -90,6 +90,9 @@ TIM_SAFE_TAGS = [
     'goaltable-runner',
     'jsframe-runner',
     'video-runner',
+
+    # raw AngularJS components:
+    'tim-rights-editor',
 ]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
@@ -110,7 +113,11 @@ TIM_SAFE_ATTRS = frozenset([
     'rel', 'rev', 'rows', 'rowspan', 'rules', 'scope', 'selected', 'shape',
     'size', 'span', 'src', 'start', 'style', 'summary', 'tabindex', 'target', 'title',
     'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'controls', 'plugin',
-    'json', 'data-plugin', 'data-answer-id', 'answer-id', 'task-id', 'placeholder', 'data-html'])
+    'json', 'data-plugin', 'data-answer-id', 'answer-id', 'task-id', 'placeholder', 'data-html',
+
+    # tim-rights-editor
+    'item-id', 'allow-select-action', 'barcode-mode',
+])
 
 c = Cleaner(
     allow_tags=TIM_SAFE_TAGS,

@@ -6,37 +6,37 @@
     <div class="panel-body">
         <uib-tabset>
             <uib-tab heading="Rights for this {{ $ctrl.objName }}">
-                <rights-editor
+                <tim-rights-editor
                         item-id="$ctrl.item.id"
                         access-types="$ctrl.accessTypes"
                         orgs="$ctrl.orgs">
-                </rights-editor>
+                </tim-rights-editor>
             </uib-tab>
             <uib-tab ng-if="$ctrl.item.isFolder" heading="Default rights for new documents">
-                <rights-editor
+                <tim-rights-editor
                         item-id="$ctrl.item.id"
                         default-item="document"
                         access-types="$ctrl.accessTypes"
                         orgs="$ctrl.orgs">
-                </rights-editor>
+                </tim-rights-editor>
             </uib-tab>
             <uib-tab ng-if="$ctrl.item.isFolder" heading="Default rights for new folders">
-                <rights-editor
+                <tim-rights-editor
                         item-id="$ctrl.item.id"
                         default-item="folder"
                         access-types="$ctrl.accessTypes"
                         orgs="$ctrl.orgs">
-                </rights-editor>
+                </tim-rights-editor>
             </uib-tab>
             <uib-tab ng-if="$ctrl.item.isFolder" heading="Rights of subitems">
                 <p>On this tab you can edit rights for many documents/folders at once.
                     From the table below, you can only select items to which you have manage right.</p>
-                <rights-editor
+                <tim-rights-editor
                         item-id="$ctrl.item.id"
                         mass-mode="true"
                         access-types="$ctrl.accessTypes"
                         orgs="$ctrl.orgs">
-                </rights-editor>
+                </tim-rights-editor>
             </uib-tab>
         </uib-tabset>
     </div>

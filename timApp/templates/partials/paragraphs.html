@@ -115,7 +115,7 @@
                 {{ (t.md or t.attrs_str or '(hidden paragraph)')|escape }}
             </div>
         {%- else -%}
-            <div {% if not t.is_plugin and not t.is_setting %}ng-non-bindable{% endif %} tabindex="0" class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
+            <div {% if not t.is_plugin and not t.is_setting and not t.attrs.allowangular %}ng-non-bindable{% endif %} tabindex="0" class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>
                 {{ t.html|safe }}
             </div>
                 {%- if t.authorinfo -%}

@@ -1,23 +1,34 @@
-<div ng-if="$ctrl.massMode && $ctrl.gridReady">
-    <div ui-grid="$ctrl.gridOptions"
-         ui-grid-selection
-         ui-grid-auto-resize
-         ui-grid-cellNav>
+<div ng-if="$ctrl.massMode && $ctrl.gridReady"
+     ui-grid="$ctrl.gridOptions"
+     ui-grid-selection
+     ui-grid-auto-resize
+     ui-grid-cellNav>
+</div>
+<div class="form" ng-if="$ctrl.allowSelectAction">
+    <label>Action:</label>
+    <div class="radio">
+        <label>
+            <input type="radio" ng-model="$ctrl.actionOption" ng-value="'add'">
+            Add rights
+        </label>
     </div>
-    <div class="form">
-        <label>Action:</label>
-        <div class="radio">
-            <label>
-                <input type="radio" ng-model="$ctrl.massOption" ng-value="0">
-                Add rights
-            </label>
-        </div>
-        <div class="radio">
-            <label>
-                <input type="radio" ng-model="$ctrl.massOption" ng-value="1">
-                Remove rights
-            </label>
-        </div>
+    <div class="radio">
+        <label>
+            <input type="radio" ng-model="$ctrl.actionOption" ng-value="'remove'">
+            Remove rights
+        </label>
+    </div>
+    <div class="radio" ng-if="!$ctrl.massMode">
+        <label>
+            <input type="radio" ng-model="$ctrl.actionOption" ng-value="'confirm'">
+            Confirm rights
+        </label>
+    </div>
+    <div class="radio" ng-if="!$ctrl.massMode">
+        <label>
+            <input type="radio" ng-model="$ctrl.actionOption" ng-value="'expire'">
+            Expire rights
+        </label>
     </div>
 </div>
 <div class="checkbox" ng-if="!$ctrl.massMode">
@@ -25,10 +36,9 @@
         <input ng-model="$ctrl.showActiveOnly" type="checkbox"/> Show only active or upcoming rights
     </label>
 </div>
-<div class="margin rights-list" ng-repeat="type in $ctrl.accessTypes" ng-if="!$ctrl.massMode">
+<div class="margin rights-list" ng-repeat="type in $ctrl.actualAccessTypes" ng-if="!$ctrl.massMode">
     <a ng-click="$ctrl.showAddRightFn(type, $event)"
        href="#"
-       ng-keypress="$ctrl.handleKeyPress(type, $event)"
        title="Click to add {{ type.name }} right to some usergroup">{{ type.name }}</a>
     <span ng-if="filtered.length > 0"> ({{ filtered.length }})</span>:
     <span ng-if="filtered.length == 0">none</span>
@@ -67,11 +77,11 @@
         </li>
     </ul>
 </div>
-<button class="timButton" ng-if="!$ctrl.addingRight && !$ctrl.editingRight()" ng-click="$ctrl.showAddRightFn($ctrl.accessType)">Add right...
+<button class="timButton" ng-if="!$ctrl.addingRight && !$ctrl.editingRight()" ng-click="$ctrl.showAddRightFn($ctrl.accessType, $event)">{{$ctrl.actionText()}} right...
 </button>
-<div ng-show="$ctrl.addingRight || $ctrl.editingRight()" class="rights-list" id="editSection">
+<div ng-show="$ctrl.addingRight || $ctrl.editingRight()" class="rights-list">
     <p ng-if="$ctrl.selectedRight">
-        Editing {{$ctrl.accessTypeById($ctrl.selectedRight.type).name}} right for: {{$ctrl.getGroupDesc($ctrl.selectedRight)}}
+        Editing {{$ctrl.findAccessTypeById($ctrl.selectedRight.type).name}} right for: {{$ctrl.getGroupDesc($ctrl.selectedRight)}}
         <button class="btn btn-default btn-xs" ng-click="$ctrl.expireRight($ctrl.selectedRight)">expire</button>
     </p>
     <form ng-submit="$ctrl.addOrEditPermission($ctrl.groupName, $ctrl.accessType)">
@@ -79,7 +89,8 @@
             <div class="form-group col-md-6 input-group-sm">
                 <label for="{{ $ctrl.listMode ? 'groupNameList' : 'groupName' }}">Name: </label>
                 <div class="input-group">
-                    <input ng-show="!$ctrl.listMode" id="groupName" class="form-control" type="text" ng-model="$ctrl.groupName"
+                    <input ng-show="!$ctrl.listMode" id="groupName" class="form-control" type="text"
+                           ng-model="$ctrl.groupName"
                            focus-me="$ctrl.focusEditor"
                            ng-focus="$event.target.select()"
                            placeholder="{{ $ctrl.getPlaceholder() }}">
@@ -98,10 +109,10 @@
             <div class="form-group col-md-6 input-group-sm">
                 <label for="accessType">Right:</label>
                 <select id="accessType" class="form-control" ng-model="$ctrl.accessType"
-                        ng-options="access.name for access in $ctrl.accessTypes track by access.id"></select>
+                        ng-options="access.name for access in $ctrl.actualAccessTypes track by access.id"></select>
             </div>
         </div>
-        <div class="row" ng-if="!$ctrl.massMode || $ctrl.massOption === 0">
+        <div class="row" ng-if="$ctrl.actionOption === 'add'">
             <div class="form-group col-md-6 input-group-sm">
                 <fieldset>
                     <label>Time:</label>
@@ -181,16 +192,16 @@
             </div>
         </div>
         <button ng-show="$ctrl.addingRight" class="timButton" type="submit" ng-disabled="!$ctrl.groupName || $ctrl.addDisabled()">
-            {{$ctrl.addOrRemove()}}
+            {{$ctrl.actionText()}}
         </button>
         <button ng-show="$ctrl.editingRight()" class="timButton" type="submit">Save</button>
         <button class="btn btn-default" type="button" ng-disabled="$ctrl.addDisabled()" ng-if="!$ctrl.massMode" ng-click="$ctrl.cancel()">Cancel</button>
         <span ng-show="$ctrl.addingRight && !$ctrl.groupName">
         <button class="timButton" type="button" ng-disabled="$ctrl.addDisabled()" ng-click="$ctrl.addOrEditPermission('Logged-in users', $ctrl.accessType)">
-            {{$ctrl.addOrRemove()}} logged-in users
+            {{$ctrl.actionText()}} logged-in users
         </button>
         <button class="timButton" type="button" ng-disabled="$ctrl.addDisabled()" ng-click="$ctrl.addOrEditPermission('Anonymous users', $ctrl.accessType)">
-            {{$ctrl.addOrRemove()}} anonymous users
+            {{$ctrl.actionText()}} anonymous users
         </button>
             <div class="form-inline" style="margin-top: 5px; margin-bottom: 5px">
                 <select class="form-control"
@@ -202,7 +213,7 @@
                     type="button"
                     ng-disabled="$ctrl.addDisabled() || !$ctrl.selectedOrg"
                     ng-click="$ctrl.addOrEditPermission($ctrl.selectedOrg.name, $ctrl.accessType)">
-                {{$ctrl.addOrRemove()}} {{ $ctrl.selectedOrg.name }}
+                {{$ctrl.actionText()}} {{ $ctrl.selectedOrg.name }}
             </button></div>
         </span>
         <tim-loading ng-if="$ctrl.loading"></tim-loading>
