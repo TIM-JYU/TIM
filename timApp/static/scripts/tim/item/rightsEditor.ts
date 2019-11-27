@@ -2,7 +2,7 @@ import {IController, IHttpResponse, IScope} from "angular";
 import moment, {Duration, Moment} from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
-import {Binding, dateFormat, getGroupDesc, markAsUsed, Result, to} from "tim/util/utils";
+import {Binding, capitalizeFirstLetter, dateFormat, getGroupDesc, markAsUsed, Result, to} from "tim/util/utils";
 import {showMessageDialog} from "../ui/dialog";
 import {durationTypes} from "../ui/durationPicker";
 import {IGroup} from "../user/IUser";
@@ -305,13 +305,13 @@ class RightsEditorController implements IController {
     }
 
     async addOrEditPermission(groupname: string, type: IAccessType) {
+        this.msg = undefined;
         if (this.massMode) {
             if (!this.grid || !this.gridOptions) {
                 console.error("grid not initialized");
                 return;
             }
             const ids = this.grid.selection.getSelectedRows().map((i) => i.id);
-            this.msg = undefined;
             this.loading = true;
             const r = await to($http.put<IPermissionEditResponse>(`/permissions/edit`, {
                 ids: ids,
@@ -357,7 +357,7 @@ class RightsEditorController implements IController {
                     this.showNotExistWarning(r.result.data.not_exist);
                     await this.getPermissions();
                     if (this.barcodeMode) {
-                        this.groupName = "";
+                        this.handleSuccessBarcode(type, groups, r.result.data.not_exist);
                     } else {
                         this.cancel();
                     }
@@ -397,6 +397,9 @@ class RightsEditorController implements IController {
                 }
                 if (successes.length > 0) {
                     await this.getPermissions();
+                    if (this.barcodeMode) {
+                        this.handleSuccessBarcode(type, groups, notFound);
+                    }
                 }
             }
             if (!this.barcodeMode) {
@@ -404,6 +407,15 @@ class RightsEditorController implements IController {
                 this.element.find(".rights-list a").first().focus();
             }
         }
+    }
+
+    private handleSuccessBarcode(type: IAccessType, requestedGroups: string[], notFoundGroups: string[]) {
+        this.severity = "success";
+        this.groupName = "";
+        const notExistSet = new Set(notFoundGroups);
+        const groups = requestedGroups.filter((g) => !notExistSet.has(g));
+        const imperative = capitalizeFirstLetter(this.actionOption + (this.actionOption.endsWith("e") ? "d" : "ed"));
+        this.msg = `${imperative} ${type.name} right for: ${groups.join(", ")}`;
     }
 
     private showNotExistWarning(r: string[]) {
@@ -473,6 +485,10 @@ class RightsEditorController implements IController {
     async expireRight(group: IRight, refresh = true) {
         if (!this.accessType) {
             void showMessageDialog("Access type not selected.");
+            return false;
+        }
+        if (this.shouldShowEndedTime(group)) {
+            void showMessageDialog(`${this.findAccessTypeById(group.type)!.name} right for ${group.usergroup.name} is already expired.`);
             return false;
         }
         this.loading = true;
