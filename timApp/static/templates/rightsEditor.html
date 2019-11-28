@@ -107,6 +107,7 @@
                         <i class="glyphicon glyphicon-align-left"></i>
                     </span>
                 </div>
+                <tim-loading ng-if="$ctrl.loading"></tim-loading>
                 <tim-alert ng-if="$ctrl.successMsg" severity="success">
                     {{$ctrl.successMsg}}
                 </tim-alert>
@@ -229,6 +230,5 @@
                 {{$ctrl.actionText()}} {{ $ctrl.selectedOrg.name }}
             </button></div>
         </span>
-        <tim-loading ng-if="$ctrl.loading"></tim-loading>
     </form>
 </div>
