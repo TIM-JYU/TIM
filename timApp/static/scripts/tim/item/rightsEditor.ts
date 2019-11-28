@@ -133,14 +133,8 @@ class RightsEditorController implements IController {
 
     async $onInit() {
         this.actionOption = this.action || ActionOption.Add;
-        if (this.accessTypes) {
-            this.accessTypes = this.accessTypes;
-        }
         if (!this.accessTypes || !this.massMode) {
             await this.getPermissions();
-        }
-        if (this.restrictRights) {
-            this.accessTypes = this.accessTypes.filter((a) => this.restrictRights!.includes(a.name));
         }
         if (this.forceDuration) {
             this.timeOpt.type = "duration";
@@ -274,6 +268,9 @@ class RightsEditorController implements IController {
             this.grouprights = data.grouprights;
             if (data.accesstypes) {
                 this.accessTypes = data.accesstypes;
+                if (this.restrictRights) {
+                    this.accessTypes = this.accessTypes.filter((a) => this.restrictRights!.includes(a.name));
+                }
                 if (!this.accessType) {
                     this.accessType = this.accessTypes[0];
                 }
