@@ -225,7 +225,7 @@
         </button>
         <button ng-show="$ctrl.editingRight()" class="timButton" type="submit">Save</button>
         <button class="btn btn-default" type="button" ng-disabled="$ctrl.addDisabled()" ng-if="!$ctrl.massMode" ng-click="$ctrl.cancel()">Cancel</button>
-        <span ng-show="$ctrl.addingRight && !$ctrl.groupName">
+        <span ng-show="$ctrl.addingRight && !$ctrl.groupName" class="addRightsButtons">
         <button class="timButton" type="button" ng-disabled="$ctrl.addDisabled()" ng-click="$ctrl.addOrEditPermission('Logged-in users', $ctrl.accessType)">
             {{$ctrl.actionText()}} logged-in users
         </button>
