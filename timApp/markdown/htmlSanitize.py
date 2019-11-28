@@ -116,7 +116,9 @@ TIM_SAFE_ATTRS = frozenset([
     'json', 'data-plugin', 'data-answer-id', 'answer-id', 'task-id', 'placeholder', 'data-html',
 
     # tim-rights-editor
-    'item-id', 'allow-select-action', 'barcode-mode',
+    'item-id', 'allow-select-action', 'barcode-mode', 'restrict-rights', 'hide-remove',
+    'hide-edit', 'hide-expire',
+    'force-duration', 'force-duration-start', 'force-duration-end', 'force-confirm',
 ])
 
 c = Cleaner(

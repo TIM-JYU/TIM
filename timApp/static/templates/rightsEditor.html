@@ -36,7 +36,7 @@
         <input ng-model="$ctrl.showActiveOnly" type="checkbox"/> Show only active or upcoming rights
     </label>
 </div>
-<div class="margin rights-list" ng-repeat="type in $ctrl.actualAccessTypes" ng-if="!$ctrl.massMode">
+<div class="margin rights-list" ng-repeat="type in $ctrl.accessTypes" ng-if="!$ctrl.massMode">
     <a ng-click="$ctrl.showAddRightFn(type, $event)"
        href="#"
        title="Click to add {{ type.name }} right to some usergroup">{{ type.name }}</a>
@@ -69,9 +69,10 @@
             <span class="label label-danger"
                   uib-tooltip="{{ right.duration_to | timdate }}"
                   ng-if="$ctrl.shouldShowNotUnlockableAnymore(right)">No longer unlockable since {{ right.duration_to | timreldate }}</span>
-            <button class="btn btn-default btn-xs" ng-click="$ctrl.removeConfirm(right, type.name)">remove</button>
-            <button ng-if="$ctrl.selectedRight !== right" class="btn btn-default btn-xs" ng-click="$ctrl.editRight(right)">edit</button>
+            <button ng-if="!$ctrl.hideRemove" class="btn btn-default btn-xs" ng-click="$ctrl.removeConfirm(right, type.name)">remove</button>
+            <button ng-if="$ctrl.selectedRight !== right && !$ctrl.hideEdit" class="btn btn-default btn-xs" ng-click="$ctrl.editRight(right)">edit</button>
             <span ng-if="$ctrl.selectedRight === right" class="label label-primary">Editing</span>
+            <button ng-if="!$ctrl.hideExpire" class="btn btn-default btn-xs" ng-click="$ctrl.expireRight(right)">expire</button>
             <button ng-if="right.require_confirm" class="btn btn-success btn-xs" ng-click="$ctrl.confirmRight(right)">confirm</button>
             <tim-loading ng-if="$ctrl.loadingRight === right && $ctrl.loading"></tim-loading>
         </li>
@@ -109,7 +110,7 @@
             <div class="form-group col-md-6 input-group-sm">
                 <label for="accessType">Right:</label>
                 <select id="accessType" class="form-control" ng-model="$ctrl.accessType"
-                        ng-options="access.name for access in $ctrl.actualAccessTypes track by access.id"></select>
+                        ng-options="access.name for access in $ctrl.accessTypes track by access.id"></select>
             </div>
         </div>
         <div class="row" ng-if="$ctrl.actionOption === 'add'">
@@ -118,13 +119,13 @@
                     <label>Time:</label>
                     <div class="radio">
                         <label>
-                            <input type="radio" ng-model="$ctrl.timeOpt.type" value="always">
+                            <input ng-disabled="$ctrl.forceDuration" type="radio" ng-model="$ctrl.timeOpt.type" value="always">
                             Always
                         </label>
                     </div>
                     <div class="radio">
                         <label>
-                            <input type="radio" ng-model="$ctrl.timeOpt.type" value="range">
+                            <input ng-disabled="$ctrl.forceDuration" type="radio" ng-model="$ctrl.timeOpt.type" value="range">
                             Set start and/or end date...
                         </label>
                     </div>
@@ -158,6 +159,7 @@
                         </div>
                     </div>
                     <tim-duration-picker amount="$ctrl.durOpt.durationAmount"
+                                         disabled="$ctrl.forceDuration"
                                          ng-show="$ctrl.durationSelected()"
                                          type="$ctrl.durOpt.durationType">
                     </tim-duration-picker>
@@ -167,6 +169,7 @@
                                  data-options="$ctrl.datePickerOptionsDurationFrom">
                                 <input type="text"
                                        class="form-control"
+                                       ng-disabled="$ctrl.forceDurationStart"
                                        placeholder="Leave blank for no restriction"/>
                                 <span class="input-group-addon">
                         <span class="glyphicon glyphicon-calendar"></span>
@@ -177,6 +180,7 @@
                                  data-options="$ctrl.datePickerOptionsDurationTo">
                                 <input type="text"
                                        class="form-control"
+                                       ng-disabled="$ctrl.forceDurationEnd"
                                        placeholder="Leave blank for no restriction"/>
                                 <span class="input-group-addon">
                         <span class="glyphicon glyphicon-calendar"></span>
@@ -187,7 +191,9 @@
 
                 </fieldset>
                 <div ng-show="$ctrl.durationSelected()" class="checkbox">
-                    <label><input type="checkbox" ng-model="$ctrl.requireConfirm">Require confirmation</label>
+                    <label><input ng-disabled="$ctrl.forceConfirm != null"
+                                  type="checkbox"
+                                  ng-model="$ctrl.requireConfirm">Require confirmation</label>
                 </div>
             </div>
         </div>
@@ -219,6 +225,9 @@
         <tim-loading ng-if="$ctrl.loading"></tim-loading>
     </form>
 </div>
-<tim-alert ng-if="$ctrl.msg" severity="{{$ctrl.severity}}">
-    {{$ctrl.msg}}
+<tim-alert ng-if="$ctrl.successMsg" severity="success">
+    {{$ctrl.successMsg}}
+</tim-alert>
+<tim-alert ng-if="$ctrl.errMsg" severity="danger">
+    {{$ctrl.errMsg}}
 </tim-alert>

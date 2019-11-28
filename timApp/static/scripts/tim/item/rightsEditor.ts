@@ -68,8 +68,7 @@ class RightsEditorController implements IController {
     private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsDurationFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsDurationTo: EonasdanBootstrapDatetimepicker.SetOptions;
-    private accessTypes: Binding<IAccessType[] | undefined, "<">;
-    private actualAccessTypes!: IAccessType[];
+    private accessTypes!: IAccessType[];
     private massMode: Binding<boolean | undefined, "<">;
     private accessType: IAccessType | undefined;
     private addingRight: boolean = false;
@@ -82,8 +81,8 @@ class RightsEditorController implements IController {
     private actionOption = ActionOption.Add;
     private grid?: uiGrid.IGridApiOf<IItemWithRights>;
     private gridReady = false;
-    private msg?: string;
-    private severity?: "danger" | "success";
+    private errMsg?: string;
+    private successMsg?: string;
     private loading = false;
     private orgs?: IGroup[];
     private selectedOrg?: IGroup;
@@ -91,6 +90,14 @@ class RightsEditorController implements IController {
     private defaultItem?: string;
     private loadingRight?: IRight;
     private barcodeMode?: boolean;
+    private restrictRights?: string[];
+    private hideRemove?: boolean;
+    private forceDuration?: number;
+    private forceDurationStart?: string;
+    private forceDurationEnd?: string;
+    private forceConfirm?: boolean;
+    private hideEdit?: boolean;
+    private hideExpire?: boolean;
 
     constructor(private scope: IScope, private element: JQLite) {
         this.timeOpt = {type: "always"};
@@ -124,12 +131,29 @@ class RightsEditorController implements IController {
     async $onInit() {
         this.actionOption = this.action || ActionOption.Add;
         if (this.accessTypes) {
-            this.actualAccessTypes = this.accessTypes;
+            this.accessTypes = this.accessTypes;
         }
         if (!this.accessTypes || !this.massMode) {
             await this.getPermissions();
         }
-        this.accessType = this.actualAccessTypes[0];
+        if (this.restrictRights) {
+            this.accessTypes = this.accessTypes.filter((a) => this.restrictRights!.includes(a.name));
+        }
+        if (this.forceDuration) {
+            this.timeOpt.type = "duration";
+            this.durOpt.durationAmount = this.forceDuration;
+            this.durOpt.durationType = "hours";
+            if (this.forceDurationStart) {
+                this.timeOpt.durationFrom = moment(this.forceDurationStart);
+            }
+            if (this.forceDurationEnd) {
+                this.timeOpt.durationTo = moment(this.forceDurationEnd);
+            }
+        }
+        if (this.forceConfirm != null) {
+            this.requireConfirm = this.forceConfirm;
+        }
+        this.accessType = this.accessTypes[0];
         if (!this.orgs) {
             const r = await to($http.get<IGroup[]>("/groups/getOrgs"));
             if (r.ok) {
@@ -246,13 +270,13 @@ class RightsEditorController implements IController {
             const data = r.result.data;
             this.grouprights = data.grouprights;
             if (data.accesstypes) {
-                this.actualAccessTypes = data.accesstypes;
+                this.accessTypes = data.accesstypes;
                 if (!this.accessType) {
-                    this.accessType = this.actualAccessTypes[0];
+                    this.accessType = this.accessTypes[0];
                 }
             }
         } else {
-            await showMessageDialog("Could not fetch permissions.");
+            this.reportError("Could not fetch permissions.");
         }
     }
 
@@ -273,7 +297,7 @@ class RightsEditorController implements IController {
             }
             return true;
         } else {
-            void showMessageDialog(r.result.data.error);
+            this.reportError(r.result.data.error);
             return false;
         }
     }
@@ -305,7 +329,7 @@ class RightsEditorController implements IController {
     }
 
     async addOrEditPermission(groupname: string, type: IAccessType) {
-        this.msg = undefined;
+        this.clearMessages();
         if (this.massMode) {
             if (!this.grid || !this.gridOptions) {
                 console.error("grid not initialized");
@@ -324,11 +348,9 @@ class RightsEditorController implements IController {
             if (r.ok) {
                 this.showNotExistWarning(r.result.data.not_exist);
                 this.gridOptions.data = await this.getItemsAndPreprocess();
-                this.msg = "Rights updated.";
-                this.severity = "success";
+                this.successMsg = "Rights updated.";
             } else {
-                this.msg = r.result.data.error;
-                this.severity = "danger";
+                this.errMsg = r.result.data.error;
             }
             this.loading = false;
         } else {
@@ -362,7 +384,7 @@ class RightsEditorController implements IController {
                         this.cancel();
                     }
                 } else {
-                    await showMessageDialog(r.result.data.error);
+                    this.reportError(r.result.data.error);
                 }
             } else {
                 let func;
@@ -393,7 +415,7 @@ class RightsEditorController implements IController {
                     }
                 }
                 if (notFound.length > 0) {
-                    void showMessageDialog(`Some usergroups were not in current ${type.name} rights list: ${notFound.join(", ")}`);
+                    this.reportError(`Some usergroups were not in current ${type.name} rights list: ${notFound.join(", ")}`);
                 }
                 if (successes.length > 0) {
                     await this.getPermissions();
@@ -409,18 +431,22 @@ class RightsEditorController implements IController {
         }
     }
 
+    private clearMessages() {
+        this.errMsg = undefined;
+        this.successMsg = undefined;
+    }
+
     private handleSuccessBarcode(type: IAccessType, requestedGroups: string[], notFoundGroups: string[]) {
-        this.severity = "success";
         this.groupName = "";
         const notExistSet = new Set(notFoundGroups);
         const groups = requestedGroups.filter((g) => !notExistSet.has(g));
         const imperative = capitalizeFirstLetter(this.actionOption + (this.actionOption.endsWith("e") ? "d" : "ed"));
-        this.msg = `${imperative} ${type.name} right for: ${groups.join(", ")}`;
+        this.successMsg = `${imperative} ${type.name} right for: ${groups.join(", ")}`;
     }
 
     private showNotExistWarning(r: string[]) {
         if (r.length > 0) {
-            showMessageDialog(`Some usergroups were not found: ${r.join(", ")}`);
+            this.reportError(`Some usergroups were not found: ${r.join(", ")}`);
         }
     }
 
@@ -484,11 +510,11 @@ class RightsEditorController implements IController {
 
     async expireRight(group: IRight, refresh = true) {
         if (!this.accessType) {
-            void showMessageDialog("Access type not selected.");
+            this.reportError("Access type not selected.");
             return false;
         }
         if (this.shouldShowEndedTime(group)) {
-            void showMessageDialog(`${this.findAccessTypeById(group.type)!.name} right for ${group.usergroup.name} is already expired.`);
+            this.reportError(`${this.findAccessTypeById(group.type)!.name} right for ${group.usergroup.name} is already expired.`);
             return false;
         }
         this.loading = true;
@@ -526,10 +552,10 @@ class RightsEditorController implements IController {
     }
 
     findAccessTypeById(id: number) {
-        if (!this.actualAccessTypes) {
+        if (!this.accessTypes) {
             return;
         }
-        return this.actualAccessTypes.find((a) => a.id === id);
+        return this.accessTypes.find((a) => a.id === id);
     }
 
     async editRight(group: IRight) {
@@ -629,6 +655,10 @@ class RightsEditorController implements IController {
         }
         return str;
     }
+
+    private reportError(s: string) {
+        this.errMsg = s;
+    }
 }
 
 timApp.component("timRightsEditor", {
@@ -638,9 +668,17 @@ timApp.component("timRightsEditor", {
         allowSelectAction: "<?",
         barcodeMode: "<?",
         defaultItem: "@?",
+        forceConfirm: "<?",
+        forceDuration: "<?",
+        forceDurationEnd: "<?",
+        forceDurationStart: "<?",
+        hideEdit: "<?",
+        hideExpire: "<?",
+        hideRemove: "<?",
         itemId: "<?",
         massMode: "<?",
         orgs: "<?",
+        restrictRights: "<?",
     },
     controller: RightsEditorController,
     templateUrl: "/static/templates/rightsEditor.html",
