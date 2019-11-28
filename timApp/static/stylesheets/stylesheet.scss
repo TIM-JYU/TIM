@@ -1336,6 +1336,10 @@ p.closeButton::before {
         border-radius: 3px;
     }
 
+    .name {
+        white-space: nowrap;
+    }
+
     .flex {
         & > * {
             margin-right: 5px;
