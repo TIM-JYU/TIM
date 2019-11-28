@@ -442,6 +442,9 @@ class RightsEditorController implements IController {
         this.groupName = "";
         const notExistSet = new Set(notFoundGroups);
         const groups = requestedGroups.filter((g) => !notExistSet.has(g));
+        if (groups.length === 0) {
+            return;
+        }
         const imperative = capitalizeFirstLetter(this.actionOption + (this.actionOption.endsWith("e") ? "d" : "ed"));
         this.successMsg = `${imperative} ${type.name} right for: ${groups.join(", ")}`;
     }
