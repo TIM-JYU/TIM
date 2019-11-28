@@ -80,7 +80,7 @@
 </div>
 <button class="timButton" ng-if="!$ctrl.addingRight && !$ctrl.editingRight()" ng-click="$ctrl.showAddRightFn($ctrl.accessType, $event)">{{$ctrl.actionText()}} right...
 </button>
-<div ng-show="$ctrl.addingRight || $ctrl.editingRight()" class="rights-list">
+<div ng-show="$ctrl.addingRight || $ctrl.editingRight()" class="rights-edit-area">
     <p ng-if="$ctrl.selectedRight">
         Editing {{$ctrl.findAccessTypeById($ctrl.selectedRight.type).name}} right for: {{$ctrl.getGroupDesc($ctrl.selectedRight)}}
         <button class="btn btn-default btn-xs" ng-click="$ctrl.expireRight($ctrl.selectedRight)">expire</button>

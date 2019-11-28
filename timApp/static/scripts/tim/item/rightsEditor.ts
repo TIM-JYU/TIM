@@ -560,7 +560,7 @@ class RightsEditorController implements IController {
 
     async editRight(group: IRight) {
         this.setEditFields(group);
-        const section = this.element.find(".rights-list")[0];
+        const section = this.element.find(".rights-edit-area")[0];
         if (section) {
             await $timeout();
             section.scrollIntoView({block: "nearest"});
