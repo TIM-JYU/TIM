@@ -1345,6 +1345,10 @@ p.closeButton::before {
             margin-right: 5px;
         }
 
+        & > .action-btn {
+            display: flex;
+        }
+
         & > .label {
             font-weight: normal;
         }
