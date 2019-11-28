@@ -107,6 +107,12 @@
                         <i class="glyphicon glyphicon-align-left"></i>
                     </span>
                 </div>
+                <tim-alert ng-if="$ctrl.successMsg" severity="success">
+                    {{$ctrl.successMsg}}
+                </tim-alert>
+                <tim-alert ng-if="$ctrl.errMsg" severity="danger">
+                    {{$ctrl.errMsg}}
+                </tim-alert>
             </div>
             <div class="form-group col-md-6 input-group-sm">
                 <label for="accessType">Right:</label>
@@ -114,12 +120,6 @@
                         ng-options="access.name for access in $ctrl.accessTypes track by access.id"></select>
             </div>
         </div>
-        <tim-alert ng-if="$ctrl.successMsg" severity="success">
-            {{$ctrl.successMsg}}
-        </tim-alert>
-        <tim-alert ng-if="$ctrl.errMsg" severity="danger">
-            {{$ctrl.errMsg}}
-        </tim-alert>
         <div class="row" ng-if="$ctrl.actionOption === 'add'">
             <div class="form-group col-md-6 input-group-sm">
                 <fieldset>
