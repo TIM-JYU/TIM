@@ -99,6 +99,7 @@ class RightsEditorController implements IController {
     private hideEdit?: boolean;
     private hideExpire?: boolean;
     private lastEdited?: IRight;
+    private confirmingRight?: IRight;
 
     constructor(private scope: IScope, private element: JQLite) {
         this.timeOpt = {type: "always"};
@@ -540,7 +541,7 @@ class RightsEditorController implements IController {
     }
 
     async confirmRight(group: IRight, refresh = true) {
-        this.loadingRight = group;
+        this.confirmingRight = group;
         this.loading = true;
         const r = await to($http.put("/permissions/confirm", {
             group: group.usergroup.id,
@@ -548,7 +549,7 @@ class RightsEditorController implements IController {
             type: this.findAccessTypeById(group.type)!.name,
         }));
         this.loading = false;
-        this.loadingRight = undefined;
+        this.confirmingRight = undefined;
         return await this.handleResult(r, refresh);
     }
 

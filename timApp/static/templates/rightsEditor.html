@@ -49,6 +49,7 @@
             <s ng-if="$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></s>
             <a title="Send email to this user" ng-if="right.usergroup.personal_user" href="mailto:{{right.usergroup.personal_user.email}}"><i class="glyphicon glyphicon-envelope"></i></a>
             <button ng-if="right.require_confirm" class="btn btn-success btn-xs" ng-click="$ctrl.confirmRight(right)">confirm</button>
+            <tim-loading ng-if="$ctrl.confirmingRight === right && $ctrl.loading"></tim-loading>
             <span class="label label-success"
                   uib-tooltip="{{ right.accessible_from | timdate }}"
                   ng-if="$ctrl.shouldShowBeginTime(right)">Begins {{ right.accessible_from | timreldate }}</span>
