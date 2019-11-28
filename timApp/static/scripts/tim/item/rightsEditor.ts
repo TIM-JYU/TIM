@@ -551,9 +551,10 @@ class RightsEditorController implements IController {
             id: this.itemId,
             type: this.findAccessTypeById(group.type)!.name,
         }));
+        const result = await this.handleResult(r, refresh);
         this.loading = false;
         this.confirmingRight = undefined;
-        return await this.handleResult(r, refresh);
+        return result;
     }
 
     findAccessTypeById(id: number) {
