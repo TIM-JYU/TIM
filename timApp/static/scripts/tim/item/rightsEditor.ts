@@ -98,6 +98,7 @@ class RightsEditorController implements IController {
     private forceConfirm?: boolean;
     private hideEdit?: boolean;
     private hideExpire?: boolean;
+    private lastEdited?: IRight;
 
     constructor(private scope: IScope, private element: JQLite) {
         this.timeOpt = {type: "always"};
@@ -572,6 +573,7 @@ class RightsEditorController implements IController {
         this.accessType = this.findAccessTypeById(group.type);
         this.addingRight = false;
         this.selectedRight = group;
+        this.lastEdited = group;
 
         if (group.duration_from) {
             this.timeOpt.durationFrom = moment(group.duration_from);
