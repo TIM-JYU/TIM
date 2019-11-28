@@ -88,7 +88,6 @@ class RightsEditorController implements IController {
     private selectedOrg?: IGroup;
     private requireConfirm = false;
     private defaultItem?: string;
-    private loadingRight?: IRight;
     private barcodeMode?: boolean;
     private restrictRights?: string[];
     private hideRemove?: boolean;
@@ -100,6 +99,8 @@ class RightsEditorController implements IController {
     private hideExpire?: boolean;
     private lastEdited?: IRight;
     private confirmingRight?: IRight;
+    private expiringRight?: IRight;
+    private removingRight?: IRight;
 
     constructor(private scope: IScope, private element: JQLite) {
         this.timeOpt = {type: "always"};
@@ -241,9 +242,9 @@ class RightsEditorController implements IController {
 
     async removeConfirm(group: IRight) {
         if (window.confirm(`Remove ${this.findAccessTypeById(group.type)!.name} right from ${getGroupDesc(group.usergroup)}?`)) {
-            this.loadingRight = group;
+            this.removingRight = group;
             await this.removeRight(group);
-            this.loadingRight = undefined;
+            this.removingRight = undefined;
         }
     }
 
@@ -523,7 +524,7 @@ class RightsEditorController implements IController {
             return false;
         }
         this.loading = true;
-        this.loadingRight = group;
+        this.expiringRight = group;
         const r = await to($http.put<IPermissionEditResponse>(`/${this.urlRootModify}/add`,
             {
                 time: {
@@ -539,7 +540,7 @@ class RightsEditorController implements IController {
             },
         ));
         this.loading = false;
-        this.loadingRight = undefined;
+        this.expiringRight = undefined;
         return await this.handleResult(r, refresh);
     }
 

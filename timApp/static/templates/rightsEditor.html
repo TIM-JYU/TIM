@@ -45,11 +45,10 @@
 
     <ul>
         <li ng-class="{lastEdited: right === $ctrl.lastEdited}" ng-repeat="right in filtered = ($ctrl.grouprights | filter: {type: type.id}:true | filter: $ctrl.obsoleteFilterFn | orderBy: ['usergroup.personal_user.real_name', 'usergroup.name'])">
+            <span class="flex align-center">
             <span class="name" ng-if="!$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></span>
             <s ng-if="$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></s>
             <a title="Send email to this user" ng-if="right.usergroup.personal_user" href="mailto:{{right.usergroup.personal_user.email}}"><i class="glyphicon glyphicon-envelope"></i></a>
-            <button ng-if="right.require_confirm" class="btn btn-success btn-xs" ng-click="$ctrl.confirmRight(right)">confirm</button>
-            <tim-loading ng-if="$ctrl.confirmingRight === right && $ctrl.loading"></tim-loading>
             <span class="label label-success"
                   uib-tooltip="{{ right.accessible_from | timdate }}"
                   ng-if="$ctrl.shouldShowBeginTime(right)">Begins {{ right.accessible_from | timreldate }}</span>
@@ -71,11 +70,27 @@
             <span class="label label-danger"
                   uib-tooltip="{{ right.duration_to | timdate }}"
                   ng-if="$ctrl.shouldShowNotUnlockableAnymore(right)">No longer unlockable since {{ right.duration_to | timreldate }}</span>
-            <button ng-if="!$ctrl.hideRemove" class="btn btn-default btn-xs" ng-click="$ctrl.removeConfirm(right, type.name)">remove</button>
-            <button ng-if="$ctrl.selectedRight !== right && !$ctrl.hideEdit" class="btn btn-default btn-xs" ng-click="$ctrl.editRight(right)">edit</button>
+
+            <span class="action-btn remove" ng-if="!$ctrl.hideRemove">
+                <button class="btn btn-default btn-xs"
+                        ng-click="$ctrl.removeConfirm(right, type.name)">remove</button>
+                <tim-loading ng-if="$ctrl.removingRight === right && $ctrl.loading"></tim-loading>
+                </span>
+            <span class="action-btn edit" ng-if="$ctrl.selectedRight !== right && !$ctrl.hideEdit">
+                <button class="btn btn-default btn-xs"
+                        ng-click="$ctrl.editRight(right)">edit</button>
+                </span>
+            <span class="action-btn expire" ng-if="!$ctrl.hideExpire">
+                <button class="btn btn-default btn-xs"
+                        ng-click="$ctrl.expireRight(right)">expire</button>
+                <tim-loading ng-if="$ctrl.expiringRight === right && $ctrl.loading"></tim-loading>
+            </span>
+            <span class="action-btn confirm" ng-if="right.require_confirm">
+                <button class="btn btn-success btn-xs" ng-click="$ctrl.confirmRight(right)">confirm</button>
+                <tim-loading ng-if="$ctrl.confirmingRight === right && $ctrl.loading"></tim-loading>
+            </span>
             <span ng-if="$ctrl.selectedRight === right" class="label label-primary">Editing</span>
-            <button ng-if="!$ctrl.hideExpire" class="btn btn-default btn-xs" ng-click="$ctrl.expireRight(right)">expire</button>
-            <tim-loading ng-if="$ctrl.loadingRight === right && $ctrl.loading"></tim-loading>
+            </span>
         </li>
     </ul>
 </div>

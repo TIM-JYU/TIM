@@ -1329,7 +1329,20 @@ p.closeButton::before {
     display: block;
 }
 
-.rights-list .lastEdited {
-    background-color: #e3e3e3;
-    border-radius: 3px;
+.rights-list {
+
+    .lastEdited {
+        background-color: #e3e3e3;
+        border-radius: 3px;
+    }
+
+    .flex {
+        & > * {
+            margin-right: 5px;
+        }
+
+        & > .label {
+            font-weight: normal;
+        }
+    }
 }
