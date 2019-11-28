@@ -101,16 +101,16 @@ class TimMenuItemModel:
 
 @dataclass
 class TimMenuMarkupModel(GenericMarkupModel):
-    backgroundColor: Union[str, Missing, None] = missing
+    backgroundColor: Union[str, Missing, None] = "#F7F7F7"
     basicColors: Union[bool, Missing, None] = False
-    fontSize: Union[str, Missing, None] = missing
+    fontSize: Union[str, Missing, None] = "0.84em"
     hoverOpen: Union[bool, Missing, None] = True
-    keepLinkColors: Union[bool, Missing, None] = False
+    keepLinkColors: Union[bool, Missing, None] = True
     menu: Union[str, Missing] = missing
     openAbove: Union[bool, Missing, None] = False
-    openingSymbol: Union[str, Missing, None] = "&#9662;"
-    separator: Union[str, Missing, None] = "&nbsp;"
-    textColor: Union[str, Missing, None] = missing
+    openingSymbol: Union[str, Missing, None] = "▼"
+    separator: Union[str, Missing, None] = "|"
+    textColor: Union[str, Missing, None] = "black"
     topMenu: Union[bool, Missing, None] = False
     topMenuTriggerHeight: Union[int, Missing, None] = 200
 
@@ -317,15 +317,14 @@ def reqs():
     """
     templates = ["""
 ``` {plugin="timMenu" .hidden-print}
-separator: "|"              # Symbol(s) separating menu titles
-#openingSymbol: " &#9661;"   # Symbol(s) indicating dropdown (remove the first # to use)
+openingSymbol: "▼"
+separator: "|"      
 backgroundColor: "#F7F7F7"  # Menu bar background color (overrides basicColors)
 textColor: black            # Menu bar text color (overrides basicColors)
-fontSize: 12pt              # Menu bar font size
-openAbove: false            # Open all menus upwards
-keepLinkColors: false       # Use default link colors
+fontSize: 0.84em
 topMenu: false              # Show menu at the top when scrolling from below
 basicColors: false          # Use TIM default color scheme in menu bar
+keepLinkColors: true
 hoverOpen: true             # Allow opening menus without clicking
 menu: |!!
  - Menu title 1
@@ -357,6 +356,14 @@ f"""
 ``` {{plugin="timMenu" .hidden-print .{INCLUDE_IN_PARTS_CLASS_NAME}}}
 topMenu: true
 topMenuTriggerHeight: 200
+openingSymbol: "▼"
+separator: "|"      
+backgroundColor: "#F7F7F7"  # Menu bar background color (overrides basicColors)
+textColor: black            # Menu bar text color (overrides basicColors)
+fontSize: 0.84em
+topMenu: false              # Show menu at the top when scrolling from below
+basicColors: false          # Use TIM default color scheme in menu bar
+keepLinkColors: true
 menu: |!!
  - Menu title 1
    - [Menu item 1](item1Address)
@@ -374,7 +381,15 @@ menu: |!!
 """,
 """
 ``` {plugin="timMenu" .hidden-print}
-separator: "|"
+openingSymbol: "▼"
+separator: "|"      
+backgroundColor: "#F7F7F7"  # Menu bar background color (overrides basicColors)
+textColor: black            # Menu bar text color (overrides basicColors)
+fontSize: 0.84em
+topMenu: false              # Show menu at the top when scrolling from below
+basicColors: false          # Use TIM default color scheme in menu bar
+keepLinkColors: true
+topMenu: true
 menu: |!!
  - Menu title 1
    width: 7.5em
