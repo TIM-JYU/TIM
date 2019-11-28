@@ -210,7 +210,7 @@ class PermissionTest(TimRouteTest):
             {
                 'groups': ['testuser1'],
                 'type': 'owner',
-                'action': 1,
+                'action': 'remove',
                 'ids': all_ids,
                 'time': {
                     'type': 'always',
@@ -225,7 +225,7 @@ class PermissionTest(TimRouteTest):
             {
                 'groups': ['testuser2', 'testuser3'],
                 'type': 'view',
-                'action': 0,
+                'action': 'add',
                 'ids': all_ids,
                 'time': {
                     'type': 'always',
@@ -246,7 +246,7 @@ class PermissionTest(TimRouteTest):
             {
                 'groups': ['testuser2'],
                 'type': 'view',
-                'action': 1,
+                'action': 'remove',
                 'ids': all_ids,
                 'time': {
                     'type': 'always',
@@ -268,7 +268,7 @@ class PermissionTest(TimRouteTest):
             {
                 'groups': ['testuser2', 'testuser3'],
                 'type': 'view',
-                'action': 1,
+                'action': 'remove',
                 'ids': all_ids,
                 'time': {
                     'type': 'always',
@@ -293,7 +293,7 @@ class PermissionTest(TimRouteTest):
             {
                 'groups': ['testuser1'],
                 'type': 'view',
-                'action': 0,
+                'action': 'add',
                 'ids': [x.id for x in self.test_user_2.get_personal_folder().get_all_documents(include_subdirs=True)],
                 'time': {
                     'type': 'always',
@@ -307,7 +307,7 @@ class PermissionTest(TimRouteTest):
             {
                 'groups': ['testuser1'],
                 'type': 'asd',
-                'action': 0,
+                'action': 'add',
                 'ids': all_ids,
                 'time': {
                     'type': 'always',
@@ -321,7 +321,7 @@ class PermissionTest(TimRouteTest):
             {
                 'groups': ['nonexistent'],
                 'type': 'view',
-                'action': 0,
+                'action': 'add',
                 'ids': all_ids,
                 'time': {
                     'type': 'always',
@@ -341,7 +341,7 @@ class PermissionTest(TimRouteTest):
             {
                 'groups': ['testuser2', 'testuser3'],
                 'type': 'view',
-                'action': 0,
+                'action': 'add',
                 'ids': all_ids,
                 'time': {
                     'type': 'always',
@@ -355,7 +355,7 @@ class PermissionTest(TimRouteTest):
             {
                 'groups': ['testuser2', 'testuser3'],
                 'type': 'view',
-                'action': 1,
+                'action': 'remove',
                 'ids': all_ids,
                 'time': {
                     'type': 'always',

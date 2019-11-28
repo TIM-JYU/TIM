@@ -128,8 +128,8 @@ class TimeOpt:
 
 
 class EditOption(Enum):
-    Add = 0
-    Remove = 1
+    Add = 'add'
+    Remove = 'remove'
 
 
 @dataclass
