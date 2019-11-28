@@ -36,7 +36,7 @@
         <input ng-model="$ctrl.showActiveOnly" type="checkbox"/> Show only active or upcoming rights
     </label>
 </div>
-<div class="margin rights-list" ng-repeat="type in $ctrl.accessTypes" ng-if="!$ctrl.massMode">
+<div class="margin rights-list {{ type.name }}" ng-repeat="type in $ctrl.accessTypes" ng-if="!$ctrl.massMode">
     <a ng-click="$ctrl.showAddRightFn(type, $event)"
        href="#"
        title="Click to add {{ type.name }} right to some usergroup">{{ type.name }}</a>
