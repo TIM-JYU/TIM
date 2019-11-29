@@ -118,7 +118,7 @@ TIM_SAFE_ATTRS = frozenset([
 
     # tim-rights-editor
     'item-id', 'allow-select-action', 'barcode-mode', 'restrict-rights', 'hide-remove',
-    'hide-edit', 'hide-expire',
+    'hide-edit', 'hide-expire', 'confirm-expire',
     'force-duration', 'force-duration-start', 'force-duration-end', 'force-confirm',
 
     # tim-self-expire

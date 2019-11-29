@@ -101,6 +101,7 @@ class RightsEditorController implements IController {
     private confirmingRight?: IRight;
     private expiringRight?: IRight;
     private removingRight?: IRight;
+    private confirmExpire?: boolean;
 
     constructor(private scope: IScope, private element: JQLite) {
         this.timeOpt = {type: "always"};
@@ -235,11 +236,15 @@ class RightsEditorController implements IController {
     }
 
     async removeConfirm(group: IRight) {
-        if (window.confirm(`Remove ${this.findAccessTypeById(group.type)!.name} right from ${getGroupDesc(group.usergroup)}?`)) {
+        if (window.confirm(`Remove ${(this.getConfirmDesc(group))}?`)) {
             this.removingRight = group;
             await this.removeRight(group);
             this.removingRight = undefined;
         }
+    }
+
+    private getConfirmDesc(group: IRight) {
+        return `${this.findAccessTypeById(group.type)!.name} right from ${getGroupDesc(group.usergroup)}`;
     }
 
     get urlRootGet() {
@@ -520,6 +525,11 @@ class RightsEditorController implements IController {
             this.reportError(`${this.findAccessTypeById(group.type)!.name} right for ${group.usergroup.name} is already expired.`);
             return false;
         }
+        if (refresh) {
+            if (this.confirmExpire && !window.confirm(`Expire ${(this.getConfirmDesc(group))}?`)) {
+                return;
+            }
+        }
         this.loading = true;
         this.expiringRight = group;
         const r = await to($http.put<IPermissionEditResponse>(`/${this.urlRootModify}/add`,
@@ -672,6 +682,7 @@ timApp.component("timRightsEditor", {
         action: "@?",
         allowSelectAction: "<?",
         barcodeMode: "<?",
+        confirmExpire: "<?",
         defaultItem: "@?",
         forceConfirm: "<?",
         forceDuration: "<?",
