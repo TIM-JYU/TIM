@@ -129,6 +129,9 @@ class DocSettings:
     course_allow_manual_enroll_key = 'course_allow_manual_enroll'
     show_velps_key = "show_velps"
     group_key = "group"
+    allow_self_confirm_from_key = 'allow_self_confirm_from'
+    auto_confirm_key = 'auto_confirm'
+    expire_next_doc_message_key = 'expire_next_doc_message'
 
     urlmacros_tester = re.compile("[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/]+")
 
@@ -385,6 +388,15 @@ class DocSettings:
 
     def course_allow_manual_enroll(self):
         return self.__dict.get(self.course_allow_manual_enroll_key, False)
+
+    def expire_next_doc_message(self):
+        return self.__dict.get(self.expire_next_doc_message_key)
+
+    def allow_self_confirm_from(self):
+        return self.__dict.get(self.allow_self_confirm_from_key)
+
+    def auto_confirm(self):
+        return self.__dict.get(self.auto_confirm_key)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

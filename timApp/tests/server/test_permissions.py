@@ -7,6 +7,7 @@ from timApp.tests.server.test_default_rights import convert_to_old_format
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
+from timApp.user.userutils import grant_access
 from timApp.util.utils import get_current_time
 
 
@@ -364,3 +365,48 @@ class PermissionTest(TimRouteTest):
             },
             expect_status=403
         )
+
+    def test_chaining(self):
+        self.login_test1()
+        d = self.create_doc()
+        # Add an expired right
+        grant_access(
+            group=self.test_user_2.get_personal_group(),
+            access_type=AccessType.view,
+            accessible_from=get_current_time(),
+            accessible_to=get_current_time(),
+            block=d,
+        )
+        d.document.set_settings({
+            'auto_confirm': self.get_personal_item_path('nextdoc'),
+            'expire_next_doc_message': 'My custom message',
+        })
+        self.login_test2()
+        r = self.get(d.url, expect_status=403)
+        self.assertIn('auto_confirm document does not exist', r)
+        self.login_test1()
+        d2 = self.create_doc(path=self.get_personal_item_path('nextdoc'))
+        self.login_test2()
+        r = self.get(d.url, expect_status=403)
+        self.assertIn('Document is not authorized to auto-confirm rights', r)
+        d2.document.set_settings({
+            'allow_self_confirm_from': d.path,
+        })
+        r = self.get(d.url, expect_status=403)
+        self.assertIn('Cannot get access:', r)
+        self.assertNotIn('My custom message', r)
+        grant_access(
+            group=self.test_user_2.get_personal_group(),
+            access_type=AccessType.view,
+            block=d2,
+            duration=timedelta(hours=2),
+            require_confirm=True,
+        )
+        r = self.get(d.url, expect_status=403)
+        self.assertIn('My custom message', r)
+        self.assertIn('Go to the next document', r)
+
+        # Make sure refreshing the page does not change anything.
+        r = self.get(d.url, expect_status=403)
+        self.assertIn('My custom message', r)
+        self.assertIn('Go to the next document', r)

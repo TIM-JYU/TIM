@@ -12,7 +12,8 @@ from flask import request
 from isodate import Duration
 
 from timApp.auth.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
-    verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort, verify_copy_access, AccessDenied
+    verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort, verify_copy_access, AccessDenied, \
+    get_single_view_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
 from timApp.auth.sessioninfo import get_current_user_group_object
@@ -268,6 +269,22 @@ def remove_permission(m: PermissionRemoveModel):
     had_ownership = verify_permission_edit_access(i, m.type)
     remove_perm(m.group, i.block, m.type.value)
     check_ownership_loss(had_ownership, i)
+    db.session.commit()
+    return ok_response()
+
+
+@dataclass
+class SelfExpireModel:
+    id: int
+
+
+@manage_page.route("/permissions/selfExpire", methods=["post"])
+@use_model(SelfExpireModel)
+def self_expire_permission(m: SelfExpireModel):
+    i = get_item_or_abort(m.id)
+    verify_view_access(i)
+    acc = get_single_view_access(i)
+    acc.accessible_to = get_current_time()
     db.session.commit()
     return ok_response()
 

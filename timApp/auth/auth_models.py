@@ -43,6 +43,10 @@ class BlockAccess(db.Model):
         return self.accessible_from is not None and get_current_time() < self.accessible_from
 
     @property
+    def access_type(self):
+        return AccessType(self.type)
+
+    @property
     def expired(self):
         return self.accessible_to is not None and get_current_time() > self.accessible_to
 

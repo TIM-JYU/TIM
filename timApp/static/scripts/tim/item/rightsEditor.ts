@@ -688,3 +688,36 @@ timApp.component("timRightsEditor", {
     controller: RightsEditorController,
     templateUrl: "/static/templates/rightsEditor.html",
 });
+
+timApp.component("timSelfExpire", {
+    bindings: {
+        buttonText: "<?",
+        confirm: "<?",
+        itemId: "<",
+    },
+    controller: class {
+        private confirm?: boolean;
+        private buttonText?: string;
+        private itemId!: number;
+
+        $onInit() {
+            if (!this.buttonText) {
+                this.buttonText = "Remove your rights";
+            }
+        }
+
+        async clicked() {
+            if (!this.confirm || window.confirm()) {
+                const r = await to($http.post<unknown>("/permissions/selfExpire", {id: this.itemId}));
+                if (r.ok) {
+                    location.reload();
+                } else {
+                    await showMessageDialog(`Error removing right: ${r.result.data.error}`);
+                }
+            }
+        }
+    },
+    template: `
+<button ng-click="$ctrl.clicked()">{{ ::$ctrl.buttonText }}</button>
+    `,
+});

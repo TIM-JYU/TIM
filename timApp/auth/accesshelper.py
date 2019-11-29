@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 from flask import flash
 from flask import request, g
@@ -24,7 +24,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
-from timApp.util.flask.requesthelper import get_option
+from timApp.util.flask.requesthelper import get_option, RouteException
 from timApp.util.utils import get_current_time
 
 
@@ -87,7 +87,7 @@ def verify_access(
                 break
     return abort_if_not_access_and_required(
         has_access,
-        b.id,
+        b,
         access_type,
         require,
         message,
@@ -113,14 +113,21 @@ def verify_seeanswers_access(b: ItemOrBlock, require=True, message=None, check_d
 
 class ItemLockedException(Exception):
     """The exception that is raised (in /view route) when a user attempts to access an item for which he has a duration
-    access that has not yet begun."""
+    access that has not yet begun or the access has expired."""
 
-    def __init__(self, access: BlockAccess):
+    def __init__(
+            self,
+            access: BlockAccess,
+            msg: Optional[str]=None,
+            next_doc: Optional[DocInfo]=None,
+    ):
         self.access = access
+        self.msg = msg
+        self.next_doc = next_doc
 
 
 def abort_if_not_access_and_required(access_obj: BlockAccess,
-                                     block_id: int,
+                                     block: ItemOrBlock,
                                      access_type: AccessType,
                                      require=True,
                                      message=None,
@@ -128,11 +135,11 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
     if access_obj:
         return access_obj
     if check_duration:
-        ba = BlockAccess.query.filter_by(block_id=block_id,
+        ba = BlockAccess.query.filter_by(block_id=block.id,
                                          type=access_type.value,
                                          usergroup_id=get_current_user_group()).first()
         if ba is None:
-            ba_group: BlockAccess = BlockAccess.query.filter_by(block_id=block_id,
+            ba_group: BlockAccess = BlockAccess.query.filter_by(block_id=block.id,
                                                                 type=access_type.value).filter(
                 BlockAccess.usergroup_id.in_(get_current_user_object().get_groups().with_entities(UserGroup.id))
             ).first()
@@ -162,7 +169,41 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
                 else:
                     raise ItemLockedException(ba)
             else:
-                raise ItemLockedException(ba)
+                # Chaining: If the right to this document has expired, check if there is a document that should
+                # get auto-confirmed.
+                msg = None
+                next_doc = None
+                if isinstance(block, DocInfo):
+                    s = block.document.get_settings()
+                    ac = s.auto_confirm()
+                    if isinstance(ac, str):
+                        target = DocEntry.find_by_path(ac)
+                        if not target:
+                            flash('auto_confirm document does not exist')
+                        else:
+                            t_s = target.document.get_settings()
+                            asc = t_s.allow_self_confirm_from()
+                            allowed = set()
+                            if isinstance(asc, str):
+                                allowed.add(asc)
+                            elif isinstance(asc, list):
+                                for a in asc:
+                                    if isinstance(a, str):
+                                        allowed.add(a)
+                            aliases = set(a.path for a in block.aliases)
+                            if allowed & aliases:
+                                try:
+                                    acc = get_single_view_access(target)
+                                except RouteException as e:
+                                    flash('Cannot get access: ' + str(e))
+                                else:
+                                    next_doc = target
+                                    msg = s.expire_next_doc_message()
+                                    acc.require_confirm = False
+                                    db.session.commit()
+                            else:
+                                flash('Document is not authorized to auto-confirm rights')
+                raise ItemLockedException(ba, msg, next_doc)
     if require:
         abort(403, message or "Sorry, you don't have permission to use this resource.")
     return None
@@ -334,3 +375,18 @@ def can_see_par_source(u: User, p: DocParagraph):
 
 class AccessDenied(Exception):
     pass
+
+
+def get_single_view_access(i: Item) -> BlockAccess:
+    u = get_current_user_object()
+    accs: List[BlockAccess] = u.get_personal_group().accesses.filter_by(block_id=i.id).all()
+    if not accs:
+        raise RouteException("No access found for this item.")
+    if len(accs) > 1:
+        raise RouteException("Multiple accesses found.")
+    acc = accs[0]
+    if acc.access_type != AccessType.view:
+        raise RouteException(f"Access type is {acc.access_type.name} instead of view.")
+    if acc.expired:
+        raise RouteException(f"Access is already expired.")
+    return acc

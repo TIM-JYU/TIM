@@ -2,7 +2,9 @@
 {% block content %}
     <div class="alert alert-warning">
         <i class="glyphicon glyphicon-warning-sign"></i>
-        {% if access.unlockable %}
+        {% if msg %}
+            {{ msg }}
+        {% elif access.unlockable %}
             You are about to access a time-limited {{ item_type }}.
             After you click Unlock, your access to this {{ item_type }} will be removed in {{ access.duration | timtimedelta }}.
         {% elif access.require_confirm %}
@@ -19,6 +21,11 @@
             You don't have access to this item.
         {% endif %}
     </div>
+    {% if next_doc %}
+        <div class="text-center">
+            <a href="/view/{{ next_doc.path }}?unlock=true" class="timButton">Go to the next document</a>
+        </div>
+    {% endif %}
     {% if access.unlockable %}
         <div class="text-center">
             <a href="/view/{{ item.path }}?unlock=true" class="timButton">Unlock</a>

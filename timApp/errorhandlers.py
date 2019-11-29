@@ -68,10 +68,14 @@ def register_errorhandlers(app: Flask):
             item = Folder.get_by_id(error.access.block_id)
         if not item:
             abort(404)
-        return render_template('duration_unlock.html',
-                               item=item,
-                               item_type='folder' if is_folder else 'document',
-                               access=error.access), 403
+        return render_template(
+            'duration_unlock.html',
+            item=item,
+            item_type='folder' if is_folder else 'document',
+            access=error.access,
+            msg=error.msg,
+            next_doc=error.next_doc,
+        ), 403
 
     @app.errorhandler(NoSuchUserException)
     def handle_user_not_found(error):

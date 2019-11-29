@@ -93,6 +93,7 @@ TIM_SAFE_TAGS = [
 
     # raw AngularJS components:
     'tim-rights-editor',
+    'tim-self-expire',
 ]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
@@ -119,6 +120,9 @@ TIM_SAFE_ATTRS = frozenset([
     'item-id', 'allow-select-action', 'barcode-mode', 'restrict-rights', 'hide-remove',
     'hide-edit', 'hide-expire',
     'force-duration', 'force-duration-start', 'force-duration-end', 'force-confirm',
+
+    # tim-self-expire
+    'button-text', 'confirm',
 ])
 
 c = Cleaner(

@@ -159,7 +159,6 @@ class DurationTest(TimRouteTest):
     def test_duration_zero(self):
         self.login_test1()
         d = self.create_doc()
-        doc_id = d.id
         self.login_test2()
         grant_access(self.test_user_2.get_personal_group(), d, AccessType.view,
                      duration=timedelta(days=0))
