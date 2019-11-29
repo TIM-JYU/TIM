@@ -141,7 +141,7 @@ class PermissionEditModel:
     confirm: Optional[bool]
 
     def __post_init__(self):
-        if self.confirm and self.time.ffrom:
+        if self.confirm and self.time.type == TimeType.range and self.time.ffrom:
             raise RouteException("Cannot require confirm with start time set")
 
     @cached_property
