@@ -410,3 +410,61 @@ class PermissionTest(TimRouteTest):
         r = self.get(d.url, expect_status=403)
         self.assertIn('My custom message', r)
         self.assertIn('Go to the next document', r)
+
+        self.get(d2.url, expect_status=403)
+        self.get(d2.url, query_string={'unlock': True})
+
+        # test also range confirm
+        grant_access(
+            group=self.test_user_2.get_personal_group(),
+            access_type=AccessType.view,
+            block=d2,
+            accessible_to=get_current_time() + timedelta(days=1),
+            require_confirm=True,
+        )
+        # make sure can't access at first
+        self.get(d2.url, expect_status=403)
+        # this does the autoconfirm
+        r = self.get(d.url, expect_status=403)
+        self.assertIn('My custom message', r)
+        self.assertIn('Go to the next document', r)
+        # and now there should be access
+        self.get(d2.url)
+
+    def test_confirm_with_end_date(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.json_put(
+            f'/permissions/add',
+            {
+                'time': {
+                    'from': None,
+                    'to': get_current_time() + timedelta(days=1),
+                    'type': 'range',
+                },
+                'id': d.id,
+                'type': 'view',
+                'groups': ['testuser2'],
+                'confirm': True,
+            }, expect_content={'not_exist': []})
+        self.login_test2()
+        self.get(d.url, expect_status=403)
+        self.login_test1()
+        self.json_put('/permissions/confirm', {
+            'id': d.id,
+            'type': 'view',
+            'group': self.get_test_user_2_group_id(),
+        })
+        self.login_test2()
+        self.get(d.url)
+
+        self.login_test1()
+        self.json_put(
+            '/permissions/confirm', {
+                'id': d.id,
+                'type': 'view',
+                'group': self.get_test_user_2_group_id(),
+            },
+            expect_status=400,
+            expect_content='view right for testuser2 does not require confirmation or it was already confirmed.',
+        )

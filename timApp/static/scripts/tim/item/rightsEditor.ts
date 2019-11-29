@@ -352,7 +352,7 @@ class RightsEditorController implements IController {
                 type: type.name,
                 action: this.actionOption,
                 groups: groupname.split(/[;\n]/),
-                confirm: this.requireConfirm && this.durationSelected(),
+                confirm: this.getEffectiveConfirm(),
             }));
             if (r.ok) {
                 this.showNotExistWarning(r.result.data.not_exist);
@@ -379,7 +379,7 @@ class RightsEditorController implements IController {
                         id: this.itemId,
                         groups: groups,
                         type: type.name.replace(" ", "_"),
-                        confirm: this.requireConfirm && this.durationSelected(),
+                        confirm: this.getEffectiveConfirm(),
                         item_type: this.defaultItem,
                     },
                 ));
@@ -440,6 +440,10 @@ class RightsEditorController implements IController {
         }
     }
 
+    private getEffectiveConfirm() {
+        return this.requireConfirm && (this.durationSelected() || this.rangeSelected());
+    }
+
     private clearMessages() {
         this.errMsg = undefined;
         this.successMsg = undefined;
@@ -464,6 +468,10 @@ class RightsEditorController implements IController {
 
     durationSelected() {
         return this.timeOpt.type == "duration";
+    }
+
+    rangeSelected() {
+        return this.timeOpt.type == "range";
     }
 
     getPlaceholder() {

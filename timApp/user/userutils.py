@@ -110,7 +110,7 @@ def grant_access(group,
 
     """
 
-    if accessible_from is None and duration is None:
+    if accessible_from is None and duration is None and not require_confirm:
         # the delta is to ease testing; the clocks of container and PostgreSQL are not perfectly in sync
         accessible_from = get_current_time() - timedelta(milliseconds=50)
 

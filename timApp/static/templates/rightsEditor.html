@@ -213,7 +213,7 @@
                     </div>
 
                 </fieldset>
-                <div ng-show="$ctrl.durationSelected()" class="checkbox">
+                <div ng-show="$ctrl.durationSelected() || $ctrl.rangeSelected()" class="checkbox">
                     <label><input ng-disabled="$ctrl.forceConfirm != null"
                                   type="checkbox"
                                   ng-model="$ctrl.requireConfirm">Require confirmation</label>

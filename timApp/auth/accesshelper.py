@@ -199,7 +199,7 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
                                 else:
                                     next_doc = target
                                     msg = s.expire_next_doc_message()
-                                    acc.require_confirm = False
+                                    acc.do_confirm()
                                     db.session.commit()
                             else:
                                 flash('Document is not authorized to auto-confirm rights')

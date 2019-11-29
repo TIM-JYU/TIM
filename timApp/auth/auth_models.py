@@ -72,6 +72,11 @@ class BlockAccess(db.Model):
             return None
         return (self.accessible_to - get_current_time()).total_seconds()
 
+    def do_confirm(self):
+        self.require_confirm = False
+        if not self.duration:
+            self.accessible_from = get_current_time()
+
     def __hash__(self):
         return hash((self.block_id,
                      self.usergroup_id,

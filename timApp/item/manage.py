@@ -140,6 +140,10 @@ class PermissionEditModel:
     groups: List[str]
     confirm: Optional[bool]
 
+    def __post_init__(self):
+        if self.confirm and self.time.ffrom:
+            raise RouteException("Cannot require confirm with start time set")
+
     @cached_property
     def group_objects(self):
         return UserGroup.query.filter(UserGroup.name.in_(self.groups)).all()
@@ -211,9 +215,7 @@ def confirm_permission(m: PermissionRemoveModel):
         raise RouteException('Right not found.')
     if not ba.require_confirm:
         raise RouteException(f'{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed.')
-    ba.require_confirm = False
-    if not ba.duration:
-        ba.accessible_from = get_current_time()
+    ba.do_confirm()
     db.session.commit()
     return ok_response()
 
