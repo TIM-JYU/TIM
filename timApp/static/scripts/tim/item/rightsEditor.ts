@@ -707,7 +707,7 @@ timApp.component("timSelfExpire", {
         itemId: "<",
     },
     controller: class {
-        private confirm?: boolean;
+        private confirm?: string;
         private buttonText?: string;
         private itemId!: number;
 
@@ -718,7 +718,7 @@ timApp.component("timSelfExpire", {
         }
 
         async clicked() {
-            if (!this.confirm || window.confirm()) {
+            if (!this.confirm || window.confirm(this.confirm)) {
                 const r = await to($http.post<unknown>("/permissions/selfExpire", {id: this.itemId}));
                 if (r.ok) {
                     location.reload();
