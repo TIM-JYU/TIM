@@ -290,9 +290,13 @@ class RightsEditorController implements IController {
             group: right.usergroup.id,
             id: this.itemId,
             item_type: this.defaultItem,
-            type: this.findAccessTypeById(right.type)!.name,
+            type: this.accessTypeEnumName(right),
         }));
         return await this.handleResult(r, refresh);
+    }
+
+    private accessTypeEnumName(right: IRight) {
+        return this.findAccessTypeById(right.type)!.name.replace(" ", "_");
     }
 
     private async handleResult(r: Result<IHttpResponse<unknown>, {data: {error: string}}>, refresh: boolean) {
@@ -374,7 +378,7 @@ class RightsEditorController implements IController {
                         time: this.timeOpt,
                         id: this.itemId,
                         groups: groups,
-                        type: type.name,
+                        type: type.name.replace(" ", "_"),
                         confirm: this.requireConfirm && this.durationSelected(),
                         item_type: this.defaultItem,
                     },
@@ -541,7 +545,7 @@ class RightsEditorController implements IController {
                 },
                 id: this.itemId,
                 groups: [group.usergroup.name],
-                type: this.findAccessTypeById(group.type)!.name,
+                type: this.accessTypeEnumName(group),
                 confirm: false,
                 item_type: this.defaultItem,
             },
@@ -557,7 +561,7 @@ class RightsEditorController implements IController {
         const r = await to($http.put("/permissions/confirm", {
             group: group.usergroup.id,
             id: this.itemId,
-            type: this.findAccessTypeById(group.type)!.name,
+            type: this.accessTypeEnumName(group),
         }));
         const result = await this.handleResult(r, refresh);
         this.loading = false;
