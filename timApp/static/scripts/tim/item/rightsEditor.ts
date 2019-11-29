@@ -300,15 +300,18 @@ class RightsEditorController implements IController {
     }
 
     private async handleResult(r: Result<IHttpResponse<unknown>, {data: {error: string}}>, refresh: boolean) {
+        let result;
         if (r.ok) {
             if (refresh) {
                 await this.getPermissions();
             }
-            return true;
+            result = true;
         } else {
             this.reportError(r.result.data.error);
-            return false;
+            result = false;
         }
+        this.selectedRight = null;
+        return result;
     }
 
     cancel() {
@@ -436,6 +439,9 @@ class RightsEditorController implements IController {
             if (!this.barcodeMode) {
                 await $timeout();
                 this.element.find(".rights-list a").first().focus();
+            }
+            if (this.editingRight()) {
+                this.selectedRight = null;
             }
         }
     }
