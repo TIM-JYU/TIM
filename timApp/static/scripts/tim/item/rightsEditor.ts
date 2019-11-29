@@ -729,6 +729,6 @@ timApp.component("timSelfExpire", {
         }
     },
     template: `
-<button ng-click="$ctrl.clicked()">{{ ::$ctrl.buttonText }}</button>
+<button class="timButton" ng-click="$ctrl.clicked()">{{ ::$ctrl.buttonText }}</button>
     `,
 });
