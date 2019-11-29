@@ -723,7 +723,7 @@ timApp.component("timSelfExpire", {
                 if (r.ok) {
                     location.reload();
                 } else {
-                    await showMessageDialog(`Error removing right: ${r.result.data.error}`);
+                    await showMessageDialog(`Error expiring right: ${r.result.data.error}`);
                 }
             }
         }
