@@ -346,6 +346,7 @@ class RightsEditorController implements IController {
      * but could not read clipboard, so just clearInput
      */
     async paste() {
+        // navigator.permissions.query({name: "clipboard-read"});  // does not compile
         if ( !this.confirmExpire ) { return; }  // clearInput did not work?
         this.groupName = "";
         /*
