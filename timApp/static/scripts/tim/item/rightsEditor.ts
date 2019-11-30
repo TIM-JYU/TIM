@@ -102,6 +102,7 @@ class RightsEditorController implements IController {
     private expiringRight?: IRight;
     private removingRight?: IRight;
     private confirmExpire?: boolean;
+    private clearInput?: boolean;
 
     constructor(private scope: IScope, private element: JQLite) {
         this.timeOpt = {type: "always"};
@@ -338,6 +339,26 @@ class RightsEditorController implements IController {
 
     addDisabled() {
         return this.loading || (this.massMode && this.grid && this.grid.selection.getSelectedRows().length === 0);
+    }
+
+    /***
+     * Purpose for this is to use clipboard data to give rights
+     * but could not read clipboard, so just clearInput
+     */
+    async paste() {
+        if ( !this.confirmExpire ) { return; }  // clearInput did not work?
+        this.groupName = "";
+        /*
+        const input = this.element.filter("#groupName");
+        input.focus();
+        document.execCommand("selectAll");
+        document.execCommand("paste");
+        // if (!navigator.clipboard) { return; }
+        // const text = await navigator.clipboard.readText();
+        const text = this.groupName;
+        if (!this.accessType || !text) { return; }
+        // this.addOrEditPermission(text, this.accessType);
+         */
     }
 
     async addOrEditPermission(groupname: string, type: IAccessType) {
@@ -700,6 +721,7 @@ timApp.component("timRightsEditor", {
         action: "@?",
         allowSelectAction: "<?",
         barcodeMode: "<?",
+        clearInput: "<?",
         confirmExpire: "<?",
         defaultItem: "@?",
         forceConfirm: "<?",

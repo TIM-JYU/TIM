@@ -94,6 +94,7 @@
         </li>
     </ul>
 </div>
+<!--<button class="btn btn-default" type="button"  ng-click="$ctrl.paste()">Paste</button>-->
 <button class="timButton" ng-if="!$ctrl.addingRight && !$ctrl.editingRight()" ng-click="$ctrl.showAddRightFn($ctrl.accessType, $event)">{{$ctrl.actionText()}} right...
 </button>
 <div ng-show="$ctrl.addingRight || $ctrl.editingRight()" class="rights-edit-area">
@@ -105,6 +106,7 @@
                     <input ng-show="!$ctrl.listMode" id="groupName" class="form-control" type="text"
                            ng-model="$ctrl.groupName"
                            ng-disabled="$ctrl.selectedRight"
+                           ng-click="$ctrl.paste()"
                            focus-me="$ctrl.focusEditor"
                            ng-focus="$event.target.select()"
                            placeholder="{{ $ctrl.getPlaceholder() }}">
