@@ -468,3 +468,58 @@ class PermissionTest(TimRouteTest):
             expect_status=400,
             expect_content='view right for testuser2 does not require confirmation or it was already confirmed.',
         )
+
+    def test_cannot_auto_confirm_too_early(self):
+        self.login_test1()
+        d = self.create_doc()
+        grant_access(
+            group=self.test_user_2.get_personal_group(),
+            access_type=AccessType.view,
+            accessible_from=None,
+            accessible_to=get_current_time() + timedelta(days=1),
+            require_confirm=True,
+            block=d,
+        )
+        d2 = self.create_doc()
+        d.document.set_settings({
+            'auto_confirm': d2.path,
+            'expire_next_doc_message': 'My custom message',
+        })
+        d2.document.set_settings({
+            'allow_self_confirm_from': d.path,
+        })
+        self.login_test2()
+        grant_access(
+            group=self.test_user_2.get_personal_group(),
+            access_type=AccessType.view,
+            block=d2,
+            duration=timedelta(hours=2),
+            require_confirm=True,
+        )
+        r = self.get(d.url, expect_status=403)
+        self.assertNotIn('My custom message', r)
+        self.assertNotIn('Go to the next document', r)
+
+        grant_access(
+            group=self.test_user_2.get_personal_group(),
+            access_type=AccessType.view,
+            duration=timedelta(days=1),
+            require_confirm=True,
+            block=d,
+        )
+
+        r = self.get(d.url, expect_status=403)
+        self.assertNotIn('My custom message', r)
+        self.assertNotIn('Go to the next document', r)
+
+        grant_access(
+            group=self.test_user_2.get_personal_group(),
+            access_type=AccessType.view,
+            duration=timedelta(days=1),
+            require_confirm=False,
+            block=d,
+        )
+
+        r = self.get(d.url, expect_status=403)
+        self.assertNotIn('My custom message', r)
+        self.assertNotIn('Go to the next document', r)

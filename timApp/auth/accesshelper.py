@@ -171,42 +171,50 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
             else:
                 # Chaining: If the right to this document has expired, check if there is a document that should
                 # get auto-confirmed.
-                msg = None
-                next_doc = None
-                if isinstance(block, DocInfo):
-                    s = block.document.get_settings()
-                    ac = s.auto_confirm()
-                    if isinstance(ac, str):
-                        target = DocEntry.find_by_path(ac)
-                        if not target:
-                            flash('auto_confirm document does not exist')
-                        else:
-                            t_s = target.document.get_settings()
-                            asc = t_s.allow_self_confirm_from()
-                            allowed = set()
-                            if isinstance(asc, str):
-                                allowed.add(asc)
-                            elif isinstance(asc, list):
-                                for a in asc:
-                                    if isinstance(a, str):
-                                        allowed.add(a)
-                            aliases = set(a.path for a in block.aliases)
-                            if allowed & aliases:
-                                try:
-                                    acc = get_single_view_access(target)
-                                except RouteException as e:
-                                    flash('Cannot get access: ' + str(e))
-                                else:
-                                    next_doc = target
-                                    msg = s.expire_next_doc_message()
-                                    acc.do_confirm()
-                                    db.session.commit()
-                            else:
-                                flash('Document is not authorized to auto-confirm rights')
+                if ba.expired:
+                    msg, next_doc = maybe_auto_confirm(block)
+                else:
+                    msg, next_doc = None, None
                 raise ItemLockedException(ba, msg, next_doc)
     if require:
         abort(403, message or "Sorry, you don't have permission to use this resource.")
     return None
+
+
+def maybe_auto_confirm(block: ItemOrBlock):
+    msg = None
+    next_doc = None
+    if isinstance(block, DocInfo):
+        s = block.document.get_settings()
+        ac = s.auto_confirm()
+        if isinstance(ac, str):
+            target = DocEntry.find_by_path(ac)
+            if not target:
+                flash('auto_confirm document does not exist')
+            else:
+                t_s = target.document.get_settings()
+                asc = t_s.allow_self_confirm_from()
+                allowed = set()
+                if isinstance(asc, str):
+                    allowed.add(asc)
+                elif isinstance(asc, list):
+                    for a in asc:
+                        if isinstance(a, str):
+                            allowed.add(a)
+                aliases = set(a.path for a in block.aliases)
+                if allowed & aliases:
+                    try:
+                        acc = get_single_view_access(target)
+                    except RouteException as e:
+                        flash('Cannot get access: ' + str(e))
+                    else:
+                        next_doc = target
+                        msg = s.expire_next_doc_message()
+                        acc.do_confirm()
+                        db.session.commit()
+                else:
+                    flash('Document is not authorized to auto-confirm rights')
+    return msg, next_doc
 
 
 def has_view_access(b: ItemOrBlock):
