@@ -188,7 +188,11 @@ def maybe_auto_confirm(block: ItemOrBlock):
         s = block.document.get_settings()
         ac = s.auto_confirm()
         if isinstance(ac, str):
-            target = DocEntry.find_by_path(ac)
+            target = None
+            if block.lang_id:
+                target = DocEntry.find_by_path(f'{ac}/{block.lang_id}')
+            if not target:
+                target = DocEntry.find_by_path(ac)
             if not target:
                 flash('auto_confirm document does not exist')
             else:

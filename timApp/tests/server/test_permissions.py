@@ -2,6 +2,8 @@ from datetime import timedelta
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
+from timApp.document.editing.documenteditresult import DocumentEditResult
+from timApp.document.translation.synchronize_translations import synchronize_translations
 from timApp.item.item import Item
 from timApp.tests.server.test_default_rights import convert_to_old_format
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -523,3 +525,40 @@ class PermissionTest(TimRouteTest):
         r = self.get(d.url, expect_status=403)
         self.assertNotIn('My custom message', r)
         self.assertNotIn('Go to the next document', r)
+
+    def test_auto_confirm_translation(self):
+        self.login_test1()
+        d = self.create_doc()
+        tr = self.create_translation(d)
+        grant_access(
+            group=self.test_user_2.get_personal_group(),
+            access_type=AccessType.view,
+            accessible_to=get_current_time() - timedelta(days=1),
+            block=tr,
+        )
+        d2 = self.create_doc()
+        d2tr = self.create_translation(d2)
+        d.document.set_settings({
+            'auto_confirm': d2.path,
+            'expire_next_doc_message': 'My custom message',
+        })
+        d2.document.set_settings({
+            'allow_self_confirm_from': d.path,
+        })
+        synchronize_translations(d, DocumentEditResult(added=d.document.get_paragraphs()))
+        synchronize_translations(d2, DocumentEditResult(added=d2.document.get_paragraphs()))
+        self.login_test2()
+        grant_access(
+            group=self.test_user_2.get_personal_group(),
+            access_type=AccessType.view,
+            block=d2tr,
+            accessible_to=get_current_time() + timedelta(days=1),
+            require_confirm=True,
+        )
+        self.get(d2tr.url, expect_status=403)
+        self.get(d2tr.url, expect_status=403)
+
+        r = self.get(tr.url, expect_status=403)
+        self.assertIn('My custom message', r)
+        self.assertIn('Go to the next document', r)
+        self.get(d2tr.url)
