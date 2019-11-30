@@ -72,6 +72,26 @@ class BlockAccess(db.Model):
             return None
         return (self.accessible_to - get_current_time()).total_seconds()
 
+    @property
+    def info_str(self):
+        r = []
+        if self.duration:
+            r.append(f'duration={self.duration}')
+        if self.duration_from:
+            r.append(f'duration_from={self.duration_from.isoformat()}')
+        if self.duration_to:
+            r.append(f'duration_to={self.duration_to.isoformat()}')
+        if self.require_confirm:
+            r.append(f'require_confirm={self.require_confirm}')
+        if self.accessible_from and self.future:
+            r.append(f'accessible_from={self.accessible_from.isoformat()}')
+        if self.expired:
+            r.append('expired')
+        elif self.accessible_to:
+            r.append(f'accessible_to={self.accessible_to.isoformat()}')
+        attrs = ','.join(r)
+        return f'{self.access_type.name}({attrs})'
+
     def do_confirm(self):
         self.require_confirm = False
         if not self.duration:

@@ -33,8 +33,9 @@ from timApp.user.users import remove_default_access, get_default_rights_holders,
 from timApp.user.userutils import grant_access, grant_default_access
 from timApp.util.flask.requesthelper import verify_json_params, get_option, use_model, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
+from timApp.util.logger import log_info
 from timApp.util.utils import remove_path_special_chars, split_location, join_location, get_current_time, \
-    cached_property
+    cached_property, seq_to_str
 
 manage_page = Blueprint('manage_page',
                         __name__,
@@ -191,14 +192,20 @@ class PermissionMassEditModel(PermissionEditModel):
 def add_permission(m: PermissionSingleEditModel):
     i = get_item_or_abort(m.id)
     is_owner = verify_permission_edit_access(i, m.type)
-    add_perm(m, i)
+    a = add_perm(m, i)[0]
     check_ownership_loss(is_owner, i)
+    log_right(f'added {a.info_str} for {seq_to_str(m.groups)} in {i.path}')
     db.session.commit()
     return permission_response(m)
 
 
 def permission_response(m: PermissionEditModel):
     return json_response({'not_exist': m.nonexistent_groups})
+
+
+def log_right(s: str):
+    u = get_current_user_object()
+    log_info(f'RIGHTS: {u.name} {s}')
 
 
 @manage_page.route("/permissions/confirm", methods=["PUT"])
@@ -216,6 +223,8 @@ def confirm_permission(m: PermissionRemoveModel):
     if not ba.require_confirm:
         raise RouteException(f'{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed.')
     ba.do_confirm()
+    ug: UserGroup = UserGroup.query.get(m.group)
+    log_right(f'confirmed {ba.info_str} for {ug.name} in {i.path}')
     db.session.commit()
     return ok_response()
 
@@ -229,28 +238,33 @@ def edit_permissions(m: PermissionMassEditModel):
         return abort(400, f'Non-existent groups: {nonexistent}')
     items = Block.query.filter(Block.id.in_(m.ids)
                                & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])).all()
+    a = None
     for i in items:
         is_owner = verify_permission_edit_access(i, m.type)
         if m.action == EditOption.Add:
-            add_perm(m, i)
+            a = add_perm(m, i)[0]
         else:
             for g in groups:
-                remove_perm(g.id, i, m.type.value)
+                a = remove_perm(g.id, i, m.type)
         check_ownership_loss(is_owner, i)
-    db.session.commit()
+    if a:
+        action = 'added' if m.action == EditOption.Add else 'removed'
+        log_right(f'{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}')
+        db.session.commit()
     return permission_response(m)
 
 
 def add_perm(
         p: PermissionEditModel,
         item: Item,
-):
+) -> List[BlockAccess]:
     if get_current_user_object().get_personal_folder().id == item.id:
         if p.type == AccessType.owner:
             abort(403, 'You cannot add owners to your personal folder.')
     opt = p.time.effective_opt
+    accs = []
     for group in p.group_objects:
-        grant_access(
+        a = grant_access(
             group,
             item,
             p.type,
@@ -262,6 +276,8 @@ def add_perm(
             require_confirm=p.confirm,
             commit=False,
         )
+        accs.append(a)
+    return accs
 
 
 @manage_page.route("/permissions/remove", methods=["PUT"])
@@ -269,8 +285,10 @@ def add_perm(
 def remove_permission(m: PermissionRemoveModel):
     i = get_item_or_abort(m.id)
     had_ownership = verify_permission_edit_access(i, m.type)
-    remove_perm(m.group, i.block, m.type.value)
+    a = remove_perm(m.group, i.block, m.type)
     check_ownership_loss(had_ownership, i)
+    ug: UserGroup = UserGroup.query.get(m.group)
+    log_right(f'removed {a.info_str} for {ug.name} in {i.path}')
     db.session.commit()
     return ok_response()
 
@@ -287,15 +305,16 @@ def self_expire_permission(m: SelfExpireModel):
     verify_view_access(i)
     acc = get_single_view_access(i)
     acc.accessible_to = get_current_time()
+    log_right(f'self-expired view access in {i.path}')
     db.session.commit()
     return ok_response()
 
 
-def remove_perm(group_id: int, b: Block, t: int):
+def remove_perm(group_id: int, b: Block, t: AccessType):
     for a in b.accesses:
-        if a.usergroup_id == group_id and a.type == t:
+        if a.usergroup_id == group_id and a.type == t.value:
             db.session.delete(a)
-            break
+            return a
 
 
 def check_ownership_loss(had_ownership, item):
