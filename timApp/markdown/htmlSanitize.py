@@ -94,6 +94,7 @@ TIM_SAFE_TAGS = [
     # raw AngularJS components:
     'tim-rights-editor',
     'tim-self-expire',
+    'tim-mark-all-as-read',
 ]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
