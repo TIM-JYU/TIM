@@ -395,6 +395,7 @@ class RightsEditorController implements IController {
             if (this.barcodeMode) {
                 groups = groups.map((g) => g.replace(/^[# ]+/, ""));
                 groups = groups.map((g) => g.replace(/#/g, "@"));
+                groups = groups.map((g) => g.replace(/\/c/g, "@"));
             }
             if (this.actionOption === ActionOption.Add) {
                 this.loading = true;
