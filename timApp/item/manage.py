@@ -192,10 +192,12 @@ class PermissionMassEditModel(PermissionEditModel):
 def add_permission(m: PermissionSingleEditModel):
     i = get_item_or_abort(m.id)
     is_owner = verify_permission_edit_access(i, m.type)
-    a = add_perm(m, i)[0]
-    check_ownership_loss(is_owner, i)
-    log_right(f'added {a.info_str} for {seq_to_str(m.groups)} in {i.path}')
-    db.session.commit()
+    accs = add_perm(m, i)
+    if accs:
+        a = accs[0]
+        check_ownership_loss(is_owner, i)
+        log_right(f'added {a.info_str} for {seq_to_str(m.groups)} in {i.path}')
+        db.session.commit()
     return permission_response(m)
 
 
@@ -242,7 +244,9 @@ def edit_permissions(m: PermissionMassEditModel):
     for i in items:
         is_owner = verify_permission_edit_access(i, m.type)
         if m.action == EditOption.Add:
-            a = add_perm(m, i)[0]
+            accs = add_perm(m, i)
+            if accs:
+                a = accs[0]
         else:
             for g in groups:
                 a = remove_perm(g.id, i, m.type)

@@ -117,6 +117,18 @@ class PermissionTest(TimRouteTest):
                 'groups': ['testuser2', 'testuserx'],
                 'confirm': False,
             }, expect_content={'not_exist': ['testuserx']})
+        self.json_put(
+            f'/permissions/add',
+            {
+                'time': {
+                    'from': get_current_time(),
+                    'type': 'always',
+                },
+                'id': f.id,
+                'type': 'view',
+                'groups': ['testuserx'],
+                'confirm': False,
+            }, expect_content={'not_exist': ['testuserx']})
 
     def test_permissions_get(self):
         self.login_test1()
