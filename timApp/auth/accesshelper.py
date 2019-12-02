@@ -209,8 +209,8 @@ def maybe_auto_confirm(block: ItemOrBlock):
                 if allowed & aliases:
                     try:
                         acc = get_single_view_access(target)
-                    except RouteException as e:
-                        flash('Cannot get access: ' + str(e))
+                    except AccessDenied as e:
+                        flash('Cannot get access to target document: ' + str(e))
                     else:
                         next_doc = target
                         msg = s.expire_next_doc_message()
@@ -393,12 +393,12 @@ def get_single_view_access(i: Item) -> BlockAccess:
     u = get_current_user_object()
     accs: List[BlockAccess] = u.get_personal_group().accesses.filter_by(block_id=i.id).all()
     if not accs:
-        raise RouteException("No access found for this item.")
+        raise AccessDenied(f"No access found for {i.path}.")
     if len(accs) > 1:
-        raise RouteException("Multiple accesses found.")
+        raise AccessDenied(f"Multiple accesses found for {i.path}.")
     acc = accs[0]
     if acc.access_type != AccessType.view:
-        raise RouteException(f"Access type is {acc.access_type.name} instead of view.")
+        raise AccessDenied(f"Access type is {acc.access_type.name} instead of view in {i.path}.")
     if acc.expired:
-        raise RouteException(f"Access is already expired.")
+        raise AccessDenied(f"Access is already expired for {i.path}.")
     return acc

@@ -407,7 +407,7 @@ class PermissionTest(TimRouteTest):
             'allow_self_confirm_from': d.path,
         })
         r = self.get(d.url, expect_status=403)
-        self.assertIn('Cannot get access:', r)
+        self.assertIn('Cannot get access to target document: No access found for users/test-user-1/nextdoc', r)
         self.assertNotIn('My custom message', r)
         grant_access(
             group=self.test_user_2.get_personal_group(),
