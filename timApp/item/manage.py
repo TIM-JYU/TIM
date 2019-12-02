@@ -306,7 +306,9 @@ class SelfExpireModel:
 @use_model(SelfExpireModel)
 def self_expire_permission(m: SelfExpireModel):
     i = get_item_or_abort(m.id)
-    verify_view_access(i)
+    acc = verify_view_access(i, require=False)
+    if not acc:
+        return ok_response()
     acc = get_single_view_access(i)
     acc.accessible_to = get_current_time()
     log_right(f'self-expired view access in {i.path}')

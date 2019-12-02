@@ -574,3 +574,24 @@ class PermissionTest(TimRouteTest):
         self.assertIn('My custom message', r)
         self.assertIn('Go to the next document', r)
         self.get(d2tr.url)
+
+    def test_self_expire(self):
+        self.login_test1()
+        d = self.create_doc()
+        grant_access(
+            group=self.test_user_2.get_personal_group(),
+            access_type=AccessType.view,
+            accessible_from=get_current_time(),
+            accessible_to=get_current_time(),
+            block=d,
+        )
+        self.login_test2()
+        self.json_post('/permissions/selfExpire', {'id': d.id})
+
+        grant_access(
+            group=self.test_user_2.get_personal_group(),
+            access_type=AccessType.view,
+            accessible_from=get_current_time(),
+            block=d,
+        )
+        self.json_post('/permissions/selfExpire', {'id': d.id})
