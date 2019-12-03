@@ -304,8 +304,20 @@ TIMJS.setData = function(P, data) {
     }
     if ( data.label ) datasets[0].label = data.label;
     if ( data.title) P.chart.options.title.text = data.title; // Tämä pitää olla näin
-    if ( data.xlabel ) coptions.scales.xAxes[0].scaleLabel.labelString = data.xlabel;
-    if ( data.ylabel) coptions.scales.yAxes[0].scaleLabel.labelString = data.ylabel;
+    if ( data.xlabel ) {
+        if ( Array.isArray(coptions.scales.xAxes) ) { // in 2.8.0 is an array
+            coptions.scales.xAxes[0].scaleLabel.labelString = data.xlabel;
+        } else {
+            coptions.scales.xAxes.scaleLabel.labelString = data.xlabel;
+        }
+    }
+    if ( data.ylabel) {
+        if ( Array.isArray(coptions.scales.yAxes) ) {
+            coptions.scales.yAxes[0].scaleLabel.labelString = data.ylabel;
+        } else {
+            coptions.scales.yAxes.scaleLabel.labelString = data.ylabel;
+        }
+    }
     if ( data.label && datasets.length > 1 ) coptions.legend.display = true;
     if ( data.label2 ) {
         coptions.legend.display = true;

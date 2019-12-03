@@ -109,7 +109,7 @@ class JSframe(Language):
         if javascript:
             src = src.replace("//JAVASCRIPT", javascript)
 
-        src = src.replace('##CHARTJSVERSION##', ma.get('chartjsversion', 'master'))
+        src = src.replace('##CHARTJSVERSION##', ma.get('chartjsversion', '2.8.0'))
         ma["srchtml"] = src
         return
 
