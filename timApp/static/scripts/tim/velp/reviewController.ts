@@ -135,7 +135,7 @@ export class ReviewController {
      * @returns {Array} Element children
      */
     getElementChildren(element: Node): Element[] {
-        /*if (typeof element.children !== "undefined")
+        /* if (typeof element.children !== "undefined")
          return element.children;
          */
         const children = [];

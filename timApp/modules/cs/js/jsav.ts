@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/tslint/config */
 /**
  * Defines the client-side implementation of the JSAV animations plugin.
  * Originally programmed by Mikko Merikivi with help from the GeoGebra plugin by Vesa Lappalainen
@@ -46,24 +47,6 @@ const JsavAll = t.intersection([
         preview: t.boolean,
     }),
 ]);
-
-/**
- * This is what's stored in TIM's database when an answer is saved
- */
-type JsavResult = string | {
-    answernotes: any,
-    api_time: number,
-    error: false,
-    formatcorrectresponse: string,
-    generalfeedback: string,
-    questiontext: string,
-    request_time: number,
-    score: number,
-    summariseresponse: any,
-} | {
-    error: true,
-    message: string,
-};
 
 /**
  * Methods and properties in JSAV library's Exercise class that we want to be able to use remotely
@@ -177,7 +160,7 @@ class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<ty
         this.console = "";
 
         const r = await to($http<{
-            web: {jsavResult: JsavResult, error?: string, console?: string},
+            web: {error?: string, console?: string},
         }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
         this.isRunning = false;

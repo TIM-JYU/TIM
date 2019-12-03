@@ -1,0 +1,12 @@
+diff --git a/node_modules/angular-diff-match-patch/angular-diff-match-patch.js b/node_modules/angular-diff-match-patch/angular-diff-match-patch.js
+index 32b7fc5..7135e9a 100644
+--- a/node_modules/angular-diff-match-patch/angular-diff-match-patch.js
++++ b/node_modules/angular-diff-match-patch/angular-diff-match-patch.js
+@@ -3,6 +3,7 @@
+  http://amweiss.github.io/angular-diff-match-patch/
+  @license: MIT
+ */
++var diff_match_patch = require('diff-match-patch');
+ angular.module('diff-match-patch', [])
+ 	.constant('DiffMatchPatch', diff_match_patch)
+ 	.factory('DIFF_INSERT', ['DiffMatchPatch', function (DiffMatchPatch) {

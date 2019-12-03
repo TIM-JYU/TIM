@@ -104,7 +104,7 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
      * @param e Event object
      * @param f The function to call
      */
-    callFunc(e: JQuery.Event, f: IMenuFunctionEntry) {
+    callFunc(e: JQuery.MouseEventBase, f: IMenuFunctionEntry) {
         f.func(e, $(this.p.srcid));
         if (f.closeAfter || f.closeAfter == null) {
             this.close();

@@ -32,7 +32,7 @@ export class BookmarksController implements IController {
     }
 
     $onInit() {
-        if (genericglobals().bookmarks && !this.data) {
+        if (!this.data) {
             this.data = clone(genericglobals().bookmarks);
         }
         if (this.userId && !this.data) {
@@ -160,8 +160,11 @@ export class BookmarksController implements IController {
      * Updates bookmarks.
      */
     async refresh() {
-        const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get");
-        this.getFromServer(response.data);
+        const response = await to($http.get<IBookmarkGroup[]>("/bookmarks/get"));
+        if (!response.ok) {
+            return;
+        }
+        this.getFromServer(response.result.data);
     }
 }
 
@@ -174,7 +177,49 @@ timApp.component("bookmarks", {
         viewctrl: "?^timView",
     },
     controller: BookmarksController,
-    templateUrl: "/static/templates/bookmarks.html",
+    template: `
+<div ng-repeat="group in $ctrl.data" class="btn-group btn-group-sm margin-4" uib-dropdown dropdown-append-to-body is-open="group.isOpen">
+    <button type="button" class="btn btn-default" uib-dropdown-toggle>
+        {{ group.name || 'Top level' }} <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu"
+        uib-dropdown-menu
+        role="menu"
+        aria-labelledby="single-button">
+        <li ng-repeat="item in group.items" role="menuitem">
+            <a ng-href="{{ item.link }}">{{ item.name }}
+                <i ng-click="$ctrl.editItem(group, item, $event)" ng-show="$ctrl.deleting"
+                   class="glyphicon glyphicon-pencil"></i>
+                <i ng-click="$ctrl.deleteItem(group, item, $event)" ng-show="$ctrl.deleting"
+                   class="glyphicon glyphicon-remove"></i>
+            </a>
+        </li>
+        <li ng-show="group.items.length > 0"
+            class="divider"></li>
+        <li role="menuitem">
+            <a ng-click="$ctrl.newBookmark(group.name, $event)"
+               href="#">New bookmark...</a>
+        </li>
+        <li ng-show="group.editable"
+            class="divider"></li>
+        <li ng-show="group.editable" role="menuitem">
+            <a ng-click="$ctrl.toggleDelete($event)"
+               href="#">{{ $ctrl.deleting ? 'Done editing' : 'Edit...' }}</a>
+        </li>
+        <li ng-show="group.editable && $ctrl.deleting" role="menuitem">
+            <a ng-click="$ctrl.deleteGroup(group, $event)"
+               href="#">Delete this folder</a>
+        </li>
+    </ul>
+</div>
+<a ng-repeat="bookmark in $ctrl.getTopLevelBookmarks()"
+   ng-href="{{ bookmark.link }}"
+   ng-bind="bookmark.name"
+   class="btn btn-sm btn-default"></a>
+<button ng-click="$ctrl.newBookmark(undefined, $event)" class="btn btn-sm btn-default">
+    <i class="glyphicon glyphicon-plus"></i> New bookmark...
+</button>
+    `,
 });
 
 class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark> {

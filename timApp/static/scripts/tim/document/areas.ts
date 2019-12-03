@@ -94,7 +94,7 @@ export class AreaHandler {
         });
     }
 
-    onAreaEditClicked($this: JQuery, e: JQuery.Event, className: string) {
+    onAreaEditClicked($this: JQuery, e: JQuery.MouseEventBase, className: string) {
         this.viewctrl.closePopupIfOpen();
         const areaName = $this.attr("data-area");
         if (!areaName) {
@@ -114,7 +114,7 @@ export class AreaHandler {
         }, 80);
     }
 
-    showAreaOptionsWindow(e: JQuery.Event, $area: Area, $pars: Paragraphs) {
+    showAreaOptionsWindow(e: JQuery.MouseEventBase, $area: Area, $pars: Paragraphs) {
         this.viewctrl.clipboardHandler.updateClipboardStatus();
         this.viewctrl.parmenuHandler.showPopupMenu(e, $pars, this.viewctrl.parmenuHandler.getPopupAttrs(), "area");
     }

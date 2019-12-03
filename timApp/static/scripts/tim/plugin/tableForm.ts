@@ -23,11 +23,12 @@ import {
     colnumToLetters,
     DataEntity,
     isPrimitiveCell,
+    moduleDefs as timtableDefs,
     TimTable,
     TimTableController,
 } from "./timTable";
 
-const tableFormApp = angular.module("tableFormApp", ["ngSanitize"]);
+const tableFormApp = angular.module("tableFormApp", ["ngSanitize", ...timtableDefs.map((m) => m.name)]);
 export const moduleDefs = [tableFormApp];
 
 const TableFormMarkup = t.intersection([
@@ -727,7 +728,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     /**
      * Removes selected users from the group
      */
-    // tslint:disable-next-line
     async removeUsers() {
         const timTable = this.getTimTable();
         if (timTable == null) {
@@ -763,7 +763,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         location.reload();
     }
 
-    // tslint:disable-next-line
     listUsernames() {
         const timTable = this.getTimTable();
         if (timTable == null) { return; }
@@ -798,7 +797,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         // TODO: myös iPad toimimaan, ks GeoGebra tai csPlugin jaa tee yleinen copy
     }
 
-    // tslint:disable-next-line
     emailUsers() {
         const timTable = this.getTimTable();
         if (timTable == null) { return; }
@@ -820,7 +818,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.emailMsg = "Sent"; // JSON.stringify(response);
     }
 
-    // tslint:disable-next-line
     public async sendEmail() {
         if ( this.emailtim ) {
             this.sendEmailTim();
@@ -896,7 +893,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.doSaveText(cells);
     }
 
-    // tslint:disable-next-line
     async openTable() {
         if (!this.tableFetched) {
             await this.updateTable();
@@ -905,7 +901,6 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.showTable = true;
     }
 
-    // tslint:disable-next-line
     closeTable() {
         this.showTable = false;
     }

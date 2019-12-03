@@ -709,7 +709,7 @@ export class VelpSelectionController implements IController {
                 this.groupDefaults[targetId].push({id: g.id, selected: g.default});
             });
 
-            /*if (!this.groupDefaults.hasOwnProperty(group.target_id))
+            /* if (!this.groupDefaults.hasOwnProperty(group.target_id))
              this.groupDefaults[group.target_id] = [];
 
              var defGroups = this.groupDefaults[group.target_id];

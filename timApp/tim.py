@@ -68,7 +68,6 @@ from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_request_message, use_model, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
-from timApp.util.flask.routes_static import static_bp
 from timApp.util.flask.search import search_routes
 from timApp.util.logger import log_info, log_debug, log_warning
 from timApp.velp.annotation import annotations
@@ -103,7 +102,6 @@ for bp in [
     search_routes,
     settings_page,
     sisu,
-    static_bp,
     tags_blueprint,
     tr_bp,
     upload,
@@ -127,11 +125,19 @@ assets = Environment(app)
 
 register_errorhandlers(app)
 
+
 @app.context_processor
 def inject_custom_css() -> dict:
     """Injects the user prefs variable to all templates."""
     prefs = get_current_user_object().get_prefs()
     return dict(prefs=prefs)
+
+
+@app.context_processor
+def inject_angular_scripts() -> dict:
+    """Provides the JavaScript files compiled by Angular."""
+    with open('static/scripts/build/index.html') as f:
+        return dict(angularscripts=f.read())
 
 
 @app.context_processor

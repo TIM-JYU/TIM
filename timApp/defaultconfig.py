@@ -28,8 +28,8 @@ PERMANENT_SESSION_LIFETIME = timedelta(days=14)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 IMMEDIATE_PRELOAD = False
 LIBSASS_STYLE = "compressed"
-LIBSASS_INCLUDES = ["static/scripts/jspm_packages/github/twbs/bootstrap-sass@3.3.7/assets/stylesheets",
-                    "static/scripts/jspm_packages/npm/eonasdan-bootstrap-datetimepicker@4.17.47/src/sass",
+LIBSASS_INCLUDES = ["node_modules/bootstrap-sass/assets/stylesheets",
+                    "node_modules/eonasdan-bootstrap-datetimepicker/src/sass",
                     "static"]
 TIM_NAME = os.environ.get('COMPOSE_PROJECT_NAME', 'tim')
 TIM_HOST = os.environ.get('TIM_HOST', 'http://localhost')

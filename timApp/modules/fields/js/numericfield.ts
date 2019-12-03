@@ -157,6 +157,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
         let message;
         let ok = true;
@@ -165,6 +166,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             this.resetField();
         } else {
             try {
+                // eslint-disable-next-line @typescript-eslint/tslint/config
                 const parsed = this.getDouble(content.c);
                 if (isNaN(parsed)) {
                     this.numericvalue = undefined;
@@ -179,6 +181,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 message = "Couldn't find related content (\"c\")";
             }
             if (!this.attrs.ignorestyles) {
+                // eslint-disable-next-line @typescript-eslint/tslint/config
                 this.applyStyling(content.styles);
             }
         }

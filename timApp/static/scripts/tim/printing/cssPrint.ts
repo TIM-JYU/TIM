@@ -1,3 +1,5 @@
+import $ from "jquery";
+
 export function initCssPrint() {
     // Removes the empty first page.
     $(".par:eq(0) > .parContent > h1").attr("class", "firstH1");
@@ -10,7 +12,11 @@ export function initCssPrint() {
     if (window.matchMedia) {
         const mediaQueryList = window.matchMedia("print");
         mediaQueryList.addListener((mql) => {
-            (mql.matches) ? BeforePrint() : AfterPrint();
+            if (mql.matches) {
+                BeforePrint();
+            } else {
+                AfterPrint();
+            }
         });
     }
 

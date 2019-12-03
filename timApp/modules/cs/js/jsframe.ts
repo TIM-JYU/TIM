@@ -1,4 +1,5 @@
-﻿import angular from "angular";
+﻿/* eslint-disable @typescript-eslint/tslint/config,@typescript-eslint/no-explicit-any */
+import angular from "angular";
 import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";
 import {ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
@@ -49,21 +50,6 @@ const JsframeAll = t.intersection([
         preview: t.boolean,
     }),
 ]);
-
-type JsframeResult = string | {
-    answernotes: any,
-    api_time: number,
-    error: false,
-    formatcorrectresponse: string,
-    generalfeedback: string,
-    questiontext: string,
-    request_time: number,
-    score: number,
-    summariseresponse: any,
-} | {
-    error: true,
-    message: string,
-};
 
 interface JSFrameWindow extends Window {
     getData(): string;
@@ -310,7 +296,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         this.console = "";
 
         const r = await to($http<{
-            web: {jsframeResult: JsframeResult, error?: string, console?: string},
+            web: {error?: string, console?: string},
         }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
         this.isRunning = false;
@@ -335,7 +321,6 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
             this.saveResponse.saved = true;
             return this.saveResponse;
         }
-        const jsframeResult = r.result.data.web.jsframeResult;
         this.saveResponse.saved = true;
         return this.saveResponse;
     }
@@ -449,10 +434,6 @@ const common = {
         viewctrl: "?^timView",
     },
 };
-
-/*
-
-*/
 
 jsframeApp.component("jsframeRunner", {
     ...common,

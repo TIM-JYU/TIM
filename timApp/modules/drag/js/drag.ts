@@ -162,8 +162,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
      * @returns {string} Plugin content in a string array.
      */
     getContentArray(): string[] {
-        let words: string[];
-        words = [];
+        const words: string[] = [];
         if (this.wordObjs) {
             this.wordObjs.map((el) => {
                 words.push(el.word);

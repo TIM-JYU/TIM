@@ -1,10 +1,9 @@
-import aceimp from "ace";
-import "ace/ext-language_tools";
+import * as aceimp from "ace-builds/src-noconflict/ace";
+import * as langtools from "ace-builds/src-noconflict/ext-language_tools";
+import * as r from "ace-builds/webpack-resolver";
+import {markAsUsed} from "tim/util/utils";
 
-let base = (SystemJS.normalizeSync as (x: string) => unknown)("ace") as string;
-base = base.substr(0, base.length - "ace.js".length);
-// basePath will be like "http://domain.com/static/scripts/jspm_packages/github/ajaxorg/ace-builds@1.4.5/"
-aceimp.config.set("basePath", base);
+markAsUsed(langtools, r);
 
 export const ace = aceimp;
 export type IAce = typeof ace;

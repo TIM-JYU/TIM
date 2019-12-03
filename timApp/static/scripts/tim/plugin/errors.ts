@@ -28,13 +28,14 @@ export function getErrors<A>(v: Left<t.Errors, A>): MarkupError {
         .map((error) => [error.slice(4).map((x) => x.key), error[error.length - 1].type.name]);
     const errs = new Map<string, Set<string>>();
     const knownKeys = ps.map(([keys, _]) => keys.join("."));
-    for (let [keys, type] of ps) {
+    for (const [keys, typ] of ps) {
         const key = keys.join(".");
         // don't report parent fields because it's not useful
         if (isPrefixOfSome(key, knownKeys)) {
             continue;
         }
         // avoid too verbose messages
+        let type = typ;
         if (type.length > 50) {
             type = "valid object";
         }

@@ -3,7 +3,7 @@ import {IModalInstanceService} from "angular-ui-bootstrap";
 import * as t from "io-ts";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
-import {$compile, $document, $q} from "../util/ngimport";
+import {$compile, $q} from "../util/ngimport";
 import {
     Binding,
     getOutOffsetFully,
@@ -234,11 +234,11 @@ export class DraggableController implements IController {
         this.createResizeHandlers();
         this.handle = this.element.children(".draghandle");
 
-        this.handle.on("mousedown pointerdown touchstart", (e: JQuery.Event) => {
+        const handleResizeBegin = (e: MouseEvent | TouchEvent) => {
             if (!this.canDrag()) {
                 return;
             }
-            if ($(e.target).hasClass("drag")) {
+            if ($(e.target as HTMLElement).hasClass("drag")) {
                 e.preventDefault();
             }
 
@@ -248,19 +248,11 @@ export class DraggableController implements IController {
                 left: false,
                 right: false,
             };
-            $document.off("mouseup pointerup touchend", this.release);
-            $document.off("mousemove pointermove touchmove", this.move);
-            this.lastPos = this.getPageXY(e);
-            // Rules for what we should set in CSS
-            // to keep the element dimensions (X).
-            // Prefer left over right.
-            this.getSetDirs();
-            // prevTop = this.element.position().top;
-            // prevLeft = this.element.position().left;
-
-            $document.on("mouseup pointerup touchend", this.release);
-            $document.on("mousemove pointermove touchmove", this.move);
-        });
+            this.refreshEventListeners(e, this.move);
+        };
+        this.handle[0].addEventListener("mousedown", handleResizeBegin);
+        this.handle[0].addEventListener("pointerdown", handleResizeBegin);
+        this.handle[0].addEventListener("touchstart", handleResizeBegin);
 
         // DialogController will call setInitialLayout in case draggable is inside modal
         if (!this.isModal()) {
@@ -426,32 +418,61 @@ export class DraggableController implements IController {
         timLogTime("set:" + [this.setLeft, this.setTop, this.setBottom, this.setRight].join(", "), "drag");
     }
 
-    private resizeElement(e: JQuery.Event, up: boolean, right: boolean, down: boolean, left: boolean) {
+    private resizeElement(e: MouseEvent | TouchEvent, up: boolean, right: boolean, down: boolean, left: boolean) {
         e.preventDefault();
         this.resizeStates = {up, down, left, right};
-        $document.off("mouseup pointerup touchend", this.release);
-        $document.off("mousemove pointermove touchmove", this.moveResize);
+        this.refreshEventListeners(e, this.moveResize);
+    }
+
+    private refreshEventListeners(e: MouseEvent | TouchEvent, handler: (e: MouseEvent | TouchEvent) => unknown) {
+        this.removeMouseUp();
+        this.removeMouseMove(handler);
         this.lastPos = this.getPageXY(e);
-
         this.getSetDirs();
+        document.addEventListener("mouseup", this.release);
+        document.addEventListener("pointerup", this.release);
+        document.addEventListener("touchend", this.release);
+        document.addEventListener("mousemove", handler);
+        document.addEventListener("pointermove", handler);
+        document.addEventListener("touchmove", handler);
+    }
 
-        $document.on("mouseup pointerup touchend", this.release);
-        $document.on("mousemove pointermove touchmove", this.moveResize);
+    private removeMouseUp() {
+        document.removeEventListener("mouseup", this.release);
+        document.removeEventListener("pointerup", this.release);
+        document.removeEventListener("touchend", this.release);
+    }
+
+    private removeMouseMove(handler: (e: (MouseEvent | TouchEvent)) => unknown) {
+        document.removeEventListener("mousemove", handler);
+        document.removeEventListener("pointermove", handler);
+        document.removeEventListener("touchmove", handler);
     }
 
     private createResizeHandlers() {
-        const handleRight = this.element.children(".resizehandle-r");
-        handleRight.on("mousedown pointerdown touchstart", (e: JQuery.Event) => {
+        const handleRight = this.element.children(".resizehandle-r")[0];
+        const listenerRight = (e: MouseEvent | TouchEvent) => {
             this.resizeElement(e, false, true, false, false);
-        });
-        const handleDown = this.element.children(".resizehandle-d");
-        handleDown.on("mousedown pointerdown touchstart", (e: JQuery.Event) => {
+        };
+        handleRight.addEventListener("mousedown", listenerRight);
+        handleRight.addEventListener("pointerdown", listenerRight);
+        handleRight.addEventListener("touchstart", listenerRight);
+
+        const handleDown = this.element.children(".resizehandle-d")[0];
+        const listenerDown = (e: MouseEvent | TouchEvent) => {
             this.resizeElement(e, false, false, true, false);
-        });
-        const handleRightDown = this.element.children(".resizehandle-rd");
-        handleRightDown.on("mousedown pointerdown touchstart", (e: JQuery.Event) => {
+        };
+        handleDown.addEventListener("mousedown", listenerDown);
+        handleDown.addEventListener("pointerdown", listenerDown);
+        handleDown.addEventListener("touchstart", listenerDown);
+
+        const handleRightDown = this.element.children(".resizehandle-rd")[0];
+        const listenerRightDown = (e: MouseEvent | TouchEvent) => {
             this.resizeElement(e, false, true, true, false);
-        });
+        };
+        handleRightDown.addEventListener("mousedown", listenerRightDown);
+        handleRightDown.addEventListener("pointerdown", listenerRightDown);
+        handleRightDown.addEventListener("touchstart", listenerRightDown);
     }
 
     private canDrag() {
@@ -462,7 +483,7 @@ export class DraggableController implements IController {
         return !this.areaMinimized && this.resize && this.canDrag();
     }
 
-    private getPageXY(e: JQuery.Event) {
+    private getPageXY(e: MouseEvent | TouchEvent) {
         const pos = getPageXY(e);
         if (pos) {
             this.lastPageXYPos = pos;
@@ -476,10 +497,10 @@ export class DraggableController implements IController {
 
     // The methods release, move and moveResize are required to be instance
     // functions because they are used as callbacks for $document.on/off.
-    release = (e: JQuery.Event) => {
-        $document.off("mouseup pointerup touchend", this.release);
-        $document.off("mousemove pointermove touchmove", this.move);
-        $document.off("mousemove pointermove touchmove", this.moveResize);
+    release = (e: Event) => {
+        this.removeMouseUp();
+        this.removeMouseMove(this.move);
+        this.removeMouseMove(this.moveResize);
         this.ensureVisibleInViewport();
         if (this.posKey) {
             // e.preventDefault();
@@ -490,7 +511,7 @@ export class DraggableController implements IController {
             timLogTime("pos:" + css.left + "," + css.top, "drag");
         }
         this.scope.$evalAsync();
-    }
+    };
 
     public ensureFullyInViewport() {
         const bound = getOutOffsetFully(this.element[0]);
@@ -524,13 +545,13 @@ export class DraggableController implements IController {
         }
     }
 
-    move = (e: JQuery.Event) => {
+    move = (e: MouseEvent | TouchEvent) => {
         // e.preventDefault();
         const pos = this.getPageXY(e);
         this.doMove(pos);
         e.preventDefault();
         e.stopPropagation();
-    }
+    };
 
     private doMove(pos: Pos) {
         const delta = {
@@ -555,7 +576,7 @@ export class DraggableController implements IController {
         }
     }
 
-    moveResize = async (e: JQuery.Event) => {
+    moveResize = async (e: MouseEvent | TouchEvent) => {
         // e.preventDefault();
         const pos = this.getPageXY(e);
         const delta = {
@@ -605,7 +626,7 @@ export class DraggableController implements IController {
                 state: this.resizeStates,
             });
         }
-    }
+    };
 
     async getSize() {
         await this.layoutReady.promise;

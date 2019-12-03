@@ -70,7 +70,7 @@ export interface IGenericPluginMarkup extends t.TypeOf<typeof GenericPluginMarku
 export function withDefault<T extends t.Any>(
     type: T,
     defaultValue: t.TypeOf<T>,
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): t.Type<t.TypeOf<T>, any> {
     return new t.Type(
         type.name,

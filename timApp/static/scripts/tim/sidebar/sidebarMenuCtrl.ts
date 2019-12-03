@@ -1,19 +1,26 @@
-/* tslint:disable:max-line-length */
 import {IController} from "angular";
 import $ from "jquery";
 import {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
+import {getActiveDocument} from "tim/document/activedocument";
 import {showCourseDialog} from "../document/course/courseDialogCtrl";
-import {getActiveDocument} from "../document/document";
 import {IDocSettings} from "../document/IDocSettings";
 import {showMergePdfDialog} from "../document/minutes/mergePdfCtrl";
 import {ViewCtrl} from "../document/viewctrl";
 import {showViewRangeEditDialog} from "../document/viewRangeEditDialog";
+import {
+    getCurrentViewRange,
+    getViewRangeWithHeaderId,
+    IViewRange,
+    partitionDocument,
+    toggleViewRange,
+} from "../document/viewRangeInfo";
 import {DocumentOrFolder, IDocument, isRootFolder, redirectToItem} from "../item/IItem";
 import {IRelevanceResponse} from "../item/relevanceEdit";
 import {showRelevanceEditDialog} from "../item/relevanceEditDialog";
 import {showTagDialog} from "../item/tagCtrl";
 import {showTagSearchDialog} from "../item/tagSearchCtrl";
+import {LectureController} from "../lecture/lectureController";
 import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
 import {ITemplateParams, showPrintDialog} from "../printing/printCtrl";
 import {showConsentDialog} from "../ui/consent";
@@ -25,16 +32,6 @@ import {Users, UserService} from "../user/userService";
 import {someglobals} from "../util/globals";
 import {$http, $localStorage} from "../util/ngimport";
 import {IOkResponse, Require, to} from "../util/utils";
-
-import {
-    getCurrentViewRange,
-    getViewRangeWithHeaderId,
-    IViewRange,
-    partitionDocument,
-    toggleViewRange,
-} from "../document/viewRangeInfo";
-import {LectureController} from "../lecture/lectureController";
-import {showLectureWall} from "../lecture/lectureWall";
 
 export interface IHeader {
     id: string;

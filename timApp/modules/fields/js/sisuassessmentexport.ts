@@ -354,6 +354,7 @@ class SisuAssessmentExportController {
     copyListToClipboard(list: readonly IAssessmentExt[]) {
         let s = "real_name;username;grade\n";
         for (const a of [...list].sort(sortAssessments)) {
+            // eslint-disable-next-line @typescript-eslint/tslint/config
             s += `${a.user.real_name};${a.user.name};${a.gradeId}\n`;
         }
         copyToClipboard(s);

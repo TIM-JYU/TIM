@@ -25,7 +25,7 @@
     {% endfor %}
 
     {# without this, lazy loading embedded_sagecell won't work because it doesn't know URL root #}
-    <link property="sagecell-root" href="//sagecell.sagemath.org/"/>
+    <link property="sagecell-root" href="https://sagecell.sagemath.org/"/>
 
     {% block viewhtml_customcss %}
         {% include 'partials/doc_customcss.html' %}

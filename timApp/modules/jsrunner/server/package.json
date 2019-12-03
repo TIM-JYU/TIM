@@ -1,0 +1,44 @@
+{
+  "name": "jsrunner",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npx ts-node -r tsconfig-paths/register ./bin/www.ts",
+    "buildtools": "npx rollup -c",
+    "buildserver": "npx rollup -c rollup.server.config.js",
+    "postinstall": "npm run buildtools"
+  },
+  "dependencies": {
+    "acorn": "^6.2.1",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "express": "~4.16.4",
+    "http-errors": "~1.6.2",
+    "io-ts": "^1.9.0",
+    "isolated-vm": "^1.7.10",
+    "jade": "~1.11.0",
+    "morgan": "~1.9.0"
+  },
+  "devDependencies": {
+    "@types/acorn": "^4.0.5",
+    "@types/cookie-parser": "^1.4.1",
+    "@types/debug": "^4.1.4",
+    "@types/http-errors": "^1.6.1",
+    "@types/morgan": "^1.7.35",
+    "@typescript-eslint/eslint-plugin": "^2.10.0",
+    "@typescript-eslint/eslint-plugin-tslint": "^2.10.0",
+    "@typescript-eslint/parser": "^2.10.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-prefer-arrow": "^1.1.7",
+    "rollup": "^1.27.8",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-typescript": "^1.0.1",
+    "ts-node": "^8.5.4",
+    "tsconfig-paths": "^3.9.0",
+    "tslib": "^1.10.0",
+    "tslint": "^5.20.1",
+    "typescript": "^3.6.4"
+  }
+}

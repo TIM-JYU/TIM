@@ -1,5 +1,6 @@
 import {IController} from "angular";
 import {ngStorage} from "ngstorage";
+import {IBookmarkGroup} from "tim/bookmark/bookmarks";
 import * as createItem from "tim/item/createItem";
 import {markAsUsed} from "tim/util/utils";
 import {timApp} from "../app";
@@ -19,7 +20,7 @@ export class StartCtrl implements IController {
     private creatingNew: boolean;
     private docListOpen: boolean;
     private language: Lang = FRONT_PAGE_DEFAULT_LANGUAGE; // Language to use.
-    private bookmarks = {}; // For My courses.
+    private bookmarks: IBookmarkGroup[]; // For My courses.
     private storage: ngStorage.StorageService & {language: null | Lang};
 
     constructor() {

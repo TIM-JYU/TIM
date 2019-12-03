@@ -2,7 +2,7 @@ import angular, {IHttpResponse, IPromise} from "angular";
 import * as t from "io-ts";
 import moment from "moment";
 import {IGroup} from "../user/IUser";
-import {$timeout} from "./ngimport";
+import {$rootScope, $timeout} from "./ngimport";
 
 const blacklist = new Set(["name", "title", "completionDate"]);
 const UnknownRecord = t.record(t.string, t.unknown);
@@ -221,16 +221,24 @@ export type Result<T, U> = Success<T> | Failure<U>;
 
 /**
  * Wraps the given promise so that it always gets fulfilled.
+ * Additionally, calls $rootScope.$applyAsync() to force AngularJS update. We can't override global Promise object
+ * because new Angular overrides it.
  * Adapted from await-to-js library: https://github.com/scopsy/await-to-js
  * @param promise Promise to wrap.
  * @returns A promise that resolves to either a success or error.
  */
 export function to<T, U = {data: {error: string}}>(promise: Promise<T> | IPromise<T>): Promise<Result<T, U>> {
-    return (promise as Promise<T>)
+    return refreshAngularJS((promise as Promise<T>)
         .then<Success<T>>((data: T) => ({ok: true, result: data}))
         .catch<Failure<U>>((err) => {
             return {ok: false, result: err as U};
-        });
+        }));
+}
+
+export function refreshAngularJS<T>(p: Promise<T> | IPromise<T>): Promise<T> {
+    return (p as Promise<T>).finally(() => {
+        $rootScope.$applyAsync();
+    });
 }
 
 export function assertNotNull(obj: unknown) {
@@ -389,30 +397,40 @@ export function debugTextToHeader(s: string) {
   }
 }
 
-export function getPageXY(e: JQuery.Event) {
-    if (!(
-        "pageX" in e) || (
-        e.pageX == 0 && e.pageY == 0)) {
+function getTouchCoords(e: TouchEvent) {
+    if (e.touches.length) {
+        return {
+            X: e.touches[0].pageX,
+            Y: e.touches[0].pageY,
+        };
+    }
+    if (e.changedTouches.length) {
+        return {
+            X: e.changedTouches[0].pageX,
+            Y: e.changedTouches[0].pageY,
+        };
+    }
+    return {X: 0, Y: 0};
+}
+
+export function getPageXY(e: JQuery.MouseEventBase | JQuery.TouchEventBase | MouseEvent | TouchEvent) {
+    if (e instanceof MouseEvent) {
+        return {X: e.pageX, Y: e.pageY};
+    } else if (isTouchEvent(e)) {
+        return getTouchCoords(e);
+    }
+    if (e.pageX == 0 && e.pageY == 0) {
         if (!(window as unknown as Record<string, unknown>).TouchEvent) {
             return {X: e.pageX, Y: e.pageY};
         }
         const o = e.originalEvent;
-        if (!(isTouchEvent(o))) {
+        if (!o || !(isTouchEvent(o))) {
             return {X: e.pageX, Y: e.pageY};
         }
-        if (o.touches.length) {
-            return {
-                X: o.touches[0].pageX,
-                Y: o.touches[0].pageY,
-            };
-        }
-        if (o.changedTouches.length) {
-            return {
-                X: o.changedTouches[0].pageX,
-                Y: o.changedTouches[0].pageY,
-            };
-        }
-        // return null;
+        return getTouchCoords(o);
+    }
+    if (e.pageX === undefined || e.pageY === undefined) {
+        return {X: 0, Y: 0};
     }
 
     return {X: e.pageX, Y: e.pageY};
@@ -439,7 +457,7 @@ export function capitalizeFirstLetter(s: string) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export type ToReturn<T, U = {data: {error: string}}> = IPromise<Result<IHttpResponse<T>, U>>;
+export type ToReturn<T, U = {data: {error: string}}> = Promise<Result<IHttpResponse<T>, U>>;
 export const ToReturn = Promise;
 
 export function injectStyle(url: string) {
@@ -454,10 +472,6 @@ export function injectStyle(url: string) {
     link.setAttribute("rel", "stylesheet");
     link.setAttribute("href", url);
     head.appendChild(link);
-}
-
-export function fixDefExport<T>(o: {default: T}) {
-    return o as unknown as T;
 }
 
 export interface IOkResponse {
@@ -489,7 +503,7 @@ export const StringOrNumber = t.union([t.string, t.number]);
 
 export type MouseOrTouch = MouseEvent | Touch;
 
-export function isTouchEvent(e: MouseOrTouch | TouchEvent | Event): e is TouchEvent {
+export function isTouchEvent(e: MouseOrTouch | TouchEvent | Event | JQuery.MouseEventBase | JQuery.TouchEventBase): e is TouchEvent {
     return (window as ExtendedWindow).TouchEvent && e instanceof TouchEvent;
 }
 

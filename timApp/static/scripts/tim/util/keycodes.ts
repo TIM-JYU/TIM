@@ -11,6 +11,7 @@ export const KEY_I = 73;
 export const KEY_LEFT = 37;
 export const KEY_O = 79;
 export const KEY_RIGHT = 39;
+export const KEY_R = 82;
 export const KEY_S = 83;
 export const KEY_TAB = 9;
 export const KEY_UP = 38;

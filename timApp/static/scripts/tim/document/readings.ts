@@ -1,18 +1,16 @@
 import {IPromise} from "angular";
 import $ from "jquery";
 import moment from "moment";
-import {getActiveDocument} from "tim/document/document";
+import {getActiveDocument} from "tim/document/activedocument";
 import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout} from "../util/ngimport";
 import {IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
-import {showDiffDialog} from "./diffDialog";
-import {EditPosition, EditType} from "./editing/editing";
-import {IExtraData} from "./editing/edittypes";
+import {diffDialog, setDiffDialog, showDiffDialog} from "./diffDialog";
+import {EditPosition, EditType, IExtraData} from "./editing/edittypes";
 import {onClick, onMouseOver, onMouseOverOut} from "./eventhandlers";
 import {canSeeSource, dereferencePar, getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
-import {vctrlInstance, ViewCtrl} from "./viewctrl";
 
 export const readClasses = {
     1: "screen",
@@ -103,7 +101,6 @@ let readPromise: IPromise<unknown> | null = null;
 let readingParId: string | undefined;
 
 function queueParagraphForReading() {
-    //noinspection CssInvalidPseudoSelector
     const visiblePars = $(".par:not('.preamble')").filter((i, e) => isInViewport(e)).find(".readline").not((i, e) => isAlreadyRead($(e), ReadingType.OnScreen));
     const parToRead = visiblePars.first().parents(".par");
     const parId = getParId(parToRead);
@@ -127,7 +124,11 @@ function queueParagraphForReading() {
 
 async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
     const par = elem.parents(".par");
-    const [id, blockId, t] = dereferencePar(par);
+    const derefData = dereferencePar(par);
+    if (!derefData) {
+        return;
+    }
+    const [id, blockId, t] = derefData;
     const parData = await to($http.get<Array<{par_hash: string}>>(`/read/${id}/${blockId}`));
     if (!parData.ok) {
     } else {
@@ -153,33 +154,31 @@ async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
                 right: newbr.result.data.text,
                 title: "Changes",
             });
-            if (vctrlInstance) {
-                if (vctrlInstance.diffDialog) {
-                    vctrlInstance.diffDialog.close();
-                }
-                vctrlInstance.diffDialog = await mi.dialogInstance.promise;
-                await to(mi.result);
-                vctrlInstance.diffDialog = undefined;
+            if (diffDialog) {
+                diffDialog.close();
             }
+            setDiffDialog(await mi.dialogInstance.promise);
+            await to(mi.result);
+            setDiffDialog(undefined);
         }
     }
 }
 
-async function readlineHandler(elem: JQuery, e: JQuery.Event) {
+async function readlineHandler(elem: JQuery, e: JQuery.MouseEventBase) {
     if ((e.target as HTMLElement).tagName === "BUTTON") {
         return;
     }
     markParRead(elem.parents(".par"), ReadingType.ClickRed);
 }
 
-export async function initReadings(sc: ViewCtrl) {
+export async function initReadings(item: IItem) {
     onClick(".readline > button", handleSeeChanges);
     onClick(".readline", readlineHandler);
     onMouseOver(".readline.read-modified", (p, e) => {
         const ev = e.originalEvent as MouseEvent | TouchEvent;
         const pos = posToRelative(p[0], ev);
         const children = p.children();
-        if (children.length === 0 && canSeeSource(sc.item, p.parents(".par"))) {
+        if (children.length === 0 && canSeeSource(item, p.parents(".par"))) {
             const x = document.createElement("button");
             x.classList.add("timButton", "btn-xs");
             x.title = "See changes";
@@ -207,7 +206,7 @@ export async function initReadings(sc: ViewCtrl) {
         $log.info($this);
 
         (async () => {
-            const r = await to($http.put("/read/" + sc.docId + "/" + areaId, {}));
+            const r = await to($http.put("/read/" + item.id + "/" + areaId, {}));
             if (r.ok) {
                 getArea(areaId).find(".readline").attr("class", "areareadline read");
                 markPageDirty();
@@ -248,7 +247,7 @@ export async function initReadings(sc: ViewCtrl) {
 
     if (Users.isLoggedIn()) {
         await $timeout(10000);
-        await $http.post("/bookmarks/markLastRead/" + sc.docId, {});
+        await $http.post("/bookmarks/markLastRead/" + item.id, {});
     }
 }
 

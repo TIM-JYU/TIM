@@ -67,7 +67,7 @@ class TaggedDocumentListCtrl implements IController {
         // Changes tag in input field to this in case the tagName is different.
         this.tagFilter = tagName;
 
-        const response = await $http<ITaggedItem[]>({
+        const response = await to($http<ITaggedItem[]>({
             method: "GET",
             url: "/tags/getDocs",
             params: {
@@ -76,8 +76,11 @@ class TaggedDocumentListCtrl implements IController {
                 list_doc_tags: this.listDocTags,
                 name: tagName,
             },
-        });
-        this.docList = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        this.docList = response.result.data;
     }
 
     /*

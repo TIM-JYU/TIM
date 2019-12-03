@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "target": "esnext",
+    "baseUrl": ".",
+    "paths": {
+      "tim/plugin/*": ["../../../static/scripts/tim/plugin/*"],
+      "io-ts": ["node_modules/io-ts"],
+      "tim/util/*": ["../../../static/scripts/tim/util/*"]
+    },
+    "lib": [
+      "es2018",
+      "scripthost"
+    ],
+    "outDir": "build"
+  },
+  "exclude": ["client/javascripts/jsrunner.ts"]
+}

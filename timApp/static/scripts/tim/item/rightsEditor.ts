@@ -341,7 +341,7 @@ class RightsEditorController implements IController {
         return this.loading || (this.massMode && this.grid && this.grid.selection.getSelectedRows().length === 0);
     }
 
-    /***
+    /**
      * Purpose for this is to use clipboard data to give rights
      * but could not read clipboard, so just clearInput
      */
@@ -555,7 +555,7 @@ class RightsEditorController implements IController {
 
     obsoleteFilterFn = (group: IRight) => {
         return !this.showActiveOnly || !this.isObsolete(group);
-    }
+    };
 
     async expireRight(group: IRight, refresh = true) {
         if (!this.accessType) {

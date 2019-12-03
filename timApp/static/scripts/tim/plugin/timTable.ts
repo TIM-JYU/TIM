@@ -33,7 +33,6 @@
 import angular, {IController, IScope} from "angular";
 import * as t from "io-ts";
 import {getParId} from "tim/document/parhelpers";
-import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
@@ -638,7 +637,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     }
 
     // private onClick = (e: MouseEvent) => {
-    private onClick(e: JQuery.Event) {
+    private onClick(e: JQuery.MouseEventBase) {
         if (this.mouseInTable) {
             if (this.isInEditMode() && isToolbarEnabled() && !this.hide.toolbar) {
                 // this.openToolbar();
@@ -1070,7 +1069,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
         delete cellValue[value];
         delete this.cellDataMatrix[row][col][value];
-    }
+    };
 
     /*
      * Set attribute to table.  If key == CLEAR, remove attribute in value
@@ -1095,7 +1094,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             return;
         }
         delete cell[value];
-    }
+    };
 
     setUserContent(row: number, col: number, content: string) {
         this.cellDataMatrix[row][col].cell = content;
@@ -1648,14 +1647,14 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if ( isKeyCode(ev, KEY_TAB) ) {
             ev.preventDefault();
         }
-    }
+    };
 
     private keyPressTable = (ev: KeyboardEvent) => {
         // if (!this.mouseInTable) return;
         if ( isKeyCode(ev, KEY_TAB) ) {
             ev.preventDefault();
         }
-    }
+    };
 
     /**
      * Deals with key events inside the table.
@@ -1668,7 +1667,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if ( this.isSomeCellBeingEdited() ) { return; }  // if active, then the smalleditor has listener
         // if (this.mouseInTable) { }
         this.doKeyUpTable(ev);
-    }
+    };
 
     private doKeyUpTable(ev: KeyboardEvent) {
         if ( isKeyCode(ev, KEY_F2) ) { // TODO: change all other keys like this to avoid depreceted warings
@@ -2707,7 +2706,8 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
     async setCell(value: Record<string, string>) {
         const cellsToSave: CellAttrToSave[] = [];
-        for (let [key, s] of Object.entries(value)) {
+        for (const [key, ss] of Object.entries(value)) {
+            let s = ss;
             if (key.indexOf("$$") == 0) {
                 continue;
             }
@@ -2891,7 +2891,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             return false;
         }
 
-        /*if (this.currentCell && this.currentCell.editorOpen) {
+        /* if (this.currentCell && this.currentCell.editorOpen) {
             return this.currentCell.row === rowi && this.currentCell.col === coli;
         }*/
         if (!this.activeCell) { return false; }
@@ -3139,7 +3139,10 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
 }
 
-timApp.component("timTable", {
+const timTableApp = angular.module("timTableApp", ["ngSanitize"]);
+export const moduleDefs = [timTableApp];
+
+timTableApp.component("timTable", {
     controller: TimTableController,
     bindings: {
         data: "<",

@@ -1,0 +1,48 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "module": "esnext",
+    "strict": true,
+    "allowUnreachableCode": true,
+    "allowSyntheticDefaultImports": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "outDir": "./dist/tsc",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "tim/*": [
+        "static/scripts/tim/*"
+      ]
+    },
+    "target": "es2015",
+    "lib": [
+      "dom",
+      "es2018",
+      "scripthost",
+      "dom.iterable"
+    ],
+    "experimentalDecorators": true,
+    "downlevelIteration": true,
+    "declaration": false,
+    "noEmit": true,
+    "importHelpers": true,
+    "skipLibCheck": true,
+    "typeRoots": [
+      "node_modules/@types"
+    ]
+  },
+  "angularCompilerOptions": {
+    "fullTemplateTypeCheck": true,
+    "strictInjectionParameters": true
+  },
+  "files": [
+    "static/scripts/tim/main.ts",
+    "static/scripts/tim/polyfills.ts"
+  ],
+  "include": [
+    "static/scripts/tim/**/*.d.ts",
+    "modules/cs/**/*.d.ts"
+  ]
+}

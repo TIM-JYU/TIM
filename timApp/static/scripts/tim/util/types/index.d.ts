@@ -12,7 +12,7 @@ declare module "angular-diff-match-patch" {
     const moduleName: string;
     export = moduleName;
 }
-declare module "katex-auto-render" {
+declare module "katex/contrib/auto-render/auto-render" {
 
     interface Delimiter {
         left: string;
@@ -23,6 +23,7 @@ declare module "katex-auto-render" {
     interface KatexRenderOptions {
         delimiters?: Delimiter[];
         ignoredTags?: string[];
+        errorCallback: (s: string) => void;
     }
 
     const renderMathInElement: (e: Element, options?: KatexRenderOptions) => void;
@@ -38,15 +39,11 @@ interface IFixedReveal extends RevealStatic {
     getPlugin(id: "notes"): INotesPlugin;
 }
 
-declare module "reveal" {
+declare module "reveal.js" {
     const x: IFixedReveal;
     export = x;
 }
 declare module "ace/snippets";
 declare module "rangyinputs";
-
-declare module "mathjax" {
-    const MathJax: jax.IMathJax;
-    export = MathJax;
-}
 declare module "url-search-params-polyfill";
+declare module "eonasdan-bootstrap-datetimepicker";

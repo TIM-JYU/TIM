@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# This script:
-# - Installs the required NPM and JSPM dependencies.
-# - Builds all JS bundles (ace, chart, deps, imagex, katex, tim).
-# - Creates type declarations for TIM modules (needed for plugins).
 
-# You only need to run this when:
-#  - you build TIM for the first time
-#  - you add or remove external JS libraries (either from NPM or JSPM)
-#  - you modify tim/editor/ace.ts (because it is not included in the set of watched files)
+set -e
 
-# ./run_command_workdir.sh timApp/static/scripts /bin/bash -c "npm install && jspm install && npm run fixLibs && npm run build && tsc"
-./run_command_workdir.sh timApp/static/scripts /bin/bash -c "npm install --no-bin-links && jspm install && npm run fixLibs && npm run build && tsc && tslint --project ."
+./run_command_workdir.sh timApp /bin/bash -c "npm install --no-bin-links && npm run lint"
+echo "NPM libraries were installed and ESLint was run.
+
+If this is a development instance, you still have to start the 'bdw' NPM script e.g. from your IDE or by running
+'npm run bdw' in timApp directory.
+
+If this is not a development instance, run './restart.sh ts' to make sure the ts container picks up the changes.
+"

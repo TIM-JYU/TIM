@@ -352,8 +352,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param id Element id.
      */
     private openDirection(id: string) {
-        // tslint:disable-next-line: prefer-const
-        let horizontal = ""; // Default: centered.
+        const horizontal = ""; // Default: centered.
         let vertical = ""; // Default: below.
         // If true, opens all menus above.
         if (this.openAbove) {

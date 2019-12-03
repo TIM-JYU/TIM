@@ -22,29 +22,20 @@ depends=(
 
         <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
         <meta name="google-site-verification" content="GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU"/>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/2.6.9/shim.min.js"></script>
-        <script src="/static/scripts/jspm_packages/system.js"></script>
-        <script src="/static/scripts/jspm.config.js"></script>
-        {% if request.args.get('unpackjs') is none %}
-            <script src="/static/scripts/build/deps.js"></script>
-            <script src="/static/scripts/build/tim.js"></script>
-        {% endif %}
         <script>
             var homeOrganization = {{ config.HOME_ORGANIZATION|tojson }};
             var IS_TESTING = {{ config.TESTING|tojson }};
             var ANGULARMODULES = {{ (jsMods or [])|tojson }};
             var JSMODULES = {{ (js or [])|tojson }};
             var userPrefs = {{ prefs|tojson }};
-            SystemJS.import("tim");
+            var current_user = {{ current_user.to_json(full=True)|tojson }};
+            var other_users = {{ other_users|tojson }};
+            var bookmarks = {{ bookmarks|tojson }};
         </script>
+        {{ angularscripts|safe }}
         {% block stylesheet %}
             {{ scss(config.SASS_GEN_PATH / prefs.css_combined) }}
         {% endblock %}
-        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/angular-ui-grid@4.6.3/ui-grid.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/katex@0.7.1/dist/katex.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/angularjs-color-picker@3.4.8/dist/angularjs-color-picker.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/angularjs-color-picker@3.4.8/dist/themes/angularjs-color-picker-bootstrap.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('3rdparty.static', filename='npm/mobile-drag-drop@2.3.0-rc.1/default.css') }}">
 
         {% block customcss %}
             <style type="text/css">
@@ -52,11 +43,6 @@ depends=(
             </style>
         {% endblock %}
 
-        <script>
-            var current_user = {{ current_user.to_json(full=True)|tojson }};
-            var other_users = {{ other_users|tojson }};
-            var bookmarks = {{ bookmarks|tojson }};
-        </script>
         <script type="text/x-mathjax-config">
             MathJax.Hub.Config({
                 skipStartupTypeset: true

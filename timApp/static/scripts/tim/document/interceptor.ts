@@ -1,9 +1,9 @@
 import angular, {IHttpInterceptorFactory, IHttpResponse, IRequestConfig} from "angular";
 import {timApp} from "tim/app";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
 import {IAnswerSaveEvent} from "../answer/answerbrowser3";
 import {$httpProvider, $q} from "../util/ngimport";
-import {vctrlInstance} from "./viewctrl";
 
 function handleResponse(taskIdFull: string, response: IHttpResponse<unknown>, params: IAnswerSaveEvent) {
     const parts = taskIdFull.split(".");

@@ -1,16 +1,17 @@
-import {Ace} from "ace";
+/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/tslint/config,no-underscore-dangle */
+import {Ace} from "ace-builds/src-noconflict/ace";
 import angular, {IController, IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
-import {CellInfo} from "sagecell";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import IAceEditor = Ace.Editor;
 import {IAce} from "tim/editor/ace";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$compile, $http, $sce, $timeout, $upload} from "tim/util/ngimport";
-import {copyToClipboard, fixDefExport, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
+import {copyToClipboard, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
+import {CellInfo} from "./embedded_sagecell";
+import IAceEditor = Ace.Editor;
 
 interface GlowScriptWindow extends Window {
     runJavaScript(text: string, args: string, input: string, wantsConsole: boolean): string;
@@ -32,7 +33,6 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
 
 // js-parsons is unused; just declare a stub to make TS happy
 declare class ParsonsWidget {
-    // tslint:disable-next-line:variable-name
     static _graders: any;
 
     constructor(data: {});
@@ -224,16 +224,8 @@ function resizeIframe(obj: HTMLFrameElement) {
 }
 
 async function loadSimcir() {
-    const simcir = import("simcir");
-    const loads = [
-        import("simcir/basicset"),
-        import("simcir/library"),
-        import("simcir/oma-kirjasto"),
-    ];
-    for (const p of loads) {
-        await p;
-    }
-    return await simcir;
+    const load = await import("../simcir/simcir-all");
+    return load.simcir;
 }
 
 // =================================================================================================================
@@ -709,7 +701,7 @@ const CsMarkupOptional = t.partial({
 });
 
 const CsMarkupDefaults = t.type({
-    // tslint:disable
+    /* eslint-disable quote-props */
     autorun: withDefault(t.boolean, false),
     parsonsnotordermatters: withDefault(t.boolean, false),
     blind: withDefault(t.boolean, false),
@@ -750,7 +742,7 @@ const CsMarkupDefaults = t.type({
     validityCheckMessage: withDefault(t.string, ""),
     viewCode: withDefault(t.boolean, false),
     words: withDefault(t.boolean, false),
-    // tslint:enable
+    /* eslint-enable quote-props */
 });
 
 const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPluginMarkup]);
@@ -2122,7 +2114,7 @@ class CsController extends CsBase implements ITimComponent {
         // TODO: kielien valinnan tallentaminen
         // TODO: kielien valinta kunnolla float.
         // ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst
-        const sagecell = fixDefExport(await import("sagecell"));
+        const sagecell = (await import("./embedded_sagecell")).default;
         if (this.sagecellInfo) {
             this.sagecellInfo.editor = "textarea";
             // cs.sagecellInfo.inputLocation = null;
@@ -3331,14 +3323,14 @@ export function truthTable(sentence: string, topbottomLines: boolean) {
         for (let n = 0; n < cnt2; n++) {
             const z = [];
             for (let i = 0; i < count; i++) {
-                // tslint:disable-next-line:no-bitwise
+                // eslint-disable-next-line no-bitwise
                 z[i] = (n >> (count - 1 - i)) & 1;
             }
-            // tslint:disable-next-line:no-eval
+            // eslint-disable-next-line no-eval
             result += eval(vals) + "= ";
             const inp = input.split(";");
             for (let i = 0; i < inp.length; i++) {
-                // tslint:disable-next-line:no-eval
+                // eslint-disable-next-line no-eval
                 const tulos = " " + (eval(inp[i]) ? 1 : 0) + fills[i];
                 result += tulos;
             }

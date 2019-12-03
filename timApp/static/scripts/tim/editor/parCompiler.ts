@@ -1,8 +1,9 @@
 import {IScope} from "angular";
+import {staticDynamicImport} from "tim/staticDynamicImport";
 import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
 import {ViewCtrl} from "../document/viewctrl";
-import {fixDefExport, injectStyle, ModuleArray} from "../util/utils";
+import {injectStyle, ModuleArray} from "../util/utils";
 
 export interface IPluginInfoResponse {
     js: string[];
@@ -28,7 +29,11 @@ export function compileWithViewctrl(html: string | Element | JQuery<HTMLElement>
 export class ParagraphCompiler {
     public async compile(data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
         for (const m of data.js) {
-            const mod = await import(m) as {moduleDefs?: unknown[]};
+            const modLoad = staticDynamicImport(m);
+            if (!modLoad) {
+                continue;
+            }
+            const mod = await modLoad as {moduleDefs?: unknown};
             const defs = mod.moduleDefs;
             if (ModuleArray.is(defs)) {
                 $injector.loadNewModules(defs.map((d) => d.name));
@@ -53,9 +58,9 @@ export class ParagraphCompiler {
             return;
         }
         timLogTime("processAllMath start", "view");
-        const renderMathInElement = fixDefExport(await import("katex-auto-render"));
+        const renderMathInElement = await import("katex/contrib/auto-render/auto-render");
         mathelems.each((index, elem) => {
-            const result = this.processMath(renderMathInElement, elem, false);
+            const result = this.processMath(renderMathInElement.default, elem, false);
             if (result != null) {
                 katexFailures.push(result);
             }
@@ -67,8 +72,9 @@ export class ParagraphCompiler {
     }
 
     public async processMathJax(elements: Element[] | Element) {
-        const MathJax = await import("mathjax");
-        MathJax.Hub!.Queue(["Typeset", MathJax.Hub, elements]);
+        const es = elements instanceof Array ? elements : [elements];
+        const mathjaxprocessor = (await import("./mathjaxentry")).mathjaxprocessor;
+        mathjaxprocessor.findMath({elements: es}).compile().getMetrics().typeset().updateDocument();
     }
 
     /**
@@ -79,20 +85,23 @@ export class ParagraphCompiler {
      * @param tryMathJax true to attempt to process using MathJax if KaTeX fails.
      * @returns null if KaTeX processed the element successfully. Otherwise, the failed element.
      */
-    public processMath(katexFunction: (e: Element) => void,
+    public processMath(katexFunction: typeof import("katex/contrib/auto-render/auto-render"),
                        elem: Element,
                        tryMathJax: boolean): Element | null {
-        try {
-            katexFunction(elem);
+        let lastError: string | undefined;
+        katexFunction(elem, {
+            errorCallback: (s) => {
+                lastError = s;
+            },
+        });
+        if (!lastError) {
             return null;
-        } catch (e) {
-            const err = e as Error;
-            $log.warn(err.message);
-            if (tryMathJax) {
-                this.processMathJax(elem);
-            }
-            return elem;
         }
+        $log.warn(lastError);
+        if (tryMathJax) {
+            this.processMathJax(elem);
+        }
+        return elem;
     }
 }
 

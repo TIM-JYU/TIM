@@ -12,9 +12,8 @@ services:
   image: timimages/tim:${TIM_IMAGE_TAG}
   volumes:
    - .:/service
-   - /opt/jspm_cache:/root/.jspm
-  working_dir: /service/timApp/static/scripts
-  command: jspm bundle tim/main - "(tim/main - [tim/**/*])" build/tim.js -wm
+  working_dir: /service/timApp
+  command: npm run bw
   restart: unless-stopped
   read_only: true
  pali:

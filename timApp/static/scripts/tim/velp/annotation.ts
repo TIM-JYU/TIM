@@ -16,7 +16,7 @@ import {ViewCtrl} from "../document/viewctrl";
 import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
-import {KEY_CTRL, KEY_ENTER} from "../util/keycodes";
+import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
 import {Binding, isInViewport, markAsUsed, Require, scrollToElement} from "../util/utils";
 import {IAnnotationCoordless} from "./velptypes";
@@ -340,7 +340,7 @@ export class AnnotationController extends DestroyScope implements IController {
         if (event.keyCode === KEY_CTRL) {
             this.ctrlDown = true;
         }
-        if (this.ctrlDown && (String.fromCharCode(event.which).toLowerCase() === "s" || event.keyCode === KEY_ENTER)) {
+        if (this.ctrlDown && (event.which === KEY_S || event.keyCode === KEY_ENTER)) {
             event.preventDefault();
             this.ctrlDown = false;
             if (this.checkIfChanged()) {

@@ -1,0 +1,12 @@
+diff --git a/node_modules/angular-timer/dist/angular-timer.js b/node_modules/angular-timer/dist/angular-timer.js
+index 7dc4a4b..b345fd9 100644
+--- a/node_modules/angular-timer/dist/angular-timer.js
++++ b/node_modules/angular-timer/dist/angular-timer.js
+@@ -5,6 +5,7 @@
+  * Copyright (c) 2017 Adrian Wardell
+  * Licensed MIT <https://github.com/siddii/angular-timer/blob/master/LICENSE.txt>
+  */
++var humanizeDuration = require('humanize-duration');
+ var timerModule = angular.module('timer', [])
+   .directive('timer', ['$compile', function ($compile) {
+     return  {

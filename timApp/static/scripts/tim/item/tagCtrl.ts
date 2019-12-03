@@ -200,8 +200,7 @@ export class TagController extends DialogController<{ params: IItem }, {}> {
             return;
         }
         const docPath = this.resolve.params.path;
-        let tagObjects: ITag[];
-        tagObjects = [];
+        const tagObjects: ITag[] = [];
         this.tagName.split(tagParsingSeparator).forEach((tag) => {
             if (tag) {
                 tagObjects.push(

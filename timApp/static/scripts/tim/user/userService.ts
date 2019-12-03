@@ -127,14 +127,7 @@ export class UserService {
     }
 }
 
-export let Users: UserService;
-
-export function initUserService() {
-    if (Users != null) {
-        throw new Error("UserService already initialized");
-    }
-    Users = new UserService(genericglobals().current_user, genericglobals().other_users);
-}
+export const Users = new UserService(genericglobals().current_user, genericglobals().other_users);
 
 /**
  * Checks whether user belongs to a certain group or admins group.

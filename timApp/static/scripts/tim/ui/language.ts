@@ -60,7 +60,7 @@ const translations: Record<string, {fi: string | {default: string, [index: strin
 };
 
 export type Lang = "fi" | "en";
-export let language: {lang: Lang} = {lang: "en"};
+export const language: {lang: Lang} = {lang: "en"};
 
 export function tr(s: string, opts?: {plural?: boolean}, replacements?: Record<string, string>): string {
     const entry = translations[s];

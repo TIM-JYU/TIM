@@ -1,5 +1,6 @@
 import angular, {IFormController, IScope} from "angular";
 import moment from "moment";
+import {KEY_S} from "tim/util/keycodes";
 import {getItem, IItem} from "../item/IItem";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {DurationChoice} from "../ui/durationPicker";
@@ -100,8 +101,8 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
 
     handleKey(event: KeyboardEvent) {
         if (event.ctrlKey || event.metaKey) {
-            switch (String.fromCharCode(event.which).toLowerCase()) {
-                case "s":
+            switch (event.which) {
+                case KEY_S:
                     event.preventDefault();
                     this.submitLecture();
                     break;

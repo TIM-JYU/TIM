@@ -179,7 +179,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
             this.removeActivationHandler();
         });
-    }
+    };
 
     /**
      * Returns the non-lazy HTML for the plugin if the plugin is lazy.
@@ -589,7 +589,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 this.nextAnswer();
             }
         }
-    }
+    };
 
     changeStudentToIndex(newIndex: number) {
         if (!this.users) {

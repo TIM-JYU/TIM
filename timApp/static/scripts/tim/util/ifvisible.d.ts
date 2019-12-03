@@ -1,3 +1,4 @@
+/* eslint-disable */
 // This file has been taken from ifvisible.js library.
 // The built-in type definition for this library does not work for two reasons:
 // 1) TypeScript cannot find the file

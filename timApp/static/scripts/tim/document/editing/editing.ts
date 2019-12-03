@@ -1,17 +1,17 @@
 import {IScope} from "angular";
 import $ from "jquery";
-import {markPageDirty} from "tim/util/utils";
-import {CURSOR} from "../../editor/BaseParEditor";
-import {compileWithViewctrl, IPluginInfoResponse, ParCompiler} from "../../editor/parCompiler";
-import {openEditor, PareditorController} from "../../editor/pareditor";
-import {showMessageDialog} from "../../ui/dialog";
-import {documentglobals} from "../../util/globals";
-import {$compile, $http, $timeout} from "../../util/ngimport";
-import {empty, isMobileDevice, to} from "../../util/utils";
+import {CURSOR} from "tim/editor/BaseParEditor";
+import {compileWithViewctrl, IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
+import {openEditor, PareditorController} from "tim/editor/pareditor";
+import {showMessageDialog} from "tim/ui/dialog";
+import {documentglobals} from "tim/util/globals";
+import {$compile, $http, $timeout} from "tim/util/ngimport";
+import {empty, isMobileDevice, markPageDirty, to} from "tim/util/utils";
 import {showDiffDialog} from "../diffDialog";
 import {onClick} from "../eventhandlers";
 import {
-    canEditPar, canSeeSource,
+    canEditPar,
+    canSeeSource,
     createNewPar,
     getElementByParId,
     getFirstParId,
@@ -31,21 +31,8 @@ import {
 import {handleUnread} from "../readings";
 import {ViewCtrl} from "../viewctrl";
 import {MenuFunctionList} from "../viewutils";
-import {IExtraData, IParResponse, ITags} from "./edittypes";
+import {EditPosition, EditType, IExtraData, IParResponse, ITags} from "./edittypes";
 import {isManageResponse, showRenameDialog} from "./pluginRenameForm";
-
-export enum EditType {
-    Edit,
-    AddAbove,
-    AddBelow,
-    AddBottom,
-}
-
-export type EditPosition =
-    | {type: EditType.Edit, pars: JQuery}
-    | {type: EditType.AddAbove, par: JQuery}
-    | {type: EditType.AddBelow, par: JQuery}
-    | {type: EditType.AddBottom};
 
 export interface IParEditorOptions {
     forcedClasses?: string[];
@@ -73,42 +60,6 @@ function prepareOptions($this: HTMLElement, saveTag: string): [JQuery, IParEdito
         forcedClasses: forcedClasses,
     };
     return [par, options];
-}
-
-// Wrap given text to max n chars length lines spliting from space
-export function wrapText(s: string, n: number) {
-    const lines = s.split("\n");
-    let needJoin = false;
-    for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
-        // lines[i] = "";
-        let sep = "";
-        if (line.length > n) {
-            lines[i] = "";
-            while (true) {
-                let p = -1;
-                if (line.length > n) {
-                    p = line.lastIndexOf(" ", n);
-                    if (p < 0) { p = line.indexOf(" "); } // long line
-                }
-                if (p < 0) {
-                    lines[i] += sep + line;
-                    break;
-                }
-                lines[i] += sep + line.substring(0, p);
-                line = line.substring(p + 1);
-                if (i + 1 < lines.length && (lines[i + 1].length > 0 && (" 0123456789-".indexOf(lines[i + 1][0]) < 0))) {
-                    lines[i + 1] = line + " " + lines[i + 1];
-                    needJoin = true;
-                    break;
-                }
-                sep = "\n";
-                needJoin = true;
-            }
-        }
-    }
-    if (needJoin) { return {modified: true, s: lines.join("\n")}; }
-    return {modified: false, s: s};
 }
 
 export class EditingHandler {
@@ -514,7 +465,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         editor.scrollIntoView();
     }
 
-    closeAndSave(e: JQuery.Event, par: Paragraph) {
+    closeAndSave(e: JQuery.MouseEventBase, par: Paragraph) {
         const editor = this.getParEditor();
         if (!editor) {
             void showMessageDialog("Editor is no longer open.");
@@ -524,7 +475,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         this.viewctrl.parmenuHandler.showOptionsWindow(e, par);
     }
 
-    closeWithoutSaving(e: JQuery.Event, par: Paragraph) {
+    closeWithoutSaving(e: JQuery.MouseEventBase, par: Paragraph) {
         const editor = this.getParEditor();
         if (!editor) {
             void showMessageDialog("Editor is no longer open.");
@@ -579,8 +530,8 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         if (this.viewctrl.editing) {
             return [
                 {func: () => this.goToEditor(), desc: "Go to editor", show: true},
-                {func: (e: JQuery.Event, p: Paragraph) => this.closeAndSave(e, p), desc: "Close editor and save", show: true},
-                {func: (e: JQuery.Event, p: Paragraph) => this.closeWithoutSaving(e, p), desc: "Close editor and cancel", show: true},
+                {func: (e, p: Paragraph) => this.closeAndSave(e, p), desc: "Close editor and save", show: true},
+                {func: (e, p: Paragraph) => this.closeWithoutSaving(e, p), desc: "Close editor and cancel", show: true},
                 {func: empty, desc: "Close menu", show: true},
             ];
         } else if (this.viewctrl.selection.start != null && documentglobals().editMode) {
@@ -661,12 +612,12 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 // {func: (e, par) => this.cutArea(e, par), desc: 'Cut area', show: $window.editMode === 'area'},
                 // {func: (e, par) => this.copyArea(e, par), desc: 'Copy area', show: $window.editMode === 'area'},
                 {
-                    func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.showPasteMenu(e, p),
+                    func: (e, p: Paragraph) => this.viewctrl.clipboardHandler.showPasteMenu(e, p),
                     desc: "Paste...",
                     show: documentglobals().editMode != null && (this.viewctrl.clipMeta.allowPasteRef || this.viewctrl.clipMeta.allowPasteContent),
                     closeAfter: false,
                 },
-                {func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, p), desc: "Move here...", show: documentglobals().allowMove},
+                {func: (e, p: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, p), desc: "Move here...", show: documentglobals().allowMove},
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.areaHandler.removeAreaMarking(e, p),
                     desc: "Remove area marking",

@@ -1,4 +1,5 @@
-import {IMapResponse, ITileSet, scale} from "./loadMap";
+import {IMapResponse} from "tim/gamification/IMapResponse";
+import {ITileSet} from "tim/gamification/ITileSet";
 
 export class Tile {
     public imageIndex: number;
@@ -15,6 +16,7 @@ export class Tile {
     public offsetY: number;
     public sourceX: number;
     public sourceY: number;
+    private readonly scaleGetter: () => number;
 
     /**
      * Tile object constructor
@@ -26,6 +28,7 @@ export class Tile {
      * @param dataIndex Index of the tile in layer data
      * @param x Tiles x-coordinate on the map
      * @param y Tiles y-coordinate on the map
+     * @param scaleGetter Function for getting the current scale
      */
     constructor(json: IMapResponse,
                 imageIndex: number,
@@ -34,8 +37,9 @@ export class Tile {
                 layerNo: number,
                 dataIndex: number,
                 x: number,
-                y: number) {
-
+                y: number,
+                scaleGetter: () => number) {
+        this.scaleGetter = scaleGetter;
         // Index for the image on spreadsheet
         this.imageIndex = imageIndex;
 
@@ -107,7 +111,7 @@ export class Tile {
         if (!context) {
             return;
         }
-
+        const scale = this.scaleGetter();
         context.drawImage(this.spreadsheet,
             this.sourceX,
             this.sourceY,
@@ -121,6 +125,7 @@ export class Tile {
 
     // Check if point is inside the tile
     public isPointInside(x: number, y: number) {
+        const scale = this.scaleGetter();
         return (x >= (this.x + this.offsetX) * scale &&
             x <= (this.x + this.tileset.tilewidth + this.offsetX) * scale &&
             y >= (this.y + this.offsetY + this.heightCorr) * scale &&

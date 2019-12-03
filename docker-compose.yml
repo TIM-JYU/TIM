@@ -20,7 +20,6 @@ services:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
    - ${FILES_ROOT}:/tim_files
-   - /opt/jspm_cache:/root/.jspm
    - cache:/cache
   working_dir: /service/timApp
   command: python3 launch.py --with-gunicorn
@@ -145,7 +144,7 @@ services:
   volumes:
    - ./timApp/modules/jsrunner:/timApp/modules/jsrunner:rw
    - ./timApp/static/scripts:/timApp/static/scripts:ro
-  working_dir: /timApp/modules/jsrunner
+  working_dir: /timApp/modules/jsrunner/server
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true

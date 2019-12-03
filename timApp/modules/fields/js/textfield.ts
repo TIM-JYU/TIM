@@ -126,6 +126,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     // TODO: Use answer content as arg or entire IAnswer?
     // TODO: get rid of any (styles can arrive as object)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
         let message;
         let ok = true;
@@ -134,6 +135,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.resetField();
         } else {
             try {
+                // eslint-disable-next-line @typescript-eslint/tslint/config
                 this.userword = content.c;
             } catch (e) {
                 this.userword = "";
@@ -141,6 +143,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
                 message = "Couldn't find related content (\"c\")";
             }
             if (!this.attrs.ignorestyles) {
+                // eslint-disable-next-line @typescript-eslint/tslint/config
                 this.applyStyling(content.styles);
             }
         }
@@ -397,12 +400,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     async autoGrow() {
         await $timeout(0);
         const ele = this.element.find(".textarea").first();
-        const scrollHeight = ele.prop("scrollHeight");
+        const scrollHeight = ele[0].scrollHeight;
         const prevHeight = parseFloat(ele.css("height"));
         if (scrollHeight < prevHeight) {
             return;
         }
-        ele.css("height",  ele.prop("scrollHeight") + "px");
+        ele.css("height",  ele[0].scrollHeight + "px");
     }
 
     isForm(): boolean {

@@ -32,6 +32,7 @@ const keywordPlaceHolder = /\|kw:.*\|/;
 enum Mode {
     // TODO: Make it so that the instructions and practice item are not presented at the same time.
     Instruction = 0,
+    // eslint-disable-next-line no-shadow
     QuestionItem = 1,
     Feedback = 2,
     EndTask = 3,
@@ -163,10 +164,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.showAnswers = true;
         }
         if (!this.showAnswers) {
-            await import("/feedback/css/hideanswerbrowser.css" as any);
+            await import("../css/hideanswerbrowser.css" as string);
         }
         if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
-            await import("/feedback/css/viewhide.css" as any);
+            await import("../css/viewhide.css" as string);
             this.vctrl.actionsDisabled = true;
         }
         this.showDocument();

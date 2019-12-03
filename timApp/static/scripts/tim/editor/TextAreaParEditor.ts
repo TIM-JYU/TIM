@@ -1,4 +1,4 @@
-import {wrapText} from "../document/editing/editing";
+import {wrapText} from "tim/document/editing/utils";
 import {
     KEY_1,
     KEY_2,

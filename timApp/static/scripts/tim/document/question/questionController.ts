@@ -10,6 +10,7 @@ import {
     minimizeJson,
 } from "tim/document/question/dynamicAnswerSheet";
 import {dateFormat, getStorage, markAsUsed, setStorage, to} from "tim/util/utils";
+import {KEY_R, KEY_S} from "tim/util/keycodes";
 import {ParCompiler} from "../../editor/parCompiler";
 import {
     IAskedJsonJson,
@@ -411,16 +412,15 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                         return this.moveToElement(event, +1);
                 }
 
-                switch (String.fromCharCode(event.which).toLowerCase()) {
-                    case "s":
+                switch (event.which) {
+                    case KEY_S:
                         event.preventDefault();
                         this.createQuestion(false);
                         break;
-                    case "r":
+                    case KEY_R:
                         event.preventDefault();
                         this.createQuestion(true);
                         break;
-                    case "g":
                 }
             }
         });
@@ -751,7 +751,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         }
         this.customError = undefined;
         if (this.rows.length > 0) {
-            if ((this.question.questionType === "radio-vertical" /*|| this.question.type === "checkbox-vertical"*/) && this.rows.length < 2) {
+            if ((this.question.questionType === "radio-vertical" /* || this.question.type === "checkbox-vertical"*/) && this.rows.length < 2) {
                 this.customError = "You must have at least two choices.";
             }
         } else if (this.question.questionType !== "") {

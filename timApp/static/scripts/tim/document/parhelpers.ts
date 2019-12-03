@@ -1,5 +1,5 @@
 import $ from "jquery";
-import {getActiveDocument} from "tim/document/document";
+import {getActiveDocument} from "tim/document/activedocument";
 import {IItem} from "../item/IItem";
 import {RightNames} from "../user/IRights";
 import {isInViewport} from "../util/utils";

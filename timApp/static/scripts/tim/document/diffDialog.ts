@@ -1,13 +1,18 @@
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {Pos} from "../ui/draggable";
 import {$injector} from "../util/ngimport";
-import {fixDefExport} from "../util/utils";
 
 export interface IDiffParams {
     left: string;
     right: string;
     title: string;
     pos?: Pos;
+}
+
+export let diffDialog: DiffController | undefined;
+
+export function setDiffDialog(d: DiffController | undefined) {
+    diffDialog = d;
 }
 
 export class DiffController extends DialogController<{params: IDiffParams}, {}> {
@@ -55,8 +60,8 @@ registerDialogComponent(DiffController,
 );
 
 export async function showDiffDialog(p: IDiffParams) {
-    const module = fixDefExport(await import("angular-diff-match-patch"));
-    $injector.loadNewModules([module]);
+    const module = await import("angular-diff-match-patch");
+    $injector.loadNewModules([module.default]);
     return showDialog(DiffController, {params: () => p},
         {
             absolute: false,

@@ -160,6 +160,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         return true;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
         let message;
         let ok = true;
@@ -167,6 +168,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             this.resetField();
         } else {
             try {
+                // eslint-disable-next-line @typescript-eslint/tslint/config
                 this.selectedWord = content.c;
             } catch (e) {
                 this.selectedWord = "";

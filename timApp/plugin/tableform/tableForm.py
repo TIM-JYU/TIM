@@ -505,7 +505,7 @@ reportButton: "Name your generate report button here"
     if os.environ.get('SHOW_TEMPLATES', "True") == "False":
         editor_tabs = None
     return jsonify({
-        "js": [],
+        "js": ["tableForm"],
         "multihtml": True,
         'editor_tabs': editor_tabs,
     },

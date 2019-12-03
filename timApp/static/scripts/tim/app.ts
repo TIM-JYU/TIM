@@ -20,7 +20,6 @@ import ngFileUpload from "ng-file-upload";
 import ngStorage from "ngstorage";
 import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
 import {tr} from "./ui/language";
-import {initUserService} from "./user/userService";
 import {KEY_ENTER, KEY_S} from "./util/keycodes";
 import {injectProviders, injectServices} from "./util/ngimport";
 
@@ -167,12 +166,6 @@ timApp.directive("onSave", () => {
 
 timApp.config(injectProviders);
 timApp.run(injectServices);
-timApp.run(initUserService);
-
-// https://stackoverflow.com/questions/35629246/typescript-async-await-and-angular-q-service/41825004#41825004
-timApp.run(["$window", "$q", ($window: IWindowService, $q: IQService) => {
-    $window.Promise = $q;
-}]);
 
 interface ISanitizeProvider {
     addValidAttrs(attrs: string[]): void;

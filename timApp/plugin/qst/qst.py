@@ -42,9 +42,7 @@ class QuestionInDocument(NamedTuple):
 def qst_mcq_reqs():
     reqs = {
         "type": "embedded",
-        "js": [
-            # "tim/controllers/qstController",
-               ],
+        "js": ["qst"],
         "multihtml": True,
         "multimd": True
     }
@@ -57,9 +55,7 @@ def qst_mcq_reqs():
 def qst_mmcq_reqs():
     reqs = {
         "type": "embedded",
-        "js": [
-            # "tim/controllers/qstController",
-               ],
+        "js": ["qst"],
         "multihtml": True,
         "multimd": True
     }
@@ -72,9 +68,7 @@ def qst_mmcq_reqs():
 def qst_reqs():
     reqs = {
         "type": "embedded",
-        "js": [
-            # "tim/controllers/qstController",
-               ],
+        "js": ["qst"],
         "multihtml": True,
         "multimd": True
     }

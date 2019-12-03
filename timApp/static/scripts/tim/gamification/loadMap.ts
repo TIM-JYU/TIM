@@ -1,27 +1,11 @@
+import {IController} from "angular";
+import {ILayerData} from "tim/gamification/ILayerData";
+import {IMapResponse} from "tim/gamification/IMapResponse";
+import {ITileSet} from "tim/gamification/ITileSet";
+import {timApp} from "../app";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 import {Tile} from "./tile";
-
-import {IController} from "angular";
-import {timApp} from "../app";
-
-export interface ITileSet {
-    tileoffset: {x: number, y: number};
-    columns: number;
-    firstgid: number;
-    image: string;
-    imageheight: number;
-    imagewidth: number;
-    margin: number;
-    name: string;
-    properties: {buildingProperty: number, frameProperty: number};
-    propertytypes: {buildingProperty: string, frameProperty: string};
-    spacing: number;
-    tilecount: number;
-    tileheight: number;
-    tilewidth: number;
-    transparentcolor: string;
-}
 
 export interface ITile {
     frame: boolean;
@@ -65,25 +49,8 @@ interface IParsedData {
     buttonText: string;
 }
 
-export interface ILayerData {
-    [index: string]: number;
-}
-
-export interface IMapResponse {
-    width: number;
-    height: number;
-    tilewidth: number;
-    tileheight: number;
-    layers: Array<{
-        properties: {title: string, maxpoints: number, studentpoints: number, site: string},
-        name: string,
-        data: ILayerData,
-    }>;
-    tilesets: ITileSet[];
-}
-
 // A global variable because Tile-class uses this too.
-export let scale: number = 0.5;
+let scale: number = 0.5;
 const defaultButtonText: string = "Show map";
 
 export class GamificationMapCtrl implements IController {
@@ -463,7 +430,7 @@ export class GamificationMapCtrl implements IController {
             const posY = Math.floor(posIndex / this.json.width) * this.json.tileheight;
 
             // Create tile object and draw it on the map
-            const t = new Tile(this.json, dict[key], this.tileset, this.image, layer, posIndex, posX, posY);
+            const t = new Tile(this.json, dict[key], this.tileset, this.image, layer, posIndex, posX, posY, () => scale);
             t.draw(canvas);
             this.tiles.push(t);
         }

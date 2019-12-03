@@ -1,9 +1,9 @@
 import {IScope} from "angular";
 import $ from "jquery";
+import {EditPosition, EditType} from "tim/document/editing/edittypes";
 import {showMessageDialog} from "../../ui/dialog";
 import {documentglobals} from "../../util/globals";
 import {$timeout} from "../../util/ngimport";
-import {EditPosition, EditType} from "../editing/editing";
 import {getParId, Paragraph} from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
 import {fetchAndEditQuestion, showQuestionEditDialog} from "./questionController";

@@ -81,10 +81,7 @@ class RelativeDataBlockValue:
 def tim_table_reqs():
     reqs = {
         "type": "embedded",
-        "js": [
-            # "js/timTable.js"
-            # "tim/controllers/qstController",
-        ],
+        "js": ["timTable"],
         "multihtml": True,
         "multimd": True,
         "default_automd": True,

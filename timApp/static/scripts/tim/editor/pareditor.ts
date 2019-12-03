@@ -1,10 +1,10 @@
-import {Ace} from "ace";
+import {Ace} from "ace-builds/src-noconflict/ace";
 import angular, {IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {setEditorScope} from "tim/editor/editorScope";
-import {fixDefExport, markAsUsed, to} from "tim/util/utils";
+import {markAsUsed, refreshAngularJS, to} from "tim/util/utils";
 import {timApp} from "../app";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings} from "../document/IDocSettings";
@@ -817,9 +817,9 @@ ${backTicks}
         });
         this.editor.setEditorText(text);
         textarea.on("input", () => this.editorChanged());
-        textarea.on("paste", (e: JQuery.Event) => this.onPaste(e));
-        textarea.on("drop", (e: JQuery.Event) => this.onDrop(e));
-        textarea.on("dragover", (e: JQuery.Event) => this.allowDrop(e));
+        textarea.on("paste", (e) => this.onPaste(e));
+        textarea.on("drop", (e) => this.onDrop(e));
+        textarea.on("dragover", (e) => this.allowDrop(e));
 
     }
 
@@ -828,17 +828,17 @@ ${backTicks}
             const editor = this.editor!;
             this.outofdate = true;
             const text = editor.getEditorText();
-            await $timeout(500);
+            await refreshAngularJS($timeout(500));
             if (text !== editor.getEditorText()) {
                 return;
             }
             this.scrollPos = this.element.find(".previewcontent").scrollTop() || this.scrollPos;
             this.outofdate = true;
-            const data = await this.resolve.params.previewCb(text);
-            const compiled = await ParCompiler.compile(data, this.scope, this.resolve.params.viewCtrl);
+            const data = await refreshAngularJS(this.resolve.params.previewCb(text));
+            const compiled = await refreshAngularJS(ParCompiler.compile(data, this.scope, this.resolve.params.viewCtrl));
             if (data.trdiff) {
-                const module = fixDefExport(await import("angular-diff-match-patch"));
-                $injector.loadNewModules([module]);
+                const module = await refreshAngularJS(import("angular-diff-match-patch"));
+                $injector.loadNewModules([module.default]);
             }
             this.trdiff = data.trdiff;
             const previewDiv = angular.element(".previewcontent");
@@ -994,7 +994,7 @@ ${backTicks}
         return editor !== undefined && (editor.editor as Ace.Editor).renderer != null;
     }
 
-    onPaste(e: JQuery.Event) {
+    onPaste(e: JQuery.TriggeredEvent) {
         const clipboardData = (e.originalEvent as ClipboardEvent).clipboardData;
         if (!clipboardData) {
             return;
@@ -1017,7 +1017,7 @@ ${backTicks}
         }
     }
 
-    onDrop(e: JQuery.Event) {
+    onDrop(e: JQuery.DropEvent) {
         e.preventDefault();
         const de = e.originalEvent as DragEvent;
         if (!de.dataTransfer) {
@@ -1262,8 +1262,8 @@ ${backTicks}
         // pasteInput.on("dragover", (e) => this.allowDrop(e));
         const pasteInput = document.getElementById("pasteInput");
         if ( pasteInput ) {
-            pasteInput.ondrop = (e) => this.onDrop(jQuery.Event(e));
-            pasteInput.ondragover = (e) => this.allowDrop(jQuery.Event(e));
+            $(pasteInput).on("drop", (e) => this.onDrop(e));
+            $(pasteInput).on("dragover", (e) => this.allowDrop(e));
         }
         editorContainer.addClass("editor-loading");
         let oldPosition;
@@ -1301,7 +1301,7 @@ ${backTicks}
             }, (this.getSaveTag() === "addAbove" || this.getSaveTag() === "addBelow") ? "ace/mode/text" : "ace/mode/markdown");
             this.editor.setAutoCompletion(this.autocomplete);
             this.editor.editor.renderer.$cursorLayer.setBlinking(!genericglobals().IS_TESTING);
-            /*iPad does not open the keyboard if not manually focused to editable area
+            /* iPad does not open the keyboard if not manually focused to editable area
              var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
              if (!iOS) editor.focus();*/
 
@@ -1368,7 +1368,7 @@ ${backTicks}
         }
         await this.focusEditor();
         this.getEditorContainer().removeClass("editor-loading");
-        setEditorScope(this.editor!);
+        setEditorScope(this.editor);
         this.adjustPreview();
     }
 
@@ -1652,8 +1652,11 @@ export function openEditorSimple(docId: number, text: string, caption: string, l
             tags: [],
             touchDevice: false,
         }, previewCb: async (txt) => {
-            const resp = await $http.post<IPluginInfoResponse>(`/preview/${docId}`, {text: txt, isComment: true});
-            return resp.data;
+            const resp = await to($http.post<IPluginInfoResponse>(`/preview/${docId}`, {text: txt, isComment: true}));
+            if (!resp.ok) {
+                throw new Error("preview route failed");
+            }
+            return resp.result.data;
         },
         saveCb: async (txt, data) => {
             return await {};

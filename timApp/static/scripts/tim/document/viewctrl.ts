@@ -2,8 +2,9 @@ import {IController, IDeferred, IPromise, IScope} from "angular";
 import $ from "jquery";
 import ngs, {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
+import {setActiveDocument} from "tim/document/activedocument";
 import {AreaHandler} from "tim/document/areas";
-import {Document, setActiveDocument} from "tim/document/document";
+import {Document} from "tim/document/document";
 import {ClipboardHandler, IClipboardMeta} from "tim/document/editing/clipboard";
 import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
@@ -12,6 +13,7 @@ import {ParmenuHandler} from "tim/document/parmenu";
 import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
+import {setViewCtrl, vctrlInstance} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict} from "tim/util/utils";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
@@ -32,7 +34,7 @@ import {documentglobals} from "../util/globals";
 import {$compile, $filter, $http, $interval, $localStorage, $q, $timeout} from "../util/ngimport";
 import {AnnotationController} from "../velp/annotation";
 import {ReviewController} from "../velp/reviewController";
-import {DiffController} from "./diffDialog";
+import {diffDialog} from "./diffDialog";
 import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
 import * as helpPar from "./editing/helpPar";
@@ -103,8 +105,6 @@ export interface IChangeDiffResult {
 
 export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffResult | IChangeDiffResult;
 
-export let vctrlInstance: ViewCtrl | undefined;
-
 export enum RegexOption {
     PrependCurrentDocId,
     DontPrependCurrentDocId,
@@ -167,7 +167,6 @@ export class ViewCtrl implements IController {
 
     // For search box.
     private displaySearch = false;
-    diffDialog?: DiffController;
 
     // To hide actions on both sides of the page.
     public actionsDisabled = false;
@@ -231,7 +230,7 @@ export class ViewCtrl implements IController {
         this.parmenuHandler = new ParmenuHandler(sc, this);
         this.viewRangeInfo = new ViewRangeInfo(this);
         if (!this.isSlideView()) {
-            initReadings(this);
+            initReadings(this.item);
         } else {
             initSlideView(this.item);
         }
@@ -268,8 +267,8 @@ export class ViewCtrl implements IController {
             }
 
             this.closePopupIfOpen();
-            if (this.diffDialog) {
-                this.diffDialog.close();
+            if (diffDialog) {
+                diffDialog.close();
             }
 
             return false;
@@ -278,7 +277,7 @@ export class ViewCtrl implements IController {
 
         // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android
         $("body,html").bind("scroll wheel DOMMouseScroll mousewheel", (e) => {
-            if (e.which > 0 || e.type === "mousedown" || e.type === "mousewheel") {
+            if ((e.which && e.which > 0) || e.type === "mousedown" || e.type === "mousewheel") {
                 $("html,body").stop();
             }
         });
@@ -425,7 +424,7 @@ export class ViewCtrl implements IController {
     }
 
     $onInit() {
-        vctrlInstance = this;
+        setViewCtrl(this);
         this.scope.$watchGroup([
             () => this.lectureCtrl.lectureSettings.lectureMode,
             () => this.selection.start,

@@ -45,3 +45,16 @@ export type Duplicate = [string, string] | [string, string, "hasAnswers"];
 export interface IChangelogEntry {
 
 }
+
+export enum EditType {
+    Edit,
+    AddAbove,
+    AddBelow,
+    AddBottom,
+}
+
+export type EditPosition =
+    | {type: EditType.Edit, pars: JQuery}
+    | {type: EditType.AddAbove, par: JQuery}
+    | {type: EditType.AddBelow, par: JQuery}
+    | {type: EditType.AddBottom};

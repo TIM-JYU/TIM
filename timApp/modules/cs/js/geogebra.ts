@@ -1,4 +1,5 @@
-﻿import angular from "angular";
+﻿/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/tslint/config */
+import angular from "angular";
 import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";
 import {ViewCtrl} from "tim/document/viewctrl";
@@ -46,21 +47,6 @@ const GeogebraAll = t.intersection([
         preview: t.boolean,
     }),
 ]);
-
-type GeogebraResult = string | {
-    answernotes: any,
-    api_time: number,
-    error: false,
-    formatcorrectresponse: string,
-    generalfeedback: string,
-    questiontext: string,
-    request_time: number,
-    score: number,
-    summariseresponse: any,
-} | {
-    error: true,
-    message: string,
-};
 
 interface IGeogebraData {
     answer: {[name: string]: string};
@@ -111,12 +97,6 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
     private geogebraoutput: string = "";
     private geogebrainputfeedback: string = "";
     private geogebrapeek: boolean = false;
-    private geogebrafeedback: string = "";
-    private geogebraformatcorrectresponse: string = "";
-    private geogebrascore: string = "";
-    private geogebrasummariseresponse: string = "";
-    private geogebraanswernotes: string = "";
-    private geogebratime: string = "";
     private isRunning: boolean = false;
     private inputrows: number = 1;
     private isOpen: boolean = false;
@@ -249,7 +229,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         this.console = "";
 
         const r = await to($http<{
-            web: {geogebraResult: GeogebraResult, error?: string, console?: string},
+            web: {error?: string, console?: string},
         }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
         this.isRunning = false;
@@ -270,7 +250,6 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
             this.console = r.result.data.web.console;
             return;
         }
-        const geogebraResult = r.result.data.web.geogebraResult;
     }
 
     getData() {

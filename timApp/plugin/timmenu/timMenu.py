@@ -450,7 +450,7 @@ menu: |!!
     if os.environ.get('SHOW_TEMPLATES', "True") == "False":
         editor_tabs = None
     return jsonify({
-        "js": [],
+        "js": ["timMenu"],
         "multihtml": True,
         "multimd": True,
         'editor_tabs': editor_tabs,

@@ -239,7 +239,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }
     }
 
-    async inputHandler(e: JQuery.Event) {
+    async inputHandler(e: JQuery.TriggeredEvent) {
         const target = e.currentTarget as HTMLInputElement;
         this.lastInputFieldElement = target;
         const id: string = target.id;

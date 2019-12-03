@@ -3,7 +3,12 @@
  */
 
 import {IScope} from "angular";
+import {ngStorage} from "ngstorage";
+import * as focusMe from "tim/ui/focusMe";
 import {IItem} from "../item/IItem";
+import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {$localStorage} from "../util/ngimport";
+import {markAsUsed} from "../util/utils";
 import {
     getCurrentPartitionURLParams,
     getPieceSize,
@@ -12,12 +17,6 @@ import {
     setPieceSize,
     unpartitionDocument,
 } from "./viewRangeInfo";
-
-import {ngStorage} from "ngstorage";
-import * as focusMe from "tim/ui/focusMe";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {$localStorage} from "../util/ngimport";
-import {markAsUsed} from "../util/utils";
 
 markAsUsed(focusMe);
 

@@ -1,5 +1,8 @@
-/* tslint:disable */
-declare module "ace" {
+/* eslint-disable */
+
+declare module "ace-builds/webpack-resolver";
+declare module "ace-builds/src-noconflict/ext-language_tools";
+declare module "ace-builds/src-noconflict/ace" {
 export namespace Ace {
   export type NewLineMode = 'auto' | 'unix' | 'windows';
 

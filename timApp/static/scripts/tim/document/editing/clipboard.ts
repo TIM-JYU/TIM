@@ -17,8 +17,7 @@ import {
     ParOrArea,
 } from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
-import {EditType} from "./editing";
-import {IParResponse} from "./edittypes";
+import {EditType, IParResponse} from "./edittypes";
 
 export type ClipboardMetaResponse = {
     area_name?: string;
@@ -50,7 +49,7 @@ export class ClipboardHandler {
         this.viewctrl = view;
     }
 
-    showPasteMenu(e: JQuery.Event, parOrArea: ParOrArea) {
+    showPasteMenu(e: JQuery.MouseEventBase, parOrArea: ParOrArea) {
         this.viewctrl.parmenuHandler.showPopupMenu(e, parOrArea, {
             actions: this.getPasteFunctions(),
             contenturl: "/clipboard",
@@ -59,7 +58,7 @@ export class ClipboardHandler {
         });
     }
 
-    showMoveMenu(e: JQuery.Event, parOrArea: ParOrArea) {
+    showMoveMenu(e: JQuery.MouseEventBase, parOrArea: ParOrArea) {
         this.viewctrl.parmenuHandler.showPopupMenu(e, parOrArea, {
             actions: this.getMoveFunctions(),
             contenturl: "/clipboard",

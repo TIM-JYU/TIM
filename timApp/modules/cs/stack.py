@@ -21,7 +21,7 @@ class Stack(Language):
         return "stack-runner"
 
     def js_files(self):
-        return ["/cs/js/build/stack.js", "/cs/stack/ServerSyncValues.js"]
+        return ["/cs/js/build/stack.js"]
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)

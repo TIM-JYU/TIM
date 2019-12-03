@@ -46,7 +46,7 @@ export interface ISizedPartial {
 }
 
 // These two are from type-zoo: https://github.com/pelotom/type-zoo
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Omit<T, K extends keyof any> = T extends any ? Pick<T, Exclude<keyof T, K>> : never;
 export type Overwrite<T, U> = Omit<T, keyof T & keyof U> & U;
 

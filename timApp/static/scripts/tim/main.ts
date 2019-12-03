@@ -1,8 +1,16 @@
+import "./loadJQueryAndMomentGlobals";
+
+import {enableProdMode, StaticProvider} from "@angular/core";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {downgradeModule, setAngularJSGlobal} from "@angular/upgrade/static";
 import angular from "angular";
 import bootstrap from "bootstrap";
+import "eonasdan-bootstrap-datetimepicker";
 import $ from "jquery";
 import * as answerbrowser from "tim/answer/answerbrowser3";
 import * as userlistController from "tim/answer/userlistController";
+import {timApp} from "tim/app";
+import {AppModule} from "tim/app.module";
 import * as bookmarkFolderBox from "tim/bookmark/bookmarkFolderBox";
 import * as bookmarks from "tim/bookmark/bookmarks";
 import * as templateList from "tim/document/editing/templateList";
@@ -10,6 +18,7 @@ import * as questionController from "tim/document/question/questionController";
 import * as viewctrl from "tim/document/viewctrl";
 import * as viewRangeNavigation from "tim/document/viewRangeNavigation";
 import * as pareditor from "tim/editor/pareditor";
+import {environment} from "tim/environments/environment";
 import * as indexCtrl from "tim/folder/indexCtrl";
 import * as startController from "tim/frontpage/startController";
 import * as loadMap from "tim/gamification/loadMap";
@@ -26,15 +35,6 @@ import * as lectureInfoController from "tim/lecture/lectureInfoController";
 import * as lectureMenu from "tim/lecture/lectureMenu";
 import * as questionAskController from "tim/lecture/questionAskController";
 import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQuestionController";
-import * as imagex from "tim/plugin/imagex";
-import * as importData from "tim/plugin/importData";
-import * as qstController from "tim/plugin/qstController";
-import moment from "tim/plugin/reexports/moment";
-import * as tableForm from "tim/plugin/tableForm";
-import * as tape from "tim/plugin/tape";
-import * as timMenuController from "tim/plugin/timMenuController";
-import * as timTable from "tim/plugin/timTable";
-import * as pluginUtil from "tim/plugin/util";
 import * as searchBox from "tim/search/searchBox";
 import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrapPanel";
@@ -48,10 +48,22 @@ import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
 import * as annotation from "tim/velp/annotation";
 import * as reviewController from "tim/velp/reviewController";
 import * as velpSelection from "tim/velp/velpSelection";
-import * as urlPolyfill from "url-search-params-polyfill";
+import {staticDynamicImport} from "tim/staticDynamicImport";
 import {ParCompiler} from "./editor/parCompiler";
 import {genericglobals} from "./util/globals";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
+
+if (environment.production) {
+    enableProdMode();
+}
+
+const bootstrapFn = (extraProviders: StaticProvider[]) => {
+    const platformRef = platformBrowserDynamic(extraProviders);
+    return platformRef.bootstrapModule(AppModule);
+};
+
+setAngularJSGlobal(angular);
+const downgradedModule = downgradeModule(bootstrapFn);
 
 markAsUsed(
     annotation,
@@ -64,8 +76,6 @@ markAsUsed(
     createItem,
     createLectureCtrl,
     header,
-    imagex,
-    importData,
     indexCtrl,
     lectureController,
     lectureInfoController,
@@ -76,10 +86,7 @@ markAsUsed(
     logo,
     manageCtrl,
     markupError,
-    moment,
     pareditor,
-    pluginUtil,
-    qstController,
     questionAskController,
     questionController,
     reviewController,
@@ -91,12 +98,7 @@ markAsUsed(
     sidebarMenuCtrl,
     startController,
     taggedDocumentList,
-    tape,
     templateList,
-    timMenuController,
-    timTable,
-    tableForm,
-    urlPolyfill,
     userlistController,
     userMenu,
     velpSelection,
@@ -114,7 +116,10 @@ $(async () => {
     const jsmodules = genericglobals().JSMODULES;
     const moduleLoads = [];
     for (const mname of jsmodules) {
-        const m = import(mname);
+        const m = staticDynamicImport(mname);
+        if (!m) {
+            continue;
+        }
         moduleLoads.push(m);
     }
     const angularModules: string[] = [];
@@ -129,7 +134,7 @@ $(async () => {
     if (StringArray.is(extraAngularModules)) {
         angularModules.push(...extraAngularModules);
     }
-    angular.bootstrap(document, ["timApp", ...angularModules], {strictDi: false});
+    angular.bootstrap(document, [timApp.name, downgradedModule, ...angularModules], {strictDi: false});
     timLogTime("Angular bootstrap done", "main.ts");
     ParCompiler.processAllMathDelayed($("body"), 1500);
 

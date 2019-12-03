@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./static/scripts/build/tsc/app",
+    "noEmit": false
+  },
+  "files": [
+    "static/scripts/tim/main.ts",
+    "static/scripts/tim/polyfills.ts"
+  ],
+  "include": [
+    "static/scripts/tim/**/*.d.ts",
+    "modules/cs/**/*.d.ts"
+  ]
+}

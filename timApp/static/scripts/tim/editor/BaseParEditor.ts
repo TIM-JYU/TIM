@@ -1,4 +1,4 @@
-import {Ace} from "ace";
+import {Ace} from "ace-builds/src-noconflict/ace";
 import {$timeout} from "../util/ngimport";
 import {AceParEditor} from "./AceParEditor";
 import {TextAreaParEditor} from "./TextAreaParEditor";

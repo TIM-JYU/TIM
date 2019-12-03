@@ -39,7 +39,7 @@ export abstract class DialogController<T, Ret> implements IController {
         if (e.keyCode === KEY_ESC && this.isTopMostDialog()) {
             this.dismiss();
         }
-    }
+    };
 
     public getDraggable() {
         return this.draggable;

@@ -29,24 +29,6 @@ import {Binding} from "../../util/utils";
  * @copyright 2015 Timppa project authors
  */
 
-function uncheckRadio(this: HTMLElement) {
-    // set this to click-method if you want a radio that can be unchecked.  for the radio there
-    // must be also property form that has other radios.
-    const elem = $(this);
-    const form = elem.parent("form");
-    if (!form) {
-        return;
-    }
-    const gn = elem.prop("name");
-    if (elem.prop("previousValue") === true) {
-        elem.prop("checked", false);
-    } else {
-        $("input[name=" + gn + "]", form).prop("previousValue", false);
-        // elem.prop('previousValue', false);
-    }
-    elem.prop("previousValue", elem.prop("checked"));
-}
-
 function deletePar(s: string) {
     if (!s.startsWith("<p>")) {
         return s;

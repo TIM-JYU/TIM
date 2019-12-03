@@ -1,13 +1,13 @@
 /**
  * Defines the client-side implementation of JavaScript runner plugin.
  */
-import angular, {INgModelOptions} from "angular";
+import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http, $sce} from "tim/util/ngimport";
-import {to, valueOr} from "tim/util/utils";
+import {$http} from "tim/util/ngimport";
+import {to} from "tim/util/utils";
 
 const goalTableApp = angular.module("goalTableApp", ["ngSanitize"]);
 export const moduleDefs = [goalTableApp];
@@ -40,14 +40,9 @@ const GoalTableAll = t.intersection([
         info: Info,
         markup: GoalTableMarkup,
         preview: t.boolean,
+        state: nullable(t.type({c: t.record(t.string, t.string)})),
     }),
 ]);
-
-type GoalTableResult = string | {
-    error: true,
-    message: string,
-    result: string,
-};
 
 interface IGoalTableData {
     answer: {[name: string]: string};
@@ -116,15 +111,10 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
 
     $onInit() {
         super.$onInit();
-        const aa: any = this.attrsall; // TODO: miten staten saa?
+        const aa = this.attrsall;
         const lang = this.attrs.lang || "fi";
         this.lang = lang;
-        let state: {[name: string]: string} = {};
-        try {
-            state = aa.state.c || {};
-        } catch (e) {
-            //
-        }
+        const state = aa.state && aa.state.c || {};
         this.mingoal = this.attrs.mingoal || 0;
         this.maxgoal = this.attrs.maxgoal || scaleValueWords.length - 1;
         this.initgoal = this.attrs.initgoal || 0;
@@ -230,7 +220,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
         const url = this.pluginMeta.getAnswerUrl();
         // url.replace("answer", "goalTable");
         const c = this.getJSContent();
-        const params: any =   {
+        const params = {
             input: {
                 nosave: false,
                 c: c,

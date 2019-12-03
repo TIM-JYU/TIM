@@ -24,7 +24,7 @@ class BookmarkFolderBoxCtrl implements IController {
     private orphanBookmarks: IBookmark[] = []; // Bookmarks that aren't pointing to any TIM-document.
 
     async $onInit() {
-        await this.getBookmarkFolder(this.bookmarkFolderName);
+        this.getBookmarkFolder(this.bookmarkFolderName);
         await this.getDocumentData();
     }
 
@@ -50,14 +50,17 @@ class BookmarkFolderBoxCtrl implements IController {
     private async getDocumentData() {
         // Returns a list of ITaggedItems because bookmarks aren't directly linked to
         // document items.
-        const response = await $http<ITaggedItem[]>({
+        const response = await to($http<ITaggedItem[]>({
             method: "GET",
             url: `/courses/documents/${this.bookmarkFolderName}`,
-        });
+        }));
+        if (!response.ok) {
+            return;
+        }
         // Bookmarks are added to their corresponding documents here.
         if (response && this.bookmarkFolder) {
             this.documents = [];
-            for (const responseItem of response.data) {
+            for (const responseItem of response.result.data) {
                 for (const b of this.bookmarkFolder.items) {
                     if ("/view/" + responseItem.path === b.link) {
                         this.documents.push({doc: responseItem, bookmark: b});
@@ -178,34 +181,34 @@ timApp.component("bookmarkFolderBox", {
     },
     controller: BookmarkFolderBoxCtrl,
     template: `
-        <div ng-cloak ng-if="$ctrl.bookmarkFolder.items.length > 0">
-            <h3>{{$ctrl.bookmarkFolder.name}}<a class="font-medium margin-4"><i class="glyphicon glyphicon-pencil"
-            title="Toggle editing {{$ctrl.bookmarkFolder.name}}"
-            ng-click="$ctrl.editOn = !$ctrl.editOn"></i></a></h3>
-            <ul class="list-unstyled">
-                <li class="h5" ng-repeat="d in $ctrl.documents | orderBy:$ctrl.courseCode">
-                    <a href="/view/{{d.doc.path}}">
-                        <span>{{$ctrl.getLinkText(d)}}
-                        <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-pencil" title="Edit bookmark"
-                        ng-click="$ctrl.editFromList(d.bookmark)"></i></a>
-                         <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-remove"
-                        title="Remove bookmark" ng-click="$ctrl.removeFromList(d.bookmark)"></i>
-                        </a>
-                        </span>
-                    </a>
-                </li>
-                <li class="h5" ng-repeat="b in $ctrl.orphanBookmarks">
-                    <a href="{{b.link}}">
-                        <span>{{b.name}}
-                        <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-pencil" title="Edit bookmark"
-                        ng-click="$ctrl.editFromList(b)"></i></a>
-                         <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-remove"
-                        title="Remove bookmark" ng-click="$ctrl.removeFromList(b)"></i>
-                        </a>
-                        </span>
-                    </a>
-                </li>
-            </ul>
-        </div>
+<div ng-cloak ng-if="$ctrl.bookmarkFolder.items.length > 0">
+    <h3>{{$ctrl.bookmarkFolder.name}}<a class="font-medium margin-4"><i class="glyphicon glyphicon-pencil"
+    title="Toggle editing {{$ctrl.bookmarkFolder.name}}"
+    ng-click="$ctrl.editOn = !$ctrl.editOn"></i></a></h3>
+    <ul class="list-unstyled">
+        <li class="h5" ng-repeat="d in $ctrl.documents | orderBy:$ctrl.courseCode">
+            <a href="/view/{{d.doc.path}}">
+                <span>{{$ctrl.getLinkText(d)}}
+                <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-pencil" title="Edit bookmark"
+                ng-click="$ctrl.editFromList(d.bookmark)"></i></a>
+                 <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-remove"
+                title="Remove bookmark" ng-click="$ctrl.removeFromList(d.bookmark)"></i>
+                </a>
+                </span>
+            </a>
+        </li>
+        <li class="h5" ng-repeat="b in $ctrl.orphanBookmarks">
+            <a href="{{b.link}}">
+                <span>{{b.name}}
+                <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-pencil" title="Edit bookmark"
+                ng-click="$ctrl.editFromList(b)"></i></a>
+                 <a ng-if="$ctrl.editOn"><i class="glyphicon glyphicon-remove"
+                title="Remove bookmark" ng-click="$ctrl.removeFromList(b)"></i>
+                </a>
+                </span>
+            </a>
+        </li>
+    </ul>
+</div>
     `,
 });

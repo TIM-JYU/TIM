@@ -198,7 +198,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
                             this.error.message = jse.error;
                         }
                         if ( this.error ) { return; }
-                    } catch (e) { }
+                    } catch { }
                 }
                 this.error.message = e;
                 return;

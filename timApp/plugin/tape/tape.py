@@ -19,10 +19,7 @@ tape_plugin = Blueprint('tape_plugin',
 def tape_reqs():
     reqs = {
         "type": "embedded",
-        "js": [
-            # "js/timTable.js"
-            # "tim/controllers/qstController",
-        ],
+        "js": ["tape"],
         "multihtml": True,
         "multimd": False,
         "default_automd": False,

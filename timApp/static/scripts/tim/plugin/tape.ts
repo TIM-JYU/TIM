@@ -1,6 +1,7 @@
 import {IController, IScope} from "angular";
 import {timApp} from "../app";
 import {Binding} from "../util/utils";
+import Timeout = NodeJS.Timeout;
 
 export enum ParameterType {
     NUMBER,
@@ -328,11 +329,11 @@ export class TapeController implements IController {
         this.iOS = isiOS();
         this.inputString = "";
         if ( this.data.presetInput ) {
-            this.inputString = String(this.data.presetInput);
+            this.inputString = this.data.presetInput.toString();
         }
         this.memString = "";
         if ( this.data.presetMemoryState ) {
-            this.memString = String(this.data.presetMemoryState);
+            this.memString = this.data.presetMemoryState.toString();
         }
         this.reset();
         this.selectedCommandIndex = this.commandList.length;
@@ -357,7 +358,7 @@ export class TapeController implements IController {
 
     private data!: Binding<TapeAttrs, "<">;
 
-    private timer?: NodeJS.Timer;
+    private timer?: Timeout;
 
     private inputString: string = "";
     private memString: string = "";
@@ -774,7 +775,7 @@ export class TapeController implements IController {
      * @param index The memory location index.
      */
     private getMemoryText(index: number) {
-        return /* "#" + */ String(index);
+        return /* "#" + */ index.toString();
     }
 }
 
