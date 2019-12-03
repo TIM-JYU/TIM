@@ -31,7 +31,11 @@
 //  BusIn
 //  BusOut
 
-!function($, $s) {
+!function($s) {
+
+  'use strict';
+
+  var $ = $s.$;
 
   // unit size
   var unit = $s.unit;
@@ -156,6 +160,13 @@
       var out1 = device.addOutput();
       var on = (type == 'PushOff');
 
+      if (type == 'Toggle' && device.deviceDef.state) {
+        on = device.deviceDef.state.on;
+      }
+      device.getState = function() {
+        return type == 'Toggle'? { on : on } : null;
+      };
+
       device.$ui.on('inputValueChange', function() {
         if (on) {
           out1.setValue(in1.getValue() );
@@ -174,20 +185,23 @@
           attr({x: size.width / 4, y: size.height / 4,
             width: size.width / 2, height: size.height / 2,
             rx: 2, ry: 2});
-        $s.addClass($button, 'simcir-basicset-switch-button');
+        $button.addClass('simcir-basicset-switch-button');
+        if (type == 'Toggle' && on) {
+          $button.addClass('simcir-basicset-switch-button-pressed');
+        }
         device.$ui.append($button);
         var button_mouseDownHandler = function(event) {
           event.preventDefault();
           event.stopPropagation();
           if (type == 'PushOn') {
             on = true;
-            $s.addClass($button, 'simcir-basicset-switch-button-pressed');
+            $button.addClass('simcir-basicset-switch-button-pressed');
           } else if (type == 'PushOff') {
             on = false;
-            $s.addClass($button, 'simcir-basicset-switch-button-pressed');
+            $button.addClass('simcir-basicset-switch-button-pressed');
           } else if (type == 'Toggle') {
             on = !on;
-            $s.addClass($button, 'simcir-basicset-switch-button-pressed');
+            $button.addClass('simcir-basicset-switch-button-pressed');
           }
           updateOutput();
           $(document).on('mouseup', button_mouseUpHandler);
@@ -196,14 +210,14 @@
         var button_mouseUpHandler = function(event) {
           if (type == 'PushOn') {
             on = false;
-            $s.removeClass($button, 'simcir-basicset-switch-button-pressed');
+            $button.removeClass('simcir-basicset-switch-button-pressed');
           } else if (type == 'PushOff') {
             on = true;
-            $s.removeClass($button, 'simcir-basicset-switch-button-pressed');
+            $button.removeClass('simcir-basicset-switch-button-pressed');
           } else if (type == 'Toggle') {
             // keep state
             if (!on) {
-              $s.removeClass($button, 'simcir-basicset-switch-button-pressed');
+              $button.removeClass('simcir-basicset-switch-button-pressed');
             }
           }
           updateOutput();
@@ -220,7 +234,7 @@
           $button.off('mousedown', button_mouseDownHandler);
           $button.off('touchstart', button_mouseDownHandler);
         });
-        $s.addClass(device.$ui, 'simcir-basicset-switch');
+        device.$ui.addClass('simcir-basicset-switch');
       };
     };
   };
@@ -297,7 +311,7 @@
       height: 1000,
       allSegments: 'abcdefg',
       drawSegment: function(g, segment, color) {
-        if (color < 0) {
+        if (!color) {
           return;
         }
         var data = _SEGMENT_DATA[segment];
@@ -595,7 +609,7 @@
           $(document).on('mouseup', knob_mouseUpHandler);
         };
         var knob_mouseMoveHandler = function(event) {
-          var off = $knob.parents('svg').offset();
+          var off = $knob.parent('svg').offset();
           var pos = $s.offset($knob);
           var cx = off.left + pos.x;
           var cy = off.top + pos.y;
@@ -647,7 +661,7 @@
     var super_createUI = device.createUI;
     device.createUI = function() {
       super_createUI();
-      $s.addClass(device.$ui, 'simcir-basicset-osc');
+      device.$ui.addClass('simcir-basicset-dc');
     };
     device.$ui.on('deviceAdd', function() {
       device.getOutputs()[0].setValue(onValue);
@@ -710,8 +724,11 @@
   $s.registerDevice('NAND', createLogicGateFactory(AND, NOT, drawNAND) );
   $s.registerDevice('OR', createLogicGateFactory(OR, BUF, drawOR) );
   $s.registerDevice('NOR', createLogicGateFactory(OR, NOT, drawNOR) );
-  $s.registerDevice('EOR', createLogicGateFactory(EOR, BUF, drawEOR) );
-  $s.registerDevice('ENOR', createLogicGateFactory(EOR, NOT, drawENOR) );
+  $s.registerDevice('XOR', createLogicGateFactory(EOR, BUF, drawEOR) );
+  $s.registerDevice('XNOR', createLogicGateFactory(EOR, NOT, drawENOR) );
+  // deprecated. not displayed in the default toolbox.
+  $s.registerDevice('EOR', createLogicGateFactory(EOR, BUF, drawEOR), true);
+  $s.registerDevice('ENOR', createLogicGateFactory(EOR, NOT, drawENOR), true);
 
   // register Oscillator
   $s.registerDevice('OSC', function(device) {
@@ -735,7 +752,7 @@
     var super_createUI = device.createUI;
     device.createUI = function() {
       super_createUI();
-      $s.addClass(device.$ui, 'simcir-basicset-dc');
+      device.$ui.addClass('simcir-basicset-osc');
       device.doc = {
         params: [
           {name: 'freq', type: 'number', defaultValue: '10',
@@ -817,4 +834,4 @@
     };
   });
 
-}(jQuery, simcir);
+}(simcir);

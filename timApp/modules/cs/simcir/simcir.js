@@ -12,8 +12,658 @@
 // includes following device types:
 //  In
 //  Out
+//  Joint
 
-var simcir = function($) {
+'use strict';
+
+var simcir = {};
+
+//
+// https://github.com/kazuhikoarase/lessQuery
+//
+simcir.$ = function() {
+
+  var debug = location.hash == '#debug';
+
+  var cacheIdKey = '.lessqCacheId';
+  var cacheIdSeq = 0;
+  var cache = {};
+
+  var getCache = function(elm) {
+    var cacheId = elm[cacheIdKey];
+    if (typeof cacheId == 'undefined') {
+      elm[cacheIdKey] = cacheId = cacheIdSeq++;
+      cache[cacheId] = debug? { e : elm } : {};
+    }
+    return cache[cacheId];
+  };
+
+  var hasCache = function(elm) {
+    return typeof elm[cacheIdKey] != 'undefined';
+  };
+
+  if (debug) {
+    var lastKeys = {};
+    var showCacheCount = function() {
+      var cnt = 0;
+      var keys = {};
+      for (var k in cache) {
+        cnt += 1;
+        if (!lastKeys[k]) {
+          console.log(cache[k]);
+        }
+        keys[k] = true;
+      }
+      lastKeys = keys;
+      console.log('cacheCount:' + cnt);
+      window.setTimeout(showCacheCount, 5000);
+    };
+    showCacheCount();
+  }
+
+  var removeCache = function(elm) {
+
+    if (typeof elm[cacheIdKey] != 'undefined') {
+
+      // remove all listeners
+      var cacheId = elm[cacheIdKey];
+      var listenerMap = cache[cacheId].listenerMap;
+      for (var type in listenerMap) {
+        var listeners = listenerMap[type];
+        for (var i = 0; i < listeners.length; i += 1) {
+          elm.removeEventListener(type, listeners[i]);
+        }
+      }
+
+      // delete refs
+      delete elm[cacheIdKey];
+      delete cache[cacheId];
+    }
+
+    while (elm.firstChild) {
+      removeCache(elm.firstChild);
+      elm.removeChild(elm.firstChild);
+    }
+  };
+
+  var getData = function(elm) {
+    if (!getCache(elm).data) { getCache(elm).data = {}; }
+    return getCache(elm).data;
+  };
+
+  var getListeners = function(elm, type) {
+    if (!getCache(elm).listenerMap) {
+      getCache(elm).listenerMap = {}; }
+    if (!getCache(elm).listenerMap[type]) {
+      getCache(elm).listenerMap[type] = []; }
+    return getCache(elm).listenerMap[type];
+  };
+
+  // add / remove event listener.
+  var addEventListener = function(elm, type, listener, add) {
+    var listeners = getListeners(elm, type);
+    var newListeners = [];
+    for (var i = 0; i < listeners.length; i += 1) {
+      if (listeners[i] != listener) {
+        newListeners.push(listeners[i]);
+      }
+    }
+    if (add) { newListeners.push(listener); }
+    getCache(elm).listenerMap[type] = newListeners;
+    return true;
+  };
+
+  var CustomEvent = {
+    preventDefault : function() { this._pD = true; },
+    stopPropagation : function() { this._sP = true; },
+    stopImmediatePropagation : function() { this._sIp = true; }
+  };
+
+  var trigger = function(elm, type, data) {
+    var event = { type : type, target : elm, currentTarget : null,
+        _pD : false, _sP : false, _sIp : false, __proto__ : CustomEvent };
+    for (var e = elm; e != null; e = e.parentNode) {
+      if (!hasCache(e) ) { continue; }
+      if (!getCache(e).listenerMap) { continue; }
+      if (!getCache(e).listenerMap[type]) { continue; }
+      event.currentTarget = e;
+      var listeners = getCache(e).listenerMap[type];
+      for (var i = 0; i < listeners.length; i += 1) {
+        listeners[i].call(e, event, data);
+        if (event._sIp) { return; }
+      }
+      if (event._sP) { return; }
+    }
+  };
+
+  var data = function(elm, kv) {
+    if (arguments.length == 2) {
+      if (typeof kv == 'string') return getData(elm)[kv];
+      for (var k in kv) { getData(elm)[k] = kv[k]; }
+    } else if (arguments.length == 3) {
+      getData(elm)[kv] = arguments[2];
+    }
+    return elm;
+  };
+
+  var extend = function(o1, o2) {
+    for (var k in o2) { o1[k] = o2[k]; } return o1;
+  };
+
+  var each = function(it, callback) {
+    if (typeof it.splice == 'function') {
+      for (var i = 0; i < it.length; i += 1) { callback(i, it[i]); }
+    } else {
+      for (var k in it) { callback(k, it[k]); }
+    }
+  };
+
+  var grep = function(list, accept) {
+    var newList = [];
+    for (var i = 0; i < list.length; i += 1) {
+      var item = list[i];
+      if (accept(item) ) {
+        newList.push(item);
+      }
+    }
+    return newList;
+  };
+
+  var addClass = function(elm, className, add) {
+    var classes = (elm.getAttribute('class') || '').split(/\s+/g);
+    var newClasses = '';
+    for (var i = 0; i < classes.length; i+= 1) {
+      if (classes[i] == className) { continue; }
+      newClasses += ' ' + classes[i];
+    }
+    if (add) { newClasses += ' ' + className; }
+    elm.setAttribute('class', newClasses);
+  };
+
+  var hasClass = function(elm, className) {
+    var classes = (elm.getAttribute('class') || '').split(/\s+/g);
+    for (var i = 0; i < classes.length; i+= 1) {
+      if (classes[i] == className) { return true; }
+    }
+    return false;
+  };
+
+  var matches = function(elm, selector) {
+    if (elm.nodeType != 1) {
+      return false;
+    } else if (!selector) {
+      return true;
+    }
+    var sels = selector.split(/[,\s]+/g);
+    for (var i = 0; i < sels.length; i += 1) {
+      var sel = sels[i];
+      if (sel.substring(0, 1) == '#') {
+        throw 'not supported:' + sel;
+      } else if (sel.substring(0, 1) == '.') {
+        if (hasClass(elm, sel.substring(1) ) ) {
+          return true;
+        }
+      } else {
+        if (elm.tagName.toUpperCase() == sel.toUpperCase() ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  var parser = new window.DOMParser();
+
+  var html = function(html) {
+    var doc = parser.parseFromString(
+        '<div xmlns="http://www.w3.org/1999/xhtml">' + html + '</div>',
+        'text/xml').firstChild;
+    var elms = [];
+    while (doc.firstChild) {
+      elms.push(doc.firstChild);
+      doc.removeChild(doc.firstChild);
+    }
+    elms.__proto__ = fn;
+    return elms;
+  };
+
+  var pxToNum = function(px) {
+    if (typeof px != 'string' || px.length <= 2 ||
+        px.charAt(px.length - 2) != 'p' ||
+        px.charAt(px.length - 1) != 'x') {
+      throw 'illegal px:' + px;
+    }
+    return +px.substring(0, px.length - 2);
+  };
+
+  var buildQuery = function(data) {
+    var query = '';
+    for (var k in data) {
+      if (query.length > 0) {
+        query += '&';
+      }
+      query += window.encodeURIComponent(k);
+      query += '=';
+      query += window.encodeURIComponent(data[k]);
+    }
+    return query;
+  };
+
+  var parseResponse = function() {
+
+    var contentType = this.getResponseHeader('content-type');
+    if (contentType != null) {
+      contentType = contentType.replace(/\s*;.+$/, '').toLowerCase();
+    }
+
+    if (contentType == 'text/xml' ||
+          contentType == 'application/xml') {
+      return parser.parseFromString(this.responseText, 'text/xml');
+    } else if (contentType == 'text/json' ||
+        contentType == 'application/json') {
+      return JSON.parse(this.responseText);
+    } else {
+      return this.response;
+    }
+  };
+
+  var ajax = function(params) {
+
+    params = extend({
+      url: '',
+      method : 'GET',
+      contentType : 'application/x-www-form-urlencoded;charset=UTF-8',
+      cache: true,
+      processData: true,
+      async : true
+    }, params);
+
+    if (!params.async) {
+      // force async.
+      throw 'not supported.';
+    }
+
+    var method = params.method.toUpperCase();
+    var data = null;
+    var contentType = params.contentType;
+    if (method == 'POST' || method == 'PUT') {
+      data = (typeof params.data == 'object' && params.processData)?
+          buildQuery(params.data) : params.data;
+    } else {
+      contentType = false;
+    }
+
+    var xhr = params.xhr? params.xhr() : new window.XMLHttpRequest();
+    xhr.open(method, params.url, params.async);
+    if (contentType !== false) {
+      xhr.setRequestHeader('Content-Type', contentType);
+    }
+    xhr.onreadystatechange = function() {
+      if(xhr.readyState == window.XMLHttpRequest.DONE) {
+        try {
+          if (xhr.status == 200) {
+            done.call(xhr, parseResponse.call(this) );
+          } else {
+            fail.call(xhr);
+          }
+        } finally {
+          always.call(xhr);
+        }
+      }
+    };
+
+    // call later
+    window.setTimeout(function() { xhr.send(data); }, 0);
+
+    // callbacks
+    var done = function(data) {};
+    var fail = function() {};
+    var always = function() {};
+
+    var $ = {
+      done : function(callback) { done = callback; return $; },
+      fail : function(callback) { fail = callback; return $; },
+      always : function(callback) { always = callback; return $; },
+      abort : function() { xhr.abort(); return $; }
+    };
+    return $;
+  };
+
+  // 1. for single element
+  var fn = {
+    attr : function(kv) {
+      if (arguments.length == 1) {
+        if (typeof kv == 'string') return this.getAttribute(kv);
+        for (var k in kv) { this.setAttribute(k, kv[k]); }
+      } else if (arguments.length == 2) {
+        this.setAttribute(kv, arguments[1]);
+      }
+      return this;
+    },
+    prop : function(kv) {
+      if (arguments.length == 1) {
+        if (typeof kv == 'string') return this[kv];
+        for (var k in kv) { this[k] = kv[k]; }
+      } else if (arguments.length == 2) {
+        this[kv] = arguments[1];
+      }
+      return this;
+    },
+    css : function(kv) {
+      if (arguments.length == 1) {
+        if (typeof kv == 'string') return this.style[kv];
+        for (var k in kv) { this.style[k] = kv[k]; }
+      } else if (arguments.length == 2) {
+        this.style[kv] = arguments[1];
+      }
+      return this;
+    },
+    data : function(kv) {
+      var args = [ this ];
+      for (var i = 0; i < arguments.length; i += 1) {
+        args.push(arguments[i]);
+      }; 
+      return data.apply(null, args);
+    },
+    val : function() {
+      if (arguments.length == 0) {
+        return this.value || '';
+      } else if (arguments.length == 1) {
+        this.value = arguments[0];
+      }
+      return this;
+    },
+    on : function(type, listener) {
+      var types = type.split(/\s+/g);
+      for (var i = 0; i < types.length; i += 1) {
+        this.addEventListener(types[i], listener);
+        addEventListener(this, types[i], listener, true);
+      }
+      return this;
+    },
+    off : function(type, listener) {
+      var types = type.split(/\s+/g);
+      for (var i = 0; i < types.length; i += 1) {
+        this.removeEventListener(types[i], listener);
+        addEventListener(this, types[i], listener, false);
+      }
+      return this;
+    },
+    trigger : function(type, data) {
+      trigger(this, type, data);
+      return this;
+    },
+    offset : function() {
+      var off = { left : 0, top : 0 };
+      var base = null;
+      for (var e = this; e.parentNode != null; e = e.parentNode) {
+        if (e.offsetParent != null) {
+          base = e;
+          break;
+        }
+      }
+      if (base != null) {
+        for (var e = base; e.offsetParent != null; e = e.offsetParent) {
+          off.left += e.offsetLeft;
+          off.top += e.offsetTop;
+        }
+      }
+      for (var e = this; e.parentNode != null &&
+            e != document.body; e = e.parentNode) {
+        off.left -= e.scrollLeft;
+        off.top -= e.scrollTop;
+      }
+      return off;
+    },
+    append : function(elms) {
+      if (typeof elms == 'string') {
+        elms = html(elms);
+      }
+      for (var i = 0; i < elms.length; i += 1) {
+        this.appendChild(elms[i]);
+      }
+      return this;
+    },
+    prepend : function(elms) {
+      if (typeof elms == 'string') {
+        elms = html(elms);
+      }
+      for (var i = 0; i < elms.length; i += 1) {
+        if (this.firstChild) {
+          this.insertBefore(elms[i], this.firstChild);
+        } else {
+          this.appendChild(elms[i]);
+        }
+      }
+      return this;
+    },
+    insertBefore : function(elms) {
+      var elm = elms[0];
+      elm.parentNode.insertBefore(this, elm);
+      return this;
+    },
+    insertAfter : function(elms) {
+      var elm = elms[0];
+      if (elm.nextSibling) {
+        elm.parentNode.insertBefore(this, elm.nextSibling);
+      } else {
+        elm.parentNode.appendChild(this);
+      }
+      return this;
+    },
+    remove : function() {
+      if (this.parentNode) { this.parentNode.removeChild(this); }
+      removeCache(this);
+      return this;
+    },
+    detach : function() {
+      if (this.parentNode) { this.parentNode.removeChild(this); }
+      return this;
+    },
+    parent : function() {
+      return $(this.parentNode);
+    },
+    closest : function(selector) {
+      for (var e = this; e != null; e = e.parentNode) {
+        if (matches(e, selector) ) {
+          return $(e);
+        }
+      }
+      return $();
+    },
+    find : function(selector) {
+      var elms = [];
+      var childNodes = this.querySelectorAll(selector);
+      for (var i = 0; i < childNodes.length; i += 1) {
+        elms.push(childNodes.item(i) );
+      }
+      elms.__proto__ = fn;
+      return elms;
+    },
+    children : function(selector) {
+      var elms = [];
+      var childNodes = this.childNodes;
+      for (var i = 0; i < childNodes.length; i += 1) {
+        if (matches(childNodes.item(i), selector) ) {
+          elms.push(childNodes.item(i) );
+        }
+      }
+      elms.__proto__ = fn;
+      return elms;
+    },
+    index : function(selector) {
+      return Array.prototype.indexOf.call(
+          $(this).parent().children(selector), this);
+    },
+    clone : function() { return $(this.cloneNode(true) ); },
+    focus : function() { this.focus(); return this; },
+    select : function() { this.select(); return this; },
+    submit : function() { this.submit(); return this; },
+    scrollLeft : function() {
+      if (arguments.length == 0) return this.scrollLeft;
+      this.scrollLeft = arguments[0]; return this;
+    },
+    scrollTop : function() {
+      if (arguments.length == 0) return this.scrollTop;
+      this.scrollTop = arguments[0]; return this;
+    },
+    html : function() {
+      if (arguments.length == 0) return this.innerHTML;
+      this.innerHTML = arguments[0]; return this;
+    },
+    text : function() {
+      if (typeof this.textContent != 'undefined') {
+        if (arguments.length == 0) return this.textContent;
+        this.textContent = arguments[0]; return this;
+      } else {
+        if (arguments.length == 0) return this.innerText;
+        this.innerText = arguments[0]; return this;
+      }
+    },
+    outerWidth : function(margin) {
+      var w = this.offsetWidth;
+      if (margin) {
+        var cs = window.getComputedStyle(this, null);
+        return w + pxToNum(cs.marginLeft) + pxToNum(cs.marginRight);
+      }
+      return w;
+    },
+    innerWidth : function() {
+      var cs = window.getComputedStyle(this, null);
+      return this.offsetWidth -
+        pxToNum(cs.borderLeftWidth) - pxToNum(cs.borderRightWidth);
+    },
+    width : function() {
+      if (this == window) return this.innerWidth;
+      var cs = window.getComputedStyle(this, null);
+      return this.offsetWidth -
+        pxToNum(cs.borderLeftWidth) - pxToNum(cs.borderRightWidth) -
+        pxToNum(cs.paddingLeft) - pxToNum(cs.paddingRight);
+    },
+    outerHeight : function(margin) {
+      var h = this.offsetHeight;
+      if (margin) {
+        var cs = window.getComputedStyle(this, null);
+        return h + pxToNum(cs.marginTop) + pxToNum(cs.marginBottom);
+      }
+      return h;
+    },
+    innerHeight : function() {
+      var cs = window.getComputedStyle(this, null);
+      return this.offsetHeight -
+        pxToNum(cs.borderTopWidth) - pxToNum(cs.borderBottomWidth);
+    },
+    height : function() {
+      if (this == window) return this.innerHeight;
+      var cs = window.getComputedStyle(this, null);
+      return this.offsetHeight -
+        pxToNum(cs.borderTopWidth) - pxToNum(cs.borderBottomWidth) -
+        pxToNum(cs.paddingTop) - pxToNum(cs.paddingBottom);
+    },
+    addClass : function(className) {
+      addClass(this, className, true); return this;
+    },
+    removeClass : function(className) {
+      addClass(this, className, false); return this;
+    },
+    hasClass : function(className) {
+      return hasClass(this, className);
+    }
+  };
+
+  // 2. to array
+  each(fn, function(name, func) {
+    fn[name] = function() {
+      var newRet = null;
+      for (var i = 0; i < this.length; i += 1) {
+        var elm = this[i];
+        var ret = func.apply(elm, arguments);
+        if (elm !== ret) {
+          if (ret != null && ret.__proto__ == fn) {
+            if (newRet == null) { newRet = []; }
+            newRet = newRet.concat(ret);
+          } else {
+            return ret;
+          }
+        }
+      }
+      if (newRet != null) {
+        newRet.__proto__ = fn;
+        return newRet;
+      }
+      return this;
+    };
+  });
+
+  // 3. for array
+  fn = extend(fn, {
+    each : function(callback) {
+      for (var i = 0; i < this.length; i += 1) {
+        callback.call(this[i], i);
+      }
+      return this;
+    },
+    first : function() {
+      return $(this.length > 0? this[0] : null);
+    },
+    last : function() {
+      return $(this.length > 0? this[this.length - 1] : null);
+    }
+  });
+
+  var $ = function(target) {
+
+    if (typeof target == 'function') {
+
+      // ready
+      return $(document).on('DOMContentLoaded', target);
+
+    } else if (typeof target == 'string') {
+
+      if (target.charAt(0) == '<') {
+
+        // dom creation
+        return html(target);
+
+      } else {
+
+        // query
+        var childNodes = document.querySelectorAll(target);
+        var elms = [];
+        for (var i = 0; i < childNodes.length; i += 1) {
+          elms.push(childNodes.item(i) );
+        }
+        elms.__proto__ = fn;
+        return elms;
+      }
+
+    } else if (typeof target == 'object' && target != null) {
+
+      if (target.__proto__ == fn) {
+        return target;
+      } else {
+        var elms = [];
+        elms.push(target);
+        elms.__proto__ = fn;
+        return elms;
+      }
+
+    } else {
+
+      var elms = [];
+      elms.__proto__ = fn;
+      return elms;
+    }
+  };
+
+  return extend($, {
+    fn : fn, extend : extend, each : each, grep : grep,
+    data : data, ajax : ajax });
+}();
+
+!function($s) {
+
+  var $ = $s.$;
 
   var createSVGElement = function(tagName) {
     return $(document.createElementNS(
@@ -66,43 +716,6 @@ var simcir = function($) {
       drawRect: drawRect,
       drawCircle: drawCircle
     };
-  };
-
-  var eachClass = function($o, f) {
-    var className = $o.attr('class');
-    if (className) {
-      $.each(className.split(/\s+/g), f);
-    }
-  };
-
-  var addClass = function($o, className, remove) {
-    var newClass = '';
-    eachClass($o, function(i, c) {
-      if (!(remove && c == className) ) {
-        newClass += '\u0020';
-        newClass += c;
-      }
-    });
-    if (!remove) {
-      newClass += '\u0020';
-      newClass += className;
-    }
-    $o.attr('class', newClass);
-    return $o;
-  };
-
-  var removeClass = function($o, className) {
-    return addClass($o, className, true);
-  };
-
-  var hasClass = function($o, className) {
-    var found = false;
-    eachClass($o, function(i, c) {
-      if (c == className) {
-        found = true;
-      }
-    });
-    return found;
   };
 
   var transform = function() {
@@ -167,9 +780,7 @@ var simcir = function($) {
     var delay = 50; // ms
     var limit = 40; // ms
     var _queue = null;
-
     var postEvent = function(event) {
-      checkTouch(event);
       if (_queue == null) {
         _queue = [];
       }
@@ -253,15 +864,13 @@ var simcir = function($) {
       var $circle = createSVGElement('circle').
         attr({cx: 0, cy: 0, r: 4});
       node.$ui.on('mouseover', function(event) {
-        checkTouch(event);
         if (isActiveNode(node.$ui) ) {
-          addClass(node.$ui, 'simcir-node-hover');
+          node.$ui.addClass('simcir-node-hover');
         }
       });
       node.$ui.on('mouseout', function(event) {
-        checkTouch(event);
         if (isActiveNode(node.$ui) ) {
-          removeClass(node.$ui, 'simcir-node-hover');
+          node.$ui.removeClass('simcir-node-hover');
         }
       });
       node.$ui.append($circle);
@@ -295,11 +904,10 @@ var simcir = function($) {
         }
       }
       node.$ui.on('nodeValueChange', function(event) {
-        checkTouch(event);
         if (_value != null) {
-          addClass(node.$ui, 'simcir-node-hot');
+          node.$ui.addClass('simcir-node-hot');
         } else {
-          removeClass(node.$ui, 'simcir-node-hot');
+          node.$ui.removeClass('simcir-node-hot');
         }
       });
     }
@@ -329,9 +937,9 @@ var simcir = function($) {
     var super_setValue = node.setValue;
     var setValue = function(value) {
       super_setValue(value);
-      $.each(inputs, function(i, inputNode) {
-        inputNode.setValue(value);
-      });
+      for (var i = 0; i < inputs.length; i += 1) {
+        inputs[i].setValue(value);
+      }
     };
     var connectTo = function(inNode) {
       if (inNode.getOutput() != null) {
@@ -362,15 +970,16 @@ var simcir = function($) {
     });
   };
 
-  var createDevice = function(deviceDef, headless) {
+  var createDevice = function(deviceDef, headless, scope) {
     headless = headless || false;
+    scope = scope || null;
     var $dev = createSVGElement('g');
     if (!headless) {
       $dev.attr('class', 'simcir-device');
     }
     controller($dev, createDeviceController(
         {$ui: $dev, deviceDef: deviceDef,
-          headless: headless, doc: null}) );
+          headless: headless, scope: scope, doc: null}) );
     var factory = factories[deviceDef.type];
     if (factory) {
       factory(controller($dev) );
@@ -387,7 +996,6 @@ var simcir = function($) {
     var addInput = function(label, description) {
       var $node = createNode('in', label, description, device.headless);
       $node.on('nodeValueChange', function(event) {
-        checkTouch(event);
         device.$ui.trigger('inputValueChange');
       });
       if (!device.headless) {
@@ -425,6 +1033,15 @@ var simcir = function($) {
         });
       });
     };
+    device.$ui.on('dispose', function() {
+      $.each(getInputs(), function(i, inNode) {
+        inNode.$ui.remove();
+      });
+      $.each(getOutputs(), function(i, outNode) {
+        outNode.$ui.remove();
+      });
+      device.$ui.remove();
+    } );
 
     var selected = false;
     var setSelected = function(value) {
@@ -485,9 +1102,9 @@ var simcir = function($) {
       device.$ui.attr('class', 'simcir-device');
       device.$ui.on('deviceSelect', function() {
         if (selected) {
-          addClass($(this), 'simcir-device-selected');
+          $(this).addClass('simcir-device-selected');
         } else {
-          removeClass($(this), 'simcir-device-selected');
+          $(this).removeClass('simcir-device-selected');
         }
       });
 
@@ -503,10 +1120,13 @@ var simcir = function($) {
         $label.text(getLabel() );
       });
 
-      var label_dblClickHandler = function() {
-        // open library,
+      var label_dblClickHandler = function(event) {
         event.preventDefault();
         event.stopPropagation();
+        var $workspace = $(event.target).closest('.simcir-workspace');
+        if (!controller($workspace).data().editable) {
+          return;
+        }
         var title = 'Enter device name ';
         var $labelEditor = $('<input type="text"/>').
           addClass('simcir-label-editor').
@@ -538,6 +1158,8 @@ var simcir = function($) {
 
     };
 
+    var getState = function() { return null; };
+
     return $.extend(device, {
       addInput: addInput,
       addOutput: addOutput,
@@ -550,7 +1172,8 @@ var simcir = function($) {
       halfPitch: false,
       getSize: getSize,
       createUI: createUI,
-      layoutUI: layoutUI
+      layoutUI: layoutUI,
+      getState: getState
     });
   };
 
@@ -570,7 +1193,7 @@ var simcir = function($) {
     }
   };
 
-  var buildCircuit = function(data, headless) {
+  var buildCircuit = function(data, headless, scope) {
     var $devices = [];
     var $devMap = {};
     var getNode = function(path) {
@@ -585,7 +1208,7 @@ var simcir = function($) {
         controller($devMap[devId]).getOutputs()[index];
     };
     $.each(data.devices, function(i, deviceDef) {
-      var $dev = createDevice(deviceDef, headless);
+      var $dev = createDevice(deviceDef, headless, scope);
       transform($dev, deviceDef.x, deviceDef.y);
       $devices.push($dev);
       $devMap[deviceDef.id] = $dev;
@@ -599,6 +1222,37 @@ var simcir = function($) {
     });
     return $devices;
   };
+
+  var dialogManager = function() {
+    var dialogs = [];
+    var updateDialogs = function($dlg, remove) {
+      var newDialogs = [];
+      $.each(dialogs, function(i) {
+        if (dialogs[i] != $dlg) {
+          newDialogs.push(dialogs[i]);
+        }
+      });
+      if (!remove) {
+        newDialogs.push($dlg);
+      }
+      // renumber z-index
+      $.each(newDialogs, function(i) {
+        newDialogs[i].css('z-index', '' + (i + 1) );
+      });
+      dialogs = newDialogs;
+    };
+    return {
+      add : function($dlg) {
+        updateDialogs($dlg);
+      },
+      remove : function($dlg) {
+        updateDialogs($dlg, true);
+      },
+      toFront : function($dlg) {
+        updateDialogs($dlg);
+      }
+    };
+  }();
 
   var showDialog = function(title, $content) {
     var $closeButton = function() {
@@ -622,8 +1276,8 @@ var simcir = function($) {
       text(title).
       css('cursor', 'default').
       on('mousedown', function(event) {
-      event.preventDefault();
-    });
+        event.preventDefault();
+      });
     var $dlg = $('<div></div>').
       addClass('simcir-dialog').
       css({position:'absolute'}).
@@ -632,27 +1286,23 @@ var simcir = function($) {
       append($('<br/>').css('clear', 'both') ).
       append($content);
     $('BODY').append($dlg);
+    dialogManager.add($dlg);
     var dragPoint = null;
     var dlg_mouseDownHandler = function(event) {
-      checkTouch(event);
       if (!$(event.target).hasClass('simcir-dialog') &&
           !$(event.target).hasClass('simcir-dialog-title') ) {
         return;
       }
       event.preventDefault();
-      $dlg.detach();
-      $('BODY').append($dlg);
+      dialogManager.toFront($dlg);
       var off = $dlg.offset();
       dragPoint = {
         x: event.pageX - off.left,
         y: event.pageY - off.top};
       $(document).on('mousemove', dlg_mouseMoveHandler);
       $(document).on('mouseup', dlg_mouseUpHandler);
-      $(document).on('touchmove', dlg_mouseMoveHandler);
-      $(document).on('touchend', dlg_mouseUpHandler);
     };
     var dlg_mouseMoveHandler = function(event) {
-      checkTouch(event);
       moveTo(
           event.pageX - dragPoint.x,
           event.pageY - dragPoint.y);
@@ -660,20 +1310,22 @@ var simcir = function($) {
     var dlg_mouseUpHandler = function(event) {
       $(document).off('mousemove', dlg_mouseMoveHandler);
       $(document).off('mouseup', dlg_mouseUpHandler);
-      $(document).off('touchmove', dlg_mouseMoveHandler);
-      $(document).off('touchend', dlg_mouseUpHandler);
     };
     $dlg.on('mousedown', dlg_mouseDownHandler);
-    $dlg.on('touchstart', dlg_mouseDownHandler);
     $closeButton.on('mousedown', function() {
+      $dlg.trigger('close');
       $dlg.remove();
+      dialogManager.remove($dlg);
     });
     var w = $dlg.width();
     var h = $dlg.height();
     var cw = $(window).width();
     var ch = $(window).height();
-    var x = (cw - w) / 2 + $(document).scrollLeft();
-    var y = (ch - h) / 2 + $(document).scrollTop();
+    var getProp = function(id) {
+      return $('HTML')[id]() || $('BODY')[id]();
+    };
+    var x = (cw - w) / 2 + getProp('scrollLeft');
+    var y = (ch - h) / 2 + getProp('scrollTop');
     var moveTo = function(x, y) {
       $dlg.css({left: x + 'px', top: y + 'px'});
     };
@@ -683,7 +1335,7 @@ var simcir = function($) {
 
   var createDeviceRefFactory = function(data) {
     return function(device) {
-      var $devs = buildCircuit(data, true);
+      var $devs = buildCircuit(data, true, {});
       var $ports = [];
       $.each($devs, function(i, $dev) {
         var deviceDef = controller($dev).deviceDef;
@@ -739,24 +1391,170 @@ var simcir = function($) {
         var size = super_getSize();
         return {width: unit * 4, height: size.height};
       };
+      device.$ui.on('dispose', function() {
+        $.each($devs, function(i, $dev) {
+          $dev.trigger('dispose');
+        });
+      } );
       device.$ui.on('dblclick', function(event) {
         // open library,
         event.preventDefault();
         event.stopPropagation();
         showDialog(device.deviceDef.label || device.deviceDef.type,
-            setupSimcir($('<div></div>'), data) );
+            setupSimcir($('<div></div>'), data) ).on('close', function() {
+              $(this).find('.simcir-workspace').trigger('dispose');
+            });
       });
+    };
+  };
+
+  var createCustomLayoutDeviceRefFactory = function(data) {
+    return function(device) {
+      var $devs = buildCircuit(data, true, {});
+      var $ports = [];
+      var intfs = [];
+      $.each($devs, function(i, $dev) {
+        var deviceDef = controller($dev).deviceDef;
+        if (deviceDef.type == 'In' || deviceDef.type == 'Out') {
+          $ports.push($dev);
+        }
+      });
+      var getDesc = function(port) {
+        return port? port.description : '';
+      };
+      $.each($ports, function(i, $port) {
+        var port = controller($port);
+        var portDef = port.deviceDef;
+        var inPort;
+        var outPort;
+        if (portDef.type == 'In') {
+          outPort = port.getOutputs()[0];
+          inPort = device.addInput();
+          intfs.push({ node : inPort, label : portDef.label,
+              desc : getDesc(outPort.getInputs()[0]) });
+          // force disconnect test devices that connected to In-port
+          var inNode = port.getInputs()[0];
+          if (inNode.getOutput() != null) {
+            inNode.getOutput().disconnectFrom(inNode);
+          }
+        } else if (portDef.type == 'Out') {
+          inPort = port.getInputs()[0];
+          outPort = device.addOutput();
+          intfs.push({ node : outPort, label : portDef.label,
+              desc : getDesc(inPort.getOutput() ) });
+          // force disconnect test devices that connected to Out-port
+          var outNode = port.getOutputs()[0];
+          $.each(outNode.getInputs(), function(i, inNode) {
+            if (inNode.getOutput() != null) {
+              inNode.getOutput().disconnectFrom(inNode);
+            }
+          } );
+        }
+        inPort.$ui.on('nodeValueChange', function() {
+          outPort.setValue(inPort.getValue() );
+        });
+      });
+      var layout = data.layout;
+      var cols = layout.cols;
+      var rows = layout.rows;
+      rows = ~~( (Math.max(1, rows) + 1) / 2) * 2;
+      cols = ~~( (Math.max(1, cols) + 1) / 2) * 2;
+      var updateIntf = function(intf, x, y, align) {
+        transform(intf.node.$ui, x, y);
+        if (!intf.$label) {
+          intf.$label = createLabel(intf.label).
+            attr('class', 'simcir-node-label');
+          enableEvents(intf.$label, false);
+          intf.node.$ui.append(intf.$label);
+        }
+        if (align == 'right') {
+          intf.$label.attr('text-anchor', 'start').
+            attr('x', 6).
+            attr('y', fontSize / 2);
+        } else if (align == 'left') {
+          intf.$label.attr('text-anchor', 'end').
+            attr('x', -6).
+            attr('y', fontSize / 2);
+        } else if (align == 'top') {
+          intf.$label.attr('text-anchor', 'middle').
+            attr('x', 0).
+            attr('y', -6);
+        } else if (align == 'bottom') {
+          intf.$label.attr('text-anchor', 'middle').
+            attr('x', 0).
+            attr('y', fontSize + 6);
+        }
+      };
+      var doLayout = function() {
+        var x = 0;
+        var y = 0;
+        var w = unit * cols / 2;
+        var h = unit * rows / 2;
+        device.$ui.children('.simcir-device-label').
+          attr({y : y + h + fontSize});
+        device.$ui.children('.simcir-device-body').
+          attr({x: x, y: y, width: w, height: h});
+        $.each(intfs, function(i, intf) {
+          if (layout.nodes[intf.label] &&
+              layout.nodes[intf.label].match(/^([TBLR])([0-9]+)$/) ) {
+            var off = +RegExp.$2 * unit / 2;
+            switch(RegExp.$1) {
+            case 'T' : updateIntf(intf, x + off, y, 'bottom'); break;
+            case 'B' : updateIntf(intf, x + off, y + h, 'top'); break;
+            case 'L' : updateIntf(intf, x, y + off, 'right'); break;
+            case 'R' : updateIntf(intf, x + w, y + off, 'left'); break;
+            }
+          } else {
+            transform(intf.node.$ui, 0, 0);
+          }
+        });
+      };
+      device.getSize = function() {
+        return {width: unit * cols / 2, height: unit * rows / 2};
+      };
+      device.$ui.on('dispose', function() {
+        $.each($devs, function(i, $dev) {
+          $dev.trigger('dispose');
+        });
+      } );
+      if (data.layout.hideLabelOnWorkspace) {
+        device.$ui.on('deviceAdd', function() {
+          device.$ui.children('.simcir-device-label').css('display', 'none');
+        }).on('deviceRemove', function() {
+          device.$ui.children('.simcir-device-label').css('display', '');
+        });
+      }
+      device.$ui.on('dblclick', function(event) {
+        // open library,
+        event.preventDefault();
+        event.stopPropagation();
+        showDialog(device.deviceDef.label || device.deviceDef.type,
+            setupSimcir($('<div></div>'), data) ).on('close', function() {
+              $(this).find('.simcir-workspace').trigger('dispose');
+            });
+      });
+      var super_createUI = device.createUI;
+      device.createUI = function() {
+        super_createUI();
+        doLayout();
+      };
     };
   };
 
   var factories = {};
   var defaultToolbox = [];
-  var registerDevice = function(type, factory) {
+  var registerDevice = function(type, factory, deprecated) {
     if (typeof factory == 'object') {
-      factory = createDeviceRefFactory(factory);
+      if (typeof factory.layout == 'object') {
+        factory = createCustomLayoutDeviceRefFactory(factory);
+      } else {
+        factory = createDeviceRefFactory(factory);
+      }
     }
     factories[type] = factory;
-    defaultToolbox.push({type: type});
+    if (!deprecated) {
+      defaultToolbox.push({type: type});
+    }
   };
 
   var createScrollbar = function() {
@@ -775,11 +1573,19 @@ var simcir = function($) {
       attr('class', 'simcir-scrollbar-bar');
     var $scrollbar = createSVGElement('g').
       attr('class', 'simcir-scrollbar').
-      append($body).append($bar);
+      append($body).append($bar).
+      on('unitup', function(event) {
+        setValue(_value - unit * 2);
+      }).on('unitdown', function(event) {
+        setValue(_value + unit * 2);
+      }).on('rollup', function(event) {
+        setValue(_value - _barSize);
+      }).on('rolldown', function(event) {
+        setValue(_value + _barSize);
+      });
 
     var dragPoint = null;
     var bar_mouseDownHandler = function(event) {
-      checkTouch(event);
       event.preventDefault();
       event.stopPropagation();
       var pos = transform($bar);
@@ -788,40 +1594,31 @@ var simcir = function($) {
           y: event.pageY - pos.y};
       $(document).on('mousemove', bar_mouseMoveHandler);
       $(document).on('mouseup', bar_mouseUpHandler);
-      $(document).on('touchmove', bar_mouseMoveHandler);
-      $(document).on('touchend', bar_mouseUpHandler);
     };
     var bar_mouseMoveHandler = function(event) {
-      checkTouch(event);
       calc(function(unitSize) {
-        setValues( (event.pageY - dragPoint.y) /
-            unitSize, _min, _max, _barSize);
+        setValue( (event.pageY - dragPoint.y) / unitSize);
       });
     };
     var bar_mouseUpHandler = function(event) {
       $(document).off('mousemove', bar_mouseMoveHandler);
       $(document).off('mouseup', bar_mouseUpHandler);
-      $(document).off('touchmove', bar_mouseMoveHandler);
-      $(document).off('touchend', bar_mouseUpHandler);
     };
     $bar.on('mousedown', bar_mouseDownHandler);
-    $bar.on('touchstart', bar_mouseDownHandler);
     var body_mouseDownHandler = function(event) {
-      checkTouch(event);
       event.preventDefault();
       event.stopPropagation();
-      var off = $scrollbar.parents('svg').offset();
+      var off = $scrollbar.parent('svg').offset();
       var pos = transform($scrollbar);
       var y = event.pageY - off.top - pos.y;
       var barPos = transform($bar);
       if (y < barPos.y) {
-        setValues(_value - _barSize, _min, _max, _barSize);
+        $scrollbar.trigger('rollup');
       } else {
-        setValues(_value + _barSize, _min, _max, _barSize);
+        $scrollbar.trigger('rolldown');
       }
     };
     $body.on('mousedown', body_mouseDownHandler);
-    $body.on('touchstart', body_mouseDownHandler);
 
     var setSize = function(width, height) {
       _width = width;
@@ -845,6 +1642,9 @@ var simcir = function($) {
     };
     var calc = function(f) {
       f(_height / (_max - _min) );
+    };
+    var setValue = function(value) {
+      setValues(value, _min, _max, _barSize);
     };
     var setValues = function(value, min, max, barSize) {
       value = Math.max(min, Math.min(value, max - barSize) );
@@ -882,19 +1682,40 @@ var simcir = function($) {
       width: 400,
       height: 200,
       showToolbox: true,
+      editable: true,
       toolbox: defaultToolbox,
       devices: [],
       connectors: [],
     }, data);
+
+    var scope = {};
 
     var workspaceWidth = data.width;
     var workspaceHeight = data.height;
     var barWidth = unit;
     var toolboxWidth = data.showToolbox? unit * 6 + barWidth : 0;
 
+    var connectorsValid = true;
+    var connectorsValidator = function() {
+      if (!connectorsValid) {
+        updateConnectors();
+        connectorsValid = true;
+      }
+    };
+
     var $workspace = createSVG(
         workspaceWidth, workspaceHeight).
-      attr('class', 'simcir-workspace');
+      attr('class', 'simcir-workspace').
+      on('nodeValueChange', function(event) {
+        connectorsValid = false;
+        window.setTimeout(connectorsValidator, 0);
+      }).
+      on('dispose', function() {
+        $(this).find('.simcir-device').trigger('dispose');
+        $toolboxPane.remove();
+        $workspace.remove();
+      });
+
     disableSelection($workspace);
 
     var $defs = createSVGElement('defs');
@@ -934,7 +1755,15 @@ var simcir = function($) {
           width: toolboxWidth,
           height: workspaceHeight}) ).
       append($toolboxDevicePane).
-      append($scrollbar);
+      append($scrollbar).on('wheel', function(event) {
+        event.preventDefault();
+        var oe = event.originalEvent || event;
+        if (oe.deltaY < 0) {
+          $scrollbar.trigger('unitup');
+        } else if (oe.deltaY > 0) {
+          $scrollbar.trigger('unitdown');
+        }
+      });
 
     var $devicePane = createSVGElement('g');
     transform($devicePane, toolboxWidth, 0);
@@ -960,7 +1789,7 @@ var simcir = function($) {
       $dev.trigger('deviceRemove');
       // before remove, disconnect all
       controller($dev).disconnectAll();
-      $dev.remove();
+      $dev.trigger('dispose');
       updateConnectors();
     };
 
@@ -980,8 +1809,11 @@ var simcir = function($) {
           if (inNode.getOutput() != null) {
             var p1 = offset(inNode.$ui);
             var p2 = offset(inNode.getOutput().$ui);
-            $connectorPane.append(
-                createConnector(p1.x, p1.y, p2.x, p2.y) );
+            var $conn = createConnector(p1.x, p1.y, p2.x, p2.y);
+            if (inNode.getOutput().getValue() != null) {
+              $conn.addClass('simcir-connector-hot');
+            }
+            $connectorPane.append($conn);
           }
         });
       });
@@ -1042,12 +1874,17 @@ var simcir = function($) {
         deviceDef.x = pos.x;
         deviceDef.y = pos.y;
         deviceDef.label = device.getLabel();
+        var state = device.getState();
+        if (state != null) {
+          deviceDef.state = state;
+        }
         devices.push(deviceDef);
       });
       return {
         width: data.width,
         height: data.height,
         showToolbox: data.showToolbox,
+        editable: data.editable,
         toolbox: toolbox,
         devices: devices,
         connectors: connectors
@@ -1067,7 +1904,8 @@ var simcir = function($) {
       };
       var printArray = function(array) {
         $.each(array, function(i, item) {
-          println('    ' + JSON.stringify(item) +
+          println('    ' + JSON.stringify(item).
+                replace(/</g, '\\u003c').replace(/>/g, '\\u003e') +
               (i + 1 < array.length? ',' : '') );
         });
       };
@@ -1110,88 +1948,50 @@ var simcir = function($) {
       var $srcNode = $target.closest('.simcir-node');
       var off = $workspace.offset();
       var pos = offset($srcNode);
-      var friendType = ".simcir-node-type-in"
       if ($srcNode.attr('simcir-node-type') == 'in') {
         disconnect($srcNode);
-        friendType = ".simcir-node-type-out"
       }
       dragMoveHandler = function(event) {
-        checkTouch(event);
         var x = event.pageX - off.left;
         var y = event.pageY - off.top;
         $temporaryPane.children().remove();
         $temporaryPane.append(createConnector(pos.x, pos.y, x, y) );
       };
       dragCompleteHandler = function(event) {
-        checkTouch(event);
         $temporaryPane.children().remove();
         var $dst = $(event.target);
-        var $dstNode = findClosest(event, friendType, 40);
-        if ( $dstNode && isActiveNode($dstNode) ) {
-          // if (isActiveNode($dst) ) {
-          // var $dstNode = $dst.closest('.simcir-node');
+        if (isActiveNode($dst) ) {
+          var $dstNode = $dst.closest('.simcir-node');
           connect($srcNode, $dstNode);
           updateConnectors();
         }
       };
     };
 
-
-    var findClosest = function(event, cond,  maxdist) {
-        var a = $(cond);
-        var best = null;
-        var x0 = event.pageX;
-        var y0 = event.pageY;
-        var mindist = maxdist*maxdist; // must be closer than this
-        for (i = 0, len = a.length; i < len; i++) {
-           var cur = $(a[i]);
-           var cir = $(cur[0].childNodes[0]);
-           // if ( cir.context != circle) continue;
-           coff = cir.offset();
-           if (!coff) continue;
-           var dx = cir.offset().left+4 - x0; // suppose circle with radious 0f 4
-           var dy = cir.offset().top+4 -y0;
-           var curdist = dx*dx + dy*dy;
-           if ( curdist < mindist ) {
-              if ( curdist > 4*4 ) { // if inside circle, always accept
-                 if ( cur.attr('simcir-node-type') == 'in' && dx < 0 ) continue; // in from left
-                 if ( cur.attr('simcir-node-type') == 'out' && dx > 0 ) continue; // out from right
-              }
-              best = cur;
-              mindist = curdist;
-           }
-        }
-        return best;
-    }
-
-
     var beginNewDevice = function(event, $target) {
-      checkTouch(event);
       var $dev = $target.closest('.simcir-device');
       var pos = offset($dev);
-      $dev = createDevice(controller($dev).deviceDef);
+      $dev = createDevice(controller($dev).deviceDef, false, scope);
       transform($dev, pos.x, pos.y);
       $temporaryPane.append($dev);
       var dragPoint = {
         x: event.pageX - pos.x,
         y: event.pageY - pos.y};
       dragMoveHandler = function(event) {
-        checkTouch(event);
         transform($dev,
             event.pageX - dragPoint.x,
             event.pageY - dragPoint.y);
       };
       dragCompleteHandler = function(event) {
-        checkTouch(event);
         var $target = $(event.target);
-        if ($target.closest('.simcir-toolbox').length == 0 || true) { // for some reason dod not find in touch??
+        if ($target.closest('.simcir-toolbox').length == 0) {
           $dev.detach();
           var pos = transform($dev);
           transform($dev, pos.x - toolboxWidth, pos.y);
           adjustDevice($dev);
           addDevice($dev);
         } else {
-          $dev.remove();
+          $dev.trigger('dispose');
         }
       };
     };
@@ -1222,7 +2022,6 @@ var simcir = function($) {
         x: event.pageX - pos.x,
         y: event.pageY - pos.y};
       dragMoveHandler = function(event) {
-        checkTouch(event);
         // disable events while dragging.
         enableEvents($dev, false);
         var curPos = transform($dev);
@@ -1238,15 +2037,10 @@ var simcir = function($) {
         updateConnectors();
       };
       dragCompleteHandler = function(event) {
-        checkTouch(event);
         var $target = $(event.target);
-        var body = $(".simcir-body");
-        var sx = 0;
-        if ( body ) sx = body.offset().left + 100;
         enableEvents($dev, true);
         $.each($selectedDevices, function(i, $dev) {
-          //if ($target.closest('.simcir-toolbox').length == 0) {
-          if ( event.pageX > sx ) {
+          if ($target.closest('.simcir-toolbox').length == 0) {
             adjustDevice($dev);
             updateConnectors();
           } else {
@@ -1257,7 +2051,6 @@ var simcir = function($) {
     };
 
     var beginSelectDevice = function(event, $target) {
-      checkTouch(event);
       var intersect = function(rect1, rect2) {
         return !(
             rect1.x > rect2.x + rect2.width ||
@@ -1277,7 +2070,6 @@ var simcir = function($) {
       var pos = offset($devicePane);
       var p1 = {x: event.pageX - off.left, y: event.pageY - off.top};
       dragMoveHandler = function(event) {
-        checkTouch(event);
         deselectAll();
         var p2 = {x: event.pageX - off.left, y: event.pageY - off.top};
         var selRect = pointToRect(p1, p2);
@@ -1302,13 +2094,14 @@ var simcir = function($) {
     };
 
     var mouseDownHandler = function(event) {
-      checkTouch(event);
       event.preventDefault();
       event.stopPropagation();
       var $target = $(event.target);
-      var $closetarget = findClosest(event, ".simcir-node", 20);
-      if ($closetarget && isActiveNode($closetarget) ) {
-        beginConnect(event, $closetarget);
+      if (!data.editable) {
+        return;
+      }
+      if (isActiveNode($target) ) {
+        beginConnect(event, $target);
       } else if ($target.closest('.simcir-device').length == 1) {
         if ($target.closest('.simcir-toolbox').length == 1) {
           beginNewDevice(event, $target);
@@ -1320,8 +2113,6 @@ var simcir = function($) {
       }
       $(document).on('mousemove', mouseMoveHandler);
       $(document).on('mouseup', mouseUpHandler);
-      $(document).on('touchmove', mouseMoveHandler);
-      $(document).on('touchend', mouseUpHandler);
     };
     var mouseMoveHandler = function(event) {
       if (dragMoveHandler != null) {
@@ -1340,17 +2131,14 @@ var simcir = function($) {
       $temporaryPane.children().remove();
       $(document).off('mousemove', mouseMoveHandler);
       $(document).off('mouseup', mouseUpHandler);
-      $(document).off('touchmove', mouseMoveHandler);
-      $(document).off('touchend', mouseUpHandler);
     };
     $workspace.on('mousedown', mouseDownHandler);
-    $workspace.on('touchstart', mouseDownHandler);
 
     //-------------------------------------------
     //
 
     loadToolbox(data);
-    $.each(buildCircuit(data, false), function(i, $dev) {
+    $.each(buildCircuit(data, false, scope), function(i, $dev) {
       addDevice($dev);
     });
     updateConnectors();
@@ -1363,33 +2151,17 @@ var simcir = function($) {
     return $workspace;
   };
 
-  var createPortFactory = function(type) {
-    return function(device) {
-      var in1 = device.addInput();
-      var out1 = device.addOutput();
-      device.$ui.on('inputValueChange', function() {
-        out1.setValue(in1.getValue() );
-      });
-      var super_createUI = device.createUI;
-      device.createUI = function() {
-        super_createUI();
-        var size = device.getSize();
-        var cx = size.width / 2;
-        var cy = size.height / 2;
-        device.$ui.append(createSVGElement('circle').
-          attr({cx: cx, cy: cy, r: unit / 2}).
-          attr('class', 'simcir-port simcir-node-type-' + type) );
-        device.$ui.append(createSVGElement('circle').
-          attr({cx: cx, cy: cy, r: unit / 4}).
-          attr('class', 'simcir-port-hole') );
-      };
-    };
+  var clearSimcir = function($placeHolder) {
+    $placeHolder = $($placeHolder[0]);
+    $placeHolder.find('.simcir-workspace').trigger('dispose');
+    $placeHolder.children().remove();
+    return $placeHolder;
   };
-  // register built-in devices
-  registerDevice('In', createPortFactory('in') );
-  registerDevice('Out', createPortFactory('out') );
 
   var setupSimcir = function($placeHolder, data) {
+
+    $placeHolder = clearSimcir($placeHolder);
+
     var $workspace = simcir.createWorkspace(data);
     var $dataArea = $('<textarea></textarea>').
       addClass('simcir-json-data-area').
@@ -1408,7 +2180,6 @@ var simcir = function($) {
     $placeHolder.text('');
     $placeHolder.append($('<div></div>').
         addClass('simcir-body').
-        css('touch-action','none'). // for IE and EDGE
         append($workspace).
         append($dataArea).
         on('click', function(event) {
@@ -1450,27 +2221,28 @@ var simcir = function($) {
             text(doc.description) );
       }
 
-      if (doc.params.length > 0) {
-        $desc.append($('<div>Params</div>').addClass('simcir-doc-title') );
-        var $paramsTable = $('<table><tbody></tbody></table>').
-          addClass('simcir-doc-params-table');
-        $paramsTable.children('tbody').append($('<tr></tr>').
-            append($('<th>Name</th>') ).
-            append($('<th>Type</th>') ).
-            append($('<th>Default</th>') ).
-            append($('<th>Description</th>') ) );
-        $paramsTable.children('tbody').append($('<tr></tr>').
-            append($('<td>type</td>') ).
-            append($('<td>string</td>') ).
-            append($('<td>-</td>').
-                css('text-align', 'center') ).
-            append($('<td>"' + deviceDef.type + '"</td>') ) );
+      $desc.append($('<div>Params</div>').addClass('simcir-doc-title') );
+      var $paramsTable = $('<table><tbody></tbody></table>').
+        addClass('simcir-doc-params-table');
+      $paramsTable.children('tbody').append($('<tr></tr>').
+          append($('<th>Name</th>') ).
+          append($('<th>Type</th>') ).
+          append($('<th>Default</th>') ).
+          append($('<th>Description</th>') ) );
+      $paramsTable.children('tbody').append($('<tr></tr>').
+          append($('<td>type</td>') ).
+          append($('<td>string</td>') ).
+          append($('<td>-</td>').
+              css('text-align', 'center') ).
+          append($('<td>"' + deviceDef.type + '"</td>') ) );
+      if (!doc.labelless) {
         $paramsTable.children('tbody').append($('<tr></tr>').
             append($('<td>label</td>') ).
             append($('<td>string</td>') ).
             append($('<td>same with type</td>').css('text-align', 'center') ).
             append($('<td>label for a device.</td>') ) );
-
+      }
+      if (doc.params) {
         $.each(doc.params, function(i, param) {
           $paramsTable.children('tbody').append($('<tr></tr>').
             append($('<td></td>').text(param.name) ).
@@ -1479,8 +2251,8 @@ var simcir = function($) {
                 text(param.defaultValue) ).
             append($('<td></td>').text(param.description) ) );
         });
-        $desc.append($paramsTable);
       }
+      $desc.append($paramsTable);
 
       if (doc.code) {
         $desc.append($('<div>Code</div>').addClass('simcir-doc-title') );
@@ -1508,31 +2280,237 @@ var simcir = function($) {
     });
   });
 
-  return {
+  $.extend($s, {
     registerDevice: registerDevice,
+    clearSimcir: clearSimcir,
     setupSimcir: setupSimcir,
     createWorkspace: createWorkspace,
     createSVGElement: createSVGElement,
-    addClass: addClass,
-    removeClass: removeClass,
-    hasClass: hasClass,
     offset: offset,
     transform: transform,
     enableEvents: enableEvents,
     graphics: graphics,
     controller: controller,
     unit: unit
+  });
+}(simcir);
+
+//
+// built-in devices
+//
+!function($s) {
+
+  'use strict';
+
+  var $ = $s.$;
+
+  // unit size
+  var unit = $s.unit;
+
+  var connectNode = function(in1, out1) {
+    // set input value to output without inputValueChange event.
+    var in1_super_setValue = in1.setValue;
+    in1.setValue = function(value, force) {
+      var changed = in1.getValue() !== value;
+      in1_super_setValue(value, force);
+      if (changed || force) {
+        out1.setValue(in1.getValue() );
+      }
+    };
   };
 
-function checkTouch(event) {
-   if ( !event.originalEvent ) return;
-   if ( !event.originalEvent.touches ) return;
-   var touch = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0];
-   if ( !touch ) return;
-   event.pageX = touch.pageX;
-   event.pageY = touch.pageY;
-}
+  var createPortFactory = function(type) {
+    return function(device) {
+      var in1 = device.addInput();
+      var out1 = device.addOutput();
+      connectNode(in1, out1);
+      var super_createUI = device.createUI;
+      device.createUI = function() {
+        super_createUI();
+        var size = device.getSize();
+        var cx = size.width / 2;
+        var cy = size.height / 2;
+        device.$ui.append($s.createSVGElement('circle').
+          attr({cx: cx, cy: cy, r: unit / 2}).
+          attr('class', 'simcir-port simcir-node-type-' + type) );
+        device.$ui.append($s.createSVGElement('circle').
+          attr({cx: cx, cy: cy, r: unit / 4}).
+          attr('class', 'simcir-port-hole') );
+      };
+    };
+  };
 
-}(jQuery);
+  var createJointFactory = function() {
 
+    var maxFadeCount = 16;
+    var fadeTimeout = 100;
 
+    var Direction = { WE : 0, NS : 1, EW : 2, SN : 3 };
+
+    return function(device) {
+
+      var in1 = device.addInput();
+      var out1 = device.addOutput();
+      connectNode(in1, out1);
+
+      var state = device.deviceDef.state || { direction : Direction.WE };
+      device.getState = function() {
+        return state;
+      };
+
+      device.getSize = function() {
+        return { width : unit, height : unit };
+      };
+
+      var super_createUI = device.createUI;
+      device.createUI = function() {
+        super_createUI();
+
+        var $label = device.$ui.children('.simcir-device-label');
+        $label.attr('y', $label.attr('y') - unit / 4);
+
+        var $point = $s.createSVGElement('circle').
+          css('pointer-events', 'none').css('opacity', 0).attr('r', 2).
+          addClass('simcir-connector').addClass('simcir-joint-point');
+        device.$ui.append($point);
+
+        var $path = $s.createSVGElement('path').
+          css('pointer-events', 'none').css('opacity', 0).
+          addClass('simcir-connector');
+        device.$ui.append($path);
+
+        var $title = $s.createSVGElement('title').
+          text('Double-Click to change a direction.');
+
+        var updatePoint = function() {
+          $point.css('display', out1.getInputs().length > 1? '' : 'none');
+        };
+
+        updatePoint();
+
+        var super_connectTo = out1.connectTo;
+        out1.connectTo = function(inNode) {
+          super_connectTo(inNode);
+          updatePoint();
+        };
+        var super_disconnectFrom = out1.disconnectFrom;
+        out1.disconnectFrom = function(inNode) {
+          super_disconnectFrom(inNode);
+          updatePoint();
+        };
+
+        var updateUI = function() {
+          var x0, y0, x1, y1;
+          x0 = y0 = x1 = y1 = unit / 2;
+          var d = unit / 2;
+          var direction = state.direction;
+          if (direction == Direction.WE) {
+            x0 -= d;
+            x1 += d;
+          } else if (direction == Direction.NS) {
+            y0 -= d;
+            y1 += d;
+          } else if (direction == Direction.EW) {
+            x0 += d;
+            x1 -= d;
+          } else if (direction == Direction.SN) {
+            y0 += d;
+            y1 -= d;
+          }
+          $path.attr('d', 'M' + x0 + ' ' + y0 + 'L' + x1 + ' ' + y1);
+          $s.transform(in1.$ui, x0, y0);
+          $s.transform(out1.$ui, x1, y1);
+          $point.attr({cx : x1, cy : y1});
+          if (direction == Direction.EW || direction == Direction.WE) {
+            device.$ui.children('.simcir-device-body').
+              attr({x: 0, y: unit / 4, width: unit, height: unit / 2});
+          } else {
+            device.$ui.children('.simcir-device-body').
+              attr({x: unit / 4, y: 0, width: unit / 2, height: unit});
+          }
+        };
+
+        updateUI();
+
+        // fadeout a body.
+        var fadeCount = 0;
+        var setOpacity = function(opacity) {
+          device.$ui.children('.simcir-device-body,.simcir-node').
+            css('opacity', opacity);
+          $path.css('opacity', 1 - opacity);
+          $point.css('opacity', 1 - opacity);
+        };
+        var fadeout = function() {
+          window.setTimeout(function() {
+            if (fadeCount > 0) {
+              fadeCount -= 1;
+              setOpacity(fadeCount / maxFadeCount);
+              fadeout();
+            }
+          }, fadeTimeout);
+        };
+
+        var isEditable = function($dev) {
+          var $workspace = $dev.closest('.simcir-workspace');
+          return !!$s.controller($workspace).data().editable;
+        };
+        var device_mouseoutHandler = function(event) {
+          if (!isEditable($(event.target) ) ) {
+            return;
+          }
+          if (!device.isSelected() ) {
+            fadeCount = maxFadeCount;
+            fadeout();
+          }
+        };
+        var device_dblclickHandler = function(event) {
+          if (!isEditable($(event.target) ) ) {
+            return;
+          }
+          state.direction = (state.direction + 1) % 4;
+          updateUI();
+          // update connectors.
+          $(this).trigger('mousedown').trigger('mouseup');
+        };
+
+        device.$ui.on('mouseover', function(event) {
+            if (!isEditable($(event.target) ) ) {
+              $title.text('');
+              return;
+            }
+            setOpacity(1);
+            fadeCount = 0;
+          }).on('deviceAdd', function() {
+            if ($(this).closest('BODY').length == 0) {
+              setOpacity(0);
+            }
+            $(this).append($title).on('mouseout', device_mouseoutHandler).
+              on('dblclick', device_dblclickHandler);
+            // hide a label
+            $label.css('display', 'none');
+          }).on('deviceRemove', function() {
+            $(this).off('mouseout', device_mouseoutHandler).
+              off('dblclick', device_dblclickHandler);
+            $title.remove();
+            // show a label
+            $label.css('display', '');
+          }).on('deviceSelect', function() {
+            if (device.isSelected() ) {
+              setOpacity(1);
+              fadeCount = 0;
+            } else {
+              if (fadeCount == 0) {
+                setOpacity(0);
+              }
+            }
+          });
+      };
+    };
+  };
+
+  // register built-in devices
+  $s.registerDevice('In', createPortFactory('in') );
+  $s.registerDevice('Out', createPortFactory('out') );
+  $s.registerDevice('Joint', createJointFactory() );
+
+}(simcir);
