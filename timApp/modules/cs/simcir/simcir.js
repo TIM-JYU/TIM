@@ -780,7 +780,9 @@ simcir.$ = function() {
     var delay = 50; // ms
     var limit = 40; // ms
     var _queue = null;
+
     var postEvent = function(event) {
+      checkTouch(event);
       if (_queue == null) {
         _queue = [];
       }
@@ -864,11 +866,13 @@ simcir.$ = function() {
       var $circle = createSVGElement('circle').
         attr({cx: 0, cy: 0, r: 4});
       node.$ui.on('mouseover', function(event) {
+        checkTouch(event);
         if (isActiveNode(node.$ui) ) {
           node.$ui.addClass('simcir-node-hover');
         }
       });
       node.$ui.on('mouseout', function(event) {
+        checkTouch(event);
         if (isActiveNode(node.$ui) ) {
           node.$ui.removeClass('simcir-node-hover');
         }
@@ -904,6 +908,7 @@ simcir.$ = function() {
         }
       }
       node.$ui.on('nodeValueChange', function(event) {
+        checkTouch(event);
         if (_value != null) {
           node.$ui.addClass('simcir-node-hot');
         } else {
@@ -996,6 +1001,7 @@ simcir.$ = function() {
     var addInput = function(label, description) {
       var $node = createNode('in', label, description, device.headless);
       $node.on('nodeValueChange', function(event) {
+        checkTouch(event);
         device.$ui.trigger('inputValueChange');
       });
       if (!device.headless) {
@@ -1289,6 +1295,7 @@ simcir.$ = function() {
     dialogManager.add($dlg);
     var dragPoint = null;
     var dlg_mouseDownHandler = function(event) {
+      checkTouch(event);
       if (!$(event.target).hasClass('simcir-dialog') &&
           !$(event.target).hasClass('simcir-dialog-title') ) {
         return;
@@ -1301,8 +1308,11 @@ simcir.$ = function() {
         y: event.pageY - off.top};
       $(document).on('mousemove', dlg_mouseMoveHandler);
       $(document).on('mouseup', dlg_mouseUpHandler);
+      $(document).on('touchmove', dlg_mouseMoveHandler);
+      $(document).on('touchend', dlg_mouseUpHandler);
     };
     var dlg_mouseMoveHandler = function(event) {
+      checkTouch(event);
       moveTo(
           event.pageX - dragPoint.x,
           event.pageY - dragPoint.y);
@@ -1310,8 +1320,11 @@ simcir.$ = function() {
     var dlg_mouseUpHandler = function(event) {
       $(document).off('mousemove', dlg_mouseMoveHandler);
       $(document).off('mouseup', dlg_mouseUpHandler);
+      $(document).off('touchmove', dlg_mouseMoveHandler);
+      $(document).off('touchend', dlg_mouseUpHandler);
     };
     $dlg.on('mousedown', dlg_mouseDownHandler);
+    $dlg.on('touchstart', dlg_mouseDownHandler);
     $closeButton.on('mousedown', function() {
       $dlg.trigger('close');
       $dlg.remove();
@@ -1586,6 +1599,7 @@ simcir.$ = function() {
 
     var dragPoint = null;
     var bar_mouseDownHandler = function(event) {
+      checkTouch(event);
       event.preventDefault();
       event.stopPropagation();
       var pos = transform($bar);
@@ -1594,8 +1608,11 @@ simcir.$ = function() {
           y: event.pageY - pos.y};
       $(document).on('mousemove', bar_mouseMoveHandler);
       $(document).on('mouseup', bar_mouseUpHandler);
+      $(document).on('touchmove', bar_mouseMoveHandler);
+      $(document).on('touchend', bar_mouseUpHandler);
     };
     var bar_mouseMoveHandler = function(event) {
+      checkTouch(event);
       calc(function(unitSize) {
         setValue( (event.pageY - dragPoint.y) / unitSize);
       });
@@ -1603,9 +1620,13 @@ simcir.$ = function() {
     var bar_mouseUpHandler = function(event) {
       $(document).off('mousemove', bar_mouseMoveHandler);
       $(document).off('mouseup', bar_mouseUpHandler);
+      $(document).off('touchmove', bar_mouseMoveHandler);
+      $(document).off('touchend', bar_mouseUpHandler);
     };
     $bar.on('mousedown', bar_mouseDownHandler);
+    $bar.on('touchstart', bar_mouseDownHandler);
     var body_mouseDownHandler = function(event) {
+      checkTouch(event);
       event.preventDefault();
       event.stopPropagation();
       var off = $scrollbar.parent('svg').offset();
@@ -1619,6 +1640,7 @@ simcir.$ = function() {
       }
     };
     $body.on('mousedown', body_mouseDownHandler);
+    $body.on('touchstart', body_mouseDownHandler);
 
     var setSize = function(width, height) {
       _width = width;
@@ -1948,27 +1970,63 @@ simcir.$ = function() {
       var $srcNode = $target.closest('.simcir-node');
       var off = $workspace.offset();
       var pos = offset($srcNode);
+      var friendType = ".simcir-node-type-in"
       if ($srcNode.attr('simcir-node-type') == 'in') {
         disconnect($srcNode);
+        friendType = ".simcir-node-type-out"
       }
       dragMoveHandler = function(event) {
+        checkTouch(event);
         var x = event.pageX - off.left;
         var y = event.pageY - off.top;
         $temporaryPane.children().remove();
         $temporaryPane.append(createConnector(pos.x, pos.y, x, y) );
       };
       dragCompleteHandler = function(event) {
+        checkTouch(event);
         $temporaryPane.children().remove();
         var $dst = $(event.target);
-        if (isActiveNode($dst) ) {
-          var $dstNode = $dst.closest('.simcir-node');
+        var $dstNode = findClosest(event, friendType, 40);
+        if ( $dstNode && isActiveNode($dstNode) ) {
+          // if (isActiveNode($dst) ) {
+          // var $dstNode = $dst.closest('.simcir-node');
           connect($srcNode, $dstNode);
           updateConnectors();
         }
       };
     };
 
+
+    var findClosest = function(event, cond, maxdist) {
+        var a = $(cond);
+        var best = null;
+        var x0 = event.pageX;
+        var y0 = event.pageY;
+        var mindist = maxdist*maxdist; // must be closer than this
+        for (i = 0, len = a.length; i < len; i++) {
+           var cur = $(a[i]);
+           var cir = $(cur[0].childNodes[0]);
+           // if ( cir.context != circle) continue;
+           var coff = cir.offset();
+           if (!coff) continue;
+           var dx = cir.offset().left+4 - x0; // suppose circle with radius of 4
+           var dy = cir.offset().top+4 -y0;
+           var curdist = dx*dx + dy*dy;
+           if ( curdist < mindist ) {
+              if ( curdist > 4*4 ) { // if inside circle, always accept
+                 if ( cur.attr('simcir-node-type') == 'in' && dx < 0 ) continue; // in from left
+                 if ( cur.attr('simcir-node-type') == 'out' && dx > 0 ) continue; // out from right
+              }
+              best = cur;
+              mindist = curdist;
+           }
+        }
+        return best;
+    }
+
+
     var beginNewDevice = function(event, $target) {
+      checkTouch(event);
       var $dev = $target.closest('.simcir-device');
       var pos = offset($dev);
       $dev = createDevice(controller($dev).deviceDef, false, scope);
@@ -1978,13 +2036,15 @@ simcir.$ = function() {
         x: event.pageX - pos.x,
         y: event.pageY - pos.y};
       dragMoveHandler = function(event) {
+        checkTouch(event);
         transform($dev,
             event.pageX - dragPoint.x,
             event.pageY - dragPoint.y);
       };
       dragCompleteHandler = function(event) {
+        checkTouch(event);
         var $target = $(event.target);
-        if ($target.closest('.simcir-toolbox').length == 0) {
+        if ($target.closest('.simcir-toolbox').length == 0 || true) { // for some reason did not find in touch?
           $dev.detach();
           var pos = transform($dev);
           transform($dev, pos.x - toolboxWidth, pos.y);
@@ -2022,6 +2082,7 @@ simcir.$ = function() {
         x: event.pageX - pos.x,
         y: event.pageY - pos.y};
       dragMoveHandler = function(event) {
+        checkTouch(event);
         // disable events while dragging.
         enableEvents($dev, false);
         var curPos = transform($dev);
@@ -2037,10 +2098,15 @@ simcir.$ = function() {
         updateConnectors();
       };
       dragCompleteHandler = function(event) {
+        checkTouch(event);
         var $target = $(event.target);
+        var body = $(".simcir-body");
+        var sx = 0;
+        if ( body ) sx = body.offset().left + 100;
         enableEvents($dev, true);
         $.each($selectedDevices, function(i, $dev) {
-          if ($target.closest('.simcir-toolbox').length == 0) {
+          //if ($target.closest('.simcir-toolbox').length == 0) {
+          if ( event.pageX > sx ) {
             adjustDevice($dev);
             updateConnectors();
           } else {
@@ -2051,6 +2117,7 @@ simcir.$ = function() {
     };
 
     var beginSelectDevice = function(event, $target) {
+      checkTouch(event);
       var intersect = function(rect1, rect2) {
         return !(
             rect1.x > rect2.x + rect2.width ||
@@ -2070,6 +2137,7 @@ simcir.$ = function() {
       var pos = offset($devicePane);
       var p1 = {x: event.pageX - off.left, y: event.pageY - off.top};
       dragMoveHandler = function(event) {
+        checkTouch(event);
         deselectAll();
         var p2 = {x: event.pageX - off.left, y: event.pageY - off.top};
         var selRect = pointToRect(p1, p2);
@@ -2094,14 +2162,16 @@ simcir.$ = function() {
     };
 
     var mouseDownHandler = function(event) {
+      checkTouch(event);
       event.preventDefault();
       event.stopPropagation();
       var $target = $(event.target);
       if (!data.editable) {
         return;
       }
-      if (isActiveNode($target) ) {
-        beginConnect(event, $target);
+      var $closetarget = findClosest(event, ".simcir-node", 20);
+      if ($closetarget && isActiveNode($closetarget) ) {
+        beginConnect(event, $closetarget);
       } else if ($target.closest('.simcir-device').length == 1) {
         if ($target.closest('.simcir-toolbox').length == 1) {
           beginNewDevice(event, $target);
@@ -2113,6 +2183,8 @@ simcir.$ = function() {
       }
       $(document).on('mousemove', mouseMoveHandler);
       $(document).on('mouseup', mouseUpHandler);
+      $(document).on('touchmove', mouseMoveHandler);
+      $(document).on('touchend', mouseUpHandler);
     };
     var mouseMoveHandler = function(event) {
       if (dragMoveHandler != null) {
@@ -2131,8 +2203,11 @@ simcir.$ = function() {
       $temporaryPane.children().remove();
       $(document).off('mousemove', mouseMoveHandler);
       $(document).off('mouseup', mouseUpHandler);
+      $(document).off('touchmove', mouseMoveHandler);
+      $(document).off('touchend', mouseUpHandler);
     };
     $workspace.on('mousedown', mouseDownHandler);
+    $workspace.on('touchstart', mouseDownHandler);
 
     //-------------------------------------------
     //
@@ -2180,6 +2255,7 @@ simcir.$ = function() {
     $placeHolder.text('');
     $placeHolder.append($('<div></div>').
         addClass('simcir-body').
+        css('touch-action', 'none'). // for IE and Edge
         append($workspace).
         append($dataArea).
         on('click', function(event) {
@@ -2293,6 +2369,15 @@ simcir.$ = function() {
     controller: controller,
     unit: unit
   });
+
+  function checkTouch(event) {
+    if (!event.originalEvent) return;
+    if (!event.originalEvent.touches) return;
+    var touch = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0];
+    if (!touch) return;
+    event.pageX = touch.pageX;
+    event.pageY = touch.pageY;
+  }
 }(simcir);
 
 //
