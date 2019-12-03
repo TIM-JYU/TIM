@@ -22,6 +22,8 @@
 //  3to8BinaryDecoder
 //  4to16BinaryDecoder
 
+import simcir from "./simcir";
+
 simcir.registerDevice('RS-FF',
 {
   "width":320,

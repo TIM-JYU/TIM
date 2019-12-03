@@ -31,11 +31,12 @@
 //  BusIn
 //  BusOut
 
+import simcir from "./simcir";
+import $ from 'jquery';
+
 !function($s) {
 
   'use strict';
-
-  var $ = $s.$;
 
   // unit size
   var unit = $s.unit;

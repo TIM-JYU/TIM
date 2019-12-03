@@ -124,4 +124,4 @@ interface Simcir {
   createWorkspace(data: SimcirData) : JQuery;
 }
 
-declare var simcir : Simcir;
+export declare const simcir: Simcir;

@@ -9,6 +9,9 @@
 // Sel Out
 //  0	A
 //  1	B
+
+import simcir from "./simcir";
+
 simcir.registerDevice('2to1Mux',
 {
   "width":380,
