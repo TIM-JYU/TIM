@@ -221,7 +221,7 @@ class SisuAssessmentExportController {
             }
         }
         const changedAssessments = this.assessments.filter(
-            (a) => StringOrNumber.is(a.sentGrade) && StringOrNumber.is(a.gradeId) && a.sentGrade.toString() !== a.gradeId.toString(),
+            (a) => StringOrNumber.is(a.sentGrade) && StringOrNumber.is(a.gradeId) && a.sentGrade && a.gradeId && a.sentGrade.toString() !== a.gradeId.toString(),
         );
         const hasChangedAssessments = changedAssessments.length > 0;
         this.notSendableButChanged = changedAssessments.filter((a) => a.error && a.error === "Sisu: Aikaisempi vahvistettu suoritus");
