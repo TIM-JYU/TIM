@@ -702,7 +702,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.user || !this.selectedAnswer) {
             return undefined;
         }
-        const parIndex = this.element.parents(".par").index(".par");
+        const parIndex = this.element.parents(".par").index(".par:not(.preamble)");
         const currBegin = getRangeBeginParam() || 0;
         const rangeParams = single ? {
             b: parIndex - 1 + currBegin,
