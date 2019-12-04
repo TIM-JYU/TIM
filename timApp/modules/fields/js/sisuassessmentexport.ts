@@ -6,7 +6,7 @@ import {showMessageDialog} from "tim/ui/dialog";
 import {IUser} from "tim/user/IUser";
 import {withComparatorFilters} from "tim/util/comparatorfilter";
 import {$http, $timeout} from "tim/util/ngimport";
-import {Binding, to} from "tim/util/utils";
+import {Binding, copyToClipboard, StringOrNumber, to} from "tim/util/utils";
 
 export const GroupType = t.union([t.string, t.array(t.string)]);
 
@@ -15,6 +15,7 @@ interface IAssessment {
     completionDate: unknown;
     gradeId: unknown;
     privateComment?: unknown;
+    sentGrade?: unknown;
     user: IUser;
 }
 
@@ -134,6 +135,7 @@ class SisuAssessmentExportController {
     private group?: Binding<t.TypeOf<typeof GroupType>, "<">;
     private includeUsers?: Binding<t.TypeOf<typeof IncludeUsersOption>, "<">;
     private testOnly?: Binding<boolean, "<">;
+    private notSendableButChanged?: IAssessmentExt[];
 
     async callSendGrades(opts: ISendGradeOptions) {
         if (!this.destCourse) {
@@ -218,6 +220,11 @@ class SisuAssessmentExportController {
                 defaultFilter = ".";
             }
         }
+        const changedAssessments = this.assessments.filter(
+            (a) => StringOrNumber.is(a.sentGrade) && StringOrNumber.is(a.gradeId) && a.sentGrade.toString() !== a.gradeId.toString(),
+        );
+        const hasChangedAssessments = changedAssessments.length > 0;
+        this.notSendableButChanged = changedAssessments.filter((a) => a.error && a.error === "Sisu: Aikaisempi vahvistettu suoritus");
         this.gridOptions = {
             onRegisterApi: async (grid) => {
                 this.grid = grid;
@@ -249,11 +256,18 @@ class SisuAssessmentExportController {
                     filter: {term: defaultFilter},
                 },
                 {
+                    field: "sentGrade",
+                    name: "Old",
+                    allowCellFocus: false,
+                    width: 65,
+                    visible: hasChangedAssessments,
+                },
+                {
                     field: "completionDate",
                     name: "Completion date",
                     allowCellFocus: false,
                     width: 140,
-                    filter: {term: "="},
+                    filter: {term: ""}, // The grade may have changed, so we cannot have any filter here!
                 },
                 {
                     field: "completionCredits",
@@ -288,6 +302,18 @@ class SisuAssessmentExportController {
             enableHorizontalScrollbar: false,
             enableSorting: true,
         };
+    }
+
+    copyNotSendable() {
+        if (!this.notSendableButChanged || this.notSendableButChanged.length === 0) {
+            return;
+        }
+        let s = "username;grade\n";
+        for (const a of this.notSendableButChanged) {
+            s += `${a.user.name};${a.gradeId}\n`;
+        }
+        copyToClipboard(s);
+        void showMessageDialog("CSV copied to clipboard.");
     }
 }
 
@@ -337,6 +363,13 @@ Sisu.component("sisuAssessmentExport", {
          ui-grid-cellNav>
     </div>
     <p>{{ $ctrl.numSelectedAssessments() }} arviointia valittu.</p>
+    <p class="red" ng-if="$ctrl.notSendableButChanged.length > 0">
+        Taulukossa on {{$ctrl.notSendableButChanged.length}} kpl arviointeja, joiden arvosana on muuttunut mutta jotka
+        on jo vahvistettu Sisussa.
+        Näitä ei voi päivittää Sisun kautta, mutta voit ottaa
+        <a ng-click="$ctrl.copyNotSendable()">tästä CSV-tiedoston</a> ja pyytää kansliaa päivittämään
+        kyseiset arvioinnit.
+    </p>
     <button class="timButton"
             ng-disabled="$ctrl.loading || $ctrl.numSelectedAssessments() === 0"
             ng-click="$ctrl.sendAssessments()">

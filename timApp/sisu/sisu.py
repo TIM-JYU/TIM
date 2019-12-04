@@ -442,9 +442,7 @@ class CandidateAssessment:
         return (not self.sentGrade or self.gradeId != self.sentGrade) and not self.is_fail_grade
 
     def to_json(self):
-        r = asdict(self)
-        r.pop('sentGrade')
-        return r
+        return asdict(self)
 
 
 AssessmentSchema = class_schema(Assessment)
@@ -534,6 +532,7 @@ def send_grades_to_sisu(
     if not dry_run and r.status_code < 400:
         for a in ok_assessments:
             a.completionDate = completion_date_iso
+            a.sentGrade = a.gradeId
         handle_jsrunner_response(
             {
                 'savedata': [
