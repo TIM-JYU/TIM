@@ -21,6 +21,19 @@ export function getCurrentPartitionURLParams() {
     return params;
 }
 
+export function getRangeBeginParam() {
+    const params = new URLSearchParams(document.location.search);
+    const b = params.get("b");
+    if (!b) {
+        return undefined;
+    }
+    const r = parseInt(b, 10);
+    if (!isNaN(r)) {
+        return r;
+    }
+    return undefined;
+}
+
 function setURLSearchParams(params: URLSearchParams) {
     document.location.search = params.toString();
 }

@@ -4,6 +4,7 @@ import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {dereferencePar, getParId} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {getRangeBeginParam} from "../document/viewRangeInfo";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {IGenericPluginMarkup} from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
@@ -697,14 +698,21 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.alerts.push({msg: "Error: " + response.data.error, type: "danger"});
     }
 
-    getAnswerLink() {
+    getAnswerLink(single = false) {
         if (!this.user || !this.selectedAnswer) {
             return undefined;
         }
+        const parIndex = this.element.parents(".par").index();
+        const currBegin = getRangeBeginParam() || 0;
+        const rangeParams = single ? {
+            b: parIndex - 1 + currBegin,
+            e: parIndex + currBegin,
+        } : {};
         return `/answers/${this.viewctrl.item.path}?${$httpParamSerializer({
             answerNumber: this.answers.length - this.findSelectedAnswerIndexFromUnFiltered(),
             task: this.getTaskName(),
             user: this.user.name,
+            ...rangeParams,
         })}`;
     }
 
