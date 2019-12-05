@@ -550,6 +550,7 @@ class PermissionTest(TimRouteTest):
         )
         d2 = self.create_doc()
         d2tr = self.create_translation(d2)
+        trid = d2tr.id
         d.document.set_settings({
             'auto_confirm': d2.path,
             'expire_next_doc_message': 'My custom message',
@@ -560,6 +561,7 @@ class PermissionTest(TimRouteTest):
         synchronize_translations(d, DocumentEditResult(added=d.document.get_paragraphs()))
         synchronize_translations(d2, DocumentEditResult(added=d2.document.get_paragraphs()))
         self.login_test2()
+        d2tr = DocEntry.find_by_id(trid)
         grant_access(
             group=self.test_user_2.get_personal_group(),
             access_type=AccessType.view,
