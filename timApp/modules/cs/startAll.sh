@@ -37,5 +37,3 @@ export MONO_PATH=/cs/jypeli
 
 # Run the server as agent
 su -p - agent -c 'python3 -O /cs/cs.py'
-
- 
