@@ -1,7 +1,7 @@
 """Routes for document view."""
 import time
 import traceback
-from typing import Tuple, Union, Optional, List
+from typing import Tuple, Optional, List, Union
 
 import attr
 from dataclasses import dataclass
@@ -12,13 +12,15 @@ from flask import g
 from flask import redirect
 from flask import request
 from flask import session
+from marshmallow import ValidationError
 
+from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, current_user_in_lecture, \
-    get_user_settings, save_last_page
+    save_last_page
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
@@ -34,7 +36,8 @@ from timApp.item.block import BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.item.item import Item
 from timApp.item.partitioning import get_piece_size_from_cookie, decide_view_range, get_doc_version_hash, load_index, \
-    INCLUDE_IN_PARTS_CLASS_NAME, save_index, partition_texts, get_index_with_header_id, get_document_areas
+    INCLUDE_IN_PARTS_CLASS_NAME, save_index, partition_texts, get_index_with_header_id, get_document_areas, \
+    RequestedViewRange, IndexedViewRange
 from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
 from timApp.markdown.htmlSanitize import sanitize_html
@@ -48,12 +51,12 @@ from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
-from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model
+from timApp.util.flask.requesthelper import verify_json_params, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
 from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
-from timApp.util.utils import remove_path_special_chars, Range, seq_to_str
+from timApp.util.utils import remove_path_special_chars, seq_to_str
 
 DEFAULT_RELEVANCE = 10
 
@@ -61,25 +64,78 @@ view_page = Blueprint('view_page',
                       __name__,
                       url_prefix='')
 
+DocumentSlice = Tuple[List[DocParagraph], IndexedViewRange]
+ViewRange = Union[RequestedViewRange, IndexedViewRange]
 
-def get_partial_document(doc: Document, view_range: Range) -> List[DocParagraph]:
-    i = 0
-    pars = []
-    for par in doc:
-        if i >= view_range[1]:
-            break
-        if i >= view_range[0]:
-            pars.append(par)
-        i += 1
-    return pars
+def get_partial_document(doc: Document, view_range: ViewRange) -> DocumentSlice:
+    all_pars = doc.get_paragraphs()
+
+    # Handle common unrestricted case first.
+    if view_range.is_full:
+        return all_pars, IndexedViewRange(b=0, e=len(all_pars), par_count=len(all_pars))
+
+    si = view_range.start_index
+    ei = view_range.end_index
+    if isinstance(view_range, RequestedViewRange):
+        spid = view_range.start_par_id
+        epid = view_range.end_par_id
+    else:
+        spid = None
+        epid = None
+    actual_start_index = None
+    actual_end_index = None
+    if si is not None and ei is not None:
+        actual_start_index = si
+        actual_end_index = ei
+    elif si is not None:
+        actual_start_index = si
+    elif ei is not None:
+        actual_end_index = ei
+    else:
+        for i, par in enumerate(all_pars):
+            if par.get_id() == epid:
+                actual_end_index = i
+            if par.get_id() == spid:
+                actual_start_index = i
+            if actual_start_index is not None and actual_end_index is not None:
+                break
+    if actual_start_index is None:
+        actual_start_index = 0
+    if actual_end_index is None:
+        actual_end_index = len(all_pars) if view_range.size is None else actual_start_index + view_range.size
+    pars = all_pars[actual_start_index:actual_end_index]
+    return pars, IndexedViewRange(b=actual_start_index, e=actual_end_index, par_count=len(all_pars))
 
 
-def get_document(doc_info: DocInfo, view_range: Optional[Range] = None) -> Tuple[Document, List[DocParagraph]]:
-    # Separated into 2 functions for optimization
-    # (don't cache partial documents and don't check ranges in the loop for whole ones)
+def get_document(doc_info: DocInfo, view_range: ViewRange) -> DocumentSlice:
     doc = doc_info.document
     doc.preload_option = PreloadOption.all
-    return doc, (doc.get_paragraphs() if view_range is None else get_partial_document(doc, view_range))
+    return get_partial_document(doc, view_range)
+
+
+@dataclass
+class ViewModel:
+    b: Union[int, str, None] = None
+    e: Union[int, str, None] = None
+    size: Union[int, None] = None
+    edit: Optional[str] = None
+    group: Optional[str] = None
+    hide_names: Optional[bool] = None
+    lazy: Optional[bool] = None
+    login: bool = False
+    noanswers: bool = False
+    nocache: bool = False
+    pars_only: bool = False
+    preamble: bool = False
+
+    def __post_init__(self):
+        if self.b and self.e:
+            if type(self.b) != type(self.e):
+                raise ValidationError('b and e must be of same type (int or string).')
+        if self.e is not None and self.size is not None:
+            raise ValidationError('Cannot provide e and size parameters at the same time.')
+
+ViewModelSchema = class_schema(ViewModel)()
 
 
 @view_page.route("/show_slide/<path:doc_name>")
@@ -89,8 +145,6 @@ def show_slide(doc_name):
 
 
 @view_page.route("/view/<path:doc_name>")
-@view_page.route("/view_html/<path:doc_name>")
-@view_page.route("/doc/<path:doc_name>")
 def view_document(doc_name):
     taketime("route view begin")
     ret = view(doc_name, 'view_html.html')
@@ -100,20 +154,17 @@ def view_document(doc_name):
 
 @view_page.route("/teacher/<path:doc_name>")
 def teacher_view(doc_name):
-    usergroup = request.args.get('group')
-    return view(doc_name, 'view_html.html', usergroup=usergroup, route="teacher")
+    return view(doc_name, 'view_html.html', route="teacher")
 
 
 @view_page.route("/velp/<path:doc_name>")
 def velp_view(doc_name):
-    usergroup = request.args.get('group')
-    return view(doc_name, 'view_html.html', usergroup=usergroup, route="velp")
+    return view(doc_name, 'view_html.html', route="velp")
 
 
 @view_page.route("/answers/<path:doc_name>")
 def see_answers_view(doc_name):
-    usergroup = request.args.get('group')
-    return view(doc_name, 'view_html.html', usergroup=usergroup, route="answers")
+    return view(doc_name, 'view_html.html', route="answers")
 
 
 @view_page.route("/lecture/<path:doc_name>")
@@ -192,12 +243,6 @@ def index_page():
                            item=Folder.get_root())
 
 
-def parse_range(start_index: Union[int, str, None], end_index: Union[int, str, None]) -> Optional[Range]:
-    if start_index is None and end_index is None:
-        return None
-    return int(start_index), int(end_index)
-
-
 debug_time = time.time()
 
 
@@ -213,10 +258,11 @@ def get_module_ids(js_paths: List[str]):
         yield jsfile.lstrip('/').rstrip('.js')
 
 
-def view(item_path, template_name, usergroup=None, route="view"):
+def view(item_path, template_name, route="view"):
     taketime("view begin", zero=True)
-
-    g.viewmode =  route in ["view", "velp", "lecture", "slide"]
+    m: ViewModel = ViewModelSchema.load(request.args, unknown='EXCLUDE')
+    usergroup = m.group
+    g.viewmode = route in ["view", "velp", "lecture", "slide"]
     g.route = route
 
     if has_special_chars(item_path):
@@ -231,13 +277,11 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     doc_info.request = request
 
-    doc_id = doc_info.id
-    edit_mode = request.args.get('edit', None) if has_edit_access(doc_info) else None
+    edit_mode = m.edit if has_edit_access(doc_info) else None
     create_environment("%%")  # TODO get macroinf
 
-    hide_names = get_option(request, 'hide_names', None, cast=bool)
-    if hide_names is not None:
-        session['hide_names'] = hide_names
+    if m.hide_names is not None:
+        session['hide_names'] = m.hide_names
 
     should_hide_names = False
 
@@ -254,7 +298,6 @@ def view(item_path, template_name, usergroup=None, route="view"):
                 return redirect(f'/view/{item_path}')
         if not verify_teacher_access(doc_info, require=False, check_duration=True):
             should_hide_names = True
-
 
     access = verify_view_access(doc_info, require=False, check_duration=True)
     if not access:
@@ -273,49 +316,39 @@ def view(item_path, template_name, usergroup=None, route="view"):
             if missing:
                 flash(f'Document has incorrect group tags: {seq_to_str(list(missing))}')
 
-    if get_option(request, 'login', False) and not logged_in():
+    if m.login and not logged_in():
         return redirect_to_login()
 
-    load_preamble = False
     piece_size = get_piece_size_from_cookie(request)
     areas = None
     if piece_size:
         areas = get_document_areas(doc_info)
-    try:
-        view_range = parse_range(request.args.get('b'), request.args.get('e'))
-        load_preamble = request.args.get('preamble') == 'true'
-    except (ValueError, TypeError):
-        view_range = None
-    if piece_size and not view_range:
+    r_view_range = RequestedViewRange(b=m.b, e=m.e, size=m.size)
+    load_preamble = m.preamble
+    view_range = None
+    if piece_size and r_view_range.is_full:
         view_range = decide_view_range(doc_info, piece_size, areas=areas)
-        load_preamble = True # If partitioning without URL-param, true is default.
-    try:
-        view_range_dict = {'b': view_range[0], 'e': view_range[1], 'name': 'Current'}
-    except (ValueError, TypeError):
-        view_range_dict = None
-    start_index = max(view_range[0], 0) if view_range else 0
+        load_preamble = True  # If partitioning without URL-param, true is default.
     index_cache_folder = cache_folder_path / "indexcache" / str(doc_info.id)
-    index = None
     contents_have_changed = False
-    if view_range:
-        doc_hash = get_doc_version_hash(doc_info)
-        index = load_index(index_cache_folder, f"{doc_hash}.json")
-    if index:
+    doc_hash = get_doc_version_hash(doc_info)
+    index = load_index(index_cache_folder / f"{doc_hash}.json")
+    if index is not None:
         # If cached header is up to date, partition document here.
-        doc, xs = get_document(doc_info, view_range)
-        # TODO: A faster way to get preambles + doc pars count.
-        par_count = len(doc_info.get_preamble_docs()) + len(doc_info.document.get_paragraphs())
+        xs, view_range = get_document(doc_info, view_range or r_view_range)
     else:
         # Otherwise the partitioning is done after forming the index.
         contents_have_changed = True
-        doc, xs = get_document(doc_info, None)
-        par_count = len(xs)
+        xs, _ = get_document(doc_info, RequestedViewRange(b=None, e=None, size=None))
+        _, view_range = get_document(doc_info, view_range or r_view_range)
+
+    doc = doc_info.document
     g.doc = doc
 
     doc.route = route
 
-    clear_cache = get_option(request, "nocache", False)
-    hide_answers = get_option(request, 'noanswers', False)
+    clear_cache = m.nocache
+    hide_answers = m.noanswers
 
     teacher_or_see_answers = route in ('teacher', 'answers')
     current_user = get_current_user_object() if logged_in() else None
@@ -324,24 +357,9 @@ def view(item_path, template_name, usergroup=None, route="view"):
     # Used later to get partitioning with preambles included correct.
     # Includes either only special class preambles, or all of them if b=0.
     preamble_count = 0
-    if load_preamble:
+    if load_preamble or view_range.starts_from_beginning:
         try:
-            if view_range[0] == 0:
-                # Load all preamble pars in the first part.
-                preamble_pars = doc.insert_preamble_pars()
-            else:
-                # Load only special class preamble pars in parts after the first.
-                preamble_pars = doc.insert_preamble_pars([INCLUDE_IN_PARTS_CLASS_NAME])
-        except PreambleException as e:
-            flash(e)
-        else:
-            if preamble_pars:
-                xs = preamble_pars + xs
-                preamble_count = len(preamble_pars)
-    # Load all normal preamble pars.
-    elif not view_range:
-        try:
-            preamble_pars = doc.insert_preamble_pars()
+            preamble_pars = doc.insert_preamble_pars([INCLUDE_IN_PARTS_CLASS_NAME] if not view_range.starts_from_beginning else None)
         except PreambleException as e:
             flash(e)
         else:
@@ -352,12 +370,11 @@ def view(item_path, template_name, usergroup=None, route="view"):
     try:
         DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
     except TimDbException as e:
-        log_error(f'Document {doc_id} exception:\n{traceback.format_exc(chain=False)}')
+        log_error(f'Document {doc_info.id} exception:\n{traceback.format_exc(chain=False)}')
         abort(500, str(e))
-    if doc_settings:
-        src_doc = doc.get_source_document()
-        if src_doc is not None:
-            DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
+    src_doc = doc.get_source_document()
+    if src_doc is not None:
+        DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
 
     rights = doc_info.rights
     word_list = (doc_info.document.get_word_list()
@@ -416,7 +433,7 @@ def view(item_path, template_name, usergroup=None, route="view"):
 
     current_list_user: Optional[User] = user_list[0]['user'] if user_list else None
 
-    raw_css = doc_settings.css() if doc_settings else None
+    raw_css = doc_settings.css()
     doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
 
     # Custom backgrounds for slides
@@ -429,8 +446,8 @@ def view(item_path, template_name, usergroup=None, route="view"):
         slide_background_color = doc_settings.get_slide_background_color()
         do_lazy = False
     else:
-        do_lazy = get_option(request, "lazy", doc_settings.lazy(
-            default=plugin_count >= current_app.config['PLUGIN_COUNT_LAZY_LIMIT']))
+        do_lazy = m.lazy if m.lazy is not None else doc_settings.lazy(
+            default=plugin_count >= current_app.config['PLUGIN_COUNT_LAZY_LIMIT'])
 
     texts, js_paths, css_paths = post_process_pars(
         doc,
@@ -440,22 +457,19 @@ def view(item_path, template_name, usergroup=None, route="view"):
         do_lazy=do_lazy,
         load_plugin_states=not hide_answers,
     )
-    if not index:
+    if index is None:
         index = get_index_from_html_list(t['html'] for t in texts)
         doc_hash = get_doc_version_hash(doc_info)
-        save_index(index, index_cache_folder, f"{doc_hash}.json")
+        save_index(index, index_cache_folder / f"{doc_hash}.json")
 
     # If index was in cache, partitioning will be done earlier.
-    if view_range and contents_have_changed:
+    if view_range.is_restricted and contents_have_changed:
         texts = partition_texts(texts, view_range, preamble_count)
 
     if hide_names_in_teacher() or should_hide_names:
         for entry in user_list:
             if not current_user or entry['user'].id != current_user.id:
                 entry['user'].hide_name = True
-
-    settings = get_user_settings()
-    # settings['add_button_text'] = doc_settings.get_dict().get('addParButtonText', 'Add paragraph')
 
     show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']
     taketime("view to render")
@@ -465,17 +479,6 @@ def view(item_path, template_name, usergroup=None, route="view"):
     doctemps = doc_settings.get('editor_templates')
     if doctemps:
         reqs["usertemps"] = doctemps
-        '''
-        reqs["usertemps"] = {
-        'text' : ['omat'],
-        'templates' : [
-            [
-                {'data': 'kissa', 'expl': 'Lisää kissa', 'text': 'Kissa'},
-                {'data': 'koira', 'expl': 'Lisää koira'},
-            ]
-        ]
-        }
-        '''
     if is_slide:
         js_paths.append('tim/document/slide')
     angular_module_names = []
@@ -484,21 +487,19 @@ def view(item_path, template_name, usergroup=None, route="view"):
         angular_module_names += get_grid_modules()
     taketime("before render")
     nav_ranges = []
-    if view_range:
+    if view_range.is_restricted:
         piece_size = get_piece_size_from_cookie(request) or 20
         first_range = decide_view_range(
             doc_info,
             preferred_set_size=piece_size,
             index=0,
-            par_count=par_count,
             forwards=True,
             areas=areas
         )
         previous_range = decide_view_range(
             doc_info,
             preferred_set_size=piece_size,
-            index=view_range[0],
-            par_count=par_count,
+            index=view_range.start_index,
             forwards=False,
             areas=areas
         )
@@ -506,66 +507,66 @@ def view(item_path, template_name, usergroup=None, route="view"):
         next_range = decide_view_range(
             doc_info,
             preferred_set_size=piece_size,
-            index=view_range[1],
-            par_count=par_count,
+            index=view_range.end_index,
             forwards=True,
             areas=areas
         )
-        last_range = decide_view_range(doc_info,
+        last_range = decide_view_range(
+            doc_info,
             preferred_set_size=piece_size,
-            index=par_count,
-            par_count=par_count,
+            index=len(doc_info.document.get_paragraphs()),
             forwards=False,
             areas=areas
         )
         # TODO: Find out if it's better to raise an error when any of these is None.
         if first_range and previous_range and next_range and last_range:
-            nav_ranges = [{'b': first_range[0], 'e': first_range[1], 'name': 'First'},
-                          {'b': previous_range[0], 'e': previous_range[1], 'name': 'Previous'},
-                          {'b': next_range[0], 'e': next_range[1], 'name': 'Next'},
-                          {'b': last_range[0], 'e': last_range[1], 'name': 'Last'}]
+            nav_ranges = [
+                first_range.to_json('First'),
+                previous_range.to_json('Previous'),
+                next_range.to_json('Next'),
+                last_range.to_json('Last'),
+            ]
 
-    pars_only = get_option(request, 'pars_only', default=False)
-    return render_template(template_name,
-                           access=access,
-                           hide_links=should_hide_links(doc_settings, rights),
-                           hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
-                           pars_only=pars_only,
-                           show_unpublished_bg=show_unpublished_bg,
-                           route=route,
-                           edit_mode=edit_mode,
-                           item=doc_info,
-                           text=texts,
-                           headers=index,
-                           plugin_users=user_list,
-                           version=doc.get_version(),
-                           js=js_paths,
-                           cssFiles=css_paths,
-                           jsMods=angular_module_names,
-                           doc_css=doc_css,
-                           start_index=start_index,
-                           in_lecture=is_in_lecture,
-                           group=usergroup,
-                           translations=doc_info.translations,
-                           reqs=reqs,
-                           settings=settings,
-                           no_browser=hide_answers,
-                           no_question_auto_numbering=no_question_auto_numbering,
-                           live_updates=doc_settings.live_updates(),
-                           slide_background_url=slide_background_url,
-                           slide_background_color=slide_background_color,
-                           task_info={'total_points': total_points,
-                                      'tasks_done': tasks_done,
-                                      'total_tasks': total_tasks,
-                                      'show': show_task_info,
-                                      'groups': task_groups},
-                           doc_settings=doc_settings,
-                           word_list=word_list,
-                           memo_minutes=doc_settings.memo_minutes(),
-                           linked_groups=linked_groups,
-                           current_view_range=view_range_dict,
-                           nav_ranges=nav_ranges,
-                           )
+    return render_template(
+        template_name,
+        access=access,
+        hide_links=should_hide_links(doc_settings, rights),
+        hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
+        pars_only=m.pars_only,
+        show_unpublished_bg=show_unpublished_bg,
+        route=route,
+        edit_mode=edit_mode,
+        item=doc_info,
+        text=texts,
+        headers=index,
+        plugin_users=user_list,
+        version=doc.get_version(),
+        js=js_paths,
+        cssFiles=css_paths,
+        jsMods=angular_module_names,
+        doc_css=doc_css,
+        start_index=view_range.start_index,
+        in_lecture=is_in_lecture,
+        group=usergroup,
+        translations=doc_info.translations,
+        reqs=reqs,
+        no_browser=hide_answers,
+        no_question_auto_numbering=no_question_auto_numbering,
+        live_updates=doc_settings.live_updates(),
+        slide_background_url=slide_background_url,
+        slide_background_color=slide_background_color,
+        task_info={'total_points': total_points,
+                   'tasks_done': tasks_done,
+                   'total_tasks': total_tasks,
+                   'show': show_task_info,
+                   'groups': task_groups},
+        doc_settings=doc_settings,
+        word_list=word_list,
+        memo_minutes=doc_settings.memo_minutes(),
+        linked_groups=linked_groups,
+        current_view_range=view_range,
+        nav_ranges=nav_ranges,
+    )
 
 
 def redirect_to_login():
@@ -623,6 +624,7 @@ def check_rights(hide_type: str, rights: dict):
             'edit': not rights['see_answers'],
             'see_answers': not rights['teacher'],
             'teacher': not rights['manage']}.get(hide_type, False)
+
 
 @view_page.route('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')
 def check_updated_pars(doc_id, major, minor):
@@ -881,8 +883,7 @@ def get_viewrange(doc_id: int, index: int, forwards: int):
     doc_info = get_doc_or_abort(doc_id)
     verify_view_access(doc_info)
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=forwards > 0)
-    return json_response({'b': view_range[0], 'e': view_range[1]}) if view_range \
-        else abort(400, "Failed to get view range")
+    return json_response(view_range)
 
 
 @view_page.route('/viewrange/getWithHeaderId/<int:doc_id>/<string:header_id>')
@@ -902,5 +903,4 @@ def get_viewrange_with_header_id(doc_id: int, header_id: str):
     if index is None:
         return abort(404, f"Header '{header_id}' not found in the document '{doc_info.short_name}'!")
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
-    return json_response({'b': view_range[0], 'e': view_range[1]}) if view_range \
-        else abort(400, "Failed to get the view range")
+    return json_response(view_range)

@@ -3,9 +3,12 @@ import {$http} from "../util/ngimport";
 import {getCookie, to} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
 
-export interface IViewRange {
+export interface IViewRangeUnnamed {
     b: number;
     e: number;
+}
+
+export interface IViewRange extends IViewRangeUnnamed {
     name?: string;
     disabled?: boolean;
 }
@@ -162,7 +165,10 @@ export function getCurrentViewRange() {
     const viewRange = documentglobals().current_view_range;
     const pieceSize = getPieceSize();
     if (viewRange && pieceSize) {
-        return viewRange;
+        return {
+            ...viewRange,
+            name: "Current",
+        };
     } else {
         return undefined;
     }

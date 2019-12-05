@@ -1,18 +1,100 @@
 """
 Functions related to document partitioning.
 """
-
+from dataclasses import dataclass
 from flask import json, Request
+
 from timApp.document.docinfo import DocInfo
 from timApp.util.utils import Range
 from lxml import html
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Union
 
-INCLUDE_IN_PARTS_CLASS_NAME = "includeInParts" # Preamble pars with this class get inserted to each doc part.
+INCLUDE_IN_PARTS_CLASS_NAME = "includeInParts"  # Preamble pars with this class get inserted to each doc part.
 
 
-def partition_texts(texts, view_range: Range, preamble_count):
+def int_or_none(s: str):
+    try:
+        return int(s)
+    except (ValueError, TypeError):
+        return None
+
+
+RangeParam = Union[int, str]
+
+
+@dataclass
+class IndexedViewRange:
+    b: int
+    e: int
+    par_count: int
+
+    @property
+    def is_full(self):
+        return self.b == 0 and self.e == self.par_count
+
+    def to_json(self, name: Optional[str] = None):
+        r = {
+            'b': self.b,
+            'e': self.e,
+        }
+        if name:
+            r['name'] = name
+        return r
+
+    @property
+    def is_restricted(self):
+        return not self.is_full
+
+    @property
+    def start_index(self):
+        return self.b
+
+    @property
+    def end_index(self):
+        return self.e
+
+    @property
+    def starts_from_beginning(self):
+        return self.b == 0
+
+
+@dataclass
+class RequestedViewRange:
+    b: Optional[RangeParam]
+    e: Optional[RangeParam]
+    size: Optional[int]
+
+    @property
+    def is_full(self):
+        return self.b is None and self.e is None
+
+    @property
+    def is_restricted(self):
+        return not self.is_full
+
+    @property
+    def start_index(self):
+        return int_or_none(self.b)
+
+    @property
+    def end_index(self):
+        return int_or_none(self.e)
+
+    @property
+    def start_par_id(self):
+        if self.start_index:
+            return None
+        return self.b
+
+    @property
+    def end_par_id(self):
+        if self.end_index:
+            return None
+        return self.e
+
+
+def partition_texts(texts, view_range: IndexedViewRange, preamble_count):
     """
     Partition document with preambles taken into account.
     :param texts: List of processed paragraphs.
@@ -22,8 +104,8 @@ def partition_texts(texts, view_range: Range, preamble_count):
     """
     i = 0
     partitioned = []
-    b = view_range[0] + preamble_count
-    e = view_range[1] + preamble_count
+    b = view_range.start_index + preamble_count
+    e = view_range.end_index + preamble_count
     for text in texts:
         # Areas take two slots in texts, so adjust the indices.
         if text.get('start_areas') or text.get('end_areas'):
@@ -52,30 +134,27 @@ def get_doc_version_hash(doc_info: DocInfo) -> str:
     return str(hash(version))
 
 
-def load_index(folder_path: Path(), file_name: str) -> Optional[str]:
+def load_index(file_path: Path) -> Optional[dict]:
     """
     Load headers from a file.
-    :param folder_path: Cache folder path.
-    :param file_name: File name.
+    :param file_path: Cache file path.
     :return: Parsed contents or None.
     """
     try:
-        with (folder_path / file_name).open("r", encoding='utf-8') as file:
-            contents = json.load(file)
-            return contents
+        with file_path.open("r", encoding='utf-8') as file:
+            return json.load(file)
     except (FileNotFoundError, ValueError, IOError, TypeError):
         return None
 
 
-def save_index(index, folder_path: Path(), file_name: str):
+def save_index(index, file_path: Path):
     """
     Save document header data as json.
     :param index: Headers.
-    :param folder_path: Save folder path.
-    :param file_name: File name.
+    :param file_path: File path.
     """
-    folder_path.mkdir(parents=True, exist_ok=True)
-    with (folder_path / file_name).open("w", encoding='utf-8') as f:
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with file_path.open("w", encoding='utf-8') as f:
         json.dump(index, f)
 
 
@@ -152,7 +231,7 @@ def adjust_to_areas(areas: List[Range], b: int, e: int) -> Range:
     for area in areas:
         area_b = area[0]
         # TODO: Check if all ranges related to partitioning use same logic (i.e. is end index included or not).
-        area_e = area[1]+1 # Include area end in the range.
+        area_e = area[1] + 1  # Include area end in the range.
         if area_b <= b <= area_e <= e:
             # Don't return, since e may possibly still cut a later area.
             b, e = area_b, e
@@ -164,9 +243,14 @@ def adjust_to_areas(areas: List[Range], b: int, e: int) -> Range:
     return b, e
 
 
-def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0, par_count: Optional[int] = None,
-                      forwards: bool = True, areas: Optional[List[Range]] = None,
-                      min_set_size_modifier: float = 0.5) -> Optional[Range]:
+def decide_view_range(
+        doc_info: DocInfo,
+        preferred_set_size: int,
+        index: int = 0,
+        forwards: bool = True,
+        areas: Optional[List[Range]] = None,
+        min_set_size_modifier: float = 0.5,
+) -> IndexedViewRange:
     """
     Decide begin and end indices of paragraph set based on preferred size.
     Avoids making the current part shorter than the piece size due to proximity to begin or end
@@ -176,16 +260,13 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
     :param doc_info: Document.
     :param preferred_set_size: User defined set size. May change depending on document.
     :param index: Begin or end index (depending on direction).
-    :param par_count: Paragraph count, if it is available.
     :param forwards: Begin index is the start index if true, end index if false (i.e. True = next, False = previous).
     :param areas: List of known areas.
     :param min_set_size_modifier: Smallest allowed neighboring set compared to set size.
     :return: Adjusted indices for view range.
     """
-    if not par_count:
-        # Assume get_paragraphs() won't return None.
-        par_count = len(doc_info.document.get_paragraphs())
-    if areas is None: # An empty area list is a separate case.
+    par_count = len(doc_info.document.get_paragraphs())
+    if areas is None:
         areas = get_document_areas(doc_info)
     min_piece_size = round(min_set_size_modifier * preferred_set_size)
     if forwards:
@@ -195,7 +276,7 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
         if (e - b) <= min_piece_size:
             b = max(min(e - min_piece_size, b), 0)
         # Round the end index to last index when the remaining part is short.
-        if par_count-e <= min_piece_size:
+        if par_count - e <= min_piece_size:
             e = par_count
     else:
         b = max(index - preferred_set_size, 0)
@@ -206,4 +287,5 @@ def decide_view_range(doc_info: DocInfo, preferred_set_size: int, index: int = 0
         # Round the start index to zero when the remaining part is short.
         if b <= min_piece_size:
             b = 0
-    return adjust_to_areas(areas, b, e)
+    fb, fe = adjust_to_areas(areas, b, e)
+    return IndexedViewRange(b=fb, e=fe, par_count=par_count)

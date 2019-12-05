@@ -702,11 +702,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.user || !this.selectedAnswer) {
             return undefined;
         }
-        const parIndex = this.element.parents(".par").index(".par:not(.preamble)");
+        const par = this.element.parents(".par");
+        const parId = getParId(par);
         const currBegin = getRangeBeginParam() || 0;
         const rangeParams = single ? {
-            b: parIndex - 1 + currBegin,
-            e: parIndex + currBegin,
+            b: parId,
+            size: 1,
         } : {};
         return `/answers/${this.viewctrl.item.path}?${$httpParamSerializer({
             answerNumber: this.answers.length - this.findSelectedAnswerIndexFromUnFiltered(),

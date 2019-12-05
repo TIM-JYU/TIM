@@ -1,7 +1,7 @@
 import {IBookmarkGroup} from "../bookmark/bookmarks";
 import {IDocSettings} from "../document/IDocSettings";
 import {EditMode} from "../document/popupMenu";
-import {IViewRange} from "../document/viewRangeInfo";
+import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
 import {DocumentOrFolder, IDocument, IFolder, IFullDocument, IItem} from "../item/IItem";
 import {ILecture} from "../lecture/lecturetypes";
 import {HeaderIndexItem, IGroupWithSisuPath} from "../sidebar/sidebarMenuCtrl";
@@ -58,7 +58,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     velpMode: boolean;
     wordList: string[];
     linked_groups: IGroupWithSisuPath[] | null;
-    current_view_range?: IViewRange | null;
+    current_view_range?: IViewRangeUnnamed | null;
     nav_ranges?: IViewRange[];
 }
 

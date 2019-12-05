@@ -15,7 +15,7 @@ from flask import session
 from timApp.auth.accesshelper import verify_ownership, get_doc_or_abort
 from timApp.auth.login import log_in_as_anonymous
 from timApp.auth.sessioninfo import get_current_user_id, logged_in, get_current_user_object, \
-    current_user_in_lecture, get_user_settings
+    current_user_in_lecture
 from timApp.document.docentry import DocEntry
 from timApp.document.post_process import has_ownership
 from timApp.document.randutils import hashfunc
@@ -486,12 +486,10 @@ def show_lecture_info(lecture_id):
 
     doc = DocEntry.find_by_id(lecture.doc_id)
     lectures = get_current_user_object().lectures.all()
-    settings = get_user_settings()
     return render_template("lectureInfo.html",
                            item=doc,
                            lecture=lecture,
                            in_lecture=len(lectures) > 0,
-                           settings=settings,
                            translations=doc.translations)
 
 

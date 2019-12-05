@@ -90,12 +90,8 @@ class DocPartitionTest(TimRouteTest):
         tree = self.get(d.url, query_string={'b': 0, 'e': 10}, as_tree=True)
         self.assert_content(tree, ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
 
-        # Check ranges for navigation links:
-        self.assert_js_variable(tree, "nav_ranges", [
-            {"b": 0, "e": 5, "name": "First"},
-            {"b": 0, "e": 2, "name": "Previous"},
-            {"b": 8, "e": 10, "name": "Next"},
-            {"b": 5, "e": 10, "name": "Last"}])
+        # We're showing the full document, so there should be no part navigation.
+        self.assert_js_variable(tree, "nav_ranges", [])
 
 
     def test_partitioning_document_with_overflowing_range(self):
@@ -373,3 +369,36 @@ Koira
         self.assert_content(self.get(d3.url, as_tree=True), ['1', '2', '3', '{"area": "test"}', '5', ])
 
     # TODO: Test areas + preambles & areas.
+
+    def test_b_block_id(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#-
+1
+
+#-
+2
+
+#-
+3
+
+#-
+4
+        """)
+        par_ids = [p.get_id() for p in d.document.get_paragraphs()]
+        tree = self.get(d.url, query_string={'b': par_ids[1], 'e': par_ids[3]}, as_tree=True)
+        self.assert_content(tree, ["2", "3"])
+        tree = self.get(d.url, query_string={'b': par_ids[1], 'e': par_ids[3]}, as_tree=True)
+        self.assert_content(tree, ["2", "3"])
+        tree = self.get(d.url, query_string={'b': par_ids[0], 'e': par_ids[3]}, as_tree=True)
+        self.assert_content(tree, ["1", "2", "3"])
+        tree = self.get(d.url, query_string={'e': par_ids[3]}, as_tree=True)
+        self.assert_content(tree, ["1", "2", "3"])
+        tree = self.get(d.url, query_string={'b': par_ids[1]}, as_tree=True)
+        self.assert_content(tree, ["2", "3", "4"])
+        tree = self.get(d.url, query_string={'b': par_ids[1], 'size': 1}, as_tree=True)
+        self.assert_content(tree, ["2"])
+        tree = self.get(d.url, query_string={'b': par_ids[1], 'size': 0}, as_tree=True)
+        self.assert_content(tree, [])
+        tree = self.get(d.url, query_string={'b': par_ids[1], 'size': 10}, as_tree=True)
+        self.assert_content(tree, ["2", "3", "4"])

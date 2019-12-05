@@ -76,9 +76,5 @@ def current_user_in_lecture():
     return bool(lectures and lectures[0].is_running)
 
 
-def get_user_settings():
-    return session.get('settings', {})
-
-
 def save_last_page():
     session['last_doc'] = request.full_path
