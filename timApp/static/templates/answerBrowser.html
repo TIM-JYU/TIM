@@ -54,8 +54,8 @@
                              ng-click="$event.preventDefault()"
                              ng-href="{{ $ctrl.getAnswerLink() }}">Link</a>
                         (<a title="Link to currently selected answer without other document content"
-                             ng-click="$event.preventDefault()"
-                             ng-href="{{ $ctrl.getAnswerLink(true) }}">only</a>)
+                            target="_blank"
+                            ng-href="{{ $ctrl.getAnswerLink(true) }}">only</a>)
                     </span>
                 </div>
             </div>
