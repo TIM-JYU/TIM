@@ -37,6 +37,7 @@ class IndexedViewRange:
         r = {
             'b': self.b,
             'e': self.e,
+            'is_full': self.is_full
         }
         if name:
             r['name'] = name

@@ -6,6 +6,7 @@ import {ViewCtrl} from "./viewctrl";
 export interface IViewRangeUnnamed {
     b: number;
     e: number;
+    is_full: boolean;
 }
 
 export interface IViewRange extends IViewRangeUnnamed {
@@ -145,7 +146,7 @@ export async function getViewRangeWithHeaderId(docId: number, headerId: string) 
  */
 export async function toggleViewRange(docId: number, pieceSize: number) {
     const currentViewRange = await getCurrentViewRange();
-    if (currentViewRange) {
+    if (currentViewRange && !currentViewRange.is_full) {
         await unpartitionDocument();
     } else {
         await setPieceSize(pieceSize);

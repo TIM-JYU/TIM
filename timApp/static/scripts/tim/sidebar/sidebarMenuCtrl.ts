@@ -87,6 +87,7 @@ export class SidebarMenuCtrl implements IController {
     private item?: DocumentOrFolder;
     private sisugroupPath?: string;
     private currentViewRange?: IViewRange;
+    private isFullRange: boolean = true;
     private hashlessUrl: string;
 
     constructor() {
@@ -464,6 +465,14 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
+    private updateIsFullRange() {
+        if ( this.currentViewRange ) {
+            this.isFullRange = this.currentViewRange.is_full;
+        } else {
+            this.isFullRange = true;
+        }
+    }
+
     /**
      * Partition or unpartition document (starting from the beginning) using user defined piece size.
      */
@@ -473,6 +482,7 @@ export class SidebarMenuCtrl implements IController {
         }
         void toggleViewRange(this.item.id, this.pieceSizeSetting);
         this.currentViewRange = getCurrentViewRange();
+        this.updateIsFullRange();
     }
 
     /**
@@ -482,6 +492,7 @@ export class SidebarMenuCtrl implements IController {
         if (this.item) {
             void showViewRangeEditDialog(this.item);
             this.currentViewRange = getCurrentViewRange();
+            this.updateIsFullRange();
         }
     }
 
@@ -509,7 +520,8 @@ export class SidebarMenuCtrl implements IController {
         if (this.storage.pieceSize != null) {
             this.pieceSizeSetting = +this.storage.pieceSize;
         }
-         this.currentViewRange = getCurrentViewRange();
+        this.currentViewRange = getCurrentViewRange();
+        this.updateIsFullRange();
     }
 
     /**
@@ -521,7 +533,7 @@ export class SidebarMenuCtrl implements IController {
      */
     private async headerClicked($event: Event, headerId: string) {
         const isInCurrentPart = document.getElementById(headerId);
-        if (!isInCurrentPart && this.currentViewRange && this.vctrl) {
+        if (!isInCurrentPart && !this.isFullRange && this.vctrl) {
             const headerRange = await getViewRangeWithHeaderId(this.vctrl.docId, headerId);
             if (headerRange) {
                 partitionDocument(headerRange.b, headerRange.e, true);
@@ -576,12 +588,11 @@ timApp.component("timSidebarMenu", {
         </div>
         <div ng-if="$ctrl.users.isLoggedIn() && $ctrl.vctrl && !$ctrl.vctrl.item.isFolder">
             <h5>Document settings</h5>
-            <a title="Toggle between showing full and partitioned document" ng-click="$ctrl.toggleViewRange()">Show page in {{ $ctrl.currentViewRange ? 'full' : 'parts' }}</a>
+            <a title="Toggle between showing full and partitioned document" ng-click="$ctrl.toggleViewRange()">Show page in {{ $ctrl.isFullRange ? 'parts' : 'full' }}</a>
             <a style="display: inline-block" ng-click="$ctrl.openViewRangeMenu()" title="Open document partitioning settings">
                 <span class="glyphicon glyphicon-cog"></span>
             </a>
-            <!-- <button ng-if="$ctrl.vctrl.item.rights.editable && !$ctrl.currentViewRange" -->
-            <button ng-if="$ctrl.vctrl.item.rights.editable"
+            <button ng-if="$ctrl.vctrl.item.rights.editable && $ctrl.isFullRange"
                     class="timButton btn-block"
                     ng-click="$ctrl.vctrl.editingHandler.editSettingsPars()">Edit settings
             </button>
