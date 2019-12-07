@@ -34,21 +34,21 @@ class DocPartitionTest(TimRouteTest):
         d1 = self.create_doc()
         d2 = self.create_doc(initial_par=["1","2","3","4","5","6","7","8","9","10"])
         # Empty document.
-        self.get(f'/viewrange/get/{d1.id}/0/1', expect_content={'b': 0, 'e': 0})
+        self.get(f'/viewrange/get/{d1.id}/0/1', expect_content={'b': 0, 'e': 0, 'is_full': True})
         # Begin index at the doc beginning.
-        self.get(f'/viewrange/get/{d2.id}/0/{forwards}', expect_content={'b': 0, 'e': 5})
+        self.get(f'/viewrange/get/{d2.id}/0/{forwards}', expect_content={'b': 0, 'e': 5, 'is_full': False})
         # Begin index is at the doc end; rounded to avoid a too short part.
-        self.get(f'/viewrange/get/{d2.id}/10/{forwards}', expect_content={'b': 8, 'e': 10})
+        self.get(f'/viewrange/get/{d2.id}/10/{forwards}', expect_content={'b': 8, 'e': 10, 'is_full': False})
         # Begin index is 5 and moving backwards.
-        self.get(f'/viewrange/get/{d2.id}/5/{backwards}', expect_content={'b': 0, 'e': 5})
+        self.get(f'/viewrange/get/{d2.id}/5/{backwards}', expect_content={'b': 0, 'e': 5, 'is_full': False})
         # Begin index is atthe doc beginning and moving backwards; rounded to avoid a too short part.
-        self.get(f'/viewrange/get/{d2.id}/0/{backwards}', expect_content={'b': 0, 'e': 2})
+        self.get(f'/viewrange/get/{d2.id}/0/{backwards}', expect_content={'b': 0, 'e': 2, 'is_full': False})
         self.json_post(url=f'/viewrange/set/piecesize',
                        json_data={'pieceSize': 8},
                        expect_cookie=('r','8'),
                        expect_status=200)
         # Test rounding when remaining pars are shorter than half the piece size.
-        self.get(f'/viewrange/get/{d2.id}/0/{forwards}', expect_content={'b': 0, 'e': 10})
+        self.get(f'/viewrange/get/{d2.id}/0/{forwards}', expect_content={'b': 0, 'e': 10, 'is_full': True})
 
 
     def test_partitioning_document(self):
@@ -70,10 +70,10 @@ class DocPartitionTest(TimRouteTest):
 
         # Check ranges for navigation links:
         self.assert_js_variable(tree, "nav_ranges", [
-            {"b": 0, "e": 5, "name": "First"},
-            {"b": 0, "e": 2, "name": "Previous"},
-            {"b": 5, "e": 10, "name": "Next"},
-            {"b": 5, "e": 10, "name": "Last"}])
+            {"b": 0, "e": 5, 'is_full': False, "name": "First"},
+            {"b": 0, "e": 2, 'is_full': False,  "name": "Previous"},
+            {"b": 5, "e": 10, 'is_full': False,  "name": "Next"},
+            {"b": 5, "e": 10, 'is_full': False,  "name": "Last"}])
 
         # Partitioning with URL parameters, mid-document range.
         tree = self.get(d.url, query_string={'b': 2, 'e': 6}, as_tree=True)
@@ -81,10 +81,10 @@ class DocPartitionTest(TimRouteTest):
 
         # Check ranges for navigation links:
         self.assert_js_variable(tree, "nav_ranges", [
-            {"b": 0, "e": 5, "name": "First"},
-            {"b": 0, "e": 4, "name": "Previous"},
-            {"b": 6, "e": 10, "name": "Next"},
-            {"b": 5, "e": 10, "name": "Last"}])
+            {"b": 0, "e": 5,'is_full': False, "name": "First"},
+            {"b": 0, "e": 4,'is_full': False, "name": "Previous"},
+            {"b": 6, "e": 10,'is_full': False, "name": "Next"},
+            {"b": 5, "e": 10,'is_full': False, "name": "Last"}])
 
         # Partitioning with URL parameters, whole document range.
         tree = self.get(d.url, query_string={'b': 0, 'e': 10}, as_tree=True)

@@ -14,11 +14,13 @@ class ViewRangeNavigation implements IController {
     static $inject = ["$element", "$scope"];
     private vctrl!: Require<ViewCtrl>;
     private ranges: IViewRange[] = [];
+    private isOnly: boolean = false;
 
     async $onInit() {
         if (this.vctrl && this.vctrl.viewRangeInfo && this.vctrl.viewRangeInfo.ranges) {
             // Ranges come from document specific ViewRangeInfo to avoid duplicate requests.
             this.ranges = this.vctrl.viewRangeInfo.ranges;
+            if ( this.vctrl.viewRangeInfo.isOnly ) { this.isOnly = true; }
         }
     }
 
@@ -48,7 +50,7 @@ timApp.component("viewRangeNavigation", {
         vctrl: "^timView",
     },
     template: `
-<div class="view-range-container" ng-if="$ctrl.ranges && $ctrl.ranges.length > 0">
+<div class="view-range-container" ng-if="$ctrl.ranges && $ctrl.ranges.length > 0 && !$ctrl.isOnly ">
     <div class="view-range-buttons">
         <span ng-repeat="r in $ctrl.ranges">
             <span ng-if="r.disabled">{{r.name}} part</span>

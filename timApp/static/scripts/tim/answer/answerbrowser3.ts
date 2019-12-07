@@ -702,19 +702,25 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.user || !this.selectedAnswer) {
             return undefined;
         }
+        let newroute = "answers";
+        if ( single && location.href.includes("/view/") ) { newroute = "view"; }  // TODO: think other routes also?
         const par = this.element.parents(".par");
         const parId = getParId(par);
         const currBegin = getRangeBeginParam() || 0;
+        const params = new URLSearchParams(document.location.search);
+        const group = params.get("group"); // TODO: should we save other params also?
         const rangeParams = single ? {
             b: parId,
             size: 1,
+            group: group,
         } : {};
-        return `/answers/${this.viewctrl.item.path}?${$httpParamSerializer({
+        const link = `/${newroute}/${this.viewctrl.item.path}?${$httpParamSerializer({
             answerNumber: this.answers.length - this.findSelectedAnswerIndexFromUnFiltered(),
             task: this.getTaskName(),
             user: this.user.name,
             ...rangeParams,
         })}`;
+        return link;
     }
 
     updateAnswerFromURL() {

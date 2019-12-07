@@ -19,7 +19,7 @@ export function getCurrentPartitionURLParams() {
     const b = params.get("b");
     const e = params.get("e");
     const preamble = params.get("preamble");
-    if (b == null || e == null || preamble == null) {
+    if (b == null && e == null && preamble == null) {
         return undefined;
     }
     return params;
@@ -70,6 +70,7 @@ export function partitionDocument(b: number, e: number, loadPreamble: boolean) {
     params.set("b", b.toString());
     params.set("e", e.toString());
     params.set("preamble", loadPreamble.toString());
+    params.delete("size");  // to prevent collision between e and size
     setURLSearchParams(params);
 }
 
@@ -165,10 +166,13 @@ export async function toggleViewRange(docId: number, pieceSize: number) {
 export function getCurrentViewRange() {
     const viewRange = documentglobals().current_view_range;
     const pieceSize = getPieceSize();
+    let name = "Current";
+    const params = getCurrentPartitionURLParams();
+    if ( params && !params.get("e") ) { name = "Only"; }
     if (viewRange && pieceSize) {
         return {
             ...viewRange,
-            name: "Current",
+            name: name,
         };
     } else {
         return undefined;
@@ -177,6 +181,7 @@ export function getCurrentViewRange() {
 
 export class ViewRangeInfo {
     public ranges?: [IViewRange, IViewRange, IViewRange, IViewRange];
+    public isOnly: boolean = false;
     public lastIndex?: number;
     private vctrl: ViewCtrl;
 
@@ -191,6 +196,8 @@ export class ViewRangeInfo {
     public loadRanges() {
         const ranges = documentglobals().nav_ranges;
         const current = getCurrentViewRange();
+        this.isOnly = false;
+        if ( current && current.name === "Only") { this.isOnly = true; }
         if (!current || !ranges || ranges.length != 4) {
             return;
         }
