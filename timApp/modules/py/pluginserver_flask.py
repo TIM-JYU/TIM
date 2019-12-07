@@ -94,6 +94,7 @@ class GenericMarkupModel:
     showInView: Union[bool, Missing] = missing
     stem: Union[str, Missing, None] = missing
     useCurrentUser: Union[bool, Missing, None] = missing
+    deadline: Union[str, Missing, None] = missing
 
     @pre_load
     def process_minus(self, data, **_):
