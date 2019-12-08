@@ -377,7 +377,7 @@ def field_for_schema(
     # generic types
     if type(typ) is TypeVar:
         b = typing_inspect.get_generic_bases(clazz)[0]
-        type_index = typing_inspect.get_args(typing_inspect.get_generic_bases(b)[0]).index(typ)
+        type_index = typing_inspect.get_args(typing_inspect.get_generic_bases(typing_inspect.get_origin(b))[0]).index(typ)
         instantiated_type = typing_inspect.get_args(b)[type_index]
         return marshmallow.fields.Nested(class_schema(instantiated_type), **metadata)
 

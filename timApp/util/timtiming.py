@@ -2,9 +2,9 @@
 """Functions for dealing taking time."""
 import time
 
-timing_last = time.clock()
+timing_last = time.perf_counter()
 timing_last_t = time.time()
-timing_last_z = time.clock()
+timing_last_z = time.perf_counter()
 timing_last_t_z = time.time()
 # print(timing_last, timing_last_t)
 
@@ -15,7 +15,7 @@ def taketime(s1="", s2="", n=0, zero= False):
     global timing_last_t
     global timing_last_z
     global timing_last_t_z
-    t22 = time.clock()
+    t22 = time.perf_counter()
     t22t = time.time()
     if zero:
         timing_last_z = t22

@@ -95,24 +95,33 @@ RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/2
 
 # Install Python, pip and other necessary packages
 
-RUN bash -c "${APT_INSTALL} openssh-server python3 python3-pip && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} software-properties-common && add-apt-repository ppa:deadsnakes/ppa && ${APT_CLEANUP}"
+
+RUN bash -c "${APT_INSTALL} openssh-server python3.8 && ${APT_CLEANUP}"
 
 # lxml dependencies
 # C-parser for PyYAML
 # python-magic dependency
-RUN bash -c "${APT_INSTALL} git-core \
- zlib1g-dev libxml2-dev libxslt-dev python3-dev \
- libyaml-dev \
+RUN bash -c "${APT_INSTALL} \
+ git-core \
+ libffi-dev \
  libmagic1 \
  libmagickwand-dev \
- libffi-dev \
+ libxml2-dev \
+ libxmlsec1-dev \
+ libxmlsec1-openssl \
+ libxslt-dev \
+ libyaml-dev \
+ python3.8-dev \
+ zlib1g-dev \
  && ${APT_CLEANUP}"
+
+RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3.8 get-pip.py && rm get-pip.py
 
 ENV LD_LIBRARY_PATH /usr/local/lib
 
-ENV PIP_INSTALL="python3 -m pip install"
+ENV PIP_INSTALL="python3.8 -m pip install"
 RUN bash -c "${PIP_INSTALL} wheel setuptools && ${APT_CLEANUP}"
-RUN bash -c "${APT_INSTALL} libxml2-dev libxmlsec1-dev libxmlsec1-openssl && ${APT_CLEANUP}"
 RUN bash -c "${PIP_INSTALL} \
 attrs \
 autopep8 \
@@ -121,7 +130,6 @@ bcrypt \
 celery[redis] \
 cffi \
 cssselect \
-dataclasses \
 docformatter \
 filelock \
 flask \
@@ -185,18 +193,23 @@ RUN bash -c "${APT_INSTALL} curl pdftk gpg-agent && ${APT_CLEANUP} && pdftk --ve
 
 RUN (curl -sL https://deb.nodesource.com/setup_12.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
-RUN npm install -g typescript@3.5 grunt typedoc tslint jspm typescript-formatter && npm cache clean --force && bash -c "${APT_CLEANUP}"
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:test' | chpasswd
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # Flask-Testing does not let us configure host, so we do it here.
-RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.6/dist-packages/flask_testing/utils.py
+RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.8/dist-packages/flask_testing/utils.py
 
 RUN wget -q http://mirrors.ctan.org/support/latexmk/latexmk.pl -O /usr/bin/latexmk
 
 WORKDIR /service
+
+# Make Python 3.8 the default one. We can't do this earlier because it breaks apt-get, which we won't need
+# after building the image.
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2 && \
+    python3 -V
+
 CMD python3 launch.py
 
 EXPOSE 22
