@@ -1108,6 +1108,7 @@ class StrCreditTest(SendGradeTestBase):
                       'gradeId': '5',
                       'privateComment': None,
                       'sentGrade': '5',
+                      'sentCredit': '5',
                       'user': {'email': 'test2@example.com',
                                'id': 3,
                                'name': 'testuser2',
