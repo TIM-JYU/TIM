@@ -16,6 +16,7 @@ interface IAssessment {
     gradeId: unknown;
     privateComment?: unknown;
     sentGrade?: unknown;
+    sentCredit?: unknown;
     user: IUser;
 }
 
@@ -220,11 +221,19 @@ class SisuAssessmentExportController {
                 defaultFilter = ".";
             }
         }
-        const changedAssessments = this.assessments.filter(
+        const changedGrades = this.assessments.filter(
             (a) => StringOrNumber.is(a.sentGrade) && StringOrNumber.is(a.gradeId) && a.sentGrade && a.gradeId && a.sentGrade.toString() !== a.gradeId.toString(),
         );
-        const hasChangedAssessments = changedAssessments.length > 0;
-        this.notSendableButChanged = changedAssessments.filter((a) => a.error && a.error === "Sisu: Aikaisempi vahvistettu suoritus");
+        const hasChangedGrades = changedGrades.length > 0;
+        const changedCredits = this.assessments.filter(
+            (a) =>
+                (StringOrNumber.is(a.sentCredit) &&
+                    StringOrNumber.is(a.completionCredits) &&
+                    a.sentCredit && a.completionCredits &&
+                    a.sentCredit.toString() !== a.completionCredits.toString()),
+        );
+        const hasChangedCredits = changedCredits.length > 0;
+        this.notSendableButChanged = [...changedGrades, ...changedCredits].filter((a) => a.error && a.error === "Sisu: Aikaisempi vahvistettu suoritus");
         this.gridOptions = {
             onRegisterApi: async (grid) => {
                 this.grid = grid;
@@ -240,7 +249,7 @@ class SisuAssessmentExportController {
                     field: "user.real_name",
                     name: "Full name",
                     allowCellFocus: false,
-                    width: 200,
+                    width: 160,
                 },
                 {
                     field: "user.name",
@@ -257,23 +266,30 @@ class SisuAssessmentExportController {
                 },
                 {
                     field: "sentGrade",
-                    name: "Old",
+                    name: "Old g",
                     allowCellFocus: false,
                     width: 65,
-                    visible: hasChangedAssessments,
+                    visible: hasChangedGrades,
                 },
                 {
                     field: "completionDate",
-                    name: "Completion date",
+                    name: "Compl. date",
                     allowCellFocus: false,
-                    width: 140,
-                    filter: {term: ""}, // The grade may have changed, so we cannot have any filter here!
+                    width: 105,
+                    filter: {term: ""}, // The grade or credit may have changed, so we cannot have any filter here!
                 },
                 {
                     field: "completionCredits",
                     name: "Credits",
                     allowCellFocus: false,
                     width: 70,
+                },
+                {
+                    field: "sentCredit",
+                    name: "Old c",
+                    allowCellFocus: false,
+                    width: 65,
+                    visible: hasChangedCredits,
                 },
                 {
                     field: "privateComment",
