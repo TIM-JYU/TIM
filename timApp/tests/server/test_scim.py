@@ -1293,12 +1293,14 @@ class SendGradeTest(SendGradeTestBase):
                   'gradeId': '5',
                   'privateComment': None,
                   'sentGrade': None,
+                  'sentCredit': None,
                   'user': test_2},
                  {'completionCredits': 2,
                   'completionDate': None,
                   'gradeId': '4',
                   'privateComment': None,
                   'sentGrade': None,
+                  'sentCredit': None,
                   'user': test_3}]},
             {'body': {'assessments': {}}}
         )
@@ -1314,12 +1316,14 @@ class SendGradeTest(SendGradeTestBase):
                   'gradeId': '5',
                   'privateComment': None,
                   'sentGrade': None,
+                  'sentCredit': None,
                   'user': test_2},
                  {'completionCredits': 2,
                   'completionDate': None,
                   'gradeId': '4',
                   'privateComment': None,
                   'sentGrade': None,
+                  'sentCredit': None,
                   'user': test_3}]},
             {'body': {'assessments': {}}}
         )
@@ -1334,6 +1338,7 @@ class SendGradeTest(SendGradeTestBase):
                   'gradeId': '5',
                   'privateComment': None,
                   'sentGrade': None,
+                  'sentCredit': None,
                   'user': test_2}]},
             {'body': {'assessments': {}}}
         )
@@ -1347,6 +1352,7 @@ class SendGradeTest(SendGradeTestBase):
                      'completionCredits': 3,
                      'privateComment': None,
                      'sentGrade': '5',
+                     'sentCredit': 3,
                      'user': test_2},
                 ],
                 'assessment_errors': [],
@@ -1356,6 +1362,7 @@ class SendGradeTest(SendGradeTestBase):
         )
         self.verify_answer_content(f'{d.id}.grade', 'c', 5, self.test_user_2)
         self.verify_answer_content(f'{d.id}.sentGrade', 'c', '5', self.test_user_2)
+        self.verify_answer_content(f'{d.id}.sentCredit', 'c', 3, self.test_user_2)
 
         self.check_send_grade_result(
             grade_params_dryrun,
@@ -1367,12 +1374,14 @@ class SendGradeTest(SendGradeTestBase):
                   'gradeId': '5',
                   'privateComment': None,
                   'sentGrade': '5',
+                  'sentCredit': 3,
                   'user': test_2},
                  {'completionCredits': 2,
                   'completionDate': None,
                   'gradeId': '4',
                   'privateComment': None,
                   'sentGrade': None,
+                  'sentCredit': None,
                   'user': test_3}]},
             {'body': {'assessments': {}}}
         )
@@ -1386,12 +1395,14 @@ class SendGradeTest(SendGradeTestBase):
                      'gradeId': '5',
                      'privateComment': None,
                      'sentGrade': '5',
+                     'sentCredit': 3,
                      'user': test_2},
                     {'completionCredits': 2,
                      'completionDate': current_date,
                      'gradeId': '4',
                      'privateComment': None,
                      'sentGrade': '4',
+                     'sentCredit': 2,
                      'user': test_3},
                 ],
                 'assessment_errors': [],
@@ -1402,8 +1413,10 @@ class SendGradeTest(SendGradeTestBase):
 
         self.verify_answer_content(f'{d.id}.grade', 'c', 5, self.test_user_2)
         self.verify_answer_content(f'{d.id}.sentGrade', 'c', '5', self.test_user_2)
+        self.verify_answer_content(f'{d.id}.sentCredit', 'c', 3, self.test_user_2)
         self.verify_answer_content(f'{d.id}.grade', 'c', 4, self.test_user_3)
         self.verify_answer_content(f'{d.id}.sentGrade', 'c', '4', self.test_user_3)
+        self.verify_answer_content(f'{d.id}.sentCredit', 'c', 2, self.test_user_3)
 
         self.check_send_grade_result(
             grade_params_dryrun,
@@ -1414,12 +1427,14 @@ class SendGradeTest(SendGradeTestBase):
                      'completionCredits': 3,
                      'privateComment': None,
                      'sentGrade': '5',
+                     'sentCredit': 3,
                      'user': test_2},
                     {'completionDate': current_date,
                      'gradeId': '4',
                      'completionCredits': 2,
                      'privateComment': None,
                      'sentGrade': '4',
+                     'sentCredit': 2,
                      'user': test_3},
                 ],
                 'assessment_errors': [],
@@ -1439,6 +1454,7 @@ class SendGradeTest(SendGradeTestBase):
                             'completionCredits': 2,
                             'privateComment': None,
                             'sentGrade': '4',
+                            'sentCredit': 2,
                             'user': test_3,
                         },
                         'message': 'Sisu: Voimassaolevaa opinto-oikeutta ei löytynyt.',
@@ -1465,6 +1481,7 @@ class SendGradeTest(SendGradeTestBase):
                         'completionCredits': 3,
                         'privateComment': None,
                         'sentGrade': '5',
+                        'sentCredit': 3,
                         'user': test_2,
                     },
                 ],
@@ -1477,6 +1494,7 @@ class SendGradeTest(SendGradeTestBase):
                             'completionDate': current_date,
                             'privateComment': None,
                             'sentGrade': '4',
+                            'sentCredit': 2,
                             'gradeId': '4',
                         },
                     },
@@ -1521,6 +1539,7 @@ class SendGradeTest(SendGradeTestBase):
                                 'gradeId': None,
                                 'privateComment': None,
                                 'sentGrade': None,
+                                'sentCredit': None,
                                 'user': sisuuser},
                  'message': 'gradeId: Field may not be null.'},
                 {'assessment': {'completionCredits': None,
@@ -1528,6 +1547,7 @@ class SendGradeTest(SendGradeTestBase):
                                 'gradeId': None,
                                 'privateComment': None,
                                 'sentGrade': None,
+                                'sentCredit': None,
                                 'user': sisuuser2},
                  'message': 'gradeId: Field may not be null.'}],
                 'default_selection': [],
@@ -1547,6 +1567,7 @@ class SendGradeTest(SendGradeTestBase):
                                 'gradeId': '4',
                                 'privateComment': None,
                                 'sentGrade': '4',
+                                'sentCredit': 2,
                                 'user': test_3},
                  'message': 'Sisu: Ilmoittautumista toteutukseen ei löytynyt'},
                 {'assessment': {'completionCredits': None,
@@ -1554,6 +1575,7 @@ class SendGradeTest(SendGradeTestBase):
                                 'gradeId': None,
                                 'privateComment': None,
                                 'sentGrade': None,
+                                'sentCredit': None,
                                 'user': sisuuser},
                  'message': 'gradeId: Field may not be null.'},
                 {'assessment': {'completionCredits': None,
@@ -1561,6 +1583,7 @@ class SendGradeTest(SendGradeTestBase):
                                 'gradeId': None,
                                 'privateComment': None,
                                 'sentGrade': None,
+                                'sentCredit': None,
                                 'user': sisuuser2},
                  'message': 'gradeId: Field may not be null.'}],
                 'default_selection': [],
@@ -1569,6 +1592,7 @@ class SendGradeTest(SendGradeTestBase):
                                       'gradeId': '5',
                                       'privateComment': None,
                                       'sentGrade': '5',
+                                      'sentCredit': 3,
                                       'user': test_2}]},
             {'body': {'assessments': {
                 '1': {'userName': {'code': 40002, 'reason': 'Ilmoittautumista toteutukseen ei löytynyt'}}}}},

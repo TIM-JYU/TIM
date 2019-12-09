@@ -406,6 +406,12 @@ class Assessment:
         #     raise ValidationError('Sisu interface currently does not accept HYL grade')
 
 
+def maybe_to_str(s) -> Optional[str]:
+    if s is None:
+        return s
+    return str(s)
+
+
 @dataclass
 class CandidateAssessment:
     user: User
@@ -414,6 +420,7 @@ class CandidateAssessment:
     completionCredits: Any = None
     privateComment: Any = None
     sentGrade: Any = None
+    sentCredit: Any = None
 
     def to_sisu_json(
             self,
@@ -439,7 +446,9 @@ class CandidateAssessment:
         return self.gradeId in ('HYL', '0')
 
     def is_new_or_changed(self):
-        return (not self.sentGrade or self.gradeId != self.sentGrade) and not self.is_fail_grade
+        return (not self.sentGrade or
+                self.gradeId != self.sentGrade or
+                maybe_to_str(self.completionCredits) != maybe_to_str(self.sentCredit)) and not self.is_fail_grade
 
     def to_json(self):
         return asdict(self)
@@ -468,6 +477,16 @@ def call_sisu_assessments(sisu_id: str, json: Dict[str, Any]):
         json=json,
         cert=app.config['SISU_CERT_PATH'],
     )
+
+
+def get_assessment_fields_to_save(doc: DocInfo, c: CandidateAssessment):
+    result = {
+        f'{doc.id}.completionDate': c.completionDate,
+        f'{doc.id}.sentGrade': c.gradeId,
+    }
+    if c.sentCredit is not None:
+        result[f'{doc.id}.sentCredit'] = c.sentCredit
+    return result
 
 
 def send_grades_to_sisu(
@@ -533,14 +552,13 @@ def send_grades_to_sisu(
         for a in ok_assessments:
             a.completionDate = completion_date_iso
             a.sentGrade = a.gradeId
+            a.sentCredit = a.completionCredits
+
         handle_jsrunner_response(
             {
                 'savedata': [
                     {
-                        'fields': {
-                            f'{doc.id}.completionDate': a.completionDate,
-                            f'{doc.id}.sentGrade': a.gradeId,
-                        },
+                        'fields': get_assessment_fields_to_save(doc, a),
                         'user': a.user.id,
                     }
                     for a in ok_assessments
@@ -581,7 +599,8 @@ def get_sisu_assessments(
     pot_groups = get_potential_groups(teacher, course_filter=sisu_id)
     if not any(g.external_id.course_id == sisu_id and
                (g.external_id.is_responsible_teacher or g.external_id.is_administrative_person) for g in pot_groups):
-        raise AccessDenied(f'You are neither a responsible teacher nor an administrative person of the course {sisu_id}.')
+        raise AccessDenied(
+            f'You are neither a responsible teacher nor an administrative person of the course {sisu_id}.')
     if not teacher.has_teacher_access(doc):
         raise AccessDenied('You do not have teacher access to the document.')
     doc_settings = doc.document.get_settings()
@@ -614,7 +633,7 @@ def get_sisu_assessments(
                     f'The associated course id "{ug.external_id.course_id}" '
                     f'of the group "{ug.name}" does not match the course setting "{sisu_id}".')
     users, _, _, _ = get_fields_and_users(
-        ['grade', 'credit', 'completionDate', 'sentGrade'],
+        ['grade', 'credit', 'completionDate', 'sentGrade', 'sentCredit'],
         ugs,
         doc,
         teacher,
@@ -635,5 +654,6 @@ def fields_to_assessment(r, doc: DocInfo) -> CandidateAssessment:
         completionDate=fields.get(f'{doc.id}.completionDate'),
         completionCredits=fields.get(f'{doc.id}.credit'),
         sentGrade=fields.get(f'{doc.id}.sentGrade'),
+        sentCredit=fields.get(f'{doc.id}.sentCredit'),
     )
     return result
