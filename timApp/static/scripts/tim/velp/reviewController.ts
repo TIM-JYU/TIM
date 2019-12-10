@@ -7,7 +7,7 @@ import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {documentglobals} from "../util/globals";
 import {$compile, $http} from "../util/ngimport";
-import {angularWait, assertIsText, checkIfElement, getElementParent, stringOrNull} from "../util/utils";
+import {angularWait, assertIsText, checkIfElement, getElementParent, stringOrNull, to} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
 import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp, IVelpUI} from "./velptypes";
 
@@ -61,8 +61,11 @@ export class ReviewController {
      * Loads the document annotations into the view.
      */
     async loadDocumentAnnotations() {
-        const response = await $http.get<IAnnotation[]>(`/${this.item.id}/get_annotations`);
-        this.annotations = response.data;
+        const response = await to($http.get<IAnnotation[]>(`/${this.item.id}/get_annotations`));
+        if (!response.ok) {
+            return;
+        }
+        this.annotations = response.result.data;
         const annotationsToRemove = [];
 
         for (const a of this.annotations) {
@@ -408,7 +411,7 @@ export class ReviewController {
 
         const currentId = this.getRealAnnotationId(id);
 
-        await $http.post("/invalidate_annotation", {annotation_id: currentId});
+        await to($http.post("/invalidate_annotation", {annotation_id: currentId}));
     }
 
     /**
@@ -836,8 +839,11 @@ export class ReviewController {
 
         this.annotationsAdded = true;
 
-        const json = await $http.post<IAnnotation>("/add_annotation", {...newAnnotation, coord});
-        this.annotationids[newAnnotation.id] = json.data.id;
+        const json = await to($http.post<IAnnotation>("/add_annotation", {...newAnnotation, coord}));
+        if (!json.ok) {
+            return;
+        }
+        this.annotationids[newAnnotation.id] = json.result.data.id;
     }
 
     getAnswerBrowserFromPluginLoader(first: Element) {

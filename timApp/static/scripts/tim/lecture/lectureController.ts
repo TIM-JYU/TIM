@@ -176,12 +176,15 @@ export class LectureController {
      * Makes http request to check if the current user is in lecture.
      */
     async checkIfInLecture() {
-        const response = await $http<ILectureResponse | ILectureListResponse | IEmptyResponse>({
+        const response = await to($http<ILectureResponse | ILectureListResponse | IEmptyResponse>({
             url: "/checkLecture",
             method: "GET",
             params: {doc_id: this.getDocIdOrNull(), buster: new Date().getTime()},
-        });
-        const answer = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        const answer = response.result.data;
         if (isEmptyResponse(answer)) {
             return;
         }
@@ -263,7 +266,7 @@ export class LectureController {
                 return false;
             }
         }
-        const response = await $http<ILectureResponse>({
+        const response = await to($http<ILectureResponse>({
             url: "/joinLecture",
             method: "POST",
             params: {
@@ -272,8 +275,11 @@ export class LectureController {
                 password_quess: passwordGuess,
                 buster: new Date().getTime(),
             },
-        });
-        const answer = response.data;
+        }));
+        if (!response.ok) {
+            return false;
+        }
+        const answer = response.result.data;
         if (hasLectureEnded(answer.lecture)) {
             showMessageDialog(`Lecture '${lectureCode}' has ended`);
             return false;
@@ -319,12 +325,15 @@ export class LectureController {
      * Starts lecture that is in future lecture list.
      */
     async startFutureLecture(l: ILecture) {
-        const response = await $http<ILectureResponse>({
+        const response = await to($http<ILectureResponse>({
             url: "/startFutureLecture",
             method: "POST",
             params: {doc_id: this.viewctrl!.docId, lecture_code: l.lecture_code},
-        });
-        const answer = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        const answer = response.result.data;
         this.showLectureView(answer);
     }
 
@@ -406,11 +415,14 @@ export class LectureController {
         const endTimeDate = moment(lecture.end_time).add(minutes, "minutes");
         $log.info("extending lecture");
         $log.info(endTimeDate);
-        await $http({
+        const r = await to($http({
             url: "/extendLecture",
             method: "POST",
             params: {lecture_id: lecture.lecture_id, new_end_time: endTimeDate},
-        });
+        }));
+        if (!r.ok) {
+            return;
+        }
         lecture.end_time = endTimeDate;
         this.lectureEnded = false;
         this.lectureEndingDialogState = LectureEndingDialogState.NotAnswered;
@@ -422,12 +434,15 @@ export class LectureController {
      */
     async editLecture(lectureId: string) {
         const params = {lecture_id: lectureId};
-        const response = await $http<ILecture>({
+        const response = await to($http<ILecture>({
             url: "/showLectureInfoGivenName",
             method: "GET",
             params,
-        });
-        const lecture = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        const lecture = response.result.data;
         await showLectureDialog(lecture);
     }
 
@@ -438,12 +453,15 @@ export class LectureController {
         // TODO: Change to some better confirm dialog.
         const confirmAnswer = window.confirm("Do you really want to end this lecture?");
         if (confirmAnswer) {
-            const response = await $http<ILectureListResponse>({
+            const response = await to($http<ILectureListResponse>({
                 url: "/endLecture",
                 method: "POST",
                 params: {lecture_id: this.lectureOrThrow().lecture_id},
-            });
-            const answer = response.data;
+            }));
+            if (!response.ok) {
+                return;
+            }
+            const answer = response.result.data;
             this.showBasicView(answer);
             $log.info("Lecture ended, not deleted");
         }
@@ -453,14 +471,14 @@ export class LectureController {
      * Sends http request to leave the lecture.
      */
     async leaveLecture() {
-        const response = await $http<ILectureListResponse>({
+        const response = await to($http<ILectureListResponse>({
             url: "/leaveLecture",
             method: "POST",
             params: {
                 buster: new Date().getTime(),
                 lecture_id: this.lectureOrThrow().lecture_id,
             },
-        });
+        }));
         await this.checkIfInLecture();
     }
 
@@ -636,14 +654,14 @@ export class LectureController {
             result = await showQuestionAnswerDialog({qa: answer.data, isLecturer: this.isLecturer});
         }
         if (result.type === "pointsclosed") {
-            await $http({
+            await to($http({
                 url: "/closePoints",
                 method: "PUT",
                 params: {
                     asked_id: result.askedId,
                     buster: new Date().getTime(),
                 },
-            });
+            }));
         } else if (result.type === "closed") {
             // empty
         } else if (result.type === "reask") {
@@ -657,14 +675,17 @@ export class LectureController {
     }
 
     async getQuestionManually(event: Event) {
-        const response = await $http<IAlreadyAnswered | IQuestionAsked | IQuestionHasAnswer | IQuestionResult | null>({
+        const response = await to($http<IAlreadyAnswered | IQuestionAsked | IQuestionHasAnswer | IQuestionResult | null>({
             url: "/getQuestionManually",
             method: "GET",
             params: {
                 buster: new Date().getTime(),
             },
-        });
-        const answer = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        const answer = response.result.data;
         if (!answer) {
             await showMessageDialog("No running questions.");
         } else if (alreadyAnswered(answer)) {

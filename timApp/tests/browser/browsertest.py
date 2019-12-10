@@ -8,7 +8,7 @@ from typing import Union, List
 
 import math
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException, ScreenshotException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.remote_connection import RemoteConnection
@@ -174,6 +174,8 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         y = element.location["y"]
         w = element.size["width"]
         h = element.size["height"]
+        if w == 0 or h == 0:
+            raise ScreenshotException('Element width and height must not be 0')
         offset = int(self.drv.execute_script('return window.pageYOffset;'))
         y -= offset
 
@@ -209,10 +211,14 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         result = None
         fail_suffix = ''
         im = None
+        f = None
         for i in range(attempts):
             if im:
                 im.close()
-            im = self.save_element_screenshot(element, move_to_element=move_to_element)
+            try:
+                im = self.save_element_screenshot(element, move_to_element=move_to_element)
+            except ScreenshotException:
+                continue
             for f in filenames:
                 try:
                     ref = Image(filename=f'tests/browser/expected_screenshots/{f}.png')
@@ -226,6 +232,8 @@ class BrowserTest(TimLiveServer, TimRouteTest):
                 if result <= self.get_screenshot_tolerance():
                     im.close()
                     return
+        if not f:
+            raise Exception('Failed to get screenshot of element')
         self.save_im(im, f'{f}{fail_suffix}')
         im.close()
         self.save_im(diff, f'{f}{fail_suffix}_DIFF')

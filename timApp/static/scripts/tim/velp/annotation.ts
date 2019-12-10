@@ -18,7 +18,7 @@ import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
-import {Binding, isInViewport, markAsUsed, Require, scrollToElement} from "../util/utils";
+import {Binding, isInViewport, markAsUsed, Require, scrollToElement, to} from "../util/utils";
 import {IAnnotationCoordless} from "./velptypes";
 
 markAsUsed(focusme);
@@ -266,7 +266,11 @@ export class AnnotationController extends DestroyScope implements IController {
             const comment = this.newcomment;
 
             const data = {annotation_id: id, content: this.newcomment};
-            const response = await $http.post<IUser>("/add_annotation_comment", data);
+            const r = await to($http.post<IUser>("/add_annotation_comment", data));
+            if (!r.ok) {
+                return;
+            }
+            const response = r.result;
             this.annotation.comments.push({
                 commenter_username: response.data.name,
                 content: comment,

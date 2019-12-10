@@ -164,10 +164,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             this.showAnswers = true;
         }
         if (!this.showAnswers) {
-            await import("../css/hideanswerbrowser.css" as string);
+            await import("style-loader!../css/hideanswerbrowser.css" as string);
         }
         if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
-            await import("../css/viewhide.css" as string);
+            await import("style-loader!../css/viewhide.css" as string);
             this.vctrl.actionsDisabled = true;
         }
         this.showDocument();

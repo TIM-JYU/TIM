@@ -1,4 +1,5 @@
 import moment, {Moment} from "moment";
+import {to} from "tim/util/utils";
 import {IRights} from "../user/IRights";
 import {IGroup} from "../user/IUser";
 import {$http} from "../util/ngimport";
@@ -63,7 +64,11 @@ export interface ITaggedItem extends IItem {
 }
 
 export async function getItem(itemId: number) {
-    return (await $http.get<IItem>(`/items/${itemId}`)).data;
+    const i = await to($http.get<IItem>(`/items/${itemId}`));
+    if (!i.ok) {
+        return;
+    }
+    return i.result.data;
 }
 
 /**

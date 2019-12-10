@@ -30,11 +30,7 @@ services:
   image: timimages/tim:${TIM_IMAGE_TAG}
   command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"
   volumes:
-   - .:/service:ro
-   - ./screenshots:/service/screenshots:rw
-   - ./timApp/static/generated:/service/timApp/static/generated:rw
-   - ./timApp/static/.webassets-cache:/service/timApp/static/.webassets-cache:rw
-   - ./timApp/static/scripts:/service/timApp/static/scripts:rw
+   - .:/service:rw
   environment:
    TIM_SETTINGS: testconfig.py
    PYTHONPATH: /service:/service/timApp/modules/py
@@ -47,3 +43,13 @@ services:
    - /cache
   working_dir: /service/timApp
   read_only: true
+# Disable some images and services that are not used in tests.
+ stack-api-server:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  command: "sleep infinity"
+ timagent:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  command: "sleep infinity"
+ uploader:
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  command: "sleep infinity"

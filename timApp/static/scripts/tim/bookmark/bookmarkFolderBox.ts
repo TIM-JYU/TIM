@@ -96,12 +96,12 @@ class BookmarkFolderBoxCtrl implements IController {
      * @param {IBookmark} d Bookmark to delete.
      */
     private async removeFromList(d: IBookmark) {
-        const response = await $http.post<IBookmarkGroup[]>("/bookmarks/delete", {
+        const response = await to($http.post<IBookmarkGroup[]>("/bookmarks/delete", {
             group: this.bookmarkFolderName,
             name: d.name,
-        });
-        if (response) {
-            this.bookmarks = response.data;
+        }));
+        if (response.ok) {
+            this.bookmarks = response.result.data;
             await this.getBookmarkFolder(this.bookmarkFolderName);
             await this.getDocumentData();
         }
@@ -120,15 +120,15 @@ class BookmarkFolderBoxCtrl implements IController {
         if (!r.ok || !r.result.name) {
             return;
         }
-        const response = await $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
+        const response = await to($http.post<IBookmarkGroup[]>("/bookmarks/edit", {
             old: {
             group: this.bookmarkFolderName,
             link: b.link,
             name: b.name,
             }, new: r.result,
-        });
-        if (response) {
-            this.bookmarks = response.data;
+        }));
+        if (response.ok) {
+            this.bookmarks = response.result.data;
             await this.getBookmarkFolder(this.bookmarkFolderName);
             await this.getDocumentData();
         }

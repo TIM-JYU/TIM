@@ -1,7 +1,7 @@
 import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as showChart from "tim/lecture/showChartDirective";
-import {markAsUsed} from "tim/util/utils";
+import {markAsUsed, to} from "tim/util/utils";
 import {showQuestionEditDialog} from "../document/question/questionController";
 import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
@@ -57,7 +57,7 @@ export class LectureInfoController implements IController {
      * Sends http request to get info about the specific lecture.
      */
     private async getLectureInfo() {
-        const response = await $http<{
+        const response = await to($http<{
             messages: ILectureMessage[],
             answers: IQuestionAnswer[],
             questions: IAskedQuestion[],
@@ -67,8 +67,11 @@ export class LectureInfoController implements IController {
             url: "/getLectureInfo",
             method: "GET",
             params: {lecture_id: this.lecture.lecture_id},
-        });
-        const data = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        const data = response.result.data;
         this.messages = data.messages;
         this.answers = data.answers;
         this.questions = data.questions;
@@ -84,12 +87,15 @@ export class LectureInfoController implements IController {
     }
 
     private async editPoints(askedId: number) {
-        const response = await $http<IAskedQuestion>({
+        const response = await to($http<IAskedQuestion>({
             url: "/getAskedQuestionById",
             method: "GET",
             params: {asked_id: askedId},
-        });
-        await showQuestionEditDialog(response.data);
+        }));
+        if (!response.ok) {
+            return;
+        }
+        await showQuestionEditDialog(response.result.data);
     }
 
     private getAnswers(question: IAskedQuestion) {
@@ -104,22 +110,28 @@ export class LectureInfoController implements IController {
     private async deleteLecture() {
         const confirmAnswer = window.confirm("Do you really want to delete this lecture?");
         if (confirmAnswer) {
-            await $http({
+            const response = await to($http({
                 url: "/deleteLecture",
                 method: "POST",
                 params: {lecture_id: this.lecture.lecture_id},
-            });
+            }));
+            if (!response.ok) {
+                return;
+            }
             window.history.back();
         }
     }
 
     private async editLecture() {
-        const response = await $http<ILecture>({
+        const response = await to($http<ILecture>({
             url: "/showLectureInfoGivenName",
             method: "GET",
             params: {lecture_id: this.lecture.lecture_id},
-        });
-        const lecture = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        const lecture = response.result.data;
         this.lecture = await showLectureDialog(lecture);
     }
 }

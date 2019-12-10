@@ -1,12 +1,12 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {IncludeUsersOption} from "tim/plugin/attributes";
-import moment from "tim/plugin/reexports/moment";
 import {showMessageDialog} from "tim/ui/dialog";
 import {IUser} from "tim/user/IUser";
 import {withComparatorFilters} from "tim/util/comparatorfilter";
 import {$http, $timeout} from "tim/util/ngimport";
 import {Binding, copyToClipboard, StringOrNumber, to} from "tim/util/utils";
+import moment from "moment";
 
 export const GroupType = t.union([t.string, t.array(t.string)]);
 

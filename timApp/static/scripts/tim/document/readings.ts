@@ -247,7 +247,7 @@ export async function initReadings(item: IItem) {
 
     if (Users.isLoggedIn()) {
         await $timeout(10000);
-        await $http.post("/bookmarks/markLastRead/" + item.id, {});
+        await to($http.post("/bookmarks/markLastRead/" + item.id, {}));
     }
 }
 
@@ -255,10 +255,13 @@ export async function handleUnread(item: IItem, extraData: IExtraData, pos: Edit
     if (pos.type !== EditType.Edit) {
         return;
     }
-    const result = await $http.put<IOkResponse & {latest?: unknown}>(`/unread/${item.id}/${extraData.par}`, {});
+    const result = await to($http.put<IOkResponse & {latest?: unknown}>(`/unread/${item.id}/${extraData.par}`, {}));
+    if (!result.ok) {
+        return;
+    }
     const rline = pos.pars.first().find(".readline");
     rline.removeClass("read read-modified");
-    if (result.data.latest) {
+    if (result.result.data.latest) {
         rline.addClass("read-modified");
     }
     getActiveDocument().refreshSectionReadMarks();

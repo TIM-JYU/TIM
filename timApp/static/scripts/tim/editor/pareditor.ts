@@ -835,14 +835,13 @@ ${backTicks}
             this.scrollPos = this.element.find(".previewcontent").scrollTop() || this.scrollPos;
             this.outofdate = true;
             const data = await refreshAngularJS(this.resolve.params.previewCb(text));
-            const compiled = await refreshAngularJS(ParCompiler.compile(data, this.scope, this.resolve.params.viewCtrl));
+            const previewDiv = angular.element(".previewcontent");
+            await refreshAngularJS(ParCompiler.compileAndAppendTo(previewDiv, data, this.scope, this.resolve.params.viewCtrl));
             if (data.trdiff) {
                 const module = await refreshAngularJS(import("angular-diff-match-patch"));
                 $injector.loadNewModules([module.default]);
             }
             this.trdiff = data.trdiff;
-            const previewDiv = angular.element(".previewcontent");
-            previewDiv.empty().append(compiled);
             this.outofdate = false;
             this.parCount = previewDiv.children().length;
             this.getEditorContainer().resize();
@@ -1187,8 +1186,11 @@ ${backTicks}
     }
 
     async getTemplate(plugin: string, template: string, index: string) {
-        const response = await $http.get<string>(`/${plugin}/template/${template}/${index}`);
-        let data = response.data;
+        const response = await to($http.get<string>(`/${plugin}/template/${template}/${index}`));
+        if (!response.ok) {
+            return;
+        }
+        let data = response.result.data;
         data = data.replace(/\\/g, "\\\\");
         this.editor!.insertTemplate(data);
         this.focusEditor();
@@ -1337,7 +1339,8 @@ ${backTicks}
             }
             const langTools = ace.require("ace/ext/language_tools") as ILanguageTools;
 
-            const wordListStr = (await $http.get<{word_list: string}>("/settings/get/word_list", {params: {_: Date.now()}})).data.word_list;
+            const r = await to($http.get<{word_list: string}>("/settings/get/word_list", {params: {_: Date.now()}}));
+            const wordListStr = r.ok ? r.result.data.word_list : undefined;
             const userWordList = wordListStr ? wordListStr.split("\n") : [];
             const createCompleter = (wordList: string[], context: string) => ({
                 getCompletions(editor: unknown,

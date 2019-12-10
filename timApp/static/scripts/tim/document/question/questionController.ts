@@ -104,21 +104,27 @@ function isAskedQuestion(params: IQuestionDialogParams): params is IAskedQuestio
 }
 
 export async function fetchQuestion(docId: number, parId: string, edit: boolean = true): Promise<IQuestionParagraph> {
-    const response = await $http<IQuestionParagraph>({
+    const response = await to($http<IQuestionParagraph>({
         url: "/getQuestionByParId",
         method: "GET",
         params: {par_id: parId, doc_id: docId, edit},
-    });
-    return response.data;
+    }));
+    if (!response.ok) {
+        throw Error("getQuestionByParId failed");
+    }
+    return response.result.data;
 }
 
 export async function fetchAskedQuestion(askedId: number): Promise<IAskedQuestion> {
-    const response = await $http<IAskedQuestion>({
+    const response = await to($http<IAskedQuestion>({
         url: "/getAskedQuestionById",
         method: "GET",
         params: {asked_id: askedId},
-    });
-    return response.data;
+    }));
+    if (!response.ok) {
+        throw Error("getQuestionByParId failed");
+    }
+    return response.result.data;
 }
 
 export async function fetchAndEditQuestion(docId: number, parId: string, edit: boolean = true) {
@@ -128,8 +134,11 @@ export async function fetchAndEditQuestion(docId: number, parId: string, edit: b
 export async function deleteQuestionWithConfirm(docId: number, parId: string): Promise<IParResponse | null> {
     const confirmDi = window.confirm("Are you sure you want to delete this question?");
     if (confirmDi) {
-        const response = await $http.post<IParResponse>(`/deleteParagraph/${docId}`, {par: parId});
-        return response.data;
+        const response = await to($http.post<IParResponse>(`/deleteParagraph/${docId}`, {par: parId}));
+        if (!response.ok) {
+            throw Error("getQuestionByParId failed");
+        }
+        return response.result.data;
     }
     return null;
 }
@@ -867,10 +876,13 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     private async updatePreview() {
         const mdStr = JSON.stringify(this.question, null, 4);
-        const response = await $http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", {
+        const response = await to($http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", {
             text: mdStr,
-        });
-        this.previewParams = makePreview(response.data.md, {
+        }));
+        if (!response.ok) {
+            throw Error("getQuestionMD failed");
+        }
+        this.previewParams = makePreview(response.result.data.md, {
             enabled: false,
             showCorrectChoices: true,
             showExplanations: true,
@@ -930,7 +942,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private async updatePoints(a: IAskedQuestion) {
         const points = this.createPoints();
         const expl = this.createExplanation();
-        await $http({
+        await to($http({
             method: "POST",
             url: "/updatePoints/",
             params: {
@@ -938,7 +950,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                 expl,
                 points,
             },
-        });
+        }));
     }
 
     private async deleteQuestion() {

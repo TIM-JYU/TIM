@@ -8,6 +8,7 @@ import {GenericPluginMarkup, IncludeUsersOption, Info, withDefault} from "tim/pl
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {Users} from "tim/user/userService";
 import {$http} from "tim/util/ngimport";
+import {to} from "tim/util/utils";
 import {GroupType, Sisu} from "./sisuassessmentexport";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize", Sisu.name]);
@@ -82,12 +83,12 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         }
         this.emailMsg = "";
 
-        const response = await $http.post<string[]>("/sendemail/", {
+        const response = await to($http.post<string[]>("/sendemail/", {
             rcpts: this.emaillist.replace(/\n/g, ";"),
             subject: this.emailsubject,
             msg: this.emailbody,
             bccme: this.emailbccme,
-        });
+        }));
     }
 
     /**

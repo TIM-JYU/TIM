@@ -2,7 +2,7 @@
  * Created by vesal on 28.12.2016.
  */
 import {IController} from "angular";
-import {timApp as qstApp} from "../app";
+import angular from "angular";
 import {getParId} from "../document/parhelpers";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
 import {ViewCtrl} from "../document/viewctrl";
@@ -196,6 +196,9 @@ class QstController implements IController {
         return this.element;
     }
 }
+
+const qstApp = angular.module("qstApp", ["ngSanitize"]);
+export const moduleDefs = [qstApp];
 
 qstApp.component("qstRunner", {
     bindings: pluginBindings,

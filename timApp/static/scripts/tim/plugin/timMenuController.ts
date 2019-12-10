@@ -1,10 +1,10 @@
 /**
  * Defines the client-side implementation of JavaScript runner plugin.
  */
+import angular from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {timApp} from "../app";
 import {onClick} from "../document/eventhandlers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IRights} from "../user/IRights";
@@ -406,7 +406,10 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
     }
 }
 
-timApp.component("timmenuRunner", {
+const menuApp = angular.module("menuApp", ["ngSanitize"]);
+export const moduleDefs = [menuApp];
+
+menuApp.component("timmenuRunner", {
     bindings: pluginBindings,
     controller: TimMenuController,
     require: {

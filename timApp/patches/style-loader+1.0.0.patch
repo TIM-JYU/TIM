@@ -1,0 +1,13 @@
+diff --git a/node_modules/style-loader/dist/index.js b/node_modules/style-loader/dist/index.js
+index e527b43..6dd9a56 100644
+--- a/node_modules/style-loader/dist/index.js
++++ b/node_modules/style-loader/dist/index.js
+@@ -137,6 +137,8 @@ if (module.hot) {
+ 
+ if (typeof content === 'string') {
+   content = [[module.id, content, '']];
++} else if (content.default && typeof content.default === 'string') {
++  content = [[module.id, content.default, '']];
+ }
+ 
+ var options = ${JSON.stringify(options)}

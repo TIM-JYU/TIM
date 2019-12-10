@@ -88,8 +88,11 @@ export class BookmarksController implements IController {
         if (!bookmark.name) {
             return;
         }
-        const resp = await $http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark);
-        this.getFromServer(resp.data);
+        const resp = await to($http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark));
+        if (!resp.ok) {
+            return;
+        }
+        this.getFromServer(resp.result.data);
     }
 
     async editItem(group: IBookmarkGroup, item: IBookmark, e: Event) {
@@ -109,14 +112,17 @@ export class BookmarksController implements IController {
         if (!r.result.name) {
             return;
         }
-        const response = await $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
+        const response = await to($http.post<IBookmarkGroup[]>("/bookmarks/edit", {
             old: {
                 group: group.name,
                 name: item.name,
                 link: item.link,
             }, new: r.result,
-        });
-        this.getFromServer(response.data, group);
+        }));
+        if (!response.ok) {
+            return;
+        }
+        this.getFromServer(response.result.data, group);
     }
 
     async deleteItem(group: IBookmarkGroup, item: IBookmark, e: Event) {

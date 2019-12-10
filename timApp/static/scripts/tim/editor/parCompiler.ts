@@ -12,11 +12,11 @@ export interface IPluginInfoResponse {
     trdiff?: {old: string, new: string};
 }
 
-export function compileWithViewctrl(html: string | Element | JQuery<HTMLElement>,
+export async function compileWithViewctrl(html: string | Element | JQuery<HTMLElement>,
                                     scope: IScope,
                                     view: ViewCtrl | undefined,
                                     extraCtrls: {[name: string]: {instance: unknown}} = {}) {
-    return $compile(html)(scope,
+    const result = $compile(html)(scope,
         undefined,
         view ? {
             transcludeControllers: {
@@ -24,10 +24,18 @@ export function compileWithViewctrl(html: string | Element | JQuery<HTMLElement>
                 ...extraCtrls,
             },
         } : {});
+    await $timeout();
+    return result;
 }
 
 export class ParagraphCompiler {
-    public async compile(data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
+    /**
+     * Private function. Use one of: compileAnd{AppendTo,Replace,After,Before}.
+     * @param data
+     * @param scope
+     * @param view
+     */
+    private async compile(data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
         for (const m of data.js) {
             const modLoad = staticDynamicImport(m);
             if (!modLoad) {
@@ -40,8 +48,35 @@ export class ParagraphCompiler {
             }
         }
         data.css.forEach((s) => injectStyle(s));
-        const compiled = compileWithViewctrl(data.texts, scope, view);
-        await this.processAllMathDelayed(compiled);
+        return compileWithViewctrl(data.texts, scope, view);
+    }
+
+    public async compileAndAppendTo(element: JQuery, data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
+        return this.compileAndDOMAction((e, c) => e.empty().append(c), element, data, scope, view);
+    }
+
+    public async compileAndReplace(element: JQuery, data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
+        return this.compileAndDOMAction((e, c) => e.replaceWith(c), element, data, scope, view);
+    }
+
+    public async compileAndAfter(element: JQuery, data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
+        return this.compileAndDOMAction((e, c) => e.after(c), element, data, scope, view);
+    }
+
+    public async compileAndBefore(element: JQuery, data: IPluginInfoResponse, scope: IScope, view?: ViewCtrl) {
+        return this.compileAndDOMAction((e, c) => e.before(c), element, data, scope, view);
+    }
+
+    public async compileAndDOMAction(
+        action: (target: JQuery, compiled: JQuery) => void,
+        element: JQuery,
+        data: IPluginInfoResponse,
+        scope: IScope,
+        view?: ViewCtrl,
+    ) {
+        const compiled = await this.compile(data, scope, view);
+        action(element, compiled);
+        await this.processAllMath(compiled);
         return compiled;
     }
 
@@ -71,9 +106,13 @@ export class ParagraphCompiler {
         timLogTime("processAllMath end", "view");
     }
 
+    /**
+     * Processes MathJax in the given elements. The elements must be in the DOM already.
+     * @param elements The element(s) to process.
+     */
     public async processMathJax(elements: Element[] | Element) {
         const es = elements instanceof Array ? elements : [elements];
-        const mathjaxprocessor = (await import("./mathjaxentry")).mathjaxprocessor;
+        const mathjaxprocessor = (await import("./mathjaxentry")).mathjaxprocessor();
         mathjaxprocessor.findMath({elements: es}).compile().getMetrics().typeset().updateDocument();
     }
 

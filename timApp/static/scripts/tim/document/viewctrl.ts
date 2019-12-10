@@ -15,7 +15,7 @@ import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {setViewCtrl, vctrlInstance} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict} from "tim/util/utils";
+import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict, to} from "tim/util/utils";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {BookmarksController} from "../bookmark/bookmarks";
@@ -364,22 +364,23 @@ export class ViewCtrl implements IController {
         }
         let stop: IPromise<unknown> | undefined;
         stop = $interval(async () => {
-            const response = await $http.get<{ version: [number, number], diff: DiffResult[], live: number }>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]);
+            const r = await to($http.get<{ version: [number, number], diff: DiffResult[], live: number }>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]));
+            if (!r.ok) {
+                return;
+            }
+            const response = r.result;
             this.docVersion = response.data.version;
             this.liveUpdates = response.data.live; // TODO: start new loop by this or stop if None
             const replaceFn = async (d: DiffResult, parId: string) => {
-                const compiled = await ParCompiler.compile(d.content, sc);
                 const e = getElementByParId(parId);
-                e.replaceWith(compiled);
+                const compiled = await ParCompiler.compileAndReplace(e, d.content, sc);
             };
             const afterFn = async (d: DiffResult, parId: string) => {
-                const compiled = await ParCompiler.compile(d.content, sc);
                 const e = getElementByParId(parId);
-                e.after(compiled);
+                const compiled = await ParCompiler.compileAndAfter(e, d.content, sc);
             };
             const beforeFn = async (d: DiffResult, e: JQuery) => {
-                const compiled = await ParCompiler.compile(d.content, sc);
-                e.before(compiled);
+                const compiled = await ParCompiler.compileAndBefore(e, d.content, sc);
             };
             for (const d of response.data.diff) {
                 if (d.type === "delete") {
@@ -683,18 +684,23 @@ export class ViewCtrl implements IController {
             for (const fab of this.formAbs.values()) {
                 taskList.push(fab.taskId);
             }
-            const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
+            const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
                 tasks: taskList,
                 user: user.id,
-            });
+            }));
+            if (!r.ok) {
+                console.error("userAnswersForTasks failed");
+                return;
+            }
+            const answerResponse = r.result;
             if (!this.formTaskInfosLoaded) {
                 // TODO: answerLimit does not currently work with fields and point browser is not visible in forms
                 //  - takes long time to load on pages with lots of form plugins
-                // const taskInfoResponse = await $http.post<{ [index: string]: ITaskInfo }>(
+                // const taskInfoResponse = await to($http.post<{ [index: string]: ITaskInfo }>(
                 //     "/infosForTasks",  // + window.location.search,  // done in interceptor
                 //     {
                 //     tasks: taskList,
-                // });
+                // }));
                 this.formTaskInfosLoaded = true;
                 for (const fab of this.formAbs.values()) {
                     // fab.setInfo(taskInfoResponse.data[fab.taskId]);
@@ -775,10 +781,14 @@ export class ViewCtrl implements IController {
             }
         }
         if (this.formAbs.size > 0) {
-            const answerResponse = await $http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
+            const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
                 tasks: fabIds,
                 user: this.selectedUser.id,
-            });
+            }));
+            if (!r.ok) {
+                return;
+            }
+            const answerResponse = r.result;
             for (const fab of formAbMap.values()) {
                 const ans = answerResponse.data.answers[fab.taskId];
                 this.handleAnswerSet(ans, fab, this.selectedUser, false);
@@ -833,8 +843,11 @@ export class ViewCtrl implements IController {
     }
 
     async beginUpdate() {
-        const response = await $http.get<{ changed_pars: { [id: string]: string } }>("/getUpdatedPars/" + this.docId);
-        this.updatePendingPars(new Map<string, string>(Object.entries(response.data.changed_pars)));
+        const response = await to($http.get<{ changed_pars: { [id: string]: string } }>("/getUpdatedPars/" + this.docId));
+        if (!response.ok) {
+            return;
+        }
+        this.updatePendingPars(new Map<string, string>(Object.entries(response.result.data.changed_pars)));
     }
 
     pendingUpdatesCount() {

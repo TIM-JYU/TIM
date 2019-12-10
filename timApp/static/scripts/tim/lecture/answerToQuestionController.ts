@@ -4,7 +4,7 @@ import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerShe
 import {fetchAskedQuestion, showQuestionEditDialog} from "../document/question/questionController";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
-import {getStorage, setStorage} from "../util/utils";
+import {getStorage, setStorage, to} from "../util/utils";
 import {
     AnswerTable,
     IAskedQuestion,
@@ -103,7 +103,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     }
 
     private async answerToQuestion() {
-        const response = await $http<{questionLate?: string}>({
+        const response = await to($http<{questionLate?: string}>({
             url: "/answerToQuestion",
             method: "PUT",
             params: {
@@ -111,8 +111,11 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
                 buster: new Date().getTime(),
                 input: {answers: this.answer},
             },
-        });
-        const answer = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        const answer = response.result.data;
         if (answer.questionLate) {
             await showMessageDialog(answer.questionLate);
         }
@@ -135,13 +138,13 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     }
 
     private async stopQuestion() {
-        const response = await $http({
+        const response = await to($http({
             url: "/stopQuestion",
             method: "POST",
             params: {
                 asked_id: this.question.asked_id,
             },
-        });
+        }));
         // Don't call endQuestion here; it will come from lectureController.
     }
 
@@ -163,22 +166,29 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         if (isAskedQuestion(this.resolve.params.qa)) {
             this.setData(await fetchAskedQuestion(this.question.asked_id));
         } else {
-            this.setData((await $http.get<IQuestionAnswer>("/getQuestionAnswer", {
+            const resp = await to($http.get<IQuestionAnswer>("/getQuestionAnswer", {
                 params: {id: this.resolve.params.qa.answer_id},
-            })).data);
+            }));
+            if (!resp.ok) {
+                return;
+            }
+            this.setData(resp.result.data);
         }
     }
 
     private async showPoints() {
-        const response = await $http<IGetNewQuestionResponse>({
+        const response = await to($http<IGetNewQuestionResponse>({
             url: "/showAnswerPoints",
             method: "POST",
             params: {
                 asked_id: this.question.asked_id,
                 current_question_id: this.question.asked_id, // TODO useless parameter
             },
-        });
-        const d = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        const d = response.result.data;
         if (questionAnswerReceived(d)) {
             this.result = true;
             this.preview = makePreview(d.data.asked_question.json.json, {

@@ -4,6 +4,7 @@
 
 import {IScope} from "angular";
 import {ngStorage} from "ngstorage";
+import {to} from "tim/util/utils";
 import {getCourseCode, ICourseSettings, ISubjectList, ITaggedItem, tagIsExpired, TagType} from "../../item/IItem";
 import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
 import {KEY_ENTER} from "../../util/keycodes";
@@ -101,7 +102,7 @@ export class CourseListDialogController extends DialogController<{ params: ICour
      * If false will also search for partial matches.
      */
     private async getDocumentsByTag(tagName: string, exactMatch: boolean, listDocTags: boolean) {
-        const response = await $http<ITaggedItem[]>({
+        const response = await to($http<ITaggedItem[]>({
             method: "GET",
             params: {
                 exact_search: exactMatch,
@@ -109,8 +110,11 @@ export class CourseListDialogController extends DialogController<{ params: ICour
                 name: tagName,
             },
             url: "/tags/getDocs",
-        });
-        this.docList = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        this.docList = response.result.data;
     }
 
     /**

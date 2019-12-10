@@ -5,7 +5,7 @@ import {compileWithViewctrl, IPluginInfoResponse, ParCompiler} from "tim/editor/
 import {openEditor, PareditorController} from "tim/editor/pareditor";
 import {showMessageDialog} from "tim/ui/dialog";
 import {documentglobals} from "tim/util/globals";
-import {$compile, $http, $timeout} from "tim/util/ngimport";
+import {$http, $timeout} from "tim/util/ngimport";
 import {empty, isMobileDevice, markPageDirty, to} from "tim/util/utils";
 import {showDiffDialog} from "../diffDialog";
 import {onClick} from "../eventhandlers";
@@ -235,7 +235,13 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 }
                 return {};
             },
-            previewCb: async (text) => (await $http.post<IPluginInfoResponse>(`/preview/${this.viewctrl.docId}`, {text, ...extraData})).data,
+            previewCb: async (text) => {
+                const r = await to($http.post<IPluginInfoResponse>(`/preview/${this.viewctrl.docId}`, {text, ...extraData}));
+                if (!r.ok) {
+                    throw Error("preview failed");
+                }
+                return r.result.data;
+            },
             saveCb: async (text, data) => {
                 const r = await to($http.post<IParResponse>(url, {text, ...data}));
                 if (!r.ok) {
@@ -313,7 +319,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         } else {
             spars.last().after(helpPar);
         }
-        compileWithViewctrl(helpPar, this.viewctrl.scope, this.viewctrl);
+        await compileWithViewctrl(helpPar, this.viewctrl.scope, this.viewctrl);
     }
 
     async editSettingsPars(recursiveCall: boolean = false) {
@@ -404,7 +410,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         this.toggleParEditor({type: EditType.AddBelow, par: par}, options);
     }
 
-    addSavedParToDom(data: IParResponse, position: EditPosition) {
+    async addSavedParToDom(data: IParResponse, position: EditPosition) {
         let par: JQuery;
         if (position.type === EditType.Edit) {
             par = position.pars;
@@ -429,18 +435,11 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
             const endpar = position.pars.last();
             par.nextUntil(endpar).add(endpar).remove();
         }
-        const newPars = $($compile(data.texts)(this.viewctrl.scope, undefined,
-            {
-                transcludeControllers: {
-                    timView: {instance: this.viewctrl},
-                },
-            }));
+        const newPars = await ParCompiler.compileAndReplace(par, data, this.viewctrl.scope, this.viewctrl);
         if (documentglobals().editMode === "area") {
             newPars.find(".editline").removeClass("editline").addClass("editline-disabled");
         }
 
-        par.replaceWith(newPars);
-        ParCompiler.processAllMathDelayed(newPars);
         this.viewctrl.docVersion = data.version;
         this.viewctrl.areaHandler.cancelArea();
         this.removeDefaultPars();

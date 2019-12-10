@@ -53,7 +53,7 @@ import {
     KEY_UP,
 } from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
-import {Binding, scrollToViewInsideParent, StringOrNumber} from "../util/utils";
+import {Binding, scrollToViewInsideParent, StringOrNumber, to} from "../util/utils";
 import {TaskId} from "./taskid";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
@@ -996,7 +996,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
         */
-        const r = await $http.put<string[]>(url, params);
+        const r = await to($http.put<string[]>(url, params));
 
         this.isRunning = false;
         /*
@@ -1181,12 +1181,15 @@ export class TimTableController extends DestroyScope implements IController, ITi
         for (const c of this.selectedCells.cells) {
             cellsToSave.push({c: cellContent, row: c.y, col: c.x});
         }
-        const response = await $http.post<CellResponse[]>("/timTable/saveMultiCell", {
+        const response = await to($http.post<CellResponse[]>("/timTable/saveMultiCell", {
             docId,
             parId,
             cellsToSave: cellsToSave,
-        });
-        const cellHtmls = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        const cellHtmls = response.result.data;
         for (const c of cellHtmls) {
             this.cellDataMatrix[c.row][c.col].cell = c.cellHtml;
         }
@@ -1202,13 +1205,15 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @returns {Promise<string>}
      */
     async getCellData(cell: CellEntity, docId: number, parId: string, row: number, col: number) {
-        const response = await $http<CellType[]>({
+        const response = await to($http<CellType[]>({
             url: "/timTable/getCellData",
             method: "GET",
             params: {docId, parId, row, col},
-        });
-
-        const data = response.data;
+        }));
+        if (!response.ok) {
+            throw Error("getCellData failed");
+        }
+        const data = response.result.data;
         return this.cellToString(data[0]);
     }
 
@@ -2503,18 +2508,22 @@ export class TimTableController extends DestroyScope implements IController, ITi
             rowId = this.cellDataMatrix.length;
         }
 
-        let response;
-
         if (this.isInGlobalAppendMode()) {
-            response = await $http.post<TimTable>("/timTable/addUserSpecificRow",
-                {docId, parId});
+            const response = await to($http.post<TimTable>("/timTable/addUserSpecificRow",
+                {docId, parId}));
+            if (!response.ok) {
+                return;
+            }
+            this.data = response.result.data;
         } else {
             const route = this.isInDataInputMode() ? "/timTable/addDatablockRow" : "/timTable/addRow";
-            response = await $http.post<TimTable>(route,
-                {docId, parId, rowId});
+            const response = await to($http.post<TimTable>(route,
+                {docId, parId, rowId}));
+            if (!response.ok) {
+                return;
+            }
+            this.data = response.result.data;
         }
-
-        this.data = response.data;
         this.reInitialize();
     }
 
@@ -2543,9 +2552,12 @@ export class TimTableController extends DestroyScope implements IController, ITi
             return;
         }
 
-        const response = await $http.post<TimTable>("/timTable/removeRow",
-            {docId, parId, rowId, datablockOnly});
-        this.data = response.data;
+        const response = await to($http.post<TimTable>("/timTable/removeRow",
+            {docId, parId, rowId, datablockOnly}));
+        if (!response.ok) {
+            return;
+        }
+        this.data = response.result.data;
         this.reInitialize();
     }
 
@@ -2562,9 +2574,12 @@ export class TimTableController extends DestroyScope implements IController, ITi
         const docId = this.viewctrl.item.id;
         const rowLen = this.cellDataMatrix[0].length;
         if ( colId < 0 ) { colId = rowLen; }
-        const response = await $http.post<TimTable>(route,
-            {docId, parId, colId, rowLen});
-        this.data = response.data;
+        const response = await to($http.post<TimTable>(route,
+            {docId, parId, colId, rowLen}));
+        if (!response.ok) {
+            return;
+        }
+        this.data = response.result.data;
         this.reInitialize();
     }
 
@@ -2587,9 +2602,12 @@ export class TimTableController extends DestroyScope implements IController, ITi
             return;
         }
 
-        const response = await $http.post<TimTable>("/timTable/removeColumn",
-            {docId, parId, colId, datablockOnly});
-        this.data = response.data;
+        const response = await to($http.post<TimTable>("/timTable/removeColumn",
+            {docId, parId, colId, datablockOnly}));
+        if (!response.ok) {
+            return;
+        }
+        this.data = response.result.data;
         this.reInitialize(false, true);
     }
 
@@ -2866,9 +2884,12 @@ export class TimTableController extends DestroyScope implements IController, ITi
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
 
-        const response = await $http.post<TimTable>("/timTable/" + route, {docId, parId, cellsToSave});
+        const response = await to($http.post<TimTable>("/timTable/" + route, {docId, parId, cellsToSave}));
+        if (!response.ok) {
+            return;
+        }
         const toolbarTemplates = this.data.toolbarTemplates;
-        this.data = response.data;
+        this.data = response.result.data;
         this.data.toolbarTemplates = toolbarTemplates;
 
         // Update display
@@ -3035,7 +3056,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
             return {saved: false, message: "No changes"};
         }
         const r = await this.sendDataBlockAsync();
-        if (r && r.status == 200) {
+        if (r && r.ok) {
             return {saved: true, message: ""};
         }
         return {saved: false, message: "Error saving table"};

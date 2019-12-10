@@ -148,8 +148,11 @@ class HeaderController implements IController {
         if (!Users.isLoggedIn()) {
             return;
         }
-        const response = await $http.get<IBookmarkGroup[]>("/bookmarks/get");
-        this.bookmarks = response.data;
+        const response = await to($http.get<IBookmarkGroup[]>("/bookmarks/get"));
+        if (!response.ok) {
+            return;
+        }
+        this.bookmarks = response.result.data;
         for (const folder of this.bookmarks) {
             if (folder.name === courseFolder) {
                 for (const bookmark of folder.items) {

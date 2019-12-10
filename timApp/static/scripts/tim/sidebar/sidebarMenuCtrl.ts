@@ -203,12 +203,15 @@ export class SidebarMenuCtrl implements IController {
             await showMessageDialog("Not currently in a document view.");
             return;
         }
-        const response = await $http<ILectureListResponse2>({
+        const response = await to($http<ILectureListResponse2>({
             url: "/getAllLecturesFromDocument",
             method: "GET",
             params: {doc_id: this.vctrl.docId},
-        });
-        const lectures = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        const lectures = response.result.data;
         this.currentLecturesList = lectures.currentLectures;
         this.futureLecturesList = lectures.futureLectures;
         this.pastLecturesList = lectures.pastLectures;

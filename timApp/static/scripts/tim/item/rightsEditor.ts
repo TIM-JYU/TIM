@@ -672,14 +672,17 @@ class RightsEditorController implements IController {
     }
 
     private async getItems() {
-        const r = await $http.get<IItemWithRights[]>("/getItems", {
+        const r = await to($http.get<IItemWithRights[]>("/getItems", {
             params: {
                 folder_id: this.itemId,
                 recursive: true,
                 include_rights: true,
             },
-        });
-        return r.data;
+        }));
+        if (!r.ok) {
+            throw Error("getItems failed");
+        }
+        return r.result.data;
     }
 
     private formatRights(i: IItemWithRights) {

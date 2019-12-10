@@ -1,4 +1,5 @@
 import {IScope} from "angular";
+import {to} from "tim/util/utils";
 import {timApp} from "../app";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {KEY_ENTER} from "../util/keycodes";
@@ -61,11 +62,11 @@ export class LectureWallController extends DialogController<{params: {messages: 
         if (message.trim() === "") {
             return false;
         }
-        await $http({
+        await to($http({
             url: "/sendMessage",
             method: "POST",
             params: {message},
-        });
+        }));
         this.newMsg = "";
     }
 

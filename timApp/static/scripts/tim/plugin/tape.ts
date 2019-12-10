@@ -1,5 +1,5 @@
+import angular from "angular";
 import {IController, IScope} from "angular";
-import {timApp} from "../app";
 import {Binding} from "../util/utils";
 import Timeout = NodeJS.Timeout;
 
@@ -779,7 +779,10 @@ export class TapeController implements IController {
     }
 }
 
-timApp.component("timTape", {
+const tapeApp = angular.module("tapeApp", ["ngSanitize"]);
+export const moduleDefs = [tapeApp];
+
+tapeApp.component("timTape", {
     controller: TapeController,
     bindings: {
         data: "<",

@@ -81,7 +81,7 @@ function initReveal(rv: IFixedReveal) {
     // https://github.com/hakimel/reveal.js#configuration
     const item: IItem = documentglobals().curr_item;
     const hasManage = item.rights.manage;
-    const pluginPath = "/static/scripts/jspm_packages/npm/reveal.js@3.8.0/plugin";
+    const pluginPath = "/static/scripts/build/reveal";
 
     (window as unknown as {Reveal: unknown}).Reveal = rv; // required for Reveal dependencies
 
@@ -136,8 +136,8 @@ export async function initSlideView(d: IDocument) {
     const bgUrl = w.background_url;
     const bgColor = w.background_color;
     const hasManage = d.rights.manage;
-    const revealCss = import("reveal.js/css/reveal.css" as string);
-    const jyuCss = import("./jyu.css" as string);
+    const revealCss = import("style-loader!reveal.js/css/reveal.css" as string);
+    const jyuCss = import("style-loader!./jyu.css" as string);
     const rv = await import("reveal.js");
     if (getURLParameter("controls") == null && hasManage) {
         refresh(rv);
@@ -147,8 +147,6 @@ export async function initSlideView(d: IDocument) {
             refresh(rv);
         }
     };
-    await revealCss;
-    await jyuCss;
 
     initReveal(rv);
     const ctrls = document.querySelector("aside.controls");

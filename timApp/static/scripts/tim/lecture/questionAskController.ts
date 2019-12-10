@@ -1,6 +1,6 @@
 import {IScope} from "angular";
 import * as answerSheet from "tim/document/question/dynamicAnswerSheet";
-import {markAsUsed} from "tim/util/utils";
+import {markAsUsed, to} from "tim/util/utils";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
 import {
     deleteQuestionWithConfirm,
@@ -53,10 +53,13 @@ export async function askQuestion(p: AskParams) {
         doc_id: p.docId,
         par_id: p.parId,
     };
-    const response = await $http.post<IAskedQuestion>("/askQuestion", {}, {
+    const response = await to($http.post<IAskedQuestion>("/askQuestion", {}, {
         params: {buster: new Date().getTime(), ...args},
-    });
-    return response.data;
+    }));
+    if (!response.ok) {
+        throw Error("askQuestion failed");
+    }
+    return response.result.data;
 }
 
 export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, IAskedQuestion> {

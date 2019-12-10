@@ -1,7 +1,7 @@
 import {IController, IFormController} from "angular";
 import * as t from "io-ts";
 import {timApp} from "tim/app";
-import {Binding, clone, markAsUsed, Require} from "tim/util/utils";
+import {Binding, clone, markAsUsed, Require, to} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velpSummary";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
 import {ViewCtrl} from "../document/viewctrl";
@@ -342,10 +342,13 @@ export class VelpSelectionController implements IController {
             content: this.newLabel.content,
             language_id: "FI", // TODO: Change to user language
         };
-        const response = await $http.post<{id: number}>("/add_velp_label", data);
+        const response = await to($http.post<{id: number}>("/add_velp_label", data));
+        if (!response.ok) {
+            return;
+        }
         const labelToAdd = {
             ...data,
-            id: response.data.id,
+            id: response.result.data.id,
             selected: false,
         };
         this.resetNewLabel();
@@ -389,8 +392,11 @@ export class VelpSelectionController implements IController {
      */
     async generateDefaultVelpGroup(): Promise<IVelpGroup | null> {
         if (this.defaultVelpGroup.edit_access) {
-            const json = await $http.post<IVelpGroup>("/{0}/create_default_velp_group".replace("{0}", this.docId.toString()), "{}");
-            const newDefaultVelpGroup = json.data;
+            const json = await to($http.post<IVelpGroup>("/{0}/create_default_velp_group".replace("{0}", this.docId.toString()), "{}"));
+            if (!json.ok) {
+                return null;
+            }
+            const newDefaultVelpGroup = json.result.data;
             newDefaultVelpGroup.default = true;
 
             const index = this.velpGroups.indexOf(this.defaultVelpGroup);
@@ -646,12 +652,15 @@ export class VelpSelectionController implements IController {
 
         form.$setPristine();
 
-        const json = await $http.post<IVelpGroup>("/{0}/create_velp_group".replace("{0}", this.docId.toString()),
-            this.newVelpGroup);
-        const group: IVelpGroupUI = json.data;
+        const json = await to($http.post<IVelpGroup>("/{0}/create_velp_group".replace("{0}", this.docId.toString()),
+            this.newVelpGroup));
+        if (!json.ok) {
+            return;
+        }
+        const group: IVelpGroupUI = json.result.data;
         group.selected = false;
         group.show = true;
-        this.velpGroups.push(json.data);
+        this.velpGroups.push(json.result.data);
 
         // TODO: show in selected area
     }
@@ -811,7 +820,7 @@ export class VelpSelectionController implements IController {
         }
 
         this.groupSelections[targetID] = clone(this.groupDefaults[targetID]);
-        await $http.post("/{0}/reset_target_area_selections_to_defaults".replace("{0}", this.docId.toString()), {target_id: targetID});
+        await to($http.post("/{0}/reset_target_area_selections_to_defaults".replace("{0}", this.docId.toString()), {target_id: targetID}));
         this.updateVelpList();
     }
 
@@ -821,7 +830,7 @@ export class VelpSelectionController implements IController {
     async resetAllShowsToDefaults() {
         this.groupSelections = clone(this.groupDefaults);
 
-        await $http.post("/{0}/reset_all_selections_to_defaults".replace("{0}", this.docId.toString()), null);
+        await to($http.post("/{0}/reset_all_selections_to_defaults".replace("{0}", this.docId.toString()), null));
         this.updateVelpList();
     }
 

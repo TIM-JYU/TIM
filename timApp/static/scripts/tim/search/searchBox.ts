@@ -469,14 +469,17 @@ export class SearchBoxCtrl implements IController {
      * Makes a list of folder paths starting from the current default search folder.
      */
     private async loadFolderSuggestions() {
-        const response = await $http<string[]>({
+        const response = await to($http<string[]>({
             method: "GET",
             params: {
                 folder: this.folder,
             },
             url: "/search/getFolders",
-        });
-        this.folderSuggestions = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        this.folderSuggestions = response.result.data;
     }
 
     /**

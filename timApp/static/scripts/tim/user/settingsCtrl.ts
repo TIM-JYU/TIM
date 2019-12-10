@@ -90,8 +90,11 @@ export class SettingsCtrl implements IController {
     }
 
     async addPrintSettings() {
-        const resp = await $http.get<string>("/static/stylesheets/userPrintSettings.css");
-        this.settings.custom_css = resp.data;
+        const resp = await to($http.get<string>("/static/stylesheets/userPrintSettings.css"));
+        if (!resp.ok) {
+            return;
+        }
+        this.settings.custom_css = resp.result.data;
     }
 
     async getAllNotifications() {

@@ -14,6 +14,8 @@ export function staticDynamicImport(s: string) {
             return import("tim/plugin/tableForm");
         case "tim/plugin/imagex":
             return import("tim/plugin/imagex");
+        case "tim/document/slide":
+            return import("tim/document/slide");
         case "qst":
             return import("tim/plugin/qstController");
         case "tape":

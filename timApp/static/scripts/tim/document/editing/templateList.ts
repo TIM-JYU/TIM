@@ -25,14 +25,17 @@ class TemplateListCtrl implements IController {
     }
 
     async getTemplates() {
-        const response = await $http<IItem[]>({
+        const response = await to($http<IItem[]>({
             method: "GET",
             url: "/getTemplates",
             params: {
                 item_path: this.doc.path,
             },
-        });
-        this.templateList = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        this.templateList = response.result.data;
     }
 }
 

@@ -1,3 +1,4 @@
+import {to} from "tim/util/utils";
 import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {KEY_S} from "../../util/keycodes";
 import {$http} from "../../util/ngimport";
@@ -56,13 +57,13 @@ class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameR
     async cancelPluginRenameClicked() {
         // Cancels recent changes to paragraph/document
         if (isFromPar(this.resolve.params)) {
-            await $http.post("/cancelChanges/", {
+            await to($http.post("/cancelChanges/", {
                 docId: this.resolve.params.extraData.docId,
                 newPars: this.resolve.params.new_par_ids,
                 originalPar: this.resolve.params.original_par,
                 parId: this.resolve.params.extraData.par,
                 ...this.getExtraData(),
-            });
+            }));
         }
         this.dismiss();
     }
@@ -89,11 +90,14 @@ class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameR
             }
         }
         // Save the new task names for duplicates
-        const response = await $http.post<IParResponse | IManageResponse>("/postNewTaskNames/", {
+        const response = await to($http.post<IParResponse | IManageResponse>("/postNewTaskNames/", {
             duplicates: duplicateData,
             ...this.getExtraData(),
-        });
-        const data = response.data;
+        }));
+        if (!response.ok) {
+            return;
+        }
+        const data = response.result.data;
         // If no new duplicates were found
         if (!data.duplicates || data.duplicates.length <= 0) {
             this.close(data);

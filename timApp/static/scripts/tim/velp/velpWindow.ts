@@ -1,7 +1,7 @@
 import {IController, IFormController} from "angular";
 import {timApp} from "tim/app";
 import {$http} from "../util/ngimport";
-import {Binding, clone, Require} from "../util/utils";
+import {Binding, clone, Require, to} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
 import {ILabel, ILabelUI, INewLabel, IVelp, IVelpGroup, IVelpGroupUI, IVelpUI} from "./velptypes";
 
@@ -279,11 +279,14 @@ export class VelpWindowController implements IController {
             language_id: "FI", // TODO: Change to user language
         };
 
-        const json = await $http.post<{id: number}>("/add_velp_label", data);
+        const json = await to($http.post<{id: number}>("/add_velp_label", data));
+        if (!json.ok) {
+            return;
+        }
         const labelToAdd = {
             ...data,
             selected: false,
-            id: json.data.id,
+            id: json.result.data.id,
         };
         this.resetNewLabel();
         this.labels.push(labelToAdd);
@@ -386,7 +389,7 @@ export class VelpWindowController implements IController {
     }
 
     async updateVelpInDatabase() {
-        await $http.post("/{0}/update_velp".replace("{0}", this.docId.toString()), this.velp);
+        await to($http.post("/{0}/update_velp".replace("{0}", this.docId.toString()), this.velp));
         this.velpLocal = clone(this.velp);
         this.toggleVelpToEdit();
     }
@@ -424,12 +427,15 @@ export class VelpWindowController implements IController {
             visible_to: this.velp.visible_to,
             velp_groups: clone(this.velp.velp_groups),
         };
-        const json = await $http.post<number>("/add_velp", data);
+        const json = await to($http.post<number>("/add_velp", data));
+        if (!json.ok) {
+            return;
+        }
         const velpToAdd: IVelp = {
-            id: json.data,
+            id: json.result.data,
             ...data,
         };
-        velpToAdd.id = json.data;
+        velpToAdd.id = json.result.data;
         if (this.velpSelection.rctrl.velps != null) {
             this.velpSelection.rctrl.velps.push(velpToAdd);
         }

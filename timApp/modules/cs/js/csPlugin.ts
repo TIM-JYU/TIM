@@ -2449,8 +2449,7 @@ class CsController extends CsBase implements ITimComponent {
                 text: text,
             }));
         if (r.ok) {
-            const html = await ParCompiler.compile(r.result.data, this.scope);
-            this.preview.empty().append(html);
+            await ParCompiler.compileAndAppendTo(this.preview, r.result.data, this.scope);
         } else {
             const data = r.result.data;
             alert("Failed to show preview: " + data.error);

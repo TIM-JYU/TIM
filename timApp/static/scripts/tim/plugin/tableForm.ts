@@ -6,7 +6,6 @@ import * as t from "io-ts";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
 import {clone, to} from "tim/util/utils";
-import {timApp} from "../app";
 import {getParId} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IDocument} from "../item/IItem";
@@ -423,14 +422,18 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             if (!tid) {
                 return;
             }
-            const tableResponse = await $http.get <{
+            const r = await to($http.get <{
                 rows: IRowsType,
                 styles: t.TypeOf<typeof Styles>,
                 fields: string[],
             }>("/tableForm/updateFields?" + $httpParamSerializer({
                 fields: fieldsToUpdate,
                 taskid: tid.docTask(),
-            }));
+            })));
+            if (!r.ok) {
+                return;
+            }
+            const tableResponse = r.result;
             // TODO if response status != ok
             const rows = tableResponse.data.rows || {};
             const styles = tableResponse.data.styles || {};
@@ -809,12 +812,12 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         const url = this.pluginMeta.getAnswerUrl()
             .replace("tableForm", "multiSendEmail")
             .replace("/answer", "");
-        const response = await $http.post<string[]>(url, {
+        const response = await to($http.post<string[]>(url, {
             rcpt: this.emaillist.replace(/\n/g, ";"),
             subject: this.emailsubject,
             msg: this.emailbody,
             bccme: this.emailbccme,
-        });
+        }));
         this.emailMsg = "Sent"; // JSON.stringify(response);
     }
 
@@ -1061,7 +1064,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     }
 }
 
-timApp.component("tableformRunner", {
+tableFormApp.component("tableformRunner", {
     bindings: pluginBindings,
 
     controller: TableFormController,

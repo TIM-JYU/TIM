@@ -142,7 +142,13 @@ export class NotesHandler {
                 }
                 return {};
             },
-            previewCb: async (text) => (await $http.post<IPluginInfoResponse>(`/preview/${this.viewctrl.docId}`, {text, ...extraData})).data,
+            previewCb: async (text) => {
+                const r = await to($http.post<IPluginInfoResponse>(`/preview/${this.viewctrl.docId}`, {text, ...extraData}));
+                if (!r.ok) {
+                    throw Error("preview failed");
+                }
+                return r.result.data;
+            },
             saveCb: async (text, eData) => {
                 const r = await to($http.post<IParResponse>(url, {text, ...eData}));
                 if (!r.ok) {

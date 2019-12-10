@@ -50,8 +50,7 @@ async function loadPlugin(html: string, plugin: JQuery, scope: IScope, viewctrl:
     const elementToCompile = $(html);
     elementToCompile.attr("plugintype", plugin.attr("data-plugin") || null);
     elementToCompile.attr("taskid", plugin.attr("id") || null);
-    const compiled = compileWithViewctrl(elementToCompile, scope, viewctrl);
-    await $timeout(); // let AngularJS finish its processing
+    const compiled = await compileWithViewctrl(elementToCompile, scope, viewctrl);
     await ParCompiler.processAllMath(compiled);
     plugin.empty().append(compiled);
     plugin.css("opacity", "1.0");
