@@ -22,7 +22,6 @@ test:
   - export IS_TESTING=true
   - ./docker-compose.sh pull --quiet
   - ./build_js.sh
-  - ./run_command_workdir.sh timApp /bin/bash -c "npm run b"
   - ./build_plugin_js.sh
   - ./run_tests.sh
   artifacts:

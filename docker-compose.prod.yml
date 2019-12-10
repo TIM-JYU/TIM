@@ -1,21 +1,11 @@
 version: "3.7"
 services:
  tim:
-  depends_on:
-   - ts
   tmpfs:
    - /run
  nginx:
   ports:
    - "${NGINX_PORT}:80"
- ts:
-  image: timimages/tim:${TIM_IMAGE_TAG}
-  volumes:
-   - .:/service
-  working_dir: /service/timApp
-  command: npm run bw
-  restart: unless-stopped
-  read_only: true
  pali:
   environment:
     SHOW_TEMPLATES: "False"

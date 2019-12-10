@@ -18,6 +18,7 @@
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
             "outputPath": "static/scripts/build",
+            "deleteOutputPath": false,
             "index": "static/scripts/tim/index.html",
             "main": "static/scripts/tim/main.ts",
             "polyfills": "static/scripts/tim/polyfills.ts",
