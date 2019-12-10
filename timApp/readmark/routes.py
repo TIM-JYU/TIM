@@ -173,6 +173,21 @@ def get_statistics(doc_path):
 
         return Response(str(len(reads)), mimetype='text/plain')
 
+    if result_format == 'userid':
+        reads =  list(
+            map(
+                row_to_dict,
+                q.all()
+            )
+        )
+
+        result = ""
+        for r in reads:
+            u = r.get('username')
+            result += "- " + u + "\n"
+
+        return Response(str(result), mimetype='text/plain')
+
     if result_format == 'csv':
         def gen_rows():
             yield column_names
