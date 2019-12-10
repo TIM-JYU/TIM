@@ -25,7 +25,7 @@ services:
   command: python3 launch.py --with-gunicorn
   environment:
    FLASK_APP: tim.py
-   PYTHONPATH: /service:/service/timApp/modules/py:/usr/local/lib/python3.6/dist-packages
+   PYTHONPATH: /service:/service/timApp/modules/py
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST}
@@ -122,7 +122,7 @@ services:
    - ./timApp/modules/py:/py:ro
   working_dir: /pali
   environment:
-    PYTHONPATH: /pali:/py:/usr/local/lib/python3.6/dist-packages
+    PYTHONPATH: /pali:/py
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
@@ -134,7 +134,7 @@ services:
    - ./timApp/modules/py:/py:ro
   working_dir: /fields
   environment:
-   PYTHONPATH: /fields:/py:/usr/local/lib/python3.6/dist-packages
+   PYTHONPATH: /fields:/py
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
@@ -158,7 +158,7 @@ services:
    - ./timApp/modules/py:/py:ro
   working_dir: /drag
   environment:
-   PYTHONPATH: /drag:/py:/usr/local/lib/python3.6/dist-packages
+   PYTHONPATH: /drag:/py
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
@@ -169,7 +169,7 @@ services:
    - ./timApp/modules/py:/py:ro
   working_dir: /feedback
   environment:
-   PYTHONPATH: /feedback:/py:/usr/local/lib/python3.6/dist-packages
+   PYTHONPATH: /feedback:/py
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
@@ -228,7 +228,7 @@ services:
    - redis
   environment:
    FLASK_APP: tim.py
-   PYTHONPATH: /service:/service/timApp/modules/py:/usr/local/lib/python3.6/dist-packages
+   PYTHONPATH: /service:/service/timApp/modules/py
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST}
