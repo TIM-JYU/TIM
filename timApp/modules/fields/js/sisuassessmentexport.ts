@@ -137,6 +137,7 @@ class SisuAssessmentExportController {
     private includeUsers?: Binding<t.TypeOf<typeof IncludeUsersOption>, "<">;
     private testOnly?: Binding<boolean, "<">;
     private notSendableButChanged?: IAssessmentExt[];
+    private notSendable?: IAssessmentExt[];
 
     async callSendGrades(opts: ISendGradeOptions) {
         if (!this.destCourse) {
@@ -233,7 +234,9 @@ class SisuAssessmentExportController {
                     a.sentCredit.toString() !== a.completionCredits.toString()),
         );
         const hasChangedCredits = changedCredits.length > 0;
-        this.notSendableButChanged = [...changedGrades, ...changedCredits].filter((a) => a.error && a.error === "Sisu: Aikaisempi vahvistettu suoritus");
+        const alreadyConfirmed = (a: IAssessmentExt) => a.error && a.error === "Sisu: Aikaisempi vahvistettu suoritus";
+        this.notSendableButChanged = [...changedGrades, ...changedCredits].filter(alreadyConfirmed);
+        this.notSendable = this.assessments.filter(alreadyConfirmed);
         this.gridOptions = {
             onRegisterApi: async (grid) => {
                 this.grid = grid;
@@ -320,12 +323,23 @@ class SisuAssessmentExportController {
         };
     }
 
-    copyNotSendable() {
-        if (!this.notSendableButChanged || this.notSendableButChanged.length === 0) {
+    copyNotSendableButChanged() {
+        if (!this.notSendableButChanged) {
             return;
         }
+        this.copyListToClipboard(this.notSendableButChanged);
+    }
+
+    copyNotSendable() {
+        if (!this.notSendable) {
+            return;
+        }
+        this.copyListToClipboard(this.notSendable);
+    }
+
+    copyListToClipboard(list: readonly IAssessmentExt[]) {
         let s = "username;grade\n";
-        for (const a of this.notSendableButChanged) {
+        for (const a of [...list].sort((a, b) => (a.user.real_name || "").localeCompare(b.user.real_name || ""))) {
             s += `${a.user.name};${a.gradeId}\n`;
         }
         copyToClipboard(s);
@@ -383,8 +397,12 @@ Sisu.component("sisuAssessmentExport", {
         Taulukossa on {{$ctrl.notSendableButChanged.length}} kpl arviointeja, joiden arvosana on muuttunut mutta jotka
         on jo vahvistettu Sisussa.
         Näitä ei voi päivittää Sisun kautta, mutta voit ottaa
-        <a ng-click="$ctrl.copyNotSendable()">tästä CSV-tiedoston</a> ja pyytää kansliaa päivittämään
+        <a ng-click="$ctrl.copyNotSendableButChanged()">tästä CSV-tiedoston</a> ja pyytää kansliaa päivittämään
         kyseiset arvioinnit.
+    </p>
+    <p class="red" ng-if="$ctrl.notSendable.length > 0">
+        Taulukossa on yhteensä {{$ctrl.notSendable.length}} kpl arviointeja, jotka on jo vahvistettu Sisussa.
+        Voit ladata listan näistä <a ng-click="$ctrl.copyNotSendable()">tästä</a>.
     </p>
     <button class="timButton"
             ng-disabled="$ctrl.loading || $ctrl.numSelectedAssessments() === 0"
