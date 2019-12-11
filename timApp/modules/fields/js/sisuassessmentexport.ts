@@ -390,15 +390,6 @@ Sisu.component("sisuAssessmentExport", {
     </p>
     <p>Taulukosta voi valita lähetettäväksi vain niitä arviointeja, joissa on arvosana.</p>
     <p ng-if="$ctrl.testOnly"><i>Tämä plugin on vain demo. Arvosanojen lähettäminen ei oikeasti tee mitään.</i></p>
-    Suorituspäivä:
-    <div class="input-group date" datetimepicker ng-model="$ctrl.completionDate"
-         data-options="$ctrl.dateOptions">
-        <input type="text"
-               class="form-control"/>
-        <span class="input-group-addon">
-                    <span class="glyphicon glyphicon-calendar"></span>
-                    </span>
-    </div>
     <div style="font-size: small"
          ui-grid="$ctrl.gridOptions"
          ui-grid-selection
@@ -418,6 +409,17 @@ Sisu.component("sisuAssessmentExport", {
 <!--        Taulukossa on yhteensä {{$ctrl.notSendable.length}} kpl arviointeja, jotka on jo vahvistettu Sisussa.-->
 <!--        Voit ladata listan näistä <a ng-click="$ctrl.copyNotSendable()">tästä</a>.-->
 <!--    </p>-->
+    <p>
+    Suorituspäivä:
+    <div class="input-group date" datetimepicker ng-model="$ctrl.completionDate"
+         data-options="$ctrl.dateOptions">
+        <input type="text"
+               class="form-control"/>
+        <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+    </div>
+    </p>
     <button class="timButton"
             ng-disabled="$ctrl.loading || $ctrl.numSelectedAssessments() === 0"
             ng-click="$ctrl.sendAssessments()">
