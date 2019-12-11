@@ -1,10 +1,10 @@
-import {IController, IDeferred, IPromise, IScope, ITranscludeFunction} from "angular";
+import {IController, IPromise, IScope, ITranscludeFunction} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
 import {timApp} from "../app";
 import {KEY_ESC} from "../util/keycodes";
-import {$q, $rootScope, $templateCache, $uibModal} from "../util/ngimport";
-import {Binding, markAsUsed, Require} from "../util/utils";
+import {$rootScope, $templateCache, $uibModal} from "../util/ngimport";
+import {Binding, markAsUsed, Require, TimDefer} from "../util/utils";
 import * as dg from "./draggable";
 import {DraggableController, Pos, VisibilityFix} from "./draggable";
 
@@ -212,8 +212,8 @@ export async function showMessageDialog(message: string) {
 }
 
 export interface IModalInstance<T extends DialogController<unknown, unknown>> extends IModalInstanceService {
-    result: IPromise<T["ret"]>;
-    dialogInstance: IDeferred<T>;
+    result: Promise<T["ret"]>;
+    dialogInstance: TimDefer<T>;
 
     close(result: T["ret"]): void;
 }
@@ -254,6 +254,6 @@ export function showDialog<T extends DialogController<unknown, unknown>, Service
         size: opts.size || "md",
     });
     const custom = instance as IModalInstance<T>;
-    custom.dialogInstance = $q.defer<T>();
+    custom.dialogInstance = new TimDefer<T>();
     return custom;
 }

@@ -5,8 +5,17 @@ import deepmerge from "deepmerge";
 import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
-import {$http, $q, $sce, $timeout} from "../util/ngimport";
-import {markAsUsed, MouseOrTouch, numOrStringToNumber, posToRelative, Require, to, valueOr} from "../util/utils";
+import {$http, $sce, $timeout} from "../util/ngimport";
+import {
+    markAsUsed,
+    MouseOrTouch,
+    numOrStringToNumber,
+    posToRelative,
+    Require,
+    TimDefer,
+    to,
+    valueOr,
+} from "../util/utils";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -930,7 +939,7 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
     public y: number;
     public a: number;
     protected childShapes: IChildShape[] = [];
-    public pendingImage?: IPromise<ImageLoadResult>;
+    public pendingImage?: Promise<ImageLoadResult>;
 
     public mainShape: Shape;
 
@@ -1445,8 +1454,8 @@ function isTouchDevice() {
     return typeof window.ontouchstart !== "undefined";
 }
 
-function loadImage(src: string): [IPromise<ImageLoadResult>, HTMLImageElement] {
-    const deferred = $q.defer<ImageLoadResult>();
+function loadImage(src: string): [Promise<ImageLoadResult>, HTMLImageElement] {
+    const deferred = new TimDefer<ImageLoadResult>();
     const sprite = new Image();
     sprite.onload = () => {
         deferred.resolve(sprite);

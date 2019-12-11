@@ -13,8 +13,8 @@ import {IUser} from "../user/IUser";
 import {Users} from "../user/userService";
 import {documentglobals} from "../util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
-import {$filter, $http, $httpParamSerializer, $q, $timeout} from "../util/ngimport";
-import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
+import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
+import {Binding, getURLParameter, markAsUsed, Require, TimDefer, to} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
 
@@ -67,7 +67,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private forceBrowser: boolean = false;
     private pluginElement?: JQuery;
     public showPlaceholder = true;
-    public abLoad = $q.defer<AnswerBrowserController | null>();
+    public abLoad = new TimDefer<AnswerBrowserController | null>();
 
     constructor(private element: JQLite, private scope: IScope, private transclude: ITranscludeFunction) {
         super(scope, element);

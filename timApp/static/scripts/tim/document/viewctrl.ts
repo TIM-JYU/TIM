@@ -1,4 +1,4 @@
-import {IController, IDeferred, IPromise, IScope} from "angular";
+import {IController, IPromise, IScope} from "angular";
 import $ from "jquery";
 import ngs, {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
@@ -13,9 +13,9 @@ import {ParmenuHandler} from "tim/document/parmenu";
 import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
-import {setViewCtrl, vctrlInstance} from "tim/document/viewctrlinstance";
+import {setViewCtrl} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict, to} from "tim/util/utils";
+import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict, TimDefer, to} from "tim/util/utils";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {BookmarksController} from "../bookmark/bookmarks";
@@ -31,7 +31,7 @@ import {IUser, IUserListEntry} from "../user/IUser";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {documentglobals} from "../util/globals";
-import {$compile, $filter, $http, $interval, $localStorage, $q, $timeout} from "../util/ngimport";
+import {$compile, $filter, $http, $interval, $localStorage, $timeout} from "../util/ngimport";
 import {AnnotationController} from "../velp/annotation";
 import {ReviewController} from "../velp/reviewController";
 import {diffDialog} from "./diffDialog";
@@ -1019,7 +1019,7 @@ export class ViewCtrl implements IController {
     }
 
     private anns = new Map<string, AnnotationController>();
-    private annsDefers = new Map<string, IDeferred<AnnotationController>>();
+    private annsDefers = new Map<string, TimDefer<AnnotationController>>();
 
     registerAnnotation(loader: AnnotationController) {
         // This assumes that the associated DOM element for annotation is attached in the page because we need to check
@@ -1037,12 +1037,12 @@ export class ViewCtrl implements IController {
         return this.anns.get(id);
     }
 
-    getAnnotationAsync(id: string): IPromise<AnnotationController> {
+    getAnnotationAsync(id: string): Promise<AnnotationController> {
         const a = this.getAnnotation(id);
         if (a) {
-            return $q.resolve(a);
+            return new Promise<AnnotationController>(((resolve) => resolve(a)));
         }
-        const value = $q.defer<AnnotationController>();
+        const value = new TimDefer<AnnotationController>();
         this.annsDefers.set(id, value);
         return value.promise;
     }

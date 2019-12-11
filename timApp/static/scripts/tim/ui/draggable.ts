@@ -3,7 +3,7 @@ import {IModalInstanceService} from "angular-ui-bootstrap";
 import * as t from "io-ts";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
-import {$compile, $q} from "../util/ngimport";
+import {$compile} from "../util/ngimport";
 import {
     Binding,
     getOutOffsetFully,
@@ -15,6 +15,7 @@ import {
     ISize,
     isMobileDevice,
     setStorage,
+    TimDefer,
 } from "../util/utils";
 
 function getPixels(s: string) {
@@ -128,7 +129,7 @@ export class DraggableController implements IController {
     private parentDraggable?: DraggableController;
     private forceMaximized?: Binding<boolean, "<">;
     private modal?: IModalInstanceService;
-    private layoutReady = $q.defer();
+    private layoutReady = new TimDefer();
     private resizeCallback?: ResizeCallback;
     private captionCb?: () => string;
 

@@ -2,7 +2,7 @@
  * Controller and HTML template for attachment restamping dialog.
  */
 
-import {IPromise, IScope} from "angular";
+import {IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
