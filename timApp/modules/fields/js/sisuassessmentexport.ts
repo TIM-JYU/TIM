@@ -408,7 +408,7 @@ Sisu.component("sisuAssessmentExport", {
     </div>
     <p>{{ $ctrl.numSelectedAssessments() }} arviointia valittu.</p>
     <p class="red" ng-if="$ctrl.notSendableButChanged.length > 0">
-        Taulukossa on {{$ctrl.notSendableButChanged.length}} kpl arviointeja, joiden arvosana on muuttunut
+        Taulukossa on {{$ctrl.notSendableButChanged.length}} kpl arviointeja, joiden arvosana tai opintopistemäärä on muuttunut
         (tai joita ei ole TIMistä vielä lähetetty Sisuun) mutta jotka on jo vahvistettu Sisussa.
         Näitä ei voi päivittää Sisun kautta, mutta voit ottaa
         <a ng-click="$ctrl.copyNotSendableButChanged()">tästä CSV-tiedoston</a> ja pyytää kansliaa päivittämään
