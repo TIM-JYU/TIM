@@ -4,7 +4,7 @@ import * as t from "io-ts";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {setEditorScope} from "tim/editor/editorScope";
-import {markAsUsed, refreshAngularJS, to} from "tim/util/utils";
+import {markAsUsed, to} from "tim/util/utils";
 import {timApp} from "../app";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings} from "../document/IDocSettings";
@@ -823,29 +823,29 @@ ${backTicks}
 
     }
 
-    editorChanged() {
-        this.scope.$evalAsync(async () => {
-            const editor = this.editor!;
-            this.outofdate = true;
-            const text = editor.getEditorText();
-            await refreshAngularJS($timeout(500));
-            if (text !== editor.getEditorText()) {
-                return;
-            }
-            this.scrollPos = this.element.find(".previewcontent").scrollTop() || this.scrollPos;
-            this.outofdate = true;
-            const data = await refreshAngularJS(this.resolve.params.previewCb(text));
-            const previewDiv = angular.element(".previewcontent");
-            await refreshAngularJS(ParCompiler.compileAndAppendTo(previewDiv, data, this.scope, this.resolve.params.viewCtrl));
-            if (data.trdiff) {
-                const module = await refreshAngularJS(import("angular-diff-match-patch"));
-                $injector.loadNewModules([module.default]);
-            }
-            this.trdiff = data.trdiff;
-            this.outofdate = false;
-            this.parCount = previewDiv.children().length;
-            this.getEditorContainer().resize();
-        });
+    async editorChanged() {
+        const editor = this.editor!;
+        this.outofdate = true;
+        const text = editor.getEditorText();
+        this.scope.$applyAsync();
+        await $timeout(500);
+        if (text !== editor.getEditorText()) {
+            return;
+        }
+        const previewDiv = angular.element(".previewcontent");
+        this.scrollPos = previewDiv.scrollTop() || this.scrollPos;
+        this.outofdate = true;
+        const data = await this.resolve.params.previewCb(text);
+        await ParCompiler.compileAndAppendTo(previewDiv, data, this.scope, this.resolve.params.viewCtrl);
+        if (data.trdiff) {
+            const module = await import("angular-diff-match-patch");
+            $injector.loadNewModules([module.default]);
+        }
+        this.trdiff = data.trdiff;
+        this.outofdate = false;
+        this.parCount = previewDiv.children().length;
+        this.getEditorContainer().resize();
+        this.scope.$applyAsync();
     }
 
     wrapFn(func: (() => void) | null = null) {
