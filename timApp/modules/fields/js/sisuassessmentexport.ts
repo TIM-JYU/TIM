@@ -122,6 +122,8 @@ function sortAssessments(a: IAssessmentExt, b: IAssessmentExt): number {
     return (a.user.real_name || "").localeCompare(b.user.real_name || "", "fi");
 }
 
+const failGrades = new Set(["0", "HYL"]);
+
 class SisuAssessmentExportController {
     private assessments?: IAssessmentExt[];
     private gridOptions?: uiGrid.IGridOptionsOf<IAssessmentExt>;
@@ -241,7 +243,13 @@ class SisuAssessmentExportController {
         );
         const hasChangedCredits = changedCredits.length > 0;
         const alreadyConfirmed = (a: IAssessmentExt) => a.error && a.error === "Sisu: Aikaisempi vahvistettu suoritus";
-        this.notSendableButChanged = this.assessments.filter((a) => alreadyConfirmed(a) && (gradeHasChanged(a) || creditHasChanged(a) || a.sentGrade == null));
+        this.notSendableButChanged = this.assessments.filter(
+            (a) => alreadyConfirmed(a) &&
+                (gradeHasChanged(a) ||
+                    creditHasChanged(a) ||
+                    a.sentGrade == null
+                )
+        ).filter((a) => StringOrNumber.is(a.gradeId) && !failGrades.has(a.gradeId.toString()));
         this.notSendable = this.assessments.filter(alreadyConfirmed);
         this.gridOptions = {
             onRegisterApi: async (grid) => {
