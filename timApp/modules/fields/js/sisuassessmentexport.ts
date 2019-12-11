@@ -45,7 +45,7 @@ function getAssessments(data: IGradeResponse) {
             // But don't set it to null either so that the isRowSelectable check still works.
             error: a.assessment.gradeId ? a.message : "",
         })),
-    ];
+    ].sort(sortAssessments);
 }
 
 export const Sisu = angular.module("sisuModule", []);
@@ -116,6 +116,10 @@ interface ISendGradeOptions {
     dryRun: boolean;
     filterUsers?: string[];
     partial: boolean;
+}
+
+function sortAssessments(a: IAssessmentExt, b: IAssessmentExt): number {
+    return (a.user.real_name || "").localeCompare(b.user.real_name || "", "fi");
 }
 
 class SisuAssessmentExportController {
@@ -222,20 +226,22 @@ class SisuAssessmentExportController {
                 defaultFilter = ".";
             }
         }
+        const gradeHasChanged = (a: IAssessmentExt) => StringOrNumber.is(a.sentGrade) && StringOrNumber.is(a.gradeId) && a.sentGrade && a.gradeId && a.sentGrade.toString() !== a.gradeId.toString();
         const changedGrades = this.assessments.filter(
-            (a) => StringOrNumber.is(a.sentGrade) && StringOrNumber.is(a.gradeId) && a.sentGrade && a.gradeId && a.sentGrade.toString() !== a.gradeId.toString(),
+            gradeHasChanged,
         );
         const hasChangedGrades = changedGrades.length > 0;
+        const creditHasChanged = (a: IAssessmentExt) =>
+            (StringOrNumber.is(a.sentCredit) &&
+                StringOrNumber.is(a.completionCredits) &&
+                a.sentCredit && a.completionCredits &&
+                a.sentCredit.toString() !== a.completionCredits.toString());
         const changedCredits = this.assessments.filter(
-            (a) =>
-                (StringOrNumber.is(a.sentCredit) &&
-                    StringOrNumber.is(a.completionCredits) &&
-                    a.sentCredit && a.completionCredits &&
-                    a.sentCredit.toString() !== a.completionCredits.toString()),
+            creditHasChanged,
         );
         const hasChangedCredits = changedCredits.length > 0;
         const alreadyConfirmed = (a: IAssessmentExt) => a.error && a.error === "Sisu: Aikaisempi vahvistettu suoritus";
-        this.notSendableButChanged = [...changedGrades, ...changedCredits].filter(alreadyConfirmed);
+        this.notSendableButChanged = this.assessments.filter((a) => alreadyConfirmed(a) && (gradeHasChanged(a) || creditHasChanged(a) || a.sentGrade == null));
         this.notSendable = this.assessments.filter(alreadyConfirmed);
         this.gridOptions = {
             onRegisterApi: async (grid) => {
@@ -338,9 +344,9 @@ class SisuAssessmentExportController {
     }
 
     copyListToClipboard(list: readonly IAssessmentExt[]) {
-        let s = "username;grade\n";
-        for (const a of [...list].sort((a, b) => (a.user.real_name || "").localeCompare(b.user.real_name || ""))) {
-            s += `${a.user.name};${a.gradeId}\n`;
+        let s = "real_name;username;grade\n";
+        for (const a of [...list].sort(sortAssessments)) {
+            s += `${a.user.real_name};${a.user.name};${a.gradeId}\n`;
         }
         copyToClipboard(s);
         void showMessageDialog("CSV copied to clipboard.");
@@ -394,16 +400,16 @@ Sisu.component("sisuAssessmentExport", {
     </div>
     <p>{{ $ctrl.numSelectedAssessments() }} arviointia valittu.</p>
     <p class="red" ng-if="$ctrl.notSendableButChanged.length > 0">
-        Taulukossa on {{$ctrl.notSendableButChanged.length}} kpl arviointeja, joiden arvosana on muuttunut mutta jotka
-        on jo vahvistettu Sisussa.
+        Taulukossa on {{$ctrl.notSendableButChanged.length}} kpl arviointeja, joiden arvosana on muuttunut
+        (tai joita ei ole TIMistä vielä lähetetty Sisuun) mutta jotka on jo vahvistettu Sisussa.
         Näitä ei voi päivittää Sisun kautta, mutta voit ottaa
         <a ng-click="$ctrl.copyNotSendableButChanged()">tästä CSV-tiedoston</a> ja pyytää kansliaa päivittämään
         kyseiset arvioinnit.
     </p>
-    <p class="red" ng-if="$ctrl.notSendable.length > 0">
-        Taulukossa on yhteensä {{$ctrl.notSendable.length}} kpl arviointeja, jotka on jo vahvistettu Sisussa.
-        Voit ladata listan näistä <a ng-click="$ctrl.copyNotSendable()">tästä</a>.
-    </p>
+<!--    <p class="red" ng-if="$ctrl.notSendable.length > 0">-->
+<!--        Taulukossa on yhteensä {{$ctrl.notSendable.length}} kpl arviointeja, jotka on jo vahvistettu Sisussa.-->
+<!--        Voit ladata listan näistä <a ng-click="$ctrl.copyNotSendable()">tästä</a>.-->
+<!--    </p>-->
     <button class="timButton"
             ng-disabled="$ctrl.loading || $ctrl.numSelectedAssessments() === 0"
             ng-click="$ctrl.sendAssessments()">
