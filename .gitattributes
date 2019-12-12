@@ -1,6 +1,9 @@
 * text=auto
 *.sh text eol=lf
 dc text eol=lf
+npmi text eol=lf
+npmiw text eol=lf
+js text eol=lf
 *.sh.template text eol=lf
 boot2docker/*.txt text eol=lf
 boot2docker/*.dep text eol=lf
