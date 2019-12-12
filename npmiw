@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -e
+
+cd timApp &&
+  npm install &&
+  npm run lint &&
+  (cd modules/cs/jsav && npm i --no-save grunt grunt-contrib-concat grunt-contrib-uglify grunt-exec load-grunt-tasks && echo NOTE: You can ignore all Local Npm module warnings. && npx grunt)
+# jsrunner cannot be installed in Windows because it needs to build native libraries.
+# && (cd modules/jsrunner/server && npm install)
+
+echo "You also need to build jsrunner dependencies (which cannot be done in Windows). So go to TIM root in virtual machine and run:"
+echo './run_command_workdir.sh timApp/modules/jsrunner bash -c "npm i --unsafe-perm"'

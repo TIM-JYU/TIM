@@ -21,8 +21,8 @@ test:
   - sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh
   - export IS_TESTING=true
   - ./docker-compose.sh pull --quiet
-  - ./build_js.sh
-  - ./build_plugin_js.sh
+  - ./npmi
+  - ./js
   - ./run_tests.sh
   artifacts:
     name: failed_screenshots
