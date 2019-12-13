@@ -404,6 +404,7 @@ var simcir = {};
         outNode.$ui.remove();
       });
       device.$ui.remove();
+      return false;
     } );
 
     var selected = false;
@@ -765,6 +766,7 @@ var simcir = {};
         $.each($devs, function(i, $dev) {
           $dev.trigger('dispose');
         });
+        return false;
       } );
       device.$ui.on('dblclick', function(event) {
         // open library,
@@ -886,6 +888,7 @@ var simcir = {};
         $.each($devs, function(i, $dev) {
           $dev.trigger('dispose');
         });
+        return false;
       } );
       if (data.layout.hideLabelOnWorkspace) {
         device.$ui.on('deviceAdd', function() {
@@ -1093,6 +1096,7 @@ var simcir = {};
         $(this).find('.simcir-device').trigger('dispose');
         $toolboxPane.remove();
         $workspace.remove();
+        return false;
       });
 
     disableSelection($workspace);
