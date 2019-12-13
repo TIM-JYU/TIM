@@ -450,6 +450,10 @@ class CandidateAssessment:
                 self.gradeId != self.sentGrade or
                 maybe_to_str(self.completionCredits) != maybe_to_str(self.sentCredit)) and not self.is_fail_grade
 
+    @property
+    def is_passing_grade(self):
+        return self.gradeId and not self.is_fail_grade
+
     def to_json(self):
         return asdict(self)
 
@@ -503,7 +507,7 @@ def send_grades_to_sisu(
     assessments = get_sisu_assessments(sisu_id, teacher, doc, groups, filter_users, membership_filter)
     if not completion_date:
         completion_date = get_current_time().date()
-    users_to_update = {a.user.id for a in assessments if a.is_new_or_changed()}
+    users_to_update = {a.user.id for a in assessments if a.is_passing_grade}
     completion_date_iso = completion_date.isoformat()
     validation_errors = []
     try:

@@ -1368,7 +1368,7 @@ class SendGradeTest(SendGradeTestBase):
         self.check_send_grade_result(
             grade_params_dryrun,
             {'assessment_errors': [],
-             'default_selection': [t3id],
+             'default_selection': [t2id, t3id],
              'sent_assessments': [
                  {'completionCredits': 3,
                   'completionDate': custom_date,
@@ -1439,7 +1439,7 @@ class SendGradeTest(SendGradeTestBase):
                      'user': test_3},
                 ],
                 'assessment_errors': [],
-                'default_selection': [],
+                'default_selection': [t2id, t3id],
             },
             {'body': {'assessments': {}}}
         )
@@ -1462,7 +1462,7 @@ class SendGradeTest(SendGradeTestBase):
                     },
                 ],
                 'sent_assessments': [],
-                'default_selection': [],
+                'default_selection': [t2id],
             },
             {'body': {'assessments': {
                 '1': {'userName': {'code': 400003, 'reason': 'Voimassaolevaa opinto-oikeutta ei löytynyt.'}}}}},
