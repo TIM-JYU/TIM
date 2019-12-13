@@ -13,7 +13,7 @@ import {showInputDialog} from "../ui/inputDialog";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, nullable, withDefault} from "./attributes";
-import "./tableForm.css";
+import "style-loader!./tableForm.css";
 import {
     CellAttrToSave,
     CellEntity,

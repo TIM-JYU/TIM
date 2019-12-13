@@ -8,7 +8,7 @@ import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
 import {AnswerReturnBrowser, ErrorList, IError, IncludeUsersOption, JsrunnerAll, JsrunnerMarkup} from "../../shared/jsrunnertypes";
-import "../stylesheets/jsrunner.css";
+import "style-loader!../stylesheets/jsrunner.css";
 
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];

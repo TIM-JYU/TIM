@@ -11,7 +11,7 @@ import {IRights} from "../user/IRights";
 import {genericglobals} from "../util/globals";
 import {Require} from "../util/utils";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
-import "./timMenu.css";
+import "style-loader!./timMenu.css";
 
 // this.attrs
 const TimMenuMarkup = t.intersection([
