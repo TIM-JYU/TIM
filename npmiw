@@ -10,4 +10,4 @@ cd timApp &&
 # && (cd modules/jsrunner/server && npm install)
 
 echo "You also need to build jsrunner dependencies (which cannot be done in Windows). So go to TIM root in virtual machine and run:"
-echo './run_command_workdir.sh timApp/modules/jsrunner bash -c "npm i --unsafe-perm"'
+echo './run_command_workdir.sh timApp/modules/jsrunner/server bash -c "npm i --unsafe-perm --no-bin-links"'
