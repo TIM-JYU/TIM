@@ -228,9 +228,12 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             + " Api Time: " + (r.api_time).toFixed(2);
 
         let self = this;
+        /*
         window.setTimeout(function() {
             ParCompiler.processAllMath(self.element);
         },1);
+         */
+        ParCompiler.processAllMathDelayed(self.element,1);
         const html = this.element.find(".stackOutput");
         const inputs = html.find("input");
         const inputse = html.find("textarea");
