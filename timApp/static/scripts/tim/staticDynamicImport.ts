@@ -8,6 +8,8 @@ export function staticDynamicImport(s: string) {
             return import("modules/fields/js/numericfield");
         case "/field/js/build/textfield.js":
             return import("modules/fields/js/textfield");
+        // case "/cs/stack/ServerSyncValues.js":
+        //     return import("modules/cs/stack/ServerSyncValues");
         case "/pali/js/build/pali.js":
             return import("modules/pali/js/pali");
         case "tableForm":

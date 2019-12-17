@@ -22,6 +22,7 @@ depends=(
 
         <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
         <meta name="google-site-verification" content="GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU"/>
+        <script src="/cs/stack/ServerSyncValues.js"></script>
         <script>
             var homeOrganization = {{ config.HOME_ORGANIZATION|tojson }};
             var IS_TESTING = {{ config.TESTING|tojson }};
