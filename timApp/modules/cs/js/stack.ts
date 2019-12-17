@@ -227,7 +227,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             + (r.request_time).toFixed(2)
             + " Api Time: " + (r.api_time).toFixed(2);
 
-        await ParCompiler.processAllMath(this.element);
+        let self = this;
+        window.setTimeout(function() {
+            ParCompiler.processAllMath(self.element);
+        },1);
         const html = this.element.find(".stackOutput");
         const inputs = html.find("input");
         const inputse = html.find("textarea");
@@ -237,6 +240,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             const divinput = this.element.find(".stackinputfeedback");
             divinput.remove();
         }
+        // await ParCompiler.processAllMath(this.element);
     }
 
     async inputHandler(e: JQuery.TriggeredEvent) {
