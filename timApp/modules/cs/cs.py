@@ -1261,7 +1261,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 # Write the program to the file =======================================================
                 s = language.before_save(language.before_code + s)
-                nofilesave = get_clean_param(query, 'nofilesave', False)
+                nofilesave = get_param(query, 'nofilesave', False)
                 if not nofilesave:
                     codecs.open(language.sourcefilename, "w", "utf-8").write(s)
                 slines = s
