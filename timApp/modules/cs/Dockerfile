@@ -160,6 +160,8 @@ ENV PATH=$PATH:/usr/local/go/bin
 
 RUN pip3 install requests --upgrade && bash -c "${APT_CLEANUP}"
 
+# git
+RUN bash -c "${APT_INSTALL} git && ${APT_CLEANUP}"
 
 # RUN bash -c "${APT_INSTALL} uuid-runtime && ${APT_CLEANUP}"
 # RUN uuidgen > /etc/machine-id
