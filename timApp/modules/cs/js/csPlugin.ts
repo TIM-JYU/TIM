@@ -663,6 +663,7 @@ const CsMarkupOptional = t.partial({
     autoupdate: t.number,
     buttons: t.string,
     byCode: t.string,
+    docurl: t.string,
     examples: t.array(Example),
     file: t.string,
     filename: t.string,
@@ -750,6 +751,7 @@ const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPlug
 const CsAll = t.intersection([
     t.partial({
         by: t.string,
+        docurl: t.string,
         program: t.string,
         replace: t.string,
         uploadedFile: t.string,
@@ -1272,6 +1274,10 @@ class CsController extends CsBase implements ITimComponent {
         const rt = this.rtype;
         const isText = this.isText;
         const isArgs = this.type.indexOf("args") >= 0;
+        if ( this.attrsall.markup.docurl ) {
+            this.docURL = this.attrsall.markup.docurl;
+            this.docLink = "Hide document";
+        }
 
         this.userinput = valueOr(this.attrsall.userinput, (this.attrs.userinput || "").toString());
         this.userargs = valueOr(this.attrsall.userargs, (this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "")).toString());
@@ -1652,7 +1658,6 @@ class CsController extends CsBase implements ITimComponent {
     runDocument() {
         if (this.docURL) {
             this.closeDocument();
-            this.docLink = "Document";
             return;
         }
         this.docLink = "Hide document";
@@ -1662,6 +1667,7 @@ class CsController extends CsBase implements ITimComponent {
 
     closeDocument() {
         this.docURL = "";
+        this.docLink = "Document"
     }
 
     hideShowEditor() {
@@ -1825,6 +1831,7 @@ class CsController extends CsBase implements ITimComponent {
             const err = data.web.console || "";
             if (docURL) {
                 this.docURL = docURL;
+                this.docLink = "Hide document";
                 this.error = err.trim();
             }
 

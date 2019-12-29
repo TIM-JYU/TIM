@@ -13,7 +13,11 @@ from fileParams import *  # noqa
 Adding new language to csPlugin:
 
 0. Install new compiler to cs/Dockerfile and build new Docker container from that
+    - if in varibles.sh is export IS_DEVELOPMENT=true, change it to false
     - in /opt/tim directory run ./dc build csplugin
+    - if in varibles.sh was export IS_DEVELOPMENT=true, change it back to true
+        - in /opt/tim directory run ./dc build csplugin
+    -  docker push cs3:rust    
 1. Add language name to languages list in languagedict at the bottom of this file
     - remember to use lowercase letters
 2. Add the language class starting with capital letter to this or new file

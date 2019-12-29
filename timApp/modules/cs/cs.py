@@ -431,6 +431,10 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
         before_open = before_open.replace('{USERCODE}', susercode)
         js['markup']['beforeOpen'] = before_open
 
+    doc_addr = doc_address(query, True)
+    if doc_addr:
+        js['markup']['docurl'] = doc_addr['dochtml']
+
     jso = json.dumps(js)
 
     if is_rv:
@@ -752,6 +756,25 @@ def check_parsons(expect_code, usercode, maxn, notordermatters):
                 p += 1
 
     return p
+
+
+def doc_address(query, check = False):
+    docaddr = get_clean_param(query, "docaddr", "")
+    if not docaddr:
+        return None
+    docaddr = re.sub(r'(https:)|([^a-zA-Z0-9])', '', docaddr)
+    task_id = str(query.query.get('taskID', ''))
+    task_id = re.sub(r'(https:)|([^a-zA-Z0-9])', '', task_id)
+    userdoc = "/csgenerated/docs/%s" % task_id
+    docrnd = docaddr
+    dochtml = "%s/%s/html/%s" % (userdoc, docrnd, "files.html")
+    if check:
+        if not os.path.isfile(dochtml):
+            return None
+
+    return { 'userdoc': userdoc,
+             'docrnd': docrnd,
+             'dochtml': dochtml}
 
 
 # see: http://stackoverflow.com/questions/366682/how-to-limit-execution-time-of-a-function-call-in-python
@@ -1238,13 +1261,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 # Write the program to the file =======================================================
                 s = language.before_save(language.before_code + s)
-                codecs.open(language.sourcefilename, "w", "utf-8").write(s)
+                nofilesave = get_clean_param(query, 'nofilesave', False)
+                if not nofilesave:
+                    codecs.open(language.sourcefilename, "w", "utf-8").write(s)
                 slines = s
 
             save_extra_files(query, extra_files, language.prgpath)
 
             if not os.path.isfile(language.sourcefilename) or os.path.getsize(language.sourcefilename) == 0:
-                return write_json_error(self.wfile, "Could not get the source file", result)
+                if not nofilesave:
+                    return write_json_error(self.wfile, "Could not get the source file", result)
                 # self.wfile.write("Could not get the source file\n")
                 # print "=== Could not get the source file"
 
@@ -1321,15 +1347,24 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 #
                 userdoc = "/csgenerated/docs/%s" % self.user_id
                 docrnd = generate_filename()
-                doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (language.prgpath, userdoc, docrnd, userdoc)
+                locsource = language.prgpath
+                locpath = re.sub(r'(https:)|([^/a-zA-Z0-9])', '', get_clean_param(query, "locpath", ""))
+                if locpath:
+                    locsource += '/' + locpath
+
+                doc_addr = doc_address(query)
+                if doc_addr:
+                    userdoc = doc_addr['userdoc']
+                    docrnd = doc_addr['docrnd']
+                doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (locsource, userdoc, docrnd, userdoc)
                 doccmd = sanitize_cmdline(doccmd)
                 p = re.compile('\.java')
                 docfilename = p.sub("", language.filename)
                 p = re.compile('[^.]*\.')
                 docfilename = p.sub("", docfilename)
                 docfilename = docfilename.replace("_", "__")  # jostakin syystä tekee näin
-                dochtml = "/csgenerated/docs/%s/%s/html/%s_8%s.html" % (
-                    self.user_id, docrnd, docfilename, language.fileext)
+                dochtml = "%s/%s/html/%s_8%s.html" % (
+                    userdoc, docrnd, docfilename, language.fileext)
                 docfile = "%s/%s/html/%s_8%s.html" % (userdoc, docrnd, docfilename, language.fileext)
                 # print("XXXXXXXXXXXXXXXXXXXXXX", language.filename)
                 # print("XXXXXXXXXXXXXXXXXXXXXX", docfilename)
@@ -1338,7 +1373,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
                 if not os.path.isfile(
                         docfile):  # There is maybe more files with same name and it is difficult to guess the name
-                    dochtml = "/csgenerated/docs/%s/%s/html/%s" % (self.user_id, docrnd, "files.html")
+                    dochtml = "%s/%s/html/%s" % (userdoc, docrnd, "files.html")
                     # print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
 
                 web["docurl"] = dochtml
