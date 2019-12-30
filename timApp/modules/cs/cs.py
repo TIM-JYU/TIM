@@ -304,7 +304,7 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
         if not cache_clear:
             cache_root = "/tmp/ucache" # maybe user dependent cache that may grow bigger, so to different place
         h = hashlib.new('ripemd160')
-        h.update(str(query.jso['markup']).encode())
+        h.update((str(query.jso['markup']) + str(query.deleted)).encode())
         task_id = get_param(query, "taskID", False)
         filepath = cache_root + '/imgcache/' + task_id.replace('.', '/')
         if filepath.endswith('/'):

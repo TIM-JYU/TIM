@@ -25,6 +25,7 @@ class QueryClass:
         self.get_query = {}
         self.query = {}
         self.jso = None
+        self.deleted = {}
 
 
 def check_key(query: QueryClass, key: str):
@@ -116,12 +117,14 @@ def get_param_del(query: QueryClass, key: str, default: Any):
         if key in query.jso["markup"]:
             value = query.jso["markup"][key]
             del query.jso["markup"][key]
+            query.deleted[key] = value
             return value
         return default
     value = query.query[key][0]
     del query.query[key]
     if value == 'undefined':
         return default
+    query.deleted[key] = value
     return value
 
 
