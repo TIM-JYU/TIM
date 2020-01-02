@@ -4,7 +4,7 @@ import {ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $sce} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {to, windowAsAny} from "tim/util/utils";
 
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
 export const moduleDefs = [stackApp];
@@ -25,9 +25,6 @@ const StackMarkup = t.intersection([
     t.type({
         autopeek: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
-        // autoplay: withDefault(t.boolean, true),
-        // file: t.string,
-        // open: withDefault(t.boolean, false),
     }),
 ]);
 const StackAll = t.intersection([
@@ -44,7 +41,7 @@ const StackAll = t.intersection([
 ]);
 
 type StackResult = string | {
-    answernotes: any,
+    answernotes: string,
     api_time: number,
     error: false,
     formatcorrectresponse: string,
@@ -52,7 +49,7 @@ type StackResult = string | {
     questiontext: string,
     request_time: number,
     score: number,
-    summariseresponse: any,
+    summariseresponse: unknown,
 } | {
     error: true,
     message: string,
@@ -172,7 +169,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                 this.userCode = JSON.stringify(res);
             } else {
                 try {
-                    res = JSON.parse(this.userCode);
+                    res = JSON.parse(this.userCode) as Record<string, string>;
                 } catch {
                     // this.timWay = true;
                 }
@@ -208,6 +205,9 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
         const qt = this.replace(r.questiontext);
         const i = qt.indexOf('<div class="stackinputfeedback"');
+        const helper = await import("../stack/ServerSyncValues");
+        windowAsAny().ServerSyncValues = helper.ServerSyncValues;
+        windowAsAny().findParentElementFromScript = helper.findParentElementFromScript;
         if (this.attrs.buttonBottom || i < 0) {
             this.stackoutput = qt;
             this.stackinputfeedback = "";
@@ -227,13 +227,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             + (r.request_time).toFixed(2)
             + " Api Time: " + (r.api_time).toFixed(2);
 
-        let self = this;
-        /*
-        window.setTimeout(function() {
-            ParCompiler.processAllMath(self.element);
-        },1);
-         */
-        ParCompiler.processAllMathDelayed(self.element,1);
+        ParCompiler.processAllMathDelayed(this.element, 1);
         const html = this.element.find(".stackOutput");
         const inputs = html.find("input");
         const inputse = html.find("textarea");

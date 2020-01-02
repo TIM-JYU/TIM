@@ -1,5 +1,5 @@
 import $ from "jquery";
-import {getURLParameter, IOkResponse, to} from "tim/util/utils";
+import {getURLParameter, IOkResponse, to, windowAsAny} from "tim/util/utils";
 import {IDocument, IItem} from "../item/IItem";
 import {documentglobals, slideglobals} from "../util/globals";
 import {$http, $log, $timeout} from "../util/ngimport";
@@ -83,7 +83,7 @@ function initReveal(rv: IFixedReveal) {
     const hasManage = item.rights.manage;
     const pluginPath = "/static/scripts/build/reveal";
 
-    (window as unknown as {Reveal: unknown}).Reveal = rv; // required for Reveal dependencies
+    windowAsAny().Reveal = rv; // required for Reveal dependencies
 
     rv.initialize({
         fragments: true,

@@ -420,7 +420,7 @@ export function getPageXY(e: JQuery.MouseEventBase | JQuery.TouchEventBase | Mou
         return getTouchCoords(e);
     }
     if (e.pageX == 0 && e.pageY == 0) {
-        if (!(window as unknown as Record<string, unknown>).TouchEvent) {
+        if (!windowAsAny().TouchEvent) {
             return {X: e.pageX, Y: e.pageY};
         }
         const o = e.originalEvent;
@@ -574,4 +574,8 @@ export function getCookie(name: string) {
 
 export function getGroupDesc(group: IGroup) {
     return group.personal_user ? group.personal_user.real_name + " (" + group.name + ")" : group.name;
+}
+
+export function windowAsAny() {
+    return window as unknown as Record<string, unknown>;
 }
