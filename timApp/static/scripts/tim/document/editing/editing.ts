@@ -341,7 +341,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 await showMessageDialog(r.result.data.error);
                 return;
             }
-            this.addSavedParToDom(r.result.data, {type: EditType.AddBottom});
+            await this.addSavedParToDom(r.result.data, {type: EditType.AddBottom});
             this.editSettingsPars(true);
         } else if (pars.length === 1) {
             this.toggleParEditor({type: EditType.Edit, pars: pars.first()}, {area: false});
