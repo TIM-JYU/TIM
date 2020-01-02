@@ -41,14 +41,16 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
         });
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         this.item = this.resolve.params;
         this.loadValues();
-        const cookie = await getPieceSize();
-        if (cookie) {
-            this.partitionDocumentsSetting = true;
-        }
+        (async () => {
+            const cookie = await getPieceSize();
+            if (cookie) {
+                this.partitionDocumentsSetting = true;
+            }
+        })();
     }
 
     /**

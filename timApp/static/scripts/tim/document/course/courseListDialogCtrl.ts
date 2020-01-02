@@ -47,16 +47,18 @@ export class CourseListDialogController extends DialogController<{ params: ICour
     /**
      * Show tag list when dialog loads and focus on tag-field.
      */
-    async $onInit() {
+    $onInit() {
         super.$onInit();
-        await this.getDocumentsByTag("", false, true);
-        this.subjects = this.resolve.params.settings.course_subjects;
-        if (this.storage.subjectsStorage) {
-            this.closedSubjects = this.storage.subjectsStorage;
-        }
-        this.groupBySubject();
-        this.loadCollapseStates();
-        this.toggleCollapseAll = !this.allClosed(this.grouped);
+        (async () => {
+            await this.getDocumentsByTag("", false, true);
+            this.subjects = this.resolve.params.settings.course_subjects;
+            if (this.storage.subjectsStorage) {
+                this.closedSubjects = this.storage.subjectsStorage;
+            }
+            this.groupBySubject();
+            this.loadCollapseStates();
+            this.toggleCollapseAll = !this.allClosed(this.grouped);
+        })();
     }
 
     $onDestroy() {

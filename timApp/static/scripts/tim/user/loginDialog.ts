@@ -72,7 +72,6 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
     private urlStyle = {position: "absolute", top: "-10em", width: "50%"}; // hide the fake URL field
     private homeOrg = genericglobals().homeOrganization;
     private idps: IDiscoveryFeedEntry[] = [];
-    private recursion = false;
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -81,9 +80,7 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
         this.addingToSession = false;
     }
 
-    async $onInit() {
-        if ( this.recursion ) { return; }
-        this.recursion = true;
+    $onInit() {
         super.$onInit();
         const params = this.resolve.params;
         if (params) {
@@ -97,7 +94,9 @@ export class LoginDialogController extends DialogController<{params: ILoginParam
                 this.showSignup = false;
             }
         }
-        this.idps = await loadIdPs();
+        (async () => {
+            this.idps = await loadIdPs();
+        })();
     }
 
     getHomeOrgDisplayName() {

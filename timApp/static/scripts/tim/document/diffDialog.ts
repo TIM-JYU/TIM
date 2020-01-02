@@ -20,12 +20,14 @@ export class DiffController extends DialogController<{params: IDiffParams}, {}> 
     static $inject = ["$element", "$scope"] as const;
     private options = {editCost: 4};
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
-        await this.draggable.makeHeightAutomatic();
-        if (this.resolve.params.pos) {
-            this.moveTo(this.resolve.params.pos);
-        }
+        (async () => {
+            await this.draggable.makeHeightAutomatic();
+            if (this.resolve.params.pos) {
+                this.moveTo(this.resolve.params.pos);
+            }
+        })();
     }
 
     close() {

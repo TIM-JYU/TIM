@@ -75,23 +75,25 @@ export class QuestionPreviewController extends DialogController<{params: Questio
         return "Ask a question";
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
-        if (!isReasking(this.resolve.params)) {
-            const data = await fetchQuestion(this.resolve.params.docId, this.resolve.params.parId, false);
-            this.questiondata = makePreview(data.markup, {
-                enabled: false,
-                showCorrectChoices: false,
-                showExplanations: false,
-            });
-        } else {
-            const data = await fetchAskedQuestion(this.resolve.params.askedId);
-            this.questiondata = makePreview(data.json.json, {
-                enabled: false,
-                showCorrectChoices: false,
-                showExplanations: false,
-            });
-        }
+        (async () => {
+            if (!isReasking(this.resolve.params)) {
+                const data = await fetchQuestion(this.resolve.params.docId, this.resolve.params.parId, false);
+                this.questiondata = makePreview(data.markup, {
+                    enabled: false,
+                    showCorrectChoices: false,
+                    showExplanations: false,
+                });
+            } else {
+                const data = await fetchAskedQuestion(this.resolve.params.askedId);
+                this.questiondata = makePreview(data.json.json, {
+                    enabled: false,
+                    showCorrectChoices: false,
+                    showExplanations: false,
+                });
+            }
+        })();
     }
 
     private showAsk() {

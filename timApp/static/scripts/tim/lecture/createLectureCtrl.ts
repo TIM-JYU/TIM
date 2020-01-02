@@ -91,12 +91,14 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
         this.options = data.options;
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
-        this.item = isLecture(this.resolve.params) ? (await getItem(this.resolve.params.doc_id)) : this.resolve.params;
-        if (isLecture(this.resolve.params)) {
-            this.setLecture(this.resolve.params);
-        }
+        (async () => {
+            this.item = isLecture(this.resolve.params) ? (await getItem(this.resolve.params.doc_id)) : this.resolve.params;
+            if (isLecture(this.resolve.params)) {
+                this.setLecture(this.resolve.params);
+            }
+        })();
     }
 
     handleKey(event: KeyboardEvent) {

@@ -35,7 +35,7 @@ export class TagSearchController extends DialogController<{}, {}> {
     /*
      * Show tag list when dialog loads and focus on tag-field.
      */
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         if (this.enableSearch) {
             this.header = "Input a tag name to search documents";

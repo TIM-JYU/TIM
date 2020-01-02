@@ -1,10 +1,11 @@
 import {IController, IPromise, IScope, ITranscludeFunction} from "angular";
 import "angular-ui-bootstrap";
 import {IModalInstanceService} from "angular-ui-bootstrap";
+import {TimDefer} from "tim/util/timdefer";
 import {timApp} from "../app";
 import {KEY_ESC} from "../util/keycodes";
 import {$rootScope, $templateCache, $uibModal} from "../util/ngimport";
-import {Binding, markAsUsed, Require, TimDefer} from "../util/utils";
+import {Binding, markAsUsed, Require} from "../util/utils";
 import * as dg from "./draggable";
 import {DraggableController, Pos, VisibilityFix} from "./draggable";
 
@@ -24,7 +25,11 @@ export abstract class DialogController<T, Ret> implements IController {
     constructor(protected element: JQLite, protected scope: IScope) {
     }
 
-    $onInit() {
+    // The signature void | undefined ensures that the $onInit in the derived class is not async.
+    // They must not be async because otherwise Edge browser (at least certain versions of it) gives
+    // "out of stack space" error when opening a dialog. It somehow generates an infinite chain of promises, even
+    // though the return value of $onInit is not used by AngularJS.
+    $onInit(): void | undefined {
         this.modalInstance.dialogInstance.resolve(this);
         this.draggable.setModal(this.modalInstance);
         this.draggable.setCloseFn(() => this.dismiss());

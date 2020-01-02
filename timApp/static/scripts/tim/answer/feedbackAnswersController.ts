@@ -39,7 +39,7 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
         return "Export to csv";
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         const options = this.resolve.params;
         this.showSort = options.allTasks;
@@ -76,14 +76,17 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
         };
 
         this.lastFetch = null;
-        const r =
-            await to($http.get<{last_answer_fetch: {[index: string]: string}}>("/settings/get/last_answer_fetch"));
-        if (r.ok && r.result.data.last_answer_fetch) {
-            this.lastFetch = r.result.data.last_answer_fetch[options.identifier];
-            if (!this.lastFetch) {
-                this.lastFetch = "no fetches yet";
+
+        (async () => {
+            const r =
+                await to($http.get<{last_answer_fetch: {[index: string]: string}}>("/settings/get/last_answer_fetch"));
+            if (r.ok && r.result.data.last_answer_fetch) {
+                this.lastFetch = r.result.data.last_answer_fetch[options.identifier];
+                if (!this.lastFetch) {
+                    this.lastFetch = "no fetches yet";
+                }
             }
-        }
+        })();
         this.options.users = "";
         for (const user of options.users) {
             this.options.users += user.name + ",";

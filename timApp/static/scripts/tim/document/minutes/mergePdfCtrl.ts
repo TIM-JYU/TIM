@@ -84,10 +84,11 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
         this.mergedUrl = r1.result.data.url;
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
-        await this.listAttachments();
-        this.loading = false;
+        (async () => {
+            await this.listAttachments();
+        })();
     }
 
     /**

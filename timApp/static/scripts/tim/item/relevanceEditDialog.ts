@@ -22,7 +22,7 @@ export class RelevanceEditController extends DialogController<{ params: IItem },
         super(element, scope);
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         this.item = this.resolve.params;
     }

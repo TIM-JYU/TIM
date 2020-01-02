@@ -43,7 +43,7 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCt
         super(element, scope);
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         this.updateAttributes(this.resolve.ctrl);
         if (this.searchComponent) {

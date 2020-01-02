@@ -47,11 +47,13 @@ export class TagController extends DialogController<{ params: IItem }, {}> {
     /*
      * Show tag list when dialog loads and focus on tag-field.
      */
-    async $onInit() {
+    $onInit() {
         super.$onInit();
-        await this.updateTags();
-        this.focusName = true;
-        await this.draggable.makeHeightAutomatic();
+        (async () => {
+            await this.updateTags();
+            this.focusName = true;
+            await this.draggable.makeHeightAutomatic();
+        })();
     }
 
     /**

@@ -41,11 +41,14 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
     /**
      * Show tag list when dialog loads and focus on tag-field.
      */
-    async $onInit() {
+    $onInit() {
         super.$onInit();
-        await this.getSubjects();
-        await this.getCurrentSpecialTags();
-        this.updateFields();
+
+        (async () => {
+            await this.getSubjects();
+            await this.getCurrentSpecialTags();
+            this.updateFields();
+        })();
     }
 
     /**

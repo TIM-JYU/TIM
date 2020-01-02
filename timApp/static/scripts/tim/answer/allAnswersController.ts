@@ -34,7 +34,7 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
         return "Get answers";
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         const options = this.resolve.params;
         this.showSort = options.allTasks;
@@ -72,13 +72,15 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
         };
 
         this.lastFetch = null;
-        const r = await to($http.get<{last_answer_fetch: {[index: string]: string}}>("/settings/get/last_answer_fetch"));
-        if (r.ok && r.result.data.last_answer_fetch) {
-            this.lastFetch = r.result.data.last_answer_fetch[options.identifier];
-            if (!this.lastFetch) {
-                this.lastFetch = "no fetches yet";
+        (async () => {
+            const r = await to($http.get<{last_answer_fetch: {[index: string]: string}}>("/settings/get/last_answer_fetch"));
+            if (r.ok && r.result.data.last_answer_fetch) {
+                this.lastFetch = r.result.data.last_answer_fetch[options.identifier];
+                if (!this.lastFetch) {
+                    this.lastFetch = "no fetches yet";
+                }
             }
-        }
+        })();
     }
 
     ok() {

@@ -1,3 +1,4 @@
+import {$rootScope} from "tim/util/ngimport";
 import {Result} from "../util/utils";
 import {DialogController, registerDialogComponent, showDialog} from "./dialog";
 
@@ -23,15 +24,18 @@ class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}
         return this.resolve.params.title;
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         this.value = this.resolve.params.defaultValue;
         if ( this.resolve.params.isInput === false) {
             this.value = "-";
             this.isInput = false;
         }
-        await this.draggable.getLayoutPromise();
-        this.focus = true;
+        (async () => {
+            await this.draggable.getLayoutPromise();
+            this.focus = true;
+            $rootScope.$applyAsync();
+        })();
     }
 
     async ok() {

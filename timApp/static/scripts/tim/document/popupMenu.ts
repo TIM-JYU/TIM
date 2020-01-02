@@ -73,14 +73,16 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
         super.close({});
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         this.p = this.resolve.params;
-        await this.draggable.makeHeightAutomatic();
-        const p = this.p.pos;
-        if (p) {
-            await this.moveTo(p);
-        }
+        (async () => {
+            await this.draggable.makeHeightAutomatic();
+            const p = this.p.pos;
+            if (p) {
+                await this.moveTo(p);
+            }
+        })();
     }
 
     async $doCheck() {

@@ -1,4 +1,4 @@
-import angular, {IPromise, IScope} from "angular";
+import angular, {IScope} from "angular";
 import * as colorpicker from "angular-bootstrap-colorpicker";
 import ngSanitize from "angular-sanitize";
 import deepmerge from "deepmerge";
@@ -6,16 +6,8 @@ import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
 import {$http, $sce, $timeout} from "../util/ngimport";
-import {
-    markAsUsed,
-    MouseOrTouch,
-    numOrStringToNumber,
-    posToRelative,
-    Require,
-    TimDefer,
-    to,
-    valueOr,
-} from "../util/utils";
+import {markAsUsed, MouseOrTouch, numOrStringToNumber, posToRelative, Require, to, valueOr} from "../util/utils";
+import {TimDefer} from "../util/timdefer";
 import {
     CommonPropsT,
     DefaultPropsT,

@@ -36,7 +36,7 @@ export class RestampDialogController extends DialogController<{params: IStamping
         super(element, scope);
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         this.stampingData = this.resolve.params;
     }

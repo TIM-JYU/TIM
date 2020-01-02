@@ -577,7 +577,7 @@ ${backTicks}
         }
     }
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         this.autocomplete = this.getLocalBool("autocomplete", false);
         const saveTag = this.getSaveTag();
@@ -609,7 +609,9 @@ ${backTicks}
             this.refreshEditorSize();
         });
         const oldMode = window.localStorage.getItem("oldMode" + this.getOptions().localSaveTag) || (this.getOptions().touchDevice ? "text" : "ace");
-        await this.changeEditor(oldMode);
+        (async () => {
+            await this.changeEditor(oldMode);
+        })();
         this.scope.$watch(() => this.autocomplete, () => {
             if (this.isAce(this.editor)) {
                 this.editor.setAutoCompletion(this.autocomplete);

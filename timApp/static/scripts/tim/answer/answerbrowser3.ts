@@ -2,6 +2,7 @@ import {IController, IScope, ITranscludeFunction} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
+import {TimDefer} from "tim/util/timdefer";
 import {dereferencePar, getParId} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {getRangeBeginParam} from "../document/viewRangeInfo";
@@ -14,7 +15,7 @@ import {Users} from "../user/userService";
 import {documentglobals} from "../util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
 import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
-import {Binding, getURLParameter, markAsUsed, Require, TimDefer, to} from "../util/utils";
+import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
 
