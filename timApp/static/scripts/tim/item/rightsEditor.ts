@@ -103,6 +103,7 @@ class RightsEditorController implements IController {
     private removingRight?: IRight;
     private confirmExpire?: boolean;
     private clearInput?: boolean;
+    private activeBoxLoading = false;
 
     constructor(private scope: IScope, private element: JQLite) {
         this.timeOpt = {type: "always"};
@@ -222,6 +223,15 @@ class RightsEditorController implements IController {
             relPath: this.relPath(i),
             rightsStr: this.formatRights(i),
         }));
+    }
+
+    async activeBoxChanged() {
+        if (!this.massMode || !this.gridOptions) {
+            return;
+        }
+        this.activeBoxLoading = true;
+        this.gridOptions.data = await this.getItemsAndPreprocess();
+        this.activeBoxLoading = false;
     }
 
     manageLink(row: uiGrid.IGridRowOf<IItemWithRights>) {
@@ -693,6 +703,9 @@ class RightsEditorController implements IController {
         let currentRight;
         let typeSep = "";
         for (const r of i.grouprights) {
+            if (this.isObsolete(r) && this.showActiveOnly) {
+                continue;
+            }
             let groupSep = ", ";
             // Assuming the rights list is ordered by access type.
             if (r.type != currentRight) {

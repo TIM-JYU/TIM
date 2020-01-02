@@ -1,3 +1,10 @@
+<div class="checkbox">
+    <label>
+        <input ng-model="$ctrl.showActiveOnly"
+               ng-change="$ctrl.activeBoxChanged()"
+               type="checkbox"/> Show only active or upcoming rights <tim-loading ng-if="$ctrl.activeBoxLoading"></tim-loading>
+    </label>
+</div>
 <div ng-if="$ctrl.massMode && $ctrl.gridReady"
      ui-grid="$ctrl.gridOptions"
      ui-grid-selection
@@ -30,11 +37,6 @@
             Expire rights
         </label>
     </div>
-</div>
-<div class="checkbox" ng-if="!$ctrl.massMode">
-    <label>
-        <input ng-model="$ctrl.showActiveOnly" type="checkbox"/> Show only active or upcoming rights
-    </label>
 </div>
 <div class="margin rights-list {{ type.name }}" ng-repeat="type in $ctrl.accessTypes" ng-if="!$ctrl.massMode">
     <a ng-click="$ctrl.showAddRightFn(type, $event)"
