@@ -3,7 +3,6 @@ from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
-from timApp.user.userutils import grant_access
 
 
 class ManageTest(TimRouteTest):
@@ -29,7 +28,8 @@ class ManageTest(TimRouteTest):
             self.get(f'/notify/{d.id}', expect_content=new_settings)
         self.login_test2()
         self.get(f'/manage/{d.id}', expect_status=403)
-        grant_access(self.test_user_2.get_personal_group(), d, AccessType.manage)
+        self.test_user_2.grant_access(d, AccessType.manage)
+        db.session.commit()
         self.get(f'/manage/{d.id}')
 
     def test_item_rights(self):
@@ -43,8 +43,10 @@ class ManageTest(TimRouteTest):
         new_alias = f'{f.path}/z/y'
         self.json_put(f'/alias/{d3.id}/{new_alias}', expect_status=403)
         self.current_user.grant_access(f, AccessType.view)
+        db.session.commit()
         self.json_put(f'/alias/{d3.id}/{new_alias}', expect_status=403)
         self.current_user.grant_access(f, AccessType.edit)
+        db.session.commit()
         self.json_put(f'/alias/{d3.id}/{new_alias}')
 
         new_alias_2 = f'{pf.path}/z'
@@ -53,11 +55,13 @@ class ManageTest(TimRouteTest):
                        expect_status=403,
                        expect_content="You cannot create documents in this folder.")
         self.current_user.grant_access(pf, AccessType.view)
+        db.session.commit()
         self.json_post(f'/alias/{new_alias}',
                        {'new_name': new_alias_2},
                        expect_status=403,
                        expect_content="You cannot create documents in this folder.")
         self.current_user.grant_access(pf, AccessType.edit)
+        db.session.commit()
         self.json_post(f'/alias/{new_alias}',
                        {'new_name': new_alias_2})
 

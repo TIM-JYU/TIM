@@ -344,6 +344,7 @@ group: testuser1
 #- {plugin=textfield #t}
         """)
         self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.login_test2()
         d2 = self.create_jsrun(f"""
 group: testuser2
@@ -373,6 +374,7 @@ tools.setString("{d.id}.t", "hi");
 
         # Can write own answer to another doc via jsrunner if teacher access there
         self.test_user_2.grant_access(d, AccessType.teacher)
+        db.session.commit()
         self.do_jsrun(
             d2,
         )
@@ -397,6 +399,7 @@ tools.setString("{d.id}.t", "hi_ext");
             expect_status=403,
         )
         self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.do_jsrun(
             d2,
         )
@@ -434,6 +437,7 @@ tools.setString("t", "hi");
         """)
         d2.document.add_text('#- {#t plugin=textfield}')
         self.test_user_2.grant_access(d2, AccessType.view)
+        db.session.commit()
         d3 = self.create_jsrun(f"""
 groups: []
 fields:
@@ -445,6 +449,7 @@ showInView: true
         """)
         d3.document.add_text('#- {#t plugin=textfield}')
         self.test_user_2.grant_access(d3, AccessType.view)
+        db.session.commit()
         self.login_test2()
         self.do_jsrun(
             d2,

@@ -24,7 +24,7 @@ from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_USERNAME
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import grant_view_access, grant_access, get_anon_user_id
+from timApp.user.userutils import grant_access, get_anon_user_id
 from timApp.util.flask.responsehelper import to_dict
 from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
 from timApp.velp.velp_models import Annotation
@@ -143,7 +143,8 @@ class PluginTest(TimRouteTest):
                                      "reason.&quot;}],&quot;trueText&quot;:null,&quot;buttonText&quot;:null,&quot;correctText&quot;:null}}'></mmcq>",
                              'reviewHtml': None}, j)
 
-        grant_access(UserGroup.get_anonymous_group(), doc, AccessType.view)
+        User.get_anon().grant_access(doc, AccessType.view)
+        db.session.commit()
 
         tree = self.get(f'/view/{doc.id}', as_tree=True, query_string={'lazy': False})
         plugs = tree.cssselect(mmcq_xpath)
@@ -268,8 +269,8 @@ class PluginTest(TimRouteTest):
                                 expect_content=self.permission_error)
 
         # until he is granted a permission
-        ug = self.current_group()
-        grant_view_access(ug, d)
+        self.current_user.grant_access(d, AccessType.view)
+        db.session.commit()
 
         # but he still cannot see the file
         resp = self.post_answer('csPlugin', task_id, user_input, expect_status=403,
@@ -277,7 +278,8 @@ class PluginTest(TimRouteTest):
         self.get(ur['file'], expect_status=403, expect_content=self.permission_error)
 
         # until the 'see answers' right is granted for the document
-        grant_access(self.current_group(), d, AccessType.see_answers)
+        self.current_user.grant_access(d, AccessType.see_answers)
+        db.session.commit()
         self.get_no_warn(ur['file'], expect_content=file_content)
 
     def do_plugin_upload(self, doc, file_content, filename, task_id, task_name, expect_version=1):
@@ -340,7 +342,8 @@ class PluginTest(TimRouteTest):
         self.post_answer(plugin_type, task_id, [True, False, False])
         self.post_answer(plugin_type, task_id, [True, True, False])
         self.post_answer(plugin_type, task_id2, [True, False])
-        grant_view_access(self.test_user_2.get_personal_group(), doc)
+        self.test_user_2.grant_access(doc, AccessType.view)
+        db.session.commit()
         self.login_test2()
         self.post_answer(plugin_type, task_id, [True, True, True])
         self.post_answer(plugin_type, task_id2, [False, False])
@@ -421,7 +424,8 @@ class PluginTest(TimRouteTest):
         self.login_test2()
         self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
         self.check_save_points(TEST_USER_2_ID, answer_id, 1, 403, self.permission_error)
-        grant_view_access(self.test_user_2.get_personal_group(), d)
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.post_answer(plugin_type, task_id, [True, False, False])
         answer_list = self.get_task_answers(task_id)
         answer_id2 = answer_list[0]['id']
@@ -437,9 +441,11 @@ class PluginTest(TimRouteTest):
         self.check_save_points(TEST_USER_2_ID, answer_id2, None, 400, point_format_error)
         self.check_save_points(TEST_USER_2_ID, answer_id2, '', 400, point_format_error)
 
-        grant_access(self.test_user_2.get_personal_group(), d, AccessType.see_answers)
+        self.test_user_2.grant_access(d, AccessType.see_answers)
+        db.session.commit()
         self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
-        grant_access(self.test_user_2.get_personal_group(), d, AccessType.teacher)
+        self.test_user_2.grant_access(d, AccessType.teacher)
+        db.session.commit()
         self.check_save_points(TEST_USER_1_ID, answer_id, 1, 200, self.ok_resp)
 
     def test_point_sum_rule(self):
@@ -465,7 +471,8 @@ class PluginTest(TimRouteTest):
         doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md')
         d = doc.document
         timdb = self.get_db()
-        grant_view_access(self.test_user_2.get_personal_group(), doc)
+        self.test_user_2.grant_access(doc, AccessType.view)
+        db.session.commit()
         task_ids = [TaskId.parse(f'{d.doc_id}.{a}-{b}') for a, b in product(('t1', 't2', 't3'), ('a', 'b', 'c'))]
         answers = [
             [True, False, True],    # U1: 3 p + 3 v =  6, U2: 0 p + 3 v = 3
@@ -864,7 +871,8 @@ choices:
     reason: ""
     text: ""
 ```""")
-        grant_view_access(self.test_user_2.get_personal_group(), d)
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         did = d.id
         self.login_test2()
         a = self.post_answer('mmcq', f'{did}.t', [False, False, False])
@@ -924,7 +932,8 @@ needed_len: 6
         test2_json_substr = '"user": {"email": "test2@example.com"'
 
         # but someone with only 'see answers' can only see his own
-        grant_access(self.test_user_2.get_personal_group(), d.block, AccessType.see_answers)
+        self.test_user_2.grant_access(d.block, AccessType.see_answers)
+        db.session.commit()
         self.login_test2()
         self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
         a = self.post_answer(plugin_type='pali', task_id=task_id, user_input={'userword': 'aaaaaa', 'paliOK': True})
@@ -1072,7 +1081,8 @@ needed_len: 6
 #- {plugin=pali #t}
         """)
         d_id = d.id
-        grant_view_access(self.test_user_2.get_personal_group(), d)
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.login_test2()
         d2 = self.create_doc(initial_par=f"""
 #- {{plugin=pali #{d_id}.t}}
@@ -1088,7 +1098,8 @@ needed_len: 6
 
 #- {plugin=pali #t.points id=a3Xuyg1PF1l1}
         """)
-        grant_view_access(self.test_user_2.get_personal_group(), d)
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         r = self.post_answer('pali', f'{d.id}.t.points', user_input={'userword': 4})
         aid = r['savedNew']
         self.assertIsInstance(aid, int)
@@ -1164,8 +1175,8 @@ needed_len: 6
             self.post_answer('pali', f'{d.id}.t', user_input={'userword': '2'})
             self.post_answer('pali', f'{d.id}.t::readonly', user_input={'userword': '3'})
             self.post_answer('pali', f'{d.id}.t::readonlyz', user_input={'userword': '3'}, expect_status=400)
-            grant_view_access(self.test_user_2.get_personal_group(), d)
-
+            self.test_user_2.grant_access(d, AccessType.view)
+            db.session.commit()
             self.login_test2()
             self.post_answer(
                 'pali', f'{d.id}.t', user_input={'userword': '2'},
@@ -1177,7 +1188,8 @@ needed_len: 6
             self.assert_plugin_json(
                 r.cssselect('.parContent pali-runner')[0],
                 self.create_plugin_json(d, 't', toplevel={'access': 'readonly'}, par_id='SSYigUyqdb7p',))
-            grant_access(self.test_user_2.get_personal_group(), d, AccessType.teacher)
+            self.test_user_2.grant_access(d, AccessType.teacher)
+            db.session.commit()
             r = self.get(d.url, as_tree=True)
             self.assert_plugin_json(
                 r.cssselect('.parContent pali-runner')[0],
@@ -1261,6 +1273,7 @@ print(x == '%%username%%')
         a = self.post_answer('csPlugin', f'{d.id}.py', user_input=uinput)
         self.assertEqual('True\n', a['web']['console'])
         self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.login_test2()
         uinput2 = {**uinput, "usercode": f"x = 'testuser2'"}
         a = self.post_answer('csPlugin', f'{d.id}.py', user_input=uinput2)
@@ -1278,6 +1291,7 @@ print(x == '%%username%%')
         self.assertEqual('True\n', a['web']['console'])
 
         self.test_user_2.grant_access(d, AccessType.teacher)
+        db.session.commit()
         self.login_test2()
         self.post_answer(
             'csPlugin',

@@ -10,9 +10,10 @@ from timApp.markdown.markdownconverter import md_to_html
 from timApp.note.notes import get_notes
 from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
 from timApp.tim_app import get_home_organization_group
-from timApp.user.user import Consent
+from timApp.timdb.sqa import db
+from timApp.user.user import Consent, User
 from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import grant_view_access, grant_access
+from timApp.user.userutils import grant_access
 
 link_selector = CSSSelector('a')
 
@@ -266,7 +267,8 @@ class TimTest(TimRouteTest):
         doc = self.create_doc()
         hide = "var hideLinks = true;"
 
-        grant_view_access(UserGroup.get_anonymous_group(), doc)
+        User.get_anon().grant_access(doc, AccessType.view)
+        db.session.commit()
         self.assertFalse(hide in self.get(f'/view/{doc.id}'))
 
         self.logout()
@@ -287,7 +289,8 @@ class TimTest(TimRouteTest):
         doc = self.create_doc()
         hide = "var hideTopButtons = true;"
 
-        grant_view_access(UserGroup.get_anonymous_group(), doc)
+        User.get_anon().grant_access(doc, AccessType.view)
+        db.session.commit()
         self.assertFalse(hide in self.get(f'/view/{doc.id}'))
 
         self.logout()
@@ -313,7 +316,8 @@ class TimTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(initial_par="""#- {#t plugin=textfield}""")
         self.post_answer('textfield', f'{d.id}.t', user_input={'c': 'x'})
-        grant_access(UserGroup.get_anonymous_group(), d, AccessType.see_answers)
+        User.get_anon().grant_access(d, AccessType.see_answers)
+        db.session.commit()
         self.logout()
         self.get(f'/answers/{d.path}')
 

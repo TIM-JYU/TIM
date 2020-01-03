@@ -24,8 +24,8 @@ from timApp.document.docinfo import move_document, find_free_name
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType, Block
-from timApp.item.item import Item
 from timApp.item.copy_rights import copy_rights
+from timApp.item.item import Item
 from timApp.item.validation import validate_item, validate_item_and_create_intermediate_folders, has_special_chars
 from timApp.timdb.sqa import db
 from timApp.user.user import User, ItemOrBlock
@@ -279,7 +279,6 @@ def add_perm(
             duration_to=opt.durationTo,
             duration=opt.duration,
             require_confirm=p.confirm,
-            commit=False,
         )
         accs.append(a)
     return accs

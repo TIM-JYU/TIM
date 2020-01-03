@@ -158,6 +158,7 @@ class GroupTest(TimRouteTest):
         d = self.create_doc(settings={'group': self.current_user.get_personal_group().name})
         self.assertNotIn(no_access_msg, self.get(d.get_url_for_view('teacher')))
         self.test_user_2.grant_access(d, AccessType.teacher)
+        db.session.commit()
         self.login_test2()
         self.assertIn(no_access_msg, self.get(d.get_url_for_view('teacher')))
 
@@ -174,10 +175,12 @@ class GroupTest2(TimRouteTest):
         self.login_test1()
         self.get('/groups/show/edittest1', expect_status=403)
         self.test_user_1.grant_access(d, AccessType.view)
+        db.session.commit()
         self.get(d.url)
         self.get(d.parent.url)
         self.get('/groups/show/edittest1')
         self.json_post('/groups/addmember/edittest1', {'names': f'testuser1'.split(',')}, expect_status=403)
         self.test_user_1.grant_access(d, AccessType.edit)
+        db.session.commit()
         self.json_post('/groups/addmember/edittest1', {'names': f'testuser1'.split(',')},
                  expect_content={'added': ['testuser1'], 'already_belongs': [], 'not_exist': []})

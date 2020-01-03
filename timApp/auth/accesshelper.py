@@ -24,7 +24,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
-from timApp.util.flask.requesthelper import get_option, RouteException
+from timApp.util.flask.requesthelper import get_option
 from timApp.util.utils import get_current_time
 
 
@@ -356,8 +356,7 @@ def grant_access_to_session_users(i: ItemOrBlock):
     for u in get_other_users_as_list():
         grant_access(User.get_by_id(int(u['id'])).get_personal_group(),
                      i,
-                     AccessType.manage,
-                     commit=False)
+                     AccessType.manage)
 
 
 def reset_request_access_cache():

@@ -1,6 +1,7 @@
 """Server tests for showing authors for paragraphs."""
+from timApp.auth.accesstype import AccessType
 from timApp.tests.server.timroutetest import TimRouteTest, get_content
-from timApp.user.userutils import grant_edit_access
+from timApp.timdb.sqa import db
 
 
 class AuthorsTest(TimRouteTest):
@@ -8,8 +9,9 @@ class AuthorsTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         url = d.url
-        grant_edit_access(self.test_user_2.get_personal_group(), d)
-        grant_edit_access(self.test_user_3.get_personal_group(), d)
+        self.test_user_2.grant_access(d, AccessType.edit)
+        self.test_user_3.grant_access(d, AccessType.edit)
+        db.session.commit()
         self.new_par(d.document, 'par 1')
         self.new_par(d.document, 'par 2')
         self.new_par(d.document, 'par 3')

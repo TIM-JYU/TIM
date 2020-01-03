@@ -9,7 +9,6 @@ from timApp.tests.server.test_default_rights import convert_to_old_format
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import grant_access
 from timApp.util.utils import get_current_time
 
 
@@ -51,6 +50,7 @@ class PermissionTest(TimRouteTest):
         d = self.create_doc()
         docid = d.id
         self.test_user_2.grant_access(d, AccessType.manage)
+        db.session.commit()
         self.login_test2()
         self.json_put(
             f'/permissions/add',
@@ -384,13 +384,13 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         # Add an expired right
-        grant_access(
-            group=self.test_user_2.get_personal_group(),
+        self.test_user_2.grant_access(
             access_type=AccessType.view,
             accessible_from=get_current_time(),
             accessible_to=get_current_time(),
             block=d,
         )
+        db.session.commit()
         d.document.set_settings({
             'auto_confirm': self.get_personal_item_path('nextdoc'),
             'expire_next_doc_message': 'My custom message',
@@ -409,13 +409,13 @@ class PermissionTest(TimRouteTest):
         r = self.get(d.url, expect_status=403)
         self.assertIn('Cannot get access to target document: No access found for users/test-user-1/nextdoc', r)
         self.assertNotIn('My custom message', r)
-        grant_access(
-            group=self.test_user_2.get_personal_group(),
+        self.test_user_2.grant_access(
             access_type=AccessType.view,
             block=d2,
             duration=timedelta(hours=2),
             require_confirm=True,
         )
+        db.session.commit()
         r = self.get(d.url, expect_status=403)
         self.assertIn('My custom message', r)
         self.assertIn('Go to the next document', r)
@@ -429,13 +429,13 @@ class PermissionTest(TimRouteTest):
         self.get(d2.url, query_string={'unlock': True})
 
         # test also range confirm
-        grant_access(
-            group=self.test_user_2.get_personal_group(),
+        self.test_user_2.grant_access(
             access_type=AccessType.view,
             block=d2,
             accessible_to=get_current_time() + timedelta(days=1),
             require_confirm=True,
         )
+        db.session.commit()
         # make sure can't access at first
         self.get(d2.url, expect_status=403)
         # this does the autoconfirm
@@ -486,14 +486,14 @@ class PermissionTest(TimRouteTest):
     def test_cannot_auto_confirm_too_early(self):
         self.login_test1()
         d = self.create_doc()
-        grant_access(
-            group=self.test_user_2.get_personal_group(),
+        self.test_user_2.grant_access(
             access_type=AccessType.view,
             accessible_from=None,
             accessible_to=get_current_time() + timedelta(days=1),
             require_confirm=True,
             block=d,
         )
+        db.session.commit()
         d2 = self.create_doc()
         d.document.set_settings({
             'auto_confirm': d2.path,
@@ -503,37 +503,35 @@ class PermissionTest(TimRouteTest):
             'allow_self_confirm_from': d.path,
         })
         self.login_test2()
-        grant_access(
-            group=self.test_user_2.get_personal_group(),
+        self.test_user_2.grant_access(
             access_type=AccessType.view,
             block=d2,
             duration=timedelta(hours=2),
             require_confirm=True,
         )
+        db.session.commit()
         r = self.get(d.url, expect_status=403)
         self.assertNotIn('My custom message', r)
         self.assertNotIn('Go to the next document', r)
 
-        grant_access(
-            group=self.test_user_2.get_personal_group(),
+        self.test_user_2.grant_access(
             access_type=AccessType.view,
             duration=timedelta(days=1),
             require_confirm=True,
             block=d,
         )
-
+        db.session.commit()
         r = self.get(d.url, expect_status=403)
         self.assertNotIn('My custom message', r)
         self.assertNotIn('Go to the next document', r)
 
-        grant_access(
-            group=self.test_user_2.get_personal_group(),
+        self.test_user_2.grant_access(
             access_type=AccessType.view,
             duration=timedelta(days=1),
             require_confirm=False,
             block=d,
         )
-
+        db.session.commit()
         r = self.get(d.url, expect_status=403)
         self.assertNotIn('My custom message', r)
         self.assertNotIn('Go to the next document', r)
@@ -542,12 +540,12 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         tr = self.create_translation(d)
-        grant_access(
-            group=self.test_user_2.get_personal_group(),
+        self.test_user_2.grant_access(
             access_type=AccessType.view,
             accessible_to=get_current_time() - timedelta(days=1),
             block=tr,
         )
+        db.session.commit()
         d2 = self.create_doc()
         d2tr = self.create_translation(d2)
         trid = d2tr.id
@@ -562,13 +560,13 @@ class PermissionTest(TimRouteTest):
         synchronize_translations(d2, DocumentEditResult(added=d2.document.get_paragraphs()))
         self.login_test2()
         d2tr = DocEntry.find_by_id(trid)
-        grant_access(
-            group=self.test_user_2.get_personal_group(),
+        self.test_user_2.grant_access(
             access_type=AccessType.view,
             block=d2tr,
             accessible_to=get_current_time() + timedelta(days=1),
             require_confirm=True,
         )
+        db.session.commit()
         self.get(d2tr.url, expect_status=403)
         self.get(d2tr.url, expect_status=403)
 
@@ -580,20 +578,20 @@ class PermissionTest(TimRouteTest):
     def test_self_expire(self):
         self.login_test1()
         d = self.create_doc()
-        grant_access(
-            group=self.test_user_2.get_personal_group(),
+        self.test_user_2.grant_access(
             access_type=AccessType.view,
             accessible_from=get_current_time(),
             accessible_to=get_current_time(),
             block=d,
         )
+        db.session.commit()
         self.login_test2()
         self.json_post('/permissions/selfExpire', {'id': d.id})
 
-        grant_access(
-            group=self.test_user_2.get_personal_group(),
+        self.test_user_2.grant_access(
             access_type=AccessType.view,
             accessible_from=get_current_time(),
             block=d,
         )
+        db.session.commit()
         self.json_post('/permissions/selfExpire', {'id': d.id})

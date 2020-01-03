@@ -1,6 +1,7 @@
 """Server tests for user-specific document rendering."""
 from timApp.auth.accesstype import AccessType
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 
 
 class UserSpecificTest(TimRouteTest):
@@ -23,9 +24,11 @@ anyone
         self.assert_content(self.get(d.url, as_tree=True), ['a', 'testuser1 only edited', 'anyone'])
 
         self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.login_test2()
         self.assert_content(self.get(d.url, as_tree=True), ['a', 'anyone'])
         self.test_user_2.grant_access(d, AccessType.edit)
+        db.session.commit()
         self.assert_content(self.get(d.url, as_tree=True), ['a', 'anyone'])  # TODO shouldn't editors always see everything?
         p = d.document.get_paragraphs()[1]
         p.set_attr('visible', "%%'testuser2'|belongs%%")

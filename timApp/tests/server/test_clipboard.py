@@ -201,6 +201,7 @@ Document:
 stem: x
         """)
         self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.login_test2()
         par = d.document.get_paragraphs()[0]
         self.copy(d, par, par)

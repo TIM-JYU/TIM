@@ -9,7 +9,6 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import StampedPDF, UploadedFile
 from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import grant_access
 
 
 class UploadTest(TimRouteTest):
@@ -48,7 +47,8 @@ class UploadTest(TimRouteTest):
                   expect_content={'error': 'You cannot create documents in this folder.'})
         self.login_test3()
         j = self.create_folder(fname)
-        grant_access(self.test_user_1.get_personal_group(), Folder.get_by_id(j['id']), AccessType.edit)
+        self.test_user_1.grant_access(Folder.get_by_id(j['id']), AccessType.edit)
+        db.session.commit()
         self.login_test1()
         self.post('/upload/',
                   data={'folder': fname,
@@ -69,7 +69,8 @@ class UploadTest(TimRouteTest):
 
         self.login_test2()
         self.get(f'/files/{j["file"]}', expect_status=403)
-        grant_access(self.test_user_2.get_personal_group(), d, AccessType.view)
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.get_no_warn(f'/files/{j["file"]}', expect_content='test file')
 
     def test_upload_image(self):
@@ -81,7 +82,8 @@ class UploadTest(TimRouteTest):
 
         self.login_test2()
         self.get(f'/images/{j}', expect_status=403)
-        grant_access(self.test_user_2.get_personal_group(), di, AccessType.view)
+        self.test_user_2.grant_access(di, AccessType.view)
+        db.session.commit()
         self.get_no_warn(f'/images/{j}', expect_content='GIF87a', expect_mimetype='image/gif')
 
     def test_upload_copy_doc(self):
@@ -89,10 +91,11 @@ class UploadTest(TimRouteTest):
         di, j = self.create_doc_with_image()
         d = self.create_doc(copy_from=di.id)
         copy_id = d.id
-        grant_access(self.test_user_2.get_personal_group(), d, AccessType.view)
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.login_test2()
         self.get_no_warn(f'/images/{j}', expect_content='GIF87a')
-        grant_access(self.test_user_2.get_personal_group(), di, AccessType.view)
+        self.test_user_2.grant_access(di, AccessType.view)
         self.test_user_2.remove_access(copy_id, 'view')
         db.session.commit()
         self.get_no_warn(f'/images/{j}', expect_content='GIF87a')

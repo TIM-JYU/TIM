@@ -1,6 +1,7 @@
+from timApp.auth.accesstype import AccessType
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import grant_view_access
+from timApp.timdb.sqa import db
+from timApp.user.user import User
 
 
 class InlinePluginTest(TimRouteTest):
@@ -231,7 +232,8 @@ a {#x initword: #} b
 {#t#}
 """)
         u = d.url
-        grant_view_access(UserGroup.get_anonymous_group(), d)
+        User.get_anon().grant_access(d, AccessType.view)
+        db.session.commit()
         self.logout()
         r = self.get(u, as_tree=True).cssselect('.parContent login-menu')
         self.assertTrue(r)

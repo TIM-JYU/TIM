@@ -25,7 +25,8 @@ class DurationTest(TimRouteTest):
         d = self.create_doc()
         doc_id = d.id
         self.login_test2()
-        grant_access(self.test_user_2.get_personal_group(), d, AccessType.view, duration=timedelta(days=1))
+        self.test_user_2.grant_access(d, AccessType.view, duration=timedelta(days=1))
+        db.session.commit()
         d = DocEntry.find_by_id(doc_id)
         self.get(d.url_relative,
                  expect_status=403,
@@ -46,9 +47,10 @@ class DurationTest(TimRouteTest):
         d = self.create_doc()
         doc_id = d.id
         self.login_test2()
-        grant_access(self.test_user_2.get_personal_group(), d, AccessType.view,
+        self.test_user_2.grant_access(d, AccessType.view,
                      duration=timedelta(days=1),
                      require_confirm=True)
+        db.session.commit()
         d = DocEntry.find_by_id(doc_id)
         err_msg_confirm = f'You can unlock this item only after your permission is confirmed.'
         self.get(d.url_relative,
@@ -65,9 +67,10 @@ class DurationTest(TimRouteTest):
         self.login_test2()
         delta = timedelta(minutes=3)
         now_plus_minutes = get_current_time() + delta
-        grant_access(self.test_user_2.get_personal_group(), d, AccessType.view,
+        self.test_user_2.grant_access(d, AccessType.view,
                      duration=timedelta(days=1),
                      duration_from=now_plus_minutes)
+        db.session.commit()
         d = DocEntry.find_by_id(doc_id)
         now_minus_minutes = get_current_time() - delta
         err_msg_too_early = f'You can unlock this item in {humanize_datetime(now_plus_minutes)}.'
@@ -79,9 +82,10 @@ class DurationTest(TimRouteTest):
                  expect_status=403,
                  expect_contains=[err_msg_too_early])
 
-        grant_access(self.test_user_2.get_personal_group(), d, AccessType.view,
+        self.test_user_2.grant_access(d, AccessType.view,
                      duration=timedelta(days=1),
                      duration_to=now_minus_minutes)
+        db.session.commit()
         self.get(d.url_relative,
                  expect_status=403,
                  expect_contains=[err_msg_too_late])
@@ -89,9 +93,10 @@ class DurationTest(TimRouteTest):
                  expect_status=403,
                  expect_contains=[err_msg_too_late])
 
-        grant_access(self.test_user_2.get_personal_group(), d, AccessType.view,
+        self.test_user_2.grant_access(d, AccessType.view,
                      duration=timedelta(days=1),
                      duration_from=now_minus_minutes)
+        db.session.commit()
         self.get(d.url_relative,
                  expect_status=403,
                  expect_contains=self.get_about_to_access_msg())
@@ -119,6 +124,7 @@ class DurationTest(TimRouteTest):
         access = grant_access(UserGroup.get_logged_in_group(), d, AccessType.view,
                               duration=duration,
                               duration_to=now + duration)
+        db.session.commit()
         accesses = self.current_group().accesses.filter_by(type=AccessType.view.value).all()
         self.assertEqual(0, len(accesses))
         d = DocEntry.find_by_id(doc_id)
@@ -160,8 +166,9 @@ class DurationTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         self.login_test2()
-        grant_access(self.test_user_2.get_personal_group(), d, AccessType.view,
+        self.test_user_2.grant_access(d, AccessType.view,
                      duration=timedelta(days=0))
+        db.session.commit()
         self.get(d.url_relative,
                  expect_status=403,
                  expect_contains=self.get_about_to_access_msg('a moment'))
@@ -175,10 +182,12 @@ class DurationTest(TimRouteTest):
         d = self.create_doc()
         self.login_test3()
         self.test_user_3.grant_access(d, AccessType.view, accessible_from=get_current_time() + timedelta(days=1))
+        db.session.commit()
         self.get(d.url_relative,
                  expect_status=403,
                  expect_contains='You can access this item in 23 hours from now.')
         self.test_user_3.grant_access(d, AccessType.view, accessible_to=get_current_time() - timedelta(days=1))
+        db.session.commit()
         self.get(d.url_relative,
                  expect_status=403,
                  expect_contains='Your access to this item has expired a day ago.')

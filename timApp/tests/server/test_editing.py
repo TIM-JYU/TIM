@@ -6,7 +6,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.plugin.plugin import Plugin
 from timApp.tests.browser.browsertest import BrowserTest
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.user.userutils import grant_view_access
+from timApp.timdb.sqa import db
 
 
 class EditTest(TimRouteTest):
@@ -213,7 +213,7 @@ class EditTest(TimRouteTest):
         par3 = pars[2]
         self.post_par(d.document, '#- {edit=manage}\ntest', par_manage.get_id())
         self.test_user_2.grant_access(d, AccessType.edit)
-
+        db.session.commit()
         self.login_test2()
         self.post_par(d.document, 'asd', par1.get_id())
         self.post_par(
@@ -247,6 +247,7 @@ class EditTest(TimRouteTest):
         self.json_post(f'/unwrap_area/{d.id}/a', expect_status=403)
 
         self.test_user_2.grant_access(d, AccessType.manage)
+        db.session.commit()
         self.post_par(d.document, '#- {edit=manage}\nedited', par1.get_id())
         self.update_whole_doc(d, d.document.export_markdown() + 'new')
         self.post_area(
@@ -331,7 +332,8 @@ macros:
 test
         """)
         d_id = d.id
-        grant_view_access(self.test_user_2.get_personal_group(), d)
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         par_ids = [p.get_id() for p in d.document.get_paragraphs()]
         self.login_test2()
         self.get(f'/getBlock/{d_id}/{par_ids[0]}', expect_status=403)

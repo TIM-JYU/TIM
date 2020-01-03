@@ -15,6 +15,7 @@ from timApp.util.utils import get_current_time
 class UserTest(TimDbTest):
     def grant(self, g: UserGroup, b: Block, t: AccessType, **kwargs):
         r = grant_access(g, b, t, **kwargs)
+        db.session.commit()
         db.session.refresh(b)
         return r
 

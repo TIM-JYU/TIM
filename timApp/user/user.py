@@ -459,6 +459,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             ))
         return u
 
+    @staticmethod
+    def get_anon() -> 'User':
+        return User.query.get(0)
+
     def update_info(
             self,
             info: UserInfo,
@@ -542,7 +546,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                      duration_from: Optional[datetime] = None,
                      duration_to: Optional[datetime] = None,
                      duration: Optional[timedelta] = None,
-                     commit: bool = True):
+                     require_confirm: Optional[bool] = None):
         return grant_access(group=self.get_personal_group(),
                             block=block,
                             access_type=access_type,
@@ -551,7 +555,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                             duration_from=duration_from,
                             duration_to=duration_to,
                             duration=duration,
-                            commit=commit)
+                            require_confirm=require_confirm)
 
     def remove_access(self, block_id: int, access_type: str):
         BlockAccess.query.filter_by(block_id=block_id,

@@ -1,5 +1,5 @@
 """Server tests for macros."""
-
+from timApp.auth.accesstype import AccessType
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.plugin.plugin import Plugin
@@ -7,7 +7,6 @@ from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID
 from timApp.tests.server.timroutetest import TimRouteTest, get_content
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
-from timApp.user.userutils import grant_view_access
 from timApp.util.utils import decode_csplugin
 
 
@@ -48,7 +47,8 @@ type: cs
 header: %%username%% and %%realname%%
 ```
             """)
-        grant_view_access(self.test_user_2.get_personal_group(), d)
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
 
         pars = self.get(d.url, as_tree=True).cssselect('.parContent')
         self.assertEqual('Username is testuser1 and real name is Test user 1 and email is test1@example.com',

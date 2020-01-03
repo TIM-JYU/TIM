@@ -22,6 +22,7 @@ class NotifyTestBase(TimRouteTest):
         title = d.title
         url = d.url
         self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.new_par(d.document, 'test')
         self.assertEqual([], sent_mails_in_testing)
         self.login_test2()
@@ -78,6 +79,7 @@ class NotifyTest(NotifyTestBase):
         }, sent_mails_in_testing[-1])
 
         self.test_user_2.grant_access(d, AccessType.edit)
+        db.session.commit()
         self.new_par(d.document, 'test')
         process_pending_notifications()
         pars = d.document.get_paragraphs()
@@ -124,6 +126,7 @@ class NotifyTest(NotifyTestBase):
         }, sent_mails_in_testing[-1])
 
         self.test_user_2.grant_access(d, AccessType.teacher)
+        db.session.commit()
         self.new_par(d.document, 'test')
         process_pending_notifications()
         pars = d.document.get_paragraphs()
@@ -158,6 +161,7 @@ class NotifyTest(NotifyTestBase):
 stem: test
         """)
         self.test_user_2.grant_access(d, AccessType.teacher)
+        db.session.commit()
         self.post_comment(plug, public=True, text='Hello')
         process_pending_notifications()
         self.assertEqual(
@@ -177,6 +181,7 @@ class NotifyFolderTest(NotifyTestBase):
         self.login_test1()
         t1_f = self.current_user.get_personal_folder()
         self.test_user_2.grant_access(t1_f, AccessType.view)
+        db.session.commit()
         self.login_test2()
         self.update_notify_settings(t1_f, {'email_comment_add': True, 'email_comment_modify': False,
                                            'email_doc_modify': True})
@@ -188,6 +193,7 @@ class NotifyFolderTest(NotifyTestBase):
         self.new_par(d.document, 'test')
         self.assertEqual(0, len(sent_mails_in_testing))
         self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.new_par(d.document, 'test')
         process_pending_notifications()
         self.assertEqual(1, len(sent_mails_in_testing))
@@ -231,6 +237,7 @@ class CutPasteNotifyTest(NotifyTestBase):
         # d.document.clear_mem_cache()
         self.test_user_2.grant_access(d, AccessType.teacher)
         self.test_user_2.grant_access(d, AccessType.edit)
+        db.session.commit()
         self.cut(d, par_start=par, par_end=par2)
         # print(d.document.export_markdown())
         process_pending_notifications()

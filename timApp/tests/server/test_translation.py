@@ -8,6 +8,7 @@ from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
@@ -256,6 +257,7 @@ b
 
         t = Translation.find_by_id(t.id)
         self.test_user_2.grant_access(t, AccessType.view)
+        db.session.commit()
 
         # only editors should see the outofdate messages
         self.login_test2()

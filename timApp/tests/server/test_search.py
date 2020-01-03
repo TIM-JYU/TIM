@@ -1,6 +1,7 @@
 from timApp.auth.accesstype import AccessType
 from timApp.item.tag import TagType
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 
 
 class SearchTest(TimRouteTest):
@@ -205,6 +206,7 @@ class SearchTest(TimRouteTest):
         d = self.create_doc(initial_par=plugin_md)
         self.get(f'search/createContentFile')
         self.test_user_1.grant_access(d, AccessType.edit)
+        db.session.commit()
         self.get(f'search?ignoreRelevance=true&folder=&query={text_to_search}',
                  expect_status=200,
                  expect_content={
@@ -257,6 +259,7 @@ class SearchTest(TimRouteTest):
 
         self.login_test2()
         self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
         self.get(f'search?folder=&query={text_to_search}',
                  expect_status=200,
                  expect_content={'content_results': [],

@@ -11,7 +11,6 @@ from timApp.folder.folder import Folder
 from timApp.item.block import BlockType, Block
 from timApp.item.item import ItemBase
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, \
     ANONYMOUS_USERNAME
 from timApp.user.usergroup import UserGroup
@@ -62,28 +61,6 @@ def get_access_type_id(access_type):
     return access_type_map[access_type]
 
 
-def grant_edit_access(group, block):
-    """Grants edit access to a group for a block.
-
-    :param group: The group to which to grant view access.
-    :param block: The block for which to grant view access.
-
-    """
-
-    grant_access(group, block, AccessType.edit)
-
-
-def grant_view_access(group, block):
-    """Grants view access to a group for a block.
-
-    :param group: The group to which to grant view access.
-    :param block: The block for which to grant view access.
-
-    """
-
-    grant_access(group, block, AccessType.view)
-
-
 def grant_access(group,
                  block: Union[ItemBase, Block],
                  access_type: AccessType,
@@ -92,8 +69,7 @@ def grant_access(group,
                  duration_from: Optional[datetime] = None,
                  duration_to: Optional[datetime] = None,
                  duration: Optional[timedelta] = None,
-                 require_confirm: Optional[bool] = None,
-                 commit: bool = True) -> BlockAccess:
+                 require_confirm: Optional[bool] = None) -> BlockAccess:
     """Grants access to a group for a block.
 
     :param require_confirm: Whether this access needs to be later confirmed by someone with manage access.
@@ -102,7 +78,6 @@ def grant_access(group,
     :param accessible_from: The optional start time for the permission.
     :param accessible_to: The optional end time for the permission.
     :param duration: The optional duration for the permission.
-    :param commit: Whether to commit changes immediately.
     :param group: The group to which to grant view access.
     :param block: The block for which to grant view access.
     :param access_type: The kind of access. Possible values are listed in accesstype table.
@@ -124,8 +99,6 @@ def grant_access(group,
             b.duration_from = duration_from
             b.duration_to = duration_to
             b.require_confirm = require_confirm
-            if commit:
-                db.session.commit()
             return b
     ba = BlockAccess(
         block_id=block.id,
@@ -138,8 +111,6 @@ def grant_access(group,
         require_confirm=require_confirm,
     )
     group.accesses.append(ba)
-    if commit:
-        db.session.commit()
     return ba
 
 
@@ -195,7 +166,6 @@ def grant_default_access(groups: List[UserGroup],
         accesses.append(grant_access(group,
                                      doc,
                                      access_type,
-                                     commit=False,
                                      accessible_from=accessible_from,
                                      accessible_to=accessible_to,
                                      duration_from=duration_from,

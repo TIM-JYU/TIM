@@ -32,6 +32,7 @@ class MinutesCreation(TimRouteTest):
 
         # Files should not get copied to minutes document.
         self.test_user_2.grant_access(d2, AccessType.view)
+        db.session.commit()
         self.login_test2()
         self.get(f'/images/{image_path}', expect_status=403)
 

@@ -9,8 +9,8 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.notification.notify import process_pending_notifications, sent_mails_in_testing
 from timApp.tests.server.test_notify import NotifyTestBase
 from timApp.tests.server.timroutetest import get_note_id_from_json
-from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import grant_view_access
+from timApp.timdb.sqa import db
+from timApp.user.user import User
 
 comment_selector = CSSSelector('div.notes > div.note')
 
@@ -34,8 +34,8 @@ class CommentTest(NotifyTestBase):
         self.assertEqual(2, len(comments))
         self.assertEqual(comment1, comments[0].find('p').text_content())
         self.assertEqual(comment_private, comments[1].find('p').text_content())
-        grant_view_access(UserGroup.get_anonymous_group(), d)
-
+        User.get_anon().grant_access(d, AccessType.view)
+        db.session.commit()
         self.login_anonymous()
         self.assertEqual(-1, self.current_user.id)
         comments = self.post_comment_and_return_html(comment2, par)
@@ -86,6 +86,7 @@ class CommentTest(NotifyTestBase):
         d = self.create_doc(initial_par='test')
         self.test_user_2.grant_access(d, AccessType.view)
         self.test_user_3.grant_access(d, AccessType.edit)
+        db.session.commit()
         par = d.document.get_paragraphs()[0]
         self.post_comment(par, True, 'hi')
         self.login_test2()
