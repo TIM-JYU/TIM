@@ -24,7 +24,8 @@ from timApp.document.docinfo import move_document, find_free_name
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType, Block
-from timApp.item.item import Item, copy_rights
+from timApp.item.item import Item
+from timApp.item.copy_rights import copy_rights
 from timApp.item.validation import validate_item, validate_item_and_create_intermediate_folders, has_special_chars
 from timApp.timdb.sqa import db
 from timApp.user.user import User, ItemOrBlock
@@ -619,10 +620,10 @@ def copy_folder(f_from: Folder, f_to: Folder, user_who_copies: User, exclude_re)
             title=d.title,
             folder_opts=folder_opts,
         )
-        copy_rights(d, nd)
+        copy_rights(d, nd, new_owner=user_who_copies)
         nd.document.modifier_group_id = user_who_copies.get_personal_group().id
         for tr, new_tr in copy_document_and_enum_translations(d, nd, copy_uploads=True):
-            copy_rights(tr, new_tr)
+            copy_rights(tr, new_tr, new_owner=user_who_copies)
     for f in f_from.get_all_folders():
         if exclude_re.search(f.path):
             continue
@@ -636,5 +637,5 @@ def copy_folder(f_from: Folder, f_to: Folder, user_who_copies: User, exclude_re)
                 title=f.title,
                 creation_opts=folder_opts,
             )
-            copy_rights(f, nf)
+            copy_rights(f, nf, new_owner=user_who_copies)
         copy_folder(f, nf, user_who_copies, exclude_re)

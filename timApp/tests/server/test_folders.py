@@ -383,6 +383,25 @@ class FolderCopyTest(TimRouteTest):
             {'destination': self.get_personal_item_path('perm'), 'exclude': ''},
         )
 
+        # Make sure the copier is now the owner, and that the copy right has not been copied.
+        d = DocEntry.find_by_path(self.get_personal_item_path('perm/b'))
+        self.assertEqual(
+            {(AccessType.owner, self.test_user_2.get_personal_group())},
+            {(a.access_type, a.usergroup) for a in d.block.accesses},
+        )
+
+        # Make sure the original rights did not change.
+        self.login_test1()
+        d = DocEntry.find_by_path(self.get_personal_item_path('perm/b'))
+        self.assertEqual(
+            {
+                (AccessType.copy, self.test_user_2.get_personal_group()),
+                (AccessType.owner, self.test_user_1.get_personal_group()),
+
+            },
+            {(a.access_type, a.usergroup) for a in d.block.accesses},
+        )
+
     def test_copy_regression(self):
         self.login_test1()
         _ = self.create_doc(self.get_personal_item_path('x/templates/b'))

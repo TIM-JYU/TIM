@@ -4,7 +4,6 @@ from flask import current_app
 from sqlalchemy import tuple_, func
 from sqlalchemy.orm import defaultload
 
-from timApp.auth.auth_models import BlockAccess
 from timApp.item.block import Block, BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
@@ -175,19 +174,3 @@ class Item(ItemBase):
             else:
                 raise NotImplementedError
         return None
-
-
-def copy_rights(source: Item, dest: Item):
-    for a in source.block.accesses:  # type: BlockAccess
-        b = BlockAccess(
-            block_id=dest.block.id,
-            usergroup_id=a.usergroup_id,
-            type=a.type,
-            accessible_from=a.accessible_from,
-            accessible_to=a.accessible_to,
-            duration=a.duration,
-            duration_from=a.duration_from,
-            duration_to=a.duration_to,
-        )
-        if b not in dest.block.accesses:
-            dest.block.accesses.append(b)
