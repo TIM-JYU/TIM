@@ -161,7 +161,7 @@ class PermissionTest(TimRouteTest):
                              [{'access_name': 'owner',
                                'access_type': 6,
                                'accessible_from': i.block.accesses[
-                                   0].accessible_from.isoformat(),
+                                   (self.get_test_user_1_group_id(), AccessType.owner.value)].accessible_from.isoformat(),
                                'accessible_to': None,
                                'duration': None,
                                'duration_from': None,
@@ -172,7 +172,7 @@ class PermissionTest(TimRouteTest):
                               {'access_name': 'view',
                                'access_type': 1,
                                'accessible_from': str(
-                                   i.block.accesses[1].accessible_from.isoformat()),
+                                   i.block.accesses[(self.get_test_user_2_group_id(), AccessType.view.value)].accessible_from.isoformat()),
                                'accessible_to': None,
                                'duration': None,
                                'duration_from': None,
@@ -348,7 +348,7 @@ class PermissionTest(TimRouteTest):
 
         # If the user doesn't have access to all documents, the operation should not complete.
         d = DocEntry.find_by_path(self.get_personal_item_path(paths[-1]))
-        for a in d.block.accesses:
+        for a in d.block.accesses.values():
             db.session.delete(a)
         db.session.commit()
         self.json_put(

@@ -494,7 +494,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if not b:
             return None
         now = get_current_time()
-        for a in b.accesses:  # type: BlockAccess
+        for a in b.accesses.values():  # type: BlockAccess
             if a.usergroup not in self.groups:
                 name = a.usergroup.name
                 if self.logged_in and name == LOGGED_IN_GROUPNAME:

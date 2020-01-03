@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Optional, List
 
 from sqlalchemy import func
+from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -40,7 +41,13 @@ class Block(db.Model):
     folder = db.relationship('Folder', back_populates='_block', uselist=False)
     translation = db.relationship('Translation', back_populates='_block', uselist=False, foreign_keys="Translation.doc_id")
     answerupload = db.relationship('AnswerUpload', back_populates='block', lazy='dynamic')
-    accesses = db.relationship('BlockAccess', back_populates='block', lazy='joined', cascade='all, delete-orphan')
+    accesses = db.relationship(
+        'BlockAccess',
+        back_populates='block',
+        lazy='joined',
+        cascade='all, delete-orphan',
+        collection_class=attribute_mapped_collection('block_collection_key'),
+    )
     tags: List[Tag] = db.relationship('Tag', back_populates='block', lazy='select')
     children = db.relationship('Block',
                                secondary=BlockAssociation.__table__,
@@ -80,7 +87,7 @@ class Block(db.Model):
 
     @property
     def owner_accesses(self):
-        return [a for a in self.accesses if a.type == AccessType.owner.value]
+        return [a for a in self.accesses.values() if a.type == AccessType.owner.value]
 
     def set_owner(self, usergroup: UserGroup):
         """Changes the owner group for a block.
@@ -88,24 +95,20 @@ class Block(db.Model):
         :param usergroup: The new usergroup.
 
         """
-        for a in self.accesses:
-            if a.type == AccessType.owner.value:
-                db.session.delete(a)
-        self.accesses.append(
-            BlockAccess(usergroup_id=usergroup.id,
-                        type=AccessType.owner.value,
-                        accessible_from=get_current_time()))
+        self.accesses = {(usergroup.id, AccessType.owner.value): BlockAccess(
+            usergroup_id=usergroup.id,
+            type=AccessType.owner.value,
+            accessible_from=get_current_time(),
+        )}
 
     def add_rights(self, groups, access_type: AccessType):
-        existing_rights = [ac.usergroup for ac in self.accesses]
         for gr in groups:
-            if gr not in existing_rights:
-                ba = BlockAccess(
-                    usergroup=gr,
-                    type=access_type.value,
-                    accessible_from=get_current_time(),
-                )
-                self.accesses.append(ba)
+            key = (gr.id, access_type.value)
+            self.accesses[key] = BlockAccess(
+                usergroup_id=gr.id,
+                type=access_type.value,
+                accessible_from=get_current_time(),
+            )
 
 
 class BlockType(Enum):
@@ -136,14 +139,16 @@ def insert_block(block_type: BlockType, description: Optional[str], owner_groups
 
     """
     b = Block(description=description, type_id=block_type.value)
-    if owner_groups is not None:
+    db.session.add(b)
+    if owner_groups:
+        db.session.flush()
         for owner_group in owner_groups:
+            # print(f'adding owner: {str(owner_group.id)} to {b.id}')
             access = BlockAccess(block=b,
                                  usergroup=owner_group,
                                  type=AccessType.owner.value,
                                  accessible_from=get_current_time())
-            db.session.add(access)
-    db.session.add(b)
+            b.accesses[(owner_group.id, AccessType.owner.value)] = access
     return b
 
 

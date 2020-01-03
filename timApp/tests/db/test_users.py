@@ -17,12 +17,14 @@ class UserTest(TimDbTest):
         r = grant_access(g, b, t, **kwargs)
         db.session.commit()
         db.session.refresh(b)
+        db.session.refresh(g)
         return r
 
     def remove(self, g, b: Block, t):
         r = remove_access(g, b, t)
         db.session.commit()
         db.session.refresh(b)
+        db.session.refresh(g)
         return r
 
     def test_create_user(self):

@@ -603,7 +603,7 @@ class ScimTest(TimRouteTest):
                 ('jy-CUR-4668-teachers', AccessType.owner.value),
                 ('jy-CUR-4668-studysubgroup-teachers', AccessType.owner.value),
             },
-            {(ac.usergroup.external_id.external_id, ac.type) for ac in d.block.accesses})
+            {(ac.usergroup.external_id.external_id, ac.type) for ac in d.block.accesses.values()})
         admin = UserGroup.get_admin_group().id
         self.assertEqual(admin, d.document.get_changelog().entries[0].group_id)
         self.login(username='ut-1')
@@ -731,7 +731,7 @@ class ScimTest(TimRouteTest):
                 ('jy-CUR-4668-studysubgroup-teachers', AccessType.owner.value),
                 ('jy-CUR-4668-teachers', AccessType.owner.value),
             },
-            {(ac.usergroup.external_id.external_id, ac.type) for ac in d.block.accesses})
+            {(ac.usergroup.external_id.external_id, ac.type) for ac in d.block.accesses.values()})
         self.assertEqual({
             'macros': {
                 'group': 'students1',
@@ -927,13 +927,13 @@ class ScimTest(TimRouteTest):
         )
         d = DocEntry.find_by_path('groups/2020/itkp222/09/sisugroups')
         expected_set = {'itkp222-200909-teachers', 'itkp222-200919-teachers', 'itkp222-200919-administrative-persons'}
-        rights_set = set([x.usergroup.name for x in d.block.accesses])
+        rights_set = set([x.usergroup.name for x in d.block.accesses.values()])
         self.assertEqual(expected_set, rights_set)
-        self.assertEqual(expected_set, set([x.usergroup.name for x in d.block.parent.block.accesses]))
-        self.assertEqual(expected_set, set([x.usergroup.name for x in d.block.parent.parent.block.accesses]))
+        self.assertEqual(expected_set, set([x.usergroup.name for x in d.block.parent.block.accesses.values()]))
+        self.assertEqual(expected_set, set([x.usergroup.name for x in d.block.parent.parent.block.accesses.values()]))
         year_folder = d.block.parent.parent.parent
         self.assertEqual('2020', year_folder.title)
-        self.assertIn('teachers', [x.usergroup.name for x in year_folder.block.accesses])
+        self.assertIn('teachers', [x.usergroup.name for x in year_folder.block.accesses.values()])
 
     def test_scim_group_manual_member_update(self):
         eid = 'jy-CUR-7777-teachers'

@@ -287,16 +287,16 @@ class FolderCopyTest(TimRouteTest):
         t1g = self.test_user_1.get_personal_group()
         self.assertEqual([BlockAccess(block_id=f1c.id, usergroup_id=t1g.id, type=AccessType.owner.value),
                           BlockAccess(block_id=f1c.id, usergroup_id=t2g.id, type=AccessType.view.value),
-                          ], f1c.block.accesses)
+                          ], list(f1c.block.accesses.values()))
         self.assertEqual([BlockAccess(block_id=f2c.id, usergroup_id=t1g.id, type=AccessType.owner.value),
                           BlockAccess(block_id=f2c.id, usergroup_id=t2g.id, type=AccessType.edit.value),
-                          ], f2c.block.accesses)
+                          ], list(f2c.block.accesses.values()))
         self.assertEqual([BlockAccess(block_id=d2c.id, usergroup_id=t1g.id, type=AccessType.owner.value),
                           BlockAccess(block_id=d2c.id, usergroup_id=t2g.id, type=AccessType.teacher.value),
-                          ], d2c.block.accesses)
+                          ], list(d2c.block.accesses.values()))
         self.assertEqual([BlockAccess(block_id=d2.id, usergroup_id=t1g.id, type=AccessType.owner.value),
                           BlockAccess(block_id=d2.id, usergroup_id=t2g.id, type=AccessType.teacher.value),
-                          ], d2.block.accesses)
+                          ], list(d2.block.accesses.values()))
         trs = sorted(f1d1c.translations, key=lambda tr: tr.lang_id)
         self.assertEqual(['', 'en', 'sv'], [tr.lang_id for tr in trs])
         self.assertEqual(['document 1', 'title_en', 'title_sv'], [tr.title for tr in trs])
@@ -396,7 +396,7 @@ class FolderCopyTest(TimRouteTest):
         d = DocEntry.find_by_path(self.get_personal_item_path('perm/b'))
         self.assertEqual(
             {(AccessType.owner, self.test_user_2.get_personal_group())},
-            {(a.access_type, a.usergroup) for a in d.block.accesses},
+            {(a.access_type, a.usergroup) for a in d.block.accesses.values()},
         )
 
         # Make sure the original rights did not change.
@@ -408,7 +408,7 @@ class FolderCopyTest(TimRouteTest):
                 (AccessType.owner, self.test_user_1.get_personal_group()),
 
             },
-            {(a.access_type, a.usergroup) for a in d.block.accesses},
+            {(a.access_type, a.usergroup) for a in d.block.accesses.values()},
         )
 
     def test_copy_regression(self):

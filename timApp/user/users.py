@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.folder.folder import Folder
-from timApp.item.block import BlockType
+from timApp.item.block import Block, BlockType
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPNAME, \
     LOGGED_IN_GROUPNAME, \
@@ -18,7 +18,8 @@ from timApp.user.userutils import get_default_right_document
 
 
 def remove_access(group, i: ItemOrBlock, access_type: AccessType):
-    return group.accesses_alt.pop((i.id, access_type.value), None)
+    b = i if isinstance(i, Block) else i.block
+    return b.accesses.pop((group.id, access_type.value), None)
 
 
 RightsList = List[BlockAccess]

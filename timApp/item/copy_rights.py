@@ -6,7 +6,7 @@ from timApp.util.utils import get_current_time
 
 
 def copy_rights(source: Item, dest: Item, new_owner: User):
-    for a in source.block.accesses:  # type: BlockAccess
+    for key, a in source.block.accesses.items():
         # We don't want to copy owner or copy rights.
         if a.access_type in (AccessType.owner, AccessType.copy):
             continue
@@ -20,8 +20,7 @@ def copy_rights(source: Item, dest: Item, new_owner: User):
             duration_from=a.duration_from,
             duration_to=a.duration_to,
         )
-        if b not in dest.block.accesses:
-            dest.block.accesses.append(b)
+        dest.block.accesses[key] = b
     g = new_owner.get_personal_group()
     o_a = BlockAccess(
         block_id=dest.block.id,
@@ -29,5 +28,5 @@ def copy_rights(source: Item, dest: Item, new_owner: User):
         type=AccessType.owner.value,
         accessible_from=get_current_time(),
     )
-    if o_a not in dest.block.accesses:
-        dest.block.accesses.append(o_a)
+    key = (g.id, AccessType.owner.value)
+    dest.block.accesses[key] = o_a

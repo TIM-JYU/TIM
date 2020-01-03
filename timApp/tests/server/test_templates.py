@@ -4,7 +4,6 @@ from timApp.document.create_item import get_templates_for_folder
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.sqa import db
 
 
 class TemplateTest(TimRouteTest):
@@ -12,7 +11,6 @@ class TemplateTest(TimRouteTest):
     def test_templates(self):
         self.login_test1()
         folder = self.current_user.get_personal_folder().path
-        db.session.expire_on_commit = False
         t1 = self.create_doc(f'{folder}/a/{TEMPLATE_FOLDER_NAME}/T1')
         t1json = json.loads(json.dumps(t1, cls=TimJsonEncoder))
         t2 = self.create_doc(f'{folder}/a/{TEMPLATE_FOLDER_NAME}/T2')

@@ -25,7 +25,7 @@ def associate_old_uploads():
         if not u.filesystem_path.exists():
             print(f'Upload does not exist in filesystem: {u.relative_filesystem_path}')
             return
-        for acc in u.block.accesses:
+        for acc in u.block.accesses.values():
             if acc.usergroup == anon:
                 print(f'Deleting anon access from upload {u.relative_filesystem_path}')
                 db.session.delete(acc)

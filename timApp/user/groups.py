@@ -118,10 +118,13 @@ def create_group(groupname):
     u.admin_doc = doc.block
     f = doc.parent
     if len(f.block.accesses) == 1:
-        f.block.accesses.append(BlockAccess(usergroup=UserGroup.get_logged_in_group(),
-                                            type=AccessType.view.value,
-                                            accessible_from=get_current_time(),
-                                            ))
+        logged_group = UserGroup.get_logged_in_group()
+        f.block.accesses[(logged_group.id, AccessType.view.value)] = (
+            BlockAccess(
+                usergroup_id=logged_group.id,
+                type=AccessType.view.value,
+                accessible_from=get_current_time(),
+            ))
     db.session.commit()
     return json_response(doc)
 
