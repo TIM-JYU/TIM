@@ -242,8 +242,11 @@ def edit_permissions(m: PermissionMassEditModel):
     items = Block.query.filter(Block.id.in_(m.ids)
                                & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])).all()
     a = None
+    owned_items_before = set()
     for i in items:
-        is_owner = verify_permission_edit_access(i, m.type)
+        checked_owner = verify_permission_edit_access(i, m.type)
+        if checked_owner:
+            owned_items_before.add(i)
         if m.action == EditOption.Add:
             accs = add_perm(m, i)
             if accs:
@@ -251,7 +254,15 @@ def edit_permissions(m: PermissionMassEditModel):
         else:
             for g in groups:
                 a = remove_perm(g.id, i, m.type)
-        check_ownership_loss(is_owner, i)
+
+    if m.type == AccessType.owner:
+        owned_items_after = set()
+        u = get_current_user_object()
+        for i in items:
+            if u.has_ownership(i):
+                owned_items_after.add(i)
+        if owned_items_before != owned_items_after:
+            raise AccessDenied('You cannot remove ownership from yourself.')
     if a:
         action = 'added' if m.action == EditOption.Add else 'removed'
         log_right(f'{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}')
@@ -319,7 +330,7 @@ def self_expire_permission(m: SelfExpireModel):
 def remove_perm(group_id: int, b: Block, t: AccessType):
     for a in b.accesses:
         if a.usergroup_id == group_id and a.type == t.value:
-            db.session.delete(a)
+            b.accesses.remove(a)
             return a
 
 
@@ -487,7 +498,7 @@ def verify_permission_edit_access(i: ItemOrBlock, perm_type: AccessType) -> bool
 
     :param i: The item to check for permission.
     :param perm_type: The permission type.
-    :return: True if the user has ownership, False if just manage access.
+    :return: True if owner permission was checked, false if just manage access.
 
     """
     if perm_type == AccessType.owner:

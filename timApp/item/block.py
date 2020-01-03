@@ -40,7 +40,7 @@ class Block(db.Model):
     folder = db.relationship('Folder', back_populates='_block', uselist=False)
     translation = db.relationship('Translation', back_populates='_block', uselist=False, foreign_keys="Translation.doc_id")
     answerupload = db.relationship('AnswerUpload', back_populates='block', lazy='dynamic')
-    accesses = db.relationship('BlockAccess', back_populates='block', lazy='joined')
+    accesses = db.relationship('BlockAccess', back_populates='block', lazy='joined', cascade='all, delete-orphan')
     tags: List[Tag] = db.relationship('Tag', back_populates='block', lazy='select')
     children = db.relationship('Block',
                                secondary=BlockAssociation.__table__,
