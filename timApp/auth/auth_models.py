@@ -39,6 +39,10 @@ class BlockAccess(db.Model):
     atype = db.relationship('AccessTypeModel', back_populates='accesses')
 
     @property
+    def group_collection_key(self):
+        return self.block_id, self.type
+
+    @property
     def future(self):
         return self.accessible_from is not None and get_current_time() < self.accessible_from
 

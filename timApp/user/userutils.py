@@ -91,15 +91,16 @@ def grant_access(group,
 
     access_id = access_type.value
     block = block if isinstance(block, Block) else block.block
-    for b in group.accesses:  # type: BlockAccess
-        if b.type == access_id and b.block_id == block.id:
-            b.accessible_from = accessible_from
-            b.accessible_to = accessible_to
-            b.duration = duration
-            b.duration_from = duration_from
-            b.duration_to = duration_to
-            b.require_confirm = require_confirm
-            return b
+    key = (block.id, access_id)
+    b = group.accesses_alt.get(key)
+    if b:
+        b.accessible_from = accessible_from
+        b.accessible_to = accessible_to
+        b.duration = duration
+        b.duration_from = duration_from
+        b.duration_to = duration_to
+        b.require_confirm = require_confirm
+        return b
     ba = BlockAccess(
         block_id=block.id,
         type=access_id,
@@ -110,7 +111,7 @@ def grant_access(group,
         duration=duration,
         require_confirm=require_confirm,
     )
-    group.accesses.append(ba)
+    group.accesses_alt[key] = ba
     return ba
 
 

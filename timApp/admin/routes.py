@@ -150,8 +150,12 @@ def do_merge(primary: str, secondary: str):
     for a in ('readparagraphs', 'notes', 'accesses'):
         a_alt = a + '_alt'
         moved_data[a] = len(getattr(u_sec_group, a_alt))
-        getattr(u_prim_group, a_alt).extend(getattr(u_sec_group, a_alt))
-        setattr(u_sec_group, a_alt, [])
+        if a == 'accesses':
+            getattr(u_prim_group, a_alt).update(getattr(u_sec_group, a_alt))
+            setattr(u_sec_group, a_alt, {})
+        else:
+            getattr(u_prim_group, a_alt).extend(getattr(u_sec_group, a_alt))
+            setattr(u_sec_group, a_alt, [])
 
     # Restore ownership of secondary's personal folder:
     # * all users are allowed to have at most one personal folder
