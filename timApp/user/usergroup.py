@@ -75,11 +75,16 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         collection_class=attribute_mapped_collection("user_id"),
         back_populates="group",
     )
-    accesses = db.relationship('BlockAccess',
-                               back_populates='usergroup',
-                               lazy='dynamic',
-                               )
-    accesses_alt = db.relationship('BlockAccess', collection_class=attribute_mapped_collection('group_collection_key'))
+    accesses = db.relationship(
+        'BlockAccess',
+        back_populates='usergroup',
+        lazy='dynamic',
+    )
+    accesses_alt = db.relationship(
+        'BlockAccess',
+        collection_class=attribute_mapped_collection('group_collection_key'),
+        cascade='all, delete-orphan',
+    )
     readparagraphs = db.relationship('ReadParagraph', back_populates='usergroup', lazy='dynamic')
     readparagraphs_alt = db.relationship('ReadParagraph')
     notes = db.relationship('UserNote', back_populates='usergroup', lazy='dynamic')

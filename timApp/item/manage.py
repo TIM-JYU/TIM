@@ -30,7 +30,7 @@ from timApp.item.validation import validate_item, validate_item_and_create_inter
 from timApp.timdb.sqa import db
 from timApp.user.user import User, ItemOrBlock
 from timApp.user.usergroup import UserGroup
-from timApp.user.users import remove_default_access, get_default_rights_holders, get_rights_holders
+from timApp.user.users import remove_default_access, get_default_rights_holders, get_rights_holders, remove_access
 from timApp.user.userutils import grant_access, grant_default_access
 from timApp.util.flask.requesthelper import verify_json_params, get_option, use_model, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
@@ -253,7 +253,7 @@ def edit_permissions(m: PermissionMassEditModel):
                 a = accs[0]
         else:
             for g in groups:
-                a = remove_perm(g.id, i, m.type)
+                a = remove_perm(g, i, m.type)
 
     if m.type == AccessType.owner:
         owned_items_after = set()
@@ -300,9 +300,12 @@ def add_perm(
 def remove_permission(m: PermissionRemoveModel):
     i = get_item_or_abort(m.id)
     had_ownership = verify_permission_edit_access(i, m.type)
-    a = remove_perm(m.group, i.block, m.type)
-    check_ownership_loss(had_ownership, i)
     ug: UserGroup = UserGroup.query.get(m.group)
+    if not ug:
+        raise RouteException('User group not found')
+    a = remove_perm(ug, i.block, m.type)
+    check_ownership_loss(had_ownership, i)
+
     log_right(f'removed {a.info_str} for {ug.name} in {i.path}')
     db.session.commit()
     return ok_response()
@@ -327,11 +330,8 @@ def self_expire_permission(m: SelfExpireModel):
     return ok_response()
 
 
-def remove_perm(group_id: int, b: Block, t: AccessType):
-    for a in b.accesses:
-        if a.usergroup_id == group_id and a.type == t.value:
-            b.accesses.remove(a)
-            return a
+def remove_perm(group: UserGroup, b: Block, t: AccessType):
+    return remove_access(group, b, t)
 
 
 def check_ownership_loss(had_ownership, item):
@@ -488,7 +488,7 @@ def remove_default_doc_permission(m: DefaultPermissionRemoveModel):
     ug = UserGroup.query.get(m.group)
     if not ug:
         abort(404, 'Usergroup not found')
-    remove_default_access(ug, m.id, m.type, BlockType.from_str(m.item_type.name))
+    remove_default_access(ug, f, m.type, BlockType.from_str(m.item_type.name))
     db.session.commit()
     return ok_response()
 

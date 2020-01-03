@@ -20,7 +20,7 @@ class UserTest(TimDbTest):
         return r
 
     def remove(self, g, b: Block, t):
-        r = remove_access(g, b.id, t)
+        r = remove_access(g, b, t)
         db.session.commit()
         db.session.refresh(b)
         return r
