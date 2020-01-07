@@ -229,6 +229,7 @@ jsrunnerApp.component("jsRunner", {
             ng-click="$ctrl.checkFields()">
         {{::$ctrl.buttonText()}}
     </button>
+    <tim-loading ng-if="$ctrl.isRunning"></tim-loading>
     <p class="error" ng-if="$ctrl.error">Error occurred, script results may not be saved.</p>
     <pre ng-if="$ctrl.error">{{$ctrl.error.msg}}</pre>
     <pre ng-if="$ctrl.error">{{$ctrl.error.stackTrace}}</pre>
