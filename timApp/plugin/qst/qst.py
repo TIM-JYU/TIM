@@ -5,6 +5,7 @@ from typing import Dict, Any, NamedTuple, Optional
 from xml.sax.saxutils import quoteattr
 
 import yaml
+from dataclasses import dataclass, asdict
 from flask import Blueprint
 from flask import Response
 from flask import abort
@@ -29,12 +30,17 @@ qst_plugin = Blueprint('qst_plugin',
                        url_prefix='')  # TODO: Better URL prefix.
 
 
-class QuestionInDocument(NamedTuple):
+@dataclass
+class QuestionInDocument:
     markup: Dict
     qst: bool
     taskId: Optional[str]
     docId: int
     parId: str
+    isPreamble: bool
+
+    def to_json(self):
+        return asdict(self)
 
 
 @qst_plugin.route("/qst/mcq/reqs/")
@@ -707,6 +713,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
     i = par_id.rfind(".")
     if i >= 0:
         par_id = par_id[i + 1:]
+    d.document.insert_preamble_pars()
     par = d.document.get_paragraph(par_id)
     try:
         plugin_values = Plugin.from_paragraph(par, user=get_current_user_object()).values
@@ -714,7 +721,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
         return abort(400, f'Paragraph is not a plugin: {par_id}')
     plugindata = {'markup': plugin_values}
     markup = plugindata.get('markup')
-    if ( markup.get("choices", None) ):
+    if markup.get("choices", None):
         convert_mcq_to_qst(plugindata, par.get_attr('plugin', '').find('mmcq') == 0)
     if not edit or edit == 'false':
         settings = d.document.get_settings()
@@ -727,6 +734,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
         taskId=par.get_attr('taskId'),
         docId=d.id,
         parId=par_id,
+        isPreamble=bool(par.from_preamble()),
     )
 
 

@@ -16,6 +16,7 @@ export interface IQuestionParagraph extends IUniqueParId {
     markup: IQuestionMarkup;
     qst: boolean;
     taskId?: string;
+    isPreamble: boolean;
     // TODO: include also other attributes
 }
 

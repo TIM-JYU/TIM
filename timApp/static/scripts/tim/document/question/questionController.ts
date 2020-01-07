@@ -128,7 +128,12 @@ export async function fetchAskedQuestion(askedId: number): Promise<IAskedQuestio
 }
 
 export async function fetchAndEditQuestion(docId: number, parId: string, edit: boolean = true) {
-    return await showQuestionEditDialog(await fetchQuestion(docId, parId, edit));
+    const q = await fetchQuestion(docId, parId, edit);
+    if (q.isPreamble) {
+        await showMessageDialog("Cannot edit a question in preamble.");
+        return undefined;
+    }
+    return await showQuestionEditDialog(q);
 }
 
 export async function deleteQuestionWithConfirm(docId: number, parId: string): Promise<IParResponse | null> {

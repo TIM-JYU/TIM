@@ -80,6 +80,7 @@ points: '2:1'</code></pre>
                          'timeLimit': 90},
                      'parId': first_id,
                      'qst': False,
+                     'isPreamble': False,
                      'taskId': 'test1'
                  })
 
@@ -98,6 +99,7 @@ points: '2:1'</code></pre>
                          'timeLimit': 1},
                      'parId': second_id,
                      'qst': True,
+                     'isPreamble': False,
                      'taskId': 'test2'})
 
         self.get('/getQuestionByParId',

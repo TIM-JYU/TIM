@@ -42,6 +42,9 @@ export class QuestionHandler {
             return;
         }
         const result = await fetchAndEditQuestion(this.viewctrl.docId, parId);
+        if (!result) {
+            return;
+        }
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
