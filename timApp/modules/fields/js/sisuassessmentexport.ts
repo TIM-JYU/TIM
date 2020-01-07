@@ -207,8 +207,11 @@ class SisuAssessmentExportController {
         return this.grid.selection.getSelectedRows().length;
     }
 
-    async previewAssessments() {
-        this.assessments = undefined;
+    async togglePreviewAssessments() {
+        if (this.assessments) {
+            this.assessments = undefined;
+            return;
+        }
         const data = await this.callSendGrades({partial: true, dryRun: true});
         if (!data) {
             return;
@@ -375,8 +378,8 @@ Sisu.component("sisuAssessmentExport", {
 <div>
     <button class="timButton"
             ng-disabled="$ctrl.loading"
-            ng-click="$ctrl.previewAssessments()">
-        Esikatsele arviointeja
+            ng-click="$ctrl.togglePreviewAssessments()">
+        {{ $ctrl.assessments ? 'Sulje esikatselu' : 'Esikatsele arviointeja' }}
     </button>
     <tim-loading ng-if="$ctrl.loading && !$ctrl.assessments"></tim-loading>
 </div>
