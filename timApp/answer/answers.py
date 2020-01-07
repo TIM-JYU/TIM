@@ -162,7 +162,6 @@ def get_all_answers(task_ids: List[TaskId],
         if hide_names:
             name = "user" + str(cnt)
         header = name + "; " + a.task_id + "; " + str(a.answered_on) + "; " + n + "; " + points
-        # print(separator + header)
         line = json.loads(a.content)
         answ = str(line)
         if isinstance(line, dict):  # maybe csPlugin?

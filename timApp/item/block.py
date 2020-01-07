@@ -143,7 +143,6 @@ def insert_block(block_type: BlockType, description: Optional[str], owner_groups
     if owner_groups:
         db.session.flush()
         for owner_group in owner_groups:
-            # print(f'adding owner: {str(owner_group.id)} to {b.id}')
             access = BlockAccess(block=b,
                                  usergroup=owner_group,
                                  type=AccessType.owner.value,
