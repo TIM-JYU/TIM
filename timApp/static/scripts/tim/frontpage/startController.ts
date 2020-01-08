@@ -1,8 +1,6 @@
 import {IController} from "angular";
 import {ngStorage} from "ngstorage";
 import {IBookmarkGroup} from "tim/bookmark/bookmarks";
-import * as createItem from "tim/item/createItem";
-import {markAsUsed} from "tim/util/utils";
 import {timApp} from "../app";
 import {showCourseListDialog} from "../document/course/courseListDialogCtrl";
 import {ICourseSettings} from "../item/IItem";
@@ -13,8 +11,6 @@ import {Users} from "../user/userService";
 import {genericglobals} from "../util/globals";
 import {$http, $localStorage} from "../util/ngimport";
 import {to} from "../util/utils";
-
-markAsUsed(createItem);
 
 export class StartCtrl implements IController {
     private creatingNew: boolean;

@@ -1,6 +1,7 @@
 import angular, {IHttpResponse, IPromise} from "angular";
 import * as t from "io-ts";
 import moment from "moment";
+import {AbstractControl, ValidatorFn} from "@angular/forms";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
@@ -228,11 +229,17 @@ export type Result<T, U> = Success<T> | Failure<U>;
  * @returns A promise that resolves to either a success or error.
  */
 export function to<T, U = {data: {error: string}}>(promise: Promise<T> | IPromise<T>): Promise<Result<T, U>> {
-    return refreshAngularJS((promise as Promise<T>)
-        .then<Success<T>>((data: T) => ({ok: true, result: data}))
-        .catch<Failure<U>>((err) => {
-            return {ok: false, result: err as U};
-        }));
+    return refreshAngularJS(to2(promise as Promise<T>));
+}
+
+/**
+ * Same as "to" function, but meant to be called from new Angular.
+ * @param promise
+ */
+export function to2<T, U = {data: {error: string}}>(promise: Promise<T>): Promise<Result<T, U>> {
+    return promise.then<Success<T>>((data: T) => ({ok: true, result: data})).catch<Failure<U>>((err) => {
+        return {ok: false, result: err as U};
+    });
 }
 
 export function refreshAngularJS<T>(p: Promise<T> | IPromise<T>): Promise<T> {
@@ -578,4 +585,15 @@ export function getGroupDesc(group: IGroup) {
 
 export function windowAsAny() {
     return window as unknown as Record<string, unknown>;
+}
+
+export function createValidator(validityChecker: (s: string) => boolean, name: string): ValidatorFn {
+    return (control: AbstractControl) => {
+        const viewValue = control.value;
+        if (typeof viewValue !== "string") {
+            return null;
+        }
+        const valid = validityChecker(viewValue);
+        return valid ? null : {[name]: {value: viewValue}};
+    };
 }

@@ -1,14 +1,14 @@
-import {IController} from "angular";
 import moment from "moment";
-import {timApp} from "../app";
+import {Component, OnInit} from "@angular/core";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {BookmarkService} from "tim/bookmark/bookmark.service";
+import {TagService} from "tim/item/tag.service";
 import {IBookmarkGroup} from "../bookmark/bookmarks";
 import {IDocSettings} from "../document/IDocSettings";
-import {ViewCtrl} from "../document/viewctrl";
-import {DocumentOrFolder, IDocument, isRootFolder, ITag, TagType} from "../item/IItem";
+import {DocumentOrFolder, IFolder, isRootFolder, ITag, ITranslation, TagType} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {genericglobals, someglobals} from "../util/globals";
-import {$http} from "../util/ngimport";
 import {capitalizeFirstLetter, to} from "../util/utils";
 
 /**
@@ -36,24 +36,60 @@ interface IItemLink {
     title: string;
 }
 
-class HeaderController implements IController {
+@Component({
+  selector: "tim-header",
+  template: `
+<div *ngIf="!hideLinks && item">
+    <div class="pull-right">
+        <button *ngIf="showAddToMyCourses()"
+                (click)="addToBookmarkFolder()"
+                title="Add this page to 'My courses' bookmark folder"
+                class="timButton label">
+            Add to My courses
+        </button>
+        <span *ngFor="let tr of translations">
+        <a class="label label-primary"
+           href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id }}</a> </span>
+    </div>
+    <div class="nav nav-tabs">
+        <li *ngFor="let link of itemLinks"
+            role="presentation"
+            [ngClass]="{active: isActive(link)}">
+            <a href="/{{ link.route }}/{{ item.path }}">{{ link.title }}</a>
+        </li>
+    </div>
+    <ol class="breadcrumb">
+        <li *ngFor="let c of crumbs">
+            <a href="/{{ route }}/{{ c.path }}">{{ c.title }}</a>
+        </li>
+        <li class="active">{{ item.title }}</li>
+    </ol>
+</div>
+  `,
+})
+export class HeaderComponent implements OnInit {
     // To show a button that adds the document to bookmark folder 'My courses'.
     private taggedAsCourse = false;
-    private item?: DocumentOrFolder = genericglobals().curr_item;
+    public item?: DocumentOrFolder = genericglobals().curr_item;
     private bookmarked: boolean = false;
     private bookmarks: IBookmarkGroup[] = [];
-    private viewctrl?: ViewCtrl;
-    private route?: string;
-    private itemLinks!: IItemLink[];
-    private translations?: IDocument[];
-    private crumbs?: unknown;
+    public route?: string;
+    public itemLinks?: IItemLink[];
+    public translations?: ITranslation[];
+    public crumbs?: IFolder[];
     private docSettings?: IDocSettings;
-    private hideLinks?: boolean;
+    public hideLinks?: boolean;
 
-    $onInit() {
+    constructor(
+        private bookmarkService: BookmarkService,
+        private tagService: TagService,
+        ) {
+    }
+
+    ngOnInit() {
         const g = someglobals();
         this.hideLinks = "hideLinks" in g ? g.hideLinks : false;
-        this.crumbs = "breadcrumbs" in g ? g.breadcrumbs : undefined;
+        this.crumbs = "breadcrumbs" in g ? [...g.breadcrumbs].reverse() : undefined;
         this.translations = "translations" in g ? g.translations : [];
         this.docSettings = "docSettings" in g ? g.docSettings : undefined;
         this.route = document.location.pathname.split("/")[1];
@@ -74,8 +110,10 @@ class HeaderController implements IController {
             allowedRoutes.push("lecture", "velp", "slide");
         }
         this.itemLinks = allowedRoutes.map((r) => ({route: r, title: capitalizeFirstLetter(r)}));
-        void this.checkIfTaggedAsCourse();
-        void this.checkIfBookmarked();
+        (async () => {
+            await this.checkIfBookmarked();
+            void this.checkIfTaggedAsCourse();
+        })();
     }
 
     isActive(i: IItemLink) {
@@ -100,9 +138,13 @@ class HeaderController implements IController {
             return; // Folders don't have tags for now.
         }
         this.taggedAsCourse = false;
-        const r = await to($http.get<ITag[]>(`/tags/getTags/${this.getMainCourseDocPath()}`));
+        const mainCourseDocPath = this.getMainCourseDocPath();
+        if (!mainCourseDocPath) {
+            return;
+        }
+        const r = await this.tagService.getTags(mainCourseDocPath);
         if (r.ok) {
-            for (const tag of r.result.data) {
+            for (const tag of r.result) {
                 if (isCourse(tag)) {
                     if (!isExpired(tag)) {
                         this.taggedAsCourse = true;
@@ -121,22 +163,26 @@ class HeaderController implements IController {
             showMessageDialog("Log in to bookmark this course");
             return;
         }
-        if (!this.viewctrl) {
-            return;
+        const viewctrl = vctrlInstance;
+        if (!viewctrl) {
+            throw new Error("viewctrl not registered");
         }
-        if (!this.viewctrl.bookmarksCtrl) {
+        if (!viewctrl.bookmarksCtrl) {
             throw new Error("Bookmarkscontroller not registered");
         }
-        const bookmark = {path: `${this.getMainCourseDocPath()}`};
-        const r = await to($http.post<{bookmarks: IBookmarkGroup[], added_to_group: boolean}>("/bookmarks/addCourse", bookmark));
+        const mainCourseDocPath = this.getMainCourseDocPath();
+        if (!mainCourseDocPath) {
+            return;
+        }
+        const r = await this.bookmarkService.addCourse(mainCourseDocPath);
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
         }
-        if (r.result.data.added_to_group) {
+        if (r.result.added_to_group) {
             await to(showMessageDialog("You were successfully added to the course group."));
         }
-        await this.viewctrl.bookmarksCtrl.refresh();
+        await viewctrl.bookmarksCtrl.refresh();
         this.checkIfBookmarked(); // Instead of directly changing boolean this checks if it really was added.
     }
 
@@ -148,11 +194,11 @@ class HeaderController implements IController {
         if (!Users.isLoggedIn()) {
             return;
         }
-        const response = await to($http.get<IBookmarkGroup[]>("/bookmarks/get"));
+        const response = await this.bookmarkService.getBookmarks();
         if (!response.ok) {
             return;
         }
-        this.bookmarks = response.result.data;
+        this.bookmarks = response.result;
         for (const folder of this.bookmarks) {
             if (folder.name === courseFolder) {
                 for (const bookmark of folder.items) {
@@ -169,39 +215,3 @@ class HeaderController implements IController {
         return this.taggedAsCourse && !this.bookmarked;
     }
 }
-
-timApp.component("timHeader", {
-    controller: HeaderController,
-    require: {
-        viewctrl: "?^timView",
-    },
-    template: `
-<div ng-if="::!$ctrl.hideLinks && $ctrl.item">
-    <div class="pull-right">
-        <button ng-cloak
-                ng-if="$ctrl.showAddToMyCourses()"
-                ng-click="$ctrl.addToBookmarkFolder()"
-                title="Add this page to 'My courses' bookmark folder"
-                class="timButton label">
-            Add to My courses
-        </button>
-        <span ng-repeat="tr in ::$ctrl.translations">
-        <a class="label label-primary"
-           href="/{{ ::$ctrl.route }}/{{ ::tr.path }}">{{ ::tr.lang_id }}</a> </span>
-    </div>
-    <div class="nav nav-tabs">
-        <li ng-repeat="link in ::$ctrl.itemLinks"
-            role="presentation"
-            ng-class="::{active: $ctrl.isActive(link)}">
-            <a href="/{{ ::link.route }}/{{ $ctrl.item.path }}">{{ ::link.title }}</a>
-        </li>
-    </div>
-    <ol class="breadcrumb">
-        <li ng-repeat="c in ::$ctrl.crumbs | orderBy:'-'">
-            <a href="/{{ ::$ctrl.route }}/{{ c.path | escape }}">{{ ::c.title }}</a>
-        </li>
-        <li class="active">{{ ::$ctrl.item.title }}</li>
-    </ol>
-</div>
-`,
-});

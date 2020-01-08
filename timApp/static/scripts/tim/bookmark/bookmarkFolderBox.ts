@@ -4,11 +4,12 @@
  */
 
 import {IController} from "angular";
+import {showBookmarkDialog} from "tim/bookmark/createBookmarkDialog";
 import {timApp} from "../app";
 import {getCourseCode, ITaggedItem} from "../item/IItem";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
-import {IBookmark, IBookmarkGroup, showBookmarkDialog} from "./bookmarks";
+import {IBookmark, IBookmarkGroup} from "./bookmarks";
 
 export interface ITaggedBookmarkedItem {
     doc: ITaggedItem;

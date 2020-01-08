@@ -232,8 +232,8 @@
 
     <bootstrap-panel ng-if="$ctrl.item.rights.copy" title="Copy this document">
         <create-item item-type="document"
-                     item-location="{{ $ctrl.item.location }}"
-                     params="$ctrl.copyParams"></create-item>
+                     [item-location]="$ctrl.item.location"
+                     [params]="$ctrl.copyParams"></create-item>
     </bootstrap-panel>
 
     <div ng-if="$ctrl.item.rights.editable" class="panel panel-default">

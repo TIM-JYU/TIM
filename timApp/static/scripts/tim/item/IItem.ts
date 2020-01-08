@@ -145,10 +145,11 @@ export function redirectToItem(data: IItem) {
     location.href = getViewUrl(data);
 }
 
-export interface ITranslation {
-    id: number;
-    old_langid: string;
+export interface ITranslation extends IDocument {
     lang_id: string;
+}
+
+export interface IEditableTranslation extends ITranslation {
+    old_langid: string;
     old_title: string;
-    title: string;
 }

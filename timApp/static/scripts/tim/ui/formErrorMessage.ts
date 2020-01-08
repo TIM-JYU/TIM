@@ -100,36 +100,4 @@ timApp.directive("timErrorState", [() => {
     };
 }]);
 
-timApp.component("timAlert", {
-    bindings: {
-        severity: "@?",
-    },
-    controller: class {
-        private severity: string | undefined;
-
-        $onInit() {
-            if (!this.severity) {
-                this.severity = "danger";
-            }
-        }
-
-        getIcon() {
-            switch (this.severity) {
-                case "danger":
-                case "warning":
-                    return "exclamation-sign";
-                case "success":
-                    return "ok";
-                default:
-                    return "exclamation-sign";
-            }
-        }
-    },
-    template: `
-<div uib-alert class="alert alert-{{ $ctrl.severity }}">
-    <span class="glyphicon glyphicon-{{$ctrl.getIcon()}}"></span>
-    <span ng-transclude></span>
-</div>
-    `,
-    transclude: true,
-});
+export type AlertSeverity = "danger" | "warning" | "success" | "info";

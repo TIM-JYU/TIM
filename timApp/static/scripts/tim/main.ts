@@ -1,8 +1,6 @@
 import "./loadJQueryAndMomentGlobals";
 
-import {enableProdMode, StaticProvider} from "@angular/core";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {downgradeModule, setAngularJSGlobal} from "@angular/upgrade/static";
+import {enableProdMode} from "@angular/core";
 import angular from "angular";
 import bootstrap from "bootstrap";
 import "eonasdan-bootstrap-datetimepicker";
@@ -10,7 +8,6 @@ import $ from "jquery";
 import * as answerbrowser from "tim/answer/answerbrowser3";
 import * as userlistController from "tim/answer/userlistController";
 import {timApp} from "tim/app";
-import {AppModule} from "tim/app.module";
 import * as bookmarkFolderBox from "tim/bookmark/bookmarkFolderBox";
 import * as bookmarks from "tim/bookmark/bookmarks";
 import * as templateList from "tim/document/editing/templateList";
@@ -22,8 +19,6 @@ import {environment} from "tim/environments/environment";
 import * as indexCtrl from "tim/folder/indexCtrl";
 import * as startController from "tim/frontpage/startController";
 import * as loadMap from "tim/gamification/loadMap";
-import * as header from "tim/header/header";
-import * as createItem from "tim/item/createItem";
 import * as manageCtrl from "tim/item/manageCtrl";
 import * as relevanceEdit from "tim/item/relevanceEdit";
 import * as rightsEditor from "tim/item/rightsEditor";
@@ -49,6 +44,7 @@ import * as annotation from "tim/velp/annotation";
 import * as reviewController from "tim/velp/reviewController";
 import * as velpSelection from "tim/velp/velpSelection";
 import {staticDynamicImport} from "tim/staticDynamicImport";
+import {downgradedModule} from "tim/downgrade";
 import {ParCompiler} from "./editor/parCompiler";
 import {genericglobals} from "./util/globals";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
@@ -56,14 +52,6 @@ import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 if (environment.production) {
     enableProdMode();
 }
-
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(AppModule);
-};
-
-setAngularJSGlobal(angular);
-const downgradedModule = downgradeModule(bootstrapFn);
 
 markAsUsed(
     annotation,
@@ -73,9 +61,7 @@ markAsUsed(
     bookmarks,
     bootstrap,
     bootstrapPanel,
-    createItem,
     createLectureCtrl,
-    header,
     indexCtrl,
     lectureController,
     lectureInfoController,
@@ -134,7 +120,7 @@ $(async () => {
     if (StringArray.is(extraAngularModules)) {
         angularModules.push(...extraAngularModules);
     }
-    angular.bootstrap(document, [timApp.name, downgradedModule, ...angularModules], {strictDi: false});
+    angular.bootstrap(document, [timApp.name, downgradedModule.name, ...angularModules], {strictDi: false});
     timLogTime("Angular bootstrap done", "main.ts");
     ParCompiler.processAllMathDelayed($("body"), 1500);
 

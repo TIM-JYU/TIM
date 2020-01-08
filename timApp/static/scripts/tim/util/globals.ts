@@ -2,7 +2,7 @@ import {IBookmarkGroup} from "../bookmark/bookmarks";
 import {IDocSettings} from "../document/IDocSettings";
 import {EditMode} from "../document/popupMenu";
 import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
-import {DocumentOrFolder, IDocument, IFolder, IFullDocument, IItem} from "../item/IItem";
+import {DocumentOrFolder, IDocument, IFolder, IFullDocument, IItem, ITranslation} from "../item/IItem";
 import {ILecture} from "../lecture/lecturetypes";
 import {HeaderIndexItem, IGroupWithSisuPath} from "../sidebar/sidebarMenuCtrl";
 import {IFullUser, IGroup, IUser, IUserListEntry} from "../user/IUser";
@@ -21,7 +21,7 @@ export interface IGenericGlobals {
 }
 
 export interface IItemGlobals extends IGenericGlobals {
-    breadcrumbs: unknown[];
+    breadcrumbs: IFolder[];
     curr_item: DocumentOrFolder;
 }
 
@@ -54,7 +54,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     reqs: {};
     showIndex: boolean;
     teacherMode: boolean;
-    translations: IDocument[];
+    translations: ITranslation[];
     velpMode: boolean;
     wordList: string[];
     linked_groups: IGroupWithSisuPath[] | null;

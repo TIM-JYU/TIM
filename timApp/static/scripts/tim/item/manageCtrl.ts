@@ -9,7 +9,7 @@ import {Users} from "../user/userService";
 import {manageglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {clone, markAsUsed, to} from "../util/utils";
-import {IDocument, IFolder, IFullDocument, IItem, ITranslation, redirectToItem} from "./IItem";
+import {IDocument, IFolder, IFullDocument, IItem, IEditableTranslation, redirectToItem} from "./IItem";
 
 markAsUsed(copyFolder);
 
@@ -26,7 +26,7 @@ export class PermCtrl implements IController {
     private newTitle: string;
     private newFolderName: string;
     private hasMoreChangelog?: boolean;
-    private translations: Array<IItem & {old_title: string}> = [];
+    private translations: Array<IEditableTranslation> = [];
     private newTranslation: {language: string, title: string};
     private accessTypes: Array<{}>;
     private orgs: IGroup[];
@@ -126,7 +126,7 @@ export class PermCtrl implements IController {
             return [];
         }
 
-        const r = await to($http.get<Array<IItem & {old_title: string, old_langid: string, lang_id: string}>>("/translations/" + this.item.id, {}));
+        const r = await to($http.get<Array<IEditableTranslation>>("/translations/" + this.item.id, {}));
         if (r.ok) {
             const data = r.result.data;
             this.translations = [];
@@ -147,11 +147,11 @@ export class PermCtrl implements IController {
         return [];
     }
 
-    trChanged(tr: ITranslation) {
+    trChanged(tr: IEditableTranslation) {
         return tr.title !== tr.old_title || tr.lang_id !== tr.old_langid;
     }
 
-    async updateTranslation(tr: ITranslation) {
+    async updateTranslation(tr: IEditableTranslation) {
         const r = await to($http.post("/translation/" + tr.id, {
             new_langid: tr.lang_id,
             new_title: tr.title,
