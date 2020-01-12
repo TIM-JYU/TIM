@@ -77,7 +77,7 @@ def csv_string(data, dialect: str, delimiter: str = ","):
         writer = csv.writer(line)
     for csv_line in data:
         writer.writerow(csv_line)
-    return line.getvalue().strip('\r\n')
+    return line.getvalue()    # .strip('\r\n')  # let the last lf be there
 
 
 def iter_csv(data, dialect: str, delimiter: str = ","):
