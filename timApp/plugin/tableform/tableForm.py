@@ -268,16 +268,19 @@ def gen_csv(args: GenerateCSVModel):
             data[ycoord + y_offset].append(row.get(_field))
 
     csv = csv_string(data, 'excel', separator)
+    output = ''
     if args.reportFilter:
         params = {'code': args.reportFilter, 'data': csv}
         csv, output = jsrunner_run(params)
     return text_response(output+csv)
-    """
+
+"""
+    # This did not work because if code is just return data; then it is not identical when returned
     if args.reportFilter:
         params = {'code': args.reportFilter, 'data': data}
         data, output = jsrunner_run(params)
     return csv_response(data, 'excel', separator)
-    """
+"""
 
 
 @tableForm_plugin.route('/fetchTableData')
