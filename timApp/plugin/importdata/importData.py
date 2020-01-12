@@ -1,13 +1,10 @@
 """
 TIM example plugin: a ImportData
 """
-import json
 import os
 from typing import Union, List
 
-import requests
 from dataclasses import dataclass, asdict
-from flask import abort
 from flask import jsonify, render_template_string
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
@@ -16,11 +13,10 @@ from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
     GenericAnswerModel, Missing, \
     create_blueprint
-from timApp.plugin.containerLink import get_plugin
+from timApp.plugin.jsrunner import jsrunner_run
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.util.utils import widen_fields
-
 
 @dataclass
 class ImportDataStateModel:
@@ -197,8 +193,8 @@ def answer(args: ImportDataAnswerModel):
     sdata = args.input.data
     defaultseparator = args.markup.separator or ";"
     separator = args.input.separator or defaultseparator
-    fieldsReqExps = args.markup.fieldsReqExps
-    userIdField = args.markup.userIdField or -1
+    # fields_req_exps = args.markup.fieldsReqExps
+    # user_id_field = args.markup.userIdField or -1
     data = sdata.split("\n")
     output = ""
     field_names = args.input.fields
@@ -211,14 +207,7 @@ def answer(args: ImportDataAnswerModel):
     data = convert_data(data, field_names, separator)
     if args.markup.prefilter:
         params = {'code': args.markup.prefilter, 'data': data}
-        runurl = get_plugin('jsrunner').get("host") + 'runScript/'
-        r = requests.request('post', runurl, data=params)
-        result = json.loads(r.text)
-        error = result.get('error', '')
-        if error:
-            abort(400, error)
-        data = result.get("result",[])
-        output = result.get("output", "")
+        data, output = jsrunner_run(params)
     did = int(args.taskID.split(".")[0])
     if args.markup.docid:
         did = args.markup.docid

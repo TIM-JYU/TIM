@@ -7,6 +7,8 @@ from typing import Union, List, Optional, Dict, Any
 
 from dataclasses import dataclass, asdict, field
 from flask import jsonify, render_template_string, request, abort
+from flask import stream_with_context
+
 from marshmallow.utils import missing
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
@@ -21,6 +23,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
+from timApp.plugin.jsrunner import jsrunner_run
 from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
 from timApp.plugin.taskid import TaskId
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
@@ -28,7 +31,7 @@ from timApp.sisu.sisu import get_potential_groups
 from timApp.tim_app import csrf
 from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import csv_response, json_response
+from timApp.util.flask.responsehelper import csv_response, csv_string, json_response, text_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter
 from timApp.util.utils import get_boolean, fin_timezone
 
@@ -72,6 +75,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     removeUsersButtonText: Union[str, Missing, None] = missing
     report: Union[bool, Missing] = missing
     reportButton: Union[str, Missing, None] = missing
+    reportFilter: Union[str, Missing, None] = missing
     runScripts: Union[List[str], Missing] = missing
     saveStyles: Union[bool, Missing] = True
     separator: Union[str, Missing, None] = missing
@@ -215,6 +219,7 @@ class GenerateCSVModel:
     realnames: Union[bool, Missing] = missing
     removeDocIds: Union[bool, Missing] = missing
     emails: Union[bool, Missing] = missing
+    reportFilter: Union[str, Missing] = ""
 
 GenerateCSVSchema = class_schema(GenerateCSVModel)
 
@@ -229,7 +234,7 @@ def gen_csv(args: GenerateCSVModel):
     :return: CSV containing headerrow and rows for users and values
     """
     curr_user = get_current_user_object()
-    docid, groups, separator, real_names, user_names, emails, removeDocIds, fields = \
+    docid, groups, separator, real_names, user_names, emails, remove_doc_ids, fields = \
         args.docId, args.groups, args.separator, args.realnames, \
         args.usernames, args.emails, args.removeDocIds, args.fields
     if len(separator) > 1:
@@ -237,7 +242,7 @@ def gen_csv(args: GenerateCSVModel):
         return "Only 1-character string separators supported for now"
     doc = get_doc_or_abort(docid)
     r = tableform_get_fields(fields, groups,
-                             doc, curr_user, removeDocIds, allow_non_teacher=True,
+                             doc, curr_user, remove_doc_ids, allow_non_teacher=True,
                              # TODO: group_filter_type=self.markup.includeUsers,
                              )
     rowkeys = list(r['rows'].keys())
@@ -259,9 +264,20 @@ def gen_csv(args: GenerateCSVModel):
             data[ycoord + y_offset].append(rowkey)
         if emails:
             data[ycoord + y_offset].append(r['emailmap'].get(rowkey))
-        for field in r['fields']:
-            data[ycoord + y_offset].append(row.get(field))
+        for _field in r['fields']:
+            data[ycoord + y_offset].append(row.get(_field))
+
+    csv = csv_string(data, 'excel', separator)
+    if args.reportFilter:
+        params = {'code': args.reportFilter, 'data': csv}
+        csv, output = jsrunner_run(params)
+    return text_response(output+csv)
+    """
+    if args.reportFilter:
+        params = {'code': args.reportFilter, 'data': data}
+        data, output = jsrunner_run(params)
     return csv_response(data, 'excel', separator)
+    """
 
 
 @tableForm_plugin.route('/fetchTableData')
@@ -297,9 +313,9 @@ def fetch_rows_preview():
         return abort(403, f'Missing edit access for document {doc.id}')
     fields = request.args.getlist("fields")
     groups = request.args.getlist("groups")
-    removeDocIds = get_boolean(request.args.get("removeDocIds"), True)
+    remove_doc_ids = get_boolean(request.args.get("removeDocIds"), True)
     r = tableform_get_fields(fields, groups,
-                             doc, curr_user, removeDocIds, allow_non_teacher=True
+                             doc, curr_user, remove_doc_ids, allow_non_teacher=True
                              #  TODO: group_filter_type = plug.values.get("includeUsers"),
                              )
     return json_response(r, headers={"No-Date-Conversion": "true"})

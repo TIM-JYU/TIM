@@ -84,6 +84,7 @@ const TableFormMarkup = t.intersection([
         maxCols: withDefault(t.string, "fit-content"),
         openButtonText: withDefault(t.string, "Avaa Taulukko/Raporttinäkymä"),
         open: withDefault(t.boolean, true),
+        reportFilter: withDefault(t.string, ""),
     }),
 ]);
 
@@ -662,6 +663,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             realnames: this.attrs.realnames,
             usernames: this.attrs.usernames,
             emails: this.attrs.emails,
+            reportFilter: this.attrs.reportFilter,
         }), "WINDOWID");
         if (win == null) {
             this.error = "Failed to open report window.";

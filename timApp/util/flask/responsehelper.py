@@ -69,6 +69,17 @@ def empty_response():
     return json_response({'empty': True})
 
 
+def csv_string(data, dialect: str, delimiter: str = ","):
+    line = StringIO()
+    try:
+        writer = csv.writer(line, dialect=dialect, delimiter=delimiter)
+    except csv.Error:
+        writer = csv.writer(line)
+    for csv_line in data:
+        writer.writerow(csv_line)
+    return line.getvalue().strip('\r\n')
+
+
 def iter_csv(data, dialect: str, delimiter: str = ","):
     line = StringIO()
     try:
@@ -85,6 +96,10 @@ def iter_csv(data, dialect: str, delimiter: str = ","):
 
 def csv_response(data, dialect='excel', delimiter=','):
     return Response(stream_with_context(iter_csv(data, dialect, delimiter)), mimetype='text/plain')
+
+
+def text_response(text):
+    return Response(text, mimetype='text/plain')
 
 
 def error_generic(error: str, code: int, template='error.html'):
