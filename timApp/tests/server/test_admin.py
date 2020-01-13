@@ -1,12 +1,13 @@
 from werkzeug.exceptions import BadRequest, NotFound
 
-from timApp.admin.routes import do_merge, do_soft_delete
+from timApp.admin.routes import find_and_merge_users, find_and_soft_delete
 from timApp.document.docentry import DocEntry
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_3_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_USERNAMES
 from timApp.user.user import User, UserInfo
+from timApp.util.flask.requesthelper import RouteException
 
 
 class SearchTest(TimRouteTest):
@@ -33,20 +34,20 @@ class MergeTest(TimRouteTest):
     def test_user_merge(self):
         self.login_test1()
         with self.assertRaises(BadRequest):
-            do_merge('testuser1', 'testuser1')
+            find_and_merge_users('testuser1', 'testuser1')
         User.create_with_group(UserInfo(username='someguy', full_name='Some Guy', email='some.guy@example.com'))
         db.session.commit()
         with self.assertRaises(BadRequest):
-            do_merge('testuser1', 'someguy')
+            find_and_merge_users('testuser1', 'someguy')
         with self.assertRaises(NotFound):
-            do_merge('testuser1', 'x')
+            find_and_merge_users('testuser1', 'x')
         for u in SPECIAL_USERNAMES:
             with self.assertRaises(BadRequest):
-                do_merge('testuser1', u)
+                find_and_merge_users('testuser1', u)
 
         d = self.create_doc()
         path = d.path
-        r = do_merge('testuser2', 'testuser1')
+        r = find_and_merge_users('testuser2', 'testuser1')
         self.assertEqual({
             'accesses': 3,
             'annotations': 0,
@@ -62,7 +63,7 @@ class MergeTest(TimRouteTest):
         self.assertIsNone(DocEntry.find_by_path(path))
         #db.session.refresh(self.test_user_1.get_personal_group())
         #db.session.refresh(self.test_user_2.get_personal_group())
-        r = do_merge('testuser2', 'testuser1')
+        r = find_and_merge_users('testuser2', 'testuser1')
         self.assertEqual({
             'accesses': 0,
             'annotations': 0,
@@ -77,7 +78,7 @@ class MergeTest(TimRouteTest):
         db.session.commit()
         db.session.refresh(self.test_user_1.get_personal_group())
         db.session.refresh(self.test_user_2.get_personal_group())
-        r = do_merge('testuser1', 'testuser2')
+        r = find_and_merge_users('testuser1', 'testuser2')
         self.assertEqual({
             'accesses': 3,
             'annotations': 0,
@@ -91,7 +92,7 @@ class MergeTest(TimRouteTest):
         }, r)
         db.session.commit()
         self.assertIsNotNone(DocEntry.find_by_path(path))
-        r = do_merge('testuser1', 'testuser2')
+        r = find_and_merge_users('testuser1', 'testuser2')
         self.assertEqual({
             'accesses': 0,
             'annotations': 0,
@@ -105,10 +106,10 @@ class MergeTest(TimRouteTest):
         }, r)
         db.session.commit()
 
-        do_soft_delete('testuser2')
+        find_and_soft_delete('testuser2')
         self.assertIsNone(User.get_by_name('testuser2'))
         self.assertIsNotNone(User.get_by_name('testuser2_deleted'))
-        with self.assertRaises(NotFound):
-            do_soft_delete('testuser2')
-        with self.assertRaises(BadRequest):
-            do_soft_delete('testuser2_deleted')
+        with self.assertRaises(RouteException):
+            find_and_soft_delete('testuser2')
+        with self.assertRaises(RouteException):
+            find_and_soft_delete('testuser2_deleted')

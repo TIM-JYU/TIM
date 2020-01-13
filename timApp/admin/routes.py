@@ -108,45 +108,45 @@ def merge_users(primary, secondary):
     This does not delete accounts.
     """
     with app.test_request_context():
-        moved_data = do_merge(primary, secondary)
+        moved_data = find_and_merge_users(primary, secondary)
         db.session.commit()
     pprint(moved_data)
     return moved_data
 
 
-def do_merge(primary: str, secondary: str):
+def find_and_merge_users(primary: str, secondary: str):
     u_prim = User.get_by_name(primary)
     u_sec = User.get_by_name(secondary)
     if not u_prim:
         return abort(404, f'User {primary} not found')
     if not u_sec:
         return abort(404, f'User {secondary} not found')
+    return do_merge_users(u_prim, u_sec)
+
+
+def do_merge_users(u_prim: User, u_sec: User):
     if u_prim.is_special:
-        return abort(400, f'User {primary} is a special user')
+        return abort(400, f'User {u_prim.name} is a special user')
     if u_sec.is_special:
-        return abort(400, f'User {secondary} is a special user')
+        return abort(400, f'User {u_sec.name} is a special user')
     if u_prim == u_sec:
         return abort(400, 'Users cannot be the same')
     if not has_anything_in_common(u_prim, u_sec):
-        return abort(400, f'Users {primary} and {secondary} do not appear to be duplicates. '
-        f'Merging not allowed to prevent accidental errors.')
-
+        return abort(400, f'Users {u_prim.name} and {u_sec.name} do not appear to be duplicates. '
+                          f'Merging not allowed to prevent accidental errors.')
     moved_data = {}
     for a in ('owned_lectures', 'lectureanswers', 'messages', 'answers', 'annotations', 'velps'):
         a_alt = a + '_alt'
         moved_data[a] = len(getattr(u_sec, a_alt))
         getattr(u_prim, a_alt).extend(getattr(u_sec, a_alt))
         setattr(u_sec, a_alt, [])
-
     u_prim_group = u_prim.get_personal_group()
     u_sec_group = u_sec.get_personal_group()
-
     u_prim_folder = u_prim.get_personal_folder()
     u_sec_folder = u_sec.get_personal_folder()
     docs = u_sec_folder.get_all_documents(include_subdirs=True)
     for d in docs:
         move_document(d, u_prim_folder)
-
     for a in ('readparagraphs', 'notes', 'accesses'):
         a_alt = a + '_alt'
         moved_data[a] = len(getattr(u_sec_group, a_alt))
@@ -156,7 +156,6 @@ def do_merge(primary: str, secondary: str):
         else:
             getattr(u_prim_group, a_alt).extend(getattr(u_sec_group, a_alt))
             setattr(u_sec_group, a_alt, [])
-
     # Restore ownership of secondary's personal folder:
     # * all users are allowed to have at most one personal folder
     # * if we don't restore access for secondary user, a new personal folder would be created when logging in
@@ -172,18 +171,22 @@ def do_merge(primary: str, secondary: str):
 @user_cli.command('soft_delete')
 @click.argument('name')
 def soft_delete(name: str):
-    do_soft_delete(name)
+    find_and_soft_delete(name)
 
 
-def do_soft_delete(name: str):
+def find_and_soft_delete(name: str):
     u = User.get_by_name(name)
     if not u:
         raise RouteException('User not found.')
+    do_soft_delete(u)
+    db.session.commit()
+
+
+def do_soft_delete(u: User):
     d_suffix = '_deleted'
     if u.name.endswith(d_suffix) or u.email.endswith(d_suffix):
-        return abort(400, 'User is already soft-deleted.')
+        raise RouteException('User is already soft-deleted.')
     u.update_info(UserInfo(username=u.name + d_suffix, email=u.email + d_suffix, full_name=u.real_name))
-    db.session.commit()
 
 
 app.cli.add_command(user_cli)

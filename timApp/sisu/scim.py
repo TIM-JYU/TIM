@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
 
+from timApp.admin.routes import do_merge_users, do_soft_delete
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
@@ -345,8 +346,15 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
                 if u.email is not None:
                     user_email = existing_accounts_by_email_dict.get(u.email)
                     if user_email and user != user_email:
-                        # TODO: Could probably merge users here automatically.
-                        raise SCIMException(422, f'Users {user.name} and {user_email.name} must be merged because of conflicting emails.')
+                        if not user_email.is_email_user:
+                            raise SCIMException(
+                                422,
+                                f'Users {user.name} and {user_email.name} were not automatically merged because neither was an email user.',
+                            )
+                        log_warning(f'Merging users {user.name} and {user_email.name}')
+                        do_merge_users(user, user_email)
+                        do_soft_delete(user_email)
+                        db.session.flush()
                 user.update_info(UserInfo(
                     username=u.value,
                     full_name=name_to_use,

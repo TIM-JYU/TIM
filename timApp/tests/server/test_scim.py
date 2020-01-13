@@ -8,6 +8,7 @@ import responses
 
 from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
+from timApp.auth.login import create_or_update_user
 from timApp.document.docentry import DocEntry
 from timApp.notification.notify import sent_mails_in_testing
 from timApp.sisu.scim import SISU_GROUP_PREFIX
@@ -934,6 +935,27 @@ class ScimTest(TimRouteTest):
         year_folder = d.block.parent.parent.parent
         self.assertEqual('2020', year_folder.title)
         self.assertIn('teachers', [x.usergroup.name for x in year_folder.block.accesses.values()])
+
+    def test_scim_auto_user_merge(self):
+        eid = 'jy-CUR-6666-teachers'
+        create_or_update_user(UserInfo(username='korppiguy', email='korppiguy@jyu.fi', full_name='Korppi Guy', origin=UserOrigin.Korppi))
+        create_or_update_user(
+            UserInfo(username='korppiguy@example.com', email='korppiguy@example.com', full_name='Korppi Guy', origin=UserOrigin.Korppi))
+        db.session.commit()
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': eid,
+                'displayName': 'ITKP102 2020-09-09--2020-12-20: Rooli - teacher',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['korppiguy']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        self.assertIsNone(User.get_by_name('korppiguy@example.com'))
+        self.assertIsNotNone(User.get_by_name('korppiguy@example.com_deleted'))
+        self.assertIsNotNone(User.get_by_name('korppiguy'))
 
     def test_scim_group_manual_member_update(self):
         eid = 'jy-CUR-7777-teachers'
