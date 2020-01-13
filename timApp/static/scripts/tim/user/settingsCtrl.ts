@@ -37,6 +37,8 @@ export class SettingsCtrl implements IController {
     private storageClear = false;
     private allNotificationsFetched = false;
     private user: IFullUser;
+    private deletingAccount = false;
+    private deleteConfirmName = "";
 
     constructor() {
         this.user = settingsglobals().current_user;
@@ -109,6 +111,22 @@ export class SettingsCtrl implements IController {
 
     showGetAllNotifications() {
         return this.notifications.length === settingsglobals().notificationLimit && !this.allNotificationsFetched;
+    }
+
+    beginDeleteAccount() {
+        this.deleteConfirmName = "";
+        this.deletingAccount = true;
+    }
+
+    async deleteAccount() {
+        if (window.confirm(`Are you sure you want to delete your account (${this.user.name})?`)) {
+            const r = await to($http.post("/settings/account/delete", {}));
+            if (r.ok) {
+                location.href = "/";
+            } else {
+                await showMessageDialog(r.result.data.error);
+            }
+        }
     }
 }
 
@@ -226,6 +244,24 @@ timApp.component("timSettings", {
             <tim-loading ng-show="$ctrl.saving"></tim-loading>
         </div>
     </bootstrap-panel>-->
+    <bootstrap-panel title="Delete your account">
+        <button class="timButton btn-danger"
+                ng-click="$ctrl.beginDeleteAccount()"
+                ng-if="!$ctrl.deletingAccount">Delete account...</button>
+        <div ng-if="$ctrl.deletingAccount">
+            To delete your account, please type your username ({{ $ctrl.user.name }}) in the field below
+            and then click "Delete account now".
+            <div class="form-inline">
+                <input class="form-control"
+                       type="text"
+                       ng-model="$ctrl.deleteConfirmName">
+                <button ng-disabled="$ctrl.user.name !== $ctrl.deleteConfirmName"
+                        class="timButton btn-danger"
+                        ng-click="$ctrl.deleteAccount()">Delete account now</button>
+                <button class="timButton btn-default" ng-click="$ctrl.deletingAccount = false">Cancel</button>
+            </div>
+        </div>
+    </bootstrap-panel>
 </form>
     `,
 });

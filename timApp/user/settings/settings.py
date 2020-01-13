@@ -1,14 +1,15 @@
 """Routes for settings view."""
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, session, flash
 from flask import abort
 from flask import request
 from jinja2 import TemplateNotFound
 
+from timApp.admin.routes import do_soft_delete
 from timApp.auth.accesshelper import verify_logged_in, verify_admin
 from timApp.notification.notify import get_current_user_notifications
 from timApp.user.consentchange import ConsentChange
-from timApp.util.flask.requesthelper import get_option, verify_json_params
+from timApp.util.flask.requesthelper import get_option, verify_json_params, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.user.settings.theme import get_available_themes
@@ -127,4 +128,16 @@ def update_consent():
         u.consent = consent
         u.consents.append(ConsentChange(consent=consent))
         db.session.commit()
+    return ok_response()
+
+
+@settings_page.route('/account/delete', methods=['post'])
+def delete_account():
+    verify_logged_in()
+    u = get_current_user_object()
+    if not u.is_email_user:
+        raise RouteException('Only users registered via email can delete their account manually.')
+    do_soft_delete(u.name)
+    session.clear()
+    flash('Your account has been deleted.')
     return ok_response()

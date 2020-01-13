@@ -16,7 +16,7 @@ from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import use_model
+from timApp.util.flask.requesthelper import use_model, RouteException
 from timApp.util.flask.responsehelper import safe_redirect, json_response
 
 admin_bp = Blueprint('admin',
@@ -175,10 +175,10 @@ def soft_delete(name: str):
     do_soft_delete(name)
 
 
-def do_soft_delete(name):
+def do_soft_delete(name: str):
     u = User.get_by_name(name)
     if not u:
-        abort(404, 'User not found.')
+        raise RouteException('User not found.')
     d_suffix = '_deleted'
     if u.name.endswith(d_suffix) or u.email.endswith(d_suffix):
         return abort(400, 'User is already soft-deleted.')
