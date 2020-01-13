@@ -24,7 +24,7 @@ from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_USERNAME
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import grant_access, get_anon_user_id
+from timApp.user.userutils import get_anon_user_id
 from timApp.util.flask.responsehelper import to_dict
 from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
 from timApp.velp.velp_models import Annotation
@@ -46,7 +46,8 @@ class PluginTest(TimRouteTest):
         task_id = f'{doc.id}.{task_name}'
         tid = TaskId.parse(task_id)
         u = self.test_user_1
-        par_id = find_plugin_from_document(doc.document, tid, u).par.get_id()
+        plug = find_plugin_from_document(doc.document, tid, u)
+        par_id = plug.par.get_id()
         task_id_ext = task_id + '.' + par_id
         task_id_ext_wrong = task_id + '.' + par_id + 'x'
 
@@ -116,14 +117,14 @@ class PluginTest(TimRouteTest):
         self.post_answer(plugin_type, task_id, [True, True, False],
                          save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
                          user_id=self.current_user_id() - 1, expect_status=400,
-                         expect_content={'error': 'userId is not associated with answer_id'})
+                         expect_content='userId is not associated with answer_id')
 
         resp = self.post_answer(plugin_type, task_id, [False, False, False],
                                 save_teacher=False, teacher=True, answer_id=answer_list[0]['id'],
                                 user_id=self.current_user_id())
         self.check_ok_answer(resp, is_new=False)
 
-        par_id = find_plugin_from_document(doc.document, tid, u).par.get_id()
+        par_id = plug.par.get_id()
         aid = answer_list[0]['id']
         j = self.get('/getState',
                      query_string={'user_id': self.current_user_id(),
@@ -165,6 +166,15 @@ class PluginTest(TimRouteTest):
         self.assertEqual(1, len(summary))
 
         self.logout()
+        self.post_answer(
+            plugin_type, task_id, [True, False, False],
+            expect_status=400,
+            expect_content='You must be logged in to answer this task.',
+        )
+
+        plug.values['anonymous'] = True
+        plug.save()
+
         resp = self.post_answer(plugin_type, task_id, [True, False, False])
         self.check_ok_answer(resp)
 

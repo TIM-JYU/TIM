@@ -1,6 +1,7 @@
 import angular, {IController} from "angular";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import {showMessageDialog} from "../ui/dialog";
 
 const mcqMod = angular.module("MCQ", []);
 
@@ -95,6 +96,8 @@ class MMCQ extends MCQBase<null | boolean[]> {
         if (r.ok) {
             this.content = r.result.data.web;
             this.checked = true;
+        } else {
+            await showMessageDialog(r.result.data.error);
         }
     }
 }
@@ -169,6 +172,8 @@ class MCQ extends MCQBase<number | null> {
         }));
         if (r.ok) {
             this.content = r.result.data.web;
+        } else {
+            await showMessageDialog(r.result.data.error);
         }
     }
 }

@@ -48,7 +48,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.answerutil import period_handling
-from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt
+from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter
 from timApp.util.utils import try_load_json
@@ -462,6 +462,8 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     upload = None
 
+    if not logged_in() and not plugin.values.get('anonymous', False):
+        raise RouteException('You must be logged in to answer this task.')
     if plugin.values.get("useCurrentUser", False) or is_global(plugin):  # For plugins that is saved only for current user
         users = [curr_user]
 
