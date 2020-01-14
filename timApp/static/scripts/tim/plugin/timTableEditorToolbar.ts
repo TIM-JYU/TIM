@@ -137,8 +137,8 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     // noinspection JSUnusedLocalSymbols
     private pinSelected() {
         const style: Record<string, string> = {};
-        if ( !this.activeTable ) { return style; }
-        if ( this.activeTable.shiftDown ) {
+        if (!this.activeTable) { return style; }
+        if (this.activeTable.shiftDown) {
             style.background = "black";
         }
         return style;
@@ -147,7 +147,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     // noinspection JSUnusedLocalSymbols
     private changePin() {
         const t = this.activeTable;
-        if ( !t ) { return; }
+        if (!t) { return; }
         t.shiftDown = !t.shiftDown;
         t.startCell = t.activeCell;
     }
@@ -166,8 +166,8 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      */
     private getCellForToolbar(value: IToolbarTemplate) {
         let v = value.text;
-        if ( !v ) { v = value.cell; }
-        if ( !v ) { return "\u2003"; } // &#8195  em space &emsp;
+        if (!v) { v = value.cell; }
+        if (!v) { return "\u2003"; } // &#8195  em space &emsp;
         // v = v.replace('$', '');
         return v.substr(0, 5);
     }

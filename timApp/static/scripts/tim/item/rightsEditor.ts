@@ -357,7 +357,7 @@ class RightsEditorController implements IController {
      */
     async paste() {
         // navigator.permissions.query({name: "clipboard-read"});  // does not compile
-        if ( !this.confirmExpire ) { return; }  // clearInput did not work?
+        if (!this.confirmExpire) { return; }  // clearInput did not work?
         this.groupName = "";
         /*
         const input = this.element.filter("#groupName");

@@ -552,7 +552,7 @@ export class ViewCtrl implements IController {
      * @returns {ITimComponent | undefined} Matching component if there was one.
      */
     public getTimComponentByName(name: string): ITimComponent | undefined {
-        if ( !name ) { return undefined; }
+        if (!name) { return undefined; }
         if (name.split(".").length < 2) {
             name = this.docId + "." + name;
         }

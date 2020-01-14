@@ -201,8 +201,8 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     }
 
     checkToShow(param: boolean|undefined, i: number, def: boolean): boolean {
-        if ( param == undefined) { param = def; }
-        if ( param ) { return true; }
+        if (param == undefined) { param = def; }
+        if (param) { return true; }
 
         this.addHiddenIndex(i);
         return false;
@@ -216,7 +216,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
         const d =  this.data;
         const table =  this.data.table;
-        if ( this.attrs.fontSize ) { table.fontSize = this.attrs.fontSize; }
+        if (this.attrs.fontSize) { table.fontSize = this.attrs.fontSize; }
         d.taskBorders = this.attrs.taskBorders;
         this.fixedColor = this.attrs.fixedColor || this.fixedColor;
 
@@ -225,13 +225,13 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
         // Initialize hide-attribute
         this.data.hide = { editMenu: true, insertMenu: true};
-        if ( this.attrs.hide) {
+        if (this.attrs.hide) {
             this.data.hide = this.attrs.hide; // TODO: TimTablen oletukset tähän
             const hide = this.attrs.hide;
-            if ( hide.editMenu === undefined) { this.data.hide.editMenu = true; }
-            if ( hide.insertMenu === undefined) { this.data.hide.insertMenu = true; }
+            if (hide.editMenu === undefined) { this.data.hide.editMenu = true; }
+            if (hide.insertMenu === undefined) { this.data.hide.insertMenu = true; }
         }
-        if ( this.attrs.showToolbar !== undefined ) {
+        if (this.attrs.showToolbar !== undefined) {
             this.data.hide.toolbar = this.attrs.showToolbar;
         }
 
@@ -322,7 +322,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * Basically just a reset
      */
     public async updateTable() {
-        if ( this.attrsall.markup.sisugroups ) { return; }
+        if (this.attrsall.markup.sisugroups) { return; }
         // TODO: Save before reset?
         type TableFetchResponse = ({
             aliases: Record<string, string>,
@@ -379,7 +379,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * @param fields to be updated
      */
     public async updateFields(fields: string[]) {
-        if ( this.attrsall.markup.sisugroups ) { return; }
+        if (this.attrsall.markup.sisugroups) { return; }
 
         try {
             if (!this.tableFetched || !this.viewctrl) {
@@ -482,15 +482,15 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      */
     setDataMatrix() {
         try {
-            if ( this.realnames ) {
+            if (this.realnames) {
                 this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
-            } else if ( this.usernames ) {
+            } else if (this.usernames) {
 
             } else {
                 this.rowKeys.sort((a, b) => this.sortByEmail(a, b));
             }
 
-            if ( this.attrsall.markup.sisugroups ) {
+            if (this.attrsall.markup.sisugroups) {
                 // These require unique names, otherwise could just use empty strings in place of "invisibleX".
                 this.data.headers = ["Kuvaus", "Sisu-nimi", "invisible1", "invisible2"];
             } else {
@@ -499,7 +499,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             this.data.headersStyle = {"backgroundColor": this.fixedColor,
                                       "font-weight": "bold"};
 
-            if (this.fields ) { this.data.table.countCol = this.fields.length + 3; }
+            if (this.fields) { this.data.table.countCol = this.fields.length + 3; }
             this.data.table.countRow = Object.keys(this.rows).length;
             let y = 1;
             if (!this.data.lockedCells) {
@@ -555,7 +555,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                     // }
                     for (y = 0; y < this.rowKeys.length; y++) {
                         // this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
-                        if ( this.styles && !angular.equals(this.styles, {}) ) {
+                        if (this.styles && !angular.equals(this.styles, {})) {
                             this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = {
                                 cell: this.rows[this.rowKeys[y]][this.fields[x]],
                                 ...this.styles[this.rowKeys[y]][this.fields[x]],
@@ -743,9 +743,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         for (const r of selUsers) {
             msg += r.join(", ") + "<br>";
         }
-        if ( msg == "" ) { return; }
+        if (msg == "") { return; }
 
-        if ( !this.attrs.groups ) { return; }
+        if (!this.attrs.groups) { return; }
         const group = this.attrs.groups[0];
 
         await showInputDialog({
@@ -778,20 +778,20 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         const selUsers = timTable.getCheckedRows(0, true);
         const ulist = [];
         let usep = "";
-        if ( !this.realnamemap ) { return; }
-        if ( !this.emailmap ) { return; }
+        if (!this.realnamemap) { return; }
+        if (!this.emailmap) { return; }
         for (const u of selUsers) {
             const un = u[userNameColIndex];
             let s = "";
-            if ( this.listName ) { s = this.realnamemap[un]; usep = ", "; }
-            if ( this.listUsername ) { s += usep + un; usep = ", "; }
-            if ( this.listEmail ) { s += usep + this.emailmap[un]; usep = ", "; }
+            if (this.listName) { s = this.realnamemap[un]; usep = ", "; }
+            if (this.listUsername) { s += usep + un; usep = ", "; }
+            if (this.listEmail) { s += usep + this.emailmap[un]; usep = ", "; }
             usep = "";
             ulist.push([s]);
         }
         // if ( this.listEmail ) { midseparator = "\n"; preseparator = "";  }
-        if ( sep == "" ) { sep = "\n"; }  // radio could not give \n?
-        if ( sep != "-") { midseparator = sep; preseparator = ""; }
+        if (sep == "") { sep = "\n"; }  // radio could not give \n?
+        if (sep != "-") { midseparator = sep; preseparator = ""; }
         this.userlist = TableFormController.makeUserList(ulist, colindex, preseparator, midseparator);
     }
 
@@ -824,19 +824,19 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     }
 
     public async sendEmail() {
-        if ( this.emailtim ) {
+        if (this.emailtim) {
             this.sendEmailTim();
             return;
         }
         // TODO: iPad do not like ;
         let  addrs = this.emaillist.replace(/\n/g, ",");
         let bcc = "";
-        if ( this.emailbcc ) {
+        if (this.emailbcc) {
             bcc = addrs;
             addrs = "";
         }
-        if ( this.emailbccme ) {
-            if ( bcc ) { bcc += ","; }
+        if (this.emailbccme) {
+            if (bcc) { bcc += ","; }
             bcc += Users.getCurrent().email;
         }
         window.location.href = "mailto:" + addrs
@@ -864,7 +864,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         // TODO make better implementation so singleCellSave is not called one by one
         // TODO: maybe done so that push cells to chengedCells and call save
         // TODO: but first check if saved to person or group and to that column by column
-        if ( this.attrsall.markup.sisugroups ) { return; }
+        if (this.attrsall.markup.sisugroups) { return; }
         for (const c of cellsToSave) {
             const coli = c.col;
             const rowi = c.row;

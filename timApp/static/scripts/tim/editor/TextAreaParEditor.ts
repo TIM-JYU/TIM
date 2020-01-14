@@ -389,7 +389,7 @@ export class TextAreaParEditor extends BaseParEditor {
     @focusAfter
     insertTemplate(text: string) {
         const ci = text.indexOf(CURSOR);
-        if ( ci >= 0 ) { text = text.slice(0, ci) + text.slice(ci + 1); }
+        if (ci >= 0) { text = text.slice(0, ci) + text.slice(ci + 1); }
         const pluginnamehere = "PLUGINNAMEHERE";
         const searchEndIndex = this.editor.getSelection().start;
         this.editor.replaceSelectedText(text);

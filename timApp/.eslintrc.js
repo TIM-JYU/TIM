@@ -160,6 +160,7 @@ module.exports = {
             }
         ],
         "spaced-comment": "error",
+        "space-in-parens": ["error", "never"],
         "use-isnan": "error",
         "valid-typeof": "off",
         "@typescript-eslint/tslint/config": [

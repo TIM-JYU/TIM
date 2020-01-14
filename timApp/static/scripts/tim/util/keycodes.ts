@@ -36,8 +36,8 @@ export function isArrowKey(ev: KeyboardEvent) {
 }
 
 export function keyCodeToString(keyCode: number): string {
-    if ( keyCode < 0 ) { return ""; }
-    if ( keyCode >= keyboardMap.length ) { return ""; }
+    if (keyCode < 0) { return ""; }
+    if (keyCode >= keyboardMap.length) { return ""; }
     return keyboardMap[keyCode].toUpperCase();
 }
 
@@ -46,7 +46,7 @@ export function stringToKeyCode(st: string): number {
 }
 
 export function getKeyCode(ev: KeyboardEvent): number {
-    if ( ev.key !== undefined ) {
+    if (ev.key !== undefined) {
         return keyboardMap.indexOf(ev.key.toUpperCase());
     }
     // noinspection JSDeprecatedSymbols
@@ -55,7 +55,7 @@ export function getKeyCode(ev: KeyboardEvent): number {
 
 // noinspection JSUnusedGlobalSymbols
 export function isKeyString(ev: KeyboardEvent, st: string): boolean {
-    if ( ev.key !== undefined ) {
+    if (ev.key !== undefined) {
         return ev.key.toUpperCase() === st.toUpperCase();
     }
     // noinspection JSDeprecatedSymbols
@@ -65,11 +65,11 @@ export function isKeyString(ev: KeyboardEvent, st: string): boolean {
 // noinspection JSUnusedGlobalSymbols
 export function isKeyCode(ev: KeyboardEvent, keyCode: number): boolean {
     // noinspection JSDeprecatedSymbols
-    if ( ev.keyCode !== undefined ) {  // this is deprecated, but a lot faster
+    if (ev.keyCode !== undefined) {  // this is deprecated, but a lot faster
         // noinspection JSDeprecatedSymbols
         return ev.keyCode === keyCode;
     }
-    if ( ev.key !== undefined ) {
+    if (ev.key !== undefined) {
         return ev.key.toUpperCase() === keyCodeToString(keyCode);
     }
     // noinspection JSDeprecatedSymbols

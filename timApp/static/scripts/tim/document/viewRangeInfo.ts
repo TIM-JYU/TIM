@@ -168,7 +168,7 @@ export function getCurrentViewRange() {
     const pieceSize = getPieceSize();
     let name = "Current";
     const params = getCurrentPartitionURLParams();
-    if ( params && !params.get("e") ) { name = "Only"; }
+    if (params && !params.get("e")) { name = "Only"; }
     if (viewRange && pieceSize) {
         return {
             ...viewRange,
@@ -197,7 +197,7 @@ export class ViewRangeInfo {
         const ranges = documentglobals().nav_ranges;
         const current = getCurrentViewRange();
         this.isOnly = false;
-        if ( current && current.name === "Only") { this.isOnly = true; }
+        if (current && current.name === "Only") { this.isOnly = true; }
         if (!current || !ranges || ranges.length != 4) {
             return;
         }

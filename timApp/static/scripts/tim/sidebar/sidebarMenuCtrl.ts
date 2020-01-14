@@ -466,7 +466,7 @@ export class SidebarMenuCtrl implements IController {
     }
 
     private updateIsFullRange() {
-        if ( this.currentViewRange ) {
+        if (this.currentViewRange) {
             this.isFullRange = this.currentViewRange.is_full;
         } else {
             this.isFullRange = true;
@@ -795,7 +795,7 @@ timApp.component("timMarkAllAsRead", {
         }
 
         async clicked() {
-            if ( this.itemId ) {
+            if (this.itemId) {
                 // const r = await to($http.put("/read/" + this.vctrl.item.id, {}));
                 const r = await to($http.put("/read/" + this.itemId, {}));
                 if (!r.ok) {

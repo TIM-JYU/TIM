@@ -632,7 +632,7 @@ ${backTicks}
         const remainingSpace = this.lastKnownDialogHeight - cont.clientTop - (elemHeight - clientBottom);
         if (this.isAce(this.editor)) {
             let lh = this.editor.editor.renderer.lineHeight;
-            if ( lh <= 0 ) { lh = 15; } // TODO: get a better value here
+            if (lh <= 0) { lh = 15; } // TODO: get a better value here
             const lines = remainingSpace / lh;
             this.editor.editor.setOptions({
                 maxLines: Math.max(lines, 5),
@@ -1265,7 +1265,7 @@ ${backTicks}
         // pasteInput.on("drop", (e) => this.onDrop(e));
         // pasteInput.on("dragover", (e) => this.allowDrop(e));
         const pasteInput = document.getElementById("pasteInput");
-        if ( pasteInput ) {
+        if (pasteInput) {
             $(pasteInput).on("drop", (e) => this.onDrop(e));
             $(pasteInput).on("dragover", (e) => this.allowDrop(e));
         }

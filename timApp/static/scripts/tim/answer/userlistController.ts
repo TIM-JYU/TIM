@@ -319,7 +319,7 @@ export class UserListController implements IController {
             filename = "korppi_" + this.viewctrl.docId + ".txt";
         }
 
-        if ( options.copy ) {
+        if (options.copy) {
             copyToClipboard(dataKorppi);
             return;
         }

@@ -91,11 +91,11 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
         }
         const m = this.pluginMarkup();
-        if ( m && m.hideBrowser ) {
+        if (m && m.hideBrowser) {
             this.hideBrowser = true;
             this.showPlaceholder = false;
         }
-        if ( m && m.forceBrowser ) { this.forceBrowser = true; }
+        if (m && m.forceBrowser) { this.forceBrowser = true; }
 
         this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
     }
@@ -168,7 +168,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                 (!this.viewctrl.noBrowser || this.forceBrowser) &&
                 this.isValidTaskId(this.taskId) &&
                 this.type !== "lazyonly" && Users.isLoggedIn() &&
-                ((!this.isUseCurrentUser() && !this.isGlobal()) || this.forceBrowser) ) {
+                ((!this.isUseCurrentUser() && !this.isGlobal()) || this.forceBrowser)) {
                 this.showBrowser = true;
             } else {
                 this.abLoad.resolve(null); // this plugin instance doesn't have answer browser
@@ -665,7 +665,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         };
         if (this.user) {
             let userId = this.user.id;
-            if ( this.isGlobal() ) {
+            if (this.isGlobal()) {
                 userId = Users.getCurrent().id;
             }
             return {
@@ -706,7 +706,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return undefined;
         }
         let newroute = "answers";
-        if ( single && location.href.includes("/view/") ) { newroute = "view"; }  // TODO: think other routes also?
+        if (single && location.href.includes("/view/")) { newroute = "view"; }  // TODO: think other routes also?
         const par = this.element.parents(".par");
         const parId = getParId(par);
         const currBegin = getRangeBeginParam() || 0;
@@ -778,12 +778,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     private getUserOrCurrentUserForAnswers(taskId: string): IUser | undefined {
         let user: IUser | undefined;
-        if ( this.user ) { user = this.user; }
+        if (this.user) { user = this.user; }
         // TODO: refactor to use pluginMarkup()
         const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
-        if ( !c ) { return user; }
+        if (!c) { return user; }
         const a = c.attrsall;
-        if ( a && a.markup && a.markup.useCurrentUser) {
+        if (a && a.markup && a.markup.useCurrentUser) {
             this.user = Users.getCurrent();  // TODO: looks bad when function has a side effect?
             return Users.getCurrent();
         }

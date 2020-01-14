@@ -27,7 +27,7 @@ class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}
     $onInit() {
         super.$onInit();
         this.value = this.resolve.params.defaultValue;
-        if ( this.resolve.params.isInput === false) {
+        if (this.resolve.params.isInput === false) {
             this.value = "-";
             this.isInput = false;
         }

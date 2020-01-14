@@ -28,7 +28,7 @@ export abstract class Command {
     }
 
     public toString(param: string | number | undefined): string {
-        if ( this.usesParameter ) {
+        if (this.usesParameter) {
             return this.name + "(" + param + ")";
         }
         return this.name;
@@ -82,7 +82,7 @@ class Output extends Command {
     public execute(params: CommandParameters<unknown>) {
         if (params.state.hand != null) {
             params.state.output.push(params.state.hand);
-            while (params.state.output.length > 6 ) {
+            while (params.state.output.length > 6) {
                 params.state.output.splice(0, 1);
             }
             params.state.hand = undefined;
@@ -300,13 +300,13 @@ function scrollElementVisibleInParent(el: Element, par: Element, extraY: number)
     const prect = par.getBoundingClientRect();
 
     let dy = prect.top - rect.top;
-    if ( dy > 0 ) { // el too high
+    if (dy > 0) { // el too high
         par.scrollTop -= dy + extraY * rect.height;
         return false;
     }
 
     dy = (prect.top + prect.height) - (rect.top + rect.height);
-    if ( dy < 0 ) { // el too low
+    if (dy < 0) { // el too low
         par.scrollTop -= dy - extraY * rect.height;
         return false;
     }
@@ -328,11 +328,11 @@ export class TapeController implements IController {
     $onInit() {
         this.iOS = isiOS();
         this.inputString = "";
-        if ( this.data.presetInput ) {
+        if (this.data.presetInput) {
             this.inputString = this.data.presetInput.toString();
         }
         this.memString = "";
-        if ( this.data.presetMemoryState ) {
+        if (this.data.presetMemoryState) {
             this.memString = this.data.presetMemoryState.toString();
         }
         this.reset();
@@ -434,8 +434,8 @@ export class TapeController implements IController {
 
     private checkCommandInView(n: number) {
         if (this.commandList.length > 10) { // long program, ensure command is visible
-            if ( n >= this.commandList.length ) { n = this.commandList.length - 1; }
-            if ( n < 0 ) { return; }
+            if (n >= this.commandList.length) { n = this.commandList.length - 1; }
+            if (n < 0) { return; }
             const cmdul = this.element.find(".cmditems");
             const cmdli = cmdul.children()[n];
             scrollElementVisibleInParent(cmdli, cmdul[0], 1);
@@ -487,15 +487,15 @@ export class TapeController implements IController {
     }
 
     private static arrayFromString(s?: string): number[] {
-        if ( !s ) { return []; }
+        if (!s) { return []; }
         s = s.trim();
-        if ( s === "" ) { return []; }
+        if (s === "") { return []; }
 
         const result = [];
         const pieces = s.split(",");
         for (const n of pieces) {
             let val = Number(n.trim());
-            if ( !val ) { val = 0; }
+            if (!val) { val = 0; }
             result.push(val);
         }
         return result;
@@ -572,10 +572,10 @@ export class TapeController implements IController {
 
     private selectAllText(name: string, newtext: string) {
         const jh = this.element.find(name);
-        if ( newtext ) { jh.val(newtext); }
+        if (newtext) { jh.val(newtext); }
         const h = jh[0] as HTMLTextAreaElement;
-        if ( !h ) { return; }
-        if ( this.iOS ) {
+        if (!h) { return; }
+        if (this.iOS) {
             h.focus();
             h.setSelectionRange(0, 99999);  // select is not working in iOS
         } else {
@@ -586,7 +586,7 @@ export class TapeController implements IController {
 
     private copyAll() {
         // this.changeText();
-        if ( this.textmode ) {
+        if (this.textmode) {
             this.selectAllText(".textAreaRobotProgram", "");
         } else {
             this.selectAllText(".hiddenRobotProgram", this.toText());
@@ -595,27 +595,27 @@ export class TapeController implements IController {
     }
 
     private paste() {
-        if ( this.programAsText === "" ) { return; }
+        if (this.programAsText === "") { return; }
         this.commandList = [];
         this.fromText(this.programAsText);
     }
 
     private changeList() {
-        if ( !this.textmode ) { return; }
+        if (!this.textmode) { return; }
         this.textmode = false;
         this.textmodeCB = false;
         this.paste();
     }
 
     private changeText() {
-        if ( this.textmode ) { return; }
+        if (this.textmode) { return; }
         this.textmode = true;
         this.textmodeCB = true;
         this.textAll();
     }
 
     private changeMode() {
-        if ( this.textmode ) { this.changeList(); } else { this.changeText(); }
+        if (this.textmode) { this.changeList(); } else { this.changeText(); }
     }
 
     /**

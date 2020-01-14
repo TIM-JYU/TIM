@@ -91,26 +91,26 @@ export function scrollToElement(element: Element) {
 export function scrollToViewInsideParent(helement: HTMLElement, hparent: HTMLElement,
                                          marginleft: number, margintop: number,
                                          marginright: number, marginbottom: number) {
-    const element = $(helement);                     if ( element == null ) { return false; }
-    const parent = $(hparent);                       if ( parent == null  ) { return false; }
-    const elementOffset = element.offset();          if ( elementOffset == null  ) { return false; }
-    const parentScrollTop = parent.scrollTop();      if ( parentScrollTop == null  ) { return false; }
-    const parentScrollLeft = parent.scrollLeft();    if ( parentScrollLeft == null  ) { return false; }
-    const parentInnerHeight = parent.innerHeight();  if ( parentInnerHeight == null  ) { return false; }
-    const parentInnerWidth = parent.innerWidth();    if ( parentInnerWidth == null  ) { return false; }
-    const parentOffset = parent.offset();            if ( parentOffset == null  ) { return false; }
-    const height = element.innerHeight();            if ( !height ) { return; }
-    const width = element.innerWidth();              if ( !width ) { return; }
+    const element = $(helement);                     if (element == null) { return false; }
+    const parent = $(hparent);                       if (parent == null) { return false; }
+    const elementOffset = element.offset();          if (elementOffset == null) { return false; }
+    const parentScrollTop = parent.scrollTop();      if (parentScrollTop == null) { return false; }
+    const parentScrollLeft = parent.scrollLeft();    if (parentScrollLeft == null) { return false; }
+    const parentInnerHeight = parent.innerHeight();  if (parentInnerHeight == null) { return false; }
+    const parentInnerWidth = parent.innerWidth();    if (parentInnerWidth == null) { return false; }
+    const parentOffset = parent.offset();            if (parentOffset == null) { return false; }
+    const height = element.innerHeight();            if (!height) { return; }
+    const width = element.innerWidth();              if (!width) { return; }
 
     const topdy = parentOffset.top - elementOffset.top + margintop;
     const bottomdy = (elementOffset.top + height) - (parentOffset.top + parentInnerHeight)  + marginbottom;
     const leftdx = parentOffset.left - elementOffset.left + marginleft;
     const rightdx = (elementOffset.left + width) - (parentOffset.left + parentInnerWidth)  + marginright;
 
-    if ( topdy >= 0 ) {  parent.scrollTop(parentScrollTop - topdy );   }
-    if ( bottomdy >= 0 ) { parent.scrollTop(parentScrollTop + bottomdy);  }
-    if ( leftdx >= 0 ) {  parent.scrollLeft(parentScrollLeft - leftdx );   }
-    if ( rightdx >= 0 ) { parent.scrollLeft(parentScrollLeft + rightdx);  }
+    if (topdy >= 0) {  parent.scrollTop(parentScrollTop - topdy);   }
+    if (bottomdy >= 0) { parent.scrollTop(parentScrollTop + bottomdy);  }
+    if (leftdx >= 0) {  parent.scrollLeft(parentScrollLeft - leftdx);   }
+    if (rightdx >= 0) { parent.scrollLeft(parentScrollLeft + rightdx);  }
     return true;
 
     /*
@@ -399,7 +399,7 @@ export function debugTextToHeader(s: string) {
   const node = document.createTextNode(s);
   para.appendChild(node);
   const element = document.getElementById("header");
-  if ( element ) {
+  if (element) {
     element.appendChild(para);
   }
 }

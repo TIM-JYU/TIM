@@ -112,11 +112,11 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
     }
 
     isVisible() {
-        if ( this.visible >= 0 ) { return this.visible == 1; }
+        if (this.visible >= 0) { return this.visible == 1; }
         this.visible = 0;
-        if ( this.attrs.showInView ) { this.visible = 1; return true; }
+        if (this.attrs.showInView) { this.visible = 1; return true; }
         const pn = window.location.pathname;
-        if ( pn.match("teacher|answers") ) { this.visible = 1; }
+        if (pn.match("teacher|answers")) { this.visible = 1; }
         return this.visible == 1;
     }
 
@@ -190,14 +190,14 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         this.isRunning = false;
         if (!r.ok) {
             const e = r.result.data.error;
-            if ( e ) {
-                if ( e.startsWith("{") ) {
+            if (e) {
+                if (e.startsWith("{")) {
                     try {
                         const jse = JSON.parse(e) as object;
                         if (t.type({error: t.string}).is(jse)) {
                             this.error.message = jse.error;
                         }
-                        if ( this.error ) { return; }
+                        if (this.error) { return; }
                     } catch { }
                 }
                 this.error.message = e;

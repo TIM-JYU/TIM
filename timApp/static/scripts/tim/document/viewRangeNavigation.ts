@@ -20,7 +20,7 @@ class ViewRangeNavigation implements IController {
         if (this.vctrl && this.vctrl.viewRangeInfo && this.vctrl.viewRangeInfo.ranges) {
             // Ranges come from document specific ViewRangeInfo to avoid duplicate requests.
             this.ranges = this.vctrl.viewRangeInfo.ranges;
-            if ( this.vctrl.viewRangeInfo.isOnly ) { this.isOnly = true; }
+            if (this.vctrl.viewRangeInfo.isOnly) { this.isOnly = true; }
         }
     }
 

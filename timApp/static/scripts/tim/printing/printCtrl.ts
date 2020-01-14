@@ -110,7 +110,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}> {
 
         let chosenTemplateId = 0;
         if (!this.selectedTemplate) {
-            if ( this.doctemplate === "" ) {
+            if (this.doctemplate === "") {
                 this.notificationmsg = "You need to choose a template first!";
                 return;
             }
@@ -123,7 +123,7 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, {}> {
         const removeOldImages = this.removeOldImages;
         const force = this.forceRefresh;
 
-        if (chosenTemplateId || this.doctemplate ) {
+        if (chosenTemplateId || this.doctemplate) {
             this.loading = true;
             this.notificationmsg = undefined;
 
