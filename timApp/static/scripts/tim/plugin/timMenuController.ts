@@ -144,7 +144,7 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         this.setBarStyles();
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return TimMenuAll;
     }
 
@@ -416,7 +416,7 @@ menuApp.component("timmenuRunner", {
         vctrl: "^timView",
     },
     template: `
-<tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+<tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder"></span>
 <span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder-content tim-menu-hidden"><br></span>
 <div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors, 'hide-link-colors': !$ctrl.keepLinkColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseLeave()" ng-mouseenter="$ctrl.mouseEnter()">

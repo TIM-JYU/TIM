@@ -410,7 +410,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         return this.attrs.form;
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return NumericfieldAll;
     }
 }
@@ -428,7 +428,7 @@ numericfieldApp.component("numericfieldRunner", {
     },
     template: `
 <div class="numericfieldNoSaveDiv">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
     <div class="form-inline">

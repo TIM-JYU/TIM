@@ -9,6 +9,7 @@ import {ErrorMessageComponent} from "tim/ui/error-message.component";
 import {ShortNameDirective} from "tim/ui/short-name.directive";
 import {LocationDirective} from "tim/ui/location.directive";
 import {TimAlertComponent} from "tim/ui/tim-alert.component";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -25,6 +26,7 @@ import {TimAlertComponent} from "tim/ui/tim-alert.component";
         BrowserModule,
         HttpClientModule,
         FormsModule,
+        TimUtilityModule,
     ],
     providers: [
     ],

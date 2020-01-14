@@ -1,6 +1,6 @@
 import "./loadJQueryAndMomentGlobals";
 
-import {enableProdMode} from "@angular/core";
+import {enableProdMode, StaticProvider} from "@angular/core";
 import angular from "angular";
 import bootstrap from "bootstrap";
 import "eonasdan-bootstrap-datetimepicker";
@@ -33,9 +33,7 @@ import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQue
 import * as searchBox from "tim/search/searchBox";
 import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrapPanel";
-import * as loadingIndicator from "tim/ui/loadingIndicator";
 import * as logo from "tim/ui/logo";
-import * as markupError from "tim/ui/markuperror";
 import * as loginMenu from "tim/user/loginMenu";
 import * as settingsCtrl from "tim/user/settingsCtrl";
 import * as userMenu from "tim/user/userMenu";
@@ -44,10 +42,17 @@ import * as annotation from "tim/velp/annotation";
 import * as reviewController from "tim/velp/reviewController";
 import * as velpSelection from "tim/velp/velpSelection";
 import {staticDynamicImport} from "tim/staticDynamicImport";
-import {downgradedModule} from "tim/downgrade";
-import {ParCompiler} from "./editor/parCompiler";
-import {genericglobals} from "./util/globals";
+import {AppModule} from "tim/app.module";
+import {HeaderComponent} from "tim/header/header.component";
+import {CreateItemComponent} from "tim/item/create-item.component";
+import {TimAlertComponent} from "tim/ui/tim-alert.component";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {setAngularJSGlobal} from "@angular/upgrade/static";
+import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
+import {genericglobals} from "./util/globals";
+import {ParCompiler} from "./editor/parCompiler";
 
 if (environment.production) {
     enableProdMode();
@@ -67,11 +72,9 @@ markAsUsed(
     lectureInfoController,
     lectureMenu,
     loadMap,
-    loadingIndicator,
     loginMenu,
     logo,
     manageCtrl,
-    markupError,
     pareditor,
     questionAskController,
     questionController,
@@ -92,13 +95,46 @@ markAsUsed(
     viewRangeNavigation,
 );
 
+const appBootstrap = (extraProviders: StaticProvider[]) => {
+    const platformRef = platformBrowserDynamic(extraProviders);
+    return platformRef.bootstrapModule(AppModule);
+};
+
+setAngularJSGlobal(angular);
+
+function createDowngradedAppModule() {
+    const dg = createDowngradedModule(appBootstrap);
+    doDowngrade(dg, "timHeader", HeaderComponent);
+    doDowngrade(dg, "createItem", CreateItemComponent);
+    doDowngrade(dg, "timAlert", TimAlertComponent);
+    doDowngrade(dg, "timMarkupError", MarkupErrorComponent);
+    return dg;
+}
+
+const downgradedModule = createDowngradedAppModule();
+
 if (document.location) {
     timLogInit(document.location.search.slice(1));
+}
+
+const themeNameMap: Record<string, string | undefined> = {
+    bluetheme: "theme-blue",
+    reunukset: "theme-borders",
+};
+
+function applyThemeClasses() {
+    for (const [name, used] of Object.entries(genericglobals().userPrefs.css_files)) {
+        const classname = themeNameMap[name];
+        if (classname) {
+            document.body.classList.add(classname);
+        }
+    }
 }
 
 $(async () => {
     timLogTime("DOM ready", "main.ts");
     insertLogDivIfEnabled();
+    applyThemeClasses();
     const jsmodules = genericglobals().JSMODULES;
     const moduleLoads = [];
     for (const mname of jsmodules) {

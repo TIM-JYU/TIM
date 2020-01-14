@@ -156,7 +156,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         }
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return JsrunnerAll;
     }
 
@@ -214,7 +214,7 @@ jsrunnerApp.component("jsRunner", {
     },
     template: `
 <div ng-if="::$ctrl.isVisible()">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
     <div class="form form-inline" ng-if="::$ctrl.showIncludeUsersOption()">

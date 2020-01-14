@@ -250,7 +250,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         }
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return multisaveAll;
     }
 }
@@ -263,7 +263,7 @@ multisaveApp.component("multisaveRunner", {
     },
     template: `
 <span class="no-popup-menu">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <sisu-assessment-export ng-if="$ctrl.attrs.destCourse"
                             doc-id="$ctrl.vctrl.item.id"

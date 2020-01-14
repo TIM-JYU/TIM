@@ -61,13 +61,6 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     private vctrl!: ViewCtrl;
     private wordObjs?: Array<{ id: number, word: string }>;
 
-    constructor(
-        protected scope: IScope,
-        protected element: JQLite,
-    ) {
-        super(scope, element);
-    }
-
     getDefaultMarkup() {
         return {};
     }
@@ -228,7 +221,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
         return {saved: r.ok, message: this.error};
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return DragAll;
     }
 
@@ -245,7 +238,7 @@ dragApp.component("dragRunner", {
     },
     template: `
 <div>
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <div class="form-inline">
     <div class="draggingarea">
      <ul ng-if="::$ctrl.trash" class="dropword" dnd-list="[]" dnd-effect-allowed="all"><li> TRASHCAN </li></ul>

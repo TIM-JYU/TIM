@@ -269,7 +269,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         return {};
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return GeogebraAll;
     }
 

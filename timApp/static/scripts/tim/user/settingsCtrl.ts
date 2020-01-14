@@ -12,6 +12,7 @@ export interface ISettings {
     css_combined: string;
     custom_css: string;
     disable_menu_hover: boolean;
+    css_files: Record<string, boolean>
 }
 
 export async function setConsent(c: ConsentType) {

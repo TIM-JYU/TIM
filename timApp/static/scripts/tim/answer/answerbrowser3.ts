@@ -290,6 +290,10 @@ export interface IAnswerSaveEvent {
 
 type AnswerCallback = (a: IAnswer) => void;
 
+export type AnswerBrowserData =
+    { saveAnswer: boolean; teacher: boolean; saveTeacher: false }
+    | { saveAnswer: boolean; teacher: boolean; saveTeacher: boolean; answer_id: number | undefined; userId: number; points: number | undefined; giveCustomPoints: boolean };
+
 export class AnswerBrowserController extends DestroyScope implements IController {
     static $inject = ["$scope", "$element"];
     public taskId!: Binding<string, "<">;
@@ -654,8 +658,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    getBrowserData() {
-        // This is data for interceptors answer route
+    getBrowserData(): AnswerBrowserData {
         const common = {
             teacher: this.viewctrl.teacherMode,
             saveAnswer: !this.viewctrl.noBrowser,

@@ -421,7 +421,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         return {};
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return StackAll;
     }
 

@@ -1,5 +1,11 @@
-import {timApp} from "../app";
+import {Component} from "@angular/core";
 
-timApp.component("timLoading", {
-    template: `<i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>`,
-});
+@Component({
+    selector: "tim-loading",
+    template: `
+<i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
+    `,
+})
+export class LoadingComponent {
+
+}

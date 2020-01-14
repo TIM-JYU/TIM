@@ -107,7 +107,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         this.fields = ((state && state.fields) || this.attrs.fields || []).join("\n");
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return ImportDataAll;
     }
 
@@ -253,7 +253,7 @@ timApp.component("importdataRunner", {
         vctrl: "^timView",
     },
     template: `
-<tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+<tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
 <div ng-cloak ng-class="{'csRunDiv': ($ctrl.attrs.borders && $ctrl.isOpen)}" class="importDataDiv no-popup-menu"
      ng-if="::$ctrl.isVisible()">
     <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen" ng-click="$ctrl.isOpen = true"></p>

@@ -397,7 +397,7 @@ function showTime(ctx: CanvasRenderingContext2D, vt: number, x: number, y: numbe
 
 const directiveTemplate = `
 <div class="csRunDiv no-popup-menu">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <div class="pluginError" ng-if="::$ctrl.imageLoadError" ng-bind="::$ctrl.imageLoadError"></div>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
@@ -1879,7 +1879,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         return {};
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return ImageXAll;
     }
 

@@ -356,7 +356,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         };
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return ShowFileAll;
     }
 }
@@ -373,7 +373,7 @@ videoApp.component("videoRunner", {
     ...common,
     template: `
 <div class="videoRunDiv">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <p ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></p>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <div class="videoContainer"></div>
@@ -396,7 +396,7 @@ videoApp.component("smallVideoRunner", {
     ...common,
     template: `
 <div class="smallVideoRunDiv">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <p ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></p>
     <p><span class="stem" ng-bind-html="::$ctrl.stem"></span>
         <a ng-if="::$ctrl.videoname" class="videoname"
@@ -418,7 +418,7 @@ videoApp.component("listVideoRunner", {
     ...common,
     template: `
 <div class="listVideoRunDiv">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <p ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></p>
     <ul>
         <li><span class="stem" ng-bind-html="::$ctrl.stem"></span>

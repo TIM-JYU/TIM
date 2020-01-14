@@ -413,7 +413,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         return {};
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return JsframeAll;
     }
 

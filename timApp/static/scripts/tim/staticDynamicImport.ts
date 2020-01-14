@@ -9,7 +9,7 @@ export function staticDynamicImport(s: string) {
         case "/field/js/build/textfield.js":
             return import("modules/fields/js/textfield");
         case "/pali/js/build/pali.js":
-            return import("modules/pali/js/pali");
+            return import("modules/pali/client/pali");
         case "tableForm":
             return import("tim/plugin/tableForm");
         case "tim/plugin/imagex":

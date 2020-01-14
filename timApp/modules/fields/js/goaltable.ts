@@ -180,7 +180,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
         return this.content;
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return GoalTableAll;
     }
 
@@ -324,7 +324,7 @@ goalTableApp.component("goaltableRunner", {
         vctrl: "^timView",
     },
     template: `
-<tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+<tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
 <div ng-cloak ng-class="{'csRunDiv': ($ctrl.attrs.borders )}" class="goalTableDiv no-popup-menu" >
    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
    <div class="goalTableInner">

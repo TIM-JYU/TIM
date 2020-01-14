@@ -77,6 +77,31 @@ export class PluginMeta {
     }
 }
 
+interface PluginInit<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>> {
+    attrsall: Readonly<A>;
+    getAttributeType(): T;
+    markupError?: PluginMarkupErrors;
+    readonly json: Binding<string, "@">;
+}
+
+export function baseOnInit<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>>(this: PluginInit<MarkupType, A, T>) {
+    const parsed = JSON.parse(atob(this.json)) as unknown;
+    const validated = this.getAttributeType().decode(parsed);
+    if (validated.isLeft()) {
+        this.markupError = getErrors(validated);
+        return undefined;
+    } else {
+        this.attrsall = validated.value;
+        return this.attrsall;
+    }
+
+    // These can be uncommented for debugging:
+    // console.log(parsed);
+    // console.log(this);
+}
+
+export type PluginMarkupErrors = Array<{name: string, type: string}>;
+
 /**
  * Base class for plugins.
  *
@@ -114,22 +139,22 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     // Parsed form of json binding or default value if json was not valid.
-    public attrsall: Readonly<A>;
+    attrsall: Readonly<A>;
     // Binding that has all the data as a JSON string.
-    protected json!: Binding<string, "@">;
+    readonly json!: Binding<string, "@">;
 
     // Optional bindings that are used when the plugin is compiled without being attached to document.
     // In that case, the plugin element does not have the parent where to fetch the type and task id, so they
     // are provided when compiling.
-    protected plugintype?: Binding<string, "@?">;
-    protected taskid?: Binding<string, "@?">;
+    plugintype?: Binding<string, "@?">;
+    taskid?: Binding<string, "@?">;
 
-    protected markupError?: Array<{ name: string, type: string }>;
-    protected pluginMeta: PluginMeta;
+    markupError?: PluginMarkupErrors;
+    pluginMeta: PluginMeta;
 
     constructor(
         protected scope: IScope,
-        protected element: JQLite) {
+        public element: JQLite) {
         this.attrsall = getDefaults(this.getAttributeType(), this.getDefaultMarkup());
         this.pluginMeta = new PluginMeta(element, this.attrsall.preview);
     }
@@ -141,26 +166,18 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     $onInit() {
-        const parsed = JSON.parse(atob(this.json)) as unknown;
-        const validated = this.getAttributeType().decode(parsed);
-        if (validated.isLeft()) {
-            this.markupError = getErrors(validated);
-        } else {
-            this.attrsall = validated.value;
+        const result = baseOnInit.call(this);
+        if (result) {
             this.pluginMeta = new PluginMeta(
                 this.element,
-                this.attrsall.preview,
+                result.preview,
                 this.plugintype,
                 this.taskid,
             );
         }
-
-        // These can be uncommented for debugging:
-        // console.log(parsed);
-        // console.log(this);
     }
 
-    protected abstract getAttributeType(): T;
+    abstract getAttributeType(): T;
 
     protected getRootElement() {
         return this.element[0];
@@ -237,12 +254,11 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
      * message: for replying with possible errors
      * TODO: This could be integrated into isForm
      */
-    setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: {[index: string]: unknown}): {ok: boolean, message: (string | undefined)} {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 
     resetField(): undefined {
-        // this.$onInit()
         return undefined;
     }
 }

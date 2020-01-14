@@ -1170,7 +1170,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         return undefined;
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return FeedbackAll;
     }
 
@@ -1187,7 +1187,7 @@ feedbackApp.component("feedbackRunner", {
     },
     template: `
 <div class="feedbackContent">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <div class="error" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>

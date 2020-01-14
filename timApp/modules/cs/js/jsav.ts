@@ -258,7 +258,7 @@ class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<ty
         return url;
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return JsavAll;
     }
 }
@@ -277,7 +277,7 @@ jsavApp.component("csJsavRunner", {
         viewCtrl: "^timView",
     },
     template: `
-<tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+<tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
 <div class="csRunDiv no-popup-menu">
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>

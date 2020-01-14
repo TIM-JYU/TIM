@@ -1,0 +1,18 @@
+@import "static/stylesheets/variables";
+
+h4 {
+  margin-top: 0;
+  margin-left: 0;
+  margin-bottom: 0;
+  padding-left: 1em;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  background-color: $basic-color;
+  color: #FFF;
+  font-family: "Helvetica", Arial, sans-serif;
+}
+
+:host-context(.theme-blue) h4 {
+  @import "static/stylesheets/themes/bluetheme";
+  background-color: $basic-color;
+}

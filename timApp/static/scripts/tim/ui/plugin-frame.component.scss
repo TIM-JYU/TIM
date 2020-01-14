@@ -1,0 +1,20 @@
+@import "static/stylesheets/variables";
+
+.root {
+  border-radius: 5px;
+  border: 1px solid $basic-color;
+  margin: 0.3em 0 1.5em 0;
+
+  // Prevents tim-plugin-header from slightly "bleeding" over the rounded corners.
+  // Another possible fix would be to give tim-plugin-header rounded top corners.
+  overflow-y: hidden;
+
+  .body {
+    padding: 10px;
+  }
+}
+
+:host-context(.theme-blue) .root {
+  @import "static/stylesheets/themes/bluetheme";
+  border-color: $basic-color;
+}

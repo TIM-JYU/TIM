@@ -393,7 +393,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         return this.saveResponse;
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return TextfieldAll;
     }
 
@@ -425,7 +425,7 @@ textfieldApp.component("textfieldRunner", {
     },
     template: `
 <div class="textfieldNoSaveDiv">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <form name="$ctrl.f" class="form-inline">

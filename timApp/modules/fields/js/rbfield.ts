@@ -294,7 +294,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         return this.saveResponse;
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return RbfieldAll;
     }
 }
@@ -310,7 +310,7 @@ rbfieldApp.component("rbfieldRunner", {
     },
     template: `
 <div class="textfieldNoSaveDiv" ng-style="::$ctrl.cols">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <!--<form name="$ctrl.f" class="form-inline"> -->

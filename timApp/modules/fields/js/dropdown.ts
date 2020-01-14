@@ -148,7 +148,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         this.selectedWord = undefined;
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return DropdownAll;
     }
 
@@ -196,7 +196,7 @@ dropdownApp.component("dropdownRunner", {
     },
     template: `
 <div>
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
     <div class="form-inline"><label><span>

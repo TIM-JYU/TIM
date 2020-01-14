@@ -1061,7 +1061,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return TableFormAll;
     }
 }
@@ -1075,7 +1075,7 @@ tableFormApp.component("tableformRunner", {
     },
     template: `
 <div class="tableform" ng-if="$ctrl.showTable">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
     <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data"

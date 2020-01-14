@@ -264,7 +264,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         return this.saveResponse;
     }
 
-    protected getAttributeType() {
+    getAttributeType() {
         return CbfieldAll;
     }
 }
@@ -280,7 +280,7 @@ cbfieldApp.component("cbfieldRunner", {
     },
     template: `
 <div class="textfieldNoSaveDiv" ng-style="::$ctrl.cols">
-    <tim-markup-error ng-if="::$ctrl.markupError" data="::$ctrl.markupError"></tim-markup-error>
+    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
      <span style="width: 100%">
