@@ -50,7 +50,7 @@ interface SimcirDeviceDefBase { [id : string] : string|number }
 
 interface SimcirDeviceDef extends SimcirDeviceDefBase {
   type: string;
-  label?: string;
+  label: string | number;
 }
 
 interface SimcirDeviceInstance extends SimcirDeviceDef {

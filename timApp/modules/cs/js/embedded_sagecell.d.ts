@@ -29,5 +29,5 @@ interface Sage {
     restoreInputForm(cellInfo: CellInfo): void;
 }
 
-const sage: Sage;
+declare const sage: Sage;
 export default sage;
