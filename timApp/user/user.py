@@ -4,7 +4,7 @@ from enum import Enum
 from typing import List, Tuple
 from typing import Optional, Union, Set
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from sqlalchemy.orm import Query, joinedload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -22,6 +22,8 @@ from timApp.lecture.lectureusers import LectureUsers
 from timApp.notification.notification import Notification
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin
+from timApp.user.hakaorganization import HakaOrganization
+from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.preferences import Preferences
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.settings.theme import Theme
@@ -124,6 +126,7 @@ class UserInfo:
     origin: Optional[UserOrigin] = None
     password: Optional[str] = None
     password_hash: Optional[str] = None
+    unique_codes: List[SchacPersonalUniqueCode] = field(default_factory=list)
 
     def __post_init__(self):
         assert self.password is None or self.password_hash is None, 'Cannot pass both password and password_hash to UserInfo'
@@ -183,6 +186,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     origin = db.Column(db.Enum(UserOrigin), nullable=True)
     """How the user registered to TIM."""
+
+    uniquecodes = db.relationship(
+        'PersonalUniqueCode',
+        back_populates='user',
+        collection_class=attribute_mapped_collection('user_collection_key'),
+    )
 
     @property
     def scim_display_name(self):
@@ -307,6 +316,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             origin=info.origin,
         )
         db.session.add(user)
+        user.set_unique_codes(info)
         group = UserGroup.create(info.username)
         user.groups.append(group)
         if is_admin:
@@ -480,6 +490,21 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             self.pass_ = create_password_hash(info.password)
         elif info.password_hash:
             self.pass_ = info.password_hash
+        self.set_unique_codes(info)
+
+    def set_unique_codes(self, info: UserInfo):
+        if info.unique_codes:
+            for c in info.unique_codes:
+                ho = HakaOrganization.get_or_create(name=c.org)
+                if ho.id is None or self.id is None:
+                    db.session.flush()
+                puc = PersonalUniqueCode(
+                    code=c.code,
+                    type=c.codetype,
+                    org_id=ho.id,
+                )
+                if puc.user_collection_key not in self.uniquecodes:
+                    self.uniquecodes[puc.user_collection_key] = puc
 
     def has_some_access(self, i: ItemOrBlock, vals: Set[int], allow_admin: bool = True) -> Optional[BlockAccess]:
         if allow_admin and self.is_admin:

@@ -9,6 +9,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
+from timApp.user.personaluniquecode import SchacPersonalUniqueCode
 from timApp.user.user import User, UserOrigin, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import create_password_hash
@@ -97,7 +98,12 @@ class SettingsMock:
                         "name": "urn:oid:2.5.4.4",
                         "isRequired": True,
                         "friendlyName": "sn"
-                    }
+                    },
+                    {
+                        "name": "urn:oid:1.3.6.1.4.1.25178.1.2.14",
+                        "isRequired": False,
+                        "friendlyName": "schacPersonalUniqueCode"
+                    },
                 ]
                 ,
             },
@@ -121,15 +127,20 @@ class OneLoginMock:
         return SettingsMock()
 
     def get_attribute(self, name):
-        return [{
-                    'urn:oid:0.9.2342.19200300.100.1.3': self.info.email,  # mail
-                    'urn:oid:1.3.6.1.4.1.5923.1.1.1.6': self.info.username,  # eduPersonPrincipalName
-                    'urn:oid:2.16.840.1.113730.3.1.241': self.info.full_name,  # displayName
-                    'urn:oid:2.16.840.1.113730.3.1.39': 'fi',  # preferredLanguage
-                    'urn:oid:2.5.4.3': self.info.full_name,  # cn
-                    'urn:oid:2.5.4.4': self.info.last_name,  # sn
-                    'urn:oid:2.5.4.42': self.info.given_name,  # givenName
-                }[name]]
+        return {
+            'urn:oid:0.9.2342.19200300.100.1.3': [self.info.email],  # mail
+            'urn:oid:1.3.6.1.4.1.5923.1.1.1.6': [self.info.username],  # eduPersonPrincipalName
+            'urn:oid:2.16.840.1.113730.3.1.241': [self.info.full_name],  # displayName
+            'urn:oid:2.16.840.1.113730.3.1.39': ['fi'],  # preferredLanguage
+            'urn:oid:2.5.4.3': [self.info.full_name],  # cn
+            'urn:oid:2.5.4.4': [self.info.last_name],  # sn
+            'urn:oid:2.5.4.42': [self.info.given_name],  # givenName
+            'urn:oid:1.3.6.1.4.1.25178.1.2.14': [uq.to_urn() for uq in self.info.unique_codes],
+            # schacPersonalUniqueCode
+        }[name]
+
+
+acs_url = '/saml/acs'
 
 
 class TestSignUp(TimRouteTest):
@@ -444,8 +455,7 @@ class TestSignUp(TimRouteTest):
                    expect_content=jyu_error,
                    )
 
-    def test_haka_login(self):
-        acs_url = '/saml/acs'
+    def test_haka_invalid_settings(self):
         self.json_post(
             acs_url,
             {},
@@ -480,53 +490,72 @@ class TestSignUp(TimRouteTest):
             expect_status=400,
             expect_contains="Error processing SAML response: No private key available to decrypt the assertion, check settings",
         )
+
+    def test_haka_login(self):
         teppo_email = 'teppo@mailinator.com'
         for i in range(0, 2):
-            self.get(
-                '/saml/sso',
-                query_string={'entityID': 'https://testidp.funet.fi/idp/shibboleth', 'return_to': '/'},
-                expect_status=302,
-            )
-            with mock.patch('timApp.auth.saml.OneLogin_Saml2_Auth') as m:
-                m.return_value = OneLoginMock(info=UserInfo(
-                    email=teppo_email,
-                    username='teppo@yliopisto.fi',
-                    last_name='Testaaja',
-                    given_name='Teppo',
-                    full_name='Teppo Testaaja',
-                ))
-                self.post(
-                    acs_url,
-                    data={},
-                    expect_status=302,
-                )
+            puc = SchacPersonalUniqueCode.parse('urn:schac:personalUniqueCode:int:studentID:jyu.fi:12345X')
+            self.do_acs_mock(UserInfo(
+                email=teppo_email,
+                username='teppo@yliopisto.fi',
+                last_name='Testaaja',
+                given_name='Teppo',
+                full_name='Teppo Testaaja',
+                unique_codes=[puc],
+            ))
             u = User.get_by_name('yliopisto.fi:teppo')
             self.assertEqual(teppo_email, u.email)
             self.assertEqual('Teppo', u.given_name)
             self.assertEqual('Testaaja', u.last_name)
             self.assertEqual('Testaaja Teppo', u.real_name)
+            uq = next(iter(u.uniquecodes.values()))
+            self.assertEqual('12345X', uq.code)
+            self.assertEqual('studentID', uq.type)
+            self.assertEqual('jyu.fi', uq.organization.name)
             self.assertIn(UserGroup.get_organization_group('yliopisto.fi'), u.groups)
             self.assertIn(UserGroup.get_haka_group(), u.groups)
+        self.do_acs_mock(UserInfo(
+            email=teppo_email,
+            username='matti@jyu.fi',
+            last_name='Meikäläinen',
+            given_name='Matti',
+            full_name='Matti Meikäläinen',
+        ))
+        u = User.get_by_name('matti')
+        self.assertIsNotNone(u)
+        self.assertIn(UserGroup.get_organization_group('jyu.fi'), u.groups)
+        self.assertIn(UserGroup.get_haka_group(), u.groups)
+        self.assertIsNone(User.get_by_name('jyu.fi:matti'))
+
+    def test_student_id_login_match(self):
+        self.do_acs_mock(UserInfo(
+            username='xxxx@jyu.fi',
+            full_name='X Test',
+            email='xxxx@example.com',
+            origin=UserOrigin.Haka,
+            unique_codes=[SchacPersonalUniqueCode(codetype='studentID', code='1234X', org='jyu.fi')],
+        ))
+        # Make sure the user is identified by student id even when when username or email do not match.
+        self.do_acs_mock(UserInfo(
+            username='xxxx2@jyu.fi',
+            full_name='X Test',
+            email='xxxx2@example.com',
+            origin=UserOrigin.Haka,
+            unique_codes=[SchacPersonalUniqueCode(codetype='studentID', code='1234X', org='jyu.fi')],
+        ))
+        self.assertIsNone(User.get_by_name('xxxx'))
+        self.assertIsNotNone(User.get_by_name('xxxx2'))
+
+    def do_acs_mock(self, info: UserInfo):
         self.get(
             '/saml/sso',
             query_string={'entityID': 'https://testidp.funet.fi/idp/shibboleth', 'return_to': '/'},
             expect_status=302,
         )
         with mock.patch('timApp.auth.saml.OneLogin_Saml2_Auth') as m:
-            m.return_value = OneLoginMock(info=UserInfo(
-                email=teppo_email,
-                username='matti@jyu.fi',
-                last_name='Meikäläinen',
-                given_name='Matti',
-                full_name='Matti Meikäläinen',
-            ))
+            m.return_value = OneLoginMock(info=info)
             self.post(
                 acs_url,
                 data={},
                 expect_status=302,
             )
-        u = User.get_by_name('matti')
-        self.assertIsNotNone(u)
-        self.assertIn(UserGroup.get_organization_group('jyu.fi'), u.groups)
-        self.assertIn(UserGroup.get_haka_group(), u.groups)
-        self.assertIsNone(User.get_by_name('jyu.fi:matti'))

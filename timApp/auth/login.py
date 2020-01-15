@@ -25,6 +25,7 @@ from timApp.tim_app import oid, get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
+from timApp.user.personaluniquecode import PersonalUniqueCode
 from timApp.user.user import User, UserOrigin, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import create_anonymous_user
@@ -87,26 +88,23 @@ def login_with_korppi():
 def create_or_update_user(
         info: UserInfo,
         group_to_add: UserGroup=None,
-        allow_finding_by_email=True,
 ):
-    user: User = User.query.filter_by(name=info.username).first()
+    user = User.get_by_name(info.username)
 
-    if user is None:
-        # Try email
-        user: User = User.query.filter_by(email=info.email).first()
-        if user is not None and info.email \
-                and (allow_finding_by_email == True
-                     or (user.is_email_user and allow_finding_by_email == 'EmailUsersOnly')):
-            # Two possibilities here:
-            # 1) An email user signs in using some other way for the first time. We update the user's username and personal
-            # usergroup.
-            # 2) Username has been changed (rare but it can happen).
-            user.update_info(info)
-        else:
-            user, _ = User.create_with_group(info)
+    if user is None and info.email:
+        user = User.get_by_email(info.email)
+    if user is None and info.unique_codes:
+        for uc in info.unique_codes:
+            puc = PersonalUniqueCode.find_by_code(code=uc.code, codetype=uc.codetype, org=uc.org)
+            if puc:
+                user = puc.user
+                break
+
+    if user is not None:
+        user.update_info(info)
     else:
-        if info.email:
-            user.update_info(info)
+        user, _ = User.create_with_group(info)
+
     if group_to_add and group_to_add not in user.groups:
         user.groups.append(group_to_add)
     return user

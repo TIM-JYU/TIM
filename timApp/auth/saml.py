@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Dict, Optional
+from typing import Dict, List
 from urllib.parse import urlparse
 
 import xmlsec
@@ -17,11 +17,13 @@ from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
 from timApp.auth.login import create_or_update_user, set_user_to_session
 from timApp.tim_app import app, csrf
 from timApp.timdb.sqa import db
+from timApp.user.personaluniquecode import SchacPersonalUniqueCode
 from timApp.user.user import UserInfo, UserOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import use_model, RouteException
 from timApp.util.flask.responsehelper import json_response
+from timApp.util.logger import log_warning
 
 saml = Blueprint('saml',
                  __name__,
@@ -161,7 +163,11 @@ class TimRequestedAttributes:
             self.friendly_name_map[ra['friendlyName']] = ra['name']
 
     def get_attribute_by_friendly_name(self, name: str):
-        return self.saml_auth.get_attribute(self.friendly_name_map[name])[0]
+        return self.get_attributes_by_friendly_name(name)[0]
+
+    def get_attributes_by_friendly_name(self, name: str) -> List[str]:
+        # noinspection PyTypeChecker
+        return self.saml_auth.get_attribute(self.friendly_name_map[name])
 
     @property
     def cn(self):
@@ -198,6 +204,10 @@ class TimRequestedAttributes:
     @property
     def org(self):
         return self.eppn_parts[1]
+
+    @property
+    def unique_codes(self) -> List[str]:
+        return self.get_attributes_by_friendly_name('schacPersonalUniqueCode')
 
     @property
     def derived_username(self):
@@ -256,6 +266,13 @@ def acs():
     session.pop('requestID', None)
     timattrs = TimRequestedAttributes(auth)
     org_group = UserGroup.get_organization_group(timattrs.org)
+    parsed_codes = []
+    for c in timattrs.unique_codes:
+        parsed = SchacPersonalUniqueCode.parse(c)
+        if not parsed:
+            log_warning(f'Failed to unique code: {c}')
+        else:
+            parsed_codes.append(parsed)
     user = create_or_update_user(
         UserInfo(
             username=timattrs.derived_username,
@@ -264,6 +281,7 @@ def acs():
             given_name=timattrs.given_name,
             last_name=timattrs.sn,
             origin=UserOrigin.Haka,
+            unique_codes=parsed_codes,
         ),
         group_to_add=org_group,
     )
