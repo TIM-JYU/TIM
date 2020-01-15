@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Dict
+from typing import Dict, Optional
 from urllib.parse import urlparse
 
 import xmlsec
@@ -140,6 +140,7 @@ def prepare_flask_request(r: Request):
 class SSOData:
     return_to: str
     entityID: str
+    debug: bool = False
 
 
 def prepare_and_init(entity_id: str) -> OneLogin_Saml2_Auth:
@@ -224,6 +225,10 @@ def sso(m: SSOData):
     session['entityID'] = m.entityID
     login_url = auth.login(return_to=m.return_to)
     session['requestID'] = auth.get_last_request_id()
+    if m.debug:
+        session['debugSSO'] = True
+    else:
+        session.pop('debugSSO', None)
     return redirect(login_url)
 
 
@@ -267,6 +272,8 @@ def acs():
         user.groups.append(haka)
     db.session.commit()
     set_user_to_session(user)
+    if session.get('debugSSO'):
+        return json_response(auth.get_attributes())
     rs = request.form.get('RelayState')
     if rs:
         return redirect(auth.redirect_to(rs))
