@@ -20,12 +20,6 @@ from timApp.document.docentry import DocEntry
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
 from timApp.folder.folder import Folder
-from timApp.gamification.docgamified import DocGamified
-from timApp.gamification.documentgamificationpoint import DocumentGamificationPoint
-from timApp.gamification.gamificationdocument import GamificationDocument
-from timApp.gamification.gamificationdocumenttype import GamificationDocumentType
-from timApp.gamification.gamificationpointtype import GamificationPointType
-from timApp.gamification.usergamification import UserGamification
 from timApp.item.block import Block
 from timApp.item.blockassociation import BlockAssociation
 from timApp.item.blockrelevance import BlockRelevance
@@ -87,13 +81,8 @@ reg_models(
     CommentNotification,
     ConsentChange,
     DocEntry,
-    DocGamified,
-    DocumentGamificationPoint,
     DocumentNotification,
     Folder,
-    GamificationDocument,
-    GamificationDocumentType,
-    GamificationPointType,
     Icon,
     ImportedVelpGroups,
     LabelInVelp,
@@ -119,7 +108,6 @@ reg_models(
     User,
     Useractivity,
     UserAnswer,
-    UserGamification,
     UserGroup,
     UserGroupDoc,
     UserGroupMember,
