@@ -942,6 +942,12 @@ class ScimTest(TimRouteTest):
         create_or_update_user(
             UserInfo(username='korppiguy@example.com', email='korppiguy@example.com', full_name='Korppi Guy', origin=UserOrigin.Korppi))
         db.session.commit()
+        # Ensure personal folders are created
+        self.get('/')
+        self.login(username='korppiguy')
+        self.get('/')
+        self.login(username='korppiguy@example.com')
+        self.get('/')
         self.json_post(
             '/scim/Groups', {
                 'externalId': eid,
@@ -956,6 +962,10 @@ class ScimTest(TimRouteTest):
         self.assertIsNone(User.get_by_name('korppiguy@example.com'))
         self.assertIsNotNone(User.get_by_name('korppiguy@example.com_deleted'))
         self.assertIsNotNone(User.get_by_name('korppiguy'))
+
+        self.login(username='korppiguy')
+        # Make sure there are no multiple personal folders. Otherwise an exception would be thrown here.
+        self.get('/')
 
     def test_scim_group_manual_member_update(self):
         eid = 'jy-CUR-7777-teachers'

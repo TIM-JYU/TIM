@@ -1,7 +1,7 @@
 import os
 import shutil
 from pprint import pprint
-from typing import List, Optional
+from typing import List
 
 import click
 from dataclasses import dataclass
@@ -159,11 +159,11 @@ def do_merge_users(u_prim: User, u_sec: User):
     # Restore ownership of secondary's personal folder:
     # * all users are allowed to have at most one personal folder
     # * if we don't restore access for secondary user, a new personal folder would be created when logging in
-    for a in u_prim_group.accesses:
+    for key, a in u_prim_group.accesses_alt.items():
         if a.block_id == u_sec_folder.block.id and a.type == AccessType.owner.value:
             moved_data['accesses'] -= 1
-            u_prim_group.accesses.remove(a)
-            u_sec_group.accesses.append(a)
+            u_prim_group.accesses_alt.pop(key)
+            u_sec_group.accesses_alt[key] = a
             break
     return moved_data
 
