@@ -19,16 +19,15 @@
  * To change from original coord to sceencoord there is permTableToScreen
  * Mostly the screencoordinates starts in code by s like sy, srow and so on.
  */
-// TODO: make all as on DOM element and do not use Angularloops and databinding
 // TODO: Static headers and filter rows so they do not scroll
 // TODO: Toolbar visible only when hit an editable field (not locked)
 // TODO: Toolbar shall not steal focus when created first time
 // TODO: save filter and sort conditions
 // TODO: Show sort icons weakly, so old icons with gray
 // TODO: set styles also by list of cells like value
-// TODO: Gobal favorites to toolbar
+// TODO: Global favorites to toolbar
 // TODO: Save favorites
-// TODO: TableForm does not suppers md:
+// TODO: TableForm does not support md:
 
 import angular, {IController, IScope} from "angular";
 import * as t from "io-ts";
@@ -226,7 +225,6 @@ export interface IColumn { // extends IColumnStyles
 
 export interface ICell { // extends ICellStyles
     cell: CellType;
-    // styles: { [name: string]: string}; // embed to [key: string]
     editing?: boolean;
     editorOpen?: boolean;
     type?: string;
@@ -242,10 +240,6 @@ export interface ICell { // extends ICellStyles
     inputScope?: boolean | undefined;
 
     [key: string]: unknown;
-}
-
-export interface ITCell extends ICell { // for use inner table
-    // styles: { [name: string]: string};  // the idea was to put all styles here
 }
 
 /**
@@ -364,7 +358,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
     private taskUrl: string = "";
 
     public viewctrl?: ViewCtrl;
-    public cellDataMatrix: ITCell[][] = [];  // this has all table data as original indecies (sort does not affect)
+    public cellDataMatrix: ICell[][] = [];  // this has all table data as original indecies (sort does not affect)
     public columns: IColumn[] = [];
     public data!: Binding<TimTable, "<">;
     public disabled?: Binding<boolean, "<?">;
@@ -562,7 +556,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
             this.onClick(e);
         });
         this.currentHiddenRows = (this.data.hiddenRows || []).slice();
-        this.setStyles();
     }
 
     totalRows() {
@@ -1071,31 +1064,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
         delete this.cellDataMatrix[row][col][value];
     };
 
-    /*
-     * Set attribute to table.  If key == CLEAR, remove attribute in value
-     * IF key == CLEAR and value = ALL, clear all attributes
-     */
-    private setTableAttribute = (c: CellAttrToSave): void => {
-        const key = c.key;
-        const row = c.row;
-        const col = c.col;
-        const value = c.c;
-        const cell = this.cellDataMatrix[row][col];
-        if (key != "CLEAR") {
-            cell[key] = value;
-            return;
-        }
-        if (value == "ALL") {
-            for (const k in cell) {
-                if (cellStyles.has(k)) {
-                    delete cell[k];
-                }
-            }
-            return;
-        }
-        delete cell[value];
-    };
-
     setUserContent(row: number, col: number, content: string) {
         this.cellDataMatrix[row][col].cell = content;
         if (!this.userdata) {
@@ -1363,10 +1331,9 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * @param {CellEntity} sourceCell The source CellEntity from which the attributes are taken.
      * @param {ICell} targetCell The ICell instance to which the attributes are applied to.
      */
-    private applyCellEntityAttributesToICell(sourceCell: CellEntity, targetCell: ITCell) {
+    private applyCellEntityAttributesToICell(sourceCell: CellEntity, targetCell: ICell) {
         if (isPrimitiveCell(sourceCell)) {
             targetCell.cell = this.cellToString(sourceCell);
-            // targetCell.styles = {};
             return;
         }
 
@@ -1374,9 +1341,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
             const value = sourceCell[key];
             if (value != null) {
                 targetCell[key] = value;
-            }
-            if (key !== "cell" && value instanceof String) {
-                // targetCell.styles[key] = value.toString();
             }
         }
         if (!targetCell.cell && targetCell.cell != 0) { targetCell.cell = ""; }
@@ -1512,7 +1476,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
                         const spanCell = spanRow[x + spanCellX];
                         if (spanCell.underSpanOf) {
-                            // console.log("Found intersecting colspan / rowspan areas");
                             break;
                         }
 
@@ -1606,8 +1569,8 @@ export class TimTableController extends DestroyScope implements IController, ITi
      * Creates and returns an "empty" ICell with no content.
      * @returns {{cell: string}}
      */
-    private createDummyCell(r: number, c: number): ITCell {
-        const cell: ITCell = {cell: "" }; // , styles: {}};
+    private createDummyCell(r: number, c: number): ICell {
+        const cell: ICell = {cell: ""};
         cell.renderIndexY = r;
         cell.renderIndexX = c;
         return cell;
@@ -1722,7 +1685,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if (isKeyCode(ev, KEY_TAB)) {
             ev.preventDefault();
             if (this.currentCell != undefined) {
-                // const curRow = this.permTableToScreen[this.currentCell.row];
                 if (ev.shiftKey) {
                     this.doCellMovement(Direction.Left);
                     this.disableStartCell();
@@ -2070,8 +2032,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
 
             if (typeof value === "string" && this.editedCellInitialContent != value) {
                 await this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
-                ParCompiler.processAllMathDelayed(this.element);
-                // await ParCompiler.processMathDelayed(this.element);
+                await ParCompiler.processAllMathDelayed(this.element);
                 return true;
             }
         }
@@ -2088,8 +2049,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         const colId = this.activeCell.col;
 
         await this.saveCells(value, docId, parId, rowId, colId);
-        // await ParCompiler.processAllMath(this.element);
-        ParCompiler.processAllMathDelayed(this.element);
+        await ParCompiler.processAllMathDelayed(this.element);
         return true;
     }
 
@@ -2628,16 +2588,12 @@ export class TimTableController extends DestroyScope implements IController, ITi
                 cells: {},
             };
         }
-        // noinspection JSIgnoredPromiseFromCall
-        // ParCompiler.processAllMathDelayed(this.element);
 
         if (this.currentCell) {
             // noinspection JSIgnoredPromiseFromCall
             this.calculateElementPlaces(this.currentCell.row, this.currentCell.col);
         }
         ParCompiler.processAllMathDelayed(this.element);
-        this.setDeleyedStyles();
-        // this.setStyles();  // does not work if celldataMatrix is initialized
     }
 
     /**
@@ -2746,7 +2702,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
         if (cellsToSave) {
             await this.setCellStyleAttribute("setCell", cellsToSave, true);
         }
-        // this.setDeleyedStyles();  // no need,because setCellStyleAttribute handles this now for changed cells
     }
 
     async addToTemplates() {
@@ -2819,31 +2774,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
     }
 
     /**
-     * Updates tyles to screen table
-     * @param cellsToSave
-     */
-    updateScreenTable(cellsToSave: CellAttrToSave[], setf: ((c: CellAttrToSave) => void)) {
-        const table = this.element.find(".timTableTable").first();
-        for (const c of cellsToSave) {
-            // this.setUserAttribute(c.row, c.col, c.key, c.c);
-            setf(c);  // set attributes needed
-
-            const sr = this.permTableToScreen[c.row];
-            const rowElement = table.children("tbody").last().children("tr").eq(sr + this.rowDelta);
-            // rowElement.css(this.stylingForRow(rowIndex));
-            const cell = this.cellDataMatrix[c.row][c.col];
-            // console.log(cell);
-            if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
-                continue; // we should never be able to get here
-            }
-            const tablecell = rowElement.children("td").eq(cell.renderIndexX + this.colDelta);
-            const css = this.stylingForCell(c.row, c.col);
-            tablecell.removeAttr("style");
-            tablecell.css(css);
-        }
-    }
-
-    /**
      * Tells the server to set a cell style attribute.
      * @param route The route to call.
      * @param cellsToSave list of cells to save
@@ -2868,7 +2798,9 @@ export class TimTableController extends DestroyScope implements IController, ITi
         }
 
         if (this.task) {
-            this.updateScreenTable(cellsToSave, this.setUserAttribute);
+            for (const c of cellsToSave) {
+                this.setUserAttribute(c);
+            }
 
             if (this.data.saveStyleCallBack) {
                 this.data.saveStyleCallBack(cellsToSave, colValuesAreSame);
@@ -2893,7 +2825,7 @@ export class TimTableController extends DestroyScope implements IController, ITi
         this.data.toolbarTemplates = toolbarTemplates;
 
         // Update display
-        this.updateScreenTable(cellsToSave, this.setTableAttribute);
+        this.reInitialize();
 
     }
 
@@ -3119,45 +3051,6 @@ export class TimTableController extends DestroyScope implements IController, ITi
             console.error("timTable.setData: unexpected data format: " + JSON.stringify(data));
         }
     }
-
-    /**
-     * Re-applies styles for every cell in the matrix
-     * TODO: Needlessly updates every cell when changing one
-     * TODO: put tablecell-reference to cellDataMatrix so no need to find it every time
-     * TODO: Remove other two-way bingings within datamatrix's ng-repeat (showrow, activecell etc)
-     */
-    setStyles() {
-        const table = this.element.find(".timTableTable").first();
-        for (const [rowIndex, row] of this.permTable.entries()) {
-            const sr = this.permTableToScreen[rowIndex];
-            const rowElement = table.children("tbody").last().children("tr").eq(sr + this.rowDelta);
-            // rowElement.css(this.stylingForRow(rowIndex));
-            for (const [cellIndex, cell] of this.cellDataMatrix[rowIndex].entries()) {
-                // console.log(cell);
-                if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
-                    return; // we should never be able to get here
-                }
-                const tablecell = rowElement.children("td").eq(cell.renderIndexX + this.colDelta);
-                const css = this.stylingForCell(rowIndex, cellIndex);
-                tablecell.removeAttr("style");
-                // const oldcss = tablecell.css("background-color");
-                tablecell.css(css);
-                // if (!this.showColumn(cellIndex)) {
-                //     tablecell.addClass(".ng-hide");
-                // } else {
-                //     tablecell.removeClass(".ng-hide");
-                // }
-            }
-        }
-    }
-
-    setDeleyedStyles() {
-        $timeout(() => this.setStyles(), 10);
-        // if not delayed, row/col +/- does not update correctly because the celldataMatrix is initialized
-        // and AngularJs creates (??) new TD dom elements for those.
-        // this.setStyles();  // this does not work for col/row +/-
-    }
-
 }
 
 const timTableApp = angular.module("timTableApp", ["ngSanitize"]);
@@ -3229,11 +3122,11 @@ timTableApp.component("timTable", {
                  ng-show="$ctrl.showColumn(coli)"
                  ng-repeat="td in $ctrl.cellDataMatrix[rowi]" ng-init="coli = $index" ng-if="$ctrl.showCell(td)"
                  colspan="{{td.colspan}}" rowspan="{{td.rowspan}}"
+                    ng-style="$ctrl.stylingForCell(rowi, coli)"
                     ng-click="$ctrl.cellClicked(td, rowi, coli, $event)">
                     <div ng-bind-html="$ctrl.getTrustedCellContentHtml(rowi, coli)"></div>
                     <!-- {{rowi+1}}{{irowi+1}} -->
                 </td> <!-- one cell -->
-                    <!-- ng-style="$ctrl.stylingForCell(rowi, coli)" -->
         </tr> <!-- the matrix -->
         </tbody>
     </table>
@@ -3247,13 +3140,13 @@ timTableApp.component("timTable", {
                    ng-keydown="$ctrl.keyDownPressedInSmallEditor($event)"
                    ng-keyup="$ctrl.keyUpPressedInSmallEditor($event)" ng-model="$ctrl.editedCellContent"><!--
      --><span class="inlineEditorButtons" style="position: absolute; width: max-content" ng-show="!$ctrl.hide.editorButtons && $ctrl.isSomeCellBeingEdited()" ><!--
-         --><button class="timButton buttonOpenBigEditor timButton"
+         --><button class="timButton buttonOpenBigEditor"
                 ng-click="$ctrl.openBigEditor()" ><span class="glyphicon glyphicon-pencil"></span>
              </button><!--
-         --><button class="timButton buttonCloseSmallEditor timButton"
+         --><button class="timButton buttonCloseSmallEditor"
                 ng-click="$ctrl.cancelEdit()"><span class="glyphicon glyphicon-remove"></span>
             </button><!--
-         --><button class="timButton buttonAcceptEdit timButton"
+         --><button class="timButton buttonAcceptEdit"
                  ng-click="$ctrl.saveAndCloseSmallEditor()" ><span class="glyphicon glyphicon-ok"></span>
             </button>
          </span>
