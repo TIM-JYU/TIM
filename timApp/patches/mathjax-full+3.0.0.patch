@@ -1,0 +1,10 @@
+diff --git a/node_modules/mathjax-full/js/input/asciimath/mathjax2/input/AsciiMath.js b/node_modules/mathjax-full/js/input/asciimath/mathjax2/input/AsciiMath.js
+index 92faee6..0596628 100644
+--- a/node_modules/mathjax-full/js/input/asciimath/mathjax2/input/AsciiMath.js
++++ b/node_modules/mathjax-full/js/input/asciimath/mathjax2/input/AsciiMath.js
+@@ -1,4 +1,4 @@
+-MathJax = Object.assign(global.MathJax || {}, require("../legacy/MathJax.js").MathJax);
++MathJax = Object.assign({}, require("../legacy/MathJax.js").MathJax);
+ 
+ MathJax.Ajax.Preloading(
+   "[MathJax]/jax/input/AsciiMath/config.js",

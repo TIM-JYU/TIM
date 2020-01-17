@@ -2,6 +2,7 @@ import {IScope} from "angular";
 import {staticDynamicImport} from "tim/staticDynamicImport";
 import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
+import {MathDocument} from "mathjax-full/js/core/MathDocument";
 import {ViewCtrl} from "../document/viewctrl";
 import {injectStyle, ModuleArray} from "../util/utils";
 
@@ -101,7 +102,7 @@ export class ParagraphCompiler {
             }
         });
         if (katexFailures.length > 0) {
-            this.processMathJax(katexFailures);
+            this.processMathJaxTeX(katexFailures);
         }
         timLogTime("processAllMath end", "view");
     }
@@ -110,9 +111,18 @@ export class ParagraphCompiler {
      * Processes MathJax in the given elements. The elements must be in the DOM already.
      * @param elements The element(s) to process.
      */
-    public async processMathJax(elements: Element[] | Element) {
+    public async processMathJaxTeX(elements: Element[] | Element) {
+        const mathjaxprocessor = (await import("./mathjaxentry")).texprocessor();
+        this.processMathJax(elements, mathjaxprocessor);
+    }
+
+    public async processMathJaxAsciiMath(elements: Element[] | Element) {
+        const mathjaxprocessor = (await import("./mathjaxentry")).asciimathprocessor();
+        this.processMathJax(elements, mathjaxprocessor);
+    }
+
+    private processMathJax(elements: Element[] | Element, mathjaxprocessor: MathDocument<unknown, unknown, unknown>) {
         const es = elements instanceof Array ? elements : [elements];
-        const mathjaxprocessor = (await import("./mathjaxentry")).mathjaxprocessor();
         mathjaxprocessor.findMath({elements: es}).compile().getMetrics().typeset().updateDocument();
     }
 
@@ -138,7 +148,7 @@ export class ParagraphCompiler {
         }
         $log.warn(lastError);
         if (tryMathJax) {
-            this.processMathJax(elem);
+            this.processMathJaxTeX(elem);
         }
         return elem;
     }

@@ -1525,7 +1525,7 @@ class CsController extends CsBase implements ITimComponent {
         }
 
         await $timeout();
-        await ParCompiler.processMathJax(this.element[0]);
+        await ParCompiler.processMathJaxAsciiMath(this.element[0]);
     }
 
     showUploaded(file: string | undefined, type: string | undefined) {
