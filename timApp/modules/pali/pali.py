@@ -184,7 +184,6 @@ cols: 20
     result = {
         "js": ["js/build/pali.js"],
         "multihtml": True,
-        "css": ["css/pali.css"],
     }
     if os.environ.get('SHOW_TEMPLATES', "True") != "False":
         result['editor_tabs'] = editor_tabs
