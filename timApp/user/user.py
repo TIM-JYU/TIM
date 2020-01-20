@@ -438,7 +438,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             )
         return q
 
-    def add_to_group(self, ug: UserGroup, added_by: 'User'):
+    def add_to_group(self, ug: UserGroup, added_by: Optional['User']):
         existing: UserGroupMember = self.id is not None and self.memberships_dyn.filter_by(group=ug).first()
         if existing:
             existing.membership_end = None

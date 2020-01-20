@@ -12,7 +12,7 @@ from timApp.auth.accesshelper import verify_admin
 from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import move_document
 from timApp.item.block import Block, BlockType
-from timApp.tim_app import app
+from timApp.tim_app import app, get_home_organization_group
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
@@ -97,6 +97,26 @@ def has_anything_in_common(u1: User, u2: User):
 
 
 user_cli = AppGroup('user')
+
+
+@user_cli.command('addtohomeorg')
+@click.argument('name')
+def add_to_jyu(name: str):
+    """Adds a user to the home organization group.
+    """
+    with app.test_request_context():
+        u = User.get_by_name(name)
+        if not u:
+            print('User not found.')
+            return
+        if u.is_email_user:
+            print('User is email user, so should not be added to home organization.')
+            return
+        if u.add_to_group(get_home_organization_group(), added_by=None):
+            print('Added.')
+        else:
+            print('User already belongs to home organization.')
+        db.session.commit()
 
 
 @user_cli.command('merge')
