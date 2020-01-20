@@ -326,7 +326,7 @@ export class UserListController implements IController {
         // from https://stackoverflow.com/a/33542499
 
         const blob = new Blob([dataKorppi], {type: "text/plain"});
-        if (window.navigator.msSaveOrOpenBlob) {
+        if (window.navigator.msSaveBlob) {
             window.navigator.msSaveBlob(blob, filename);
         } else {
             const elem = window.document.createElement("a");

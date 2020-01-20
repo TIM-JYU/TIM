@@ -196,7 +196,7 @@ export async function initSlideView(d: IDocument) {
     const rElem = document.querySelector(".reveal");
     if (rElem instanceof HTMLElement) {
         // The slides are initially hidden to avoid showing style changes.
-        rElem.style.visibility = null;
+        rElem.style.visibility = "";
     } else {
         console.error("Did not find reveal element");
     }
