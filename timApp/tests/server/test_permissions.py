@@ -26,7 +26,7 @@ class PermissionTest(TimRouteTest):
                     'type': 'range',
                 },
                 'id': d.id,
-                'type': 'owner',
+                'type': AccessType.owner.value,
                 'groups': ['testuser1'],
                 'confirm': False,
             },
@@ -37,7 +37,7 @@ class PermissionTest(TimRouteTest):
         self.json_put(f'/permissions/remove',
                       {
                           'id': d.id,
-                          'type': 'owner',
+                          'type': AccessType.owner.value,
                           'group': self.get_test_user_1_group_id(),
                       },
                       expect_status=403)
@@ -60,7 +60,7 @@ class PermissionTest(TimRouteTest):
                     'type': 'always',
                 },
                 'id': docid,
-                'type': 'owner',
+                'type': AccessType.owner.value,
                 'groups': ['testuser2'],
                 'confirm': False,
             },
@@ -73,7 +73,7 @@ class PermissionTest(TimRouteTest):
             f'/permissions/add',
             {
                 'id': f.id,
-                'type': 'owner',
+                'type': AccessType.owner.value,
                 'groups': ['testuser2'],
                 'time': {
                     'type': 'always',
@@ -94,7 +94,7 @@ class PermissionTest(TimRouteTest):
                     'type': 'always',
                 },
                 'id': f.id,
-                'type': 'view',
+                'type': AccessType.view.value,
                 'groups': ['testuser2', 'testuser3'],
                 'confirm': False,
             })
@@ -113,7 +113,7 @@ class PermissionTest(TimRouteTest):
                     'type': 'always',
                 },
                 'id': f.id,
-                'type': 'view',
+                'type': AccessType.view.value,
                 'groups': ['testuser2', 'testuserx'],
                 'confirm': False,
             }, expect_content={'not_exist': ['testuserx']})
@@ -125,7 +125,7 @@ class PermissionTest(TimRouteTest):
                     'type': 'always',
                 },
                 'id': f.id,
-                'type': 'view',
+                'type': AccessType.view.value,
                 'groups': ['testuserx'],
                 'confirm': False,
             }, expect_content={'not_exist': ['testuserx']})
@@ -141,7 +141,7 @@ class PermissionTest(TimRouteTest):
                         'type': 'always',
                     },
                     'id': i.id,
-                    'type': 'view',
+                    'type': AccessType.view.value,
                     'groups': ['testuser2'],
                     'confirm': False,
                 })
@@ -192,7 +192,7 @@ class PermissionTest(TimRouteTest):
                     'type': 'always',
                 },
                 'id': d.id,
-                'type': 'view',
+                'type': AccessType.view.value,
                 'groups': ['Logged-in users'],
                 'confirm': False,
             })
@@ -201,7 +201,7 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         self.json_put(f'/permissions/remove', {
             'id': d.id,
-            'type': 'view',
+            'type': AccessType.view.value,
             'group': UserGroup.get_logged_in_group().id,
         })
         self.login_test2()
@@ -224,7 +224,7 @@ class PermissionTest(TimRouteTest):
             f"/permissions/edit",
             {
                 'groups': ['testuser1'],
-                'type': 'owner',
+                'type': AccessType.owner.value,
                 'action': 'remove',
                 'ids': all_ids,
                 'time': {
@@ -239,7 +239,7 @@ class PermissionTest(TimRouteTest):
             f"/permissions/edit",
             {
                 'groups': ['testuser2', 'testuser3'],
-                'type': 'view',
+                'type': AccessType.view.value,
                 'action': 'add',
                 'ids': all_ids,
                 'time': {
@@ -260,7 +260,7 @@ class PermissionTest(TimRouteTest):
             f"/permissions/edit",
             {
                 'groups': ['testuser2'],
-                'type': 'view',
+                'type': AccessType.view.value,
                 'action': 'remove',
                 'ids': all_ids,
                 'time': {
@@ -282,7 +282,7 @@ class PermissionTest(TimRouteTest):
             f"/permissions/edit",
             {
                 'groups': ['testuser2', 'testuser3'],
-                'type': 'view',
+                'type': AccessType.view.value,
                 'action': 'remove',
                 'ids': all_ids,
                 'time': {
@@ -307,7 +307,7 @@ class PermissionTest(TimRouteTest):
             f"/permissions/edit",
             {
                 'groups': ['testuser1'],
-                'type': 'view',
+                'type': AccessType.view.value,
                 'action': 'add',
                 'ids': [x.id for x in self.test_user_2.get_personal_folder().get_all_documents(include_subdirs=True)],
                 'time': {
@@ -335,7 +335,7 @@ class PermissionTest(TimRouteTest):
             f"/permissions/edit",
             {
                 'groups': ['nonexistent'],
-                'type': 'view',
+                'type': AccessType.view.value,
                 'action': 'add',
                 'ids': all_ids,
                 'time': {
@@ -355,7 +355,7 @@ class PermissionTest(TimRouteTest):
             f"/permissions/edit",
             {
                 'groups': ['testuser2', 'testuser3'],
-                'type': 'view',
+                'type': AccessType.view.value,
                 'action': 'add',
                 'ids': all_ids,
                 'time': {
@@ -369,7 +369,7 @@ class PermissionTest(TimRouteTest):
             f"/permissions/edit",
             {
                 'groups': ['testuser2', 'testuser3'],
-                'type': 'view',
+                'type': AccessType.view.value,
                 'action': 'remove',
                 'ids': all_ids,
                 'time': {
@@ -457,7 +457,7 @@ class PermissionTest(TimRouteTest):
                     'type': 'range',
                 },
                 'id': d.id,
-                'type': 'view',
+                'type': AccessType.view.value,
                 'groups': ['testuser2'],
                 'confirm': True,
             }, expect_content={'not_exist': []})
@@ -466,7 +466,7 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         self.json_put('/permissions/confirm', {
             'id': d.id,
-            'type': 'view',
+            'type': AccessType.view.value,
             'group': self.get_test_user_2_group_id(),
         })
         self.login_test2()
@@ -476,7 +476,7 @@ class PermissionTest(TimRouteTest):
         self.json_put(
             '/permissions/confirm', {
                 'id': d.id,
-                'type': 'view',
+                'type': AccessType.view.value,
                 'group': self.get_test_user_2_group_id(),
             },
             expect_status=400,

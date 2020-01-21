@@ -51,7 +51,7 @@ class DefaultRightTest(TimRouteTest):
                         'type': 'always',
                     },
                     'item_type': obj_type_str,
-                    'type': 'view',
+                    'type': AccessType.view.value,
                     'id': folder.id,
                     'groups': ['Anonymous users', 'testuser2'],
                     'confirm': None,
@@ -122,7 +122,7 @@ class DefaultRightTest(TimRouteTest):
                 f'/defaultPermissions/remove',
                 {
                     'id': folder.id,
-                    'type': 'view',
+                    'type': AccessType.view.value,
                     'group': UserGroup.get_anonymous_group().id,
                     'item_type': obj_type_str,
                 },

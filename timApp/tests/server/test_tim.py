@@ -50,7 +50,7 @@ class TimTest(TimRouteTest):
                           },
                           'confirm': False,
                           'groups': ['Anonymous users'],
-                          'type': 'view',
+                          'type': AccessType.view.value,
                           'id': doc_id,
                       })
         self.json_put(
@@ -61,7 +61,7 @@ class TimTest(TimRouteTest):
                 },
                 'confirm': False,
                 'groups': ['Logged-in users'],
-                'type': 'view',
+                'type': AccessType.view.value,
                 'id': doc_id_list[1],
             })
         self.json_put(
@@ -72,7 +72,7 @@ class TimTest(TimRouteTest):
                 },
                 'confirm': False,
                 'groups': ['testuser2'],
-                'type': 'view',
+                'type': AccessType.view.value,
                 'id': doc_id_list[2],
             })
         self.json_put(
@@ -83,7 +83,7 @@ class TimTest(TimRouteTest):
                 },
                 'confirm': False,
                 'groups': ['testuser2'],
-                'type': 'edit',
+                'type': AccessType.edit.value,
                 'id': doc_id_list[3],
             })
         doc = Document(doc_id)
@@ -171,7 +171,7 @@ class TimTest(TimRouteTest):
                               },
                               'confirm': False,
                               'groups': ['testuser2'],
-                              'type': 'teacher',
+                              'type': AccessType.teacher.value,
                               'id': i,
                           })
 
@@ -203,7 +203,7 @@ class TimTest(TimRouteTest):
                     },
                     'confirm': False,
                     'groups': ['testuser2'],
-                    'type': 'teacher',
+                    'type': AccessType.teacher.value,
                     'id': view_id,
                 },
                 expect_status=403,
@@ -219,7 +219,7 @@ class TimTest(TimRouteTest):
                     },
                     'confirm': False,
                     'groups': ['testuser2'],
-                    'type': 'teacher',
+                    'type': AccessType.teacher.value,
                     'id': view_id,
                 },
                 expect_status=403,

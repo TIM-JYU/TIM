@@ -301,13 +301,9 @@ class RightsEditorController implements IController {
             group: right.usergroup.id,
             id: this.itemId,
             item_type: this.defaultItem,
-            type: this.accessTypeEnumName(right),
+            type: right.type,
         }));
         return await this.handleResult(r, refresh);
-    }
-
-    private accessTypeEnumName(right: IRight) {
-        return this.findAccessTypeById(right.type)!.name.replace(" ", "_");
     }
 
     private async handleResult(r: Result<IHttpResponse<unknown>, {data: {error: string}}>, refresh: boolean) {
@@ -384,7 +380,7 @@ class RightsEditorController implements IController {
             const r = await to($http.put<IPermissionEditResponse>(`/permissions/edit`, {
                 ids: ids,
                 time: this.timeOpt,
-                type: type.name,
+                type: type.id,
                 action: this.actionOption,
                 groups: groupname.split(/[;\n]/),
                 confirm: this.getEffectiveConfirm(),
@@ -414,7 +410,7 @@ class RightsEditorController implements IController {
                         time: this.timeOpt,
                         id: this.itemId,
                         groups: groups,
-                        type: type.name.replace(" ", "_"),
+                        type: type.id,
                         confirm: this.getEffectiveConfirm(),
                         item_type: this.defaultItem,
                     },
@@ -592,7 +588,7 @@ class RightsEditorController implements IController {
                 },
                 id: this.itemId,
                 groups: [group.usergroup.name],
-                type: this.accessTypeEnumName(group),
+                type: group.type,
                 confirm: false,
                 item_type: this.defaultItem,
             },
@@ -608,7 +604,7 @@ class RightsEditorController implements IController {
         const r = await to($http.put("/permissions/confirm", {
             group: group.usergroup.id,
             id: this.itemId,
-            type: this.accessTypeEnumName(group),
+            type: group.type,
         }));
         const result = await this.handleResult(r, refresh);
         this.loading = false;

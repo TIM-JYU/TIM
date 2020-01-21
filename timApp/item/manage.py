@@ -137,7 +137,7 @@ class EditOption(Enum):
 
 @dataclass
 class PermissionEditModel:
-    type: AccessType
+    type: AccessType = field(metadata={'by_value': True})
     time: TimeOpt
     groups: List[str]
     confirm: Optional[bool]
@@ -173,7 +173,7 @@ class DefaultPermissionModel(PermissionSingleEditModel):
 @dataclass
 class PermissionRemoveModel:
     id: int
-    type: AccessType
+    type: AccessType = field(metadata={'by_value': True})
     group: int
 
 
