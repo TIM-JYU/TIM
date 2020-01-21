@@ -18,6 +18,7 @@ const JsframeMarkup = t.intersection([
         beforeOpen: t.string,
         showButton: t.string,
         srchtml: t.string,
+        iframeopts: t.string,
         message: t.string,
         width: t.number,
         height: t.number,
@@ -243,6 +244,8 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
             src = "src='data:text/html;base64," + datasrc;
         }
 
+        let iframeopts = this.attrs.iframeopts || "sandbox='allow-scripts allow-same-origin'"
+
         // let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
         // url = url.replace("//", "/");
         this.jsframeoutput = "<iframe id='jsIFrame'\n" +
@@ -251,7 +254,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
             "               margin-right: auto;\n" +
             "               display: block;" +
             "               width: " + w + "px; height: " + h + "px;border: none;'\n" +
-            "        sandbox='allow-scripts allow-same-origin'\n" +
+            "        " + iframeopts + "\n" +
             src +
             "'>\n" +
             // 'src="' + url + '"' +
