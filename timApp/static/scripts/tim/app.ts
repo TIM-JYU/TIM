@@ -94,11 +94,6 @@ timApp.config(["$httpProvider", ($httpProvider: IHttpProvider) => {
     });
 }]);
 
-timApp.config(["$qProvider", ($qProvider: IQProvider) => {
-    // Available in AngularJS 1.6
-    // $qProvider.errorOnUnhandledRejections(true);
-}]);
-
 // Filter to make string URL friendly
 timApp.filter("escape", () => {
     return (str: string) => {
