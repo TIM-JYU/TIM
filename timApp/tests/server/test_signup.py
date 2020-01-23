@@ -113,6 +113,7 @@ class SettingsMock:
 @dataclass
 class OneLoginMock:
     info: UserInfo
+    mock_missing_uniquecode: bool = False
 
     def process_response(self, request_id):
         pass
@@ -127,7 +128,7 @@ class OneLoginMock:
         return SettingsMock()
 
     def get_attribute(self, name):
-        return {
+        values = {
             'urn:oid:0.9.2342.19200300.100.1.3': [self.info.email],  # mail
             'urn:oid:1.3.6.1.4.1.5923.1.1.1.6': [self.info.username],  # eduPersonPrincipalName
             'urn:oid:2.16.840.1.113730.3.1.241': [self.info.full_name],  # displayName
@@ -135,9 +136,10 @@ class OneLoginMock:
             'urn:oid:2.5.4.3': [self.info.full_name],  # cn
             'urn:oid:2.5.4.4': [self.info.last_name],  # sn
             'urn:oid:2.5.4.42': [self.info.given_name],  # givenName
-            'urn:oid:1.3.6.1.4.1.25178.1.2.14': [uq.to_urn() for uq in self.info.unique_codes],
-            # schacPersonalUniqueCode
-        }[name]
+        }
+        if not self.mock_missing_uniquecode:
+            values['urn:oid:1.3.6.1.4.1.25178.1.2.14'] = [uq.to_urn() for uq in self.info.unique_codes]
+        return values.get(name)
 
 
 acs_url = '/saml/acs'
@@ -546,14 +548,23 @@ class TestSignUp(TimRouteTest):
         self.assertIsNone(User.get_by_name('xxxx'))
         self.assertIsNotNone(User.get_by_name('xxxx2'))
 
-    def do_acs_mock(self, info: UserInfo):
+    def test_missing_uniquecode(self):
+        self.do_acs_mock(UserInfo(
+            username='xxxx@jyu.fi',
+            full_name='X Test',
+            email='xxxx@example.com',
+            origin=UserOrigin.Haka,
+            unique_codes=[SchacPersonalUniqueCode(codetype='studentID', code='1234X', org='jyu.fi')],
+        ), missing_uniquecode=True)
+
+    def do_acs_mock(self, info: UserInfo, missing_uniquecode=False):
         self.get(
             '/saml/sso',
             query_string={'entityID': 'https://testidp.funet.fi/idp/shibboleth', 'return_to': '/'},
             expect_status=302,
         )
         with mock.patch('timApp.auth.saml.OneLogin_Saml2_Auth') as m:
-            m.return_value = OneLoginMock(info=info)
+            m.return_value = OneLoginMock(info=info, mock_missing_uniquecode=missing_uniquecode)
             self.post(
                 acs_url,
                 data={},

@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Dict, List
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 import xmlsec
@@ -162,10 +162,11 @@ class TimRequestedAttributes:
         for ra in settings.get_sp_data()['attributeConsumingService']['requestedAttributes']:
             self.friendly_name_map[ra['friendlyName']] = ra['name']
 
-    def get_attribute_by_friendly_name(self, name: str):
-        return self.get_attributes_by_friendly_name(name)[0]
+    def get_attribute_by_friendly_name(self, name: str) -> Optional[str]:
+        values = self.get_attributes_by_friendly_name(name)
+        return values[0] if values else None
 
-    def get_attributes_by_friendly_name(self, name: str) -> List[str]:
+    def get_attributes_by_friendly_name(self, name: str) -> Optional[List[str]]:
         # noinspection PyTypeChecker
         return self.saml_auth.get_attribute(self.friendly_name_map[name])
 
@@ -206,7 +207,7 @@ class TimRequestedAttributes:
         return self.eppn_parts[1]
 
     @property
-    def unique_codes(self) -> List[str]:
+    def unique_codes(self) -> Optional[List[str]]:
         return self.get_attributes_by_friendly_name('schacPersonalUniqueCode')
 
     @property
@@ -267,12 +268,18 @@ def acs():
     timattrs = TimRequestedAttributes(auth)
     org_group = UserGroup.get_organization_group(timattrs.org)
     parsed_codes = []
-    for c in timattrs.unique_codes:
-        parsed = SchacPersonalUniqueCode.parse(c)
-        if not parsed:
-            log_warning(f'Failed to unique code: {c}')
-        else:
-            parsed_codes.append(parsed)
+    ucs = timattrs.unique_codes
+    if ucs:
+        for c in ucs:
+            parsed = SchacPersonalUniqueCode.parse(c)
+            if not parsed:
+                log_warning(f'Failed to unique code: {c}')
+            else:
+                parsed_codes.append(parsed)
+    elif ucs is None:
+        log_warning(f'{timattrs.derived_username} did not receive unique codes')
+    else:
+        log_warning(f'{timattrs.derived_username} received empty unique code list')
     user = create_or_update_user(
         UserInfo(
             username=timattrs.derived_username,
