@@ -9,24 +9,47 @@ const blacklist = new Set(["name", "title", "completionDate"]);
 const UnknownRecord = t.record(t.string, t.unknown);
 
 // adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html
-export function convertDateStringsToMoments(input: unknown): void {
+export function convertDateStringsToMoments(input: unknown): unknown {
     if (!UnknownRecord.is(input)) {
-        return;
+        return input;
     }
 
-    for (const [key, value] of Object.entries(input)) {
-        if (typeof value === "string") {
-            // ignore strings and keys that are most likely not intended to be interpreted as timestamps
-            if (!blacklist.has(key)) {
+    let converted: Record<string, unknown> | Array<unknown>;
+    if (Array.isArray(input)) {
+        converted = [];
+        for (const value of input) {
+            if (typeof value === "string") {
                 const m = moment(value, moment.ISO_8601, true);
                 if (m.isValid()) {
-                    input[key] = m;
+                    converted.push(m);
+                } else {
+                    converted.push(value);
                 }
+            } else {
+                converted.push(convertDateStringsToMoments(value));
             }
-        } else {
-            convertDateStringsToMoments(value);
+        }
+    } else {
+        converted = {};
+        for (const [key, value] of Object.entries(input)) {
+            if (typeof value === "string") {
+                // ignore strings and keys that are most likely not intended to be interpreted as timestamps
+                if (!blacklist.has(key)) {
+                    const m = moment(value, moment.ISO_8601, true);
+                    if (m.isValid()) {
+                        converted[key] = m;
+                    } else {
+                        converted[key] = value;
+                    }
+                } else {
+                    converted[key] = value;
+                }
+            } else {
+                converted[key] = convertDateStringsToMoments(value);
+            }
         }
     }
+    return converted;
 }
 
 export function angularWait(): IPromise<void> {
@@ -41,7 +64,7 @@ export function assertIsText(n: Node): n is Text {
     return true;
 }
 
-export function stringOrNull(x: {toString: () => string}): string {
+export function stringOrNull(x: { toString: () => string }): string {
     if (x != null) {
         return x.toString();
     }
@@ -59,7 +82,9 @@ export function checkIfElement(x: Node): x is Element {
  */
 export function isInViewport(el: Element) {
     const rect = el.getBoundingClientRect();
-    if (!document.documentElement) { return true; }
+    if (!document.documentElement) {
+        return true;
+    }
     return (
         rect.top >= 0 &&
         rect.left >= 0 &&
@@ -91,26 +116,64 @@ export function scrollToElement(element: Element) {
 export function scrollToViewInsideParent(helement: HTMLElement, hparent: HTMLElement,
                                          marginleft: number, margintop: number,
                                          marginright: number, marginbottom: number) {
-    const element = $(helement);                     if (element == null) { return false; }
-    const parent = $(hparent);                       if (parent == null) { return false; }
-    const elementOffset = element.offset();          if (elementOffset == null) { return false; }
-    const parentScrollTop = parent.scrollTop();      if (parentScrollTop == null) { return false; }
-    const parentScrollLeft = parent.scrollLeft();    if (parentScrollLeft == null) { return false; }
-    const parentInnerHeight = parent.innerHeight();  if (parentInnerHeight == null) { return false; }
-    const parentInnerWidth = parent.innerWidth();    if (parentInnerWidth == null) { return false; }
-    const parentOffset = parent.offset();            if (parentOffset == null) { return false; }
-    const height = element.innerHeight();            if (!height) { return; }
-    const width = element.innerWidth();              if (!width) { return; }
+    const element = $(helement);
+    if (element == null) {
+        return false;
+    }
+    const parent = $(hparent);
+    if (parent == null) {
+        return false;
+    }
+    const elementOffset = element.offset();
+    if (elementOffset == null) {
+        return false;
+    }
+    const parentScrollTop = parent.scrollTop();
+    if (parentScrollTop == null) {
+        return false;
+    }
+    const parentScrollLeft = parent.scrollLeft();
+    if (parentScrollLeft == null) {
+        return false;
+    }
+    const parentInnerHeight = parent.innerHeight();
+    if (parentInnerHeight == null) {
+        return false;
+    }
+    const parentInnerWidth = parent.innerWidth();
+    if (parentInnerWidth == null) {
+        return false;
+    }
+    const parentOffset = parent.offset();
+    if (parentOffset == null) {
+        return false;
+    }
+    const height = element.innerHeight();
+    if (!height) {
+        return;
+    }
+    const width = element.innerWidth();
+    if (!width) {
+        return;
+    }
 
     const topdy = parentOffset.top - elementOffset.top + margintop;
-    const bottomdy = (elementOffset.top + height) - (parentOffset.top + parentInnerHeight)  + marginbottom;
+    const bottomdy = (elementOffset.top + height) - (parentOffset.top + parentInnerHeight) + marginbottom;
     const leftdx = parentOffset.left - elementOffset.left + marginleft;
-    const rightdx = (elementOffset.left + width) - (parentOffset.left + parentInnerWidth)  + marginright;
+    const rightdx = (elementOffset.left + width) - (parentOffset.left + parentInnerWidth) + marginright;
 
-    if (topdy >= 0) {  parent.scrollTop(parentScrollTop - topdy);   }
-    if (bottomdy >= 0) { parent.scrollTop(parentScrollTop + bottomdy);  }
-    if (leftdx >= 0) {  parent.scrollLeft(parentScrollLeft - leftdx);   }
-    if (rightdx >= 0) { parent.scrollLeft(parentScrollLeft + rightdx);  }
+    if (topdy >= 0) {
+        parent.scrollTop(parentScrollTop - topdy);
+    }
+    if (bottomdy >= 0) {
+        parent.scrollTop(parentScrollTop + bottomdy);
+    }
+    if (leftdx >= 0) {
+        parent.scrollLeft(parentScrollLeft - leftdx);
+    }
+    if (rightdx >= 0) {
+        parent.scrollLeft(parentScrollLeft + rightdx);
+    }
     return true;
 
     /*
@@ -216,8 +279,16 @@ export function clone<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj)) as T;
 }
 
-interface Success<T> {ok: true; result: T; }
-interface Failure<T> {ok: false; result: T; }
+interface Success<T> {
+    ok: true;
+    result: T;
+}
+
+interface Failure<T> {
+    ok: false;
+    result: T;
+}
+
 export type Result<T, U> = Success<T> | Failure<U>;
 
 /**
@@ -228,7 +299,7 @@ export type Result<T, U> = Success<T> | Failure<U>;
  * @param promise Promise to wrap.
  * @returns A promise that resolves to either a success or error.
  */
-export function to<T, U = {data: {error: string}}>(promise: Promise<T> | IPromise<T>): Promise<Result<T, U>> {
+export function to<T, U = { data: { error: string } }>(promise: Promise<T> | IPromise<T>): Promise<Result<T, U>> {
     return refreshAngularJS(to2(promise as Promise<T>));
 }
 
@@ -236,7 +307,7 @@ export function to<T, U = {data: {error: string}}>(promise: Promise<T> | IPromis
  * Same as "to" function, but meant to be called from new Angular.
  * @param promise
  */
-export function to2<T, U = {data: {error: string}}>(promise: Promise<T>): Promise<Result<T, U>> {
+export function to2<T, U = { data: { error: string } }>(promise: Promise<T>): Promise<Result<T, U>> {
     return promise.then<Success<T>>((data: T) => ({ok: true, result: data})).catch<Failure<U>>((err) => {
         return {ok: false, result: err as U};
     });
@@ -395,13 +466,13 @@ export function escapeRegExp(str: string) {
 }
 
 export function debugTextToHeader(s: string) {
-  const para = document.createElement("p");
-  const node = document.createTextNode(s);
-  para.appendChild(node);
-  const element = document.getElementById("header");
-  if (element) {
-    element.appendChild(para);
-  }
+    const para = document.createElement("p");
+    const node = document.createTextNode(s);
+    para.appendChild(node);
+    const element = document.getElementById("header");
+    if (element) {
+        element.appendChild(para);
+    }
 }
 
 function getTouchCoords(e: TouchEvent) {
@@ -464,7 +535,7 @@ export function capitalizeFirstLetter(s: string) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export type ToReturn<T, U = {data: {error: string}}> = Promise<Result<IHttpResponse<T>, U>>;
+export type ToReturn<T, U = { data: { error: string } }> = Promise<Result<IHttpResponse<T>, U>>;
 export const ToReturn = Promise;
 
 export function injectStyle(url: string) {
@@ -497,8 +568,12 @@ export function valueOr<T extends {}, K extends T>(v: T | undefined | null, def:
 }
 
 export function valueDefu(s: string | undefined | null, def: string): string {
-    if (s === undefined) { return def; }
-    if (s === null) { return ""; }
+    if (s === undefined) {
+        return def;
+    }
+    if (s === null) {
+        return "";
+    }
     return s;
 }
 

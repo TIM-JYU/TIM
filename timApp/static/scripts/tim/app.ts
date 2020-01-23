@@ -5,8 +5,6 @@ import angular, {
     IHttpResponseTransformer,
     IModule,
     IQProvider,
-    IQService,
-    IWindowService,
 } from "angular";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
@@ -90,7 +88,7 @@ timApp.config(["$httpProvider", ($httpProvider: IHttpProvider) => {
     // convert ISO 8601 date strings to moment objects
     ($httpProvider.defaults.transformResponse as IHttpResponseTransformer[]).push((responseData, headers) => {
         if (headers("No-Date-Conversion") !== "true") {
-            convertDateStringsToMoments(responseData);
+            return convertDateStringsToMoments(responseData);
         }
         return responseData;
     });
