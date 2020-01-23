@@ -44,6 +44,11 @@
           "name": "urn:oid:2.5.4.4",
           "isRequired": true,
           "friendlyName": "sn"
+        },
+        {
+          "name": "urn:oid:1.3.6.1.4.1.25178.1.2.14",
+          "isRequired": false,
+          "friendlyName": "schacPersonalUniqueCode"
         }
       ]
     },
