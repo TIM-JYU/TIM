@@ -274,7 +274,7 @@ def acs():
         for c in ucs:
             parsed = SchacPersonalUniqueCode.parse(c)
             if not parsed:
-                log_warning(f'Failed to unique code: {c}')
+                log_warning(f'Failed to parse unique code: {c}')
             else:
                 parsed_codes.append(parsed)
     elif ucs is None:
