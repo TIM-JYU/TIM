@@ -107,10 +107,10 @@
                 Force reprint (skip cache)
             </label>
         </div>
-        <button class="btn timButton" ng-click="$ctrl.create()">
-            <span ng-show="$ctrl.loading"><tim-loading></tim-loading> Creating</span>
-            <span ng-hide="$ctrl.loading">Create</span>
+        <button ng-disabled="$ctrl.loading" class="timButton" ng-click="$ctrl.create()">
+            Create
         </button>
+        <tim-loading ng-if="$ctrl.loading"></tim-loading>
         <div id="print-success" ng-show="$ctrl.docUrl && !$ctrl.errormsg" class="alert alert-success">
             <p><span class="glyphicon glyphicon-ok"></span>Creation succeeded! <a ng-href="{{ $ctrl.docUrl }}"
                                                                                   target="_blank">View the document.</a>
