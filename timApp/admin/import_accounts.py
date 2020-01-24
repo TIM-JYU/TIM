@@ -66,13 +66,13 @@ def main():
         else:
             print(f'No new accounts were added.')
         for u in added:
-            print(u.email)
+            print(u.name)
         if existing:
             print(f'Updated the following {len(existing)} existing accounts:')
         else:
             print(f'No existing accounts were updated.')
         for u in existing:
-            print(u.email)
+            print(u.name)
 
 
 if __name__ == '__main__':
