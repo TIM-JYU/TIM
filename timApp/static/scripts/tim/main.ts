@@ -50,6 +50,7 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {setAngularJSGlobal} from "@angular/upgrade/static";
 import {MarkupErrorComponent} from "tim/ui/markup-error.component";
+import {LoadingComponent} from "tim/ui/loadingIndicator";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -108,6 +109,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "createItem", CreateItemComponent);
     doDowngrade(dg, "timAlert", TimAlertComponent);
     doDowngrade(dg, "timMarkupError", MarkupErrorComponent);
+    doDowngrade(dg, "timLoading", LoadingComponent);
     return dg;
 }
 
