@@ -226,6 +226,7 @@ class TimRequestedAttributes:
             'mail': self.mail,
             'preferredLanguage': self.preferred_language,
             'sn': self.sn,
+            'schacPersonalUniqueCode': self.unique_codes,
         }
 
 
