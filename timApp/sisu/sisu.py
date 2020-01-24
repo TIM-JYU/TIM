@@ -275,7 +275,8 @@ def refresh_sisu_grouplist_doc(ug: UserGroup):
                 if doc == d:
                     continue
                 group = doc.block.managed_usergroup
-                # Do some sanity checks that may theoretically happen if someone manually moves documents in a wrong place.
+                # Do some sanity checks for cases that may theoretically happen if someone manually moves documents
+                # in a wrong place.
                 if not group:
                     continue
                 if not group.external_id:
