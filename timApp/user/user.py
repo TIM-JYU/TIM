@@ -477,15 +477,18 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             self,
             info: UserInfo,
     ):
-        if self.name != info.username:
+        if self.name and self.name != info.username:
             group = self.get_personal_group()
             self.name = info.username
             group.name = info.username
-        if info.given_name and info.last_name:
+        if info.given_name:
             self.given_name = info.given_name
+        if info.last_name:
             self.last_name = info.last_name
-        self.real_name = info.full_name
-        self.email = info.email
+        if info.full_name:
+            self.real_name = info.full_name
+        if info.email:
+            self.email = info.email
         if info.password:
             self.pass_ = create_password_hash(info.password)
         elif info.password_hash:
