@@ -967,6 +967,57 @@ class ScimTest(TimRouteTest):
         # Make sure there are no multiple personal folders. Otherwise an exception would be thrown here.
         self.get('/')
 
+    def test_scim_permission_update_on_new_teachers_group(self):
+        """Make sure the rights of already activated groups are updated if the teachers group is provisioned later."""
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': 'jy-CUR-9999-responsible-teachers',
+                'displayName': 'ITKP102 2020-09-09--2020-12-20: Vastuuopettajat',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['teacher9999']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': 'jy-CUR-9999-students',
+                'displayName': 'ITKP102 2020-09-09--2020-12-20: Opiskelijat',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['student9999']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        self.login(username='teacher9999')
+        r = self.json_post(
+            '/sisu/createGroupDocs', json_data=[
+                {'externalId': 'jy-CUR-9999-students'},
+            ],
+        )
+        path = r['created'][0]['path']
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': 'jy-CUR-9999-teachers',
+                'displayName': 'ITKP102 2020-09-09--2020-12-20: Opettajat',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['teacher99992']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        d = DocEntry.find_by_path(path)
+        self.assertEqual(
+            {
+                ('jy-CUR-9999-responsible-teachers', AccessType.owner.value),
+                ('jy-CUR-9999-teachers', AccessType.owner.value),
+            },
+            {(ac.usergroup.external_id.external_id, ac.type) for ac in d.block.accesses.values()},
+        )
+
     def test_scim_group_manual_member_update(self):
         eid = 'jy-CUR-7777-teachers'
         self.json_post(

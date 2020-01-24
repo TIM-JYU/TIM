@@ -12,6 +12,7 @@ from marshmallow import validates, ValidationError
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import any_, true
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
 from marshmallow_dataclass import class_schema
@@ -263,6 +264,26 @@ def refresh_sisu_grouplist_doc(ug: UserGroup):
             p1.block.add_rights([ug], AccessType.owner)
             p2.block.add_rights([ug], AccessType.owner)
             p2.parent.block.add_rights([UserGroup.get_teachers_group()], AccessType.view)
+
+            # Update rights for already existing activated groups.
+            docs = d.parent.get_all_documents(
+                query_options=joinedload(DocEntry._block)
+                    .joinedload(Block.managed_usergroup)
+                    .joinedload(UserGroup.external_id),
+            )
+            for doc in docs:
+                if doc == d:
+                    continue
+                group = doc.block.managed_usergroup
+                # Do some sanity checks that may theoretically happen if someone manually moves documents in a wrong place.
+                if not group:
+                    continue
+                if not group.external_id:
+                    continue
+                if group.external_id.course_id != ug.external_id.course_id:
+                    continue
+                doc.block.add_rights([ug], AccessType.owner)
+
             s = d.document.get_settings()
             g_attrs = s.global_plugin_attrs()
             has_sisu_attr = False

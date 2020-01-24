@@ -202,10 +202,17 @@ class Folder(db.Model, Item):
         else:
             return None
 
-    def get_all_documents(self, include_subdirs: bool = False) -> List[DocEntry]:
-        return get_documents(include_nonpublic=True,
-                             filter_folder=self.get_full_path(),
-                             search_recursively=include_subdirs)
+    def get_all_documents(
+            self,
+            include_subdirs: bool = False,
+            query_options=None,
+    ) -> List[DocEntry]:
+        return get_documents(
+            include_nonpublic=True,
+            filter_folder=self.get_full_path(),
+            search_recursively=include_subdirs,
+            query_options=query_options,
+        )
 
     def get_all_folders(self) -> List['Folder']:
         return Folder.get_all_in_path(self.path)

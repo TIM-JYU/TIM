@@ -11,6 +11,7 @@ from timApp.item.tag import Tag
 from timApp.timdb.sqa import db
 from timApp.timtypes import FolderType
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.util.utils import get_current_time
 
 
@@ -62,6 +63,14 @@ class Block(db.Model):
     notifications = db.relationship('Notification', back_populates='block', lazy='dynamic')
 
     relevance = db.relationship('BlockRelevance', back_populates='_block', uselist=False)
+
+    # If this Block corresponds to a group's manage document, indicates the group being managed.
+    managed_usergroup: Optional[UserGroup] = db.relationship(
+        'UserGroup',
+        secondary=UserGroupDoc.__table__,
+        lazy='select',
+        uselist=False,
+    )
 
     def __json__(self):
         return ['id', 'type_id', 'description', 'created', 'modified']
