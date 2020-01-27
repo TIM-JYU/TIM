@@ -15,7 +15,7 @@ from flask import request
 from flask import session
 from flask import url_for
 
-from timApp.auth.accesshelper import verify_admin
+from timApp.auth.accesshelper import verify_admin, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_id, logged_in
 from timApp.auth.sessioninfo import get_other_users, get_session_users_ids, get_other_users_as_list, \
     get_current_user_object
@@ -115,7 +115,7 @@ def create_or_update_user(
 def login_with_openid():
     add_user = get_option(request, 'add_user', False)
     if not logged_in() and add_user:
-        return abort(403, 'You must be logged in before adding users to session.')
+        raise AccessDenied('You must be logged in before adding users to session.')
     if not add_user and logged_in():
         flash("You're already logged in.")
         return finish_login()
@@ -178,8 +178,7 @@ def openid_success_handler(resp: KorppiOpenIDResponse):
 
 
 def set_user_to_session(user: User):
-    adding = session.get('adding_user')
-    session.pop('adding_user', None)
+    adding = session.pop('adding_user', None)
     if adding:
         if user.id in get_session_users_ids():
             flash(f'{user.real_name} is already logged in.')

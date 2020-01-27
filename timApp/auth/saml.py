@@ -14,7 +14,9 @@ from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from onelogin.saml2.utils import OneLogin_Saml2_Utils, return_false_on_exception
 from onelogin.saml2.xml_utils import OneLogin_Saml2_XML
 
+from timApp.auth.accesshelper import AccessDenied
 from timApp.auth.login import create_or_update_user, set_user_to_session
+from timApp.auth.sessioninfo import logged_in
 from timApp.tim_app import app, csrf
 from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
@@ -143,6 +145,7 @@ class SSOData:
     return_to: str
     entityID: str
     debug: bool = False
+    addUser: bool = False
 
 
 def prepare_and_init(entity_id: str) -> OneLogin_Saml2_Auth:
@@ -237,6 +240,9 @@ def sso(m: SSOData):
     session['entityID'] = m.entityID
     login_url = auth.login(return_to=m.return_to)
     session['requestID'] = auth.get_last_request_id()
+    if not logged_in() and m.addUser:
+        raise AccessDenied('You must be logged in before adding users to session.')
+    session['adding_user'] = m.addUser
     if m.debug:
         session['debugSSO'] = True
     else:

@@ -28,10 +28,11 @@ export interface IDiscoveryFeedEntry {
     scopes: string[];
 }
 
-export function ssoLogin(entityID: string) {
+export function ssoLogin(entityID: string, addUser?: boolean) {
     redirectTo("/saml/sso?" + $httpParamSerializer({
         entityID: entityID,
         return_to: document.location.toString(),
+        addUser: addUser,
     }));
 }
 
@@ -79,7 +80,7 @@ class HakaLoginController {
         if ((this.addingUser || this.alwaysKorppi) && this.selectedIdp.scopes.includes("jyu.fi")) {
             Users.korppiLogin(this.addingUser || false);
         } else {
-            ssoLogin(this.selectedIdp.entityID);
+            ssoLogin(this.selectedIdp.entityID, this.addingUser);
         }
     }
 }
