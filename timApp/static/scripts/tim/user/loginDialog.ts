@@ -258,7 +258,7 @@ registerDialogComponent(LoginDialogController,
                     idps="$ctrl.idps"
                     home-org="$ctrl.homeOrg"
                     adding-user="$ctrl.addingToSession"
-                    always-korppi="true"></haka-login>
+                    always-korppi="false"></haka-login>
         <hr>
         <p class="text-center">
             {{ 'Others, please log in with your TIM account.' | tr }}
