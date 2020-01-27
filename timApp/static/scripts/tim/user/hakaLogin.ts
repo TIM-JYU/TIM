@@ -76,8 +76,7 @@ class HakaLoginController {
         }
         setStorage("lastIdp", this.selectedIdp.entityID);
 
-        // Adding user doesn't work smoothly with Haka, so we fall back to Korppi.
-        if ((this.addingUser || this.alwaysKorppi) && this.selectedIdp.scopes.includes("jyu.fi")) {
+        if (this.alwaysKorppi && this.selectedIdp.scopes.includes("jyu.fi")) {
             Users.korppiLogin(this.addingUser || false);
         } else {
             ssoLogin(this.selectedIdp.entityID, this.addingUser);
