@@ -2,7 +2,7 @@
 
 # Idea from https://gist.github.com/lmakarov/54302df8ecfc87b36320
 
-DOCKER_COMPOSE_VERSION=1.23.2
+DOCKER_COMPOSE_VERSION=1.25.3
 
 echo 'Downloading docker-compose to the permanent VM storage...'
 sudo mkdir -p /var/lib/boot2docker/bin
