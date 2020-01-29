@@ -117,7 +117,6 @@ def init_saml_auth(req, entity_id: str) -> OneLogin_Saml2_Auth:
     return auth
 
 
-
 def get_haka_metadata() -> str:
     return get_haka_metadata_from_url(app.config['HAKA_METADATA_URL'])
 
