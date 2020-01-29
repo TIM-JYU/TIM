@@ -548,6 +548,19 @@ class TestSignUp(TimRouteTest):
         self.assertIsNone(User.get_by_name('xxxx'))
         self.assertIsNotNone(User.get_by_name('xxxx2'))
 
+    def test_haka_login_email_conflict(self):
+        self.create_or_update_test_user(
+            username='somep@example.com',
+            real_name='Someperson',
+            email='somep@example.com',
+        )
+        self.create_or_update_test_user(username='sp', email='sp@jyu.fi', real_name='Person Söme')
+        self.do_acs_mock(UserInfo(
+            username='sp@jyu.fi',
+            email='somep@example.com',
+            origin=UserOrigin.Haka,
+        ))
+
     def test_missing_uniquecode(self):
         self.do_acs_mock(UserInfo(
             username='xxxx@jyu.fi',

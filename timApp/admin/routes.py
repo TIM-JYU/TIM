@@ -87,9 +87,23 @@ def search_users(term: str):
     return json_response(result)
 
 
+def create_user_info_set(u: User):
+    """Returns a set of strings constructed from various parts of user info.
+    This set is meant to be intersected with another user to determine whether they have anything in common.
+    """
+    real_name_ascii = u.real_name.translate(str.maketrans('åöäÅÖÄ', 'aoaAOA')).lower()
+    return {
+        u.name.lower(),
+        *u.real_name.lower().split(' '),
+        u.email_name_part.lower(),
+        real_name_ascii.replace(' ', ''),
+        ''.join(real_name_ascii.split(' ')[::-1])
+    }
+
+
 def has_anything_in_common(u1: User, u2: User):
-    u1_set = {u1.name.lower(), *u1.real_name.lower().split(' '), u1.email_name_part.lower()}
-    u2_set = {u2.name.lower(), *u2.real_name.lower().split(' '), u2.email_name_part.lower()}
+    u1_set = create_user_info_set(u1)
+    u2_set = create_user_info_set(u2)
     if u1_set & u2_set:
         return True
     # This allows e.g. testuser1 and testuser2 to be merged.

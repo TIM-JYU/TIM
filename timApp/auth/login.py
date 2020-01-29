@@ -15,6 +15,7 @@ from flask import request
 from flask import session
 from flask import url_for
 
+from timApp.admin.routes import do_merge_users, do_soft_delete
 from timApp.auth.accesshelper import verify_admin, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_id, logged_in
 from timApp.auth.sessioninfo import get_other_users, get_session_users_ids, get_other_users_as_list, \
@@ -101,6 +102,14 @@ def create_or_update_user(
                 break
 
     if user is not None:
+        if user.email != info.email:
+            ue = user.get_by_email(info.email)
+            if ue and user != ue:
+                log_warning(f'Merging users during login: {user.name} and {ue.name}')
+                do_merge_users(user, ue)
+                do_soft_delete(ue)
+            elif ue:
+                raise Exception(f'Users were the same but still different email: {user.name}')
         user.update_info(info)
     else:
         user, _ = User.create_with_group(info)
