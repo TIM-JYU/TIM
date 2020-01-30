@@ -1,5 +1,6 @@
 from typing import Optional
 
+import re
 from dataclasses import dataclass
 
 from timApp.timdb.sqa import db
@@ -50,8 +51,10 @@ class PersonalUniqueCode(db.Model):
         return PersonalUniqueCode.find_by_code(p.code, p.org, p.codetype)
 
 
-uc_start = 'urn:schac:personalUniqueCode:int:'
+uc_start = 'urn:schac:personalUniqueCode:int'
 
+# The mace:terena.org part is used by at least Aalto.
+uc_re = re.compile(rf'urn:(mace:terena\.org:)?schac:personalUniqueCode:int:(?P<type>[^:]+):(?P<org>[^:]+):(?P<code>[^:]+)')
 
 @dataclass
 class SchacPersonalUniqueCode:
@@ -63,15 +66,13 @@ class SchacPersonalUniqueCode:
 
     @staticmethod
     def parse(urn: str):
-        if not urn.startswith(uc_start):
+        match = uc_re.fullmatch(urn)
+        if not match:
             return None
-        parts = urn.split(':')
-        if len(parts) != 7:
-            return None
-        codetype = parts[-3]
-        org_name = parts[-2]
-        code = parts[-1]
+        codetype = match.group('type')
+        org_name = match.group('org')
+        code = match.group('code')
         return SchacPersonalUniqueCode(code=code, codetype=codetype, org=org_name)
 
     def to_urn(self):
-        return f'{uc_start}{self.codetype}:{self.org}:{self.code}'
+        return f'{uc_start}:{self.codetype}:{self.org}:{self.code}'
