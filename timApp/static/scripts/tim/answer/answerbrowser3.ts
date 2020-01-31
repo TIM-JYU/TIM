@@ -3,6 +3,7 @@ import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
+import {TaskId} from "tim/plugin/taskid";
 import {dereferencePar, getParId} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {getRangeBeginParam} from "../document/viewRangeInfo";
@@ -49,8 +50,18 @@ function isElement(n: Node): n is Element {
 
 async function loadPlugin(html: string, plugin: JQuery, scope: IScope, viewctrl: ViewCtrl) {
     const elementToCompile = $(html);
-    elementToCompile.attr("plugintype", plugin.attr("data-plugin") || null);
-    elementToCompile.attr("taskid", plugin.attr("id") || null);
+    elementToCompile.attr("plugintype", plugin.attr("data-plugin") ?? null);
+    const taskidstr = plugin.attr("id");
+    elementToCompile.attr("taskid", taskidstr ?? null);
+    const sc = scope.$new(true) as unknown as {taskid: TaskId};
+    if (taskidstr) {
+        // For Angular plugins (timTable and tableForm so far), we must pass the parsed TaskId.
+        const p = TaskId.tryParse(taskidstr);
+        if (p.ok) {
+            sc.taskid = p.result;
+            elementToCompile.attr("taskid", "{{taskid}}");
+        }
+    }
     const compiled = await compileWithViewctrl(elementToCompile, scope, viewctrl);
     await ParCompiler.processAllMath(compiled);
     plugin.empty().append(compiled);

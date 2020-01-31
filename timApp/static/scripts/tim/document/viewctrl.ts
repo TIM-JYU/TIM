@@ -24,9 +24,9 @@ import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
 import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "../plugin/attributes";
-import {TableFormController} from "../plugin/tableForm";
+import {TableFormComponent} from "../plugin/tableForm";
 import {TaskId} from "../plugin/taskid";
-import {TimTableController} from "../plugin/timTable";
+import {TimTableComponent} from "../plugin/timTable";
 import {initCssPrint} from "../printing/cssPrint";
 import {IUser, IUserListEntry} from "../user/IUser";
 import {Users} from "../user/userService";
@@ -133,8 +133,8 @@ export class ViewCtrl implements IController {
     public teacherMode: boolean;
     private velpMode: boolean;
 
-    private timTables = new Map<string, TimTableController>();
-    private tableForms = new Map<string, TableFormController>();
+    private timTables = new Map<string, TimTableComponent>();
+    private tableForms = new Map<string, TableFormComponent>();
     private jsRunners = new Map<string, IJsRunner>();
 
     // TODO: Possibly redundant since same thing can be achieved by just using the array version
@@ -458,10 +458,10 @@ export class ViewCtrl implements IController {
      * Registers a table controller to the view controller.
      * All table controllers need to register for toggling edit mode of
      * the table to work.
-     * @param {TimTableController} controller The table controller.
+     * @param {TimTableComponent} controller The table controller.
      * @param {string} parId The ID of the table paragraph.
      */
-    public addTable(controller: TimTableController, parId: string) {
+    public addTable(controller: TimTableComponent, parId: string) {
         // console.log("table added!");
         this.timTables.set(parId, controller);
     }
@@ -469,7 +469,7 @@ export class ViewCtrl implements IController {
     /**
      * Returns a table controller related to a specific table paragraph.
      * @param {string} parId The paragraph's ID.
-     * @returns {TimTableController} The table controller related to the given table paragraph, or undefined.
+     * @returns {TimTableComponent} The table controller related to the given table paragraph, or undefined.
      */
     public getTableControllerFromParId(parId: string) {
         return this.timTables.get(parId);
@@ -477,7 +477,7 @@ export class ViewCtrl implements IController {
 
     // TODO: Refactor plugin interface for tableForm:
     //  - Export entire controller & keep own map vs implement ITimComponent
-    public addTableForm(controller: TableFormController, taskId: string) {
+    public addTableForm(controller: TableFormComponent, taskId: string) {
         this.tableForms.set(taskId, controller);
     }
 

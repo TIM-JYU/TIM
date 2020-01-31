@@ -3,32 +3,47 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
 import {clone, to} from "tim/util/utils";
-import {getParId} from "../document/parhelpers";
+import {
+    ApplicationRef,
+    ChangeDetectorRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    Input,
+    NgModule,
+    OnInit,
+    StaticProvider,
+    ViewChild,
+} from "@angular/core";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {TaskId} from "tim/plugin/taskid";
 import {ViewCtrl} from "../document/viewctrl";
 import {IDocument} from "../item/IItem";
 import {showInputDialog} from "../ui/inputDialog";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, nullable, withDefault} from "./attributes";
-import "style-loader!./tableForm.css";
 import {
     CellAttrToSave,
     CellEntity,
     CellToSave,
-    CellType,
+    ClearSort,
     colnumToLetters,
     DataEntity,
     isPrimitiveCell,
-    moduleDefs as timtableDefs,
     TimTable,
-    TimTableController,
+    TimTableComponent,
+    TimTableModule,
 } from "./timTable";
-
-const tableFormApp = angular.module("tableFormApp", ["ngSanitize", ...timtableDefs.map((m) => m.name)]);
-export const moduleDefs = [tableFormApp];
 
 const TableFormMarkup = t.intersection([
     t.partial({
@@ -118,13 +133,191 @@ const emailColIndex = 2;
 const memberShipColIndex = 3;
 const sortLang = "fi";
 
-export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMarkup>, t.TypeOf<typeof TableFormAll>, typeof TableFormAll> {
+@Component({
+    selector: "tim-email-send",
+    template: `
+        <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="emaillist"> <!-- email -->
+            <p class="closeButton" (click)="emaillist=''"></p>
+            <p><textarea [(ngModel)]="emaillist" rows="4" cols="40"></textarea>
+            </p>
+            <p>
+                <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox"
+                                                                                                   [(ngModel)]="emailbcc">BCC</label>&nbsp;
+                <label title="Send also a copy for me"><input type="checkbox" [(ngModel)]="emailbccme">BCC also
+                    for me</label>&nbsp;
+                <label title="Send using TIM.  Every mail is send as a personal mail."><input type="checkbox"
+                                                                                              [(ngModel)]="emailtim">use
+                    TIM to send</label>&nbsp;
+            </p>
+            <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
+            <p>eMail content:</p>
+            <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
+            <p>
+                <button class="timButton"
+                        (click)="sendEmail()">
+                    Lähetä
+                </button>
+                <!-- <span class="emailMsg" [(ngModel)]="emailMsg"></span> -->
+                <span class="savedtext" *ngIf="emailMsg">Sent!</span>
+            </p>
+        </div>
+    `,
+})
+export class TimEmailComponent {
+    @Input()
+    emaillist: string = "";
+    emailsubject: string = "";
+    emailbody: string = "";
+    emailbcc: boolean = false;
+    emailbccme: boolean = true;
+    emailtim: boolean = true;
+    emailMsg: string = "";
+    @Input()
+    taskid?: TaskId;
+
+    async sendEmailTim() {
+        if (!this.taskid) {
+            this.emailMsg = "Cannot send email without taskid";
+            return;
+        }
+        this.emailMsg = ""; // JSON.stringify(response);
+        const url = `/multiSendEmail/${this.taskid.docTask()}`;
+        const response = await to($http.post<string[]>(url, {
+            rcpt: this.emaillist.replace(/\n/g, ";"),
+            subject: this.emailsubject,
+            msg: this.emailbody,
+            bccme: this.emailbccme,
+        }));
+        this.emailMsg = "Sent"; // JSON.stringify(response);
+    }
+
+    public async sendEmail() {
+        if (this.emailtim) {
+            this.sendEmailTim();
+            return;
+        }
+        // TODO: iPad do not like ;
+        let addrs = this.emaillist.replace(/\n/g, ",");
+        let bcc = "";
+        if (this.emailbcc) {
+            bcc = addrs;
+            addrs = "";
+        }
+        if (this.emailbccme) {
+            if (bcc) {
+                bcc += ",";
+            }
+            bcc += Users.getCurrent().email;
+        }
+        window.location.href = "mailto:" + addrs
+            + "?" + "subject=" + this.emailsubject
+            + "&" + "body=" + this.emailbody
+            + "&" + "bcc=" + bcc;
+    }
+}
+
+@Component({
+    selector: "tableform-runner",
+    // changeDetection: ChangeDetectionStrategy.OnPush,
+    template: `
+        <div class="tableform" *ngIf="showTable">
+            <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+            <h4 *ngIf="header" [innerHtml]="header"></h4>
+            <p *ngIf="stem" [innerHtml]="stem"></p>
+            <tim-table *ngIf="tableCheck()" [data]="data"
+                       [taskid]="getTaskId()"></tim-table>
+
+            <div class="hidden-print">
+                <button class="timButton"
+                        *ngIf="tableCheck() && !autosave"
+                        (click)="saveText()">
+                    {{ buttonText() }}
+                </button>
+                <button class="timButton"
+                        *ngIf="reportCheck()"
+                        (click)="generateReport()">
+                    {{ reportButton() }}
+                </button>
+                <button class="timButton"
+                        (click)="closeTable()"
+                        *ngIf="hideButtonText">
+                    {{hideButtonText}}
+                </button>
+                <button class="timButton"
+                        (click)="removeUsers()"
+                        *ngIf="removeUsersButtonText && cbCount">
+                    {{removeUsersButtonText}}
+                </button>
+                <button class="timButton"
+                        (click)="listUsernames()"
+                        *ngIf="userListButtonText && cbCount">
+                    {{userListButtonText}}
+                </button>
+                <button class="timButton"
+                        (click)="emailUsers()"
+                        *ngIf="emailUsersButtonText && cbCount">
+                    {{emailUsersButtonText}}
+                </button>
+                <ng-container *ngIf="runScripts && cbCount">
+                    <button class="timButton"
+                            *ngFor="let s of runScripts"
+                            (click)="runJsRunner(s)">
+                        Run {{s}}
+                    </button>
+                </ng-container>
+                <button class="timButton"
+                        (click)="orderSisuGroups()"
+                        *ngIf="sisugroups && cbCount">
+                    Confirm groups
+                </button>
+            </div>
+            <div class="csRunDiv tableUsers" style="padding: 1em;" *ngIf="userlist"> <!-- userlist -->
+                <p class="closeButton" (click)="userlist=''"></p>
+                <p>Separator:
+                    <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="-"
+                                  (change)="listUsernames()">-</label>&nbsp;
+                    <label><input type="radio" name="listsep" [(ngModel)]="listSep" value=","
+                                  (change)="listUsernames()">,</label>&nbsp;
+                    <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="|"
+                                  (change)="listUsernames()">|</label>&nbsp;
+                    <label><input type="radio" name="listsep" [(ngModel)]="listSep" value=";"
+                                  (change)="listUsernames()">;</label>&nbsp;
+                    <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="\n"
+                                  (change)="listUsernames()">\\n</label>&nbsp;
+                </p>
+                <label><input type="checkbox" [(ngModel)]="listName" (change)="listUsernames()">Name</label>&nbsp;
+                <label><input type="checkbox" [(ngModel)]="listUsername"
+                              (change)="listUsernames()">Username</label>&nbsp;
+                <label><input type="checkbox" [(ngModel)]="listEmail" (change)="listUsernames()">Email</label>&nbsp;
+                <br>
+                <textarea id="userlist" [(ngModel)]="userlist" rows="10" cols="60"></textarea>
+                <button class="timButton"
+                        (click)="copyList()">
+                    Copy
+                </button>
+            </div>
+            <tim-email-send [emaillist]="emaillist" [taskid]="getTaskId()"></tim-email-send>
+            <pre *ngIf="result">{{result}}</pre>
+            <pre *ngIf="error" [innerHtml]="error"></pre>
+            <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+        </div>
+        <div class="tableOpener" *ngIf="!showTable">
+            <button class="timButton"
+                    [disabled]="loading"
+                    (click)="openTable()">
+                {{openButtonText}}
+            </button><tim-loading *ngIf="loading"></tim-loading>
+        </div>
+    `,
+    styleUrls: ["./tableForm.scss"],
+})
+export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableFormMarkup>, t.TypeOf<typeof TableFormAll>, typeof TableFormAll>
+    implements OnInit {
     public viewctrl?: ViewCtrl;
-    private result?: string;
-    private error?: string;
-    private isRunning = false;
+    result?: string;
+    error?: string;
     private userfilter = "";
-    private data: TimTable & { userdata: DataEntity } = {
+    data: TimTable & { userdata: DataEntity } = {
         hide: {edit: false, insertMenu: true, editMenu: true},
         hiddenRows: [],
         hiddenColumns: [],
@@ -150,46 +343,73 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     private realnames = false;
     private usernames = false;
     private emails = false;
-    private showTable = false;
+    showTable = false;
     private tableFetched = false;
     private rowKeys!: string[];
     private userLocations: Record<string, string> = {};
     private taskLocations: Record<string, string> = {};
     private changedCells: string[] = []; // Use same type as data.userdata?
     private clearStylesCells = new Set<string>();
-    private userlist: string = "";
-    private emaillist: string = "";
-    private emailsubject: string = "";
-    private emailbody: string = "";
-    private emailbcc: boolean = false;
-    private emailbccme: boolean = true;
-    private emailtim: boolean = true;
-    private emailMsg: string = "";
-    private listSep: string = "-";
-    private listName: boolean = false;
-    private listUsername: boolean = true;
-    private listEmail: boolean = false;
+    userlist: string = "";
+    listSep: string = "-";
+    listName: boolean = false;
+    listUsername: boolean = true;
+    listEmail: boolean = false;
     private fixedColor: string = "#f0f0f0";
-    private cbCount: number = 0;
+    cbCount: number = 0;
+    @ViewChild(TimTableComponent)
+    timTable?: TimTableComponent;
+    emaillist = "";
+    loading = false;
 
     getDefaultMarkup() {
         return {};
     }
 
-    // noinspection JSUnusedGlobalSymbols
+    get autosave() {
+        return this.markup.autosave;
+    }
+
+    get hideButtonText() {
+        return this.markup.hideButtonText;
+    }
+
+    get openButtonText() {
+        return this.markup.openButtonText;
+    }
+
+    get removeUsersButtonText() {
+        return this.markup.removeUsersButtonText;
+    }
+
+    get userListButtonText() {
+        return this.markup.userListButtonText;
+    }
+
+    get emailUsersButtonText() {
+        return this.markup.emailUsersButtonText;
+    }
+
+    get runScripts() {
+        return this.markup.runScripts;
+    }
+
+    get sisugroups() {
+        return this.markup.sisugroups;
+    }
+
     /**
      * Used to define table view & relative save button in angular, true or false.
      */
     buttonText() {
-        return (this.attrs.buttonText || "Tallenna taulukko");
+        return (this.markup.buttonText || "Tallenna taulukko");
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Used to define table view & relative save button in angular, true or false.
      */
     reportButton() {
-        return (this.attrs.reportButton || "Luo Raportti");
+        return (this.markup.reportButton || "Luo Raportti");
     }
 
     addHiddenIndex(i: number) {
@@ -200,46 +420,61 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
     }
 
-    checkToShow(param: boolean|undefined, i: number, def: boolean): boolean {
-        if (param == undefined) { param = def; }
-        if (param) { return true; }
+    checkToShow(param: boolean | undefined, i: number, def: boolean): boolean {
+        if (param == undefined) {
+            param = def;
+        }
+        if (param) {
+            return true;
+        }
 
         this.addHiddenIndex(i);
         return false;
     }
 
-    $onInit() {
-        super.$onInit();
+    constructor(el: ElementRef, http: HttpClient, private cdr: ChangeDetectorRef) {
+        super(el, http);
+        // cdr.detach();
+    }
+
+    ngOnInit() {
+        super.ngOnInit();
         const tid = this.getTaskId();
+        this.viewctrl = vctrlInstance; // TODO: Make an Angular service for getting ViewCtrl.
         if (this.viewctrl && tid) {
             this.viewctrl.addTableForm(this, tid.docTask());
         }
-        const d =  this.data;
-        const table =  this.data.table;
-        if (this.attrs.fontSize) { table.fontSize = this.attrs.fontSize; }
-        d.taskBorders = this.attrs.taskBorders;
-        this.fixedColor = this.attrs.fixedColor || this.fixedColor;
+        const table = this.data.table;
+        if (this.markup.fontSize) {
+            table.fontSize = this.markup.fontSize;
+        }
+        this.data.taskBorders = this.markup.taskBorders;
+        this.fixedColor = this.markup.fixedColor || this.fixedColor;
 
-        this.data.hiddenRows = this.attrs.hiddenRows;
-        this.data.hiddenColumns = this.attrs.hiddenColumns;
+        this.data.hiddenRows = this.markup.hiddenRows;
+        this.data.hiddenColumns = this.markup.hiddenColumns;
 
         // Initialize hide-attribute
-        this.data.hide = { editMenu: true, insertMenu: true};
-        if (this.attrs.hide) {
-            this.data.hide = this.attrs.hide; // TODO: TimTablen oletukset tähän
-            const hide = this.attrs.hide;
-            if (hide.editMenu === undefined) { this.data.hide.editMenu = true; }
-            if (hide.insertMenu === undefined) { this.data.hide.insertMenu = true; }
+        this.data.hide = {editMenu: true, insertMenu: true};
+        if (this.markup.hide) {
+            this.data.hide = this.markup.hide; // TODO: TimTablen oletukset tähän
+            const hide = this.markup.hide;
+            if (hide.editMenu === undefined) {
+                this.data.hide.editMenu = true;
+            }
+            if (hide.insertMenu === undefined) {
+                this.data.hide.insertMenu = true;
+            }
         }
-        if (this.attrs.showToolbar !== undefined) {
-            this.data.hide.toolbar = this.attrs.showToolbar;
+        if (this.markup.showToolbar !== undefined) {
+            this.data.hide.toolbar = this.markup.showToolbar;
         }
 
         this.userfilter = "";
-        this.realnames = this.checkToShow(this.attrs.realnames, realNameColIndex, true);
-        this.usernames = this.checkToShow(this.attrs.usernames, userNameColIndex, true);
-        this.emails    = this.checkToShow(this.attrs.emails,    emailColIndex,    false);
-        this.checkToShow(this.attrs.includeUsers !== "current",  memberShipColIndex, false);
+        this.realnames = this.checkToShow(this.markup.realnames, realNameColIndex, true);
+        this.usernames = this.checkToShow(this.markup.usernames, userNameColIndex, true);
+        this.emails = this.checkToShow(this.markup.emails, emailColIndex, false);
+        this.checkToShow(this.markup.includeUsers !== "current", memberShipColIndex, false);
 
         this.rows = this.attrsall.rows || {};
         this.rowKeys = Object.keys(this.rows);
@@ -253,41 +488,39 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.setDataMatrix();
 
         this.data.saveCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
-        if (this.attrs.saveStyles) {
+        if (this.markup.saveStyles) {
             this.data.saveStyleCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
         }
         this.data.cbCallBack = (cbs, n, index) => this.cbChanged(cbs, n, index);
 
-        if (this.attrs.minWidth) {
-            this.data.minWidth = this.attrs.minWidth;
+        if (this.markup.minWidth) {
+            this.data.minWidth = this.markup.minWidth;
         }
-        if (this.attrs.maxWidth !== undefined) {
-            this.data.maxWidth = this.attrs.maxWidth;
+        if (this.markup.maxWidth !== undefined) {
+            this.data.maxWidth = this.markup.maxWidth;
         }
-        if (this.attrs.singleLine) {
-            this.data.singleLine = this.attrs.singleLine;
+        if (this.markup.singleLine) {
+            this.data.singleLine = this.markup.singleLine;
         }
-        if (this.attrs.open) {
+        if (this.markup.open) {
             this.tableFetched = true;
-            this.showTable = this.attrs.open;
+            this.showTable = this.markup.open;
         }
 
-        this.data.cbColumn = this.attrs.cbColumn;
-        this.data.nrColumn = this.attrs.nrColumn;
-        this.data.filterRow = this.attrs.filterRow;
-        this.data.maxRows = this.attrs.maxRows;
-        this.data.maxCols = this.attrs.maxCols;
-        this.data.toolbarTemplates = this.attrs.toolbarTemplates;
+        this.data.cbColumn = this.markup.cbColumn;
+        this.data.nrColumn = this.markup.nrColumn;
+        this.data.filterRow = this.markup.filterRow;
+        this.data.maxRows = this.markup.maxRows;
+        this.data.maxCols = this.markup.maxCols;
+        this.data.toolbarTemplates = this.markup.toolbarTemplates;
+        // this.cdr.detectChanges();
     }
 
     /**
-     * Returns the TimTableController within the tableForm
+     * Returns the TimTableComponent within the tableForm.
      */
     getTimTable() {
-        const parId = getParId(this.getPar());
-        if (this.viewctrl && parId) {
-            return this.viewctrl.getTableControllerFromParId(parId);
-        }
+        return this.timTable;
     }
 
     /**
@@ -322,7 +555,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * Basically just a reset
      */
     public async updateTable() {
-        if (this.attrsall.markup.sisugroups) { return; }
+        if (this.attrsall.markup.sisugroups) {
+            return;
+        }
         // TODO: Save before reset?
         type TableFetchResponse = ({
             aliases: Record<string, string>,
@@ -338,12 +573,13 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         if (!tid) {
             return;
         }
+        this.loading = true;
         if (this.isPreview()) {
             prom = $http.get<TableFetchResponse>("/tableForm/fetchTableDataPreview?" + $httpParamSerializer({
                 taskid: tid.docTask(),
-                fields: this.attrs.fields,
-                groups: this.attrs.groups,
-                removeDocIds: this.attrs.removeDocIds,
+                fields: this.markup.fields,
+                groups: this.markup.groups,
+                removeDocIds: this.markup.removeDocIds,
             }));
         } else {
             prom = $http.get<TableFetchResponse>("/tableForm/fetchTableData?" + $httpParamSerializer({
@@ -370,8 +606,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         this.setDataMatrix();
         const timtab = this.getTimTable();
         if (timtab) {
-            timtab.reInitialize(false);
+            timtab.reInitialize(ClearSort.No);
         }
+        this.loading = false;
     }
 
     /**
@@ -379,7 +616,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * @param fields to be updated
      */
     public async updateFields(fields: string[]) {
-        if (this.attrsall.markup.sisugroups) { return; }
+        if (this.attrsall.markup.sisugroups) {
+            return;
+        }
 
         try {
             if (!this.tableFetched || !this.viewctrl) {
@@ -406,10 +645,10 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             //     return;
             // }
             // parse fields from this.attrsall.fields - remove alias part
-            if (!this.attrs.fields) {
+            if (!this.markup.fields) {
                 return;
             }
-            const ownFields = widenFields(this.attrs.fields);
+            const ownFields = widenFields(this.markup.fields);
             for (const aliasfield of ownFields) {
                 const field = aliasfield.split("=")[0].trim();
                 const docField = this.viewctrl.docId + "." + field;
@@ -468,7 +707,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             const timtab = this.getTimTable();
             // if ( this.viewctrl ) { return; } // for test purposes that why styles are lost
             if (timtab) {
-                timtab.reInitialize(false);
+                timtab.reInitialize(ClearSort.No);
             }
         } catch (e) {
             console.log(e);
@@ -496,10 +735,14 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             } else {
                 this.data.headers = ["Henkilön nimi", "Käyttäjänimi", "eMail", "Poistunut?"];
             }
-            this.data.headersStyle = {"backgroundColor": this.fixedColor,
-                                      "font-weight": "bold"};
+            this.data.headersStyle = {
+                "backgroundColor": this.fixedColor,
+                "font-weight": "bold",
+            };
 
-            if (this.fields) { this.data.table.countCol = this.fields.length + 3; }
+            if (this.fields) {
+                this.data.table.countCol = this.fields.length + 3;
+            }
             this.data.table.countRow = Object.keys(this.rows).length;
             let y = 1;
             if (!this.data.lockedCells) {
@@ -573,59 +816,36 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     }
 
     /**
-     * Clears the usernamefilter
-     */
-    initCode() {
-        this.userfilter = "";
-        this.error = undefined;
-        this.result = undefined;
-    }
-
-    /**
      * Closes timTable's editor and saves the cell that is being currently edited
      */
-    saveText() {
+    async saveText() {
         const timTable = this.getTimTable();
         if (timTable == null) {
             return;
         }
-        timTable.saveAndCloseSmallEditor();
+        await timTable.saveAndCloseSmallEditor();
         this.doSaveText([]);
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if table attribute is true.
      * Used to define table view & relative save button in angular, true or false.
      */
     tableCheck() {
-        // return (this.attrs.table === true);
-        if (this.attrs.table != undefined) {
-            return this.attrs.table;
+        // return (this.markup.table === true);
+        if (this.markup.table != undefined) {
+            return this.markup.table;
         } else {
             return true;
         }
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if report attribute is true.
      * Used to define create report button in angular, true or false.
      */
     reportCheck() {
-        return (this.attrs.report == true);
-    }
-
-    /**
-     * Boolean to determinate if usernames are viewed in report.
-     * Choises are true for username and false for anonymous. Username/true as default.
-     */
-    anonNames() {
-        if (this.attrs.anonNames) {
-            return this.attrs.anonNames;
-        } else {
-            return false;
-        }
+        return (this.markup.report == true);
     }
 
     /**
@@ -633,10 +853,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * Choises are username, username and full name and anonymous. Username as default.
      */
     sortBy() {
-        return (this.attrs.sortBy || "username");
+        return (this.markup.sortBy || "username");
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Generates report based on the table.
      * Used if report is set to true and create report button is clicked.
@@ -655,55 +874,19 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             // taskid: this.getTaskId()
             // TODO: use taskid? (less data to transfer because of plug.values, but dependant on task existence)
             docId: taskId.docId,
-            fields: this.attrs.fields,
-            groups: this.attrs.groups,
-            removeDocIds: this.attrs.removeDocIds,
-            separator: (this.attrs.separator || ","),
-            anonNames: this.attrs.anonNames,
-            realnames: this.attrs.realnames,
-            usernames: this.attrs.usernames,
-            emails: this.attrs.emails,
-            reportFilter: this.attrs.reportFilter,
+            fields: this.markup.fields,
+            groups: this.markup.groups,
+            removeDocIds: this.markup.removeDocIds,
+            separator: (this.markup.separator || ","),
+            anonNames: this.markup.anonNames,
+            realnames: this.markup.realnames,
+            usernames: this.markup.usernames,
+            emails: this.markup.emails,
+            reportFilter: this.markup.reportFilter,
         }), "WINDOWID");
         if (win == null) {
             this.error = "Failed to open report window.";
         }
-    }
-
-    /**
-     * @deprecated
-     */
-    generateCSVTable() {
-        const timTable = this.getTimTable();
-        if (timTable == null) {
-            return;
-        }
-        const result: CellType[][] = [];
-        const rowcount = Object.keys(this.rows).length + 1;
-        let colcount = 0;
-        if (this.fields && this.fields.length) {
-            colcount = this.fields.length + 1;
-        }
-        for (let i = 0; i < rowcount; i++) {
-            // TODO: In future: change hiddenRows check if hiddenRows is changed from number[] to IRows
-            // TODO: Check for hiddenColumns
-            if (this.data.hiddenRows && this.data.hiddenRows.includes(i)) { continue; }
-            const row: CellType[] = [];
-            result.push(row);
-            for (let j = 0; j < colcount; j++) {
-                if (this.data.hiddenColumns && this.data.hiddenColumns.includes(j)) { continue; }
-                if (this.anonNames() && j == userNameColIndex && i > 0) {
-                    row.push("Anonymous" + i);
-                    continue;
-                }
-                if (this.anonNames() && j == realNameColIndex && i > 0) {
-                    row.push("Unknown" + i);
-                    continue;
-                }
-                row.push(timTable.cellDataMatrix[i][j].cell);
-            }
-        }
-        return result;
     }
 
     /**
@@ -730,6 +913,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
         return result;
     }
+
     /**
      * Removes selected users from the group
      */
@@ -743,10 +927,14 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         for (const r of selUsers) {
             msg += r.join(", ") + "<br>";
         }
-        if (msg == "") { return; }
+        if (msg == "") {
+            return;
+        }
 
-        if (!this.attrs.groups) { return; }
-        const group = this.attrs.groups[0];
+        if (!this.markup.groups) {
+            return;
+        }
+        const group = this.markup.groups[0];
 
         await showInputDialog({
             defaultValue: "",
@@ -754,7 +942,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
             title: "Remove users from group " + group,
             isInput: false,
             validator: async () => {
-                const ulist = TableFormController.makeUserList(selUsers, 1, "", ",");
+                const ulist = TableFormComponent.makeUserList(selUsers, 1, "", ",");
                 const r = await to($http.post<IDocument>(
                     `/groups/removemember/${group}`,
                     {names: ulist.split(",")}));
@@ -770,7 +958,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
     listUsernames() {
         const timTable = this.getTimTable();
-        if (timTable == null) { return; }
+        if (timTable == null) {
+            return;
+        }
         let preseparator = " - ";
         let midseparator = "\n";
         let sep = this.listSep;
@@ -778,71 +968,56 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         const selUsers = timTable.getCheckedRows(0, true);
         const ulist = [];
         let usep = "";
-        if (!this.realnamemap) { return; }
-        if (!this.emailmap) { return; }
+        if (!this.realnamemap) {
+            return;
+        }
+        if (!this.emailmap) {
+            return;
+        }
         for (const u of selUsers) {
             const un = u[userNameColIndex];
             let s = "";
-            if (this.listName) { s = this.realnamemap[un]; usep = ", "; }
-            if (this.listUsername) { s += usep + un; usep = ", "; }
-            if (this.listEmail) { s += usep + this.emailmap[un]; usep = ", "; }
+            if (this.listName) {
+                s = this.realnamemap[un];
+                usep = ", ";
+            }
+            if (this.listUsername) {
+                s += usep + un;
+                usep = ", ";
+            }
+            if (this.listEmail) {
+                s += usep + this.emailmap[un];
+                usep = ", ";
+            }
             usep = "";
             ulist.push([s]);
         }
         // if ( this.listEmail ) { midseparator = "\n"; preseparator = "";  }
-        if (sep == "") { sep = "\n"; }  // radio could not give \n?
-        if (sep != "-") { midseparator = sep; preseparator = ""; }
-        this.userlist = TableFormController.makeUserList(ulist, colindex, preseparator, midseparator);
+        if (sep == "") {
+            sep = "\n";
+        }  // radio could not give \n?
+        if (sep != "-") {
+            midseparator = sep;
+            preseparator = "";
+        }
+        this.userlist = TableFormComponent.makeUserList(ulist, colindex, preseparator, midseparator);
     }
 
-    // @ts-ignore
     copyList() {
         const ta = this.element.find("#userlist");
-        ta.focus(); ta.select(); document.execCommand("copy");
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
         // TODO: myös iPad toimimaan, ks GeoGebra tai csPlugin jaa tee yleinen copy
     }
 
     emailUsers() {
         const timTable = this.getTimTable();
-        if (timTable == null) { return; }
-        const selUsers = timTable.getCheckedRows(0, true);
-        this.emaillist = TableFormController.makeUserList(selUsers, emailColIndex, "", "\n");
-    }
-
-    async sendEmailTim() {
-        this.emailMsg = ""; // JSON.stringify(response);
-        const url = this.pluginMeta.getAnswerUrl()
-            .replace("tableForm", "multiSendEmail")
-            .replace("/answer", "");
-        const response = await to($http.post<string[]>(url, {
-            rcpt: this.emaillist.replace(/\n/g, ";"),
-            subject: this.emailsubject,
-            msg: this.emailbody,
-            bccme: this.emailbccme,
-        }));
-        this.emailMsg = "Sent"; // JSON.stringify(response);
-    }
-
-    public async sendEmail() {
-        if (this.emailtim) {
-            this.sendEmailTim();
+        if (timTable == null) {
             return;
         }
-        // TODO: iPad do not like ;
-        let  addrs = this.emaillist.replace(/\n/g, ",");
-        let bcc = "";
-        if (this.emailbcc) {
-            bcc = addrs;
-            addrs = "";
-        }
-        if (this.emailbccme) {
-            if (bcc) { bcc += ","; }
-            bcc += Users.getCurrent().email;
-        }
-        window.location.href = "mailto:" + addrs
-              + "?" + "subject=" + this.emailsubject
-              + "&" + "body=" + this.emailbody
-              + "&" + "bcc=" + bcc;
+        const selUsers = timTable.getCheckedRows(0, true);
+        this.emaillist = TableFormComponent.makeUserList(selUsers, emailColIndex, "", "\n");
     }
 
     /**
@@ -860,17 +1035,17 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * @param cellsToSave list of cells that needs to be saved
      * @param colValuesAreSame if all values in on column has same value
      */
-    cellChanged(cellsToSave: CellToSave[] | CellAttrToSave[], colValuesAreSame: boolean) {
+    async cellChanged(cellsToSave: CellToSave[] | CellAttrToSave[], colValuesAreSame: boolean) {
         // TODO make better implementation so singleCellSave is not called one by one
         // TODO: maybe done so that push cells to chengedCells and call save
         // TODO: but first check if saved to person or group and to that column by column
-        if (this.attrsall.markup.sisugroups) { return; }
+        if (this.attrsall.markup.sisugroups) {
+            return;
+        }
         for (const c of cellsToSave) {
             const coli = c.col;
             const rowi = c.row;
             const content = c.c;
-            // TODO: Ensure type is CellAttrToSave or that CellToSave doesn't contain .key
-            // @ts-ignore - CellAttrToSave contains c.key
             const changedStyle = c.key;
             if (changedStyle) {
                 if (changedStyle == "CLEAR") {
@@ -879,8 +1054,8 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                     this.clearStylesCells.delete(colnumToLetters(coli) + (rowi + 1));
                 }
             }
-            if (this.attrs.autosave) {
-                this.singleCellSave(rowi, coli, content);
+            if (this.markup.autosave) {
+                await this.singleCellSave(rowi, coli, content);
             } else {
                 this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
             }
@@ -893,9 +1068,9 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
      * @param coli col number
      * @param content unused
      */
-    singleCellSave(rowi: number, coli: number, content: string) {
+    async singleCellSave(rowi: number, coli: number, content: string) {
         const cells = [colnumToLetters(coli) + (rowi + 1)];
-        this.doSaveText(cells);
+        await this.doSaveText(cells);
     }
 
     async openTable() {
@@ -949,7 +1124,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
                 let cellStyle = null;
                 if (!isPrimitiveCell(cell)) {
                     cellContent = cell.cell;
-                    if (this.attrs.saveStyles) {
+                    if (this.markup.saveStyles) {
                         const cellcopy = clone(cell);
                         delete cellcopy.cell;
                         // cellStyle = JSON.stringify(cellcopy);
@@ -1005,7 +1180,7 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         };
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
-        this.isRunning = false;
+        this.loading = false;
         if (r.ok) {
             const data = r.result.data;
             this.error = data.web.error;
@@ -1019,10 +1194,10 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
         timtab.confirmSaved();
         if (this.viewctrl && changedFields.size > 0) {
-            if (this.attrs.autoUpdateFields) {
+            if (this.markup.autoUpdateFields) {
                 this.viewctrl.updateFields(Array.from(changedFields));
             }
-            if (this.attrs.autoUpdateTables) {
+            if (this.markup.autoUpdateTables) {
                 this.viewctrl.updateAllTables(Array.from(changedFields));
 
             }
@@ -1033,13 +1208,15 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
 
     async orderSisuGroups() {
         const timTable = this.getTimTable();
-        if (timTable == null || this.data.headers == null) { return; }
+        if (timTable == null || this.data.headers == null) {
+            return;
+        }
         const selUsers = timTable.getCheckedRows(0, true);
-        const groups = TimTableController.makeSmallerMatrix(selUsers, [1, this.data.headers.indexOf("TIM-nimi")]);
+        const groups = TimTableComponent.makeSmallerMatrix(selUsers, [1, this.data.headers.indexOf("TIM-nimi")]);
         const params = groups.map(([sisuid, timname]) => ({externalId: sisuid, name: timname}));
-        this.isRunning = true;
+        this.loading = true;
         const r = await to($http.post<{ web: { result: string, error?: string } }>("/sisu/createGroupDocs", params));
-        this.isRunning = false;
+        this.loading = false;
         if (r.ok) {
             timTable.confirmSaved();
             location.reload();
@@ -1048,15 +1225,14 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
         }
     }
 
-    // noinspection JSUnusedLocalSymbols
-    private runJsRunner(runner: string) {
+    runJsRunner(runner: string) {
         const timTable = this.getTimTable();
         if (timTable == null) {
             return;
         }
         if (this.viewctrl) {
             const selUsers = timTable.getCheckedRows(0, true);
-            const users = TableFormController.makeUserArray(selUsers, userNameColIndex);
+            const users = TableFormComponent.makeUserArray(selUsers, userNameColIndex);
             this.viewctrl.runJsRunner(runner, users);
         }
     }
@@ -1066,113 +1242,30 @@ export class TableFormController extends PluginBase<t.TypeOf<typeof TableFormMar
     }
 }
 
-tableFormApp.component("tableformRunner", {
-    bindings: pluginBindings,
+// noinspection AngularInvalidImportedOrDeclaredSymbol
+@NgModule({
+    declarations: [
+        TableFormComponent,
+        TimEmailComponent,
+    ],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        TimTableModule,
+    ],
+})
+export class TableFormModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {
+    }
+}
 
-    controller: TableFormController,
-    require: {
-        viewctrl: "?^timView",
-    },
-    template: `
-<div class="tableform" ng-if="$ctrl.showTable">
-    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <tim-table disabled="!$ctrl.tableCheck()" data="::$ctrl.data"
-               taskid="{{$ctrl.pluginMeta.getTaskId().docTask()}}" plugintype="{{$ctrl.pluginMeta.getPlugin()}}"></tim-table>
+const bootstrapFn = (extraProviders: StaticProvider[]) => {
+    const platformRef = platformBrowserDynamic(extraProviders);
+    return platformRef.bootstrapModule(TableFormModule);
+};
 
-    <div class="hidden-print">
-    <button class="timButton"
-            ng-if="::$ctrl.tableCheck() && !$ctrl.attrs.autosave"
-            ng-click="$ctrl.saveText()">
-            {{ ::$ctrl.buttonText() }}
-    </button>
-    <button class="timButton"
-            ng-if="::$ctrl.reportCheck()"
-            ng-click="$ctrl.generateReport()">
-            {{ ::$ctrl.reportButton() }}
-    </button>
-    <button class="timButton"
-            ng-click="$ctrl.closeTable()"
-            ng-if="::$ctrl.attrs.hideButtonText">
-            {{::$ctrl.attrs.hideButtonText}}
-    </button>
-    <button class="timButton"
-            ng-click="$ctrl.removeUsers()"
-            ng-if="$ctrl.attrs.removeUsersButtonText && $ctrl.cbCount">
-            {{::$ctrl.attrs.removeUsersButtonText}}
-    </button>
-    <button class="timButton"
-            ng-click="$ctrl.listUsernames()"
-            ng-if="$ctrl.attrs.userListButtonText && $ctrl.cbCount">
-            {{::$ctrl.attrs.userListButtonText}}
-    </button>
-    <button class="timButton"
-            ng-click="$ctrl.emailUsers()"
-            ng-if="$ctrl.attrs.emailUsersButtonText && $ctrl.cbCount">
-            {{::$ctrl.attrs.emailUsersButtonText}}
-    </button>
-    <button class="timButton"
-            ng-repeat="s in $ctrl.attrs.runScripts"
-            ng-click="$ctrl.runJsRunner(s)"
-            ng-if="$ctrl.attrs.runScripts && $ctrl.cbCount">
-            Run {{s}}
-    </button>
-    <button class="timButton"
-            ng-click="$ctrl.orderSisuGroups()"
-            ng-if="$ctrl.attrs.sisugroups && $ctrl.cbCount">
-            Confirm groups
-    </button>
-    </div>
-    <div class="csRunDiv tableUsers" style="padding: 1em;" ng-if="$ctrl.userlist"> <!-- userlist -->
-        <p class="closeButton" ng-click="$ctrl.userlist=''"></p>
-        <p>Separator:
-        <label><input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "-" ng-change="$ctrl.listUsernames()">-</label>&nbsp;
-        <label><input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "," ng-change="$ctrl.listUsernames()">,</label>&nbsp;
-        <label><input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "|" ng-change="$ctrl.listUsernames()">|</label>&nbsp;
-        <label><input type="radio" name="listsep" ng-model="$ctrl.listSep" value = ";" ng-change="$ctrl.listUsernames()">;</label>&nbsp;
-        <label><input type="radio" name="listsep" ng-model="$ctrl.listSep" value = "\n" ng-change="$ctrl.listUsernames()">\\n</label>&nbsp;
-        </p>
-        <label><input type="checkbox" ng-model="$ctrl.listName" ng-change="$ctrl.listUsernames()">Name</label>&nbsp;
-        <label><input type="checkbox" ng-model="$ctrl.listUsername" ng-change="$ctrl.listUsernames()">Username</label>&nbsp;
-        <label><input type="checkbox" ng-model="$ctrl.listEmail" ng-change="$ctrl.listUsernames()">Email</label>&nbsp;
-        <br>
-        <textarea id="userlist" ng-model="$ctrl.userlist" rows="10" cols="60"></textarea>
-        <button class="timButton"
-                ng-click="$ctrl.copyList()">
-                Copy
-        </button>
-    </div>
-    <div class="csRunDiv tableEmail" style="padding: 1em;" ng-if="$ctrl.emaillist"> <!-- email -->
-        <p class="closeButton" ng-click="$ctrl.emaillist=''"></p>
-        <p><textarea id="emaillist" ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea><p>
-        <p>
-        <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox" ng-model="$ctrl.emailbcc">BCC</label>&nbsp;
-        <label title="Send also a copy for me"><input type="checkbox" ng-model="$ctrl.emailbccme" >BCC also for me</label>&nbsp;
-        <label title="Send using TIM.  Every mail is send as a personal mail."><input type="checkbox" ng-model="$ctrl.emailtim" >use TIM to send</label>&nbsp;
-        </p>
-        <p>Subject: <input ng-model="$ctrl.emailsubject" size="60"></p>
-        <p>eMail content:</p>
-        <p><textarea id="emaillist" ng-model="$ctrl.emailbody" rows="10" cols="70"></textarea></p>
-        <p>
-        <button class="timButton"
-                ng-click="$ctrl.sendEmail()">
-                Lähetä
-        </button>
-        <!-- <span class="emailMsg" ng-model="$ctrl.emailMsg"></span> -->
-        <span class="savedtext" ng-if="$ctrl.emailMsg">Sent!</span>
-        </p>
-    </div>
-    <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <pre ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></pre>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
-<div class="tableOpener" ng-if="!$ctrl.showTable">
-    <button class="timButton"
-            ng-click="$ctrl.openTable()">
-            {{::$ctrl.attrs.openButtonText}}
-    </button>
-</div>
-<br>
-`,
-});
+const angularJsModule = createDowngradedModule(bootstrapFn);
+doDowngrade(angularJsModule, "tableformRunner", TableFormComponent);
+export const moduleDefs = [angularJsModule];

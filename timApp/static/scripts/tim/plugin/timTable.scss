@@ -1,0 +1,69 @@
+.timTableTable {
+  //margin-left: 0px;
+  margin: 0px;
+  margin-top: 1.5em; /* to leave space for editor buttons */
+  margin-right: 0em; /* - " - */
+}
+
+button.timTableEditor {
+  font-size: xx-small;
+  padding: 5px;
+}
+
+.buttonAddCol {
+  position: absolute;
+  right: calc(-1em - 11px);
+}
+
+.buttonRemoveCol {
+  position: absolute;
+  //right: calc(-2cm - 4px); next to buttonAddCol instead of below it
+  right: calc(-0cm - 0px);
+  /*top: calc(1cm - 15px);*/
+}
+
+.buttonAddRow {
+  position: absolute;
+  bottom: calc(-1em - 10px);
+  left: calc(-1em - 13px);
+}
+
+.buttonRemoveRow {
+  position: absolute;
+  bottom: calc(-0em + 5px);
+  left: calc(-1em - 13px);
+}
+
+.editable {
+  box-shadow: 0 0 4px 2px blue;
+}
+
+.forcedEditable {
+  //border: 2px dotted red;
+}
+
+.activeCell {
+  box-shadow: 0 0 4px 2px green;
+}
+
+.timTableContentDiv {
+  position: relative;
+  display: table;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+}
+
+td input[type="text"] {
+  width: 100%;
+}
+
+.inlineEditorButtons {
+  width: -moz-max-content;
+}
+
+.timTableRunDiv {
+  overflow: auto;
+  border: none;
+  padding-right: 4em;
+}

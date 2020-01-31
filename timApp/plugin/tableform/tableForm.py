@@ -290,6 +290,7 @@ def fetch_rows():
     taskid = request.args.get("taskid")
     tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
     doc = get_doc_or_abort(tid.doc_id)
+    doc.document.insert_preamble_pars()
     try:
         plug = find_plugin_from_document(doc.document, tid, curr_user)
     except TaskNotFoundException:
@@ -310,6 +311,7 @@ def fetch_rows_preview():
     taskid = request.args.get("taskid")
     tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
     doc = get_doc_or_abort(tid.doc_id)
+    doc.document.insert_preamble_pars()
     # With this route we can't be certain about showInView so we just check for edit access
     # whoever can open the plugin in preview should have that right
     if not curr_user.has_edit_access(doc):

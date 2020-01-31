@@ -6,6 +6,7 @@ export function doDowngrade(m: IModule, component: string, angularComponent: Typ
     m.directive(component, downgradeComponent({
         component: angularComponent,
         downgradedModule: m.name,
+        propagateDigest: false,
     }) as Injectable<IDirectiveFactory>);
 }
 

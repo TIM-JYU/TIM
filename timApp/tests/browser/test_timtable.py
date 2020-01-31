@@ -123,7 +123,7 @@ table:
       - cell: "10"
       - cell: "11"
       - cell: "12"
-      fontSize: 30
+      fontSize: 30px
       color: red
     - row:
       - cell: "13"
@@ -176,7 +176,7 @@ table:
       - cell: "10"
       - cell: "11"
       - cell: "12"
-        fontSize: 30
+        fontSize: 30px
         color: red
         border: 2px solid purple
     - row:
@@ -223,7 +223,7 @@ table:
       - cell: "astra."
       
   fontFamily: Times
-  fontSize: 25
+  fontSize: 25px
   color: green
   backgroundColor: yellow
   width: 550px
@@ -276,7 +276,7 @@ table:
         borderRight: 20px solid magenta
         borderLeft: 5px solid magenta
         backgroundColor: gold
-        fontSize: 30
+        fontSize: 30px
         fontFamily: Courier
         color: purple
         width: 200px
@@ -288,7 +288,7 @@ table:
       borderRight: 20px solid green
       borderLeft: 5px solid red
       backgroundColor: white
-      fontSize: 15
+      fontSize: 15px
       fontFamily: Times
       color: crimson
     - row:
@@ -308,7 +308,7 @@ table:
       - cell: "astra."
       
   fontFamily: Helvetica
-  fontSize: 25
+  fontSize: 25px
   color: black
   backgroundColor: yellow
   width: 600px
@@ -368,7 +368,7 @@ table:
         borderRight: 20px solid magenta
         borderLeft: 5px solid magenta
         backgroundColor: gold
-        fontSize: 30
+        fontSize: 30px
         fontFamily: Script
         color: purple
       - cell: "Claudius"
@@ -379,7 +379,7 @@ table:
       borderRight: 20px solid green
       borderLeft: 5px solid red
       backgroundColor: white
-      fontSize: 15
+      fontSize: 15px
       fontFamily: Times
       color: crimson
       Julius: Caesar
@@ -401,7 +401,7 @@ table:
         Lucius: Vorenus
       
   fontFamily:"Helvetica"
-  fontSize: 25
+  fontSize: 25px
   color: black
   backgroundColor: yellow
   width: 600px

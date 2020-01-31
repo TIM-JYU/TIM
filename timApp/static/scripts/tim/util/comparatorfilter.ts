@@ -45,7 +45,7 @@ export class ComparatorFilter {
             }
             let v: NumStr;
             try {
-                v = Number.parseFloat(vs);
+                v = parseFloat(vs);
                 if (isNaN(v)) {
                     v = vs.toLowerCase();
                 }
@@ -74,7 +74,7 @@ export class ComparatorFilter {
     public isMatch(s: string): boolean {
         let n: NumStr = "";
         try {
-            n = Number.parseFloat(s);
+            n = parseFloat(s);
             if (isNaN(n)) {
                 n = s.toLowerCase();
             }

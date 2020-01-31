@@ -23,10 +23,10 @@ export function getDefaults<MarkupType extends IGenericPluginMarkup,
 
 export class PluginMeta {
     constructor(
-        private element: JQLite,
-        private preview = false,
-        private plugintype?: string,
-        private taskid?: string,
+        private readonly element: JQLite,
+        private readonly preview = false,
+        private readonly plugintype?: string,
+        private readonly taskid?: string,
     ) {
 
     }
@@ -35,13 +35,19 @@ export class PluginMeta {
         return this.element.parent().attr(name);
     }
 
+    taskIdCache?: TaskId | null;
     public getTaskId() {
+        if (this.taskIdCache !== undefined) {
+            return this.taskIdCache || undefined;
+        }
         const tidStr = this.taskid || this.getParentAttr("id");
         if (tidStr) {
             const r = TaskId.tryParse(tidStr);
             if (r.ok) {
+                this.taskIdCache = r.result;
                 return r.result;
             } else {
+                this.taskIdCache = null;
                 // If a plugin doesn't have task id, the servers sends "<docid>..<blockid>" in HTML.
                 // Don't warn about those because they are common.
                 // The server should be fixed to not put any taskid attribute in these cases.

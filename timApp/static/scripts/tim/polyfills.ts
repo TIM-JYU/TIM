@@ -76,3 +76,5 @@ import "zone.js/dist/zone";  // Included with Angular CLI.
 /** *************************************************************************************************
  * APPLICATION IMPORTS
  */
+
+(window as unknown as Record<string, unknown>).global = window;

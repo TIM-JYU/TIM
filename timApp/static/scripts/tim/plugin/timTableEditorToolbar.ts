@@ -1,6 +1,6 @@
 import {IScope} from "angular";
 import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
-import {HideValues, IToolbarTemplate, TimTableController} from "./timTable";
+import {HideValues, IToolbarTemplate, TimTableComponent} from "./timTable";
 
 export interface ITimTableToolbarCallbacks {
     setCell: (value: Record<string, string>) => void;
@@ -13,7 +13,7 @@ export interface ITimTableToolbarCallbacks {
 
 export interface ITimTableEditorToolbarParams {
     callbacks: ITimTableToolbarCallbacks;
-    activeTable: TimTableController;
+    activeTable: TimTableComponent;
 }
 
 let instance: TimTableEditorToolbarController | undefined;
@@ -55,7 +55,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     }
 
     public callbacks!: ITimTableToolbarCallbacks; // $onInit
-    public activeTable?: TimTableController;
+    public activeTable?: TimTableComponent;
     private visible: boolean = true;
     private hide?: HideValues;
     // private lockCellCount: boolean = false;
@@ -93,7 +93,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      * @param callbacks Callbacks for communicating with the table.
      * @param activeTable The object that requested the toolbar to open.
      */
-    public show(callbacks: ITimTableToolbarCallbacks, activeTable: TimTableController) {
+    public show(callbacks: ITimTableToolbarCallbacks, activeTable: TimTableComponent) {
         this.visible = true;
         this.activeTable = activeTable;
         this.hide = this.activeTable.data.hide;

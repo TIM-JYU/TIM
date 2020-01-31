@@ -43,16 +43,20 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
         return this.attrsall.access === "readonly";
     }
 
-    constructor(private element: ElementRef, private http: HttpClient) {
+    constructor(private el: ElementRef, private http: HttpClient) {
         this.attrsall = getDefaults(this.getAttributeType(), this.getDefaultMarkup());
-        this.pluginMeta = new PluginMeta($(element.nativeElement), this.attrsall.preview);
+        this.pluginMeta = new PluginMeta($(el.nativeElement), this.attrsall.preview);
+    }
+
+    get element() {
+        return $(this.el.nativeElement);
     }
 
     ngOnInit() {
         const result = baseOnInit.call(this);
         if (result) {
             this.pluginMeta = new PluginMeta(
-                $(this.element.nativeElement),
+                this.element,
                 result.preview,
                 this.plugintype,
                 this.taskid,
@@ -100,4 +104,16 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
     abstract getAttributeType(): T;
 
     abstract getDefaultMarkup(): Partial<MarkupType>;
+
+    getTaskId() {
+        return this.pluginMeta.getTaskId();
+    }
+
+    public getPar() {
+        return this.element.parents(".par");
+    }
+
+    isPreview() {
+        return this.pluginMeta.isPreview();
+    }
 }
