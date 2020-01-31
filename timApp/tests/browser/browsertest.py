@@ -52,7 +52,6 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.skip_screenshot_tests = False
 
     def get_screenshot_tolerance(self) -> float:
         return 5
@@ -243,9 +242,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
                      f'and difference to screenshots/{f}{fail_suffix}_DIFF'
         new_screenshots = 0  # change here 1 for generating new screenshots
         if new_screenshots == 0:
-            self.assertTrue(self.skip_screenshot_tests, msg=assert_msg)  # for normal run
-        else:
-            self.assertTrue(self.skip_screenshot_tests or True, msg=assert_msg)  # for making new screenshots
+            self.assertTrue(False, msg=assert_msg)
 
     def should_not_exist(self, css_selector: str):
         """Asserts that the current document should not contain any elements that match the specified CSS selector.
