@@ -1263,6 +1263,7 @@ class Mathcheck(Language):
         correct_text = get_param(self.query, 'correctText', None)
         if correct_text:
             out = out.replace("No errors found. MathCheck is convinced that there are no errors.", correct_text)
+            out = out.replace("No errors found. Please notice that the check was not complete.", correct_text)
         return 0, out, "", ""
 
 
