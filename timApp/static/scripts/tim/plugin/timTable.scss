@@ -38,10 +38,6 @@ button.timTableEditor {
   box-shadow: 0 0 4px 2px blue;
 }
 
-.forcedEditable {
-  //border: 2px dotted red;
-}
-
 .activeCell {
   // Don't use border style here - it takes up size in layout and so it makes the table move a little.
   outline: 2.5px dotted #33cccc;
