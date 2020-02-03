@@ -48,18 +48,25 @@ function isElement(n: Node): n is Element {
     return n.nodeType === Node.ELEMENT_NODE;
 }
 
+const angularPlugins = new Set(["timTable", "tableForm", "pali"]);
+
 async function loadPlugin(html: string, plugin: JQuery, scope: IScope, viewctrl: ViewCtrl) {
     const elementToCompile = $(html);
-    elementToCompile.attr("plugintype", plugin.attr("data-plugin") ?? null);
+    const plugintype = plugin.attr("data-plugin");
+    elementToCompile.attr("plugintype", plugintype ?? null);
     const taskidstr = plugin.attr("id");
-    elementToCompile.attr("taskid", taskidstr ?? null);
-    const sc = scope.$new(true) as unknown as {taskid: TaskId};
+    const sc = scope.$new(true) as {taskid: TaskId} & IScope;
     if (taskidstr) {
-        // For Angular plugins (timTable and tableForm so far), we must pass the parsed TaskId.
-        const p = TaskId.tryParse(taskidstr);
-        if (p.ok) {
-            sc.taskid = p.result;
-            elementToCompile.attr("taskid", "{{taskid}}");
+        if (plugintype && angularPlugins.has(plugintype.slice(1))) {
+            // For Angular plugins (e.g. timTable and tableForm), we must pass the parsed TaskId.
+            const p = TaskId.tryParse(taskidstr);
+            if (p.ok) {
+                sc.taskid = p.result;
+                elementToCompile.attr("bind-taskid", "taskid");
+                scope = sc;
+            }
+        } else {
+            elementToCompile.attr("taskid", taskidstr);
         }
     }
     const compiled = await compileWithViewctrl(elementToCompile, scope, viewctrl);
