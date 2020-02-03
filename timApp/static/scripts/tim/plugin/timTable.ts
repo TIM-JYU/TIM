@@ -606,9 +606,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * Force change detection.
      */
     c() {
-        console.log("forcing change detection");
         this.cdr.detectChanges();
-        // this.doCustomDomUpdates();
     }
 
     /**
@@ -733,7 +731,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     private doCustomDomUpdates() {
         if (this.customDomUpdateInProgress) {
-            // console.log("DOM update in progress, returning");
             return;
         }
         this.customDomUpdateInProgress = true;
@@ -742,10 +739,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.focusSmallEditor();
                 this.shouldSelectInputText = false;
             }
-            // console.log("DOM update start");
             await ParCompiler.processAllMath(this.element);
             this.updateSmallEditorPosition();
-            // console.log("DOM update end");
             this.customDomUpdateInProgress = false;
         });
     }
@@ -763,7 +758,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     ngDoCheck() {
-        // console.log("timtable docheck");
     }
 
     /**
