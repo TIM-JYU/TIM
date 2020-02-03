@@ -1,10 +1,10 @@
-import uuid
+import itertools
+import subprocess
 import sys
 import time
-import itertools
+import uuid
+from pathlib import PurePath, PureWindowsPath
 from subprocess import PIPE, Popen
-import subprocess
-import shutil
 
 CS3_TAG = 'rust'
 
@@ -152,12 +152,20 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     mkdirs("/tmp/run")  # varmistetaan run-hakemisto
     udir = cwd.replace("/tmp/", "")  # koska mountattu eri tavalla, poistetaan tmp alusta
     # print(udir,"\nWait for run")
-    path_mappings = [["-v", "{0}/timApp/modules/cs/{1}:/cs/{1}:ro".format(os.environ['TIM_ROOT'], p)] for p in
+    compose_proj = os.environ['COMPOSE_PROJECT_NAME']
+
+    # Convert possible Windows path to Linux style, e.g. C:/Users/... -> /C/Users/...
+    root_dir = PureWindowsPath(os.environ['TIM_ROOT'])
+    if root_dir.drive:
+        drive_letter = root_dir.drive[0]
+        root_dir = PurePath('/') / drive_letter / root_dir.relative_to(root_dir.anchor)
+
+    path_mappings = [["-v", f"{root_dir.as_posix()}/timApp/modules/cs/{p}:/cs/{p}:ro"] for p in
                      ["rcmd.sh", "cpp", "java", "jypeli", "doxygen", "mathcheck", "fs", "data", "simcir", "MIRToolbox"]]
 
     dargs = ["docker", "run", "--name", tmpname, "--rm=true",
              *itertools.chain.from_iterable(path_mappings),
-             "-v", "/tmp/{}_uhome/{}/:/home/agent/".format(os.environ['COMPOSE_PROJECT_NAME'], udir),
+             "-v", f"/tmp/{compose_proj}_uhome/{udir}/:/home/agent/",
              "-w", "/home/agent", dockercontainer, "/cs/rcmd.sh", urndname + ".sh", str(no_x11), str(savestate)]
     # print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)

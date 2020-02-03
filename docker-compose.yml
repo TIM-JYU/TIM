@@ -79,7 +79,7 @@ services:
    TIM_ROOT: ${TIM_ROOT}
    TIM_HOST: ${TIM_HOST}
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
-  user: root
+  user: root  # We need access to Docker socket.
   restart: unless-stopped
   read_only: true
  haskellplugins:

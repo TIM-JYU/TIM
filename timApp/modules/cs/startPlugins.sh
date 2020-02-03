@@ -33,7 +33,8 @@ chown -R agent:agent /csgenerated
 touch /cs/log.txt
 chown agent:agent /cs/log.txt
 
-# Oikeudet käyttää dockeria niin saadaan docker in docker
+# TODO: This might not be necessary because we have to run as root anyway - in Docker Desktop for Windows,
+#  it's not possible to change socket permissions (it has no effect).
 chmod 766 /var/run/docker.sock
 
 # Copy Jypeli dll's  

@@ -4,4 +4,5 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-. ${DIR}/docker-compose.sh run --rm --workdir="/service/$1" tim "${@:2}"
+# Git Bash needs extra "/" in workdir.
+. ${DIR}/docker-compose.sh run --rm --workdir="//service/$1" tim "${@:2}"

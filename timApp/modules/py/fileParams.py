@@ -1,4 +1,5 @@
 import http.server
+import shutil
 from typing import List, Any, Dict, Callable
 from urllib.request import urlopen
 import re
@@ -1047,9 +1048,8 @@ def is_review(query: QueryClass):
 
 
 def mkdirs(path: str):
-    if os.path.exists(path):
-        return
-    os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
+    shutil.chown(path, user="agent", group="agent")
 
 
 def remove(fname: str):
