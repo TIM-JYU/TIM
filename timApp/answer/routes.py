@@ -334,6 +334,7 @@ class SendEmailModel:
     subject: str
     bccme: Union[bool, Missing, None] = missing
 
+
 SendEmailSchema = class_schema(SendEmailModel)
 
 
@@ -361,7 +362,6 @@ def send_email(args: SendEmailModel):
         bcc=bcc
     )
     return ok_response()
-
 
 
 @answers.route("/multiSendEmail/<task_id_ext>/", methods=['POST'])
@@ -907,6 +907,7 @@ def get_task_infos():
             return abort(400, str(e))
     return json_response(infolist)
 
+
 @answers.route("/taskinfo/<task_id>")
 def get_task_info(task_id):
     try:
@@ -915,6 +916,7 @@ def get_task_info(task_id):
     except PluginException as e:
         return abort(400, str(e))
     return json_response(tim_vars)
+
 
 def find_tim_vars(plugin: Plugin):
     tim_vars = {'maxPoints': plugin.max_points(),
@@ -927,6 +929,7 @@ def find_tim_vars(plugin: Plugin):
                 'pointsText': plugin.values.get('pointsText', 'Points:')
                 }
     return tim_vars
+
 
 @answers.route("/answers/<task_id>/<user_id>")
 def get_answers(task_id, user_id):
@@ -1109,6 +1112,7 @@ def get_jsframe_data(task_id, user_id):
 class GetMultiStatesModel:
     answer_ids: List[int]
     user_id: int
+
 
 GetMultiStatesSchema = class_schema(GetMultiStatesModel)
 
