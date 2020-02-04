@@ -960,22 +960,6 @@ def get_answers(task_id, user_id):
     except Exception as e:
         return abort(400, str(e))
 
-@answers.route("/globalAnswer/<task_id>")
-def get_global_answers(task_id):
-    verify_logged_in()
-    try:
-        tid = TaskId.parse(task_id)
-    except PluginException as e:
-        return abort(400, str(e))
-    if not is_global_id(tid):
-        return abort(400, 'Task is not global task')
-    try:
-        user_answers = get_globals_for_tasks([tid], {})
-        return json_response([user_answers[1][0][0]])
-    except Exception as e:
-        # return abort(400, str(e))
-        return json_response([])
-
 
 @answers.route("/allDocumentAnswersPlain/<path:doc_path>")
 def get_document_answers(doc_path):
