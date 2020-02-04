@@ -2775,9 +2775,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     public reInitialize(clearSort: ClearSort = ClearSort.Yes) {
         this.initializeCellDataMatrix(clearSort);
         this.processDataBlockAndSpanInfo();
-        if (clearSort) {
-            this.clearSortOrder();
-        }
         if (this.userdata) {
             this.processDataBlock(this.userdata.cells);
         } else {
@@ -2785,6 +2782,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 type: "Relative",
                 cells: {},
             };
+        }
+        if (clearSort == ClearSort.Yes) {
+            this.clearSortOrder();
         }
     }
 
