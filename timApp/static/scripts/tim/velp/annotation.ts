@@ -1,7 +1,6 @@
 /**
  * The directive handles the logic behind a single annotation.
  *
- * @module annotation
  * @author Joonas Lattu
  * @author Petteri Palojärvi
  * @author Seppo Tarvainen

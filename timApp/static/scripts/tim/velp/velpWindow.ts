@@ -8,7 +8,6 @@ import {ILabel, ILabelUI, INewLabel, IVelp, IVelpGroup, IVelpGroupUI, IVelpUI} f
 /**
  * Created by Seppo Tarvainen on 25.11.2016.
  *
- * @module velpWindow
  * @author Seppo Tarvainen
  * @licence MIT
  */

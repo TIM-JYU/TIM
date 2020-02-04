@@ -1,7 +1,6 @@
 /**
  * The directive handles velp summary. Requires reviewController.
  *
- * @module velpSummary
  * @author Joonas Lattu
  * @author Petteri Palojärvi
  * @author Seppo Tarvainen

@@ -10,7 +10,6 @@ import {IAskedQuestion, IQuestionAnswer} from "./lecturetypes";
 /**
  * Created by hajoviin on 13.5.2015.
  * FILL WITH SUITABLE TEXT
- * @module showChartDirective
  * @author Matias Berg
  * @author Bek Eljurkaev
  * @author Minna Lehtomäki

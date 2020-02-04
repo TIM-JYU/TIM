@@ -10,7 +10,6 @@ import {ILecture, ILectureFormParams, ILectureOptions} from "./lecturetypes";
 
 /**
  * Lecture creation controller which is used to handle and validate the form data.
- * @module createLectureCtrl
  * @author Matias Berg
  * @author Bek Eljurkaev
  * @author Minna Lehtomäki

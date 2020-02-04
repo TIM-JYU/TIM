@@ -8,7 +8,6 @@ import {$http} from "../../util/ngimport";
 import {to} from "../../util/utils";
 
 /**
- * @module mergePdfCtrl
  * @author Matti Leinonen
  * @author Ronja Lindholm
  * @author Visa Naukkarinen

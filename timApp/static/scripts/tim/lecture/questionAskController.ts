@@ -17,7 +17,6 @@ markAsUsed(answerSheet);
 
 /**
  * FILL WITH SUITABLE TEXT
- * @module questionPreviewController
  * @author Matias Berg
  * @author Bek Eljurkaev
  * @author Minna Lehtomäki

@@ -20,7 +20,6 @@ import {showStatisticsDialog} from "./statisticsToQuestionController";
 /**
  * Created by hajoviin on 22.4.2015
  * FILL WITH SUITABLE TEXT
- * @module answerToQuestionController
  * @author Matias Berg
  * @author Bek Eljurkaev
  * @author Minna Lehtomäki

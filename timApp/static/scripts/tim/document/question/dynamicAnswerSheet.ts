@@ -18,7 +18,6 @@ import {Binding} from "../../util/utils";
  * Created by localadmin on 25.5.2015.
  * Directive for dynamic answer sheet. Sheet to answer lecture questions.
  * If preview parameter is used, inputs are disable and there is no progressbar or answer button
- * @module dynamicAnswerSheet
  * @author Matias Berg
  * @author Bek Eljurkaev
  * @author Minna Lehtomäki

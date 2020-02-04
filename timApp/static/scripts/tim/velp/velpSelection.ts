@@ -26,7 +26,6 @@ markAsUsed(velpSummary);
  * The directive retrieves all the data from the server including velps, labels, velp groups and annotations.
  * The directive also handles majority of the functionality that is relevant in handling velps, labels and velp groups.
  *
- * @module velpSelection
  * @author Joonas Lattu
  * @author Petteri Palojärvi
  * @author Seppo Tarvainen

@@ -34,7 +34,6 @@ markAsUsed(QuestionMatrixController);
 
 /**
  * Controller for creating and editing questions
- * @module questionController
  * @author Matias Berg
  * @author Bek Eljurkaev
  * @author Minna Lehtomäki

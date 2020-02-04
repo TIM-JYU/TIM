@@ -1,7 +1,6 @@
 /**
  * Created by hajoviin on 24.2.2015.
  * Contoller that handles lectures.
- * @module lectureController
  * @author Matias Berg
  * @author Bek Eljurkaev
  * @author Minna Lehtomäki

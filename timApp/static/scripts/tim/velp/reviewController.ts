@@ -15,7 +15,6 @@ import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVe
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
  * the selected area is defined in the view. Requires `velpSelection` directive.
  *
- * @module reviewController
  * @author Joonas Lattu
  * @author Petteri Palojärvi
  * @author Seppo Tarvainen
