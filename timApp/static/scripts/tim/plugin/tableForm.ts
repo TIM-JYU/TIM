@@ -4,7 +4,7 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
-import {clone, to} from "tim/util/utils";
+import {clone, maxContentOrFitContent, to} from "tim/util/utils";
 import {
     ApplicationRef,
     ChangeDetectorRef,
@@ -96,7 +96,7 @@ const TableFormMarkup = t.intersection([
         usernames: withDefault(t.boolean, true),
         realnames: withDefault(t.boolean, true),
         emails: withDefault(t.boolean, false),
-        maxCols: withDefault(t.string, "max-content"), // for Firefox, max-content is needed to avoid horizontal scroll
+        maxCols: withDefault(t.string, maxContentOrFitContent()),
         openButtonText: withDefault(t.string, "Avaa Taulukko/Raporttinäkymä"),
         open: withDefault(t.boolean, true),
         reportFilter: withDefault(t.string, ""),

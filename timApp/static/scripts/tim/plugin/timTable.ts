@@ -81,7 +81,7 @@ import {
     KEY_UP,
 } from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
-import {scrollToViewInsideParent, StringOrNumber, to} from "../util/utils";
+import {maxContentOrFitContent, scrollToViewInsideParent, StringOrNumber, to} from "../util/utils";
 import {TaskId} from "./taskid";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
@@ -559,7 +559,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     cbFilter = false;
     filterRow = false;
     maxRows = "2000em";
-    maxCols = "max-content"; // "auto" gives an undesired horizontal scrollbar for the table in Firefox
+    maxCols = maxContentOrFitContent();
     permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
     private edited = false;

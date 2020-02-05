@@ -672,3 +672,15 @@ export function createValidator(validityChecker: (s: string) => boolean, name: s
         return valid ? null : {[name]: {value: viewValue}};
     };
 }
+
+export function isFirefox() {
+    return navigator.userAgent.includes("Firefox");
+}
+
+/**
+ * On Firefox, we need max-content in timTable to get rid of the horizontal scrollbar.
+ * On the other hand, max-content does not work well in Chrome because it makes some columns too wide.
+ */
+export function maxContentOrFitContent() {
+    return isFirefox() ? "max-content" : "fit-content";
+}
