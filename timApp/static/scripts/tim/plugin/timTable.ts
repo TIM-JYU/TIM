@@ -557,7 +557,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     cbFilter = false;
     filterRow = false;
     private maxRows: string = "2000em";
-    private maxCols: string = "auto";
+    private maxCols: string = "max-content"; // "auto" gives an undesired horizontal scrollbar for the table in Firefox
     permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
     private edited = false;
