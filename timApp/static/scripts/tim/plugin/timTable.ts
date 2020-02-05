@@ -735,12 +735,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
         this.customDomUpdateInProgress = true;
         void this.zone.runOutsideAngular(async () => {
+            // Update position before focusing. Otherwise, focus causes a scroll to the old position which can be far
+            // away from the new position.
+            this.updateSmallEditorPosition();
             if (this.shouldSelectInputText) {
                 this.focusSmallEditor();
                 this.shouldSelectInputText = false;
             }
             await ParCompiler.processAllMath(this.element);
-            this.updateSmallEditorPosition();
             this.customDomUpdateInProgress = false;
         });
     }
