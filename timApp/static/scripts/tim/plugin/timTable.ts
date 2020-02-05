@@ -2255,22 +2255,17 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const inlineEditorDiv = $(this.editorDiv.nativeElement);
         inlineEditorDiv.height(1);
         inlineEditorDiv[0].style.position = "relative";
-        // edit.focus();
         const toff = table.offset()!;
         inlineEditorDiv.offset({left: toff.left, top: toff.top + table.height()!});
         const editinp = $(editInputElement);
 
         if (this.data.editorBottom) {
-            // edit.focus();
             return;
         }
         editinp.offset(tableCellOffset);
 
         const editOffset = editinp.offset();
         const tableCellWidth = tablecell.innerWidth();
-
-        // const editOuterWidth = edit.outerWidth();
-
         const minEditWidth = 20;
 
         let editOuterWidth;
