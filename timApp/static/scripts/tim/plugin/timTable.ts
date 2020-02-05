@@ -409,7 +409,9 @@ export enum ClearSort {
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders}" class="timTableRunDiv no-popup-menu"
-             [ngStyle]="tableStyle()">
+             [style.max-height]="maxRows"
+             [style.width]="maxCols"
+        >
             <h4 *ngIf="data.header" [innerHtml]="data.header"></h4>
             <p *ngIf="data.stem" class="stem" [innerHtml]="data.stem"></p>
             <div class="timTableContentDiv no-highlight">
@@ -556,8 +558,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private colDelta = 0;
     cbFilter = false;
     filterRow = false;
-    private maxRows: string = "2000em";
-    private maxCols: string = "max-content"; // "auto" gives an undesired horizontal scrollbar for the table in Firefox
+    maxRows = "2000em";
+    maxCols = "max-content"; // "auto" gives an undesired horizontal scrollbar for the table in Firefox
     permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
     private edited = false;
@@ -3091,13 +3093,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      */
     showColumn(index: number) {
         return (!this.data.hiddenColumns || !this.data.hiddenColumns.includes(index));
-    }
-
-    tableStyle() {
-        return {
-            "max-height": this.maxRows,
-            "width": this.maxCols,
-        };
     }
 
     async handleClickClearFilters() {
