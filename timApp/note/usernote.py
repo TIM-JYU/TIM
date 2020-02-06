@@ -43,6 +43,19 @@ class UserNote(db.Model):
 
     usergroup = db.relationship('UserGroup', back_populates='notes')
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'doc_id': self.doc_id,
+            'par_id': self.par_id,
+            'par_hash': self.par_hash,
+            'content': self.content,
+            'created': self.created,
+            'modified': self.modified,
+            'access': self.access,
+            'usergroup': self.usergroup,
+        }
+
 
 def get_comment_by_id(c_id: int) -> Optional[UserNote]:
     return UserNote.query.get(c_id)

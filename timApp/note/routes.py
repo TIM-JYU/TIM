@@ -1,12 +1,20 @@
+from dataclasses import dataclass
+
 from flask import Blueprint
 from flask import abort
 from flask import request
+from sqlalchemy import true
+from sqlalchemy.orm import joinedload
 
-from timApp.auth.accesshelper import verify_comment_right, verify_logged_in, has_ownership, get_doc_or_abort
+from marshmallow_dataclass import class_schema
+from timApp.auth.accesshelper import verify_comment_right, verify_logged_in, has_ownership, get_doc_or_abort, \
+    AccessDenied, verify_teacher_access
 from timApp.auth.accesshelper import verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docentry import DocEntry
 from timApp.document.document import Document
 from timApp.document.editing.routes import par_response
+from timApp.folder.folder import Folder
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.note.notes import tagstostr
 from timApp.note.usernote import get_comment_by_id, UserNote
@@ -14,7 +22,7 @@ from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
-from timApp.util.flask.requesthelper import get_referenced_pars_from_req, verify_json_params
+from timApp.util.flask.requesthelper import get_referenced_pars_from_req, verify_json_params, RouteException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.utils import get_current_time
 
@@ -44,6 +52,43 @@ def get_note(note_id):
     if not has_note_edit_access(note):
         return abort(403)
     return json_response({'text': note.content, 'extraData': note})
+
+
+@dataclass
+class NotesModel:
+    private: bool = False  # Whether private comments should be included; only usable for admins
+
+
+NotesSchema = class_schema(NotesModel)
+
+
+@notes.route("/notes/<path:item_path>")
+def get_notes(item_path):
+    i = Folder.find_by_path(item_path)
+    if not i:
+        i = DocEntry.find_by_path(item_path)
+    if not i:
+        raise RouteException('Item not found.')
+    u = get_current_user_object()
+    if isinstance(i, Folder):
+        docs = i.get_all_documents(
+            include_subdirs=True,
+        )
+        docs = [d for d in docs if u.has_teacher_access(d)]
+    else:
+        verify_teacher_access(i)
+        docs = [i]
+    access_restriction = UserNote.access == 'everyone'
+    vals: NotesModel = NotesSchema().load(request.args)
+    if u.is_admin and vals.private:
+        access_restriction = true()
+    elif vals.private:
+        raise AccessDenied('Only administrators can fetch private comments.')
+    ns = (UserNote.query
+          .filter(UserNote.doc_id.in_([d.id for d in docs]) & access_restriction)
+          .options(joinedload(UserNote.usergroup))
+          .all())
+    return json_response(ns)
 
 
 def check_note_access_ok(is_public: bool, doc: Document):
