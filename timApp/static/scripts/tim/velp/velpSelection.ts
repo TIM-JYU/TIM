@@ -2,7 +2,7 @@ import {IController, IFormController} from "angular";
 import * as t from "io-ts";
 import {timApp} from "tim/app";
 import {Binding, clone, markAsUsed, Require, to} from "tim/util/utils";
-import * as velpSummary from "tim/velp/velpSummary";
+import * as velpSummary from "tim/velp/velp-summary.component";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
 import {ViewCtrl} from "../document/viewctrl";
 import {showMessageDialog} from "../ui/dialog";
@@ -208,7 +208,6 @@ export class VelpSelectionController implements IController {
         const response4 = await p4;
         this.rctrl.velps = response4.data;
         this.rctrl.velps.forEach((v) => {
-            v.used = 0;
             v.edit = false;
             if (v.labels == null) {
                 v.labels = [];

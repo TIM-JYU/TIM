@@ -10,182 +10,208 @@ and their labels. The module also retrieves the data related to velps and their 
 import copy
 from typing import Optional, List, Tuple, Dict
 
+from timApp.timdb.sqa import db
 from timApp.timdb.timdbbase import TimDbBase, result_as_dict_list
-from timApp.velp.velp_models import Velp, VelpVersion, VelpLabel, VelpLabelContent
+from timApp.velp.velp_models import Velp, VelpVersion, VelpLabel, VelpLabelContent, VelpContent, LabelInVelp
+
+
+def _create_velp(creator_id: int, default_points: Optional[float], icon_id: Optional[int] = None,
+                 valid_until: Optional[str] = None, visible_to: Optional[int] = None,
+                 color: Optional[str] = None) -> int:
+    """Creates a new entry to the velp table.
+
+    :param creator_id: User ID of creator.
+    :param default_points: Default points for velp.
+    :param icon_id: Icon ID attached to velp. Can be null.
+    :param valid_until: Time after velp becomes unusable.
+    :param visible_to: Default visibility to annotation.
+    :return: ID of velp that was just created.
+
+    """
+    if not visible_to:
+        visible_to = 4
+    v = Velp(creator_id=creator_id,
+             default_points=default_points,
+             icon_id=icon_id,
+             color=color,
+             valid_until=valid_until,
+             visible_to=visible_to)
+    db.session.add(v)
+    db.session.commit()
+    return v.id
+
+
+def create_velp_version(velp_id: int):
+    """Creates a new version for a velp to use.
+
+    :param velp_id: ID of velp we're adding version for
+    :return: ID of version that was just created
+
+    """
+
+    vv = VelpVersion(velp_id=velp_id)
+    db.session.add(vv)
+    db.session.commit()
+    return vv.id
+
+
+def add_velp_label_translation(label_id: int, language_id: str, content: str):
+    """Adds new translation to an existing label.
+
+    :param label_id: Label id
+    :param language_id: Language chosen
+    :param content: New translation
+
+    """
+    vlc = VelpLabelContent(velplabel_id=label_id, language_id=language_id, content=content)
+    db.session.add(vlc)
+    db.session.commit()
+
+
+def update_velp_label(label_id: int, language_id: str, content: str):
+    """Updates content of label in specific language.
+
+    :param label_id: Label id
+    :param language_id: Language chosen
+    :param content: Updated content
+
+    """
+    vlc = VelpLabelContent.query.filter(
+        (VelpLabelContent.velplabel_id == label_id) & (VelpLabelContent.language_id == language_id)
+    ).one()
+    vlc.content = content
+    db.session.commit()
+
+
+def create_velp_label(language_id: str, content: str) -> int:
+    """Creates a new label.
+
+    :param language_id: Language chosen
+    :param content: Label content
+    :return: id of the new label
+
+    """
+
+    vl = VelpLabel()
+    db.session.add(vl)
+    db.session.flush()
+    add_velp_label_translation(vl.id, language_id, content)
+    return vl.id
+
+
+def create_velp_content(version_id: int, language_id: str, content: str, default_comment: str):
+    """Method to create content (text) for velp.
+
+    :param version_id: Version id where the content will be stored
+    :param language_id: Language id
+    :param content: Text of velp
+    :param default_comment: Default comment for velp
+
+    """
+    vc = VelpContent(version_id=version_id, language_id=language_id, content=content, default_comment=default_comment)
+    db.session.add(vc)
+    db.session.commit()
+
+
+def create_new_velp(creator_id: int, content: str, default_points: Optional[float] = None,
+                    default_comment: Optional[str] = None, icon_id: Optional[int] = None,
+                    valid_until: Optional[str] = None, language_id: str = "FI",
+                    visible_to: Optional[int] = None, color: Optional[int] = None) -> Tuple[int, int]:
+    """Creates a new velp with all information.
+
+    Creates a new velp with all necessary information in one function using three others.
+
+    :param default_comment: Default comment for velp
+    :param creator_id: User ID of creator.
+    :param content: Text for velp.
+    :param default_points: Default points for velp, None if not given.
+    :param icon_id: Icon ID attached to velp. Can be null.
+    :param valid_until: Time after velp becomes unusable.
+    :param language_id: Language ID of velp.
+    :param visible_to: Default visibility to annotation.
+    :param color: Velp color
+    :return: A tuple of (velp id, velp version id).
+
+    """
+    new_velp_id = _create_velp(creator_id, default_points, icon_id, valid_until, visible_to, color)
+    new_version_id = create_velp_version(new_velp_id)
+    create_velp_content(new_version_id, language_id, content, default_comment)
+
+    return new_velp_id, new_version_id
+
+
+def update_velp(velp_id: int, default_points: str, icon_id: str, color: str, visible_to: int):
+    """Changes the non-versioned properties of a velp. Does not update labels.
+
+    :param velp_id: ID of velp that's being updated
+    :param default_points: New default points
+    :param icon_id: ID of icon
+    :param color: Velp color
+    :param visible_to: Velp visibility
+
+    """
+    if not visible_to:
+        visible_to = 4
+    v: Velp = Velp.query.get(velp_id)
+    if v:
+        v.default_points = default_points
+        v.icon_id = icon_id
+        v.color = color
+        v.visible_to = visible_to
+    db.session.commit()
+
+
+def add_labels_to_velp(velp_id: int, labels: List[int]):
+    """Associates a set of labels to a velp. (Appends to existing labels)
+
+    Do note that update_velp_labels depends on this method
+
+    :param velp_id: id of the velp that
+    :param labels: list of label ids
+
+    """
+
+    if labels:  # Labels list can theoretically be null at some situations
+        for label_id in labels:
+            db.session.add(LabelInVelp(label_id=label_id, velp_id=velp_id))
+    db.session.commit()
+
+
+def update_velp_labels(velp_id: int, labels: List[int]):
+    """Replaces the labels of a velp with new ones.
+
+    :param velp_id: velp ID
+    :param labels: list of label IDs.
+
+    """
+    # First nuke existing labels.
+    LabelInVelp.query.filter_by(velp_id=velp_id).delete()
+    # self.db.commit() # changes will be commited in add_labels_to_velp
+    # Then add the new ones.
+    add_labels_to_velp(velp_id, labels)
+
+
+def get_latest_velp_version(velp_id: int, language_id: str = "FI") -> Optional[VelpContent]:
+    """Method to fetch the latest version for velp in specific language.
+
+    :param velp_id: ID of velp we're checking
+    :param language_id: ID of language
+    :return: Dictionary containing ID and content of velp version.
+
+    """
+    return (VelpContent.query
+            .filter_by(language_id=language_id)
+            .join(VelpVersion)
+            .filter_by(velp_id=velp_id)
+            .order_by(VelpVersion.id.desc())
+            .with_entities(VelpContent)
+            .first())
 
 
 class Velps(TimDbBase):
     """Used as an interface to query the database about velps."""
 
-    def create_new_velp(self, creator_id: int, content: str, default_points: Optional[float] = None,
-                        default_comment: Optional[str] = None, icon_id: Optional[int] = None,
-                        valid_until: Optional[str] = None, language_id: str = "FI",
-                        visible_to: Optional[int] = None, color: Optional[int] = None) -> Tuple[int, int]:
-        """Creates a new velp with all information.
-
-        Creates a new velp with all necessary information in one function using three others.
-
-        :param default_comment: Default comment for velp
-        :param creator_id: User ID of creator.
-        :param content: Text for velp.
-        :param default_points: Default points for velp, None if not given.
-        :param icon_id: Icon ID attached to velp. Can be null.
-        :param valid_until: Time after velp becomes unusable.
-        :param language_id: Language ID of velp.
-        :param visible_to: Default visibility to annotation.
-        :param color: Velp color
-        :return: A tuple of (velp id, velp version id).
-
-        """
-        new_velp_id = self._create_velp(creator_id, default_points, icon_id, valid_until, visible_to, color)
-        new_version_id = self.create_velp_version(new_velp_id)
-        self.create_velp_content(new_version_id, language_id, content, default_comment)
-
-        return new_velp_id, new_version_id
-
-    def _create_velp(self, creator_id: int, default_points: Optional[float], icon_id: Optional[int] = None,
-                     valid_until: Optional[str] = None, visible_to: Optional[int] = None,
-                     color: Optional[str] = None) -> int:
-        """Creates a new entry to the velp table.
-
-        :param creator_id: User ID of creator.
-        :param default_points: Default points for velp.
-        :param icon_id: Icon ID attached to velp. Can be null.
-        :param valid_until: Time after velp becomes unusable.
-        :param visible_to: Default visibility to annotation.
-        :return: ID of velp that was just created.
-
-        """
-        if not visible_to:
-            visible_to = 4
-        v = Velp(creator_id=creator_id,
-                 default_points=default_points,
-                 icon_id=icon_id,
-                 color=color,
-                 valid_until=valid_until,
-                 visible_to=visible_to)
-        self.session.add(v)
-        self.session.commit()
-        return v.id
-
-    def create_velp_version(self, velp_id: int):
-        """Creates a new version for a velp to use.
-
-        :param velp_id: ID of velp we're adding version for
-        :return: ID of version that was just created
-
-        """
-
-        vv = VelpVersion(velp_id=velp_id)
-        self.session.add(vv)
-        self.session.commit()
-        return vv.id
-
-    def create_velp_content(self, version_id: int, language_id: str, content: str, default_comment: str):
-        """Method to create content (text) for velp.
-
-        :param version_id: Version id where the content will be stored
-        :param language_id: Language id
-        :param content: Text of velp
-        :param default_comment: Default comment for velp
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      INSERT INTO
-                      VelpContent(version_id, language_id, content, default_comment)
-                      VALUES (%s, %s, %s, %s)
-                      """, [version_id, language_id, content, default_comment]
-                       )
-        self.db.commit()
-
-    def update_velp(self, velp_id: int, default_points: str, icon_id: str, color: str, visible_to: int):
-        """Changes the non-versioned properties of a velp. Does not update labels.
-
-        :param velp_id: ID of velp that's being updated
-        :param default_points: New default points
-        :param icon_id: ID of icon
-        :param color: Velp color
-        :param visible_to: Velp visibility
-
-        """
-        if not visible_to:
-            visible_to = 4
-        cursor = self.db.cursor()
-        cursor.execute("""
-                       UPDATE Velp
-                       SET icon_id = %s, default_points = %s, color = %s, visible_to = %s
-                       WHERE id = %s
-                       """, [icon_id, default_points, color, visible_to, velp_id]
-                       )
-        self.db.commit()
-
-    def get_latest_velp_version(self, velp_id: int, language_id: str = "FI"):
-        """Method to fetch the latest version for velp in specific language.
-
-        :param velp_id: ID of velp we're checking
-        :param language_id: ID of language
-        :return: Dictionary containing ID and content of velp version.
-
-        """
-        cursor = self.db.cursor()
-        cursor.execute("""
-                      SELECT version_id as id, content
-                      FROM VelpContent
-                      WHERE version_id IN
-                      (
-                      SELECT
-                      MAX(id)
-                      FROM VelpVersion
-                      JOIN VelpContent ON VelpVersion.id = VelpContent.version_id
-                      WHERE velp_id = %s AND language_id = %s
-                      )
-                      """, [velp_id, language_id]
-                       )
-        row = cursor.fetchone()
-        return {"id": row[0], "content": row[1]}
-
     # Methods concerning velp labels
-
-    def create_velp_label(self, language_id: str, content: str) -> int:
-        """Creates a new label.
-
-        :param language_id: Language chosen
-        :param content: Label content
-        :return: id of the new label
-
-        """
-
-        vl = VelpLabel()
-        self.session.add(vl)
-        self.session.flush()
-        self.add_velp_label_translation(vl.id, language_id, content)
-        return vl.id
-
-    def add_velp_label_translation(self, label_id: int, language_id: str, content: str):
-        """Adds new translation to an existing label.
-
-        :param label_id: Label id
-        :param language_id: Language chosen
-        :param content: New translation
-
-        """
-        vlc = VelpLabelContent(velplabel_id=label_id, language_id=language_id, content=content)
-        self.session.add(vlc)
-        self.session.commit()
-
-    def update_velp_label(self, label_id: int, language_id: str, content: str):
-        """Updates content of label in specific language.
-
-        :param label_id: Label id
-        :param language_id: Language chosen
-        :param content: Updated content
-
-        """
-        vlc = self.session.query(VelpLabelContent).filter((VelpLabelContent.velplabel_id ==
-                                                           label_id) & (VelpLabelContent.language_id == language_id)).one()
-        vlc.content = content
-        self.session.commit()
 
     def get_velp_label_ids_for_velp(self, velp_id: int) -> Dict:
         """Gets labels for one velp.
@@ -202,43 +228,6 @@ class Velps(TimDbBase):
                       """, [velp_id]
                        )
         return result_as_dict_list(cursor)
-
-    def add_labels_to_velp(self, velp_id: int, labels: List[int]):
-        """Associates a set of labels to a velp. (Appends to existing labels)
-
-        Do note that update_velp_labels depends on this method
-
-        :param velp_id: id of the velp that
-        :param labels: list of label ids
-
-        """
-        cursor = self.db.cursor()
-        if labels:  # Labels list can theoretically be null at some situations
-            for label_id in labels:
-                cursor.execute("""
-                               INSERT INTO LabelInVelp(label_id, velp_id)
-                               VALUES (%s, %s)
-                               """, [label_id, velp_id]
-                               )
-            self.db.commit()
-
-    def update_velp_labels(self, velp_id: int, labels: List[int]):
-        """Replaces the labels of a velp with new ones.
-
-        :param velp_id: velp ID
-        :param labels: list of label IDs.
-
-        """
-        cursor = self.db.cursor()
-        # First nuke existing labels.
-        cursor.execute("""
-                       DELETE FROM LabelInVelp
-                       WHERE velp_id=%s
-                       """, [velp_id]
-                       )
-        # self.db.commit() # changes will be commited in add_labels_to_velp
-        # Then add the new ones.
-        self.add_labels_to_velp(velp_id, labels)
 
     # Methods for getting information for document
 

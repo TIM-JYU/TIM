@@ -154,7 +154,7 @@ module.exports = {
         "no-underscore-dangle": "error",
         "no-unsafe-finally": "error",
         "no-unsafe-negation": "error",
-        "no-unused-expressions": "error",
+        "no-unused-expressions": "off", // TODO this has false positives with optional calls; enable when it's been fixed
         "no-unused-labels": "error",
         "no-var": "error",
         "object-shorthand": "off",

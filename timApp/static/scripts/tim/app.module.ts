@@ -2,7 +2,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {ApplicationRef, DoBootstrap, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HeaderComponent} from "tim/header/header.component";
-import {HttpClientModule, HTTP_INTERCEPTORS} from "@angular/common/http";
+import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";
 import {CreateItemComponent} from "tim/item/create-item.component";
 import {ErrorStateDirective} from "tim/ui/error-state.directive";
 import {ErrorMessageComponent} from "tim/ui/error-message.component";
@@ -11,6 +11,10 @@ import {LocationDirective} from "tim/ui/location.directive";
 import {TimAlertComponent} from "tim/ui/tim-alert.component";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converter.service";
+import {AnnotationComponent} from "tim/velp/annotation.component";
+import {RelativeTimestampPipe} from "tim/ui/relative-timestamp.pipe";
+import {SignatureComponent} from "tim/ui/signature.component";
+import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -22,6 +26,10 @@ import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converte
         LocationDirective,
         ShortNameDirective,
         TimAlertComponent,
+        AnnotationComponent,
+        RelativeTimestampPipe,
+        SignatureComponent,
+        VelpSummaryComponent,
     ],
     imports: [
         BrowserModule,

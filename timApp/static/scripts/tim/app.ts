@@ -1,11 +1,4 @@
-import angular, {
-    ICompileProvider,
-    IFilterService,
-    IHttpProvider,
-    IHttpResponseTransformer,
-    IModule,
-    IQProvider,
-} from "angular";
+import angular, {ICompileProvider, IFilterService, IHttpProvider, IHttpResponseTransformer, IModule} from "angular";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
 import ngSanitize from "angular-sanitize";

@@ -19,6 +19,7 @@ from timApp.auth.accesshelper import verify_logged_in, has_edit_access, has_mana
     get_doc_or_abort, verify_edit_access
 from timApp.auth.sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group_object
 from timApp.document.docentry import DocEntry, get_documents_in_folder, get_documents
+from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.timdb.dbaccess import get_timdb
@@ -26,9 +27,15 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.users import get_rights_holders
 from timApp.user.userutils import grant_access
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, set_no_cache_headers, ok_response
 from timApp.util.utils import split_location
 from timApp.velp.velp_folders import check_velp_group_folder_path, check_personal_velp_folder
+from timApp.velp.velp_models import Velp, VelpGroup
+from timApp.velp.velpgroups import create_default_velp_group, create_velp_group, get_groups_from_document_table, \
+    make_document_a_velp_group, add_groups_to_document
+from timApp.velp.velps import create_velp_version, create_velp_label, update_velp_label, create_new_velp, \
+    create_velp_content, update_velp, update_velp_labels, add_labels_to_velp, get_latest_velp_version
 
 velps = Blueprint('velps',
                   __name__,
@@ -50,7 +57,7 @@ def get_default_velp_group(doc_id: int):
 
     """
     timdb = get_timdb()
-    user_id = get_current_user_id()
+    user = get_current_user_object()
 
     doc = get_doc_or_abort(doc_id)
     full_path = doc.path
@@ -70,11 +77,11 @@ def get_default_velp_group(doc_id: int):
         else:
             return set_no_cache_headers(
                 json_response({"id": -1, "name": "No access to default group", "edit_access": edit_access}))
-        timdb.velp_groups.make_document_a_velp_group(doc_name, doc_id)
+        vg = make_document_a_velp_group(doc_name, doc_id)
         velp_group = [{'target_type': '0', 'target_id': 0, 'id': doc_id}]
 
-        timdb.velp_groups.add_groups_to_document(velp_group, doc_id, user_id)
-        timdb.velp_groups.add_groups_to_selection_table(velp_group, doc_id, user_id)
+        add_groups_to_document([vg], doc, user)
+        timdb.velp_groups.add_groups_to_selection_table(velp_group, doc_id, user.id)
         print("Document is a velp group, made default velp group to point itself")
         return set_no_cache_headers(json_response({"id": doc_id, "name": doc_name, "edit_access": edit_access}))
 
@@ -103,7 +110,6 @@ def get_default_personal_velp_group():
     :return: Dictionary containing personal velp group data.
 
     """
-    timdb = get_timdb()
     user = get_current_user_object()
 
     personal_velp_group_path = user.get_personal_folder().path + "/velp-groups"
@@ -111,37 +117,37 @@ def get_default_personal_velp_group():
     velp_groups = []
     for v in found_velp_groups:
         velp_groups.append(v.id)
-    default_group = timdb.velp_groups.check_velp_group_ids_for_default_group(velp_groups)
+    default_group = VelpGroup.query.filter(VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True).first()
     if default_group is not None:
         return set_no_cache_headers(json_response(default_group))
+    group_name = "Personal-default"
+    new_group_path = personal_velp_group_path + "/" + group_name
+    group = DocEntry.find_by_path(new_group_path)
+    if group:
+        vg: VelpGroup = VelpGroup.query.get(group.id)
+        vg.default_group = True
+        vg.valid_until = None
+        created_new = False
     else:
-        group_name = "Personal-default"
-        new_group_path = personal_velp_group_path + "/" + group_name
-        group = DocEntry.find_by_path(new_group_path)
-        if group:
-            default_id = group.id
-            timdb.velp_groups.update_velp_group_to_default_velp_group(default_id)
-            created_new = False
-        else:
-            user_group = get_current_user_group_object()
-            default_id = timdb.velp_groups.create_default_velp_group(group_name, user_group, new_group_path).id
-            created_new = True
+        user_group = get_current_user_group_object()
+        group = create_default_velp_group(group_name, user_group, new_group_path)
+        created_new = True
 
-        created_velp_group = dict()
-        created_velp_group['id'] = default_id
-        created_velp_group['target_type'] = 0
-        created_velp_group['target_id'] = "0"
-        created_velp_group['name'] = group_name
-        created_velp_group['location'] = new_group_path
-        created_velp_group['show'] = True
-        created_velp_group['default'] = False
-        created_velp_group['edit_access'] = True
-        created_velp_group['default_group'] = True
-        created_velp_group['created_new_group'] = created_new
-        db.session.commit()
+    created_velp_group = dict()
+    created_velp_group['id'] = group.id
+    created_velp_group['target_type'] = 0
+    created_velp_group['target_id'] = "0"
+    created_velp_group['name'] = group_name
+    created_velp_group['location'] = new_group_path
+    created_velp_group['show'] = True
+    created_velp_group['default'] = False
+    created_velp_group['edit_access'] = True
+    created_velp_group['default_group'] = True
+    created_velp_group['created_new_group'] = created_new
+    db.session.commit()
 
-        response = set_no_cache_headers(json_response(created_velp_group))
-        return response
+    response = set_no_cache_headers(json_response(created_velp_group))
+    return response
 
 
 @velps.route("/<int:doc_id>/get_velps", methods=['GET'])
@@ -170,28 +176,21 @@ def get_velp_groups(doc_id: int):
     :return: List of dictionaries containing velp group information
 
     """
-    timdb = get_timdb()
     user = get_current_user_object()
-    user_id = user.id
-
-    velp_groups = get_velp_groups_from_tree(doc_id)
-    timdb.velp_groups.add_groups_to_document(({'id': v.id} for v in velp_groups), doc_id, user_id)
+    doc = get_doc_or_abort(doc_id)
+    velp_groups = get_velp_groups_from_tree(doc)
+    add_groups_to_document(velp_groups, doc, user)
 
     user_groups = user.get_groups().all()
     user_group_list = []
     for group in user_groups:
         user_group_list.append(group.id)
-    imported_groups = timdb.velp_groups.get_groups_from_imported_table(user_group_list, doc_id)
-    timdb.velp_groups.add_groups_to_document(imported_groups, doc_id, user_id)
 
-    all_velp_groups = timdb.velp_groups.get_groups_from_document_table(doc_id, user_id)
-
-    # SQLite uses 1/0 instead of True/False, change them to True/False for JavaScript side
-    for group in all_velp_groups:
-        b = Block.query.get(group['id'])
-        group['edit_access'] = bool(has_edit_access(b))
-
-    response = json_response(all_velp_groups)
+    all_velp_groups = get_groups_from_document_table(doc_id, user.id)
+    response = json_response([{
+        **vg.to_json(),
+        'edit_access': bool(has_edit_access(vg.block))
+    } for vg in all_velp_groups])
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
 
@@ -313,11 +312,11 @@ def add_velp() -> int:
 
     velp_groups = velp_groups_rights
 
-    new_velp_id, _ = timdb.velps.create_new_velp(current_user_id, velp_content, default_points, default_comment,
+    new_velp_id, _ = create_new_velp(current_user_id, velp_content, default_points, default_comment,
                                                  icon_id, valid_until, language_id, visible_to, color)
 
     if velp_labels is not None:
-        timdb.velps.add_labels_to_velp(new_velp_id, velp_labels)
+        add_labels_to_velp(new_velp_id, velp_labels)
     if velp_groups is not None:
         for group_id in velp_groups:
             timdb.velp_groups.add_velp_to_group(new_velp_id, group_id)
@@ -330,7 +329,7 @@ def add_velp() -> int:
 
 
 @velps.route("/<int:doc_id>/update_velp", methods=['POST'])
-def update_velp(doc_id: int):
+def update_velp_route(doc_id: int):
     """Updates the velp's data.
 
     Required key(s):
@@ -371,13 +370,14 @@ def update_velp(doc_id: int):
     verify_logged_in()
     user_id = get_current_user_id()
     edit_access = False
-
-    all_velp_groups = timdb.velp_groups.get_groups_for_velp(velp_id)
+    velp = Velp.query.get(velp_id)
+    if not velp:
+        raise RouteException('Velp not found')
+    all_velp_groups = velp.groups
 
     # Check that user has edit access to velp via any velp group in database
-    for group in all_velp_groups:
-        b = Block.query.get(group['id'])
-        if has_edit_access(b):
+    for group in all_velp_groups.values():
+        if has_edit_access(group.block):
             edit_access = True
             break
     if not edit_access:
@@ -389,11 +389,11 @@ def update_velp(doc_id: int):
     groups_to_add = []
 
     # Add all velp group ids user has edit access to in a document to a remove list
-    doc_groups = timdb.velp_groups.get_groups_from_document_table(doc_id, user_id)
+    doc_groups = get_groups_from_document_table(doc_id, user_id)
     for group in doc_groups:
-        b = Block.query.get(group['id'])
+        b = group.block
         if has_edit_access(b):
-            groups_to_remove.append(group['id'])
+            groups_to_remove.append(group.id)
             edit_access = True
 
     # Check that user has edit access to velp groups in given velp group list and add them to an add list
@@ -404,27 +404,25 @@ def update_velp(doc_id: int):
             groups_to_add.append(group)
 
     # Add and remove velp from velp groups
-    if edit_access and len(groups_to_add) > 0:
+    if edit_access and groups_to_add:
         timdb.velp_groups.remove_velp_from_groups(velp_id, groups_to_remove)
         timdb.velp_groups.add_velp_to_groups(velp_id, groups_to_add)
 
-    old_velp = timdb.velps.get_latest_velp_version(velp_id, language_id)
-    old_content = old_velp['content']
+    old_velp = get_latest_velp_version(velp_id, language_id)
+    old_content = old_velp.content
 
-    old_default_comment = None
-    if 'default_comment' in old_velp:
-        old_default_comment = old_velp['default_comment']
+    old_default_comment = old_velp.default_comment
 
     old_labels = timdb.velps.get_velp_label_ids_for_velp(velp_id)
     if old_content != new_content or old_default_comment != default_comment:
         # Todo this does not really work correctly, now any update to any language creates a new version, and we can not
         # produce different contents with the same version but different language.
 
-        version_id = timdb.velps.create_velp_version(velp_id)
-        timdb.velps.create_velp_content(version_id, language_id, new_content, default_comment)
+        version_id = create_velp_version(velp_id)
+        create_velp_content(version_id, language_id, new_content, default_comment)
     if old_labels != new_labels:
-        timdb.velps.update_velp_labels(velp_id, new_labels)
-    timdb.velps.update_velp(velp_id, default_points, icon_id, color, visible_to)
+        update_velp_labels(velp_id, new_labels)
+    update_velp(velp_id, default_points, icon_id, color, visible_to)
 
     response = ok_response()
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
@@ -452,14 +450,13 @@ def add_label() -> int:
     language_id = json_data.get('language_id')
     language_id = "FI" if language_id is None else language_id
 
-    timdb = get_timdb()
-    label_id = timdb.velps.create_velp_label(language_id, content)
+    label_id = create_velp_label(language_id, content)
 
     return json_response({'id': label_id})
 
 
 @velps.route("/update_velp_label", methods=["POST"])
-def update_velp_label():
+def update_velp_label_route():
     """Updates velp label content.
 
     Required key(s):
@@ -478,9 +475,8 @@ def update_velp_label():
     language_id = json_data.get('language_id')
     language_id = "FI" if language_id is None else language_id
 
-    timdb = get_timdb()
     # TODO: Add some check so a random person can't use the route?
-    timdb.velps.update_velp_label(velp_label_id, language_id, content)
+    update_velp_label(velp_label_id, language_id, content)
 
     response = ok_response()
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
@@ -651,7 +647,7 @@ def reset_all_selections_to_defaults(doc_id: int):
 
 
 @velps.route("/<int:doc_id>/create_velp_group", methods=['POST'])
-def create_velp_group(doc_id: int) -> Dict:
+def create_velp_group_route(doc_id: int) -> Dict:
     """Creates a new velp group.
 
     Required key(s):
@@ -680,7 +676,7 @@ def create_velp_group(doc_id: int) -> Dict:
 
     verify_logged_in()
     user_group = get_current_user_group_object()
-    user_id = get_current_user_id()
+    user = get_current_user_object()
 
     # Create a new velp group / document in users/username/velp groups folder
     if target_type == 0:
@@ -689,7 +685,7 @@ def create_velp_group(doc_id: int) -> Dict:
         new_group_path = user_velp_path + "/" + velp_group_name
         group_exists = DocEntry.find_by_path(new_group_path)
         if group_exists is None:
-            velp_group_doc = timdb.velp_groups.create_velp_group(velp_group_name, user_group, new_group_path)
+            velp_group_doc = create_velp_group(velp_group_name, user_group, new_group_path)
         else:
             return abort(400, "Velp group with same name and location exists already.")
 
@@ -713,12 +709,10 @@ def create_velp_group(doc_id: int) -> Dict:
         if group_exists is None:
             b = Block.query.get(target.id)
             original_owner = b.owners[0]
-            velp_group_doc = timdb.velp_groups.create_velp_group(velp_group_name, original_owner, new_group_path)
+            velp_group_doc = create_velp_group(velp_group_name, original_owner, new_group_path)
             rights = get_rights_holders(target.id)
             # Copy all rights but view
             for right in rights:
-                # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
-                # function.
                 if not right.atype.name == 'view':
                     grant_access(right.usergroup, velp_group_doc, right.atype.to_enum())
         else:
@@ -736,9 +730,9 @@ def create_velp_group(doc_id: int) -> Dict:
     created_velp_group['default_group'] = False
     db.session.commit()
 
-    timdb.velp_groups.add_groups_to_document([created_velp_group], doc_id, user_id)
+    add_groups_to_document([velp_group_doc], doc, user)
     # TODO Do we want to make just created velp group selected in document immediately?
-    timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, user_id)
+    timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, user.id)
 
     response = json_response(created_velp_group)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
@@ -746,7 +740,7 @@ def create_velp_group(doc_id: int) -> Dict:
 
 
 @velps.route("/<int:doc_id>/create_default_velp_group", methods=['POST'])
-def create_default_velp_group(doc_id: int):
+def create_default_velp_group_route(doc_id: int):
     """Creates a default velp group document or changes existing document to default velp group.
 
     :param doc_id: ID of document
@@ -762,7 +756,6 @@ def create_default_velp_group(doc_id: int):
 
     verify_logged_in()
     user_group = doc.block.owners[0]
-    user_id = get_current_user_id()
 
     verify_edit_access(doc)
 
@@ -772,7 +765,7 @@ def create_default_velp_group(doc_id: int):
     new_group_path = velps_folder_path + "/" + velp_group_name
     group_exists = DocEntry.find_by_path(new_group_path)  # Check name so no duplicates are made
     if group_exists is None:
-        velp_group = timdb.velp_groups.create_default_velp_group(velp_group_name, user_group, new_group_path)
+        velp_group = create_default_velp_group(velp_group_name, user_group, new_group_path)
         created_new_group = True
         rights = get_rights_holders(doc_id)
         # Copy all rights but view
@@ -784,7 +777,7 @@ def create_default_velp_group(doc_id: int):
 
     else:
         default = DocEntry.find_by_path(new_group_path)
-        timdb.velp_groups.make_document_a_velp_group(velp_group_name, default.id, None, True)
+        make_document_a_velp_group(velp_group_name, default.id, None, True)
         velp_group = default
         timdb.velp_groups.update_velp_group_to_default_velp_group(default.id)
         created_new_group = False
@@ -803,7 +796,7 @@ def create_default_velp_group(doc_id: int):
     created_velp_group['created_new_group'] = created_new_group
     db.session.commit()
 
-    timdb.velp_groups.add_groups_to_document([created_velp_group], doc_id, user_id)
+    add_groups_to_document([velp_group], doc, get_current_user_object())
 
     # TODO Do we want to make just created default velp group selected in document immediately?
     # timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, user_id)
@@ -812,7 +805,7 @@ def create_default_velp_group(doc_id: int):
     return response
 
 
-def get_velp_groups_from_tree(document_id: int):
+def get_velp_groups_from_tree(doc: DocInfo):
     """Returns all velp groups found from tree from document to root and from users own velp folder.
 
     Checks document's own velp group folder first, then default velp group folders going up all the
@@ -821,14 +814,11 @@ def get_velp_groups_from_tree(document_id: int):
 
     Checks that user has minimum of view right for velp groups.
 
-    :param document_id: ID of document
     :return: List of document / velp group information of found hits.
 
     """
 
-    doc_id = int(document_id)
     timdb = get_timdb()
-    doc = get_doc_or_abort(doc_id)
     full_path = doc.path
     doc_path, doc_name = split_location(full_path)
     velp_group_folder = "velp-groups"
@@ -873,7 +863,7 @@ def get_velp_groups_from_tree(document_id: int):
         is_velp_group = timdb.velp_groups.is_id_velp_group(result.id)
         if not is_velp_group:
             _, group_name = split_location(result.path)
-            timdb.velp_groups.make_document_a_velp_group(group_name, result.id)
+            make_document_a_velp_group(group_name, result.id)
 
     return results
 

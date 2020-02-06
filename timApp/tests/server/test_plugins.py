@@ -27,7 +27,8 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import get_anon_user_id
 from timApp.util.flask.responsehelper import to_dict
 from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
-from timApp.velp.velp_models import Annotation
+from timApp.velp.annotation_model import Annotation
+from timApp.velp.velps import create_new_velp
 
 
 class PluginTest(TimRouteTest):
@@ -513,7 +514,7 @@ class PluginTest(TimRouteTest):
         self.login_test2()
         for t, a in zip(task_ids, answers):
             answer_ids2.append(self.post_answer('mmcq', t.doc_task, [not b for b in a])['savedNew'])
-        _, velp_ver_id = timdb.velps.create_new_velp(TEST_USER_1_ID, 'Test velp')
+        _, velp_ver_id = create_new_velp(TEST_USER_1_ID, 'Test velp')
         # add a 1-point annotation to every answer except the last three
         for ans in answer_ids[:-3] + answer_ids2[:-3]:
             a = Annotation(velp_version_id=velp_ver_id, points=1, annotator_id=TEST_USER_2_ID, answer_id=ans)

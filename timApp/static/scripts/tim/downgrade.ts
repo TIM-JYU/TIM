@@ -2,11 +2,11 @@ import {NgModuleRef, StaticProvider, Type} from "@angular/core";
 import {downgradeComponent, downgradeModule} from "@angular/upgrade/static";
 import angular, {IDirectiveFactory, IModule, Injectable} from "angular";
 
-export function doDowngrade(m: IModule, component: string, angularComponent: Type<unknown>) {
+export function doDowngrade(m: IModule, component: string, angularComponent: Type<unknown>, propagateDigest = false) {
     m.directive(component, downgradeComponent({
         component: angularComponent,
         downgradedModule: m.name,
-        propagateDigest: false,
+        propagateDigest,
     }) as Injectable<IDirectiveFactory>);
 }
 

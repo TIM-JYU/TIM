@@ -1,4 +1,5 @@
 import "./loadJQueryAndMomentGlobals";
+import "reflect-metadata";
 
 import {enableProdMode, StaticProvider} from "@angular/core";
 import angular from "angular";
@@ -38,7 +39,8 @@ import * as loginMenu from "tim/user/loginMenu";
 import * as settingsCtrl from "tim/user/settingsCtrl";
 import * as userMenu from "tim/user/userMenu";
 import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
-import * as annotation from "tim/velp/annotation";
+import * as annotation from "tim/velp/annotation.component";
+import {AnnotationComponent} from "tim/velp/annotation.component";
 import * as reviewController from "tim/velp/reviewController";
 import * as velpSelection from "tim/velp/velpSelection";
 import {staticDynamicImport} from "tim/staticDynamicImport";
@@ -51,6 +53,7 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {setAngularJSGlobal} from "@angular/upgrade/static";
 import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {LoadingComponent} from "tim/ui/loadingIndicator";
+import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -110,6 +113,8 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timAlert", TimAlertComponent);
     doDowngrade(dg, "timMarkupError", MarkupErrorComponent);
     doDowngrade(dg, "timLoading", LoadingComponent);
+    doDowngrade(dg, "annotation", AnnotationComponent);
+    doDowngrade(dg, "velpSummary", VelpSummaryComponent);
     return dg;
 }
 

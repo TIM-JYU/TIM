@@ -33,7 +33,7 @@ import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {documentglobals} from "../util/globals";
 import {$compile, $filter, $http, $interval, $localStorage, $timeout} from "../util/ngimport";
-import {AnnotationController} from "../velp/annotation";
+import {AnnotationComponent} from "../velp/annotation.component";
 import {ReviewController} from "../velp/reviewController";
 import {diffDialog} from "./diffDialog";
 import {EditingHandler} from "./editing/editing";
@@ -1020,10 +1020,10 @@ export class ViewCtrl implements IController {
         return this.ldrs.get(taskId);
     }
 
-    private anns = new Map<string, AnnotationController>();
-    private annsDefers = new Map<string, TimDefer<AnnotationController>>();
+    private anns = new Map<string, AnnotationComponent>();
+    private annsDefers = new Map<string, TimDefer<AnnotationComponent>>();
 
-    registerAnnotation(loader: AnnotationController) {
+    registerAnnotation(loader: AnnotationComponent) {
         // This assumes that the associated DOM element for annotation is attached in the page because we need to check
         // whether it's in the right margin or not (i.e. in text).
         const prefix = loader.getKeyPrefix();
@@ -1039,17 +1039,17 @@ export class ViewCtrl implements IController {
         return this.anns.get(id);
     }
 
-    getAnnotationAsync(id: string): Promise<AnnotationController> {
+    getAnnotationAsync(id: string): Promise<AnnotationComponent> {
         const a = this.getAnnotation(id);
         if (a) {
-            return new Promise<AnnotationController>(((resolve) => resolve(a)));
+            return new Promise<AnnotationComponent>(((resolve) => resolve(a)));
         }
-        const value = new TimDefer<AnnotationController>();
+        const value = new TimDefer<AnnotationComponent>();
         this.annsDefers.set(id, value);
         return value.promise;
     }
 
-    unRegisterAnnotation(a: AnnotationController) {
+    unRegisterAnnotation(a: AnnotationComponent) {
         const prefix = a.getKeyPrefix();
         const key = prefix + a.annotation.id;
         this.anns.delete(key);

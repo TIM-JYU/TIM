@@ -8,250 +8,176 @@ as well as adding comments to the annotations. The module also retrieves the ann
 """
 
 import re
-from typing import Dict
+from dataclasses import dataclass, field
+from typing import Optional
 
 from flask import Blueprint
-from flask import abort
-from flask import request
 
-from timApp.auth.accesshelper import verify_logged_in, has_seeanswers_access, has_teacher_access, \
-    has_ownership, get_doc_or_abort, verify_view_access
-from timApp.auth.sessioninfo import get_current_user_id, get_current_user_object
-from timApp.timdb.dbaccess import get_timdb
+from timApp.auth.accesshelper import verify_logged_in, has_teacher_access, \
+    get_doc_or_abort, verify_view_access, AccessDenied
+from timApp.auth.sessioninfo import get_current_user_object
+from timApp.timdb.sqa import db
+from timApp.util.flask.requesthelper import RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.velp.annotations import Annotations
+from timApp.util.utils import get_current_time
+from timApp.velp.annotation_model import Annotation, AnnotationPosition
+from timApp.velp.annotations import AnnotationVisibility, create_annotation, get_annotations_with_comments_in_document, \
+    set_annotation_query_opts
+from timApp.velp.velp_models import AnnotationComment
+from timApp.velp.velps import get_latest_velp_version
 
 annotations = Blueprint('annotations',
                         __name__,
                         url_prefix='')
 
 
-# TODO connect the routes in this file to the ui.
-@annotations.route("/add_annotation", methods=['POST'])
-def add_annotation() -> Dict:
-    """Creates a new annotation to the database.
+@dataclass
+class AddAnnotationModel:
+    velp_id: int
+    doc_id: int
+    coord: AnnotationPosition
+    visible_to: AnnotationVisibility = field(metadata={'by_value': True})
+    points: Optional[int]
+    color: Optional[str] = None
+    icon_id: Optional[int] = None
+    answer_id: Optional[int] = None
 
-    Required key(s):
-        - velp: velp ID
-        - visible_to: visibility group (1-4)
-        - doc_id: document ID
-        - coord: start and end coordinates of the annotation.
 
-    :return: Dictionary oontaining annotation id and annotator name.
-
+@annotations.route("/add_annotation", methods=['post'])
+@use_model(AddAnnotationModel)
+def add_annotation(m: AddAnnotationModel):
+    """Adds a new annotation.
     """
-    json_data = request.get_json()
-    timdb = get_timdb()
-
-    # first get the non-optional arguments and abort if there is missing data.
-    try:
-        velp_id = json_data['velp']
-        visible_to = timdb.annotations.AnnotationVisibility(json_data['visible_to'])
-        document_id = json_data['doc_id']
-        coordinates = json_data['coord']
-        start = coordinates['start']
-        end = coordinates['end']
-
-    except KeyError as e:  # one of the json_data['foo'] fails
-        return abort(400, "Missing data: " + e.args[0])
-    except TypeError as e:  # one of the element paths is not a list of integers
-        return abort(400, "Malformed element path. " + e.args[0])
-    except ValueError as e:  # visible_to could not be casted to the enum used.
-        return abort(400, e.args[0])
-
-    # .get() returns None if there is no data instead of throwing.
-    offset_start = start.get('offset')
-    depth_start = start.get('depth')
-    node_start = start.get('node')
-
-    offset_end = end.get('offset')
-    depth_end = end.get('depth')
-    node_end = end.get('node')
-
-    element_path_start = start.get('el_path')
-    if element_path_start is not None:
-        if type(element_path_start) is not list or any(type(i) is not int for i in element_path_start):
-            return abort(400, "Malformed element path. " + str(element_path_start))
-        element_path_start = str(element_path_start)
-
-    element_path_end = end.get('el_path')
-    if element_path_end is not None:
-        if type(element_path_end) is not list or any(type(i) is not int for i in element_path_end):
-            return abort(400, "Malformed element path. " + str(element_path_end))
-        element_path_end = str(element_path_end)
-
-    points = json_data.get('points')
-    icon_id = json_data.get('icon_id')
-    answer_id = json_data.get('answer_id')
-    color = json_data.get('color')
-
-    if len(color) > 0 and not is_hex_string(color):
-        return abort(400, "Color should be a hex string or None, e.g. '#FFFFFF'.")
-
-    # default_comment = ""
-    # if (len(json_data.get('comments')) > 0):
-    #     default_comment = json_data.get('comments')[0]['content']
-
-    try:
-        paragraph_id_start = start['par_id']
-        hash_start = start['t']
-        paragraph_id_end = end['par_id']
-        hash_end = end['t']
-    except KeyError as e:
-        return abort(400, "Missing data: " + e.args[0])
-
-    verify_logged_in()
-
+    document_id = m.doc_id
+    d = get_doc_or_abort(document_id)
+    verify_view_access(d)
+    color = m.color
+    validate_color(color)
     annotator = get_current_user_object()
-    velp_version_id = timdb.velps.get_latest_velp_version(velp_id)["id"]
+    velp_version_id = get_latest_velp_version(m.velp_id).version_id
 
-    new_id = timdb.annotations.create_annotation(velp_version_id, visible_to, points, annotator.id, document_id,
-                                                 paragraph_id_start, paragraph_id_end, offset_start, node_start,
-                                                 depth_start, offset_end, node_end, depth_end, hash_start, hash_end,
-                                                 element_path_start, element_path_end, None, icon_id, color, answer_id)
+    ann = create_annotation(
+        velp_version_id,
+        m.visible_to,
+        m.points,
+        annotator.id,
+        document_id,
+        None,
+        m.icon_id,
+        color,
+        m.answer_id,
+    )
+    ann.set_position_info(m.coord)
+    db.session.commit()
+    return json_response(ann)
 
-    # if len(default_comment) > 0:
-    #     comment_data = dict(content=default_comment, annotation_id=new_id)
-    #     add_comment_helper(comment_data)
 
-    return json_response({"id": new_id, "annotator_name": annotator.name})
+def validate_color(color: Optional[str]):
+    if color and not is_color_hex_string(color):
+        raise RouteException("Color should be a hex string or None, e.g. '#FFFFFF'.")
 
 
-@annotations.route("/update_annotation", methods=['POST'])
-def update_annotation():
-    """Updates the visibility and/or points of the annotation.
+@dataclass
+class AnnotationIdModel:
+    id: int
 
-    Required key(s):
-        - annotation_id: annotation ID.
 
-    Optional key(s):
-        - visible_to: visibility group number (1-4)
-        - color: color as hex string e.g. "#FFFFFF"
-        - points: number of points
-        - doc_id: document ID.
+@dataclass
+class UpdateAnnotationModel(AnnotationIdModel):
+    visible_to: AnnotationVisibility = field(metadata={'by_value': True})
+    points: Optional[int] = None
+    color: Optional[str] = None
+    coord: Optional[AnnotationPosition] = None
 
-    :return: ok_response()
 
+@annotations.route("/update_annotation", methods=['post'])
+@use_model(UpdateAnnotationModel)
+def update_annotation(m: UpdateAnnotationModel):
+    """Updates the information of an annotation.
     """
     verify_logged_in()
-    user_id = get_current_user_id()
-    json_data = request.get_json()
-    try:
-        annotation_id = json_data['annotation_id']
-    except KeyError as e:
-        return abort(400, "Missing data: " + e.args[0])
-    visible_to = json_data.get('visible_to')
-    points = json_data.get('points')
-    doc_id = json_data.get('doc_id')
-    color = json_data.get('color')
-    d = get_doc_or_abort(doc_id)
+    user = get_current_user_object()
 
-    timdb = get_timdb()
-    # Get values from the database to fill in unchanged new values.
-    new_values = timdb.annotations.get_annotation(annotation_id)
-    if not new_values:
-        return abort(404, "No such annotation.")
-    new_values = new_values[0]
-    # Todo panic if there is more than one item in the list.
-    if not new_values['annotator_id'] == user_id:
-        return abort(403, "You are not the annotator.")
+    visible_to = m.visible_to
+    points = m.points
+    color = m.color
+
+    ann = get_annotation_or_abort(m.id)
+    d = get_doc_or_abort(ann.document_id)
+    if ann.annotator_id != user.id:
+        raise AccessDenied("You are not the annotator.")
     if visible_to:
-        try:
-            visible_to = Annotations.AnnotationVisibility(visible_to)
-        except ValueError:
-            return abort(400, "Visibility should be 1, 2, 3 or 4.")
-        new_values['visible_to'] = visible_to
+        ann.visible_to = visible_to.value
 
-    if len(color) > 0 and not is_hex_string(color):
-        return abort(400, "Color should be a hex string, e.g. '#FFFFFF'.")
-    new_values['color'] = color
+    validate_color(color)
+
+    ann.color = color
 
     if has_teacher_access(d):
-        new_values['points'] = points
+        ann.points = points
     else:
         if points is None:
-            new_values['points'] = points
+            ann.points = points
         else:
-            new_values['points'] = None
-    timdb.annotations.update_annotation(new_values['id'], new_values['velp_version_id'],
-                                        new_values['visible_to'], new_values['points'], new_values['icon_id'],
-                                        new_values['color'])
-    return ok_response()
+            ann.points = None
+    if m.coord:
+        ann.set_position_info(m.coord)
+    db.session.commit()
+    return json_response(ann)
 
 
-def is_hex_string(color: str) -> bool:
-    """Checks if string is valid HTML hex string.
-
-    :param color:
-    :return:
-
+def is_color_hex_string(s: str) -> bool:
+    """Checks if string is valid HTML color hex string.
     """
     exp = r"#[a-fA-F0-9]{6}"
-    check = re.match(exp, color)
+    check = re.match(exp, s)
     if check is not None:
-        return check.group() == color
+        return check.group() == s
     return False
 
 
-@annotations.route("/invalidate_annotation", methods=['POST'])
-def invalidate_annotation():
-    """Invalidates annotation by setting its valid from to current moment.
-
-    Required key(s):
-        - annotation_id: annotation ID
-
-    :return: ok_response()
-
+@annotations.route("/invalidate_annotation", methods=['post'])
+@use_model(AnnotationIdModel)
+def invalidate_annotation(m: AnnotationIdModel):
+    """Invalidates an annotation by setting its valid_until to current moment.
     """
-    json_data = request.get_json()
-    try:
-        annotation_id = json_data['annotation_id']
-    except KeyError as e:
-        return abort(400, "Missing data: " + e.args[0])
-    timdb = get_timdb()
-    annotation = timdb.annotations.get_annotation(annotation_id)
-    if not annotation:
-        return abort(404, "No such annotation.")
-    annotation = annotation[0]
-    verify_logged_in()
-    user_id = get_current_user_id()
-    if not annotation['annotator_id'] == user_id:
-        return abort(403, "You are not the annotator.")
-    # TODO: Add option to choose when annotation gets invalidated
-    timdb.annotations.invalidate_annotation(annotation_id)
 
+    verify_logged_in()
+    annotation = get_annotation_or_abort(m.id)
+    user = get_current_user_object()
+    if not annotation.annotator_id == user.id:
+        raise AccessDenied("You are not the annotator.")
+    annotation.valid_until = get_current_time()
+    db.session.commit()
     return ok_response()
 
 
-@annotations.route("/add_annotation_comment", methods=['POST'])
-def add_comment() -> Dict:
-    """Adds new comment to the annotation.
+@dataclass
+class AddAnnotationCommentModel(AnnotationIdModel):
+    content: str
 
-    Required key(s):
-        - annotation_id: annotation ID
-        - content: content of the comment.
 
-    :return: Dictionary of information about user who added the comment
+def get_annotation_or_abort(ann_id: int) -> Annotation:
+    ann = set_annotation_query_opts(Annotation.query).get(ann_id)
+    if not ann:
+        raise RouteException(f'Annotation with id {ann_id} not found')
+    return ann
 
+
+@annotations.route("/add_annotation_comment", methods=['post'])
+@use_model(AddAnnotationCommentModel)
+def add_comment_route(m: AddAnnotationCommentModel):
+    """Adds a new comment to the annotation.
     """
-    json_data = request.get_json()
-
-    return add_comment_helper(json_data)
-
-
-def add_comment_helper(json_data) -> Dict:
-    try:
-        annotation_id = json_data['annotation_id']
-        content = json_data['content']
-    except KeyError as e:
-        return abort(400, "Missing data: " + e.args[0])
-    # Todo maybe check that content isn't an empty string
-    timdb = get_timdb()
     verify_logged_in()
     commenter = get_current_user_object()
-    timdb.annotations.add_comment(annotation_id, commenter.id, content)
-    # TODO notice with email to annotator if commenter is not itself
-    return json_response(commenter)
+    a = get_annotation_or_abort(m.id)
+    if not m.content:
+        raise RouteException('Comment must not be empty')
+    a.comments.append(AnnotationComment(content=m.content, commenter_id=commenter.id))
+    # TODO: Send email to annotator if commenter is not the annotator.
+    db.session.commit()
+    return json_response(a)
 
 
 @annotations.route("/<int:doc_id>/get_annotations", methods=['GET'])
@@ -259,18 +185,11 @@ def get_annotations(doc_id: int):
     """Returns all annotations with comments user can see, e.g. has access to them in a document.
 
     :param doc_id: ID of the document
-    :return: List of dictionaries containing annotations with comments
-
     """
-    timdb = get_timdb()
     d = get_doc_or_abort(doc_id)
     verify_view_access(d)
-    user_has_see_answers = bool(has_seeanswers_access(d))
-    user_has_teacher = bool(has_teacher_access(d))
-    user_has_owner = bool(has_ownership(d))
 
-    results = timdb.annotations.get_annotations_with_comments_in_document(get_current_user_id(), user_has_see_answers,
-                                                                          user_has_teacher, user_has_owner, doc_id)
+    results = get_annotations_with_comments_in_document(get_current_user_object(), d)
     response = json_response(results)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response

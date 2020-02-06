@@ -17,7 +17,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import Consent, User
 from timApp.user.usergroup import UserGroup
 from timApp.util.answerutil import task_ids_to_strlist
-from timApp.velp.velp_models import Annotation
+from timApp.velp.annotation_model import Annotation
 
 
 def get_latest_answers_query(task_id: TaskId, users: List[User]):

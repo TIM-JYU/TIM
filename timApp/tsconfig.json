@@ -24,6 +24,7 @@
       "dom.iterable"
     ],
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "downlevelIteration": true,
     "declaration": false,
     "noEmit": true,

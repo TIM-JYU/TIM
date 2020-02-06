@@ -1,0 +1,30 @@
+.velpSummary {
+  /*  position: fixed;
+    max-width: 20em;*/
+    word-wrap: break-word;
+    /*right: 0;*/
+    top: 50px;
+    /*border: 1px solid gainsboro;
+    background: white;
+    z-index: 100000;
+    overflow-y: auto;
+    padding: 0.5em;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;*/
+}
+
+.velpSummary table {
+    margin-top: 1.3em;
+    margin-bottom: 2em;
+    margin-left: 0;
+    width: 98%;
+  /*  border: 1px solid gainsboro;*/
+}
+
+.summSecColumn {
+    border-left: 0;
+}
+
+.summThiColumn {
+    text-align: center;
+}

@@ -1,15 +1,23 @@
 import angular, {IScope} from "angular";
 import $ from "jquery";
+import {Users} from "tim/user/userService";
+import {
+    AnnotationAddReason,
+    AnnotationPlacement,
+    IAnnotationBindings,
+    updateAnnotationServer,
+} from "tim/velp/annotation.component";
+import {deserialize} from "typescript-json-serializer";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {documentglobals} from "../util/globals";
-import {$compile, $http} from "../util/ngimport";
-import {angularWait, assertIsText, checkIfElement, getElementParent, stringOrNull, to} from "../util/utils";
+import {$compile, $http, $rootScope} from "../util/ngimport";
+import {angularWait, assertIsText, checkIfElement, getElementParent, to} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
-import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVelp, IVelpUI} from "./velptypes";
+import {Annotation, IAnnotationInterval, isFullCoord, IVelp, IVelpUI, NewAnnotation} from "./velptypes";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
@@ -22,18 +30,16 @@ import {IAnnotation, IAnnotationCoordless, IAnnotationInterval, isFullCoord, IVe
  * @copyright 2016 Timber project members
  */
 
-const illegalClasses = ["annotation-element", "highlighted", "editorArea", "previewcontent"];
+const illegalClasses = ["annotation-info", "highlighted", "editorArea", "previewcontent"];
 
 /**
  * A class for handling annotations.
  */
 export class ReviewController {
-    private annotationsAdded: boolean;
     private selectedArea?: Range;
     public selectedElement?: Element;
     public item: IItem;
-    private annotations: IAnnotation[];
-    private annotationids: {[i: number]: number};
+    private annotations: Annotation[];
     public zIndex: number;
     private scope: IScope;
     private velpBadge?: HTMLElementTagNameMap["input"];
@@ -44,12 +50,10 @@ export class ReviewController {
 
     constructor(public vctrl: ViewCtrl) {
         this.scope = vctrl.scope;
-        this.annotationsAdded = false;
         this.velpMode = documentglobals().velpMode;
         this.item = documentglobals().curr_item;
         this.annotations = [];
-        this.annotationids = {0: 0};
-        this.zIndex = 1;
+        this.zIndex = 3;
     }
 
     initVelpSelection(velpSelection: VelpSelectionController) {
@@ -60,11 +64,11 @@ export class ReviewController {
      * Loads the document annotations into the view.
      */
     async loadDocumentAnnotations() {
-        const response = await to($http.get<IAnnotation[]>(`/${this.item.id}/get_annotations`));
+        const response = await to($http.get<object[]>(`/${this.item.id}/get_annotations`));
         if (!response.ok) {
             return;
         }
-        this.annotations = response.result.data;
+        this.annotations = response.result.data.map((o) => deserialize(o, Annotation));
         const annotationsToRemove = [];
 
         for (const a of this.annotations) {
@@ -78,7 +82,7 @@ export class ReviewController {
                 continue;
             }
 
-            if (a.answer_id != null) {
+            if (a.answer != null) {
                 if (!parent.classList.contains("has-annotation")) {
                     parent.classList.add("has-annotation");
                 }
@@ -90,10 +94,10 @@ export class ReviewController {
                 try {
                     let elements = parent.querySelector(".parContent");
                     if (elements == null) {
-                        this.addAnnotationToElement(
+                        this.addAnnotationToMargin(
                             parent,
                             a,
-                            false,
+                            AnnotationAddReason.LoadingExisting,
                             "Could not show annotation in correct place");
                         return;
                     }
@@ -113,13 +117,13 @@ export class ReviewController {
                     const range = document.createRange();
                     range.setStart(startel, placeInfo.start.offset);
                     range.setEnd(endel, placeInfo.end.offset);
-                    this.addAnnotationToCoord(range, a, false);
-                    this.addAnnotationToElement(parent, a, false, "Added also margin annotation");
+                    this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
+                    this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, "Added also margin annotation");
                 } catch (err) {
-                    this.addAnnotationToElement(parent, a, false, "Could not show annotation in correct place");
+                    this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, "Could not show annotation in correct place");
                 }
             } else {
-                this.addAnnotationToElement(parent, a, false, "Paragraph has been modified");
+                this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, "Paragraph has been modified");
             }
         }
 
@@ -128,7 +132,6 @@ export class ReviewController {
             this.annotations.splice(index, 1);
         }
 
-        this.annotationsAdded = true;
     }
 
     /**
@@ -205,7 +208,6 @@ export class ReviewController {
 
         const oldAnnotations = par.querySelectorAll(".notes [aid]");
         angular.element(oldAnnotations).remove();
-
         for (const a of annotations) {
             const placeInfo = a.coord;
 
@@ -216,7 +218,7 @@ export class ReviewController {
             const element = preElem.firstChild;
 
             if (!showInPlace || !isFullCoord(placeInfo.start) || !isFullCoord(placeInfo.end)) {
-                this.addAnnotationToElement(par, a, false, "Added as margin annotation");
+                this.addAnnotationToMargin(par, a, AnnotationAddReason.LoadingExisting, "Added as margin annotation");
             } else if (element) {
                 const range = document.createRange();
                 try {
@@ -225,12 +227,13 @@ export class ReviewController {
                 } catch (e) {
                     // catch: Failed to execute 'setStart' on 'Range': The offset XX is larger than the node's length (YY).
                 }
-                this.addAnnotationToCoord(range, a, false);
-                this.addAnnotationToElement(par, a, false, "Added also margin annotation");
+                this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
+                this.addAnnotationToMargin(par, a, AnnotationAddReason.LoadingExisting, "Added also margin annotation");
             } else {
                 showMessageDialog("Couldn't add annotations");
             }
         }
+        $rootScope.$applyAsync(); // TODO: run only if we are in Angular zone
     }
 
     /**
@@ -238,23 +241,14 @@ export class ReviewController {
      * @param id - Answer ID
      * @returns {Array} Annotations of the answer
      */
-    getAnnotationsByAnswerId(id: number): IAnnotation[] {
-        const annotations: IAnnotation[] = [];
-        this.annotations.forEach((a) => {
-            if (a.answer_id != null && a.answer_id === id) {
-                annotations.push(a);
-            }
-        });
-
+    getAnnotationsByAnswerId(id: number): Annotation[] {
+        const annotations = this.annotations.filter((a) => a.answer != null && a.answer.id === id);
         annotations.sort((a, b) => (b.coord.start.offset ?? 0) - (a.coord.start.offset ?? 0));
-
         return annotations;
     }
 
     /**
-     * Gets all the annotations with a given answer ID.
-     * @param id - annotation ID
-     * @returns annotation with this id
+     * Gets an annotation by ID.
      */
     getAnnotationById(id: number) {
         for (const a of this.annotations) {
@@ -271,27 +265,15 @@ export class ReviewController {
      * @param annotation - Annotation info
      * @param show - Whether annotation is shown when created or not
      */
-    addAnnotationToCoord(range: Range, annotation: IAnnotationCoordless, show: boolean): void {
-        const span = this.createPopOverElement(annotation, show);
+    addAnnotationToCoord(range: Range, annotation: Annotation, show: AnnotationAddReason): void {
+        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.InText);
         try {
-            range.surroundContents(span);
+            range.surroundContents(element);
         } catch (err) {
-            this.addAnnotationToElement(span, annotation, true, "Annotation crosses taglines");
+            this.addAnnotationToMargin(element, annotation, show, "Annotation crosses taglines");
             this.selectedArea = undefined;
-
-            /*
-             var new_range = document.createRange();
-
-             var el = range.startContainer;
-             var start = range.startOffset;
-             var end = range.startContainer.parentNode.innerHTML.length - 1;
-
-             new_range.setStart(el, start);
-             new_range.setEnd(el, end);
-             this.addAnnotationToCoord(new_range, annotation, show);
-             */
         }
-        $compile(span)(this.scope);
+        $compile(element)(scope);
     }
 
     /**
@@ -301,14 +283,12 @@ export class ReviewController {
      * @param show - Whether annotation is shown when created or not
      * @param reason - The reason why the annotation is put here (not implemented yet)
      */
-    addAnnotationToElement(el: Element, annotation: IAnnotationCoordless, show: boolean, reason: string): void {
-        annotation.reason = reason;
-        const span = this.createPopOverElement(annotation, show);
-        const text = document.createTextNode("\u00A0" + annotation.content + "\u00A0");
-        span.appendChild(text);
-        addElementToParagraphMargin(el, span);
-
-        $compile(span)(this.scope);
+    addAnnotationToMargin(el: Element, annotation: Annotation, show: AnnotationAddReason, reason: string): void {
+        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.InMargin);
+        const text = document.createTextNode("\u00A0" + annotation.getContent() + "\u00A0");
+        element.appendChild(text);
+        addElementToParagraphMargin(el, element);
+        $compile(element)(scope);
     }
 
     /**
@@ -370,22 +350,10 @@ export class ReviewController {
     }
 
     /**
-     * Returns the real ID of an annotation.
-     * @param id - Annotation ID generated by the client
-     * @returns {int} Annotation ID generated by the server
-     */
-    getRealAnnotationId(id: number): number {
-        if (id < 0) {
-            return this.annotationids[id];
-        }
-        return id;
-    }
-
-    /**
      * Deletes the given annotation.
      * @param id - Annotation ID
      */
-    async deleteAnnotation(id: number): Promise<void> {
+    async deleteAnnotation(id: number) {
         const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
         const annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
 
@@ -401,36 +369,26 @@ export class ReviewController {
         } else {
             $(annotationParents[0]).remove();
         }
-
-        for (let a = 0; a < this.annotations.length; a++) {
-            if (id === this.annotations[a].id) {
-                this.annotations.splice(a, 1);
-            }
-        }
-
-        const currentId = this.getRealAnnotationId(id);
-
-        await to($http.post("/invalidate_annotation", {annotation_id: currentId}));
+        await to($http.post("/invalidate_annotation", {id: id}));
+        this.annotations = this.annotations.filter((a) => a.id !== id);
     }
 
     /**
      * Updates annotation data.
-     * @param id - Annotation ID
+     * @param ann - Annotation
      * @param inmargin - Whether the annotation is to be placed in the margin or not
      */
-    updateAnnotation(id: number, inmargin: boolean): void {
-        const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
-        const annotationElement = $(`[aid="${id}"]`);
+    updateAnnotation(ann: Annotation, inmargin: boolean): void {
+        const annotationParents = document.querySelectorAll(`[aid="${ann.id}"]`);
+        const annotationElement = $(`[aid="${ann.id}"]`);
         const par = annotationElement.parents(".par");
         const annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
+        this.refreshAnnotation(ann);
+        this.annotations = this.annotations.slice(); // required for velp-summary to see the change
         if (!inmargin) {
-            for (const a of this.annotations) {
-                if (id === a.id) {
-                    $(annotationElement[1]).remove();
-                    this.addAnnotationToElement(par[0], a, false, "Added also margin annotation");
-                    // addAnnotationToElement(this.annotations[a], false, "Added also margin annotation");
-                }
-            }
+            $(annotationElement[1]).remove();
+            this.addAnnotationToMargin(par[0], ann, AnnotationAddReason.LoadingExisting, "Added also margin annotation");
+            // addAnnotationToElement(this.annotations[a], false, "Added also margin annotation");
 
         } else {
             if (annotationParents.length > 1) {
@@ -445,70 +403,15 @@ export class ReviewController {
                 // TODO: add redraw annotation text
             }
         }
-
     }
 
-    /**
-     * Changes annotation points.
-     * @param id - Annotation ID
-     * @param points - Annotation points
-     */
-    changeAnnotationPoints(id: number, points: number): void {
-        for (const a of this.annotations) {
-            if (a.id === id) {
-                a.points = points;
-                break;
-            }
+    private refreshAnnotation(ann: Annotation) {
+        const i = this.annotations.findIndex((a) => a.id === ann.id);
+        if (i >= 0) {
+            this.annotations[i] = ann;
         }
-    }
-
-    changeAnnotationColor(id: number, color: string | null): void {
-        for (const a of this.annotations) {
-            if (a.id === id) {
-                a.color = color;
-                break;
-            }
-        }
-    }
-
-    /**
-     * Adds a comment to the given annotation.
-     * @param id - Annotation ID
-     * @param name - Commenter name
-     * @param comment - Content of the given comment
-     */
-    addComment(id: number, name: string, comment: string): void {
-        for (const a of this.annotations) {
-            if (a.id === id) {
-                a.comments.push({
-                    commenter_username: name,
-                    content: comment,
-                    comment_time: "now",
-                    comment_relative_time: "just now",
-                });
-                break;
-            }
-        }
-    }
-
-    /**
-     * Changes the visibility of an annotation. Visibility can be one of the following:
-     *
-     * - 1 = Myself
-     * - 2 = Document owner
-     * - 3 = Teacher
-     * - 4 = Everyone.
-     *
-     * @param id - Annoation ID
-     * @param visibility - Annotation visibility (1, 2, 3 or 4)
-     */
-    changeVisibility(id: number, visiblity: number): void {
-        for (const a of this.annotations) {
-            if (a.id === id) {
-                a.visible_to = visiblity;
-                break;
-            }
-        }
+        this.vctrl.getAnnotation(`m${ann.id}`)?.setAnnotation(ann);
+        this.vctrl.getAnnotation(`t${ann.id}`)?.setAnnotation(ann);
     }
 
     /**
@@ -677,64 +580,23 @@ export class ReviewController {
     }
 
     /**
-     * Get marking highlight style.
-     * @param points - Points given in marking
-     * @returns {string} Highlight style
-     */
-    getAnnotationHighlight(points: number): string {
-        let highlightStyle = "positive";
-        if (points === 0) {
-            highlightStyle = "neutral";
-        } else if (points < 0) {
-            highlightStyle = "negative";
-        }
-        return highlightStyle;
-    }
-
-    /**
      * Adds an annotation with the selected velp's data to
      * the selected text area or element.
      * @todo When the annotations can cross HTML tags, end coordinate needs to be changed according to the end element.
      * @todo Also get the paragraph element (parelement) according to endContainer.
      * @param velp - Velp selected in the `velpSelection` directive
      */
-    async useVelp(velp: IVelp): Promise<void> {
+    async useVelp(velp: IVelp) {
 
         if (this.selectedElement == null && this.selectedArea == null) {
             return;
         }
 
-        /*
-         if (velp.default_comment != null && velp.default_comment.length > 0){
-         comment.push({
-         content: velp.default_comment,
-         commenter_username: "me",
-         comment_time: "now",
-         comment_relative_time: "just now"
-         });
-         }
-         */
-
-        const newAnnotation: IAnnotationCoordless = {
-            id: -(this.annotations.length + 1),
-            velp: velp.id,
-            points: velp.points,
-            doc_id: this.item.id,
-            visible_to: velp.visible_to,
-            content: velp.content,
-            annotator_name: "me",
-            edit_access: true,
-            email: "",
-            timesince: "just now",
-            creationtime: "now",
-            color: velp.color,
-            comments: [],
-            default_comment: velp.default_comment,
-            newannotation: true,
-            user_id: -1,
-            reason: null,
-            answer_id: null,
-        };
+        const newAnnotation = new NewAnnotation(
+            velp,
+            Users.getCurrent(),
+            null,
+        );
         let coord: IAnnotationInterval;
         if (this.selectedArea != null) {
 
@@ -756,12 +618,6 @@ export class ReviewController {
             const elementPath = this.getElementPositionInTree(startElement, []);
             const answerInfo = this.getAnswerInfo(startElement);
 
-            if (answerInfo == null) {
-                newAnnotation.user_id = null;
-            } else {
-                newAnnotation.user_id = this.vctrl.selectedUser.id;
-            }
-
             const startoffset = this.getRealStartOffset(this.selectedArea.startContainer, this.selectedArea.startOffset);
             let endOffset = this.selectedArea.endOffset;
             if (innerDiv.childElementCount === 0) {
@@ -774,14 +630,18 @@ export class ReviewController {
             if (answerInfo != null) {
                 newAnnotation.answer_id = answerInfo.id;
             }
-
+            const ann = await this.addAnnotation(
+                newAnnotation,
+                {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
+                velp,
+            );
             if (this.selectedElement != null) {
-                this.addAnnotationToElement(this.selectedElement, newAnnotation, false, "Added also margin annotation");
+                this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.LoadingExisting, "Added also margin annotation");
             }
-            this.addAnnotationToCoord(this.selectedArea, newAnnotation, true);
+            this.addAnnotationToCoord(this.selectedArea, ann, AnnotationAddReason.AddingNew);
             await angularWait();
 
-            const nodeNums = this.getNodeNumbers(this.selectedArea.startContainer, newAnnotation.id, innerDiv);
+            const nodeNums = this.getNodeNumbers(this.selectedArea.startContainer, ann.id, innerDiv);
             coord = {
                 start: {
                     par_id: parelement.id,
@@ -800,8 +660,14 @@ export class ReviewController {
                     node: nodeNums[1],
                 },
             };
-            this.annotations.push({...newAnnotation, coord});
-            this.annotationids[newAnnotation.id] = newAnnotation.id;
+            const saved = await updateAnnotationServer({
+                id: ann.id,
+                ...ann.getEditableValues(),
+                coord,
+            });
+            if (saved.ok) {
+                this.refreshAnnotation(saved.result);
+            }
 
             this.selectedArea = undefined;
 
@@ -823,26 +689,28 @@ export class ReviewController {
             if (answerInfo != null) {
                 newAnnotation.answer_id = answerInfo.id;
             }
-
-            this.addAnnotationToElement(this.selectedElement, newAnnotation, true, "No coordinate found");
-            this.annotationids[newAnnotation.id] = newAnnotation.id;
+            const ann = await this.addAnnotation(newAnnotation, coord, velp);
+            this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.AddingNew, "No coordinate found");
         } else {
             throw new Error("selectedArea and selectedElement were both null");
         }
+    }
 
-        if (!velp.used) {
-            velp.used = 1;
-        } else {
-            velp.used += 1;
-        }
-
-        this.annotationsAdded = true;
-
-        const json = await to($http.post<IAnnotation>("/add_annotation", {...newAnnotation, coord}));
+    private async addAnnotation(newAnnotation: NewAnnotation, coord: IAnnotationInterval, velp: IVelp) {
+        const json = await to($http.post<object>("/add_annotation", {
+            answer_id: newAnnotation.answer_id,
+            coord: coord,
+            doc_id: this.vctrl.item.id,
+            points: velp.points,
+            velp_id: newAnnotation.velp.id,
+            visible_to: velp.visible_to,
+        }));
         if (!json.ok) {
-            return;
+            throw Error(json.result.data.error);
         }
-        this.annotationids[newAnnotation.id] = json.result.data.id;
+        const ann = deserialize(json.result.data, Annotation);
+        this.annotations.push(ann);
+        return ann;
     }
 
     getAnswerBrowserFromPluginLoader(first: Element) {
@@ -1056,54 +924,26 @@ export class ReviewController {
     }
 
     /**
-     * Gets the comments of the given annotation.
-     * @param id - Annotation ID
-     * @returns Object - Annotation
-     */
-    getAnnotation(id: number): IAnnotation | undefined {
-        for (const a of this.annotations) {
-            if (id === a.id) {
-                return a;
-            }
-        }
-    }
-
-    /**
      * Creates the actual (pop over) annotation element.
-     * @param annotation - Annotation info
-     * @param show - Whether to show the annotation on creation or not
-     * @returns {Element} - Annotation element
      */
-    createPopOverElement(annotation: IAnnotationCoordless, show: boolean): HTMLElementTagNameMap["span"] {
+    createPopOverElement(annotation: Annotation, reason: AnnotationAddReason, placement: AnnotationPlacement) {
         const element = document.createElement("annotation");
 
-        const velpData = this.getVelpById(annotation.velp);
-
-        let velpContent;
-
-        if (velpData != null) {
-            velpContent = velpData.content;
-        } else {
-            velpContent = annotation.content;
+        const bindings: IAnnotationBindings = {
+            reason,
+            placement,
+            annotation,
+            defaultcomment: reason == AnnotationAddReason.AddingNew ? this.getVelpById(annotation.velp)!.default_comment : "",
+        };
+        const scope = Object.assign(this.scope.$new(true), bindings);
+        for (const k of Object.keys(bindings)) {
+            element.setAttribute(`bind-${k}`, k);
         }
-
-        if (annotation.default_comment == null) {
-            annotation.default_comment = "";
-        }
-
-        if (annotation.color == null) {
-            annotation.color = "";
-        }
-
-        element.setAttribute("velp", velpContent);
-        element.setAttribute("show-str", show.toString());
-
-        element.setAttribute("annotationdata", JSON.stringify(annotation));
 
         // The getNodeNumbers method uses aid attribute, so we include that. Otherwise it's not needed.
-        element.setAttribute("aid", stringOrNull(annotation.id));
+        element.setAttribute("aid", annotation.id.toString());
 
-        return element;
+        return {element, scope};
     }
 
     /**
@@ -1112,7 +952,7 @@ export class ReviewController {
      * @param annotation - Annotation to be showed.
      * @param scrollToAnnotation Whether to scroll to annotation if it is not in viewport.
      */
-    async toggleAnnotation(annotation: IAnnotation, scrollToAnnotation: boolean) {
+    async toggleAnnotation(annotation: Annotation, scrollToAnnotation: boolean) {
         const parent = document.getElementById(annotation.coord.start.par_id);
         if (parent == null) {
             return;
@@ -1122,11 +962,11 @@ export class ReviewController {
         // if it exists.
         const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end) ? "t" : "m";
         let actrl = this.vctrl.getAnnotation(prefix + annotation.id);
-        if (!annotation.answer_id && !actrl) {
+        if (!annotation.answer && !actrl) {
             actrl = this.vctrl.getAnnotation("m" + annotation.id);
         }
         if (actrl) {
-            if ((annotation.coord.start == null || actrl.show || !annotation.user_id)) {
+            if ((annotation.coord.start == null || actrl.show || !annotation.answer)) {
                 actrl.toggleAnnotationShow();
                 if (scrollToAnnotation && actrl.show) {
                     actrl.scrollToIfNotInViewport();
@@ -1135,7 +975,7 @@ export class ReviewController {
             }
         }
 
-        if (!annotation.answer_id) {
+        if (!annotation.answer) {
             return;
         }
         // Find answer browser and its scope
@@ -1162,23 +1002,23 @@ export class ReviewController {
                 return;
             }
         }
-        if (this.vctrl.selectedUser.id !== annotation.user_id) {
+        const uid = annotation.answer.users[0].id;
+        if (this.vctrl.selectedUser.id !== uid) {
             for (const u of this.vctrl.users) {
-                if (u.user.id === annotation.user_id) {
+                if (u.user.id === uid) {
                     this.vctrl.changeUser(u.user, false);
                     break;
                 }
             }
         }
 
-        if (!(ab.review && ab.selectedAnswer && ab.selectedAnswer.id === annotation.answer_id)) {
+        if (!(ab.review && ab.selectedAnswer && ab.selectedAnswer.id === annotation.answer.id)) {
             // If review is false, setting review to true will eventually update the answer,
             // and we don't want to do it twice. Therefore setAnswerById shall only update the answer if review
             // is already true.
-            ab.setAnswerById(annotation.answer_id, ab.review);
+            await ab.setAnswerById(annotation.answer.id, ab.review);
             ab.review = true;
         }
-
         const actrl2 = await this.vctrl.getAnnotationAsync(prefix + annotation.id);
         if (!actrl2) {
             return;

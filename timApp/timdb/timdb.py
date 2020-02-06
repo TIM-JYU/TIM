@@ -5,7 +5,6 @@ from time import sleep
 
 from timApp.timdb.sqa import db
 from timApp.util.logger import log_info, log_debug, log_error, log_warning
-from timApp.velp.annotations import Annotations
 from timApp.velp.velpgroups import VelpGroups
 from timApp.velp.velps import Velps
 
@@ -54,7 +53,6 @@ class TimDb:
         self.db = None
         self.velps = None
         self.velp_groups = None
-        self.annotations = None
 
     def __getattribute__(self, item):
         """Used to open TimDb connection lazily."""
@@ -92,8 +90,6 @@ class TimDb:
         self.velps = Velps(self.db, self.files_root_path, 'velps', self.current_user_name, self.session)
         self.velp_groups = VelpGroups(self.db, self.files_root_path, 'velp_groups',
                                       self.current_user_name, self.session)
-        self.annotations = Annotations(self.db, self.files_root_path, 'annotations',
-                                       self.current_user_name, self.session)
 
     def get_pg_connections(self):
         """Returns the number of clients currently connected to PostgreSQL."""

@@ -664,12 +664,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    setAnswerById(id: number, updateImmediately: boolean) {
+    async setAnswerById(id: number, updateImmediately: boolean) {
         for (const f of this.filteredAnswers) {
             if (f.id === id) {
                 this.selectedAnswer = f;
                 if (updateImmediately) {
-                    this.changeAnswer();
+                    await this.changeAnswer();
                 }
                 break;
             }

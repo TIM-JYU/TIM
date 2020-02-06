@@ -348,164 +348,34 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     right: 0;
 }
 
-annotation {
-    display: inline-block;
-}
-
-.annotation-element {
-    display: inline;
-    position: relative;
-}
-
-.annotation {
-    cursor: pointer;
-}
-
-.annHeader {
-    font-size: 1.5rem;
-}
-
-.comment-info {
-    display: inline-block;
-}
-
-.annotation-info{
-    /*line-height: 20px;*/
-    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-    font-size: 1.3rem;
-    color: black;
-    font-style: normal;
-    word-break: normal;
-    font-weight: normal;
-    text-decoration: none;
-    text-align: left;
-    white-space: normal;
-    min-height: 5em;
-    width: 18em;
-    position: absolute;
-    display: inline-block;
-    padding: 0.5em 0.75em;
-    top: 1.25em;
-    -webkit-box-shadow: 2px 6px 16px -5px rgba(0,0,0,0.6);
-    -moz-box-shadow: 2px 6px 16px -5px rgba(0,0,0,0.6);
-    box-shadow: 2px 6px 16px -5px rgba(0,0,0,0.6);
-}
-.annotationVisibleText{
-    font-size: 0.9rem;
-}
-
-.annotation-info em {
-    font-size: 0.9em;
-}
-
 label.disabled {
     color: grey;
 }
 
-.annotation-info .comments li{
-    width: 100%;
-    font-size: 0.9em;
-    margin-bottom: 0.5em;
+.emphasise {
+    &.default {
+        background: gainsboro;
+    }
 
-}
+    &.positive {
+        background: palegreen;
+    }
 
-.annotation-info ul.comments {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
+    &.neutral {
+        background: khaki;
+    }
 
-.annotation-info p {
-  /*  padding: 0.5em 0;*/
-    margin: 0;
-}
+    &.negative {
+        background: lightpink;
+    }
 
-.annotation-info input[type="number"], .annotation-info textarea {
-  background: transparent;
-}
+    &.new {
+        background: lightskyblue;
+    }
 
-.annotation-info input[type="color"] {
-    background: transparent;
-    cursor: pointer;
-}
-
-.annotation-info input[type="number"]{
-    width: 4em;
-    border: 0;
-}
-
-.annotation-info select{
-    width:50%;
-}
-
-.annotation-info textarea {
-    width: 100%;
-    margin-top: 0.6em;
-    font-size: 0.9em;
-    resize: vertical;
-}
-
-.annotation-info .username {
-    font-size: 0.9rem;
-}
-
-.annotation-info .timestamp {
-    font-size: 0.9rem;
-    color: grey;
-}
-
-.annotation-info .popover.left > .arrow {
-    display: none;
-}
-
-.annotation-info .popover {
-    width: 25em;
-}
-
-.annTopSection {
-    line-height: 1.15em;
-}
-
-.annqmark {
-    margin-left: 0.2rem;
-    margin-top: 0.1rem;
-}
-
-.closeAnn {
-    float: right;
-}
-
-.delAnnotation {
-    float: right;
-    margin-top: 9px;
-}
-
-.saveChanges {
-    float: left;
-}
-
-.emphasise.default {
-    background: gainsboro;
-}
-
-.emphasise.positive {
-    background: palegreen;
-}
-
-.emphasise.neutral {
-    background: khaki;
-}
-
-.emphasise.negative {
-    background: lightpink;
-}
-
-.emphasise.new {
-    background: lightskyblue;
-}
-
-.emphasise.inactive {
-    background: whitesmoke;
+    &.inactive {
+        background: whitesmoke;
+    }
 }
 
 .clickable-icon {
@@ -523,39 +393,4 @@ label.disabled {
 
 #resetAllSelBtn {
     margin-top: 1em;
-}
-
-.velpSummary {
-  /*  position: fixed;
-    max-width: 20em;*/
-    word-wrap: break-word;
-    /*right: 0;*/
-    top: 50px;
-    /*border: 1px solid gainsboro;
-    background: white;
-    z-index: 100000;
-    overflow-y: auto;
-    padding: 0.5em;
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;*/
-}
-
-.velpSummary table {
-    margin-top: 1.3em;
-    margin-bottom: 2em;
-    margin-left: 0;
-    width: 98%;
-  /*  border: 1px solid gainsboro;*/
-}
-
-.summCheckbox {
-    border-right: 0;
-}
-
-.summSecColumn {
-    border-left: 0;
-}
-
-.summThiColumn {
-    text-align: center;
 }
