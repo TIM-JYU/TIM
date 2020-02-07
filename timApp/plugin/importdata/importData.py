@@ -1,10 +1,9 @@
 """
 A plugin for importing data to TIM fields.
 """
-import os
+from dataclasses import dataclass, asdict
 from typing import Union, List
 
-from dataclasses import dataclass, asdict
 from flask import jsonify, render_template_string
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
@@ -211,27 +210,23 @@ def answer(args: ImportDataAnswerModel):
     rows = []
     wrong = 0
     wrongs = ""
-    users = {}
+    users = {u.name: u for u in User.query.filter(User.name.in_([r.split(separator)[0] for r in data])).all()}
     for r in data:
         if not r:
             continue
         parts = r.split(separator)
         u = None
-        first_time = False
-        error = ": unknown name"
+        error = None
         if len(parts) >= 3:
             uname = parts[0]
-            u = users.get(uname, -1)
-            if u == -1:
-                u = User.get_by_name(uname)
-                users[uname] = u
-                first_time = True
+            u = users.get(uname)
+            if not u:
+                error = ": unknown name"
         else:
             error = ": too few parts"
-        if not u:
-            if first_time:
-                wrong += 1
-                wrongs += "\n" + r + error
+        if error:
+            wrong += 1
+            wrongs += "\n" + r + error
             continue
         uid = u.id
         ur = {'user': uid, 'fields': {}}

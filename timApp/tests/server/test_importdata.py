@@ -48,9 +48,9 @@ return ["x;y;z", "a;b;c"];
                 fields=['x=a', 'y=b', '*'])
 
         imp_200('', {'result': 'Imported 0'})
-        imp_200('x', {'result': 'Imported 0'})
+        imp_200('x', {'result': 'Imported 0\nWrong lines: 1\n\nx: too few parts'})
         imp_200('x;x;x', {'result': 'Imported 0\nWrong lines: 1\n\nx;x;x: unknown name'})
-        imp_200('x;x', {'result': 'Imported 0'})
+        imp_200('x;x', {'result': 'Imported 0\nWrong lines: 1\n\nx;x: too few parts'})
         imp_200('testuser1;a;x', {'result': 'Imported 1'})
         imp_200('testuser1;a;x;b;y', {'result': 'Imported 1'})
         imp_200('testuser1;a;x\ntestuser1;b;y', {'result': 'Imported 2'})
