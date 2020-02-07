@@ -1571,7 +1571,7 @@ class SendGradeTest(SendGradeTestBase):
                 ],
                 'assessment_errors': [
                     {
-                        'message': 'Sisu: Voimassaolevaa opinto-oikeutta ei löytynyt',
+                        'message': 'Sisu: Aikaisempi vahvistettu suoritus (HYV, 3 op)',
                         'assessment': {
                             'user': test_3,
                             'completionCredits': 2,
@@ -1586,7 +1586,12 @@ class SendGradeTest(SendGradeTestBase):
                 'default_selection': [],
             },
             {'body': {'assessments': {
-                '1': {'userName': {'code': 400003, 'reason': 'Voimassaolevaa opinto-oikeutta ei löytynyt'}}}}},
+                '1': {'userName': {
+                    'code': 40009,
+                    'reason': 'Aikaisempi vahvistettu suoritus',
+                    'credits': 3,
+                    'gradeId': 'HYV',
+                }}}}},
             207,
         )
         self.check_send_grade_result(

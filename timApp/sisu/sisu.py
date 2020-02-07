@@ -394,11 +394,16 @@ class SisuError(Exception):
 class PostAssessmentsErrorValue:
     code: int
     reason: str
+    credits: Optional[int] = None
+    gradeId: Optional[str] = None
+
+
+AssessmentErrors = Dict[str, PostAssessmentsErrorValue]
 
 
 @dataclass
 class PostAssessmentsBody:
-    assessments: Dict[int, Dict[str, PostAssessmentsErrorValue]]
+    assessments: Dict[int, AssessmentErrors]
 
 
 @dataclass
@@ -466,11 +471,6 @@ class CandidateAssessment:
     @property
     def is_fail_grade(self):
         return self.gradeId in ('HYL', '0')
-
-    def is_new_or_changed(self):
-        return (not self.sentGrade or
-                self.gradeId != self.sentGrade or
-                maybe_to_str(self.completionCredits) != maybe_to_str(self.sentCredit)) and not self.is_fail_grade
 
     @property
     def is_passing_grade(self):
@@ -597,7 +597,7 @@ def send_grades_to_sisu(
         users_to_update = set()
     errs = [
         {
-            'message': 'Sisu: ' + ', '.join(x.reason for x in v.values()),
+            'message': 'Sisu: ' + ', '.join(list_reasons(v)),
             'assessment': assessments[k],
         }
         for k, v in pr.body.assessments.items()
@@ -609,6 +609,14 @@ def send_grades_to_sisu(
         'assessment_errors': all_errors,
         'default_selection': sorted(list(users_to_update - error_users)),
     }
+
+
+def list_reasons(codes: AssessmentErrors):
+    for k, v in codes.items():
+        if v.code == 40009 and v.gradeId and v.credits:
+            yield f'{v.reason} ({v.gradeId}, {v.credits} op)'
+        else:
+            yield v.reason
 
 
 def get_sisu_assessments(
