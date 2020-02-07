@@ -1,11 +1,10 @@
 """
 TimMenu-plugin.
 """
-import os
 import uuid
+from dataclasses import dataclass, asdict
 from typing import Union, Optional
 
-from dataclasses import dataclass, asdict
 from flask import jsonify, render_template_string
 from marshmallow.utils import missing
 
@@ -13,9 +12,9 @@ from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
     Missing, create_blueprint
 from timApp.document.timjsonencoder import TimJsonEncoder
+from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.tim_app import csrf
-from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
 
 
 @dataclass
@@ -143,7 +142,7 @@ def decide_menu_level(index: int, previous_level: int,  level_indentations, max_
     :param max_level: Level ceiling; further indentations go into the same menu level.
     :return: Menu level decided by indentation.
     """
-    #TODO: Allow no max_level when recursive menu is implemented.
+    # TODO: Allow no max_level when recursive menu is implemented.
     for ind in level_indentations:
         if ind.is_this_level(index):
             return ind.level
@@ -302,19 +301,18 @@ def render_static_timmenu(m: TimMenuHtmlModel):
         **asdict(m.markup),
     )
 
+
 TimMenuHtmlSchema = class_schema(TimMenuHtmlModel)
 
 
 timMenu_plugin = create_blueprint(__name__, 'timMenu', TimMenuHtmlSchema, csrf)
 
+
 @timMenu_plugin.route('/reqs/')
 @timMenu_plugin.route('/reqs')
 def reqs():
-    """
-    Introducing templates for TimMenu-plugin.
-    Note: selecting the whole line doesn't work with underscore in some devices, so
-    camel case is used for parts meant to be replaced by the user.
-    """
+    # Note: selecting the whole line doesn't work with underscore in some devices, so
+    # camel case is used for parts meant to be replaced by the user.
     templates = ["""
 ``` {plugin="timMenu" .hidden-print}
 openingSymbol: "▼"
@@ -447,13 +445,10 @@ menu: |!!
                 ],
             },
         ]
-    if os.environ.get('SHOW_TEMPLATES', "True") == "False":
-        editor_tabs = None
     return jsonify({
         "js": ["timMenu"],
         "multihtml": True,
         "multimd": True,
         'editor_tabs': editor_tabs,
-        #"default_automd": True,
     },
     )

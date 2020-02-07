@@ -9,8 +9,9 @@ import warnings
 from base64 import b64encode
 from functools import lru_cache
 from typing import Union, Optional, List, Dict, Tuple, Any
+from urllib.parse import urlparse
 
-from flask import Response
+from flask import Response, current_app
 from flask import session
 from flask.testing import FlaskClient
 from lxml import html
@@ -27,6 +28,8 @@ from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_N
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
 from timApp.item.routes import create_item_direct, CreateItemModel
+from timApp.plugin import containerLink
+from timApp.plugin.containerLink import do_request
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.sqa import db
@@ -67,7 +70,7 @@ def get_content(element: HtmlElement, selector: str = '.parContent') -> List[str
     return [r.text_content().strip() for r in element.cssselect(selector)]
 
 
-def get_cookie_value(resp, key: str) -> Optional[str]:
+def get_cookie_value(resp: Response, key: str) -> Optional[str]:
     """
     Get value of the cookie with given key.
     :param resp: Response.
@@ -76,9 +79,9 @@ def get_cookie_value(resp, key: str) -> Optional[str]:
     """
     cookies = resp.headers.getlist('Set-Cookie')
     for cookie in cookies:
-        matches = re.findall(f"{key}=\d+;", cookie)
-        if len(matches) > 0:
-            return re.findall(f"{key}=\d+;", cookie)[0].replace(f"{key}=", "", 1)[0:-1]
+        match = re.match(f"{key}=(?P<value>\d+);", cookie)
+        if match:
+            return match.group('value')
     return None
 
 
@@ -193,6 +196,7 @@ class TimRouteTest(TimDbTest):
                 headers: Optional[List[Tuple[str, str]]] = None,
                 xhr=True,
                 auth: Optional[BasicAuthParams] = None,
+                force_return_text=False,
                 **kwargs) -> Union[Response, str, Dict]:
         """Performs a request.
 
@@ -242,6 +246,8 @@ class TimRouteTest(TimDbTest):
             self.assertEqual(expect_cookie[1], get_cookie_value(resp, expect_cookie[0]))
         resp_data = resp.get_data(as_text=is_textual)
         if not is_textual:
+            return resp_data
+        if force_return_text:
             return resp_data
         if expect_status >= 400 and json_key is None and (isinstance(expect_content, str) or isinstance(expect_contains, str)):
             json_key = 'error'
@@ -497,15 +503,21 @@ class TimRouteTest(TimDbTest):
 
     def post_answer(self, plugin_type, task_id, user_input,
                     save_teacher=False, teacher=False, user_id=None, answer_id=None, ref_from=None,
+                    expect_content=None, expect_status=200,
                     **kwargs):
-        return self.json_put(f'/{plugin_type}/{task_id}/answer/',
-                             {"input": user_input,
-                              "ref_from": {'docId': ref_from[0], 'par': ref_from[1]} if ref_from else None,
-                              "abData": {"saveTeacher": save_teacher,
-                                         "teacher": teacher,
-                                         "userId": user_id,
-                                         "answer_id": answer_id,
-                                         "saveAnswer": True}}, **kwargs)
+        return self.json_put(
+            f'/{plugin_type}/{task_id}/answer/',
+            {"input": user_input,
+             "ref_from": {'docId': ref_from[0], 'par': ref_from[1]} if ref_from else None,
+             "abData": {"saveTeacher": save_teacher,
+                        "teacher": teacher,
+                        "userId": user_id,
+                        "answer_id": answer_id,
+                        "saveAnswer": True}},
+            expect_content=expect_content,
+            expect_status=expect_status,
+            **kwargs,
+        )
 
     def post_answer_no_abdata(self, plugin_type, task_id, user_input, ref_from=None, **kwargs):
         return self.json_put(f'/{plugin_type}/{task_id}/answer/',
@@ -892,6 +904,38 @@ class TimRouteTest(TimDbTest):
         first = anss[0]
         self.assertEqual(content, first.content_as_json[content_field])
         return first
+
+
+class TimPluginFix(TimRouteTest):
+    """Unused class. This was a test whether local plugins could be made to work without BrowserTest class.
+    """
+    def setUp(self):
+        super().setUp()
+        # Some plugins live in TIM container, which means we cannot use the requests library to call those plugins
+        # because there is no real server running (it is just the test client).
+        # Here we replace the request method in containerLink so that all such requests are redirected
+        # to the test client.
+        def test_do_request(method: str, url: str, data, params, headers, read_timeout):
+            parsed = urlparse(url)
+            if parsed.hostname != 'localhost':
+                return do_request(method, url, data, params, headers, read_timeout)
+            r = self.request(
+                url=parsed.path,
+                method=method,
+                headers=[(k, v) for k, v in headers.items()] if headers else None,
+                data=data,
+                query_string=params,
+                force_return_text=True,
+                follow_redirects=True,
+            )
+            testclient.__exit__(None, None, None)
+            return r
+
+        containerLink.plugin_request_fn = test_do_request
+
+    def tearDown(self):
+        super().tearDown()
+        containerLink.plugin_request_fn = do_request
 
 
 if __name__ == '__main__':

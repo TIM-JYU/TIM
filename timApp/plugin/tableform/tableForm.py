@@ -3,12 +3,10 @@ TIM example plugin: a tableFormndrome checker.
 """
 import json
 import os
+from dataclasses import dataclass, asdict, field
 from typing import Union, List, Optional, Dict, Any
 
-from dataclasses import dataclass, asdict, field
 from flask import jsonify, render_template_string, request, abort
-from flask import stream_with_context
-
 from marshmallow.utils import missing
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
@@ -23,7 +21,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
-from timApp.plugin.jsrunner import jsrunner_run
+from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
 from timApp.plugin.taskid import TaskId
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
@@ -31,7 +29,8 @@ from timApp.sisu.sisu import get_potential_groups
 from timApp.tim_app import csrf
 from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import csv_response, csv_string, json_response, text_response
+from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.responsehelper import csv_string, json_response, text_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter
 from timApp.util.utils import get_boolean, fin_timezone
 
@@ -203,6 +202,7 @@ def render_static_table_form(m: TableFormHtmlModel):
         **asdict(m.markup),
     )
 
+
 TableFormHtmlSchema = class_schema(TableFormHtmlModel)
 TableFormAnswerSchema = class_schema(TableFormAnswerModel)
 
@@ -220,6 +220,7 @@ class GenerateCSVModel:
     removeDocIds: Union[bool, Missing] = missing
     emails: Union[bool, Missing] = missing
     reportFilter: Union[str, Missing] = ""
+
 
 GenerateCSVSchema = class_schema(GenerateCSVModel)
 
@@ -270,8 +271,11 @@ def gen_csv(args: GenerateCSVModel):
     csv = csv_string(data, 'excel', separator)
     output = ''
     if args.reportFilter:
-        params = {'code': args.reportFilter, 'data': csv}
-        csv, output = jsrunner_run(params)
+        params = JsRunnerParams(code=args.reportFilter, data=csv)
+        try:
+            csv, output = jsrunner_run(params)
+        except JsRunnerError as e:
+            raise RouteException('Error in JavaScript: ' + str(e)) from e
     return text_response(output+csv)
 
 """
@@ -285,7 +289,6 @@ def gen_csv(args: GenerateCSVModel):
 
 @tableForm_plugin.route('/fetchTableData')
 def fetch_rows():
-    # r = {}
     curr_user = get_current_user_object()
     taskid = request.args.get("taskid")
     tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
@@ -440,7 +443,6 @@ def answer(args: TableFormAnswerModel):
 @tableForm_plugin.route('/reqs/')
 @tableForm_plugin.route('/reqs')
 def reqs():
-    """Introducing templates for tableForm plugin"""
     templates = ["""
 ``` {#tableForm_table plugin="tableForm"}
 groups: 
@@ -523,8 +525,6 @@ reportButton: "Name your generate report button here"
                 ],
             },
         ]
-    if os.environ.get('SHOW_TEMPLATES', "True") == "False":
-        editor_tabs = None
     return jsonify({
         "js": ["tableForm"],
         "multihtml": True,

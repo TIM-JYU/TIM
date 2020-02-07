@@ -195,7 +195,6 @@ goals:
 @goaltable_route.route('/reqs/')
 @goaltable_route.route('/reqs')
 def goaltable_reqs():
-    """Introducing templates for cbfield plugin"""
     return jsonify({
         "js": ["/field/js/build/goaltable.js"],
         "css": ["/field/css/field.css"],

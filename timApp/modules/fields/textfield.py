@@ -119,7 +119,6 @@ def answer(args: TextfieldAnswerModel):
 @textfield_route.route('/reqs/')
 @textfield_route.route('/reqs')
 def reqs():
-    """Introducing templates for textfield plugin"""
     templates = [
 """``` {#PLUGINNAMEHERE plugin="textfield"}
 header:          # otsikko, tyhjä = ei otsikkoa

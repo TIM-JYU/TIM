@@ -1,5 +1,5 @@
 """
-TIM example plugin: a ImportData
+A plugin for importing data to TIM fields.
 """
 import os
 from typing import Union, List
@@ -13,10 +13,11 @@ from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
     GenericAnswerModel, Missing, \
     create_blueprint
-from timApp.plugin.jsrunner import jsrunner_run
+from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.util.utils import widen_fields
+
 
 @dataclass
 class ImportDataStateModel:
@@ -96,18 +97,18 @@ def render_static_import_data(m: ImportDataHtmlModel, s: str):
 ImportDataHtmlSchema = class_schema(ImportDataHtmlModel)
 ImportDataAnswerSchema = class_schema(ImportDataAnswerModel)
 
-
 importData_plugin = create_blueprint(__name__, 'importData', ImportDataHtmlSchema, csrf)
 
-def conv_data_csv(data, field_names, separator):
+
+def conv_data_csv(data: List[str], field_names: List[str], separator: str) -> List[str]:
     """
-    Convert csv format "akankka;1,2,3" to TIM-format ["akankka;d1;1", "akankks;d2;2" ...]
-    using field names.  If there is too less fields on data, only those
-    are used.  If there is more columns in data thatn fields, omit extra columns
-    :param data: data in csv-format to convert
-    :param field_names: list of filednames to use for columns
+    Convert csv format "akankka;1,2,3" to TIM format ["akankka;d1;1", "akankka;d2;2" ...]
+    using field names.  If there are too few fields on data, only those
+    are used.  If there are more columns in data than fields, omit extra columns.
+    :param data: data in CSV format to convert
+    :param field_names: list of fieldnames to use for columns
     :param separator: separator to use to separate items
-    :return: converted data in TIM-format
+    :return: converted data in TIM format
     """
     field_names = widen_fields(field_names)
     res = []
@@ -117,20 +118,20 @@ def conv_data_csv(data, field_names, separator):
             continue
         row = f"{parts[0]}"
         for i in range(1, len(parts)):
-            if i-1 >= len(field_names):
+            if i - 1 >= len(field_names):
                 break
-            name = field_names[i-1].strip()
+            name = field_names[i - 1].strip()
             row += f"{separator}{name}{separator}{parts[i]}"
         res.append(row)
     return res
 
 
-def conv_data_field_names(data, field_names, separator):
+def conv_data_field_names(data: List[str], field_names: List[str], separator: str) -> List[str]:
     """
-    Convert field names on TIM-format akankka;demo;2 so that demo is changes if
-    found from field_names
+    Converts field names on TIM format akankka;demo;2 so that demo is changed if
+    found from field_names.
     :param data: data to convert
-    :param field_names: lits off fileds ana aliases in format "demo=d1"
+    :param field_names: list of fields and aliases in format "demo=d1"
     :param separator: separator for items
     :return: converted data
     """
@@ -153,15 +154,15 @@ def conv_data_field_names(data, field_names, separator):
         if len(parts) < 3:
             continue
         row = ""
-        for i in range(1, len(parts)-1, 2):
+        for i in range(1, len(parts) - 1, 2):
             tname = parts[i]
-            name = fconv.get(tname, None)
+            name = fconv.get(tname)
             if not name:
                 if use_all:
                     name = tname
                 else:
                     continue
-            value = parts[i+1]
+            value = parts[i + 1]
             row += f"{separator}{name}{separator}{value}"
 
         if row:
@@ -169,7 +170,7 @@ def conv_data_field_names(data, field_names, separator):
     return res
 
 
-def convert_data(data, field_names, separator):
+def convert_data(data: List[str], field_names: List[str], separator: str):
     """
     If there is field_names, then convert data either by changing names (field_names has =)
     or csv data
@@ -178,11 +179,11 @@ def convert_data(data, field_names, separator):
     :param separator: separator to use between items
     :return: converted data or data as it is
     """
-    if not field_names or len(field_names) <= 0:
+    if not field_names:
         return data
     f0 = field_names[0]
-    if f0.find("=") > 0: # convert names
-       return conv_data_field_names(data, field_names, separator)
+    if f0.find("=") > 0:  # convert names
+        return conv_data_field_names(data, field_names, separator)
     return conv_data_csv(data, field_names, separator)
 
 
@@ -193,21 +194,17 @@ def answer(args: ImportDataAnswerModel):
     sdata = args.input.data
     defaultseparator = args.markup.separator or ";"
     separator = args.input.separator or defaultseparator
-    # fields_req_exps = args.markup.fieldsReqExps
-    # user_id_field = args.markup.userIdField or -1
-    data = sdata.split("\n")
+    data = sdata.splitlines()
     output = ""
     field_names = args.input.fields
-    """
-    if separator != ',' and field_names:
-        for i in range(0, len(field_names)):
-            fn = field_names[i]
-            fn = fn.replace(separator, ';')
-    """
-    data = convert_data(data, field_names, separator)
+    if field_names:
+        data = convert_data(data, field_names, separator)
     if args.markup.prefilter:
-        params = {'code': args.markup.prefilter, 'data': data}
-        data, output = jsrunner_run(params)
+        params = JsRunnerParams(code=args.markup.prefilter, data=data)
+        try:
+            data, output = jsrunner_run(params)
+        except JsRunnerError as e:
+            return jsonify({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
     did = int(args.taskID.split(".")[0])
     if args.markup.docid:
         did = args.markup.docid
@@ -237,10 +234,10 @@ def answer(args: ImportDataAnswerModel):
                 wrongs += "\n" + r + error
             continue
         uid = u.id
-        ur = { 'user': uid, 'fields': {}}
-        for i in range(1, len(parts)-1, 2):
+        ur = {'user': uid, 'fields': {}}
+        for i in range(1, len(parts) - 1, 2):
             tname = parts[i]
-            value = parts[i+1]
+            value = parts[i + 1]
             if tname.find('.') < 0:
                 tname = f"{did}.{tname}"
             ur['fields'][tname] = value
@@ -251,9 +248,9 @@ def answer(args: ImportDataAnswerModel):
 
     if wrong:
         wrongs = "\nWrong lines: " + str(wrong) + "\n" + wrongs
-    jsonresp = { 'ignoreMissing': args.markup.ignoreMissing,
-                 'savedata': rows,
-                 'web' : { 'result': output + "Imported " + str(len(rows)) + wrongs} }
+    jsonresp = {'ignoreMissing': args.markup.ignoreMissing,
+                'savedata': rows,
+                'web': {'result': output + "Imported " + str(len(rows)) + wrongs}}
 
     save = {}
 
@@ -272,39 +269,33 @@ def answer(args: ImportDataAnswerModel):
         save['fields'] = field_names
     if save:
         jsonresp["save"] = save
-    # ret = handle_jsrunner_response(jsonresp, result, current_doc)
-    # save = saveRows
-    # result["save"] = save
     return jsonify(jsonresp)
 
 
 @importData_plugin.route('/reqs/')
 @importData_plugin.route('/reqs')
 def reqs():
-    """Introducing templates for ImportData plugin"""
     templates = ["""
 ``` {#ImportData plugin="importData"}
 buttonText: Import
 ```"""]
     editor_tabs = [
-            {
-                'text': 'Fields',
-                'items': [
-                    {
-                        'text': 'Save/Import',
-                        'items': [
-                            {
-                                'data': templates[0].strip(),
-                                'text': 'Import data',
-                                'expl': 'Import data from text',
-                            },
-                        ],
-                    },
-                ],
-            },
-        ]
-    if os.environ.get('SHOW_TEMPLATES', "True") == "False":
-        editor_tabs = None
+        {
+            'text': 'Fields',
+            'items': [
+                {
+                    'text': 'Save/Import',
+                    'items': [
+                        {
+                            'data': templates[0].strip(),
+                            'text': 'Import data',
+                            'expl': 'Import data from text',
+                        },
+                    ],
+                },
+            ],
+        },
+    ]
     return jsonify({
         "js": ["importData"],
         "multihtml": True,

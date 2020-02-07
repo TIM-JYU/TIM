@@ -102,10 +102,6 @@ class TimDb:
         num_connections = cursor.fetchone()[0]
         return num_connections
 
-    def __del__(self):
-        """Release the database connection when the object is deleted."""
-        self.close()
-
     def commit(self):
         """Commits any changes to the database."""
         db.session.commit()

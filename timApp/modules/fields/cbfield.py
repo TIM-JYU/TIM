@@ -71,7 +71,6 @@ def cb_answer(args: TextfieldAnswerModel):
 @cbfield_route.route('/reqs/')
 @cbfield_route.route('/reqs')
 def cb_reqs():
-    """Introducing templates for cbfield plugin"""
     return jsonify({
         "js": ["/field/js/build/cbfield.js"],
         "css": ["/field/css/field.css"],

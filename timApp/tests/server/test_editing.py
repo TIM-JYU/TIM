@@ -4,7 +4,6 @@ from lxml.html import HtmlElement
 from timApp.auth.accesstype import AccessType
 from timApp.document.docparagraph import DocParagraph
 from timApp.plugin.plugin import Plugin
-from timApp.tests.browser.browsertest import BrowserTest
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 
@@ -341,7 +340,7 @@ test
         self.get(f'/getBlock/{d_id}/{par_ids[2]}')
 
 
-class TimTableEditTest(BrowserTest):
+class TimTableEditTest(TimRouteTest):
     def test_timtable_edit(self):
         self.login_test1()
         d = self.create_doc(initial_par="""

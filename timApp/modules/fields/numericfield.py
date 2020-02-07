@@ -175,7 +175,6 @@ def answer(args: NumericfieldAnswerModel):
 @numericfield_route.route('/reqs/')
 @numericfield_route.route('/reqs')
 def reqs():
-    """Introducing templates for numericfield plugin"""
     templates = ["""``` {#PLUGINNAMEHERE plugin="numericfield"}
 header:          # otsikko, tyhjä = ei otsikkoa
 stem:            # kysymys, tyhjä = ei kysymystä

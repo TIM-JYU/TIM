@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
 import json
+import re
 from functools import lru_cache
 from typing import List
-
-import re
 
 import requests
 from flask import current_app
 
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.markdown.dumboclient import call_dumbo, DumboOptions
-from timApp.plugin.timmenu import timMenu
-from timApp.util.logger import log_warning
 from timApp.plugin.plugin import Plugin, AUTOMD
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
-from timApp.timtypes import DocumentType as Document
-
 from timApp.plugin.timtable import timTable
+from timApp.timtypes import DocumentType as Document
+from timApp.util.logger import log_warning
 
 TIM_URL = ""
 
@@ -72,7 +69,7 @@ def get_plugins():
             # "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/"},
             "graphviz": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/graphviz/"},
             "pali": {"host": "http://" + PALIPLUGIN_NAME + ":5000/"},
-            # TODO: field is just a dummy class to get toute for /field  better solution is needed
+            # TODO: field is just a dummy class to get route for /field - better solution is needed
             "field": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
             "textfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/tf/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
             "cbfield": {"host": "http://" + FIELDPLUGIN_BASE_NAME + ":5000/cb/", REGEXATTRS: TEXTFIELDATTRS, AUTOMDATTRS: True},
@@ -110,22 +107,37 @@ def get_plugin_regex_obj(plugin: str):
 
 def call_plugin_generic(plugin: str, method: str, route: str, data=None, headers=None, params=None):
     plug = get_plugin(plugin)
+    host = plug['host']
+    read_timeout = 30
+    if route == 'multimd' and (plugin == "mmcq" or plugin == "mcq"):  # hack to handle mcq and mmcq in tim by qst
+        plug = get_plugin('qst')
+        host = plug['host'] + plugin + '/'
+    url = host + route + "/"
     try:
-        read_timeout = 30
-        host = plug['host']
-        if route == 'multimd' and (plugin == "mmcq" or plugin == "mcq"):  # hack to handle mcq and mmcq in tim by qst
-            plug = get_plugin('qst')
-            host = plug['host'] + plugin + '/'
-        request = requests.request(method, host + route + "/", data=data,
-                                   timeout=(0.5, read_timeout), headers=headers, params=params)
-        request.encoding = 'utf-8'
-        return request.text
+        return do_request(method, url, data, params, headers, read_timeout)
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:
         log_warning(f'Connection failed to plugin {plugin}: {e}')
-        raise PluginException(f"Could not connect to {plugin}.")
+        raise PluginException(f"Could not connect to {plugin} ({url}).")
     except requests.exceptions.ReadTimeout as e:
         log_warning(f'Read timeout occurred for plugin {plugin} in route {route}: {e}')
         raise PluginException(f"Read timeout occurred when calling {plugin}.")
+
+
+def do_request(method, url, data, params, headers, read_timeout):
+    request = requests.request(
+        method,
+        url,
+        data=data,
+        timeout=(0.5, read_timeout),
+        headers=headers,
+        params=params,
+    )
+    request.encoding = 'utf-8'
+    return request.text
+
+
+# Not used currently.
+plugin_request_fn = do_request
 
 
 def render_plugin(doc: Document, plugin: Plugin, output_format: PluginOutputFormat):
