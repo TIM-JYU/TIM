@@ -52,6 +52,8 @@ module.exports = {
         "@typescript-eslint/no-namespace": "error",
         "@typescript-eslint/no-parameter-properties": "off",
         "@typescript-eslint/no-unnecessary-type-assertion": "error",
+        "@typescript-eslint/no-unnecessary-condition": "off", // TODO enable
+        "@typescript-eslint/no-unnecessary-boolean-literal-compare": "error",
         "@typescript-eslint/no-use-before-declare": "off",
         "@typescript-eslint/no-var-requires": "error",
         "@typescript-eslint/prefer-for-of": "error",
@@ -175,7 +177,6 @@ module.exports = {
                 "rules": {
                     "import-spacing": true,
                     "jsdoc-format": true,
-                    "no-boolean-literal-compare": true,
                     "no-reference-import": true,
                     "no-unsafe-any": true,
                     "one-line": [

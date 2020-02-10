@@ -242,7 +242,7 @@ export interface IEmptyResponse {
 }
 
 export function isEmptyResponse(r: ILectureResponse | ILectureListResponse | IEmptyResponse): r is IEmptyResponse {
-    return (r as IEmptyResponse).empty === true;
+    return (r as IEmptyResponse).empty;
 }
 
 export interface INoUpdatesResponse {
