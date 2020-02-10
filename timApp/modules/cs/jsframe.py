@@ -258,6 +258,7 @@ JSREADYHTML['simpleDrawIO'] = """
 						// localStorage.setItem(name, JSON.stringify({lastModified: new Date(), data: svg}));
 						// localStorage.removeItem('.draft-' + name);
 						draft = null;
+						if ( window.port2 )	window.port2.postMessage({msg:"datasave", data: getData()});
 						close();
 					}
 					else if (msg.event == 'autosave')
@@ -360,5 +361,6 @@ class DrawIO(JSframe):
             data["aspectRatio"] = ma.get("width", 800) / (height * 0.95)
         if not height and ar:
             ma["height"] = ma.get("width", 800) / (ar * 0.95)
+        ma["initListener"] = ma.get("initListener", True)
         super().modify_query()
         return

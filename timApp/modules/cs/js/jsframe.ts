@@ -28,6 +28,7 @@ const JsframeMarkup = t.intersection([
         data: t.any,
         fielddata: t.any,
         fields: t.any,
+        initListener: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -131,6 +132,10 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         if (!this.attrs.forceBrowser && tid) {
             this.viewctrl.addUserChangeListener(tid.docTask(), this);
         }
+        var wnd = this;
+        if ( this.attrs.initListener ) {
+            setTimeout(function() { wnd.addListener(); }, 500);
+        }
     }
 
     async userChanged(user: IUser) {
@@ -173,13 +178,13 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
 
     private communicationJS = `
     <script>
-    let port2;
+    // let port2;
 
     window.addEventListener('message', function(e) {
          if ( e.data.msg === "init" ) {
-            port2 = e.ports[0];
-            port2.onmessage = onMessage;
-            port2.postMessage({msg:"Inited"});
+            window.port2 = e.ports[0];
+            window.port2.onmessage = onMessage;
+            window.port2.postMessage({msg:"Inited"});
          }
     });
 
@@ -189,13 +194,13 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
 
          if ( event.data.msg === "setData" ) {
             setData(event.data.data);
-            port2.postMessage({msg: "Got data!"});
+            window.port2.postMessage({msg: "Got data!"});
          }
          if ( event.data.msg === "getData" ) {
-            port2.postMessage({msg:"data", data: getData()});
+            window.port2.postMessage({msg:"data", data: getData()});
          }
          if ( event.data.msg === "getDataSave" ) {
-            port2.postMessage({msg:"datasave", data: getData()});
+            window.port2.postMessage({msg:"datasave", data: getData()});
          }
     }
 
