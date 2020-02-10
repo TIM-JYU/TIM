@@ -1040,7 +1040,7 @@ timApp.filter("orderByWhenNotEditing", () => {
         let list;
         let reverse = false;
         let order: keyof IVelp = orderStr as keyof IVelp;
-        if (orderStr[0] === "-") {
+        if (orderStr.startsWith("-")) {
             reverse = true;
             order = order.substring(1) as keyof IVelp;
         }

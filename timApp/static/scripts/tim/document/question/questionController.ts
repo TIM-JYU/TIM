@@ -390,7 +390,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             return 0;
         }
         const id = activeObj.id;
-        if (!id || id[0] !== "r") {
+        if (!id || !id.startsWith("r")) {
             return 0;
         }
         const edits = this.element.find(".questiontext");

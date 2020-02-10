@@ -80,6 +80,7 @@ module.exports = {
         "@typescript-eslint/prefer-includes": "error",
         "@typescript-eslint/prefer-nullish-coalescing": "error",
         "@typescript-eslint/prefer-optional-chain": "error",
+        "@typescript-eslint/prefer-string-starts-ends-with": "error",
         "arrow-body-style": "off",
         "arrow-parens": [
             "error",

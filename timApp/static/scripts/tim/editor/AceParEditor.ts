@@ -343,7 +343,7 @@ export class AceParEditor extends BaseParEditor {
         range.start.column -= before.length;
         range.end.column += after.length;
         const word = (this.editor.session.getTextRange(range));
-        return (word.indexOf(before) === 0 && word.lastIndexOf(after) === (word.length - after.length));
+        return (word.startsWith(before) && word.endsWith(after));
     }
 
     @focusAfter
@@ -358,7 +358,7 @@ export class AceParEditor extends BaseParEditor {
         const range = this.editor.getSelection().getRange();
         range.start.column = 0;
         range.end.column = line.length;
-        while (line.charAt(0) === "#") {
+        while (line.startsWith("#")) {
             line = line.substr(1);
         }
         line = line.trim();

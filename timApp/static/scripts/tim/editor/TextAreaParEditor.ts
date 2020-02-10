@@ -218,7 +218,7 @@ export class TextAreaParEditor extends BaseParEditor {
 
             if (outdent) {
                 for (let i = 0; i < lines.length; i++) {
-                    if (lines[i].substring(0, tablength) === tab) {
+                    if (lines[i].startsWith(tab)) {
                         lines[i] = lines[i].substring(tablength);
                     }
                 }
@@ -295,7 +295,7 @@ export class TextAreaParEditor extends BaseParEditor {
         const end = selection.end;
         let line = this.editor.getSelection().text;
         let original = 0;
-        while (line.charAt(0) === "#") {
+        while (line.startsWith("#")) {
             original++;
             line = line.substr(1);
         }
@@ -339,7 +339,7 @@ export class TextAreaParEditor extends BaseParEditor {
         const value = this.getEditorText();
         const selection = this.editor.getSelection();
         const word = value.substring(selection.start - before.length, selection.end + after.length);
-        return (word.indexOf(before) === 0 && word.lastIndexOf(after) === (word.length - after.length));
+        return (word.startsWith(before) && word.endsWith(after));
     }
 
     // Style

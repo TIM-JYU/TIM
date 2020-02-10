@@ -1005,7 +1005,7 @@ ${backTicks}
         let blobs = 0;
         for (const i of items) {
             // TODO: one could inspect if some item contains image name and then use that to name the image
-            if (i.type.indexOf("image") === 0) {
+            if (i.type.startsWith("image")) {
                 const blob = i.getAsFile();
                 if (blob !== null) {
                     this.onFileSelect(blob);

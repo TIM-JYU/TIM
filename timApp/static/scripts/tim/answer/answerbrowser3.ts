@@ -137,7 +137,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
      * @returns {boolean} True if the task id is valid, false otherwise.
      */
     isValidTaskId(taskId: string) {
-        return taskId && taskId.slice(-1) !== "."; // TODO should check more accurately
+        return taskId && !taskId.endsWith("."); // TODO should check more accurately
     }
 
     public pluginObject(): ITimComponent | undefined {
