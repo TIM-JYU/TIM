@@ -3222,6 +3222,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             if (save) {
                 await this.sendDataBlock();
             }
+            this.c();
         } else {
             console.error("timTable.setData: unexpected data format: " + JSON.stringify(data));
         }
