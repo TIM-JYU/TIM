@@ -146,6 +146,7 @@ module.exports = {
         "no-undef-init": "error",
         "no-underscore-dangle": "error",
         "no-unsafe-finally": "error",
+        "no-unsafe-negation": "error",
         "no-unused-expressions": "error",
         "no-unused-labels": "error",
         "no-var": "error",
