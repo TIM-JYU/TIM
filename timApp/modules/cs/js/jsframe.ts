@@ -133,7 +133,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
             this.viewctrl.addUserChangeListener(tid.docTask(), this);
         }
         let wnd = this;
-        if ( this.attrs.initListener && !this.attrsall.preview ) {
+        if (this.attrs.initListener && !this.attrsall.preview) {
             setTimeout(function() { wnd.addListener(); }, 500);
         }
     }
