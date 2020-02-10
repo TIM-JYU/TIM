@@ -270,7 +270,7 @@ export class TagController extends DialogController<{ params: IItem }, {}> {
  * @return Array a1 without any a2 items.
  */
 function arrayDifference<T>(a1: T[], a2: T[]) {
-    return a1.filter((item) => a2.indexOf(item) < 0);
+    return a1.filter((item) => !a2.includes(item));
 }
 
 registerDialogComponent(TagController,

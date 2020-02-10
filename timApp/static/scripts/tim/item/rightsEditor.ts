@@ -44,7 +44,7 @@ interface IPermissionEditResponse {
 }
 
 function isVelpGroupItem(i: IItemWithRights) {
-    return i.path.indexOf("/velp-groups/") >= 0 || i.path.endsWith("/velp-groups");
+    return i.path.includes("/velp-groups/") || i.path.endsWith("/velp-groups");
 }
 
 class RightsEditorController implements IController {

@@ -51,13 +51,13 @@ export function timLogInit(params: string) {
         const key = k[0];
         const val = k[1];
         if (key === "timing") {
-            if (val.indexOf("div") >= 0) {
+            if (val.includes("div")) {
                 timTimingDiv = true;
             }
-            if (val.indexOf("log") >= 0) {
+            if (val.includes("log")) {
                 timTimingLog = true;
             }
-            if (val.indexOf("summary") >= 0) {
+            if (val.includes("summary")) {
                 timTimingSummary = true;
             }
         }

@@ -58,7 +58,7 @@ export class UserService {
     public korppiLogin(addUser: boolean) {
         saveCurrentScreenPar();
         const targetUrl = "/openIDLogin?provider=korppi";
-        const separator = targetUrl.indexOf("?") >= 0 ? "&" : "?";
+        const separator = targetUrl.includes("?") ? "&" : "?";
         const cameFromRaw = "";
         const anchorRaw = window.location.hash.replace("#", "");
         const redirectFn = () => {

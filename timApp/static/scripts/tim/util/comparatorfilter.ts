@@ -61,7 +61,7 @@ export class ComparatorFilter {
             return false;
         }
         // return ( !!numFilterEx.exec(s) ); // eats first match?
-        return "!<=>".indexOf(s[0]) >= 0;
+        return "!<=>".includes(s[0]);
     }
 
     public static makeNumFilter(s: string): ComparatorFilter | null {

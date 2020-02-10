@@ -150,7 +150,7 @@ export class CourseListDialogController extends DialogController<{ params: ICour
                     let isNonExpiredCourse = false;
                     let passesFilter = false;  // Won't be added unless this is true.
                     if (this.filterText.length === 0 ||
-                        d.title.toLowerCase().indexOf(this.filterText.toLowerCase()) > -1) {
+                        d.title.toLowerCase().includes(this.filterText.toLowerCase())) {
                         passesFilter = true;
                     }
                     for (const tag of d.tags) {
@@ -158,7 +158,7 @@ export class CourseListDialogController extends DialogController<{ params: ICour
                             isSameSubject = true;
                         }
                         if (tag.type === TagType.CourseCode && !tagIsExpired(tag)) {
-                            if (tag.name.toLowerCase().indexOf(this.filterText.toLowerCase()) > -1) {
+                            if (tag.name.toLowerCase().includes(this.filterText.toLowerCase())) {
                                 passesFilter = true;
                             }
                             isNonExpiredCourse = true;

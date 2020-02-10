@@ -2973,7 +2973,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             // TODO: For some reason, the index signature of style property is number, so we need a cast.
             // See https://github.com/microsoft/TypeScript/issues/17827
             const k = key as unknown as number;
-            if (stylesNotToClear.indexOf(key) >= 0 || !editInputElement.style[k]) {
+            if (stylesNotToClear.includes(key) || !editInputElement.style[k]) {
                 continue;
             }
             editInputElement.style[k] = "";

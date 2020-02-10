@@ -402,7 +402,7 @@ export class VelpSelectionController implements IController {
             const index = this.velpGroups.indexOf(this.defaultVelpGroup);
             this.velpGroups.splice(index, 1);
 
-            if (this.velpGroups.indexOf(newDefaultVelpGroup) < 0) {
+            if (!this.velpGroups.includes(newDefaultVelpGroup)) {
                 this.velpGroups.push(newDefaultVelpGroup);
             }
 
@@ -866,7 +866,7 @@ export class VelpSelectionController implements IController {
         for (let i = 0; i < velp.velp_groups.length; i++) {
             for (const v of this.velpGroups) {
                 groups.push(v);
-                groups[i].selected = velp.velp_groups.indexOf(v.id) >= 0;
+                groups[i].selected = velp.velp_groups.includes(v.id);
             }
         }
         return groups;
@@ -907,7 +907,7 @@ export class VelpSelectionController implements IController {
         if (velp.velp_groups == null || group.id === null) {
             return false;
         }
-        return velp.velp_groups.indexOf(group.id) >= 0;
+        return velp.velp_groups.includes(group.id);
     }
 
     /**
@@ -959,7 +959,7 @@ timApp.filter("filterByLabels", () => {
             for (let j = 0; j < velps.length; j++) {
 
                 for (const s of selectedLabels) {
-                    if (velps[j].labels != null && velps[j].labels.indexOf(s) !== -1) {
+                    if (velps[j].labels != null && velps[j].labels.includes(s)) {
                         if (!(j in selectedVelps)) {
                             selectedVelps[j] = [velps[j], 1];
                         } else {
@@ -1019,7 +1019,7 @@ timApp.filter("filterByVelpGroups", () => {
             }
 
             for (const c of checkedGroups) {
-                if (v.velp_groups.indexOf(c) >= 0 && selected.indexOf(v) < 0) {
+                if (v.velp_groups.includes(c) && !selected.includes(v)) {
                     selected.push(v);
                 }
             }

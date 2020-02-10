@@ -454,7 +454,7 @@ export class SearchBoxCtrl implements IController {
         if (err.data && tempError.length < 1) {
             // Proxy error data is in raw HTML format, so this is to make it more readable.
             tempError = removeHtmlTags(err.data.toString());
-            if (tempError.indexOf("Proxy Error") > -1) {
+            if (tempError.includes("Proxy Error")) {
                 tempError = tempError.replace("Proxy ErrorProxy Error", "Proxy Error ").
                 replace(".R", ". R").replace("&nbsp;", " ");
             }

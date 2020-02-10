@@ -1144,7 +1144,7 @@ ${backTicks}
                     const isplugin = (ed.editorStartsWith("``` {"));
                     let start = "[File](";
                     let savedir = "/files/";
-                    if (response.data.image || response.data.file.toString().indexOf(".svg") >= 0) {
+                    if (response.data.image || response.data.file.toString().includes(".svg")) {
                         start = "![Image](";
                     }
                     if (response.data.image) {

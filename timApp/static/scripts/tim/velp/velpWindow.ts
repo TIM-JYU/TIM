@@ -191,7 +191,7 @@ export class VelpWindowController implements IController {
         if (label.id == null) {
             return false;
         }
-        return this.velp.labels.indexOf(label.id) >= 0;
+        return this.velp.labels.includes(label.id);
     }
 
     /**
@@ -203,7 +203,7 @@ export class VelpWindowController implements IController {
         if (this.velp.velp_groups == null || group.id == null) {
             return false;
         }
-        return this.velp.velp_groups.indexOf(group.id) >= 0;
+        return this.velp.velp_groups.includes(group.id);
     }
 
     /**

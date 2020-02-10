@@ -57,6 +57,7 @@ module.exports = {
         "@typescript-eslint/prefer-for-of": "error",
         "@typescript-eslint/prefer-function-type": "error",
         "@typescript-eslint/prefer-namespace-keyword": "error",
+        "@typescript-eslint/no-floating-promises": "off", // TODO enable
         "quotes": "off",
         "@typescript-eslint/quotes": [
             "error",
@@ -71,11 +72,12 @@ module.exports = {
             "error",
             "always"
         ],
-        "@typescript-eslint/strict-boolean-expressions": "off",
+        "@typescript-eslint/strict-boolean-expressions": "off", // TODO enable
         "@typescript-eslint/triple-slash-reference": "error",
         "@typescript-eslint/type-annotation-spacing": "error",
         "@typescript-eslint/unbound-method": "off",
         "@typescript-eslint/unified-signatures": "error",
+        "@typescript-eslint/prefer-includes": "error",
         "arrow-body-style": "off",
         "arrow-parens": [
             "error",

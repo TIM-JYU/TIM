@@ -591,8 +591,8 @@ export class AceParEditor extends BaseParEditor {
         if (n < 0) { n = -n; }
         const text = this.getEditorText();
         if (!force) {
-            if (text.indexOf("```") >= 0) { return; }
-            if (text.indexOf("|") >= 0) { return; }
+            if (text.includes("```")) { return; }
+            if (text.includes("|")) { return; }
         }
         const r = wrapText(text, n);
         if (!r.modified) { return; }
