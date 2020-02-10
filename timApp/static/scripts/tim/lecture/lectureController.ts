@@ -341,7 +341,7 @@ export class LectureController {
      * Initializes the window to be lecture view a.k.a. the current user in in lecture.
      * @param response The lecture to be shown.
      */
-    async showLectureView(response: ILectureResponse) {
+    showLectureView(response: ILectureResponse) {
         this.lecture = response.lecture;
         this.isLecturer = response.isLecturer;
 

@@ -715,7 +715,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     ngAfterViewInit() {
-        this.inputSub = this.editInputs.changes.subscribe(async (val: QueryList<ElementRef<HTMLInputElement>>) => {
+        this.inputSub = this.editInputs.changes.subscribe((val: QueryList<ElementRef<HTMLInputElement>>) => {
             if (val.length > 0) {
                 this.updateSmallEditorPosition();
             }

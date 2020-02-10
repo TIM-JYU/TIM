@@ -212,8 +212,8 @@ registerDialogComponent(MessageDialogController,
         `,
     });
 
-export async function showMessageDialog(message: string) {
-    return showDialog(MessageDialogController, {message: () => message});
+export function showMessageDialog(message: string) {
+    return showDialog(MessageDialogController, {message: () => message}).result;
 }
 
 export interface IModalInstance<T extends DialogController<unknown, unknown>> extends IModalInstanceService {

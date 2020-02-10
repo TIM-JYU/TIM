@@ -35,7 +35,7 @@ class RelevanceCtrl implements IController {
     private errorMessage: string|undefined;
     private suggestions = relevanceSuggestions;
 
-    async $onInit() {
+    $onInit() {
         void this.getRelevance();
     }
 
@@ -85,12 +85,12 @@ class RelevanceCtrl implements IController {
     }
 
     private async resetClicked() {
-        void this.resetRelevance();
+        await this.resetRelevance();
     }
 
     private async saveClicked() {
         if (this.relevance != null) {
-            void this.setRelevance(this.relevance);
+            await this.setRelevance(this.relevance);
         } else {
             this.errorMessage = "Incorrect relevance value: input a whole number!";
         }

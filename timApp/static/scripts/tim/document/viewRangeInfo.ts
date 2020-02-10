@@ -89,7 +89,7 @@ export async function setPieceSize(pieceSize: number) {
     }
 }
 
-export async function getPieceSize() {
+export function getPieceSize() {
     const cookie = getCookie("r");
     let value = 0;
     if (cookie != null) {

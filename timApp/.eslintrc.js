@@ -61,6 +61,7 @@ module.exports = {
         "@typescript-eslint/prefer-function-type": "error",
         "@typescript-eslint/prefer-namespace-keyword": "error",
         "@typescript-eslint/no-floating-promises": "off", // TODO enable
+        "@typescript-eslint/require-await": "error",
         "quotes": "off",
         "@typescript-eslint/quotes": [
             "error",

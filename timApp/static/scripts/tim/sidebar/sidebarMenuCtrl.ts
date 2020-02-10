@@ -135,7 +135,7 @@ export class SidebarMenuCtrl implements IController {
         }
     }
 
-    async $onInit() {
+    $onInit() {
         const g = someglobals();
         this.lctrl = this.vctrl && this.vctrl.lectureCtrl || LectureController.createAndInit(this.vctrl);
         this.documentMemoMinutes = "memoMinutes" in g ? g.memoMinutes : undefined;
@@ -145,7 +145,7 @@ export class SidebarMenuCtrl implements IController {
             this.showFolderSettings = this.users.isLoggedIn() && this.item.isFolder;
         }
         if (this.item && !this.item.isFolder) {
-            this.loadViewRangeSettings();
+            void this.loadViewRangeSettings();
         }
         // await this.processConsent();
     }
@@ -480,7 +480,7 @@ export class SidebarMenuCtrl implements IController {
         if (!(this.vctrl && this.item)) {
             return;
         }
-        void toggleViewRange(this.item.id, this.pieceSizeSetting);
+        await toggleViewRange(this.item.id, this.pieceSizeSetting);
         this.currentViewRange = getCurrentViewRange();
         this.updateIsFullRange();
     }
@@ -516,7 +516,7 @@ export class SidebarMenuCtrl implements IController {
     /**
      * Get piece size from local storage and current view range from document globals.
      */
-    private async loadViewRangeSettings() {
+    private loadViewRangeSettings() {
         if (this.storage.pieceSize != null) {
             this.pieceSizeSetting = +this.storage.pieceSize;
         }

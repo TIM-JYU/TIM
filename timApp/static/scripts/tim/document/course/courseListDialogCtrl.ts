@@ -212,7 +212,7 @@ export class CourseListDialogController extends DialogController<{ params: ICour
      * Filter when Enter is pressed.
      * @param event Keyboard event.
      */
-    private async keyPressed(event: KeyboardEvent) {
+    private keyPressed(event: KeyboardEvent) {
         if (event.which === KEY_ENTER) {
             this.refresh();
         }

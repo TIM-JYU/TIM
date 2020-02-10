@@ -168,7 +168,7 @@ async function readlineHandler(elem: JQuery, e: JQuery.MouseEventBase) {
     if ((e.target as HTMLElement).tagName === "BUTTON") {
         return;
     }
-    markParRead(elem.parents(".par"), ReadingType.ClickRed);
+    await markParRead(elem.parents(".par"), ReadingType.ClickRed);
 }
 
 export async function initReadings(item: IItem) {

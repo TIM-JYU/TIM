@@ -193,7 +193,7 @@ export class TimEmailComponent {
 
     public async sendEmail() {
         if (this.emailtim) {
-            this.sendEmailTim();
+            await this.sendEmailTim();
             return;
         }
         // TODO: iPad do not like ;

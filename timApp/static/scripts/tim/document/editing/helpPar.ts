@@ -13,7 +13,7 @@ timApp.component("timHelpParContent", {
         private showHelp = false;
         private hasText = false;
 
-        async $onInit() {
+        $onInit() {
             const eh = this.vctrl.editingHandler;
             const spars = eh.findSettingsPars();
             this.hasText = eh.hasNonSettingsPars();
