@@ -243,7 +243,9 @@ JSREADYHTML['simpleDrawIO'] = """
 						else
 						{
 							// Avoids unescaped < and > from innerHTML for valid XML
-							var svg = new XMLSerializer().serializeToString(elt.firstChild);
+                            var ch = elt.firstChild;
+							var svg = '';
+							if ( ch ) svg = new XMLSerializer().serializeToString();
 							iframe.contentWindow.postMessage(JSON.stringify({action: 'load',
 								autosave: 1, xml: svg}), '*');
 						}
@@ -329,7 +331,7 @@ JSREADYHTML['simpleDrawIO'] = """
 <div>
 <button onclick="edit(this);">Muokkaa</button>
 <div id="wrapper">
-<div id="diagram"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1px" height="1px" viewBox="-0.5 -0.5 1 1" content="<mxfile host=&quot;www.draw.io&quot; modified=&quot;2020-02-09T18:51:35.659Z&quot; agent=&quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36&quot; etag=&quot;IIS9Wlu7M_3kGZSahqxD&quot; version=&quot;12.6.6&quot;><diagram id=&quot;14058d99-db58-e9f5-3aba-399879c13e25&quot; name=&quot;Page-1&quot;>dZHBEoIgEIafhrvC5OjZrC6dPHQmQWRC10EcradPA1PG4sAs37+7PyyIpPV41rStrsC4QjhgIyJHhHESRdM+g6cFhzi0QGjJLNqAXL64g4GjvWS88xINgDKy9WEBTcML4zGqNQx+WgnKd22p4DuQF1Tt6U0yU1ka42jlFy5FtTiHUWKVOy0eQkPfOD+ESflZVq7p0ss9tKsog2GDSIZIqgGMjeox5Woe7TI2W3f6o37vrXljfhRMwdp7Onj/R7I3</diagram></mxfile>" style="background-color: rgb(255, 255, 255);"><defs></defs><g></g></svg></div>
+<div id="diagram"></div>
 </div>
 </div>
 <script>
