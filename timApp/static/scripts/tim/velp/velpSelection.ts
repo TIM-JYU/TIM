@@ -998,7 +998,7 @@ timApp.filter("filterByLabels", () => {
 timApp.filter("filterByVelpGroups", () => {
     return (velps?: INewVelp[], groups?: IVelpGroupUI[]) => {
 
-        const selected = [];
+        const selected: INewVelp[] = [];
         const checkedGroups = [];
 
         if (groups == null || velps == null) {
