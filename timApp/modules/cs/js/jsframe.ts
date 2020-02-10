@@ -452,7 +452,7 @@ jsframeApp.component("jsframeRunner", {
     <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.jsframepeek"></div> -->
     <p class="csRunMenu">
         <button ng-if="!$ctrl.isOpen"  ng-click="$ctrl.runShowTask()"  ng-bind-html="$ctrl.showButton()"></button>
-        <button ng-if="$ctrl.isOpen && !$ctrl.attrs.norun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.getData()"
+        <button ng-if="$ctrl.isOpen && !$ctrl.attrs.norun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.getData('getDataSave')"
                 ng-bind-html="::$ctrl.button"></button>
         <span class="jsframe message"
               ng-if="$ctrl.message"

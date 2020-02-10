@@ -53,3 +53,4 @@ languages["jsav"] = Jsav
 languages["quorum"] = Quorum
 languages["jsframe"] = JSframe
 languages["chartjs"] = ChartJS
+languages["drawio"] = DrawIO
