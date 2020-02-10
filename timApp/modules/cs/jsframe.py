@@ -156,8 +156,8 @@ class ChartJS(JSframe):
 
 JSREADYHTML['simpleDrawIO'] = """
 <!doctype html>
+<meta charset="UTF8"> 
 <html>
-<head>
 <head>
 	<style type="text/css">
 		html, body, #wrapper {
