@@ -109,11 +109,10 @@ module.exports = {
         ],
         "guard-for-in": "error",
         "id-blacklist": [
-            "warn",
+            "error",
             "any",
             "Number",
             "number",
-            "String",
             "string",
             "Boolean",
             "boolean",

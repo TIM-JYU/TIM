@@ -671,8 +671,8 @@ class DragTask {
 
         if (this.activeDragObject) {
             const dobj = this.activeDragObject;
-            const xlimits: [number, number] = dobj.obj.xlimits ?? [Number.MIN_VALUE, Number.MAX_VALUE];
-            const ylimits: [number, number] = dobj.obj.ylimits ?? [Number.MIN_VALUE, Number.MAX_VALUE];
+            const xlimits: [number, number] = dobj.obj.xlimits ?? [0, 1e100];
+            const ylimits: [number, number] = dobj.obj.ylimits ?? [0, 1e100];
             if (dobj.obj.lock !== "x") {
                 dobj.obj.x = toRange(xlimits, this.mousePosition.x - dobj.xoffset);
             }
