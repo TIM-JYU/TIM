@@ -15,6 +15,13 @@ module.exports = {
         "import",
         "prefer-arrow"
     ],
+    "ignorePatterns": [
+        "modules/cs/jsav/",
+        "modules/cs/mindsim/",
+        "modules/cs/simcir/",
+        "modules/jsrunner/server/",
+        "static/scripts/tim/environments/environment.prod.ts",
+    ],
     "rules": {
         "@typescript-eslint/adjacent-overload-signatures": "error",
         "@typescript-eslint/array-type": "off",

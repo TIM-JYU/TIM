@@ -540,7 +540,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
 
         if (this.pluginMode === Mode.Instruction) {
-            const instructionQuestion = this.vctrl.getTimComponentByName(this.attrs.practiceID || "");
+            const instructionQuestion = this.vctrl.getTimComponentByName(this.attrs.practiceID ?? "");
             if (this.attrs.practiceID && instructionQuestion) {
                 if (instructionQuestion.getContent() === undefined) {
                     this.printFeedback("Please select a choice");
@@ -560,7 +560,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     this.hideParagraph(instruction[0]);
                 }
                 const result = await this.doSave(false, false, "", "");
-                if ( !result.saved ) {
+                if (!result.saved) {
                     this.error = "Error saving a plugin";
                     return;
                 }
@@ -642,7 +642,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
         if (this.pluginMode === Mode.Feedback) {
             const result = await this.save();
-            if ( !result.saved ) {
+            if (!result.saved) {
                 this.error = "Error saving feedback";
                 return;
             }
@@ -694,7 +694,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param plugins Plugins to check.
      */
     hasContent(plugins: IQuestionItemT): boolean {
-        if ( !plugins ) { return false; }
+        if (!plugins) { return false; }
         for (const p of plugins.pluginNames) {
             const plugin = this.vctrl.getTimComponentByName(p);
             if (plugin && plugin.getContent() === undefined) {
@@ -792,7 +792,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 }
                 continue;
             }
-            if ( match[i] === answer[i] ) { continue; }
+            if (match[i] === answer[i]) { continue; }
             const re = new RegExp(`\\b${match[i]}\\b`);
             if (!re.test(answer[i])) {
                 return false;
@@ -1085,7 +1085,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             let i = 0;
             for (const plugin of item.pluginNames) {
                 const timComponent = this.vctrl.getTimComponentByName(plugin);
-                if (timComponent && timComponent.setPluginWords) {
+                if (timComponent?.setPluginWords) {
                     if (item.words.length === 0) {
                         timComponent.setPluginWords([]);
                     } else {
@@ -1111,7 +1111,7 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * Check whether edit mode is on and show or hide instructions and question items based on it.
      *
      */
-    async $doCheck() {
+    $doCheck() {
         if (!this.attrsall.preview && this.editMode != documentglobals().editMode) {
             this.editMode = documentglobals().editMode;
             const instructions = document.querySelectorAll(".par.instruction");

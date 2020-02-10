@@ -99,7 +99,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             return;
         }
         if (this.emailtim) {
-            this.sendEmailTim();
+            await this.sendEmailTim();
             return;
         }
         // TODO: iPad do not like ;
@@ -243,9 +243,9 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
 
             let link = this.attrs.jumplink;
             for (let i = 0; i < values.length; i++) {
-                link = link.replace("{" + i + "}", values[i] || "");
+                link = link.replace("{" + i + "}", values[i] ?? "");
             }
-            const target = this.attrs.jumptarget || "_self";
+            const target = this.attrs.jumptarget ?? "_self";
             window.open(link, target);
         }
     }

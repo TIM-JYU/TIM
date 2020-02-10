@@ -57,7 +57,6 @@ function time2String(time: number) {
     const s = (time - m * 60);
     let hs;
     let ms;
-    let ss;
     if (!h) {
         hs = "";
     } else {
@@ -68,7 +67,7 @@ function time2String(time: number) {
     } else {
         ms = m + "m";
     }
-    ss = s + "s";
+    const ss = s + "s";
     return hs + ms + ss;
 }
 
@@ -76,10 +75,10 @@ function isYoutube(file: string) {
     if (!file) {
         return false;
     }
-    if (file.indexOf("youtube") >= 0) {
+    if (file.includes("youtube")) {
         return true;
     }
-    return file.indexOf("youtu.be") >= 0;
+    return file.includes("youtu.be");
 }
 
 function ifIs(value: number | undefined, name: string) {
@@ -128,15 +127,15 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     }
 
     get docicon() {
-        return this.attrs.docicon || "/csstatic/book.png";
+        return this.attrs.docicon ?? "/csstatic/book.png";
     }
 
     get iframe() {
-        return this.attrs.iframe || isYoutube(this.attrs.file);
+        return this.attrs.iframe ?? isYoutube(this.attrs.file);
     }
 
     get videoname() {
-        return this.attrs.videoname || null;
+        return this.attrs.videoname ?? null;
     }
 
     get doclink() {
@@ -148,7 +147,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     }
 
     get doctext() {
-        return this.attrs.doctext || null;
+        return this.attrs.doctext ?? null;
     }
 
     private watchEnd?: number;
@@ -158,8 +157,8 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     private videoOn: boolean = false;
     private span?: string | null;
     private origSize!: string;
-    private origWidth: any;
-    private origHeight: any;
+    private origWidth?: number;
+    private origHeight?: number;
     private video?: HTMLVideoElement;
     private limits!: string | null;
     private duration!: string | null;
@@ -172,7 +171,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     $onInit() {
         super.$onInit();
         const n = this.attrs.file || "";
-        this.iframeopts =  this.attrs.iframeopts || 'sandbox="allow-scripts allow-same-origin"';
+        this.iframeopts =  this.attrs.iframeopts ?? 'sandbox="allow-scripts allow-same-origin"';
         if (n.endsWith(".pdf")) {
             this.iframeopts = ""; // for Chrome :-( Sandboxed viewer does not work!
         }
@@ -209,11 +208,13 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     }
 
     getCurrentZoom() {
-        if (localStorage[this.origSize + ".width"]) {
-            this.width = localStorage[this.origSize + ".width"];
+        const origw = localStorage[this.origSize + ".width"];
+        if (t.number.is(origw)) {
+            this.width = origw;
         }
-        if (localStorage[this.origSize + ".height"]) {
-            this.height = localStorage[this.origSize + ".height"];
+        const origh = localStorage[this.origSize + ".height"];
+        if (t.number.is(origh)) {
+            this.height = origh;
         }
     }
 
@@ -275,7 +276,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         this.span = this.limits;
         const w = ifIs(this.width, "width");
         const h = ifIs(this.height, "height");
-        const moniviestin = this.attrs.file.indexOf("m3.jyu.fi") >= 0;
+        const moniviestin = this.attrs.file.includes("m3.jyu.fi");
         let params = "?";
         if (this.start) {
             if (moniviestin) {
@@ -286,7 +287,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         }
         if (this.iframe) {
             let file = this.attrs.file;
-            if (isYoutube(file) && file.indexOf("embed") < 0) {
+            if (isYoutube(file) && !file.includes("embed")) {
                 const yname = "youtu.be/";  // could be also https://youtu.be/1OygRiwlAok
                 const yembed = "//www.youtube.com/embed/";
                 const iy = file.indexOf(yname);
@@ -303,7 +304,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         ${w}${h}
         frameborder="0"
         allowfullscreen
-        ${this.iframeopts || ""}>
+        ${this.iframeopts ?? ""}>
 </iframe>`;
         } else {
             params = "";
@@ -314,7 +315,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
                     tbe += "," + this.end;
                 }
             }
-            if ( tbe ) {
+            if (tbe) {
                 params = "#t=" + tbe;
             }
             let autoplay = "";
@@ -337,7 +338,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
             this.vctrl.registerVideo(this.attrs.followid, this.video);
         }
         this.video.addEventListener("loadedmetadata", () => {
-            this.video!.currentTime = this.start || 0;
+            this.video!.currentTime = this.start ?? 0;
         }, false);
 
         this.watchEnd = this.end;

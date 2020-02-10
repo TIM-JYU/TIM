@@ -67,6 +67,7 @@ export interface ITimComponent {
     resetField: () => string | undefined;
     supportsSetAnswer: () => boolean;
     setAnswer: (content: {[index: string]: unknown}) => {ok: boolean, message: (string | undefined)};
+    setData?(data: unknown, save: boolean): void;
 }
 
 // TODO: import entire controller?

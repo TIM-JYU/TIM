@@ -118,8 +118,8 @@ class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<ty
             this.isOpen = true;
         }
         const aa = this.attrsall;
-        this.userCode = aa.usercode ||  "";
-        this.message = this.attrs.message || "";
+        this.userCode = aa.usercode ??  "";
+        this.message = this.attrs.message ?? "";
     }
 
     getTaskUrl(): string {
@@ -231,13 +231,13 @@ class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<ty
         const taskId = tid.docTask();
         const ab = this.viewCtrl.getAnswerBrowser(taskId);
         let anr = 0;
-        if ( ab ) {
+        if (ab) {
             anr = ab.findSelectedAnswerIndex();
         }
         const selectedUser = this.viewCtrl.selectedUser;
         const userId = selectedUser.id;
-        const w = this.attrs.width || 800;
-        const h = this.attrs.height || 600;
+        const w = this.attrs.width ?? 800;
+        const h = this.attrs.height ?? 600;
         this.jsavOutput = "<iframe id=\"jsav-iframe1\"\n" +
             "        style=\"width:calc(" + w + "px + 2px);height:calc(" + h + "px + 2px);border: none;\"\n" +
             "        sandbox=\"allow-scripts allow-same-origin\"\n" +

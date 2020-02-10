@@ -113,18 +113,18 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         this.userName = aa.user_id;
         this.userCode = aa.usercode ||  "";
 
-        this.message = this.attrs.message || "";
+        this.message = this.attrs.message ?? "";
 
         let jsobject = "window.";
-        if ( this.attrs.srchtml && this.attrs.srchtml.indexOf("TIMJS") >= 0 ) { jsobject = "TIMJS."; }
+        if (this.attrs.srchtml && this.attrs.srchtml.includes("TIMJS")) { jsobject = "TIMJS."; }
 
         if (this.attrs.open) {
             this.isOpen = true;
         }
         let data = this.attrs.data;
-        if ( this.attrs.c ) { data = this.attrs.c; }
-        if ( data ) { this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n"; }
-        if ( aa.markup.fielddata ) { this.initData += "    " + jsobject + "fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n"; }
+        if (this.attrs.c) { data = this.attrs.c; }
+        if (data) { this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n"; }
+        if (aa.markup.fielddata) { this.initData += "    " + jsobject + "fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n"; }
         // if ( data ) { this.setData(data); }
         this.viewctrl.addTimComponent(this);
         const tid = this.getTaskId();
@@ -135,8 +135,8 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
 
     async userChanged(user: IUser) {
         // TODO: Experimental
-        if ( user.name == this.userName ) { return; }
-        if ( !this.attrsall.markup.fields ) { return; }
+        if (user.name == this.userName) { return; }
+        if (!this.attrsall.markup.fields) { return; }
         this.userName = user.name;
 
         try {
@@ -149,10 +149,10 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
             let data: any = this.attrs.data;
             if (this.attrs.c) { data = this.attrs.c; }
             if (res.result.data.fielddata) {
-                if ( !data ) { data = {}; }
+                if (!data) { data = {}; }
                 data.fielddata = res.result.data.fielddata;
             }
-            if ( data ) { this.setData(data); }
+            if (data) { this.setData(data); }
         } catch (e) {
             this.error = "Error fetching new data for user" + "\n" + e;
         }
@@ -165,7 +165,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
     changeAnswer(a: IAnswer) {
         const frameElem = this.element.find(".jsFrameContainer")[0];
         const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
-        if ( !f.contentWindow.setData ) {
+        if (!f.contentWindow.setData) {
             return;
         }
         f.contentWindow.setData(JSON.parse(a.content));
@@ -209,10 +209,10 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
             // return "";
         } // TODO: replace when preview delay and preview from markup ready
         $timeout(0);
-        const w = this.attrs.width || 800; // for some reason if w/h = 2, does not give hints on Chart.js
-        const h = this.attrs.height || (208 * w / 400);  //  experimental result for Chart.js
+        const w = this.attrs.width ?? 800; // for some reason if w/h = 2, does not give hints on Chart.js
+        const h = this.attrs.height ?? (208 * w / 400);  //  experimental result for Chart.js
         let src = "";
-        if ( this.attrs.useurl ) {
+        if (this.attrs.useurl) {
             const tid = this.pluginMeta.getTaskId()!;
             const taskId = tid.docTask();
             let ab = null;
@@ -237,14 +237,14 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
             url = url.replace("//", "/");
             src = 'src="' + url + '"';
         } else {
-            let html: string = this.attrs.srchtml || "";
+            let html: string = this.attrs.srchtml ?? "";
             html = html.replace("</body>", this.communicationJS + "\n</body>");
             html = html.replace("// INITDATA", this.initData);
             const datasrc = btoa(html);
             src = "src='data:text/html;base64," + datasrc;
         }
 
-        let iframeopts = this.attrs.iframeopts || "sandbox='allow-scripts allow-same-origin'"
+        const iframeopts = this.attrs.iframeopts ?? "sandbox='allow-scripts allow-same-origin'";
 
         // let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
         // url = url.replace("//", "/");
@@ -329,7 +329,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
     }
 
     getData(msg: string = "getData") {
-        if ( this.attrs.useurl ) {
+        if (this.attrs.useurl) {
             const frameElem = this.element.find(".jsFrameContainer")[0];
             const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
             if (!f.contentWindow.getData) {
@@ -344,15 +344,15 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         if (data.message) {
             this.message = data.message;
         }
-        if ( dosave ) { this.runSend({c: data}); }
+        if (dosave) { this.runSend({c: data}); }
         return data;
     }
 
     setData(data: any, save: boolean = false) {
         $timeout(0);
 
-        if (save ) { this.runSend({c: data}); }
-        if ( this.attrs.useurl ) {
+        if (save) { this.runSend({c: data}); }
+        if (this.attrs.useurl) {
             const frameElem = this.element.find(".jsFrameContainer")[0];
             const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
             if (!f.contentWindow.setData) {
@@ -395,15 +395,15 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
     private channel: any = 0;
 
     addListener() {
-        if ( this.channel ) { return; }
+        if (this.channel) { return; }
         this.channel = new MessageChannel();
         this.channel.port1.onmessage =  (event: any) => {
             // console.log(event);
             const msg = event.data.msg;
-            if ( msg === "data") {
+            if (msg === "data") {
                 this.getDataReady(event.data.data);
             }
-            if ( msg === "datasave") {
+            if (msg === "datasave") {
                 this.getDataReady(event.data.data, true);
             }
         };

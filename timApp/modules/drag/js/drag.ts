@@ -1,7 +1,7 @@
 /**
  * Defines the client-side implementation of a drag plugin.
  */
-import angular, {IScope} from "angular";
+import angular from "angular";
 import drag from "angular-drag-and-drop-lists";
 import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
@@ -71,12 +71,12 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
 
     $onInit() {
         super.$onInit();
-        this.max = this.attrs.max || Number.MAX_VALUE;
-        this.copy = this.attrs.copy || "";
-        this.type = this.attrs.type || " ";
-        this.trash = this.attrs.trash || false;
-        this.shuffle = this.attrs.shuffle || false;
-        this.saveButton = this.attrs.savebutton || false;
+        this.max = this.attrs.max ?? 1e100;
+        this.copy = this.attrs.copy ?? "";
+        this.type = this.attrs.type ?? " ";
+        this.trash = this.attrs.trash ?? false;
+        this.shuffle = this.attrs.shuffle ?? false;
+        this.saveButton = this.attrs.savebutton ?? false;
         this.wordObjs = [];
         if (this.attrsall.state) {
             this.createWordobjs(this.attrsall.state.c);
@@ -85,7 +85,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
                 const words = shuffleStrings(this.attrs.words || []);
                 this.createWordobjs(words);
             } else {
-                this.createWordobjs(this.attrs.words || []);
+                this.createWordobjs(this.attrs.words ?? []);
             }
         }
 
@@ -186,7 +186,7 @@ class DragController extends PluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<ty
     }
 
     resetField(): undefined {
-        this.setPluginWords(this.attrs.words || []);
+        this.setPluginWords(this.attrs.words ?? []);
         return undefined;
     }
 

@@ -75,10 +75,10 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private saveCalledExternally = false;
 
     getDouble(s: string): number {
-        if ( typeof(s) === "number" ) { return s; }
+        if (typeof(s) === "number") { return s; }
         s = s.replace(REDOUBLE, "");
         s = s.replace(",", ".");
-        if ( s.startsWith("e") ) { s = "1" + s; }
+        if (s.startsWith("e")) { s = "1" + s; }
         const d = parseFloat(s);
         return d;
     }
@@ -91,7 +91,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Returns (user) defined text for the button.
      */
     buttonText() {
-        return super.buttonText() || null;
+        return super.buttonText() ?? null;
     }
 
     get valueOrEmpty(): string {
@@ -118,11 +118,11 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 }
             }
         }
-        if ( !this.attrs.wheel ) { this.element.bind("mousewheel DOMMouseScroll", () => false); }
-        if ( !this.attrs.verticalkeys ) { this.element.bind("keydown",
-            (e) => { if ( e.which == 38 || e.which == 40 ) { e.preventDefault(); } }); }
+        if (!this.attrs.wheel) { this.element.bind("mousewheel DOMMouseScroll", () => false); }
+        if (!this.attrs.verticalkeys) { this.element.bind("keydown",
+            (e) => { if (e.which == 38 || e.which == 40) { e.preventDefault(); } }); }
         this.modelOpts = {debounce: {blur: 0}};
-        this.vctrl.addTimComponent(this, this.attrs.tag );
+        this.vctrl.addTimComponent(this, this.attrs.tag);
         this.initialValue = this.numericvalue;
         if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles) {
             this.applyStyling(this.attrsall.state.styles);
@@ -201,7 +201,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Returns (user) set inputstem (textfeed before userinput box).
      */
     get inputstem() {
-        return this.attrs.inputstem || null;
+        return this.attrs.inputstem ?? null;
     }
 
     /**
@@ -342,7 +342,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.errormessage = "";
         if (this.attrs.validinput) {
             if (!this.validityCheck(this.attrs.validinput)) {
-                this.errormessage = this.attrs.errormessage || "Input does not pass the RegEx: " + this.attrs.validinput;
+                this.errormessage = this.attrs.errormessage ?? "Input does not pass the RegEx: " + this.attrs.validinput;
                 this.redAlert = true;
                 this.saveResponse.message = this.errormessage;
                 return this.saveResponse;

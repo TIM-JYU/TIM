@@ -99,7 +99,7 @@ class PaliComponent extends AngularPluginBase<t.TypeOf<typeof PluginMarkupFields
     }
 
     buttonText() {
-        return super.buttonText() || "Save";
+        return super.buttonText() ?? "Save";
     }
 
     ngOnInit() {
@@ -132,11 +132,11 @@ class PaliComponent extends AngularPluginBase<t.TypeOf<typeof PluginMarkupFields
     }
 
     get inputplaceholder() {
-        return this.markup.inputplaceholder || "";
+        return this.markup.inputplaceholder ?? "";
     }
 
     get inputstem() {
-        return this.markup.inputstem || null;
+        return this.markup.inputstem ?? null;
     }
 
     get cols() {
@@ -158,7 +158,7 @@ class PaliComponent extends AngularPluginBase<t.TypeOf<typeof PluginMarkupFields
     }
 
     private getInitWord() {
-        return this.markup.initword || "";
+        return this.markup.initword ?? "";
     }
 
     async saveText() {

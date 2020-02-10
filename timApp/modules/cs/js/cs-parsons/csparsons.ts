@@ -68,8 +68,7 @@ export class CsParsonsWidget {
             }
             div.setAttribute("class", "sortitem");
 
-            const t = document.createTextNode(w) as any;
-            t.title = w; // TODO this may be wrong; TS complains without "any"
+            const t = document.createTextNode(w);
             div.appendChild(t);
             // var div2 = document.createElement(typ);
             // div2.appendChild(div);
@@ -92,15 +91,15 @@ export class CsParsonsWidget {
                         thisJq.data("pos", thisJq.index());
                     });
                 },
-                change: function() {
+                change: function(this: Element) {
                     const sortable = $(this);
                     const statics = $(".parsonsstatic", this).detach();
-                    const helper = $("<" + type + "></" + type + ">").prependTo(this as any);
+                    const helper = $("<" + type + "></" + type + ">").prependTo(this);
                     statics.each(function() {
                         const thisJq = $(this);
                         const target = thisJq.data("pos");
 
-                        thisJq.insertAfter($(type, sortable).eq(target));
+                        thisJq.insertAfter($(type, sortable).eq(target as number));
                     });
                     helper.remove();
                 },

@@ -8,19 +8,19 @@ export interface CellInfo {
     mode: string;
     code: string;
     evalButtonText: string;
-    editor: any;
-    collapse: any;
-    session: any;
-    interacts: any[];
+    editor: unknown;
+    collapse: unknown;
+    session: unknown;
+    interacts: unknown[];
 
-    submit(event: any): void;
+    submit(event: unknown): void;
 }
 
 interface Sage {
     allLanguages: string[];
     templates: {[name: string]: {editor: string, hide: string[]}};
 
-    makeSagecell(args: any): CellInfo;
+    makeSagecell(args: unknown): CellInfo;
 
     deleteSagecell(cellInfo: CellInfo): void;
 

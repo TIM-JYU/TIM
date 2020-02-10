@@ -58,7 +58,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         if (this.shuffle && this.attrs.words) {
             this.wordList = shuffleStrings(this.attrs.words);
         } else {
-            this.wordList = this.attrs.words || [];
+            this.wordList = this.attrs.words ?? [];
         }
         if (!this.attrsall.preview) {
             this.addToCtrl();

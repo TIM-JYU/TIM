@@ -63,7 +63,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
      * Returns (user) defined text for the button.
      */
     buttonText() {
-        return super.buttonText() || null;
+        return super.buttonText() ?? null;
     }
 /*
     makeBoolean(s: string): boolean {
@@ -77,7 +77,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     $onInit() {
         super.$onInit();
         this.rbName = this.rbname;
-        const uw = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "0")).toString();
+        const uw = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword ?? "0")).toString();
         this.userword = uw; // this.makeBoolean(uw);
 
         if (this.attrs.tag) {
@@ -86,7 +86,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
             this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
-        if (this.attrs.showname ) { this.initCode(); }
+        if (this.attrs.showname) { this.initCode(); }
     }
 
     get inputtype(): string {
@@ -94,8 +94,8 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     }
 
     get rbname(): string {
-        if ( this.rbName ) { return this.rbName; }
-        let n: string = this.getName() || "rb";
+        if (this.rbName) { return this.rbName; }
+        let n: string = this.getName() ?? "rb";
         n = n.replace(/[0-9]+/, "");
         this.rbName = n;
         return n;
@@ -149,20 +149,20 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
      * Returns (user) set inputstem (textfeed before userinput box).
      */
     get inputstem() {
-        return this.attrs.inputstem || "";
+        return this.attrs.inputstem ?? "";
     }
 
     /**
      * Returns (user) set col size (size of the field).
      */
     get cols() {
-        if ( !this.attrs.cols ) { return {}; }
+        if (!this.attrs.cols) { return {}; }
         return {width: this.attrs.cols + "em", display: "inline-block"};
     }
 
     // noinspection JSUnusedGlobalSymbols
     get cbStyle() {
-        if ( !this.inputstem && (this.stem || this.header ) ) { return {}; }
+        if (!this.inputstem && (this.stem || this.header)) { return {}; }
         return { // otherwise input stem and cb are vertical
             width: "auto",
         };
@@ -172,7 +172,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
      * Initialize content.
      */
     initCode() {
-        this.userword = this.attrs.initword || "";
+        this.userword = this.attrs.initword ?? "";
         this.initialValue = this.userword;
         this.result = undefined;
     }
@@ -243,8 +243,8 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         const comps = this.vctrl.getTimComponentsByRegex(`${tid.docId}\.${this.rbname}.*`, RegexOption.DontPrependCurrentDocId);
         const n = this.getName();
         for (const c of comps) {
-            if ( c.getName() == n ) { continue; }
-            if ( !(c instanceof RbfieldController) ) { continue; }
+            if (c.getName() == n) { continue; }
+            if (!(c instanceof RbfieldController)) { continue; }
             c.setChecked(false);
         }
         if (this.preventedAutosave) {
@@ -282,7 +282,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
             const data = r.result.data;
             // TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
             // (Use premade bootstrap method / add listener for enter?)
-            this.errormessage = data.web.error || "";
+            this.errormessage = data.web.error ?? "";
             this.result = data.web.result;
             this.initialValue = this.userword;
             this.hideSavedText = false;

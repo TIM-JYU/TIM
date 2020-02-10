@@ -30,7 +30,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     buttonText() {
-        return super.buttonText() || "Run script";
+        return super.buttonText() ?? "Run script";
     }
 
     toggleFieldHelper() {
@@ -69,7 +69,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         super.$onInit();
         this.userOpt = this.attrs.includeUsers;
         if (this.attrs.fieldhelper && this.isVisible()) {
-            this.isopen = this.attrs.open || false;
+            this.isopen = this.attrs.open ?? false;
             if (this.isopen) {
                 this.showFieldHelper();
             }
@@ -85,7 +85,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     addError(msg: string) {
-        if ( !this.error) { this.error = {msg: ""}; }
+        if (!this.error) { this.error = {msg: ""}; }
         this.error.msg += msg;
     }
 
@@ -99,7 +99,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 for (const v of timComponents) {
                     const cname = v.getName();
                     const value = v.getContent();
-                    if ( cname ) { paramComps[cname] = value; }
+                    if (cname) { paramComps[cname] = value; }
                 }
             }
         }
@@ -124,30 +124,30 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 this.error = undefined;
                 this.scriptErrors = data.web.errors;
                 this.output = data.web.output;
-                if ( this.attrsall.markup.updateFields ) {
+                if (this.attrsall.markup.updateFields) {
                     this.vctrl.updateFields(this.attrsall.markup.updateFields);
                     if (this.attrs.autoUpdateTables) {
                         this.vctrl.updateAllTables(this.attrsall.markup.updateFields);
                     }
                 }
                 // temp code:
-                const tempd: any = data.web;
+                const tempd = data.web;
                 if (!tempd.outdata) { return; }
-                const exportdata: any = tempd.outdata.exportdata;
-                if (  !exportdata ) { return; }
-                for (const edata of exportdata ) {
+                const exportdata = tempd.outdata.exportdata;
+                if (!exportdata) { return; }
+                for (const edata of exportdata) {
                     const pname = edata.plugin;
                     if (!pname) { continue; }
-                    const plugin: any  =  this.vctrl.getTimComponentByName(pname);
-                    if (!plugin ) {
-                        this.addError(`Plugin ${pname} not found. Check plugin names!`);
+                    const plugin = this.vctrl.getTimComponentByName(pname);
+                    if (!plugin) {
+                        this.addError(`Plugin ${pname} not found. Check plugin names.`);
                         continue;
                     }
                     const save = edata.save == true;
-                    if ( plugin.setData ) {
+                    if (plugin.setData) {
                         plugin.setData(edata.data, save);
                     } else {
-                        this.addError(`Plugin ${pname} has not setData-method!`);
+                        this.addError(`Plugin ${pname} does not have setData method.`);
                     }
                 }
             }
@@ -165,15 +165,15 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     protected hasAllAttributes() {
-        return (this.attrs.fields || this.attrs.groups || this.attrs.program);
+        return ((this.attrs.fields ?? this.attrs.groups) ?? this.attrs.program);
     }
 
     isVisible() {
-        if ( this.visible >= 0 ) { return this.visible == 1; }
+        if (this.visible >= 0) { return this.visible == 1; }
         this.visible = 0;
-        if ( this.attrs.showInView ) { this.visible = 1; return true; }
+        if (this.attrs.showInView) { this.visible = 1; return true; }
         const pn = window.location.pathname;
-        if ( pn.match("teacher|answers") ) { this.visible = 1; }
+        if (pn.match("teacher|answers")) { this.visible = 1; }
         return this.visible == 1;
     }
 

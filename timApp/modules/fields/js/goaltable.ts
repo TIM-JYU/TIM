@@ -115,13 +115,13 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
         const lang = this.attrs.lang || "fi";
         this.lang = lang;
         const state = aa.state && aa.state.c || {};
-        this.mingoal = this.attrs.mingoal || 0;
-        this.maxgoal = this.attrs.maxgoal || scaleValueWords.length - 1;
-        this.initgoal = this.attrs.initgoal || 0;
+        this.mingoal = this.attrs.mingoal ?? 0;
+        this.maxgoal = this.attrs.maxgoal ?? scaleValueWords.length - 1;
+        this.initgoal = this.attrs.initgoal ?? 0;
         for (let i = this.mingoal; i <= this.maxgoal; i++) {
             this.headings.push("" + i);
         }
-        for (const s of this.attrs.goals || []) {
+        for (const s of this.attrs.goals ?? []) {
             const parts = s.split(";", 3);
             const iid = s.indexOf(";");
             const ig = s.indexOf(";", iid + 1);
@@ -137,15 +137,15 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
         this.vctrl.addTimComponent(this);
 
         // make translated words
-        if ( this.attrs.goalscale ) {
+        if (this.attrs.goalscale) {
             this.scaleWords = this.attrs.goalscale;
         } else {
             for (let i = 0; i < scaleValueWords.length; i++) {
                 this.scaleWords[i] = scaleValueWords[i][lang];
             }
         }
-        if ( this.attrs.bloom ) {
-            if ( this.attrs.lang === "en") {
+        if (this.attrs.bloom) {
+            if (this.attrs.lang === "en") {
                 this.bloomText = "(learning outcomes by Bloom's taxonomy: ";
             } else {
                 this.bloomText = "(osaamisen taso sovelletulla Bloomin asteikolla: ";
@@ -157,9 +157,9 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
             }
             this.bloomText += ")";
         }
-        this.btnText = super.buttonText() || goalTableWords.btnText[lang];
-        this.editText = this.attrs.editText || goalTableWords.editText[lang];
-        this.goalText = this.attrs.goalText || goalTableWords.goalText[lang];
+        this.btnText = super.buttonText() ?? goalTableWords.btnText[lang];
+        this.editText = this.attrs.editText ?? goalTableWords.editText[lang];
+        this.goalText = this.attrs.goalText ?? goalTableWords.goalText[lang];
         this.editTitle = goalTableWords.editTitle[lang];
     }
 
@@ -168,7 +168,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
         const def: string = "" + this.initgoal;
         for (const row of this.rows) {
             const u = row.userSelection;
-            if ( u !== def ) {
+            if (u !== def) {
                 c[row.id] = u;
             }
         }
@@ -200,7 +200,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
      */
     isUnSaved() {
         const unsaved = this.initialValue !== this.getContent();
-        if ( unsaved ) {
+        if (unsaved) {
             // this.hideSavedText = true;
         }
         return unsaved;
@@ -210,7 +210,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
      * Save method for other plugins, needed by e.g. multisave plugin.
      */
     async save() {
-        this.saveText();
+        await this.saveText();
         return this.saveResponse;
     }
 
@@ -239,7 +239,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
         this.isRunning = false;
         if (!r.ok) {
             const e = r.result.data.error;
-            if ( e ) {
+            if (e) {
                 this.error.message = e;
                 return;
             }
@@ -267,7 +267,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
 
     // noinspection JSUnusedLocalSymbols
     private rbClicked(row: GoalLine, h: string) {
-        if ( !this.editMode ) { return; }
+        if (!this.editMode) { return; }
         row.userSelection = h;
         this.calcContent();
         this.result = "";
@@ -277,11 +277,11 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
     private cellStyle(row: GoalLine, h: string) {
         const styles: {[index: string]: string} = {};
         const userSelection: string = row.userSelection;
-        if ( row.goal <= userSelection && userSelection === h) {
+        if (row.goal <= userSelection && userSelection === h) {
             styles["background-color"] = "#00ff00";
-        } else if ( row.goal === h ) {
+        } else if (row.goal === h) {
             styles["background-color"] = "#ffff00";
-        } else if ( userSelection === h ) {
+        } else if (userSelection === h) {
             styles["background-color"] = "#ffb0b0";
         }
         return styles;
@@ -291,7 +291,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
     private cellTDStyle(row: GoalLine, h: string) {
         const styles: {[index: string]: string} = {};
         const userSelection: string = row.userSelection;
-        if ( row.goal === h ) {
+        if (row.goal === h) {
             styles["background-color"] = "#ffff00";
         }
         return styles;
@@ -303,9 +303,9 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
         /* if ( row.goal <= userSelection && userSelection === h) {
             // html = ".";
         } else */
-        if ( row.goal === h ) {
+        if (row.goal === h) {
             html = "o";
-        } else if ( userSelection === h ) {
+        } else if (userSelection === h) {
             //
         }
         return html;

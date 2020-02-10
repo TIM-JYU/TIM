@@ -114,9 +114,9 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         super.$onInit();
         this.button = this.buttonText();
         const aa = this.attrsall;
-        this.userCode = aa.usercode ||  "";
+        this.userCode = aa.usercode ??  "";
 
-        this.message = this.attrs.message || "";
+        this.message = this.attrs.message ?? "";
 
         if (this.attrs.open) {
             this.isOpen = true;
@@ -130,7 +130,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
     changeAnswer(a: IAnswer) {
         const frameElem = this.element.find(".jsFrameContainer")[0];
         const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
-        if ( !f.contentWindow.setData ) {
+        if (!f.contentWindow.setData) {
             return;
         }
         f.contentWindow.setData(JSON.parse(a.content));
@@ -164,8 +164,8 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         }
         // const html:string = this.attrs.srchtml;
         // const datasrc = btoa(html);
-        let w = this.attrs.width || 800;
-        let h = this.attrs.height || 450;
+        let w = this.attrs.width ?? 800;
+        let h = this.attrs.height ?? 450;
 
         if (this.attrs.tool) {
             w = Math.max(w, 1200);

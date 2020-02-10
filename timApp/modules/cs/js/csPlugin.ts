@@ -144,20 +144,20 @@ const ConsolePWD = new CWPD();
 let browserName: string | undefined;
 
 function getBrowserName() {
-    return browserName = browserName || (() => {
+    return browserName = browserName ?? (() => {
         const userAgent = navigator ? navigator.userAgent.toLowerCase() : "other";
 
-        if (userAgent.indexOf("chrome") > -1) {
+        if (userAgent.includes("chrome")) {
             return "chrome";
-        } else if (userAgent.indexOf("safari") > -1) {
+        } else if (userAgent.includes("safari")) {
             return "safari";
-        } else if (userAgent.indexOf("msie") > -1) {
+        } else if (userAgent.includes("msie")) {
             return "ie";
-        } else if (userAgent.indexOf("firefox") > -1) {
+        } else if (userAgent.includes("firefox")) {
             return "firefox";
         }
         // if ( userAgent.match(/Trident.*rv\:11\./) ) return "ie";'
-        if (userAgent.indexOf("trident/") >= 0) {
+        if (userAgent.includes("trident/")) {
             return "ie";
         }
         return userAgent;
@@ -274,7 +274,7 @@ class LanguageTypes {
         }
         type = type.toLowerCase();
         for (const ty of types) {
-            if (type.indexOf(ty) >= 0) {
+            if (type.includes(ty)) {
                 return ty;
             }
         }
@@ -288,7 +288,7 @@ class LanguageTypes {
         }
         type = type.toLowerCase();
         for (let i = 0; i < types.length; i++) {
-            if (type.indexOf(types[i]) >= 0) {
+            if (type.includes(types[i])) {
                 return this.aceModes[i];
             }
         }
@@ -382,7 +382,7 @@ function wrapText(s: string, n: number) {
                 }
                 lines[i] += sep + line.substring(0, p);
                 line = line.substring(p + 1);
-                if (i + 1 < lines.length && (lines[i + 1].length > 0 && (" 0123456789-".indexOf(lines[i + 1][0]) < 0))) {
+                if (i + 1 < lines.length && (lines[i + 1].length > 0 && (!" 0123456789-".includes(lines[i + 1][0])))) {
                     lines[i + 1] = line + " " + lines[i + 1];
                     needJoin = true;
                     break;
@@ -778,7 +778,7 @@ class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll
     protected usercode: string = "";
 
     get byCode() {
-        return commentTrim(this.attrsall.by || this.attrs.byCode || "");
+        return commentTrim((this.attrsall.by ?? this.attrs.byCode) ?? "");
     }
 
     get type() {
@@ -930,7 +930,7 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     async save() {
-        this.runCode();
+        await this.runCode();
         return {saved: true, message: undefined};
     }
 
@@ -1028,7 +1028,7 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     get program() {
-        return this.attrsall.program || this.attrs.program;
+        return this.attrsall.program ?? this.attrs.program;
     }
 
     get hideTaunoText() {
@@ -1086,7 +1086,7 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     get placeholder() {
-        const tiny = this.type.indexOf("tiny") >= 0;
+        const tiny = this.type.includes("tiny");
         return valueDefu(this.attrs.placeholder, (tiny ? "" : this.english ? "Write your code here" : "Kirjoita koodi tähän:"));
     }
 
@@ -1114,20 +1114,20 @@ class CsController extends CsBase implements ITimComponent {
             || this.isProcessing
             || this.type === "wescheme"
             || this.fullhtml
-            || this.type.indexOf("html") >= 0
-            || this.type.indexOf("/vis") >= 0;
+            || this.type.includes("html")
+            || this.type.includes("/vis");
     }
 
     get fullhtml() {
-        const r = this.attrs.fullhtml || "";
-        if (!r && this.type.indexOf("html") >= 0 || this.isProcessing) {
+        const r = this.attrs.fullhtml ?? "";
+        if (!r && this.type.includes("html") || this.isProcessing) {
             return "REPLACEBYCODE";
         }
         return r;
     }
 
     get isProcessing() {
-        return this.type.indexOf("processing") >= 0;
+        return this.type.includes("processing");
     }
 
     get toggleEditor() {
@@ -1135,7 +1135,7 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     get toggleEditorText() {
-        if (typeof this.toggleEditor === "string" && this.toggleEditor.indexOf("|") >= 0) {
+        if (typeof this.toggleEditor === "string" && this.toggleEditor.includes("|")) {
             return this.toggleEditor.split("|");
         } else {
             return this.english ? ["Edit", "Hide"] : ["Muokkaa", "Piilota"];
@@ -1156,7 +1156,7 @@ class CsController extends CsBase implements ITimComponent {
 
     get isRun() {
         return ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) && !this.attrs.norun)
-            || (this.type.indexOf("text") >= 0 || this.isSimcir || this.attrs.justSave)
+            || (this.type.includes("text") || this.isSimcir || this.attrs.justSave)
             || this.attrs.button; // or this.buttonText()?
     }
 
@@ -1168,7 +1168,7 @@ class CsController extends CsBase implements ITimComponent {
         if (this.attrs.button === null || this.attrs.buttonText === null) {
             return null;
         }
-        if (this.type.indexOf("text") >= 0 || this.isSimcir || this.attrs.justSave) {
+        if (this.type.includes("text") || this.isSimcir || this.attrs.justSave) {
             return this.english ? "Save" : "Tallenna";
         }
         return this.english ? "Run" : "Aja";
@@ -1183,15 +1183,15 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     get isDocument() {
-        return this.type.indexOf("doc") >= 0;
+        return this.type.includes("doc");
     }
 
     get showInput() {
-        return this.type.indexOf("input") >= 0;
+        return this.type.includes("input");
     }
 
     get showArgs() {
-        return this.type.indexOf("args") >= 0;
+        return this.type.includes("args");
     }
 
     get uploadstem() {
@@ -1252,7 +1252,7 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     get mode() {
-        return languageTypes.getAceModeType(this.type, this.attrs.mode || "");
+        return languageTypes.getAceModeType(this.type, this.attrs.mode ?? "");
     }
 
     get iframeopts() {
@@ -1273,17 +1273,17 @@ class CsController extends CsBase implements ITimComponent {
         this.buttons = this.getTemplateButtons();
         const rt = this.rtype;
         const isText = this.isText;
-        const isArgs = this.type.indexOf("args") >= 0;
-        if ( this.attrsall.markup.docurl ) {
+        const isArgs = this.type.includes("args");
+        if (this.attrsall.markup.docurl) {
             this.docURL = this.attrsall.markup.docurl;
             this.docLink = "Hide document";
         }
 
-        this.userinput = valueOr(this.attrsall.userinput, (this.attrs.userinput || "").toString());
-        this.userargs = valueOr(this.attrsall.userargs, (this.attrs.userargs || (isText && isArgs ? this.attrs.filename || "" : "")).toString());
-        this.selectedLanguage = this.attrsall.selectedLanguage || rt;
+        this.userinput = valueOr(this.attrsall.userinput, (this.attrs.userinput ?? "").toString());
+        this.userargs = valueOr(this.attrsall.userargs, (this.attrs.userargs ?? (isText && isArgs ? this.attrs.filename ?? "" : "")).toString());
+        this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
         this.noeditor = valueOr(this.attrs.noeditor, this.isSimcir || (this.type === "upload"));
-        this.wrap = this.attrs.wrap || (isText ? 70 : -1);
+        this.wrap = this.attrs.wrap ?? (isText ? 70 : -1);
         this.editorMode = this.attrs.editorMode;
         this.viewCode = this.attrs.viewCode;
         this.editorText = [
@@ -1415,7 +1415,7 @@ class CsController extends CsBase implements ITimComponent {
         this.notSaved = this.usercode !== this.dochecks.savedcode ||
                         this.userinput != this.dochecks.savedinput ||
                         this.userargs != this.dochecks.savedargs;
-        if ( this.notSaved )  {
+        if (this.notSaved)  {
             anyChanged = true;
         }
         if (this.usercode !== this.dochecks.usercode) {
@@ -1478,7 +1478,7 @@ class CsController extends CsBase implements ITimComponent {
                 reader.onload = ((e) => {
                     this.scope.$evalAsync(() => {
                         this.usercode = reader.result as string;
-                        if ( this.attrs.uploadautosave ) { this.runCode(); }
+                        if (this.attrs.uploadautosave) { this.runCode(); }
                     });
                 });
                 reader.readAsText(file);
@@ -1501,7 +1501,7 @@ class CsController extends CsBase implements ITimComponent {
             upload.then((response) => {
                 $timeout(() => {
                     this.showUploaded(response.data.file, response.data.type);
-                    if ( this.attrs.uploadautosave || !this.attrs.button ) {
+                    if (this.attrs.uploadautosave || !this.attrs.button) {
                         this.doRunCode("upload", false);
                     }
                 });
@@ -1536,22 +1536,22 @@ class CsController extends CsBase implements ITimComponent {
         this.uploadedType = type;
         const name = uploadFileTypesName(file);
         let html = `<p class="smalllink"><a href="${file}" title="${type}">${name}</a></p>`; // (' + type + ')</p>';
-        if (type.indexOf("image") === 0) {
+        if (type.startsWith("image")) {
             html += `<img src="${this.uploadedFile}"/>`;
             this.uploadresult = $sce.trustAsHtml(html);
             return;
         }
-        if (type.indexOf("video") === 0) {
+        if (type.startsWith("video")) {
             html += `<video src="${this.uploadedFile}" controls/>`;
             this.uploadresult = $sce.trustAsHtml(html);
             return;
         }
-        if (type.indexOf("audio") === 0) {
+        if (type.startsWith("audio")) {
             html += `<audio src="${this.uploadedFile}" controls/>`;
             this.uploadresult = $sce.trustAsHtml(html);
             return;
         }
-        if (type.indexOf("text") === 0) {
+        if (type.startsWith("text")) {
             html = '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;"  width:1200px>';
             html += `<iframe  width="800" src="${file}" target="csdocument" allowfullscreen   ${this.iframeopts} />`;
             html += "</div>";
@@ -1603,7 +1603,7 @@ class CsController extends CsBase implements ITimComponent {
 
     logTime(msg: string) {
         const tid = this.pluginMeta.getTaskId();
-        csLogTime(msg + " " + (tid && tid.docTask()));
+        csLogTime(msg + " " + (tid?.docTask()));
         return true;
     }
 
@@ -1614,7 +1614,7 @@ class CsController extends CsBase implements ITimComponent {
         }
     }
 
-    runCodeCommon(nosave: boolean, extraMarkUp?: IExtraMarkup) {
+    async runCodeCommon(nosave: boolean, extraMarkUp?: IExtraMarkup) {
         this.runned = true;
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
         if (ty === "md") {
@@ -1630,7 +1630,7 @@ class CsController extends CsBase implements ITimComponent {
                 return;
             }
         }
-        this.doRunCode(ty, nosave || this.nosave);
+        await this.doRunCode(ty, nosave || this.nosave);
     }
 
     runCodeAuto() {
@@ -1641,8 +1641,8 @@ class CsController extends CsBase implements ITimComponent {
         this.runCodeCommon(nosave || this.nosave);
     }
 
-    runCode() {
-        this.runCodeCommon(false);
+    async runCode() {
+        await this.runCodeCommon(false);
     }
 
     runTest() {
@@ -1667,7 +1667,7 @@ class CsController extends CsBase implements ITimComponent {
 
     closeDocument() {
         this.docURL = "";
-        this.docLink = "Document"
+        this.docLink = "Document";
     }
 
     hideShowEditor() {
@@ -1720,7 +1720,7 @@ class CsController extends CsBase implements ITimComponent {
         this.runTestRed = false;
         this.oneruntime = "";
         let isInput = false;
-        if (this.type.indexOf("input") >= 0) {
+        if (this.type.includes("input")) {
             isInput = true;
         }
 
@@ -1799,7 +1799,7 @@ class CsController extends CsBase implements ITimComponent {
             this.initSaved();
             const data = r.result.data;
             const tsruntime = ((performance.now() - t0run) / 1000).toFixed(3);
-            const runtime = (data.web.runtime || "").trim();
+            const runtime = (data.web.runtime ?? "").trim();
             this.oneruntime = "" + tsruntime + " " + runtime.split(" ", 1)[0];
             this.runtime = "\nWhole: " + tsruntime + "\ncsPlugin: " + runtime;
             if (data.web.pwd) {
@@ -1812,8 +1812,8 @@ class CsController extends CsBase implements ITimComponent {
 
             const imgURL = data.web.image;
             // if ( !imgURL ) imgURL = data.web["-replyImage"];
-            this.imgURL = data.web["-replyImage"] || "";
-            this.htmlresult = (data.web["-replyHTML"] || "") + (data.web["-replyMD"] || "");
+            this.imgURL = data.web["-replyImage"] ?? "";
+            this.htmlresult = (data.web["-replyHTML"] ?? "") + (data.web["-replyMD"] ?? "");
             const wavURL = data.web.wav;
             if (data.web.testGreen) {
                 this.runTestGreen = true;
@@ -1828,7 +1828,7 @@ class CsController extends CsBase implements ITimComponent {
 
             const docURL = data.web.docurl;
 
-            const err = data.web.console || "";
+            const err = data.web.console ?? "";
             if (docURL) {
                 this.docURL = docURL;
                 this.docLink = "Hide document";
@@ -1861,7 +1861,7 @@ class CsController extends CsBase implements ITimComponent {
             this.isRunning = false;
             const data = r.result.data;
             this.error = "Ikuinen silmukka tai jokin muu vika?";
-            if (data && data.error) {
+            if (data?.error) {
                 this.error = data.error;
                 this.errors.push(data.error);
             }
@@ -1881,7 +1881,7 @@ class CsController extends CsBase implements ITimComponent {
         const f = this.taunoElem.firstChild as CustomFrame<TaunoWindow>;
         let s = f.contentWindow.getUserCodeFromTauno();
         this.copyingFromTauno = true;
-        const treplace = this.attrs.treplace || "";
+        const treplace = this.attrs.treplace ?? "";
         if (treplace) {
             const treps = treplace.split("&");
             for (const trep of treps) {
@@ -2075,7 +2075,7 @@ class CsController extends CsBase implements ITimComponent {
         let taunoUrl = tt; // +"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
         const s = this.attrs.table;
         if (s && s.length > 0) {
-            if (s[0] === "s") {
+            if (s.startsWith("s")) {
                 p = "ts=" + s.substring(1) + "&";
             } else {
                 p = "t=" + s.trim() + "&";
@@ -2226,11 +2226,11 @@ class CsController extends CsBase implements ITimComponent {
         let i = s.length - 1;
         let foundChars = false;
 
-        for ( ; i >= 0; i--) {
+        for (; i >= 0; i--) {
             const c = s[i];
-            if ( c == "\n") {
-                if ( foundChars ) { i++; break; }
-            } else if ( c != " ") { foundChars = true; }
+            if (c == "\n") {
+                if (foundChars) { i++; break; }
+            } else if (c != " ") { foundChars = true; }
         }
         return i;
     }
@@ -2239,12 +2239,12 @@ class CsController extends CsBase implements ITimComponent {
         let pre = "";
         let post = "";
         let extra = false;
-        if ( this.viewCode && this.precode ) { // TODO: get if not present?
+        if (this.viewCode && this.precode) { // TODO: get if not present?
             pre = this.precode + "\n";
             extra = true;
         }
 
-        if ( this.viewCode && this.postcode ) { // TODO: get if not present?
+        if (this.viewCode && this.postcode) { // TODO: get if not present?
             post = this.postcode + "\n";
             extra = true;
         }
@@ -2253,7 +2253,7 @@ class CsController extends CsBase implements ITimComponent {
 
         // TODO: begin and end texts as a parameter and then indext picked there
         let ind = "";
-        if ( extra ) {
+        if (extra) {
             ind = this.getSameIndent(this.usercode, 0);
             pre += ind + "// BYCODEBEGIN\n";  // TODO: ask comment string from language
             const i = this.findLastNonEmpty(usercode);
@@ -2266,23 +2266,23 @@ class CsController extends CsBase implements ITimComponent {
 
     checkByCodeRemove() {
         // TODO: begin and end texts as a parameter and then indext picked there
-        if ( this.nocode || !(this.file || this.program) ) { return; }
+        if (this.nocode || !(this.file || this.program)) { return; }
         const BEGINCODE = "BYCODEBEGIN";
         const ENDCODE = "BYCODEEND";
         let code = this.usercode;
         let i = code.indexOf(BEGINCODE);
-        if ( i >= 0) {
+        if (i >= 0) {
             const endl = code.indexOf("\n", i);
             if (endl < 0) { return; } // NO user code
             code = code.substr(endl + 1);
         }
         i = code.indexOf(ENDCODE);
-        if ( i >= 0 ) {
+        if (i >= 0) {
             let endl = code.lastIndexOf("\n", i);
-            if ( endl > 0 && code[endl - 1] == "\r") { endl--; } // if there are linefeeds like cr lf
-            if ( endl >= 0 ) { code = code.substr(0, endl); }
+            if (endl > 0 && code[endl - 1] == "\r") { endl--; } // if there are linefeeds like cr lf
+            if (endl >= 0) { code = code.substr(0, endl); }
         }
-        if ( code.length == this.usercode.length ) { return; }
+        if (code.length == this.usercode.length) { return; }
         this.usercode = code;
 
     }
@@ -2342,7 +2342,7 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     get replace() {
-        return this.attrs.replace || this.attrsall.replace;
+        return this.attrs.replace ?? this.attrsall.replace;
     }
 
     private maybeReplace(st: string[]): [string, string, string] {
@@ -2352,7 +2352,7 @@ class CsController extends CsBase implements ITimComponent {
         let nl = "";
         let nls = "";
         const needReplace = !!this.replace;
-        const regexp = new RegExp(this.replace || "");
+        const regexp = new RegExp(this.replace ?? "");
         for (const s of st) {
             // if ( s.indexOf($scope.replace) >= 0 ) {
             if (needReplace && regexp.test(s)) {
@@ -2568,10 +2568,10 @@ class CsController extends CsBase implements ITimComponent {
             return;
         }
         const eindex = parseInt(eindexStr, 10);
-        if (this.editorModes.indexOf("0") < 0) {
+        if (!this.editorModes.includes("0")) {
             return;
         }
-        if (this.editorModes.indexOf("1") < 0) {
+        if (!this.editorModes.includes("1")) {
             return;
         }
         for (let em = 0; em < this.editorModeIndecies.length; em++) {
@@ -2733,7 +2733,7 @@ class CsController extends CsBase implements ITimComponent {
 
     async showJS() {
         let isProcessing = false;
-        if (this.type.indexOf("processing") >= 0) {
+        if (this.type.includes("processing")) {
             isProcessing = true;
         }
         let wescheme = false;
@@ -2742,7 +2742,7 @@ class CsController extends CsBase implements ITimComponent {
         }
 
         let wantsConsole = false;
-        if (this.type.indexOf("/c") >= 0) {
+        if (this.type.includes("/c")) {
             wantsConsole = true;
         }
         if (!this.attrs.runeverytime && !this.usercode && !this.userargs && !this.userinput) {
@@ -2751,7 +2751,7 @@ class CsController extends CsBase implements ITimComponent {
         if (!this.canvas) { // create a canvas on first time
             let html = "";
             let scripts = "";
-            if (this.type.indexOf("/vis") >= 0) {
+            if (this.type.includes("/vis")) {
                 html = '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
                 scripts = "https://cdnjs.cloudflare.com/ajax/libs/vis/4.20.0/vis.min.js";
             }
@@ -2776,7 +2776,7 @@ class CsController extends CsBase implements ITimComponent {
                 }
                 const v = this.getVid(dw, dh);
                 this.irrotaKiinnita = this.english ? "Release" : "Irrota";
-                html = (this.attrs.html || html);
+                html = (this.attrs.html ?? html);
                 html = encodeURI(html);
                 let opts = 'seamless="seamless" sandbox="allow-scripts allow-forms allow-same-origin"';
                 if (this.iframeopts) {
@@ -2790,7 +2790,7 @@ class CsController extends CsBase implements ITimComponent {
            ng-click="$ctrl.closeFrame()"
            style="float: right">[X]</a></div></span>
     <iframe ng-if="!$ctrl.fullhtml" id="${v.vid}" class="jsCanvas"
-            src="${fsrc}?scripts=${this.attrs.scripts || scripts}&html=${html}" ${v.w}${v.h} style="border:0"
+            src="${fsrc}?scripts=${this.attrs.scripts ?? scripts}&html=${html}" ${v.w}${v.h} style="border:0"
             ${opts}></iframe>
     <iframe ng-if="$ctrl.fullhtml" id="${v.vid}" class="jsCanvas" ${v.w}${v.h} style="border:0"
             ${opts}></iframe>
@@ -3160,7 +3160,7 @@ class CsConsoleController extends CsBase implements IController {
                 s = data.web.error;
                 s = "<pre>" + s + "</pre>";
             } else {
-                s = data.web.console || "";
+                s = data.web.console ?? "";
                 if (!this.attrs.isHtml) {
                     s = "<pre>" + s + "</pre>";
                 }
@@ -3300,7 +3300,7 @@ export function truthTable(sentence: string, topbottomLines: boolean) {
         }
 
         for (const c of abcde) {
-            if (input.indexOf(c) >= 0) {
+            if (input.includes(c)) {
                 header += c + " ";
                 const zv = "z[" + count + "]";
                 input = input.split(c).join(zv);

@@ -10,8 +10,8 @@
     "bd": "ng build --deployUrl /static/scripts/build/",
     "bdw": "ng build --watch --deployUrl /static/scripts/build/",
     "postinstall": "patch-package",
-    "lint": "eslint static/scripts/tim/**/*.ts --ignore-pattern static/scripts/tim/environments/*.prod.ts",
-    "lintfix": "eslint static/scripts/tim/**/*.ts --ignore-pattern static/scripts/tim/environments/*.prod.ts --fix"
+    "lint": "eslint --ext ts static/scripts/tim modules",
+    "lintfix": "eslint --ext ts static/scripts/tim modules --fix"
   },
   "repository": {
     "type": "git",

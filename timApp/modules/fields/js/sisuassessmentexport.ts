@@ -119,7 +119,7 @@ interface ISendGradeOptions {
 }
 
 function sortAssessments(a: IAssessmentExt, b: IAssessmentExt): number {
-    return (a.user.real_name || "").localeCompare(b.user.real_name || "", "fi");
+    return (a.user.real_name ?? "").localeCompare(b.user.real_name ?? "", "fi");
 }
 
 const failGrades = new Set(["0", "HYL"]);

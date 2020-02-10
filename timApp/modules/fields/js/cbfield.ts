@@ -60,20 +60,20 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      * Returns (user) defined text for the button.
      */
     buttonText() {
-        return super.buttonText() || null;
+        return super.buttonText() ?? null;
     }
 
     static makeBoolean(s: string): boolean {
-        if ( s == "" ) { return false; }
-        if ( s == "0" ) { return false; }
-        if ( s == "false" ) { return false; }
-        if ( s == "1" ) { return true; }
+        if (s == "") { return false; }
+        if (s == "0") { return false; }
+        if (s == "false") { return false; }
+        if (s == "1") { return true; }
         return true;
     }
 
     $onInit() {
         super.$onInit();
-        const uw = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
+        const uw = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword ?? "")).toString();
         this.userword = CbfieldController.makeBoolean(uw);
 
         if (this.attrs.tag) {
@@ -82,7 +82,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
-        if (this.attrs.showname ) { this.initCode(); }
+        if (this.attrs.showname) { this.initCode(); }
     }
 
     /**
@@ -133,20 +133,20 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      * Returns (user) set inputstem (textfeed before userinput box).
      */
     get inputstem() {
-        return this.attrs.inputstem || "";
+        return this.attrs.inputstem ?? "";
     }
 
     /**
      * Returns (user) set col size (size of the field).
      */
     get cols() {
-        if ( !this.attrs.cols ) { return {}; }
+        if (!this.attrs.cols) { return {}; }
         return {width: this.attrs.cols + "em", display: "inline-block"};
     }
 
     // noinspection JSUnusedGlobalSymbols
     get cbStyle() {
-        if ( !this.inputstem && (this.stem || this.header ) ) { return {}; }
+        if (!this.inputstem && (this.stem || this.header)) { return {}; }
         return { // otherwise input stem and cb are vertical
             width: "auto",
         };
@@ -156,7 +156,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      * Initialize content.
      */
     initCode() {
-        this.userword = CbfieldController.makeBoolean(this.attrs.initword || "");
+        this.userword = CbfieldController.makeBoolean(this.attrs.initword ?? "");
         this.initialValue = this.userword;
         this.result = undefined;
     }
@@ -233,7 +233,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         this.errormessage = "";
         this.isRunning = true;
         let c = "0";
-        if ( this.userword ) { c = "1"; }
+        if (this.userword) { c = "1"; }
         this.result = undefined;
         const params = {
             input: {
@@ -252,7 +252,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             const data = r.result.data;
             // TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
             // (Use premade bootstrap method / add listener for enter?)
-            this.errormessage = data.web.error || "";
+            this.errormessage = data.web.error ?? "";
             this.result = data.web.result;
             this.initialValue = this.userword;
             this.hideSavedText = false;

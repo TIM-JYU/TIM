@@ -55,7 +55,7 @@ export type ErrorList = Array<{errors: IError[], user: string}>;
 
 interface AnswerReturnSuccess {
     web:
-        {output: string, errors: ErrorList, fatalError?: undefined, outdata?: object};
+        {output: string, errors: ErrorList, fatalError?: undefined, outdata?: {exportdata?: Array<{plugin: string, save?: boolean, data: unknown}>}};
     savedata: {};
 }
 

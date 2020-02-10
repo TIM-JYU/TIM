@@ -80,17 +80,17 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Returns (user) defined text for the button.
      */
     buttonText() {
-        return super.buttonText() || null;
+        return super.buttonText() ?? null;
     }
 
     $onInit() {
         super.$onInit();
-        this.userword = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword || "")).toString();
+        this.userword = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword ?? "")).toString();
         // this.modelOpts = {debounce: this.autoupdate};
         this.modelOpts = {debounce: { blur: 0}};
-        this.vctrl.addTimComponent(this, this.attrs.tag );
+        this.vctrl.addTimComponent(this, this.attrs.tag);
         this.initialValue = this.userword;
-        if (this.attrs.showname ) { this.initCode(); }
+        if (this.attrs.showname) { this.initCode(); }
         if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles) {
             this.applyStyling(this.attrsall.state.styles);
         }
@@ -163,7 +163,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Returns (user) set inputstem (textfeed before userinput box).
      */
     get inputstem() {
-        return this.attrs.inputstem || "";
+        return this.attrs.inputstem ?? "";
     }
 
     /**
@@ -181,15 +181,15 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Initialize content.
      */
     initCode() {
-        if ( this.attrs.showname ) {
+        if (this.attrs.showname) {
             const u = this.vctrl.selectedUser;
-            if ( this.attrs.showname == 1 ) {
-                this.userword = u.real_name || "";
+            if (this.attrs.showname == 1) {
+                this.userword = u.real_name ?? "";
             }
-            if ( this.attrs.showname == 2 ) {
+            if (this.attrs.showname == 2) {
                 this.userword = u.name;
             }
-        } else { this.userword = this.attrs.initword || ""; }
+        } else { this.userword = this.attrs.initword ?? ""; }
         this.initialValue = this.userword;
         this.result = undefined;
     }
@@ -246,7 +246,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
-        if ( this.attrs.showname ) { return true; }
+        if (this.attrs.showname) { return true; }
         return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
     }
 
@@ -333,7 +333,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.errormessage = "";
         if (this.attrs.validinput) {
             if (!this.validityCheck(this.attrs.validinput)) {
-                this.errormessage = this.attrs.errormessage || "Input does not pass the RegEx: " + this.attrs.validinput;
+                this.errormessage = this.attrs.errormessage ?? "Input does not pass the RegEx: " + this.attrs.validinput;
                 this.redAlert = true;
                 this.saveResponse.message = this.errormessage;
                 return this.saveResponse;
@@ -358,7 +358,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             const data = r.result.data;
             // TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
             // (Use premade bootstrap method / add listener for enter?)
-            this.errormessage = data.web.error || "";
+            this.errormessage = data.web.error ?? "";
             this.result = data.web.result;
             this.initialValue = this.userword;
             this.hideSavedText = false;

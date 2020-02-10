@@ -107,8 +107,8 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         super.$onInit();
         this.button = this.buttonText();
         const aa = this.attrsall;
-        this.userCode = aa.usercode || this.attrs.by || "";
-        this.timWay = aa.timWay || this.attrs.timWay || false;
+        this.userCode = (aa.usercode ?? this.attrs.by) ?? "";
+        this.timWay = (aa.timWay ?? this.attrs.timWay) ?? false;
 
         this.element.on("keydown", (event) => {
             if (event.ctrlKey || event.metaKey) {
@@ -129,9 +129,9 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
     processNodes(res: {[name: string]: string}, nodes: HTMLCollectionOf<HTMLInputElement> |
         HTMLCollectionOf<HTMLTextAreaElement> | HTMLCollectionOf<HTMLSelectElement>, id: string): {[name: string]: string} {
         for (const element of nodes) {
-            if (element.name.indexOf(STACK_VARIABLE_PREFIX) === 0 &&
-                element.name.indexOf("_val") === -1 &&
-                element.name.indexOf(id) >= 0
+            if (element.name.startsWith(STACK_VARIABLE_PREFIX) &&
+                !element.name.includes("_val") &&
+                element.name.includes(id)
             ) {
                 if (element instanceof HTMLInputElement && (element.type === "checkbox" || element.type === "radio")) {
                     if (element.checked) {
@@ -240,7 +240,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         // await ParCompiler.processAllMath(this.element);
     }
 
-    async inputHandler(e: JQuery.TriggeredEvent) {
+    inputHandler(e: JQuery.TriggeredEvent) {
         const target = e.currentTarget as HTMLInputElement;
         this.lastInputFieldElement = target;
         const id: string = target.id;
@@ -272,7 +272,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         peekDivC.replaceWith(pdiv); // TODO: still flashes
     }
 
-    async autoPeekInput(id: string) {
+    autoPeekInput(id: string) {
         this.stopTimer();
         this.timer = setTimeout(() => this.timedAutoPeek(id), 500);
     }
