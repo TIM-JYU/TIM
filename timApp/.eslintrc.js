@@ -86,6 +86,7 @@ module.exports = {
         "@typescript-eslint/prefer-optional-chain": "error",
         "@typescript-eslint/prefer-string-starts-ends-with": "error",
         "@typescript-eslint/prefer-as-const": "error",
+        "@typescript-eslint/switch-exhaustiveness-check": "error",
         "arrow-body-style": "off",
         "arrow-parens": [
             "error",
