@@ -245,7 +245,7 @@ JSREADYHTML['simpleDrawIO'] = """
 							// Avoids unescaped < and > from innerHTML for valid XML
                             var ch = elt.firstChild;
 							var svg = '';
-							if ( ch ) svg = new XMLSerializer().serializeToString();
+							if ( ch ) svg = new XMLSerializer().serializeToString(ch);
 							iframe.contentWindow.postMessage(JSON.stringify({action: 'load',
 								autosave: 1, xml: svg}), '*');
 						}
