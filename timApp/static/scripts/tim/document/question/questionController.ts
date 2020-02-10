@@ -904,7 +904,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             return;
         }
 
-        setStorage("timelimit", questionjson.timeLimit || 30);
+        setStorage("timelimit", questionjson.timeLimit ?? 30);
 
         if (isAskedQuestion(p)) {
             await this.updatePoints(p);
@@ -923,7 +923,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         const docId = p.docId;
 
         // Change undefined to null. This avoids "null" being saved in the markup for answerLimit.
-        this.pluginMarkup.answerLimit = this.pluginMarkup.answerLimit || undefined;
+        this.pluginMarkup.answerLimit = this.pluginMarkup.answerLimit ?? undefined;
 
         const r = await to($http.post<IParResponse>(route, {
             docId,

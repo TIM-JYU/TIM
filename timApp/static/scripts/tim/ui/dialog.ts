@@ -239,9 +239,9 @@ export function showDialog<T extends DialogController<unknown, unknown>, Service
 <div tim-draggable-fixed
      click="${opts.showMinimizeButton !== undefined ? opts.showMinimizeButton : true}"
      resize="true"
-     save="${opts.saveKey || component.component}"
-     absolute="${opts.absolute || false}"
-     force-maximized="${opts.forceMaximized || false}"
+     save="${opts.saveKey ?? component.component}"
+     absolute="${opts.absolute ?? false}"
+     force-maximized="${opts.forceMaximized ?? false}"
      style="pointer-events: auto;"
      class="modal-dialog {{size ? 'modal-' + size : ''}}">
     <div class="draggable-content modal-content" uib-modal-transclude>
@@ -250,13 +250,13 @@ export function showDialog<T extends DialogController<unknown, unknown>, Service
 </div>`);
     const instance: IModalInstanceService = $uibModal.open({
         animation: false,
-        backdrop: opts.backdrop || false,
+        backdrop: opts.backdrop ?? false,
         component: component.component,
         keyboard: false,
         openedClass: "unused-class", // prevents scrolling from being disabled
         resolve: resolve,
-        windowClass: (opts.classes || ["no-pointer-events"]).join(" "), // no-pointer-events enables clicking things outside dialog
-        size: opts.size || "md",
+        windowClass: (opts.classes ?? ["no-pointer-events"]).join(" "), // no-pointer-events enables clicking things outside dialog
+        size: opts.size ?? "md",
     });
     const custom = instance as IModalInstance<T>;
     custom.dialogInstance = new TimDefer<T>();

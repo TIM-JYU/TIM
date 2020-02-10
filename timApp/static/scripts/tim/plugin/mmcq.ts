@@ -149,7 +149,7 @@ class MCQ extends MCQBase<number | null> {
 
     $onInit() {
         super.$onInit();
-        this.userSelection = this.content.state || undefined;
+        this.userSelection = this.content.state ?? undefined;
         const fields = ["headerText", "buttonText"] as const;
         fields.forEach((opt) => {
             const o = this.content.question[opt];

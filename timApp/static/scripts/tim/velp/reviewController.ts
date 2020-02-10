@@ -247,7 +247,7 @@ export class ReviewController {
             }
         });
 
-        annotations.sort((a, b) => (b.coord.start.offset || 0) - (a.coord.start.offset || 0));
+        annotations.sort((a, b) => (b.coord.start.offset ?? 0) - (a.coord.start.offset ?? 0));
 
         return annotations;
     }
@@ -536,7 +536,7 @@ export class ReviewController {
             }
             if (range && range.toString().length > 0) {
                 this.selectedArea = range.getRangeAt(0);
-                this.selectedElement = this.getElementParentUntilAttribute(this.selectedArea.startContainer, "t") || undefined;
+                this.selectedElement = this.getElementParentUntilAttribute(this.selectedArea.startContainer, "t") ?? undefined;
             } else {
                 this.selectedArea = undefined;
             }
@@ -564,7 +564,7 @@ export class ReviewController {
         }
 
         const newElement = this.selectedElement;
-        this.updateVelpBadge(oldElement, newElement || null);
+        this.updateVelpBadge(oldElement, newElement ?? null);
         if (newElement != null) {
             this.velpSelection.updateVelpList();
         }
@@ -786,7 +786,7 @@ export class ReviewController {
             coord = {
                 start: {
                     par_id: parelement.id,
-                    t: parelement.getAttribute("t") || undefined,
+                    t: parelement.getAttribute("t") ?? undefined,
                     el_path: elementPath,
                     offset: startoffset,
                     depth: elementPath.length,
@@ -794,7 +794,7 @@ export class ReviewController {
                 },
                 end: {
                     par_id: parelement.id,
-                    t: parelement.getAttribute("t") || undefined,
+                    t: parelement.getAttribute("t") ?? undefined,
                     el_path: elementPath,
                     offset: endOffset,
                     depth: elementPath.length,
@@ -811,11 +811,11 @@ export class ReviewController {
             coord = {
                 start: {
                     par_id: this.selectedElement.id,
-                    t: this.selectedElement.getAttribute("t") || undefined,
+                    t: this.selectedElement.getAttribute("t") ?? undefined,
                 },
                 end: {
                     par_id: this.selectedElement.id,
-                    t: this.selectedElement.getAttribute("t") || undefined,
+                    t: this.selectedElement.getAttribute("t") ?? undefined,
                 },
             };
 
@@ -1150,7 +1150,7 @@ export class ReviewController {
         if (!taskId) {
             return;
         }
-        let ab = this.getAnswerBrowserFromPluginLoader(loader) || null;
+        let ab = this.getAnswerBrowserFromPluginLoader(loader) ?? null;
 
         if (!ab) {
             const loaderCtrl = this.vctrl.getPluginLoader(taskId);

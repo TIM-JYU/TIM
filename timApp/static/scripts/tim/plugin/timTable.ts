@@ -619,7 +619,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.hide = this.data.hide;
         }
 
-        this.noNeedFirstClick = this.hide.needFirstClick || false;
+        this.noNeedFirstClick = this.hide.needFirstClick ?? false;
 
         if (typeof this.data.button !== "undefined") {
             this.button = this.data.button;
@@ -632,7 +632,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.maxCols = this.data.maxCols;
         }
 
-        this.headersStyle = this.data.headersStyle || null;
+        this.headersStyle = this.data.headersStyle ?? null;
 
         if (!this.headersStyle) {
             this.headersStyle = {"backgroundColor": "lightgray", "font-weight": "bold"};
@@ -644,7 +644,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.userdata = this.data.userdata;
         this.reInitialize();
 
-        this.filterRow = this.data.filterRow || false;
+        this.filterRow = this.data.filterRow ?? false;
         if (this.cellDataMatrix.length <= 2) {
             this.filterRow = false;
         }
@@ -705,7 +705,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             }
             this.viewctrl.addTable(this, parId);
         }
-        this.currentHiddenRows = (this.data.hiddenRows || []).slice();
+        this.currentHiddenRows = (this.data.hiddenRows ?? []).slice();
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
@@ -1001,7 +1001,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.disableStartCell();
         // TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
         // this.saveAndCloseSmallEditor();
-        this.currentHiddenRows = (this.data.hiddenRows || []).slice();
+        this.currentHiddenRows = (this.data.hiddenRows ?? []).slice();
 
         let isFilter = false;
         const regs = [];
@@ -1086,7 +1086,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (this.sortRing[nl] != col) { // push old symbols  left and drop leftmost away
             const coli = this.sortRing.indexOf(col);
             if (coli < 0) {  // drop lefmost away
-                const last = this.sortRing.shift() || -1;
+                const last = this.sortRing.shift() ?? -1;
                 if (last >= 0) {
                     this.sortDir[last] = 0;
                     this.sortSymbol[last] = "";
@@ -2297,7 +2297,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const editOuterHeight = editinp.outerHeight();
         const buttonOpenBigEditor = this.buttonOpenBigEditor.nativeElement;
         const h1 = buttonOpenBigEditor.offsetHeight;
-        const h = tablecell.outerHeight() || 20;
+        const h = tablecell.outerHeight() ?? 20;
         if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
             const mul = sr == 0 ? 1 : 2;
             inlineEditorButtons.offset({
@@ -2346,7 +2346,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             const rown = this.cellDataMatrix.length;
             const coln = this.cellDataMatrix[0].length;
             for (const dr of defrange) {
-                const r = dr.validrange || this.checkRange(dr.range);
+                const r = dr.validrange ?? this.checkRange(dr.range);
                 dr.validrange = r;
                 if (this.checkIndex2(r, rown, coln, rowi, coli)) {
                     this.applyStyle(styles, dr.def, columnStyles);
@@ -2524,7 +2524,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (defrange) {
             const n = this.cellDataMatrix[0].length;
             for (const dr of defrange) {
-                const r = dr.validrange || this.checkRange(dr.range);
+                const r = dr.validrange ?? this.checkRange(dr.range);
                 dr.validrange = r;
                 if (this.checkIndex(r, n, index)) {
                     this.applyStyle(styles, dr.def, columnStyles);
@@ -2558,7 +2558,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (defrange) { // todo: do all this on init
             const n = this.cellDataMatrix.length;
             for (const dr of defrange) {
-                const r = dr.validrange || this.checkRange(dr.range);
+                const r = dr.validrange ?? this.checkRange(dr.range);
                 dr.validrange = r;
                 if (this.checkIndex(r, n, rowi)) {
                     this.applyStyle(styles, dr.def, rowStyles);
@@ -3114,7 +3114,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getTaskId(): TaskId | undefined {
-        return this.taskid || this.pluginMeta.getTaskId();
+        return this.taskid ?? this.pluginMeta.getTaskId();
     }
 
     // getContent: () => string | undefined;

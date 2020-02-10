@@ -79,9 +79,9 @@ export class BookmarksController implements IController {
 
     async newBookmark(group: string | undefined, e: Event) {
         e.preventDefault();
-        const suggestedName = (genericglobals().curr_item || {title: undefined}).title || document.title;
+        const suggestedName = (genericglobals().curr_item ?? {title: undefined}).title ?? document.title;
         const bookmark = await showBookmarkDialog({
-            group: group || "",
+            group: group ?? "",
             name: suggestedName,
             link: "",
         });

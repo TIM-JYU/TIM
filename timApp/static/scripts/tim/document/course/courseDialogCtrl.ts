@@ -180,7 +180,7 @@ export class CourseDialogController extends DialogController<{params: IItem}, {}
         const r = await to($http.get<ICourseSettings>(`/courses/settings`));
         if (r.ok) {
             // Add a placeholder subject for quicker testing in case course settings does not exist.
-            this.subjects = r.result.data.course_subjects || ["test"];
+            this.subjects = r.result.data.course_subjects ?? ["test"];
         } else {
             this.errorMessage = r.result.data.error;
             this.successMessage = undefined;

@@ -111,7 +111,7 @@ export function getRefAttrs(par: Paragraph) {
         "ref-id": par.attr("ref-id"),
         "ref-t": par.attr("ref-t"),
         "ref-doc-id": par.attr("ref-doc-id"),
-        "ref-attrs": JSON.parse(par.attr("ref-attrs") || "{}"),
+        "ref-attrs": JSON.parse(par.attr("ref-attrs") ?? "{}"),
     };
 }
 

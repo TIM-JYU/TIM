@@ -84,7 +84,7 @@ export class ParagraphCompiler {
     public async processAllMathDelayed($elem: JQuery, delay?: number) {
         await $timeout(() => {
             this.processAllMath($elem);
-        }, delay || 300);
+        }, delay ?? 300);
     }
 
     public async processAllMath($elem: JQuery) {

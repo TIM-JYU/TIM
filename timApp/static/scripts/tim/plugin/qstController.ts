@@ -59,14 +59,14 @@ class QstController implements IController {
         this.isLecturer = (this.lctrl && this.lctrl.isLecturer) || false;
         this.attrs = JSON.parse(this.json) as IQstAttributes;
         // console.log(this.attrs);
-        this.preview = makePreview(this.attrs.markup, {answerTable: this.attrs.state || [],
+        this.preview = makePreview(this.attrs.markup, {answerTable: this.attrs.state ?? [],
                                                         showCorrectChoices: this.attrs.show_result,
                                                         showExplanations: this.attrs.show_result,
                                                         enabled: !this.attrs.markup.invalid});
         this.result = "";
-        this.button = this.attrs.markup.button || "Save";
-        this.resetText = this.attrs.markup.resetText || "Reset";
-        this.stem = this.attrs.markup.stem || "";
+        this.button = this.attrs.markup.button ?? "Save";
+        this.resetText = this.attrs.markup.resetText ?? "Reset";
+        this.stem = this.attrs.markup.stem ?? "";
         this.newAnswer = this.preview.answerTable;
     }
 

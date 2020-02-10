@@ -77,7 +77,7 @@ class FreeHand {
         this.ctx = imgx.getCanvasCtx();
         this.emotion = imgx.emotion;
         this.imgx = imgx;
-        this.videoPlayer = player || {currentTime: 1e60, fakeVideo: true};
+        this.videoPlayer = player ?? {currentTime: 1e60, fakeVideo: true};
         if (this.emotion && this.imgx.teacherMode) {
             if (!isFakePlayer(this.videoPlayer)) {
                 if (this.imgx.attrs.analyzeDot) {
@@ -343,8 +343,8 @@ class FreeHand {
 }
 
 function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
-    ctx.strokeStyle = seg.color || ctx.strokeStyle;
-    ctx.lineWidth = numOrStringToNumber(seg.w || ctx.lineWidth);
+    ctx.strokeStyle = seg.color ?? ctx.strokeStyle;
+    ctx.lineWidth = numOrStringToNumber(seg.w ?? ctx.lineWidth);
 }
 
 function drawFreeHand(ctx: CanvasRenderingContext2D, dr: ILineSegment[]) {
@@ -508,7 +508,7 @@ function areObjectsOnTopOf<T extends DrawObject>(
     grabOffset: number | undefined,
 ): T | undefined {
     for (const o of objects) {
-        const collision = isObjectOnTopOf(position, o, grabOffset || 0);
+        const collision = isObjectOnTopOf(position, o, grabOffset ?? 0);
         if (collision) {
             return o;
         }
@@ -671,8 +671,8 @@ class DragTask {
 
         if (this.activeDragObject) {
             const dobj = this.activeDragObject;
-            const xlimits: [number, number] = dobj.obj.xlimits || [Number.MIN_VALUE, Number.MAX_VALUE];
-            const ylimits: [number, number] = dobj.obj.ylimits || [Number.MIN_VALUE, Number.MAX_VALUE];
+            const xlimits: [number, number] = dobj.obj.xlimits ?? [Number.MIN_VALUE, Number.MAX_VALUE];
+            const ylimits: [number, number] = dobj.obj.ylimits ?? [Number.MIN_VALUE, Number.MAX_VALUE];
             if (dobj.obj.lock !== "x") {
                 dobj.obj.x = toRange(xlimits, this.mousePosition.x - dobj.xoffset);
             }
@@ -871,13 +871,13 @@ class Pin {
         private values: RequiredNonNull<PinPropsT>,
         defaultAlign: PinAlign,
     ) {
-        const a = values.position.align || defaultAlign;
+        const a = values.position.align ?? defaultAlign;
         const {x, y} = alignToDir(a, 1 / Math.sqrt(2));
         const lngth = values.length;
         this.pos = {
             align: a,
-            coord: tupleToCoords(values.position.coord || [x * lngth, y * lngth]),
-            start: tupleToCoords(values.position.start || [0, 0]),
+            coord: tupleToCoords(values.position.coord ?? [x * lngth, y * lngth]),
+            start: tupleToCoords(values.position.start ?? [0, 0]),
         };
     }
 
@@ -968,7 +968,7 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
                     [this.pendingImage, img] = loadImage(this.values.imgproperties.src);
                     if (this.values.imgproperties.textbox) {
                         this.childShapes.push({
-                            p: this.values.textboxproperties ? tupleToCoords(this.values.textboxproperties.position || [0, 0]) : {
+                            p: this.values.textboxproperties ? tupleToCoords(this.values.textboxproperties.position ?? [0, 0]) : {
                                 x: 0,
                                 y: 0,
                             },
@@ -981,15 +981,15 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
                 this.mainShape = new DImage(img, s);
                 break;
             case "ellipse":
-                this.mainShape = new Ellipse(() => this.overrideColor || this.values.color || "black", 2, s);
+                this.mainShape = new Ellipse(() => (this.overrideColor ?? this.values.color) ?? "black", 2, s);
                 break;
             case "textbox":
                 this.mainShape = textboxFromProps(this.values, s, () => this.overrideColor, this.id);
                 break;
             case "vector":
-                const vprops = this.values.vectorproperties || {};
+                const vprops = this.values.vectorproperties ?? {};
                 this.mainShape = new Vector(
-                    () => this.overrideColor || vprops.color || this.values.color || "black",
+                    () => (this.overrideColor ?? vprops.color) ?? this.values.color ?? "black",
                     2,
                     s,
                     vprops.arrowheadwidth,
@@ -997,9 +997,9 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
                 );
                 break;
             default: // rectangle
-                this.mainShape = new Rectangle(() => this.overrideColor || this.values.color || "black",
+                this.mainShape = new Rectangle(() => (this.overrideColor ?? this.values.color) ?? "black",
                     "transparent",
-                    this.values.borderWidth || 2,
+                    this.values.borderWidth ?? 2,
                     0,
                     s);
                 break;
@@ -1027,7 +1027,7 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
     }
 
     get id(): string {
-        return this.values.id || this.did;
+        return this.values.id ?? this.did;
     }
 
     get mainShapeOffset() {
@@ -1065,16 +1065,16 @@ function textboxFromProps(values: {textboxproperties?: TextboxPropsT | null, col
                           s: ISizedPartial | undefined,
                           overrideColorFn: () => string | undefined,
                           defaultText: string) {
-    const props = values.textboxproperties || {};
+    const props = values.textboxproperties ?? {};
     return new Textbox(
-        () => overrideColorFn() || props.borderColor || values.color || "black",
-        props.textColor || "black",
-        props.fillColor || "white",
+        () => (overrideColorFn() ?? props.borderColor) ?? values.color ?? "black",
+        props.textColor ?? "black",
+        props.fillColor ?? "white",
         valueOr(props.borderWidth, 2),
         valueOr(props.cornerradius, 2),
         tupleToSizedOrDef(props.size, s),
-        props.text || defaultText,
-        props.font || "14px Arial",
+        props.text ?? defaultText,
+        props.font ?? "14px Arial",
     );
 }
 
@@ -1100,11 +1100,11 @@ class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObj
                 defId: string) {
         super(ctx, values, defId);
         this.pin = new Pin({
-            color: values.pin.color || "blue",
+            color: values.pin.color ?? "blue",
             dotRadius: valueOr(values.pin.dotRadius, 3),
             length: valueOr(values.pin.length, 15),
             linewidth: valueOr(values.pin.linewidth, 2),
-            position: values.pin.position || {},
+            position: values.pin.position ?? {},
             visible: valueOr(values.pin.visible, true),
         }, this.values.type === "vector" ? "west" : "northwest");
     }
@@ -1209,8 +1209,8 @@ abstract class Shape {
      */
     isNormalizedPointInsideShape(p: IPoint, offset?: number) {
         const s = this.size;
-        const r1 = s.width + (offset || 0);
-        const r2 = s.height + (offset || 0);
+        const r1 = s.width + (offset ?? 0);
+        const r2 = s.height + (offset ?? 0);
         return p.x >= -r1 / 2 && p.x <= r1 / 2 &&
             p.y >= -r2 / 2 && p.y <= r2 / 2;
     }
@@ -1263,8 +1263,8 @@ class Ellipse extends Shape {
 
     isNormalizedPointInsideShape(p: IPoint, offset?: number) {
         const {width, height} = this.size;
-        const r1 = width + (offset || 0);
-        const r2 = height + (offset || 0);
+        const r1 = width + (offset ?? 0);
+        const r2 = height + (offset ?? 0);
         return (Math.pow(p.x, 2) / Math.pow(r1 / 2, 2)) +
             (Math.pow(p.y, 2) / Math.pow(r2 / 2, 2)) <= 1;
     }
@@ -1517,11 +1517,11 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get buttonPlay() {
-        return this.attrs.buttonPlay || (this.videoPlayer ? "Aloita/pysäytä" : null);
+        return this.attrs.buttonPlay ?? (this.videoPlayer ? "Aloita/pysäytä" : null);
     }
 
     get buttonRevert() {
-        return this.attrs.buttonRevert || (this.videoPlayer ? "Video alkuun" : null);
+        return this.attrs.buttonRevert ?? (this.videoPlayer ? "Video alkuun" : null);
     }
 
     get teacherMode() {
@@ -1615,7 +1615,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         if (this.attrs.background) {
             const background = new FixedObject(
                 ctx, {
-                    a: this.attrs.background.a || 0,
+                    a: this.attrs.background.a ?? 0,
                     imgproperties: {src: this.attrs.background.src, textbox: false},
                     position: [0, 0],
                     size: this.attrs.background.size,
@@ -1632,7 +1632,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 
         let fixedDef = deepmerge<RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>>(
             baseDefs("rectangle", "blue"),
-            this.attrs.defaults || {},
+            this.attrs.defaults ?? {},
             opts,
         );
 
@@ -1645,7 +1645,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 
         let targetDef = deepmerge<RequireExcept<TargetPropsT, OptionalTargetPropNames>>(
             baseDefs("rectangle", "blue"),
-            this.attrs.defaults || {},
+            this.attrs.defaults ?? {},
             opts,
         );
         if (userTargets) {
@@ -1665,7 +1665,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 
         let dragDef = deepmerge<RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>>(
             baseDefs("textbox", "black"),
-            this.attrs.defaults || {},
+            this.attrs.defaults ?? {},
             opts,
         );
         if (userObjects) {
@@ -1896,11 +1896,11 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get button() {
-        return this.attrs.button || "Save";
+        return this.attrs.button ?? "Save";
     }
 
     get resetText() {
-        return this.attrs.resetText || "Reset";
+        return this.attrs.resetText ?? "Reset";
     }
 
     get freeHandLineVisible() {

@@ -50,7 +50,7 @@ This paragraph references another document.
 <ul class="list-unstyled">
     <li><b>Title:</b> ${this.data.item.title}</li>
     <li><b>Authors:</b> ${this.data.item.owners.map((o) => getGroupDesc(o)).join(", ")}</li>
-    <li><b>Paragraph:</b> ${this.data.par_name || this.parid}</li>
+    <li><b>Paragraph:</b> ${this.data.par_name ?? this.parid}</li>
 </ul>
 </div>
         `;

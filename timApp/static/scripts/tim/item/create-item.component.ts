@@ -79,13 +79,13 @@ export class CreateItemComponent implements OnInit {
         if (this.fullPath) {
             const str = this.fullPath;
             this.itemLocation = str.substring(0, str.lastIndexOf("/"));
-            this.itemTitle = getURLParameter("title") || str.substring(str.lastIndexOf("/") + 1, str.length);
+            this.itemTitle = getURLParameter("title") ?? str.substring(str.lastIndexOf("/") + 1, str.length);
         }
         if (this.itemTitle) {
             this.itemName = slugify(this.itemTitle);
         }
         if (this.template) {
-            this.params = this.params || {};
+            this.params = this.params ?? {};
             this.params.template = this.template;
         }
 
@@ -140,6 +140,6 @@ export class CreateItemComponent implements OnInit {
     }
 
     nameChanged() {
-        this.automaticShortName = (this.itemName || []).length === 0;
+        this.automaticShortName = (this.itemName ?? []).length === 0;
     }
 }

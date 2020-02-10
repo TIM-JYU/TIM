@@ -61,8 +61,8 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
 
         this.options = {
             ...this.storage.feedbackAnswersOptions,
-            periodFrom: moment(this.storage.feedbackAnswersOptions.periodFrom || Date.now()),
-            periodTo: moment(this.storage.feedbackAnswersOptions.periodFrom || Date.now()),
+            periodFrom: moment(this.storage.feedbackAnswersOptions.periodFrom ?? Date.now()),
+            periodTo: moment(this.storage.feedbackAnswersOptions.periodFrom ?? Date.now()),
         };
         this.datePickerOptionsFrom = {
             format: dateFormat,

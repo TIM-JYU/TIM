@@ -176,7 +176,7 @@ export class EditingHandler {
             tagsDescs.push({name: "marktranslated", desc: "Mark as translated"});
         }
         for (const t of tagKeys) {
-            const x = window.localStorage.getItem(t) || false;
+            const x = window.localStorage.getItem(t) ?? false;
             tags[t] = x === "true";
         }
 
@@ -185,7 +185,7 @@ export class EditingHandler {
             area_start: areaStart,
             docId: this.viewctrl.docId, // current document id
             forced_classes: options.forcedClasses,
-            par: parId || "NEW_PAR", // the id of paragraph on which the editor was opened
+            par: parId ?? "NEW_PAR", // the id of paragraph on which the editor was opened
             par_next: parNextId, // the id of the paragraph that follows par or null if par is the last one
             tags,
             ...(params.type === EditType.Edit ? isReference(params.pars) ? getRefAttrs(params.pars) : {} : {}),
@@ -217,7 +217,7 @@ export class EditingHandler {
 This will delete the whole ${options.area ? "area" : "paragraph"} from the document. Are you sure?
 
 (If you only want to remove selected text, use backspace.)`,
-                localSaveTag: options.localSaveTag || "par",
+                localSaveTag: options.localSaveTag ?? "par",
                 showDelete: options.showDelete,
                 showImageUpload: true,
                 showPlugins: true,

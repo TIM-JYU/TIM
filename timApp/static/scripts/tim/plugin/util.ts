@@ -38,9 +38,9 @@ export class PluginMeta {
     taskIdCache?: TaskId | null;
     public getTaskId() {
         if (this.taskIdCache !== undefined) {
-            return this.taskIdCache || undefined;
+            return this.taskIdCache ?? undefined;
         }
-        const tidStr = this.taskid || this.getParentAttr("id");
+        const tidStr = this.taskid ?? this.getParentAttr("id");
         if (tidStr) {
             const r = TaskId.tryParse(tidStr);
             if (r.ok) {
@@ -59,7 +59,7 @@ export class PluginMeta {
     }
 
     protected getPlugin() {
-        return this.plugintype || this.getParentAttr("data-plugin");
+        return this.plugintype ?? this.getParentAttr("data-plugin");
     }
 
     public getAnswerUrl() {

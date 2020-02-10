@@ -135,7 +135,7 @@ class RightsEditorController implements IController {
     }
 
     async $onInit() {
-        this.actionOption = this.action || ActionOption.Add;
+        this.actionOption = this.action ?? ActionOption.Add;
         if (!this.accessTypes || !this.massMode) {
             await this.getPermissions();
         }
@@ -656,7 +656,7 @@ class RightsEditorController implements IController {
         } else {
             this.timeOpt.to = undefined;
         }
-        this.requireConfirm = group.require_confirm || false;
+        this.requireConfirm = group.require_confirm ?? false;
 
         if (group.duration && group.accessible_from == null) {
             const d = moment.duration(group.duration);

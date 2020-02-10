@@ -14,7 +14,7 @@ export interface IStatisticsResult {
 }
 
 function getQuestionEndTime(q: IAskedQuestion) {
-    return q.asked_time.clone().add(moment.duration(q.json.json.timeLimit || 999999, "seconds"));
+    return q.asked_time.clone().add(moment.duration(q.json.json.timeLimit ?? 999999, "seconds"));
 }
 
 export class StatisticsToQuestionController extends DialogController<{params: IStatisticsParams}, IStatisticsResult> {

@@ -89,7 +89,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
     }
 
     buttonText() {
-        return super.buttonText() || "Import";
+        return super.buttonText() ?? "Import";
     }
 
     $onInit() {
@@ -103,7 +103,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         });
         this.separator = (state && state.separator) || this.attrs.separator;
         this.url = (state && state.url) || this.storage.importUrl || this.attrs.url;
-        this.urlToken = this.storage.importToken || "";
+        this.urlToken = this.storage.importToken ?? "";
         this.fields = ((state && state.fields) || this.attrs.fields || []).join("\n");
     }
 

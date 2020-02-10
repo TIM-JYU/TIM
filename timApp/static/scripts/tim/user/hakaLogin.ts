@@ -77,7 +77,7 @@ class HakaLoginController {
         setStorage("lastIdp", this.selectedIdp.entityID);
 
         if (this.alwaysKorppi && this.selectedIdp.scopes.includes("jyu.fi")) {
-            Users.korppiLogin(this.addingUser || false);
+            Users.korppiLogin(this.addingUser ?? false);
         } else {
             ssoLogin(this.selectedIdp.entityID, this.addingUser);
         }

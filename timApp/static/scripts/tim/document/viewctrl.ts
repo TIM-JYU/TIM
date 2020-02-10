@@ -289,7 +289,7 @@ export class ViewCtrl implements IController {
         });
 
         dg.allowMove = false;
-        this.oldWidth = $(window).width() || 500;
+        this.oldWidth = $(window).width() ?? 500;
         this.showRefresh = isPageDirty();
         this.liveUpdates = dg.liveUpdates;
 
@@ -988,7 +988,7 @@ export class ViewCtrl implements IController {
         if (taskId.split(".").length < 2) {
             taskId = this.docId + "." + taskId;
         }
-        return (this.abs.get(taskId) || this.formAbs.get(taskId));
+        return (this.abs.get(taskId) ?? this.formAbs.get(taskId));
     }
 
     getFormAnswerBrowser(taskId: string) {

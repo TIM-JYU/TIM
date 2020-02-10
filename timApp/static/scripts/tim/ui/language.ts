@@ -77,7 +77,7 @@ export function tr(s: string, opts?: {plural?: boolean}, replacements?: Record<s
     } else if (opts) {
         for (const [k, v] of Object.entries(opts)) {
             if (v) {
-                result = e[k] || s;
+                result = e[k] ?? s;
             }
         }
         result = e.default;

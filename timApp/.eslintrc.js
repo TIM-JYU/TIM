@@ -78,6 +78,7 @@ module.exports = {
         "@typescript-eslint/unbound-method": "off",
         "@typescript-eslint/unified-signatures": "error",
         "@typescript-eslint/prefer-includes": "error",
+        "@typescript-eslint/prefer-nullish-coalescing": "error",
         "arrow-body-style": "off",
         "arrow-parens": [
             "error",

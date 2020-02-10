@@ -376,8 +376,8 @@ class ChartController implements IController {
         }
 
         if (this.divresize) {
-            this.canvasw = this.div.width() || 400;
-            this.canvash = this.div.height() || 300;
+            this.canvasw = this.div.width() ?? 400;
+            this.canvash = this.div.height() ?? 300;
         }
 
         const j = this.question.json.json;
@@ -546,8 +546,8 @@ class ChartController implements IController {
         if (!this.div) {
             return;
         }
-        const w = this.div.width() || 400;
-        const h = this.div.height() || 300;
+        const w = this.div.width() ?? 400;
+        const h = this.div.height() ?? 300;
         this.resize(w, h);
     }
 

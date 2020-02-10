@@ -186,7 +186,7 @@ type MenuNameAndItems = Array<[string, MenuItemEntries]>;
 
 function getFullscreenElement(): Element | undefined {
     const doc = document as INonStandardFullScreenProperties & Document;
-    return doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+    return (doc.fullscreenElement ?? doc.webkitFullscreenElement) ?? doc.msFullscreenElement;
 }
 
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult> {
@@ -583,11 +583,11 @@ ${backTicks}
         const saveTag = this.getSaveTag();
         this.proeditor = this.getLocalBool("proeditor",
             saveTag === "par" || saveTag === TIM_TABLE_CELL);
-        this.activeTab = this.getLocalValue("editortab") || "navigation";
+        this.activeTab = this.getLocalValue("editortab") ?? "navigation";
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
         const sn = this.getLocalValue("wrap");
-        let n = parseInt(sn || "-90", 10);
+        let n = parseInt(sn ?? "-90", 10);
         if (isNaN(n)) {
             n = -90;
         }
@@ -608,7 +608,7 @@ ${backTicks}
             this.lastKnownDialogHeight = params.h;
             this.refreshEditorSize();
         });
-        const oldMode = window.localStorage.getItem("oldMode" + this.getOptions().localSaveTag) || (this.getOptions().touchDevice ? "text" : "ace");
+        const oldMode = window.localStorage.getItem("oldMode" + this.getOptions().localSaveTag) ?? (this.getOptions().touchDevice ? "text" : "ace");
         (async () => {
             await this.changeEditor(oldMode);
         })();
@@ -718,20 +718,20 @@ ${backTicks}
                         let text;
                         let clickfn;
                         if (MenuItemFileObject.is(templateObj)) {
-                            text = templateObj.text || templateObj.file;
+                            text = templateObj.text ?? templateObj.file;
                             const f = templateObj.file;
                             clickfn = async () => {
                                 await this.getTemplate(plugin, f, j.toString()); // TODO: Why is index needed for getTemplate...?
                             };
                         } else {
-                            text = templateObj.text || templateObj.data;
+                            text = templateObj.text ?? templateObj.data;
                             const dt = templateObj.data;
                             clickfn = () => {
                                 this.putTemplate(dt);
                             };
                         }
                         const existingTab = tabs[tab];
-                        const item = {name: text, title: templateObj.expl || "", func: clickfn};
+                        const item = {name: text, title: templateObj.expl ?? "", func: clickfn};
                         if (!existingTab) {
                             tabs[tab] = {[menu]: [item]};
                         } else {
@@ -835,7 +835,7 @@ ${backTicks}
             return;
         }
         const previewDiv = angular.element(".previewcontent");
-        this.scrollPos = previewDiv.scrollTop() || this.scrollPos;
+        this.scrollPos = previewDiv.scrollTop() ?? this.scrollPos;
         this.outofdate = true;
         const data = await this.resolve.params.previewCb(text);
         await ParCompiler.compileAndAppendTo(previewDiv, data, this.scope, this.resolve.params.viewCtrl);
@@ -1443,11 +1443,11 @@ ${backTicks}
         const s = $(window).scrollTop();
         this.editor!.focus();
         await $timeout();
-        $(window).scrollTop(s || this.scrollPos || 0);
+        $(window).scrollTop((s ?? this.scrollPos) ?? 0);
     }
 
     private saveOptions() {
-        this.setLocalValue("editortab", this.activeTab || "navigation");
+        this.setLocalValue("editortab", this.activeTab ?? "navigation");
         this.setLocalValue("autocomplete", this.autocomplete.toString());
         this.setLocalValue("oldMode", this.isAce(this.editor) ? "ace" : "text");
         this.setLocalValue("wrap", "" + this.wrap.n);

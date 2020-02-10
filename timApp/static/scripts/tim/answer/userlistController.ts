@@ -65,7 +65,7 @@ export class UserListController implements IController {
         let smallFieldWidth = 59;
 
         function nameCompare(a: IUserListEntry, b: IUserListEntry) {
-            return (a.user.real_name || "").localeCompare(b.user.real_name || "", sortLang);
+            return (a.user.real_name ?? "").localeCompare(b.user.real_name ?? "", sortLang);
         }
 
         this.viewctrl.users.sort(nameCompare);
@@ -135,7 +135,7 @@ export class UserListController implements IController {
                 sortingAlgorithm: numericSort,
             },
         ]);
-        this.instantUpdate = this.viewctrl.docSettings.form_mode || false;
+        this.instantUpdate = this.viewctrl.docSettings.form_mode ?? false;
 
         this.gridOptions = {
             exporterMenuPdf: false,
@@ -302,7 +302,7 @@ export class UserListController implements IController {
         for (const f of fields) {
             const fieldName = fieldNames.get(f);
             if (fieldName) {
-                filename = (filename || fieldName + ".txt");
+                filename = (filename ?? fieldName + ".txt");
                 if (dataKorppi !== "") {
                     dataKorppi += "\n";
                 }

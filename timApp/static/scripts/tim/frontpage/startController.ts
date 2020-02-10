@@ -43,7 +43,7 @@ export class StartCtrl implements IController {
                 this.language = "en";
                 break;
             default:
-                this.language = this.storage.language || FRONT_PAGE_DEFAULT_LANGUAGE;
+                this.language = this.storage.language ?? FRONT_PAGE_DEFAULT_LANGUAGE;
                 break;
         }
         this.storage.language = this.language;

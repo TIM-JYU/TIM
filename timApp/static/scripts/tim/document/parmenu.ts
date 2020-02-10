@@ -52,7 +52,7 @@ export class ParmenuHandler {
             if (this.viewctrl.selection.start != null) {
                 this.viewctrl.editingHandler.extendSelection(par, true);
             } else {
-                const offset = par.offset() || getEmptyCoords();
+                const offset = par.offset() ?? getEmptyCoords();
                 const coords = {left: e.pageX - offset.left, top: e.pageY - offset.top};
                 const toggle1 = !par.hasClass("lightselect");
                 const toggle2 = par.hasClass("lightselect") && !this.isCloseMenuDefault();
@@ -76,7 +76,7 @@ export class ParmenuHandler {
             await this.viewctrl.closePopupIfOpen();
             const par = $this.parent().filter(".par");
             if (isPreamble(par)) {
-                const parId = getParId(par) || "";
+                const parId = getParId(par) ?? "";
                 showMessageDialog(`
 <p>This paragraph is from a preamble document.
 To comment or edit this, go to the corresponding <a href="/view/${getPreambleDocId(par)}">preamble document</a>.</p>

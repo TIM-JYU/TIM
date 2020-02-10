@@ -54,8 +54,8 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
 
         this.options = {
             ...this.storage.allAnswersOptions,
-            periodFrom: moment(this.storage.allAnswersOptions.periodFrom || Date.now()),
-            periodTo: moment(this.storage.allAnswersOptions.periodFrom || Date.now()),
+            periodFrom: moment(this.storage.allAnswersOptions.periodFrom ?? Date.now()),
+            periodTo: moment(this.storage.allAnswersOptions.periodFrom ?? Date.now()),
             // The consent option was removed from the dialog (because the consent dialog was disabled),
             // so make sure that it does not restrict the search in case in is in local storage.
             consent: "any",

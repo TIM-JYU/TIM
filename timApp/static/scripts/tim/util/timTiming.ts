@@ -81,7 +81,7 @@ export function timLogTime(msg: string, id: string, level?: number) {
     if (timTimingFilter && !id.match(timTimingFilter)) {
         return;
     }
-    const tlevel = level || 0;
+    const tlevel = level ?? 0;
     if (tlevel > timTimingLevel) {
         return;
     }

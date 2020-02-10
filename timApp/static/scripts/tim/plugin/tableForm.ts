@@ -402,14 +402,14 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
      * Used to define table view & relative save button in angular, true or false.
      */
     buttonText() {
-        return (this.markup.buttonText || "Tallenna taulukko");
+        return (this.markup.buttonText ?? "Tallenna taulukko");
     }
 
     /**
      * Used to define table view & relative save button in angular, true or false.
      */
     reportButton() {
-        return (this.markup.reportButton || "Luo Raportti");
+        return (this.markup.reportButton ?? "Luo Raportti");
     }
 
     addHiddenIndex(i: number) {
@@ -476,14 +476,14 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         this.emails = this.checkToShow(this.markup.emails, emailColIndex, false);
         this.checkToShow(this.markup.includeUsers !== "current", memberShipColIndex, false);
 
-        this.rows = this.attrsall.rows || {};
+        this.rows = this.attrsall.rows ?? {};
         this.rowKeys = Object.keys(this.rows);
         this.styles = this.attrsall.styles;
-        this.fields = this.attrsall.fields || [];
-        this.realnamemap = this.attrsall.realnamemap || {};
-        this.emailmap = this.attrsall.emailmap || {};
-        this.membershipmap = this.attrsall.membershipmap || {};
-        this.aliases = this.attrsall.aliases || {};
+        this.fields = this.attrsall.fields ?? [];
+        this.realnamemap = this.attrsall.realnamemap ?? {};
+        this.emailmap = this.attrsall.emailmap ?? {};
+        this.membershipmap = this.attrsall.membershipmap ?? {};
+        this.aliases = this.attrsall.aliases ?? {};
 
         this.setDataMatrix();
 
@@ -853,7 +853,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
      * Choises are username, username and full name and anonymous. Username as default.
      */
     sortBy() {
-        return (this.markup.sortBy || "username");
+        return (this.markup.sortBy ?? "username");
     }
 
     /**
@@ -877,7 +877,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             fields: this.markup.fields,
             groups: this.markup.groups,
             removeDocIds: this.markup.removeDocIds,
-            separator: (this.markup.separator || ","),
+            separator: (this.markup.separator ?? ","),
             anonNames: this.markup.anonNames,
             realnames: this.markup.realnames,
             usernames: this.markup.usernames,

@@ -191,7 +191,7 @@ export async function initReadings(item: IItem) {
     });
 
     onClick(".areareadline", function areareadlineHandler($this, e) {
-        const oldClass = $this.attr("class") || null;
+        const oldClass = $this.attr("class") ?? null;
         $this.attr("class", "readline read");
 
         if (!Users.isLoggedIn()) {

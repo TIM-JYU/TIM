@@ -55,11 +55,11 @@ class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}
     }
 
     okText(): string {
-        return this.resolve.params.okText || "OK";
+        return this.resolve.params.okText ?? "OK";
     }
 
     cancelText(): string {
-        return this.resolve.params.cancelText || "Cancel";
+        return this.resolve.params.cancelText ?? "Cancel";
     }
 
     text() {

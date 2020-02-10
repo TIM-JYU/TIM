@@ -727,7 +727,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (single && location.href.includes("/view/")) { newroute = "view"; }  // TODO: think other routes also?
         const par = this.element.parents(".par");
         const parId = getParId(par);
-        const currBegin = getRangeBeginParam() || 0;
+        const currBegin = getRangeBeginParam() ?? 0;
         const params = new URLSearchParams(document.location.search);
         const group = params.get("group"); // TODO: should we save other params also?
         const rangeParams = single ? {
@@ -746,7 +746,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     updateAnswerFromURL() {
         const answerNumber = getURLParameter("answerNumber");
-        const index = this.answers.length - parseInt(answerNumber || "1", 10);
+        const index = this.answers.length - parseInt(answerNumber ?? "1", 10);
         if (answerNumber != null && this.urlParamMatchesThisTask()) {
             if (index >= 0 && index < this.answers.length) {
                 this.onlyValid = false;
@@ -858,7 +858,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     hasUserChanged() {
-        return (this.user || {id: null}).id !== (this.fetchedUser || {id: null}).id;
+        return (this.user ?? {id: null}).id !== (this.fetchedUser ?? {id: null}).id;
     }
 
     dimPlugin() {

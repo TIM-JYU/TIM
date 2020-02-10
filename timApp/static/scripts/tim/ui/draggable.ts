@@ -158,7 +158,7 @@ export class DraggableController implements IController {
     }
 
     getCaption() {
-        return this.caption || (this.captionCb ? this.captionCb() : "Dialog");
+        return this.caption ?? (this.captionCb ? this.captionCb() : "Dialog");
     }
 
     setCaptionCb(cb: () => string) {
@@ -312,7 +312,7 @@ export class DraggableController implements IController {
         const oldPos = getStorage(this.posKey);
         // it doesn't make sense to restore Y position if the dialog has absolute position (instead of fixed)
         if (await this.modalHasAbsolutePosition()) {
-            const off = this.element.offset() || {left: 20};
+            const off = this.element.offset() ?? {left: 20};
             this.element.offset({top: window.pageYOffset, left: off.left});
         }
         if (PosType.is(oldPos)) {

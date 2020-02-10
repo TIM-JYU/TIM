@@ -261,7 +261,7 @@ export class LectureController {
 
         let passwordGuess = null;
         if (codeRequired) {
-            passwordGuess = window.prompt(`Please enter a password to join the lecture '${lecture.lecture_code}':`, "") || undefined;
+            passwordGuess = window.prompt(`Please enter a password to join the lecture '${lecture.lecture_code}':`, "") ?? undefined;
             if (passwordGuess == null) {
                 return false;
             }

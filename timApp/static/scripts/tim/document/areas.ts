@@ -102,7 +102,7 @@ export class AreaHandler {
         }
         const pars = getArea(areaName).find(".par");
         const areaPart = $this.parent().filter(".area");
-        const offset = areaPart.offset() || getEmptyCoords();
+        const offset = areaPart.offset() ?? getEmptyCoords();
         const coords = {left: e.pageX - offset.left, top: e.pageY - offset.top};
 
         this.selectedAreaName = areaName;

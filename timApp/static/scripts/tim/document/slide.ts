@@ -94,7 +94,7 @@ function initReveal(rv: IFixedReveal) {
         showNotes: false,
         viewDistance: 10,
         theme: getURLParameter("theme"), // available themes are in /css/theme
-        transition: getURLParameter("transition") || "linear", // default/cube/page/concave/zoom/linear/fade/none
+        transition: getURLParameter("transition") ?? "linear", // default/cube/page/concave/zoom/linear/fade/none
         dependencies: [
             {
                 async: true,

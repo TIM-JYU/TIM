@@ -37,7 +37,7 @@ const orgNames: Record<string, string | undefined> = {
 };
 
 function getHomeOrgDisplay(s: string): string {
-    return orgNames[s] || s;
+    return orgNames[s] ?? s;
 }
 
 export class LoginDialogController extends DialogController<{params: ILoginParams}, {}> {

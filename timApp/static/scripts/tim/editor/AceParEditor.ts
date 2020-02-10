@@ -21,7 +21,7 @@ export class AceParEditor extends BaseParEditor {
         this.snippetManager = snippetModule.snippetManager;
         const line = editor.renderer.lineHeight;
         const containertop = $(".editorContainer").position().top;
-        const height = ($(window).innerHeight() || 700) - containertop;
+        const height = ($(window).innerHeight() ?? 700) - containertop;
         const max = Math.floor((height / 2) / line);
 
         this.editor.renderer.setPadding(10);
