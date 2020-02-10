@@ -824,7 +824,7 @@ export class ViewCtrl implements IController {
             if (taskId) {
                 const tid = taskId.docTask();
                 const comptab = this.getTimComponentByName(tid);
-                if (comptab && comptab.isUnSaved()) {
+                if (comptab?.isUnSaved()) {
                     continue;
                 }
             }

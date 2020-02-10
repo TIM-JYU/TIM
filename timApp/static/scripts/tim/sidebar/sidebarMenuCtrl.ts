@@ -130,7 +130,7 @@ export class SidebarMenuCtrl implements IController {
         // TODO: Theoretically there can be multiple different courses.
         //  Should display a list in that case.
         const gr = groups.find((g) => g.sisugroup_path != null);
-        if (gr && gr.sisugroup_path != null) {
+        if (gr?.sisugroup_path != null) {
             this.sisugroupPath = gr.sisugroup_path;
         }
     }

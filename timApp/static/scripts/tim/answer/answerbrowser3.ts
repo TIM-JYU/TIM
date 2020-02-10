@@ -109,11 +109,11 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
         }
         const m = this.pluginMarkup();
-        if (m && m.hideBrowser) {
+        if (m?.hideBrowser) {
             this.hideBrowser = true;
             this.showPlaceholder = false;
         }
-        if (m && m.forceBrowser) { this.forceBrowser = true; }
+        if (m?.forceBrowser) { this.forceBrowser = true; }
 
         this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
     }
@@ -153,12 +153,12 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             return undefined;
         }
         const a = c.attrsall;
-        return a && a.markup;
+        return a?.markup;
     }
 
     public isUseCurrentUser() {
         const m = this.pluginMarkup();
-        return m != null && m.useCurrentUser;
+        return m?.useCurrentUser;
     }
 
     public isGlobal(): boolean {
@@ -251,7 +251,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                 return true;
             }
             const timComp = this.viewctrl.getTimComponentByName(this.taskId);
-            if (timComp && timComp.isForm()) {
+            if (timComp?.isForm()) {
                 return true;
             }
         }
@@ -801,7 +801,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
         if (!c) { return user; }
         const a = c.attrsall;
-        if (a && a.markup && a.markup.useCurrentUser) {
+        if (a?.markup?.useCurrentUser) {
             this.user = Users.getCurrent();  // TODO: looks bad when function has a side effect?
             return Users.getCurrent();
         }
@@ -817,7 +817,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return undefined;
         }
         const a = c.attrsall;
-        return a && a.markup;
+        return a?.markup;
     }
 
     public isGlobal() {
@@ -827,7 +827,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     public forceBrowser() {
         const m = this.pluginMarkup();
-        return m && m.forceBrowser;
+        return m?.forceBrowser;
     }
 
     /* Return user answers, null = do not care */

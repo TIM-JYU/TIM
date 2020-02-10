@@ -79,6 +79,7 @@ module.exports = {
         "@typescript-eslint/unified-signatures": "error",
         "@typescript-eslint/prefer-includes": "error",
         "@typescript-eslint/prefer-nullish-coalescing": "error",
+        "@typescript-eslint/prefer-optional-chain": "error",
         "arrow-body-style": "off",
         "arrow-parens": [
             "error",

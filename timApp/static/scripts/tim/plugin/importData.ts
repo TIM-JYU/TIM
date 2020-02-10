@@ -101,10 +101,10 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
             importUrl: null,
             importToken: null,
         });
-        this.separator = (state && state.separator) || this.attrs.separator;
-        this.url = (state && state.url) || this.storage.importUrl || this.attrs.url;
+        this.separator = (state?.separator) ?? this.attrs.separator;
+        this.url = ((state?.url) ?? this.storage.importUrl) ?? this.attrs.url;
         this.urlToken = this.storage.importToken ?? "";
-        this.fields = ((state && state.fields) || this.attrs.fields || []).join("\n");
+        this.fields = (((state?.fields) ?? this.attrs.fields) ?? []).join("\n");
     }
 
     getAttributeType() {

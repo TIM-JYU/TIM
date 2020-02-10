@@ -156,7 +156,7 @@ function getModalAndMaxIndex(scope: IScope) {
         mymodal = mymodal.$parent as ModalScope;
     }
     let modal = ($rootScope as ModalScope).$$childHead;
-    while (modal != null && modal.$$prevSibling != null) {
+    while (modal?.$$prevSibling != null) {
         modal = modal.$$prevSibling;
     }
     let maxIndex = -1;

@@ -557,7 +557,7 @@ export class ReviewController {
              if (elements.length > 0)
              this.selectedElement = elements[0];
              */
-            if (par && par.id) {
+            if (par?.id) {
                 this.selectedElement = par;
             }
 
@@ -880,7 +880,7 @@ export class ReviewController {
                     return;
                 }
                 const ab = this.getAnswerBrowserFromPluginLoader(first);
-                return ab && ab.selectedAnswer;
+                return ab?.selectedAnswer;
             }
             return;
         }
@@ -890,7 +890,7 @@ export class ReviewController {
             return;
         }
         const ctrl = this.getAnswerBrowserFromPluginLoader(loader);
-        return ctrl && ctrl.selectedAnswer;
+        return ctrl?.selectedAnswer;
     }
 
     /**

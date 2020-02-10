@@ -3163,7 +3163,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return {saved: false, message: "No changes"};
         }
         const r = await this.sendDataBlockAsync();
-        if (r && r.ok) {
+        if (r?.ok) {
             return {saved: true, message: ""};
         }
         return {saved: false, message: "Error saving table"};

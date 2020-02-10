@@ -959,7 +959,7 @@ timApp.filter("filterByLabels", () => {
             for (let j = 0; j < velps.length; j++) {
 
                 for (const s of selectedLabels) {
-                    if (velps[j].labels != null && velps[j].labels.includes(s)) {
+                    if (velps[j].labels?.includes(s)) {
                         if (!(j in selectedVelps)) {
                             selectedVelps[j] = [velps[j], 1];
                         } else {
