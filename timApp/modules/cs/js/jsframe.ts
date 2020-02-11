@@ -134,7 +134,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         }
         const wnd = this;
         if (this.attrs.initListener && !this.attrsall.preview) {
-            setTimeout(function() { wnd.addListener(); }, 500);
+            setTimeout(function() { wnd.addListener(); }, 2000);
         }
     }
 
