@@ -89,11 +89,13 @@ def save_points(answer_id, user_id):
 
 
 def points_to_float(points: Union[str, float]):
-    if points:
-        points = float(points)
-    else:
-        points = None
-    return points
+    if isinstance(points, float):
+        return points
+    if points == '':
+        return None
+    if points is None:
+        return None
+    return float(points)
 
 
 @answers.route("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<int:anr>")

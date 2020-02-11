@@ -448,6 +448,7 @@ class PluginTest(TimRouteTest):
         p.set_value('pointsRule', {'allowUserMin': 0, 'allowUserMax': 5}).save()
         self.check_save_points(TEST_USER_2_ID, answer_id2, 6, 400, {'error': 'Points must be in range [0,5]'})
         self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 200, self.ok_resp)
+        self.check_save_points(TEST_USER_2_ID, answer_id2, 0, 200, self.ok_resp)
         self.check_save_points(TEST_USER_2_ID, answer_id2, None, 400, point_format_error)
         self.check_save_points(TEST_USER_2_ID, answer_id2, '', 400, point_format_error)
 
@@ -643,6 +644,9 @@ class PluginTest(TimRouteTest):
                       json_data={'points': points},
                       expect_status=expect_status,
                       expect_content=expect_content)
+        if expect_status == 200:
+            a = Answer.query.get(answer_id)
+            self.assertEqual(float(points) if points not in ('', None) else None, a.points)
 
     def test_find_tasks(self):
         self.login_test1()
