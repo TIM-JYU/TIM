@@ -3,13 +3,14 @@ from timApp.plugin.importdata.importData import conv_data_field_names
 from timApp.plugin.importdata.importData import conv_data_csv
 from timApp.plugin.importdata.importData import convert_data
 
+
 class TestImportData(TestCase):
     def test_conv_data_field_names(self):
         data = ["aknakka;demoA;3", "vesal;demoB;4", "hopohessu;demoC;5"]
         fields = ["demoA = d1", "demoB=d2"]
         e1 = ["aknakka;d1;3", "vesal;d2;4"]
 
-        r1 = conv_data_field_names(data, fields, ";")
+        r1 = conv_data_field_names(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in normal case")
 
     def test_conv_data_field_names2(self):
@@ -17,7 +18,7 @@ class TestImportData(TestCase):
         fields = ["demoA = d1", "demoB=d2", "*"]
         e1 = ["aknakka;d1;3", "vesal;d2;4", "hopohessu;demoC;5"]
 
-        r1 = conv_data_field_names(data, fields, ";")
+        r1 = conv_data_field_names(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in * case")
 
     def test_conv_data_field_names4(self):
@@ -25,7 +26,7 @@ class TestImportData(TestCase):
         fields = ["demoA = d1", "demoB=d2", "*"]
         e1 = ["aknakka;d1;3;d2;2", "vesal;d2;4;d1;9", "hopohessu;demoC;5"]
 
-        r1 = conv_data_field_names(data, fields, ";")
+        r1 = conv_data_field_names(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in * case")
 
     def test_conv_data_field_names5(self):
@@ -33,7 +34,7 @@ class TestImportData(TestCase):
         fields = ["demoA = d1"]
         e1 = ["aknakka;d1;3", "vesal;d1;9"]
 
-        r1 = conv_data_field_names(data, fields, ";")
+        r1 = conv_data_field_names(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in restricted case")
 
     def test_conv_data_field_names6(self):
@@ -41,7 +42,7 @@ class TestImportData(TestCase):
         fields = ["demo1 = d1;demo2=d2"]
         e1 = ["aknakka;d1;3", "vesal;d2;4"]
 
-        r1 = conv_data_field_names(data, fields, ";")
+        r1 = conv_data_field_names(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in widen case")
 
     def test_conv_data_field_names7(self):
@@ -49,7 +50,7 @@ class TestImportData(TestCase):
         fields = ["demo1 = d1;demo2=d2;*"]
         e1 = ["aknakka;d1;3", "vesal;d2;4", "hopohessu;demo3;5"]
 
-        r1 = conv_data_field_names(data, fields, ";")
+        r1 = conv_data_field_names(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in widen case")
 
     def test_conv_data_field_names8(self):
@@ -57,7 +58,7 @@ class TestImportData(TestCase):
         fields = ["demo(1,4) = d"]
         e1 = ["aknakka;d1;3", "vesal;d2;4", "hopohessu;d3;5"]
 
-        r1 = conv_data_field_names(data, fields, ";")
+        r1 = conv_data_field_names(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in widen case")
 
     def test_conv_data_csv(self):
@@ -66,7 +67,7 @@ class TestImportData(TestCase):
 
         e1 = ["aknakka;d1;1;d2;3;d3;4", "vesal;d1;2;d2;3;d3;6"]
 
-        r1 = conv_data_csv(data, fields, ";")
+        r1 = conv_data_csv(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in normal case")
 
     def test_conv_data_csv2(self):
@@ -75,7 +76,7 @@ class TestImportData(TestCase):
 
         e1 = ["aknakka;d1;1;d2;3;d3;4", "vesal;d1;2;d2;3;d3;6"]
 
-        r1 = conv_data_csv(data, fields, ";")
+        r1 = conv_data_csv(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in too many columns case")
 
     def test_conv_data_csv3(self):
@@ -84,7 +85,7 @@ class TestImportData(TestCase):
 
         e1 = ["aknakka;d1;1;d2;3;d3;4", "vesal;d1;2;d2;3"]
 
-        r1 = conv_data_csv(data, fields, ";")
+        r1 = conv_data_csv(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in too few columns case")
 
     def test_conv_data_csv4(self):
@@ -93,7 +94,7 @@ class TestImportData(TestCase):
 
         e1 = ["aknakka;d1;1;d2;3;d3;4", "vesal;d1;2;d2;3"]
 
-        r1 = conv_data_csv(data, fields, ";")
+        r1 = conv_data_csv(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in too few columns case")
 
     def test_conv_data_csv5(self):
@@ -102,7 +103,7 @@ class TestImportData(TestCase):
 
         e1 = ["aknakka;d1;1;d2;3;d3;4", "vesal;d1;2;d2;3"]
 
-        r1 = conv_data_csv(data, fields, ";")
+        r1 = conv_data_csv(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in too few columns case")
 
     def test_convert_data(self):
@@ -110,7 +111,7 @@ class TestImportData(TestCase):
         fields = []
         e1 = ["aknakka;d1;3", "vesal;d2;4"]
 
-        r1 = convert_data(data, fields, ";")
+        r1 = convert_data(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in normal case")
 
     def test_convert_data2(self):
@@ -119,7 +120,7 @@ class TestImportData(TestCase):
 
         e1 = ["aknakka;d1;1;d2;3;d3;4", "vesal;d1;2;d2;3"]
 
-        r1 = convert_data(data, fields, ";")
+        r1 = convert_data(data, fields, ";").to_tim_format()
         self.assertEqual(e1, r1, "Not same in CSV case")
 
     def test_convert_data3(self):
@@ -127,5 +128,5 @@ class TestImportData(TestCase):
         fields = ["demoA = d1", "demoB=d2"]
         e1 = ["aknakka,d1,3", "vesal,d2,4"]
 
-        r1 = conv_data_field_names(data, fields, ",")
+        r1 = conv_data_field_names(data, fields, ",").to_tim_format(',')
         self.assertEqual(e1, r1, "Not same in change name case")

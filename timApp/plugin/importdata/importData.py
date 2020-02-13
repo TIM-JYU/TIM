@@ -1,6 +1,7 @@
 """
 A plugin for importing data to TIM fields.
 """
+import re
 from collections import defaultdict
 from dataclasses import dataclass, asdict, field
 from enum import Enum
@@ -16,6 +17,8 @@ from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
     create_blueprint
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
+from timApp.user.hakaorganization import HakaOrganization
+from timApp.user.personaluniquecode import PersonalUniqueCode
 from timApp.user.user import User
 from timApp.util.utils import widen_fields
 
@@ -34,14 +37,11 @@ class ImportDataMarkupModel(GenericMarkupModel):
     borders: Union[bool, Missing, None] = missing
     docid: Union[int, Missing, None] = missing
     fields: Union[List[str], Missing] = missing
-    fieldsReqExps: Union[List[str], Missing] = missing
     loadButtonText: Union[str, Missing, None] = missing
     open: Union[bool, Missing, None] = missing
     placeholder: Union[str, Missing, None] = missing
     prefilter: Union[str, Missing, None] = missing
     separator: Union[str, Missing, None] = missing
-    userprefix: Union[str, Missing, None] = missing
-    userIdField: Union[int, Missing, None] = missing
     upload: Union[bool, Missing, None] = missing
     uploadstem: Union[str, Missing, None] = missing
     url: Union[str, Missing, None] = missing
@@ -51,6 +51,7 @@ class ImportDataMarkupModel(GenericMarkupModel):
     useurl: Union[bool, Missing, None] = missing
     useurltoken: Union[bool, Missing, None] = missing
     ignoreMissing: Union[bool, Missing, None] = missing
+    joinProperty: Union[str, Missing, None] = missing
 
 
 @dataclass
@@ -130,7 +131,8 @@ class FieldValues:
         self.values[user_ident][field_name] = value
 
     def to_tim_format(self, separator=';') -> List[str]:
-        return [f'{u}{separator}{separator.join(f"{n}{separator}{v}" for n, v in vals.items())}' for u, vals in self.values.items()]
+        return [f'{u}{separator}{separator.join(f"{n}{separator}{v}" for n, v in vals.items())}' for u, vals in
+                self.values.items()]
 
     @staticmethod
     def from_tim_format(data: List[str], separator=';'):
@@ -249,7 +251,7 @@ def answer(args: ImportDataAnswerModel):
         try:
             data, output = jsrunner_run(params)
         except JsRunnerError as e:
-            return jsonify({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
+            return args.make_answer_error('Error in JavaScript: ' + e.args[0])
         vals = FieldValues.from_tim_format(data)
     did = int(args.taskID.split(".")[0])
     if args.markup.docid:
@@ -258,7 +260,34 @@ def answer(args: ImportDataAnswerModel):
     wrong_count = 0
     wrongs = []
     field_count = 0
-    users = {u.name: u for u in User.query.filter(User.name.in_([r for r in vals.values.keys()])).all()}
+    id_prop = args.markup.joinProperty or 'username'
+    idents = [r for r in vals.values.keys()]
+
+    m = re.fullmatch(r'studentID\((?P<org>[a-z.]+)\)', id_prop)
+    users: Dict[str, User]
+    if m:
+        org = m.group('org')
+        q = (User.query.join(PersonalUniqueCode)
+             .filter(PersonalUniqueCode.code.in_(idents))
+             .join(HakaOrganization)
+             .filter_by(name=org)
+             .with_entities(PersonalUniqueCode.code, User))
+        users = {c: u for c, u in q.all()}
+    elif id_prop == 'username':
+        q = User.query.filter(User.name.in_(idents))
+        users = {u.name: u for u in q.all()}
+    elif id_prop == 'id':
+        try:
+            q = User.query.filter(User.id.in_([int(i) for i in idents]))
+        except ValueError as e:
+            return args.make_answer_error(f'User ids must be ints ({e})')
+        users = {str(u.id): u for u in q.all()}
+    elif id_prop == 'email':
+        q = User.query.filter(User.email.in_(idents))
+        users = {u.email: u for u in q.all()}
+    else:
+        return args.make_answer_error(f'Invalid joinProperty: {args.markup.joinProperty}')
+
     for uident, vs in vals.values.items():
         u = users.get(uident)
         if not u:

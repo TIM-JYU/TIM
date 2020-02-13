@@ -128,6 +128,9 @@ class GenericAnswerModel(GenericRouteModel[PluginInput, PluginMarkup, PluginStat
     """Generic base class for answer route models."""
     input: PluginInput
 
+    def make_answer_error(self, msg: str):
+        return jsonify({'web': {'error': msg}})
+
 
 class Laziness(Enum):
     No = False

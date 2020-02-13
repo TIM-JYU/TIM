@@ -1,5 +1,8 @@
 """Server tests for importData plugin."""
 from timApp.tests.browser.browsertest import BrowserTest
+from timApp.timdb.sqa import db
+from timApp.user.personaluniquecode import SchacPersonalUniqueCode
+from timApp.user.user import UserInfo
 
 
 class ImportDataTest(BrowserTest):
@@ -18,6 +21,18 @@ prefilter: |!!
 data.push("u;x;1");
 return data;
 !!
+#- {plugin=importData #t4}
+joinProperty: x
+#- {plugin=importData #t5}
+joinProperty: studentID
+#- {plugin=importData #t6}
+joinProperty: id
+#- {plugin=importData #t7}
+joinProperty: email
+#- {plugin=importData #t8}
+joinProperty: username
+#- {plugin=importData #t9}
+joinProperty: studentID(jyu.fi)
         """)
 
         def imp_200(data, expect_web=None, fields=None, expect=None, task=None):
@@ -83,3 +98,30 @@ return data;
                            '\n'
                            'x: user not found\n'
                            'u: user not found'}, task='t3')
+        imp_200('x;a;1', {'error': 'Invalid joinProperty: x'}, task='t4')
+        imp_200('x;a;1', {'error': 'Invalid joinProperty: studentID'}, task='t5')
+        imp_200('x;a;1', {'error': 'User ids must be ints (invalid literal for int() with base '
+                                   "10: 'x')"}, task='t6')
+        imp_200(f'{self.current_user.id};a;1',
+                {'result': 'Imported 1 values for 1 users'}, task='t6')
+
+        imp_200(f'{self.current_user.email};a;1', {'result': 'Imported 1 values for 1 users'}, task='t7')
+        imp_200(f'{self.current_user.id};a;1', {'result': 'Imported 0 values for 0 users\n'
+                                                          'Wrong lines: 1\n'
+                                                          '\n'
+                                                          '2: user not found'}, task='t7')
+        imp_200(f'{self.current_user.name};a;1', {'result': 'Imported 1 values for 1 users'}, task='t8')
+        imp_200(f'{self.current_user.email};a;1', {'result': 'Imported 0 values for 0 users\n'
+                                                             'Wrong lines: 1\n'
+                                                             '\n'
+                                                             'test1@example.com: user not found'}, task='t8')
+        imp_200(f'x;a;1', {'result': 'Imported 0 values for 0 users\n'
+                                     'Wrong lines: 1\n'
+                                     '\n'
+                                     'x: user not found'}, task='t9')
+        self.current_user.set_unique_codes(UserInfo(username=self.current_user.name,
+                                                    unique_codes=[
+                                                        SchacPersonalUniqueCode(code='x', codetype='studentID',
+                                                                                org='jyu.fi')]))
+        db.session.commit()
+        imp_200(f'x;a;1', {'result': 'Imported 1 values for 1 users'}, task='t9')
