@@ -160,15 +160,17 @@ def insert_block(block_type: BlockType, description: Optional[str], owner_groups
     return b
 
 
-def copy_default_rights(item, item_type: BlockType):
+def copy_default_rights(item, item_type: BlockType, owners_to_skip: Optional[List[UserGroup]] = None):
     from timApp.user.userutils import grant_access
     from timApp.user.users import get_default_rights_holders
     default_rights: List[BlockAccess] = []
     folder = item.parent
     while folder is not None:
-        default_rights += get_default_rights_holders(folder.id, item_type)
+        default_rights += get_default_rights_holders(folder, item_type)
         folder = folder.parent
     for d in default_rights:
+        if owners_to_skip and d.usergroup in owners_to_skip and d.access_type == AccessType.owner:
+            continue
         grant_access(d.usergroup,
                      item,
                      d.atype.to_enum(),

@@ -52,15 +52,15 @@ def get_rights_holders_all(block_ids: List[int], order_by=None):
     return results
 
 
-def get_default_rights_holders(folder_id: int, object_type: BlockType) -> RightsList:
-    doc = get_default_right_document(folder_id, object_type)
+def get_default_rights_holders(folder: Folder, object_type: BlockType) -> RightsList:
+    doc = get_default_right_document(folder, object_type)
     if doc is None:
         return []
     return get_rights_holders(doc.id)
 
 
 def remove_default_access(group, folder: Folder, access_type: AccessType, object_type: BlockType):
-    doc = get_default_right_document(folder.id, object_type, create_if_not_exist=True)
+    doc = get_default_right_document(folder, object_type, create_if_not_exist=True)
     remove_access(group, doc, access_type)
 
 

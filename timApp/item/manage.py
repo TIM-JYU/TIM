@@ -455,7 +455,7 @@ def get_permissions(item_id):
 def get_default_document_permissions(folder_id, object_type):
     f = get_folder_or_abort(folder_id)
     verify_manage_access(f)
-    grouprights = get_default_rights_holders(folder_id, BlockType.from_str(object_type))
+    grouprights = get_default_rights_holders(f, BlockType.from_str(object_type))
     return json_response({'grouprights': grouprights})
 
 
@@ -467,7 +467,7 @@ def add_default_doc_permission(m: DefaultPermissionModel):
     opt = m.time.effective_opt
     grant_default_access(
         m.group_objects,
-        m.id,
+        i,
         m.type,
         BlockType.from_str(m.item_type.name),
         accessible_from=opt.ffrom,

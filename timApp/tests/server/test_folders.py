@@ -4,11 +4,11 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
+from timApp.item.block import BlockType
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import grant_access
+from timApp.user.userutils import grant_access, get_default_right_document
 
 
 class FolderTest(TimRouteTest):
@@ -417,6 +417,17 @@ class FolderCopyTest(TimRouteTest):
         f = Folder.find_by_path(self.get_personal_item_path('x'))
         self.json_post(f'/copy/{f.id}',
                        {'destination': self.get_personal_item_path('c'), 'exclude': None})
+
+    def test_default_owner_right(self):
+        """Exception when an intermediate folder gets a duplicate owner right because of its default rights."""
+        self.login_test1()
+        self.create_doc(self.get_personal_item_path('r/a'))
+        f = Folder.find_by_path(self.get_personal_item_path('r'))
+        dr = get_default_right_document(f, BlockType.Folder, create_if_not_exist=True)
+        grant_access(self.test_user_1.get_personal_group(), dr, AccessType.owner)
+        db.session.commit()
+        # Ensure this won't throw an exception.
+        self.create_doc(self.get_personal_item_path('r/x/b'))
 
 
 class FolderParentTest(TimRouteTest):

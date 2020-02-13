@@ -137,10 +137,7 @@ def get_user_id_by_name(name: str) -> Optional[int]:
     return None
 
 
-def get_default_right_document(folder_id, object_type: BlockType, create_if_not_exist=False):
-    folder = Folder.get_by_id(folder_id)
-    if folder is None:
-        raise TimDbException('Non-existent folder')
+def get_default_right_document(folder: Folder, object_type: BlockType, create_if_not_exist=False):
     right_doc_path = default_right_paths.get(object_type)
     if right_doc_path is None:
         raise TimDbException(f'Unsupported object type: {object_type}')
@@ -153,7 +150,7 @@ def get_default_right_document(folder_id, object_type: BlockType, create_if_not_
 
 
 def grant_default_access(groups: List[UserGroup],
-                         folder_id: int,
+                         folder: Folder,
                          access_type: AccessType,
                          object_type: BlockType,
                          accessible_from: Optional[datetime] = None,
@@ -161,7 +158,7 @@ def grant_default_access(groups: List[UserGroup],
                          duration_from: Optional[datetime] = None,
                          duration_to: Optional[datetime] = None,
                          duration: Optional[timedelta] = None) -> List[BlockAccess]:
-    doc = get_default_right_document(folder_id, object_type, create_if_not_exist=True)
+    doc = get_default_right_document(folder, object_type, create_if_not_exist=True)
     accesses = []
     for group in groups:
         accesses.append(grant_access(group,

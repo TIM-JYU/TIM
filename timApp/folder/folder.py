@@ -260,10 +260,11 @@ class Folder(db.Model, Item):
                              rel_path != 'users' else owner_groups)
         if owner_groups is None:
             owner_groups = []
+        owner_groups = owner_groups if isinstance(owner_groups, list) else [owner_groups]
         block = insert_block(
             BlockType.Folder,
             title or rel_name,
-            owner_groups if isinstance(owner_groups, list) else [owner_groups],
+            owner_groups,
         )
 
         # noinspection PyArgumentList
@@ -271,7 +272,7 @@ class Folder(db.Model, Item):
         db.session.add(f)
 
         if creation_opts.apply_default_rights:
-            copy_default_rights(f, BlockType.Folder)
+            copy_default_rights(f, BlockType.Folder, owners_to_skip=owner_groups)
 
         return f
 
