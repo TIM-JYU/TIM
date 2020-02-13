@@ -1,8 +1,10 @@
 """
 A plugin for importing data to TIM fields.
 """
-from dataclasses import dataclass, asdict
-from typing import Union, List
+from collections import defaultdict
+from dataclasses import dataclass, asdict, field
+from enum import Enum
+from typing import Union, List, DefaultDict, Dict
 
 from flask import jsonify, render_template_string
 from marshmallow.utils import missing
@@ -99,7 +101,57 @@ ImportDataAnswerSchema = class_schema(ImportDataAnswerModel)
 importData_plugin = create_blueprint(__name__, 'importData', ImportDataHtmlSchema, csrf)
 
 
-def conv_data_csv(data: List[str], field_names: List[str], separator: str) -> List[str]:
+class LineErrorKind(Enum):
+    TooFewParts = 0
+    OddNumberOfFieldValuePairs = 1
+
+    def __str__(self):
+        if self == LineErrorKind.TooFewParts:
+            return 'too few parts'
+        else:
+            return 'odd number of field-value pairs'
+
+
+@dataclass
+class FieldLineError:
+    line: str
+    kind: LineErrorKind
+
+    def __str__(self):
+        return f'{self.line}: {self.kind}'
+
+
+@dataclass
+class FieldValues:
+    values: DefaultDict[str, Dict[str, str]] = field(default_factory=lambda: defaultdict(dict))
+    error_lines: List[FieldLineError] = field(default_factory=list)
+
+    def add_val(self, user_ident: str, field_name: str, value: str):
+        self.values[user_ident][field_name] = value
+
+    def to_tim_format(self, separator=';') -> List[str]:
+        return [f'{u}{separator}{separator.join(f"{n}{separator}{v}" for n, v in vals.items())}' for u, vals in self.values.items()]
+
+    @staticmethod
+    def from_tim_format(data: List[str], separator=';'):
+        v = FieldValues()
+        for d in data:
+            parts = d.split(separator)
+            if len(parts) < 3:
+                v.error_lines.append(FieldLineError(line=d, kind=LineErrorKind.TooFewParts))
+            elif len(parts) % 2 == 0:
+                v.error_lines.append(FieldLineError(line=d, kind=LineErrorKind.OddNumberOfFieldValuePairs))
+            else:
+                for name, value in zip(parts[1::2], parts[2::2]):
+                    v.add_val(parts[0], name, value)
+        return v
+
+    def list_errors(self):
+        for e in self.error_lines:
+            yield str(e)
+
+
+def conv_data_csv(data: List[str], field_names: List[str], separator: str) -> FieldValues:
     """
     Convert csv format "akankka;1,2,3" to TIM format ["akankka;d1;1", "akankka;d2;2" ...]
     using field names.  If there are too few fields on data, only those
@@ -110,22 +162,21 @@ def conv_data_csv(data: List[str], field_names: List[str], separator: str) -> Li
     :return: converted data in TIM format
     """
     field_names = widen_fields(field_names)
-    res = []
+    res = FieldValues()
     for r in data:
         parts = r.split(separator)
         if len(parts) < 2:
             continue
-        row = f"{parts[0]}"
+        ident = parts[0]
         for i in range(1, len(parts)):
             if i - 1 >= len(field_names):
                 break
             name = field_names[i - 1].strip()
-            row += f"{separator}{name}{separator}{parts[i]}"
-        res.append(row)
+            res.add_val(ident, name, parts[i])
     return res
 
 
-def conv_data_field_names(data: List[str], field_names: List[str], separator: str) -> List[str]:
+def conv_data_field_names(data: List[str], field_names: List[str], separator: str) -> FieldValues:
     """
     Converts field names on TIM format akankka;demo;2 so that demo is changed if
     found from field_names.
@@ -136,7 +187,7 @@ def conv_data_field_names(data: List[str], field_names: List[str], separator: st
     """
     field_names = widen_fields(field_names)
     fconv = {}
-    res = []
+    res = FieldValues()
     use_all = False
     for fn in field_names:
         pcs = fn.split("=")
@@ -152,7 +203,6 @@ def conv_data_field_names(data: List[str], field_names: List[str], separator: st
         parts = r.split(separator)
         if len(parts) < 3:
             continue
-        row = ""
         for i in range(1, len(parts) - 1, 2):
             tname = parts[i]
             name = fconv.get(tname)
@@ -162,14 +212,11 @@ def conv_data_field_names(data: List[str], field_names: List[str], separator: st
                 else:
                     continue
             value = parts[i + 1]
-            row += f"{separator}{name}{separator}{value}"
-
-        if row:
-            res.append(f"{parts[0]}" + row)
+            res.add_val(parts[0], name, value)
     return res
 
 
-def convert_data(data: List[str], field_names: List[str], separator: str):
+def convert_data(data: List[str], field_names: List[str], separator: str) -> FieldValues:
     """
     If there is field_names, then convert data either by changing names (field_names has =)
     or csv data
@@ -179,7 +226,7 @@ def convert_data(data: List[str], field_names: List[str], separator: str):
     :return: converted data or data as it is
     """
     if not field_names:
-        return data
+        return FieldValues.from_tim_format(data)
     f0 = field_names[0]
     if f0.find("=") > 0:  # convert names
         return conv_data_field_names(data, field_names, separator)
@@ -196,56 +243,50 @@ def answer(args: ImportDataAnswerModel):
     data = sdata.splitlines()
     output = ""
     field_names = args.input.fields
-    if field_names:
-        data = convert_data(data, field_names, separator)
+    vals = convert_data(data, field_names, separator)
     if args.markup.prefilter:
-        params = JsRunnerParams(code=args.markup.prefilter, data=data)
+        params = JsRunnerParams(code=args.markup.prefilter, data=vals.to_tim_format())
         try:
             data, output = jsrunner_run(params)
         except JsRunnerError as e:
             return jsonify({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
+        vals = FieldValues.from_tim_format(data)
     did = int(args.taskID.split(".")[0])
     if args.markup.docid:
         did = args.markup.docid
     rows = []
-    wrong = 0
-    wrongs = ""
-    users = {u.name: u for u in User.query.filter(User.name.in_([r.split(separator)[0] for r in data])).all()}
-    for r in data:
-        if not r:
+    wrong_count = 0
+    wrongs = []
+    field_count = 0
+    users = {u.name: u for u in User.query.filter(User.name.in_([r for r in vals.values.keys()])).all()}
+    for uident, vs in vals.values.items():
+        u = users.get(uident)
+        if not u:
+            wrong_count += len(vs)
+            wrongs.append(f'{uident}: user not found')
             continue
-        parts = r.split(separator)
-        u = None
-        error = None
-        if len(parts) >= 3:
-            uname = parts[0]
-            u = users.get(uname)
-            if not u:
-                error = ": unknown name"
-        else:
-            error = ": too few parts"
-        if error:
-            wrong += 1
-            wrongs += "\n" + r + error
-            continue
-        uid = u.id
-        ur = {'user': uid, 'fields': {}}
-        for i in range(1, len(parts) - 1, 2):
-            tname = parts[i]
-            value = parts[i + 1]
-            if tname.find('.') < 0:
-                tname = f"{did}.{tname}"
-            ur['fields'][tname] = value
+        flds = {}
+        ur = {'user': u.id, 'fields': flds}
+        for k, v in vs.items():
+            if '.' not in k:
+                k = f'{did}.{k}'
+            flds[k] = v
         rows.append(ur)
+        field_count += len(flds)
 
     if output:
         output = output + "\n"
-
-    if wrong:
-        wrongs = "\nWrong lines: " + str(wrong) + "\n" + wrongs
-    jsonresp = {'ignoreMissing': args.markup.ignoreMissing,
-                'savedata': rows,
-                'web': {'result': output + "Imported " + str(len(rows)) + wrongs}}
+    wrong_count += len(vals.error_lines)
+    wrongs += list(vals.list_errors())
+    if wrong_count:
+        wrongstr = "\nWrong lines: " + str(wrong_count) + "\n\n" + '\n'.join(wrongs)
+    else:
+        wrongstr = ''
+    jsonresp = {
+        'ignoreMissing': args.markup.ignoreMissing,
+        'savedata': rows,
+        'web': {'result': f"{output}Imported {field_count} values for {len(rows)} users{wrongstr}"},
+    }
 
     save = {}
 
