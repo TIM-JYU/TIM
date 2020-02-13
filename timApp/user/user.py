@@ -316,7 +316,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             origin=info.origin,
         )
         db.session.add(user)
-        user.set_unique_codes(info)
+        user.set_unique_codes(info.unique_codes)
         group = UserGroup.create(info.username)
         user.groups.append(group)
         if is_admin:
@@ -497,21 +497,20 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             self.pass_ = create_password_hash(info.password)
         elif info.password_hash:
             self.pass_ = info.password_hash
-        self.set_unique_codes(info)
+        self.set_unique_codes(info.unique_codes)
 
-    def set_unique_codes(self, info: UserInfo):
-        if info.unique_codes:
-            for c in info.unique_codes:
-                ho = HakaOrganization.get_or_create(name=c.org)
-                if ho.id is None or self.id is None:
-                    db.session.flush()
-                puc = PersonalUniqueCode(
-                    code=c.code,
-                    type=c.codetype,
-                    org_id=ho.id,
-                )
-                if puc.user_collection_key not in self.uniquecodes:
-                    self.uniquecodes[puc.user_collection_key] = puc
+    def set_unique_codes(self, codes: List[SchacPersonalUniqueCode]):
+        for c in codes:
+            ho = HakaOrganization.get_or_create(name=c.org)
+            if ho.id is None or self.id is None:
+                db.session.flush()
+            puc = PersonalUniqueCode(
+                code=c.code,
+                type=c.codetype,
+                org_id=ho.id,
+            )
+            if puc.user_collection_key not in self.uniquecodes:
+                self.uniquecodes[puc.user_collection_key] = puc
 
     def has_some_access(self, i: ItemOrBlock, vals: Set[int], allow_admin: bool = True) -> Optional[BlockAccess]:
         if allow_admin and self.is_admin:

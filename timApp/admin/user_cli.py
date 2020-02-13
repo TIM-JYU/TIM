@@ -1,4 +1,5 @@
 from pprint import pprint
+from typing import List
 
 import click
 from flask import abort
@@ -8,7 +9,9 @@ from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import move_document
 from timApp.tim_app import app, get_home_organization_group
 from timApp.timdb.sqa import db
+from timApp.user.personaluniquecode import SchacPersonalUniqueCode
 from timApp.user.user import User, UserInfo
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 
 
@@ -43,19 +46,18 @@ user_cli = AppGroup('user')
 def addtohomeorg(name: str):
     """Adds a user to the home organization group.
     """
-    with app.test_request_context():
-        u = User.get_by_name(name)
-        if not u:
-            print('User not found.')
-            return
-        if u.is_email_user:
-            print('User is email user, so should not be added to home organization.')
-            return
-        if u.add_to_group(get_home_organization_group(), added_by=None):
-            print('Added.')
-        else:
-            print('User already belongs to home organization.')
-        db.session.commit()
+    u = User.get_by_name(name)
+    if not u:
+        print('User not found.')
+        return
+    if u.is_email_user:
+        print('User is email user, so should not be added to home organization.')
+        return
+    if u.add_to_group(get_home_organization_group(), added_by=None):
+        print('Added.')
+    else:
+        print('User already belongs to home organization.')
+    db.session.commit()
 
 
 @user_cli.command()
@@ -66,9 +68,8 @@ def merge(primary, secondary):
 
     This does not delete accounts.
     """
-    with app.test_request_context():
-        moved_data = find_and_merge_users(primary, secondary)
-        db.session.commit()
+    moved_data = find_and_merge_users(primary, secondary)
+    db.session.commit()
     pprint(moved_data)
     return moved_data
 
@@ -183,3 +184,18 @@ def create(
         User.create_with_group(info, is_admin=admin)
         click.echo('User created.')
     db.session.commit()
+
+
+@user_cli.command()
+def fix_aalto_student_ids():
+    users_to_fix: List[User] = UserGroup.query.filter(
+        UserGroup.name.in_(['aalto19test', 'cs-a1141-2017-2018'])).join(User, UserGroup.users).with_entities(
+        User).all()
+    for u in users_to_fix:
+        u.set_unique_codes([SchacPersonalUniqueCode(
+            code=u.name.split(':')[1],
+            codetype='studentID',
+            org='aalto.fi'
+        )])
+    db.session.commit()
+    click.echo(f'Updated {len(users_to_fix)} users.')

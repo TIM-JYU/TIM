@@ -119,9 +119,8 @@ joinProperty: studentID(jyu.fi)
                                      'Wrong lines: 1\n'
                                      '\n'
                                      'x: user not found'}, task='t9')
-        self.current_user.set_unique_codes(UserInfo(username=self.current_user.name,
-                                                    unique_codes=[
-                                                        SchacPersonalUniqueCode(code='x', codetype='studentID',
-                                                                                org='jyu.fi')]))
+        self.current_user.set_unique_codes([
+            SchacPersonalUniqueCode(code='x', codetype='studentID', org='jyu.fi'),
+        ])
         db.session.commit()
         imp_200(f'x;a;1', {'result': 'Imported 1 values for 1 users'}, task='t9')
