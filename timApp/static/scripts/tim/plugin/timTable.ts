@@ -477,7 +477,7 @@ export enum ClearSort {
                                 [attr.rowspan]="td.rowspan"
                                 [style]="stylingForCell(rowi, coli)"
                                 (click)="handleClickCell(rowi, coli, $event)"
-                                [innerHtml]="td.cell">
+                                [innerHtml]="td.cell | trust_html">
                                 <!--                                <div [innerHtml]="td.cell"></div>-->
                             </td>
                         </ng-container> <!-- one cell -->

@@ -791,3 +791,20 @@ table:
                         """)
         self.goto_document(d)
         self.find_and_save_timtable("timTableTabledatablock")
+
+    def test_svg_math(self):
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {settings=""}
+math_type: svg
+
+``` {plugin="timTable"}
+table:
+  rows:
+    - row:
+      - cell: '$x$'
+```
+                                """)
+        self.goto_document(d)
+        self.find_and_save_timtable("timTableSvgMath")
