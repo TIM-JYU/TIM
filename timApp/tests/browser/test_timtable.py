@@ -1,5 +1,3 @@
-from time import sleep
-
 from selenium.common.exceptions import StaleElementReferenceException
 
 from timApp.tests.browser.browsertest import BrowserTest
@@ -16,7 +14,7 @@ class TimTableTest(BrowserTest):
             except StaleElementReferenceException:
                 continue
 
-    def test_timtable_simple(self):
+    def test_simple(self):
         """
         Test case 1.2. Simple table.
 
@@ -37,7 +35,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableSimple")
 
-    def test_timtable_all_column_styles(self):
+    def test_all_column_styles(self):
         """
         Test case 1.3. All styles for column-element.
         """
@@ -88,7 +86,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllColumnStyles")
 
-    def test_timtable_all_row_styles(self):
+    def test_all_row_styles(self):
         """
         Test case 1.4. All styles for row-elements.
         """
@@ -139,7 +137,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllRowStyles")
 
-    def test_timtable_all_cell_styles(self):
+    def test_all_cell_styles(self):
         """
         Test case 1.5. All styles for cell-element.
         """
@@ -190,7 +188,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllCellStyles")
 
-    def test_timtable_all_table_styles(self):
+    def test_all_table_styles(self):
         """
         Test case 1.6. All styles for table-element.
         :return:
@@ -240,7 +238,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableTableStyles")
 
-    def test_timtable_all_styles(self):
+    def test_all_styles(self):
         """
         Test case 1.7. All styles..
         """
@@ -325,7 +323,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllStyles")
 
-    def test_timtable_extra_properties(self):
+    def test_extra_properties(self):
         """
            Test case 1.8. Extra properties.
            Right way to function: Added extra properties
@@ -419,7 +417,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableExtraStyles")
 
-    def test_timtable_colspan(self):
+    def test_colspan(self):
         """
         Test case 1.9. Colspan
         """
@@ -459,7 +457,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableColspan")
 
-    def test_timtable_rowspan(self):
+    def test_rowspan(self):
         """
         Test case 1.10 Rowspan
         """
@@ -499,7 +497,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableRowspan")
 
-    def test_timtable_rowspan_over_rows(self):
+    def test_rowspan_over_rows(self):
         """
         Test case 1.11 Rowspan over amount of rows.
         """
@@ -540,7 +538,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableRowspanOverRows")
 
-    def test_timtable_colspan_over_columns(self):
+    def test_colspan_over_columns(self):
         """
         Test case 1.12. Colspan over the amount of columns.
         Right way to function is like HTML normally would with these colspan values.
@@ -579,7 +577,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableColspanOverColumns")
 
-    def test_timtable_rowspan_colspan(self):
+    def test_rowspan_colspan(self):
         """
         Test case 1.13. Rowspan and colspan together.
         """
@@ -621,7 +619,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableRowspanColspan")
 
-    def test_timtable_column_span(self):
+    def test_column_span(self):
         """
         Test case 1.14. Column span.
         """
@@ -668,7 +666,7 @@ table:
         self.goto_document(d)
         self.find_and_save_timtable("timTableColumnSpan")
 
-    def test_timtable_many_things(self):
+    def test_many_things(self):
         """
         Test case 1.15. Many things.
         """
@@ -752,10 +750,9 @@ table:
 
             """)
         self.goto_document(d)
-        sleep(2)
         self.find_and_save_timtable("timTableManyThings")
 
-    def test_timtable_tabledatablock(self):
+    def test_tabledatablock(self):
         """
         Test case 1.16. Data block.
         """
