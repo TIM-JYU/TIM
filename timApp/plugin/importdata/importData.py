@@ -246,8 +246,10 @@ def answer(args: ImportDataAnswerModel):
     output = ""
     field_names = args.input.fields
     vals = convert_data(data, field_names, separator)
+    if field_names:
+        data = vals.to_tim_format()
     if args.markup.prefilter:
-        params = JsRunnerParams(code=args.markup.prefilter, data=vals.to_tim_format())
+        params = JsRunnerParams(code=args.markup.prefilter, data=data)
         try:
             data, output = jsrunner_run(params)
         except JsRunnerError as e:
