@@ -934,6 +934,7 @@ def find_tim_vars(plugin: Plugin):
 
 
 @answers.route("/answers/<task_id>/<user_id>")
+@answers.route("/getAnswers/<task_id>/<user_id>")
 def get_answers(task_id, user_id):
     try:
         user_id = int(user_id)

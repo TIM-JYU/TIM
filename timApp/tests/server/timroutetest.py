@@ -526,7 +526,7 @@ class TimRouteTest(TimDbTest):
                               }, **kwargs)
 
     def get_task_answers(self, task_id, user: Optional[User]=None):
-        answer_list = self.get(f'/answers/{task_id}/{user.id if user else self.current_user_id()}')
+        answer_list = self.get(f'/getAnswers/{task_id}/{user.id if user else self.current_user_id()}')
         return answer_list
 
     @staticmethod
