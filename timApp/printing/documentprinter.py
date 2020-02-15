@@ -267,7 +267,7 @@ class DocumentPrinter:
                                          ignore_errors=True)
                 '''
             if md.find("§") >= 0:  # check if slide fragments
-                md = md.replace("<§", "").replace("§>", "")
+                md = md.replace("<§", "").replace("§>", "").replace("§§", "")
             if md.find("---") >= 0: # check if slide separator
                 if REGSLIDESEP.match(md):
                     continue
