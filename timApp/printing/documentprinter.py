@@ -43,6 +43,7 @@ DEFAULT_PRINTING_FOLDER = cache_folder_path / 'printed_documents'
 TEMPLATES_FOLDER = Path(TEMPLATE_FOLDER_NAME) / PRINT_FOLDER_NAME
 TEX_MACROS_KEY = "texmacros"
 
+REGSLIDESEP = re.compile("^-{3,}$")  # slide separator
 
 class PrintingError(Exception):
     pass
@@ -265,6 +266,11 @@ class DocumentPrinter:
                                          env=pdoc_macro_env,
                                          ignore_errors=True)
                 '''
+            if md.find("§") >= 0:  # check if slide fragments
+                md = md.replace("<§", "").replace("§>", "")
+            if md.find("---") >= 0: # check if slide separator
+                if REGSLIDESEP.match(md):
+                    continue
             export_pars.append(md)
 
         if self.texplain:
