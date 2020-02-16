@@ -127,9 +127,10 @@ export class NotesHandler {
                 choices: [{
                     desc: "Show note to:",
                     name: "access",
+                    title: "Who can see the note. With everyone only teachers can see the user name",
                     opts: [
-                        {desc: "Everyone", value: "everyone"},
-                        {desc: "Just me", value: "justme"},
+                        {desc: "Everyone", value: "everyone", title: "User name is visible only for teachers"},
+                        {desc: "Just me", value: "justme", title: "No one can answer to this note!"},
                     ],
                 }],
             },

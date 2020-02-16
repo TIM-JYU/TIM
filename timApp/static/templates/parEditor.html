@@ -51,9 +51,11 @@
     </div>
     <div class="choices">
         <div ng-repeat="choice in $ctrl.getOptions().choices">
-            {{ choice.desc }}
-            <label ng-repeat="opt in choice.opts">
-                <input type="radio" ng-model="$ctrl.getExtraData()[choice.name]" ng-value="opt.value"/> {{ opt.desc }}&nbsp;
+            <span title="{{ choice.title }}">{{ choice.desc }}</span>
+            <label ng-repeat="opt in choice.opts" >
+                <span title="{{ opt.title }}">
+                    <input type="radio"  ng-model="$ctrl.getExtraData()[choice.name]" ng-value="opt.value"/>{{ opt.desc }}&nbsp;
+                </span>
             </label>
         </div>
     </div>

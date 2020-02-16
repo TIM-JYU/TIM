@@ -38,12 +38,14 @@ interface INonStandardFullScreenElement {
 export interface ITag {
     name: keyof ITags;
     desc: string;
+    title?: string;
 }
 
 export interface IChoice {
     desc: string;
     name: string;
-    opts: Array<{desc: string, value: string}>;
+    title?: string;
+    opts: Array<{desc: string, value: string, title?: string}>;
 }
 
 export interface IEditorParams {
@@ -819,8 +821,11 @@ ${backTicks}
         });
         this.editor.setEditorText(text);
         textarea.on("input", () => this.editorChanged());
+        // @ts-ignore
         textarea.on("paste", (e) => this.onPaste(e));
+        // @ts-ignore
         textarea.on("drop", (e) => this.onDrop(e));
+        // @ts-ignore
         textarea.on("dragover", (e) => this.allowDrop(e));
 
     }
@@ -1266,7 +1271,9 @@ ${backTicks}
         // pasteInput.on("dragover", (e) => this.allowDrop(e));
         const pasteInput = document.getElementById("pasteInput");
         if (pasteInput) {
+            // @ts-ignore
             $(pasteInput).on("drop", (e) => this.onDrop(e));
+            // @ts-ignore
             $(pasteInput).on("dragover", (e) => this.allowDrop(e));
         }
         editorContainer.addClass("editor-loading");
