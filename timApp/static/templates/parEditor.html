@@ -38,37 +38,44 @@
     <div class="editorContainer">
     </div>
     <div class="editButtonArea">
-        <span ng-show="$ctrl.proeditor">
-        <button class="timButton" title="Change editor between Ace and normal textarea" ng-click="$ctrl.changeEditor()">Editor</button>
-        <button class="timButton" ng-show="$ctrl.fullscreenSupported()" ng-click="$ctrl.goFullScreen()">Fullscreen</button>
-        </span>
         <button class="timButton" ng-disabled="$ctrl.saving" title="Save (Ctrl-S)" ng-click="$ctrl.saveClicked()">Save</button>
         <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.cancelClicked()">Cancel</button>
-        <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()">Mark as unread</button>
         <span ng-show="$ctrl.proeditor">
         <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>
         </span>
+        <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()" style="right: 2px; position: absolute;">Mark as unread</button>
     </div>
-    <div class="choices">
-        <div ng-repeat="choice in $ctrl.getOptions().choices">
-            <span title="{{ choice.title }}">{{ choice.desc }}</span>
-            <label ng-repeat="opt in choice.opts" >
-                <span title="{{ opt.title }}">
+    <div class="choices" ng-show="$ctrl.getOptions().choices">
+        <div ng-repeat="choice in $ctrl.getOptions().choices" title="{{ choice.title }}">
+            <span >{{ choice.desc }}</span>
+            <label ng-repeat="opt in choice.opts" title="{{ opt.title }}">
                     <input type="radio"  ng-model="$ctrl.getExtraData()[choice.name]" ng-value="opt.value"/>{{ opt.desc }}&nbsp;
-                </span>
             </label>
         </div>
     </div>
-    <div class="inline-flex">
-        <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.proeditor"/> Advanced view</label>
-        <label class="font-weight-normal margin-5-right" ng-show="$ctrl.aceEnabled()"><input type="checkbox" ng-model="$ctrl.autocomplete"/> Autocomplete</label>
+    <div class="editorOptions"><!--="inline-flex"-->
+        <label class="font-weight-normal margin-5-right" title="Show more options to editor"><input type="checkbox" ng-model="$ctrl.proeditor"/>Advanced view </label>
+        <span ng-show="$ctrl.proeditor">
+            <label class="font-weight-normal margin-5-right" title="Change editor between Ace and normal textarea">
+                <input type="checkbox"  ng-model="$ctrl.aceEnabled()" ng-click="$ctrl.changeEditor()">Ace ditor </label>
+            <label class="font-weight-normal margin-5-right" ng-show="$ctrl.fullscreenSupported()" ><input type="checkbox" ng-click="$ctrl.goFullScreen()">Fullscreen </label>
+        </span>
+        <label class="font-weight-normal margin-5-right" ng-show="$ctrl.aceEnabled()"><input type="checkbox" ng-model="$ctrl.autocomplete"/>Autocomplete </label>
         <label class="font-weight-normal margin-5-right" ng-repeat="tag in $ctrl.getOptions().tags">
             <input type="checkbox" ng-model="$ctrl.getExtraData().tags[tag.name]"/> {{ tag.desc }}
         </label>
+        <span class="pull-right font-weight-normal" title="Put 0 to no wrap">
+            <button class="timButton" title="Click to reformat text for given line length" ng-click="$ctrl.editor.forceWrap(true)" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
+            </button>
+            <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto"/>
+            <input type="text" title="Choose linelength for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="1"/>
+        </span>
     </div>
+    <!--
     <label class="pull-right font-weight-normal" title="Put 0 to no wrap" ng-click="$ctrl.editor.forceWrap(true)">Wrap:
         <input type="text" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
     </label>
+    -->
     <div ng-if="$ctrl.trdiff"
          tim-draggable-fixed
          detachable="true"

@@ -200,7 +200,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private file?: File & {progress?: number, error?: string};
     private isIE: boolean = false;
     private oldmeta?: HTMLMetaElement;
-    private wrap!: {n: number}; // $onInit
+    private wrap!: {n: number, auto: boolean}; // $onInit
     private outofdate: boolean;
     private parCount: number;
     private proeditor!: boolean; // $onInit
@@ -579,6 +579,10 @@ ${backTicks}
         }
     }
 
+    wrapValue() {
+        return  this.wrap.n * (this.wrap.auto ? 1 : -1);
+    }
+
     $onInit() {
         super.$onInit();
         this.autocomplete = this.getLocalBool("autocomplete", false);
@@ -593,7 +597,7 @@ ${backTicks}
         if (isNaN(n)) {
             n = -90;
         }
-        this.wrap = {n: n};
+        this.wrap = {n: Math.abs(n), auto: n > 0};
 
         if (this.getOptions().touchDevice) {
             if (!this.oldmeta) {
@@ -817,15 +821,12 @@ ${backTicks}
         this.editor = new TextAreaParEditor(this.element.find("#teksti"), {
             wrapFn: () => this.wrapFn(),
             saveClicked: () => this.saveClicked(),
-            getWrapValue: () => this.wrap.n,
+            getWrapValue: () => this.wrapValue(),
         });
         this.editor.setEditorText(text);
         textarea.on("input", () => this.editorChanged());
-        // @ts-ignore
         textarea.on("paste", (e) => this.onPaste(e));
-        // @ts-ignore
         textarea.on("drop", (e) => this.onDrop(e));
-        // @ts-ignore
         textarea.on("dragover", (e) => this.allowDrop(e));
 
     }
@@ -1271,9 +1272,7 @@ ${backTicks}
         // pasteInput.on("dragover", (e) => this.allowDrop(e));
         const pasteInput = document.getElementById("pasteInput");
         if (pasteInput) {
-            // @ts-ignore
             $(pasteInput).on("drop", (e) => this.onDrop(e));
-            // @ts-ignore
             $(pasteInput).on("dragover", (e) => this.allowDrop(e));
         }
         editorContainer.addClass("editor-loading");
@@ -1308,7 +1307,7 @@ ${backTicks}
             this.editor = new AceParEditor(neweditor, {
                 wrapFn: () => this.wrapFn(),
                 saveClicked: () => this.saveClicked(),
-                getWrapValue: () => this.wrap.n,
+                getWrapValue: () => this.wrapValue(),
             }, (this.getSaveTag() === "addAbove" || this.getSaveTag() === "addBelow") ? "ace/mode/text" : "ace/mode/markdown");
             this.editor.setAutoCompletion(this.autocomplete);
             this.editor.editor.renderer.$cursorLayer.setBlinking(!genericglobals().IS_TESTING);
@@ -1457,7 +1456,7 @@ ${backTicks}
         this.setLocalValue("editortab", this.activeTab ?? "navigation");
         this.setLocalValue("autocomplete", this.autocomplete.toString());
         this.setLocalValue("oldMode", this.isAce(this.editor) ? "ace" : "text");
-        this.setLocalValue("wrap", "" + this.wrap.n);
+        this.setLocalValue("wrap", "" + this.wrapValue());
         if (this.getExtraData().access != null) {
             $localStorage.noteAccess = this.getExtraData().access;
         }

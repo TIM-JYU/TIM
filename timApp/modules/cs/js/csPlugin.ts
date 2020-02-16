@@ -360,6 +360,9 @@ const languageTypes = new LanguageTypes();
 
 // Wrap given text to max n chars length lines spliting from space
 function wrapText(s: string, n: number) {
+    if (n <= 0) {
+        return {modified: false, s: s};
+    }
     const lines = s.split("\n");
     let needJoin = false;
     for (let i = 0; i < lines.length; i++) {
@@ -532,11 +535,21 @@ function makeTemplate() {
                   class="inputSmall"
                   style="float: right;"
                   title="Run time in sec {{$ctrl.runtime}}">{{$ctrl.oneruntime}}</span>
-            <span ng-if="$ctrl.wrap!=-1" class="inputSmall" style="float: right;"><label
-                    title="Put 0 to no wrap">wrap: <input type="text"
+            <span ng-if="$ctrl.wrap.n!=-1" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
+                <button class="timButton" title="Click to reformat text for given line length" ng-click="$ctrl.checkWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
+                </button>
+                <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto" style="position: relative;top: 0.3em;"/>
+                <input type="text" title="Choose linelength for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="1"/>
+            </span>
+            <!--
+            <span ng-if="$ctrl.wrap.n!=-1" class="inputSmall" style="float: right;">
+              <label title="Put 0 to no wrap">wrap: <input type="text"
                                                           ng-pattern="/[-0-9]*/"
-                                                          ng-model="$ctrl.wrap"
-                                                          size="2"/></label></span></p>
+                                                          ng-model="$ctrl.wrap.n"
+                                                          size="1"/></label>
+            </span>
+            -->
+            </p>
 
     </div>
     <div ng-if="::$ctrl.isSage" class="outputSage no-popup-menu"></div>
@@ -697,7 +710,7 @@ const CsMarkupOptional = t.partial({
     userinput: t.union([t.string, t.number]),
     variables: t.string,
     width: t.union([t.number, t.string]),
-    wrap: t.Integer,
+    wrap:  t.Integer,
     borders: withDefault(t.boolean, true),
 });
 
@@ -878,7 +891,7 @@ class CsController extends CsBase implements ITimComponent {
     private userinput: string = "";
     private viewCode!: boolean;
     private wavURL: string = "";
-    private wrap!: number;
+    private wrap!:  {n: number, auto: boolean};
     private buttons: string[] = [];
 
     // These are used only in $doCheck to keep track of the old values.
@@ -1283,7 +1296,9 @@ class CsController extends CsBase implements ITimComponent {
         this.userargs = valueOr(this.attrsall.userargs, (this.attrs.userargs ?? (isText && isArgs ? this.attrs.filename ?? "" : "")).toString());
         this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
         this.noeditor = valueOr(this.attrs.noeditor, this.isSimcir || (this.type === "upload"));
-        this.wrap = this.attrs.wrap ?? (isText ? 70 : -1);
+        const wn =  this.attrs.wrap ?? (isText ? 70 : -1);
+        this.wrap = { n:wn == -1 ? -1 : Math.abs(wn), auto: wn > 0 };
+
         this.editorMode = this.attrs.editorMode;
         this.viewCode = this.attrs.viewCode;
         this.editorText = [
@@ -1435,7 +1450,7 @@ class CsController extends CsBase implements ITimComponent {
             if (this.viewCode) {
                 this.pushShowCodeNow();
             }
-            if (this.wrap > 0) {
+            if (this.wrap.auto) {
                 this.checkWrap();
             }
             anyChanged = true;
@@ -1574,7 +1589,8 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     checkWrap() {
-        const r = wrapText(this.usercode, this.wrap);
+        if (this.wrap.n <= 0) { return; }
+        const r = wrapText(this.usercode, this.wrap.n);
         if (r.modified) {
             if (this.editorIndex === 0 && this.edit) {
                 const start = this.edit.selectionStart;
