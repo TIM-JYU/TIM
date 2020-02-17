@@ -1,18 +1,32 @@
-﻿/* eslint-disable @typescript-eslint/tslint/config,@typescript-eslint/no-explicit-any */
-import angular from "angular";
-import * as t from "io-ts";
+﻿import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";
 import {ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {IUser} from "tim/user/IUser";
-import {$http, $sce, $timeout} from "tim/util/ngimport";
+import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {
+    AfterViewInit,
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    StaticProvider,
+    ViewChild,
+    OnDestroy,
+} from "@angular/core";
+import {BrowserModule, SafeResourceUrl} from "@angular/platform-browser";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {Subscription} from "rxjs";
+import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 
-const jsframeApp = angular.module("jsframeApp", ["ngSanitize"]);
-export const moduleDefs = [jsframeApp];
-
-// this.attrs
 const JsframeMarkup = t.intersection([
     t.partial({
         beforeOpen: t.string,
@@ -24,10 +38,10 @@ const JsframeMarkup = t.intersection([
         height: t.number,
         tool: t.boolean,
         useurl: t.boolean,
-        c: t.any,
-        data: t.any,
-        fielddata: t.any,
-        fields: t.any,
+        c: t.UnknownRecord,
+        data: t.UnknownRecord,
+        fielddata: t.unknown,
+        fields: t.unknown,
         initListener: t.boolean,
     }),
     GenericPluginMarkup,
@@ -36,14 +50,12 @@ const JsframeMarkup = t.intersection([
         borders: withDefault(t.boolean, false),
         norun: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
-        // autoplay: withDefault(t.boolean, true),
-        // file: t.string,
-        // open: withDefault(t.boolean, false),
     }),
 ]);
 const JsframeAll = t.intersection([
     t.partial({
         usercode: t.string,
+        user_id: t.string,
         srchtml: t.string,
     }),
     t.type({
@@ -53,21 +65,106 @@ const JsframeAll = t.intersection([
     }),
 ]);
 
+interface JSFrameData {
+    message?: string;
+}
+
 interface JSFrameWindow extends Window {
-    getData(): string;
-    setData(state: any): void;
+    getData?(): JSFrameData;
+
+    setData?(state: JSFrameData): void;
 }
 
 interface CustomFrame<T extends Window> extends HTMLIFrameElement {
     contentWindow: T;
 }
 
-class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
+const FieldDataObj = t.type({
+    fielddata: t.unknown,
+});
+
+type MessageType = "init" | MessageGet | "setData";
+type MessageGet = "getData" | "getDataSave";
+
+type MessageToFrame =
+    | {
+    msg: "setData";
+    data: JSFrameData;
+} | { msg: "init" }
+    | { msg: "getData" }
+    | { msg: "getDataSave" };
+
+type MessageFromFrame =
+    | {
+    msg: "data";
+    data: JSFrameData;
+} | {
+    msg: "datasave";
+    data: JSFrameData;
+};
+
+
+@Component({
+    selector: "jsframe-runner",
+    template: `
+        <div [ngClass]="{csRunDiv: borders}" class="math que jsframe no-popup-menu">
+            <h4 *ngIf="header" [innerHtml]="header"></h4>
+            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
+            <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen"></p>
+
+            <div *ngIf="isOpen && iframesettings" id="output" class="jsFrameContainer jsframeOutput">
+                <iframe #frame
+                        class='showJsframe jsframeFrame'
+                        style='margin-left: auto;
+                               margin-right: auto;
+                               display: block; border: none;'
+                        [style.width.px]="iframesettings.width"
+                        [style.height.px]="iframesettings.height"
+                        [src]="iframesettings.src"
+                        [sandbox]="iframesettings.sandbox"
+                >
+                </iframe>
+            </div>
+            <p class="csRunMenu">
+                <button *ngIf="!isOpen" (click)="runShowTask()" [innerHtml]="showButton()"></button>
+                <button *ngIf="isOpen && !norun" [disabled]="isRunning" title="(Ctrl-S)"
+                        (click)="getData('getDataSave')"
+                        [innerHtml]="button"></button>
+                <span class="jsframe message"
+                      *ngIf="message"
+                      [innerHtml]="message"></span>
+                <span class="jsframe message"
+                      *ngIf="console"
+                      [innerHtml]="console"></span>
+            </p>
+            <span class="csRunError"
+                  *ngIf="error"
+                  [innerHtml]="error"></span>
+
+            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
+        </div>
+    `,
+})
+class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
     t.TypeOf<typeof JsframeAll>,
-    typeof JsframeAll> implements ITimComponent, IUserChanged {
+    typeof JsframeAll> implements ITimComponent, IUserChanged, AfterViewInit, OnDestroy {
+    iframesettings?: { sandbox: string, src: SafeResourceUrl, width: number, height: number };
+    private ab?: AnswerBrowserController;
 
     get english() {
-        return this.attrs.lang === "en";
+        return this.markup.lang === "en";
+    }
+
+    get beforeOpen() {
+        return this.markup.beforeOpen;
+    }
+
+    get borders() {
+        return this.markup.borders;
+    }
+
+    get norun() {
+        return this.markup.norun;
     }
 
     buttonText() {
@@ -79,7 +176,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
     }
 
     showButton() {
-        const txt = this.attrs.showButton;
+        const txt = this.markup.showButton;
         if (txt) {
             return txt;
         }
@@ -88,78 +185,111 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
 
     public viewctrl!: ViewCtrl;
     private span: string = "";
-    private error: string = "";
-    private console: string = "";
-    private message: string = "";
+    error: string = "";
+    console: string = "";
+    message: string = "";
     private userCode: string = "";
-    private jsframeoutput: string = "";
     private jsframepeek: boolean = false;
-    private isRunning: boolean = false;
-    private isOpen: boolean = false;
-    private button: string = "";
+    isRunning: boolean = false;
+    isOpen: boolean = false;
+    button: string = "";
 
     private timer: NodeJS.Timer | undefined;
 
     private taskUrl: string = "";
     private htmlUrl: string = "";
     private initData: string = "";
-    private userName: string = "";
+    private userName?: string;
 
-    private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
+    private saveResponse: { saved: boolean, message: (string | undefined) } = {saved: false, message: undefined};
+    private channel?: MessageChannel;
+    @ViewChild("frame") private frame?: ElementRef<HTMLIFrameElement>;
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
+        this.viewctrl = vctrlInstance!;
         this.button = this.buttonText();
-        const aa: any = this.attrsall;
+        const aa = this.attrsall;
         this.userName = aa.user_id;
-        this.userCode = aa.usercode ||  "";
+        this.userCode = aa.usercode ?? "";
 
-        this.message = this.attrs.message ?? "";
+        this.message = this.markup.message ?? "";
 
         let jsobject = "window.";
-        if (this.attrs.srchtml && this.attrs.srchtml.includes("TIMJS")) { jsobject = "TIMJS."; }
+        if (this.markup.srchtml && this.markup.srchtml.includes("TIMJS")) {
+            jsobject = "TIMJS.";
+        }
 
-        if (this.attrs.open) {
+        if (this.markup.open) {
             this.isOpen = true;
         }
-        let data = this.attrs.data;
-        if (this.attrs.c) { data = this.attrs.c; }
-        if (data) { this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n"; }
-        if (aa.markup.fielddata) { this.initData += "    " + jsobject + "fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n"; }
+        let data = this.markup.data;
+        if (this.markup.c) {
+            data = this.markup.c;
+        }
+        if (data) {
+            this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n";
+        }
+        if (aa.markup.fielddata) {
+            this.initData += "    " + jsobject + "fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n";
+        }
         // if ( data ) { this.setData(data); }
         this.viewctrl.addTimComponent(this);
         const tid = this.getTaskId();
-        if (!this.attrs.forceBrowser && tid) {
-            this.viewctrl.addUserChangeListener(tid.docTask(), this);
-        }
-        const wnd = this;
-        if (this.attrs.initListener && !this.attrsall.preview) {
-            setTimeout(function() { wnd.addListener(); }, 2000);
+        this.updateIframeSettings();
+        if (tid) {
+            if (!this.markup.forceBrowser) {
+                this.viewctrl.addUserChangeListener(tid.docTask(), this);
+            }
+            const taskId = tid.docTask();
+            (async () => {
+                const ab = await this.viewctrl.getAnswerBrowserAsync(taskId);
+                this.ab = ab;
+                if (ab) {
+                    ab.setAnswerLoader((a) => this.changeAnswer(a));
+                }
+            })();
         }
     }
 
+    ngAfterViewInit() {
+        if (this.markup.initListener && !this.attrsall.preview) {
+            this.getFrame().addEventListener("load", () => {
+                this.addListener();
+            });
+        }
+    }
+
+    ngOnDestroy() {
+    }
+
     async userChanged(user: IUser) {
-        // TODO: Experimental
-        if (user.name == this.userName) { return; }
-        if (!this.attrsall.markup.fields) { return; }
+        if (user.name == this.userName) {
+            return;
+        }
+        if (!this.attrsall.markup.fields) {
+            return;
+        }
         this.userName = user.name;
 
-        try {
-            const tid = this.getTaskId();
-            if (!tid) {
-                return;
+        const tid = this.getTaskId();
+        if (!tid) {
+            return;
+        }
+        const res = await to($http.get<unknown>(`/jsframeUserChange/${tid.docTask()}/${user.id}`));
+        this.initData = "";
+        let data = this.markup.data;
+        if (this.markup.c) {
+            data = this.markup.c;
+        }
+        if (FieldDataObj.is(res.result.data)) {
+            if (!data) {
+                data = {};
             }
-            const res = await to($http.get<any>(`/jsframeUserChange/${tid.docTask()}/${user.id}`));
-            this.initData = "";
-            let data: any = this.attrs.data;
-            if (this.attrs.c) { data = this.attrs.c; }
-            if (res.result.data.fielddata) {
-                if (!data) { data = {}; }
-                data.fielddata = res.result.data.fielddata;
-            }
-            if (data) { this.setData(data); }
-        } catch (e) {
-            this.error = "Error fetching new data for user" + "\n" + e;
+            data.fielddata = res.result.data.fielddata;
+        }
+        if (data) {
+            this.setData(data);
         }
     }
 
@@ -168,23 +298,25 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
     }
 
     changeAnswer(a: IAnswer) {
-        const frameElem = this.element.find(".jsFrameContainer")[0];
-        const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+        const f = this.getFrame();
         if (!f.contentWindow.setData) {
             return;
         }
-        f.contentWindow.setData(JSON.parse(a.content));
+        f.contentWindow.setData(JSON.parse(a.content) as JSFrameData);
+    }
+
+    private getFrame() {
+        return this.frame!.nativeElement as CustomFrame<JSFrameWindow>;
     }
 
     private communicationJS = `
     <script>
-    // let port2;
 
     window.addEventListener('message', function(e) {
-         if ( e.data.msg === "init" ) {
+         if (e.data.msg === "init") {
             window.port2 = e.ports[0];
             window.port2.onmessage = onMessage;
-            window.port2.postMessage({msg:"Inited"});
+            window.port2.postMessage({msg: "Inited"});
          }
     });
 
@@ -192,15 +324,15 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
          // console.log(event.data);
          // console.log(event.origin);
 
-         if ( event.data.msg === "setData" ) {
+         if (event.data.msg === "setData") {
             setData(event.data.data);
             window.port2.postMessage({msg: "Got data!"});
          }
-         if ( event.data.msg === "getData" ) {
-            window.port2.postMessage({msg:"data", data: getData()});
+         if (event.data.msg === "getData") {
+            window.port2.postMessage({msg: "data", data: getData()});
          }
-         if ( event.data.msg === "getDataSave" ) {
-            window.port2.postMessage({msg:"datasave", data: getData()});
+         if (event.data.msg === "getDataSave") {
+            window.port2.postMessage({msg: "datasave", data: getData()});
          }
     }
 
@@ -208,63 +340,47 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
     </script>
     `;
 
-    outputAsHtml() {
-        // if ( !this.attrs.srchtml ) return "";
+    updateIframeSettings() {
         if (this.attrsall.preview) {
             // return "";
         } // TODO: replace when preview delay and preview from markup ready
-        $timeout(0);
-        const w = this.attrs.width ?? 800; // for some reason if w/h = 2, does not give hints on Chart.js
-        const h = this.attrs.height ?? (208 * w / 400);  //  experimental result for Chart.js
-        let src = "";
-        if (this.attrs.useurl) {
-            const tid = this.pluginMeta.getTaskId()!;
-            const taskId = tid.docTask();
-            let ab = null;
-
-            let userId = 1;
-            if (this.viewctrl) {
-                ab = this.viewctrl.getAnswerBrowser(taskId);
-                const selectedUser = this.viewctrl.selectedUser;
-                userId = selectedUser.id;
-            }
-            if (ab) {
-                ab.registerAnswerListener((a) => this.changeAnswer(a));
-            }
+        const w = this.markup.width ?? 800; // for some reason if w/h = 2, does not give hints on Chart.js
+        const h = this.markup.height ?? (208 * w / 400);  //  experimental result for Chart.js
+        let src;
+        if (this.markup.useurl) {
+            const selectedUser = this.viewctrl.selectedUser;
+            const userId = selectedUser.id;
             let anr = 0;
-            if (ab) {
-                anr = ab.findSelectedAnswerIndex();
+            if (this.ab) {
+                anr = this.ab.findSelectedAnswerIndex();
                 if (anr < 0) {
                     anr = 0;
                 }
             }
             let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
             url = url.replace("//", "/");
-            src = 'src="' + url + '"';
+            src = url;
         } else {
-            let html: string = this.attrs.srchtml ?? "";
+            let html = this.markup.srchtml ?? "";
             html = html.replace("</body>", this.communicationJS + "\n</body>");
             html = html.replace("// INITDATA", this.initData);
             const datasrc = btoa(html);
-            src = "src='data:text/html;base64," + datasrc;
+            src = "data:text/html;base64," + datasrc;
         }
 
-        const iframeopts = this.attrs.iframeopts ?? "sandbox='allow-scripts allow-same-origin'";
+        const iframeopts = this.markup.iframeopts ?? "sandbox='allow-scripts allow-same-origin'";
 
-        // let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
-        // url = url.replace("//", "/");
-        this.jsframeoutput = "<iframe id='jsIFrame'\n" +
-            "        class='showJsframe jsframeFrame' \n" +
-            "        style='margin-left: auto;\n" +
-            "               margin-right: auto;\n" +
-            "               display: block;" +
-            "               width: " + w + "px; height: " + h + "px;border: none;'\n" +
-            "        " + iframeopts + "\n" +
-            src +
-            "'>\n" +
-            // 'src="' + url + '"' +
-            "</iframe>";
-        return $sce.trustAsHtml(this.jsframeoutput);
+        const parse = Range.prototype.createContextualFragment.bind(document.createRange());
+        const parsed = parse(`<div ${iframeopts}></div>`);
+        let sandbox = "";
+        for (const c of parsed.firstElementChild!.attributes) {
+            if (c.name === "sandbox") {
+                sandbox = c.value;
+            }
+            // TODO: Handle possible other iframe options.
+        }
+        const source = this.domSanitizer.bypassSecurityTrustResourceUrl(src);
+        this.iframesettings = {sandbox, src: source, width: w, height: h};
     }
 
     getHtmlUrl(): string {
@@ -286,7 +402,7 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         return url;
     }
 
-    async runSend(data: any) {
+    async runSend(data: { c: unknown }) {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             this.saveResponse.saved = false;
@@ -296,15 +412,17 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         this.error = "";
         this.isRunning = true;
         const url = this.getTaskUrl();
-        data.type = "jsframe";
         const params = {
-            input: data,
+            input: {
+                ...data,
+                type: "jsframe",
+            },
         };
 
         this.console = "";
 
         const r = await to($http<{
-            web: {error?: string, console?: string},
+            web: { error?: string, console?: string },
         }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
         this.isRunning = false;
@@ -333,44 +451,44 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         return this.saveResponse;
     }
 
-    getData(msg: string = "getData") {
-        if (this.attrs.useurl) {
-            const frameElem = this.element.find(".jsFrameContainer")[0];
-            const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+    getData(msg: MessageGet = "getData") {
+        if (this.markup.useurl) {
+            const f = this.getFrame();
             if (!f.contentWindow.getData) {
                 return;
             }
             return this.getDataReady(f.contentWindow.getData());
         }
-        this.send({msg: msg });
+        this.send({msg: msg});
     }
 
-    getDataReady(data: any, dosave: boolean = false) {
+    getDataReady<T extends JSFrameData>(data: T, dosave = false) {
         if (data.message) {
             this.message = data.message;
         }
-        if (dosave) { this.runSend({c: data}); }
+        if (dosave) {
+            this.runSend({c: data});
+        }
         return data;
     }
 
-    setData(data: any, save: boolean = false) {
-        $timeout(0);
-
-        if (save) { this.runSend({c: data}); }
-        if (this.attrs.useurl) {
-            const frameElem = this.element.find(".jsFrameContainer")[0];
-            const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+    setData<T extends JSFrameData>(data: T, save = false) {
+        if (save) {
+            this.runSend({c: data});
+        }
+        if (this.markup.useurl) {
+            const f = this.getFrame();
             if (!f.contentWindow.setData) {
                 return;
             }
             f.contentWindow.setData(data);
         } else {
-            this.send({msg: "setData", data: data });
+            this.send({msg: "setData", data: data});
         }
     }
 
     getContent() {
-        return this.getData();
+        return JSON.stringify(this.getData());
     }
 
     async save() {
@@ -382,39 +500,30 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
         return false;  // TODO: compare datas
     }
 
-    tempSetData() {
-        const newData = {  labels: [1, 2, 3, 4, 5, 6],
-                           data:   [4, 5, 6, 12, 3, 10] };
-        this.setData(newData);
+    send(obj: MessageToFrame) {
+        const c = this.addListener();
+        c.port1.postMessage(obj);
     }
-
-    tempGetData() {
-        this.getData();
-    }
-
-    send(obj: any) {
-        this.addListener();
-        this.channel.port1.postMessage(obj);
-    }
-
-    private channel: any = 0;
 
     addListener() {
-        if (this.channel) { return; }
+        if (this.channel) {
+            return this.channel;
+        }
         this.channel = new MessageChannel();
-        this.channel.port1.onmessage =  (event: any) => {
+        this.channel.port1.onmessage = (event: MessageEvent) => {
             // console.log(event);
-            const msg = event.data.msg;
+            const d = event.data as MessageFromFrame;
+            const msg = d.msg;
             if (msg === "data") {
-                this.getDataReady(event.data.data);
+                this.getDataReady(d.data);
             }
             if (msg === "datasave") {
-                this.getDataReady(event.data.data, true);
+                this.getDataReady(d.data, true);
             }
         };
-        const frameElem = this.element.find(".jsFrameContainer")[0];
-        const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
-        f.contentWindow.postMessage({msg: "init" }, "*", [this.channel.port2]);
+        const f = this.getFrame();
+        f.contentWindow.postMessage({msg: "init"}, "*", [this.channel.port2]);
+        return this.channel;
     }
 
     getDefaultMarkup() {
@@ -435,44 +544,28 @@ class JsframeController extends PluginBase<t.TypeOf<typeof JsframeMarkup> ,
     }
 }
 
-const common = {
-    bindings: pluginBindings,
-    controller: JsframeController,
-    require: {
-        viewctrl: "?^timView",
-    },
+// noinspection AngularInvalidImportedOrDeclaredSymbol
+@NgModule({
+    declarations: [
+        JsframeComponent,
+    ],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+    ],
+})
+export class JsframeModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {
+    }
+}
+
+const bootstrapFn = (extraProviders: StaticProvider[]) => {
+    const platformRef = platformBrowserDynamic(extraProviders);
+    return platformRef.bootstrapModule(JsframeModule);
 };
 
-jsframeApp.component("jsframeRunner", {
-    ...common,
-    template: `
-<div ng-cloak ng-class="::{'csRunDiv': $ctrl.attrs.borders}"  class="math que jsframe no-popup-menu" >
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
-    <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
-
-    <div ng-cloak ng-if="$ctrl.isOpen" id="output" class="jsFrameContainer jsframeOutput" ng-bind-html="::$ctrl.outputAsHtml()">
-    <!--<div ng-cloak id="output" ng-if="::!$ctrl.timWay" class="jsframeOutput" ng-bind-html="$ctrl.output">-->
-    </div>
-    <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.jsframepeek"></div> -->
-    <p class="csRunMenu">
-        <button ng-if="!$ctrl.isOpen"  ng-click="$ctrl.runShowTask()"  ng-bind-html="$ctrl.showButton()"></button>
-        <button ng-if="$ctrl.isOpen && !$ctrl.attrs.norun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.getData('getDataSave')"
-                ng-bind-html="::$ctrl.button"></button>
-        <span class="jsframe message"
-              ng-if="$ctrl.message"
-              ng-bind-html="$ctrl.message"></span>
-        <span class="jsframe message"
-              ng-if="$ctrl.console"
-              ng-bind-html="$ctrl.console"></span>
-    </p>
-    <span class="csRunError"
-          ng-if="$ctrl.error"
-          ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
-
-    <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
-    <!--<button ng-click="$ctrl.tempSetData()">Set data</button>
-    <button ng-click="$ctrl.tempGetData()">Get data</button>-->
-</div>
-`,
-});
+const angularJsModule = createDowngradedModule(bootstrapFn);
+doDowngrade(angularJsModule, "jsframeRunner", JsframeComponent);
+export const moduleDefs = [angularJsModule];

@@ -19,7 +19,7 @@ import {
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {BrowserModule} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -432,8 +432,8 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         return false;
     }
 
-    constructor(el: ElementRef, http: HttpClient, private cdr: ChangeDetectorRef) {
-        super(el, http);
+    constructor(el: ElementRef, http: HttpClient, domSanitizer: DomSanitizer, private cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer);
         // cdr.detach();
     }
 

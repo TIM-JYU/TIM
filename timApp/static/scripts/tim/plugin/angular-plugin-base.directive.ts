@@ -3,14 +3,15 @@ import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "tim/plugin/att
 import {Type} from "io-ts";
 import {HttpClient} from "@angular/common/http";
 import {to2} from "tim/util/utils";
-import {baseOnInit, getDefaults, PluginMarkupErrors, PluginMeta} from "tim/plugin/util";
+import {baseOnInit, getDefaults, PluginBaseCommon, PluginMarkupErrors, PluginMeta} from "tim/plugin/util";
+import {DomSanitizer} from "@angular/platform-browser";
 import {handleAnswerResponse, prepareAnswerRequest} from "../document/interceptor";
 import {IAnswerSaveEvent} from "../answer/answerbrowser3";
 
 @Directive()
 export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
     A extends IGenericPluginTopLevelFields<MarkupType>,
-    T extends Type<A>> implements OnInit {
+    T extends Type<A>> extends PluginBaseCommon implements OnInit {
     attrsall: Readonly<A>;
     @Input() readonly json!: string;
     @Input() readonly plugintype?: string;
@@ -20,7 +21,7 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
     protected pluginMeta: PluginMeta;
 
     buttonText() {
-        return this.markup.button || this.markup.buttonText;
+        return this.markup.button ?? this.markup.buttonText;
     }
 
     get markup(): Readonly<MarkupType> {
@@ -43,7 +44,8 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
         return this.attrsall.access === "readonly";
     }
 
-    constructor(private el: ElementRef, private http: HttpClient) {
+    constructor(private el: ElementRef<HTMLElement>, private http: HttpClient, protected domSanitizer: DomSanitizer) {
+        super();
         this.attrsall = getDefaults(this.getAttributeType(), this.getDefaultMarkup());
         this.pluginMeta = new PluginMeta($(el.nativeElement), this.attrsall.preview);
     }
@@ -104,16 +106,4 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
     abstract getAttributeType(): T;
 
     abstract getDefaultMarkup(): Partial<MarkupType>;
-
-    getTaskId() {
-        return this.pluginMeta.getTaskId();
-    }
-
-    public getPar() {
-        return this.element.parents(".par");
-    }
-
-    isPreview() {
-        return this.pluginMeta.isPreview();
-    }
 }

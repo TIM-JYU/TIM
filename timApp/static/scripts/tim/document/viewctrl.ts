@@ -491,14 +491,8 @@ export class ViewCtrl implements IController {
     }
 
     public getJsRunner(taskId: string) {
-        if (taskId.split(".").length < 2) {
-            taskId = this.docId + "." + taskId;
-        }
+        taskId = this.normalizeTaskId(taskId);
         return this.jsRunners.get(taskId);
-    }
-
-    public addTimComponent2(component: ITimComponent, tag?: (string | undefined)) {
-        this.addTimComponent(component, tag);
     }
 
     public addUserChangeListener(name: string, listener: IUserChanged) {
@@ -540,9 +534,7 @@ export class ViewCtrl implements IController {
         if (!name) {
             return undefined;
         }
-        if (name.split(".").length < 2) {
-            name = this.docId + "." + name;
-        }
+        name = this.normalizeTaskId(name);
         return this.timComponentArrays.get(name);
     }
 
@@ -554,9 +546,7 @@ export class ViewCtrl implements IController {
      */
     public getTimComponentByName(name: string): ITimComponent | undefined {
         if (!name) { return undefined; }
-        if (name.split(".").length < 2) {
-            name = this.docId + "." + name;
-        }
+        name = this.normalizeTaskId(name);
         return this.timComponents.get(name);
     }
 
@@ -681,9 +671,9 @@ export class ViewCtrl implements IController {
             }
         }
 
-        if (this.formAbs.size > 0) {
+        if (this.formAbs.getSize() > 0) {
             const taskList = [];
-            for (const fab of this.formAbs.values()) {
+            for (const fab of this.formAbs.entities.values()) {
                 taskList.push(fab.taskId);
             }
             const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
@@ -704,7 +694,7 @@ export class ViewCtrl implements IController {
                 //     tasks: taskList,
                 // }));
                 this.formTaskInfosLoaded = true;
-                for (const fab of this.formAbs.values()) {
+                for (const fab of this.formAbs.entities.values()) {
                     // fab.setInfo(taskInfoResponse.data[fab.taskId]);
                     fab.setInfo({userMin: 0,
                     userMax: 0,
@@ -713,7 +703,7 @@ export class ViewCtrl implements IController {
                 }
             }
             if (answerResponse.data.userId == this.selectedUser.id) {
-                for (const fab of this.formAbs.values()) {
+                for (const fab of this.formAbs.entities.values()) {
                     const ans = answerResponse.data.answers[fab.taskId];
                     this.handleAnswerSet(ans, fab, user, true);
                 }
@@ -723,7 +713,7 @@ export class ViewCtrl implements IController {
         // TODO: do not call changeUser separately if updateAll enabled
         // - handle /answers as single request for all related plugins instead of separate requests
         // - do the same for /taskinfo and /getState requests
-        for (const ab of this.abs.values()) {
+        for (const ab of this.abs.entities.values()) {
             ab.changeUser(user, updateAll);
         }
     }
@@ -782,7 +772,7 @@ export class ViewCtrl implements IController {
                 }
             }
         }
-        if (this.formAbs.size > 0) {
+        if (this.formAbs.getSize() > 0) {
             const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
                 tasks: fabIds,
                 user: this.selectedUser.id,
@@ -951,8 +941,8 @@ export class ViewCtrl implements IController {
         }
     }
 
-    private abs = new Map<string, AnswerBrowserController>();
-    private formAbs = new Map<string, AnswerBrowserController>();
+    private abs = new EntityRegistry<string, AnswerBrowserController>();
+    private formAbs = new EntityRegistry<string, AnswerBrowserController>();
 
     /**
      * Registers answerbrowser to related map
@@ -985,17 +975,27 @@ export class ViewCtrl implements IController {
     }
 
     getAnswerBrowser(taskId: string) {
-        // TODO: Probably need a generic function for checking missing docId
-        if (taskId.split(".").length < 2) {
-            taskId = this.docId + "." + taskId;
-        }
+        taskId = this.normalizeTaskId(taskId);
         return (this.abs.get(taskId) ?? this.formAbs.get(taskId));
     }
 
-    getFormAnswerBrowser(taskId: string) {
+    getAnswerBrowserAsync(taskId: string) {
+        taskId = this.normalizeTaskId(taskId);
+        const p1 = this.abs.getEntityAsync(taskId);
+        const p2 = this.formAbs.getEntityAsync(taskId);
+        // The getEntityAsync method never rejects the promise, so we can use Promise.race here.
+        return Promise.race([p1, p2]);
+    }
+
+    private normalizeTaskId(taskId: string) {
         if (taskId.split(".").length < 2) {
             taskId = this.docId + "." + taskId;
         }
+        return taskId;
+    }
+
+    getFormAnswerBrowser(taskId: string) {
+        taskId = this.normalizeTaskId(taskId);
         return this.formAbs.get(taskId);
     }
 
@@ -1014,14 +1014,11 @@ export class ViewCtrl implements IController {
     }
 
     getPluginLoader(taskId: string) {
-        if (taskId.split(".").length < 2) {
-            taskId = this.docId + "." + taskId;
-        }
+        taskId = this.normalizeTaskId(taskId);
         return this.ldrs.get(taskId);
     }
 
-    private anns = new Map<string, AnnotationComponent>();
-    private annsDefers = new Map<string, TimDefer<AnnotationComponent>>();
+    private anns = new EntityRegistry<string, AnnotationComponent>();
 
     registerAnnotation(loader: AnnotationComponent) {
         // This assumes that the associated DOM element for annotation is attached in the page because we need to check
@@ -1029,10 +1026,6 @@ export class ViewCtrl implements IController {
         const prefix = loader.getKeyPrefix();
         const key = prefix + loader.annotation.id;
         this.anns.set(key, loader);
-        const defer = this.annsDefers.get(key);
-        if (defer) {
-            defer.resolve(loader);
-        }
     }
 
     getAnnotation(id: string) {
@@ -1040,33 +1033,49 @@ export class ViewCtrl implements IController {
     }
 
     getAnnotationAsync(id: string): Promise<AnnotationComponent> {
-        const a = this.getAnnotation(id);
-        if (a) {
-            return new Promise<AnnotationComponent>(((resolve) => resolve(a)));
-        }
-        const value = new TimDefer<AnnotationComponent>();
-        this.annsDefers.set(id, value);
-        return value.promise;
+        return this.anns.getEntityAsync(id);
     }
 
     unRegisterAnnotation(a: AnnotationComponent) {
         const prefix = a.getKeyPrefix();
         const key = prefix + a.annotation.id;
         this.anns.delete(key);
-        this.annsDefers.delete(key);
     }
-
 }
 
 class EntityRegistry<K, V> {
-    private entities = new Map<K, V>();
+    entities = new Map<K, V>();
+    private entityDefers = new Map<K, TimDefer<V>>();
 
-    registerEntity(k: K, e: V) {
+    set(k: K, e: V) {
         this.entities.set(k, e);
+        const defer = this.entityDefers.get(k);
+        if (defer) {
+            defer.resolve(e);
+        }
     }
 
-    getEntity(k: K) {
+    getSize() {
+        return this.entities.size;
+    }
+
+    get(k: K) {
         return this.entities.get(k);
+    }
+
+    delete(k: K) {
+        this.entities.delete(k);
+        this.entityDefers.delete(k);
+    }
+
+    getEntityAsync(k: K): Promise<V> {
+        const e = this.get(k);
+        if (e) {
+            return new Promise<V>((resolve) => resolve(e));
+        }
+        const value = new TimDefer<V>();
+        this.entityDefers.set(k, value);
+        return value.promise;
     }
 }
 

@@ -5,7 +5,7 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum, unique
-from typing import List, Optional, Tuple, DefaultDict, Dict
+from typing import List, Optional, Tuple, DefaultDict, Dict, TypedDict, Any, Union
 
 import attr
 import dateutil.parser
@@ -99,6 +99,15 @@ member_filter_relation_map = {
 }
 
 
+UserFields = Dict[str, Union[str, float, None]]
+
+
+class UserFieldObj(TypedDict):
+    user: User
+    fields: UserFields
+    styles: Any
+
+
 def get_fields_and_users(
         u_fields: List[str],
         requested_groups: List[UserGroup],
@@ -109,7 +118,7 @@ def get_fields_and_users(
         allow_non_teacher: bool = False,
         member_filter_type: MembershipFilter = MembershipFilter.Current,
         user_filter=None,
-):
+) -> Tuple[List[UserFieldObj], Dict[str, str], List[str], List[UserGroup]]:
     """
     Return fielddata, aliases, field_names
     :param user_filter: Additional filter to use.
@@ -205,7 +214,7 @@ def get_fields_and_users(
         dib = get_doc_or_abort(did, f'Document {did} not found')
         if not (current_user.has_teacher_access(dib) or allow_non_teacher):
             abort(403, f'Missing teacher access for document {dib.id}')
-        elif dib.document.get_own_settings().get('need_view_for_answers', False) \
+        elif dib.document.get_settings().get('need_view_for_answers', False) \
                 and not current_user.has_view_access(dib):
             abort(403, "Sorry, you don't have permission to use this resource.")
         doc_map[did] = dib.document
@@ -257,7 +266,7 @@ def get_fields_and_users(
     )
     if member_filter_type != MembershipFilter.Current:
         q = q.options(joinedload(User.memberships))
-    users = q.all()
+    users: List[User] = q.all()
     user_map = {}
     for u in users:
         user_map[u.id] = u
@@ -275,7 +284,7 @@ def get_fields_and_users(
     user_fieldstyles = None
     user_index = -1
     user = None
-    res = []
+    res: List[UserFieldObj] = []
     for uid, a in answers_with_users:
         if last_user != uid:
             user_index += 1

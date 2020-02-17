@@ -1,9 +1,9 @@
 """Answer-related routes."""
 import json
 import re
-from typing import Union, List, Tuple, Dict, Optional, Any, Callable
+from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from flask import Blueprint
 from flask import Response
 from flask import abort
@@ -50,7 +50,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields
 from timApp.util.utils import try_load_json
 
 # TODO: Remove methods in util/answerutil where many "moved" here to avoid circular imports
@@ -116,16 +116,19 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
 
+    ctx_user = User.get_by_id(user_id)
+    if not ctx_user:
+        raise RouteException('User not found')
     try:
         tid.block_id_hint = None  # TODO: this should only be done in preview?
-        plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite)
+        plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite, context_user=ctx_user)
     except (PluginException, TimDbException) as e:
         return abort(400, str(e))
 
     if plugin.type != plugintype:
         abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
 
-    users = [User.query.get(user_id)]
+    users = [ctx_user]
 
     old_answers = get_common_answers(users, tid)
     """
@@ -136,12 +139,11 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
         old_answers = get_common_answers(users, tid)
     """
 
-    info = plugin.get_info(users, len(old_answers), look_answer=False and not False, valid=True)
+    info = plugin.get_info(users, len(old_answers))
 
     if anr < 0:
         anr = 0
-    # Get the newest answer (state). Only for logged in users.
-    state = try_load_json(old_answers[anr].content) if logged_in() and len(old_answers) > 0 else None
+    state = try_load_json(old_answers[anr].content) if len(old_answers) > 0 else None
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,
@@ -151,7 +153,7 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
 
     vals = get_plug_vals(d, tid, get_current_user_object(), users[0])
     if vals:
-        answer_call_data['markup']['fielddata'] = vals.get('fielddata', {})
+        answer_call_data['markup']['fielddata'] = vals.to_json()
 
     jsonresp = call_plugin_answer_and_parse(answer_call_data, plugintype)
 
@@ -250,7 +252,7 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
                 dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
                 if user_id != currid:
                     verify_seeanswers_access(dib)
-                elif dib.document.get_own_settings().get('need_view_for_answers', False):
+                elif dib.document.get_settings().get('need_view_for_answers', False):
                     verify_view_access(dib)
                 doc_map[tid.doc_id] = dib.document
             if is_global_id(tid):
@@ -948,7 +950,7 @@ def get_answers(task_id, user_id):
     user = User.get_by_id(user_id)
     if user_id != get_current_user_id():
         verify_seeanswers_access(d)
-    elif d.document.get_own_settings().get('need_view_for_answers', False):
+    elif d.document.get_settings().get('need_view_for_answers', False):
         verify_view_access(d)
     if user is None:
         abort(400, 'Non-existent user')
@@ -1038,32 +1040,46 @@ def get_all_answers_route(task_id):
     return json_response(all_answers)
 
 
-def get_plug_vals(doc, tid, curr_user, user):
-    plug = get_plugin_from_request(doc.document, tid, curr_user)
-    vals = {}
-    flds = plug[1].values.get('fields', [])
+class GraphData(TypedDict):
+    data: List[Union[str, float, None]]
+    labels: List[str]
+
+
+@dataclass
+class FieldInfo:
+    data: UserFields
+    aliases: Dict[str, str]
+    fieldnames: List[str]
+    graphdata: GraphData
+
+    def to_json(self):
+        return asdict(self)
+
+
+def get_plug_vals(doc: DocInfo, tid: TaskId, curr_user: User, user: User) -> Optional[FieldInfo]:
+    d, plug = get_plugin_from_request(doc.document, tid, curr_user)
+    flds = plug.values.get('fields', [])
     if not flds:
-        return {}
+        return None
 
     data, aliases, field_names, _ = get_fields_and_users(
         flds,
         [user.personal_group_prop],
         doc,
-        get_current_user_object(),
+        curr_user,
         add_missing_fields=True,
         allow_non_teacher=True,
     )
     df = data[0]['fields']
     da = []
-    labels = []
     for fn in field_names:
         da.append(df.get(fn, 0))
-        labels.append(fn)
-    vals['fielddata'] = {'data': df,
-                         'aliases': aliases,
-                         'fieldnames': field_names,
-                         'graphdata': {'data': da, 'labels': labels}}
-    return vals
+    return FieldInfo(
+        data=df,
+        aliases=aliases,
+        fieldnames=field_names,
+        graphdata={'data': da, 'labels': field_names},
+    )
 
 
 @answers.route("/jsframeUserChange/<task_id>/<user_id>")
@@ -1079,31 +1095,6 @@ def get_jsframe_data(task_id, user_id):
     curr_user = get_current_user_object()
     try:
         vals = get_plug_vals(doc, tid, curr_user, user)
-        """
-                vals = {}
-                flds = plug[1].values.get('fields', [])
-                if not flds:
-                    return json_response({})
-        
-                data, aliases, field_names = get_fields_and_users(
-                    flds,
-                    [user.personal_group_prop],
-                    doc,
-                    get_current_user_object(),
-                    add_missing_fields=True,
-                    allow_non_teacher=True,
-                )
-                df = data[0]['fields']
-                da = []
-                labels = []
-                for fn in field_names:
-                    da.append(df.get(fn, 0))
-                    labels.append(fn)
-                vals['fielddata'] = {'data': data[0]['fields'],
-                                     'aliases': aliases,
-                                     'fieldnames': field_names,
-                                     'graphdata': {'data': da, 'labels': labels}}
-        """
         return json_response(vals)
     except Exception as e:
         return abort(400, str(e))

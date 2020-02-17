@@ -7,6 +7,8 @@ import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $sce, $timeout} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import {Subscription} from "rxjs";
+import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 
 const geogebraApp = angular.module("geogebraApp", ["ngSanitize"]);
 export const moduleDefs = [geogebraApp];
@@ -67,6 +69,7 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
 class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
     t.TypeOf<typeof GeogebraAll>,
     typeof GeogebraAll> {
+    private ab?: AnswerBrowserController;
 
     get english() {
         return this.attrs.lang === "en";
@@ -88,7 +91,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         return this.english ? "Show task" : "Näytä tehtävä";
     }
 
-    public viewctrl?: ViewCtrl;
+    public viewctrl!: ViewCtrl;
     private span: string = "";
     private error: string = "";
     private console: string = "";
@@ -121,6 +124,18 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         if (this.attrs.open) {
             this.isOpen = true;
         }
+        const tid = this.pluginMeta.getTaskId()!;
+        const taskId = tid.docTask();
+        (async () => {
+            const ab = await this.viewctrl.getAnswerBrowserAsync(taskId);
+            this.ab = ab;
+            if (ab) {
+                ab.setAnswerLoader((a) => this.changeAnswer(a));
+            }
+        })();
+    }
+
+    $onDestroy() {
     }
 
     runShowTask() {
@@ -142,22 +157,11 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
             return "";
         } // TODO: replace when preview delay and preview from markup ready
         $timeout(0);
-        const tid = this.pluginMeta.getTaskId()!;
-        const taskId = tid.docTask();
-        let ab = null;
-
-        let userId = 1;
-        if (this.viewctrl) {
-            ab = this.viewctrl.getAnswerBrowser(taskId);
-            const selectedUser = this.viewctrl.selectedUser;
-            userId = selectedUser.id;
-        }
-        if (ab) {
-            ab.registerAnswerListener((a) => this.changeAnswer(a));
-        }
+        const selectedUser = this.viewctrl.selectedUser;
+        const userId = selectedUser.id;
         let anr = 0;
-        if (ab) {
-            anr = ab.findSelectedAnswerIndex();
+        if (this.ab) {
+            anr = this.ab.findSelectedAnswerIndex();
             if (anr < 0) {
                 anr = 0;
             }

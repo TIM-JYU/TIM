@@ -4,6 +4,7 @@ import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
+import {Subject, Observable} from "rxjs";
 import {dereferencePar, getParId} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {getRangeBeginParam} from "../document/viewRangeInfo";
@@ -306,7 +307,7 @@ export interface IAnswerSaveEvent {
     error?: string;
 }
 
-type AnswerCallback = (a: IAnswer) => void;
+type AnswerLoadCallback = (a: IAnswer) => void;
 
 export type AnswerBrowserData =
     { saveAnswer: boolean; teacher: boolean; saveTeacher: false }
@@ -336,7 +337,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private answerId?: Binding<number, "<?">;
     private loader!: PluginLoaderCtrl;
     private reviewHtml?: string;
-    private answerListener?: AnswerCallback;
+    private answerLoader?: AnswerLoadCallback;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -502,8 +503,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.element.focus();
     }
 
-    registerAnswerListener(ac: AnswerCallback) {
-        this.answerListener = ac;
+    setAnswerLoader(ac: AnswerLoadCallback) {
+        if (this.answerLoader) {
+            console.warn(`answerListener was already set for task ${this.taskId}`);
+        }
+        this.answerLoader = ac;
     }
 
     async changeAnswer() {
@@ -548,8 +552,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
             this.loadedAnswer.id = this.selectedAnswer.id;
             this.loadedAnswer.review = this.review;
-            if (this.answerListener) {
-                this.answerListener(this.selectedAnswer);
+
+            // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
+            // have to be fully reloaded every time.
+            if (this.answerLoader) {
+                this.answerLoader(this.selectedAnswer);
             } else {
                 void loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
             }

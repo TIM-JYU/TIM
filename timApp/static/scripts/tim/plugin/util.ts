@@ -36,6 +36,7 @@ export class PluginMeta {
     }
 
     taskIdCache?: TaskId | null;
+
     public getTaskId() {
         if (this.taskIdCache !== undefined) {
             return this.taskIdCache ?? undefined;
@@ -85,7 +86,9 @@ export class PluginMeta {
 
 interface PluginInit<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>> {
     attrsall: Readonly<A>;
+
     getAttributeType(): T;
+
     markupError?: PluginMarkupErrors;
     readonly json: Binding<string, "@">;
 }
@@ -106,84 +109,14 @@ export function baseOnInit<MarkupType extends IGenericPluginMarkup, A extends IG
     // console.log(this);
 }
 
-export type PluginMarkupErrors = Array<{name: string, type: string}>;
+export type PluginMarkupErrors = Array<{ name: string, type: string }>;
 
 /**
- * Base class for plugins.
- *
- * All properties or fields having a one-time binding in template should eventually return a non-undefined value.
- * That's why there are "|| null"s in several places.
+ * Functionality that is common to both Angular and old AngularJS plugins.
  */
-export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>> implements IController {
-    static $inject = ["$scope", "$element"];
-
-    buttonText() {
-        return this.attrs.button || this.attrs.buttonText || null;
-    }
-
-    get attrs(): Readonly<MarkupType> {
-        return this.attrsall.markup;
-    }
-
-    get footer() {
-        return this.attrs.footer || null;
-    }
-
-    get header() {
-        return this.attrs.header || null;
-    }
-
-    get stem() {
-        return this.attrs.stem || null;
-    }
-
-    /**
-     * Returns if this plugin is readonly for the current user.
-     */
-    get readonly(): boolean {
-        return this.attrsall.access === "readonly";
-    }
-
-    // Parsed form of json binding or default value if json was not valid.
-    attrsall: Readonly<A>;
-    // Binding that has all the data as a JSON string.
-    readonly json!: Binding<string, "@">;
-
-    // Optional bindings that are used when the plugin is compiled without being attached to document.
-    // In that case, the plugin element does not have the parent where to fetch the type and task id, so they
-    // are provided when compiling.
-    plugintype?: Binding<string, "@?">;
-    taskid?: Binding<string, "@?">;
-
-    markupError?: PluginMarkupErrors;
-    pluginMeta: PluginMeta;
-
-    constructor(
-        protected scope: IScope,
-        public element: JQLite) {
-        this.attrsall = getDefaults(this.getAttributeType(), this.getDefaultMarkup());
-        this.pluginMeta = new PluginMeta(element, this.attrsall.preview);
-    }
-
-    abstract getDefaultMarkup(): Partial<MarkupType>;
-
-    $postLink() {
-
-    }
-
-    $onInit() {
-        const result = baseOnInit.call(this);
-        if (result) {
-            this.pluginMeta = new PluginMeta(
-                this.element,
-                result.preview,
-                this.plugintype,
-                this.taskid,
-            );
-        }
-    }
-
-    abstract getAttributeType(): T;
+export abstract class PluginBaseCommon {
+    abstract element: JQuery;
+    protected abstract pluginMeta: PluginMeta;
 
     protected getRootElement() {
         return this.element[0];
@@ -260,13 +193,93 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
      * message: for replying with possible errors
      * TODO: This could be integrated into isForm
      */
-    setAnswer(content: {[index: string]: unknown}): {ok: boolean, message: (string | undefined)} {
+    setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 
     resetField(): undefined {
         return undefined;
     }
+}
+
+/**
+ * Base class for plugins.
+ *
+ * All properties or fields having a one-time binding in template should eventually return a non-undefined value.
+ * That's why there are "|| null"s in several places.
+ */
+export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>>
+    extends PluginBaseCommon implements IController {
+    static $inject = ["$scope", "$element"];
+
+    buttonText() {
+        return this.attrs.button || this.attrs.buttonText || null;
+    }
+
+    get attrs(): Readonly<MarkupType> {
+        return this.attrsall.markup;
+    }
+
+    get footer() {
+        return this.attrs.footer || null;
+    }
+
+    get header() {
+        return this.attrs.header || null;
+    }
+
+    get stem() {
+        return this.attrs.stem || null;
+    }
+
+    /**
+     * Returns if this plugin is readonly for the current user.
+     */
+    get readonly(): boolean {
+        return this.attrsall.access === "readonly";
+    }
+
+    // Parsed form of json binding or default value if json was not valid.
+    attrsall: Readonly<A>;
+    // Binding that has all the data as a JSON string.
+    readonly json!: Binding<string, "@">;
+
+    // Optional bindings that are used when the plugin is compiled without being attached to document.
+    // In that case, the plugin element does not have the parent where to fetch the type and task id, so they
+    // are provided when compiling.
+    plugintype?: Binding<string, "@?">;
+    taskid?: Binding<string, "@?">;
+
+    markupError?: PluginMarkupErrors;
+    pluginMeta: PluginMeta;
+
+    constructor(
+        protected scope: IScope,
+        public element: JQLite) {
+        super();
+        this.attrsall = getDefaults(this.getAttributeType(), this.getDefaultMarkup());
+        this.pluginMeta = new PluginMeta(element, this.attrsall.preview);
+    }
+
+    abstract getDefaultMarkup(): Partial<MarkupType>;
+
+    $postLink() {
+
+    }
+
+    $onInit() {
+        const result = baseOnInit.call(this);
+        if (result) {
+            this.pluginMeta = new PluginMeta(
+                this.element,
+                result.preview,
+                this.plugintype,
+                this.taskid,
+            );
+        }
+    }
+
+    abstract getAttributeType(): T;
 }
 
 /**
