@@ -54,18 +54,18 @@
         </div>
     </div>
     <div class="editorOptions"><!--="inline-flex"-->
-        <label class="font-weight-normal margin-5-right" title="Show more options to editor"><input type="checkbox" ng-model="$ctrl.proeditor"/>Advanced view </label>
+        <label class="font-weight-normal margin-5-right" title="Show more options to editor"><input type="checkbox" ng-model="$ctrl.proeditor"/> Advanced view </label>
         <span ng-show="$ctrl.proeditor">
             <label class="font-weight-normal margin-5-right" title="Change editor between Ace and normal textarea">
-                <input type="checkbox"  ng-model="$ctrl.aceEnabled()" ng-click="$ctrl.changeEditor()">Ace editor </label>
-            <label class="font-weight-normal margin-5-right" ng-show="$ctrl.fullscreenSupported()" ><input type="checkbox" ng-click="$ctrl.goFullScreen()">Fullscreen </label>
+                <input type="checkbox" ng-checked="$ctrl.aceEnabled()" ng-click="$ctrl.changeEditor()"> Ace editor</label>
+            <label class="font-weight-normal margin-5-right" ng-show="$ctrl.fullscreenSupported()" ><input type="checkbox" ng-click="$ctrl.goFullScreen()"> Fullscreen </label>
         </span>
-        <label class="font-weight-normal margin-5-right" ng-show="$ctrl.aceEnabled()"><input type="checkbox" ng-model="$ctrl.autocomplete"/>Autocomplete </label>
+        <label class="font-weight-normal margin-5-right" ng-show="$ctrl.aceEnabled()"><input type="checkbox" ng-model="$ctrl.autocomplete"/> Autocomplete </label>
         <label class="font-weight-normal margin-5-right" ng-repeat="tag in $ctrl.getOptions().tags">
             <input type="checkbox" ng-model="$ctrl.getExtraData().tags[tag.name]"/> {{ tag.desc }}
         </label>
         <span class="pull-right font-weight-normal" title="Put 0 to no wrap">
-            <button class="timButton" title="Click to reformat text for given line length" ng-click="$ctrl.editor.forceWrap(true)" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
+            <button class="timButton btn-xs" title="Click to reformat text for given line length" ng-click="$ctrl.editor.forceWrap(true)">Wrap
             </button>
             <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto"/>
             <input type="text" title="Choose linelength for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="1"/>

@@ -11,7 +11,7 @@ from timApp.timdb.sqa import db
 
 
 def get_change_editor_button(pareditor) -> WebElement:
-    change_editor_button = find_button_by_text(pareditor, 'Editor')
+    change_editor_button = pareditor.find_elements_by_css_selector('.editorOptions label')[1]
     return change_editor_button
 
 
