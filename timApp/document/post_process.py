@@ -1,7 +1,7 @@
 """Common functions for use with routes."""
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Dict, DefaultDict, Tuple
+from typing import List, Dict, DefaultDict, Tuple, Optional
 
 import pytz
 from flask import flash, session
@@ -14,7 +14,7 @@ from timApp.document.document import Document
 from timApp.readmark.readmarkcollection import ReadMarkCollection
 from timApp.markdown.markdownconverter import expand_macros, create_environment
 from timApp.plugin.pluginControl import pluginify
-from timApp.auth.sessioninfo import get_session_usergroup_ids
+from timApp.auth.sessioninfo import get_session_usergroup_ids, get_current_user_object
 from timApp.user.user import User
 from timApp.readmark.readings import get_common_readings, get_read_expiry_condition
 from timApp.readmark.readparagraph import ReadParagraph
@@ -23,8 +23,20 @@ from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
 
 
-def hide_names_in_teacher():
-    return session.get('hide_names', False)
+def hide_names_in_teacher(d: DocInfo, context_user: Optional[User]=None):
+    """Determines whether user names should be hidden.
+
+    :param d: The document we're viewing.
+    :param context_user: The user whose data we are inspecting. If same as currently logged-in user, we don't have to
+    force hiding.
+    """
+    u = get_current_user_object()
+    force_hide = False
+    if context_user and context_user.id == u.id:
+        pass
+    else:
+        force_hide = not u.has_teacher_access(d)
+    return session.get('hide_names', False) or force_hide
 
 
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??
@@ -108,8 +120,9 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         d['notes'] = []
     # taketime("pars done")
 
-    group = user.get_personal_group().id if user is not None else get_anon_group_id()
-    if user is not None:
+    curr_user = get_current_user_object()
+    group = curr_user.get_personal_group().id
+    if curr_user.logged_in:
         # taketime("readings begin")
         readings = get_common_readings(get_session_usergroup_ids(),
                                        doc,
@@ -130,6 +143,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     is_owner = has_ownership(doc.get_docinfo())
     # taketime("notes picked")
 
+    should_hide_names = hide_names_in_teacher(doc.get_docinfo())
     for n, u in notes:
         key = (n.par_id, n.doc_id)
         pars = pars_dict.get(key)
@@ -139,6 +153,8 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
             for p in pars:
                 if 'notes' not in p:
                     p['notes'] = []
+                if should_hide_names and u.id != curr_user.id:
+                    u.hide_name = True
                 p['notes'].append(UserNoteAndUser(user=u, note=n, editable=editable, private=private))
     # taketime("notes mixed")
 

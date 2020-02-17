@@ -466,17 +466,10 @@ def view(item_path, template_name, route="view"):
     if view_range.is_restricted and contents_have_changed:
         texts = partition_texts(texts, view_range, preamble_count)
 
-    if hide_names_in_teacher() or should_hide_names:
+    if hide_names_in_teacher(doc_info) or should_hide_names:
         for entry in user_list:
             if not current_user or entry['user'].id != current_user.id:
                 entry['user'].hide_name = True
-        for t in texts:
-            notes = t.get('notes')
-            if not notes:
-                continue
-            for n in notes:
-                if not current_user or n.user.id != current_user.id:
-                    n.user.hide_name = True
 
     show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']
     taketime("view to render")

@@ -155,7 +155,7 @@ def get_statistics(doc_path):
          .with_entities(UserGroup.name, *cols))
 
     def maybe_hide_name_from_row(row):
-        if hide_names_in_teacher():
+        if hide_names_in_teacher(d):
             _, rest = row[0], row[1:]
             return ('user', *rest)
         return row

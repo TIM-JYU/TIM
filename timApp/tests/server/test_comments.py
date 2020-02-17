@@ -193,3 +193,5 @@ hi
         comments = r.cssselect('.notes > .note > .username')
         self.assertEqual('testuser1', comments[0].text_content())
         self.assertEqual('user3', comments[1].text_content())
+        r = self.post_comment_and_return_html('test3', par)
+        self.assertEqual('user3', r[1].cssselect('.username')[0].text_content())
