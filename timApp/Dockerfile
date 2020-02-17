@@ -201,6 +201,8 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 
 # Flask-Testing does not let us configure host, so we do it here.
 RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.8/dist-packages/flask_testing/utils.py
+# Fix newest Werkzeug incompatibility
+RUN sed -i "s/from werkzeug import cached_property/from werkzeug.utils import cached_property/" /usr/local/lib/python3.8/dist-packages/flask_testing/utils.py
 
 RUN wget -q http://mirrors.ctan.org/support/latexmk/latexmk.pl -O /usr/bin/latexmk
 
