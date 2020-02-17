@@ -169,7 +169,7 @@ recommonmark \
 responses \
 selenium==3.141.0 \
 sphinx \
-sqlalchemy \
+sqlalchemy==1.3.12 \
 sqlalchemy-utils \
 typing-inspect \
 wand \
