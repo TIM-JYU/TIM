@@ -29,6 +29,8 @@ services:
   tmpfs:
    - /var/lib/postgresql/data
   restart: unless-stopped
+  environment:
+   POSTGRES_PASSWORD: postgresql
  imagex:
   << : *common-root
   image: timimages/cs3sudo:rust

@@ -61,6 +61,8 @@ services:
   tmpfs:
    - /run/postgresql
    - /tmp
+  environment:
+   POSTGRES_PASSWORD: postgresql
  csplugin:
   image: timimages/cs3:rust
   build: ./timApp/modules/cs

@@ -22,7 +22,7 @@ from timApp.util.utils import del_content, remove_prefix, temp_folder_path
 
 class TimDbTest(unittest.TestCase):
     test_files_path = temp_folder_path / 'doctest_files'
-    db_path = app.config['DATABASE']
+    db_path = app.config['DB_URI']
     i = 0
     create_docs = False
 

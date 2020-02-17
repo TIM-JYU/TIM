@@ -7,8 +7,7 @@ from timApp.util.utils import pycharm_running
 DEBUG = True
 PROFILE = False
 TIM_NAME = 'tim-test'
-DB_HOST = 'postgresql-test'
-DATABASE = f"postgresql://postgres@{DB_HOST}:5432/{TIM_NAME}"
+DB_URI = f"postgresql://postgres:postgresql@postgresql-test:5432/{TIM_NAME}"
 FILES_PATH = '/tmp/doctest_files'
 LOG_DIR = "/tmp/tim_logs"
 LOG_FILE = "timLog.log"
@@ -16,7 +15,7 @@ LOG_LEVEL = logging.ERROR
 LOG_LEVEL_STDOUT = logging.ERROR
 LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
 TESTING = True
-SQLALCHEMY_DATABASE_URI = DATABASE
+SQLALCHEMY_DATABASE_URI = DB_URI
 
 # Webassets seems to have a weird bug that it cannot find the cache files if the paths are not default,
 # so we cannot modify them. And without the cache, running the tests is twice as slow.

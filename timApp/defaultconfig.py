@@ -33,11 +33,11 @@ LIBSASS_INCLUDES = ["node_modules/bootstrap-sass/assets/stylesheets",
                     "static"]
 TIM_NAME = os.environ.get('COMPOSE_PROJECT_NAME', 'tim')
 TIM_HOST = os.environ.get('TIM_HOST', 'http://localhost')
-DB_HOST = 'postgresql'
-DATABASE = f"postgresql://postgres@{DB_HOST}:5432/{TIM_NAME}"
+DB_PASSWORD = 'postgresql'
+DB_URI = f"postgresql://postgres:{DB_PASSWORD}@postgresql:5432/{TIM_NAME}"
 SASS_GEN_PATH = Path('generated')
 TEMPLATES_AUTO_RELOAD = True
-SQLALCHEMY_DATABASE_URI = DATABASE
+SQLALCHEMY_DATABASE_URI = DB_URI
 SQLALCHEMY_POOL_SIZE = 2
 SQLALCHEMY_POOL_TIMEOUT = 15
 SQLALCHEMY_MAX_OVERFLOW = 100

@@ -2,7 +2,6 @@
 
 import logging
 import sys
-import time
 
 import flask_migrate
 import sqlalchemy
@@ -21,8 +20,9 @@ from timApp.timdb.timdb import TimDb
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup, ORG_GROUP_SUFFIX
 from timApp.user.users import create_special_usergroups
-from timApp.util.logger import log_info, enable_loggers, log_error, log_warning
+from timApp.util.logger import log_info, enable_loggers, log_error
 from timApp.util.utils import EXAMPLE_DOCS_PATH
+from sqlalchemy_utils import database_exists, create_database
 
 
 def check_db_version(_, context: MigrationContext):
@@ -33,31 +33,11 @@ def check_db_version(_, context: MigrationContext):
     return []
 
 
-def postgre_create_database(host, db_name):
-    engine = sqlalchemy.create_engine(f"postgresql://postgres@{host}:5432/postgres")
-    conn_failures = 0
-    while True:
-        try:
-            conn = engine.connect()
-            break
-        except sqlalchemy.exc.OperationalError:
-            conn_failures += 1
-            max_failures = 10
-            if conn_failures > max_failures:
-                log_error(f'Failed more than {max_failures} times when trying to connect to PostgreSQL - exiting.')
-                sys.exit(1)
-            log_warning('Failed to connect to PostgreSQL, trying again in 1 second...')
-            time.sleep(1)
-    conn.execute("commit")
-    try:
-        conn.execute(f'create database "{db_name}"')
+def postgre_create_database(db_uri: str):
+    if not database_exists(db_uri):
+        create_database(db_uri)
         return True
-    except sqlalchemy.exc.ProgrammingError as e:
-        if 'already exists' not in str(e):
-            raise e
-        return False
-    finally:
-        conn.close()
+    return False
 
 
 def database_has_tables():
@@ -66,8 +46,9 @@ def database_has_tables():
 
 def initialize_database(create_docs=True):
     files_root_path = get_files_path()
-    was_created = postgre_create_database(app.config['DB_HOST'], app.config['TIM_NAME'])
-    log_info(f'Database {app.config["TIM_NAME"]} {"was created" if was_created else "exists"}.')
+    db_uri = app.config['DB_URI']
+    was_created = postgre_create_database(db_uri)
+    log_info(f'Database {db_uri} {"was created" if was_created else "exists"}.')
     timdb = TimDb(files_root_path=files_root_path)
     sess = timdb.session
     if database_has_tables():

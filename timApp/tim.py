@@ -327,7 +327,7 @@ def init_app():
 
     log_info(f'Debug mode: {app.config["DEBUG"]}')
     log_info(f'Profiling: {app.config["PROFILE"]}')
-    log_info(f'Using database: {app.config["DATABASE"]}')
+    log_info(f'Using database: {app.config["DB_URI"]}')
     if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
         log_warning('secret file not found, using default values - do not run in production!')
     else:
