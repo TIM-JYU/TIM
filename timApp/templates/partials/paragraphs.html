@@ -36,8 +36,9 @@
         {{ note.note.html|safe }}
         &mdash;
         {%- if item.rights.teacher %}
-        <a class="username" title="{{ note.user.real_name }}" href="mailto:{{ note.user.email }}"
-        >{{ note.user.name }}</a>
+        {% set info = note.user.basic_info_dict %}
+        <a class="username" title="{{ info.real_name }}" href="mailto:{{ info.email }}"
+        >{{ info.name }}</a>
         {%- endif %}
         <span class="timestamp" title="{{ note.note.created }}">{{ note.note.created|datestr_to_relative }}</span>
         {%- if note.note.modified -%}

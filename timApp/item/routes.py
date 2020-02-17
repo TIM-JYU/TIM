@@ -470,6 +470,13 @@ def view(item_path, template_name, route="view"):
         for entry in user_list:
             if not current_user or entry['user'].id != current_user.id:
                 entry['user'].hide_name = True
+        for t in texts:
+            notes = t.get('notes')
+            if not notes:
+                continue
+            for n in notes:
+                if not current_user or n.user.id != current_user.id:
+                    n.user.hide_name = True
 
     show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']
     taketime("view to render")

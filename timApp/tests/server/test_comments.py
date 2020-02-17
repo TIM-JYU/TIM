@@ -178,3 +178,18 @@ hi
         r = self.get(d.url, as_tree=True)
         comments = r.cssselect('.notes > .note')
         self.assertTrue(comments)
+
+    def test_comment_anonymized(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="test")
+        par = d.document.get_paragraphs()[0]
+        self.post_comment(par, public=True, text='test')
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.login_test2()
+        self.post_comment(par, public=True, text='test2')
+        self.login_test1()
+        r = self.get(d.url, as_tree=True, query_string={'hide_names': True})
+        comments = r.cssselect('.notes > .note > .username')
+        self.assertEqual('testuser1', comments[0].text_content())
+        self.assertEqual('user3', comments[1].text_content())
