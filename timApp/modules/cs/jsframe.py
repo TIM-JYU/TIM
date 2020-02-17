@@ -187,21 +187,43 @@ JSREADYHTML['simpleDrawIO'] = """
 		}
 	</style>
 	<script type="text/javascript">
-	    var TIMJS = {};
+	    var TIMJS = {frm: true, options: {}};
 		var editor = 'https://www.draw.io/?embed=1&ui=atlas&spin=1&proto=json&configure=1';
 		var initial = null;
 		var name = null;
+		var drw = null;
+		var iframe = null;
 
 		function edit(elt)
 		{
+		    if ( TIMJS.options && TIMJS.options.fullscreen ) { 
+		        TIMJS.frm = !TIMJS.options.fullscreen; 
+		    } 
+		    var fs = document.getElementById('fullscreen');
+            if ( fs ) {
+		        TIMJS.frm = !fs.checked; 
+            }
+
+		    
+		    if ( drw && !drw.closed ) {
+		        drw.focus();
+		        return;
+		    }
 		    elt =  document.getElementById('diagram');
-			var iframe = document.createElement('iframe');
-			iframe.setAttribute('frameborder', '0');
+		    if ( TIMJS.frm ) {
+			   var iframe = document.createElement('iframe');
+			   iframe.setAttribute('frameborder', '0');
+			}   
 
 			var close = function()
 			{
 				window.removeEventListener('message', receive);
-				document.body.removeChild(iframe);
+				if ( TIMJS.frm ) {
+				    document.body.removeChild(iframe);
+			    } else {
+				    drw.close();
+				}    
+				drw = null;
 			};
 
 			var draft = null; // localStorage.getItem('.draft-' + name);
@@ -228,16 +250,16 @@ JSREADYHTML['simpleDrawIO'] = """
 					if (msg.event == 'configure')
 					{
 						// Configuration example
-						iframe.contentWindow.postMessage(JSON.stringify({action: 'configure',
+						drw.postMessage(JSON.stringify({action: 'configure',
 							config: {defaultFonts: ["Humor Sans", "Helvetica", "Times New Roman"]}}), '*');
 					}
 					else if (msg.event == 'init')
 					{
 						if (draft != null)
 						{
-							iframe.contentWindow.postMessage(JSON.stringify({action: 'load',
+							drw.postMessage(JSON.stringify({action: 'load',
 								autosave: 1, xml: draft.xml}), '*');
-							iframe.contentWindow.postMessage(JSON.stringify({action: 'status',
+							drw.postMessage(JSON.stringify({action: 'status',
 								modified: true}), '*');
 						}
 						else
@@ -246,7 +268,7 @@ JSREADYHTML['simpleDrawIO'] = """
                             var ch = elt.firstChild;
 							var svg = '';
 							if ( ch ) svg = new XMLSerializer().serializeToString(ch);
-							iframe.contentWindow.postMessage(JSON.stringify({action: 'load',
+							drw.postMessage(JSON.stringify({action: 'load',
 								autosave: 1, xml: svg}), '*');
 						}
 					}
@@ -267,7 +289,7 @@ JSREADYHTML['simpleDrawIO'] = """
 					}
 					else if (msg.event == 'save')
 					{
-						iframe.contentWindow.postMessage(JSON.stringify({action: 'export',
+						drw.postMessage(JSON.stringify({action: 'export',
 							format: 'xmlsvg', xml: msg.xml, spin: 'Updating page'}), '*');
 						// localStorage.setItem('.draft-' + name, JSON.stringify({lastModified: new Date(), xml: msg.xml}));
 					}
@@ -281,8 +303,13 @@ JSREADYHTML['simpleDrawIO'] = """
 			};
 
 			window.addEventListener('message', receive);
-			iframe.setAttribute('src', editor);
-			document.body.appendChild(iframe);
+			if ( TIMJS.frm ) {
+			    iframe.setAttribute('src', editor);
+			    document.body.appendChild(iframe);
+			    drw = iframe.contentWindow;
+			} else  {  
+    			drw = window.open(editor);
+    		}	
 		};
 				
 		function load()
@@ -331,12 +358,15 @@ JSREADYHTML['simpleDrawIO'] = """
 <body>
 <div>
 <button onclick="edit(this);">Muokkaa</button>
+Fullscreen <input id="fullscreen" type="checkbox" />
 <div id="wrapper">
 <div id="diagram"></div>
 </div>
 </div>
 <script>
 //OPTIONS	// TIMJS
+var fs = document.getElementById('fullscreen');
+fs.checked = TIMJS.options.fullscreen;
 //ORIGINALDATA
 //JAVASCRIPT
 </script>
@@ -362,5 +392,6 @@ class DrawIO(JSframe):
         if not height and ar:
             ma["height"] = ma.get("width", 800) / (ar * 0.95)
         ma["initListener"] = ma.get("initListener", True)
+        ma["iframeopts"] = ma.get("iframeopts", 'sandbox="allow-scripts allow-same-origin allow-popups"')
         super().modify_query()
         return
