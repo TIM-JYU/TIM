@@ -96,6 +96,9 @@ interface PluginInit<MarkupType extends IGenericPluginMarkup, A extends IGeneric
 export function baseOnInit<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>>(this: PluginInit<MarkupType, A, T>) {
     const parsed = JSON.parse(atob(this.json)) as unknown;
     const validated = this.getAttributeType().decode(parsed);
+    // These can be uncommented for debugging:
+    // console.log(parsed);
+    // console.log(this);
     if (validated.isLeft()) {
         this.markupError = getErrors(validated);
         return undefined;
@@ -103,10 +106,6 @@ export function baseOnInit<MarkupType extends IGenericPluginMarkup, A extends IG
         this.attrsall = validated.value;
         return this.attrsall;
     }
-
-    // These can be uncommented for debugging:
-    // console.log(parsed);
-    // console.log(this);
 }
 
 export type PluginMarkupErrors = Array<{ name: string, type: string }>;
