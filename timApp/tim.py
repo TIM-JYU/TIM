@@ -17,6 +17,7 @@ from flask_wtf.csrf import generate_csrf
 from requests.exceptions import MissingSchema, InvalidURL
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
+from timApp.admin.cli import register_clis
 from timApp.admin.global_notification import global_notification
 from timApp.admin.routes import admin_bp
 from timApp.answer.feedbackanswer import feedback
@@ -124,6 +125,7 @@ app.wsgi_app = ReverseProxied(app.wsgi_app)
 assets = Environment(app)
 
 register_errorhandlers(app)
+register_clis(app)
 
 
 @app.context_processor

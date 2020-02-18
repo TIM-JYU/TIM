@@ -5,7 +5,7 @@ from flask import abort
 from flask import request
 from jinja2 import TemplateNotFound
 
-from timApp.admin.routes import do_soft_delete
+from timApp.admin.user_cli import do_soft_delete
 from timApp.answer.answer_models import AnswerUpload
 from timApp.auth.accesshelper import verify_logged_in, verify_admin
 from timApp.auth.accesstype import AccessType

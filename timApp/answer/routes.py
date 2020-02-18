@@ -29,7 +29,7 @@ from timApp.auth.sessioninfo import get_current_user_object, get_session_users, 
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
-from timApp.document.post_process import hide_names_in_teacher
+from timApp.document.hide_names import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.modules.py.marshmallow_dataclass import class_schema

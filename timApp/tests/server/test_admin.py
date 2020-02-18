@@ -1,6 +1,6 @@
 from werkzeug.exceptions import BadRequest, NotFound
 
-from timApp.admin.routes import find_and_merge_users, find_and_soft_delete
+from timApp.admin.user_cli import find_and_merge_users, find_and_soft_delete
 from timApp.document.docentry import DocEntry
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_3_ID
 from timApp.tests.server.timroutetest import TimRouteTest

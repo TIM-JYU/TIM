@@ -1,13 +1,11 @@
+from dataclasses import dataclass, asdict, field
 from datetime import date, datetime
 from json import JSONDecodeError
 from textwrap import dedent
 from typing import List, Optional, Dict, Union, Any
 
-import click
 import requests
-from dataclasses import dataclass, asdict, field
 from flask import Blueprint, abort, current_app, request
-from flask.cli import AppGroup
 from marshmallow import validates, ValidationError
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import any_, true
@@ -204,36 +202,6 @@ def create_sisu_document(
         validation_rule=ItemValidationRule(check_write_perm=False, require_login=False),
     )
     return DocEntry.create(item_path, owner_group, item_title)
-
-
-sisu_cli = AppGroup('sisu')
-
-
-@sisu_cli.command('createdocs')
-def create_docs():
-    all_sisu_groups = get_sisu_groups_by_filter(true())
-    for g in all_sisu_groups:
-        print(f'Refreshing {g.external_id.external_id}')
-        refresh_sisu_grouplist_doc(g)
-    db.session.commit()
-
-
-@sisu_cli.command('sendmail')
-@click.argument('courses', nargs=-1)
-def send_course_mail_cli(courses: List[str]):
-    for course in courses:
-        ug = UserGroup.get_by_external_id(f'{course}-responsible-teachers')
-        if not ug:
-            print(f'Could not find the responsible teachers group for course {course}. '
-                  'Make sure you typed the course in format "jy-CUR-xxxx".')
-            return
-        p = parse_sisu_group_display_name(ug.display_name)
-        for u in ug.users:
-            print(f'Sending mail to {u.real_name} {u.email}')
-            send_course_group_mail(p, u)
-
-
-app.cli.add_command(sisu_cli)
 
 
 def refresh_sisu_grouplist_doc(ug: UserGroup):

@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
 
-from timApp.admin.routes import do_merge_users, do_soft_delete
+from timApp.admin.user_cli import do_merge_users, do_soft_delete
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re

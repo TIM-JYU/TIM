@@ -1,13 +1,13 @@
 """Common functions for use with routes."""
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Dict, DefaultDict, Tuple, Optional
+from typing import List, Dict, DefaultDict, Tuple
 
 import pytz
-from flask import flash, session
+from flask import flash
 
 from timApp.auth.accesshelper import has_ownership, has_edit_access
-from timApp.document.docinfo import DocInfo
+from timApp.document.hide_names import hide_names_in_teacher
 from timApp.note.notes import get_notes, UserNoteAndUser
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
@@ -18,25 +18,8 @@ from timApp.auth.sessioninfo import get_session_usergroup_ids, get_current_user_
 from timApp.user.user import User
 from timApp.readmark.readings import get_common_readings, get_read_expiry_condition
 from timApp.readmark.readparagraph import ReadParagraph
-from timApp.user.userutils import get_anon_group_id
 from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
-
-
-def hide_names_in_teacher(d: DocInfo, context_user: Optional[User]=None):
-    """Determines whether user names should be hidden.
-
-    :param d: The document we're viewing.
-    :param context_user: The user whose data we are inspecting. If same as currently logged-in user, we don't have to
-    force hiding.
-    """
-    u = get_current_user_object()
-    force_hide = False
-    if context_user and context_user.id == u.id:
-        pass
-    else:
-        force_hide = not u.has_teacher_access(d)
-    return session.get('hide_names', False) or force_hide
 
 
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??

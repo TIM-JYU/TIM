@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from timApp.auth.accesshelper import verify_read_marking_right, get_doc_or_abort, verify_teacher_access
 from timApp.auth.sessioninfo import get_session_usergroup_ids
 from timApp.document.docentry import DocEntry
-from timApp.document.post_process import hide_names_in_teacher
+from timApp.document.hide_names import hide_names_in_teacher
 from timApp.readmark.readings import mark_read, mark_all_read, get_common_readings
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.readmark.readparagraphtype import ReadParagraphType

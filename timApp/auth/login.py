@@ -15,7 +15,7 @@ from flask import request
 from flask import session
 from flask import url_for
 
-from timApp.admin.routes import do_merge_users, do_soft_delete
+from timApp.admin.user_cli import do_merge_users, do_soft_delete
 from timApp.auth.accesshelper import verify_admin, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_id, logged_in
 from timApp.auth.sessioninfo import get_other_users, get_session_users_ids, get_other_users_as_list, \

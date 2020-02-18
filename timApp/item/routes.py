@@ -27,8 +27,8 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import get_index_from_html_list, dereference_pars, Document
-from timApp.document.post_process import post_process_pars, \
-    hide_names_in_teacher
+from timApp.document.post_process import post_process_pars
+from timApp.document.hide_names import hide_names_in_teacher
 from timApp.document.preloadoption import PreloadOption
 from timApp.folder.folder import Folder
 from timApp.folder.folder_view import try_return_folder

@@ -56,10 +56,10 @@ from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.filters import map_format, timdate, humanize_timedelta, humanize_datetime
 from timApp.util.logger import setup_logging
 from timApp.util.utils import datestr_to_relative, date_to_relative
+from timApp.velp.annotation_model import Annotation
 from timApp.velp.velp_models import Velp, VelpContent, VelpGroup, VelpGroupDefaults, VelpGroupLabel, \
     VelpGroupSelection, VelpGroupsInDocument, VelpInGroup, VelpLabel, VelpLabelContent, VelpVersion, \
     LabelInVelp, LabelInVelpGroup, AnnotationComment, Icon
-from timApp.velp.annotation_model import Annotation
 
 
 def reg_models(*_):
