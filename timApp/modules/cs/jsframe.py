@@ -393,5 +393,7 @@ class DrawIO(JSframe):
             ma["height"] = ma.get("width", 800) / (ar * 0.95)
         ma["initListener"] = ma.get("initListener", True)
         ma["iframeopts"] = ma.get("iframeopts", 'sandbox="allow-scripts allow-same-origin allow-popups"')
+        # TODO: prevent user options if thereis
+        ma["options"] = {'fullscreen': ma.get("fullscreen", True)}
         super().modify_query()
         return
