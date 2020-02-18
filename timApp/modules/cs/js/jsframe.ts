@@ -13,9 +13,9 @@ import {
     DoBootstrap,
     ElementRef,
     NgModule,
+    OnDestroy,
     StaticProvider,
     ViewChild,
-    OnDestroy,
 } from "@angular/core";
 import {BrowserModule, SafeResourceUrl} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -24,7 +24,6 @@ import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {Subscription} from "rxjs";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 
 const JsframeMarkup = t.intersection([
@@ -38,8 +37,8 @@ const JsframeMarkup = t.intersection([
         height: t.number,
         tool: t.boolean,
         useurl: t.boolean,
-        c: t.UnknownRecord,
-        data: t.UnknownRecord,
+        c: t.unknown,
+        data: t.unknown,
         fielddata: t.unknown,
         fields: t.unknown,
         initListener: t.boolean,
@@ -66,6 +65,7 @@ const JsframeAll = t.intersection([
 ]);
 
 interface JSFrameData {
+    c: unknown;
     message?: string;
 }
 
@@ -81,6 +81,10 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
 
 const FieldDataObj = t.type({
     fielddata: t.unknown,
+});
+
+const CProp = t.type({
+    c: t.unknown,
 });
 
 type MessageType = "init" | MessageGet | "setData";
@@ -103,6 +107,27 @@ type MessageFromFrame =
     data: JSFrameData;
 };
 
+
+/**
+ * Returns the given data (un)wrapped so that there is exactly one layer of "c".
+ *
+ * This is a temporary hack because the database contains some incorrect data.
+ *
+ * Examples:
+ *
+ * {c: {c: 1, d: 2}} -> {c: 1, d: 2}
+ * {c: 1} -> {c: 1}
+ * 1 -> {c: 1}
+ * {c: {c: 1}, d: 2} -> {c: 1}  (NOTE: discards the outer d)
+ *
+ * @param data The data to transform.
+ */
+function unwrapAllC<A>(data: unknown): { c: unknown } {
+    while (CProp.is(data) && CProp.is(data.c)) {
+        data = data.c;
+    }
+    return CProp.is(data) ? data : {c: data};
+}
 
 @Component({
     selector: "jsframe-runner",
@@ -223,10 +248,7 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
         if (this.markup.open) {
             this.isOpen = true;
         }
-        let data = this.markup.data;
-        if (this.markup.c) {
-            data = this.markup.c;
-        }
+        const data = this.getDataFromMarkup();
         if (data) {
             this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n";
         }
@@ -250,6 +272,10 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
                 }
             })();
         }
+    }
+
+    private getDataFromMarkup() {
+        return unwrapAllC(this.markup.c ?? this.markup.data);
     }
 
     ngAfterViewInit() {
@@ -278,13 +304,10 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
         }
         const res = await to($http.get<unknown>(`/jsframeUserChange/${tid.docTask()}/${user.id}`));
         this.initData = "";
-        let data = this.markup.data;
-        if (this.markup.c) {
-            data = this.markup.c;
-        }
+        let data: { c: unknown, fielddata?: unknown } = this.getDataFromMarkup();
         if (FieldDataObj.is(res.result.data)) {
             if (!data) {
-                data = {};
+                data = {c: undefined};
             }
             data.fielddata = res.result.data.fielddata;
         }
@@ -298,11 +321,8 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
     }
 
     changeAnswer(a: IAnswer) {
-        const f = this.getFrame();
-        if (!f.contentWindow.setData) {
-            return;
-        }
-        f.contentWindow.setData(JSON.parse(a.content) as JSFrameData);
+        const parse = JSON.parse(a.content) as unknown;
+        this.setData(unwrapAllC(parse));
     }
 
     private getFrame() {
@@ -402,7 +422,7 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
         return url;
     }
 
-    async runSend(data: { c: unknown }) {
+    async runSend(data: unknown) {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             this.saveResponse.saved = false;
@@ -414,7 +434,7 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
         const url = this.getTaskUrl();
         const params = {
             input: {
-                ...data,
+                ...unwrapAllC(data), // Unwrap just in case there is a double "c".
                 type: "jsframe",
             },
         };
@@ -467,14 +487,14 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
             this.message = data.message;
         }
         if (dosave) {
-            this.runSend({c: data});
+            this.runSend(data);
         }
         return data;
     }
 
     setData<T extends JSFrameData>(data: T, save = false) {
         if (save) {
-            this.runSend({c: data});
+            this.runSend(data);
         }
         if (this.markup.useurl) {
             const f = this.getFrame();
@@ -493,7 +513,7 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
 
     async save() {
         const data = this.getData("getDataSave");
-        return this.runSend({c: data});
+        return this.runSend(data);
     }
 
     isUnSaved() {
