@@ -333,6 +333,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_by_email(email: str) -> Optional['User']:
+        if email is None:
+            raise Exception('Tried to find an user by null email')
         return User.query.filter_by(email=email).first()
 
     @staticmethod

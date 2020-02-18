@@ -102,7 +102,7 @@ def create_or_update_user(
                 break
 
     if user is not None:
-        if user.email != info.email:
+        if user.email != info.email and info.email:
             ue = user.get_by_email(info.email)
             if ue and user != ue:
                 log_warning(f'Merging users during login: {user.name} and {ue.name}')
