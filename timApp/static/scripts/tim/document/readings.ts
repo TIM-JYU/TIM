@@ -62,7 +62,6 @@ export async function markParRead(par: JQuery, readingType: ReadingType) {
     }
     const r = await to($http.put(`/read/${getActiveDocument().getId()}/${parId}/${readingType}`, data));
     if (!r.ok) {
-        $log.error("Could not save the read marking for paragraph " + parId);
         readline.removeClass(readClassName);
         return;
     }
