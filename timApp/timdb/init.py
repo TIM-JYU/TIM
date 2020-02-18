@@ -28,7 +28,7 @@ from sqlalchemy_utils import database_exists, create_database
 def check_db_version(_, context: MigrationContext):
     if context.get_current_revision() != context.environment_context.get_head_revision():
         enable_loggers()
-        log_error('Your database is not up to date. To upgrade, run: ./run_command.sh flask db upgrade')
+        log_error('Your database is not up to date. To upgrade, run: ./r flask db upgrade')
         sys.exit(-1)
     return []
 
