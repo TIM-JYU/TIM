@@ -38,9 +38,9 @@ def has_anything_in_common(u1: User, u2: User):
 user_cli = AppGroup('user')
 
 
-@user_cli.command('addtohomeorg')
+@user_cli.command()
 @click.argument('name')
-def add_to_jyu(name: str):
+def addtohomeorg(name: str):
     """Adds a user to the home organization group.
     """
     with app.test_request_context():
@@ -58,10 +58,10 @@ def add_to_jyu(name: str):
         db.session.commit()
 
 
-@user_cli.command('merge')
+@user_cli.command()
 @click.argument('primary')
 @click.argument('secondary')
-def merge_users(primary, secondary):
+def merge(primary, secondary):
     """Merges two users by moving data from secondary account to primary account.
 
     This does not delete accounts.
@@ -127,7 +127,7 @@ def do_merge_users(u_prim: User, u_sec: User):
     return moved_data
 
 
-@user_cli.command('soft_delete')
+@user_cli.command()
 @click.argument('name')
 def soft_delete(name: str):
     find_and_soft_delete(name)
@@ -146,3 +146,40 @@ def do_soft_delete(u: User):
     if u.name.endswith(d_suffix) or u.email.endswith(d_suffix):
         raise RouteException('User is already soft-deleted.')
     u.update_info(UserInfo(username=u.name + d_suffix, email=u.email + d_suffix, full_name=u.real_name))
+
+
+@user_cli.command()
+@click.option('--username', prompt='Username')
+@click.option('--firstname', prompt='First name', default='')
+@click.option('--lastname', prompt='Last name', default='')
+@click.option('--email', prompt='Email', default='')
+@click.option('--password', prompt='Password', default='')
+@click.option('--admin', default=False, is_flag=True, prompt='Make this user an administrator?')
+def create(
+        username: str,
+        firstname: str,
+        lastname: str,
+        email: str,
+        password: str,
+        admin: bool,
+):
+    """Creates or updates a user."""
+
+    user = User.query.filter_by(name=username).first()
+    info = UserInfo(
+        username=username,
+        email=email or None,
+        full_name=f'{lastname} {firstname}'.strip() or None,
+        given_name=firstname or None,
+        last_name=lastname or None,
+        password=password or None,
+    )
+    if user:
+        user.update_info(info)
+        if admin:
+            user.make_admin()
+        click.echo('User updated.')
+    else:
+        User.create_with_group(info, is_admin=admin)
+        click.echo('User created.')
+    db.session.commit()

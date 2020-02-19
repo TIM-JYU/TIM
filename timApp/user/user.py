@@ -320,7 +320,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         group = UserGroup.create(info.username)
         user.groups.append(group)
         if is_admin:
-            user.groups.append(UserGroup.get_admin_group())
+            user.make_admin()
         return user, group
 
     @staticmethod
@@ -367,7 +367,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return is_ok
 
     def make_admin(self):
-        self.groups.append(UserGroup.get_admin_group())
+        ag = UserGroup.get_admin_group()
+        if ag not in self.groups:
+            self.groups.append(ag)
 
     def get_personal_group(self) -> UserGroup:
         return self.personal_group_prop
