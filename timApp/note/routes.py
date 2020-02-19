@@ -20,6 +20,7 @@ from timApp.note.notes import tagstostr
 from timApp.note.usernote import get_comment_by_id, UserNote
 from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
+from timApp.notification.pending_notification import PendingNotification
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import get_referenced_pars_from_req, verify_json_params, RouteException
@@ -57,9 +58,30 @@ def get_note(note_id):
 @dataclass
 class NotesModel:
     private: bool = False  # Whether private comments should be included; only usable for admins
+    deleted: bool = False  # Whether deleted public comments should be included
 
 
 NotesSchema = class_schema(NotesModel)
+
+
+@dataclass
+class DeletedNote:
+    notification: PendingNotification
+
+    def to_json(self):
+        return {
+            'id': None,
+            'doc_id': self.notification.doc_id,
+            'par_id': self.notification.par_id,
+            'par_hash': None,
+            'content': self.notification.text,
+            'created': None,
+            'modified': None,
+            'deleted_on': self.notification.created,
+            'access': 'everyone',
+            'usergroup': None,
+            'user_who_deleted': self.notification.user,
+        }
 
 
 @notes.route("/notes/<path:item_path>")
@@ -84,10 +106,18 @@ def get_notes(item_path):
         access_restriction = true()
     elif vals.private:
         raise AccessDenied('Only administrators can fetch private comments.')
+    d_ids = [d.id for d in docs]
     ns = (UserNote.query
-          .filter(UserNote.doc_id.in_([d.id for d in docs]) & access_restriction)
+          .filter(UserNote.doc_id.in_(d_ids) & access_restriction)
           .options(joinedload(UserNote.usergroup))
           .all())
+    if vals.deleted:
+        ns += map(
+            DeletedNote,
+            PendingNotification.query
+                .filter(
+                PendingNotification.doc_id.in_(d_ids) & (PendingNotification.kind == NotificationType.CommentDeleted))
+                .all())
     return json_response(ns)
 
 
