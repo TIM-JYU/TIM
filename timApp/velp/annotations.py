@@ -11,15 +11,14 @@ from enum import Enum, unique
 from typing import List, Optional
 
 from sqlalchemy import func, true
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, contains_eager
 
 from timApp.answer.answer import Answer
-from timApp.answer.answer_models import UserAnswer
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.velp.velp_models import VelpContent, VelpVersion, Velp, AnnotationComment
 from timApp.velp.annotation_model import Annotation
+from timApp.velp.velp_models import VelpContent, VelpVersion, Velp, AnnotationComment
 
 
 @unique
@@ -84,7 +83,7 @@ def get_annotations_with_comments_in_document(user: User, d: DocInfo) -> List[An
         vis_filter = vis_filter | (Annotation.visible_to == AnnotationVisibility.owner.value)
     answer_filter = true()
     if not user.has_seeanswers_access(d):
-        answer_filter = (UserAnswer.user_id == user.id) | (UserAnswer.user_id == None)
+        answer_filter = (User.id == user.id) | (User.id == None)
     anns = (set_annotation_query_opts(Annotation.query
         .filter_by(document_id=d.id)
         .filter((Annotation.valid_until == None) | (Annotation.valid_until >= func.current_timestamp()))
@@ -93,21 +92,25 @@ def get_annotations_with_comments_in_document(user: User, d: DocInfo) -> List[An
         .join(Velp)
         .join(VelpContent)
         .filter(VelpContent.language_id == language_id)
-        .outerjoin(UserAnswer, UserAnswer.answer_id == Annotation.answer_id)
+        .outerjoin(Answer)
+        .outerjoin(User, Answer.users_all)
         .filter(answer_filter)
         .order_by(
         Annotation.depth_start.desc(),
         Annotation.node_start.desc(),
         Annotation.offset_start.desc(),
     ))
+            .options(contains_eager(Annotation.velp_content))
+            .options(contains_eager(Annotation.answer).contains_eager(Answer.users_all))
+            .options(contains_eager(Annotation.velp_version).contains_eager(VelpVersion.velp))
             .with_entities(Annotation)
             .all())
     return anns
 
 
 def set_annotation_query_opts(q):
-    return (q.options(joinedload(Annotation.velp_content))
-            .options(joinedload(Annotation.comments).joinedload(AnnotationComment.commenter))
-            .options(joinedload(Annotation.annotator))
-            .options(joinedload(Annotation.answer).joinedload(Answer.users_all))
-            .options(joinedload(Annotation.velp_version).joinedload(VelpVersion.velp)))
+    return (q.options(joinedload(Annotation.velp_content, innerjoin=True).load_only(VelpContent.content))
+            .options(joinedload(Annotation.comments).joinedload(AnnotationComment.commenter, innerjoin=True).raiseload(User.groups))
+            .options(joinedload(Annotation.annotator, innerjoin=True).raiseload(User.groups))
+            .options(joinedload(Annotation.answer).joinedload(Answer.users_all).raiseload(User.groups))
+            .options(joinedload(Annotation.velp_version, innerjoin=True).load_only(VelpVersion.id, VelpVersion.velp_id).joinedload(VelpVersion.velp).load_only(Velp.color)))
