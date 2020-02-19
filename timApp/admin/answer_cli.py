@@ -14,7 +14,12 @@ answer_cli = AppGroup('answer')
 @answer_cli.command('fix_double_c')
 @click.option('--dry-run/--no-dry-run', default=True)
 def create_docs(dry_run):
-    answers: List[Answer] = Answer.query.filter(Answer.answered_on > datetime(year=2020, month=1, day=1)).order_by(Answer.id).all()
+    answers: List[Answer] = (
+        Answer.query
+            .filter((Answer.answered_on > datetime(year=2020, month=2, day=9)) & Answer.content.startswith('{"c": {"c":'))
+            .order_by(Answer.id)
+            .all()
+    )
     count = 0
     for a in answers:
         cont = a.content_as_json
