@@ -246,6 +246,7 @@ class LanguageTypes {
 
     // What are known test types (be careful not to include partial word):
     testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest"];
+    testAceModes = ["c_cpp", "java", "csharp", "scala"];
     unitTestTypes = ["junit", "unit"];
 
     // If test type is comtest, how to change it for specific languages
@@ -290,6 +291,12 @@ class LanguageTypes {
         for (let i = 0; i < types.length; i++) {
             if (type.includes(types[i])) {
                 return this.aceModes[i];
+            }
+        }
+        // If not any of languages, is it any of test's?
+        for (let i = 0; i < this.testTypes.length; i++) {
+            if (type.includes(this.testTypes[i])) {
+                return this.testAceModes[i];
             }
         }
         return def;

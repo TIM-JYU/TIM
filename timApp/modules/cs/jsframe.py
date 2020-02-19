@@ -347,7 +347,7 @@ JSREADYHTML['simpleDrawIO'] = """
 		    return {'c': data};
 		}
 		function setData(data) {
-		    if ( !data || !data.c ) return;
+		    if ( !data || !data.c || Object.entries(data.c).length === 0 ) return;
 		    document.getElementById('diagram').innerHTML = data.c;
 		}
 	</script>
