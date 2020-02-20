@@ -2768,7 +2768,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     /**
      * Initializes the cell data matrix, reads the data block and sets its values
-     * to the cell data matrix and processes all math.
+     * to the cell data matrix.
      * Call this when the whole table's content is refreshed.
      */
     public reInitialize(clearSort: ClearSort = ClearSort.Yes) {
