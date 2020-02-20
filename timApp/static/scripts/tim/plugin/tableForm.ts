@@ -604,11 +604,16 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         this.data.table.columns = [];
         this.data.userdata.cells = {};
         this.setDataMatrix();
+        this.reinitializeTimTable();
+        this.loading = false;
+    }
+
+    private reinitializeTimTable() {
         const timtab = this.getTimTable();
         if (timtab) {
             timtab.reInitialize(ClearSort.No);
+            timtab.c();
         }
-        this.loading = false;
     }
 
     /**
@@ -704,11 +709,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                     }
                 }
             }
-            const timtab = this.getTimTable();
-            // if ( this.viewctrl ) { return; } // for test purposes that why styles are lost
-            if (timtab) {
-                timtab.reInitialize(ClearSort.No);
-            }
+            this.reinitializeTimTable();
         } catch (e) {
             console.log(e);
             this.error = "Error updating fields" + "\n" + e;
