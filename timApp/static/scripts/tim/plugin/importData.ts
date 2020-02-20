@@ -290,7 +290,7 @@ timApp.component("importdataRunner", {
             <p><textarea class="form-control" ng-if="$ctrl.attrs.usefields" ng-model="$ctrl.fields" placeholder="fields"
                          rows="7" cols="30"></textarea></p>
             <p></p>
-            <p><textarea class="form-control" ng-model="$ctrl.importText"
+            <p><textarea class="form-control" ng-model="$ctrl.importText" ng-trim="false"
                          ng-attr-placeholder="{{$ctrl.attrs.placeholder}}" rows="10" cols="50"></textarea></p>
             <button class="timButton" ng-disabled="$ctrl.isRunning" ng-click="$ctrl.doImport()">
                 {{::$ctrl.buttonText()}}
