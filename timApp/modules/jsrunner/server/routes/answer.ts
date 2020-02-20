@@ -84,16 +84,16 @@ function runner(d: IRunnerData): RunnerResult {
         const gtools = new GTools(currDoc, markup, aliases, dummyTools); // create global tools
         // Fake parameters hide the outer local variables so user script won't accidentally touch them.
         /* eslint-disable no-shadow,no-eval */
-        function runProgram(program: string | undefined, pname: string, tools: ToolsBase, saveUsersFields?: never, output?: never, errors?: never,
+        function runProgram(program: string, pname: string, tools: ToolsBase, saveUsersFields?: never, output?: never, errors?: never,
                             data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
             errorprg = program;
             prgname = pname;
-            if (program) {
-                eval("function main() {" + program + "\n} main();");
-            }
+            eval(`function main() {${program}\n} main();`);
         }
         /* eslint-enable no-shadow,no-eval */
-        runProgram(d.markup.preprogram, "preprogram", gtools);
+        if (d.markup.preprogram) {
+            runProgram(d.markup.preprogram, "preprogram", gtools);
+        }
         output += gtools.getOutput();
         gtools.clearOutput();
 
@@ -121,7 +121,9 @@ function runner(d: IRunnerData): RunnerResult {
         // dtools = new Tools(guser2, "", markup, aliases); // in compiled JS, this is tools_1.default(...)
         gtools.setTools(dummyTools);
         gtools.clearGtools(); // to avoid circular references if print gtools
-        runProgram(d.markup.postprogram, "postprogram", gtools);
+        if (d.markup.postprogram) {
+            runProgram(d.markup.postprogram, "postprogram", gtools);
+        }
         // saveUsersFields.push(gtools.getResult());
         output += gtools.getOutput();
         const guserErrs = gtools.getErrors();
@@ -196,7 +198,6 @@ router.put("/", async (req, res, next) => {
     );
     const ctx = await isolate.createContext({inspector: false});
     await toolsScript.run(ctx);
-    if ( typeof(value.markup.autoadd ) === "undefined" ) { value.markup.autoadd = true; }
     const runnerData: IRunnerData = {
         data: value.input.data,
         currDoc: currDoc[0],

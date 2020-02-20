@@ -29,12 +29,12 @@ export const JsrunnerMarkup = t.intersection([
         timeout: Max1000,
         open: t.boolean,
         showInView: t.boolean,
-        autoadd: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
         includeUsers: withDefault(IncludeUsersOption, "current"),
         autoUpdateTables: withDefault(t.boolean, true),
+        autoadd: withDefault(t.boolean, true),
     }),
 ]);
 
