@@ -176,6 +176,10 @@ def isview(ret_val, mode=None):
 def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str] = None,
                   env=None, ignore_errors: bool = False):
     # return text  # comment out when want to take time if this slows things
+    charmacros = settings.get_charmacros() if settings else None
+    if (charmacros):
+        for cm_key, cm_value in charmacros.items():
+            text = text.replace(cm_key, cm_value)
     if not has_macros(text, macros, macro_delimiter):
         return text
     if env is None:
@@ -187,11 +191,6 @@ def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str] = 
         if env is None:
             env = create_environment(macro_delimiter)
     try:
-        charmacros = settings.get_charmacros() if settings else None
-        if ( charmacros):
-            for cm_key, cm_value in charmacros.items():
-                text = text.replace(cm_key, cm_value)
-
         globalmacros = settings.get_globalmacros() if settings else None
         if globalmacros:
             for gmacro in globalmacros:

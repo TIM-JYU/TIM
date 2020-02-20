@@ -361,8 +361,9 @@ class DocSettings:
     def get_hash(self):
         macroinfo = self.get_macroinfo()
         macros = macroinfo.get_macros()
+        charmacros = self.get_charmacros() or ""
         macro_delim = macroinfo.get_macro_delimiter()
-        return hashfunc(f"{macros}{macro_delim}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}")
+        return hashfunc(f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}")
 
     def math_preamble(self):
         return self.__dict.get(self.math_preamble_key, '')
