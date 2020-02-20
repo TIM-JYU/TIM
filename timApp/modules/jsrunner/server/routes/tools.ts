@@ -705,6 +705,7 @@ export class GTools extends ToolsBase {
 
     setTools(tools: Tools) {
         this.tools = tools;
+        tools.setUseDefComplaint(this.useDefComplaint);
     }
 }
 
