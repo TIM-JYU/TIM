@@ -19,13 +19,14 @@ from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
-from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException, find_task_ids
+from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException, find_task_ids, Plugin
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
+from marshmallow.utils import _Missing as Missing
 
 
 def chunks(l: List, n: int):
@@ -283,8 +284,8 @@ def get_fields_and_users(
     user_tasks = None
     user_fieldstyles = None
     user_index = -1
-    user = None
     res: List[UserFieldObj] = []
+    plugin_cache: Dict[str, Union[Plugin, Missing]] = {}
     for uid, a in answers_with_users:
         if last_user != uid:
             user_index += 1
@@ -326,10 +327,18 @@ def get_fields_and_users(
                             value = json.dumps(p)
                     else:
                         if len(json_str) > 1:
-                            try:
-                                plug = find_plugin_from_document(doc_map[task.doc_id], task, user)
+                            plug = plugin_cache.get(task.doc_task)
+                            if plug is None:
+                                try:
+                                    plug = find_plugin_from_document(doc_map[task.doc_id], task, current_user)
+                                except TaskNotFoundException:
+                                    # Explicitly mark the plugin as missing so we won't try to find it again.
+                                    plugin_cache[task.doc_task] = missing
+                                else:
+                                    plugin_cache[task.doc_task] = plug
+                            if plug:
                                 content_field = plug.get_content_field_name()
-                            except TaskNotFoundException:
+                            else:
                                 content_field = "c"
                             if isinstance(p, dict):
                                 value = p.get(content_field)
