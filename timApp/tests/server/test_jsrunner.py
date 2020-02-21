@@ -27,13 +27,14 @@ class JsRunnerTestBase(TimRouteTest):
             expect_content=None,
             expect_status=200,
             user_input=None,
+            runner_name='r',
             **kwargs,
     ):
         if not user_input:
             user_input = {}
         return self.post_answer(
             'jsrunner',
-            f'{d.id}.r',
+            f'{d.id}.{runner_name}',
             user_input=user_input,
             expect_content=expect_content,
             expect_status=expect_status,
@@ -783,13 +784,10 @@ tools.print(tools.getString("a"));
         d.document.add_text("""
 #- {plugin=textfield #a}
         """)
-        ug = UserGroup.create('collabs')
-        ug.users.append(self.test_user_1)
-        ug.users.append(self.test_user_2)
+        self.create_test_group('collabs')
         a = Answer(content=json.dumps({'c': 'test'}), valid=True, task_id=f'{d.id}.a')
         self.test_user_1.answers.append(a)
         self.test_user_2.answers.append(a)
-        ug.admin_doc = self.create_doc().block
         db.session.commit()
         self.do_jsrun(
             d,
@@ -800,6 +798,113 @@ tools.print(tools.getString("a"));
                         },
             },
         )
+
+    def create_test_group(self, ugname: str):
+        ug = UserGroup.create(ugname)
+        ug.users.append(self.test_user_1)
+        ug.users.append(self.test_user_2)
+        ug.admin_doc = self.create_doc().block
+        return ug
+
+    def test_global_field(self):
+        d = self.create_jsrun("""
+fields:
+ - GLO_a
+group: tg2
+program: |!!
+tools.setString("GLO_a", tools.getString("GLO_a") + "b")
+!!
+        """)
+        d.document.add_text("""
+#- {plugin=textfield #GLO_a}
+                """)
+        self.create_test_group('tg2')
+        a = Answer(content=json.dumps({'c': 'a'}), valid=True, task_id=f'{d.id}.GLO_a')
+        self.test_user_1.answers.append(a)
+        db.session.commit()
+        total_answer_count_before = Answer.query.count()
+        self.do_jsrun(d)
+        total_answer_count_after = Answer.query.count()
+        self.assertEqual(1, total_answer_count_after - total_answer_count_before)
+        self.verify_answer_content(f'{d.id}.GLO_a', 'c', 'ab', self.test_user_1, expected_count=2)
+        self.verify_answer_content(f'{d.id}.GLO_a', 'c', 'ab', self.test_user_2, expected_count=0)
+
+    def test_styles(self):
+        d = self.create_jsrun("""
+fields: []
+group: testuser1
+program: |!!
+tools.setString("t.styles", JSON.stringify({backgroundColor: "red"}));
+!!
+                """)
+        d.document.add_text("""
+#- {plugin=textfield #t}
+
+#- {plugin=jsrunner #r2}
+fields: []
+group: testuser1
+program: |!!
+tools.setString("t", "x");
+!!
+#- {plugin=jsrunner #r3}
+fields: []
+group: testuser1
+program: |!!
+tools.setDouble("t", 0);
+!!
+#- {plugin=jsrunner #r4}
+fields: []
+group: testuser1
+program: |!!
+tools.setString("t.styles", JSON.stringify({backgroundColor: "green"}));
+!!
+#- {plugin=jsrunner #r5}
+fields: []
+group: testuser1
+program: |!!
+tools.setString("t.styles", "");
+!!
+""")
+        self.do_jsrun(d)
+        self.verify_answer_content(f'{d.id}.t', None, {'styles': {'backgroundColor': 'red'}, 'c': None}, self.test_user_1)
+        self.do_jsrun(d)
+        self.verify_answer_content(f'{d.id}.t', None, {'styles': {'backgroundColor': 'red'}, 'c': None}, self.test_user_1)
+        self.do_jsrun(d, runner_name='r2')
+        self.verify_answer_content(f'{d.id}.t', None, {'styles': {'backgroundColor': 'red'}, 'c': 'x'},
+                                   self.test_user_1, expected_count=2)
+        self.do_jsrun(d)
+        self.verify_answer_content(f'{d.id}.t', None, {'styles': {'backgroundColor': 'red'}, 'c': 'x'},
+                                   self.test_user_1, expected_count=2)
+        self.do_jsrun(d, runner_name='r3')
+        self.verify_answer_content(f'{d.id}.t', None, {'styles': {'backgroundColor': 'red'}, 'c': 0},
+                                   self.test_user_1, expected_count=3)
+        self.do_jsrun(d)
+        self.verify_answer_content(f'{d.id}.t', None, {'styles': {'backgroundColor': 'red'}, 'c': 0},
+                                   self.test_user_1, expected_count=3)
+        self.do_jsrun(d, runner_name='r4')
+        self.verify_answer_content(f'{d.id}.t', None, {'styles': {'backgroundColor': 'green'}, 'c': 0},
+                                   self.test_user_1, expected_count=4)
+        self.do_jsrun(d, runner_name='r5')
+        self.verify_answer_content(f'{d.id}.t', None, {'c': 0},
+                                   self.test_user_1, expected_count=5)
+        self.do_jsrun(d, runner_name='r5')
+        self.verify_answer_content(f'{d.id}.t', None, {'c': 0},
+                                   self.test_user_1, expected_count=5)
+
+    def test_points(self):
+        d = self.create_jsrun("""
+fields: []
+group: testuser1
+program: |!!
+tools.setDouble("t.points", 1);
+!!
+        """)
+        d.document.add_text("#- {plugin=textfield #t}")
+        self.do_jsrun(d)
+        a = self.verify_answer_content(f'{d.id}.t', None, {'c': None}, self.test_user_1)
+        self.assertEqual(1, a.points)
+        self.do_jsrun(d)
+        self.verify_answer_content(f'{d.id}.t', None, {'c': None}, self.test_user_1)
 
 
 class JsRunnerGroupTest(JsRunnerTestBase):

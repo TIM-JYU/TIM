@@ -18,15 +18,14 @@ from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_answers_query
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.document.docinfo import DocInfo
-from timApp.document.document import Document
-from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException, find_task_ids, Plugin
+from timApp.plugin.plugin import find_task_ids, is_global_id, \
+    CachedPluginFinder
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
-from marshmallow.utils import _Missing as Missing
 
 
 def chunks(l: List, n: int):
@@ -218,14 +217,15 @@ def get_fields_and_users(
         elif dib.document.get_settings().get('need_view_for_answers', False) \
                 and not current_user.has_view_access(dib):
             abort(403, "Sorry, you don't have permission to use this resource.")
-        doc_map[did] = dib.document
+        doc_map[did] = dib
 
+    cpf = CachedPluginFinder(doc_map=doc_map, curr_user=current_user)
     if add_missing_fields:
         for task in tasks_without_fields:
-            try:
-                plug = find_plugin_from_document(doc_map[task.doc_id], task, current_user)
+            plug = cpf.find(task)
+            if plug:
                 task.field = plug.get_content_field_name()
-            except TaskNotFoundException:
+            else:
                 task.field = "c"
             try:
                 alias_map[task.doc_task_with_field] = alias_map[task.doc_task]
@@ -244,7 +244,8 @@ def get_fields_and_users(
     # For some reason, with 7 or more fields, executing the following query is very slow in PostgreSQL 9.5.
     # That's why we split the list of task ids in chunks of size 6 and merge the results.
     # TODO: Investigate if this is still true for PostgreSQL 11.
-    for task_chunk in chunks(task_ids, 6):
+    not_global_taskids = [t for t in task_ids if not is_global_id(t)]
+    for task_chunk in chunks(not_global_taskids, 6):
         sub += (
             valid_answers_query(task_chunk)
                 .join(User, Answer.users)
@@ -271,11 +272,19 @@ def get_fields_and_users(
     user_map = {}
     for u in users:
         user_map[u.id] = u
-    answs = Answer.query.filter(Answer.id.in_(aid for aid, _ in sub)).all()
+    global_taskids = [t for t in task_ids if is_global_id(t)]
+    global_answer_ids = valid_answers_query(global_taskids).group_by(Answer.task_id).with_entities(func.max(Answer.id)).all()
+    answs = Answer.query.filter(Answer.id.in_(itertools.chain((aid for aid, _ in sub), global_answer_ids))).all()
     answers_with_users: List[Tuple[int, Optional[Answer]]] = []
     for a in answs:
-        for uid in aid_uid_map[a.id]:
-            answers_with_users.append((uid, a))
+        uids = aid_uid_map.get(a.id)
+        if uids is not None:
+            for uid in uids:
+                answers_with_users.append((uid, a))
+        else:
+            # This is a global task, so add the answer for all users.
+            for uid in user_map.keys():
+                answers_with_users.append((uid, a))
     missing_users = set(u.id for u in users) - set(uid for uid, _ in answers_with_users)
     for mu in missing_users:
         answers_with_users.append((mu, None))
@@ -285,7 +294,6 @@ def get_fields_and_users(
     user_fieldstyles = None
     user_index = -1
     res: List[UserFieldObj] = []
-    plugin_cache: Dict[str, Union[Plugin, Missing]] = {}
     for uid, a in answers_with_users:
         if last_user != uid:
             user_index += 1
@@ -327,15 +335,7 @@ def get_fields_and_users(
                             value = json.dumps(p)
                     else:
                         if len(json_str) > 1:
-                            plug = plugin_cache.get(task.doc_task)
-                            if plug is None:
-                                try:
-                                    plug = find_plugin_from_document(doc_map[task.doc_id], task, current_user)
-                                except TaskNotFoundException:
-                                    # Explicitly mark the plugin as missing so we won't try to find it again.
-                                    plugin_cache[task.doc_task] = missing
-                                else:
-                                    plugin_cache[task.doc_task] = plug
+                            plug = cpf.find(task)
                             if plug:
                                 content_field = plug.get_content_field_name()
                             else:
@@ -359,7 +359,7 @@ def get_fields_and_users(
 
 def get_tally_field_values(
         d: DocInfo,
-        doc_map: Dict[int, Document],
+        doc_map: Dict[int, DocInfo],
         group_filter,
         join_relation,
         tally_fields: List[Tuple[TallyField, Optional[str]]],
@@ -370,7 +370,7 @@ def get_tally_field_values(
     for _, x in field_groups:
         fs = list(x)
         g = fs[0][0]
-        doc = doc_map[g.doc_id] if g.doc_id else d.document
+        doc = doc_map[g.doc_id].document if g.doc_id else d.document
         tids = task_id_cache.get(doc.doc_id)
         if tids is None:
             doc.insert_preamble_pars()

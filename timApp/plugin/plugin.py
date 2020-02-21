@@ -1,6 +1,7 @@
 import html
 import re
 from copy import deepcopy
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator, Match, List
@@ -8,11 +9,13 @@ from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator
 import attr
 import yaml
 from jinja2 import Environment, BaseLoader
+from marshmallow import missing
 
 import timApp
 from timApp.answer.answer import Answer
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.macroinfo import MacroInfo
@@ -646,6 +649,26 @@ def maybe_get_plugin_from_par(p: DocParagraph, task_id: TaskId, u: User) -> Opti
 class TaskNotFoundException(PluginException):
     """The exception that is thrown when a task cannot be found."""
     pass
+
+
+@dataclass
+class CachedPluginFinder:
+    doc_map: Dict[int, DocInfo]
+    curr_user: User
+    cache: Dict[str, Optional[Plugin]] = field(default_factory=dict)
+
+    def find(self, task_id: TaskId) -> Optional[Plugin]:
+        cached = self.cache.get(task_id.doc_task, missing)
+        if cached is not missing:
+            return cached
+        try:
+            p = find_plugin_from_document(self.doc_map[task_id.doc_id].document, task_id, self.curr_user)
+        except TaskNotFoundException:
+            self.cache[task_id.doc_task] = None
+            return None
+        else:
+            self.cache[task_id.doc_task] = p
+            return p
 
 
 def find_plugin_from_document(d: Document, task_id: TaskId, u: User):

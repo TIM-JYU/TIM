@@ -898,11 +898,16 @@ class TimRouteTest(TimDbTest):
                  **kwargs,
                  )
 
-    def verify_answer_content(self, task: str, content_field: str, content, u: User, expected_count=1):
+    def verify_answer_content(self, task: str, content_field: Optional[str], content, u: User, expected_count=1):
         anss: List[Answer] = u.answers.filter_by(task_id=task).order_by(Answer.answered_on.desc()).all()
         self.assertEqual(expected_count, len(anss))
+        if expected_count == 0:
+            return None
         first = anss[0]
-        self.assertEqual(content, first.content_as_json[content_field])
+        if content_field:
+            self.assertEqual(content, first.content_as_json[content_field])
+        else:
+            self.assertEqual(content, first.content_as_json)
         return first
 
 

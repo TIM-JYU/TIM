@@ -1,9 +1,10 @@
 """Answer-related routes."""
 import json
 import re
-from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict
-
+from collections import defaultdict
 from dataclasses import dataclass, field, asdict
+from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict
+
 from flask import Blueprint
 from flask import Response
 from flask import abort
@@ -17,7 +18,7 @@ from webargs.flaskparser import use_args
 from pluginserver_flask import GenericMarkupModel
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
-from timApp.answer.answers import get_latest_answers_query, get_common_answers, save_answer, get_all_answers, \
+from timApp.answer.answers import get_common_answers, save_answer, get_all_answers, \
     valid_answers_query, valid_taskid_filter
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access, AccessDenied
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
@@ -36,7 +37,7 @@ from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.notification.notify import multi_send_email
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, is_global, is_global_id, \
-    find_task_ids
+    find_task_ids, CachedPluginFinder
 from timApp.plugin.plugin import PluginType
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import pluginify
@@ -731,7 +732,7 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
     task_content_name_map = {}
     curr_user = get_current_user_object()
     for task in tasks:
-        t_id = TaskId.parse(task, require_doc_id=False, allow_block_hint=False, allow_custom_field=True)
+        t_id = TaskId.parse(task, require_doc_id=True, allow_block_hint=False, allow_custom_field=True)
         if ignore_fields.get(t_id.doc_task, False):
             continue
         dib = doc_map[t_id.doc_id]
@@ -763,37 +764,52 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
         else:
             task_content_name_map[task] = plugin.get_content_field_name()
 
+    parsed_task_ids = {
+        key: TaskId.parse(key, require_doc_id=True, allow_block_hint=False, allow_custom_field=True)
+        for user in save_obj for key in user['fields'].keys()
+    }
+    sq = (Answer.query
+          .filter(Answer.task_id.in_([tid.doc_task for tid in parsed_task_ids.values() if not is_global_id(tid)]))
+          .join(User, Answer.users)
+          .filter(User.id.in_(user_map.keys()))
+          .group_by(User.id, Answer.task_id)
+          .with_entities(func.max(Answer.id).label('aid'), User.id.label('uid'))
+          .subquery())
+    datas = Answer.query.join(sq, Answer.id == sq.c.aid).with_entities(sq.c.uid, Answer).all()
+    global_answers = get_global_answers(parsed_task_ids)
+    answer_map = defaultdict(dict)
+    for uid, a in datas:
+        answer_map[uid][a.task_id] = a
+    for uid in user_map.keys():
+        for a in global_answers:
+            answer_map[uid][a.task_id] = a
+    cpf = CachedPluginFinder(doc_map=doc_map, curr_user=curr_user)
     for user in save_obj:
         u_id = user['user']
         u = user_map.get(u_id)
         if not u:
             return abort(400, f'User id {u_id} not found')
         user_fields = user['fields']
-        task_map = {}
+        task_map: DefaultDict[str, Dict[str, Any]] = defaultdict(dict)
         for key, value in user_fields.items():
-            task_id = TaskId.parse(key, require_doc_id=False, allow_block_hint=False, allow_custom_field=True)
+            task_id = parsed_task_ids[key]
             if ignore_fields.get(task_id.doc_task, False):
                 continue
             field = task_id.field
             if field is None:
                 field = task_content_name_map[task_id.doc_task]
-            try:
-                task_map[task_id.doc_task][field] = value
-            except KeyError:
-                task_map[task_id.doc_task] = {}
-                task_map[task_id.doc_task][field] = value
+            task_map[task_id.doc_task][field] = value
         for taskid, contents in task_map.items():
             task_id = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False)
             if ignore_fields.get(task_id.doc_task, False):
                 continue
-            an: Answer = get_latest_answers_query(task_id, [u]).first()
+            an: Answer = answer_map[u.id].get(task_id.doc_task)
             points = None
             content = {}
-            new_answer = True
+            new_answer = False
             if an:
                 points = an.points
                 content = json.loads(an.content)
-                new_answer = False
             lastfield = "c"
             for field, value in contents.items():
                 lastfield = field
@@ -809,54 +825,39 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
                         new_answer = True
                     points = value
                 elif field == "styles":
-                    try:
-                        if type(value) is str:
-                            if value == "":
-                                value = None
-                            else:
-                                try:
-                                    value = json.loads(value)
-                                except json.decoder.JSONDecodeError:
-                                    return abort(400,
-                                                 f'Value {value} is not valid style syntax for task {task_id.task_name}')
-                        plug = find_plugin_from_document(doc_map[task_id.doc_id].document, task_id, curr_user)
-                        allow_styles = plug.allow_styles_field()
-                        if allow_styles:
-                            if an and content.get(field, None) != value:
-                                new_answer = True
-                            if value is None:
-                                try:
-                                    del content[field]
-                                except KeyError:
-                                    pass
-                            else:
-                                content[field] = value
-                            # Ensure that there's always a content field even when setting styles to empty answer
-
-                            # TODO: this line is definitely wrong because the 'task' variable
-                            #  does not exist in this loop.
-                            prev_content_value = content.get(task_content_name_map[task], None)
-                            if prev_content_value is None:
-                                content[task_content_name_map[task]] = None
-                        else:
-                            continue
-                    except TaskNotFoundException as e:
+                    if isinstance(value, str):
+                        try:
+                            value = json.loads(value or "null")
+                        except json.decoder.JSONDecodeError:
+                            return abort(400,
+                                         f'Value {value} is not valid style syntax for task {task_id.task_name}')
+                    plug = cpf.find(task_id)
+                    if not plug:
                         continue
+                    if plug.allow_styles_field():
+                        if not an or content.get(field) != value:
+                            new_answer = True
+                        if value is None:
+                            content.pop(field, None)
+                        else:
+                            content[field] = value
+
+                        # Ensure there's always a content field even when setting styles to an empty answer.
+                        c_field = task_content_name_map[f'{task_id.doc_task}.{field}']
+                        if c_field not in content:
+                            content[c_field] = None
                 elif field == "JSSTRING":
-                    if an and json.dumps(content) != value:
+                    if not an or json.dumps(content) != value:
                         new_answer = True
                     content = json.loads(value)
                 else:
-                    if an and content.get(field, "") != value:
+                    if not an or content.get(field, "") != value:
                         new_answer = True
                     content[field] = value
             if not new_answer:
                 continue
-            if content == {}:
-                # Reached if fields were only points or failed styles
-                if list(contents) == ['styles']:
-                    continue
-                content[task_content_name_map[task_id.doc_task + "." + lastfield]] = None
+            if not content:
+                content[task_content_name_map[f'{task_id.doc_task}.{lastfield}']] = None
             content = json.dumps(content)
             ans = Answer(
                 content=content,
@@ -866,7 +867,21 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
                 valid=True,
                 saver=curr_user,
             )
+            # If this was a global task, add it to all users in the answer map so we won't save it multiple times.
+            if is_global_id(task_id):
+                for uid in user_map.keys():
+                    answer_map[uid][ans.task_id] = ans
             db.session.add(ans)
+
+
+def get_global_answers(parsed_task_ids: Dict[str, TaskId]) -> List[Answer]:
+    sq2 = (Answer.query
+           .filter(Answer.task_id.in_([tid.doc_task for tid in parsed_task_ids.values() if is_global_id(tid)]))
+           .group_by(Answer.task_id)
+           .with_entities(func.max(Answer.id).label('aid'))
+           .subquery())
+    global_datas = Answer.query.join(sq2, Answer.id == sq2.c.aid).with_entities(Answer).all()
+    return global_datas
 
 
 def get_hidden_name(user_id):
