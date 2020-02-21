@@ -91,7 +91,7 @@ GEOPOSTHTML
 """
 
 GEOGEBRA_PARAMETERS_INIT = """
-P.appName = "graphing";
+// P.appName = "graphing";
 P.width = 1200;
 P.height = 600;
 P.showMenuBar = true;
