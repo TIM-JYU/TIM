@@ -43,7 +43,6 @@ router.get("/", (req, res, next) => {
     res.json({
         js: ["javascripts/build/jsrunner.js"],
         multihtml: true,
-        css: ["stylesheets/jsrunner.css"],
         editor_tabs: [
             {
                 text: "Fields",
