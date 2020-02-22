@@ -305,11 +305,11 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
         const res = await to($http.get<unknown>(`/jsframeUserChange/${tid.docTask()}/${user.id}`));
         this.initData = "";
         let data: { c: unknown, fielddata?: unknown } = this.getDataFromMarkup();
-        if (FieldDataObj.is(res.result.data)) {
+        if (res.result.data) { // there os no more fielddata-attribute
             if (!data) {
                 data = {c: undefined};
             }
-            data.fielddata = res.result.data.fielddata;
+            data.fielddata = res.result.data;
         }
         if (data) {
             this.setData(data);

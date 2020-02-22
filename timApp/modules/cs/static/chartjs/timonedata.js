@@ -258,7 +258,13 @@ function ensureDataSets(datasets, n) {
  */
 TIMJS.setData = function(P, data) {
   try {
-    if ( data && data.c ) { data = data.c; }  // remove extra c
+    // we expect that data is in format {data, labels, fielddata}
+    // and current jsframe gives it in format {c: {data, labels}, fielddata}
+    if ( data && data.c ) { // so we must tune it a bit
+        let tdata = data.c;
+        tdata.fielddata = data.fielddata;
+        data = tdata;
+    }
     P.globaldata = data;
     // noinspection JSUnresolvedVariable
       if ( P.originalData ) {
