@@ -258,6 +258,7 @@ function ensureDataSets(datasets, n) {
  */
 TIMJS.setData = function(P, data) {
   try {
+    if ( data && data.c ) { data = data.c; }  // remove extra c
     P.globaldata = data;
     // noinspection JSUnresolvedVariable
       if ( P.originalData ) {
