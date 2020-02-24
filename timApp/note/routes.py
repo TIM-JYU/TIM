@@ -72,6 +72,10 @@ NotesSchema = class_schema(NotesModel)
 class DeletedNote:
     notification: PendingNotification
 
+    @property
+    def access(self):
+        return 'everyone'
+
     def to_json(self):
         return {
             'id': None,
