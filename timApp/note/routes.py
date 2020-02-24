@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Optional
 
 from flask import Blueprint
 from flask import abort
@@ -59,6 +61,8 @@ def get_note(note_id):
 class NotesModel:
     private: bool = False  # Whether private comments should be included; only usable for admins
     deleted: bool = False  # Whether deleted public comments should be included
+    start: Optional[datetime] = None
+    end: Optional[datetime] = None
 
 
 NotesSchema = class_schema(NotesModel)
@@ -106,9 +110,14 @@ def get_notes(item_path):
         access_restriction = true()
     elif vals.private:
         raise AccessDenied('Only administrators can fetch private comments.')
+    time_restriction = true()
+    if vals.start:
+        time_restriction = time_restriction & (UserNote.created >= vals.start)
+    if vals.end:
+        time_restriction = time_restriction & (UserNote.created < vals.end)
     d_ids = [d.id for d in docs]
     ns = (UserNote.query
-          .filter(UserNote.doc_id.in_(d_ids) & access_restriction)
+          .filter(UserNote.doc_id.in_(d_ids) & access_restriction & time_restriction)
           .options(joinedload(UserNote.usergroup))
           .all())
     if vals.deleted:
@@ -118,7 +127,14 @@ def get_notes(item_path):
                 .filter(
                 PendingNotification.doc_id.in_(d_ids) & (PendingNotification.kind == NotificationType.CommentDeleted))
                 .all())
-    return json_response(ns)
+    public_count = 0
+    for n in ns:
+        if n.access == 'everyone':
+            public_count += 1
+    return json_response({
+        'counts': {'everyone': public_count, 'justme': len(ns) - public_count, 'all': len(ns)},
+        'notes': ns,
+    })
 
 
 def check_note_access_ok(is_public: bool, doc: Document):
