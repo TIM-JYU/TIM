@@ -132,11 +132,24 @@ def get_notes(item_path):
                 PendingNotification.doc_id.in_(d_ids) & (PendingNotification.kind == NotificationType.CommentDeleted))
                 .all())
     public_count = 0
+    deleted_count = 0
     for n in ns:
+        if isinstance(n, DeletedNote):
+            deleted_count += 1
         if n.access == 'everyone':
             public_count += 1
+    extra = {}
+    if vals.deleted:
+        extra['deleted_everyone'] = deleted_count
+        extra['not_deleted_everyone'] = public_count - deleted_count
+    if vals.private:
+        extra['justme'] = len(ns) - public_count
     return json_response({
-        'counts': {'everyone': public_count, 'justme': len(ns) - public_count, 'all': len(ns)},
+        'counts': {
+            **extra,
+            'everyone': public_count,
+            'all': len(ns),
+        },
         'notes': ns,
     })
 
