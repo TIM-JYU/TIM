@@ -1031,6 +1031,8 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         this.cbCount = n;
     }
 
+    private globalChangedFields?: Set<string>; // new Set<string>();
+
     /**
      * Callback function that gets called when timTable saves a cell
      * @param cellsToSave list of cells that needs to be saved
@@ -1043,6 +1045,9 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         if (this.attrsall.markup.sisugroups) {
             return;
         }
+
+        this.globalChangedFields = new Set<string>();
+
         for (const c of cellsToSave) {
             const coli = c.col;
             const rowi = c.row;
@@ -1061,6 +1066,16 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                 this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
             }
         }
+        if (this.viewctrl && this.globalChangedFields.size > 0) {
+            if (this.markup.autoUpdateFields) {
+                this.viewctrl.updateFields(Array.from(this.globalChangedFields));
+            }
+            if (this.markup.autoUpdateTables) {
+                this.viewctrl.updateAllTables(Array.from(this.globalChangedFields));
+
+            }
+        }
+        this.globalChangedFields = undefined;
     }
 
     /**
@@ -1147,7 +1162,11 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                     if (this.viewctrl.selectedUser.name == this.userLocations[numberPlace]) {
                         const taskWithField = this.taskLocations[columnPlace].split(".");
                         const docTask = taskWithField[0] + "." + taskWithField[1];
-                        changedFields.add(docTask);
+                        if (this.globalChangedFields) { // if call from cellChanged update global
+                            this.globalChangedFields.add(docTask);
+                        } else {
+                            changedFields.add(docTask);
+                        }
                     }
                 }
                 try {
@@ -1194,7 +1213,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             return;
         }
         timtab.confirmSaved();
-        if (this.viewctrl && changedFields.size > 0) {
+        if (this.viewctrl && changedFields.size > 0) {  // if this.globalChangedFields then this is empty
             if (this.markup.autoUpdateFields) {
                 this.viewctrl.updateFields(Array.from(changedFields));
             }
