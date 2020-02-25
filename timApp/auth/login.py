@@ -108,6 +108,7 @@ def create_or_update_user(
                 log_warning(f'Merging users during login: {user.name} and {ue.name}')
                 do_merge_users(user, ue)
                 do_soft_delete(ue)
+                db.session.flush()
             elif ue:
                 raise Exception(f'Users were the same but still different email: {user.name}')
         user.update_info(info)
