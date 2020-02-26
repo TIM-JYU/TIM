@@ -143,7 +143,6 @@ export interface IVelp {
     visible_to: number;
     color: string | null;
     language_id: string;
-    icon_id: number | null;
     valid_until: string | null;
 }
 

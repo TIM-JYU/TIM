@@ -20,7 +20,7 @@ from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTe
     DEFAULT_PRINTING_FOLDER
 from timApp.printing.printsettings import PrintFormat
 from timApp.util.flask.requesthelper import verify_json_params, get_option
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, add_no_cache_headers
 from timApp.document.docinfo import DocInfo
 from timApp.document.docentry import DocEntry
 from timApp.printing.printeddoc import PrintedDoc
@@ -258,13 +258,7 @@ def get_printed_document(doc_path):
                   '<p><a href="' + pdf_access_url + '&showerror=true">Recreate PDF</a></p>'
         result += "\n</div>\n</body>\n</html>"
         response = make_response(result)
-
-        # Add headers to stop the documents from caching
-        # This is needed for making sure the current version of the document is actually retrieved
-        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '-1'
-
+        add_no_cache_headers(response)
         return response
 
     mime = get_mimetype_for_format(print_type)
@@ -296,11 +290,7 @@ def get_printed_document(doc_path):
         result += "\n</div>\n</body>\n</html>"
         response = make_response(result)
 
-    # Add headers to stop the documents from caching
-    # This is needed for making sure the current version of the document is actually retrieved
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '-1'
+    add_no_cache_headers(response)
     db.session.commit()
     return response
 

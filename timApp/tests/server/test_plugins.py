@@ -514,15 +514,15 @@ class PluginTest(TimRouteTest):
         self.login_test2()
         for t, a in zip(task_ids, answers):
             answer_ids2.append(self.post_answer('mmcq', t.doc_task, [not b for b in a])['savedNew'])
-        _, velp_ver_id = create_new_velp(TEST_USER_1_ID, 'Test velp')
+        _, velp_ver = create_new_velp(TEST_USER_1_ID, 'Test velp')
         # add a 1-point annotation to every answer except the last three
         for ans in answer_ids[:-3] + answer_ids2[:-3]:
-            a = Annotation(velp_version_id=velp_ver_id, points=1, annotator_id=TEST_USER_2_ID, answer_id=ans)
+            a = Annotation(velp_version_id=velp_ver.id, points=1, annotator_id=TEST_USER_2_ID, answer_id=ans)
             db.session.add(a)
 
         # add a 2-point annotation to every other answer
         for ans in answer_ids[::2] + answer_ids2[::2]:
-            a = Annotation(velp_version_id=velp_ver_id, points=2, annotator_id=TEST_USER_2_ID, answer_id=ans)
+            a = Annotation(velp_version_id=velp_ver.id, points=2, annotator_id=TEST_USER_2_ID, answer_id=ans)
             db.session.add(a)
 
         db.session.commit()

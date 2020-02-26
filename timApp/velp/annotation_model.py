@@ -48,9 +48,6 @@ class Annotation(db.Model):
     velp_version_id = db.Column(db.Integer, db.ForeignKey('velpversion.id'), nullable=False)
     """Id of the velp that has been used for this annotation."""
 
-    icon_id = db.Column(db.Integer, db.ForeignKey('icon.id'))
-    """Icon id that has been used for this annotation. Currently not used."""
-
     annotator_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
     """Id of the User who created the annotation."""
 
@@ -189,7 +186,6 @@ class Annotation(db.Model):
             'content': self.velp_content.content,
             'coord': {'start': start, 'end': end},
             'creation_time': self.creation_time,
-            'icon_id': self.icon_id,
             'points': self.points,
             'valid_until': self.valid_until,
             'velp': self.velp_version.velp_id,

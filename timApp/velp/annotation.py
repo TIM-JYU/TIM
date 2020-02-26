@@ -18,10 +18,10 @@ from timApp.auth.accesshelper import verify_logged_in, has_teacher_access, \
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException, use_model
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, no_cache_json_response
 from timApp.util.utils import get_current_time
 from timApp.velp.annotation_model import Annotation, AnnotationPosition
-from timApp.velp.annotations import AnnotationVisibility, create_annotation, get_annotations_with_comments_in_document, \
+from timApp.velp.annotations import AnnotationVisibility, get_annotations_with_comments_in_document, \
     set_annotation_query_opts
 from timApp.velp.velp_models import AnnotationComment
 from timApp.velp.velps import get_latest_velp_version
@@ -48,25 +48,23 @@ class AddAnnotationModel:
 def add_annotation(m: AddAnnotationModel):
     """Adds a new annotation.
     """
-    document_id = m.doc_id
-    d = get_doc_or_abort(document_id)
+    d = get_doc_or_abort(m.doc_id)
     verify_view_access(d)
     color = m.color
     validate_color(color)
     annotator = get_current_user_object()
     velp_version_id = get_latest_velp_version(m.velp_id).version_id
 
-    ann = create_annotation(
-        velp_version_id,
-        m.visible_to,
-        m.points,
-        annotator.id,
-        document_id,
-        None,
-        m.icon_id,
-        color,
-        m.answer_id,
+    ann = Annotation(
+        velp_version_id=velp_version_id,
+        visible_to=m.visible_to.value,
+        points=m.points,
+        annotator_id=annotator.id,
+        document_id=m.doc_id,
+        color=color,
+        answer_id=m.answer_id,
     )
+    db.session.add(ann)
     ann.set_position_info(m.coord)
     db.session.commit()
     return json_response(ann)
@@ -190,6 +188,4 @@ def get_annotations(doc_id: int):
     verify_view_access(d)
 
     results = get_annotations_with_comments_in_document(get_current_user_object(), d)
-    response = json_response(results)
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
-    return response
+    return no_cache_json_response(results)

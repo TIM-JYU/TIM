@@ -420,7 +420,6 @@ export class VelpWindowController implements IController {
             content: this.velp.content,
             default_comment: this.velp.default_comment,
             language_id: "FI",
-            icon_id: null,
             valid_until: null,
             color: this.velp.color,
             visible_to: this.velp.visible_to,

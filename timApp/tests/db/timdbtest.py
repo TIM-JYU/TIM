@@ -5,6 +5,7 @@ from typing import Union, List
 
 import sqlalchemy.exc
 from sqlalchemy.orm import close_all_sessions
+from sqlalchemy_utils import drop_database
 
 import timApp.markdown.dumboclient
 import timApp.timdb.init
@@ -51,6 +52,11 @@ class TimDbTest(unittest.TestCase):
             db.drop_all()
         except sqlalchemy.exc.OperationalError:
             pass
+        except sqlalchemy.exc.InternalError:
+            # An internal error can happen when switching Git branches that have different database structure.
+            # In that case, we can just drop the whole test database.
+            db.session.rollback()
+            drop_database(app.config['SQLALCHEMY_DATABASE_URI'])
         timApp.timdb.init.initialize_database(create_docs=cls.create_docs)
 
     def setUp(self):

@@ -1,5 +1,6 @@
 """Defines all data models related to velps."""
 from datetime import datetime
+from typing import List
 
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -39,19 +40,6 @@ class AnnotationComment(db.Model):
     commenter = db.relationship('User')
 
 
-class Icon(db.Model):
-    """An icon that can be associated with an Annotation.
-
-    Currently not used (0 rows in production DB as of 5th July 2018).
-    """
-    __tablename__ = 'icon'
-    id = db.Column(db.Integer, primary_key=True)
-    """Icon identifier."""
-
-    filename = db.Column(db.Text)  # TODO Should this be not null?
-    """Icon file name."""
-
-
 class LabelInVelp(db.Model):
     """Associates VelpLabels with Velps."""
     __tablename__ = 'labelinvelp'
@@ -59,18 +47,10 @@ class LabelInVelp(db.Model):
     velp_id = db.Column(db.Integer, db.ForeignKey('velp.id'), primary_key=True)
 
 
-class LabelInVelpGroup(db.Model):
-    """Currently not used (0 rows in production DB as of 5th July 2018)."""
-    __tablename__ = 'labelinvelpgroup'
-    velp_group_id = db.Column(db.Integer, db.ForeignKey('velpgroup.id'), primary_key=True)
-    group_label_id = db.Column(db.Integer, db.ForeignKey('velpgrouplabel.id'), primary_key=True)
-
-
 class VelpInGroup(db.Model):
     __tablename__ = 'velpingroup'
     velp_group_id = db.Column(db.Integer, db.ForeignKey('velpgroup.id'), primary_key=True)
     velp_id = db.Column(db.Integer, db.ForeignKey('velp.id'), primary_key=True)
-    points = db.Column(db.Float)
 
 
 class Velp(db.Model):
@@ -80,7 +60,6 @@ class Velp(db.Model):
     creator_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
     creation_time = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.utcnow)
     default_points = db.Column(db.Float)
-    icon_id = db.Column(db.Integer, db.ForeignKey('icon.id'))
     valid_from = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
     valid_until = db.Column(db.DateTime(timezone=True))
     color = db.Column(db.Text)
@@ -99,6 +78,23 @@ class Velp(db.Model):
         secondary=VelpInGroup.__table__,
         collection_class=attribute_mapped_collection('id'),
     )
+    velp_versions: List['VelpVersion'] = db.relationship('VelpVersion', order_by='VelpVersion.id.desc()')
+
+    def to_json(self):
+        vv = self.velp_versions[0]
+        vc = vv.content[0]
+        return {
+            'color': self.color,
+            'content': vc.content,
+            'default_comment': vc.default_comment,
+            'id': self.id,
+            'labels': [lbl.id for lbl in self.labels.values()],
+            'language_id': vc.language_id,
+            'points': self.default_points,
+            'valid_until': self.valid_until,
+            'velp_groups': [vg.id for vg in self.groups.values()],
+            'visible_to': self.visible_to,
+        }
 
 
 class VelpGroup(db.Model):
@@ -175,7 +171,10 @@ class VelpLabel(db.Model):
     """A label that can be assigned to a Velp."""
     __tablename__ = 'velplabel'
     id = db.Column(db.Integer, primary_key=True)
+    # TODO make not nullable
+    creator_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=True)
 
+    creator = db.relationship('User')
     velps = db.relationship(
         'Velp',
         back_populates='labels',
@@ -190,6 +189,15 @@ class VelpLabelContent(db.Model):
     language_id = db.Column(db.Text, primary_key=True)
     content = db.Column(db.Text)
 
+    velplabel = db.relationship('VelpLabel')
+
+    def to_json(self):
+        return {
+            'id': self.velplabel_id,
+            'language_id': self.language_id,
+            'content': self.content,
+        }
+
 
 class VelpVersion(db.Model):
     __tablename__ = 'velpversion'
@@ -198,3 +206,4 @@ class VelpVersion(db.Model):
     modify_time = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.utcnow)
 
     velp: Velp = db.relationship('Velp')
+    content: List[VelpContent] = db.relationship('VelpContent')

@@ -59,7 +59,7 @@ from timApp.util.utils import datestr_to_relative, date_to_relative
 from timApp.velp.annotation_model import Annotation
 from timApp.velp.velp_models import Velp, VelpContent, VelpGroup, VelpGroupDefaults, VelpGroupLabel, \
     VelpGroupSelection, VelpGroupsInDocument, VelpInGroup, VelpLabel, VelpLabelContent, VelpVersion, \
-    LabelInVelp, LabelInVelpGroup, AnnotationComment, Icon
+    LabelInVelp, AnnotationComment
 
 
 def reg_models(*_):
@@ -87,9 +87,7 @@ reg_models(
     DocumentNotification,
     Folder,
     HakaOrganization,
-    Icon,
     LabelInVelp,
-    LabelInVelpGroup,
     Lecture,
     LectureAnswer,
     LectureUsers,

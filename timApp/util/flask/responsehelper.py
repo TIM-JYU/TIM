@@ -2,6 +2,7 @@ import csv
 import http.client
 import json
 from io import StringIO
+from typing import Any
 from urllib.parse import urlparse, urljoin
 
 from flask import request, redirect, url_for, Response, stream_with_context, render_template
@@ -50,13 +51,14 @@ def to_dict(jsondata):
     return json.loads(to_json_str(jsondata))
 
 
-def set_no_cache_headers(response: Response) -> Response:
-    """Sets headers for the response that should prevent any caching of the result.
-
-    :param response: Response to be modified.
-    :return: We also return the modified object for convenience.
-
+def no_cache_json_response(data: Any) -> Response:
+    """Returns a JSON response that prevents any caching of the result.
     """
+    response = json_response(data)
+    return add_no_cache_headers(response)
+
+
+def add_no_cache_headers(response: Response):
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     return response
 
