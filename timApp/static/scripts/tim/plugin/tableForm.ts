@@ -1031,8 +1031,6 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         this.cbCount = n;
     }
 
-    private globalChangedFields?: Set<string>; // new Set<string>();
-
     /**
      * Callback function that gets called when timTable saves a cell
      * @param cellsToSave list of cells that needs to be saved
@@ -1046,7 +1044,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             return;
         }
 
-        this.globalChangedFields = new Set<string>();
+        const globalChangedFields = new Set<string>();
 
         for (const c of cellsToSave) {
             const coli = c.col;
@@ -1061,21 +1059,19 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                 }
             }
             if (this.markup.autosave) {
-                await this.singleCellSave(rowi, coli, content);
+                await this.singleCellSave(rowi, coli, content, globalChangedFields);
             } else {
                 this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
             }
         }
-        if (this.viewctrl && this.globalChangedFields.size > 0) {
+        if (this.viewctrl && globalChangedFields.size > 0) {
             if (this.markup.autoUpdateFields) {
-                this.viewctrl.updateFields(Array.from(this.globalChangedFields));
+                this.viewctrl.updateFields(Array.from(globalChangedFields));
             }
             if (this.markup.autoUpdateTables) {
-                this.viewctrl.updateAllTables(Array.from(this.globalChangedFields));
-
+                this.viewctrl.updateAllTables(Array.from(globalChangedFields));
             }
         }
-        this.globalChangedFields = undefined;
     }
 
     /**
@@ -1083,10 +1079,13 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
      * @param rowi row number
      * @param coli col number
      * @param content unused
+     * @param globalChangedFields set where save fields than should be updated
      */
-    async singleCellSave(rowi: number, coli: number, content: string) {
+    async singleCellSave(rowi: number, coli: number,
+                         content: string,
+                         globalChangedFields: Set<string> | undefined = undefined) {
         const cells = [colnumToLetters(coli) + (rowi + 1)];
-        await this.doSaveText(cells);
+        await this.doSaveText(cells, globalChangedFields);
     }
 
     async openTable() {
@@ -1103,9 +1102,10 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
 
     /**
      * Transforms the cell format back to row format and saves the table input
-     * @param cells
+     * @param cells to save
+     * @param globalChangedFields set where save fields than should be updated
      */
-    async doSaveText(cells: string[]) {
+    async doSaveText(cells: string[], globalChangedFields: Set<string> | undefined = undefined) {
         // this.error = "... saving ...";
         let keys: string[] = [];
         if (cells && cells.length > 0) {
@@ -1162,8 +1162,8 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                     if (this.viewctrl.selectedUser.name == this.userLocations[numberPlace]) {
                         const taskWithField = this.taskLocations[columnPlace].split(".");
                         const docTask = taskWithField[0] + "." + taskWithField[1];
-                        if (this.globalChangedFields) { // if call from cellChanged update global
-                            this.globalChangedFields.add(docTask);
+                        if (globalChangedFields) { // if call from cellChanged update global
+                            globalChangedFields.add(docTask);
                         } else {
                             changedFields.add(docTask);
                         }

@@ -3019,6 +3019,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             if (this.data.autosave) {
                 this.sendDataBlockAsync();
             }
+            this.reInitialize();
             return;
         }
 
