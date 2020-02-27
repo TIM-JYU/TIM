@@ -39,7 +39,6 @@ class ParEditorTest(BrowserTest):
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        self.accept_consent()
         d = self.create_doc()
         self.goto_document(d)
         self.open_editor_from_bottom()
@@ -80,7 +79,6 @@ class ParEditorTest(BrowserTest):
     def test_autocomplete(self):
         self.login_browser_quick_test1()
         self.login_test1()
-        self.accept_consent()
         d = self.create_doc(initial_par='words in the document')
         prefs = self.current_user.get_prefs()
         prefs.use_document_word_list = True

@@ -10,7 +10,6 @@ class CsPluginTest(BrowserTest):
     def test_csplugin_translation(self):
         self.login_browser_quick_test1()
         self.login_test1()
-        self.accept_consent()
         d = self.create_doc(initial_par="""
 #- {plugin=csPlugin #py}
 type: python

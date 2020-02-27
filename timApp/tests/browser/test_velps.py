@@ -15,7 +15,6 @@ class VelpTest(BrowserTest):
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        self.accept_consent()
         d = self.create_doc(initial_par='This is a velp test.')
         self.goto_document(d, view='velp')
 
