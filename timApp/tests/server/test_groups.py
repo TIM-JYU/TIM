@@ -82,7 +82,8 @@ class GroupTest(TimRouteTest):
 
     def init_groupadmin(self):
         u = self.test_user_2
-        self.add_to_group(UserGroup.get_groupadmin_group(), u)
+        u.add_to_group(UserGroup.get_groupadmin_group(), added_by=None)
+        db.session.commit()
         self.login_test2()
         return False
 

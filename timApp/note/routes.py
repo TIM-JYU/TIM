@@ -116,10 +116,8 @@ def get_notes(item_path):
         docs = [i]
     access_restriction = UserNote.access == 'everyone'
     vals: NotesModel = NotesSchema().load(request.args)
-    if u.is_admin and vals.private:
+    if vals.private:
         access_restriction = true()
-    elif vals.private:
-        raise AccessDenied('Only administrators can fetch private comments.')
     time_restriction = true()
     if vals.start:
         time_restriction = time_restriction & (UserNote.created >= vals.start)
@@ -131,6 +129,9 @@ def get_notes(item_path):
           .options(joinedload(UserNote.usergroup))
           .options(joinedload(UserNote.block).joinedload(Block.docentries))
           .all())
+    all_count = len(ns)
+    if not u.is_admin:
+        ns = [n for n in ns if n.access == 'everyone']
     if vals.deleted:
         ns += map(
             DeletedNote,
@@ -151,12 +152,12 @@ def get_notes(item_path):
         extra['deleted_everyone'] = deleted_count
         extra['not_deleted_everyone'] = public_count - deleted_count
     if vals.private:
-        extra['justme'] = len(ns) - public_count
+        extra['justme'] = all_count - public_count
     return json_response({
         'counts': {
             **extra,
             'everyone': public_count,
-            'all': len(ns),
+            'all': all_count,
         },
         'notes': ns,
     })

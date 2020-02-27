@@ -6,6 +6,7 @@ from lxml.html import HtmlElement
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docparagraph import DocParagraph
+from timApp.item.item import Item
 from timApp.notification.notify import process_pending_notifications, sent_mails_in_testing
 from timApp.tests.server.test_notify import NotifyTestBase
 from timApp.tests.server.timroutetest import get_note_id_from_json
@@ -52,6 +53,35 @@ class CommentTest(NotifyTestBase):
         comments = self.post_comment_and_return_html(comment4, par, public=False)
         self.assertEqual(4, len(comments))
 
+        self.get_comments(d, expect_status=403)
+        self.login_test1()
+        cms = self.get_comments(d)
+        self.assertEqual(
+            ['This is a comment.', 'This is a comment 2.', 'This is a comment 3.'],
+            [c['content'] for c in cms['notes']],
+        )
+        self.assertEqual({'all': 3, 'everyone': 3}, cms['counts'])
+        cms = self.get_comments(d, private=True)
+        self.assertEqual(
+            ['This is a comment.', 'This is a comment 2.', 'This is a comment 3.'],
+            [c['content'] for c in cms['notes']],
+        )
+        self.assertEqual({'all': 6, 'everyone': 3, 'justme': 3}, cms['counts'])
+        self.make_admin(self.current_user)
+        cms = self.get_comments(d, private=True)
+        self.assertEqual(
+            [
+                'This is a comment.',
+                'This is a private comment.',
+                'This is a comment 2.',
+                'This is a comment 3.',
+                'This is a comment 3.',
+                'This is a comment 4.',
+            ],
+            [c['content'] for c in cms['notes']],
+        )
+        self.assertEqual({'all': 6, 'everyone': 3, 'justme': 3}, cms['counts'])
+
     def post_comment_and_return_html(self, text: str, par: DocParagraph, public: bool = True) -> List[HtmlElement]:
         resp = self.post_comment(par, public, text)
         h: HtmlElement = html.fromstring(resp['texts'])
@@ -69,6 +99,10 @@ class CommentTest(NotifyTestBase):
                  expect_status=404,
                  expect_content='Comment not found. It may have been deleted.',
                  )
+
+    def get_comments(self, i: Item, private=False, deleted=False, expect_status=200):
+        return self.get(f'/notes/{i.path}', query_string={'private': private, 'deleted': deleted},
+                        expect_status=expect_status)
 
     def test_nonexistent_note_post(self):
         self.login_test1()
