@@ -17,6 +17,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.document import Document
 from timApp.document.editing.routes import par_response
 from timApp.folder.folder import Folder
+from timApp.item.block import Block
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.note.notes import tagstostr
 from timApp.note.usernote import get_comment_by_id, UserNote
@@ -77,9 +78,11 @@ class DeletedNote:
         return 'everyone'
 
     def to_json(self):
+        d = self.notification.block.docentries[0]
         return {
             'id': None,
             'doc_id': self.notification.doc_id,
+            'doc_title': d.title,
             'par_id': self.notification.par_id,
             'par_hash': None,
             'content': self.notification.text,
@@ -89,6 +92,7 @@ class DeletedNote:
             'access': 'everyone',
             'usergroup': None,
             'user_who_deleted': self.notification.user,
+            'url': d.url + '#' + self.notification.par_id,
         }
 
 
@@ -101,10 +105,12 @@ def get_notes(item_path):
         raise RouteException('Item not found.')
     u = get_current_user_object()
     if isinstance(i, Folder):
-        docs = i.get_all_documents(
+        all_docs = i.get_all_documents(
             include_subdirs=True,
         )
-        docs = [d for d in docs if u.has_teacher_access(d)]
+        if not all(u.has_teacher_access(d) for d in all_docs):
+            raise AccessDenied('You do not have teacher access to all documents in this folder.')
+        docs = all_docs
     else:
         verify_teacher_access(i)
         docs = [i]
@@ -123,6 +129,7 @@ def get_notes(item_path):
     ns = (UserNote.query
           .filter(UserNote.doc_id.in_(d_ids) & access_restriction & time_restriction)
           .options(joinedload(UserNote.usergroup))
+          .options(joinedload(UserNote.block).joinedload(Block.docentries))
           .all())
     if vals.deleted:
         ns += map(
@@ -130,6 +137,7 @@ def get_notes(item_path):
             PendingNotification.query
                 .filter(
                 PendingNotification.doc_id.in_(d_ids) & (PendingNotification.kind == NotificationType.CommentDeleted))
+                .options(joinedload(PendingNotification.block).joinedload(Block.docentries))
                 .all())
     public_count = 0
     deleted_count = 0

@@ -24,6 +24,7 @@ class PendingNotification(db.Model):
     kind = db.Column(db.Enum(NotificationType), nullable=False)
 
     user: User = db.relationship('User', lazy='joined')
+    block = db.relationship('Block')
 
     @property
     def grouping_key(self) -> GroupingKey:

@@ -42,11 +42,14 @@ class UserNote(db.Model):
     """Comment HTML cache."""
 
     usergroup = db.relationship('UserGroup', back_populates='notes')
+    block = db.relationship('Block')
 
     def to_json(self):
+        d = self.block.docentries[0]
         return {
             'id': self.id,
             'doc_id': self.doc_id,
+            'doc_title': d.title,
             'par_id': self.par_id,
             'par_hash': self.par_hash,
             'content': self.content,
@@ -54,6 +57,7 @@ class UserNote(db.Model):
             'modified': self.modified,
             'access': self.access,
             'usergroup': self.usergroup,
+            'url': d.url + '#' + self.par_id,
         }
 
 
