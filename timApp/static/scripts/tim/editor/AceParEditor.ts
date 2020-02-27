@@ -2,7 +2,7 @@ import AceAjax = Ace;
 import IAceEditor = Ace.Editor;
 import {Ace} from "ace-builds/src-noconflict/ace";
 import {wrapText} from "tim/document/editing/utils";
-import {ace} from "tim/editor/ace";
+import {IAce} from "tim/editor/ace";
 import {$log, $timeout} from "../util/ngimport";
 import {BaseParEditor, CURSOR, focusAfter, IEditorCallbacks, SelectionRange} from "./BaseParEditor";
 
@@ -13,10 +13,12 @@ interface ISnippetManager {
 export class AceParEditor extends BaseParEditor {
     public editor: IAceEditor;
     private snippetManager: ISnippetManager;
+    private ace: IAce;
 
-    constructor(editor: AceAjax.Editor, callbacks: IEditorCallbacks, mode: string = "ace/mode/markdown") {
+    constructor(ace: IAce, editor: AceAjax.Editor, callbacks: IEditorCallbacks, mode: string = "ace/mode/markdown") {
         super(editor, callbacks);
         this.editor = editor;
+        this.ace = ace;
         const snippetModule = ace.require("ace/snippets") as {snippetManager: ISnippetManager};
         this.snippetManager = snippetModule.snippetManager;
         const line = editor.renderer.lineHeight;
@@ -580,7 +582,7 @@ export class AceParEditor extends BaseParEditor {
     setPosition([start, end]: SelectionRange) {
         const range = this.editor.session.getDocument().indexToPosition(start, 0);
         const range2 = this.editor.session.getDocument().indexToPosition(end, 0);
-        const Range = ace.Range;
+        const Range = this.ace.Range;
         this.editor.selection.setRange(Range.fromPoints(range, range2), false);
         this.gotoCursor();
     }

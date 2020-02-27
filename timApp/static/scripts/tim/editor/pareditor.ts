@@ -1304,7 +1304,7 @@ ${backTicks}
             editorContainer.append(neweditorElem);
             const neweditor = ace.edit(neweditorElem[0]);
 
-            this.editor = new AceParEditor(neweditor, {
+            this.editor = new AceParEditor(ace, neweditor, {
                 wrapFn: () => this.wrapFn(),
                 saveClicked: () => this.saveClicked(),
                 getWrapValue: () => this.wrapValue(),
