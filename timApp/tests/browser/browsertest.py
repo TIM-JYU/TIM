@@ -7,6 +7,8 @@ from pprint import pprint
 from typing import Union, List
 
 import math
+from urllib.parse import urlencode
+
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException, ScreenshotException
 from selenium.webdriver import ActionChains
@@ -268,8 +270,11 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         except socket.timeout:
             pass
 
-    def goto_document(self, d: DocInfo, view='view'):
-        self.goto(f'/{view}/{d.path}')
+    def goto_document(self, d: DocInfo, view='view', query=None):
+        params = ''
+        if query:
+            params = '?' + urlencode(query)
+        self.goto(f'/{view}/{d.path}{params}')
 
     def wait_until_hidden(self, selector):
         self.drv.implicitly_wait(0.1)

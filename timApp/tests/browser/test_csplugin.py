@@ -21,8 +21,6 @@ type: python
             'css': '.tr-outofdate::before { display: none; }',
         })
         self.goto_document(dt)
-        par = self.find_element_avoid_staleness('#py')
-        # self.wait_until_hidden('tim-plugin-loader')
 
         self.wait_until_present('#py textarea')
         textarea = self.find_element_and_move_to('#py textarea')
