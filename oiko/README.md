@@ -1,1 +1,0 @@
-{domain}/api/v1/proofread?text={text}

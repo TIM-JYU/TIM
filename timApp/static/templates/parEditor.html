@@ -42,7 +42,7 @@
         <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.cancelClicked()">Cancel</button>
         <span ng-show="$ctrl.proeditor">
         <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>
-        <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.spellcheck" ng-change="$ctrl.changeSpellcheck()"/> Check spelling</label>
+        <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.spellcheck" ng-change="$ctrl.editorChanged()"/> Check spelling</label>
         </span>
         <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()" style="right: 2px; position: absolute;">Mark as unread</button>
     </div>

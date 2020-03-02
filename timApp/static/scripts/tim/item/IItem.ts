@@ -7,6 +7,7 @@ import {$http} from "../util/ngimport";
 export interface IDocument extends IItem {
     isFolder: false;
     src_docid?: number;
+    lang_id?: string;
 }
 
 export interface IFullDocument extends IDocument {

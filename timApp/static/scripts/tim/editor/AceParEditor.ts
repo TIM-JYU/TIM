@@ -587,6 +587,10 @@ export class AceParEditor extends BaseParEditor {
         this.gotoCursor();
     }
 
+    replaceSelectedText(s: string) {
+        this.editor.getSession().replace(this.editor.getSelectionRange(), s);
+    }
+
     forceWrap(force: boolean) {
         let n = this.getWrapValue();
         if (!n) { return; }

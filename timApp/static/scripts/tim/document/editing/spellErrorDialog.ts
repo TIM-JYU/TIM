@@ -2,70 +2,108 @@
  * Dialog for showing suggestions for spelling errors.
  */
 
-import {IRootElementService, IScope} from "angular";
-import * as focusMe from "tim/ui/focusMe";
-import {PareditorController} from "../../editor/pareditor";
-import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
-import {copyToClipboard, markAsUsed, Require} from "../../util/utils";
-import {ViewCtrl} from "../viewctrl";
+import {ISpellWordInfo, PareditorController} from "tim/editor/pareditor";
+import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "tim/ui/dialog";
+import {copyToClipboard} from "tim/util/utils";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 
 export interface ISpellErrorParams {
-    suggestions: string[];
-    position: number;
-    length: number;
+    info: ISpellWordInfo;
     dialogX: number;
     dialogY: number;
-    vc: Require<ViewCtrl>;
 }
 
-export class SpellErrorDialogController extends DialogController<{params: ISpellErrorParams}, {}> {
-    static component = "spellErrorDialogController";
-    static $inject = ["$element", "$scope"] as const;
-    private vctrl!: Require<ViewCtrl>;
-    private suggestions: string[] = [];
-    private pare: PareditorController;
-    private options: ISpellErrorParams;
+export function computeSourcePosition(editorText: string, info: Readonly<ISpellWordInfo>) {
 
-    constructor(protected element: IRootElementService, protected scope: IScope) {
-        super(element, scope);
+    // If the word starts or ends with a non-ascii character, word boundary regex does not work.
+    // See https://stackoverflow.com/questions/10590098/javascript-regexp-word-boundaries-unicode-characters
+    const nonAsciiRe = /[åäöÅÄÖ]$|^[åäöÅÄÖ]/g;
+    let word = info.word;
+    const needsAsciiHack = nonAsciiRe.test(word);
+    if (needsAsciiHack) {
+        // We'll replace the non-ascii characters with uncommon ascii characters.
+        const asciiChar = "X";
+        const asciiRe = /[åäöÅÄÖ]/g;
+        editorText = editorText.replace(asciiRe, asciiChar);
+        word = word.replace(asciiRe, asciiChar);
     }
 
-    async $onInit() {
+    let blocks = editorText.split(/(?:\n|^)(?:#-|(?:#+|`{3,}) *{.+})/);
+    if (blocks[0].trim() == "") {
+        blocks = blocks.slice(1);
+    }
+    const block = blocks[info.blockIndex];
+    if (block == undefined) {
+        return undefined;
+    }
+    const re = new RegExp(`\\b${word}\\b`, "g");
+    let match;
+    let index;
+    let occurrence = 0;
+    while ((match = re.exec(block)) != null) {
+        occurrence++;
+        if (occurrence == info.occurrence) {
+            index = match.index;
+            break;
+        }
+    }
+    if (index == undefined) {
+        return undefined;
+    }
+    return index + editorText.indexOf(block);
+}
+
+export class SpellErrorDialogController extends DialogController<{ params: ISpellErrorParams }, {}> {
+    static component = "spellErrorDialogController";
+    static $inject = ["$element", "$scope"] as const;
+    private suggestions: string[] = [];
+    private pare!: PareditorController;
+
+    $onInit() {
         super.$onInit();
-        this.vctrl = this.resolve.params.vc;
-        this.pare = this.vctrl.editingHandler.getParEditor() as PareditorController;
-        this.suggestions = this.resolve.params.suggestions;
-        this.options = this.resolve.params;
-        this.selectWord();
-        this.getDraggable().makeHeightAutomatic();
-        this.moveTo({X: this.options.dialogX, Y: this.options.dialogY});
+        const vctrl = vctrlInstance!;
+        this.pare = vctrl.editingHandler.getParEditor()!;
+        this.suggestions = this.resolve.params.info.suggestions;
+        (async () => {
+            await this.getDraggable().makeHeightAutomatic();
+            await this.moveTo({X: this.resolve.params.dialogX, Y: this.resolve.params.dialogY});
+            this.selectWord();
+        })();
+    }
+
+    get options() {
+        return this.resolve.params.info;
     }
 
     public getTitle() {
-        return "Suggestions";
+        return "Oikeinkirjoitus";
     }
 
-    async ignoreWord() {
+    ignoreWord() {
         this.selectWord();
         this.pare.getEditor()!.surroundClicked("[", "]{.nospell}");
         this.pare.editorChanged();
         this.close({});
     }
 
-    async selectWord() {
+    selectWord() {
         this.pare.getEditor()!.focus();
-        this.pare.getEditor()!.setPosition([this.options.position, this.options.position + this.options.length]);
+        const pos = computeSourcePosition(this.pare.getEditor()!.getEditorText(), this.options);
+        if (pos == undefined) {
+            void showMessageDialog("Cannot find the word from editor text.");
+            return;
+        }
+        this.pare.getEditor()!.setPosition([pos, pos + this.options.word.length]);
     }
 
-    async selectSuggestion(s: string) {
+    selectSuggestion(s: string) {
         copyToClipboard(s);
         this.selectWord();
     }
 
-    async replaceWord(s: string) {
-        this.pare.getEditor()!.focus();
-        this.pare.getEditor()!.setPosition([this.options.position, this.options.position + this.options.length]);
-        this.pare.getEditor()!.editor!.replaceSelectedText(s);
+    replaceWord(s: string) {
+        this.selectWord();
+        this.pare.getEditor()!.replaceSelectedText(s);
         this.pare.editorChanged();
         this.close({});
     }
@@ -74,20 +112,31 @@ export class SpellErrorDialogController extends DialogController<{params: ISpell
 registerDialogComponent(SpellErrorDialogController,
     {
         template:
-            `<tim-dialog class="overflow-visible">
+            `
+<tim-dialog class="overflow-visible">
     <dialog-body>
-            <div ng-repeat="sug in $ctrl.suggestions">
-                    <div ng-click="$ctrl.selectSuggestion(sug); $event.stopPropagation()" title="Korvaa sana">
-                        <button class="timButton" ng-click="$ctrl.replaceWord(sug); $event.stopPropagation()">K</button> {{sug}}
-                    </div>
-             </div>
-             <button class="timButton" ng-click="$ctrl.ignoreWord(); $event.stopPropagation()" title="Älä huomioi sanaa jatkossa">Ohita</button>
-            <div ng-show="!$ctrl.suggestions.length" class="red">Ei ehdotuksia.</div>
+        <div ng-if="$ctrl.suggestions.length > 0">
+            Ehdotukset:
+            <ul ng-repeat="sug in $ctrl.suggestions">
+                <li ng-click="$ctrl.selectSuggestion(sug); $event.stopPropagation()"
+                    title="Korvaa '{{$ctrl.options.word}}' sanalla '{{sug}}'">
+                    <a ng-click="$ctrl.replaceWord(sug); $event.stopPropagation()">{{sug}}</a>
+                </li>
+            </ul>
+        </div>
+        <div ng-if="$ctrl.suggestions.length == 0">Ei ehdotuksia.</div>
     </dialog-body>
+    <dialog-footer>
+        <button class="timButton" ng-click="$ctrl.ignoreWord(); $event.stopPropagation()"
+                title="Älä huomioi sanaa jatkossa">
+            Ohita sana
+        </button>
+        <button class="timButton" ng-click="$ctrl.dismiss()">Peruuta</button>
+    </dialog-footer>
 </tim-dialog>
 `,
     });
 
-export async function showSpellErrorDialog(s: ISpellErrorParams) {
-    return await showDialog(SpellErrorDialogController, {params: () => s}).result;
+export function showSpellErrorDialog(s: ISpellErrorParams) {
+    return showDialog(SpellErrorDialogController, {params: () => s});
 }

@@ -12,7 +12,7 @@ import {getElementByParId, getParAttributes} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {DialogController, IModalInstance, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {documentglobals, genericglobals} from "../util/globals";
-import {$http, $injector, $localStorage, $timeout, $upload} from "../util/ngimport";
+import {$compile, $http, $injector, $localStorage, $timeout, $upload} from "../util/ngimport";
 import {AceParEditor} from "./AceParEditor";
 import {SelectionRange} from "./BaseParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
@@ -191,10 +191,17 @@ function getFullscreenElement(): Element | undefined {
     return (doc.fullscreenElement ?? doc.webkitFullscreenElement) ?? doc.msFullscreenElement;
 }
 
+export interface ISpellWordInfo {
+    word: string;
+    occurrence: number;
+    blockIndex: number;
+    suggestions: string[];
+}
+
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult> {
     static component = "pareditor";
     static $inject = ["$element", "$scope"] as const;
-    private _spellcheck: boolean = false;
+    private spellcheck = false;
     private spellcheckTimeout = 1000;
     private deleting = false;
     private editor?: TextAreaParEditor | AceParEditor; // $onInit
@@ -224,8 +231,6 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private perusliiteMacroStringBegin = "%%perusliite(";  // Attachment macro without stamping.
     private perusliiteMacroStringEnd = ")%%";
     private lastKnownDialogHeight?: number;
-    // TODO: Tälle varmaan parempi paikka ja ehkä oma luokka.
-    public spellcheckData;
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -557,13 +562,6 @@ ${backTicks}
         this.parCount = 0;
         this.touchDevice = false;
     }
-    get spellcheck(): boolean {
-        return this._spellcheck;
-    }
-
-    set spellcheck(value: boolean) {
-        this._spellcheck = value;
-    }
 
     getEditor() {
         return this.editor;
@@ -847,6 +845,14 @@ ${backTicks}
 
     }
 
+    isFinnishDoc() {
+        const item = this.resolve.params.viewCtrl?.item;
+        if (!item) {
+            return true; // Assume Finnish by default.
+        }
+        return item.lang_id == null || item.lang_id == "fi";
+    }
+
     async editorChanged() {
         const editor = this.editor!;
         this.outofdate = true;
@@ -859,20 +865,7 @@ ${backTicks}
         const previewDiv = angular.element(".previewcontent");
         this.scrollPos = previewDiv.scrollTop() ?? this.scrollPos;
         this.outofdate = true;
-        let data = await this.resolve.params.previewCb(text, this._spellcheck);
-
-        this.spellcheckData = data.proofread;
-        data.texts = data.texts.replace("ng-non-bindable", "");
-
-        let compiledWithoutSpellcheck;
-        if (this._spellcheck) {
-            // Laitetaan this._spellcheck falseksi jotta saadaan previewistä versio ilman spellcheckiä
-            this._spellcheck = false;
-            let dataWithoutSpellcheck = await this.resolve.params.previewCb(text, this._spellcheck);
-            compiledWithoutSpellcheck = await ParCompiler.compile(dataWithoutSpellcheck, this.scope, this.resolve.params.viewCtrl);
-            this._spellcheck = true;
-        }
-
+        const data = await this.resolve.params.previewCb(text, this.spellcheck && this.isFinnishDoc());
         await ParCompiler.compileAndAppendTo(previewDiv, data, this.scope, this.resolve.params.viewCtrl);
         if (data.trdiff) {
             const module = await import("angular-diff-match-patch");
@@ -881,9 +874,10 @@ ${backTicks}
         this.trdiff = data.trdiff;
         this.outofdate = false;
         this.parCount = previewDiv.children().length;
-        if (compiledWithoutSpellcheck != undefined) {
-            previewDiv.empty().append(compiledWithoutSpellcheck);
-            await $timeout(this.spellcheckTimeout);
+        if (this.spellcheck) {
+            previewDiv.find(".parContent[ng-non-bindable] tim-spell-error").each((i, e) => {
+                $compile(e)(this.scope);
+            });
         }
         this.getEditorContainer().resize();
         this.scope.$applyAsync();
@@ -957,13 +951,6 @@ ${backTicks}
         if (this.confirmDismiss()) {
             this.close({type: "cancel"});
         }
-    }
-
-    // kutsutaan kun spellcheck boxin tila muuttuu
-    changeSpellcheck() {
-        this.setLocalValue("spellcheck", this.spellcheck.toString())
-        this.outofdate = true;
-        this.editorChanged();
     }
 
     cancelClicked() {
@@ -1493,6 +1480,7 @@ ${backTicks}
     }
 
     private saveOptions() {
+        this.setLocalValue("spellcheck", this.spellcheck.toString());
         this.setLocalValue("editortab", this.activeTab ?? "navigation");
         this.setLocalValue("autocomplete", this.autocomplete.toString());
         this.setLocalValue("oldMode", this.isAce(this.editor) ? "ace" : "text");

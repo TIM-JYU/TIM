@@ -11,7 +11,7 @@ import * as userlistController from "tim/answer/userlistController";
 import {timApp} from "tim/app";
 import * as bookmarkFolderBox from "tim/bookmark/bookmarkFolderBox";
 import * as bookmarks from "tim/bookmark/bookmarks";
-import * as spellError from "tim/document/editing/spellError";
+import * as spellError from "tim/document/editing/spell-error.component";
 import * as templateList from "tim/document/editing/templateList";
 import * as questionController from "tim/document/question/questionController";
 import * as viewctrl from "tim/document/viewctrl";
@@ -55,6 +55,7 @@ import {setAngularJSGlobal} from "@angular/upgrade/static";
 import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {LoadingComponent} from "tim/ui/loadingIndicator";
 import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
+import {SpellErrorComponent} from "tim/document/editing/spell-error.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -117,6 +118,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timLoading", LoadingComponent);
     doDowngrade(dg, "annotation", AnnotationComponent);
     doDowngrade(dg, "velpSummary", VelpSummaryComponent);
+    doDowngrade(dg, "timSpellError", SpellErrorComponent);
     return dg;
 }
 

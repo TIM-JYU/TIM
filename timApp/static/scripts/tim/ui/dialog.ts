@@ -58,7 +58,7 @@ export abstract class DialogController<T, Ret> implements IController {
         return this.modalInstance.closed;
     }
 
-    protected close(returnValue: Ret) {
+    close(returnValue: Ret) {
         this.closed = true;
         this.modalInstance.close(returnValue);
         document.removeEventListener("keydown", this.handleEscPress);

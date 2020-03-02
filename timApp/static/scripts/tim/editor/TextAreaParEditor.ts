@@ -617,6 +617,10 @@ export class TextAreaParEditor extends BaseParEditor {
         this.editor.setSelection(pos - seltext.length, pos);
     }
 
+    replaceSelectedText(s: string) {
+        this.editor.replaceSelectedText(s);
+    }
+
     styleClicked(descDefault: string, styleDefault: string) {
         // this.editor.replaceSelectedText("[" + descDefault + "]{." + styleDefault + "}");
         this.replaceSelected("[", descDefault, "]{.", styleDefault, "}");

@@ -1,0 +1,11 @@
+.dropdown-error {
+  position: relative;
+  display: inline-block;
+  border-bottom-style: solid;
+  border-bottom-color: red;
+}
+
+:host {
+  pointer-events: auto;
+  cursor: pointer;
+}

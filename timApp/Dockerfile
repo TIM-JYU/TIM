@@ -107,12 +107,14 @@ RUN bash -c "${APT_INSTALL} \
  libffi-dev \
  libmagic1 \
  libmagickwand-dev \
+ libvoikko1 \
  libxml2-dev \
  libxmlsec1-dev \
  libxmlsec1-openssl \
  libxslt-dev \
  libyaml-dev \
  python3.8-dev \
+ voikko-fi \
  zlib1g-dev \
  && ${APT_CLEANUP}"
 
@@ -172,8 +174,9 @@ sphinx \
 sqlalchemy==1.3.12 \
 sqlalchemy-utils \
 typing-inspect \
+voikko \
 wand \
-webargs \
+webargs==5.5 \
 && ${PIP_INSTALL} requests --upgrade && ${APT_CLEANUP}"
 
 # Install Pandoc

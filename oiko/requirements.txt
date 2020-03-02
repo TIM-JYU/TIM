@@ -1,4 +1,0 @@
-flask
-redis
-gunicorn
-gevent

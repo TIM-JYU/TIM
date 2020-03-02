@@ -38,7 +38,7 @@ from timApp.readmark.readings import mark_read
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_error_html
 from timApp.item.validation import validate_uploaded_document_content
-from timApp.document.editing.proofread import proofread_pars, proofread_text
+from timApp.document.editing.proofread import proofread_pars
 
 edit_page = Blueprint('edit_page',
                       __name__,
@@ -336,25 +336,11 @@ def preview_paragraphs(doc_id):
     proofread, = verify_json_params('proofread', require=False, default=False)
     docinfo = get_doc_or_abort(doc_id)
     rjson = request.get_json()
-    print("text: ", text)
     if not rjson.get('isComment'):
         doc = docinfo.document
         edit_request = EditRequest.from_request(doc, preview=True)
-        try:
-            blocks = edit_request.get_pars()
-            print("Blocks: ", blocks)
-            return par_response(blocks, docinfo, proofread, edit_request=edit_request)
-        # IndexError is caused by empty editor, this exception handler is a workaround for that.
-        # A better solution might be to add all the necessary variables to "blocks" variable in
-        # timApp/document/document.py text_to_paragraphs()
-        # Also with this solution preview says "1 paragraph"
-        except IndexError:
-            blocks = [DocParagraph.create(doc=doc, md='', html='')]
-            return par_response(blocks, docinfo, proofread)
-        except Exception as e:
-            err_html = get_error_html(e)
-            blocks = [DocParagraph.create(doc=doc, md='', html=err_html)]
-            return par_response(blocks, docinfo, proofread)
+        blocks = edit_request.get_pars()
+        return par_response(blocks, docinfo, proofread, edit_request=edit_request)
     else:
         return json_response({'texts': md_to_html(text), 'js': [], 'css': []})
 
@@ -454,25 +440,9 @@ def par_response(pars: List[DocParagraph],
     original_par = edit_request.original_par if edit_request else None
 
     if spellcheck:
-        if pars is not None:
-            proofed_text = proofread_pars(pars)
-        else:
-            proofed_text = proofread_text('')
-        # Käytetään prosessoimatonta tekstiä suoraan editorista jotta sanojen sijainnit täsmää
-        if edit_request is not None:
-            proofed_text['words'] = proofread_text(edit_request.text)['words']
-        pars[0]['html'] = proofed_text['htmldata']
-        rendered = render_template('partials/paragraphs.html',
-                                                   text=pars,
-                                                   item={'rights': get_rights(doc.get_docinfo())},
-                                                   preview=preview)
-
-        proofed_text['htmldata'] = rendered
-    else:
-        try:
-            proofed_text = pars[0]
-        except IndexError:
-            proofed_text = ''
+        proofed_text = proofread_pars(pars)
+        for p, r in zip(pars, proofed_text):
+            p['html'] = r.new_html
 
     r = json_response({'texts': render_template('partials/paragraphs.html',
                                                 text=pars,
@@ -491,7 +461,6 @@ def par_response(pars: List[DocParagraph],
                        'original_par': {'md': original_par.get_markdown(),
                                         'attrs': original_par.get_attrs()} if original_par else None,
                        'new_par_ids': edit_result.new_par_ids if edit_result else None,
-                       'proofread': proofed_text
                        })
     db.session.commit()
     return r

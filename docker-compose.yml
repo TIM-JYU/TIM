@@ -16,6 +16,7 @@ services:
    - dumbo
    - feedback
    - redis
+   - oiko
   volumes:
    - .:/service
    - ${LOG_DIR}:/service/tim_logs
@@ -256,9 +257,15 @@ services:
   environment:
    BROWSER_URL: ${BROWSER_URL}
  oiko:
-  build: ./oiko
-  command: python3 launch.py --with-gunicorn
+  image: timimages/tim:${TIM_IMAGE_TAG}
+  command: gunicorn -b 0.0.0.0:5000 app:app
   restart: unless-stopped
+  working_dir: /service
+  read_only: true
+  volumes:
+   - ./oiko:/service:ro
+  tmpfs:
+   - /tmp
 volumes:
  data11:
  cache:
