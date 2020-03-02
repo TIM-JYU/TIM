@@ -90,7 +90,7 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
         this.pare.getEditor()!.focus();
         const pos = computeSourcePosition(this.pare.getEditor()!.getEditorText(), this.options);
         if (pos == undefined) {
-            void showMessageDialog("Cannot find the word from editor text.");
+            void showMessageDialog(`Cannot find the word '${this.options.word}' from editor text.`);
             return;
         }
         this.pare.getEditor()!.setPosition([pos, pos + this.options.word.length]);
