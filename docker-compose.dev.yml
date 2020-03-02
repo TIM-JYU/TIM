@@ -126,3 +126,7 @@ services:
     MAIN_CONFIG: tim_dev.conf
   ports:
    - "${NGINX_PORT}:80"
+ oiko:
+  build: ./oiko
+  command: python3 launch.py
+  restart: unless-stopped

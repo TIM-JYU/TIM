@@ -255,6 +255,10 @@ services:
   restart: unless-stopped
   environment:
    BROWSER_URL: ${BROWSER_URL}
+ oiko:
+  build: ./oiko
+  command: python3 launch.py --with-gunicorn
+  restart: unless-stopped
 volumes:
  data11:
  cache:

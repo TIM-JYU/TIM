@@ -66,7 +66,7 @@ export interface IEditorParams {
         choices?: IChoice[],
         cursorPosition?: number,
     };
-    previewCb: (text: string) => Promise<IPluginInfoResponse>;
+    previewCb: (text: string, proofread: boolean) => Promise<IPluginInfoResponse>;
     saveCb: (text: string, data: IExtraData) => Promise<{error?: string}>;
     deleteCb: () => Promise<{error?: string}>;
     unreadCb: () => Promise<void>;
@@ -194,6 +194,8 @@ function getFullscreenElement(): Element | undefined {
 export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult> {
     static component = "pareditor";
     static $inject = ["$element", "$scope"] as const;
+    private _spellcheck: boolean = false;
+    private spellcheckTimeout = 1000;
     private deleting = false;
     private editor?: TextAreaParEditor | AceParEditor; // $onInit
     private isACE: boolean = false;
@@ -222,6 +224,8 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private perusliiteMacroStringBegin = "%%perusliite(";  // Attachment macro without stamping.
     private perusliiteMacroStringEnd = ")%%";
     private lastKnownDialogHeight?: number;
+    // TODO: Tälle varmaan parempi paikka ja ehkä oma luokka.
+    public spellcheckData;
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -553,6 +557,17 @@ ${backTicks}
         this.parCount = 0;
         this.touchDevice = false;
     }
+    get spellcheck(): boolean {
+        return this._spellcheck;
+    }
+
+    set spellcheck(value: boolean) {
+        this._spellcheck = value;
+    }
+
+    getEditor() {
+        return this.editor;
+    }
 
     getVisibleTabs() {
         // Upload tab is shown separately in the template because
@@ -585,6 +600,7 @@ ${backTicks}
 
     $onInit() {
         super.$onInit();
+        this.spellcheck = this.getLocalBool("spellcheck", false);
         this.autocomplete = this.getLocalBool("autocomplete", false);
         const saveTag = this.getSaveTag();
         this.proeditor = this.getLocalBool("proeditor",
@@ -843,7 +859,20 @@ ${backTicks}
         const previewDiv = angular.element(".previewcontent");
         this.scrollPos = previewDiv.scrollTop() ?? this.scrollPos;
         this.outofdate = true;
-        const data = await this.resolve.params.previewCb(text);
+        let data = await this.resolve.params.previewCb(text, this._spellcheck);
+
+        this.spellcheckData = data.proofread;
+        data.texts = data.texts.replace("ng-non-bindable", "");
+
+        let compiledWithoutSpellcheck;
+        if (this._spellcheck) {
+            // Laitetaan this._spellcheck falseksi jotta saadaan previewistä versio ilman spellcheckiä
+            this._spellcheck = false;
+            let dataWithoutSpellcheck = await this.resolve.params.previewCb(text, this._spellcheck);
+            compiledWithoutSpellcheck = await ParCompiler.compile(dataWithoutSpellcheck, this.scope, this.resolve.params.viewCtrl);
+            this._spellcheck = true;
+        }
+
         await ParCompiler.compileAndAppendTo(previewDiv, data, this.scope, this.resolve.params.viewCtrl);
         if (data.trdiff) {
             const module = await import("angular-diff-match-patch");
@@ -852,6 +881,10 @@ ${backTicks}
         this.trdiff = data.trdiff;
         this.outofdate = false;
         this.parCount = previewDiv.children().length;
+        if (compiledWithoutSpellcheck != undefined) {
+            previewDiv.empty().append(compiledWithoutSpellcheck);
+            await $timeout(this.spellcheckTimeout);
+        }
         this.getEditorContainer().resize();
         this.scope.$applyAsync();
     }
@@ -924,6 +957,13 @@ ${backTicks}
         if (this.confirmDismiss()) {
             this.close({type: "cancel"});
         }
+    }
+
+    // kutsutaan kun spellcheck boxin tila muuttuu
+    changeSpellcheck() {
+        this.setLocalValue("spellcheck", this.spellcheck.toString())
+        this.outofdate = true;
+        this.editorChanged();
     }
 
     cancelClicked() {

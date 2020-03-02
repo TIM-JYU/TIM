@@ -150,7 +150,8 @@ export class ViewCtrl implements IController {
     private showRefresh: boolean;
     public selectedUser: IUser;
     public editing: boolean = false;
-    public $storage: ngStorage.StorageService & { defaultAction: string | null; noteAccess: string };
+    // public $storage: ngStorage.StorageService & { defaultAction: string | null; noteAccess: string };
+    public $storage: ngStorage.StorageService & { defaultAction: string | null; noteAccess: string; };
     private liveUpdates: number;
     private oldWidth: number;
     public defaultAction: IMenuFunctionEntry | undefined;

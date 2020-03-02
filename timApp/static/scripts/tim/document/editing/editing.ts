@@ -236,7 +236,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 return {};
             },
             previewCb: async (text) => {
-                const r = await to($http.post<IPluginInfoResponse>(`/preview/${this.viewctrl.docId}`, {text, ...extraData}));
+                const r = await to($http.post<IPluginInfoResponse>(`/preview/${this.viewctrl.docId}`, {text, proofread: (this.currentEditor)? this.currentEditor.spellcheck : false, ...extraData}));
                 if (!r.ok) {
                     throw Error("preview failed");
                 }

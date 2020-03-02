@@ -38,6 +38,7 @@ from timApp.readmark.readings import mark_read
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_error_html
 from timApp.item.validation import validate_uploaded_document_content
+from timApp.document.editing.proofread import proofread_pars, proofread_text
 
 edit_page = Blueprint('edit_page',
                       __name__,
@@ -181,6 +182,7 @@ def rename_task_ids():
     if not manage_view:
         return par_response(pars,
                             docinfo,
+                            spellcheck=False,
                             update_cache=current_app.config['IMMEDIATE_PRELOAD'])
     else:
         return manage_response(docinfo, pars, timdb, ver_before)
@@ -300,6 +302,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: Opti
                         old_version=edit_request.old_doc_version)
     return par_response(pars,
                         docinfo,
+                        spellcheck=False,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
                         edit_request=edit_request,
                         edit_result=edit_result)
@@ -330,18 +333,28 @@ def preview_paragraphs(doc_id):
 
     """
     text, = verify_json_params('text')
+    proofread, = verify_json_params('proofread', require=False, default=False)
     docinfo = get_doc_or_abort(doc_id)
     rjson = request.get_json()
+    print("text: ", text)
     if not rjson.get('isComment'):
         doc = docinfo.document
         edit_request = EditRequest.from_request(doc, preview=True)
         try:
             blocks = edit_request.get_pars()
-            return par_response(blocks, docinfo, edit_request=edit_request)
+            print("Blocks: ", blocks)
+            return par_response(blocks, docinfo, proofread, edit_request=edit_request)
+        # IndexError is caused by empty editor, this exception handler is a workaround for that.
+        # A better solution might be to add all the necessary variables to "blocks" variable in
+        # timApp/document/document.py text_to_paragraphs()
+        # Also with this solution preview says "1 paragraph"
+        except IndexError:
+            blocks = [DocParagraph.create(doc=doc, md='', html='')]
+            return par_response(blocks, docinfo, proofread)
         except Exception as e:
             err_html = get_error_html(e)
             blocks = [DocParagraph.create(doc=doc, md='', html=err_html)]
-            return par_response(blocks, docinfo)
+            return par_response(blocks, docinfo, proofread)
     else:
         return json_response({'texts': md_to_html(text), 'js': [], 'css': []})
 
@@ -366,9 +379,10 @@ def update_associated_uploads(pars: List[DocParagraph], doc: DocInfo):
 
 def par_response(pars: List[DocParagraph],
                  docu: DocInfo,
+                 spellcheck=False,
                  update_cache=False,
-                 edit_request: Optional[EditRequest]=None,
-                 edit_result: Optional[DocumentEditResult]=None):
+                 edit_request: Optional[EditRequest] = None,
+                 edit_result: Optional[DocumentEditResult] = None):
     current_user = get_current_user_object()
     doc = docu.document
     new_doc_version = doc.get_version()
@@ -439,6 +453,27 @@ def par_response(pars: List[DocParagraph],
     changed_pars, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
     original_par = edit_request.original_par if edit_request else None
 
+    if spellcheck:
+        if pars is not None:
+            proofed_text = proofread_pars(pars)
+        else:
+            proofed_text = proofread_text('')
+        # Käytetään prosessoimatonta tekstiä suoraan editorista jotta sanojen sijainnit täsmää
+        if edit_request is not None:
+            proofed_text['words'] = proofread_text(edit_request.text)['words']
+        pars[0]['html'] = proofed_text['htmldata']
+        rendered = render_template('partials/paragraphs.html',
+                                                   text=pars,
+                                                   item={'rights': get_rights(doc.get_docinfo())},
+                                                   preview=preview)
+
+        proofed_text['htmldata'] = rendered
+    else:
+        try:
+            proofed_text = pars[0]
+        except IndexError:
+            proofed_text = ''
+
     r = json_response({'texts': render_template('partials/paragraphs.html',
                                                 text=pars,
                                                 item={'rights': get_rights(doc.get_docinfo())},
@@ -455,7 +490,8 @@ def par_response(pars: List[DocParagraph],
                        'duplicates': duplicates,
                        'original_par': {'md': original_par.get_markdown(),
                                         'attrs': original_par.get_attrs()} if original_par else None,
-                       'new_par_ids': edit_result.new_par_ids if edit_result else None
+                       'new_par_ids': edit_result.new_par_ids if edit_result else None,
+                       'proofread': proofed_text
                        })
     db.session.commit()
     return r
@@ -529,11 +565,11 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
 # Automatically rename plugins with name pluginnamehere
 def check_and_rename_pluginnamehere(blocks: List[DocParagraph], doc: Document):
     # Get the paragraphs from the document with taskids
-    old_pars = None # lazy load for old_pars
+    old_pars = None  # lazy load for old_pars
     i = 1
     j = 0
     # For all blocks check if taskId is pluginnamehere, if it is find next available name.
-    for p in blocks: # go thru all new pars if they need to be renamed
+    for p in blocks:  # go thru all new pars if they need to be renamed
         if p.is_task():
             task_id = p.get_attr('taskId')
             if task_id == 'PLUGINNAMEHERE':
@@ -561,10 +597,10 @@ def check_and_rename_pluginnamehere(blocks: List[DocParagraph], doc: Document):
 # Check new paragraphs with plugins for duplicate task ids
 def check_duplicates(pars, doc):
     duplicates = []
-    all_pars = None # cache all_pars
+    all_pars = None  # cache all_pars
     for par in pars:
         if par.is_task():
-            if all_pars is None: # now we need the pars
+            if all_pars is None:  # now we need the pars
                 doc.clear_mem_cache()
                 docpars = doc.get_paragraphs()
                 all_pars = []
@@ -683,6 +719,7 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: Optional[str]):
                             old_version=edit_request.old_doc_version)
     return par_response(pars,
                         docinfo,
+                        spellcheck=False,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
                         edit_result=edit_result,
                         edit_request=edit_request)
@@ -726,6 +763,7 @@ def delete_paragraph(doc_id):
     notify_doc_watchers(docinfo, md, NotificationType.ParDeleted, old_version=version_before)
     return par_response([],
                         docinfo,
+                        spellcheck=False,
                         update_cache=current_app.config['IMMEDIATE_PRELOAD'],
                         edit_result=edit_result)
 
@@ -740,7 +778,7 @@ def get_updated_pars(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_view_access(d)
     d.document.preload_option = PreloadOption.all
-    return par_response([], d, update_cache=True)
+    return par_response([], d, spellcheck=False, update_cache=True)
 
 
 @edit_page.route("/name_area/<int:doc_id>/<area_name>", methods=["POST"])

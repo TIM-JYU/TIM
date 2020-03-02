@@ -1,0 +1,4 @@
+flask
+redis
+gunicorn
+gevent

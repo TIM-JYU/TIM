@@ -11,6 +11,7 @@ import * as userlistController from "tim/answer/userlistController";
 import {timApp} from "tim/app";
 import * as bookmarkFolderBox from "tim/bookmark/bookmarkFolderBox";
 import * as bookmarks from "tim/bookmark/bookmarks";
+import * as spellError from "tim/document/editing/spellError";
 import * as templateList from "tim/document/editing/templateList";
 import * as questionController from "tim/document/question/questionController";
 import * as viewctrl from "tim/document/viewctrl";
@@ -89,6 +90,7 @@ markAsUsed(
     settingsCtrl,
     showStatisticsToQuestionController,
     sidebarMenuCtrl,
+    spellError,
     startController,
     taggedDocumentList,
     templateList,
