@@ -196,7 +196,6 @@ export class PareditorController extends DialogController<{params: IEditorParams
     static component = "pareditor";
     static $inject = ["$element", "$scope"] as const;
     private spellcheck = false;
-    private spellcheckTimeout = 1000;
     private deleting = false;
     private editor?: TextAreaParEditor | AceParEditor; // $onInit
     private isACE: boolean = false;
