@@ -4,6 +4,7 @@ import {PluginHeaderComponent} from "tim/ui/plugin-header.component";
 import {FocusMeDirective} from "tim/ui/focus-me.directive";
 import {TrustHtmlPipe} from "tim/ui/trust-html.pipe";
 import {SpellErrorComponent} from "tim/document/editing/spell-error.component";
+import {DialogComponent} from "tim/ui/dialog.component";
 import {PluginFrameComponent} from "./plugin-frame.component";
 import {LoadingComponent} from "./loadingIndicator";
 import {MarkupErrorComponent} from "./markup-error.component";
@@ -18,6 +19,7 @@ import {MarkupErrorComponent} from "./markup-error.component";
         FocusMeDirective,
         TrustHtmlPipe,
         SpellErrorComponent,
+        DialogComponent,
     ],
     exports: [
         MarkupErrorComponent,
@@ -27,6 +29,7 @@ import {MarkupErrorComponent} from "./markup-error.component";
         FocusMeDirective,
         TrustHtmlPipe,
         SpellErrorComponent,
+        DialogComponent,
     ],
     imports: [CommonModule],
 })
