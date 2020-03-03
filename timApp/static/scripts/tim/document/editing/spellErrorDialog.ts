@@ -13,7 +13,12 @@ export interface ISpellErrorParams {
     dialogY: number;
 }
 
-export function computeSourcePosition(editorText: string, info: Readonly<ISpellWordInfo>) {
+enum SourceType {
+    Comment,
+    Paragraph,
+}
+
+export function computeSourcePosition(editorText: string, info: Readonly<ISpellWordInfo>, type: SourceType) {
 
     // If the word starts or ends with a non-ascii character, word boundary regex does not work.
     // See https://stackoverflow.com/questions/10590098/javascript-regexp-word-boundaries-unicode-characters
@@ -28,7 +33,7 @@ export function computeSourcePosition(editorText: string, info: Readonly<ISpellW
         word = word.replace(asciiRe, asciiChar);
     }
 
-    let blocks = editorText.split(/(?:\n|^)(?:#-|(?:#+|`{3,}) *{.+})/);
+    let blocks = type == SourceType.Paragraph ? editorText.split(/(?:\n|^)(?:#-|(?:#+|`{3,}) *{.+})/) : [editorText];
     if (blocks[0].trim() == "") {
         blocks = blocks.slice(1);
     }
@@ -58,11 +63,18 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
     static $inject = ["$element", "$scope"] as const;
     private suggestions: string[] = [];
     private pare!: PareditorController;
+    private type!: SourceType;
 
     $onInit() {
         super.$onInit();
         const vctrl = vctrlInstance!;
-        this.pare = vctrl.editingHandler.getParEditor()!;
+        if (vctrl.notesHandler.editor) {
+            this.pare = vctrl.notesHandler.editor;
+            this.type = SourceType.Comment;
+        } else {
+            this.pare = vctrl.editingHandler.getParEditor()!;
+            this.type = SourceType.Paragraph;
+        }
         this.suggestions = this.resolve.params.info.suggestions;
         (async () => {
             await this.getDraggable().makeHeightAutomatic();
@@ -88,7 +100,7 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
 
     selectWord() {
         this.pare.getEditor()!.focus();
-        const pos = computeSourcePosition(this.pare.getEditor()!.getEditorText(), this.options);
+        const pos = computeSourcePosition(this.pare.getEditor()!.getEditorText(), this.options, this.type);
         if (pos == undefined) {
             void showMessageDialog(`Cannot find the word '${this.options.word}' from editor text.`);
             return;

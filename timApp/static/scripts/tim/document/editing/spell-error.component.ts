@@ -40,7 +40,7 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
             info: {
                 word: this.e.nativeElement.textContent!,
                 occurrence: this.count ?? 1,
-                blockIndex: par.index(),
+                blockIndex: par.length > 0 ? par.index() : 0, // In case we're editing a comment, there is no par class.
                 suggestions: this.sugg,
             },
             dialogX: e.clientX,

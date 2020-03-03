@@ -38,7 +38,7 @@ from timApp.readmark.readings import mark_read
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_error_html
 from timApp.item.validation import validate_uploaded_document_content
-from timApp.document.editing.proofread import proofread_pars
+from timApp.document.editing.proofread import proofread_pars, process_spelling_errors
 
 edit_page = Blueprint('edit_page',
                       __name__,
@@ -342,7 +342,10 @@ def preview_paragraphs(doc_id):
         blocks = edit_request.get_pars()
         return par_response(blocks, docinfo, proofread, edit_request=edit_request)
     else:
-        return json_response({'texts': md_to_html(text), 'js': [], 'css': []})
+        comment_html = md_to_html(text)
+        if proofread:
+            comment_html = process_spelling_errors(comment_html).new_html
+        return json_response({'texts': comment_html, 'js': [], 'css': []})
 
 
 def update_associated_uploads(pars: List[DocParagraph], doc: DocInfo):

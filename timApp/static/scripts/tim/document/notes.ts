@@ -37,6 +37,7 @@ export class NotesHandler {
     public noteBadgePar: JQuery | undefined;
     public noteBadge: HTMLElement | undefined;
     private editorInstance?: IModalInstance<PareditorController>;
+    public editor?: PareditorController;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
@@ -143,8 +144,8 @@ export class NotesHandler {
                 }
                 return {};
             },
-            previewCb: async (text) => {
-                const r = await to($http.post<IPluginInfoResponse>(`/preview/${this.viewctrl.docId}`, {text, ...extraData}));
+            previewCb: async (text, proofread) => {
+                const r = await to($http.post<IPluginInfoResponse>(`/preview/${this.viewctrl.docId}`, {text, proofread, ...extraData}));
                 if (!r.ok) {
                     throw Error("preview failed");
                 }
@@ -163,8 +164,10 @@ export class NotesHandler {
                 await handleUnread(this.viewctrl.item, extraData, params);
             },
         });
+        this.editor = await this.editorInstance.dialogInstance.promise;
         await to(this.editorInstance.result);
         this.editorInstance = undefined;
+        this.editor = undefined;
         this.viewctrl.editing = false;
     }
 
