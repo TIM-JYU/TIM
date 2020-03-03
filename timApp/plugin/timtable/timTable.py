@@ -154,7 +154,7 @@ def tim_table_get_html(jso, review):
         return s
     attrs = json.dumps(values)
     runner = 'tim-table'
-    s = f'<{runner} [data]={quoteattr(attrs)}></{runner}>'
+    s = f'<{runner} bind-data={quoteattr(attrs)}></{runner}>'
     return s
 
 
