@@ -92,7 +92,7 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
     }
 
     public getTitle() {
-        return "Oikeinkirjoitus";
+        return `Sanan '${this.options.word}' oikeinkirjoitus`;
     }
 
     ignoreWord() {
