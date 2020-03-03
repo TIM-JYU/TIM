@@ -1221,6 +1221,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const row = c.row;
         const col = c.col;
         const value = c.c;
+
+        // Force style cache refresh for this cell.
+        this.cellDataMatrix[row][col].styleCache = undefined;
+
         if (c.key != "CLEAR") {
             this.cellDataMatrix[row][col][key] = value;
         }
@@ -3019,7 +3023,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             if (this.data.autosave) {
                 this.sendDataBlockAsync();
             }
-            this.reInitialize();
             return;
         }
 
