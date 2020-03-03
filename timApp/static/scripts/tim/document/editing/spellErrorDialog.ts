@@ -3,9 +3,10 @@
  */
 
 import {ISpellWordInfo, PareditorController} from "tim/editor/pareditor";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "tim/ui/dialog";
+import {DialogController, registerDialogComponent, showDialog} from "tim/ui/dialog";
 import {copyToClipboard} from "tim/util/utils";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {$rootScope} from "tim/util/ngimport";
 
 export interface ISpellErrorParams {
     info: ISpellWordInfo;
@@ -64,6 +65,8 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
     private suggestions: string[] = [];
     private pare!: PareditorController;
     private type!: SourceType;
+    private wordFindError = false;
+    private copied?: string;
 
     $onInit() {
         super.$onInit();
@@ -80,6 +83,7 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
             await this.getDraggable().makeHeightAutomatic();
             await this.moveTo({X: this.resolve.params.dialogX, Y: this.resolve.params.dialogY});
             this.selectWord();
+            $rootScope.$applyAsync();
         })();
     }
 
@@ -102,18 +106,18 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
         this.pare.getEditor()!.focus();
         const pos = computeSourcePosition(this.pare.getEditor()!.getEditorText(), this.options, this.type);
         if (pos == undefined) {
-            void showMessageDialog(`Cannot find the word '${this.options.word}' from editor text.`);
+            this.wordFindError = true;
             return;
         }
         this.pare.getEditor()!.setPosition([pos, pos + this.options.word.length]);
     }
 
-    selectSuggestion(s: string) {
-        copyToClipboard(s);
-        this.selectWord();
-    }
-
     replaceWord(s: string) {
+        if (this.wordFindError) {
+            copyToClipboard(s);
+            this.copied = s;
+            return;
+        }
         this.selectWord();
         this.pare.getEditor()!.replaceSelectedText(s);
         this.pare.editorChanged();
@@ -130,16 +134,23 @@ registerDialogComponent(SpellErrorDialogController,
         <div ng-if="$ctrl.suggestions.length > 0">
             Ehdotukset:
             <ul ng-repeat="sug in $ctrl.suggestions">
-                <li ng-click="$ctrl.selectSuggestion(sug); $event.stopPropagation()"
-                    title="Korvaa '{{$ctrl.options.word}}' sanalla '{{sug}}'">
+                <li title="Korvaa '{{$ctrl.options.word}}' sanalla '{{sug}}'">
                     <a ng-click="$ctrl.replaceWord(sug); $event.stopPropagation()">{{sug}}</a>
                 </li>
             </ul>
         </div>
         <div ng-if="$ctrl.suggestions.length == 0">Ei ehdotuksia.</div>
+        <tim-alert ng-if="$ctrl.wordFindError">
+            Sanaa '{{$ctrl.options.word}}' ei löydy markdown-tekstistä.
+        </tim-alert>
+        <tim-alert ng-if="$ctrl.copied" severity="info">
+            Sana '{{$ctrl.copied}}' kopioitu leikepöydälle.
+        </tim-alert>
     </dialog-body>
     <dialog-footer>
-        <button class="timButton" ng-click="$ctrl.ignoreWord(); $event.stopPropagation()"
+        <button class="timButton"
+                ng-click="$ctrl.ignoreWord(); $event.stopPropagation()"
+                ng-disabled="$ctrl.wordFindError"
                 title="Älä huomioi sanaa jatkossa">
             Ohita sana
         </button>
