@@ -1,7 +1,8 @@
 import {IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
+import {DialogController} from "tim/ui/dialogController";
+import {registerDialogComponent, showDialog} from "../../ui/dialog";
 import {dateFormat} from "../../util/utils";
 
 timApp.directive("noPeriod", () => (scope, element, attrs) => {

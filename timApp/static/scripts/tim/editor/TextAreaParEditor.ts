@@ -200,7 +200,7 @@ export class TextAreaParEditor extends BaseParEditor {
     indent(outdent = false) {
         const tab = "    ";
         const tablength = tab.length;
-        const selection = this.editor.getSelection();
+        const selection = this.getSelection();
         const pos = selection.start;
         const value = this.getEditorText();
 
@@ -223,17 +223,17 @@ export class TextAreaParEditor extends BaseParEditor {
                     }
                 }
                 toIndent = lines.join("\n");
-                this.editor.setSelection(selection.start, selection.end);
-                this.editor.replaceSelectedText(toIndent);
-                this.editor.setSelection(selection.start, selection.start + toIndent.length);
+                this.setSelection(selection.start, selection.end);
+                this.replaceSelectedText(toIndent);
+                this.setSelection(selection.start, selection.start + toIndent.length);
             } else {
                 for (let j = 0; j < lines.length; j++) {
                     lines[j] = tab + lines[j];
                 }
                 toIndent = lines.join("\n");
-                this.editor.setSelection(selection.start, selection.end);
-                this.editor.replaceSelectedText(toIndent);
-                this.editor.setSelection(selection.start, selection.start + toIndent.length);
+                this.setSelection(selection.start, selection.end);
+                this.replaceSelectedText(toIndent);
+                this.setSelection(selection.start, selection.start + toIndent.length);
             }
 
         } else {
@@ -244,12 +244,12 @@ export class TextAreaParEditor extends BaseParEditor {
             if (outdent) {
                 if (value.substring(pos - tablength, pos) === tab) {
                     edited = value.substring(0, pos - tablength) + right;
-                    this.editor.val(edited);
-                    this.editor.setSelection(pos - tablength, pos - tablength);
+                    this.setEditorText(edited);
+                    this.setSelection(pos - tablength, pos - tablength);
                 }
             } else {
-                this.editor.val(edited);
-                this.editor.setSelection(pos + tablength, pos + tablength);
+                this.setEditorText(edited);
+                this.setSelection(pos + tablength, pos + tablength);
             }
         }
     }
@@ -268,32 +268,32 @@ export class TextAreaParEditor extends BaseParEditor {
 
     @focusAfter
     surroundClicked(before: string, after: string, func?: () => boolean) {
-        if (this.editor.getSelection().text === "") {
+        if (this.getSelection().text === "") {
             this.selectWord();
         }
         const surrounded = (func) ? func() : this.surroundedBy(before, after);
         if (surrounded) {
-            const selection = this.editor.getSelection();
+            const selection = this.getSelection();
             const word = selection.text;
             const start = selection.start - before.length;
             const end = selection.end + after.length;
-            this.editor.setSelection(start, end);
-            this.editor.replaceSelectedText(word, "select");
+            this.setSelection(start, end);
+            this.replaceSelectedText(word, "select");
         } else {
-            this.editor.surroundSelectedText(before, after, "select");
+            this.surroundSelectedText(before, after, "select");
         }
     }
 
     @focusAfter
     codeBlockClicked() {
-        this.editor.surroundSelectedText("```\n", "\n```", "select");
+        this.surroundSelectedText("```\n", "\n```", "select");
     }
 
     @focusAfter
     headerClicked(head: string) {
         const selection = this.selectLine(true);
         const end = selection.end;
-        let line = this.editor.getSelection().text;
+        let line = this.getSelection().text;
         let original = 0;
         while (line.startsWith("#")) {
             original++;
@@ -301,9 +301,9 @@ export class TextAreaParEditor extends BaseParEditor {
         }
         line = line.trim();
         const headAndSpace = head + " ";
-        this.editor.replaceSelectedText(headAndSpace + line);
+        this.replaceSelectedText(headAndSpace + line);
         const n = (headAndSpace.length - original);
-        this.editor.setSelection(end + n, end + n);
+        this.setSelection(end + n, end + n);
     }
 
     selectWord() {
@@ -312,7 +312,7 @@ export class TextAreaParEditor extends BaseParEditor {
             return /\w/.test(ch) || ch > "\x80" &&
                 (ch.toUpperCase() !== ch.toLowerCase() || nonASCIISingleCaseWordChar.test(ch)) && !/\s/.test(ch);
         };
-        const selection = this.editor.getSelection();
+        const selection = this.getSelection();
         const doc = this.getEditorText();
         const coords = this.selectLine(false);
         const line = doc.substring(coords.start, coords.end);
@@ -328,7 +328,7 @@ export class TextAreaParEditor extends BaseParEditor {
                 tempEnd++;
             }
             if (tempStart !== tempEnd) {
-                this.editor.setSelection(tempStart, tempEnd);
+                this.setSelection(tempStart, tempEnd);
                 return true;
             }
         }
@@ -337,7 +337,7 @@ export class TextAreaParEditor extends BaseParEditor {
 
     surroundedBy(before: string, after: string): boolean {
         const value = this.getEditorText();
-        const selection = this.editor.getSelection();
+        const selection = this.getSelection();
         const word = value.substring(selection.start - before.length, selection.end + after.length);
         return (word.startsWith(before) && word.endsWith(after));
     }
@@ -352,12 +352,11 @@ export class TextAreaParEditor extends BaseParEditor {
     @focusAfter
     linkClicked(descDefault: string, linkDefault: string, isImage: boolean) {
         const image = (isImage) ? "!" : "";
-        // this.editor.replaceSelectedText(image + "[" + descDefault + "](" + linkDefault + ")");
         this.replaceSelected(image + "[", descDefault, "](", linkDefault, ")");
     }
 
     selectLine(select: boolean) {
-        const selection = this.editor.getSelection();
+        const selection = this.getSelection();
         const value = this.getEditorText();
         let tempStart = selection.start;
         while (tempStart > 0) {
@@ -375,7 +374,7 @@ export class TextAreaParEditor extends BaseParEditor {
             tempEnd++;
         }
         if (select) {
-            this.editor.setSelection(tempStart, tempEnd);
+            this.setSelection(tempStart, tempEnd);
         }
         return {start: tempStart, end: tempEnd};
     }
@@ -383,7 +382,7 @@ export class TextAreaParEditor extends BaseParEditor {
     @focusAfter
     listClicked() {
         this.selectLine(true);
-        this.editor.replaceSelectedText("- " + this.editor.getSelection().text);
+        this.replaceSelectedText("- " + this.getSelection().text);
     }
 
     @focusAfter
@@ -391,15 +390,15 @@ export class TextAreaParEditor extends BaseParEditor {
         const ci = text.indexOf(CURSOR);
         if (ci >= 0) { text = text.slice(0, ci) + text.slice(ci + 1); }
         const pluginnamehere = "PLUGINNAMEHERE";
-        const searchEndIndex = this.editor.getSelection().start;
-        this.editor.replaceSelectedText(text);
-        const searchStartIndex = this.editor.getSelection().start;
+        const searchEndIndex = this.getSelection().start;
+        this.replaceSelectedText(text);
+        const searchStartIndex = this.getSelection().start;
         const index = this.getEditorText().lastIndexOf(pluginnamehere, searchStartIndex);
         if (index > searchEndIndex) {
-            this.editor.setSelection(index, index + pluginnamehere.length);
+            this.setSelection(index, index + pluginnamehere.length);
         }
         if (ci >= 0) {
-            this.editor.setSelection(searchEndIndex + ci);
+            this.setSelection(searchEndIndex + ci);
         }
     }
 
@@ -408,7 +407,7 @@ export class TextAreaParEditor extends BaseParEditor {
     }
 
     changeValue(attributes: string[], text: string) {
-        const sel = this.editor.getSelection();
+        const sel = this.getSelection();
         const t = this.getEditorText();
         if (t.length === 0) {
             return;
@@ -436,8 +435,8 @@ export class TextAreaParEditor extends BaseParEditor {
             const ma = line.match(" *" + a);
             if (ma) {
                 line = ma[0] + " " + text;
-                this.editor.setSelection(b, e);
-                this.editor.replaceSelectedText(line);
+                this.setSelection(b, e);
+                this.replaceSelectedText(line);
                 break;
             }
         }
@@ -446,13 +445,13 @@ export class TextAreaParEditor extends BaseParEditor {
     @focusAfter
     ruleClicked() {
         this.endClicked();
-        this.editor.replaceSelectedText("\n#-\n---\n#-\n");
+        this.replaceSelectedText("\n#-\n---\n#-\n");
     }
 
     @focusAfter
     paragraphClicked() {
         this.endClicked();
-        this.editor.replaceSelectedText("\n#-\n");
+        this.replaceSelectedText("\n#-\n");
     }
 
     /*
@@ -476,11 +475,11 @@ export class TextAreaParEditor extends BaseParEditor {
     @focusAfter
     endLineClicked() {
         const editor = this.editorElement;
-        const selection = this.editor.getSelection();
+        const selection = this.getSelection();
         const value = this.getEditorText();
         const pos = selection.start;
         this.selectLine(true);
-        const lineToBreak = this.editor.getSelection().text;
+        const lineToBreak = this.getSelection().text;
         let toKeepInLine;
         if (lineToBreak.length > 0) {
             toKeepInLine = value.substring(editor.selectionStart, pos);
@@ -494,19 +493,19 @@ export class TextAreaParEditor extends BaseParEditor {
             toNextLine = "";
         }
         toNextLine = toNextLine.trim();
-        this.editor.replaceSelectedText(toKeepInLine + "\\\n" + toNextLine);
+        this.replaceSelectedText(toKeepInLine + "\\\n" + toNextLine);
         this.endClicked();
     }
 
     @focusAfter
     pageBreakClicked() {
         const editor = this.editorElement;
-        const selection = this.editor.getSelection();
+        const selection = this.getSelection();
         const value = this.getEditorText();
         const cursor = selection.start;
         this.selectLine(true);
 
-        const lineToBreak = this.editor.getSelection().text;
+        const lineToBreak = this.getSelection().text;
         let toKeepInLine;
 
         if (lineToBreak.length > 0) {
@@ -524,7 +523,7 @@ export class TextAreaParEditor extends BaseParEditor {
 
         const breakline = "\n#- {.printpagebreak}\n#-\n";
 
-        this.editor.replaceSelectedText(toKeepInLine + breakline + "\n" + toNextLine);
+        this.replaceSelectedText(toKeepInLine + breakline + "\n" + toNextLine);
     }
 
     // Insert
@@ -539,24 +538,24 @@ export class TextAreaParEditor extends BaseParEditor {
         if (typeof char !== "undefined") {
             character = char;
         }
-        this.editor.replaceSelectedText(character);
+        this.replaceSelectedText(character);
     }
 
     @focusAfter
     // Special characters
     // TEX
     indexClicked() {
-        this.editor.surroundSelectedText("_{", "}", "select");
+        this.surroundSelectedText("_{", "}", "select");
     }
 
     @focusAfter
     powerClicked() {
-        this.editor.surroundSelectedText("^{", "}", "select");
+        this.surroundSelectedText("^{", "}", "select");
     }
 
     @focusAfter
     squareClicked() {
-        this.editor.surroundSelectedText("\\sqrt {", "}", "select");
+        this.surroundSelectedText("\\sqrt {", "}", "select");
     }
 
     getEditorText(): string {
@@ -565,6 +564,7 @@ export class TextAreaParEditor extends BaseParEditor {
 
     setEditorText(text: string) {
         this.editor.val(text);
+        this.editor.trigger("input"); // Update the AngularJS model value.
     }
 
     getPosition(): SelectionRange {
@@ -605,24 +605,37 @@ export class TextAreaParEditor extends BaseParEditor {
     }
 
     replaceSelected(begin: string, descDefault: string, mid: string, seltext: string, end: string) {
-        if (this.editor.getSelection().text === "") {
+        if (this.getSelection().text === "") {
             if (this.selectWord()) {
-                descDefault = this.editor.getSelection().text;
+                descDefault = this.getSelection().text;
             }
         } else {
-            descDefault = this.editor.getSelection().text;
+            descDefault = this.getSelection().text;
         }
-        this.editor.replaceSelectedText(begin + descDefault + mid + seltext + end);
-        const pos = this.editor.getSelection().start - end.length;
-        this.editor.setSelection(pos - seltext.length, pos);
+        this.replaceSelectedText(begin + descDefault + mid + seltext + end);
+        const pos = this.getSelection().start - end.length;
+        this.setSelection(pos - seltext.length, pos);
     }
 
-    replaceSelectedText(s: string) {
+    setSelection(start: number, end?: number) {
+        this.editor.setSelection(start, end);
+    }
+
+    getSelection() {
+        return this.editor.getSelection();
+    }
+
+    replaceSelectedText(s: string, behavior?: "select" | "collapseToStart" | "collapseToEnd") {
         this.editor.replaceSelectedText(s);
+        this.editor.trigger("input");
+    }
+
+    surroundSelectedText(before: string, after: string, behavior?: "select" | "collapseToStart" | "collapseToEnd") {
+        this.editor.surroundSelectedText(before, after, behavior);
+        this.editor.trigger("input");
     }
 
     styleClicked(descDefault: string, styleDefault: string) {
-        // this.editor.replaceSelectedText("[" + descDefault + "]{." + styleDefault + "}");
         this.replaceSelected("[", descDefault, "]{.", styleDefault, "}");
     }
 }

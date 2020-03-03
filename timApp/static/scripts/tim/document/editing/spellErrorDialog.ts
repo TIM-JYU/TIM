@@ -3,10 +3,12 @@
  */
 
 import {ISpellWordInfo, PareditorController} from "tim/editor/pareditor";
-import {DialogController, registerDialogComponent, showDialog} from "tim/ui/dialog";
+import {registerDialogComponentForModule} from "tim/ui/dialog";
 import {copyToClipboard} from "tim/util/utils";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {$rootScope} from "tim/util/ngimport";
+import {DialogController} from "tim/ui/dialogController";
+import angular from "angular";
 
 export interface ISpellErrorParams {
     info: ISpellWordInfo;
@@ -19,7 +21,7 @@ enum SourceType {
     Paragraph,
 }
 
-export function computeSourcePosition(editorText: string, info: Readonly<ISpellWordInfo>, type: SourceType) {
+function computeSourcePosition(editorText: string, info: Readonly<ISpellWordInfo>, type: SourceType) {
 
     // If the word starts or ends with a non-ascii character, word boundary regex does not work.
     // See https://stackoverflow.com/questions/10590098/javascript-regexp-word-boundaries-unicode-characters
@@ -98,7 +100,6 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
     ignoreWord() {
         this.selectWord();
         this.pare.getEditor()!.surroundClicked("[", "]{.nospell}");
-        this.pare.editorChanged();
         this.close({});
     }
 
@@ -120,12 +121,13 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
         }
         this.selectWord();
         this.pare.getEditor()!.replaceSelectedText(s);
-        this.pare.editorChanged();
         this.close({});
     }
 }
 
-registerDialogComponent(SpellErrorDialogController,
+export const dialogModule = angular.module("timSpellErrorDialog", []);
+
+registerDialogComponentForModule(dialogModule, SpellErrorDialogController,
     {
         template:
             `
@@ -159,7 +161,3 @@ registerDialogComponent(SpellErrorDialogController,
 </tim-dialog>
 `,
     });
-
-export function showSpellErrorDialog(s: ISpellErrorParams) {
-    return showDialog(SpellErrorDialogController, {params: () => s});
-}

@@ -2,11 +2,12 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {CURSOR} from "tim/editor/BaseParEditor";
 import {compileWithViewctrl, IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
-import {openEditor, PareditorController} from "tim/editor/pareditor";
+import {PareditorController} from "tim/editor/pareditor";
 import {showMessageDialog} from "tim/ui/dialog";
 import {documentglobals} from "tim/util/globals";
 import {$http, $timeout} from "tim/util/ngimport";
 import {empty, isMobileDevice, markPageDirty, to} from "tim/util/utils";
+import {openEditor} from "tim/editor/pareditorOpen";
 import {showDiffDialog} from "../diffDialog";
 import {onClick} from "../eventhandlers";
 import {
@@ -270,8 +271,9 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 await handleUnread(this.viewctrl.item, extraData, params);
             },
         });
-        this.currentEditor = await inst.dialogInstance.promise;
-        await to(inst.result);
+        const awaited = await inst;
+        this.currentEditor = await awaited.dialogInstance.promise;
+        await to(awaited.result);
         this.viewctrl.editing = false;
     }
 

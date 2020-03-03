@@ -1,8 +1,9 @@
 import {IScope} from "angular";
 import moment, {Moment} from "moment";
+import {DialogController} from "tim/ui/dialogController";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
 import {fetchAskedQuestion, showQuestionEditDialog} from "../document/question/questionController";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
 import {getStorage, setStorage, to} from "../util/utils";
 import {

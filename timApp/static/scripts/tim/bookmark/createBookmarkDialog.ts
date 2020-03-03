@@ -1,5 +1,6 @@
 import { IFormController, IScope } from "angular";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController} from "tim/ui/dialogController";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {IBookmark} from "./bookmarks";
 
 class CreateBookmarkCtrl extends DialogController<{params: IBookmark}, IBookmark> {

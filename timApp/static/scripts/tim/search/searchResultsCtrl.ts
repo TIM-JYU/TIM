@@ -3,8 +3,9 @@
  */
 
 import {IScope} from "angular";
+import {DialogController} from "tim/ui/dialogController";
 import {ITag, TagType} from "../item/IItem";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {IDocSearchResult, ITagSearchResult, SearchBoxCtrl} from "./searchBox";
 
 export interface ISearchResultDisplay {

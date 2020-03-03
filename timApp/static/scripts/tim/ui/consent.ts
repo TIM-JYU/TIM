@@ -4,9 +4,10 @@
 
 import {IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
+import {DialogController} from "tim/ui/dialogController";
 import {markAsUsed} from "../util/utils";
 import * as ccheckbox from "./consentChoice";
-import {DialogController, registerDialogComponent, showDialog} from "./dialog";
+import {registerDialogComponent, showDialog} from "./dialog";
 
 markAsUsed(focusMe, ccheckbox);
 

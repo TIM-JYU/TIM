@@ -62,10 +62,10 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import deepEqual from "deep-equal";
 import {Subscription} from "rxjs";
+import {openEditorSimple} from "tim/editor/pareditorOpen";
 import {onClick} from "../document/eventhandlers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
-import {openEditorSimple} from "../editor/pareditor";
 import {ComparatorFilter} from "../util/comparatorfilter";
 import {
     getKeyCode,

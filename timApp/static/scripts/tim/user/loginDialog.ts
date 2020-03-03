@@ -5,8 +5,9 @@
 import {IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import * as onEnter from "tim/ui/onEnter";
+import {DialogController} from "tim/ui/dialogController";
 import {saveCurrentScreenPar} from "../document/parhelpers";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {tr} from "../ui/language";
 import {genericglobals} from "../util/globals";
 import {$http} from "../util/ngimport";

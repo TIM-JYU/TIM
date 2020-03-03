@@ -1,7 +1,8 @@
 import {IScope} from "angular";
 import {ngStorage} from "ngstorage";
+import {DialogController} from "tim/ui/dialogController";
 import {IItem} from "../item/IItem";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http, $localStorage} from "../util/ngimport";
 import {to} from "../util/utils";
 

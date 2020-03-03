@@ -1,5 +1,6 @@
 import {to} from "tim/util/utils";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
+import {DialogController} from "tim/ui/dialogController";
+import {registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {KEY_S} from "../../util/keycodes";
 import {$http} from "../../util/ngimport";
 import {Duplicate, IExtraData, IManageResponse, IParResponse} from "./edittypes";

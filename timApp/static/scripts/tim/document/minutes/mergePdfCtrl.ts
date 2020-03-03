@@ -2,8 +2,9 @@
  * Controller for checking PDF-attachment validity and merging them.
  */
 import {IScope} from "angular";
+import {DialogController} from "tim/ui/dialogController";
 import {IItem} from "../../item/IItem";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
+import {registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {$http} from "../../util/ngimport";
 import {to} from "../../util/utils";
 

@@ -4,8 +4,9 @@
 
 import {IFormController, IScope} from "angular";
 import {Moment} from "moment";
+import {DialogController} from "tim/ui/dialogController";
 import {ICourseSettings, IItem, ISubjectList, ITag, TagType} from "../../item/IItem";
-import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
+import {registerDialogComponent, showDialog} from "../../ui/dialog";
 import {$http} from "../../util/ngimport";
 import {dateFormat, to} from "../../util/utils";
 

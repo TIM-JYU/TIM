@@ -5,8 +5,9 @@
 import {IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import {to} from "tim/util/utils";
+import {DialogController} from "tim/ui/dialogController";
 import {getCourseCode, ICourseSettings, ISubjectList, ITaggedItem, tagIsExpired, TagType} from "../../item/IItem";
-import {DialogController, registerDialogComponent, showDialog} from "../../ui/dialog";
+import {registerDialogComponent, showDialog} from "../../ui/dialog";
 import {KEY_ENTER} from "../../util/keycodes";
 import {$http, $localStorage} from "../../util/ngimport";
 

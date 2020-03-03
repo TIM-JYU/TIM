@@ -1,7 +1,8 @@
 import {IScope} from "angular";
 import {to} from "tim/util/utils";
+import {DialogController} from "tim/ui/dialogController";
 import {timApp} from "../app";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {KEY_ENTER} from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
 import {ILectureMessage} from "./lecturetypes";

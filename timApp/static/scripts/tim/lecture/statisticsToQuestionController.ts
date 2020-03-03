@@ -2,7 +2,8 @@ import {IScope} from "angular";
 import moment from "moment";
 import * as chart from "tim/lecture/showChartDirective";
 import {markAsUsed, to} from "tim/util/utils";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController} from "tim/ui/dialogController";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
 import {IAskedQuestion, IQuestionAnswer} from "./lecturetypes";
 

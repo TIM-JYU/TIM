@@ -5,12 +5,12 @@ import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {setEditorScope} from "tim/editor/editorScope";
 import {markAsUsed, to} from "tim/util/utils";
-import {timApp} from "../app";
+import {DialogController} from "tim/ui/dialogController";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings} from "../document/IDocSettings";
-import {getElementByParId, getParAttributes} from "../document/parhelpers";
+import {getCitePar, getElementByParId, getParAttributes} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
-import {DialogController, IModalInstance, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {registerDialogComponentForModule, showMessageDialog} from "../ui/dialog";
 import {documentglobals, genericglobals} from "../util/globals";
 import {$compile, $http, $injector, $localStorage, $timeout, $upload} from "../util/ngimport";
 import {AceParEditor} from "./AceParEditor";
@@ -87,10 +87,6 @@ type EditorEntry = IEditorMenu | IEditorMenuItem;
 
 export type IEditorResult = {type: "save", text: string} | {type: "delete"} | {type: "markunread"} | {type: "cancel"};
 
-export function getCitePar(docId: number, par: string) {
-    return `#- {rd="${docId}" rl="no" rp="${par}"}`;
-}
-
 const MenuItemFileObject = t.intersection([
     t.type({
         file: t.string,
@@ -112,8 +108,6 @@ const MenuItemDataObject = t.intersection([
 ]);
 
 const MenuItemObject = t.union([MenuItemDataObject, MenuItemFileObject]);
-
-export type IMenuItemObject = t.TypeOf<typeof MenuItemObject>;
 
 export interface IAttachmentData {
     issueNumber: string | number;
@@ -791,7 +785,6 @@ ${backTicks}
             const pos = this.getOptions().cursorPosition;
             const editor = this.editor!;
             editor.setEditorText(initialText);
-            this.editorChanged();
             await $timeout(10);
             if (pos !== undefined) {
                 editor.setPosition([pos, pos]);
@@ -875,6 +868,7 @@ ${backTicks}
         this.outofdate = false;
         this.parCount = previewDiv.children().length;
         if (this.spellcheck) {
+            $injector.loadNewModules([(await import("../document/editing/spell-error.component")).spellModule.name]);
             previewDiv.find(".parContent[ng-non-bindable] tim-spell-error").each((i, e) => {
                 $compile(e)(this.scope);
             });
@@ -1624,7 +1618,9 @@ ${backTicks}
 
 const MacroParams = t.tuple([t.unknown, t.string, t.union([t.string, t.number]), t.string]);
 
-timApp.component("timEditorMenu", {
+export const parEditorModule = angular.module("timEditor", []);
+
+parEditorModule.component("timEditorMenu", {
     bindings: {
         data: "<",
     },
@@ -1648,7 +1644,7 @@ timApp.component("timEditorMenu", {
     `,
 });
 
-timApp.component("timEditorEntry", {
+parEditorModule.component("timEditorEntry", {
     bindings: {
         data: "<",
     },
@@ -1666,44 +1662,9 @@ timApp.component("timEditorEntry", {
     `,
 });
 
-registerDialogComponent(PareditorController,
-    {templateUrl: "/static/templates/parEditor.html"});
+registerDialogComponentForModule(
+    parEditorModule,
+    PareditorController,
+    {templateUrl: "/static/templates/parEditor.html"},
+);
 
-export function openEditor(p: IEditorParams): IModalInstance<PareditorController> {
-    return showDialog(
-        PareditorController,
-        {params: () => p},
-        {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize, forceMaximized: true});
-}
-
-export function openEditorSimple(docId: number, text: string, caption: string, localSaveTag: string) {
-    return openEditor({
-        defaultSize: "lg",
-        initialText: text,
-        extraData: {docId, tags: {markread: false}, par: "nothing"}, options: {
-            caption: caption,
-            choices: undefined,
-            localSaveTag: localSaveTag,
-            showDelete: false,
-            showImageUpload: true,
-            showPlugins: false,
-            showSettings: false,
-            tags: [],
-            touchDevice: false,
-        }, previewCb: async (txt) => {
-            const resp = await to($http.post<IPluginInfoResponse>(`/preview/${docId}`, {text: txt, isComment: true}));
-            if (!resp.ok) {
-                throw new Error("preview route failed");
-            }
-            return resp.result.data;
-        },
-        saveCb: async (txt, data) => {
-            return await {};
-        },
-        deleteCb: async () => {
-            return await {};
-        },
-        unreadCb: async () => {
-        },
-    }).result;
-}

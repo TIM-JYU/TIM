@@ -1,6 +1,7 @@
 import {$rootScope} from "tim/util/ngimport";
+import {DialogController} from "tim/ui/dialogController";
 import {Result} from "../util/utils";
-import {DialogController, registerDialogComponent, showDialog} from "./dialog";
+import {registerDialogComponent, showDialog} from "./dialog";
 
 interface InputDialogParams<T> {
     defaultValue: string;

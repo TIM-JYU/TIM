@@ -1,8 +1,9 @@
 import angular, {IFormController, IScope} from "angular";
 import moment from "moment";
 import {KEY_S} from "tim/util/keycodes";
+import {DialogController} from "tim/ui/dialogController";
 import {getItem, IItem} from "../item/IItem";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {DurationChoice} from "../ui/durationPicker";
 import {$http} from "../util/ngimport";
 import {dateFormat, to} from "../util/utils";

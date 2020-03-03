@@ -11,6 +11,7 @@ import {
 } from "tim/document/question/dynamicAnswerSheet";
 import {dateFormat, getStorage, markAsUsed, setStorage, to} from "tim/util/utils";
 import {KEY_R, KEY_S} from "tim/util/keycodes";
+import {DialogController} from "tim/ui/dialogController";
 import {ParCompiler} from "../../editor/parCompiler";
 import {
     IAskedJsonJson,
@@ -25,7 +26,7 @@ import {
     QuestionType,
 } from "../../lecture/lecturetypes";
 import {IGenericPluginMarkup} from "../../plugin/attributes";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
+import {registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
 import {$http, $timeout} from "../../util/ngimport";
 import {IParResponse} from "../editing/edittypes";
 import {QuestionMatrixController} from "./questionMatrix";

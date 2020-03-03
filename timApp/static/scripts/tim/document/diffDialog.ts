@@ -1,4 +1,5 @@
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController} from "tim/ui/dialogController";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {Pos} from "../ui/draggable";
 import {$injector} from "../util/ngimport";
 

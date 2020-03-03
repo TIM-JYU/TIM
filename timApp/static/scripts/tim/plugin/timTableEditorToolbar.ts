@@ -1,5 +1,6 @@
 import {IScope} from "angular";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController} from "tim/ui/dialogController";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {HideValues, IToolbarTemplate, TimTableComponent} from "./timTable";
 
 export interface ITimTableToolbarCallbacks {

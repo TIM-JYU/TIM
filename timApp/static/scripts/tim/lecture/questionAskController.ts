@@ -1,6 +1,7 @@
 import {IScope} from "angular";
 import * as answerSheet from "tim/document/question/dynamicAnswerSheet";
 import {markAsUsed, to} from "tim/util/utils";
+import {DialogController} from "tim/ui/dialogController";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
 import {
     deleteQuestionWithConfirm,
@@ -9,7 +10,7 @@ import {
     fetchQuestion,
     showQuestionEditDialog,
 } from "../document/question/questionController";
-import {DialogController, registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {IAskedQuestion, IUniqueParId} from "./lecturetypes";
 

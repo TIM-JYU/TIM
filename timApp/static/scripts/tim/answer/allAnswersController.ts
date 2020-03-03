@@ -1,6 +1,7 @@
 import moment, {Moment} from "moment";
 import {ngStorage} from "ngstorage";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController} from "tim/ui/dialogController";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http, $httpParamSerializer, $localStorage} from "../util/ngimport";
 import {dateFormat, to} from "../util/utils";
 

@@ -5,7 +5,8 @@
 import {IFormController, IScope} from "angular";
 import {Moment} from "moment";
 import * as focusMe from "tim/ui/focusMe";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController} from "tim/ui/dialogController";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {TEACHERS_GROUPNAME} from "../user/IUser";
 import {userBelongsToGroupOrIsAdmin} from "../user/userService";
 import {KEY_ENTER} from "../util/keycodes";

@@ -277,3 +277,7 @@ export function getParHash(parId: string) {
     }
     return `#${parId}`;
 }
+
+export function getCitePar(docId: number, par: string) {
+    return `#- {rd="${docId}" rl="no" rp="${par}"}`;
+}

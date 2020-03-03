@@ -1,10 +1,9 @@
 import {IScope} from "angular";
 import $ from "jquery";
-import {getCitePar} from "../editor/pareditor";
 import {showMessageDialog} from "../ui/dialog";
 import {Coords, dist, getPageXY, to} from "../util/utils";
 import {onClick} from "./eventhandlers";
-import {getParId, getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
+import {getCitePar, getParId, getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
 import {EditMode, showPopupMenu} from "./popupMenu";
 import {ViewCtrl} from "./viewctrl";
 import {getEmptyCoords, MenuFunctionList} from "./viewutils";

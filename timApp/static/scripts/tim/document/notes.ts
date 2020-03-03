@@ -1,8 +1,9 @@
 import {IScope} from "angular";
 import $ from "jquery";
 import {Moment} from "moment";
+import {openEditor} from "tim/editor/pareditorOpen";
 import {IPluginInfoResponse} from "../editor/parCompiler";
-import {openEditor, PareditorController} from "../editor/pareditor";
+import {PareditorController} from "../editor/pareditor";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
 import {documentglobals} from "../util/globals";
 import {$compile, $http} from "../util/ngimport";
@@ -112,7 +113,7 @@ export class NotesHandler {
         };
         const params: EditPosition = {type: EditType.Edit, pars: parOrArea};
         this.viewctrl.editing = true;
-        this.editorInstance = openEditor({
+        this.editorInstance = await openEditor({
             extraData,
             initialText,
             defaultSize: "md",

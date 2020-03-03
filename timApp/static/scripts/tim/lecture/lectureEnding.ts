@@ -1,4 +1,5 @@
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController} from "tim/ui/dialogController";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {hasLectureEnded, ILecture} from "./lecturetypes";
 
 export interface ILectureEndingDialogResult {

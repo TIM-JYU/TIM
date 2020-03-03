@@ -1,7 +1,8 @@
 import {IScope} from "angular";
 import $ from "jquery";
 import {watchEditMode} from "tim/document/editing/editmode";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController} from "tim/ui/dialogController";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {Pos} from "../ui/draggable";
 import {documentglobals} from "../util/globals";
 import {$http, $timeout} from "../util/ngimport";

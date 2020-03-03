@@ -4,7 +4,8 @@
 
 import {IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {DialogController} from "tim/ui/dialogController";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {markAsUsed, to} from "../util/utils";
 import {IStampingData} from "./pareditor";

@@ -5,8 +5,9 @@
 import {IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import * as focusMe from "tim/ui/focusMe";
+import {DialogController} from "tim/ui/dialogController";
 import {IItem} from "../item/IItem";
-import {DialogController, registerDialogComponent, showDialog} from "../ui/dialog";
+import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {$localStorage} from "../util/ngimport";
 import {markAsUsed} from "../util/utils";
 import {

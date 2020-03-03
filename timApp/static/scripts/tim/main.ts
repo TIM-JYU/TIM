@@ -1,7 +1,7 @@
 import "./loadJQueryAndMomentGlobals";
 import "reflect-metadata";
 
-import {enableProdMode, StaticProvider} from "@angular/core";
+import {enableProdMode} from "@angular/core";
 import angular from "angular";
 import bootstrap from "bootstrap";
 import "eonasdan-bootstrap-datetimepicker";
@@ -11,12 +11,10 @@ import * as userlistController from "tim/answer/userlistController";
 import {timApp} from "tim/app";
 import * as bookmarkFolderBox from "tim/bookmark/bookmarkFolderBox";
 import * as bookmarks from "tim/bookmark/bookmarks";
-import * as spellError from "tim/document/editing/spell-error.component";
 import * as templateList from "tim/document/editing/templateList";
 import * as questionController from "tim/document/question/questionController";
 import * as viewctrl from "tim/document/viewctrl";
 import * as viewRangeNavigation from "tim/document/viewRangeNavigation";
-import * as pareditor from "tim/editor/pareditor";
 import {environment} from "tim/environments/environment";
 import * as indexCtrl from "tim/folder/indexCtrl";
 import * as startController from "tim/frontpage/startController";
@@ -55,7 +53,6 @@ import {setAngularJSGlobal} from "@angular/upgrade/static";
 import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {LoadingComponent} from "tim/ui/loadingIndicator";
 import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
-import {SpellErrorComponent} from "tim/document/editing/spell-error.component";
 import {DialogComponent} from "tim/ui/dialog.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
@@ -82,7 +79,6 @@ markAsUsed(
     loginMenu,
     logo,
     manageCtrl,
-    pareditor,
     questionAskController,
     questionController,
     reviewController,
@@ -92,7 +88,6 @@ markAsUsed(
     settingsCtrl,
     showStatisticsToQuestionController,
     sidebarMenuCtrl,
-    spellError,
     startController,
     taggedDocumentList,
     templateList,
@@ -103,15 +98,13 @@ markAsUsed(
     viewRangeNavigation,
 );
 
-const appBootstrap = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(AppModule);
-};
-
 setAngularJSGlobal(angular);
 
 function createDowngradedAppModule() {
-    const dg = createDowngradedModule(appBootstrap);
+    const dg = createDowngradedModule((extraProviders) => {
+        const platformRef = platformBrowserDynamic(extraProviders);
+        return platformRef.bootstrapModule(AppModule);
+    });
     doDowngrade(dg, "timHeader", HeaderComponent);
     doDowngrade(dg, "createItem", CreateItemComponent);
     doDowngrade(dg, "timAlert", TimAlertComponent);
@@ -119,7 +112,6 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timLoading", LoadingComponent);
     doDowngrade(dg, "annotation", AnnotationComponent);
     doDowngrade(dg, "velpSummary", VelpSummaryComponent);
-    doDowngrade(dg, "timSpellError", SpellErrorComponent);
     doDowngrade(dg, "timDialog", DialogComponent);
     return dg;
 }
@@ -159,7 +151,7 @@ $(async () => {
     }
     const angularModules: string[] = [];
     for (const m of moduleLoads) {
-        const loaded = await m as {moduleDefs: unknown};
+        const loaded = await m as { moduleDefs: unknown };
         const mods = loaded.moduleDefs;
         if (ModuleArray.is(mods)) {
             angularModules.push(...mods.map((mm) => mm.name));
