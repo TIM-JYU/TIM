@@ -4,7 +4,7 @@ import traceback
 from base64 import b64decode
 from io import BytesIO
 from pprint import pprint
-from typing import Union, List
+from typing import Union, List, Optional
 
 import math
 from urllib.parse import urlencode
@@ -254,7 +254,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         """
         self.drv.implicitly_wait(0.5)
         try:
-            self.drv.find_element_by_css_selector(css_selector)
+            self.find_element(css_selector)
         except NoSuchElementException:
             pass
         else:
@@ -297,19 +297,39 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         window.getSelection().addRange(range);
         """)
 
-    def find_element_and_move_to(self, selector: str, times=1) -> WebElement:
+    def find_element_and_move_to(self, selector: str, times=1, parent: Optional[WebElement] = None) -> WebElement:
         e = None
         for i in range(0, times):
-            e = self.drv.find_element_by_css_selector(selector)
+            e = self.find_element(selector, parent=parent)
             ActionChains(self.drv).move_to_element(e).perform()
         return e
 
-    def find_element(self, selector: str) -> WebElement:
-        return self.drv.find_element_by_css_selector(selector)
+    def find_element(
+            self,
+            selector: Optional[str] = None,
+            xpath: Optional[str] = None,
+            parent: Optional[WebElement] = None,
+    ) -> WebElement:
+        if selector and xpath:
+            raise Exception('Only one of selector and xpath must be given')
+        if not selector and not xpath:
+            raise Exception('selector or xpath must be given')
+        root = parent or self.drv
+        if selector:
+            return root.find_element_by_css_selector(selector)
+        else:
+            return root.find_element_by_xpath(xpath)
 
-    def find_element_avoid_staleness(self, selector: str, tries: int = 10, click=False) -> WebElement:
+    def find_element_avoid_staleness(
+            self,
+            selector: Optional[str] = None,
+            xpath: Optional[str] = None,
+            tries: int = 10,
+            click=False,
+            parent=None,
+    ) -> WebElement:
         while True:
-            e = self.find_element(selector)
+            e = self.find_element(selector=selector, xpath=xpath, parent=parent)
             try:
                 if click:
                     e.click()
@@ -323,12 +343,25 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             else:
                 return e
 
+    def find_element_by_text(
+            self,
+            text: str,
+            element: str = '*',
+            staleness_attempts=1,
+            parent: Optional[WebElement] = None,
+    ) -> WebElement:
+        return self.find_element_avoid_staleness(
+            xpath=f"//{element}[contains(text(),'{text}')]",
+            parent=parent,
+            tries=staleness_attempts,
+        )
+
     def touch(self, e: WebElement):
         ActionChains(self.drv).move_to_element(e).perform()
 
     def wait_and_click(self, selector: str):
         self.wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, selector)))
-        self.drv.find_element_by_css_selector(selector).click()
+        self.find_element(selector).click()
 
     def accept_consent(self):
         self.current_user.consent = Consent.CookieOnly

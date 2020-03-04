@@ -6,7 +6,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 
-from timApp.tests.browser.browsertest import BrowserTest, find_element_by_text, find_button_by_text
+from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text
 from timApp.timdb.sqa import db
 
 
@@ -18,11 +18,6 @@ def get_change_editor_button(pareditor) -> WebElement:
 def get_cancel_button(pareditor) -> WebElement:
     button = find_button_by_text(pareditor, 'Cancel')
     return button
-
-
-def find_preview_element(pareditor: WebElement) -> WebElement:
-    preview = pareditor.find_element_by_css_selector('.previewcontent')
-    return preview
 
 
 class ParEditorTest(BrowserTest):
@@ -44,7 +39,7 @@ class ParEditorTest(BrowserTest):
         self.open_editor_from_bottom()
         pareditor = self.get_editor_element()
         ActionChains(self.drv).send_keys('# hello\n\nworld').perform()
-        preview = find_preview_element(pareditor)
+        preview = self.find_element_avoid_staleness('.previewcontent', parent=pareditor)
         self.wait_for_preview_to_finish()
         ActionChains(self.drv).move_to_element(preview).perform()  # avoids having mouse above a toolbar button
         self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
@@ -87,13 +82,13 @@ class ParEditorTest(BrowserTest):
         db.session.commit()
         self.goto_document(d)
         self.open_editor_from_bottom()
-        pareditor = self.get_editor_element()
-        cb = find_element_by_text(pareditor, 'Autocomplete', 'label')
+        cb = self.find_element_by_text('Autocomplete', 'label', staleness_attempts=2)
         cb.click()
         editor = self.find_element_and_move_to('.ace_editor')
         editor.click()
         ActionChains(self.drv).send_keys('d').perform()
         self.wait_for_preview_to_finish()
+        pareditor = self.get_editor_element()
         self.assert_same_screenshot(pareditor, 'pareditor/autocomplete')
         prefs = self.current_user.get_prefs()
         prefs.use_document_word_list = False

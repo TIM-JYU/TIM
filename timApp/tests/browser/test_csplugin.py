@@ -33,7 +33,7 @@ type: python
         runbutton.click()
         self.wait_until_present('.console')
         self.wait_until_present('answerbrowser')
-        self.assert_same_screenshot(par, 'csplugin/python_after_answer')
+        self.assert_same_screenshot(par, 'csplugin/python_after_answer', attempts=2)
 
         # post a second answer because otherwise clicking previous answer does not do anything
         textarea.send_keys(' ')
