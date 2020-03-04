@@ -16,7 +16,7 @@ services:
   environment:
    POSTGRES_PASSWORD: postgresql
  chrome:
-  image: selenium/standalone-chrome:3.141.59-uranium
+  image: selenium/standalone-chrome:3.141.59-zirconium
   tmpfs:
    - /home/seluser
    - /run/supervisor

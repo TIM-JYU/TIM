@@ -95,15 +95,15 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.goto("/empty")
         self.drv.delete_all_cookies()
         self.drv.add_cookie(
-            {'class': 'org.openqa.selenium.Cookie',
-             'domain': 'nginx',
-             'expiry': 7544144177,
-             'hCode': 1984987798,
-             'httpOnly': True,
-             'name': 'session',
-             'path': '/',
-             'secure': False,
-             'value': 'eyJfcGVybWFuZW50Ijp0cnVlLCJhbmNob3IiOiIiLCJjYW1lX2Zyb20iOiIvIiwidXNlcl9pZCI6Mn0.DowETw.cyvyDZcvHWr2aKC5agfIW5sUVrU'})
+            {
+                'expiry': 7544144177,
+                'hCode': 1984987798,
+                'httpOnly': True,
+                'name': 'session',
+                'path': '/',
+                'secure': False,
+                'value': 'eyJfcGVybWFuZW50Ijp0cnVlLCJhbmNob3IiOiIiLCJjYW1lX2Zyb20iOiIvIiwidXNlcl9pZCI6Mn0.DowETw.cyvyDZcvHWr2aKC5agfIW5sUVrU',
+            })
 
     def login_browser_test1(self):
         """Logs in as Test user 1."""
