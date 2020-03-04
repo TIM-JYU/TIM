@@ -12,7 +12,6 @@ services:
    - showfile
    - haskellplugins
    - imagex
-   - uploader
    - dumbo
    - feedback
    - redis
@@ -174,11 +173,6 @@ services:
   environment:
    PYTHONPATH: /feedback:/py
   command: ./startAll.sh
-  restart: unless-stopped
-  read_only: true
- uploader:
-  image: villet/uploaderplugin:13_10_16_15
-  command: ${UPLOADER_COMMAND}
   restart: unless-stopped
   read_only: true
  nginx:

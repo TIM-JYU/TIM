@@ -44,8 +44,6 @@ SQLALCHEMY_MAX_OVERFLOW = 100
 LAST_EDITED_BOOKMARK_LIMIT = 15
 LAST_READ_BOOKMARK_LIMIT = 15
 PLUGIN_COUNT_LAZY_LIMIT = 20
-UPLOADER_NGINX_URL = TIM_HOST + ":41419/"
-UPLOADER_CONTAINER_URL = "http://uploader:41419/"
 
 # When enabled, the readingtypes on_screen and hover_par will not be saved in the database.
 DISABLE_AUTOMATIC_READINGS = False

@@ -64,7 +64,6 @@ def get_plugins():
             "mcq2": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/mcq/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
             "mmcq": {"host": "http://" + HASKELLPLUGIN_NAME + ":5002/"},
             "mmcq2": {"host": "http://" + "localhost" + f":{current_app.config['QST_PLUGIN_PORT']}/qst/mmcq/", REGEXATTRS: QSTMDATTRS, AUTOMDATTRS: True},
-            "uploader": {"host": current_app.config['UPLOADER_CONTAINER_URL']},
             #  "shortNote": {"host": "http://" + HASKELLPLUGIN_NAME + ":5003/"},
             # "graphviz": {"host": "http://" + HASKELLPLUGIN_NAME + ":5004/"},
             "graphviz": {"host": "http://" + CSPLUGIN_NAME + ":5000/cs/graphviz/"},

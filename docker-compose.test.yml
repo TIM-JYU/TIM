@@ -52,6 +52,3 @@ services:
  timagent:
   image: timimages/tim:${TIM_IMAGE_TAG}
   command: "sleep infinity"
- uploader:
-  image: timimages/tim:${TIM_IMAGE_TAG}
-  command: "sleep infinity"
