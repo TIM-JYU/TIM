@@ -854,8 +854,9 @@ ${backTicks}
         const previewDiv = angular.element(".previewcontent");
         this.scrollPos = previewDiv.scrollTop() ?? this.scrollPos;
         this.outofdate = true;
-        const data = await this.resolve.params.previewCb(text, this.spellcheck && this.isFinnishDoc());
-        if (this.spellcheck) {
+        const spellCheckInEffect = this.spellcheck && this.isFinnishDoc();
+        const data = await this.resolve.params.previewCb(text, spellCheckInEffect);
+        if (spellCheckInEffect) {
             $injector.loadNewModules([(await import("../document/editing/spell-error.component")).spellModule.name]);
         }
         await ParCompiler.compileAndAppendTo(previewDiv, data, this.scope, this.resolve.params.viewCtrl);
@@ -866,7 +867,7 @@ ${backTicks}
         this.trdiff = data.trdiff;
         this.outofdate = false;
         this.parCount = previewDiv.children().length;
-        if (this.spellcheck) {
+        if (spellCheckInEffect) {
             previewDiv.find(".parContent[ng-non-bindable] tim-spell-error").each((i, e) => {
                 $compile(e)(this.scope);
             });
