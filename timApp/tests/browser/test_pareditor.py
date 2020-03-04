@@ -52,7 +52,7 @@ class ParEditorTest(BrowserTest):
         self.assert_same_screenshot(pareditor, 'pareditor/textarea_hello_world', move_to_element=True)
         change_editor_button.click()
         self.wait_for_editor_load()
-
+        self.wait_until_present('.ace_content')
         # after deleting the '!', the screenshot should be the same
         ActionChains(self.drv).send_keys(Keys.PAGE_DOWN, Keys.BACKSPACE).perform()
         self.wait_for_preview_to_finish()
@@ -70,6 +70,7 @@ class ParEditorTest(BrowserTest):
         sleep(0.1)
         self.find_element_avoid_staleness('.addBottom', click=True)
         self.wait_for_editor_load()
+        self.wait_until_present('.ace_content')
 
     def test_autocomplete(self):
         self.login_browser_quick_test1()
@@ -82,13 +83,13 @@ class ParEditorTest(BrowserTest):
         db.session.commit()
         self.goto_document(d)
         self.open_editor_from_bottom()
-        cb = self.find_element_by_text('Autocomplete', 'label', staleness_attempts=2)
+        pareditor = self.get_editor_element()
+        cb = self.find_element_by_text('Autocomplete', 'label', parent=pareditor)
         cb.click()
         editor = self.find_element_and_move_to('.ace_editor')
         editor.click()
         ActionChains(self.drv).send_keys('d').perform()
         self.wait_for_preview_to_finish()
-        pareditor = self.get_editor_element()
         self.assert_same_screenshot(pareditor, 'pareditor/autocomplete')
         prefs = self.current_user.get_prefs()
         prefs.use_document_word_list = False
