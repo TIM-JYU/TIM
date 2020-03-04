@@ -823,12 +823,14 @@ class TimRouteTest(TimDbTest):
                                             'docId': par.doc.doc_id,
                                             'par': par.get_id()}, **kwargs)
 
-    def post_preview(self, d: DocInfo, text: str, par_next=None, par=None, **kwargs):
+    def post_preview(self, d: DocInfo, text: str, spellcheck=False, par_next=None, par=None, **kwargs):
         data = {'text': text}
         if par_next:
             data['par_next'] = par_next
         if par:
             data['par'] = par
+        if spellcheck:
+            data['proofread'] = True
         return self.json_post(f'/preview/{d.id}', data, **kwargs)
 
     def upload_file(self, d: DocInfo, content: bytes, filename: str, **extra_data):

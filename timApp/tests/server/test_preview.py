@@ -1,4 +1,6 @@
 """Server tests for preview."""
+from lxml.html import HtmlElement
+
 from timApp.tests.server.timroutetest import TimRouteTest
 
 
@@ -33,3 +35,45 @@ class PreviewTest(TimRouteTest):
         p.document.add_paragraph('test2')
         first = d.document.get_paragraphs()[0]
         self.post_preview(d, text='asd', par=first.get_id(), json_key='texts', as_tree=True)
+
+    def test_spellcheck(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.check_spelling(
+            d,
+            [
+                """<p><tim-spell-error bind-sugg='["koira", "Korria", "koitta"]'>koirra</tim-spell-error></p>""",
+            ],
+            'koirra',
+        )
+        self.check_spelling(
+            d,
+            [
+                """<p><tim-spell-error bind-sugg="[]">koirrra</tim-spell-error></p>""",
+            ],
+            'koirrra',
+        )
+        self.check_spelling(
+            d,
+            [
+                r"""<p>astia juusto <tim-spell-error bind-sugg='["leip\u00e4", "Leopa", "Leila", "leipoa"]'>leipa</tim-spell-error> <tim-spell-error bind-sugg='["sieni", "siteeni", "sieneni", "sireeni", "siseni"]'>sieeni</tim-spell-error> omena <tim-spell-error bind-sugg='["kasvi", "kiva", "k\u00e4vi", "kavio", "kahvi"]'>kavi</tim-spell-error> kissa</p>""",
+            ],
+            'astia juusto leipa sieeni omena kavi kissa',
+        )
+        self.check_spelling(
+            d,
+            [
+                """<p><tim-spell-error bind-sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error> <tim-spell-error bind-count="2" bind-sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error></p>""",
+                """<p><tim-spell-error bind-sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error></p>""",
+            ],
+            'juustu juustu\n#-\njuustu',
+        )
+
+    def check_spelling(self, d, expected, markdown):
+        e: HtmlElement = self.post_preview(d, text=markdown, json_key='texts', as_tree=True, spellcheck=True)
+        contents = e.cssselect('.parContent')
+        for i, ex in enumerate(expected):
+            self.assert_same_html(
+                contents[i].getchildren()[0],
+                ex,
+            )
