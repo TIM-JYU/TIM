@@ -855,6 +855,9 @@ ${backTicks}
         this.scrollPos = previewDiv.scrollTop() ?? this.scrollPos;
         this.outofdate = true;
         const data = await this.resolve.params.previewCb(text, this.spellcheck && this.isFinnishDoc());
+        if (this.spellcheck) {
+            $injector.loadNewModules([(await import("../document/editing/spell-error.component")).spellModule.name]);
+        }
         await ParCompiler.compileAndAppendTo(previewDiv, data, this.scope, this.resolve.params.viewCtrl);
         if (data.trdiff) {
             const module = await import("angular-diff-match-patch");
@@ -864,7 +867,6 @@ ${backTicks}
         this.outofdate = false;
         this.parCount = previewDiv.children().length;
         if (this.spellcheck) {
-            $injector.loadNewModules([(await import("../document/editing/spell-error.component")).spellModule.name]);
             previewDiv.find(".parContent[ng-non-bindable] tim-spell-error").each((i, e) => {
                 $compile(e)(this.scope);
             });
