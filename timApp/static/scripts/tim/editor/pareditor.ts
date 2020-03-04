@@ -1,4 +1,3 @@
-import {Ace} from "ace-builds/src-noconflict/ace";
 import angular, {IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
@@ -14,7 +13,7 @@ import {registerDialogComponentForModule, showMessageDialog} from "../ui/dialog"
 import {documentglobals, genericglobals} from "../util/globals";
 import {$compile, $http, $injector, $localStorage, $timeout, $upload} from "../util/ngimport";
 import {AceParEditor} from "./AceParEditor";
-import {SelectionRange} from "./BaseParEditor";
+import {EditorType, SelectionRange} from "./BaseParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {RestampDialogClose, showRestampDialog} from "./restampDialog";
 import {TextAreaParEditor} from "./TextAreaParEditor";
@@ -198,7 +197,6 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private spellcheck = false;
     private deleting = false;
     private editor?: TextAreaParEditor | AceParEditor; // $onInit
-    private isACE: boolean = false;
     private file?: File & {progress?: number, error?: string};
     private isIE: boolean = false;
     private oldmeta?: HTMLMetaElement;
@@ -626,9 +624,7 @@ ${backTicks}
             await this.changeEditor(oldMode);
         })();
         this.scope.$watch(() => this.autocomplete, () => {
-            if (this.isAce(this.editor)) {
-                this.editor.setAutoCompletion(this.autocomplete);
-            }
+            this.isAce()?.setAutoCompletion(this.autocomplete);
         });
         this.docSettings = documentglobals().docSettings;
 
@@ -643,15 +639,16 @@ ${backTicks}
         const elemHeight = this.element[0].clientHeight;
         const clientBottom = cont.clientTop + cont.clientHeight;
         const remainingSpace = this.lastKnownDialogHeight - cont.clientTop - (elemHeight - clientBottom);
-        if (this.isAce(this.editor)) {
-            let lh = this.editor.editor.renderer.lineHeight;
+        const ace = this.isAce();
+        if (ace) {
+            let lh = ace.editor.renderer.lineHeight;
             if (lh <= 0) { lh = 15; } // TODO: get a better value here
             const lines = remainingSpace / lh;
-            this.editor.editor.setOptions({
+            ace.editor.setOptions({
                 maxLines: Math.max(lines, 5),
                 minLines: Math.min(lines, 5),
             });
-        } else if (this.editor) {
+        } else if (this.editor?.type == EditorType.Textarea) {
             this.editor.editor.height(remainingSpace);
         }
     }
@@ -1013,12 +1010,8 @@ ${backTicks}
         }
     }
 
-    aceEnabled(): boolean {
-        return this.isAce(this.editor);
-    }
-
-    isAce(editor: AceParEditor | TextAreaParEditor | undefined): editor is AceParEditor {
-        return editor !== undefined && (editor.editor as Ace.Editor).renderer != null;
+    isAce(): AceParEditor | undefined {
+        return this.editor?.type == EditorType.Ace ? this.editor : undefined;
     }
 
     onPaste(e: JQuery.TriggeredEvent) {
@@ -1306,14 +1299,12 @@ ${backTicks}
         if (h != null) {
             this.lastKnownDialogHeight = h;
         }
-        if (this.isAce(this.editor) || initialMode === "text") {
+        if (this.isAce() || initialMode === "text") {
             oldeditor = this.element.find("#ace_editor");
             oldeditor.remove();
             this.createTextArea(text);
-            this.isACE = false;
             this.refreshEditorSize();
         } else {
-            this.isACE = true;
             oldeditor = this.element.find("#teksti");
             oldeditor.remove();
             const ace = (await import("tim/editor/ace")).ace;
@@ -1476,7 +1467,8 @@ ${backTicks}
         this.setLocalValue("spellcheck", this.spellcheck.toString());
         this.setLocalValue("editortab", this.activeTab ?? "navigation");
         this.setLocalValue("autocomplete", this.autocomplete.toString());
-        this.setLocalValue("oldMode", this.isAce(this.editor) ? "ace" : "text");
+        const ace = this.isAce();
+        this.setLocalValue("oldMode", ace ? "ace" : "text");
         this.setLocalValue("wrap", "" + this.wrapValue());
         if (this.getExtraData().access != null) {
             $localStorage.noteAccess = this.getExtraData().access;
@@ -1490,10 +1482,9 @@ ${backTicks}
             }
         }
         this.setLocalValue("proeditor", this.proeditor.toString());
-
-        if (this.isAce(this.editor)) {
-            this.setLocalValue("acewrap", this.editor.editor.getSession().getUseWrapMode().toString());
-            this.setLocalValue("acebehaviours", this.editor.editor.getBehavioursEnabled().toString()); // some of these are in editor and some in session?
+        if (ace) {
+            this.setLocalValue("acewrap", ace.editor.getSession().getUseWrapMode().toString());
+            this.setLocalValue("acebehaviours", ace.editor.getBehavioursEnabled().toString()); // some of these are in editor and some in session?
         }
     }
 

@@ -7,7 +7,7 @@
         <span>
             Upload image/file:
             <input ng-paste="$ctrl.onPaste($event)" id="pasteInput"
-                   placeholder='paste image' size="9" style="font-size: 0.7em;" ng-show="$ctrl.isACE" />
+                   placeholder='paste image' size="9" style="font-size: 0.7em;" ng-show="$ctrl.isAce()" />
                    <!--ngf-drop="$ctrl.onDrop($event)"  ng-dragover="$ctrl.allowDrop($event)" -->
                    <!-- ondragover="$ctrl.allowDrop($event)" ondrop="$ctrl.onDrop($event)" -->
             <input type="file" ngf-select="$ctrl.onFileSelect($file)">
@@ -57,11 +57,11 @@
         <label class="font-weight-normal margin-5-right" title="Show more options to editor"><input type="checkbox" ng-model="$ctrl.proeditor"/> Advanced view </label>
         <span ng-show="$ctrl.proeditor">
             <label class="font-weight-normal margin-5-right" title="Change editor between Ace and normal textarea">
-                <input type="checkbox" ng-checked="$ctrl.aceEnabled()" ng-click="$ctrl.changeEditor()"> Ace editor</label>
+                <input type="checkbox" ng-checked="$ctrl.isAce()" ng-click="$ctrl.changeEditor()"> Ace editor</label>
             <label class="font-weight-normal margin-5-right" ng-show="$ctrl.fullscreenSupported()" ><input type="checkbox" ng-click="$ctrl.goFullScreen()"> Fullscreen </label>
             <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.spellcheck" ng-change="$ctrl.editorChanged()"/> Check spelling</label>
         </span>
-        <label class="font-weight-normal margin-5-right" ng-show="$ctrl.aceEnabled()"><input type="checkbox" ng-model="$ctrl.autocomplete"/> Autocomplete </label>
+        <label class="font-weight-normal margin-5-right" ng-show="$ctrl.isAce()"><input type="checkbox" ng-model="$ctrl.autocomplete"/> Autocomplete </label>
         <label class="font-weight-normal margin-5-right" ng-repeat="tag in $ctrl.getOptions().tags">
             <input type="checkbox" ng-model="$ctrl.getExtraData().tags[tag.name]"/> {{ tag.desc }}
         </label>

@@ -14,11 +14,12 @@ import {
     KEY_Y,
 } from "../util/keycodes";
 import {$log, $timeout} from "../util/ngimport";
-import {BaseParEditor, CURSOR, focusAfter, IEditorCallbacks, SelectionRange} from "./BaseParEditor";
+import {BaseParEditor, CURSOR, EditorType, focusAfter, IEditorCallbacks, SelectionRange} from "./BaseParEditor";
 
 export class TextAreaParEditor extends BaseParEditor {
     public editor: JQuery;
     private editorElement: HTMLTextAreaElement;
+    type: EditorType.Textarea = EditorType.Textarea;
 
     constructor(editor: JQuery, callbacks: IEditorCallbacks) {
         super(editor, callbacks);

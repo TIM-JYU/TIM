@@ -4,7 +4,7 @@ import {Ace} from "ace-builds/src-noconflict/ace";
 import {wrapText} from "tim/document/editing/utils";
 import {IAce} from "tim/editor/ace";
 import {$log, $timeout} from "../util/ngimport";
-import {BaseParEditor, CURSOR, focusAfter, IEditorCallbacks, SelectionRange} from "./BaseParEditor";
+import {BaseParEditor, CURSOR, EditorType, focusAfter, IEditorCallbacks, SelectionRange} from "./BaseParEditor";
 
 interface ISnippetManager {
     insertSnippet(editor: AceAjax.Editor, text: string): void;
@@ -14,6 +14,7 @@ export class AceParEditor extends BaseParEditor {
     public editor: IAceEditor;
     private snippetManager: ISnippetManager;
     private ace: IAce;
+    type: EditorType.Ace = EditorType.Ace;
 
     constructor(ace: IAce, editor: AceAjax.Editor, callbacks: IEditorCallbacks, mode: string = "ace/mode/markdown") {
         super(editor, callbacks);
