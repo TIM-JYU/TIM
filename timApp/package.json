@@ -9,7 +9,7 @@
     "bw": "ng build --prod --watch --deployUrl /static/scripts/build/",
     "bd": "ng build --deployUrl /static/scripts/build/",
     "bdw": "ng build --watch --deployUrl /static/scripts/build/",
-    "bds": "ng build --prod --statsJson --deployUrl /static/scripts/build/",
+    "stats": "ng build --prod --statsJson --deployUrl /static/scripts/build/ && npx webpack-bundle-analyzer static/scripts/build/stats-es2015.json",
     "postinstall": "patch-package",
     "lint": "eslint --ext ts static/scripts/tim modules",
     "lintfix": "eslint --ext ts static/scripts/tim modules --fix"
