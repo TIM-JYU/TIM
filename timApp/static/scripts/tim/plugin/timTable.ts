@@ -1786,6 +1786,12 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         // if (!this.mouseInTable) return;
         // TODO: Check properly if table has focus when preventing default tab behavior
+
+        // Prevents unwanted scrolling in Firefox.
+        if (ev.ctrlKey && isArrowKey(ev)) {
+            ev.preventDefault();
+        }
+
         if (!this.isSomeCellBeingEdited()) {
             return;
         }
