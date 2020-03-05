@@ -429,6 +429,20 @@ class FolderCopyTest(TimRouteTest):
         # Ensure this won't throw an exception.
         self.create_doc(self.get_personal_item_path('r/x/b'))
 
+    def test_no_lose_owners_for_templates(self):
+        self.login_test1()
+        f_path = self.get_personal_item_path('test_no_lose_owners')
+        f = self.create_folder(f_path)
+        f = Folder.get_by_id(f['id'])
+        self.test_user_2.grant_access(f, AccessType.owner)
+        self.test_user_3.grant_access(f, AccessType.owner)
+        db.session.commit()
+        f_path = self.get_personal_item_path('test_no_lose_owners/templates')
+        f = self.create_folder(f_path)
+        f = Folder.get_by_id(f['id'])
+        db.session.refresh(f)
+        self.assertEqual(3, len(f.block.accesses))
+
 
 class FolderParentTest(TimRouteTest):
     def test_folder_parents(self):
