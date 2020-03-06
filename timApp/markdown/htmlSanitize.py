@@ -90,6 +90,7 @@ TIM_SAFE_TAGS = [
     'goaltable-runner',
     'jsframe-runner',
     'video-runner',
+    'importdata-runner',
 
     # raw AngularJS components:
     'tim-rights-editor',
