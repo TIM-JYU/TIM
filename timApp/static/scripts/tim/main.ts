@@ -54,6 +54,7 @@ import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {LoadingComponent} from "tim/ui/loadingIndicator";
 import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
 import {DialogComponent} from "tim/ui/dialog.component";
+import {CloseButtonComponent} from "tim/ui/close-button.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -113,6 +114,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "annotation", AnnotationComponent);
     doDowngrade(dg, "velpSummary", VelpSummaryComponent);
     doDowngrade(dg, "timDialog", DialogComponent);
+    doDowngrade(dg, "timCloseButton", CloseButtonComponent);
     return dg;
 }
 

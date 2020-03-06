@@ -1263,17 +1263,12 @@ tim-user-list {
     height: calc(100% - #{13px * $line-height-base});
 }
 
-p.closeButton {
-    margin-left: auto;
-    margin-right: 0;
-    position: absolute;
-    right: 10px;
-    cursor: pointer;
-}
-
-p.closeButton::before {
-  content: "X";
-  font-weight: bold;
+importdata-runner {
+    tim-close-button {
+        float: none;
+        position: absolute;
+        right: 6px;
+    }
 }
 
 .importDataInner {

@@ -280,7 +280,7 @@ multisaveApp.component("multisaveRunner", {
     </button>
     <p class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</p>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
-        <p class="closeButton" ng-click="$ctrl.toggleEmailForm()"></p>
+        <tim-close-button ng-click="$ctrl.toggleEmailForm()"></tim-close-button>
         <p><textarea ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea>
         <p>
         <p>

@@ -7,6 +7,7 @@ import {DialogComponent} from "tim/ui/dialog.component";
 import {PluginFrameComponent} from "./plugin-frame.component";
 import {LoadingComponent} from "./loadingIndicator";
 import {MarkupErrorComponent} from "./markup-error.component";
+import {CloseButtonComponent} from "./close-button.component";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -18,6 +19,7 @@ import {MarkupErrorComponent} from "./markup-error.component";
         FocusMeDirective,
         TrustHtmlPipe,
         DialogComponent,
+        CloseButtonComponent,
     ],
     exports: [
         MarkupErrorComponent,
@@ -27,6 +29,7 @@ import {MarkupErrorComponent} from "./markup-error.component";
         FocusMeDirective,
         TrustHtmlPipe,
         DialogComponent,
+        CloseButtonComponent,
     ],
     imports: [CommonModule],
 })

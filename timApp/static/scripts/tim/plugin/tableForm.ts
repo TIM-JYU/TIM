@@ -137,7 +137,7 @@ const sortLang = "fi";
     selector: "tim-email-send",
     template: `
         <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="emaillist"> <!-- email -->
-            <p class="closeButton" (click)="emaillist=''"></p>
+            <tim-close-button (click)="emaillist=''"></tim-close-button>
             <p><textarea [(ngModel)]="emaillist" rows="4" cols="40"></textarea>
             </p>
             <p>
@@ -272,7 +272,7 @@ export class TimEmailComponent {
                 </button>
             </div>
             <div class="csRunDiv tableUsers" style="padding: 1em;" *ngIf="userlist"> <!-- userlist -->
-                <p class="closeButton" (click)="userlist=''"></p>
+                <tim-close-button (click)="userlist=''"></tim-close-button>
                 <p>Separator:
                     <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="-"
                                   (change)="listUsernames()">-</label>&nbsp;

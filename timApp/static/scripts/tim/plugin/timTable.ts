@@ -504,7 +504,7 @@ export enum ClearSort {
                             (click)="handleClickOpenBigEditor()"><span class="glyphicon glyphicon-pencil"></span>
                     </button>
                     <button class="timButton buttonCloseSmallEditor"
-                            (click)="handleClickCancelSmallEditor()"><span class="glyphicon glyphicon-remove"></span>
+                            (click)="handleClickCancelSmallEditor()"><tim-close-button></tim-close-button>
                     </button>
                     <button class="timButton buttonAcceptEdit"
                             (click)="handleClickAcceptSmallEditor()"><span class="glyphicon glyphicon-ok"></span>

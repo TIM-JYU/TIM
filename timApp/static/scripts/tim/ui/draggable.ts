@@ -35,10 +35,8 @@ const draggableTemplate = `
        title="{{ d.areaMinimized ? 'Maximize' : 'Minimize' }} dialog"
        ng-click="d.toggleMinimize()"
        class="glyphicon glyphicon-{{ d.areaMinimized ? 'unchecked' : 'minus' }}"></i>
-    <i ng-show="d.closeFn"
-       title="Close dialog"
-       ng-click="d.closeFn()"
-       class="glyphicon glyphicon-remove"></i>
+    <tim-close-button ng-show="d.closeFn"
+                      ng-click="d.closeFn()"></tim-close-button>
 </div>
 <div ng-show="d.canResize() && !d.autoWidth"
      class="resizehandle-r resizehandle"></div>

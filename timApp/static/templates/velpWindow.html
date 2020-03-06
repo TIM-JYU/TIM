@@ -39,8 +39,8 @@
         Show this when velp IS being edited
 
      --><div ng-if="$ctrl.velp.edit" class="content">
-                            <span ng-click="$ctrl.toggleVelpToEdit(); $event.stopPropagation();"
-                            ng-class="['pull-right', 'glyphicon', 'glyphicon-remove', 'clickable-icon']"></span>
+                            <tim-close-button ng-click="$ctrl.toggleVelpToEdit(); $event.stopPropagation();"
+                            class="clickable-icon"></tim-close-button>
 
         <form name="saveVelpForm" ng-submit="$ctrl.saveVelp(saveVelpForm)">
             <p class="header"><input name="velpName" type="text" ng-model="$ctrl.velp.content"

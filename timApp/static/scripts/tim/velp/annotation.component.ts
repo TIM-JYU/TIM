@@ -75,8 +75,8 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
                 <tim-signature [user]="annotation.annotator" [time]="annotation.creation_time"></tim-signature>
             </p>
         </span>
-            <span title="Close" class="pull-right glyphicon glyphicon-remove clickable-icon"
-                  (click)="toggleAnnotation();setShowFull(false)"></span>
+            <tim-close-button class="clickable-icon"
+                  (click)="toggleAnnotation();setShowFull(false)"></tim-close-button>
     </span>
 
                 <div>

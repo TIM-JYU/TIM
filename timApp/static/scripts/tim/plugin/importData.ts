@@ -256,9 +256,9 @@ timApp.component("importdataRunner", {
 <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
 <div ng-cloak ng-class="{'csRunDiv': ($ctrl.attrs.borders && $ctrl.isOpen)}" class="importDataDiv no-popup-menu"
      ng-if="::$ctrl.isVisible()">
-    <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen" ng-click="$ctrl.isOpen = true"></p>
+    <button ng-if="!$ctrl.isOpen" class="timButton" ng-bind-html="::$ctrl.attrs.beforeOpen" ng-click="$ctrl.isOpen = true"></button>
     <div ng-if="$ctrl.isOpen">
-        <p class="closeButton" ng-click="$ctrl.isOpen = false"/>
+        <tim-close-button ng-click="$ctrl.isOpen = false"></tim-close-button>
         <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
         <div class="importDataInner">
             <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
@@ -297,7 +297,7 @@ timApp.component("importdataRunner", {
             </button>
             <tim-loading ng-if="$ctrl.isRunning"></tim-loading>
             <div ng-if="$ctrl.error.message">
-                <p class="closeButton" ng-click="$ctrl.error = ''"/>
+                <tim-close-button ng-click="$ctrl.error = ''"></tim-close-button>
                 <importdata-error ng-if="$ctrl.error" e="$ctrl.error"></importdata-error>
                 <importdata-error ng-repeat="err in $ctrl.scriptErrors" e="err"></importdata-error>
             </div>
