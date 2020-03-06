@@ -39,6 +39,7 @@ export abstract class DialogController<T, Ret> implements IController {
     handleEscPress = (e: KeyboardEvent) => {
         if (e.keyCode === KEY_ESC && this.isTopMostDialog()) {
             this.dismiss();
+            e.stopPropagation();
         }
     };
 

@@ -1,0 +1,14 @@
+.draghandle {
+  position: absolute;
+  top: -18px;
+  z-index: 1;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.minimized {
+  visibility: hidden;
+}
