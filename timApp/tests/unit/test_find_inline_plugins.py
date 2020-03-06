@@ -13,7 +13,7 @@ class TestFindInlinePlugins(TestCase):
         for p_task_id, p_yaml, p_range, md in r1:
             self.assertEqual("yhtpisteet2", p_task_id.s, "Not same task_id")
             self.assertEqual(
-                " autosave: true, inputstem: Pisteet yhteensä, verticalkeys: true, header: '*kana*', stem: '[Puh]{.red}'",
+                " autosave: true,\ninputstem: Pisteet yhteensä, verticalkeys: true, header: '*kana*', stem: '[Puh]{.red}'",
                 p_yaml, "Not same yaml")
             self.assertEqual("(7, 125)", str(p_range), "Not same range")
 
