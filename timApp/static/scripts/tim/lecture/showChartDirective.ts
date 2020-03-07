@@ -375,8 +375,12 @@ class ChartController implements IController {
         }
 
         if (this.divresize) {
-            this.canvasw = this.div.width() ?? 400;
-            this.canvash = this.div.height() ?? 300;
+            const w = timGetLSIntValue("qstChartW", 400);
+            const h = timGetLSIntValue("qstChartH", 300);
+            this.canvasw = this.div.width() ?? w;
+            if (this.canvasw < 10) { this.canvasw = w; }
+            this.canvash = this.div.height() ?? h;
+            if (this.canvash < 10) { this.canvash = h; }
         }
 
         const j = this.question.json.json;
@@ -530,14 +534,17 @@ class ChartController implements IController {
     }
 
     zoom(w: number, h: number) {
-        this.canvasw += w * 100;
+        const factor = 50;
+        this.canvasw += w * factor;
         if (this.canvasw < 100) {
             this.canvasw = 100;
         }
-        this.canvash += h * 100;
+        this.canvash += h * factor;
         if (this.canvash < 100) {
             this.canvash = 100;
         }
+        window.localStorage.setItem("qstChartW", this.canvasw.toString());
+        window.localStorage.setItem("qstChartH", this.canvash.toString());
         this.changeType();
     }
 
@@ -547,7 +554,7 @@ class ChartController implements IController {
         }
         const w = this.div.width() ?? 400;
         const h = this.div.height() ?? 300;
-        this.resize(w, h);
+        if (h >= 100 && w >= 100) { this.resize(w, h); }
     }
 
     update() {

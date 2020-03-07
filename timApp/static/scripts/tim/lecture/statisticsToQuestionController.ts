@@ -2,7 +2,9 @@ import {IScope} from "angular";
 import moment from "moment";
 import * as chart from "tim/lecture/showChartDirective";
 import {markAsUsed, to} from "tim/util/utils";
+// import {ChangeDetectorRef, ElementRef, NgZone} from "@angular/core";
 import {DialogController} from "tim/ui/dialogController";
+// import {PluginMeta} from "tim/plugin/util";
 import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
 import {IAskedQuestion, IQuestionAnswer} from "./lecturetypes";
@@ -28,6 +30,13 @@ export class StatisticsToQuestionController extends DialogController<{params: IS
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
     }
+
+/*
+    constructor(private el: JQLite, public cdr: ChangeDetectorRef, private zone: NgZone, protected scope: IScope) {
+        super(el, scope);
+        // this.pluginMeta = new PluginMeta($(el.nativeElement));
+    }
+*/
 
     public getTitle() {
         return `Question ${this.resolve.params.json.json.questionTitle} statistics`;
@@ -58,6 +67,7 @@ export class StatisticsToQuestionController extends DialogController<{params: IS
                 }
                 if (this.answers.length > 0) {
                     this.lastFetch = this.answers[this.answers.length - 1].answered_on.clone().add(1, "ms");
+                    // this.cdr.detectChanges();
                 }
                 if (getQuestionEndTime(this.resolve.params) < now) {
                     this.ended = true;
