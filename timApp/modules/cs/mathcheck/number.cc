@@ -1,4 +1,4 @@
-copyright number_file( "number.cc", "Antti Valmari", 20190121 );
+copyright number_file( "number.cc", "Antti Valmari", 20200227 );
 /*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -64,6 +64,9 @@ truth_val operator &&( truth_val t1, truth_val t2 ){
 inline truth_val operator ||( truth_val t1, truth_val t2 ){
   return tv_neg[ tv_conj[ tv_neg[ t1 ] ][ tv_neg[ t2 ] ] ];
 }
+inline truth_val tv_def( truth_val t1 ){
+  return t1 & 2 ? tv_T : t1 == tv_U ? tv_F : tv_FT;
+}
 
 /* Testing presence|absence of F|U|T */
 inline bool tv_may_F( truth_val tv ){ return !( tv & 1 ); }
@@ -91,6 +94,29 @@ unsigned tv_max( truth_val tv ){
   if( tv == tv_F ){ return 1; }
   if( tv == tv_U || tv == tv_FU ){ return 2; }
   return 4;
+}
+
+
+/* Reasoning operators */
+bool tv_r_impl( truth_val &t1, truth_val t2 ){
+  if( t1 == tv_T ){ return tv_may_T( t2 ); }
+  t1 = t2; return true;
+}
+bool tv_r_lpmi( truth_val &t1, truth_val t2 ){
+  if( tv_may_T( t1 ) ){ t1 = t2; return true; }
+  if( t2 == tv_T ){ return false; }
+  else{ t1 = truth_val( t2 | 4 ); return true; }
+}
+bool tv_r_eq( truth_val &t1, truth_val t2 ){
+  if( t1 == tv_T ){ return tv_may_T( t2 ); }
+  if( tv_may_T( t1 ) ){ t1 = t2; return true; }
+  if( t2 == tv_T ){ return false; }
+  else{ t1 = truth_val( t2 | 4 ); return true; }
+}
+bool tv_r_iden( truth_val &t1, truth_val t2 ){
+  unsigned uu = t1 | t2;
+  if( uu < 7 ){ t1 = truth_val( uu ); return true; }
+  else{ return false; }
 }
 
 
@@ -299,6 +325,17 @@ public:
     return INT_MIN;
   }
 
+  unsigned numer(){
+    if( type == pos || type == neg ){ return r_nu; }
+    else{ return 0; }
+  }
+
+  unsigned denom(){
+    if( type == pos || type == neg ){ return r_de; }
+    else if( type == zer ){ return 1; }
+    else{ return 0; }
+  }
+
 
   /* Information on type and value. If the answer is uncertain or undefined,
    isc-functions return false. */
@@ -310,6 +347,10 @@ public:
   inline bool is_dbl() const { return type == dbl; }
   inline bool is_dbu() const { return type == dbu; }
   inline bool is_trv() const { return type == trv; }
+
+  inline bool is_uns_type() const {
+    return type == zer || ( type == pos && r_de == 1 );
+  }
 
   inline bool is_int_type() const {
     if( type == zer ){ return true; }

@@ -48,6 +48,7 @@ const char draw_font[] =
   "YhfIbVX@ND@xAC`@cnFGbV\\@VFQDQDP@YhfIbVX@DCpPD@p@XhAbDfH@A@RfuYVU"
   "YhfIbVX@AFRFYQUecnFGbV\\@A@RfuYVU@@@G\\XGraGPG@@@@yxFA`XFA`XFA`XGg"
   "`XFA`XFA`XFA`XGgyxFA`XFA`XFA`XFA@PDGJReghJAnBPdI@@dIJR]`kjeiC``H"
-  "DAIpdiIr@DQDJB`PtJbhjJ`A@T^ijZeG`HzQdXx@\\iUqDf\\@";
-unsigned draw_font_size = 187;
+  "DAIpdiIr@DQDJB`PtJbhjJ`A@T^ijZeG`HzQdXx@\\iUqDf\\@@@C~@@C~@@C~@@@@"
+  "@@@@IAK?DbP@@@@@LDbHTCEJaHiq@@C~QDQDQDQDQDQDQDP@";
+unsigned draw_font_size = 191;
 const unsigned draw_font_width = 8, draw_font_height = 12;
