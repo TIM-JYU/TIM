@@ -17,7 +17,7 @@ import {ViewCtrl} from "../document/viewctrl";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {someglobals} from "../util/globals";
-import {$http, $log, $timeout} from "../util/ngimport";
+import {$http, $log, $rootScope, $timeout} from "../util/ngimport";
 import {
     currentQuestion,
     getAskedQuestionFromQA,
@@ -491,9 +491,12 @@ export class LectureController {
                 await $timeout(5000);
                 continue;
             }
-            if (ifvisible.now()) {
+
+            // By checking "hidden" we avoid the idle timeout (default 60 seconds).
+            if (!ifvisible.now("hidden")) {
                 const [timeout, last] = await this.pollOnce(lastID);
                 lastID = last;
+                $rootScope.$applyAsync();
                 await $timeout(Math.max(timeout, 1000));
             } else {
                 await $timeout(1000);
