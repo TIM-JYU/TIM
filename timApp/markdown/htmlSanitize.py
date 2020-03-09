@@ -91,6 +91,7 @@ TIM_SAFE_TAGS = [
     'jsframe-runner',
     'video-runner',
     'importdata-runner',
+    'tim-table',
 
     # raw AngularJS components:
     'tim-rights-editor',
@@ -125,6 +126,9 @@ TIM_SAFE_ATTRS = frozenset([
 
     # tim-self-expire
     'button-text', 'confirm',
+
+    # tim-table
+    'bind-data',
 ])
 
 c = Cleaner(
