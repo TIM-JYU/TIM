@@ -45,7 +45,7 @@ def fix_double_c(dry_run):
 def clear_all(doc, dry_run):
     d = DocEntry.find_by_path(doc)
     if not d:
-        click.echo(err=f'cannot find document "{doc}"')
+        click.echo(f'cannot find document "{doc}"', err=True)
         return
     ids = Answer.query.filter(Answer.task_id.startswith(f'{d.id}.')).with_entities(Answer.id)
     cnt = ids.count()
