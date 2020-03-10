@@ -148,7 +148,7 @@ var TIMJS = {};
 TIMJS.basicoptions = {
     'type': 'bar',
     'data': {
-        'labels': [1,2,3,4,5,6],
+        'labels': ['Chart','has','no','data'],
         'datasets': [
             {
                 'label': '',
@@ -157,7 +157,7 @@ TIMJS.basicoptions = {
                 'backgroundColor': 'rgba(0,0,255,0.5)',
                 'borderColor': '#0000ff',
                 'borderWidth': 1,
-                'data': [4,5,6,2,3,10],
+                'data': [0, 1, 2, 3],
             },
         ]
     },
