@@ -1500,7 +1500,7 @@ ${backTicks}
             const knro = this.docSettings.macros.knro;
             const dates = this.docSettings.macros.dates;
             if (dates != null && knro != null) {
-                return dates[knro][0];  // Dates is 2-dim array.
+                return dates[knro][0];
             }
         }
     }
