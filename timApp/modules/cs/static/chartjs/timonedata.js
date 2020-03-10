@@ -345,7 +345,12 @@ TIMJS.setData = function(P, data) {
     let fdata = data.fielddata || P.fieldData;
     if ( fdata ) {
        ensureDataSets(datasets, fieldindex+1);
-  	   if ( fieldindex === 0 ) P.data.labels = fdata.graphdata.labels;
+        if (fieldindex === 0) {
+            if (!P.data) {
+                P.data = {};
+            }
+            P.data.labels = fdata.graphdata.labels;
+        }
        datasets[fieldindex].data = fdata.graphdata.data;
        datasets[fieldindex].backgroundColor = 'rgba(255,0,0,0.5)';
   	   datasets[fieldindex].borderColor = '#F00';
