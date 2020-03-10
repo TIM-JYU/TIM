@@ -20,7 +20,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.post_process import has_ownership
 from timApp.document.randutils import hashfunc
 from timApp.lecture.askedjson import get_asked_json_by_hash, AskedJson
-from timApp.lecture.askedquestion import AskedQuestion, get_asked_question
+from timApp.lecture.askedquestion import AskedQuestion, get_asked_question, user_activity_lock
 from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer, get_totals
 from timApp.lecture.message import Message
@@ -31,10 +31,10 @@ from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
 from timApp.plugin.qst.qst import get_question_data_from_document, create_points_table, \
     calculate_points_from_json_answer, calculate_points
-from timApp.timdb.sqa import db
+from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import get_option, verify_json_params
-from timApp.util.flask.responsehelper import json_response, ok_response, empty_response, json_response_and_commit
+from timApp.util.flask.responsehelper import json_response, ok_response, empty_response
 from timApp.util.logger import log_debug
 from timApp.util.utils import get_current_time
 
@@ -111,15 +111,21 @@ def get_all_messages():
 @lecture_routes.route('/getUpdates')
 def get_updates():
     # taketime("before update")
-    ret = do_get_updates(request)
+    ret = do_get_updates()
+    db.session.commit()
     # taketime("after update")
-    return ret
+    return json_response(ret)
+
+
+@lecture_routes.before_request
+def lecture_before_request():
+    tim_main_execute("SET LOCAL lock_timeout = '1s'")
 
 
 EXTRA_FIELD_NAME = "extra"
 
 
-def do_get_updates(request):
+def do_get_updates():
     """Gets updates from some lecture.
 
     Checks updates in 1 second frequently and answers if there is updates.
@@ -198,7 +204,6 @@ def do_get_updates(request):
         except:
             pass
 
-
     is_lecturer = is_lecturer_of(lecture)
     if is_lecturer:
         poll_interval_ms = poll_interval_t_ms
@@ -248,12 +253,13 @@ def do_get_updates(request):
             if q and q.is_running:
                 already_answered = q.has_activity(QuestionActivityKind.Useranswered, u)
             if q and q.is_running and not already_answered:
-                already_extended = q.has_activity(QuestionActivityKind.Userextended, u)
-                if not already_extended:
-                    q.add_activity(QuestionActivityKind.Userextended, u)
-                    # Return this is question has been extended
-                    resp[EXTRA_FIELD_NAME]['new_end_time'] = q.running_question.end_time
-                    return json_response_and_commit(resp)
+                with user_activity_lock(u):
+                    already_extended = q.has_activity(QuestionActivityKind.Userextended, u)
+                    if not already_extended:
+                        q.add_activity(QuestionActivityKind.Userextended, u)
+                        # Return this is question has been extended
+                        resp[EXTRA_FIELD_NAME]['new_end_time'] = q.running_question.end_time
+                        return resp
             else:
                 # Don't return this "question has ended" response here because there can be a new question running,
                 # so we want to return directly that.
@@ -271,7 +277,7 @@ def do_get_updates(request):
             if q:
                 already_closed = q.has_activity(QuestionActivityKind.Pointsclosed, u)
             if already_closed:
-                return json_response_and_commit(resp)
+                return resp
 
         # Gets new questions if the questions are in use.
         if use_questions:
@@ -279,12 +285,12 @@ def do_get_updates(request):
             new_question = get_new_question(lecture, current_question_id, current_points_id)
             if new_question:
                 log_debug(user_name + " send new question")
-                return json_response_and_commit({**base_resp, EXTRA_FIELD_NAME: new_question})
+                return {**base_resp, EXTRA_FIELD_NAME: new_question}
             elif question_end_resp:
-                return json_response_and_commit(question_end_resp)
+                return question_end_resp
 
         if list_of_new_messages:
-            return json_response_and_commit(base_resp)
+            return base_resp
 
         if not long_poll or current_app.config['TESTING']:
             # Don't loop when testing
@@ -300,9 +306,9 @@ def do_get_updates(request):
         step += 1
 
     if lecture_ending != 100 or lecturers or students:
-        return json_response_and_commit(base_resp)
+        return base_resp
 
-    return json_response_and_commit({"ms": poll_interval_ms})  # no new updates
+    return {"ms": poll_interval_ms}  # no new updates
 
 
 @lecture_routes.route('/getQuestionManually')
@@ -326,40 +332,41 @@ def get_new_question(lecture: Lecture, current_question_id=None, current_points_
     current_user = get_current_user_id()
     u = get_current_user_object()
     rqs: List[Runningquestion] = lecture.running_questions
-    if rqs and rqs[0].asked_question.is_running:
-        question: AskedQuestion = rqs[0].asked_question
-        asked_id = question.asked_id
-        already_shown = question.has_activity(QuestionActivityKind.Usershown, u)
-        already_answered = question.has_activity(QuestionActivityKind.Useranswered, u)
-        if already_answered:
-            if force:
-                return {'type': 'already_answered'}
-            else:
-                return None
-        if (not already_shown or force) or (asked_id != current_question_id):
-            q = get_asked_question(asked_id)
-            answer = q.answers.filter_by(user_id=current_user).first()
-            question.add_activity(QuestionActivityKind.Usershown, u)
-            question.add_activity(QuestionActivityKind.Userextended, u)
-            return {'type': 'answer', 'data': answer} if answer else {'type': 'question', 'data': q}
-    else:
-        question_to_show_points = get_shown_points(lecture)
-        if question_to_show_points:
-            asked_id = question_to_show_points.asked_id
-            already_shown = question_to_show_points.has_activity(QuestionActivityKind.Pointsshown, u)
-            already_closed = question_to_show_points.has_activity(QuestionActivityKind.Pointsclosed, u)
-            if already_closed:
+    with user_activity_lock(u):
+        if rqs and rqs[0].asked_question.is_running:
+            question: AskedQuestion = rqs[0].asked_question
+            asked_id = question.asked_id
+            already_shown = question.has_activity(QuestionActivityKind.Usershown, u)
+            already_answered = question.has_activity(QuestionActivityKind.Useranswered, u)
+            if already_answered:
                 if force:
-                    db.session.delete(already_closed)
+                    return {'type': 'already_answered'}
                 else:
                     return None
-            if not (already_shown or force) or (asked_id != current_points_id):
-                question = get_asked_question(asked_id)
-                question.add_activity(QuestionActivityKind.Pointsshown, u)
-                answer = question.answers.filter_by(user_id=current_user).first()
-                if answer:
-                    return {'type': 'result', 'data': answer}
-        return None
+            if (not already_shown or force) or (asked_id != current_question_id):
+                q = get_asked_question(asked_id)
+                answer = q.answers.filter_by(user_id=current_user).first()
+                question.add_activity(QuestionActivityKind.Usershown, u)
+                question.add_activity(QuestionActivityKind.Userextended, u)
+                return {'type': 'answer', 'data': answer} if answer else {'type': 'question', 'data': q}
+        else:
+            question_to_show_points = get_shown_points(lecture)
+            if question_to_show_points:
+                asked_id = question_to_show_points.asked_id
+                already_shown = question_to_show_points.has_activity(QuestionActivityKind.Pointsshown, u)
+                already_closed = question_to_show_points.has_activity(QuestionActivityKind.Pointsclosed, u)
+                if already_closed:
+                    if force:
+                        db.session.delete(already_closed)
+                    else:
+                        return None
+                if not (already_shown or force) or (asked_id != current_points_id):
+                    question = get_asked_question(asked_id)
+                    question.add_activity(QuestionActivityKind.Pointsshown, u)
+                    answer = question.answers.filter_by(user_id=current_user).first()
+                    if answer:
+                        return {'type': 'result', 'data': answer}
+            return None
 
 
 def get_shown_points(lecture) -> Optional[AskedQuestion]:
@@ -976,15 +983,15 @@ def answer_to_question():
     asked_question = get_asked_question(asked_id)
 
     lecture_answer: LectureAnswer = asked_question.answers.filter_by(user_id=u.id).first()
+    with user_activity_lock(u):
+        already_answered = asked_question.has_activity(QuestionActivityKind.Useranswered, u)
+        if not asked_question.is_running:
+            if not asked_question.running_question or get_current_time() > asked_question.running_question.end_time + timedelta(seconds=5):
+                return json_response({"questionLate": "The question has already finished. Your answer was not saved."})
+        if already_answered:
+            return json_response({"alreadyAnswered": "You have already answered to question. Your first answer is saved."})
 
-    already_answered = asked_question.has_activity(QuestionActivityKind.Useranswered, u)
-    if not asked_question.is_running:
-        if not asked_question.running_question or get_current_time() > asked_question.running_question.end_time + timedelta(seconds=5):
-            return json_response({"questionLate": "The question has already finished. Your answer was not saved."})
-    if already_answered:
-        return json_response({"alreadyAnswered": "You have already answered to question. Your first answer is saved."})
-
-    asked_question.add_activity(QuestionActivityKind.Useranswered, u)
+        asked_question.add_activity(QuestionActivityKind.Useranswered, u)
 
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer.answer):
         time_now = get_current_time()

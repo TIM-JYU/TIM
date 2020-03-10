@@ -1,6 +1,10 @@
 import json
+from contextlib import contextmanager
 from datetime import timedelta, datetime
 from typing import Optional
+
+from sqlalchemy import func
+from sqlalchemy.exc import InvalidRequestError
 
 from timApp.lecture.askedjson import AskedJson
 from timApp.lecture.lecture import Lecture
@@ -44,7 +48,7 @@ class AskedQuestion(db.Model):
         if self.has_activity(kind, user):
             return
         a = QuestionActivity(kind=kind, user=user, asked_question=self)
-        db.session.merge(a)
+        db.session.add(a)
 
     @property
     def time_limit(self):
@@ -84,3 +88,18 @@ class AskedQuestion(db.Model):
 
 def get_asked_question(asked_id: int) -> Optional[AskedQuestion]:
     return AskedQuestion.query.get(asked_id)
+
+
+@contextmanager
+def user_activity_lock(user: UserType):
+    db.session.query(func.pg_advisory_lock(user.id)).all()
+    try:
+        yield
+    finally:
+        try:
+            r = db.session.query(func.pg_advisory_unlock(user.id)).scalar()
+        except InvalidRequestError:
+            db.session.rollback()
+            r = db.session.query(func.pg_advisory_unlock(user.id)).scalar()
+        if not r:
+            raise Exception(f'Failed to release lock: {user.id}')
