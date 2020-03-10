@@ -370,6 +370,7 @@ TIMJS.setData = function(P, data) {
 
     P.chart.update();
   } catch(err) {
+     console.error(err);
      let cont = document.getElementById('container');
      let p = document.createElement("p");
      let textnode = document.createTextNode(err.message);
