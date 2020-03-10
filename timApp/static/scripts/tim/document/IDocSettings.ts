@@ -1,5 +1,7 @@
+export type MeetingDateEntry = [string, string, string];
+
 interface IMacros {
-    dates?: Array<[string, string, string]>;
+    dates?: Array<MeetingDateEntry>;
     knro?: number;
     stampformat?: string;
 }

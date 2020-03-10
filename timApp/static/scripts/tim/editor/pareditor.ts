@@ -6,7 +6,7 @@ import {setEditorScope} from "tim/editor/editorScope";
 import {markAsUsed, to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
 import {IExtraData, ITags} from "../document/editing/edittypes";
-import {IDocSettings} from "../document/IDocSettings";
+import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar, getElementByParId, getParAttributes} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {registerDialogComponentForModule, showMessageDialog} from "../ui/dialog";
@@ -1500,7 +1500,8 @@ ${backTicks}
             const knro = this.docSettings.macros.knro;
             const dates = this.docSettings.macros.dates;
             if (dates != null && knro != null) {
-                return dates[knro][0];
+                const entry = dates[knro] as MeetingDateEntry | undefined;
+                return entry?.[0];
             }
         }
     }
