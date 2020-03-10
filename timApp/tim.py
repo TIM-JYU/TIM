@@ -138,8 +138,16 @@ def inject_custom_css() -> dict:
 @app.context_processor
 def inject_angular_scripts() -> dict:
     """Provides the JavaScript files compiled by Angular."""
-    with open('static/scripts/build/index.html') as f:
-        return dict(angularscripts=f.read())
+    try:
+        with open('static/scripts/build/index.html') as f:
+            return dict(angularscripts=f.read())
+    except FileNotFoundError:
+        raise Exception(
+            'TypeScript files have not been built (compiled JavaScript files are missing).\n'
+            'If this is a local development TIM instance, start the "bdw" NPM script (in timApp/package.json) '
+            'from your IDE.\n'
+            'If this is not a local TIM instance, run "./js" from TIM root.'
+        )
 
 
 @app.context_processor
