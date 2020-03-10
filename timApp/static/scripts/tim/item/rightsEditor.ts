@@ -422,7 +422,9 @@ class RightsEditorController implements IController {
                     if (this.barcodeMode) {
                         this.handleSuccessBarcode(type, groups, r.result.data.not_exist);
                     } else {
-                        this.cancel();
+                        if (!this.errMsg) {
+                            this.cancel();
+                        }
                     }
                 } else {
                     this.reportError(r.result.data.error);
@@ -465,7 +467,7 @@ class RightsEditorController implements IController {
                     }
                 }
             }
-            if (!this.barcodeMode) {
+            if (!this.barcodeMode && !this.errMsg) {
                 await $timeout();
                 this.element.find(".rights-list a").first().focus();
             }
