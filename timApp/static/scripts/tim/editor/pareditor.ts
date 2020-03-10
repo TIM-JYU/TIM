@@ -1499,7 +1499,6 @@ ${backTicks}
             // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
             const knro = this.docSettings.macros.knro;
             const dates = this.docSettings.macros.dates;
-            // dates = ["ERROR", ...dates];  // Start from index 1; unnecessary now?
             if (dates != null && knro != null) {
                 return dates[knro][0];  // Dates is 2-dim array.
             }
