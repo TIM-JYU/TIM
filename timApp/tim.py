@@ -71,6 +71,7 @@ from timApp.util.flask.requesthelper import get_request_message, use_model, Rout
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.search import search_routes
 from timApp.util.logger import log_info, log_debug, log_warning
+from timApp.util.utils import get_current_time
 from timApp.velp.annotation import annotations
 from timApp.velp.velp import velps
 
@@ -203,6 +204,11 @@ def getproxy(m: GetProxyModel):
         raise RouteException('Invalid URL')
 
     return json_response({'data': r.text, 'status_code': r.status_code})
+
+
+@app.route("/time")
+def get_time():
+    return json_response({'time': get_current_time()})
 
 
 @app.route("/getTemplates")
