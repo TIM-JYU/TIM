@@ -1,5 +1,6 @@
 import json
 import time
+from dataclasses import dataclass, field
 from datetime import timedelta
 from random import randrange
 from typing import List, Optional
@@ -33,7 +34,7 @@ from timApp.plugin.qst.qst import get_question_data_from_document, create_points
     calculate_points_from_json_answer, calculate_points
 from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
-from timApp.util.flask.requesthelper import get_option, verify_json_params
+from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, empty_response
 from timApp.util.logger import log_debug
 from timApp.util.utils import get_current_time
@@ -49,7 +50,7 @@ def is_lecturer_of(l: Lecture):
 
 def verify_is_lecturer(l: Lecture):
     if not is_lecturer_of(l):
-        abort(400, 'Only lecturer can perform this action.')
+        raise RouteException('Only lecturer can perform this action.')
 
 
 @lecture_routes.route('/getLectureInfo')
@@ -108,10 +109,21 @@ def get_all_messages():
     return json_response(messages)
 
 
+@dataclass
+class GetUpdatesModel:
+    client_last_id: int = field(metadata={'data_key': 'c'})
+    current_points_id: Optional[int] = field(metadata={'data_key': 'p'}, default=None)
+    current_question_id: Optional[int] = field(metadata={'data_key': 'i'}, default=None)
+    doc_id: Optional[int] = field(metadata={'data_key': 'd'}, default=None)
+    use_questions: bool = field(metadata={'data_key': 'q'}, default=False)
+    use_wall: bool = field(metadata={'data_key': 'm'}, default=False)
+
+
 @lecture_routes.route('/getUpdates')
-def get_updates():
+@use_model(GetUpdatesModel)
+def get_updates(m: GetUpdatesModel):
     # taketime("before update")
-    ret = do_get_updates()
+    ret = do_get_updates(m)
     db.session.commit()
     # taketime("after update")
     return json_response(ret)
@@ -125,34 +137,25 @@ def lecture_before_request():
 EXTRA_FIELD_NAME = "extra"
 
 
-def do_get_updates():
+def do_get_updates(m: GetUpdatesModel):
     """Gets updates from some lecture.
 
     Checks updates in 1 second frequently and answers if there is updates.
 
     """
     log_debug("get updates")
-    if not request.args.get('c'):
-        abort(400, "Bad request")
-    client_last_id = int(request.args.get('c'))  # client_message_id'))
-    current_question_id = None
-    current_points_id = None
-    if 'i' in request.args:
-        current_question_id = int(request.args.get('i'))  # current_question_id'))
-    if 'p' in request.args:
-        current_points_id = int(request.args.get('p'))  # current_points_id'))
-
-    use_wall = get_option(request, 'm', False)  # 'get_messages'
+    client_last_id = m.client_last_id
+    current_question_id = m.current_question_id
+    current_points_id = m.current_points_id
+    use_wall = m.use_wall
     session['use_wall'] = use_wall
-    use_questions = get_option(request, 'q', False)  # 'get_questions'
+    use_questions = m.use_questions
     session['use_questions'] = use_questions
 
     step = 0
     lecture = get_current_lecture()
 
-    doc_id = request.args.get("d")  # "doc_id"
-    if doc_id:
-        doc_id = int(doc_id)
+    doc_id = m.doc_id
     if not lecture:
         return get_running_lectures(doc_id)
     lecture_id = lecture.lecture_id
@@ -257,7 +260,7 @@ def do_get_updates():
                     already_extended = q.has_activity(QuestionActivityKind.Userextended, u)
                     if not already_extended:
                         q.add_activity(QuestionActivityKind.Userextended, u)
-                        # Return this is question has been extended
+                        # Return this if question has been extended
                         resp[EXTRA_FIELD_NAME]['new_end_time'] = q.running_question.end_time
                         return resp
             else:
@@ -464,7 +467,7 @@ def start_future_lecture():
 @lecture_routes.route('/getAllLecturesFromDocument', methods=['GET'])
 def get_all_lectures():
     if not request.args.get('doc_id'):
-        abort(400)
+        raise RouteException('missing argument(s)')
 
     doc_id = int(request.args.get('doc_id'))
 
@@ -489,7 +492,7 @@ def get_all_lectures():
 def show_lecture_info(lecture_id):
     lecture = Lecture.find_by_id(lecture_id)
     if not lecture:
-        abort(400, 'Lecture not found')
+        raise RouteException('Lecture not found')
 
     doc = DocEntry.find_by_id(lecture.doc_id)
     lectures = get_current_user_object().lectures.all()
@@ -578,7 +581,7 @@ def create_lecture():
     current_user = get_current_user_id()
     lec = Lecture.find_by_code(lecture_code, doc_id)
     if lec and not lecture_id:
-        abort(400, "Can't create two or more lectures with the same name to the same document.")
+        raise RouteException("Can't create two or more lectures with the same name to the same document.")
 
     options = json.dumps(options)
     if lecture_id is None:
@@ -651,7 +654,7 @@ def delete_question_temp_data(question: AskedQuestion, lecture: Lecture):
 def extend_lecture():
     new_end_time = request.args.get("new_end_time")
     if not new_end_time:
-        abort(400)
+        raise RouteException('missing argument(s)')
     lecture = get_lecture_from_request()
     lecture.end_time = new_end_time
     db.session.commit()
@@ -697,9 +700,6 @@ def join_lecture():
     """
     lecture = get_lecture_from_request(check_access=False)
     password_quess = request.args.get("password_quess")
-    lecture_id = lecture.lecture_id
-
-    lecture_ended = not lecture.is_running
 
     # TODO Allow lecturer always join, even if the lecture is full
     lecture_full = lecture.is_full
@@ -709,7 +709,7 @@ def join_lecture():
         correct_password = False
 
     u = get_current_user_object()
-    if not lecture_ended and not lecture_full and correct_password:
+    if lecture.is_running and not lecture_full and correct_password:
         if not logged_in():
             u = log_in_as_anonymous(session)
             g.user = u
@@ -754,7 +754,7 @@ def extend_question():
         return abort(404)
     rq: Runningquestion = q.running_question
     if not q.is_running:
-        abort(400, 'Question is not running')
+        raise RouteException('Question is not running')
     rq.end_time += timedelta(seconds=extend)
     delete_activity(q, [QuestionActivityKind.Userextended])
     db.session.commit()
@@ -774,14 +774,14 @@ def get_current_lecture() -> Optional[Lecture]:
 def get_current_lecture_or_abort() -> Lecture:
     lec = get_current_lecture()
     if not lec:
-        return abort(400, 'Not joined to any lecture')
+        raise RouteException('Not joined to any lecture')
     return lec
 
 
 @lecture_routes.route("/askQuestion", methods=['POST'])
 def ask_question():
     if not (request.args.get('question_id') or request.args.get('asked_id') or request.args.get('par_id')):
-        abort(400, "Bad request")
+        raise RouteException("Bad request")
     question_id = None
     asked_id = None
     par_id = None
@@ -798,7 +798,7 @@ def ask_question():
     if question_id or par_id:
         doc_id = get_option(request, 'doc_id', None, cast=int)
         if not doc_id:
-            abort(400, 'doc_id missing')
+            raise RouteException('doc_id missing')
         if question_id:
             question = Question.query.get(question_id)  # Old version???
             question_json_str = question.questionjson
@@ -825,7 +825,7 @@ def ask_question():
         question.asked_time = get_current_time()
         lecture = question.lecture
     else:
-        return abort(400, 'Missing parameters')
+        raise RouteException('Missing parameters')
 
     delete_question_temp_data(question, lecture)
     rq = Runningquestion(lecture=lecture, asked_question=question, ask_time=question.asked_time, end_time=question.end_time)
@@ -837,7 +837,7 @@ def ask_question():
 @lecture_routes.route('/showAnswerPoints', methods=['POST'])
 def show_points():
     if 'asked_id' not in request.args:
-        abort(400)
+        raise RouteException('missing argument(s)')
     lecture = get_current_lecture_or_abort()
     verify_is_lecturer(lecture)
     asked_id = int(request.args.get('asked_id'))
@@ -871,7 +871,7 @@ def stop_showing_points(lecture: Lecture):
 def update_question_points():
     """Route to get add question to database."""
     if 'asked_id' not in request.args or 'points' not in request.args:
-        abort(400)
+        raise RouteException('missing argument(s)')
     asked_id = int(request.args.get('asked_id'))
     points = request.args.get('points')
     expl = request.args.get('expl')
@@ -895,7 +895,7 @@ def delete_activity(question: AskedQuestion, kinds):
 @lecture_routes.route("/getQuestionByParId", methods=['GET'])
 def get_question_by_par_id():
     if not request.args.get("par_id") or not request.args.get("doc_id"):
-        abort(400)
+        raise RouteException('missing argument(s)')
     doc_id = int(request.args.get('doc_id'))
     par_id = request.args.get('par_id')
     edit = request.args.get('edit', False)
@@ -908,7 +908,7 @@ def get_question_by_par_id():
 @lecture_routes.route("/getAskedQuestionById", methods=['GET'])
 def get_asked_question_by_id():
     if not request.args.get("asked_id"):
-        abort(400)
+        raise RouteException('missing argument(s)')
     asked_id = int(request.args.get('asked_id'))
     question = get_asked_question(asked_id)
     verify_is_lecturer(question.lecture)
@@ -919,7 +919,7 @@ def get_asked_question_by_id():
 def get_question_answer_by_id():
     answer_id = get_option(request, 'id', default=None, cast=int)
     if answer_id:
-        abort(400)
+        raise RouteException('missing argument(s)')
     ans = LectureAnswer.get_by_id(answer_id)
     if not ans:
         abort(404, 'Answer not found')
@@ -931,7 +931,7 @@ def get_question_answer_by_id():
 def stop_question():
     """Route to stop question from running."""
     if not request.args.get("asked_id"):
-        abort(400)
+        raise RouteException('missing argument(s)')
     asked_id = int(request.args.get('asked_id'))
     aq = get_asked_question(asked_id)
     if not aq:
@@ -939,7 +939,7 @@ def stop_question():
     lecture = get_current_lecture_or_abort()
     verify_is_lecturer(lecture)
     if not aq.is_running:
-        return abort(400, 'Question was not running')
+        raise RouteException('Question was not running')
     aq.running_question.end_time = get_current_time()
     delete_activity(aq, [QuestionActivityKind.Usershown, QuestionActivityKind.Useranswered])
     db.session.commit()
@@ -952,7 +952,7 @@ def get_lecture_answers():
     asked_id = get_option(request, 'asked_id', None, cast=int)
 
     if not asked_id:
-        return abort(400, "Bad request")
+        raise RouteException("Bad request")
 
     question = get_asked_question(asked_id)
     verify_is_lecturer(question.lecture)
@@ -968,14 +968,14 @@ def get_lecture_answers():
 @lecture_routes.route("/answerToQuestion", methods=['PUT'])
 def answer_to_question():
     if not request.args.get("asked_id") or not request.args.get('input'):
-        abort(400, "missing asked_id or input")
+        raise RouteException("missing asked_id or input")
 
     asked_id = int(request.args.get("asked_id"))
     req_input = json.loads(request.args.get("input"))
     answer = req_input.get('answers')
     if answer is None:
         # The data SHOULD have (empty) answers array even if the user does not touch the answer sheet.
-        return abort(400, 'Missing answers in input')
+        raise RouteException('Missing answers in input')
     whole_answer = answer
     lecture = get_current_lecture_or_abort()
     lecture_id = lecture.lecture_id
@@ -1016,7 +1016,7 @@ def answer_to_question():
 def close_points():
     asked_id = get_option(request, 'asked_id', None, cast=int)
     if not asked_id:
-        return abort(400, "Missing asked_id")
+        raise RouteException("Missing asked_id")
 
     lecture = get_current_lecture_or_abort()
 

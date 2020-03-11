@@ -247,6 +247,7 @@ class LectureTest(TimRouteTest):
         l: Lecture = Lecture.query.get(lecture_id)
         self.assertEqual(1, len(l.running_questions))
 
+        self.json_post('/extendLecture', {}, expect_status=400)
         self.post('/extendLecture',
                   query_string={**lecture_q,
                                 'new_end_time': (current_time + datetime.timedelta(hours=3))})
