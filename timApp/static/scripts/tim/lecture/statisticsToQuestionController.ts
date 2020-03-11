@@ -1,10 +1,7 @@
-import {IScope} from "angular";
 import moment from "moment";
 import * as chart from "tim/lecture/showChartDirective";
 import {markAsUsed, to} from "tim/util/utils";
-// import {ChangeDetectorRef, ElementRef, NgZone} from "@angular/core";
 import {DialogController} from "tim/ui/dialogController";
-// import {PluginMeta} from "tim/plugin/util";
 import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
 import {IAskedQuestion, IQuestionAnswer} from "./lecturetypes";
@@ -26,17 +23,6 @@ export class StatisticsToQuestionController extends DialogController<{params: IS
     private answers: IQuestionAnswer[] = [];
     private ended = false;
     private lastFetch = moment({year: 1900});
-
-    constructor(protected element: JQLite, protected scope: IScope) {
-        super(element, scope);
-    }
-
-/*
-    constructor(private el: JQLite, public cdr: ChangeDetectorRef, private zone: NgZone, protected scope: IScope) {
-        super(el, scope);
-        // this.pluginMeta = new PluginMeta($(el.nativeElement));
-    }
-*/
 
     public getTitle() {
         return `Question ${this.resolve.params.json.json.questionTitle} statistics`;
@@ -67,7 +53,6 @@ export class StatisticsToQuestionController extends DialogController<{params: IS
                 }
                 if (this.answers.length > 0) {
                     this.lastFetch = this.answers[this.answers.length - 1].answered_on.clone().add(1, "ms");
-                    // this.cdr.detectChanges();
                 }
                 if (getQuestionEndTime(this.resolve.params) < now) {
                     this.ended = true;
@@ -86,15 +71,13 @@ registerDialogComponent(StatisticsToQuestionController,
     {
         template: `
 <tim-dialog>
-    <dialog-header ng-bind-html="$ctrl.getTitle()">
-
-    </dialog-header>
     <dialog-body>
-        <show-chart-directive
-                divresize="true"
-                question="$ctrl.resolve.params"
-                answers="$ctrl.answers"></show-chart-directive>
-        <p ng-show="$ctrl.ended">Question has ended.</p>
+        <div class="flex" style="height: 100%; flex-direction: column">
+            <show-chart-directive
+                    question="$ctrl.resolve.params"
+                    answers="$ctrl.answers"></show-chart-directive>
+            <p>Question <span ng-if="$ctrl.ended">has ended</span><span ng-if="!$ctrl.ended">is running</span>.</p>
+        </div>
     </dialog-body>
     <dialog-footer>
         <button class="timButton" ng-click="$ctrl.close()">Close</button>

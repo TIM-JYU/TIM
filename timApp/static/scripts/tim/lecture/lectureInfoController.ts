@@ -206,11 +206,18 @@ timApp.component("timLectureInfo", {
                 /
                 <span ng-bind="question.asked_time | timtim"></span>
             </p>
-            <p ng-bind-html="question.json.json.questionText"></p>
-            <show-chart-directive
-                    question="question"
-                    answers="$ctrl.answerMap[question.asked_id]">
-            </show-chart-directive>
+            <div tim-draggable-fixed
+                 caption="{{question.json.json.questionText}}"
+                 resize="true"
+                 detachable="false"
+                 draggable="false"
+                 class="flex cl"
+                 style="width: 400px; height: 300px; position: relative">
+                <show-chart-directive
+                        question="question"
+                        answers="$ctrl.answerMap[question.asked_id]">
+                </show-chart-directive>
+            </div>
         </div>
 
         <p ng-show="$ctrl.answers.length === 0">

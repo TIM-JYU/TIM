@@ -7,7 +7,7 @@ class QuestionActivityKind(Enum):
     Pointsclosed = 1
     Pointsshown = 2
     Useranswered = 3
-    Userextended = 4
+    Userextended = 4  # Not used anymore.
     Usershown = 5
 
 

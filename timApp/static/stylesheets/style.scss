@@ -19,10 +19,23 @@ tim-dialog {
             overflow-y: visible;
         }
     }
+
+    dialog-body {
+        display: block;
+        height: 100%;
+    }
+}
+
+show-chart-directive {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 .modal-body {
     overflow-y: auto;
+    flex: 1;
 }
 
 .modal-content {
@@ -66,14 +79,6 @@ h4.questionTitle {
     padding-bottom: 0em !important;
     padding-top: 0em !important;
     font-size: 10pt;
-}
-
-
-p.chart-menu {
-    font-size: 11px;
-    color: $basic-color;
-    margin-left: 20em;
-    background: inherit;
 }
 
 /* reveal */

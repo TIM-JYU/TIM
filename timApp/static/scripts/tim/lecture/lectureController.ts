@@ -30,7 +30,6 @@ import {showLectureDialog} from "./createLectureCtrl";
 import {showLectureEnding} from "./lectureEnding";
 import {
     alreadyAnswered,
-    endTimeChanged,
     hasLectureEnded,
     hasUpdates,
     IAlreadyAnswered,
@@ -41,7 +40,7 @@ import {
     ILectureMessage,
     ILecturePerson,
     ILectureResponse,
-    ILectureSettings,
+    ILectureSettings, INoUpdatesResponse,
     IQuestionAsked,
     IQuestionHasAnswer,
     IQuestionResult,
@@ -560,25 +559,15 @@ export class LectureController {
 
             this.addPeopleToList(answer.students, this.studentTable);
             this.addPeopleToList(answer.lecturers, this.lecturerTable);
+            this.handleEndTimeUpdate(answer);
             if (answer.extra) {
-                if (endTimeChanged(answer.extra)) {
-                    // extend or end question according to new_end_time
-                    if (currentQuestion) {
-                        if (answer.extra.new_end_time != null) {
-                            currentQuestion.updateEndTime(answer.extra.new_end_time);
-                        } else {
-                            await currentQuestion.endQuestion();
-                        }
-                    } else {
-                        $log.error("currentQuestion was undefined when trying to update end time");
-                    }
-                } else if (pointsClosed(answer.extra)) {
+                if (pointsClosed(answer.extra)) {
                     if (currentQuestion) {
                         if (!this.isLecturer) {
                             currentQuestion.close();
                         }
                     } else {
-                        $log.error("currentQuestion was undefined when set end time to null");
+                        $log.error("got points_closed, but there was no currentQuestion");
                     }
                 } else if (!alreadyAnswered(answer.extra) && !questionHasAnswer(answer.extra)) {
                     if (
@@ -616,6 +605,7 @@ export class LectureController {
             }
             return [pollInterval, newLastId];
         } else if (isNoUpdatesResponse(answer)) {
+            this.handleEndTimeUpdate(answer);
             let pollInterval = answer.ms;
             if (isNaN(pollInterval) || pollInterval < 1000) {
                 pollInterval = 4000;
@@ -623,6 +613,16 @@ export class LectureController {
             return [pollInterval, lastID];
         }
         return [0, lastID];
+    }
+
+    private handleEndTimeUpdate(answer: INoUpdatesResponse) {
+        if (answer.question_end_time !== undefined) {
+            if (currentQuestion) {
+                currentQuestion.updateEndTime(answer.question_end_time);
+            } else {
+                $log.error("currentQuestion was undefined when trying to update end time");
+            }
+        }
     }
 
     getCurrentQuestionId() {
@@ -653,7 +653,11 @@ export class LectureController {
             currentQuestion.setData(answer.data);
             return;
         } else {
-            result = await showQuestionAnswerDialog({qa: answer.data, isLecturer: this.isLecturer});
+            const r = await to(showQuestionAnswerDialog({qa: answer.data, isLecturer: this.isLecturer}));
+            if (!r.ok) {
+                return;
+            }
+            result = r.result;
         }
         if (result.type === "pointsclosed") {
             await to($http({

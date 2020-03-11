@@ -4,6 +4,7 @@ from time import sleep
 from typing import Optional
 
 import dateutil.parser
+from marshmallow import missing
 
 from timApp.lecture.askedjson import AskedJson, make_error_question
 from timApp.lecture.askedquestion import AskedQuestion, get_asked_question
@@ -183,22 +184,28 @@ class LectureTest(TimRouteTest):
 
         self.login_test2()
         resp = self.get_updates(doc.id, msg_id, True, aid)
-        dateutil.parser.parse(resp['extra']['new_end_time'])  # ensure valid timestamp
+        original_end_time = dateutil.parser.parse(resp['question_end_time'])
 
         self.json_put('/answerToQuestion', query_string={'input': json.dumps({'answers': [['1']]}), 'asked_id': aid},
                       expect_content=self.ok_resp)
 
         resp = self.get_updates(doc.id, msg_id, True, aid)
-        self.assertIsNotNone(resp.get('extra'))
+        # self.assertIsNotNone(resp.get('extra'))
         resp = self.get_updates(doc.id, msg_id, True, aid)
-        self.assertIsNotNone(resp.get('extra'))
+        # self.assertIsNotNone(resp.get('extra'))
 
         self.login_test1()
-        self.post('/stopQuestion', query_string=dict(asked_id=aid))
+        self.post('/stopQuestion', query_string=dict(asked_id=aid), expect_content={'status': 'ok'})
+        self.post(
+            '/stopQuestion',
+            query_string=dict(asked_id=aid),
+            expect_content={'status': 'Question not running anymore'},
+        )
 
         self.login_test2()
         resp = self.get_updates(doc.id, msg_id, True, aid)
-        self.assertEqual(resp.get('extra'), {'new_end_time': None})
+        new_end_time = dateutil.parser.parse(resp['question_end_time'])
+        self.assertTrue(original_end_time > new_end_time)
 
         sp = Showpoints.query.get(aid)
         self.assertIsNone(sp)

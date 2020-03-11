@@ -188,10 +188,6 @@ export interface IUniqueParId {
 
 export type IUpdateResponse = IGotUpdatesResponse | INoUpdatesResponse | ILectureListResponse;
 
-export interface IQuestionEndTimeChange {
-    new_end_time: Moment | null;
-}
-
 export interface IPointsClosed {
     points_closed: true;
 }
@@ -216,7 +212,6 @@ export interface IQuestionResult {
 }
 
 export type IExtraResponse =
-    IQuestionEndTimeChange
     | IPointsClosed
     | IGetNewQuestionResponse;
 
@@ -227,13 +222,12 @@ export type IGetNewQuestionResponse =
     | IQuestionHasAnswer
     | null;
 
-export interface IGotUpdatesResponse {
+export interface IGotUpdatesResponse extends INoUpdatesResponse {
     msgs: ILectureMessage[];
     lectureEnding: 1 | 5 | 100;
     lectureId: number;
     lecturers: ILecturePerson[];
     students: ILecturePerson[];
-    ms: number;
     extra?: IExtraResponse;
 }
 
@@ -247,14 +241,11 @@ export function isEmptyResponse(r: ILectureResponse | ILectureListResponse | IEm
 
 export interface INoUpdatesResponse {
     ms: number;
+    question_end_time?: Moment | null;
 }
 
 export function hasUpdates(r: IUpdateResponse): r is IGotUpdatesResponse {
     return (r as IGotUpdatesResponse).msgs != null;
-}
-
-export function endTimeChanged(r: IExtraResponse): r is IQuestionEndTimeChange {
-    return (r as IQuestionEndTimeChange).new_end_time !== undefined; // can be null, so must check for undefined
 }
 
 export function pointsClosed(r: IExtraResponse): r is IPointsClosed {

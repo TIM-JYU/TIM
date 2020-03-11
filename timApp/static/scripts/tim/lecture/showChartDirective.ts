@@ -1,5 +1,5 @@
-import {IChangesObject, IController, IOnChangesObject, IScope} from "angular";
-import Chart, {ChartData} from "chart.js";
+import {IChangesObject, IController, IOnChangesObject} from "angular";
+import Chart, {ChartData, ChartType} from "chart.js";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {fixQuestionJson} from "tim/document/question/dynamicAnswerSheet";
@@ -166,15 +166,13 @@ type TimChartData = Overwrite<ChartData, {datasets: IDataSet[]}>;
 type ChartConfig = Overwrite<Chart.ChartConfiguration, {data: TimChartData}>;
 type TimChart = Overwrite<Chart, {data: TimChartData}>;
 
+const chartTypes: ChartType[] = ["bar", "horizontalBar"];
+
 class ChartController implements IController {
-    static $inject = ["$scope", "$element"];
-    private isText = true;
+    static $inject = ["$element"];
+    private isText = false;
     private div?: JQuery<HTMLDivElement>;
-    private charts: [string, string];
     private chartIndex: number;
-    private canvasw = 400;
-    private canvash = 300;
-    private divresize = false;
     private question?: IAskedQuestion;
     private answers?: IQuestionAnswer[];
     private chartConfig?: ChartConfig;
@@ -305,15 +303,11 @@ class ChartController implements IController {
             data: [],
         },
     ];
-    private scope: IScope;
     private element: JQLite;
     private textAnswers: string[] = [];
 
-    constructor(scope: IScope, element: JQLite) {
-        this.isText = false;
-        this.charts = ["bar", "horizontalBar"];
+    constructor(element: JQLite) {
         this.chartIndex = qstChartIndex;
-        this.scope = scope;
         this.element = element;
     }
 
@@ -342,12 +336,6 @@ class ChartController implements IController {
         this.div = this.element.find(".canvasContainer") as JQuery<HTMLDivElement>;
         assertNotNull(this.div);
         this.createChart();
-        this.scope.$on("resizeElement", (event, data) => {
-            if (this.isText) {
-                return;
-            }
-            this.resizeDiv();
-        });
     }
 
     intScale(value: number, axis: number): number | undefined {
@@ -372,15 +360,6 @@ class ChartController implements IController {
     async createChart() {
         if (!this.question || !this.div) {
             return;
-        }
-
-        if (this.divresize) {
-            const w = timGetLSIntValue("qstChartW", 400);
-            const h = timGetLSIntValue("qstChartH", 300);
-            this.canvasw = this.div.width() ?? w;
-            if (this.canvasw < 10) { this.canvasw = w; }
-            this.canvash = this.div.height() ?? h;
-            if (this.canvash < 10) { this.canvash = h; }
         }
 
         const j = this.question.json.json;
@@ -420,70 +399,44 @@ class ChartController implements IController {
             this.fillValues(emptyData, usedDataSets, 0);
         }
 
-        // $log.info(usedDataSets);
-        /*
-         var ctx  = this.ctx;
-         ctx.canvas.width = 300;
-         ctx.canvas.height = 300;
-         ctx.canvas.style.width = "300px";
-         ctx.canvas.style.height = "300px";
-         */
-        /*
-         this.answerChart = new Chart(this.ctx).Bar(bardata, {animation: false} ,{
-         multiTooltipTemplate: "<%= datasetLabel %> - <%= fvalue %>"
-         });
-         // experiment with: https://jsfiddle.net/4r26box7/85/
-         */
-
         this.chartConfig = {
             type: "horizontalBar",
-            // type: 'bar',
-            // type: 'pie',
             data: {
                 labels: labels,
                 datasets: usedDataSets,
             },
             options: {
-                responsive: false,
-                maintainAspectRatio: true,
+                responsive: true,
+                maintainAspectRatio: false,
                 animation: {
                     duration: 0,
                 },
-                // multiTooltipTemplate: "<%= datasetLabel %> - <%= fvalue %>",
                 legend: {
                     display: showLegend,
                     labels: {
-                        // fontColor: 'rgb(255, 99, 132)'
                     },
                 },
                 scales: {
                     xAxes: [{
-                        // stacked: true,
                         ticks: {
                             min: 0,
-                            // beginAtZero: true,
                             callback: (value) => {
                                 // According to http://www.chartjs.org/docs/latest/axes/labelling.html#creating-custom-tick-formats,
                                 // this callback is allowed to return undefined. Type definition is not accurate,
                                 // so we use "as number".
                                 return this.intScale(value as number, 0) as number;
                             },
-                            // stepSize: 1
                         },
                     }],
                     yAxes: [{
-                        // stacked: true
                         ticks: {
                             min: 0,
-                            // beginAtZero: true,
                             callback: (value) => {
                                 return this.intScale(value as number, 1) as number;
                             },
-                            // stepSize: 1
                         },
                     }],
                 },
-
             },
         };
 
@@ -495,7 +448,7 @@ class ChartController implements IController {
         if (qstChartIndex != this.chartIndex) {
             qstChartIndex = this.chartIndex;
         }
-        qstChartIndex = (qstChartIndex + 1) % this.charts.length;
+        qstChartIndex = (qstChartIndex + 1) % chartTypes.length;
         this.chartIndex = qstChartIndex;
         window.localStorage.setItem("qstChartIndex", qstChartIndex.toString());
         this.changeType();
@@ -510,8 +463,8 @@ class ChartController implements IController {
         }
         this.div.empty();
         if (!this.isText) {
-            const newType = this.charts[qstChartIndex];
-            const ctx: JQuery<HTMLCanvasElement> = $(`<canvas width="${this.canvasw}" height="${this.canvash}"><canvas>`);
+            const newType = chartTypes[qstChartIndex];
+            const ctx: JQuery<HTMLCanvasElement> = $(`<canvas><canvas>`);
             this.div.append(ctx);
             const config = clone(this.chartConfig);
             config.type = newType;
@@ -519,42 +472,6 @@ class ChartController implements IController {
             this.answerChart = new chart(ctx, config) as TimChart;
         }
         this.update();
-    }
-
-    resize(w: number, h: number) {
-        this.canvasw = w;
-        if (this.canvasw < 100) {
-            this.canvasw = 100;
-        }
-        this.canvash = h;
-        if (this.canvash < 100) {
-            this.canvash = 100;
-        }
-        this.changeType();
-    }
-
-    zoom(w: number, h: number) {
-        const factor = 50;
-        this.canvasw += w * factor;
-        if (this.canvasw < 100) {
-            this.canvasw = 100;
-        }
-        this.canvash += h * factor;
-        if (this.canvash < 100) {
-            this.canvash = 100;
-        }
-        window.localStorage.setItem("qstChartW", this.canvasw.toString());
-        window.localStorage.setItem("qstChartH", this.canvash.toString());
-        this.changeType();
-    }
-
-    resizeDiv() {
-        if (!this.div) {
-            return;
-        }
-        const w = this.div.width() ?? 400;
-        const h = this.div.height() ?? 300;
-        if (h >= 100 && w >= 100) { this.resize(w, h); }
     }
 
     update() {
@@ -620,24 +537,19 @@ class ChartController implements IController {
 timApp.component("showChartDirective", {
     bindings: {
         answers: "<",
-        divresize: "<",
         question: "<",
     },
     controller: ChartController,
     template: `
-<div ng-show="!$ctrl.isText" style="overflow: hidden" class="canvasContainer">
+<div ng-show="!$ctrl.isText" class="canvasContainer" style="flex: 1; min-height: 0">
 
 </div>
 <div ng-show="$ctrl.isText">
     <p ng-repeat="t in $ctrl.textAnswers" ng-bind="t"></p>
 </div>
 <p ng-show="$ctrl.answers">Total points: {{ $ctrl.getTotalPoints() }}</p>
-<p ng-show="!$ctrl.isText" class="chart-menu">
-    <span ng-click="$ctrl.toggle()">Bar</span>
-    <span ng-click="$ctrl.zoom(-1,0)">w-</span>
-    <span ng-click="$ctrl.zoom(1,0)">w+</span>
-    <span ng-click="$ctrl.zoom(0,-1)">h-</span>
-    <span ng-click="$ctrl.zoom(0,1)">h+</span>
-</p>
+<div ng-show="!$ctrl.isText">
+    <button class="timButton btn-xs" ng-click="$ctrl.toggle()">Change chart orientation</button>
+</div>
     `,
 });

@@ -114,13 +114,15 @@ class QstController implements IController {
             await showMessageDialog("Cannot show question because not in lecture mode or in a document.");
             return;
         }
-        const result = await showQuestionAskDialog(
+        const result = await to(showQuestionAskDialog(
             {
                 docId: this.lctrl.viewctrl.docId,
                 parId: parId,
                 showAsk: this.lctrl.lectureSettings.inLecture,
-            });
-        this.lctrl.lastQuestion = result;
+            }));
+        if (result.ok) {
+            this.lctrl.lastQuestion = result.result;
+        }
     }
 
     private initCode() {

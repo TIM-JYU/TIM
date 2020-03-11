@@ -44,17 +44,17 @@ export function getAskedQuestionFromQA(qa: QuestionOrAnswer): IAskedQuestion {
 }
 
 export type IAnswerQuestionResult =
-    {type: "pointsclosed", askedId: number}
-    | {type: "closed"}
-    | {type: "answered"}
-    | {type: "reask"}
-    | {type: "reask_as_new"};
+    { type: "pointsclosed", askedId: number }
+    | { type: "closed" }
+    | { type: "answered" }
+    | { type: "reask" }
+    | { type: "reask_as_new" };
 
 export let currentQuestion: AnswerToQuestionController | undefined;
 
 export const QUESTION_STORAGE = "lectureQuestion";
 
-export class AnswerToQuestionController extends DialogController<{params: IAnswerQuestionParams}, IAnswerQuestionResult> {
+export class AnswerToQuestionController extends DialogController<{ params: IAnswerQuestionParams }, IAnswerQuestionResult> {
     static component = "timAnswerQuestion";
     static $inject = ["$element", "$scope"] as const;
     private barFilled?: number;
@@ -103,7 +103,7 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     }
 
     private async answerToQuestion() {
-        const response = await to($http<{questionLate?: string}>({
+        const response = await to($http<{ questionLate?: string }>({
             url: "/answerToQuestion",
             method: "PUT",
             params: {
@@ -120,14 +120,17 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
             await showMessageDialog(answer.questionLate);
         }
         this.answered = true;
-        this.preview = makePreview(this.preview.markup, {answerTable: this.answer});
         if (!this.isLecturer) {
             super.close({type: "answered"});
         }
     }
 
+    private disableAnswerSheet() {
+        this.preview = makePreview(this.preview.markup, {answerTable: this.answer});
+    }
+
     public close() {
-        if (this.isLecturer) {
+        if (this.isLecturer && !this.questionEnded) {
             this.stopQuestion();
         }
         if (this.result) {
@@ -135,6 +138,10 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         } else {
             super.close({type: "closed"});
         }
+    }
+
+    public dismiss() {
+        this.close();
     }
 
     private async stopQuestion() {
@@ -216,8 +223,13 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
     /**
      * Changes question end time.
      */
-    public updateEndTime(time: Moment) {
-        this.endTime = time.clone();
+    public updateEndTime(time: Moment | null) {
+        if (time != null) {
+            this.endTime = time.clone();
+        } else {
+            this.endTime = undefined;
+        }
+
         this.updateMaxProgress();
     }
 
@@ -255,9 +267,12 @@ export class AnswerToQuestionController extends DialogController<{params: IAnswe
         this.barFilled = this.progressMax;
         this.progressText = "Time's up";
         this.questionEnded = true;
-        if (!this.answered && !this.isLecturer) {
-            await this.answerToQuestion();
+        if (!this.isLecturer) {
+            if (!this.answered) {
+                await this.answerToQuestion();
+            }
         }
+        this.disableAnswerSheet();
     }
 
     public setData(data: QuestionOrAnswer) {

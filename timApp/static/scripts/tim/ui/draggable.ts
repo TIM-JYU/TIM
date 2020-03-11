@@ -25,7 +25,10 @@ function getPixels(s: string) {
 
 const draggableTemplate = `
 <div class="draghandle drag"
-     ng-class="{'attached': !d.canDrag()}" ng-mousedown="d.dragClick(); $event.preventDefault()">
+     ng-class="{'attached': !d.canDrag()}"
+     ng-mousedown="d.dragClick(); $event.preventDefault()"
+     ng-show="d.dragEnabled"
+     >
     <p class="drag" ng-show="d.getCaption()" ng-bind="d.getCaption()"></p>
     <i ng-show="d.detachable"
        ng-click="d.toggleDetach()"
@@ -55,6 +58,7 @@ timApp.directive("timDraggableFixed", [() => {
             detachable: "<?",
             forceMaximized: "<?",
             resize: "<?",
+            draggable: "<?",
             save: "@?",
         },
         controller: DraggableController,
@@ -114,7 +118,7 @@ export class DraggableController implements IController {
     private resizeStates: IResizeStates = {up: false, down: false, right: false, left: false};
     private lastPos: Pos = {X: 0, Y: 0};
     private lastPageXYPos = {X: 0, Y: 0};
-    private handle?: JQuery;
+    private handle?: HTMLElement;
     private closeFn?: () => void;
     private caption?: Binding<string, "<">;
     private click?: Binding<boolean, "<">;
@@ -130,6 +134,8 @@ export class DraggableController implements IController {
     private layoutReady = new TimDefer();
     private resizeCallback?: ResizeCallback;
     private captionCb?: () => string;
+    private dragEnabled = true;
+    private draggable?: boolean;
 
     constructor(private scope: IScope, private element: JQLite) {
     }
@@ -139,6 +145,7 @@ export class DraggableController implements IController {
     }
 
     $onInit() {
+        this.dragEnabled = this.draggable ?? true;
         // hide element temporarily to avoid flashing the dialog in wrong position briefly
         this.setVisibility("hidden");
         if (this.save) {
@@ -231,7 +238,7 @@ export class DraggableController implements IController {
     async $postLink() {
         this.element.prepend($compile(draggableTemplate)(this.scope));
         this.createResizeHandlers();
-        this.handle = this.element.children(".draghandle");
+        this.handle = this.element.children(".draghandle")[0];
 
         const handleResizeBegin = (e: MouseEvent | TouchEvent) => {
             if (!this.canDrag()) {
@@ -249,9 +256,11 @@ export class DraggableController implements IController {
             };
             this.refreshEventListeners(e, this.move);
         };
-        this.handle[0].addEventListener("mousedown", handleResizeBegin);
-        this.handle[0].addEventListener("pointerdown", handleResizeBegin);
-        this.handle[0].addEventListener("touchstart", handleResizeBegin);
+        if (this.handle) {
+            this.handle.addEventListener("mousedown", handleResizeBegin);
+            this.handle.addEventListener("pointerdown", handleResizeBegin);
+            this.handle.addEventListener("touchstart", handleResizeBegin);
+        }
 
         // DialogController will call setInitialLayout in case draggable is inside modal
         if (!this.isModal()) {
@@ -479,7 +488,7 @@ export class DraggableController implements IController {
     }
 
     private canResize() {
-        return !this.areaMinimized && this.resize && this.canDrag();
+        return !this.areaMinimized && this.resize;
     }
 
     private getPageXY(e: MouseEvent | TouchEvent) {
@@ -502,7 +511,6 @@ export class DraggableController implements IController {
         this.removeMouseMove(this.moveResize);
         this.ensureVisibleInViewport();
         if (this.posKey) {
-            // e.preventDefault();
             const css = this.element.css(["top", "bottom", "left",
                 "right"]);
             setStorage(this.posKey, css);
@@ -545,7 +553,6 @@ export class DraggableController implements IController {
     }
 
     move = (e: MouseEvent | TouchEvent) => {
-        // e.preventDefault();
         const pos = this.getPageXY(e);
         this.doMove(pos);
         e.preventDefault();
@@ -576,12 +583,19 @@ export class DraggableController implements IController {
     }
 
     moveResize = async (e: MouseEvent | TouchEvent) => {
-        // e.preventDefault();
         const pos = this.getPageXY(e);
         const delta = {
             X: pos.X - this.lastPos.X, Y: pos.Y -
                 this.lastPos.Y,
         };
+
+        // If the top and left styles have not been set, resizing behaves illogically.
+        if (this.element[0].style.top == "") {
+            this.element.css("top", "0");
+        }
+        if (this.element[0].style.left == "") {
+            this.element.css("left", "0");
+        }
 
         if (this.resizeStates.up) {
             this.element.css("height",

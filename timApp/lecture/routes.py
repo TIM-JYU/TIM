@@ -218,6 +218,9 @@ def do_get_updates(m: GetUpdatesModel):
     base_resp = None
     log_debug(user_name + " before loop")
 
+    basic_info = {
+        "ms": poll_interval_ms,
+    }
     while step <= 10:
         lecture = get_current_lecture()
         if not lecture:
@@ -230,73 +233,43 @@ def do_get_updates(m: GetUpdatesModel):
             list_of_new_messages = lecture.messages.filter(Message.msg_id > client_last_id).order_by(
                 Message.msg_id.asc()).all()
 
+        # Check if current question is still running and user hasn't already answered on it on another tab.
+        if current_question_id:
+            q = get_asked_question(current_question_id)
+            if q and q.running_question:
+                # Always report question end time in case it has been stopped or extended.
+                basic_info['question_end_time'] = q.running_question.end_time
+
         base_resp = {
+            **basic_info,
             "msgs": list_of_new_messages,
             "lectureEnding": lecture_ending,
             "lectureId": lecture_id,
             "lecturers": lecturers,
-            "ms": poll_interval_ms,
             "students": students,
         }
 
-        # Check if current question is still running and user hasn't already answered on it on another tab
-        # Return also questions new end time if it is extended
-
-        question_end_resp = None
-        if current_question_id:
-            resp = {
-                **base_resp,
-                EXTRA_FIELD_NAME: {
-                    "new_end_time": None,
-                }
-            }
-
-            q = get_asked_question(current_question_id)
-            already_answered = None
-            if q and q.is_running:
-                already_answered = q.has_activity(QuestionActivityKind.Useranswered, u)
-            if q and q.is_running and not already_answered:
-                with user_activity_lock(u):
-                    already_extended = q.has_activity(QuestionActivityKind.Userextended, u)
-                    if not already_extended:
-                        q.add_activity(QuestionActivityKind.Userextended, u)
-                        # Return this if question has been extended
-                        resp[EXTRA_FIELD_NAME]['new_end_time'] = q.running_question.end_time
-                        return resp
-            else:
-                # Don't return this "question has ended" response here because there can be a new question running,
-                # so we want to return directly that.
-                question_end_resp = resp
-
         if current_points_id:
-            resp = {
-                **base_resp,
-                EXTRA_FIELD_NAME: {
-                    "points_closed": True,
-                }
-            }
             q = get_asked_question(current_points_id)
-            already_closed = False
-            if q:
-                already_closed = q.has_activity(QuestionActivityKind.Pointsclosed, u)
-            if already_closed:
-                return resp
+            if q and q.has_activity(QuestionActivityKind.Pointsclosed, u):
+                return {
+                    **base_resp,
+                    EXTRA_FIELD_NAME: {
+                        "points_closed": True,
+                    }
+                }
 
         # Gets new questions if the questions are in use.
         if use_questions:
-            log_debug(user_name + " " + str(step))
             new_question = get_new_question(lecture, current_question_id, current_points_id)
             if new_question:
-                log_debug(user_name + " send new question")
                 return {**base_resp, EXTRA_FIELD_NAME: new_question}
-            elif question_end_resp:
-                return question_end_resp
 
         if list_of_new_messages:
             return base_resp
 
         if not long_poll or current_app.config['TESTING']:
-            # Don't loop when testing
+            # Don't loop when testing.
             break
 
         # Database updates may have happened during sleep, so we have to expire all objects so that they will be
@@ -311,7 +284,8 @@ def do_get_updates(m: GetUpdatesModel):
     if lecture_ending != 100 or lecturers or students:
         return base_resp
 
-    return {"ms": poll_interval_ms}  # no new updates
+    # No new updates, except possibly new question end time.
+    return basic_info
 
 
 @lecture_routes.route('/getQuestionManually')
@@ -350,7 +324,6 @@ def get_new_question(lecture: Lecture, current_question_id=None, current_points_
                 q = get_asked_question(asked_id)
                 answer = q.answers.filter_by(user_id=current_user).first()
                 question.add_activity(QuestionActivityKind.Usershown, u)
-                question.add_activity(QuestionActivityKind.Userextended, u)
                 return {'type': 'answer', 'data': answer} if answer else {'type': 'question', 'data': q}
         else:
             question_to_show_points = get_shown_points(lecture)
@@ -634,7 +607,6 @@ def clean_dictionaries_by_lecture(lecture: Lecture):
     QuestionActivity.query.filter((QuestionActivity.asked_id.in_(
         AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).with_entities(AskedQuestion.asked_id))) &
                                   QuestionActivity.kind.in_([QuestionActivityKind.Usershown,
-                                                             QuestionActivityKind.Userextended,
                                                              QuestionActivityKind.Pointsshown,
                                                              QuestionActivityKind.Pointsclosed,
                                                              QuestionActivityKind.Useranswered])).delete(synchronize_session='fetch')
@@ -642,7 +614,6 @@ def clean_dictionaries_by_lecture(lecture: Lecture):
 
 def delete_question_temp_data(question: AskedQuestion, lecture: Lecture):
     delete_activity(question, [QuestionActivityKind.Usershown,
-                               QuestionActivityKind.Userextended,
                                QuestionActivityKind.Useranswered,
                                QuestionActivityKind.Pointsclosed,
                                QuestionActivityKind.Pointsshown])
@@ -756,7 +727,6 @@ def extend_question():
     if not q.is_running:
         raise RouteException('Question is not running')
     rq.end_time += timedelta(seconds=extend)
-    delete_activity(q, [QuestionActivityKind.Userextended])
     db.session.commit()
     return ok_response()
 
@@ -939,7 +909,7 @@ def stop_question():
     lecture = get_current_lecture_or_abort()
     verify_is_lecturer(lecture)
     if not aq.is_running:
-        raise RouteException('Question was not running')
+        return json_response({'status': 'Question not running anymore'})
     aq.running_question.end_time = get_current_time()
     delete_activity(aq, [QuestionActivityKind.Usershown, QuestionActivityKind.Useranswered])
     db.session.commit()
