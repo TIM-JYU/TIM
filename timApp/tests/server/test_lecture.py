@@ -11,7 +11,7 @@ from timApp.lecture.askedquestion import AskedQuestion, get_asked_question
 from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer
 from timApp.lecture.showpoints import Showpoints
-from timApp.tests.db.timdbtest import TEST_USER_1_ID
+from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_3_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
@@ -121,7 +121,7 @@ class LectureTest(TimRouteTest):
                            par_id='test',
                            asked_time=get_current_time(),
                            points='1',
-                           expl='testing',
+                           expl='{}',
                            asked_json=aj)
         la = LectureAnswer(user_id=self.current_user.id,
                            lecture_id=lecture_id,
@@ -281,6 +281,18 @@ testuser2;sum;0.0
 testuser1;count;2
 testuser2;count;1
         """.strip() + '\n', totals)
+
+        r = self.get(f'/getLectureInfo',
+                     query_string=lecture_q)
+        self.assertEqual(2, len(r['answerers']))
+        self.assertEqual(3, len(r['answers']))
+        self.login_test3()
+        r = self.get(f'/getLectureInfo', query_string=lecture_q)
+        self.assertEqual(1, len(r['answerers']))
+        self.assertEqual(self.current_user.name, r['answerers'][0]['name'])
+        self.assertEqual(0, len(r['answers']))
+        self.assertEqual(3, len(r['questions']))
+        self.login_test1()
 
         self.post('/deleteLecture', query_string=lecture_q)
         self.post('/deleteLecture', query_string=lecture_q, expect_status=404)

@@ -49,7 +49,8 @@ def is_lecturer_of(l: Lecture):
 
 
 def verify_is_lecturer(l: Lecture):
-    if not is_lecturer_of(l):
+    u = get_current_user_object()
+    if not is_lecturer_of(l) and not u.is_admin:
         raise RouteException('Only lecturer can perform this action.')
 
 
@@ -63,14 +64,14 @@ def get_lecture_info():
     lecture = get_lecture_from_request(check_access=False)
     messages = lecture.messages.order_by(Message.timestamp.asc()).all()
     is_lecturer = is_lecturer_of(lecture)
-    current_user = get_current_user_id()
+    u = get_current_user_object()
     lecture_questions: List[AskedQuestion] = lecture.asked_questions.all()
 
-    if is_lecturer:
+    if is_lecturer or u.is_admin:
         answers = [a for q in lecture_questions for a in q.answers.all()]
         answerers = list({a.user for a in answers})
     else:
-        answers = [a for q in lecture_questions for a in q.answers.filter_by(user_id=current_user)]
+        answers = [a for q in lecture_questions for a in q.answers.filter_by(user_id=u.id)]
         answerers = [get_current_user_object()]
 
     return json_response(
@@ -87,7 +88,8 @@ def get_lecture_info():
 def get_lecture_answer_totals(lecture_id):
     lec = Lecture.find_by_id(lecture_id)
     is_lecturer = is_lecturer_of(lec)
-    results = get_totals(lec, None if is_lecturer else get_current_user_object())
+    u = get_current_user_object()
+    results = get_totals(lec, None if is_lecturer or u.is_admin else u)
     sum_field_name = get_option(request, 'sum_field_name', 'sum')
     count_field_name = get_option(request, 'count_field_name', 'count')
 
@@ -479,7 +481,7 @@ def show_lecture_info(lecture_id):
 @lecture_routes.route('/showLectureInfoGivenName')
 def show_lecture_info_given_name():
     lecture = get_lecture_from_request(check_access=False)
-    return json_response(lecture.to_json(show_password=is_lecturer_of(lecture)))
+    return json_response(lecture.to_json(show_password=is_lecturer_of(lecture) or get_current_user_object().is_admin))
 
 
 @lecture_routes.route('/getLectureByCode')
@@ -657,8 +659,7 @@ def get_lecture_from_request(check_access=True) -> Lecture:
     if not lecture:
         abort(404, 'Lecture not found')
     if check_access:
-        d = get_doc_or_abort(lecture.doc_id)
-        verify_ownership(d)
+        verify_is_lecturer(lecture)
     return lecture
 
 
