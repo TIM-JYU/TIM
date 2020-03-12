@@ -4,7 +4,7 @@ import * as showChart from "tim/lecture/showChartDirective";
 import {markAsUsed, to} from "tim/util/utils";
 import {showQuestionEditDialog} from "../document/question/questionController";
 import {IUser} from "../user/IUser";
-import {Users} from "../user/userService";
+import {isAdmin, Users} from "../user/userService";
 import {lectureinfoglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {showLectureDialog} from "./createLectureCtrl";
@@ -80,6 +80,10 @@ export class LectureInfoController implements IController {
         this.updateAnswerMap();
     }
 
+    canSeeAllData() {
+        return this.isLecturer || isAdmin();
+    }
+
     private updateAnswerMap() {
         this.answerMap = {};
         this.questions.forEach((q) => this.answerMap[q.asked_id] = this.getAnswers(q));
@@ -153,7 +157,7 @@ timApp.component("timLectureInfo", {
 
         <p ng-bind="$ctrl.lecture.end_time | timdate"></p>
 
-        <div ng-show="$ctrl.isLecturer">
+        <div ng-show="$ctrl.canSeeAllData()">
             <strong>Questions asked:</strong>
             <ul>
                 <li ng-repeat="question in $ctrl.questions">
@@ -180,7 +184,7 @@ timApp.component("timLectureInfo", {
     <div class="panel-heading">Find answers
     </div>
     <div class="panel-body">
-        <label ng-show="$ctrl.isLecturer">User name
+        <label ng-show="$ctrl.canSeeAllData()">User name
             <select
                     ng-disabled="$ctrl.showAll"
                     class="form-control"
@@ -189,7 +193,7 @@ timApp.component("timLectureInfo", {
                     ng-change="$ctrl.updateAnswerMap()">
             </select>
         </label>
-        <div class="checkbox" ng-show="$ctrl.isLecturer">
+        <div class="checkbox" ng-show="$ctrl.canSeeAllData()">
             <label>
                 <input
                         type="checkbox"
@@ -226,7 +230,7 @@ timApp.component("timLectureInfo", {
     </div>
 </div>
 
-<div ng-show="$ctrl.isLecturer" class="panel panel-default">
+<div ng-show="$ctrl.canSeeAllData()" class="panel panel-default">
     <div class="panel-heading">
         Actions
     </div>

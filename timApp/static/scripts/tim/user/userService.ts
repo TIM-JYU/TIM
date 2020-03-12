@@ -129,10 +129,14 @@ export class UserService {
 
 export const Users = new UserService(genericglobals().current_user, genericglobals().other_users);
 
+export function isAdmin() {
+    return Users.belongsToGroup(ADMIN_GROUPNAME);
+}
+
 /**
  * Checks whether user belongs to a certain group or admins group.
  * @returns {boolean}
  */
 export function userBelongsToGroupOrIsAdmin(group: string) {
-    return Users.belongsToGroup(ADMIN_GROUPNAME) || Users.belongsToGroup(group);
+    return isAdmin() || Users.belongsToGroup(group);
 }
