@@ -69,6 +69,7 @@ def get_lecture_info():
     lecture_questions: List[AskedQuestion] = (
         lecture.asked_questions
             .options(joinedload(AskedQuestion.answers_all).raiseload(LectureAnswer.asked_question))
+            .options(joinedload(AskedQuestion.answers_all).joinedload(LectureAnswer.user).raiseload(User.groups))
             .all()
     )
 
