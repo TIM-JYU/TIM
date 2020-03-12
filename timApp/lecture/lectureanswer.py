@@ -28,19 +28,26 @@ class LectureAnswer(db.Model):
     def get_by_id(ans_id: int) -> Optional['LectureAnswer']:
         return LectureAnswer.query.get(ans_id)
 
-    def to_json(self):
+    def to_json(self, include_question=True, include_user=True):
         try:
             ans = json.loads(self.answer)
         except JSONDecodeError:
             ans = []
-        return {
+        result = {
             'answer': ans,
             'answer_id': self.answer_id,
             'answered_on': self.answered_on,
-            'asked_question': self.asked_question,
             'points': self.points,
-            'user': self.user,
         }
+        if include_question:
+            result['asked_question'] = self.asked_question
+        else:
+            result['asked_id'] = self.question_id
+        if include_user:
+            result['user'] = self.user
+        else:
+            result['user_id'] = self.user_id
+        return result
 
 
 def get_totals(lecture: Lecture, user: Optional[User]=None) -> List[Tuple[User, float, int]]:

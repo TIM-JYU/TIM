@@ -12,6 +12,7 @@ from flask import abort
 from flask import current_app
 from flask import request
 from flask import session
+from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import verify_ownership, get_doc_or_abort
 from timApp.auth.login import log_in_as_anonymous
@@ -65,19 +66,23 @@ def get_lecture_info():
     messages = lecture.messages.order_by(Message.timestamp.asc()).all()
     is_lecturer = is_lecturer_of(lecture)
     u = get_current_user_object()
-    lecture_questions: List[AskedQuestion] = lecture.asked_questions.all()
+    lecture_questions: List[AskedQuestion] = (
+        lecture.asked_questions
+            .options(joinedload(AskedQuestion.answers_all).raiseload(LectureAnswer.asked_question))
+            .all()
+    )
 
     if is_lecturer or u.is_admin:
-        answers = [a for q in lecture_questions for a in q.answers.all()]
+        answers: List[LectureAnswer] = [a for q in lecture_questions for a in q.answers_all]
         answerers = list({a.user for a in answers})
     else:
-        answers = [a for q in lecture_questions for a in q.answers.filter_by(user_id=u.id)]
+        answers = [a for q in lecture_questions for a in q.answers_all if a.user_id == u.id]
         answerers = [get_current_user_object()]
 
     return json_response(
         {
             "answerers": answerers,
-            "answers": answers,
+            "answers": [a.to_json(include_question=False, include_user=False) for a in answers],
             "isLecturer": is_lecturer,
             "messages": messages,
             "questions": lecture_questions,

@@ -28,6 +28,7 @@ class AskedQuestion(db.Model):
     asked_json: AskedJson = db.relationship('AskedJson', back_populates='asked_questions', lazy='joined')
     lecture: Lecture = db.relationship('Lecture', back_populates='asked_questions', lazy='joined')
     answers = db.relationship('LectureAnswer', back_populates='asked_question', lazy='dynamic')
+    answers_all = db.relationship('LectureAnswer', back_populates='asked_question')
     running_question = db.relationship('Runningquestion', back_populates='asked_question', lazy='select', uselist=False)
     questionactivity = db.relationship('QuestionActivity', back_populates='asked_question', lazy='dynamic')
     showpoints = db.relationship('Showpoints', back_populates='asked_question', lazy='select')

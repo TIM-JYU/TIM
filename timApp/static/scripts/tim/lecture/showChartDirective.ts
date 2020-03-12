@@ -5,7 +5,7 @@ import {timApp} from "tim/app";
 import {fixQuestionJson} from "tim/document/question/dynamicAnswerSheet";
 import {Overwrite} from "type-zoo";
 import {assertNotNull, clone} from "../util/utils";
-import {IAskedQuestion, IQuestionAnswer} from "./lecturetypes";
+import {IAskedQuestion, IQuestionAnswer, IQuestionAnswerPlain} from "./lecturetypes";
 
 /**
  * Created by hajoviin on 13.5.2015.
@@ -137,7 +137,7 @@ function timGetLSIntValue(key: string, def: number): number {
 
 let qstChartIndex = timGetLSIntValue("qstChartIndex", 0);
 
-type AnswerList = IQuestionAnswer[];
+type AnswerList = (IQuestionAnswer | IQuestionAnswerPlain)[];
 
 function* enumAnswers(answers: AnswerList): Iterable<[number, string[]]> {
     for (const answ of answers) {
@@ -174,7 +174,7 @@ class ChartController implements IController {
     private div?: JQuery<HTMLDivElement>;
     private chartIndex: number;
     private question?: IAskedQuestion;
-    private answers?: IQuestionAnswer[];
+    private answers?: AnswerList;
     private chartConfig?: ChartConfig;
     private answerChart?: TimChart;
     private lastAnswerCount = 0;

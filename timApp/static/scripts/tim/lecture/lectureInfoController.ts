@@ -8,7 +8,7 @@ import {isAdmin, Users} from "../user/userService";
 import {lectureinfoglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {showLectureDialog} from "./createLectureCtrl";
-import {IAskedQuestion, ILecture, ILectureMessage, IQuestionAnswer} from "./lecturetypes";
+import {IAskedQuestion, ILecture, ILectureMessage, IQuestionAnswer, IQuestionAnswerPlain} from "./lecturetypes";
 
 markAsUsed(showChart);
 
@@ -32,11 +32,11 @@ export class LectureInfoController implements IController {
     private inLecture: boolean;
     private isLecturer: boolean;
     private answerers: IUser[];
-    private answers: IQuestionAnswer[] = [];
+    private answers: IQuestionAnswerPlain[] = [];
     private questions: IAskedQuestion[] = [];
     private selectedUser: IUser | undefined;
     private showAll = false;
-    private answerMap: {[index: number]: IQuestionAnswer[]} = {};
+    private answerMap: {[index: number]: IQuestionAnswerPlain[]} = {};
     private messages: ILectureMessage[] = [];
 
     constructor(element: JQLite) {
@@ -58,7 +58,7 @@ export class LectureInfoController implements IController {
     private async getLectureInfo() {
         const response = await to($http<{
             messages: ILectureMessage[],
-            answers: IQuestionAnswer[],
+            answers: IQuestionAnswerPlain[],
             questions: IAskedQuestion[],
             isLecturer: boolean,
             answerers: IUser[],
@@ -103,8 +103,8 @@ export class LectureInfoController implements IController {
 
     private getAnswers(question: IAskedQuestion) {
         return this.answers.filter((q) =>
-            q.asked_question.asked_id === question.asked_id &&
-            (this.showAll || !this.selectedUser || this.selectedUser.id === q.user.id));
+            q.asked_id === question.asked_id &&
+            (this.showAll || !this.selectedUser || this.selectedUser.id === q.user_id));
     }
 
     /**

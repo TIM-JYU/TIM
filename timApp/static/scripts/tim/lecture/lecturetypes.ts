@@ -124,6 +124,15 @@ export interface ILecture {
     is_access_code: boolean;
 }
 
+export interface IQuestionAnswerPlain {
+    answer_id: number;
+    user_id: number;
+    points: number;
+    answer: AnswerTable;
+    answered_on: Moment;
+    asked_id: number;
+}
+
 export interface IQuestionAnswer {
     answer_id: number;
     user: IUser;
