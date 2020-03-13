@@ -33,9 +33,11 @@ class ResizableDraggableWrapper {
     selector: "tim-dialog-frame",
     template: `
         <div class="modal no-pointer-events in" role="dialog"
-             [ngStyle]="{'z-index': 1050 + index*10, display: 'block'}" tabindex="-1">
+             [ngStyle]="{'z-index': 1050 + index*10, display: 'block'}" tabindex="-1" #bounds>
             <div [ngDraggable]
                  [ngResizable]="!areaMinimized"
+                 [inBounds]="true"
+                 [bounds]="bounds"
                  #resizable="ngResizable"
                  #draggable="ngDraggable"
                  [preventDefaultEvent]="true"
