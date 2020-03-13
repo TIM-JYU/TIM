@@ -25,7 +25,7 @@ export interface IRight {
 
 export interface IAccessType {
     id: number;
-    name: string;
+    name: keyof typeof accessOrder;
 }
 
 interface IItemWithRights extends IItem {
@@ -46,6 +46,16 @@ interface IPermissionEditResponse {
 function isVelpGroupItem(i: IItemWithRights) {
     return i.path.includes("/velp-groups/") || i.path.endsWith("/velp-groups");
 }
+
+const accessOrder = {
+    "view": 1,
+    "copy": 2,
+    "edit": 3,
+    "see answers": 4,
+    "teacher": 5,
+    "manage": 6,
+    "owner": 7,
+};
 
 class RightsEditorController implements IController {
     static $inject = ["$scope", "$element"];
@@ -284,6 +294,7 @@ class RightsEditorController implements IController {
             this.grouprights = data.grouprights;
             if (data.accesstypes) {
                 this.accessTypes = data.accesstypes;
+                this.accessTypes.sort((a1, a2) => accessOrder[a1.name] - accessOrder[a2.name]);
                 if (this.restrictRights) {
                     this.accessTypes = this.accessTypes.filter((a) => this.restrictRights!.includes(a.name));
                 }
