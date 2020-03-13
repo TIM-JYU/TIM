@@ -2,7 +2,7 @@ import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
 import {Binding, clone, markAsUsed, to} from "tim/util/utils";
-import {showBookmarkDialog} from "tim/bookmark/createBookmarkDialog";
+import {showBookmarkDialog} from "tim/bookmark/bookmark-dialog.component";
 import {ViewCtrl} from "../document/viewctrl";
 import {showMessageDialog} from "../ui/dialog";
 import {genericglobals} from "../util/globals";

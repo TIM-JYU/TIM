@@ -15,6 +15,8 @@ import {AnnotationComponent} from "tim/velp/annotation.component";
 import {RelativeTimestampPipe} from "tim/ui/relative-timestamp.pipe";
 import {SignatureComponent} from "tim/ui/signature.component";
 import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
+import {BookmarkDialogComponent} from "tim/bookmark/bookmark-dialog.component";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -30,12 +32,14 @@ import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
         RelativeTimestampPipe,
         SignatureComponent,
         VelpSummaryComponent,
+        BookmarkDialogComponent,
     ],
     imports: [
         BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
+        DialogModule,
     ],
     providers: [
         {provide: HTTP_INTERCEPTORS, useClass: TimeStampToMomentConverter, multi: true},

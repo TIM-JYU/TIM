@@ -4,7 +4,7 @@
  */
 
 import {IController} from "angular";
-import {showBookmarkDialog} from "tim/bookmark/createBookmarkDialog";
+import {showBookmarkDialog} from "tim/bookmark/bookmark-dialog.component";
 import {timApp} from "../app";
 import {getCourseCode, ITaggedItem} from "../item/IItem";
 import {$http} from "../util/ngimport";
