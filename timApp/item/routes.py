@@ -26,7 +26,7 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
-from timApp.document.document import get_index_from_html_list, dereference_pars, Document
+from timApp.document.document import get_index_from_html_list, dereference_pars, Document, viewmode_routes
 from timApp.document.post_process import post_process_pars
 from timApp.document.hide_names import hide_names_in_teacher
 from timApp.document.preloadoption import PreloadOption
@@ -262,7 +262,7 @@ def view(item_path, template_name, route="view"):
     taketime("view begin", zero=True)
     m: ViewModel = ViewModelSchema.load(request.args, unknown='EXCLUDE')
     usergroup = m.group
-    g.viewmode = route in ["view", "velp", "lecture", "slide"]
+    g.viewmode = route in viewmode_routes
     g.route = route
 
     if has_special_chars(item_path):

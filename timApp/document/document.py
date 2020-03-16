@@ -32,6 +32,13 @@ from timApp.util.utils import get_error_html, trim_markdown, temp_folder_path, c
 if TYPE_CHECKING:
     from timApp.user.user import User
 
+viewmode_routes = {
+    'view',
+    'lecture',
+    'slide',
+    'velp',
+}
+
 
 def get_duplicate_id_msg(conflicting_ids):
     return f'Duplicate paragraph id(s): {", ".join(conflicting_ids)}'
@@ -85,13 +92,7 @@ class Document:
         self.route = ''
 
     def is_viewmode(self):
-        if self.route == "view":
-            return True
-        if self.route == "lecture":
-            return True
-        if self.route == "slide":
-            return True
-        return False
+        return self.route in viewmode_routes
 
     @classmethod
     def get_documents_dir(cls) -> Path:
