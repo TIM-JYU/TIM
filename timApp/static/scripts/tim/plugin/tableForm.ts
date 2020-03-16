@@ -136,7 +136,7 @@ const sortLang = "fi";
 @Component({
     selector: "tim-email-send",
     template: `
-        <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="emaillist"> <!-- email -->
+        <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="emaillist">
             <tim-close-button (click)="emaillist=''"></tim-close-button>
             <p><textarea [(ngModel)]="emaillist" rows="4" cols="40"></textarea>
             </p>
@@ -157,7 +157,6 @@ const sortLang = "fi";
                         (click)="sendEmail()">
                     Send
                 </button>
-                <!-- <span class="emailMsg" [(ngModel)]="emailMsg"></span> -->
                 <span class="savedtext" *ngIf="emailMsg">Sent!</span>
             </p>
         </div>
