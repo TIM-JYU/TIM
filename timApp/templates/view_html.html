@@ -91,7 +91,7 @@
     {% endif %}
 
     {% if teacher_mode %}
-        <div  save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed resize="true"  click="true"  caption="{{ plugin_users|length }} users with answers ">
+        <div  save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed click="true"  caption="{{ plugin_users|length }} users with answers ">
             <tim-user-list class="draggable-content" on-user-change="$ctrl.changeUser($USER, $UPDATEALL)" users="$ctrl.users"></tim-user-list>
         </div>
     {% endif %}

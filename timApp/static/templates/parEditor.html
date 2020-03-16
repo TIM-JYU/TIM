@@ -82,7 +82,7 @@
          detachable="true"
          caption="Difference in original document"
          save="{{$ctrl.getOptions().localSaveTag}}Trdiff"
-         resize="true">
+    >
         <div class="diff border">
             <pre diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
             <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
@@ -92,7 +92,6 @@
          detachable="true"
          caption="{{ $ctrl.getPreviewCaption() }}"
          save="{{$ctrl.getOptions().localSaveTag}}Preview"
-         resize="true"
          class="previewDiv"
          ng-show="$ctrl.proeditor">
         <div class="previewcontent paragraphs"></div>

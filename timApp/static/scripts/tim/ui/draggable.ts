@@ -488,7 +488,14 @@ export class DraggableController implements IController {
     }
 
     private canResize() {
-        return !this.areaMinimized && this.resize;
+        if (this.resize === false || this.areaMinimized) {
+            return false;
+        }
+        if (this.resize === true) {
+            return true;
+        }
+        // If resize is not specified, allow resizing only when the element is draggable.
+        return this.canDrag();
     }
 
     private getPageXY(e: MouseEvent | TouchEvent) {
