@@ -145,7 +145,7 @@ const sortLang = "fi";
                                                                                                    [(ngModel)]="emailbcc">BCC</label>&nbsp;
                 <label title="Send also a copy for me"><input type="checkbox" [(ngModel)]="emailbccme">BCC also
                     for me</label>&nbsp;
-                <label title="Send using TIM.  Every mail is send as a personal mail."><input type="checkbox"
+                <label title="Send using TIM. Every mail is sent as a personal mail."><input type="checkbox"
                                                                                               [(ngModel)]="emailtim">use
                     TIM to send</label>&nbsp;
             </p>
