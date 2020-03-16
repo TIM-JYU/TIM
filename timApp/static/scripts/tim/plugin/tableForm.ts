@@ -155,7 +155,7 @@ const sortLang = "fi";
             <p>
                 <button class="timButton"
                         (click)="sendEmail()">
-                    Lähetä
+                    Send
                 </button>
                 <!-- <span class="emailMsg" [(ngModel)]="emailMsg"></span> -->
                 <span class="savedtext" *ngIf="emailMsg">Sent!</span>
