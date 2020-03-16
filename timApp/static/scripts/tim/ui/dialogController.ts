@@ -9,6 +9,9 @@ type ModalScope =
     IScope
     & { $$topModalIndex?: number, $$childHead?: ModalScope, $$prevSibling: ModalScope, $$nextSibling: ModalScope };
 
+/**
+ * @deprecated In new dialogs, use AngularDialogComponent class. See BookmarkDialogComponent for an example.
+ */
 export abstract class DialogController<T, Ret> implements IController {
     public readonly ret!: Ret; // only used for typing
     public readonly resolve!: Binding<T, "<">;
