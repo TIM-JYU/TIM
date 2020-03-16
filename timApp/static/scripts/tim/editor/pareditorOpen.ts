@@ -28,8 +28,8 @@ export async function openEditorSimple(docId: number, text: string, caption: str
             showSettings: false,
             tags: [],
             touchDevice: false,
-        }, previewCb: async (txt) => {
-            const resp = await to($http.post<IPluginInfoResponse>(`/preview/${docId}`, {text: txt, isComment: true}));
+        }, previewCb: async (txt, proofread) => {
+            const resp = await to($http.post<IPluginInfoResponse>(`/preview/${docId}`, {text: txt, proofread, isComment: true}));
             if (!resp.ok) {
                 throw new Error("preview route failed");
             }

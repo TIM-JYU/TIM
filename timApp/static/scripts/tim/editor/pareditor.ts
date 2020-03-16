@@ -2,7 +2,7 @@ import angular, {IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
-import {setEditorScope} from "tim/editor/editorScope";
+import {setCurrentEditor} from "tim/editor/editorScope";
 import {markAsUsed, to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
 import {IExtraData, ITags} from "../document/editing/edittypes";
@@ -589,6 +589,7 @@ ${backTicks}
 
     $onInit() {
         super.$onInit();
+        setCurrentEditor(this);
         this.spellcheck = this.getLocalBool("spellcheck", false);
         this.autocomplete = this.getLocalBool("autocomplete", false);
         const saveTag = this.getSaveTag();
@@ -658,7 +659,7 @@ ${backTicks}
     }
 
     $onDestroy() {
-        setEditorScope(undefined);
+        setCurrentEditor(undefined);
     }
 
     getCiteText(): string {
@@ -1393,7 +1394,6 @@ ${backTicks}
         }
         await this.focusEditor();
         this.getEditorContainer().removeClass("editor-loading");
-        setEditorScope(this.editor);
         this.adjustPreview();
     }
 

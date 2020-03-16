@@ -2,6 +2,7 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {Moment} from "moment";
 import {openEditor} from "tim/editor/pareditorOpen";
+import {getCurrentEditor} from "tim/editor/editorScope";
 import {IPluginInfoResponse} from "../editor/parCompiler";
 import {PareditorController} from "../editor/pareditor";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
@@ -39,6 +40,7 @@ export class NotesHandler {
     public noteBadge: HTMLElement | undefined;
     private editorInstance?: IModalInstance<PareditorController>;
     public editor?: PareditorController;
+    private editorLoad?: Promise<IModalInstance<PareditorController>>;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
@@ -58,11 +60,11 @@ export class NotesHandler {
     }
 
     async toggleNoteEditor(parOrArea: ParOrArea, options: INoteEditorOptions = {}) {
-        if (this.editorInstance) {
+        if (getCurrentEditor() || this.editorInstance || this.editorLoad) {
             // Double-clicking a comment will trigger this message, but it seems like on Chrome, the message dialog
             // interferes with the editor dialog if it opens first, making the editor invisible.
             // Awaiting for editor render helps.
-            await this.editorInstance.rendered;
+            await this.editorInstance?.rendered;
             await showMessageDialog("Some editor is already open.");
             return;
         }
@@ -113,7 +115,7 @@ export class NotesHandler {
         };
         const params: EditPosition = {type: EditType.Edit, pars: parOrArea};
         this.viewctrl.editing = true;
-        this.editorInstance = await openEditor({
+        this.editorLoad = openEditor({
             extraData,
             initialText,
             defaultSize: "md",
@@ -165,10 +167,12 @@ export class NotesHandler {
                 await handleUnread(this.viewctrl.item, extraData, params);
             },
         });
+        this.editorInstance = await this.editorLoad;
         this.editor = await this.editorInstance.dialogInstance.promise;
         await to(this.editorInstance.result);
         this.editorInstance = undefined;
         this.editor = undefined;
+        this.editorLoad = undefined;
         this.viewctrl.editing = false;
     }
 

@@ -3,11 +3,12 @@ import $ from "jquery";
 import {CURSOR} from "tim/editor/BaseParEditor";
 import {compileWithViewctrl, IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {PareditorController} from "tim/editor/pareditor";
-import {showMessageDialog} from "tim/ui/dialog";
+import {IModalInstance, showMessageDialog} from "tim/ui/dialog";
 import {documentglobals} from "tim/util/globals";
 import {$http, $timeout} from "tim/util/ngimport";
 import {empty, isMobileDevice, markPageDirty, to} from "tim/util/utils";
 import {openEditor} from "tim/editor/pareditorOpen";
+import {getCurrentEditor} from "tim/editor/editorScope";
 import {showDiffDialog} from "../diffDialog";
 import {onClick} from "../eventhandlers";
 import {
@@ -67,6 +68,7 @@ export class EditingHandler {
     public viewctrl: ViewCtrl;
     public sc: IScope;
     private currentEditor?: PareditorController;
+    private editorLoad?: Promise<IModalInstance<PareditorController>>;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
@@ -127,7 +129,7 @@ export class EditingHandler {
     }
 
     async toggleParEditor(params: EditPosition, options: IParEditorOptions) {
-        if (this.viewctrl.editing) {
+        if (getCurrentEditor() || this.viewctrl.editing || this.editorLoad) {
             await showMessageDialog("Some editor is already open.");
             return;
         }
@@ -207,7 +209,7 @@ export class EditingHandler {
             }
         }
         this.viewctrl.editing = true;
-        const inst = openEditor({
+        this.editorLoad = openEditor({
             viewCtrl: this.viewctrl,
             extraData,
             initialText,
@@ -271,9 +273,11 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 await handleUnread(this.viewctrl.item, extraData, params);
             },
         });
-        const awaited = await inst;
+        const awaited = await this.editorLoad;
         this.currentEditor = await awaited.dialogInstance.promise;
         await to(awaited.result);
+        this.currentEditor = undefined;
+        this.editorLoad = undefined;
         this.viewctrl.editing = false;
     }
 

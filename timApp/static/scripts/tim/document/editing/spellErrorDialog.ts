@@ -9,6 +9,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {$rootScope} from "tim/util/ngimport";
 import {DialogController} from "tim/ui/dialogController";
 import angular from "angular";
+import {getCurrentEditor} from "../../editor/editorScope";
 
 export interface ISpellErrorParams {
     info: ISpellWordInfo;
@@ -19,6 +20,7 @@ export interface ISpellErrorParams {
 enum SourceType {
     Comment,
     Paragraph,
+    Other,
 }
 
 function computeSourcePosition(editorText: string, info: Readonly<ISpellWordInfo>, type: SourceType) {
@@ -72,13 +74,18 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
 
     $onInit() {
         super.$onInit();
+        const editor = getCurrentEditor();
+        if (!editor) {
+            throw Error("No editor was open");
+        }
+        this.pare = editor;
         const vctrl = vctrlInstance!;
         if (vctrl.notesHandler.editor) {
-            this.pare = vctrl.notesHandler.editor;
             this.type = SourceType.Comment;
-        } else {
-            this.pare = vctrl.editingHandler.getParEditor()!;
+        } else if (vctrl.editingHandler.getParEditor()) {
             this.type = SourceType.Paragraph;
+        } else {
+            this.type = SourceType.Other; // Can be e.g. timTable cell editor.
         }
         this.suggestions = this.resolve.params.info.suggestions;
         (async () => {

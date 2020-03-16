@@ -1,15 +1,18 @@
-import {AceParEditor} from "./AceParEditor";
-import {TextAreaParEditor} from "./TextAreaParEditor";
+import {PareditorController} from "tim/editor/pareditor";
 
-let currentEditorScope: AceParEditor | TextAreaParEditor | undefined;
+let currentEditor: PareditorController | undefined;
 
 export function editorChangeValue(attributes: string[], text: string) {
-    if (!currentEditorScope) {
+    if (!currentEditor) {
         return;
     }
-    currentEditorScope.changeValue(attributes, text);
+    currentEditor.getEditor()!.changeValue(attributes, text);
 }
 
-export function setEditorScope(scope: AceParEditor | TextAreaParEditor | undefined) {
-    currentEditorScope = scope;
+export function setCurrentEditor(e: PareditorController | undefined) {
+    currentEditor = e;
+}
+
+export function getCurrentEditor() {
+    return currentEditor;
 }
