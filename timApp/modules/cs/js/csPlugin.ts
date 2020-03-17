@@ -9,7 +9,7 @@ import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$compile, $http, $sce, $timeout, $upload} from "tim/util/ngimport";
-import {copyToClipboard, getClipboardHelper, isFirefox, isIE, to, valueDefu, valueOr} from "tim/util/utils";
+import {copyToClipboard, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
 import {CellInfo} from "./embedded_sagecell";
 import IAceEditor = Ace.Editor;
 
@@ -141,24 +141,6 @@ class CWPD {
 
 const ConsolePWD = new CWPD();
 
-let isAcrobatInstalled: boolean | undefined;
-
-function hasAcrobatInstalled(): boolean {
-    if (isAcrobatInstalled !== undefined) {
-        return isAcrobatInstalled;
-    }
-
-    function getActiveXObject(name: string): ActiveXObject | undefined {
-        try {
-            return new ActiveXObject(name);
-        } catch (e) {
-        }
-    }
-
-    isAcrobatInstalled = getActiveXObject("AcroPDF.PDF") != undefined || getActiveXObject("PDF.PdfCtrl") != undefined;
-    return isAcrobatInstalled;
-}
-
 const csJSTypes = ["js", "glowscript", "vpython", "html", "processing", "wescheme"];
 
 // =================================================================================================================
@@ -173,10 +155,7 @@ function is(types: string[], file: string) {
     file = file.toLowerCase();
     for (const ty of types) {
         if (file.endsWith(ty)) {
-            if (ty !== "pdf") {
-                return true;
-            }
-            return navigator.mimeTypes.namedItem("application/pdf") != null || isFirefox() || isIE() || hasAcrobatInstalled();
+            return true;
         }
     }
     return false;
