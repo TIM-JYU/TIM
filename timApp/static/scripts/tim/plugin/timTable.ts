@@ -415,10 +415,13 @@ export enum ClearSort {
             <h4 *ngIf="data.header" [innerHtml]="data.header"></h4>
             <p *ngIf="data.stem" class="stem" [innerHtml]="data.stem"></p>
             <div class="timTableContentDiv no-highlight">
-                <button class="timTableEditor timButton buttonAddCol" title="Add column" *ngIf="addColEnabled()"
-                        (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
-                <button class="timTableEditor timButton buttonRemoveCol" title="Remove column" *ngIf="delColEnabled()"
-                        (click)="handleClickRemoveColumn()"><span class="glyphicon glyphicon-minus"></span></button>
+                <div class="buttonsCol">
+                    <button class="timButton" title="Remove column"
+                            *ngIf="delColEnabled()"
+                            (click)="handleClickRemoveColumn()"><span class="glyphicon glyphicon-minus"></span></button>
+                    <button class="timButton" title="Add column" *ngIf="addColEnabled()"
+                            (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
+                </div>
                 <table #tableElem
                        [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(), forcedEditable: isInForcedEditMode()}"
                        class="timTableTable"
@@ -484,12 +487,14 @@ export enum ClearSort {
                     </tr> <!-- the matrix -->
                     </tbody>
                 </table>
-                <button class="timTableEditor timButton buttonAddRow" title="Add row" *ngIf="addRowEnabled()"
-                        (click)="handleClickAddRow()"><span
-                        class="glyphicon glyphicon-plus" [innerText]="addRowButtonText"></span></button>
-                <button class="timTableEditor timButton buttonRemoveRow" title="Remove row" *ngIf="delRowEnabled()"
-                        (click)="handleClickRemoveRow()"><span
-                        class="glyphicon glyphicon-minus"></span></button>
+                <div class="buttonsRow">
+                    <button class="timButton" title="Remove row" *ngIf="delRowEnabled()"
+                            (click)="handleClickRemoveRow()"><span
+                            class="glyphicon glyphicon-minus"></span></button>
+                    <button class="timButton" title="Add row" *ngIf="addRowEnabled()"
+                            (click)="handleClickAddRow()"><span
+                            class="glyphicon glyphicon-plus" [innerText]="addRowButtonText"></span></button>
+                </div>
                 <div #inlineEditor class="timTableEditor inlineEditorDiv no-highlight" *ngIf="currentCell">
                     <input class="editInput" #editInput autocomplete="off"
                            (blur)="smallEditorLostFocus($event)"

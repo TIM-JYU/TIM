@@ -1,37 +1,25 @@
 .timTableTable {
-  //margin-left: 0px;
-  margin: 0px;
   margin-top: 1.5em; /* to leave space for editor buttons */
-  margin-right: 0em; /* - " - */
 }
 
-button.timTableEditor {
-  font-size: xx-small;
-  padding: 5px;
-}
-
-.buttonAddCol {
+.buttonsCol, .buttonsRow {
   position: absolute;
-  right: calc(-1em - 11px);
+  display: flex;
+  button {
+    font-size: xx-small;
+    padding: 5px;
+  }
 }
 
-.buttonRemoveCol {
-  position: absolute;
-  //right: calc(-2cm - 4px); next to buttonAddCol instead of below it
-  right: calc(-0cm - 0px);
-  /*top: calc(1cm - 15px);*/
+.buttonsCol {
+  right: -1.4em;
+  top: -1.7em;
 }
 
-.buttonAddRow {
-  position: absolute;
-  bottom: calc(-1em - 10px);
-  left: calc(-1em - 13px);
-}
-
-.buttonRemoveRow {
-  position: absolute;
-  bottom: calc(-0em + 5px);
-  left: calc(-1em - 13px);
+.buttonsRow {
+  bottom: -1.2em;
+  left: -1.6em;
+  flex-direction: column;
 }
 
 .editable {
@@ -46,7 +34,6 @@ button.timTableEditor {
 
 .timTableContentDiv {
   position: relative;
-  display: table;
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 20px;
