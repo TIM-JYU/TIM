@@ -9,7 +9,7 @@ import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$compile, $http, $sce, $timeout, $upload} from "tim/util/ngimport";
-import {copyToClipboard, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
+import {copyToClipboard, getClipboardHelper, isFirefox, isIE, to, valueDefu, valueOr} from "tim/util/utils";
 import {CellInfo} from "./embedded_sagecell";
 import IAceEditor = Ace.Editor;
 
@@ -141,44 +141,21 @@ class CWPD {
 
 const ConsolePWD = new CWPD();
 
-let browserName: string | undefined;
-
-function getBrowserName() {
-    return browserName = browserName ?? (() => {
-        const userAgent = navigator ? navigator.userAgent.toLowerCase() : "other";
-
-        if (userAgent.includes("chrome")) {
-            return "chrome";
-        } else if (userAgent.includes("safari")) {
-            return "safari";
-        } else if (userAgent.includes("msie")) {
-            return "ie";
-        } else if (userAgent.includes("firefox")) {
-            return "firefox";
-        }
-        // if ( userAgent.match(/Trident.*rv\:11\./) ) return "ie";'
-        if (userAgent.includes("trident/")) {
-            return "ie";
-        }
-        return userAgent;
-    })();
-}
-
 let isAcrobatInstalled: boolean | undefined;
 
-function hasAcrobatInstalled() {
+function hasAcrobatInstalled(): boolean {
     if (isAcrobatInstalled !== undefined) {
         return isAcrobatInstalled;
     }
 
-    function getActiveXObject(name: string) {
+    function getActiveXObject(name: string): ActiveXObject | undefined {
         try {
             return new ActiveXObject(name);
         } catch (e) {
         }
     }
 
-    isAcrobatInstalled = getActiveXObject("AcroPDF.PDF") || getActiveXObject("PDF.PdfCtrl");
+    isAcrobatInstalled = getActiveXObject("AcroPDF.PDF") != undefined || getActiveXObject("PDF.PdfCtrl") != undefined;
     return isAcrobatInstalled;
 }
 
@@ -199,10 +176,7 @@ function is(types: string[], file: string) {
             if (ty !== "pdf") {
                 return true;
             }
-            if (navigator.mimeTypes.namedItem("application/pdf") || hasAcrobatInstalled() || getBrowserName() === "ie") {
-                return true;
-            }
-            return false;
+            return navigator.mimeTypes.namedItem("application/pdf") != null || isFirefox() || isIE() || hasAcrobatInstalled();
         }
     }
     return false;

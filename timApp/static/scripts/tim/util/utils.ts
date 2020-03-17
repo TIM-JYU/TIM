@@ -674,7 +674,11 @@ export function createValidator(validityChecker: (s: string) => boolean, name: s
 }
 
 export function isFirefox() {
-    return navigator.userAgent.includes("Firefox");
+    return getBrowserKind() == BrowserKind.Firefox;
+}
+
+export function isIE() {
+    return getBrowserKind() == BrowserKind.IE;
 }
 
 /**
@@ -683,4 +687,29 @@ export function isFirefox() {
  */
 export function maxContentOrFitContent() {
     return isFirefox() ? "max-content" : "fit-content";
+}
+
+enum BrowserKind {
+    Chrome,
+    Safari,
+    IE,
+    Firefox,
+    Unknown,
+}
+
+function getBrowserKind() {
+    const userAgent = navigator.userAgent.toLowerCase();
+    if (userAgent.includes("chrome")) {
+        return BrowserKind.Chrome;
+    } else if (userAgent.includes("safari")) {
+        return BrowserKind.Safari;
+    } else if (userAgent.includes("msie")) {
+        return BrowserKind.IE;
+    } else if (userAgent.includes("firefox")) {
+        return BrowserKind.Firefox;
+    }
+    if (userAgent.includes("trident/")) {
+        return BrowserKind.IE;
+    }
+    return BrowserKind.Unknown;
 }
