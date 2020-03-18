@@ -17,7 +17,7 @@ import {ViewCtrl} from "../document/viewctrl";
 import {showMessageDialog} from "../ui/dialog";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
-import {clone, isInViewport, Result, scrollToElement, to} from "../util/utils";
+import {clone, isInViewport, log, Result, scrollToElement, to} from "../util/utils";
 import {Annotation, IAnnotationEditableValues, IAnnotationInterval} from "./velptypes";
 
 /**
@@ -191,6 +191,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     private prefix = "x";
     private readonly element: JQuery<HTMLElement>;
     zIndex = 0;
+    private registered = false;
 
     constructor(public e: ElementRef) {
         this.element = $(e.nativeElement);
@@ -205,7 +206,14 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     }
 
     ngOnDestroy() {
-        this.vctrl.unRegisterAnnotation(this);
+        // Workaround: when adding and compiling the annotation,
+        // Angular might call ngOnDestroy without ever calling
+        // ngOnInit.
+        if (this.registered) {
+            this.vctrl.unRegisterAnnotation(this);
+        } else {
+            log("annotation ngOnDestroy called without ngOnInit");
+        }
     }
 
     getClass() {
@@ -235,6 +243,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         this.newcomment = this.defaultcomment;
         this.prefix = this.isInMargin() ? "m" : "t"; // as in "margin" or "text"
         this.vctrl.registerAnnotation(this);
+        this.registered = true;
     }
 
     setAnnotation(a: Annotation) {
