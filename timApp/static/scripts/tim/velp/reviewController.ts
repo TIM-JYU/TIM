@@ -15,7 +15,7 @@ import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {documentglobals} from "../util/globals";
 import {$compile, $http, $rootScope} from "../util/ngimport";
-import {angularWait, assertIsText, checkIfElement, getElementParent, to} from "../util/utils";
+import {angularWait, assertIsText, checkIfElement, getElementParent, log, to} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
 import {Annotation, IAnnotationInterval, isFullCoord, IVelp, IVelpUI, NewAnnotation} from "./velptypes";
 
@@ -955,6 +955,7 @@ export class ReviewController {
     async toggleAnnotation(annotation: Annotation, scrollToAnnotation: boolean) {
         const parent = document.getElementById(annotation.coord.start.par_id);
         if (parent == null) {
+            log(`par ${annotation.coord.start.par_id} not found`);
             return;
         }
 
@@ -976,6 +977,7 @@ export class ReviewController {
         }
 
         if (!annotation.answer) {
+            log("annotation.answer is null");
             return;
         }
         // Find answer browser and its scope
@@ -983,10 +985,12 @@ export class ReviewController {
         // query selector element -> toggle annotation
         const loader = parent.getElementsByTagName("TIM-PLUGIN-LOADER")[0];
         if (!loader) {
+            log("tim-plugin-loader not found");
             return;
         }
         const taskId = loader.getAttribute("task-id");
         if (!taskId) {
+            log("task-id missing");
             return;
         }
         let ab = this.getAnswerBrowserFromPluginLoader(loader) ?? null;
@@ -994,11 +998,13 @@ export class ReviewController {
         if (!ab) {
             const loaderCtrl = this.vctrl.getPluginLoader(taskId);
             if (!loaderCtrl) {
+                log("getPluginLoader failed");
                 return;
             }
             loaderCtrl.loadPlugin();
             ab = await loaderCtrl.abLoad.promise;
             if (!ab) {
+                log("plugin has no answerbrowser");
                 return;
             }
         }
@@ -1021,6 +1027,7 @@ export class ReviewController {
         }
         const actrl2 = await this.vctrl.getAnnotationAsync(prefix + annotation.id);
         if (!actrl2) {
+            log("getAnnotationAsync failed");
             return;
         }
         actrl2.showAnnotation();
