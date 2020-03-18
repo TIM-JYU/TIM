@@ -4,7 +4,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {fixQuestionJson} from "tim/document/question/dynamicAnswerSheet";
 import {Overwrite} from "type-zoo";
-import {assertNotNull, clone} from "../util/utils";
+import {assertNotNull, clone, truncate} from "../util/utils";
 import {IAskedQuestion, IQuestionAnswer, IQuestionAnswerPlain} from "./lecturetypes";
 
 /**
@@ -83,13 +83,6 @@ function qstFormatLabel(str: string, maxwidth: number, maxrows: number) {
     });
 
     return sections;
-}
-
-function truncate(text: string, max: number) {
-    if (text.length > max) {
-        text = text.substring(0, max - 1) + "...";
-    }
-    return text;
 }
 
 function qstShortText(s: string): string | string[] {

@@ -141,7 +141,7 @@
                 <a id="showSlidesLink" href="/show_slide/{{ item.path }}">Show slides only</a>
             </div>
         {% else %}
-            <div id="pars" {% if velp_mode or teacher_mode %}ng-click="$ctrl.reviewCtrl.selectText($event)"{% endif %}>
+            <div id="pars">
                 {% include 'partials/paragraphs.html' %}
                 <div ng-cloak class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
                      ng-class="{'height-35': $ctrl.editing}">

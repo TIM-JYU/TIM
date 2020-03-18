@@ -61,6 +61,7 @@ export class ParmenuHandler {
                 this.viewctrl.closePopupIfOpen();
                 this.toggleActionButtons(e, par, toggle1, toggle2, coords);
             }
+            this.viewctrl.reviewCtrl.selectText(par[0]);
             sc.$apply();
             return true;
         }, true);

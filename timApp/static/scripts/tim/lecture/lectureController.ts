@@ -12,7 +12,7 @@
 
 import ifvisible from "ifvisible.js";
 import moment from "moment";
-import {clone, getURLParameter, markAsUsed, setStorage, to} from "tim/util/utils";
+import {clone, getURLParameter, markAsUsed, setStorage, to, truncate} from "tim/util/utils";
 import {ViewCtrl} from "../document/viewctrl";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
@@ -343,10 +343,7 @@ export class LectureController {
         this.lecture = response.lecture;
         this.isLecturer = response.isLecturer;
 
-        this.wallName = "Wall - " + response.lecture.lecture_code;
-        if (this.wallName.length > 30) {
-            this.wallName = this.wallName.substring(0, 30) + "...";
-        }
+        this.wallName = truncate("Wall - " + response.lecture.lecture_code, 30);
         this.lectureSettings.inLecture = true;
         this.lectureSettings.useWall = response.useWall;
         this.lectureSettings.useQuestions = response.useQuestions;

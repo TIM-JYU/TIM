@@ -717,3 +717,10 @@ function getBrowserKind() {
 export function log(s: string) {
     console.log(s);
 }
+
+export function truncate(text: string, max: number) {
+    if (text.length > max) {
+        text = text.substring(0, max - 1) + "...";
+    }
+    return text;
+}

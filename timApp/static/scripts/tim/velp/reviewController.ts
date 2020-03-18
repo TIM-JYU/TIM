@@ -9,6 +9,7 @@ import {
     updateAnnotationServer,
 } from "tim/velp/annotation.component";
 import {deserialize} from "typescript-json-serializer";
+import {TaskId} from "tim/plugin/taskid";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -16,7 +17,7 @@ import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {documentglobals} from "../util/globals";
 import {$compile, $http, $rootScope} from "../util/ngimport";
-import {angularWait, assertIsText, checkIfElement, getElementParent, log, to} from "../util/utils";
+import {angularWait, assertIsText, checkIfElement, getElementParent, log, to, truncate} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
 import {
     Annotation,
@@ -73,7 +74,7 @@ export class ReviewController {
     private scope: IScope;
     private velpBadge?: HTMLElementTagNameMap["input"];
     private velpBadgePar?: string;
-    private velpSelection!: VelpSelectionController; // initialized through onInit
+    private velpSelection?: VelpSelectionController; // initialized through onInit
     public velpMode: boolean;
     public velps?: IVelpUI[];
 
@@ -87,6 +88,16 @@ export class ReviewController {
 
     initVelpSelection(velpSelection: VelpSelectionController) {
         this.velpSelection = velpSelection;
+
+        document.addEventListener("selectionchange", () => {
+            const range = getSelection()?.getRangeAt(0);
+
+            // Length check is important - we don't want to lose the previous selection in touch devices.
+            if (range && range.toString().length > 0) {
+                this.selectText($(range.startContainer).parents(".par")[0] as Element);
+                $rootScope.$applyAsync();
+            }
+        });
     }
 
     /**
@@ -339,7 +350,7 @@ export class ReviewController {
      * @param oldElement - Element where the badge was
      * @param newElement - Element where the badge needs to be attached
      */
-    updateVelpBadge(oldElement: Element | null, newElement: Element | null): void {
+    updateVelpBadge(oldElement: Element | undefined, newElement: Element | null): void {
         if (newElement == null) {
             return;
         } else if (oldElement == null) {
@@ -360,7 +371,7 @@ export class ReviewController {
             $(btn).remove();
         }
 
-        if (e != null) {
+        if (e != null && this.velpSelection) {
             this.selectedElement = undefined;
             this.selectedArea = undefined;
             this.velpSelection.updateVelpList();
@@ -409,32 +420,17 @@ export class ReviewController {
      * Selects text range or just the element.
      * @todo When annotations can break tags, check annotations from all elements in the selection.
      */
-    selectText($event: Event): void {
-        if (!$event.target) {
+    selectText(par: Element): void {
+        if (!this.velpSelection) {
             return;
         }
-        const par = $($event.target as HTMLElement).parents(".par")[0];
-
-        let oldElement = null;
-        if (this.selectedElement != null) {
-            oldElement = this.selectedElement;
-        }
-
-        try {
-            let range;
-            if (window.getSelection) {
-                range = window.getSelection();
-            } else {
-                range = document.getSelection();
-            }
-            if (range && range.toString().length > 0) {
-                this.selectedArea = range.getRangeAt(0);
-                this.selectedElement = this.getElementParentUntilAttribute(this.selectedArea.startContainer, "t") ?? undefined;
-            } else {
-                this.selectedArea = undefined;
-            }
-        } catch (err) {
-            // return;
+        const oldElement = this.selectedElement;
+        this.selectedElement = par;
+        const range = getSelection();
+        if (range && range.toString().length > 0) {
+            this.selectedArea = range.getRangeAt(0);
+        } else {
+            this.selectedArea = undefined;
         }
 
         if (this.selectedArea != null) {
@@ -444,16 +440,6 @@ export class ReviewController {
                 this.hasSelectionChildrenAnnotation(this.selectedArea)) {
                 this.selectedArea = undefined;
             }
-        } else {
-            /*
-             var elements = document.getElementsByClassName("lightselect");
-             if (elements.length > 0)
-             this.selectedElement = elements[0];
-             */
-            if (par?.id) {
-                this.selectedElement = par;
-            }
-
         }
 
         const newElement = this.selectedElement;
@@ -568,6 +554,23 @@ export class ReviewController {
         }
 
         return null;
+    }
+
+    getSelectedAnswerTaskName() {
+        const a = this.selectedElement && this.getAnswerInfo(this.selectedElement);
+        if (a) {
+            const p = TaskId.tryParse(a.task_id);
+            if (p.ok) {
+                return p.result.name;
+            }
+        }
+    }
+
+    getSelectedBeginning() {
+        if (!this.selectedElement) {
+            return;
+        }
+        return truncate(this.selectedElement.querySelector(".parContent")?.textContent?.trim() ?? "", 20);
     }
 
     /**

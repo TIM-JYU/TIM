@@ -329,11 +329,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private anyInvalid: boolean = false;
     private giveCustomPoints: boolean = false;
     public review: boolean = false;
+    public oldreview: boolean = false;
     private shouldFocus: boolean = false;
     private alerts: Array<{}> = [];
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
-    private loadedAnswer: { id: number | undefined, review: boolean } = {review: false, id: undefined};
+    private loadedAnswer: { id: number | undefined } = {id: undefined};
     private answerId?: Binding<number, "<?">;
     private loader!: PluginLoaderCtrl;
     private reviewHtml?: string;
@@ -348,7 +349,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (args.savedNew) {
             this.loadedAnswer.id = args.savedNew;
             this.review = false;
-            this.loadedAnswer.review = false;
+            this.oldreview = false;
             this.getAnswersAndUpdate();
             // HACK: for some reason the math mode is lost because of the above call, so we restore it here
             ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
@@ -512,10 +513,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async changeAnswer() {
         if (this.forceBrowser() && this.selectedAnswer == null && this.loadedAnswer.id) {
+            // TODO: This is a hack; get rid of it.
             this.selectedAnswer = {
                 content: "",
                 id: this.loadedAnswer.id,
-                last_points_modifier: 0,
+                task_id: "",
+                last_points_modifier: null,
                 valid: true,
             };
         }
@@ -535,7 +538,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             ref_from_doc_id: this.viewctrl.docId,
             ref_from_par_id: getParId(par),
         };
-        if (this.forceBrowser() || this.selectedAnswer.id !== this.loadedAnswer.id || this.loadedAnswer.review !== this.review || this.isGlobal()) {
+        if (this.forceBrowser() || this.selectedAnswer.id !== this.loadedAnswer.id || this.oldreview !== this.review || this.isGlobal()) {
             this.loading++;
             const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
                 params: {
@@ -551,7 +554,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 return;
             }
             this.loadedAnswer.id = this.selectedAnswer.id;
-            this.loadedAnswer.review = this.review;
+            this.oldreview = this.review;
 
             // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
             // have to be fully reloaded every time.
