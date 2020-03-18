@@ -3,6 +3,7 @@ import $ from "jquery";
 import {Users} from "tim/user/userService";
 import {
     AnnotationAddReason,
+    AnnotationComponent,
     AnnotationPlacement,
     IAnnotationBindings,
     updateAnnotationServer,
@@ -17,7 +18,15 @@ import {documentglobals} from "../util/globals";
 import {$compile, $http, $rootScope} from "../util/ngimport";
 import {angularWait, assertIsText, checkIfElement, getElementParent, log, to} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
-import {Annotation, IAnnotationInterval, isFullCoord, IVelp, IVelpUI, NewAnnotation} from "./velptypes";
+import {
+    Annotation,
+    IAnnotationCoordinate,
+    IAnnotationInterval,
+    isFullCoord,
+    IVelp,
+    IVelpUI,
+    NewAnnotation,
+} from "./velptypes";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how
@@ -31,6 +40,26 @@ import {Annotation, IAnnotationInterval, isFullCoord, IVelp, IVelpUI, NewAnnotat
  */
 
 const illegalClasses = ["annotation-info", "highlighted", "editorArea", "previewcontent"];
+
+function tryCreateRange(
+    start: Required<IAnnotationCoordinate>,
+    end: Required<IAnnotationCoordinate>,
+    startElem: Node,
+    endElem: Node | undefined,
+) {
+    const range = document.createRange();
+    try {
+        range.setStart(startElem, start.offset);
+    } catch {
+        return undefined;
+    }
+    try {
+        range.setEnd(endElem ?? startElem, end.offset);
+    } catch {
+        // Ignore exception; it is still possibly useful to put the annotation in text even though it's zero sized.
+    }
+    return range;
+}
 
 /**
  * A class for handling annotations.
@@ -98,7 +127,7 @@ export class ReviewController {
                             parent,
                             a,
                             AnnotationAddReason.LoadingExisting,
-                            "Could not show annotation in correct place");
+                            AnnotationPlacement.InMarginOnly);
                         return;
                     }
 
@@ -114,16 +143,17 @@ export class ReviewController {
                     const startel = elements.childNodes[placeInfo.start.node];
                     const endel = elements.childNodes[placeInfo.end.node];
 
-                    const range = document.createRange();
-                    range.setStart(startel, placeInfo.start.offset);
-                    range.setEnd(endel, placeInfo.end.offset);
-                    this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
-                    this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, "Added also margin annotation");
+                    const range = tryCreateRange(placeInfo.start, placeInfo.end, startel, endel);
+                    let added = false;
+                    if (range) {
+                        added = this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
+                    }
+                    this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, added ? AnnotationPlacement.InMargin : AnnotationPlacement.InMarginOnly);
                 } catch (err) {
-                    this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, "Could not show annotation in correct place");
+                    this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, AnnotationPlacement.InMarginOnly);
                 }
             } else {
-                this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, "Paragraph has been modified");
+                this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, AnnotationPlacement.InMarginOnly);
             }
         }
 
@@ -201,9 +231,8 @@ export class ReviewController {
      * Loads the annotations to the given answer.
      * @param answerId - Answer ID
      * @param par - Paragraph element
-     * @param showInPlace - show velp inside answer text
      */
-    loadAnnotationsToAnswer(answerId: number, par: Element, showInPlace: boolean): void {
+    loadAnnotationsToAnswer(answerId: number, par: Element): void {
         const annotations = this.getAnnotationsByAnswerId(answerId);
 
         const oldAnnotations = par.querySelectorAll(".notes [aid]");
@@ -211,27 +240,28 @@ export class ReviewController {
         for (const a of annotations) {
             const placeInfo = a.coord;
 
-            const preElem = par.getElementsByTagName("PRE")[0];
-            if (!preElem) {
+            const element = par.querySelector(".review pre")?.firstChild;
+
+            if (!isFullCoord(placeInfo.start) || !isFullCoord(placeInfo.end) || !element) {
+                this.addAnnotationToMargin(
+                    par,
+                    a,
+                    AnnotationAddReason.LoadingExisting,
+                    // If the coordinates exist but the review element does not, we don't know yet if the annotation can be
+                    // successfully placed in text.
+                    !isFullCoord(placeInfo.start) ||
+                    !isFullCoord(placeInfo.end) ? AnnotationPlacement.InMarginOnly : AnnotationPlacement.InMarginAndUnknownIfItWillBeInText,
+                );
                 continue;
             }
-            const element = preElem.firstChild;
-
-            if (!showInPlace || !isFullCoord(placeInfo.start) || !isFullCoord(placeInfo.end)) {
-                this.addAnnotationToMargin(par, a, AnnotationAddReason.LoadingExisting, "Added as margin annotation");
-            } else if (element) {
-                const range = document.createRange();
-                try {
-                    range.setStart(element, placeInfo.start.offset);
-                    range.setEnd(element, placeInfo.end.offset);
-                } catch (e) {
-                    // catch: Failed to execute 'setStart' on 'Range': The offset XX is larger than the node's length (YY).
-                }
-                this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
-                this.addAnnotationToMargin(par, a, AnnotationAddReason.LoadingExisting, "Added also margin annotation");
+            const range = tryCreateRange(placeInfo.start, placeInfo.end, element, undefined);
+            let added = false;
+            if (range) {
+                added = this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
             } else {
-                showMessageDialog("Couldn't add annotations");
+                log("annotation range invalid, adding to margin only");
             }
+            this.addAnnotationToMargin(par, a, AnnotationAddReason.LoadingExisting, added ? AnnotationPlacement.InMargin : AnnotationPlacement.InMarginOnly);
         }
         $rootScope.$applyAsync(); // TODO: run only if we are in Angular zone
     }
@@ -248,32 +278,21 @@ export class ReviewController {
     }
 
     /**
-     * Gets an annotation by ID.
-     */
-    getAnnotationById(id: number) {
-        for (const a of this.annotations) {
-            if (a.id === id) {
-                return a;
-            }
-        }
-        return undefined;
-    }
-
-    /**
      * Adds an annotation to the given element in a given coordinate.
      * @param range - Annotation coordinate
      * @param annotation - Annotation info
      * @param show - Whether annotation is shown when created or not
      */
-    addAnnotationToCoord(range: Range, annotation: Annotation, show: AnnotationAddReason): void {
+    addAnnotationToCoord(range: Range, annotation: Annotation, show: AnnotationAddReason): boolean {
         const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.InText);
         try {
             range.surroundContents(element);
         } catch (err) {
-            this.addAnnotationToMargin(element, annotation, show, "Annotation crosses taglines");
             this.selectedArea = undefined;
+            return false;
         }
         $compile(element)(scope);
+        return true;
     }
 
     /**
@@ -283,8 +302,8 @@ export class ReviewController {
      * @param show - Whether annotation is shown when created or not
      * @param reason - The reason why the annotation is put here (not implemented yet)
      */
-    addAnnotationToMargin(el: Element, annotation: Annotation, show: AnnotationAddReason, reason: string): void {
-        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.InMargin);
+    addAnnotationToMargin(el: Element, annotation: Annotation, show: AnnotationAddReason, reason: AnnotationPlacement): void {
+        const {element, scope} = this.createPopOverElement(annotation, show, reason);
         const text = document.createTextNode("\u00A0" + annotation.getContent() + "\u00A0");
         element.appendChild(text);
         addElementToParagraphMargin(el, element);
@@ -376,36 +395,8 @@ export class ReviewController {
     /**
      * Updates annotation data.
      * @param ann - Annotation
-     * @param inmargin - Whether the annotation is to be placed in the margin or not
      */
-    updateAnnotation(ann: Annotation, inmargin: boolean): void {
-        const annotationParents = document.querySelectorAll(`[aid="${ann.id}"]`);
-        const annotationElement = $(`[aid="${ann.id}"]`);
-        const par = annotationElement.parents(".par");
-        const annotationHighlights = annotationElement[0].getElementsByClassName("highlighted");
-        this.refreshAnnotation(ann);
-        this.annotations = this.annotations.slice(); // required for velp-summary to see the change
-        if (!inmargin) {
-            $(annotationElement[1]).remove();
-            this.addAnnotationToMargin(par[0], ann, AnnotationAddReason.LoadingExisting, "Added also margin annotation");
-            // addAnnotationToElement(this.annotations[a], false, "Added also margin annotation");
-
-        } else {
-            if (annotationParents.length > 1) {
-                let savedHTML = "";
-                for (const a of annotationHighlights) {
-                    let addHTML = a.innerHTML.replace('<span class="ng-scope">', "");
-                    addHTML = addHTML.replace("</span>", "");
-                    savedHTML += addHTML;
-                }
-                annotationParents[0].outerHTML = savedHTML;
-
-                // TODO: add redraw annotation text
-            }
-        }
-    }
-
-    private refreshAnnotation(ann: Annotation) {
+    updateAnnotation(ann: Annotation) {
         const i = this.annotations.findIndex((a) => a.id === ann.id);
         if (i >= 0) {
             this.annotations[i] = ann;
@@ -587,8 +578,7 @@ export class ReviewController {
      * @param velp - Velp selected in the `velpSelection` directive
      */
     async useVelp(velp: IVelp) {
-
-        if (this.selectedElement == null && this.selectedArea == null) {
+        if (this.selectedElement == null) {
             return;
         }
 
@@ -635,10 +625,8 @@ export class ReviewController {
                 {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
                 velp,
             );
-            if (this.selectedElement != null) {
-                this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.LoadingExisting, "Added also margin annotation");
-            }
-            this.addAnnotationToCoord(this.selectedArea, ann, AnnotationAddReason.AddingNew);
+            const added = this.addAnnotationToCoord(this.selectedArea, ann, AnnotationAddReason.AddingNew);
+            this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.LoadingExisting, added ? AnnotationPlacement.InMargin : AnnotationPlacement.InMarginOnly);
             await angularWait();
 
             const nodeNums = this.getNodeNumbers(this.selectedArea.startContainer, ann.id, innerDiv);
@@ -666,12 +654,12 @@ export class ReviewController {
                 coord,
             });
             if (saved.ok) {
-                this.refreshAnnotation(saved.result);
+                this.updateAnnotation(saved.result);
             }
 
             this.selectedArea = undefined;
 
-        } else if (this.selectedElement != null) {
+        } else {
 
             coord = {
                 start: {
@@ -690,9 +678,7 @@ export class ReviewController {
                 newAnnotation.answer_id = answerInfo.id;
             }
             const ann = await this.addAnnotation(newAnnotation, coord, velp);
-            this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.AddingNew, "No coordinate found");
-        } else {
-            throw new Error("selectedArea and selectedElement were both null");
+            this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.AddingNew, AnnotationPlacement.InMarginOnly);
         }
     }
 
@@ -948,11 +934,11 @@ export class ReviewController {
 
     /**
      * Shows the annotation (despite the name).
-     * @todo If the annotation should be toggled, change all `showAnnotation()` methods to `toggleAnnotation()`.
-     * @param annotation - Annotation to be showed.
+     * @param ac - AnnotationComponent to be shown.
      * @param scrollToAnnotation Whether to scroll to annotation if it is not in viewport.
      */
-    async toggleAnnotation(annotation: Annotation, scrollToAnnotation: boolean) {
+    async toggleAnnotation(ac: AnnotationComponent, scrollToAnnotation: boolean) {
+        const annotation = ac.annotation;
         const parent = document.getElementById(annotation.coord.start.par_id);
         if (parent == null) {
             log(`par ${annotation.coord.start.par_id} not found`);
@@ -961,13 +947,14 @@ export class ReviewController {
 
         // We might click a margin annotation, but we still want to open the corresponding inline annotation,
         // if it exists.
-        const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end) ? "t" : "m";
+        const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end) &&
+        ac.placement !== AnnotationPlacement.InMarginOnly ? "t" : "m";
         let actrl = this.vctrl.getAnnotation(prefix + annotation.id);
         if (!annotation.answer && !actrl) {
             actrl = this.vctrl.getAnnotation("m" + annotation.id);
         }
         if (actrl) {
-            if ((annotation.coord.start == null || actrl.show || !annotation.answer)) {
+            if ((annotation.coord.start.offset == null || actrl.show || !annotation.answer)) {
                 actrl.toggleAnnotationShow();
                 if (scrollToAnnotation && actrl.show) {
                     actrl.scrollToIfNotInViewport();
@@ -1025,11 +1012,16 @@ export class ReviewController {
             await ab.setAnswerById(annotation.answer.id, ab.review);
             ab.review = true;
         }
-        const actrl2 = await this.vctrl.getAnnotationAsync(prefix + annotation.id);
-        if (!actrl2) {
-            log("getAnnotationAsync failed");
-            return;
+        let r = await to(this.vctrl.getAnnotationAsync(prefix + annotation.id));
+        if (!r.ok) {
+            log("falling back to showing margin annotation");
+            r = await to(this.vctrl.getAnnotationAsync("m" + annotation.id));
+            if (!r.ok) {
+                log("getAnnotationAsync failed even for margin");
+                return;
+            }
         }
+        const actrl2 = r.result;
         actrl2.showAnnotation();
         if (scrollToAnnotation) {
             actrl2.scrollToIfNotInViewport();

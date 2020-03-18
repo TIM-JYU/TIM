@@ -1029,6 +1029,11 @@ export class ViewCtrl implements IController {
         this.anns.set(key, loader);
     }
 
+    rejectTextAnnotation(loader: AnnotationComponent) {
+        // Informs that there won't be an InText annotation.
+        this.anns.reject("t" + loader.annotation.id);
+    }
+
     getAnnotation(id: string) {
         return this.anns.get(id);
     }
@@ -1067,6 +1072,13 @@ class EntityRegistry<K, V> {
     delete(k: K) {
         this.entities.delete(k);
         this.entityDefers.delete(k);
+    }
+
+    reject(k: K) {
+        const defer = this.entityDefers.get(k);
+        if (defer) {
+            defer.reject();
+        }
     }
 
     getEntityAsync(k: K): Promise<V> {

@@ -33,6 +33,8 @@ export enum AnnotationAddReason {
 export enum AnnotationPlacement {
     InText,
     InMargin,
+    InMarginOnly,
+    InMarginAndUnknownIfItWillBeInText,
 }
 
 export interface IAnnotationBindings {
@@ -191,7 +193,6 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     private prefix = "x";
     private readonly element: JQuery<HTMLElement>;
     zIndex = 0;
-    private registered = false;
 
     constructor(public e: ElementRef) {
         this.element = $(e.nativeElement);
@@ -206,14 +207,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     }
 
     ngOnDestroy() {
-        // Workaround: when adding and compiling the annotation,
-        // Angular might call ngOnDestroy without ever calling
-        // ngOnInit.
-        if (this.registered) {
-            this.vctrl.unRegisterAnnotation(this);
-        } else {
-            log("annotation ngOnDestroy called without ngOnInit");
-        }
+        this.vctrl.unRegisterAnnotation(this);
     }
 
     getClass() {
@@ -243,7 +237,9 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         this.newcomment = this.defaultcomment;
         this.prefix = this.isInMargin() ? "m" : "t"; // as in "margin" or "text"
         this.vctrl.registerAnnotation(this);
-        this.registered = true;
+        if (this.placement == AnnotationPlacement.InMarginOnly) {
+            this.vctrl.rejectTextAnnotation(this);
+        }
     }
 
     setAnnotation(a: Annotation) {
@@ -252,8 +248,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     }
 
     private isInMargin() {
-        const e = this.element;
-        return this.placement == AnnotationPlacement.InMargin;
+        return this.placement !== AnnotationPlacement.InText;
     }
 
     ngAfterViewInit() {
@@ -270,12 +265,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
      * Toggles the visibility of the annotation.
      */
     async toggleAnnotation() {
-        const a = this.rctrl.getAnnotationById(this.annotation.id);
-        if (!a) {
-            showMessageDialog(`Could not find annotation with id ${this.annotation.id}`);
-            return;
-        }
-        await this.rctrl.toggleAnnotation(a, false);
+        await this.rctrl.toggleAnnotation(this, false);
     }
 
     toggleAnnotationShow() {
@@ -358,7 +348,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         const ann = r2.result;
         this.annotation = ann;
         this.original = this.annotation.getEditableValues();
-        this.rctrl.updateAnnotation(ann, this.isInMargin());
+        this.rctrl.updateAnnotation(ann);
     }
 
     getCustomColor() {

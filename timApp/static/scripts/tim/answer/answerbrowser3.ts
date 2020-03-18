@@ -565,7 +565,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 await $timeout();
             }
         }
-        this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0], this.review);
+        this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
     }
 
     nextAnswer() {
