@@ -10,10 +10,12 @@ from lxml import html
 from lxml.html import HtmlElement
 
 from timApp.answer.answer import Answer
+from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_points_by_rule
 from timApp.answer.pointsumrule import PointSumRule, PointType
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docinfo import DocInfo
 from timApp.document.randutils import random_id
 from timApp.plugin.plugin import Plugin, find_plugin_from_document
 from timApp.plugin.taskid import TaskId
@@ -244,11 +246,11 @@ class PluginTest(TimRouteTest):
         task_id = f'{doc.doc_id}.{task_name}'
         filename = 'test.txt'
         file_content = 'test file'
-        mimetype, ur, user_input = self.do_plugin_upload(doc, file_content, filename, task_id, task_name)
-        self.do_plugin_upload(doc, file_content, 'test2.txt', task_id, task_name, expect_version=2)
-        self.do_plugin_upload(doc, file_content, filename, task_id, task_name2)
-        self.do_plugin_upload(doc, file_content, filename, task_id, task_name, expect_version=3)
-        self.do_plugin_upload(doc, file_content, filename, task_id, task_name2, expect_version=2)
+        mimetype, ur, user_input = self.do_plugin_upload(d, file_content, filename, task_id, task_name)
+        self.do_plugin_upload(d, file_content, 'test2.txt', task_id, task_name, expect_version=2)
+        self.do_plugin_upload(d, file_content, filename, task_id, task_name2)
+        self.do_plugin_upload(d, file_content, filename, task_id, task_name, expect_version=3)
+        self.do_plugin_upload(d, file_content, filename, task_id, task_name2, expect_version=2)
         # self.post_answer('csPlugin', task_id, user_input,
         #                  expect_status=400,
         #                  expect_content={'error': f'File was already uploaded: {ur["file"]}'})
@@ -262,13 +264,13 @@ class PluginTest(TimRouteTest):
                                 expect_content={'error': f'Non-existent upload: {invalid_file}'}
                                 )
         curr_name = self.current_user.name
-        self.assertEqual(f'/uploads/{doc.doc_id}/{task_name}/{curr_name}/1/test.txt', ur['file'])
+        self.assertEqual(f'/uploads/{d.id}/{task_name}/{curr_name}/1/test.txt', ur['file'])
         self.assertEqual(file_content, self.get_no_warn(ur['file']))
         self.get(ur['file'] + 'x', expect_status=404)
         self.assertEqual(file_content,
-                         self.get_no_warn(f'/uploads/{doc.doc_id}/{task_name}/{curr_name}'))
-        self.get(f'/uploads/{doc.doc_id}/{task_name}', expect_status=400)
-        self.get(f'/uploads/{doc.doc_id}', expect_status=400)
+                         self.get_no_warn(f'/uploads/{d.id}/{task_name}/{curr_name}'))
+        self.get(f'/uploads/{d.id}/{task_name}', expect_status=400)
+        self.get(f'/uploads/{d.id}', expect_status=400)
         self.get(f'/uploads', expect_status=404)
         self.login_test2()
 
@@ -293,12 +295,34 @@ class PluginTest(TimRouteTest):
         db.session.commit()
         self.get_no_warn(ur['file'], expect_content=file_content)
 
-    def do_plugin_upload(self, doc, file_content, filename, task_id, task_name, expect_version=1):
-        ur = self.post(f'/pluginUpload/{doc.doc_id}/{task_name}/',
+    def test_broken_upload(self):
+        """Ensures accessing an unassociated upload won't throw an exception."""
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin #testupload}
+type: upload
+        """)
+        self.do_plugin_upload(d, 'test', 'test.txt', f'{d.id}.testupload', 'testupload')
+        self.get(f'/uploads/{d.id}/testupload/testuser1/1/test.txt')
+        a = Answer.query.filter_by(task_id=f'{d.id}.testupload').join(AnswerUpload).with_entities(AnswerUpload).first()
+
+        # Simulate the situation where the upload has not been associated to any answer.
+        a.answer_id = None
+        db.session.commit()
+
+        self.login_test2()
+        self.get(
+            f'/uploads/{d.id}/testupload/testuser1/1/test.txt',
+            expect_status=400,
+            expect_content='Upload has not been associated with any answer; it should be re-uploaded',
+        )
+
+    def do_plugin_upload(self, d: DocInfo, file_content, filename, task_id, task_name, expect_version=1):
+        ur = self.post(f'/pluginUpload/{d.id}/{task_name}/',
                        data={'file': (io.BytesIO(bytes(file_content, encoding='utf-8')), filename)},
                        expect_status=200)
         mimetype = "text/plain"
-        self.assertDictEqual({'file': f'/uploads/{doc.doc_id}/{task_name}/{self.current_user.name}/{expect_version}/{filename}',
+        self.assertDictEqual({'file': f'/uploads/{d.id}/{task_name}/{self.current_user.name}/{expect_version}/{filename}',
                               'type': mimetype,
                               'block': ur['block']}, ur)
         self.assertIsInstance(ur['block'], int)
@@ -320,12 +344,12 @@ class PluginTest(TimRouteTest):
     def test_group_answering(self):
         self.login_test1()
         self.login_test2(add=True)
-        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/upload_plugin.md').document
+        d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/upload_plugin.md')
         task_name = 'testupload'
-        task_id = f'{doc.doc_id}.{task_name}'
+        task_id = f'{d.id}.{task_name}'
         filename = 'test.txt'
         file_content = 'test file'
-        mimetype, ur, user_input = self.do_plugin_upload(doc, file_content, filename, task_id, task_name)
+        mimetype, ur, user_input = self.do_plugin_upload(d, file_content, filename, task_id, task_name)
         answer_list = self.get_task_answers(task_id)
         self.assertEqual(1, len(answer_list))
         self.assertEqual([{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID,

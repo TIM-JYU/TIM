@@ -29,7 +29,7 @@ from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import PluginUpload, PluginUploadInfo, UploadedFile
-from timApp.util.flask.requesthelper import use_model
+from timApp.util.flask.requesthelper import use_model, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
     PdfError, stamp_pdfs, create_tex_file, stamp_model_default_path
@@ -130,6 +130,8 @@ def get_upload(relfilename: str):
         if answerupload is None:
             abort(403)
         answer = answerupload.answer
+        if not answer:
+            raise RouteException('Upload has not been associated with any answer; it should be re-uploaded')
         tid = TaskId.parse(answer.task_id)
         d = get_doc_or_abort(tid.doc_id)
         verify_seeanswers_access(d)
