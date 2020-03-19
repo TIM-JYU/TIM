@@ -1,7 +1,8 @@
 import datetime
 import json
-
+from dataclasses import is_dataclass, fields
 from enum import Enum
+
 from isodate import duration_isoformat
 from jinja2 import Undefined
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -28,11 +29,11 @@ class TimJsonEncoder(json.JSONEncoder):
         if isinstance(o.__class__, DeclarativeMeta):
             data = {}
             if hasattr(o, '__json__'):
-                fields = o.__json__()
+                flds = o.__json__()
             else:
-                fields = dir(o)
-                fields = [f for f in fields if not f.startswith('_') and f not in ['metadata', 'query', 'query_class']]
-            for field in fields:
+                flds = dir(o)
+                flds = [f for f in flds if not f.startswith('_') and f not in ['metadata', 'query', 'query_class']]
+            for field in flds:
                 value = o.__getattribute__(field)
                 try:
                     json.dumps(value, cls=TimJsonEncoder)
@@ -42,7 +43,8 @@ class TimJsonEncoder(json.JSONEncoder):
             return data
         if isinstance(o, Enum):
             return o.value
-
+        if is_dataclass(o):
+            return {f.name: getattr(o, f.name) for f in fields(o)}
         from timApp.document.docparagraph import DocParagraph
         if isinstance(o, DocParagraph):  # currently not used anywhere
             return {'md': o.get_markdown(),

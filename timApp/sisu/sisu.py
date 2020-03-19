@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from json import JSONDecodeError
 from textwrap import dedent
@@ -443,9 +443,6 @@ class CandidateAssessment:
     @property
     def is_passing_grade(self):
         return self.gradeId and not self.is_fail_grade
-
-    def to_json(self):
-        return asdict(self)
 
 
 AssessmentSchema = class_schema(Assessment)

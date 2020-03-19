@@ -2,7 +2,7 @@
 import json
 import re
 from collections import defaultdict
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict
 
 from flask import Blueprint
@@ -1066,9 +1066,6 @@ class FieldInfo:
     aliases: Dict[str, str]
     fieldnames: List[str]
     graphdata: GraphData
-
-    def to_json(self):
-        return asdict(self)
 
 
 def get_plug_vals(doc: DocInfo, tid: TaskId, curr_user: User, user: User) -> Optional[FieldInfo]:

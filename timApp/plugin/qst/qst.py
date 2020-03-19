@@ -1,29 +1,28 @@
 """Routes for qst (question) plugin."""
 import json
 import re
-from typing import Dict, Any, NamedTuple, Optional
+from dataclasses import dataclass
+from typing import Dict, Any, Optional
 from xml.sax.saxutils import quoteattr
 
 import yaml
-from dataclasses import dataclass, asdict
 from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
 
-from timApp.plugin.containerLink import convert_md
+from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docinfo import DocInfo
+from timApp.lecture.askedjson import normalize_question_json
 from timApp.markdown.dumboclient import DumboOptions
+from timApp.plugin.containerLink import convert_md
+from timApp.plugin.containerLink import prepare_for_dumbo_attr_list_recursive, get_plugin_regex_obj
 from timApp.plugin.plugin import Plugin, PluginException
 from timApp.plugin.plugin import get_num_value
 from timApp.plugin.plugin import get_value
 from timApp.tim_app import csrf
 from timApp.util.flask.requesthelper import verify_json_params
 from timApp.util.flask.responsehelper import json_response
-from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.docinfo import DocInfo
-from timApp.lecture.askedjson import normalize_question_json
-
-from timApp.plugin.containerLink import prepare_for_dumbo_attr_list_recursive, get_plugin_regex_obj
 
 qst_plugin = Blueprint('qst_plugin',
                        __name__,
@@ -38,9 +37,6 @@ class QuestionInDocument:
     docId: int
     parId: str
     isPreamble: bool
-
-    def to_json(self):
-        return asdict(self)
 
 
 @qst_plugin.route("/qst/mcq/reqs/")
