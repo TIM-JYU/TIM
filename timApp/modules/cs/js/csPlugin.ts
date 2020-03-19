@@ -810,7 +810,6 @@ class CsController extends CsBase implements ITimComponent {
     private imgURL: string;
     private indent!: number;
     private initUserCode: boolean = false;
-    private irrotaKiinnita?: string;
     private isRunning: boolean = false;
     private lastJS: string;
     private lastMD: string;
@@ -2670,21 +2669,6 @@ class CsController extends CsBase implements ITimComponent {
         this.write(s + "\n");
     }
 
-    toggleFixed() {
-        if (!this.canvas) {
-            console.warn("toggleFixed: canvas not initialized");
-            return;
-        }
-        if (this.canvas.style.position === "fixed") {
-            this.canvas.style.position = "";
-            this.irrotaKiinnita = this.english ? "Release" : "Irrota";
-        } else {
-            this.canvas.style.position = "fixed";
-            this.canvas.style.width = "900px";
-            this.irrotaKiinnita = this.english ? "Fix" : "Kiinnitä";
-        }
-    }
-
     getCode() {
         if (this.program && !this.codeInitialized) {
             this.localcode = this.program;
@@ -2751,7 +2735,6 @@ class CsController extends CsBase implements ITimComponent {
                     fsrc = "/cs/gethtml/processing.html";
                 }
                 const v = this.getVid(dw, dh);
-                this.irrotaKiinnita = this.english ? "Release" : "Irrota";
                 html = (this.attrs.html ?? html);
                 html = encodeURI(html);
                 let opts = 'seamless="seamless" sandbox="allow-scripts allow-forms allow-same-origin"';
@@ -2759,12 +2742,15 @@ class CsController extends CsBase implements ITimComponent {
                     opts = this.iframeopts;
                 }
                 const angularElement = `
-<div tim-draggable-fixed class="no-popup-menu" style="top: 91px; right: 0px; z-index: 20">
+<div tim-draggable-fixed
+     caption="Preview"
+     detachable="true"
+     class="no-popup-menu">
     <span class="csRunMenu">
-        <div class="csFixRelease"><a href ng-click="$ctrl.toggleFixed()">{{$ctrl.irrotaKiinnita}}</a>
-        <a href
+        <tim-close-button
            ng-click="$ctrl.closeFrame()"
-           style="float: right">[X]</a></div></span>
+           style="float: right"></tim-close-button>
+    </span>
     <iframe ng-if="!$ctrl.fullhtml" id="${v.vid}" class="jsCanvas"
             src="${fsrc}?scripts=${this.attrs.scripts ?? scripts}&html=${html}" ${v.w}${v.h} style="border:0"
             ${opts}></iframe>
