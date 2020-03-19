@@ -70,14 +70,6 @@ Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.
 
 const csApp = angular.module("csApp", ["ngSanitize", "ngFileUpload"]);
 
-function csLogTime(msg: string) {
-    const d = new Date();
-    const diff = d.getTime() - csPluginStartTime.getTime();
-    console.log("cs: " + d.toLocaleTimeString() + " " + diff.valueOf() + " - " + msg);
-}
-
-csLogTime("directives done");
-
 let taunoNr = 0;
 
 // ==============================================================
@@ -1314,9 +1306,6 @@ class CsController extends CsBase implements ITimComponent {
 
         this.processPluginMath();
         const tid = this.pluginMeta.getTaskId();
-        if (tid) {
-            csLogTime(tid.docTask());
-        }
 
         this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
         this.initSaved();
@@ -1574,12 +1563,6 @@ class CsController extends CsBase implements ITimComponent {
 
         }
 
-    }
-
-    logTime(msg: string) {
-        const tid = this.pluginMeta.getTaskId();
-        csLogTime(msg + " " + (tid?.docTask()));
-        return true;
     }
 
     runCodeIfCR(event: KeyboardEvent) {
