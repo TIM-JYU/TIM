@@ -374,11 +374,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.getAnswersAndUpdate();
         });
 
-        if (this.viewctrl.teacherMode) {
-            // ng-keypress will not fire if the textbox has focus
-            this.element[0].addEventListener("keydown", this.checkKeyPress);
-        }
-
         if (this.viewctrl.selectedUser) {
             this.user = this.viewctrl.selectedUser;
         } else if (this.viewctrl.users && this.viewctrl.users.length > 0) {
@@ -561,7 +556,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             if (this.answerLoader) {
                 this.answerLoader(this.selectedAnswer);
             } else {
-                void loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
+                await loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
             }
             if (this.review) {
                 this.reviewHtml = r.result.data.reviewHtml;
@@ -571,22 +566,22 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
     }
 
-    nextAnswer() {
+    async nextAnswer() {
         let newIndex = this.findSelectedAnswerIndex() - 1;
         if (newIndex < 0) {
             newIndex = this.filteredAnswers.length - 1;
         }
         this.selectedAnswer = this.filteredAnswers[newIndex];
-        this.changeAnswer();
+        await this.changeAnswer();
     }
 
-    previousAnswer() {
+    async previousAnswer() {
         let newIndex = this.findSelectedAnswerIndex() + 1;
         if (newIndex >= this.filteredAnswers.length) {
             newIndex = 0;
         }
         this.selectedAnswer = this.filteredAnswers[newIndex];
-        this.changeAnswer();
+        await this.changeAnswer();
     }
 
     findSelectedUserIndex() {
@@ -601,7 +596,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return -1;
     }
 
-    checkKeyPress = (e: KeyboardEvent) => {
+    async checkKeyPress(e: KeyboardEvent) {
         if (this.loading > 0) {
             return;
         }
@@ -609,21 +604,21 @@ export class AnswerBrowserController extends DestroyScope implements IController
             // e.key does not work on IE but it is more readable, so let's use both
             if ((e.key === "ArrowUp" || e.which === KEY_UP)) {
                 e.preventDefault();
-                this.changeStudent(-1);
+                await this.changeStudent(-1);
             } else if ((e.key === "ArrowDown" || e.which === KEY_DOWN)) {
                 e.preventDefault();
-                this.changeStudent(1);
+                await this.changeStudent(1);
             } else if ((e.key === "ArrowLeft" || e.which === KEY_LEFT)) {
                 e.preventDefault();
-                this.previousAnswer();
+                await this.previousAnswer();
             } else if ((e.key === "ArrowRight" || e.which === KEY_RIGHT)) {
                 e.preventDefault();
-                this.nextAnswer();
+                await this.nextAnswer();
             }
         }
-    };
+    }
 
-    changeStudentToIndex(newIndex: number) {
+    async changeStudentToIndex(newIndex: number) {
         if (!this.users) {
             return;
         }
@@ -641,7 +636,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         this.user = this.users[newIndex];
-        this.getAnswersAndUpdate();
+        await this.getAnswersAndUpdate();
 
         // Be careful when modifying the following code. All browsers (IE/Chrome/FF)
         // behave slightly differently when it comes to (de-)focusing something.
@@ -654,23 +649,23 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }, 200);
     }
 
-    changeStudent(dir: 1 | -1) {
+    async changeStudent(dir: 1 | -1) {
         const newIndex = this.findSelectedUserIndex() + dir;
-        this.changeStudentToIndex(newIndex);
+        await this.changeStudentToIndex(newIndex);
     }
 
-    randomStudent() {
+    async randomStudent() {
         if (!this.users) {
             return;
         }
         const newIndex = Math.floor(Math.random() * this.users.length);
-        this.changeStudentToIndex(newIndex);
+        await this.changeStudentToIndex(newIndex);
     }
 
-    setNewest() {
+    async setNewest() {
         if (this.filteredAnswers.length > 0) {
             this.selectedAnswer = this.filteredAnswers[0];
-            this.changeAnswer();
+            await this.changeAnswer();
         }
     }
 
@@ -781,11 +776,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!data) {
             return;
         }
-        this.handleAnswerFetch(data);
+        await this.handleAnswerFetch(data);
         return data;
     }
 
-    private handleAnswerFetch(data: IAnswer[]) {
+    private async handleAnswerFetch(data: IAnswer[]) {
         if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length) || this.forceBrowser()) {
             this.answers = data;
             this.updateFiltered();
@@ -793,14 +788,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
             if (!this.selectedAnswer && !this.forceBrowser()) {
                 this.dimPlugin();
             } else {
-                this.changeAnswer();
+                await this.changeAnswer();
             }
         } else {
             this.answers = data;
             if (this.answers.length === 0 && this.viewctrl.teacherMode) {
                 this.dimPlugin();
             }
-            this.updateFilteredAndSetNewest();
+            await this.updateFilteredAndSetNewest();
         }
     }
 
@@ -994,10 +989,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
         });
     }
 
-    updateFilteredAndSetNewest() {
+    async updateFilteredAndSetNewest() {
         this.updateFiltered();
         if (this.findSelectedAnswerIndex() < 0) {
-            this.setNewest();
+            await this.setNewest();
         }
     }
 
@@ -1006,7 +1001,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     $onDestroy() {
-        this.element[0].removeEventListener("keydown", this.checkKeyPress);
     }
 
     private getTaskName() {

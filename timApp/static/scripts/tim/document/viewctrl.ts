@@ -449,11 +449,38 @@ export class ViewCtrl implements IController {
         this.reviewCtrl.loadDocumentAnnotations();
         this.editingHandler.insertHelpPar();
         this.viewRangeInfo.loadRanges();
-        // window.onbeforeunload = () => {
-        //     const dirty = this.checkUnSavedTimComponents();
-        //     if ( dirty ) { return "You have unsaved tasks!"; }  // IE shows this message
-        //     // And for IE you can not return anything, otherwise it will show even null
-        // };
+
+        if (this.teacherMode) {
+            document.addEventListener("keydown", async (e) => {
+                const activeElement = document.activeElement;
+                if (!activeElement) {
+                    return;
+                }
+                let abElem: Element | null = $(activeElement).parents("tim-plugin-loader")[0];
+                if (!abElem) {
+                    abElem = $(activeElement).parents(".par")[0]?.querySelector("tim-plugin-loader");
+                }
+                if (abElem) {
+                    const tid = abElem.getAttribute("task-id");
+                    if (tid) {
+                        const p = TaskId.tryParse(tid);
+                        if (p.ok) {
+                            const ab = this.getAnswerBrowser(p.result.docTask());
+                            if (ab) {
+                                await ab.checkKeyPress(e);
+
+                                // If the focus was in a textarea element, it means the focus was inside the plugin
+                                // area (because answerbrowser itself doesn't have any textareas), and so we need to
+                                // re-focus it.
+                                if (activeElement.tagName === "TEXTAREA") {
+                                    abElem.querySelector("textarea")?.focus();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
     }
 
     /**
