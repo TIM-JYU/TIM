@@ -72,6 +72,11 @@ class PreviewTest(TimRouteTest):
         )
         self.check_spelling(
             d,
+            ["""<p>Maitoa 0.5 litraa</p>"""],
+            'Maitoa 0.5 litraa',
+        )
+        self.check_spelling(
+            d,
             [''],
             '#- {defaultplugin=xxx}',
         )

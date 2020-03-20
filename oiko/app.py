@@ -9,6 +9,7 @@ def proofread():
     phrases = request.get_json()
     # The Voikko object is NOT thread-safe; we cannot initialize it in module level.
     voikko = Voikko("fi")
+    voikko.setIgnoreNumbers(True)
     tokenized = [voikko.tokens(p) for p in phrases]
 
     def get_spelling_info(s: str):
