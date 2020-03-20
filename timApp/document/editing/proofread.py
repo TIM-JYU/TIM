@@ -100,6 +100,6 @@ def process_spelling_errors(s: str) -> SpellCheckResult:
             e.replace_with(n)
 
     # Unwrap html and body tags.
-    new_html = ''.join(str(e) for e in bs.contents[0].contents[0].contents) if s else ''
+    new_html = ''.join(str(e) for e in bs.contents[0].contents[0].contents) if bs.contents else ''
 
     return SpellCheckResult(words=words, new_html=new_html)

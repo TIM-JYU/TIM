@@ -1,4 +1,6 @@
 """Server tests for preview."""
+from typing import List
+
 from lxml.html import HtmlElement
 
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -68,12 +70,26 @@ class PreviewTest(TimRouteTest):
             ],
             'juustu juustu\n#-\njuustu',
         )
+        self.check_spelling(
+            d,
+            [''],
+            '#- {defaultplugin=xxx}',
+        )
+        self.check_spelling(
+            d,
+            [],
+            '',
+        )
 
     def check_spelling(self, d, expected, markdown):
-        e: HtmlElement = self.post_preview(d, text=markdown, json_key='texts', as_tree=True, spellcheck=True)
-        contents = e.cssselect('.parContent')
+        e: List[HtmlElement] = self.post_preview(d, text=markdown, json_key='texts', as_tree='fragments', spellcheck=True)
+        self.assertEqual(len(e), len(expected))
         for i, ex in enumerate(expected):
+            children = e[i].cssselect('.parContent')[0].getchildren()
+            if not children:
+                self.assertEqual('', ex)
+                continue
             self.assert_same_html(
-                contents[i].getchildren()[0],
+                children[0],
                 ex,
             )

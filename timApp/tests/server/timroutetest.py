@@ -254,9 +254,14 @@ class TimRouteTest(TimDbTest):
         if as_tree:
             if json_key is not None:
                 resp_data = json.loads(resp_data)[json_key]
-            tree = html.fromstring(resp_data)
-            if expect_xpath is not None:
-                self.assertLessEqual(1, len(tree.findall(expect_xpath)))
+            if as_tree is True:
+                tree = html.fromstring(resp_data)
+                if expect_xpath is not None:
+                    self.assertLessEqual(1, len(tree.findall(expect_xpath)))
+            elif as_tree == 'fragments':
+                tree = html.fragments_fromstring(resp_data)
+            else:
+                raise Exception(f'Unknown value for as_tree: {as_tree}')
             return tree
         elif resp.mimetype == 'application/json':
             loaded = json.loads(resp_data)
