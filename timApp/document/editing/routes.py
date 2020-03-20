@@ -339,7 +339,12 @@ def preview_paragraphs(doc_id):
     if not rjson.get('isComment'):
         doc = docinfo.document
         edit_request = EditRequest.from_request(doc, preview=True)
-        blocks = edit_request.get_pars()
+        try:
+            blocks = edit_request.get_pars()
+        except ValidationException as e:
+            blocks = [DocParagraph.create(doc=doc, md='', html=get_error_html(e))]
+            proofread = False
+            edit_request = None
         return par_response(blocks, docinfo, proofread, edit_request=edit_request)
     else:
         comment_html = md_to_html(text)

@@ -3,7 +3,7 @@ from typing import List
 
 from lxml.html import HtmlElement
 
-from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tests.server.timroutetest import TimRouteTest, get_content
 
 
 class PreviewTest(TimRouteTest):
@@ -28,6 +28,12 @@ class PreviewTest(TimRouteTest):
         d = self.create_doc()
         e = self.post_preview(d, text='test\\\ntest2\\', json_key='texts', as_tree=True)
         self.assert_content(e, ['test\ntest2'])
+
+    def test_attributes_at_end_of_code_block(self):
+        self.login_test1()
+        d = self.create_doc()
+        e = self.post_preview(d, text='```\n``` {}', json_key='texts', as_tree=True)
+        self.assertTrue(get_content(e)[0].startswith('Attributes at end of code block noticed in paragraph '))
 
     def test_preamble_preview_first(self):
         """Make sure an exception won't occur when editing the first paragraph of a document with a preamble."""
