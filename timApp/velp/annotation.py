@@ -37,7 +37,7 @@ class AddAnnotationModel:
     doc_id: int
     coord: AnnotationPosition
     visible_to: AnnotationVisibility = field(metadata={'by_value': True})
-    points: Optional[int]
+    points: Optional[float]
     color: Optional[str] = None
     icon_id: Optional[int] = None
     answer_id: Optional[int] = None
@@ -83,7 +83,7 @@ class AnnotationIdModel:
 @dataclass
 class UpdateAnnotationModel(AnnotationIdModel):
     visible_to: AnnotationVisibility = field(metadata={'by_value': True})
-    points: Optional[int] = None
+    points: Optional[float] = None
     color: Optional[str] = None
     coord: Optional[AnnotationPosition] = None
 

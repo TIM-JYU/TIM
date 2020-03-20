@@ -84,7 +84,9 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
                 <div>
                     <div *ngIf="showFull">
                         <p [hidden]="!isAnnotator() || !allowChangePoints()"><label>
-                            Points: <input type="number" [(ngModel)]="values.points"
+                            Points: <input type="number"
+                                           [(ngModel)]="values.points"
+                                           step="any"
                                            [disabled]="!isAnnotator()"/></label>
                         </p>
                         <p *ngIf="!isAnnotator()"><label
