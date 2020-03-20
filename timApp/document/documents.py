@@ -2,24 +2,17 @@
 
 from typing import Optional
 
+from timApp.auth.auth_models import BlockAccess
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
-from timApp.document.yamlblock import YamlBlock
-from timApp.document.docinfo import DocInfo
-from timApp.item.block import Block, BlockType
-from timApp.document.docentry import DocEntry, create_document_and_block
 from timApp.document.translation.translation import Translation
-from timApp.auth.auth_models import BlockAccess
+from timApp.document.yamlblock import YamlBlock
+from timApp.item.block import Block, BlockType
 from timApp.note.usernote import UserNote
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.user.usergroup import UserGroup
-
-
-def create_translation(original_doc: Document,
-                       owner_group) -> Document:
-    doc = create_document_and_block(owner_group)
-    add_reference_pars(doc, original_doc, 'tr')
-    return doc
 
 
 def apply_citation(new_doc: DocInfo, src_doc: Document):

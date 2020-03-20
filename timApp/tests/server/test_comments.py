@@ -229,3 +229,19 @@ hi
         self.assertEqual('user3', comments[1].text_content())
         r = self.post_comment_and_return_html('test3', par)
         self.assertEqual('user3', r[1].cssselect('.username')[0].text_content())
+
+    def test_comment_name_not_visible_when_referenced(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="test")
+        par = d.document.get_paragraphs()[0]
+        self.post_comment(par, public=True, text='test')
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.login_test2()
+        d2 = self.create_doc()
+        d2.document.add_paragraph_obj(par.create_reference(d2.document))
+        r = self.get(d2.url, as_tree=True)
+        comments = r.cssselect('.notes > .note')
+        self.assertEqual(1, len(comments))
+        names = r.cssselect('.notes > .note > .username')
+        self.assertEqual(0, len(names))

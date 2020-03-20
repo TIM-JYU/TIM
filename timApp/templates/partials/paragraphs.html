@@ -35,7 +35,7 @@
          note-id="{{ note.note.id }}">
         {{ note.note.html|safe }}
         &mdash;
-        {%- if item.rights.teacher %}
+        {%- if note.editable %}
         {% set info = note.user.basic_info_dict %}
         <a class="username" title="{{ info.real_name }}" href="mailto:{{ info.email }}"
         >{{ info.name }}</a>

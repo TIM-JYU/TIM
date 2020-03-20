@@ -502,11 +502,16 @@ class Document:
     def add_text(self, text: str) -> List[DocParagraph]:
         """Converts the given text to (possibly) multiple paragraphs and adds them to the document."""
         pars, _ = self.text_to_paragraphs(text, False)
-        return [self.add_paragraph_obj(p) for p in pars]
+        old_ver = self.get_version()
+        result = [self.add_paragraph_obj(p, update_meta=False) for p in pars]
+        new_ver = self.get_version()
+        self.__update_metadata(result, old_ver, new_ver)
+        return result
 
-    def add_paragraph_obj(self, p: DocParagraph) -> DocParagraph:
+    def add_paragraph_obj(self, p: DocParagraph, update_meta=True) -> DocParagraph:
         """Appends a new paragraph into the document.
 
+        :param update_meta: Whether to update metadata.
         :param p: Paragraph to be added.
         :return: The same paragraph object, or None if could not add.
 
@@ -524,6 +529,8 @@ class Document:
         with new_path.open('a') as f:
             f.write(p.get_id() + '/' + p.get_hash())
             f.write('\n')
+        if update_meta:
+            self.__update_metadata([p], old_ver, new_ver)
         return p
 
     def add_paragraph(

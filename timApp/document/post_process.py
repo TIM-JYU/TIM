@@ -6,7 +6,8 @@ from typing import List, Dict, DefaultDict, Tuple
 import pytz
 from flask import flash
 
-from timApp.auth.accesshelper import has_ownership, has_edit_access
+from timApp.auth.accesshelper import has_ownership, has_edit_access, has_teacher_access
+from timApp.document.docentry import DocEntry
 from timApp.document.hide_names import hide_names_in_teacher
 from timApp.note.notes import get_notes, UserNoteAndUser
 from timApp.document.docparagraph import DocParagraph
@@ -68,7 +69,8 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict: DefaultDict[Tuple[str, int], List[dict]] = defaultdict(list)
 
-    if not has_edit_access(doc.get_docinfo()):
+    docinfo = doc.get_docinfo()
+    if not has_edit_access(docinfo):
         for p in final_pars:
             if p.is_question():
                 d = p.get_final_dict()
@@ -123,15 +125,22 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
 
     taketime("read mixed")
     notes = get_notes(group, doc)
-    is_owner = has_ownership(doc.get_docinfo())
     # taketime("notes picked")
 
-    should_hide_names = hide_names_in_teacher(doc.get_docinfo())
+    should_hide_names = hide_names_in_teacher(docinfo)
+    comment_docs = {docinfo.id: docinfo}
+    teacher_access_cache = {}
     for n, u in notes:
         key = (n.par_id, n.doc_id)
         pars = pars_dict.get(key)
         if pars:
-            editable = n.usergroup_id == group or is_owner
+            if n.doc_id not in comment_docs:
+                comment_docs[n.doc_id] = DocEntry.find_by_id(n.doc_id)
+            has_teacher = teacher_access_cache.get(n.doc_id)
+            if has_teacher is None:
+                has_teacher = bool(has_teacher_access(comment_docs[n.doc_id]))
+                teacher_access_cache[n.doc_id] = has_teacher
+            editable = n.usergroup_id == group or has_teacher
             private = n.access == 'justme'
             for p in pars:
                 if 'notes' not in p:

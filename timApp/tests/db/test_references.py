@@ -105,6 +105,7 @@ class RefTest(TimDbTest):
         self.src_par.set_attr('rp', ref_par.get_id())
         self.src_doc.modify_paragraph_obj(self.src_par.get_id(), self.src_par)
 
+        self.ref_doc.clear_mem_cache()
         self.assertRaises(TimDbException, ref_par.get_referenced_pars)
         self.assertRaises(TimDbException, self.src_par.get_referenced_pars)
 
