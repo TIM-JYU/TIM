@@ -418,11 +418,17 @@ class DrawIO(JSframe):
             return None
         matches: Iterable[Match] = SVGTEXT_PROG.finditer(c)
         texts = ""
+        line = ""
         for m in matches:
             text = m.group(1)
             text = bytes(text, 'ISO-8859-1').decode('utf-8') # TODO: miksi näin pitää tehdä???
             if text != "Viewer does not support full SVG 1.1":
-                texts += text + "\n"
+                if len(line) + len(text) > 75:
+                    texts += line + "\n"
+                    line = ""
+                line += text + ", "
+        if line:
+            texts += line
         if not texts:
             texts = "Labels: 0"
         return texts
