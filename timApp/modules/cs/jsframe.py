@@ -354,7 +354,11 @@ JSREADYHTML['simpleDrawIO'] = """
 		}
 		function setData(data) {
 		    if ( !data || !data.c || Object.entries(data.c).length === 0 ) return;
-		    document.getElementById('diagram').innerHTML = data.c;
+		    let c = data.c;
+		    let d = String.fromCharCode(195);  // UTF-Escape for ä
+		    if ( c.indexOf(d) >= 0 )
+		        c = decodeURIComponent(escape(c));
+		    document.getElementById('diagram').innerHTML = c;
 		}
 	</script>
 
@@ -386,6 +390,13 @@ SVGTEXT_PROG = re.compile(">([^>]*)</text")
 
 class DrawIO(JSframe):
     def modify_query(self):
+        """
+        state = self.query.jso.get('state', None)
+        if state:
+            c = state.get('c', None)
+            if c:
+                state['c'] = bytes(c, 'ISO-8859-1').decode('utf-8') # TODO: miksi näin pitää tehdä???
+        """
         ma = self.query.jso['markup']
         readyhtml = get_by_id(ma, "readyHtml", None)
         srchtml = get_by_id(ma, "srchtml", None)
