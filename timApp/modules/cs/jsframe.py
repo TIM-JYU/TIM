@@ -1,6 +1,12 @@
 import json
 import os
+
+import re
+
+from collections import Iterable
+
 from languages import Language, get_by_id
+from typing import Match
 
 JSREADYHTML = {}
 
@@ -156,9 +162,9 @@ class ChartJS(JSframe):
 
 JSREADYHTML['simpleDrawIO'] = """
 <!doctype html>
-<meta charset="UTF8"> 
 <html>
 <head>
+    <meta charset="UTF-8"> 
 	<style type="text/css">
 		html, body, #wrapper {
 			height:90%;
@@ -374,6 +380,10 @@ fs.checked = TIMJS.options.fullscreen;
 </html>
 """
 
+# see: https://regex101.com/r/eEPcs2/1/
+# regexp to find text's inside svg
+SVGTEXT_PROG = re.compile(">([^>]*)</text")
+
 class DrawIO(JSframe):
     def modify_query(self):
         ma = self.query.jso['markup']
@@ -397,3 +407,22 @@ class DrawIO(JSframe):
         ma["options"] = {'fullscreen': ma.get("fullscreen", True)}
         super().modify_query()
         return
+
+
+    def get_review(self, usercode):
+        """
+        return text to show when reviewing task
+        """
+        c = self.query.jso.get('state', {}).get('c', None)
+        if not c:
+            return None
+        matches: Iterable[Match] = SVGTEXT_PROG.finditer(c)
+        texts = ""
+        for m in matches:
+            text = m.group(1)
+            text = bytes(text, 'ISO-8859-1').decode('utf-8') # TODO: miksi näin pitää tehdä???
+            if text != "Viewer does not support full SVG 1.1":
+                texts += text + "\n"
+        if not texts:
+            texts = "Labels: 0"
+        return texts

@@ -448,10 +448,11 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
             s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
         if uploaded_file is not None:
             s = s + '<p>File:</p><pre>' + os.path.basename(uploaded_file) + '</pre>'
-        if isinstance(usercode, str):
-            s = '<pre>' + usercode + '</ pre>' + s
+        ucode =  language.get_review(usercode)
+        if isinstance(ucode, str):
+            s = '<pre>' + ucode + '</ pre>' + s
         if not s:
-            s = "No answer"
+            s = "<pre>No answer</pre>"
         result = NOLAZY + '<div class="review" ng-non-bindable>' + s + '</div>'
         return result
 

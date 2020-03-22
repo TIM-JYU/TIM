@@ -1,6 +1,8 @@
 from subprocess import check_output
 from typing import Optional
 
+import requests
+
 from points import *
 from run import *
 from os.path import splitext
@@ -252,6 +254,12 @@ class Language:
 
     def iframehtml(self, result, sourcelines, points_rule):
         return ""
+
+    def get_review(self, usercode):
+        """
+        return text to show when reviewing task
+        """
+        return usercode
 
     def runself(self, args, cwd=None, shell=None, kill_tree=None, timeout=None, env=None, stdin=None, uargs=None,
                 code=None, extra=None, ulimit=None, no_x11=None, savestate=None, dockercontainer=None,

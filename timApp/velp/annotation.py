@@ -107,7 +107,7 @@ def update_annotation(m: UpdateAnnotationModel):
     if visible_to:
         ann.visible_to = visible_to.value
 
-    validate_color(color)
+    # validate_color(color) # TODO: tämä ei salli värien nimiä kuten aqua tms, iPadillä niitä saa kirjoittaa
 
     ann.color = color
 
