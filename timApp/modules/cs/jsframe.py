@@ -282,7 +282,8 @@ JSREADYHTML['simpleDrawIO'] = """
 					{
 						// Extracts SVG DOM from data URI to enable links
 						var svg = atob(msg.data.substring(msg.data.indexOf(',') + 1));
-						elt.innerHTML = svg;
+						// elt.innerHTML = svg;
+						setData({'c': svg});
 						// localStorage.setItem(name, JSON.stringify({lastModified: new Date(), data: svg}));
 						// localStorage.removeItem('.draft-' + name);
 						draft = null;

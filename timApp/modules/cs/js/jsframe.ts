@@ -493,6 +493,9 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
     }
 
     setData<T extends JSFrameData>(data: T, save = false) {
+        if (this.iframesettings) {
+            this.iframesettings.height = 900;
+        }
         if (save) {
             this.runSend(data);
         }
