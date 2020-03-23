@@ -598,24 +598,29 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async checkKeyPress(e: KeyboardEvent) {
         if (this.loading > 0) {
-            return;
+            return false;
         }
         if (e.ctrlKey) {
             // e.key does not work on IE but it is more readable, so let's use both
             if ((e.key === "ArrowUp" || e.which === KEY_UP)) {
                 e.preventDefault();
                 await this.changeStudent(-1);
+                return true;
             } else if ((e.key === "ArrowDown" || e.which === KEY_DOWN)) {
                 e.preventDefault();
                 await this.changeStudent(1);
+                return true;
             } else if ((e.key === "ArrowLeft" || e.which === KEY_LEFT)) {
                 e.preventDefault();
                 await this.previousAnswer();
+                return true;
             } else if ((e.key === "ArrowRight" || e.which === KEY_RIGHT)) {
                 e.preventDefault();
                 await this.nextAnswer();
+                return true;
             }
         }
+        return false;
     }
 
     async changeStudentToIndex(newIndex: number) {

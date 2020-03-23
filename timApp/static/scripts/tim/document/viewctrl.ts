@@ -456,6 +456,9 @@ export class ViewCtrl implements IController {
                 if (!activeElement) {
                     return;
                 }
+                if (!e.ctrlKey) {
+                    return;
+                }
                 let abElem: Element | null = $(activeElement).parents("tim-plugin-loader")[0];
                 if (!abElem) {
                     abElem = $(activeElement).parents(".par")[0]?.querySelector("tim-plugin-loader");
@@ -467,12 +470,12 @@ export class ViewCtrl implements IController {
                         if (p.ok) {
                             const ab = this.getAnswerBrowser(p.result.docTask());
                             if (ab) {
-                                await ab.checkKeyPress(e);
+                                const changed = await ab.checkKeyPress(e);
 
                                 // If the focus was in a textarea element, it means the focus was inside the plugin
                                 // area (because answerbrowser itself doesn't have any textareas), and so we need to
                                 // re-focus it.
-                                if (activeElement.tagName === "TEXTAREA") {
+                                if (changed && activeElement.tagName === "TEXTAREA") {
                                     abElem.querySelector("textarea")?.focus();
                                 }
                             }
