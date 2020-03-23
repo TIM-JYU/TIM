@@ -230,6 +230,17 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
     private channel?: MessageChannel;
     @ViewChild("frame") private frame?: ElementRef<HTMLIFrameElement>;
 
+    b64EncodeUnicode(str: string) {
+        // first we use encodeURIComponent to get percent-encoded UTF-8,
+        // then we convert the percent encodings into raw bytes which
+        // can be fed into btoa.
+        const s = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+            function toSolidBytes(match, p1) {
+                return String.fromCharCode(parseInt("0x" + p1, 16));
+        });
+        return btoa(s);
+    }
+
     ngOnInit() {
         super.ngOnInit();
         this.viewctrl = vctrlInstance!;
@@ -384,7 +395,8 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
             let html = this.markup.srchtml ?? "";
             html = html.replace("</body>", this.communicationJS + "\n</body>");
             html = html.replace("// INITDATA", this.initData);
-            const datasrc = btoa(html);
+            // const datasrc = btoa(html);
+            const datasrc = this.b64EncodeUnicode(html);
             src = "data:text/html;base64," + datasrc;
         }
 

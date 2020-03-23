@@ -357,8 +357,13 @@ JSREADYHTML['simpleDrawIO'] = """
 		    if ( !data || !data.c || Object.entries(data.c).length === 0 ) return;
 		    let c = data.c;
 		    let d = String.fromCharCode(195);  // UTF-Escape for ä
-		    if ( c.indexOf(d) >= 0 )
-		        c = decodeURIComponent(escape(c));
+		    if ( c.indexOf(d) >= 0 ) {
+		        try {
+		           c = decodeURIComponent(escape(c));
+		        } catch(err) {
+		           // let c be as it was
+		        }   
+		    }   
 		    document.getElementById('diagram').innerHTML = c;
 		}
 	</script>
@@ -433,7 +438,13 @@ class DrawIO(JSframe):
         line = ""
         for m in matches:
             text = m.group(1)
-            text = bytes(text, 'ISO-8859-1').decode('utf-8') # TODO: miksi näin pitää tehdä???
+            try:
+                d = chr(195)
+                if text.find(d) >= 0:
+                    text = bytes(text, 'ISO-8859-1').decode('utf-8') # TODO: miksi näin pitää tehdä???
+            except:
+                # let text be as it was
+                text = text
             if text != "Viewer does not support full SVG 1.1":
                 if len(line) + len(text) > 75:
                     texts += line + "\n"
