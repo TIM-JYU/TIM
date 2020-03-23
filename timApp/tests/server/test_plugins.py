@@ -1186,6 +1186,8 @@ needed_len: 6
 
         self.login_test2()
         self.post_answer('pali', f'{d.id}.t.points', user_input={'userword': 2}, expect_status=403)
+        self.login_test3()
+        self.get(f'/taskinfo/{d.id}.t', expect_status=403)
 
     def test_translation_plugin_state(self):
         """Plugin's initial state is correctly loaded in a translated document."""

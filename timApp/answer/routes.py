@@ -931,6 +931,8 @@ def get_task_infos():
 def get_task_info(task_id):
     try:
         plugin = Plugin.from_task_id(task_id, user=get_current_user_object())
+        d = get_doc_or_abort(plugin.task_id.doc_id)
+        verify_view_access(d)
         tim_vars = find_tim_vars(plugin)
     except PluginException as e:
         return abort(400, str(e))
