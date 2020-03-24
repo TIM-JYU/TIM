@@ -1,7 +1,8 @@
 import enum
 
-from timApp.item.block import Block
+from timApp.item.block import Block, BlockType
 from timApp.timdb.sqa import db, is_attribute_loaded
+from timApp.util.logger import log_warning
 
 
 class NotificationType(enum.Enum):
@@ -56,6 +57,15 @@ class Notification(db.Model):
             'email_comment_modify': self.email_comment_modify,
         }
         if is_attribute_loaded('block', self):
-            # Assuming block.folder, block.docentries have also been loaded.
-            j['item'] = self.block.folder or self.block.translation or self.block.docentries[0]
+            if self.block.type_id == BlockType.Folder.value:
+                j['item'] = self.block.folder
+            elif self.block.type_id == BlockType.Document.value:
+                if self.block.translation:
+                    j['item'] = self.block.translation
+                elif self.block.docentries:
+                    j['item'] = self.block.docentries[0]
+                else:
+                    log_warning(f'No docentries for block: {self.block.id}')
+            else:
+                log_warning(f'Unexpected block type in notification: {self.block.type_id}')
         return j

@@ -201,7 +201,10 @@ class NotifyFolderTest(NotifyTestBase):
         self.login_test2()
         self.update_notify_settings(d, {'email_comment_add': True, 'email_comment_modify': False,
                                         'email_doc_modify': True})
-
+        r = self.get('/notify/all')
+        self.assertEqual(2, len(r))
+        self.assertTrue(r[1]['item']['isFolder'])
+        self.assertFalse(r[0]['item']['isFolder'])
         self.login_test1()
         self.new_par(d.document, 'test')
         process_pending_notifications()
