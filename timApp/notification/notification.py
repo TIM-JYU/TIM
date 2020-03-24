@@ -67,5 +67,5 @@ class Notification(db.Model):
                 else:
                     log_warning(f'No docentries for block: {self.block.id}')
             else:
-                log_warning(f'Unexpected block type in notification: {self.block.type_id}')
+                log_warning(f'Unexpected block type in notification: {self.block.type_id} (id {self.block.id})')
         return j
