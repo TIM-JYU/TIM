@@ -28,6 +28,7 @@ import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 
 const JsframeMarkup = t.intersection([
     t.partial({
+        type: t.string,
         beforeOpen: t.string,
         showButton: t.string,
         srchtml: t.string,
@@ -230,10 +231,11 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
     private channel?: MessageChannel;
     @ViewChild("frame") private frame?: ElementRef<HTMLIFrameElement>;
 
-    b64EncodeUnicode(str: string) {
+    b64EncodeUnicode(str: string, codeUTF: boolean) {
         // first we use encodeURIComponent to get percent-encoded UTF-8,
         // then we convert the percent encodings into raw bytes which
         // can be fed into btoa.
+        if (!codeUTF) { return btoa(str); }
         const s = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
             function toSolidBytes(match, p1) {
                 return String.fromCharCode(parseInt("0x" + p1, 16));
@@ -396,7 +398,8 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
             html = html.replace("</body>", this.communicationJS + "\n</body>");
             html = html.replace("// INITDATA", this.initData);
             // const datasrc = btoa(html);
-            const datasrc = this.b64EncodeUnicode(html);
+            const type = this.attrsall.markup.type;
+            const datasrc = this.b64EncodeUnicode(html, type == "drawio");
             src = "data:text/html;base64," + datasrc;
         }
 
