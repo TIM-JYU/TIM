@@ -214,11 +214,11 @@ def prepare_for_dumbo_attr_list_recursive(regex_obj, plugin_data: dict):
         if isinstance(value, dict):
             prepare_for_dumbo_attr_list_recursive(regex_obj, value)
         elif isinstance(value, list):
-            if regex_obj.search(key) is not None:
+            if regex_obj.search(str(key)) is not None:
                 prepare_for_dumbo_attr_list_list_recursive(regex_obj, value)
         elif isinstance(value, str):
-             if regex_obj.search(key) is not None:
-                 if not plugin_data[key].startswith('md:'):
+            if regex_obj.search(str(key)) is not None:
+                if not plugin_data[key].startswith('md:'):
                     plugin_data[key] = "md:" + value
 
 

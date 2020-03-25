@@ -112,3 +112,13 @@ points: '2:1'</code></pre>
                  query_string={'doc_id': d.id, 'par_id': normal_par_id},
                  expect_status=400,
                  expect_content={'error': f'Paragraph is not a plugin: {normal_par_id}'})
+
+    def test_question_invalid_numeric_keys(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=qst}
+1:1|
+#- {plugin=qst}
+1:[]
+        """)
+        self.get(d.url)
