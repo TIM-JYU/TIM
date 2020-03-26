@@ -37,6 +37,12 @@
             }
             writeln(res);
         };
+        canvasConsole.assert = function(assertion, ...objs) {
+            if (!assertion) {
+                canvasConsole.log(...objs);
+            }
+        };
+        canvasConsole.info = canvasConsole.log;
 
         var beforeCode = 'function paint(ctx,out, userargs, userinput, console) {"use strict"; ';
         var afterCode = '\n}\n';
