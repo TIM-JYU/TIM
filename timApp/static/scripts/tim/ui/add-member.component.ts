@@ -13,34 +13,34 @@ interface IAddmemberResponse {
     template: `
         <tim-plugin-frame [markupError]="undefined">
             <tim-plugin-header header>
-                Add group members
+                Lisää ryhmän jäseniä
             </tim-plugin-header>
             <p stem>
-                Add usernames line-by-line or comma separated. Adding already added users is ok; they will not be
-                added twice.
+                Lisää käyttäjätunnukset allekkain tai pilkuilla eroteltuina.
+                Ei haittaa, vaikka listassa olisi jo lisättyjä jäseniä; heitä ei lisätä toista kertaa.
             </p>
             <ng-container body>
-                <textarea class="form-control" [(ngModel)]="users" placeholder="Add usernames here">
+                <textarea class="form-control" [(ngModel)]="users" placeholder="Kirjoita nimet tähän">
                 </textarea>
-                <button class="timButton" (click)="add()">Add</button>
+                <button class="timButton" (click)="add()">Lisää</button>
             </ng-container>
             <ng-container footer>
                 <div *ngIf="result">
-                    <tim-alert severity="success">Group updated.</tim-alert>
+                    <tim-alert severity="success">Päivitetty.</tim-alert>
                     <ng-container *ngIf="result.added.length > 0">
-                        Added:
+                        Lisätyt:
                         <ul>
                             <li *ngFor="let n of result.added">{{n}}</li>
                         </ul>
                     </ng-container>
                     <ng-container *ngIf="result.already_belongs.length > 0">
-                        Already belongs:
+                        Ryhmään jo kuuluvat:
                         <ul>
                             <li *ngFor="let n of result.already_belongs">{{n}}</li>
                         </ul>
                     </ng-container>
                     <ng-container *ngIf="result.not_exist.length > 0">
-                        Non-existent users:
+                        Käyttäjiä ei löydy:
                         <ul>
                             <li *ngFor="let n of result.not_exist">{{n}}</li>
                         </ul>
