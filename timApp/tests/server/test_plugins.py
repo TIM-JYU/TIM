@@ -275,7 +275,7 @@ class PluginTest(TimRouteTest):
         self.login_test2()
 
         # Another user cannot see the file
-        self.get(ur['file'], expect_status=403, expect_content=self.permission_error)
+        self.get(ur['file'], expect_status=403, expect_content="Sorry, you don't have permission to access this upload.")
 
         # and cannot post answers
         resp = self.post_answer('csPlugin', task_id, user_input, expect_status=403,
@@ -288,7 +288,7 @@ class PluginTest(TimRouteTest):
         # but he still cannot see the file
         resp = self.post_answer('csPlugin', task_id, user_input, expect_status=403,
                                 expect_content={'error': "You don't have permission to touch this file."})
-        self.get(ur['file'], expect_status=403, expect_content=self.permission_error)
+        self.get(ur['file'], expect_status=403, expect_content="Sorry, you don't have permission to access this upload.")
 
         # until the 'see answers' right is granted for the document
         self.current_user.grant_access(d, AccessType.see_answers)

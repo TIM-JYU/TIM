@@ -14,7 +14,7 @@ from flask import abort
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
-    grant_access_to_session_users, get_doc_or_abort, verify_edit_access
+    grant_access_to_session_users, get_doc_or_abort, verify_edit_access, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.auth.sessioninfo import logged_in, get_current_user_group_object
@@ -134,7 +134,8 @@ def get_upload(relfilename: str):
             raise RouteException('Upload has not been associated with any answer; it should be re-uploaded')
         tid = TaskId.parse(answer.task_id)
         d = get_doc_or_abort(tid.doc_id)
-        verify_seeanswers_access(d)
+        if not verify_seeanswers_access(d, require=False) and get_current_user_object() not in answer.users_all:
+            raise AccessDenied("Sorry, you don't have permission to access this upload.")
 
     up = PluginUpload(block)
     p = up.filesystem_path.as_posix()
