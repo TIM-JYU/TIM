@@ -183,7 +183,7 @@ class PaliComponent extends AngularPluginBase<t.TypeOf<typeof PluginMarkupFields
             this.error = data.web.error;
             this.result = data.web.result;
         } else {
-            this.error = r.result.data.error;
+            this.error = r.result.error.error;
         }
     }
 

@@ -187,7 +187,34 @@ function gsErrorHandler(err) {
 function getConsoleHeight() {
  return 0;
 }
+// } workaround comment for IDE linter misparsing
 
+
+function setData(data) {
+    if (data.language) {
+        setDefLanguage(data.language);
+    }
+    if (data.code) {
+        runJavaScript(data.code, data.args, data.input, data.console);
+    } else {
+        throw Error("Unexpected data for setData");
+    }
+}
+
+window.addEventListener('message', function (e) {
+    if (e.data.msg === "init") {
+        window.port2 = e.ports[0];
+        window.port2.onmessage = onMessage;
+        window.port2.postMessage({msg: "Inited"});
+    }
+});
+
+function onMessage(event) {
+    if (event.data.msg === "setData") {
+        setData(event.data.data);
+        window.port2.postMessage({msg: "Got data"});
+    }
+}
 
 </script>
 
@@ -209,11 +236,11 @@ redbox=box(pos=vector(4,2,3),size=vector(8,4,6),color=color.red)
 
 <div id="gserrors">
 </div>
-<p align="right" style="font-size: 0.5em; margin-top: -1em">See: <a href="http://www.glowscript.org/docs/VPythonDocs/index.html" target="_blank">GlowScript</a></p>
-<div id ="glows">
+<p align="right" style="font-size: 0.5em; margin-top: -1em">See: <a
+        href="http://www.glowscript.org/docs/VPythonDocs/index.html" target="_blank">GlowScript</a></p>
+<div id="glows">
     <div id="glowscript" class="glowscript">
-</div>
-<div>
+    </div>
 </div>
 </body>
 </html>

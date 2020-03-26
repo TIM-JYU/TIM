@@ -19,7 +19,7 @@
     "target": "es2015",
     "lib": [
       "dom",
-      "es2018",
+      "es2019",
       "scripthost",
       "dom.iterable"
     ],

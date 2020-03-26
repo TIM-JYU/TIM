@@ -4,7 +4,7 @@ import {ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {IUser} from "tim/user/IUser";
 import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {parseIframeopts, to} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     AfterViewInit,
@@ -25,6 +25,7 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
+import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
     t.partial({
@@ -342,37 +343,6 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
         return this.frame!.nativeElement as CustomFrame<JSFrameWindow>;
     }
 
-    private communicationJS = `
-    <script>
-
-    window.addEventListener('message', function(e) {
-         if (e.data.msg === "init") {
-            window.port2 = e.ports[0];
-            window.port2.onmessage = onMessage;
-            window.port2.postMessage({msg: "Inited"});
-         }
-    });
-
-    function onMessage(event) {
-         // console.log(event.data);
-         // console.log(event.origin);
-
-         if (event.data.msg === "setData") {
-            setData(event.data.data);
-            window.port2.postMessage({msg: "Got data!"});
-         }
-         if (event.data.msg === "getData") {
-            window.port2.postMessage({msg: "data", data: getData()});
-         }
-         if (event.data.msg === "getDataSave") {
-            window.port2.postMessage({msg: "datasave", data: getData()});
-         }
-    }
-
-// INITDATA
-    </script>
-    `;
-
     updateIframeSettings() {
         if (this.attrsall.preview) {
             // return "";
@@ -395,7 +365,7 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
             src = url;
         } else {
             let html = this.markup.srchtml ?? "";
-            html = html.replace("</body>", this.communicationJS + "\n</body>");
+            html = html.replace("</body>", communicationJS + "\n</body>");
             html = html.replace("// INITDATA", this.initData);
             // const datasrc = btoa(html);
             const type = this.attrsall.markup.type;
@@ -405,15 +375,7 @@ class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
 
         const iframeopts = this.markup.iframeopts ?? "sandbox='allow-scripts allow-same-origin'";
 
-        const parse = Range.prototype.createContextualFragment.bind(document.createRange());
-        const parsed = parse(`<div ${iframeopts}></div>`);
-        let sandbox = "";
-        for (const c of parsed.firstElementChild!.attributes) {
-            if (c.name === "sandbox") {
-                sandbox = c.value;
-            }
-            // TODO: Handle possible other iframe options.
-        }
+        const sandbox = parseIframeopts(iframeopts).sandbox;
         const source = this.domSanitizer.bypassSecurityTrustResourceUrl(src);
         this.iframesettings = {sandbox, src: source, width: w, height: h};
     }

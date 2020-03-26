@@ -97,6 +97,7 @@ TIM_SAFE_TAGS = [
     'tim-rights-editor',
     'tim-self-expire',
     'tim-mark-all-as-read',
+    'tim-add-member',
 ]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
@@ -129,6 +130,9 @@ TIM_SAFE_ATTRS = frozenset([
 
     # tim-table
     'bind-data',
+
+    # tim-add-member
+    'group',
 ])
 
 c = Cleaner(

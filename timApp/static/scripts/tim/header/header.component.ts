@@ -176,7 +176,7 @@ export class HeaderComponent implements OnInit {
         }
         const r = await this.bookmarkService.addCourse(mainCourseDocPath);
         if (!r.ok) {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
             return;
         }
         if (r.result.added_to_group) {

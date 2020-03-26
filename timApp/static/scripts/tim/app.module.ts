@@ -8,7 +8,6 @@ import {ErrorStateDirective} from "tim/ui/error-state.directive";
 import {ErrorMessageComponent} from "tim/ui/error-message.component";
 import {ShortNameDirective} from "tim/ui/short-name.directive";
 import {LocationDirective} from "tim/ui/location.directive";
-import {TimAlertComponent} from "tim/ui/tim-alert.component";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converter.service";
 import {AnnotationComponent} from "tim/velp/annotation.component";
@@ -27,7 +26,6 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
         HeaderComponent,
         LocationDirective,
         ShortNameDirective,
-        TimAlertComponent,
         AnnotationComponent,
         RelativeTimestampPipe,
         SignatureComponent,

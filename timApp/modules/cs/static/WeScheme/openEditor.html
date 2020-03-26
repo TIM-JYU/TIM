@@ -78,7 +78,7 @@ s.parentNode.insertBefore(ga, s);
     <script src="https://apis.google.com/js/client.js?onload=handleClientLoad" type="text/javascript"></script>
 
    <!-- The standard Google Loader script; use your own key. -->
-    <script src="http://www.google.com/jsapi?key=AIzaSyBV6MeANy_ZaLB2f2c-XKCMA7hIu2Fy744"></script>
+    <script src="https://www.google.com/jsapi?key=AIzaSyBV6MeANy_ZaLB2f2c-XKCMA7hIu2Fy744"></script>
     <script type="text/javascript">
       google.load('picker', '1');
 
@@ -459,6 +459,25 @@ s.parentNode.insertBefore(ga, s);
         button.click();
         console.log(s);
 
+    }
+
+    function setData(data) {
+        runWeScheme(data.code);
+    }
+
+    window.addEventListener('message', function (e) {
+        if (e.data.msg === "init") {
+            window.port2 = e.ports[0];
+            window.port2.onmessage = onMessage;
+            window.port2.postMessage({msg: "Inited"});
+        }
+    });
+
+    function onMessage(event) {
+        if (event.data.msg === "setData") {
+            setData(event.data.data);
+            window.port2.postMessage({msg: "Got data"});
+        }
     }
 
   </script>

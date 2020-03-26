@@ -300,14 +300,14 @@ export type Result<T, U> = Success<T> | Failure<U>;
  * @returns A promise that resolves to either a success or error.
  */
 export function to<T, U = { data: { error: string } }>(promise: Promise<T> | IPromise<T>): Promise<Result<T, U>> {
-    return refreshAngularJS(to2(promise as Promise<T>));
+    return refreshAngularJS(to2<T, U>(promise as Promise<T>));
 }
 
 /**
  * Same as "to" function, but meant to be called from new Angular.
  * @param promise
  */
-export function to2<T, U = { data: { error: string } }>(promise: Promise<T>): Promise<Result<T, U>> {
+export function to2<T, U = { error: { error: string } }>(promise: Promise<T>): Promise<Result<T, U>> {
     return promise.then<Success<T>>((data: T) => ({ok: true, result: data})).catch<Failure<U>>((err) => {
         return {ok: false, result: err as U};
     });
@@ -723,4 +723,17 @@ export function truncate(text: string, max: number) {
         text = text.substring(0, max - 1) + "...";
     }
     return text;
+}
+
+export function parseIframeopts(iframeopts: string) {
+    const parse = Range.prototype.createContextualFragment.bind(document.createRange());
+    const parsed = parse(`<div ${iframeopts}></div>`);
+    let sandbox = "";
+    for (const c of parsed.firstElementChild!.attributes) {
+        if (c.name === "sandbox") {
+            sandbox = c.value;
+        }
+        // TODO: Handle possible other iframe options.
+    }
+    return {sandbox};
 }

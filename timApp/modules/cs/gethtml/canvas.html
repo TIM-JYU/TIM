@@ -1,141 +1,139 @@
 <!DOCTYPE HTML>
 <html>
-  <head>
-    <style> 
-      body { 
-        margin: 0px;
-        padding: 0px;
-      }
-      html, body {
-          width:  100%;
-          height: 95%;
-          margin: 0px;
-          overflow: hidden;
-     }
-     .error, .mycanvas {
-        position: fixed;
-        top: 0px;
-     }
-     .jsconsole {
-     }
-     
+<head>
+    <title>Canvas</title>
+    <style>
+        body {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        html, body {
+            width: 100%;
+            height: 95%;
+            margin: 0px;
+            overflow: hidden;
+        }
+
+        .error, .mycanvas {
+            position: fixed;
+            top: 0px;
+        }
+
     </style>
     %INCLUDESCRIPTS%
     <script>
-      var canvas; 
-      var error;
-      var myConsole;
-      var resized = false;
-      var consoleText = "";
-      var canvasConsole = {};
-      canvasConsole.log = function(s) {
-        var res = "", sep = "";
-        for (var i=0; i<arguments.length; i++) { res += sep + arguments[i]; sep = " "; }    
-        writeln(res);
-      };
-      
-      var beforeCode = 'function paint(ctx,out, userargs, userinput, console) {"use strict"; ';
-      var afterCode = '\n}\n';
-      
-      function getConsoleHeight() {
-         if ( myConsole ) return myConsole.clientHeight+30;
-         // if ( myConsole ) return document.body.scrollHeight; // ei palaudu pieneksi enää
-         return 0;
-      }
-      
-      function runJavaScript(text,userargs,userinput, wantsConsole) {
-        try {
-            if ( !error ) error = document.getElementById('error');
-            error.innerHTML = "";
-            if ( !myConsole ) myConsole = document.getElementById('myConsole');
-            if ( myConsole ) myConsole.innerHTML = "";
-            consoleText = "";
-
-            if ( !canvas ) canvas = document.getElementById('myCanvas');
-            var b = "";
-            var a = "";
-            var cons = console;
-            if ( wantsConsole ) {
-               b = beforeCode;
-               a = afterCode; 
-               cons = canvasConsole;
+        var canvas;
+        var error;
+        var myConsole;
+        var resized = false;
+        var consoleText = "";
+        var canvasConsole = {};
+        canvasConsole.log = function (s) {
+            var res = "", sep = "";
+            for (var i = 0; i < arguments.length; i++) {
+                res += sep + arguments[i];
+                sep = " ";
             }
-            var paint = new Function("return ("+b+text+a+")")(); 
-            var ctx = canvas.getContext("2d");
-            var out=myConsole;
-            out.write = write;
-            out.writeln = writeln;
-            out.flush = flush;
-            out.canvas = canvas;
-            if ( !resized ) {
-              ctx.canvas.width  = window.innerWidth; // jos toisella puolen piirtoa niin kuva häviää
-              ctx.canvas.height = window.innerHeight-20;
-              resized = true;
-            }  
-            ctx.save(); 
-            paint(ctx,out,userargs,userinput,cons);
-            ctx.restore(); 
-            out.flush();
-        } catch (exc) {
-          var rivi ='';
-          var sarake = '';
-          if (exc.column) sarake = ' Col '+exc.column.toString()+': ';
-          if (exc.line) rivi = 'Row '+exc.line+': ';                  // FF has line
-          else if (exc.lineNumber) rivi = 'Row '+exc.lineNumber+': '; // Safari has lineNUmber
-          if ( !error ) error = document.getElementById('error');
-          if ( error ) error.innerHTML = rivi+sarake+exc.toString();
-          else console.log("Ei error ikkunaa " + exc.message + rivi+sarake);
-       }
-      }
-      
-      
-      
-    function write(s) {
-       //if ( !myConsole ) myConsole = document.getElementById('myConsole');
-       //if ( myConsole ) myConsole.innerHTML += s;
-       consoleText += s;
-    }    
-      
-    function writeln(s) {
-       write(s+"\n");
-       flush();
-    }    
-      
-    function flush() {
-       myConsole.innerHTML = consoleText;
-    }    
-      
-    function resize_canvas(){
-        resized = false;
-        /*
-        return;
-        /
-        if ( !canvas ) canvas = document.getElementById('myCanvas');
-        if (canvas.width  < window.innerWidth) {
-            canvas.width  = window.innerWidth;
+            writeln(res);
+        };
+
+        var beforeCode = 'function paint(ctx,out, userargs, userinput, console) {"use strict"; ';
+        var afterCode = '\n}\n';
+
+        function getConsoleHeight() {
+            if (myConsole) return myConsole.clientHeight + 30;
+            // if ( myConsole ) return document.body.scrollHeight; // ei palaudu pieneksi enää
+            return 0;
         }
 
-        if (canvas.height < window.innerHeight) {
-            canvas.height = window.innerHeight - 30;
+        function runJavaScript(text, userargs, userinput, wantsConsole) {
+            try {
+                if (!error) error = document.getElementById('error');
+                error.innerHTML = "";
+                if (!myConsole) myConsole = document.getElementById('myConsole');
+                if (myConsole) myConsole.innerHTML = "";
+                consoleText = "";
+
+                if (!canvas) canvas = document.getElementById('myCanvas');
+                var b = "";
+                var a = "";
+                var cons = console;
+                if (wantsConsole) {
+                    b = beforeCode;
+                    a = afterCode;
+                    cons = canvasConsole;
+                }
+                var paint = new Function("return (" + b + text + a + ")")();
+                var ctx = canvas.getContext("2d");
+                var out = myConsole;
+                out.write = write;
+                out.writeln = writeln;
+                out.flush = flush;
+                out.canvas = canvas;
+                if (!resized) {
+                    ctx.canvas.width = window.innerWidth; // jos toisella puolen piirtoa niin kuva häviää
+                    ctx.canvas.height = window.innerHeight - 20;
+                    resized = true;
+                }
+                ctx.save();
+                paint(ctx, out, userargs, userinput, cons);
+                ctx.restore();
+                out.flush();
+            } catch (exc) {
+                var rivi = '';
+                var sarake = '';
+                if (exc.column) sarake = ' Col ' + exc.column.toString() + ': ';
+                if (exc.line) rivi = 'Row ' + exc.line + ': ';                  // FF has line
+                else if (exc.lineNumber) rivi = 'Row ' + exc.lineNumber + ': '; // Safari has lineNUmber
+                if (!error) error = document.getElementById('error');
+                if (error) error.innerHTML = rivi + sarake + exc.toString();
+                else console.log("Ei error ikkunaa " + exc.message + rivi + sarake);
+            }
         }
-        */
-    }
-    
-     Object.getPrototypeOf(document.createElement('canvas').getContext('2d')).fillCircle =
-       function (x,y,r) {
-         this.beginPath();
-         this.arc(x, y, r, 0, Math.PI*2, false);
-         this.closePath();
-         this.fill();
-         this.stroke();
-       };
-      
+
+
+        function write(s) {
+            consoleText += s;
+        }
+
+        function writeln(s) {
+            write(s + "\n");
+            flush();
+        }
+
+        function flush() {
+            myConsole.innerHTML = consoleText;
+        }
+
+        function resize_canvas() {
+            resized = false;
+        }
+
+        function setData(data) {
+            runJavaScript(data.code, data.args, data.input, data.console);
+        }
+
+        window.addEventListener('message', function (e) {
+            if (e.data.msg === "init") {
+                window.port2 = e.ports[0];
+                window.port2.onmessage = onMessage;
+                window.port2.postMessage({msg: "Inited"});
+            }
+        });
+
+        function onMessage(event) {
+            if (event.data.msg === "setData") {
+                setData(event.data.data);
+                window.port2.postMessage({msg: "Got data"});
+            }
+        }
     </script>
-  </head>
-  <body onresize="resize_canvas()">
-    <div id="error" class="error" ></div>
-    <pre id="myConsole" class="jsconsole" ></pre>
-    <canvas id="myCanvas" class="mycanvas" width="800" height="1" style="touch-action: none;"  ></canvas>
-    %INCLUDEHTML%
+</head>
+<body onresize="resize_canvas()">
+<div id="error" class="error"></div>
+<pre id="myConsole" class="jsconsole"></pre>
+<canvas id="myCanvas" class="mycanvas" width="800" height="1" style="touch-action: none;"></canvas>
+%INCLUDEHTML%
 </body>
-</html>     
+</html>

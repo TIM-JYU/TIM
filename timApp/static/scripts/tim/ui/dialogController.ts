@@ -17,7 +17,7 @@ export abstract class DialogController<T, Ret> implements IController {
     public readonly resolve!: Binding<T, "<">;
     protected closed = false;
     protected readonly draggable!: Require<DraggableController>;
-    private readonly modalInstance!: Binding<IModalInstance<DialogController<T, Ret>>, "<">;
+    private readonly modalInstance!: Binding<IModalInstance<DialogController<unknown, unknown>>, "<">;
 
     protected abstract getTitle(): string;
 

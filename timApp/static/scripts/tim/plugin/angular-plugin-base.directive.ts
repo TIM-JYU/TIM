@@ -97,7 +97,7 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
         } else {
             handleAnswerResponse(dt, {
                 savedNew: false,
-                error: result.result.data.error,
+                error: result.result.error.error,
             });
         }
         return result;

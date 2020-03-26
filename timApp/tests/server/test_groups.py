@@ -29,8 +29,8 @@ class GroupTest(TimRouteTest):
             uids = [u.id for u, g in users_and_groups]
             db.session.commit()
             groupname = f'testgroup1{is_admin}'
-            self.get(f'/groups/show/{groupname}', expect_status=404,
-                     expect_content={'error': 'User group not found'})
+            self.get(f'/groups/show/{groupname}', expect_status=400,
+                     expect_content={'error': f'User group "{groupname}" not found'})
             self.get(f'/groups/create/{groupname}')
             self.get(f'/groups/create/{groupname}',
                      expect_content={'error': 'User group already exists.'},
@@ -136,11 +136,11 @@ class GroupTest(TimRouteTest):
         self.get(f'/groups/belongs/asd/testuser1',
                  expect_content={'error': 'User not found'}, expect_status=404)
         self.get(f'/groups/belongs/testuser1/asd',
-                 expect_content={'error': 'User group not found'}, expect_status=404)
+                 expect_content={'error': 'User group "asd" not found'}, expect_status=400)
         self.get(f'/groups/usergroups/asd',
                  expect_content={'error': 'User not found'}, expect_status=404)
         self.json_post(f'/groups/addmember/asd', {'names': f'testuser1'.split(',')},
-                 expect_content={'error': 'User group not found'}, expect_status=404)
+                 expect_content={'error': 'User group "asd" not found'}, expect_status=400)
 
     def test_groups_trim(self):
         self.init_admin()

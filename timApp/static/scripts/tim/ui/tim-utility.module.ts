@@ -4,6 +4,9 @@ import {PluginHeaderComponent} from "tim/ui/plugin-header.component";
 import {FocusMeDirective} from "tim/ui/focus-me.directive";
 import {TrustHtmlPipe} from "tim/ui/trust-html.pipe";
 import {DialogComponent} from "tim/ui/dialog.component";
+import {AddMemberComponent} from "tim/ui/add-member.component";
+import {FormsModule} from "@angular/forms";
+import {TimAlertComponent} from "tim/ui/tim-alert.component";
 import {PluginFrameComponent} from "./plugin-frame.component";
 import {LoadingComponent} from "./loadingIndicator";
 import {MarkupErrorComponent} from "./markup-error.component";
@@ -20,6 +23,8 @@ import {CloseButtonComponent} from "./close-button.component";
         TrustHtmlPipe,
         DialogComponent,
         CloseButtonComponent,
+        AddMemberComponent,
+        TimAlertComponent,
     ],
     exports: [
         MarkupErrorComponent,
@@ -30,8 +35,13 @@ import {CloseButtonComponent} from "./close-button.component";
         TrustHtmlPipe,
         DialogComponent,
         CloseButtonComponent,
+        AddMemberComponent,
+        TimAlertComponent,
     ],
-    imports: [CommonModule],
+    imports: [
+        CommonModule,
+        FormsModule,
+    ],
 })
 export class TimUtilityModule {
 }

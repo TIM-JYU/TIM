@@ -16,7 +16,7 @@ from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS, SPECIAL_USERNAMES
 from timApp.user.user import User, view_access_set, edit_access_set
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import load_data_from_req
+from timApp.util.flask.requesthelper import load_data_from_req, RouteException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.utils import remove_path_special_chars, get_current_time
 
@@ -25,7 +25,6 @@ groups = Blueprint('groups',
                    url_prefix='/groups')
 
 USER_NOT_FOUND = 'User not found'
-USERGROUP_NOT_FOUND = 'User group not found'
 
 
 def verify_groupadmin(require=True, user=None):
@@ -44,8 +43,7 @@ def verify_groupadmin(require=True, user=None):
 def get_uid_gid(groupname, usernames) -> Tuple[UserGroup, List[User]]:
     users = User.query.filter(User.name.in_(usernames)).all()
     group = UserGroup.query.filter_by(name=groupname).first()
-    if group is None:
-        abort(404, USERGROUP_NOT_FOUND)
+    raise_group_not_found_if_none(groupname, group)
     return group, users
 
 
@@ -56,9 +54,7 @@ def get_organizations():
 
 @groups.route('/show/<groupname>')
 def show_members(groupname):
-    ug = UserGroup.get_by_name(groupname)
-    if not ug:
-        abort(404, USERGROUP_NOT_FOUND)
+    ug = get_group_or_abort(groupname)
     verify_group_view_access(ug)
     return json_response(sorted(list(ug.users), key=attrgetter('id')))
 
@@ -74,14 +70,23 @@ def show_usergroups(username):
 
 @groups.route('/belongs/<username>/<groupname>')
 def belongs(username, groupname):
-    ug = UserGroup.get_by_name(groupname)
-    if not ug:
-        abort(404, USERGROUP_NOT_FOUND)
+    ug = get_group_or_abort(groupname)
     verify_group_view_access(ug)
     u = User.get_by_name(username)
     if not u:
         abort(404, USER_NOT_FOUND)
     return json_response({'status': ug in u.groups})
+
+
+def get_group_or_abort(groupname: str):
+    ug = UserGroup.get_by_name(groupname)
+    raise_group_not_found_if_none(groupname, ug)
+    return ug
+
+
+def raise_group_not_found_if_none(groupname: str, ug: Optional[UserGroup]):
+    if not ug:
+        raise RouteException(f'User group "{groupname}" not found')
 
 
 @groups.route('/create/<groupname>')
