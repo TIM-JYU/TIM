@@ -499,7 +499,7 @@ export enum ClearSort {
                     <input class="editInput" #editInput autocomplete="off"
                            (blur)="smallEditorLostFocus($event)"
                            (keyup)="handleKeyUpSmallEditor($event)"
-                           [(ngModel)]="currentCell!.editedCellContent">
+                           [(ngModel)]="currentCell.editedCellContent">
                     <span #inlineEditorButtons
                           class="inlineEditorButtons"
                           style="position: absolute; width: max-content"
