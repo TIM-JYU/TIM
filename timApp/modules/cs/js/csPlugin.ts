@@ -2728,6 +2728,7 @@ ${fhtml}
         if (this.type.includes("truthtable")) {
             const truthTable = (await import("./truthTable")).truthTable;
             this.result = truthTable(this.userargs);
+            this.scope.$applyAsync();
             return;
         }
         if (!this.iframesettings || this.fullhtml) { // create an iframe on first time
