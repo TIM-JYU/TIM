@@ -3,7 +3,8 @@ import {evaluate} from "mathjs";
 const replacements = [
     ["v", "|"],
     ["^", "&"],
-    ["∼", "not"],
+    ["∼", "not "],
+    ["~", "not "],
     ["∧", "&"],
     ["∨", "|"],
     ["xor", "^|"],
