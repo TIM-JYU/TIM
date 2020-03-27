@@ -822,7 +822,6 @@ interface IFrameLoad {
 class CsController extends CsBase implements ITimComponent {
     private vctrl!: ViewCtrl;
 
-    private notSaved: boolean = false;
     private aceEditor?: IAceEditor;
     private canvasConsole: {log: (...args: string[]) => void};
     private code?: string;
@@ -891,9 +890,6 @@ class CsController extends CsBase implements ITimComponent {
         userinput?: string;
         userargs?: string;
         usercode?: string;
-        savedcode?: string;
-        savedargs?: string;
-        savedinput?: string;
     } = {};
 
     private editorText: string[] = [];
@@ -905,6 +901,7 @@ class CsController extends CsBase implements ITimComponent {
     private taunoCopy?: TimDefer<string>;
     private iframedefer?: TimDefer<IFrameLoad>;
     private iframemessageHandler?: (e: MessageEvent) => void;
+    private savedvals?: { args: string; input: string; code: string };
 
     constructor(scope: IScope, element: JQLite) {
         super(scope, element);
@@ -956,7 +953,10 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     isUnSaved() {
-        return this.notSaved && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
+        return this.savedvals != null && (
+            this.savedvals.code !== this.usercode ||
+            this.savedvals.args !== this.userargs ||
+            this.savedvals.input !== this.userinput) && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
     }
 
     resetField(): undefined {
@@ -1419,27 +1419,28 @@ ${fhtml}
     }
 
     initSaved() {
-        this.dochecks.savedcode = this.usercode;
-        this.dochecks.savedargs = this.userargs;
-        this.dochecks.savedinput = this.userinput;
-        this.notSaved = false;
+        this.savedvals = {
+            code: this.usercode,
+            args: this.userargs,
+            input: this.userinput,
+        };
     }
 
     async $doCheck() {
-        let anyChanged = false;
-        this.notSaved = this.usercode !== this.dochecks.savedcode ||
-                        this.userinput != this.dochecks.savedinput ||
-                        this.userargs != this.dochecks.savedargs;
-        if (this.notSaved)  {
-            anyChanged = true;
-        }
-        if (this.usercode !== this.dochecks.usercode) {
 
+        // Only the properties
+        //  * this.dochecks.user{code,input,args}
+        //  * this.user{code,input,args}
+        // should affect `anyChanged`. Don't make `anyChanged` depend on `this.savedvals` or anything else.
+        // Don't add more properties to `this.dochecks`.
+        let anyChanged = false;
+
+        if (this.usercode !== this.dochecks.usercode) {
+            this.dochecks.usercode = this.usercode;
             this.checkByCodeRemove();
             if (this.aceEditor && this.aceEditor.getSession().getValue() !== this.usercode) {
                 this.aceEditor.getSession().setValue(this.usercode);
             }
-            this.dochecks.usercode = this.usercode;
             if (!this.copyingFromTauno && this.usercode !== this.byCode) {
                 this.muokattu = true;
             }
