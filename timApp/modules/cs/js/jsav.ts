@@ -289,10 +289,18 @@ jsavApp.component("csJsavRunner", {
 
     <p class="csRunMenu">
         <!-- The save button -->
-        <button ng-if="$ctrl.isOpen" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.getData(false)"
+        <button ng-if="$ctrl.isOpen"
+                ng-disabled="$ctrl.isRunning"
+                title="(Ctrl-S)"
+                class="timButton btn-sm"
+                ng-click="$ctrl.getData(false)"
                 ng-bind-html="::$ctrl.button"></button>
         <!-- The model answer button -->
-        <button ng-if="$ctrl.isOpen && $ctrl.userCode" ng-disabled="$ctrl.isRunning" title="(Ctrl-M)" ng-click="$ctrl.modelAnswer()"
+        <button ng-if="$ctrl.isOpen && $ctrl.userCode"
+                ng-disabled="$ctrl.isRunning"
+                title="(Ctrl-M)"
+                class="timButton btn-sm"
+                ng-click="$ctrl.modelAnswer()"
                 ng-bind-html="::$ctrl.modelAnswerButton"></button>
         <!-- User-specified messages -->
         <span class="jsav message"

@@ -153,8 +153,8 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
                 </iframe>
             </div>
             <p class="csRunMenu">
-                <button *ngIf="!isOpen" (click)="runShowTask()" [innerHtml]="showButton()"></button>
-                <button *ngIf="isOpen && !norun" [disabled]="isRunning" title="(Ctrl-S)"
+                <button class="timButton btn-sm" *ngIf="!isOpen" (click)="runShowTask()" [innerHtml]="showButton()"></button>
+                <button class="timButton btn-sm" *ngIf="isOpen && !norun" [disabled]="isRunning" title="(Ctrl-S)"
                         (click)="getData('getDataSave')"
                         [innerHtml]="button"></button>
                 <span class="jsframe message"

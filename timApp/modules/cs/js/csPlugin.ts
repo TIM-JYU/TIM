@@ -441,16 +441,22 @@ function makeTemplate() {
         <p class="csRunMenu">
             <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
                     ng-disabled="$ctrl.isRunning"
+                    class="timButton btn-sm"
                     title="(Ctrl-S)"
                     ng-click="$ctrl.runCode()"
                     ng-bind-html="::$ctrl.buttonText()"></button>
             &nbsp&nbsp
-            <button ng-if="::$ctrl.isTest" ng-disabled="$ctrl.isRunning" ng-click="$ctrl.runTest()">Test</button>
+            <button ng-if="::$ctrl.isTest"
+                    ng-disabled="$ctrl.isRunning"
+                    ng-click="$ctrl.runTest()"
+                    class="timButton btn-sm">Test</button>
             &nbsp&nbsp
             <button ng-if="::$ctrl.isUnitTest"
+                    class="timButton btn-sm"
                     ng-disabled="$ctrl.isRunning"
                     ng-click="$ctrl.runUnitTest()">UTest
             </button>
+            <tim-loading ng-if="$ctrl.isRunning"></tim-loading>
             &nbsp&nbsp<span ng-if="::$ctrl.isDocument">
 
             <a href="" ng-disabled="$ctrl.isRunning"
@@ -1725,9 +1731,6 @@ ${fhtml}
         this.checkIndent();
         if (!this.attrs.autoupdate) {
             this.tinyErrorStyle = {};
-            this.error = "... running ...";
-            this.runError = true;
-            this.isRunning = true;
         }
         this.isRunning = true;
         this.imgURL = "";

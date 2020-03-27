@@ -312,8 +312,15 @@ geogebraApp.component("geogebraRunner", {
     </div>
     <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.geogebrapeek"></div> -->
     <p class="csRunMenu">
-        <button ng-if="!$ctrl.isOpen"  ng-click="$ctrl.runShowTask()"  ng-bind-html="$ctrl.showButton()"></button>
-        <button ng-if="$ctrl.isOpen && !$ctrl.attrs.norun" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.getData()"
+        <button ng-if="!$ctrl.isOpen"
+                class="timButton btn-sm"
+                ng-click="$ctrl.runShowTask()"
+                ng-bind-html="$ctrl.showButton()"></button>
+        <button ng-if="$ctrl.isOpen && !$ctrl.attrs.norun"
+                ng-disabled="$ctrl.isRunning"
+                title="(Ctrl-S)"
+                ng-click="$ctrl.getData()"
+                class="timButton btn-sm"
                 ng-bind-html="::$ctrl.button"></button>
         <span class="geogebra message"
               ng-if="$ctrl.message"

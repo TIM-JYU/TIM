@@ -515,10 +515,20 @@ stackApp.component("stackRunner", {
     </div>
     <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.stackpeek"></div> -->
     <p class="csRunMenu">
-        <button ng-if="!$ctrl.isOpen"  ng-click="$ctrl.runGetTask()"  ng-bind-html="'Show task'"></button>
-        <button ng-if="$ctrl.isOpen" ng-disabled="$ctrl.isRunning" title="(Ctrl-S)" ng-click="$ctrl.runSend()"
+        <button ng-if="!$ctrl.isOpen"
+                class="timButton btn-sm"
+                ng-click="$ctrl.runGetTask()"
+                ng-bind-html="'Show task'"></button>
+        <button ng-if="$ctrl.isOpen"
+                ng-disabled="$ctrl.isRunning"
+                title="(Ctrl-S)"
+                class="timButton btn-sm"
+                ng-click="$ctrl.runSend()"
                 ng-bind-html="::$ctrl.button"></button>
-        <button ng-if="::!$ctrl.attrs.autopeek" ng-disabled="$ctrl.isRunning"  ng-click="$ctrl.runPeek()"
+        <button ng-if="::!$ctrl.attrs.autopeek"
+                class="timButton btn-sm"
+                ng-disabled="$ctrl.isRunning"
+                ng-click="$ctrl.runPeek()"
                 ng-bind-html="'Peek'"></button>
     </p>
     <div ng-cloak ng-if="$ctrl.stackpeek" class="peekdiv" id="peek" style="min-height: 10em;"><div></div></div>
