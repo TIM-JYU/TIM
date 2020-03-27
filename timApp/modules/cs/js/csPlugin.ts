@@ -503,9 +503,13 @@ function makeTemplate() {
     <p class="unitTestGreen" ng-if="$ctrl.runTestGreen">&nbsp;ok</p>
     <pre class="unitTestRed" ng-if="$ctrl.runTestRed">{{$ctrl.comtestError}}</pre>
     <div class="csRunErrorClass" ng-if="$ctrl.runError">
-        <p align="right" style="position: absolute; margin-left: 790px;"><a ng-click="$ctrl.closeError()">x</a></p>
+        <p class="pull-right">
+            <tim-close-button ng-click="$ctrl.closeError()"></tim-close-button>
+        </p>
         <pre class="csRunError" >{{$ctrl.error}}</pre>
-        <p align="right" style="position: absolute; margin-left: 790px; margin-top: -1em;"><a ng-click="$ctrl.closeError()">x</a></p>
+        <p class="pull-right" style="margin-top: -1em">
+            <tim-close-button ng-click="$ctrl.closeError()"></tim-close-button>
+        </p>
     </div>
     <pre class="console" ng-show="$ctrl.result">{{$ctrl.result}}</pre>
     <div class="htmlresult" ng-if="$ctrl.htmlresult"><span ng-bind-html="$ctrl.svgImageSnippet()"></span></div>
@@ -534,7 +538,9 @@ function makeTemplate() {
     <video ng-if="$ctrl.wavURL" ng-src="{{$ctrl.wavURL}}" type="video/mp4" controls="" autoplay="true" width="300"
            height="40"></video>
     <div ng-if="$ctrl.docURL" class="docurl">
-        <p align="right" style="position: absolute; margin-left: 790px;"><a ng-click="$ctrl.closeDocument()">X</a></p>
+        <p class="pull-right">
+            <tim-close-button ng-click="$ctrl.closeDocument()"></tim-close-button>
+        </p>
         <iframe width="800" height="600" ng-src="{{$ctrl.docURL}}" target="csdocument" allowfullscreen/>
     </div>
     <p class="footer" ng-bind-html="::$ctrl.footer"></p>
