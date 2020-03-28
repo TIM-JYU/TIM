@@ -30,6 +30,7 @@ class InputFormat(Enum):
     CommonMark = 'commonmark'
     GitHubMarkdown = 'gfm'
     Markdown = 'markdown'
+    MarkdownStrict = 'markdown_strict'
     MediaWiki = 'mediawiki'
     RST = 'rst'
 
