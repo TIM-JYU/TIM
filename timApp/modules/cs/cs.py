@@ -1056,12 +1056,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             for language_class in languages.values():  # ask needed js and css files from language
                 language = language_class(query, "")
 
-                list = language.js_files()
+                lang_js_list = language.js_files()
+                if lang_js_list:
+                    jslist.extend(lang_js_list)
+                lang_css_list = language.css_files()
                 if list:
-                    jslist.extend(list)
-                list = language.css_files()
-                if list:
-                    csslist.extend(list)
+                    csslist.extend(lang_css_list)
 
             if not (is_tauno or is_rikki or is_parsons or is_simcir or is_graphviz ):
                 templs = get_all_templates('templates')
@@ -1608,7 +1608,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         out_replace = get_param(query, "outReplace", None)
         out_by = get_param(query, "outBy", "")
         if out_replace:
-            if type(out_replace) is list:
+            # if type(out_replace) is list:
+            if isinstance(out_replace, list):
                 for rep in out_replace:
                     replace = rep.get("replace", "")
                     if replace:
