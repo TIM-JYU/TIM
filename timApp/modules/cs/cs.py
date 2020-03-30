@@ -1060,7 +1060,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if lang_js_list:
                     jslist.extend(lang_js_list)
                 lang_css_list = language.css_files()
-                if list:
+                if lang_css_list:
                     csslist.extend(lang_css_list)
 
             if not (is_tauno or is_rikki or is_parsons or is_simcir or is_graphviz ):
