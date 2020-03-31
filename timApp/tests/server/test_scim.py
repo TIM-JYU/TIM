@@ -1113,6 +1113,34 @@ class ScimTest(TimRouteTest):
         self.assertEqual(
             expected, r)
 
+    def test_uuid_externalid(self):
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': 'jy-f7d67fab-1f2a-4d01-9687-0910f1bbdfda-students',
+                'displayName': 'MATP211 P1 2019-08-01--2019-12-31: Kaikki opiskelijat',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['korppiguy']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        self.json_post(
+            '/scim/Groups', {
+                'externalId': 'jy-f7d67fab-1f2a-4d01-x687-0910f1bbdfda-students',
+                'displayName': 'MATP211 P1 2019-08-01--2019-12-31: Kaikki opiskelijat',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['korppiguy']
+                ]),
+            },
+            auth=a,
+            expect_status=422,
+            expect_content={'detail': 'Unexpected externalId format: '
+                                      '"jy-f7d67fab-1f2a-4d01-x687-0910f1bbdfda-students" (displayName: '
+                                      '"MATP211 P1 2019-08-01--2019-12-31: Kaikki opiskelijat")',
+                            'schemas': ['urn:ietf:params:scim:api:messages:2.0:Error'],
+                            'status': '422'},
+        )
 
 def scim_error(msg: str, code=422):
     return dict(

@@ -2,9 +2,9 @@ import re
 
 from timApp.timdb.sqa import db
 
-
+uuid_re = '[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}'
 external_id_re = re.compile(
-    r'(?P<norole>(?P<courseid>jy-[A-Z]+-\d+)-(jy-studysubgroup-\d+-)?)(?P<role>teachers|responsible-teachers|students|administrative-persons|studysubgroup-teachers|studysubgroup-students)'
+    rf'(?P<norole>(?P<courseid>jy-(CUR-\d+|{uuid_re}))-(jy-studysubgroup-\d+-)?)(?P<role>teachers|responsible-teachers|students|administrative-persons|studysubgroup-teachers|studysubgroup-students)'
 )
 
 class ScimUserGroup(db.Model):
