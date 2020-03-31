@@ -301,7 +301,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
     external_id = args.externalId
     if not ug.external_id:
         if not external_id_re.fullmatch(external_id):
-            raise SCIMException(422, f'Unexpected externalId format: {external_id}')
+            raise SCIMException(422, f'Unexpected externalId format: "{external_id}" (displayName: "{args.displayName}")')
         ug.external_id = ScimUserGroup(external_id=external_id)
     else:
         if ug.external_id.external_id != args.externalId:
