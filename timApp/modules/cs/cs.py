@@ -814,7 +814,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return
 
         # print("do_POST MULTIHML ==========================================")
-        t1 = time.clock()
+        t1 = time.perf_counter()
         t1t = time.time()
         querys = multi_post_params(self)
         do_headers(self, "application/json")
@@ -879,7 +879,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         sresult = json.dumps(htmls)
         self.wout(sresult)
         log(self)
-        t2 = time.clock()
+        t2 = time.perf_counter()
         t2t = time.time()
         ts = "multihtml: %7.4f %7.4f" % (t2 - t1, t2t - t1t)
         print(ts)

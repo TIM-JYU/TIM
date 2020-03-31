@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # A wrapper script for executing Docker Compose commands.
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ ! -f "${DIR}/variables.sh" ]; then
   echo "The file variables.sh does not exist, copying template. See variables.sh for how to proceed."
@@ -11,6 +11,14 @@ if [ ! -f "${DIR}/variables.sh" ]; then
 fi
 
 . ${DIR}/variables.sh
+
+if ! [ -z $DEV ]; then
+  if [ "$DEV" == 1 ]; then
+    IS_DEVELOPMENT=true
+  else
+    IS_DEVELOPMENT=false
+  fi
+fi
 
 if [ "$IS_TESTING" = true ]; then
   COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}test"

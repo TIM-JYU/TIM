@@ -411,7 +411,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
                 n = int(n)
             except ValueError:
                 n = 1
-            t1 = time.clock()
+            t1 = time.perf_counter()
             query = post_params(self)
             # self.do_all(query)
 
@@ -419,7 +419,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
             for i in range(0, n):
                 s = get_html(self, query, True)
 
-            t2 = time.clock()
+            t2 = time.perf_counter()
             ts = "%7.4f" % (t2 - t1)
             self.wout(s + "\n" + ts)
             print(ts)
@@ -432,7 +432,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
             return
 
         print("do_POST MULTIHML ==========================================")
-        t1 = time.clock()
+        t1 = time.perf_counter()
         querys = multi_post_params(self)
         # print(querys)
 
@@ -448,7 +448,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
 
         sresult = json.dumps(htmls)
         self.wout(sresult)
-        t2 = time.clock()
+        t2 = time.perf_counter()
         ts = "multihtml: %d - %7.4f" % (len(querys), (t2 - t1))
         print(ts)
 

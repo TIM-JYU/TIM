@@ -198,7 +198,7 @@ def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[int]=None, state
 
     rnd_seed = attrs.get('seed', rnd_seed)
     if not rnd_seed:
-        rnd_seed = time.clock()*1000
+        rnd_seed = time.perf_counter()*1000
 
     if isinstance(rnd_seed, str):
         rnd_seed = myhash(rnd_seed)
@@ -207,7 +207,7 @@ def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[int]=None, state
     try:
         rnd_seed = int(rnd_seed)
     except:
-        rnd_seed = int(time.clock()*1000)
+        rnd_seed = int(time.perf_counter()*1000)
     myrandom = Random()
     myrandom.seed(a=rnd_seed)
     if state:

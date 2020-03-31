@@ -37,7 +37,6 @@ lua5.2 \
 mono-complete \
 ncdu \
 nunit-console \
-openjdk-11-jdk \
 postgresql-client \
 r-base \
 sbcl \
@@ -47,16 +46,17 @@ xvfb \
 && ${APT_CLEANUP}"
 
 # Scala
-ENV SCALA_VERSION 2.12.7
-RUN wget -q http://downloads.typesafe.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.deb && \
+RUN bash -c "${APT_INSTALL} openjdk-11-jre-headless && ${APT_CLEANUP}"
+ENV SCALA_VERSION 2.13.1
+RUN wget -q https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.deb && \
  dpkg -i scala-${SCALA_VERSION}.deb && \
  rm scala-${SCALA_VERSION}.deb
 
 # Docker client binary
-ENV DOCKER_VERSION 18.06.1
-RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}-ce.tgz && \
-    tar -xzvf docker-${DOCKER_VERSION}-ce.tgz --strip=1 -C /usr/bin docker/docker && \
-    rm docker-${DOCKER_VERSION}-ce.tgz && docker --version
+ENV DOCKER_VERSION 19.03.8
+RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz && \
+    tar -xzvf docker-${DOCKER_VERSION}.tgz --strip=1 -C /usr/bin docker/docker && \
+    rm docker-${DOCKER_VERSION}.tgz && docker --version
 
 # Python packages
 
@@ -66,45 +66,48 @@ RUN bash -c "${APT_INSTALL} python3-numpy python3-scipy python3-matplotlib pytho
 RUN pip3 install statsmodels control && bash -c "${APT_CLEANUP}"
 
 # Octave
-RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic gnuplot5 pstoedit liboctave-dev && ${APT_CLEANUP}"
-RUN wget -q \
- http://downloads.sourceforge.net/octave/statistics-1.3.0.tar.gz \
- http://downloads.sourceforge.net/octave/struct-1.0.14.tar.gz \
- http://downloads.sourceforge.net/octave/optim-1.5.2.tar.gz \
- http://downloads.sourceforge.net/octave/io-2.4.7.tar.gz && \
- printf "pkg install io-2.4.7.tar.gz" | octave && \
- printf "pkg install statistics-1.3.0.tar.gz" | octave && \
- printf "pkg install struct-1.0.14.tar.gz" | octave && \
- printf "pkg install optim-1.5.2.tar.gz" | octave && \
- rm statistics-1.3.0.tar.gz struct-1.0.14.tar.gz optim-1.5.2.tar.gz io-2.4.7.tar.gz
+RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic gnuplot pstoedit liboctave-dev && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} make && ${APT_CLEANUP}"
+RUN printf "pkg install -forge io" | octave && \
+ printf "pkg install -forge statistics" | octave && \
+ printf "pkg install -forge struct" | octave && \
+ printf "pkg install -forge optim" | octave
 
 # Swift requirements
-RUN bash -c "${APT_INSTALL} clang libicu-dev curl && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} libatomic1 libcurl4 curl libxml2 tzdata libpython2.7 && ${APT_CLEANUP}"
 
-# Everything up to here should cache nicely between Swift versions, assuming dev dependencies change little
-ENV SWIFT_BRANCH=swift-4.2-release \
-    SWIFT_VERSION=swift-4.2-RELEASE \
-    SWIFT_PLATFORM=ubuntu18.04 \
-    PATH=/usr/bin:$PATH
-ENV SWIFT_URL=https://swift.org/builds/swift-4.2.1-release/ubuntu1804/swift-4.2.1-RELEASE/swift-4.2.1-RELEASE-ubuntu18.04.tar.gz
-# Download GPG keys, signature and Swift package, then unpack and cleanup
-# RUN export SWIFT_URL=https://swift.org/builds/$SWIFT_BRANCH/$(echo "$SWIFT_PLATFORM" | tr -d .)/$SWIFT_VERSION/$SWIFT_VERSION-$SWIFT_PLATFORM.tar.gz
-RUN curl -fSsL $SWIFT_URL -o swift.tar.gz
-#    && curl -fSsL $SWIFT_URL.sig -o swift.tar.gz.sig \
-RUN export GNUPGHOME="$(mktemp -d)"
-#    && gpg --keyserver ha.pool.sks-keyservers.net \
-#      --recv-keys \
-#      '7463 A81A 4B2E EA1B 551F  FBCF D441 C977 412B 37AD' \
-#      '1BE1 E29A 084C B305 F397  D62A 9F59 7F4D 21A5 6D5F' \
-#      'A3BA FD35 56A5 9079 C068  94BD 63BC 1CFE 91D3 06C6' \
-#      '5E4D F843 FB06 5D7F 7E24  FBA2 EF54 30F0 71E1 B235' \
-#      '8513 444E 2DA3 6B7C 1659  AF4D 7638 F1FB 2B2B 08C4' \
-#    && gpg --batch --verify --quiet swift.tar.gz.sig swift.tar.gz \
-RUN  tar -xzf swift.tar.gz --directory / --strip-components=1
-#    && pkill -9 gpg-agent \
-#    && pkill -9 dirmngr \
-# RUN rm -r "$GNUPGHOME" swift.tar.gz.sig swift.tar.gz
-RUN chmod -R 755 /usr/lib/swift
+# from https://github.com/apple/swift-docker/blob/master/5.2/ubuntu/18.04/slim/Dockerfile
+ARG SWIFT_SIGNING_KEY=A62AE125BBBFBB96A6E042EC925CC1CCED3D1561
+ARG SWIFT_PLATFORM=ubuntu18.04
+ARG SWIFT_BRANCH=swift-5.2-release
+ARG SWIFT_VERSION=swift-5.2-RELEASE
+ARG SWIFT_WEBROOT=https://swift.org/builds/
+
+ENV SWIFT_SIGNING_KEY=$SWIFT_SIGNING_KEY \
+    SWIFT_PLATFORM=$SWIFT_PLATFORM \
+    SWIFT_BRANCH=$SWIFT_BRANCH \
+    SWIFT_VERSION=$SWIFT_VERSION \
+    SWIFT_WEBROOT=$SWIFT_WEBROOT
+
+RUN set -e; \
+    SWIFT_WEBDIR="$SWIFT_WEBROOT/$SWIFT_BRANCH/$(echo $SWIFT_PLATFORM | tr -d .)/" \
+    && SWIFT_BIN_URL="$SWIFT_WEBDIR/$SWIFT_VERSION/$SWIFT_VERSION-$SWIFT_PLATFORM.tar.gz" \
+    && SWIFT_SIG_URL="$SWIFT_BIN_URL.sig" \
+    # - Grab gpg here so we cache better up above
+    && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -q update && apt-get -q install -y gnupg && rm -rf /var/lib/apt/lists/* \
+    # - Download the GPG keys, Swift toolchain, and toolchain signature, and verify.
+    && export GNUPGHOME="$(mktemp -d)" \
+    && curl -fsSL "$SWIFT_BIN_URL" -o swift.tar.gz "$SWIFT_SIG_URL" -o swift.tar.gz.sig \
+    && gpg --batch --quiet --keyserver ha.pool.sks-keyservers.net --recv-keys "$SWIFT_SIGNING_KEY" \
+    && gpg --batch --verify swift.tar.gz.sig swift.tar.gz \
+    # - Unpack the toolchain, set libs permissions, and clean up.
+    && tar -xzf swift.tar.gz --directory / --strip-components=1 \
+    && chmod -R o+r /usr/lib/swift \
+    && rm -rf "$GNUPGHOME" swift.tar.gz.sig swift.tar.gz \
+    && apt-get purge --auto-remove -y gnupg
+
+RUN swift --version
 # Swift ends
 
 # R packages
@@ -123,10 +126,10 @@ RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArm
 
 RUN bash -c "${APT_INSTALL} python3-tk bsdmainutils iputils-ping && ${APT_CLEANUP}"
 
-RUN pip3 install sympy pyaml html5lib && bash -c "${APT_CLEANUP}"
+RUN pip3 install sympy pyaml html5lib opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
 
 # Kotlin
-ENV         KOTLIN_VERSION=1.2.71 \
+ENV         KOTLIN_VERSION=1.3.70 \
             KOTLIN_HOME=/usr/local/kotlin
 
 RUN         cd  /tmp && \
@@ -140,9 +143,9 @@ RUN         cd  /tmp && \
             ${APT_CLEANUP}
 
 # JavaFX for OpenJDK
-RUN wget https://download2.gluonhq.com/openjfx/11.0.1/openjfx-11.0.1_linux-x64_bin-sdk.zip && \
-    unzip openjfx-11.0.1_linux-x64_bin-sdk.zip && \
-    rm openjfx-11.0.1_linux-x64_bin-sdk.zip
+RUN wget https://download2.gluonhq.com/openjfx/14/openjfx-14_linux-x64_bin-sdk.zip && \
+    unzip openjfx-14_linux-x64_bin-sdk.zip && \
+    rm openjfx-14_linux-x64_bin-sdk.zip
 
 # Rust (nightly)
 ENV CARGO_HOME=/cargo
@@ -155,7 +158,7 @@ RUN ln -s "/cargo/bin/"* "/usr/bin/"
 RUN bash -c "${APT_INSTALL} fpc && ${APT_CLEANUP}"
 
 # Go
-RUN wget -q https://dl.google.com/go/go1.11.1.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.11.1.linux-amd64.tar.gz && rm go1.11.1.linux-amd64.tar.gz
+RUN wget -q https://dl.google.com/go/go1.14.1.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.14.1.linux-amd64.tar.gz && rm go1.14.1.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
 RUN pip3 install requests --upgrade && bash -c "${APT_CLEANUP}"
@@ -163,6 +166,11 @@ RUN pip3 install requests --upgrade && bash -c "${APT_CLEANUP}"
 # git
 RUN bash -c "${APT_INSTALL} git && ${APT_CLEANUP}"
 
+RUN wget -q https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14%2B36/OpenJDK14U-jdk_x64_linux_hotspot_14_36.tar.gz && \
+ tar -xf OpenJDK14U-jdk_x64_linux_hotspot_14_36.tar.gz && \
+ rm OpenJDK14U-jdk_x64_linux_hotspot_14_36.tar.gz
+ENV PATH=$PWD/jdk-14+36/bin:$PATH
+RUN java -version
 # RUN bash -c "${APT_INSTALL} uuid-runtime && ${APT_CLEANUP}"
 # RUN uuidgen > /etc/machine-id
 # RUN dbus-uuidgen > /etc/machine-id
