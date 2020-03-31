@@ -1127,6 +1127,17 @@ class ScimTest(TimRouteTest):
         )
         self.json_post(
             '/scim/Groups', {
+                'externalId': 'jy-f7d67fab-1f2a-4d01-9687-0910f1bbdfda-jy-70c7345b-41d7-4e79-9421-3fb8fba1c7ca-students',
+                'displayName': 'MATP211 P1 2019-08-01--2019-12-31: Tentti yleisenä tenttipäivänä - ilmoittaudu myös Korpissa: Opiskelijat',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['korppiguy']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        self.json_post(
+            '/scim/Groups', {
                 'externalId': 'jy-f7d67fab-1f2a-4d01-x687-0910f1bbdfda-students',
                 'displayName': 'MATP211 P1 2019-08-01--2019-12-31: Kaikki opiskelijat',
                 'members': add_name_parts([
