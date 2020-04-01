@@ -29,7 +29,7 @@ class LoginMenuController implements IController {
             });
             window.open("/saml/sso?" + $httpParamSerializer({
                 addUser: false,
-                entityID: hakaLogin === "aalto" ? "https://idp.aalto.fi/shibboleth" : "https://login.jyu.fi/idp/shibboleth",
+                entityID: hakaLogin === "aalto" ? "https://idp.aalto.fi/idp/shibboleth" : "https://login.jyu.fi/idp/shibboleth",
                 return_to: document.location.toString() + "?" + $httpParamSerializer({
                     sendLoginSuccessMsg: true,
                 }),
