@@ -30,7 +30,7 @@ class LoginMenuController implements IController {
             window.open("/saml/sso?" + $httpParamSerializer({
                 addUser: false,
                 entityID: hakaLogin === "aalto" ? "https://idp.aalto.fi/idp/shibboleth" : "https://login.jyu.fi/idp/shibboleth",
-                return_to: document.location.toString() + "?" + $httpParamSerializer({
+                return_to: document.location.origin + "?" + $httpParamSerializer({
                     sendLoginSuccessMsg: true,
                 }),
             }));
