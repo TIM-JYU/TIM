@@ -248,15 +248,8 @@ export function isPageDirty() {
 }
 
 export function getURLParameter(sParam: string): string | undefined {
-    const sPageURL = window.location.search.substring(1);
-    const sURLVariables = sPageURL.split("&");
-    for (const urlvar of sURLVariables) {
-        const sParameterName = urlvar.split("=");
-        if (sParameterName[0] === sParam) {
-            return decodeURIComponent(sParameterName[1]);
-        }
-    }
-    return undefined;
+    const params = new URLSearchParams(document.location.search);
+    return params.get(sParam) ?? undefined;
 }
 
 /**
