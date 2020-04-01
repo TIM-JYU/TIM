@@ -324,9 +324,14 @@ def del_g(response):
 
 
 @app.after_request
-def after_request(resp):
+def after_request(resp: Response):
     token = generate_csrf()
-    resp.set_cookie('XSRF-TOKEN', token)
+    resp.set_cookie(
+        'XSRF-TOKEN',
+        token,
+        samesite='None',
+        secure=app.config['SESSION_COOKIE_SECURE'],
+    )
     return resp
 
 

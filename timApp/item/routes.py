@@ -850,7 +850,13 @@ def get_document_relevance(i: DocInfo) -> int:
 @view_page.route('/viewrange/unset/piecesize')
 def unset_piece_size():
     resp = make_response()
-    resp.set_cookie(key="r", value="-1", expires=0)
+    resp.set_cookie(
+        key="r",
+        value="-1",
+        expires=0,
+        samesite='None',
+        secure=app.config['SESSION_COOKIE_SECURE'],
+    )
     return resp
 
 
@@ -870,7 +876,12 @@ def set_piece_size(args: SetViewRangeModel):
     if not piece_size or piece_size < 1:
         return abort(400, "Invalid piece size")
     resp = make_response()
-    resp.set_cookie(key="r", value=str(piece_size))
+    resp.set_cookie(
+        key="r",
+        value=str(piece_size),
+        samesite='None',
+        secure=app.config['SESSION_COOKIE_SECURE'],
+    )
     return resp
 
 
