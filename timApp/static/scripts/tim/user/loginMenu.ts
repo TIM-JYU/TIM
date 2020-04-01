@@ -27,9 +27,13 @@ class LoginMenuController implements IController {
                     location.reload();
                 }
             });
+            const entities: Record<string, string> = {
+                test: "https://testidp.funet.fi/idp/shibboleth",
+                aalto: "https://idp.aalto.fi/idp/shibboleth",
+            };
             window.open("/saml/sso?" + $httpParamSerializer({
                 addUser: false,
-                entityID: hakaLogin === "aalto" ? "https://idp.aalto.fi/idp/shibboleth" : "https://login.jyu.fi/idp/shibboleth",
+                entityID: entities[hakaLogin] ?? "https://login.jyu.fi/idp/shibboleth",
                 return_to: document.location.origin + "?" + $httpParamSerializer({
                     sendLoginSuccessMsg: true,
                 }),
