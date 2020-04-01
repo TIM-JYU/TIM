@@ -213,7 +213,7 @@ jsrunnerApp.component("jsRunner", {
         vctrl: "^timView",
     },
     template: `
-<div ng-if="::$ctrl.isVisible()">
+<div ng-if="::$ctrl.isVisible()" style="display: inline-block">
     <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
     <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
     <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
