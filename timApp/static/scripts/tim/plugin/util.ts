@@ -302,3 +302,11 @@ export const pluginBindings = {
     plugintype: "@?",
     taskid: "@?",
 };
+
+export function inIframe() {
+    try {
+        return window.self !== window.top;
+    } catch (e) {
+        return true;
+    }
+}
