@@ -1,7 +1,7 @@
 #define confuse
 #define record
 #include "input_output.cc"
-copyright mathcheck_cc( "mathcheck.cc", "Antti Valmari", 20200306 );
+copyright mathcheck_cc( "mathcheck.cc", "Antti Valmari", 20200330 );
 /*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -3890,6 +3890,8 @@ void parse_comment( bool new_pg = false ){
       if( new_pg ){ out_html( "\n<p>" ); }
       pgh_broken = true; get_token(); new_pg = true; continue;
     }
+
+    else if( err_pos < 2 ){ new_pg = true; }
 
     /* Ban deconfusion, except if tkn_lc was confused. */
     if( inp_cnf_cnt < 3 ){ inp_deconfuse_off(); }

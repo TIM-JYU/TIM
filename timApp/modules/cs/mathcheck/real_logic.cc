@@ -1,4 +1,4 @@
-copyright real_logic_cc( "real_logic.cc", "Antti Valmari", 20200305 );
+copyright real_logic_cc( "real_logic.cc", "Antti Valmari", 20200313 );
 
 
 /*** A data structure to represent c_0 + c_1 x_1 + ... + c_n x_n ≥ 0
@@ -55,12 +55,18 @@ struct relo_ineq{
   }
 
 
+  /* Remove unnecessary last variables. */
+  inline void prune_variables(){
+    while( var_cnt && coeff[ var_cnt ].is_zer() ){ --var_cnt; }
+  }
+
+
   /* This is executed when an inequation is put into a clause. In addition to
     obvious little things, this divides away the gcd of the coefficients. */
   void normalize(){
 
     /* Remove unnecessary last variables. */
-    while( var_cnt && coeff[ var_cnt ].is_zer() ){ --var_cnt; }
+    prune_variables();
 
     /* If no variables, convert to 0 ≥ 0 or 0 > 0. */
     if( !( var_cnt || coeff[0].is_zer() ) ){
@@ -165,9 +171,9 @@ public:
 
   /* Constructors */
   relo_clause(){}
-  relo_clause( relo_ineq & ie ){
-    ie.normalize();
-    if( !ie.is_true() ){ atoms.push_back( ie ); }
+  relo_clause( const relo_ineq & ie ){
+    atoms.push_back( ie ); atoms[0].normalize();
+    if( atoms[0].is_true() ){ atoms.clear(); }
   }
 
   /* These recognize special cases. */
@@ -513,6 +519,112 @@ public:
 relo_DNF relo_DNF_false, relo_DNF_true = relo_clause();
 
 
+/*
+  The fraction of two expressions of the form c_0 + c_1 x_1 + ... + c_n x_n
+  The denominator is used only if de.var_cnt > 0. Then its first non-zero c_i
+  is made 1. That the denominator is constant 0 is indicated by de.strict =
+  true. Then the fraction is defined nowhere. That strict comparison is
+  needed with absolute values is denoted with nu.strict.
+*/
+struct relo_frac{
+  relo_ineq nu, de;
+
+  void plusminus( const relo_frac & rf, bool is_plus ){
+    if( de.strict ){ return; }
+    if( rf.de.strict ){ *this = rf; return; }
+
+    if( de.var_cnt ){
+
+      if( rf.de.var_cnt ){
+        unsigned nn = de.var_cnt;
+        if( nn < rf.de.var_cnt ){ nn = rf.de.var_cnt; }
+        for( unsigned ii = 0; ii <= nn; ++ii ){
+          if( !( de.coeff[ ii ] == rf.de.coeff[ ii ] ) ){
+            test_fail_compl(); return;
+          }
+        }
+        if( is_plus ){ nu.add( rf.nu ); }else{ nu.subtract( rf.nu ); }
+        nu.prune_variables(); return;
+      }
+
+      if( rf.nu.var_cnt ){ test_fail_compl(); return; }
+
+      number xx = rf.nu.coeff[0];
+      if( !is_plus ){ xx = -xx; }
+      if( nu.var_cnt < de.var_cnt ){ nu.var_cnt = de.var_cnt; }
+      for( unsigned ii = 0; ii <= nu.var_cnt; ++ii ){
+        nu.coeff[ ii ] += de.coeff[ ii ] * xx;
+      }
+      nu.prune_variables(); return;
+
+    }
+
+    if( rf.de.var_cnt ){
+      if( nu.var_cnt ){ test_fail_compl(); return; }
+
+      number xx = nu.coeff[0];
+      de = rf.de; nu.var_cnt = de.var_cnt;
+      for( unsigned ii = 0; ii <= nu.var_cnt; ++ii ){
+        nu.coeff[ ii ] = de.coeff[ ii ] * xx;
+      }
+
+    }
+
+    if( is_plus ){ nu.add( rf.nu ); }else{ nu.subtract( rf.nu ); }
+    nu.prune_variables();
+  }
+
+  void add( const relo_frac & rf ){ plusminus( rf, true ); return; }
+
+  void subtract( const relo_frac & rf ){ plusminus( rf, false ); return; }
+
+  void multiply( const relo_frac & rf ){
+    if( de.strict ){ return; }
+    if( rf.de.strict ){ *this = rf; return; }
+    if( ( nu.var_cnt && rf.nu.var_cnt ) || ( de.var_cnt && rf.de.var_cnt ) ){
+      test_fail_compl(
+        "Product of variables is not allowed in first-degree arithmetic"
+      ); return;
+    }
+    number xx;
+    if( !rf.nu.var_cnt ){ xx = rf.nu.coeff[0]; }
+    else{ xx = nu.coeff[0]; nu = rf.nu; }
+    for( unsigned ii = 0; ii <= nu.var_cnt; ++ii ){ nu.coeff[ ii ] *= xx; }
+    if( rf.de.var_cnt ){ de = rf.de; }
+    nu.prune_variables();
+  }
+
+  void divide( const relo_frac & rf ){
+    if( de.strict ){ return; }
+    if( rf.de.strict ){ *this = rf; return; }
+    if( rf.de.var_cnt || ( de.var_cnt && rf.nu.var_cnt ) ){
+      test_fail_compl(); return;
+    }
+    number xx;
+/*
+    if( rf.de.var_cnt ){
+      xx = nu.coeff[0]; nu = rf.de;
+      for( unsigned ii = 0; ii <= nu.var_cnt; ++ii ){ nu.coeff[ ii ] *= xx; }
+    }
+*/
+    if( rf.nu.var_cnt ){
+      de = rf.nu;
+      unsigned ii = 0;
+      for( ; ii <= de.var_cnt && de.coeff[ ii ].is_zer(); ++ii ){}
+      if( ii > de.var_cnt ){
+        de.var_cnt = 0; nu = de; de.strict = true; return;
+      }
+      xx = de.coeff[ ii ];
+      for( ; ii <= de.var_cnt; ++ii ){ de.coeff[ ii ] /= xx; }
+    }else{ xx = rf.nu.coeff[0]; }
+    if( xx.is_zer() ){ de.var_cnt = 0; nu = de; de.strict = true; return; }
+    for( unsigned ii = 0; ii <= nu.var_cnt; ++ii ){ nu.coeff[ ii ] /= xx; }
+    //nu.prune_variables();
+  }
+
+};
+
+
 /* Ensures an error message, if ee is null. */
 inline bool relo_null( const expression *ee ){
   if( err_mode ){ return true; }
@@ -530,16 +642,16 @@ inline bool relo_null( const expression *ee ){
 unsigned
   relo_abs_idx = 0,   // counts from 0 to number of |...| in the relation
   relo_abs_cnt = 0;   // from 0 to 2 ^ (total number of |...| in the relation)
-std::vector< relo_ineq >
+std::vector< relo_frac >
   relo_abs_term;      // term inside |...| that makes the condition
 
 /* Constructs an inequation from an integer arithmetic term. */
-relo_ineq relo_term( const expression *ee ){
-  relo_ineq result;
+relo_frac relo_term( const expression *ee ){
+  relo_frac result;
   if( relo_null( ee ) ){ return result; }
 
   if( ee->opr() == op_const ){
-    if( ee->val().is_uns_type() ){ result.coeff[0] = ee->val(); }
+    if( ee->val().is_uns_type() ){ result.nu.coeff[0] = ee->val(); }
     else{ test_fail( ee->val() ); }
     return result;
   }
@@ -559,7 +671,7 @@ relo_ineq relo_term( const expression *ee ){
       }else{ test_fail( err_var_cnt ); return result; }
     }
 
-    result.var_cnt = vv; result.coeff[ vv ] = 1; return result;
+    result.nu.var_cnt = vv; result.nu.coeff[ vv ] = 1; return result;
   }
 
   if( ee->opr() == op_plus || ee->opr() == op_mixn ){
@@ -570,7 +682,7 @@ relo_ineq relo_term( const expression *ee ){
 
   if( ee->opr() == op_minus ){
     if( !ee->left() ){
-      result = relo_term( ee->right() ); result.reverse(); return result;
+      result = relo_term( ee->right() ); result.nu.reverse(); return result;
     }
     result = relo_term( ee->left() );
     result.subtract( relo_term( ee->right() ) ); return result;
@@ -578,6 +690,8 @@ relo_ineq relo_term( const expression *ee ){
 
   if( ee->opr() == op_iprod || ee->opr() == op_vprod ){
     result = relo_term( ee->left() );
+    result.multiply( relo_term( ee->right() ) );
+/*
     relo_ineq ie = relo_term( ee->right() );
     if( result.var_cnt && ie.var_cnt ){
       test_fail_compl(
@@ -590,10 +704,14 @@ relo_ineq relo_term( const expression *ee ){
     for( unsigned ii = 0; ii <= result.var_cnt; ++ii ){
       result.coeff[ ii ] *= cc;
     }
+*/
     return result;
   }
 
   if( ee->opr() == op_div ){
+    result = relo_term( ee->left() );
+    result.divide( relo_term( ee->right() ) );
+/*
     if(
       ee->left() && ee->right() && ee->right()->opr() == op_const &&
       ee->right()->val().is_uns_type()
@@ -606,16 +724,17 @@ relo_ineq relo_term( const expression *ee ){
         }
       }
     }else{ test_fail( ee->val() ); }
+*/
     return result;
   }
 
   if( ee->opr() == op_abs ){
     result = relo_term( ee->right() );
     bool is_neg = relo_abs_cnt & 1u << relo_abs_idx;
-    if( is_neg ){ result.reverse(); }
+    if( is_neg ){ result.nu.reverse(); }
     if( relo_abs_cnt ){
       relo_abs_term[ relo_abs_idx ] = result;
-      if( is_neg ){ relo_abs_term[ relo_abs_idx ].strict = true; }
+      if( is_neg ){ relo_abs_term[ relo_abs_idx ].nu.strict = true; }
     }
     else{ relo_abs_term.push_back( result ); }
     ++relo_abs_idx;
@@ -645,9 +764,9 @@ const expression * relo_r_term( const expression *ee ){
 
 
 /* Constructs a system of inequations from a relation chain. */
-relo_DNF relo_relation( const expression *ee ){
-  relo_DNF result1;
-  if( relo_null( ee ) ){ return result1; }
+relo_DNF relo_relation( const expression *ee, bool U_becomes ){
+  relo_DNF result;
+  if( relo_null( ee ) ){ return result; }
 
   if(
     ee->opr() == op_gq || ee->opr() == op_gt || ee->opr() == op_eq ||
@@ -657,55 +776,91 @@ relo_DNF relo_relation( const expression *ee ){
     /* Process the current relation. */
     relo_abs_cnt = 0; relo_abs_term.clear();
     do{
-      relo_abs_idx = 0;
+      relo_abs_idx = 0;   // relo_term counts |...|s with this
 
       /* Fetch the terms compared by the current relation. */
-      relo_ineq ie = relo_term( relo_r_term( ee->left() ) );
-      ie.subtract( relo_term( relo_l_term( ee->right() ) ) );
+      relo_frac rf = relo_term( relo_r_term( ee->left() ) );
+      rf.subtract( relo_term( relo_l_term( ee->right() ) ) );
+      relo_DNF dnf;
 
-      /* Build a comparison. */	
-      if( ee->opr() == op_lt || ee->opr() == op_gt || ee->opr() == op_nq ){
-        ie.strict = true;
-      }
-      if( ee->opr() == op_lq || ee->opr() == op_lt ){ ie.reverse(); }
-      relo_ineq ie2 = ie;
-      relo_DNF result2 = relo_clause( ie2 );
+      /* Process division by constant 0. */
+      if( rf.de.strict ){ dnf = U_becomes ? relo_DNF_true : relo_DNF_false; }
 
-      /* If necessary, build another comparison. */
-      if( ee->opr() == op_eq || ee->opr() == op_nq ){
-        ie.reverse();
-        if( ee->opr() == op_eq ){ result2 &= relo_clause( ie ); }
-        else{ result2 |= ie; }
-      }
+      else{
+        relo_clause cl1, cl2;
 
-      /* Take the absolute value conditions into account. */
-      for( unsigned ii = 0; ii < relo_abs_idx; ++ii ){
-        result2 &= relo_clause( relo_abs_term[ ii ] );
+        /* Build a comparison. */	
+        if( ee->opr() == op_lt || ee->opr() == op_gt ){ rf.nu.strict = true; }
+        if( ee->opr() == op_lq || ee->opr() == op_lt ){ rf.nu.reverse(); }
+        cl1 = rf.nu;
+
+        /* If necessary, build another comparison. */
+        if( ee->opr() == op_eq || ee->opr() == op_nq ){
+          rf.nu.reverse(); cl1 &= rf.nu;
+        }
+
+        /* Take the denominator into account. */
+        if( rf.de.var_cnt ){
+          if( ee->opr() == op_nq ){ cl2 = rf.de; }
+          else{
+            if( ee->opr() == op_eq ){ cl2 = cl1; }
+            else{ rf.nu.reverse(); cl2 = rf.nu; }
+            rf.de.strict = true; cl1 &= rf.de;
+          }
+          rf.de.reverse(); cl2 &= rf.de;
+          dnf = cl1; dnf |= cl2;
+        }else{ dnf = cl1; }
+        if( ee->opr() == op_nq ){ dnf.negate(); }
+ 
+        /* If necessary, make undefined appear as true. */
+        if( U_becomes && rf.de.var_cnt ){
+          rf.de.strict = false; cl1 = rf.de;
+          rf.de.reverse(); cl1 &= rf.de;
+          dnf |= cl1;
+        }
+
+        /* Take the absolute value conditions into account. */
+        for( unsigned ii = 0; ii < relo_abs_idx; ++ii ){
+          if( relo_abs_term[ ii ].de.strict ){
+            if( !U_becomes ){ dnf = relo_DNF_false; }
+          }else{
+            relo_DNF d2 = relo_clause( relo_abs_term[ ii ].nu );
+            if( relo_abs_term[ ii ].de.var_cnt ){
+              relo_abs_term[ ii ].de.strict = true;
+              d2 &= relo_clause( relo_abs_term[ ii ].de );
+              relo_abs_term[ ii ].nu.reverse(); cl2 = relo_abs_term[ ii ].nu;
+              relo_abs_term[ ii ].de.reverse(); cl2 &= relo_abs_term[ ii ].de;
+              d2 |= cl2;
+            }
+            dnf &= d2;
+          }
+        }
+
       }
 
       /* Combine to the final outcome and move to next absolute option. */
-      result1 |= result2;
+      result |= dnf;
       ++relo_abs_cnt;
     }while( relo_abs_cnt < 1u << relo_abs_idx );
 
     /* Merge the relation with the chains on the left and right, if exist. */
     if( is_rel( ee->left()->opr() ) ){
-      result1 &= relo_relation( ee->left() );
+      result &= relo_relation( ee->left(), U_becomes );
     }
     if( is_rel( ee->right()->opr() ) ){
-      result1 &= relo_relation( ee->right() );
+      result &= relo_relation( ee->right(), U_becomes );
     }
 
     /* Return the result. */
-    return result1;
+    return result;
   }
 
   test_fail( ee->opr(), "first-degree arithmetic relation" );
-  return result1;
+  return result;
 }
 
 
-relo_DNF relo_formula( const expression *ee, bool negated ){
+relo_DNF relo_formula( const expression *ee, bool negated, bool U_becomes ){
   relo_DNF result;
   if( relo_null( ee ) ){ return result; }
 
@@ -713,52 +868,66 @@ relo_DNF relo_formula( const expression *ee, bool negated ){
     ee->opr() == op_gq || ee->opr() == op_gt || ee->opr() == op_eq ||
     ee->opr() == op_lq || ee->opr() == op_lt || ee->opr() == op_nq
   ){
-    result = relo_relation( ee );
+    result = relo_relation( ee, U_becomes != negated );
     if( negated ){ result.negate(); }
     return result;
   }
 
-  if( ee->opr() == op_not ){ return relo_formula( ee->right(), !negated ); }
+  if( ee->opr() == op_not ){
+    return relo_formula( ee->right(), !negated, U_becomes );
+  }
 
   if(
-    ( !negated && ( ee->opr() == op_or || ee->opr() == op_sor ) ) ||
-    ( negated && ( ee->opr() == op_and || ee->opr() == op_sand ) )
+    ( !negated && ee->opr() == op_or ) || ( negated && ee->opr() == op_and )
   ){
-    result = relo_formula( ee->left(), negated );
-    result |= relo_formula( ee->right(), negated );
+    result = relo_formula( ee->left(), negated, U_becomes );
+    result |= relo_formula( ee->right(), negated, U_becomes );
     return result;
   }
 
   if(
-    ( negated && ( ee->opr() == op_or || ee->opr() == op_sor ) ) ||
-    ( !negated && ( ee->opr() == op_and || ee->opr() == op_sand ) )
+    ( negated && ee->opr() == op_or ) || ( !negated && ee->opr() == op_and )
   ){
-    result = relo_formula( ee->left(), negated );
-    result &= relo_formula( ee->right(), negated );
+    result = relo_formula( ee->left(), negated, U_becomes );
+    result &= relo_formula( ee->right(), negated, U_becomes );
     return result;
+  }
+
+  if( ee->opr() == op_sand ){
+    return relo_formula(
+      new_expr( ee->left(), op_and,
+        new_expr( new_expr( op_not, ee->left() ), op_or, ee->right() )
+      ), negated, U_becomes );
+  }
+
+  if( ee->opr() == op_sor ){
+    return relo_formula(
+      new_expr( ee->left(), op_or,
+        new_expr( new_expr( op_not, ee->left() ), op_and, ee->right() )
+      ), negated, U_becomes );
   }
 
   if( ee->opr() == op_rarr ){
     if( negated ){
-      result = relo_formula( ee->left(), false );
-      result &= relo_formula( ee->right(), true );
+      result = relo_formula( ee->left(), false, U_becomes );
+      result &= relo_formula( ee->right(), true, U_becomes );
     }else{
-      result = relo_formula( ee->left(), true );
-      result |= relo_formula( ee->right(), false );
+      result = relo_formula( ee->left(), true, U_becomes );
+      result |= relo_formula( ee->right(), false, U_becomes );
     }
     return result;
   }
 
   if( ee->opr() == op_harr ){
-    result = relo_formula( ee->left(), true );
-    relo_DNF df = relo_formula( ee->right(), true );
+    result = relo_formula( ee->left(), true, U_becomes );
+    relo_DNF df = relo_formula( ee->right(), true, U_becomes );
     if( negated ){
-      result &= relo_formula( ee->right(), false );
-      df &= relo_formula( ee->left(), false );
+      result &= relo_formula( ee->right(), false, U_becomes );
+      df &= relo_formula( ee->left(), false, U_becomes );
       result |= df;
     }else{
-      result |= relo_formula( ee->right(), false );
-      df |= relo_formula( ee->left(), false );
+      result |= relo_formula( ee->right(), false, U_becomes );
+      df |= relo_formula( ee->left(), false, U_becomes );
       result &= df;
     }
     return result;
@@ -773,10 +942,12 @@ relo_DNF relo_formula( const expression *ee, bool negated ){
       else{ test_fail( err_var_cnt ); return result; }
     }
     relo_var_idx[ vv ] = to_var_idx( ee->val() );
-    result = relo_formula( ee->right(), sub_neg );
+    if( negated != sub_neg ){ U_becomes = !U_becomes; }
+    result = relo_formula( ee->right(), sub_neg, U_becomes );
     if( ee->left() ){
-      if( sub_neg ){ result &= relo_formula( ee->left(), !sub_neg ); }
-      else{ result &= relo_formula( ee->left(), sub_neg ); }
+      if( sub_neg ){
+        result &= relo_formula( ee->left(), !sub_neg, U_becomes );
+      }else{ result &= relo_formula( ee->left(), sub_neg, U_becomes ); }
     }
     result.eliminate( vv ); relo_var_idx[ vv ] = ~0u;
     if( negated != sub_neg ){ result.negate(); }
@@ -788,9 +959,10 @@ relo_DNF relo_formula( const expression *ee, bool negated ){
     else{ return relo_DNF_true; }
   }
   if( ee == expr_U ){
-    test_fail_compl(
-      "<b>U</b> is not allowed in first-degree arithmetic formulas"
-    );
+    return U_becomes ? relo_DNF_true : relo_DNF_false;
+    //???test_fail_compl(
+    //  "<b>U</b> is not allowed in first-degree arithmetic formulas"
+    //);
     return result;
   }
 
@@ -799,12 +971,16 @@ relo_DNF relo_formula( const expression *ee, bool negated ){
 }
 
 
-bool real_logic_root( expression *ee ){
-  if( !ee ){ mc_err_print( "No real logic expression" ); return false; }
+bool real_logic_root( expression *eF, expression *eT = expr_T ){
+  if( !( eF && eT ) ){
+    mc_err_print( "No real logic expression" ); return false;
+  }
 
   /* Fetch the formula in a disjunctive normal form. */
   relo_var_count = 0;
-  relo_DNF dnf = relo_formula( ee, false );
+  relo_DNF dnf =
+    relo_formula( new_expr( eF, op_and, dom_expr ), false, false );
+  dnf &= relo_formula( new_expr( eT, op_and, dom_expr ), false, true );
   if( err_mode ){ return false; }
 
   /* Eliminate the free variables. */
@@ -847,36 +1023,34 @@ void real_logic_check( expression *e1, expression *e2, op_type rel_op ){
   if( rel_op == op_leq || rel_op == op_iden || rel_op == op_limp ){
     if(
       e1 != expr_T && e2 != expr_F &&
-      real_logic_root( new_expr(
-        new_expr( new_expr( op_not, e1 ), op_and, e2 ),
-        op_and, dom_expr )
-      )
-    ){ test_fail( tv_F, tv_T ); }
+      real_logic_root( e2, new_expr( op_not, e1 ) )
+    ){
+      test_fail( tv_U, tv_T ); err_mode = err_none;   // store counterexample
+      if( real_logic_root( new_expr( e2, op_and, new_expr( op_not, e1 ) ) ) ){
+        test_fail( tv_F, tv_T );    // use F-counterexample, if exists
+      }else{ err_mode = err_cmp; }  // activate stored U-counterexample
+    }
   }
   if( rel_op == op_leq || rel_op == op_iden || rel_op == op_impl ){
     if(
       e2 != expr_T && e1 != expr_F &&
-      real_logic_root( new_expr(
-        new_expr( e1, op_and, new_expr( op_not, e2 ) ),
-        op_and, dom_expr )
-      )
-    ){ test_fail( tv_T, tv_F ); }
+      real_logic_root( e1, new_expr( op_not, e2 ) )
+    ){
+      test_fail( tv_T, tv_U ); err_mode = err_none;   // store counterexample
+      if( real_logic_root( new_expr( e1, op_and, new_expr( op_not, e2 ) ) ) ){
+        test_fail( tv_T, tv_F );    // use F-counterexample, if exists
+      }else{ err_mode = err_cmp; }  // activate stored U-counterexample
+    }
+  }
+  if( rel_op == op_iden ){
+    if(
+      e1 != expr_T && e2 != expr_F &&
+      real_logic_root( new_expr( op_not, e1 ), e2 )
+    ){ test_fail( tv_F, tv_U ); }
+    if(
+      e2 != expr_T && e1 != expr_F &&
+      real_logic_root( new_expr( op_not, e2 ), e1 )
+    ){ test_fail( tv_U, tv_F ); }
   }
   if( !err_mode ){ err_mode = err_proven; }
 }
-
-
-/*
-  first_test_combination();
-  do{
-    truth_val d1 = eval_tv( dom_expr );
-    truth_val v1 = eval_tv( e1 ) && d1;
-    truth_val v2 = eval_tv( e2 ) && d1;
-    if(
-      ( rel_op == op_leq && !tv_r_eq( v1, v2 ) ) ||
-      ( rel_op == op_iden && !tv_r_iden( v1, v2 ) ) ||
-      ( rel_op == op_impl && !tv_r_impl( v1, v2 ) ) ||
-      ( rel_op == op_limp && !tv_r_lpmi( v1, v2 ) )
-    ){ test_fail( v1, v2 ); return; }
-  }while( next_test_combination() );
-*/
