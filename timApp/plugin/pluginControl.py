@@ -195,12 +195,15 @@ class PluginPlacement:
                     errs[p_range] = str(e), plugin_name
                 else:
                     if check_task_access(errs, p_range, plugin_name, tid):
-                        plugs[p_range] = Plugin(
-                            tid,
-                            vals,
-                            plugin_name,
-                            par=block,
-                        )
+                        try:
+                            plugs[p_range] = Plugin(
+                                tid,
+                                vals,
+                                plugin_name,
+                                par=block,
+                            )
+                        except PluginException as e:
+                            errs[p_range] = str(e), plugin_name
         else:
             md = None
             for task_id, p_yaml, p_range, md in find_inline_plugins(block, macroinfo):
@@ -214,13 +217,17 @@ class PluginPlacement:
                     continue
                 if not check_task_access(errs, p_range, plugin_type, task_id):
                     continue
-                plug = InlinePlugin(
-                    task_id=task_id,
-                    values=y,
-                    plugin_type=plugin_type,
-                    p_range=p_range,
-                    par=block,
-                )
+                try:
+                    plug = InlinePlugin(
+                        task_id=task_id,
+                        values=y,
+                        plugin_type=plugin_type,
+                        p_range=p_range,
+                        par=block,
+                    )
+                except PluginException as e:
+                    errs[p_range] = str(e), plugin_type
+                    continue
                 plugs[p_range] = plug
         if md is None:
             # Can happen if inline plugin block has no plugins.

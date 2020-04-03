@@ -9,7 +9,7 @@ from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator
 import attr
 import yaml
 from jinja2 import Environment, BaseLoader
-from marshmallow import missing
+from marshmallow import missing, ValidationError
 
 import timApp
 from markupmodels import PointsRule, KnownMarkupFields
@@ -214,11 +214,13 @@ class Plugin:
                 self.task_id.access_specifier = TaskIdAccess.ReadOnly
         assert isinstance(values, dict)
         self.values = values
-        self.known_errors = KnownMarkupFieldsSchema.validate(values)
-        self.known: KnownMarkupFields = KnownMarkupFieldsSchema.load(
-            {k: v for k, v in values.items() if k not in self.known_errors},
-            unknown='EXCLUDE',
-        )
+        try:
+            self.known: KnownMarkupFields = KnownMarkupFieldsSchema.load(
+                {k: v for k, v in values.items()},
+                unknown='EXCLUDE',
+            )
+        except ValidationError as e:
+            raise PluginException(f'Invalid markup: {e}') from e
         self.type = plugin_type
         self.ptype = PluginType(plugin_type)
         self.par = par
@@ -259,13 +261,9 @@ class Plugin:
         return p
 
     def deadline(self, default=None):
-        if 'deadline' in self.known_errors:
-            raise PluginException(f'Invalid date format: {self.values["deadline"]}')
         return self.known.deadline or default
 
     def starttime(self, default=None):
-        if 'starttime' in self.known_errors:
-            raise PluginException(f'Invalid date format: {self.values["starttime"]}')
         return self.known.starttime or default
 
     def points_rule(self):

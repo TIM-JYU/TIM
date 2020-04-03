@@ -704,8 +704,10 @@ type: upload
 
         p.set_value('starttime', 'asdasd')
         p.save()
-        self.post_answer(p.type, p.task_id.doc_task, [], expect_status=400, expect_content={'error': 'Invalid date format: asdasd'})
-        self.get(f'/taskinfo/{p.task_id.doc_task}', expect_status=400, expect_content={'error': 'Invalid date format: asdasd'})
+        self.post_answer(p.type, p.task_id.doc_task, [], expect_status=400, expect_content={'error': "Invalid markup: {'starttime': [['Invalid value.'], ['Not a valid "
++           "datetime.'], {'_schema': ['Invalid input type.']}]}"})
+        self.get(f'/taskinfo/{p.task_id.doc_task}', expect_status=400, expect_content={'error': "Invalid markup: {'starttime': [['Invalid value.'], ['Not a valid "
++           "datetime.'], {'_schema': ['Invalid input type.']}]}"})
 
     def test_deadline_datetime(self):
         self.login_test1()
@@ -737,13 +739,12 @@ starttime:
 deadline:
 ```
 """)
-        p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
-        self.post_answer(p.type, p.task_id.doc_task, [],
+        t = 'csPlugin'
+        self.post_answer(t, f'{d.id}.t', [],
                          expect_status=400,
-                         expect_content='Invalid date format: 15',
+                         expect_content="Invalid markup: {'starttime': [['Invalid value.'], ['Not a valid datetime.'], {'_schema': ['Invalid input type.']}]}",
                          )
-        p = Plugin.from_paragraph(d.document.get_paragraphs()[1])
-        self.post_answer(p.type, p.task_id.doc_task, [])
+        self.post_answer(t, f'{d.id}.t2', [])
 
     def test_invalid_yaml(self):
         self.login_test1()
@@ -1434,5 +1435,14 @@ a: b
 -pointsRule:
     readpoints: "Pisteet: (.*)\n"
     maxPoints: 1
+        """)
+        self.get(d.url)
+
+    def test_pointsrule_invalid(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin}
+-pointsRule:
+   maxPoints: []
         """)
         self.get(d.url)
