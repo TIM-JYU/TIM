@@ -133,13 +133,11 @@ def get_notes(item_path):
     if not u.is_admin:
         ns = [n for n in ns if n.access == 'everyone']
     if vals.deleted:
-        ns += map(
-            DeletedNote,
-            PendingNotification.query
-                .filter(
-                PendingNotification.doc_id.in_(d_ids) & (PendingNotification.kind == NotificationType.CommentDeleted))
-                .options(joinedload(PendingNotification.block).joinedload(Block.docentries))
-                .all())
+        deleted = list(map(DeletedNote, PendingNotification.query.filter(PendingNotification.doc_id.in_(d_ids) & (
+                    PendingNotification.kind == NotificationType.CommentDeleted)).options(
+            joinedload(PendingNotification.block).joinedload(Block.docentries)).all()))
+        ns += deleted
+        all_count += len(deleted)
     public_count = 0
     deleted_count = 0
     for n in ns:
