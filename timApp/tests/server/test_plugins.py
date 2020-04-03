@@ -1429,5 +1429,10 @@ a: b
     compile: 0.2
     output: 1.8
     expectOutputPlain: ""
+
+#- {plugin=csPlugin}
+-pointsRule:
+    readpoints: "Pisteet: (.*)\n"
+    maxPoints: 1
         """)
         self.get(d.url)
