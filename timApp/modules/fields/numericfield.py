@@ -3,24 +3,24 @@ TIM plugin: a numericfield
 """
 
 import re
+from dataclasses import dataclass, asdict
 from typing import Union, List
 
-from dataclasses import dataclass, asdict
 from flask import jsonify, render_template_string, Blueprint, request
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
-from common_schemas import TextfieldStateModel, TextfieldStateSchema
+from common_schemas import TextfieldStateModel
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
-    GenericAnswerModel, Missing, \
-    render_multihtml, render_multimd
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, render_multihtml, render_multimd
+from markupmodels import GenericMarkupModel
+from utils import Missing
 
 numericfield_route = Blueprint('nf', __name__, url_prefix="/nf")
 
 
 NumericfieldStateModel = TextfieldStateModel
-NumericfieldStateSchema = TextfieldStateSchema
 
 
 @dataclass

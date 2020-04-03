@@ -10,12 +10,12 @@ from flask import Response
 from flask import abort
 from flask import request
 from marshmallow import validates_schema, ValidationError
-from marshmallow.utils import _Missing as Missing, missing
+from marshmallow.utils import missing
 from sqlalchemy import func
 from sqlalchemy.orm import lazyload
 from webargs.flaskparser import use_args
 
-from pluginserver_flask import GenericMarkupModel
+from markupmodels import GenericMarkupModel
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_common_answers, save_answer, get_all_answers, \
@@ -53,6 +53,7 @@ from timApp.util.flask.requesthelper import verify_json_params, get_option, get_
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields
 from timApp.util.utils import try_load_json
+from utils import Missing
 
 # TODO: Remove methods in util/answerutil where many "moved" here to avoid circular imports
 
@@ -408,7 +409,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     ptype = PluginType(plugintype)
     answerdata, = verify_json_params('input')
     answer_browser_data, answer_options = verify_json_params('abData', 'options', require=False, default={})
-    force_answer = answer_options.get('forceSave', False)
+    force_answer = answer_options.get('forceSave', False)  # Only used in feedback plugin.
     is_teacher = answer_browser_data.get('teacher', False)
     save_teacher = answer_browser_data.get('saveTeacher', False)
     should_save_answer = answer_browser_data.get('saveAnswer', True) and tid.task_name
@@ -467,9 +468,9 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     upload = None
 
-    if not logged_in() and not plugin.values.get('anonymous', False):
+    if not logged_in() and not plugin.known.anonymous:
         raise RouteException('You must be logged in to answer this task.')
-    if plugin.values.get("useCurrentUser", False) or is_global(plugin):  # For plugins that is saved only for current user
+    if plugin.known.useCurrentUser or is_global(plugin):  # For plugins that is saved only for current user
         users = [curr_user]
 
     if isinstance(answerdata, dict):
@@ -515,7 +516,7 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     web = jsonresp.get('web')
     if web is None:
-        raise PluginException('Missing "web" in plugin response.')
+        raise PluginException(f'Got malformed response from plugin: {jsonresp}')
     result = {'web': web}
 
     # if plugin.type == 'jsrunner' or plugin.type == 'tableForm' or plugin.type == 'importData':
@@ -940,24 +941,30 @@ def get_task_info(task_id):
 
 
 def find_tim_vars(plugin: Plugin):
-    tim_vars = {'maxPoints': plugin.max_points(),
-                'userMin': plugin.user_min_points(),
-                'userMax': plugin.user_max_points(),
-                'deadline': plugin.deadline(),
-                'starttime': plugin.starttime(),
-                'answerLimit': plugin.answer_limit(),
-                'triesText': plugin.values.get('triesText', 'Tries left:'),
-                'pointsText': plugin.values.get('pointsText', 'Points:')
-                }
+    tim_vars = {
+        'maxPoints': plugin.max_points(),
+        'userMin': plugin.user_min_points(),
+        'userMax': plugin.user_max_points(),
+        'showPoints': plugin.show_points(),
+        'deadline': plugin.deadline(),
+        'starttime': plugin.starttime(),
+        'answerLimit': plugin.answer_limit(),
+        'triesText': plugin.known.tries_text(),
+        'pointsText': plugin.known.points_text(),
+    }
     return tim_vars
 
 
-@answers.route("/getAnswers/<task_id>/<user_id>")
-def get_answers(task_id, user_id):
-    try:
-        user_id = int(user_id)
-    except ValueError:
-        abort(404, 'Not a valid user id')
+def hide_points(a: Answer):
+    j = a.to_json()
+    j['points'] = None
+    if a.points is not None:
+        j['points_hidden'] = True
+    return j
+
+
+@answers.route("/getAnswers/<task_id>/<int:user_id>")
+def get_answers(task_id: str, user_id: int):
     verify_logged_in()
     try:
         tid = TaskId.parse(task_id)
@@ -972,14 +979,17 @@ def get_answers(task_id, user_id):
     if user is None:
         abort(400, 'Non-existent user')
     try:
-        user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
-        if hide_names_in_teacher(d, context_user=user):
-            for answer in user_answers:
-                for u in answer.users_all:
-                    maybe_hide_name(d, u)
-        return json_response(user_answers)
-    except Exception as e:
-        return abort(400, str(e))
+        p = find_plugin_from_document(d.document, tid, user)
+    except TaskNotFoundException:
+        p = None
+    user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
+    if hide_names_in_teacher(d, context_user=user):
+        for answer in user_answers:
+            for u in answer.users_all:
+                maybe_hide_name(d, u)
+    if p and not p.known.show_points() and not get_current_user_object().has_teacher_access(d):
+        user_answers = list(map(hide_points, user_answers))
+    return json_response(user_answers)
 
 
 @answers.route("/allDocumentAnswersPlain/<path:doc_path>")
@@ -1072,7 +1082,7 @@ class FieldInfo:
 
 def get_plug_vals(doc: DocInfo, tid: TaskId, curr_user: User, user: User) -> Optional[FieldInfo]:
     d, plug = get_plugin_from_request(doc.document, tid, curr_user)
-    flds = plug.values.get('fields', [])
+    flds = plug.known.fields
     if not flds:
         return None
 

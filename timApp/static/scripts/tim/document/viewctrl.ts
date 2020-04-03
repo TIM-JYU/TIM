@@ -727,9 +727,11 @@ export class ViewCtrl implements IController {
                 this.formTaskInfosLoaded = true;
                 for (const fab of this.formAbs.entities.values()) {
                     // fab.setInfo(taskInfoResponse.data[fab.taskId]);
-                    fab.setInfo({userMin: 0,
-                    userMax: 0,
-                    answerLimit: 0,
+                    fab.setInfo({
+                        userMin: 0,
+                        userMax: 0,
+                        answerLimit: 0,
+                        showPoints: true,
                     });
                 }
             }

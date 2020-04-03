@@ -8,9 +8,10 @@ from flask import jsonify, render_template_string, Blueprint, request
 from marshmallow.utils import missing
 
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
-    Missing, \
+from pluginserver_flask import GenericHtmlModel, \
     render_multihtml
+from markupmodels import GenericMarkupModel
+from utils import Missing
 
 multisave_route = Blueprint('ms', __name__, url_prefix="/ms")
 

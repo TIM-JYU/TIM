@@ -2,7 +2,7 @@
 import json
 import re
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Dict, Optional, List, Union, Any
 from xml.sax.saxutils import quoteattr
 
 import yaml
@@ -10,7 +10,11 @@ from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import request
+from marshmallow import missing, EXCLUDE
 
+from markupmodels import GenericMarkupModel
+from marshmallow_dataclass import class_schema
+from pluginserver_flask import GenericAnswerModel
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.lecture.askedjson import normalize_question_json
@@ -21,8 +25,9 @@ from timApp.plugin.plugin import Plugin, PluginException
 from timApp.plugin.plugin import get_num_value
 from timApp.plugin.plugin import get_value
 from timApp.tim_app import csrf
-from timApp.util.flask.requesthelper import verify_json_params
+from timApp.util.flask.requesthelper import verify_json_params, use_model
 from timApp.util.flask.responsehelper import json_response
+from utils import Missing
 
 qst_plugin = Blueprint('qst_plugin',
                        __name__,
@@ -83,7 +88,7 @@ def qst_reqs():
 def qst_mcq_answer():
     jsondata = request.get_json()
     convert_mcq_to_qst(jsondata)
-    return qst_answer_jso(jsondata)
+    return qst_answer_jso(AnswerSchema().load(jsondata))
 
 
 @qst_plugin.route("/qst/mmcq/answer/", methods=["PUT"])
@@ -91,45 +96,82 @@ def qst_mcq_answer():
 def qst_mmcq_answer():
     jsondata = request.get_json()
     convert_mcq_to_qst(jsondata, True)
-    return qst_answer_jso(jsondata)
+    return qst_answer_jso(AnswerSchema().load(jsondata))
+
+
+@dataclass
+class QstInputModel:
+    answers: List[List[str]]
+    nosave: Union[bool, Missing] = missing
+
+
+@dataclass
+class QstMarkupModel(GenericMarkupModel):
+    class Meta:
+        unknown = EXCLUDE
+    points: Union[str, Missing] = missing
+    minpoints: Union[float, Missing] = missing
+    maxpoints: Union[float, Missing] = missing
+    # TODO: Set proper types
+    answerFieldType: Union[Any, Missing] = missing
+    expl: Union[Any, Missing] = missing
+    headers: Union[Any, Missing] = missing
+    matrixType: Union[Any, Missing] = missing
+    questionText: Union[Any, Missing] = missing
+    questionTitle: Union[Any, Missing] = missing
+    questionType: Union[Any, Missing] = missing
+    rows: Union[Any, Missing] = missing
+
+
+QstStateModel = List[List[str]]
+
+
+@dataclass
+class QstAnswerModel(GenericAnswerModel[QstInputModel, QstMarkupModel, QstStateModel]):
+    pass
+
+
+AnswerSchema = class_schema(QstAnswerModel)
 
 
 @qst_plugin.route("/qst/answer/", methods=["PUT"])
 @csrf.exempt
-def qst_answer():
-    return qst_answer_jso(request.get_json())
+@use_model(QstAnswerModel)
+def qst_answer(m):
+    return qst_answer_jso(m)
 
 
-def qst_answer_jso(jsondata):
+def qst_answer_jso(m: QstAnswerModel):
     tim_info = {}
-    answers = jsondata['input']['answers']
-    spoints = jsondata['markup'].get('points')
-    markup = jsondata['markup']
+    answers = m.input.answers
+    spoints = m.markup.points
+    markup = m.markup
     if spoints:
         points_table = create_points_table(spoints)
         points = calculate_points_from_json_answer(answers, points_table)
-        minpoints = markup.get('minpoints', -1e20)
-        maxpoints = markup.get('maxpoints', 1e20)
+        minpoints = markup.minpoints if markup.minpoints is not missing else -1e20
+        maxpoints = markup.maxpoints if markup.maxpoints is not missing else 1e20
         if points < minpoints:
             points = minpoints
         if points > maxpoints:
             points = maxpoints
         tim_info["points"] = points
-    convert_md([jsondata], options=DumboOptions.default())  # TODO get mathtype from doc settings?
-    info = jsondata['info']
-    result = False
-    if info and info['max_answers'] and get_num_value(info,'max_answers', 1) <= get_num_value(info,'earlier_answers', 0) + 1:
-        result = True
-    if not result:
-        markup = None
 
+    info = m.info
+    result = False
+    if info and info.max_answers and info.max_answers <= info.earlier_answers + 1:
+        result = True
+    jsonmarkup = m.markup.get_visible_data()
+    convert_md([jsonmarkup], options=DumboOptions.default())  # TODO get mathtype from doc settings?
     save = answers
-    web = {'result': "Vastattu", 'markup': markup, 'show_result': result, 'state': save}
+    if not markup.show_points():
+        jsonmarkup.pop('expl', None)
+        jsonmarkup.pop('points', None)
+    web = {'result': "Vastattu", 'markup': jsonmarkup if result else None, 'show_result': result, 'state': save}
     return json_response({'save': save, 'web': web, "tim_info": tim_info})
 
 
 def is_review(jso):
-    # print(query)
     result = jso.get("review", False)
     return result
 
@@ -303,11 +345,6 @@ def not_found(path):
     return abort(404)
 
 
-def delete_key(d: Dict[str, Any], key: str):
-    if key in d:
-        del d[key]
-
-
 def set_explanation(markup):
     # if expl, change to 1-based, if xpl rename to expl
     if 'xpl' in markup:
@@ -352,10 +389,7 @@ def mcq_get_md(jso):
         }
 
     :param jso: json block to make the markdown or TeX
-    :param review:
-    :return:
     """
-    info = jso['info']
     markup = jso['markup']
     printlikeqst = get_value(markup, 'texprintlikeqst', 0)
     user_print = jso.get('userPrint', False)
@@ -438,10 +472,7 @@ def mmcq_get_md(jso):
         }
 
     :param jso: json block to make the markdown or TeX
-    :param review:
-    :return:
     """
-    info = jso['info']
     markup = jso['markup']
     user_print = jso.get('userPrint', False)
     printlikeqst = get_value(markup, 'texprintlikeqst', 0)
@@ -520,8 +551,8 @@ def qst_get_html(jso, review):
     if info and info['max_answers'] and get_num_value(info,'max_answers', 1) <= get_num_value(info,'earlier_answers', 0):
         result = True
     if not result:
-        delete_key(markup, 'points')
-        delete_key(markup, 'expl')
+        markup.pop('points', None)
+        markup.pop('expl', None)
     jso['show_result'] = result
 
     if review:
@@ -547,7 +578,6 @@ def qst_get_md(jso):
     jso['show_result'] = result
 
     # attrs = json.dumps(jso)
-    usercode = qst_str(jso.get("state", "-"))
     user_print = jso.get('userPrint', False)
 
     print_reason = get_num_value(info,'max_answers', 1) <= get_num_value(info,'earlier_answers', 0)
@@ -574,8 +604,6 @@ def qst_get_md(jso):
     if texhline:
         texhline += ' '
     rows = qjson.get('rows', [])
-    reason = ' & ' + ' ' + ' & ' + ' ' if user_print else ''
-    cstr = texhline + ' & ' + reason + ' \\\\\n'
     cstr = ''
     expl = markup.get('expl', {})
     empty_theader = True
@@ -608,9 +636,7 @@ def qst_get_md(jso):
     for row in rows:
         if type(row) is not str:
             continue
-        correct = '' # choice.get('correct', False)
         exp = expl.get(str(idx+1),'')
-        reason = ''
         lbox = ''
         sep = ''
         lh = len(headers)
@@ -626,7 +652,6 @@ def qst_get_md(jso):
                 ua = uidx < len(user_answer) and str(ui+1) in user_answer[uidx]
                 if len(points_table) > uidx:
                     cell_points = get_num_value(points_table[uidx], str(ui + 1), 0)
-                correct_or_wrong_mark = ''
                 box = leftbox
                 if aft == 'text':
                     if idx < len(user_answer):
@@ -648,7 +673,7 @@ def qst_get_md(jso):
             lbox += sep + box
             sep = " & "
         reason = ' '
-        if user_print and print_reason:  # user_answer:
+        if user_print and print_reason:
             reason = ' & ' + exp
         if vertical:
             line = texhline + lbox + ' & ' + row + reason + ' \\\\\n'
@@ -678,19 +703,16 @@ def question_convert_js_to_yaml(markup: Dict, is_task: bool, task_id: Optional[s
     if task_id:
         taskid = task_id
     qst = is_task
-    delete_key(markup, "question")  # old attribute
-    delete_key(markup, "taskId")
-    delete_key(markup, "qst")
+    markup.pop('question', None)  # old attribute
+    markup.pop('taskId', None)
+    markup.pop('qst', None)
 
     mdyaml = yaml.dump(markup, encoding='utf-8', allow_unicode=True, default_flow_style=False).decode(
         'utf-8')  # see also .safe_dump
     mdyaml = mdyaml.replace("\n\n", "\n")
-    # mdyaml = mdyaml.replace("\\xC4", "Ä").replace("\\xD6", "Ö").replace(
-    #    "\\xC5", "Å").replace("\\xE4", "ä").replace("\\xF6", "ö").replace("\\xE5", "å")
     prefix = ' '
     if qst:
         prefix = ' d'  # like document question
-    # result = '``` {#' + taskid + prefix + 'question="' + question + '" plugin="qst"}\n' + mdyaml + '```\n'
     result = '``` {#' + taskid + prefix + 'question="' + 'true' + '" plugin="qst"}\n' + mdyaml + '```\n'
     return result
 
@@ -753,7 +775,7 @@ def create_points_table(points):
     return points_table
 
 
-def calculate_points_from_json_answer(single_answers, points_table):
+def calculate_points_from_json_answer(single_answers: List[List[str]], points_table):
     points = 0.0
     for (oneAnswer, point_row) in zip(single_answers, points_table):
         for oneLine in oneAnswer:
@@ -763,10 +785,5 @@ def calculate_points_from_json_answer(single_answers, points_table):
 
 
 def calculate_points(answer, points_table):
-    # single_answers = []
-    # all_answers = answer.split('|')
-    # for answer in all_answers:
-    #    single_answers.append(answer.split(','))
-
     single_answers = json.loads(answer)
     return calculate_points_from_json_answer(single_answers, points_table)

@@ -12,6 +12,8 @@ from jinja2 import Environment, BaseLoader
 from marshmallow import missing
 
 import timApp
+from markupmodels import PointsRule, KnownMarkupFields
+from marshmallow_dataclass import class_schema
 from timApp.answer.answer import Answer
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
@@ -185,6 +187,9 @@ class PluginType:
         return plugin_class.get('canGiveTask', False)
 
 
+KnownMarkupFieldsSchema = class_schema(KnownMarkupFields)()
+
+
 class Plugin:
     deadline_key = 'deadline'
     starttime_key = 'starttime'
@@ -209,10 +214,14 @@ class Plugin:
                 self.task_id.access_specifier = TaskIdAccess.ReadOnly
         assert isinstance(values, dict)
         self.values = values
+        self.known_errors = KnownMarkupFieldsSchema.validate(values)
+        self.known: KnownMarkupFields = KnownMarkupFieldsSchema.load(
+            {k: v for k, v in values.items() if k not in self.known_errors},
+            unknown='EXCLUDE',
+        )
         self.type = plugin_type
         self.ptype = PluginType(plugin_type)
         self.par = par
-        self.points_rule_cache = None  # cache for points rule
         self.output = None
         self.plugin_lazy = None
 
@@ -221,20 +230,6 @@ class Plugin:
     @property
     def fake_task_id(self):
         return f'{self.par.doc.doc_id}..{self.par.get_id()}'
-
-    @staticmethod
-    def get_date(d):
-        if isinstance(d, str):
-            try:
-                d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
-            except ValueError:
-                raise PluginException(f'Invalid date format: {d}')
-        if isinstance(d, datetime):
-            if d.tzinfo is None:
-                d = d.replace(tzinfo=timezone.utc)
-        elif d is not None:
-            raise PluginException(f'Invalid date format: {d}')
-        return d
 
     @staticmethod
     def from_task_id(task_id: str, user: User):
@@ -264,32 +259,50 @@ class Plugin:
         return p
 
     def deadline(self, default=None):
-        return self.get_date(get_value(self.values, self.deadline_key, default)) or default
+        if 'deadline' in self.known_errors:
+            raise PluginException(f'Invalid date format: {self.values["deadline"]}')
+        return self.known.deadline or default
 
     def starttime(self, default=None):
-        return self.get_date(get_value(self.values, self.starttime_key, default)) or default
+        if 'starttime' in self.known_errors:
+            raise PluginException(f'Invalid date format: {self.values["starttime"]}')
+        return self.known.starttime or default
 
     def points_rule(self):
-        if self.points_rule_cache is None:
-            self.points_rule_cache = get_value(self.values, self.points_rule_key, {})
-            if not isinstance(self.points_rule_cache, dict):
-                self.points_rule_cache = {}
-        return self.points_rule_cache
+        return self.known.pointsRule or PointsRule(
+            maxPoints=missing,
+            allowUserMax=missing,
+            allowUserMin=missing,
+            multiplier=missing,
+        )
 
-    def max_points(self, default=None):
-        return self.points_rule().get('maxPoints', default)
+    def max_points(self, default=None) -> Optional[str]:
+        if self.known.pointsRule and self.known.pointsRule.maxPoints is not missing:
+            return self.known.pointsRule.maxPoints
+        return default
 
     def user_min_points(self, default=None):
-        return self.points_rule().get('allowUserMin', default)
+        if self.known.pointsRule and self.known.pointsRule.allowUserMin is not missing:
+            return self.known.pointsRule.allowUserMin
+        return default
 
     def user_max_points(self, default=None):
-        return self.points_rule().get('allowUserMax', default)
+        if self.known.pointsRule and self.known.pointsRule.allowUserMax is not missing:
+            return self.known.pointsRule.allowUserMax
+        return default
 
-    def answer_limit(self):
-        return get_value(self.values, self.answer_limit_key, self.limit_defaults.get(self.type))
+    def answer_limit(self) -> Optional[int]:
+        if self.known.answerLimit is not missing:
+            return self.known.answerLimit
+        return self.limit_defaults.get(self.type)
+
+    def show_points(self):
+        return self.known.showPoints
 
     def points_multiplier(self, default=1):
-        return self.points_rule().get('multiplier', default)
+        if self.known.pointsRule and self.known.pointsRule.multiplier is not missing:
+            return self.known.pointsRule.multiplier
+        return default
 
     def validate_points(self, points: Union[str, float]):
         try:
@@ -344,11 +357,6 @@ class Plugin:
 
     def render_json(self):
         options = self.options
-        """
-        if options.current_user != options.user:
-            if self.values.get("userCurrentUser"):
-                options.user = options.current_user
-        """
         if self.answer is not None:
             if self.task_id.is_points_ref:
                 p = f'{self.answer.points:g}' if self.answer.points is not None else ''
@@ -413,13 +421,11 @@ class Plugin:
         valid_msg = tim_info.get('validMsg', "ok")
         return valid, valid_msg
 
-    def is_cached(self):
-        cached = self.values.get('cache', None)
-        if cached:
-            return True
-        if cached is not None:
-            return False
-        return self.values.get('gvData', False)  # Graphviz is cached if not cacahe: false attribute
+    def is_cached(self) -> bool:
+        cached = self.known.cache
+        if cached is not missing:
+            return bool(cached)  # Cast potential None to False
+        return self.type == 'graphviz' and self.values.get('gvData') is not None  # Graphviz is cached by default
 
     def is_lazy(self) -> bool:
         if self.type in NEVERLAZY_PLUGINS:
@@ -429,8 +435,7 @@ class Plugin:
         html = self.output
         if do_lazy == NEVERLAZY:
             return False
-        markup = self.values
-        markup_lazy = markup.get("lazy", "")
+        markup_lazy = self.known.lazy
         if markup_lazy == False:
             return False  # user do not want lazy
         if self.is_cached():
@@ -446,7 +451,9 @@ class Plugin:
         return True
 
     def is_automd_enabled(self, default=False):
-        return self.values.get(AUTOMD, default)
+        if self.known.automd is not missing:
+            return self.known.automd
+        return default
 
     def set_output(self, output: str):
         self.output = output
@@ -471,9 +478,8 @@ class Plugin:
     def get_final_output(self):
         out = self.output
         if self.is_lazy() and out.find(LAZYSTART) < 0:
-            markup = self.values
-            header = str(markup.get("header", markup.get("headerText", "")))
-            stem = str(markup.get("stem", "Open plugin"))
+            header = self.known.header or self.known.headerText or ''
+            stem = self.known.stem or 'Open plugin'
             # Plugins are possibly not visible in lazy form at all if both header and stem are empty,
             # so we add a placeholder in that case. This is the case for at least mcq and mmcq.
             if not header.strip() and not stem.strip():
@@ -482,10 +488,10 @@ class Plugin:
 
         # Create min and max height for div
         style = ''
-        mh = self.values.get('-min-height', 0)
+        mh = self.known.minHeight
         if mh:
             style = f'min-height:{html.escape(str(mh))};'
-        mh = self.values.get('-max-height', 0)
+        mh = self.known.maxHeight
         if mh:
             style += f'max-height:{html.escape(str(mh))};overflow-y:auto;'
         if style:
@@ -671,7 +677,7 @@ class CachedPluginFinder:
             return p
 
 
-def find_plugin_from_document(d: Document, task_id: TaskId, u: User):
+def find_plugin_from_document(d: Document, task_id: TaskId, u: User) -> Plugin:
     used_hint = False
     with d.__iter__() as it:
         for p in it:
@@ -727,7 +733,6 @@ def finalize_inline_yaml(p_yaml: Optional[str]):
 
 def is_global(plugin: Plugin):
     return is_global_id(plugin.task_id)
-    # return plugin.values.get("globalField", False)
 
 
 def is_global_id(task_id: TaskId):

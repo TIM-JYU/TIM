@@ -435,7 +435,7 @@ def pluginify(doc: Document,
             if is_global(plugin):
                 glb_task_ids.append(plugin.task_id)
                 glb_plugins_to_change.append(plugin)
-            elif plugin.values.get("useCurrentUser", False) and (user.id != current_user.id):
+            elif plugin.known.useCurrentUser and (user.id != current_user.id):
                 curruser_task_ids.append(plugin.task_id)
                 curruser_plugins_to_change.append(plugin)
     if glb_task_ids:

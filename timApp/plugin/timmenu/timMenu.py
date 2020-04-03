@@ -9,8 +9,10 @@ from flask import jsonify, render_template_string
 from marshmallow.utils import missing
 
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
-    Missing, create_blueprint
+from pluginserver_flask import GenericHtmlModel, \
+    create_blueprint
+from markupmodels import GenericMarkupModel
+from utils import Missing
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
 from timApp.markdown.dumboclient import call_dumbo

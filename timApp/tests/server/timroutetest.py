@@ -506,7 +506,7 @@ class TimRouteTest(TimDbTest):
         return self.json_post(f'/update/{doc.id}', {'fulltext': text, 'original': doc.document.export_markdown()},
                               **kwargs)
 
-    def post_answer(self, plugin_type, task_id, user_input,
+    def post_answer(self, plugin_type, task_id: str, user_input,
                     save_teacher=False, teacher=False, user_id=None, answer_id=None, ref_from=None,
                     expect_content=None, expect_status=200,
                     **kwargs):
@@ -615,8 +615,6 @@ class TimRouteTest(TimDbTest):
         :param username: The username of the user.
         :param email: The email of the user.
         :param passw: The password of the user.
-        :param clear_last_doc: Whether to clear the last document information from session (TODO: This parameter is
-               possibly not needed anymore).
         :param force: Whether to force the login route to be called even if the user is already logged in.
         :param add: Whether to add this user to the session group.
         :return: Response as a JSON dict.
@@ -635,10 +633,9 @@ class TimRouteTest(TimDbTest):
                     s.pop('other_users', None)
                 self.client.session_transaction().__enter__()
                 return
-            if clear_last_doc:
-                with self.client.session_transaction() as s:
-                    s.pop('last_doc', None)
-                    s.pop('came_from', None)
+            with self.client.session_transaction() as s:
+                s.pop('last_doc', None)
+                s.pop('came_from', None)
         return self.post('/altlogin',
                          data={'email': email, 'password': passw, 'add_user': add},
                          follow_redirects=True, **kwargs)

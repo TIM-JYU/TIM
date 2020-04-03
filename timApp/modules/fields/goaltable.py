@@ -10,9 +10,10 @@ from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
-    GenericAnswerModel, Missing, \
-    render_multihtml, render_multimd
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, render_multihtml, render_multimd
+from markupmodels import GenericMarkupModel
+from utils import Missing
 
 goaltable_route = Blueprint('goaltable', __name__, url_prefix="/goaltable")
 

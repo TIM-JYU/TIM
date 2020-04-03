@@ -10,9 +10,10 @@ from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
-    GenericAnswerModel, Missing, \
-    make_base64, render_multihtml
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, make_base64, render_multihtml
+from markupmodels import GenericMarkupModel
+from utils import Missing
 
 dropdown_route = Blueprint('dropdown', __name__, url_prefix="/dropdown")
 

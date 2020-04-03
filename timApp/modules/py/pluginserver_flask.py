@@ -8,8 +8,7 @@ TIM interacts with plugins through certain HTTP routes:
 
 * answer:    Renders the plugin response when an answer is posted to the plugin.
 
-The accepted data of each route is defined by Marshmallow Schemas. Each Schema
-should have a corresponding Model to make code more type-safe. Upon successful validation, the JSON
+The accepted data of each route is defined by a dataclass. Upon successful validation, the JSON
 is converted to the corresponding Model object that can be used in code.
 
 If validation fails, the plugin returns an error with status code 422.
@@ -18,17 +17,18 @@ If validation fails, the plugin returns an error with status code 422.
 import base64
 import json
 from enum import Enum
-from typing import Optional, Union, TypeVar, Generic, Dict, List, Type
+from typing import Optional, Union, TypeVar, Generic, Dict, Type
 
-from dataclasses import dataclass, field, is_dataclass, fields
+from dataclasses import dataclass, field
 from flask import Blueprint, request
 from flask import render_template_string, jsonify, Flask
-from marshmallow import pre_load, ValidationError, Schema
-# noinspection PyProtectedMember
-from marshmallow.utils import _Missing as Missing, missing
+from marshmallow import ValidationError, Schema
+from marshmallow.utils import missing
 from werkzeug.exceptions import UnprocessableEntity
 
 from marshmallow_dataclass import class_schema
+from markupmodels import list_not_missing_fields, GenericMarkupModel
+from utils import Missing
 
 
 class PluginJsonEncoder(json.JSONEncoder):
@@ -49,65 +49,6 @@ class InfoModel:
 
 
 InfoSchema = class_schema(InfoModel)
-
-
-def asdict_skip_missing(obj):
-    result = []
-    for f in fields(obj):
-        v = getattr(obj, f.name)
-        if v is missing:
-            continue
-        value = asdict_skip_missing(v) if is_dataclass(v) else v
-        result.append((f.name, value))
-    return dict(result)
-
-
-def list_not_missing_fields(inst):
-    return list(((k, v) for k, v in asdict_skip_missing(inst).items()))
-
-
-@dataclass
-class GenericMarkupModel:
-    """Specifies which fields the editor can use in the plugin markup.
-    This base class defines some fields that are applicable to all plugins.
-    """
-
-    hidden_keys: List[str]
-    """Meta field that keeps track which markup fields were hidden (that is, prefixed with "-").
-    Hidden keys are never sent to browser.
-    """
-
-    texprint: Union[str, None, Missing] = missing
-    texbeforeprint: Union[str, None, Missing] = missing
-    texafterprint: Union[str, None, Missing] = missing
-    answerLimit: Union[int, Missing] = missing
-    button: Union[str, None, Missing] = missing
-    buttonText: Union[str, None, Missing] = missing
-    footer: Union[str, Missing] = missing
-    forceBrowser: Union[bool, Missing, None] = missing
-    globalField: Union[bool, Missing, None] = missing
-    header: Union[str, Missing, None] = missing
-    hideBrowser: Union[bool, Missing, None] = missing
-    lang: Union[str, None, Missing] = missing
-    lazy: Union[bool, Missing] = missing
-    resetText: Union[str, Missing, None] = missing
-    showInView: Union[bool, Missing] = missing
-    stem: Union[str, Missing, None] = missing
-    useCurrentUser: Union[bool, Missing, None] = missing
-    deadline: Union[str, Missing, None] = missing
-
-    @pre_load
-    def process_minus(self, data, **_):
-        if isinstance(data, dict):
-            hidden_keys = {k[1:] for k in data.keys() if isinstance(k, str) and k.startswith('-')}
-            for k in hidden_keys:
-                data[k] = data.pop(f'-{k}')
-            data['hidden_keys'] = hidden_keys
-        return data
-
-    def get_visible_data(self):
-        return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys and k != 'hidden_keys'}
-
 
 PluginMarkup = TypeVar('PluginMarkup', bound=GenericMarkupModel)
 PluginState = TypeVar('PluginState')

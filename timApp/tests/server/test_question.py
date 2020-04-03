@@ -1,11 +1,12 @@
 from lxml import html
 
-from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.tests.timliveserver import TimLiveServer
+from timApp.auth.accesstype import AccessType
+from timApp.tests.browser.browsertest import BrowserTest
+from timApp.timdb.sqa import db
 from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
-class QuestionTest(TimLiveServer, TimRouteTest):
+class QuestionTest(BrowserTest):
     def test_question_html(self):
         self.login_test1()
         d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/questions.md')
@@ -122,3 +123,61 @@ points: '2:1'</code></pre>
 1:[]
         """)
         self.get(d.url)
+
+    def test_hidden_points(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {#t plugin=qst dquestion=true}
+answerFieldType: radio
+answerLimit: 1
+expl: {}
+headers:
+- a
+- b
+matrixType: radiobutton-horizontal
+points: '2:1'
+questionText: test
+questionTitle: test
+questionType: matrix
+rows:
+- x
+""")
+        d.document.set_settings({'global_plugin_attrs': {'qst': {'showPoints': False}}})
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        db.session.refresh(d)
+        r = self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"]]})
+        self.assertEqual(
+            {'markup': {'answerFieldType': 'radio',
+                        'answerLimit': 1,
+                        'headers': ['a', 'b'],
+                        'matrixType': 'radiobutton-horizontal',
+                        'questionText': 'test',
+                        'questionTitle': 'test',
+                        'questionType': 'matrix',
+                        'rows': ['x'],
+                        'showPoints': False},
+             'result': 'Vastattu',
+             'show_result': True,
+             'state': [['2']]}, r['web'])
+        self.assertTrue('error' not in r)
+        answers = self.get_task_answers(f'{d.id}.t', self.current_user)
+        self.assertEqual(1, answers[0]['points'])
+        self.login_test2()
+        r = self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"]]})
+        self.assertEqual(
+            {'markup': {'answerFieldType': 'radio',
+                        'answerLimit': 1,
+                        'headers': ['a', 'b'],
+                        'matrixType': 'radiobutton-horizontal',
+                        'questionText': 'test',
+                        'questionTitle': 'test',
+                        'questionType': 'matrix',
+                        'rows': ['x'],
+                        'showPoints': False},
+             'result': 'Vastattu',
+             'show_result': True,
+             'state': [['2']]}, r['web'])
+        self.assertTrue('error' not in r)
+        answers = self.get_task_answers(f'{d.id}.t', self.current_user)
+        self.assertEqual(None, answers[0]['points'])  # Should be hidden.

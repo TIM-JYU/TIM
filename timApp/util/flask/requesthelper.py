@@ -17,6 +17,7 @@ from marshmallow_dataclass import class_schema
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.timdb.exceptions import InvalidReferenceException
 from timApp.user.user import Consent
+from utils import DurationSchema
 
 
 class EmptyWarning:
@@ -162,4 +163,4 @@ ModelType = TypeVar('ModelType')
 def use_model(m: Type[ModelType]) -> Callable[[Callable[[ModelType], Response]], None]:
     if not is_dataclass(m):
         raise Exception('use_model requires a dataclass')
-    return use_args(class_schema(m)())
+    return use_args(class_schema(m, base_schema=DurationSchema)())

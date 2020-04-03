@@ -367,6 +367,33 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.current_user.consent = Consent.CookieOnly
         db.session.commit()
 
+    def login(
+            self,
+            email: Optional[str] = None,
+            passw: Optional[str] = None,
+            username: Optional[str] = None,
+            add: bool = False,
+            force: bool = True,
+            **kwargs,
+    ):
+        """Logs a user in.
+
+        :param force: Unused parameter; must be defined so that it is not in kwargs.
+        :param username: The username of the user.
+        :param email: The email of the user.
+        :param passw: The password of the user.
+        :param add: Whether to add this user to the session group.
+        :return: Response as a JSON dict.
+
+        """
+        if self.client.application.got_first_request:
+            with self.client.session_transaction() as s:
+                s.pop('last_doc', None)
+                s.pop('came_from', None)
+        return self.post('/altlogin',
+                         data={'email': email, 'password': passw, 'add_user': add},
+                         follow_redirects=True, **kwargs)
+
 
 def find_button_by_text(root: WebElement, text: str):
     return find_element_by_text(root, text, 'button')

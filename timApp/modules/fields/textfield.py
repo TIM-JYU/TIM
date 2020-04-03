@@ -10,9 +10,10 @@ from webargs.flaskparser import use_args
 
 from common_schemas import TextfieldStateModel
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
-    GenericAnswerModel, Missing, \
-    render_multihtml
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, render_multihtml
+from markupmodels import GenericMarkupModel
+from utils import Missing
 
 textfield_route = Blueprint('tf', __name__, url_prefix="/tf")
 

@@ -369,8 +369,16 @@ class TimTest(TimRouteTest):
             self.json_post('/timTable/multimd/', [])
             self.json_put('/qst/answer/',
                           {
-                              'info': {},
+                              'info': {
+                                  'earlier_answers': 0,
+                                  'look_answer': False,
+                                  'user_id': 'xxx',
+                                  'max_answers': None,
+                                  'valid': True,
+                              },
                               'input': {'answers': []},
+                              'taskID': '1.xx',
+                              'state': None,
                               'markup': {},
                           })
         finally:

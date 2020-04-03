@@ -12,9 +12,10 @@ from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
-    GenericAnswerModel, Missing, \
-    create_blueprint
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, create_blueprint
+from markupmodels import GenericMarkupModel
+from utils import Missing
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
 from timApp.user.hakaorganization import HakaOrganization

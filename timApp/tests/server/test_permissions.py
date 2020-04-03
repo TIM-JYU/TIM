@@ -595,3 +595,21 @@ class PermissionTest(TimRouteTest):
         )
         db.session.commit()
         self.json_post('/permissions/selfExpire', {'id': d.id})
+
+    def test_duration_right(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.json_put(
+            f'/permissions/add',
+            {
+                'time': {
+                    'from': None,
+                    'to': None,
+                    'type': 'duration',
+                    'duration': 'PT4H',
+                },
+                'id': d.id,
+                'type': AccessType.view.value,
+                'groups': ['testuser2'],
+                'confirm': False,
+            })

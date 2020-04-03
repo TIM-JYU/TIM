@@ -10,9 +10,10 @@ from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
-    GenericAnswerModel, Missing, \
-    create_app
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, create_app
+from markupmodels import GenericMarkupModel
+from utils import Missing
 
 
 @dataclass

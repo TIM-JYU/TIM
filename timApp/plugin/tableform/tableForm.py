@@ -12,9 +12,10 @@ from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericMarkupModel, GenericHtmlModel, \
-    GenericAnswerModel, Missing, \
-    create_blueprint
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, create_blueprint
+from markupmodels import GenericMarkupModel
+from utils import Missing
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo

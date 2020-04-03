@@ -300,6 +300,7 @@ export interface ITaskInfo {
     userMin: number;
     userMax: number;
     answerLimit: number;
+    showPoints: boolean;
 }
 
 export interface IAnswerSaveEvent {
