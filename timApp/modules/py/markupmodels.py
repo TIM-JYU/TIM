@@ -13,6 +13,8 @@ from utils import Missing
 
 @dataclass
 class PointsRule:
+    class Meta:
+        unknown = 'EXCLUDE'  # Plugins may have custom rules - TIM can ignore them.
     maxPoints: Union[str, None, Missing] = missing
     allowUserMin: Union[int, float, None, Missing] = missing
     allowUserMax: Union[int, float, None, Missing] = missing

@@ -1420,3 +1420,14 @@ a: b
         self.assertIsInstance(a['savedNew'], int)
         a = self.post_answer('rbfield', f'{d.id}.f', user_input={'c': '0'})
         self.assertEqual({'web': {'result': 'saved'}, 'savedNew': None}, a)
+
+    def test_pointsrule_plugin_specific(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin}
+-pointsRule:
+    compile: 0.2
+    output: 1.8
+    expectOutputPlain: ""
+        """)
+        self.get(d.url)
