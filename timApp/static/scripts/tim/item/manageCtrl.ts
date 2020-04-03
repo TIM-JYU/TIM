@@ -195,23 +195,22 @@ export class PermCtrl implements IController {
     }
 
     async renameFolder(newName: string) {
-        const r = await to($http.put("/rename/" + this.item.id, {
+        const r = await to($http.put<{new_name: string}>("/rename/" + this.item.id, {
             new_name: this.oldFolderName + "/" + newName,
         }));
         if (r.ok) {
-            window.location.assign("/manage/" + this.oldFolderName + "/" + newName);
+            window.location.assign("/manage/" + r.result.data.new_name);
         } else {
             await showMessageDialog(r.result.data.error);
         }
     }
 
     async moveFolder(newLocation: string) {
-        const r = await to($http.put("/rename/" + this.item.id, {
+        const r = await to($http.put<{new_name: string}>("/rename/" + this.item.id, {
             new_name: newLocation + "/" + this.oldName,
         }));
         if (r.ok) {
-            // This is needed to update the breadcrumbs
-            location.reload();
+            window.location.assign("/manage/" + r.result.data.new_name);
         } else {
             await showMessageDialog(r.result.data.error);
         }
