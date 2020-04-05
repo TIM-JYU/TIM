@@ -4,6 +4,8 @@ import os
 
 import sys
 
+from flask import Flask
+
 tim_logger = logging.getLogger('tim')
 tim_logger.setLevel(logging.DEBUG)
 
@@ -11,7 +13,7 @@ wz = logging.getLogger('werkzeug')
 wz.setLevel(logging.ERROR)
 
 
-def setup_logging(app):
+def setup_logging(app: Flask) -> None:
     if not app.config['TESTING']:
         logging.getLogger('alembic').level = logging.INFO
     formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s ')
@@ -35,22 +37,22 @@ def setup_logging(app):
         tim_logger.addHandler(stdout_handler)
 
 
-def enable_loggers():
+def enable_loggers() -> None:
     tim_logger.disabled = False
     wz.disabled = False
 
 
-def log_debug(message: str):
+def log_debug(message: str) -> None:
     tim_logger.debug(message)
 
 
-def log_info(message: str):
+def log_info(message: str) -> None:
     tim_logger.info(message)
 
 
-def log_error(message: str):
+def log_error(message: str) -> None:
     tim_logger.error(message)
 
 
-def log_warning(message: str):
+def log_warning(message: str) -> None:
     tim_logger.warning(message)

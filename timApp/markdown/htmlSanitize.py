@@ -145,7 +145,7 @@ c = Cleaner(
 
 
 # NOTE: lxml cleaner is a LOT faster than bleach.
-def sanitize_html(html_string):
+def sanitize_html(html_string: str) -> str:
     try:
         doc = fromstring(html_string)
         c(doc)
@@ -159,7 +159,7 @@ def sanitize_html(html_string):
         return ""
 
 
-def strip_div(s: str):
+def strip_div(s: str) -> str:
     if s.startswith('<div>') and s.endswith('</div>'):
         return s[5:-6]
     else:

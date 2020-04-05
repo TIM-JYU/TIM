@@ -4,8 +4,8 @@ import os
 import re
 import shutil
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import List, Optional, Tuple, Union, Dict, Any, Sequence
+from pathlib import Path, PurePath
+from typing import List, Optional, Tuple, Union, Dict, Any, Sequence, Callable, Type
 
 import base64
 import dateutil.parser
@@ -15,13 +15,13 @@ from lxml.html import HtmlElement
 from timApp.markdown.htmlSanitize import sanitize_html
 
 
-def datestr_to_relative(dstr):
-    if isinstance(dstr, str):
-        dstr = datetime.strptime(dstr, '%Y-%m-%d %H:%M:%S')
-    return date_to_relative(dstr) if dstr else ''
+def datestr_to_relative(d: Union[str, datetime]) -> str:
+    if isinstance(d, str):
+        d = datetime.strptime(d, '%Y-%m-%d %H:%M:%S')
+    return date_to_relative(d) if d else ''
 
 
-def date_to_relative(d: Optional[datetime]):
+def date_to_relative(d: datetime) -> str:
     """Converts the given datetime object to relative string representation, such as "2 days ago", etc.
 
     :param d: The datetime object to convert.
@@ -29,8 +29,6 @@ def date_to_relative(d: Optional[datetime]):
 
     """
 
-    if d is None:
-        return None
     diff = get_current_time() - d
     s = diff.seconds
     if diff.days > 7 or diff.days < 0:
@@ -53,7 +51,7 @@ def date_to_relative(d: Optional[datetime]):
         return f'{s // 3600} hours ago'
 
 
-def count_chars_from_beginning(md: str, char: str):
+def count_chars_from_beginning(md: str, char: str) -> int:
     num = 0
     for c in md:
         if c == char:
@@ -63,7 +61,7 @@ def count_chars_from_beginning(md: str, char: str):
     return num
 
 
-def get_error_html(message: Union[str, Exception], response: Optional[str]=None):
+def get_error_html(message: Union[str, Exception], response: Optional[str]=None) -> str:
     """Wraps an error message in an HTML element with class 'error'.
 
     :param response: The plugin response string.
@@ -77,7 +75,7 @@ def get_error_html(message: Union[str, Exception], response: Optional[str]=None)
 
 
 # noinspection PyUnusedLocal
-def get_error_tex(title, message: Union[str, Exception], response: Optional[str]=None):
+def get_error_tex(title: str, message: Union[str, Exception], response: Optional[str]=None) -> str:
     """Wraps an error message in a TeX element 'timpluginerror'.
 
     :param title: The plugin response string.
@@ -89,7 +87,7 @@ def get_error_tex(title, message: Union[str, Exception], response: Optional[str]
     return f'\\timpluginerror{{ {title} }}{{ {str(message)} }}'
 
 
-def del_content(directory, onerror=None):
+def del_content(directory: Path, onerror: Optional[Callable[[Any, str, Any], Any]]=None) -> None:
     for f in os.listdir(directory):
         f_path = os.path.join(directory, f)
         try:
@@ -115,15 +113,15 @@ def get_sql_template(value_list: List) -> str:
     return ','.join(['%s'] * len(value_list))
 
 
-def pycharm_running():
+def pycharm_running() -> bool:
     return os.environ.get('PYCHARM_HOSTED') == '1'
 
 
-def remove_path_special_chars(item_path):
+def remove_path_special_chars(item_path: str) -> str:
     return re.sub('[^a-zA-Z0-9/_-]', '', item_path.translate(str.maketrans(' äöåÄÖÅ', '-aoaAOA')))
 
 
-def title_to_id(s: str):
+def title_to_id(s: str) -> str:
     """Converts a HTML heading to id attribute. Tries to be equivalent to what Pandoc does."""
     if s is None:
         return 'section'
@@ -134,7 +132,7 @@ def title_to_id(s: str):
     return s
 
 
-def getdatetime(s: str, default_val=None):
+def getdatetime(s: str, default_val: Optional[datetime] = None) -> Optional[datetime]:
     try:
         dt = dateutil.parser.parse(s, dayfirst=not 'Z' in s)
         return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
@@ -142,7 +140,7 @@ def getdatetime(s: str, default_val=None):
         return default_val
 
 
-def trim_markdown(text: str):
+def trim_markdown(text: str) -> str:
     """Trims the specified text. Don't trim spaces from left side because they may indicate a code block.
 
     :param text: The text to be trimmed.
@@ -152,17 +150,17 @@ def trim_markdown(text: str):
     return text.rstrip().strip('\r\n')
 
 
-def remove_prefix(text: str, prefix: str):
+def remove_prefix(text: str, prefix: str) -> str:
     if text.startswith(prefix):
         return text[len(prefix):]
     return text
 
 
-def include_keys(obj: Dict[str, Any], *keys: str):
+def include_keys(obj: Dict[str, Any], *keys: str) -> Dict[str, Any]:
     return {k: v for k, v in obj.items() if k in keys}
 
 
-def exclude_keys(obj: Dict[str, Any], *keys: str):
+def exclude_keys(obj: Dict[str, Any], *keys: str) -> Dict[str, Any]:
     return {k: v for k, v in obj.items() if k not in keys}
 
 
@@ -174,18 +172,18 @@ class cached_property:
     Source: https://github.com/bottlepy/bottle/commit/fa7733e075da0d790d809aa3d2f53071897e6f76
     """
 
-    def __init__(self, func):
+    def __init__(self, func: Callable):
         self.__doc__ = getattr(func, '__doc__')
         self.func = func
 
-    def __get__(self, obj, cls):
+    def __get__(self, obj: Any, cls: Any) -> Any:
         if obj is None:
             return self
         value = obj.__dict__[self.func.__name__] = self.func(obj)
         return value
 
 
-def try_load_json(json_str: Optional[str]):
+def try_load_json(json_str: Optional[str]) -> Union[None, str, Any]:
     """"""
     try:
         if json_str is not None:
@@ -195,7 +193,7 @@ def try_load_json(json_str: Optional[str]):
         return json_str
 
 
-def get_boolean(s, default, cast=None):
+def get_boolean(s: Union[bool, int, str], default: bool) -> bool:
     if s is None:
         return default
     if isinstance(s, bool):
@@ -204,46 +202,34 @@ def get_boolean(s, default, cast=None):
         return s != 0
     result = s
     lresult = result.lower()
-    if isinstance(default, bool):
-        if len(lresult) == 0:
-            return default
-        if "f0y".find(lresult[0]) >= 0:
-            return False
-        if "t1n".find(lresult[0]) >= 0:
-            return True
+    if len(lresult) == 0:
+        return default
+    if "f0y".find(lresult[0]) >= 0:
+        return False
+    if "t1n".find(lresult[0]) >= 0:
         return True
-    if isinstance(default, int):
-        try:
-            return int(lresult)
-        except ValueError:
-            return default
-    if cast is not None:
-        try:
-            result = cast(result)
-        except ValueError:
-            pass
-    return result
+    return True
 
 
 EXAMPLE_DOCS_PATH = 'static/example_docs'
 
 
-def decode_csplugin(text: HtmlElement):
+def decode_csplugin(text: HtmlElement) -> Dict[str, Any]:
     return json.loads(base64.b64decode(text.get('json')))['markup']
 
 
-def get_current_time():
+def get_current_time() -> datetime:
     return datetime.now(tz=timezone.utc)
 
 
-def seq_to_str(lst: Sequence[str]):
+def seq_to_str(lst: Sequence[str]) -> str:
     if len(lst) == 1:
         return lst[0]
     else:
         return f', '.join(lst[:-1]) + ' and ' + lst[-1]
 
 
-def split_by_semicolon(p: str):
+def split_by_semicolon(p: str) -> List[str]:
     return [s.strip() for s in p.split(';')]
 
 
@@ -262,7 +248,7 @@ TASK_PROG = re.compile('([\w\.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)') # see http
 TASK_NAME_PROG = re.compile("(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
 
 
-def widen_fields(fields: Union[List[str], str]):
+def widen_fields(fields: Union[List[str], str]) -> List[str]:
     """
     if there is syntax d(1,3) in fileds, it is made d1,d2
     from d(1,3)=t  would come d1=t1, d2=t2
@@ -309,7 +295,7 @@ def widen_fields(fields: Union[List[str], str]):
     return rfields
 
 
-def get_alias(name):
+def get_alias(name: str) -> str:
     """
     Get name part form string like 534.d1.points
     :param name: full name of field

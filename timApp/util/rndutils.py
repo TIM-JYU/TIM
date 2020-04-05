@@ -3,10 +3,9 @@ Functions to produce random lists.
 For documentation, see: https://tim.jyu.fi/view/tim/ohjeita/satunnaistus
 """
 import json
-import numbers
 import time
 from random import Random
-from typing import List, Dict, Tuple, Optional, Union
+from typing import List, Dict, Tuple, Optional, Union, Callable, TypeVar
 
 MAX_RND_LIST_LEN = 100
 
@@ -22,7 +21,7 @@ def fix_jso(jso: str) -> str:
     return '[[' + jso + ']]'
 
 
-def sep_n_and_jso(jso: str) -> [int, str]:
+def sep_n_and_jso(jso: str) -> Tuple[int, str]:
     """
     Separates repeat factor and json string from string. Separator is * or :
     If no repeat factor, return just json string.
@@ -37,10 +36,10 @@ def sep_n_and_jso(jso: str) -> [int, str]:
         idx = jso.find('*')
     if idx < 0:
         return -1, fix_jso(jso)  # means no repeat factor
-    n = jso[:idx]
+    n_str = jso[:idx]
     jso = jso[idx+1:]
     try:
-        n = int(n)
+        n = int(n_str)
         if n < 0:
             n = 0
     except ValueError:
@@ -60,13 +59,13 @@ def get_sample_list(myrandom: Random, jso: str) -> List[int]:
     if idx < 0:
         idx = jso.find('*')
     if idx < 0:
-        n = jso
+        n_str = jso
         jso = ''
     else:
-        n = jso[:idx]
+        n_str = jso[:idx]
         jso = jso[idx+1:]
     try:
-        n = int(n)
+        n = int(n_str)
     except ValueError:
         n = 1
     n = min(n, MAX_RND_LIST_LEN)
@@ -138,11 +137,11 @@ def get_uniform_list(myrandom: Random, jso: str) -> List[float]:
     :return: list of random ints ints
     """
     ranges = json.loads(jso)
-    if isinstance(ranges, numbers.Number):  # only on item, rnd=6
+    if isinstance(ranges, float) or isinstance(ranges, int):  # only on item, rnd=6
         return [myrandom.uniform(0, ranges)]
     ret = []
     for r in ranges:
-        if isinstance(r, numbers.Number):  # only on item, rnd=[6, 4]
+        if isinstance(ranges, float) or isinstance(ranges, int):  # only on item, rnd=[6, 4]
             ret.append(myrandom.uniform(0, r))
         else:
             if len(r) < 2:
@@ -151,7 +150,10 @@ def get_uniform_list(myrandom: Random, jso: str) -> List[float]:
     return ret
 
 
-def repeat_rnd(list_func, myrandom: Random, jso:str) -> Optional[List[int]]:
+T = TypeVar('T')
+
+
+def repeat_rnd(list_func: Callable[[Random, str], List[T]], myrandom: Random, jso: str) -> Optional[List[T]]:
     """
 
     :param list_func: function to produce random list
@@ -179,8 +181,11 @@ def repeat_rnd(list_func, myrandom: Random, jso:str) -> Optional[List[int]]:
     return ret
 
 
-def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[int]=None, state = None) \
-        -> Tuple[Optional[List[int]], int, int]:
+State = Tuple[int, ...]
+
+
+def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None, state: Optional[State] = None) \
+        -> Tuple[Optional[Union[List[float], List[int]]], Optional[SeedType], Optional[State]]:
     """
     Returns list of random numbers based on attribute name (def: rnd) and rnd_seed.
     :param attrs: dict of attributes
@@ -198,7 +203,7 @@ def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[int]=None, state
 
     rnd_seed = attrs.get('seed', rnd_seed)
     if not rnd_seed:
-        rnd_seed = time.perf_counter()*1000
+        rnd_seed = int(time.perf_counter()*1000)
 
     if isinstance(rnd_seed, str):
         rnd_seed = myhash(rnd_seed)
@@ -222,7 +227,7 @@ def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[int]=None, state
     return ret, rnd_seed, myrandom.getstate()
 
 
-def get_rands_as_dict(attrs: Dict, rnd_seed: SeedType, state = None) -> Tuple[Optional[dict], SeedType, int]:
+def get_rands_as_dict(attrs: Dict, rnd_seed: Optional[SeedType], state: Optional[State] = None) -> Tuple[Optional[dict], Optional[SeedType], Optional[State]]:
     """
     Returns a dict of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
@@ -234,7 +239,7 @@ def get_rands_as_dict(attrs: Dict, rnd_seed: SeedType, state = None) -> Tuple[Op
     if attrs is None:
         return None, rnd_seed, state
     names = attrs.get('rndnames', 'rnd').split(',')
-    ret = {}
+    ret: dict = {}
     for name in names:
         rnds, rnd_seed, state = get_rnds(attrs, name, rnd_seed, state)
         if rnds is None:
@@ -246,7 +251,7 @@ def get_rands_as_dict(attrs: Dict, rnd_seed: SeedType, state = None) -> Tuple[Op
     return ret, rnd_seed, state
 
 
-def get_rands_as_str(attrs: Dict, rnd_seed: SeedType, state = None) -> Tuple[str, SeedType, int]:
+def get_rands_as_str(attrs: Dict, rnd_seed: Optional[SeedType], state: Optional[State] = None) -> Tuple[str, Optional[SeedType], Optional[State]]:
     """
     Returns a Jinja2 str of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
@@ -278,17 +283,3 @@ def myhash(s: str) -> int:
     for c in s:
         csum += ord(c)
     return csum
-
-
-def get_simple_hash_from_par_and_user(block, user) -> int:
-    """
-    Get simple int hash from TIM's document block and user.
-    :param block: TIM's document block
-    :param user: TIM user
-    :return: simple hash that can be used for example as a seed for random number generator
-    """
-    h = str(block.get_id()) + str(block.get_doc_id())
-    if user:
-        h += user.name
-    rnd_seed = myhash(h) & 0xffffffff
-    return rnd_seed

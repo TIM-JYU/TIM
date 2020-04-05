@@ -2,7 +2,10 @@ import os
 
 
 # noinspection PyUnusedLocal
-def change_permission_and_retry(func, path, exc_info):
+from typing import Callable, Any
+
+
+def change_permission_and_retry(func: Callable[[str], None], path: str, exc_info: Any) -> None:
     import stat
 
     # Change permission of the path so that it is deletable

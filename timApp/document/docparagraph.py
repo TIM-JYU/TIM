@@ -340,7 +340,7 @@ class DocParagraph:
         """Returns the markdown of this paragraph."""
         return self.__data['md']
 
-    def get_rands_str(self, rnd_seed: SeedType) -> str:
+    def get_rands_str(self, rnd_seed: Optional[SeedType]) -> str:
         ret, self.__rnd_seed = get_rands_as_str(self.attrs, rnd_seed, None)
         return ret
 

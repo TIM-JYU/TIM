@@ -1,6 +1,9 @@
 import logging
 import os
 from datetime import timedelta
+from typing import List, Optional, Dict, TypedDict
+
+from celery.schedules import crontab
 
 from timApp.util.utils import pycharm_running
 
@@ -33,13 +36,19 @@ LIVESERVER_PORT = 5001
 QST_PLUGIN_PORT = LIVESERVER_PORT
 PERMANENT_SESSION_LIFETIME = timedelta(weeks=9999)
 
-CELERYBEAT_SCHEDULE = {
+
+class Schedule(TypedDict):
+    task: str
+    schedule: crontab
+
+
+CELERYBEAT_SCHEDULE: Dict[str, Schedule] = {
     # don't schedule anything while testing
 }
-WTF_CSRF_METHODS = []
+WTF_CSRF_METHODS: List[str] = []
 SCIM_USERNAME = 't'
 SCIM_PASSWORD = 'pass'
-SISU_CERT_PATH = None
+SISU_CERT_PATH: Optional[str] = None
 HOME_ORGANIZATION = 'jyu.fi'
 
 SAML_PATH = '/service/timApp/auth/saml/test'

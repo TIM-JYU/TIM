@@ -44,7 +44,7 @@ def database_has_tables():
     return bool(sqlalchemy.inspect(get_tim_main_engine()).get_table_names())
 
 
-def initialize_database(create_docs=True):
+def initialize_database(create_docs: bool = True) -> None:
     files_root_path = get_files_path()
     db_uri = app.config['DB_URI']
     was_created = postgre_create_database(db_uri)

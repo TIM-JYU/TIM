@@ -356,7 +356,7 @@ def init_app():
     return app
 
 
-def start_app():
+def start_app() -> None:
     init_app()
     app.run(host='0.0.0.0',
             port=5000,

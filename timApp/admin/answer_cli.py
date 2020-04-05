@@ -15,7 +15,7 @@ answer_cli = AppGroup('answer')
 
 @answer_cli.command()
 @click.option('--dry-run/--no-dry-run', default=True)
-def fix_double_c(dry_run):
+def fix_double_c(dry_run: bool) -> None:
     answers: List[Answer] = (
         Answer.query
             .filter((Answer.answered_on > datetime(year=2020, month=2, day=9)) & Answer.content.startswith('{"c": {"c":'))
@@ -42,7 +42,7 @@ def fix_double_c(dry_run):
 @answer_cli.command()
 @click.argument('doc')
 @click.option('--dry-run/--no-dry-run', default=True)
-def clear_all(doc, dry_run):
+def clear_all(doc: str, dry_run: bool) -> None:
     d = DocEntry.find_by_path(doc)
     if not d:
         click.echo(f'cannot find document "{doc}"', err=True)

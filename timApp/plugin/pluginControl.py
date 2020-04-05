@@ -26,14 +26,14 @@ from timApp.markdown.htmlSanitize import sanitize_html
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
-    find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap, is_global, WANT_FIELDS, find_task_ids
+    find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap, is_global, WANT_FIELDS, find_task_ids, \
+    get_simple_hash_from_par_and_user
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
 from timApp.util.get_fields import get_fields_and_users
-from timApp.util.rndutils import get_simple_hash_from_par_and_user
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex, Range
 

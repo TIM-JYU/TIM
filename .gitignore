@@ -6,6 +6,7 @@
 *~
 .cabal-sandbox/
 .cache/
+.dmypy.json
 .idea
 .mypy_cache/
 .settings

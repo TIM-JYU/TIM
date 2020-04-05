@@ -20,7 +20,9 @@ test:
   - chmod +x variables.sh
   - sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh
   - export IS_TESTING=true
-  - ./docker-compose.sh pull --quiet
+  - ./dc pull tim
+  - ./dc run --rm --no-deps --workdir /service tim mypy -p timApp
+  - ./dc pull --quiet
   - ./npmi
   - ./js
   - ./run_tests.sh

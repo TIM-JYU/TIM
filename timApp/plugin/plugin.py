@@ -29,7 +29,7 @@ from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
-from timApp.util.rndutils import get_simple_hash_from_par_and_user
+from timApp.util.rndutils import myhash
 from timApp.util.utils import try_load_json, get_current_time, Range
 
 date_format = '%Y-%m-%d %H:%M:%S'
@@ -782,3 +782,17 @@ def find_task_ids(
                     continue
                 task_ids.append(task_id)
     return task_ids, plugin_count, access_missing
+
+
+def get_simple_hash_from_par_and_user(block: DocParagraph, user: User) -> int:
+    """
+    Get simple int hash from TIM's document block and user.
+    :param block: TIM's document block
+    :param user: TIM user
+    :return: simple hash that can be used for example as a seed for random number generator
+    """
+    h = str(block.get_id()) + str(block.get_doc_id())
+    if user:
+        h += user.name
+    rnd_seed = myhash(h) & 0xffffffff
+    return rnd_seed

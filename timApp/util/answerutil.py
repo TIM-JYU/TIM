@@ -1,6 +1,6 @@
 """Answer-related routes."""
 from datetime import datetime, timezone, timedelta
-from typing import List
+from typing import List, Set, Tuple
 
 import dateutil.parser
 import dateutil.relativedelta
@@ -13,11 +13,11 @@ from timApp.util.flask.requesthelper import get_option
 from timApp.util.utils import get_current_time
 
 
-def task_ids_to_strlist(ids: List[TaskId]):
+def task_ids_to_strlist(ids: List[TaskId]) -> List[str]:
     return [t.doc_task for t in ids]
 
 
-def period_handling(task_ids, doc_ids, period):
+def period_handling(task_ids: List[TaskId], doc_ids: Set[int], period: str) -> Tuple[datetime, datetime]:
     """
     Returns start and end of an period for answer results.
     :param task_ids: Task ids containing the answers.
@@ -41,8 +41,12 @@ def period_handling(task_ids, doc_ids, period):
         u = get_current_user_object()
         prefs = u.get_prefs()
         last_answer_fetch = prefs.last_answer_fetch
-        period_from = last_answer_fetch.get(since_last_key, datetime.min.replace(tzinfo=timezone.utc))
-        last_answer_fetch[since_last_key] = get_current_time()
+        pf = last_answer_fetch.get(since_last_key)
+        if pf is None:
+            period_from = datetime.min.replace(tzinfo=timezone.utc)
+        else:
+            period_from = dateutil.parser.parse(pf)
+        last_answer_fetch[since_last_key] = get_current_time().isoformat()
         prefs.last_answer_fetch = last_answer_fetch
         u.set_prefs(prefs)
         db.session.commit()

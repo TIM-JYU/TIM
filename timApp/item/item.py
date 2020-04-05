@@ -142,7 +142,7 @@ class Item(ItemBase):
                 'title': self.title,
                 'location': self.location,
                 'id': self.id,
-                'modified': date_to_relative(self.last_modified),
+                'modified': date_to_relative(self.last_modified) if self.last_modified else None,
                 'owners': self.owners,
                 'rights': self.rights,
                 'unpublished': self.block.is_unpublished() if self.block else False,

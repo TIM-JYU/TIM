@@ -3,16 +3,17 @@ import os
 import signal
 import subprocess
 import sys
+from types import FrameType
 
 import timApp.tim
+from timApp.tim_app import app
 from timApp.timdb.init import initialize_database
 from timApp.util.logger import log_info
-from timApp.tim_app import app
 from timApp.util.utils import pycharm_running
 
 
 # noinspection PyUnusedLocal
-def quit_fast(sig, frame):
+def quit_fast(sig: signal.Signals, frame: FrameType) -> None:
     sys.exit(0)
 
 
