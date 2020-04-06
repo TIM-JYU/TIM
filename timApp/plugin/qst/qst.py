@@ -113,13 +113,13 @@ class QstMarkupModel(GenericMarkupModel):
     minpoints: Union[float, Missing] = missing
     maxpoints: Union[float, Missing] = missing
     # TODO: Set proper types
-    answerFieldType: Union[Any, Missing] = missing
+    answerFieldType: Union[str, None, Missing] = missing
     expl: Union[Any, Missing] = missing
     headers: Union[Any, Missing] = missing
-    matrixType: Union[Any, Missing] = missing
-    questionText: Union[Any, Missing] = missing
-    questionTitle: Union[Any, Missing] = missing
-    questionType: Union[Any, Missing] = missing
+    matrixType: Union[str, None, Missing] = missing
+    questionText: Union[str, None, Missing] = missing
+    questionTitle: Union[str, None, Missing] = missing
+    questionType: Union[str, None, Missing] = missing
     rows: Union[Any, Missing] = missing
 
 
