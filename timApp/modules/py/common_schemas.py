@@ -8,5 +8,5 @@ from marshmallow.utils import _Missing, missing
 @dataclass
 class TextfieldStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    c: Union[str, float, int, None]
+    c: Union[str, int, float, None]
     styles: Union[Dict[str, str], _Missing] = missing

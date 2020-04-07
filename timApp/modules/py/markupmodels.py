@@ -15,10 +15,10 @@ from utils import Missing
 class PointsRule:
     class Meta:
         unknown = 'EXCLUDE'  # Plugins may have custom rules - TIM can ignore them.
-    maxPoints: Union[str, float, int, None, Missing] = missing
-    allowUserMin: Union[float, int, None, Missing] = missing
-    allowUserMax: Union[float, int, None, Missing] = missing
-    multiplier: Union[float, int, None, Missing] = missing
+    maxPoints: Union[str, int, float, None, Missing] = missing
+    allowUserMin: Union[int, float, None, Missing] = missing
+    allowUserMax: Union[int, float, None, Missing] = missing
+    multiplier: Union[int, float, None, Missing] = missing
 
 
 class PluginDateTimeField(marshmallow.fields.Field):

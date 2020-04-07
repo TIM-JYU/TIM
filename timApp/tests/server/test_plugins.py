@@ -471,7 +471,7 @@ type: upload
         self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 400, cannot_give_custom)
         p = Plugin.from_task_id(task_id, user=get_current_user_object())
         p.set_value('pointsRule', {'allowUserMin': 0, 'allowUserMax': 5}).save()
-        self.check_save_points(TEST_USER_2_ID, answer_id2, 6, 400, {'error': 'Points must be in range [0.0,5.0]'})
+        self.check_save_points(TEST_USER_2_ID, answer_id2, 6, 400, {'error': 'Points must be in range [0,5]'})
         self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 200, self.ok_resp)
         self.check_save_points(TEST_USER_2_ID, answer_id2, 0, 200, self.ok_resp)
         self.check_save_points(TEST_USER_2_ID, answer_id2, None, 400, point_format_error)
@@ -1446,3 +1446,30 @@ a: b
    maxPoints: []
         """)
         self.get(d.url)
+
+    def test_pointsrule_floats(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin #t}
+-pointsRule:
+   allowUserMin: 0.1
+   allowUserMax: 0.5
+   multiplier: 0.3
+                """)
+        self.get(
+            f'/taskinfo/{d.id}.t',
+            expect_content={
+                'answerLimit': None,
+                'deadline': None,
+                'maxPoints': None,
+                'pointsText': 'Points:',
+                'showPoints': {},
+                'starttime': None,
+                'triesText': 'Tries left:',
+                'userMax': 0.5,
+                'userMin': 0.1,
+            })
+        p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
+        self.assertEqual(0.1, p.points_rule().allowUserMin)
+        self.assertEqual(0.5, p.points_rule().allowUserMax)
+        self.assertEqual(0.3, p.points_rule().multiplier)

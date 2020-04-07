@@ -59,6 +59,8 @@ import typing_inspect
 
 __all__ = ["dataclass", "add_schema", "class_schema", "field_for_schema", "NewType"]
 
+from marshmallow.fields import Integer
+
 NoneType = type(None)
 _U = TypeVar("_U")
 
@@ -327,6 +329,25 @@ def _field_by_type(
         ) or marshmallow.Schema.TYPE_MAPPING.get(typ)
 
 
+class SemiStrictIntegerField(marshmallow.fields.Field):
+    """A "semi-strict" integer field that accepts integers and strings convertible to integers
+     but not floats."""
+
+    def _serialize(self, value: Any, attr: str, obj: Any, **kwargs):
+        raise NotImplementedError
+
+    def _deserialize(self, value: Any, attr: Optional[str],
+                     data: Optional[Mapping[str, Any]], **kwargs):
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str):
+            try:
+                return int(value)
+            except ValueError:
+                pass
+        raise self.make_error('validator_failed')
+
+
 def field_for_schema(
     typ: type,
     default=dataclasses.MISSING,
@@ -378,6 +399,11 @@ def field_for_schema(
     # Base types
     field = _field_by_type(typ, base_schema)
     if field:
+        if field is Integer:
+            # We want a custom integer field because otherwise floats would get silently rounded to integers.
+            # The built-in Integer field with strict=True option is too strict because it doesn't allow strings
+            # that are convertible to ints.
+            field = SemiStrictIntegerField
         check_default(clazz, default, typ, name)
         return field(**metadata)
 
