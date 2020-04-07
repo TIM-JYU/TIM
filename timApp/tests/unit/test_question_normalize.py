@@ -301,25 +301,6 @@ class QuestionJsonNormalizeTest(unittest.TestCase):
                           'invalid': True,
                           'isTask': True,
                           'matrixType': 'textArea',
-                          'questionText': 'Invalid question data: A row must not be null',
-                          'questionTitle': 'Invalid question data: A row must not be null',
-                          'questionType': 'matrix',
-                          'rows': ['']}, normalize_question_json({
-            "questionText": "test",
-            "questionTitle": "test",
-            "timeLimit": 1,
-            "matrixType": "textArea",
-            "headers": [],
-            "rows": [None],
-            "questionType": "matrix",
-            "answerFieldType": "radio"
-        }))
-        self.assertEqual({'answerFieldType': 'text',
-                          'expl': {},
-                          'headers': [''],
-                          'invalid': True,
-                          'isTask': True,
-                          'matrixType': 'textArea',
                           'questionText': 'Invalid question data: Missing matrixType when questionType '
                                           'is matrix',
                           'questionTitle': 'Invalid question data: Missing matrixType when questionType '
@@ -332,5 +313,25 @@ class QuestionJsonNormalizeTest(unittest.TestCase):
             "headers": [],
             "rows": [""],
             "questionType": "matrix",
+            "answerFieldType": "radio"
+        }))
+        self.assertEqual({'answerFieldType': 'text',
+                          'expl': {},
+                          'headers': [''],
+                          'invalid': True,
+                          'isTask': True,
+                          'matrixType': 'textArea',
+                          'questionText': 'Invalid question data: A row must be a dictionary or a '
+                                          'string',
+                          'questionTitle': 'Invalid question data: A row must be a dictionary or a '
+                                           'string',
+                          'questionType': 'matrix',
+                          'rows': ['']}, normalize_question_json({
+            "questionText": "test",
+            "questionTitle": "test",
+            "timeLimit": 1,
+            "headers": [],
+            "rows": [0],
+            "questionType": "radiobutton-horizontal",
             "answerFieldType": "radio"
         }))

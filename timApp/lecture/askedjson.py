@@ -133,8 +133,8 @@ def normalize_rows(rows):
     for r in rows:
         if isinstance(r, str):
             continue
-        if r is None:
-            return False, 'A row must not be null'
+        if not isinstance(r, dict):
+            return False, 'A row must be a dictionary or a string'
         cap_cols = r.get('COLUMNS')
         if cap_cols:
             r['columns'] = r.pop('COLUMNS')
