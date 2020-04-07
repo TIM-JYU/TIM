@@ -322,7 +322,7 @@ def _field_by_type(
     typ: Union[type, Any], base_schema: Optional[Type[marshmallow.Schema]]
 ) -> Optional[Type[marshmallow.fields.Field]]:
     if typ is Any:
-        return lambda **x: marshmallow.fields.Raw(allow_none=True, **x)
+        return lambda **x: marshmallow.fields.Raw(**{**x, 'allow_none': True})
     else:
         return (
             base_schema and base_schema.TYPE_MAPPING.get(typ)
@@ -429,7 +429,7 @@ def field_for_schema(
                 **metadata,
             )
         elif typing_inspect.is_union_type(typ):
-            has_none = typing_inspect.is_optional_type(typ)
+            has_none = typing_inspect.is_optional_type(typ) or any(subtyp is Any for subtyp in arguments)
             if has_none:
                 metadata['allow_none'] = True
             if default is not dataclasses.MISSING:
