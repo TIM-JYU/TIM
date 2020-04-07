@@ -39,6 +39,7 @@ from timApp.util.flask.responsehelper import json_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter
 from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time, fin_timezone
+from utils import Missing
 
 sisu = Blueprint('sisu',
                  __name__,
@@ -362,7 +363,7 @@ class SisuError(Exception):
 class PostAssessmentsErrorValue:
     code: int
     reason: str
-    credits: Optional[int] = None
+    credits: Union[int, str, Missing] = missing
     gradeId: Optional[str] = None
 
 
@@ -535,6 +536,8 @@ def send_grades_to_sisu(
     except JSONDecodeError:
         log_warning(f'Sisu returned invalid JSON: {r.text}')
         raise SisuError('Connection to Sisu is currently not working (Sisu gave an unexpected error).')
+    except ValidationError:
+        raise SisuError(f'Failed to validate Sisu JSON: {r.text}')
     if pr.error:
         raise SisuError(pr.error.reason)
     invalid_assessments = set(n for n in pr.body.assessments.keys())
