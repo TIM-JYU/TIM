@@ -363,7 +363,8 @@ class SisuError(Exception):
 class PostAssessmentsErrorValue:
     code: int
     reason: str
-    credits: Union[int, str, Missing] = missing
+    # TODO: Temporary workaround to allow floats because Sisu API may sometimes erroneously return these.
+    credits: Union[int, float, Missing] = missing
     gradeId: Optional[str] = None
 
 
