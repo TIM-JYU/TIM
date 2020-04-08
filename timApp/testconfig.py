@@ -52,3 +52,5 @@ SISU_CERT_PATH: Optional[str] = None
 HOME_ORGANIZATION = 'jyu.fi'
 
 SAML_PATH = '/service/timApp/auth/saml/test'
+
+SESSION_COOKIE_SECURE = False  # Test running does not have HTTPS, so secure cookie can't be used.

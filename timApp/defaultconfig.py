@@ -96,4 +96,4 @@ HAKA_METADATA_FINGERPRINT_PROD = '6212391dfbd2874425a7fdd5ac8dd0bd5cd50d2f'
 
 HOME_ORGANIZATION = 'jyu.fi'
 SESSION_COOKIE_SAMESITE = 'None'  # Required for Aalto iframe to work.
-SESSION_COOKIE_SECURE = False  # Override to True in production.
+SESSION_COOKIE_SECURE = True  # Required by Chrome due to SameSite=None setting.
