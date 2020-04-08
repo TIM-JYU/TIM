@@ -16,6 +16,7 @@ import {SignatureComponent} from "tim/ui/signature.component";
 import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
 import {BookmarkDialogComponent} from "tim/bookmark/bookmark-dialog.component";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {TimFooterComponent} from "tim/footer.component";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -31,6 +32,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
         SignatureComponent,
         VelpSummaryComponent,
         BookmarkDialogComponent,
+        TimFooterComponent,
     ],
     imports: [
         BrowserModule,

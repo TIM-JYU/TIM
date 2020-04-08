@@ -107,18 +107,6 @@
     {% endif %}
     <div class="paragraphs" ng-click="$ctrl.notesHandler.setNotePadge($event)" >
         <view-range-navigation></view-range-navigation>
-        <div ng-cloak="" class="dialog" caption="Refresh the page?" tim-draggable-fixed="" ng-show="$ctrl.showRefresh">
-            <p>The page has been modified since the last reload. Refresh now?</p>
-            <button class="timButton" ng-click="$ctrl.reload()">Refresh</button>
-            <button class="timButton" ng-click="$ctrl.closeRefreshDlg()">No</button>
-        </div>
-        {% raw %}
-        <div ng-cloak="" class="dialog" caption="Updates pending" tim-draggable-fixed="" ng-show="$ctrl.showUpdateDialog()">
-            <p>There are {{ $ctrl.pendingUpdatesCount() }} pending paragraph updates.</p>
-            <button class="timButton" ng-click="$ctrl.updatePending()">Update</button>
-            <button class="timButton" ng-click="$ctrl.hidePending = true">Dismiss</button>
-        </div>
-        {% endraw %}
         {% if task_info and task_info.show %}
             <div class="taskSummary">
                 <span> 

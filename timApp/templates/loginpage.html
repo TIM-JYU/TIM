@@ -4,10 +4,7 @@
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3">
             <p class="text-center">
-                {% if not hide_require_text %}
-                    Login is required for this document.
-                {% endif %}
-                Please use the above button to log in.
+                {{ text|default(request.args.logintext)|default('Login is required for this document. Please use the above button to log in.') }}
             </p>
         </div>
     </div>

@@ -937,13 +937,13 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         const group = this.markup.groups[0];
 
         await showInputDialog({
-            defaultValue: "",
+            okValue: true,
             text: "<b>Really remove the following users from group:</b> " + group + "<br>\n<pre>\n" + msg + "\n</pre>",
             title: "Remove users from group " + group,
             isInput: false,
             validator: async () => {
                 const ulist = TableFormComponent.makeUserList(selUsers, 1, "", ",");
-                const r = await to($http.post<IDocument>(
+                const r = await to($http.post<unknown>(
                     `/groups/removemember/${group}`,
                     {names: ulist.split(",")}));
                 if (r.ok) {

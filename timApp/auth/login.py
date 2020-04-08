@@ -77,7 +77,7 @@ def login():
         flash('You are already logged in.')
         return safe_redirect(session.get('came_from', '/'))
     return render_template('loginpage.html',
-                           hide_require_text=True,
+                           text='Please use the above button to log in.',
                            anchor=request.args.get('anchor'))
 
 

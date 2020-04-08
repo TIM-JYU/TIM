@@ -35,6 +35,7 @@ import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrapPanel";
 import * as logo from "tim/ui/logo";
 import * as loginMenu from "tim/user/loginMenu";
+import * as timRoot from "tim/timRoot";
 import * as settingsCtrl from "tim/user/settingsCtrl";
 import * as userMenu from "tim/user/userMenu";
 import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
@@ -57,6 +58,7 @@ import {DialogComponent} from "tim/ui/dialog.component";
 import {CloseButtonComponent} from "tim/ui/close-button.component";
 import {DialogContainerComponent} from "tim/ui/angulardialog/dialog-container.component";
 import {AddMemberComponent} from "tim/ui/add-member.component";
+import {TimFooterComponent} from "tim/footer.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -84,8 +86,8 @@ markAsUsed(
     manageCtrl,
     questionAskController,
     questionController,
-    reviewController,
     relevanceEdit,
+    reviewController,
     rightsEditor,
     searchBox,
     settingsCtrl,
@@ -94,6 +96,7 @@ markAsUsed(
     startController,
     taggedDocumentList,
     templateList,
+    timRoot,
     userlistController,
     userMenu,
     velpSelection,
@@ -119,6 +122,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timCloseButton", CloseButtonComponent);
     doDowngrade(dg, "timDialogContainer", DialogContainerComponent);
     doDowngrade(dg, "timAddMember", AddMemberComponent);
+    doDowngrade(dg, "timFooter", TimFooterComponent);
     return dg;
 }
 

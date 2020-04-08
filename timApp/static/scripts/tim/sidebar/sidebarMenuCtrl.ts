@@ -3,6 +3,7 @@ import $ from "jquery";
 import {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
 import {getActiveDocument} from "tim/document/activedocument";
+import {getVisibilityVars} from "tim/timRoot";
 import {showCourseDialog} from "../document/course/courseDialogCtrl";
 import {IDocSettings} from "../document/IDocSettings";
 import {showMergePdfDialog} from "../document/minutes/mergePdfCtrl";
@@ -65,8 +66,6 @@ export class SidebarMenuCtrl implements IController {
     private bookmarks: {};
     private documentMemoMinutes: string | undefined;
     private docSettings?: IDocSettings;
-    private hideLinks: boolean = false;
-    private hideTopButtons: boolean = false;
     private displayIndex?: IHeaderDisplayIndexItem[];
     // Consent types:
     // number corresponds to values of ConsentType
@@ -86,6 +85,7 @@ export class SidebarMenuCtrl implements IController {
     private currentViewRange?: IViewRange;
     private isFullRange: boolean = true;
     private hashlessUrl: string;
+    private hide = getVisibilityVars();
 
     constructor() {
         const g = someglobals();
@@ -96,8 +96,6 @@ export class SidebarMenuCtrl implements IController {
         this.users = Users;
         this.bookmarks = g.bookmarks; // from base.html
         this.leftSide = $(".left-fixed-side");
-        this.hideLinks = "hideLinks" in g ? g.hideLinks : false;
-        this.hideTopButtons = "hideTopButtons" in g ? g.hideTopButtons : false;
         this.displayIndex = "index" in g ? this.formDisplayIndex(g.index) : undefined;
         this.active = -1;
         if ("showIndex" in g ? g.showIndex : false) {
@@ -498,6 +496,7 @@ export class SidebarMenuCtrl implements IController {
 
     private async createGroup() {
         const doc = await showInputDialog({
+            isInput: true,
             defaultValue: "",
             text: "Enter name of the usergroup",
             title: "Create group",
@@ -549,11 +548,11 @@ timApp.component("timSidebarMenu", {
         vctrl: "?^timView",
     },
     template: `<div class="btn btn-default btn-sm pull-left" ng-click="$ctrl.showSidebar()" title="Show menu"
-     ng-if="!$ctrl.hideTopButtons">
+     ng-if="!$ctrl.hide.hamburger">
     <i class="glyphicon glyphicon-menu-hamburger" title="Click to open sidebar-menu"></i>
 </div>
 <uib-tabset id="menuTabs" active="$ctrl.active" class="hidden-sm hidden-xs">
-    <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.users.isLoggedIn()" index="6">
+    <uib-tab ng-if="!$ctrl.hide.bookmarks && $ctrl.users.isLoggedIn()" index="6">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-bookmark" title="Bookmarks"></i>
         </uib-tab-heading>
@@ -561,7 +560,7 @@ timApp.component("timSidebarMenu", {
         <bookmarks data="$ctrl.bookmarks"></bookmarks>
     </uib-tab>
 
-    <uib-tab index="1" ng-if="!$ctrl.hideLinks">
+    <uib-tab index="1" ng-if="!$ctrl.hide.settings">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-cog" title="Document settings"></i>
         </uib-tab-heading>
@@ -691,7 +690,7 @@ timApp.component("timSidebarMenu", {
         </div>
     </uib-tab>
 
-    <uib-tab ng-if="$ctrl.displayIndex.length > 0" index="0">
+    <uib-tab ng-if="!$ctrl.hide.index && $ctrl.displayIndex.length > 0" index="0">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-book" title="Document index"></i>
         </uib-tab-heading>
@@ -715,7 +714,7 @@ timApp.component("timSidebarMenu", {
         </ul>
     </uib-tab>
 
-    <uib-tab index="2" ng-if="!$ctrl.hideLinks && $ctrl.lctrl.lectureSettings.lectureMode"
+    <uib-tab index="2" ng-if="!$ctrl.hide.lecturetab && $ctrl.lctrl.lectureSettings.lectureMode"
              select="$ctrl.toggleLectures()">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-education" title="Lecture"></i>
@@ -747,7 +746,7 @@ timApp.component("timSidebarMenu", {
         </ul>
     </uib-tab>
 
-    <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.lctrl.lectureSettings.inLecture && !$ctrl.lctrl.isLecturer" index="4"
+    <uib-tab ng-if="!$ctrl.hide.getquestion && $ctrl.lctrl.lectureSettings.inLecture && !$ctrl.lctrl.isLecturer" index="4"
              select="$ctrl.lctrl.getQuestionManually()">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-question-sign" title="Get question"></i>
@@ -755,7 +754,7 @@ timApp.component("timSidebarMenu", {
         Loading question manually...
     </uib-tab>
 
-    <uib-tab ng-if="!$ctrl.hideLinks && $ctrl.lctrl.isLecturer && $ctrl.lctrl.lectureSettings.inLecture" index="5">
+    <uib-tab ng-if="!$ctrl.hide.lecturer && $ctrl.lctrl.isLecturer && $ctrl.lctrl.lectureSettings.inLecture" index="5">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-user" title="Lecture participants"></i>
         </uib-tab-heading>

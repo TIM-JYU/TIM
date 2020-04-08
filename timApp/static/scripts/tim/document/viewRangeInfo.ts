@@ -1,6 +1,6 @@
 import {documentglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
-import {getCookie, to} from "../util/utils";
+import {getCookie, getUrlParams, to} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
 
 export interface IViewRangeUnnamed {
@@ -15,7 +15,7 @@ export interface IViewRange extends IViewRangeUnnamed {
 }
 
 export function getCurrentPartitionURLParams() {
-    const params = new URLSearchParams(document.location.search);
+    const params = getUrlParams();
     const b = params.get("b");
     const e = params.get("e");
     const preamble = params.get("preamble");
@@ -26,7 +26,7 @@ export function getCurrentPartitionURLParams() {
 }
 
 export function getRangeBeginParam() {
-    const params = new URLSearchParams(document.location.search);
+    const params = getUrlParams();
     const b = params.get("b");
     if (!b) {
         return undefined;
@@ -66,7 +66,7 @@ export async function unpartitionDocument() {
  * @param loadPreamble Load preamble at the beginning of each part.
  */
 export function partitionDocument(b: number, e: number, loadPreamble: boolean) {
-    const params = new URLSearchParams(document.location.search);
+    const params = getUrlParams();
     params.set("b", b.toString());
     params.set("e", e.toString());
     params.set("preamble", loadPreamble.toString());

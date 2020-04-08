@@ -8,6 +8,31 @@ import {HeaderIndexItem, IGroupWithSisuPath} from "../sidebar/sidebarMenuCtrl";
 import {IFullUser, IGroup, IUser, IUserListEntry} from "../user/IUser";
 import {INotification, ISettings} from "../user/settingsCtrl";
 
+interface ILayout {
+    col_1_lg: number;
+    col_2_lg: number;
+    col_3_lg: number;
+    col_m_lg: number;
+    col_1_md: number;
+    col_2_md: number;
+    col_3_md: number;
+    col_m_md: number;
+    col_1_sm: number;
+    col_2_sm: number;
+    col_3_sm: number;
+    col_m_sm: number;
+    col_1_xs: number;
+    col_2_xs: number;
+    col_3_xs: number;
+    col_m_xs: number;
+}
+
+interface IConfig {
+    gitLastestCommitTimestamp: string;
+    helpEmail: string;
+    gitBranch: string;
+}
+
 export interface IGenericGlobals {
     IS_TESTING: boolean;
     current_user: IFullUser;
@@ -18,6 +43,8 @@ export interface IGenericGlobals {
     curr_item?: DocumentOrFolder;
     userPrefs: ISettings;
     homeOrganization: string;
+    config: IConfig;
+    layout: ILayout;
 }
 
 export interface IItemGlobals extends IGenericGlobals {

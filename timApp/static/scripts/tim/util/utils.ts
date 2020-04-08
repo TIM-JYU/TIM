@@ -247,8 +247,12 @@ export function isPageDirty() {
     return e.val() === "1";
 }
 
+export function getUrlParams() {
+    return new URLSearchParams(document.location.search);
+}
+
 export function getURLParameter(sParam: string): string | undefined {
-    const params = new URLSearchParams(document.location.search);
+    const params = getUrlParams();
     return params.get(sParam) ?? undefined;
 }
 

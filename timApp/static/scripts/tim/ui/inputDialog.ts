@@ -3,17 +3,25 @@ import {DialogController} from "tim/ui/dialogController";
 import {Result} from "../util/utils";
 import {registerDialogComponent, showDialog} from "./dialog";
 
-interface InputDialogParams<T> {
+type InputDialogParams<T> = {
     defaultValue: string;
     validator: (s: string) => Promise<Result<T, string>>;
     title: string;
     text: string;
     okText?: string;
     cancelText?: string;
-    isInput?: boolean;       // If one wants to use it just as confirm dialog with error messages
-}
+    isInput: true;
+} | {
+    isInput: false;
+    title: string;
+    text: string;
+    okText?: string;
+    cancelText?: string;
+    okValue: T;
+    validator?: () => Promise<Result<T, string>>;
+};
 
-class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}, T> {
+class InputDialogCtrl<T> extends DialogController<{ params: InputDialogParams<T> }, T> {
     static component = "timInputDialog";
     static $inject = ["$element", "$scope"] as const;
     private value = "";
@@ -27,10 +35,11 @@ class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}
 
     $onInit() {
         super.$onInit();
-        this.value = this.resolve.params.defaultValue;
-        if (this.resolve.params.isInput === false) {
+        if (!this.resolve.params.isInput) {
             this.value = "-";
             this.isInput = false;
+        } else {
+            this.value = this.resolve.params.defaultValue;
         }
         (async () => {
             await this.draggable.getLayoutPromise();
@@ -43,12 +52,16 @@ class InputDialogCtrl<T> extends DialogController<{params: InputDialogParams<T>}
         if (!this.value) {
             return;
         }
-        const result = await this.resolve.params.validator(this.value);
-        if (!result.ok) {
-            this.error = result.result;
-            return;
+        if (this.resolve.params.isInput) {
+            const result = await this.resolve.params.validator(this.value);
+            if (!result.ok) {
+                this.error = result.result;
+                return;
+            }
+            this.close(result.result);
+        } else {
+            this.close(this.resolve.params.okValue);
         }
-        this.close(result.result);
     }
 
     clearError() {

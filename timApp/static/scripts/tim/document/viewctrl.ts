@@ -17,6 +17,8 @@ import {setViewCtrl} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict, to} from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
+import {getVisibilityVars} from "tim/timRoot";
+import {showInputDialog} from "tim/ui/inputDialog";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {BookmarksController} from "../bookmark/bookmarks";
@@ -124,7 +126,6 @@ export class ViewCtrl implements IController {
     public item: IDocument;
     public docId: number;
 
-    private hidePending: boolean;
     public group: unknown;
     public scope: IScope;
     public noBrowser: boolean;
@@ -147,7 +148,6 @@ export class ViewCtrl implements IController {
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document: Document;
-    private showRefresh: boolean;
     public selectedUser: IUser;
     public editing: boolean = false;
     // public $storage: ngStorage.StorageService & { defaultAction: string | null; noteAccess: string };
@@ -180,17 +180,12 @@ export class ViewCtrl implements IController {
 
     // Form-mode related attributes.
     private formTaskInfosLoaded = false;
-    private hideLinks: boolean;
-    private hideTopButtons: boolean;
-    private parsOnly: boolean;
+    private hide = getVisibilityVars();
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
         const dg = documentglobals();
         this.noBrowser = dg.noBrowser;
-        this.hideLinks = dg.hideLinks;
-        this.hideTopButtons = dg.hideTopButtons;
-        this.parsOnly = dg.parsOnly;
         this.docId = dg.curr_item.id;
         this.docVersion = dg.docVersion;
         this.item = dg.curr_item;
@@ -209,7 +204,6 @@ export class ViewCtrl implements IController {
         } else {
             this.selectedUser = Users.getCurrent();
         }
-        this.hidePending = false;
 
         $(window).resize((e) => {
             if (e.target === window) {
@@ -292,7 +286,14 @@ export class ViewCtrl implements IController {
 
         dg.allowMove = false;
         this.oldWidth = $(window).width() ?? 500;
-        this.showRefresh = isPageDirty();
+        if (isPageDirty()) {
+            showInputDialog({
+                isInput: false,
+                text: "The page has been modified since the last reload. Refresh now?",
+                title: "Page was modified - reload?",
+                okValue: true,
+            });
+        }
         this.liveUpdates = dg.liveUpdates;
 
         if (Users.isLoggedIn() && this.liveUpdates) {
@@ -356,7 +357,7 @@ export class ViewCtrl implements IController {
 
     // noinspection JSUnusedGlobalSymbols (used in view_html.html)
     showVelpSelection() {
-        return (this.reviewCtrl.velpMode || (this.teacherMode && this.docSettings.show_velps)) && !this.parsOnly;
+        return (this.reviewCtrl.velpMode || (this.teacherMode && this.docSettings.show_velps)) && !this.hide.velps;
     }
 
     startLiveUpdates() {
@@ -665,10 +666,6 @@ export class ViewCtrl implements IController {
         window.location.reload();
     }
 
-    closeRefreshDlg() {
-        this.showRefresh = false;
-    }
-
     async changeUser(user: IUser, updateAll: boolean) {
         this.selectedUser = user;
         for (const uc of this.userChangeListeners.values()) {
@@ -879,16 +876,21 @@ export class ViewCtrl implements IController {
         return this.pendingUpdates.size;
     }
 
-    showUpdateDialog() {
-        return !this.hidePending && this.pendingUpdatesCount() > 0;
-    }
-
-    updatePendingPars(pars: PendingCollection) {
+    async updatePendingPars(pars: PendingCollection) {
         for (const [k, v] of pars) {
             this.pendingUpdates.set(k, v);
         }
-        this.hidePending = false;
         if (this.pendingUpdatesCount() < 10) {
+            this.updatePending();
+        } else {
+            const r = await showInputDialog({
+                cancelText: "Dismiss",
+                isInput: false,
+                okText: "Update",
+                okValue: true,
+                text: `There are ${this.pendingUpdatesCount()} pending paragraph updates.`,
+                title: "Updates pending",
+            });
             this.updatePending();
         }
     }

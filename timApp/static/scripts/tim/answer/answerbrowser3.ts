@@ -17,7 +17,7 @@ import {Users} from "../user/userService";
 import {documentglobals} from "../util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
 import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
-import {Binding, getURLParameter, markAsUsed, Require, to} from "../util/utils";
+import {Binding, getURLParameter, getUrlParams, markAsUsed, Require, to} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
 
@@ -739,7 +739,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         const par = this.element.parents(".par");
         const parId = getParId(par);
         const currBegin = getRangeBeginParam() ?? 0;
-        const params = new URLSearchParams(document.location.search);
+        const params = getUrlParams();
         const group = params.get("group"); // TODO: should we save other params also?
         const rangeParams = single ? {
             b: parId,
