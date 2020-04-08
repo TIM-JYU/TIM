@@ -175,7 +175,6 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
     }
 
     showOptionsWindow(e: JQuery.MouseEventBase, par: Paragraph) {
-        this.viewctrl.clipboardHandler.updateClipboardStatus();
         const result = this.getPopupAttrs(par);
         par.children(".editline").addClass("menuopen");
         this.showPopupMenu(e, par, result, "par");

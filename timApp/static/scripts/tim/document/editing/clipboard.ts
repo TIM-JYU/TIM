@@ -49,9 +49,9 @@ export class ClipboardHandler {
         this.viewctrl = view;
     }
 
-    showPasteMenu(e: JQuery.MouseEventBase, parOrArea: ParOrArea) {
+    async showPasteMenu(e: JQuery.MouseEventBase, parOrArea: ParOrArea) {
         this.viewctrl.parmenuHandler.showPopupMenu(e, parOrArea, {
-            actions: this.getPasteFunctions(),
+            actions: await this.getPasteFunctions(),
             contenturl: "/clipboard",
             editbutton: false,
             save: false,
@@ -189,8 +189,8 @@ export class ClipboardHandler {
         }
     }
 
-    getPasteFunctions() {
-        this.updateClipboardStatus();
+    async getPasteFunctions() {
+        await this.updateClipboardStatus();
         return [
             {
                 func: (e: JQuery.Event, p: Paragraph) => this.pasteRefAbove(e, p),

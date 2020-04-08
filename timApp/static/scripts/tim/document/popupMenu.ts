@@ -45,9 +45,6 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
 
     updateAttrs(p: Partial<IPopupParams>) {
         this.p = {...this.p, ...p};
-        if (p.contenturl) {
-            this.getContent(p.contenturl);
-        }
     }
 
     get vctrl() {

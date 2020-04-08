@@ -619,7 +619,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {
                     func: (e, p: Paragraph) => this.viewctrl.clipboardHandler.showPasteMenu(e, p),
                     desc: "Paste...",
-                    show: documentglobals().editMode != null && (this.viewctrl.clipMeta.allowPasteRef || this.viewctrl.clipMeta.allowPasteContent),
+                    show: documentglobals().editMode != null,
                     closeAfter: false,
                 },
                 {func: (e, p: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, p), desc: "Move here...", show: documentglobals().allowMove},

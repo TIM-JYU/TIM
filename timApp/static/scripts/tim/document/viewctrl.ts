@@ -436,8 +436,6 @@ export class ViewCtrl implements IController {
             () => this.selection.end,
             () => this.editing,
             () => this.getEditMode(),
-            () => this.clipMeta.allowPasteContent,
-            () => this.clipMeta.allowPasteRef,
             () => this.getAllowMove()], (newValues, oldValues, scope) => {
             const par = $(".editline.menuopen").parents(".par");
             this.parmenuHandler.updatePopupMenuIfOpen(this.parmenuHandler.getPopupAttrs(par.length > 0 ? par : undefined));

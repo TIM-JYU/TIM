@@ -115,7 +115,6 @@ export class AreaHandler {
     }
 
     showAreaOptionsWindow(e: JQuery.MouseEventBase, $area: Area, $pars: Paragraphs) {
-        this.viewctrl.clipboardHandler.updateClipboardStatus();
         this.viewctrl.parmenuHandler.showPopupMenu(e, $pars, this.viewctrl.parmenuHandler.getPopupAttrs(), "area");
     }
 
