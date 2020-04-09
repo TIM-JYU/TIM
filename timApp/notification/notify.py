@@ -419,6 +419,10 @@ def process_pending_notifications():
                 email_threads.append(result)
         for p in ps:
             p.processed = get_current_time()
+            # To save database space, we null the text for all document notifications.
+            # The document history already exists elsewhere, so we don't need it to store it.
+            if isinstance(p, DocumentNotification):
+                p.text = None
     for t in email_threads:
         t.join()
     db.session.commit()
