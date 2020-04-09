@@ -1,10 +1,13 @@
 """Routes for document view."""
+import html
 import time
 import traceback
 from typing import Tuple, Optional, List, Union
 
 import attr
 from dataclasses import dataclass
+
+import sass
 from flask import Blueprint, render_template, make_response, abort
 from flask import current_app
 from flask import flash
@@ -12,6 +15,7 @@ from flask import g
 from flask import redirect
 from flask import request
 from flask import session
+from markupsafe import Markup
 from marshmallow import ValidationError
 
 from marshmallow_dataclass import class_schema
@@ -434,7 +438,16 @@ def view(item_path, template_name, route="view"):
     current_list_user: Optional[User] = user_list[0]['user'] if user_list else None
 
     raw_css = doc_settings.css()
-    doc_css = sanitize_html('<style type="text/css">' + raw_css + '</style>') if raw_css else None
+    if raw_css:
+        try:
+            compiled_sass = sass.compile(string=raw_css, output_style='compact')
+        except sass.CompileError as e:
+            doc_css = None
+            flash(Markup(f'Document stylesheet has errors: <pre>{html.escape(str(e))}</pre>'))
+        else:
+            doc_css = sanitize_html('<style type="text/css">' + compiled_sass + '</style>')
+    else:
+        doc_css = None
 
     # Custom backgrounds for slides
     slide_background_url = None
