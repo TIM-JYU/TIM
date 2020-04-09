@@ -434,8 +434,8 @@ Sisu.component("sisuAssessmentExport", {
         {{ $ctrl.okAssessments }} arviointia lähetettiin Sisuun.
         <span ng-if="$ctrl.errAssessments > 0">{{ $ctrl.errAssessments }} virheellistä arviointia torjuttiin.</span>
         Voit vahvistaa arvioinnit
-        <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{$ctrl.destCourse}}/evaluation/verification">
-        Sisussa</a>.
+        <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{$ctrl.destCourse}}/evaluation/grade">
+        Sisussa</a> (klikkaa linkin takana "Vahvistus").
     </p>
 </div>
     `,
