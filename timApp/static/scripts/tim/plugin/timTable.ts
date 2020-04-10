@@ -82,6 +82,7 @@ import {
 } from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
 import {maxContentOrFitContent, scrollToViewInsideParent, StringOrNumber, to} from "../util/utils";
+import {copyToClipboard} from "../util/utils";
 import {TaskId} from "./taskid";
 import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
@@ -505,7 +506,7 @@ export enum ClearSort {
                           class="inlineEditorButtons"
                           style="position: absolute; width: max-content"
                           [hidden]="hide.editorButtons">
-                    <span [hidden]="hide.editorPosition" [innerHtml]="editorPosition" style="background: yellow;"></span>
+                    <span [hidden]="hide.editorPosition" [innerHtml]="editorPosition" (click)="handleClickEditorPostion()" style="background: yellow;"></span>
                     <button
                             #buttonOpenBigEditor class="timButton buttonOpenBigEditor"
                             (click)="handleClickOpenBigEditor()"><span class="glyphicon glyphicon-pencil"></span>
@@ -1777,6 +1778,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             // TODO: can not use this, because then save is done also for Cancel, BigEditor, Toolbar buttons and so on
         }
         // hideToolbar(this);
+    }
+
+    handleClickEditorPostion() {
+        copyToClipboard(this.editorPosition);
     }
 
     handleClickCancelSmallEditor() {
