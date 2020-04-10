@@ -137,6 +137,7 @@ export interface HideValues {
     editMenu?: boolean;
     toolbar?: boolean;
     editorButtons?: boolean;
+    editorPosition?: boolean;
     select?: boolean;
     addRow?: boolean;
     delRow?: boolean;
@@ -504,6 +505,7 @@ export enum ClearSort {
                           class="inlineEditorButtons"
                           style="position: absolute; width: max-content"
                           [hidden]="hide.editorButtons">
+                    <span [hidden]="hide.editorPosition" [innerHtml]="editorPosition" style="background: yellow;"></span>
                     <button
                             #buttonOpenBigEditor class="timButton buttonOpenBigEditor"
                             (click)="handleClickOpenBigEditor()"><span class="glyphicon glyphicon-pencil"></span>
@@ -579,7 +581,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     headersStyle: Record<string, string> | null = null;
     button: string = "Tallenna";
     private noNeedFirstClick = false;
-    hide: HideValues = {};
+    hide: HideValues = { editorPosition: true};
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -590,6 +592,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private mouseInTable?: boolean;
 
     addRowButtonText: string = "";
+    editorPosition: string = "";
     private pluginMeta: PluginMeta;
     private inputSub!: Subscription;
     private customDomUpdateInProgress?: boolean;
@@ -621,7 +624,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      */
     async ngOnInit() {
         if (this.data.hide) {
-            this.hide = this.data.hide;
+            this.hide = {...this.hide, ...this.data.hide};
         }
 
         this.noNeedFirstClick = this.hide.needFirstClick ?? false;
@@ -2167,6 +2170,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
 
         const cellCoordinate = colnumToLetters(coli) + (rowi + 1);
+        this.editorPosition = cellCoordinate;
         if (this.data.lockedCells && this.data.lockedCells.includes(cellCoordinate)) {
             return;
         }
