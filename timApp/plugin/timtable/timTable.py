@@ -139,7 +139,7 @@ def tim_table_get_html(jso, review):
         userdata = state.get(USERDATA, None)
         headers = state.get("headers", None)
         values[USERDATA] = userdata
-        if headers:
+        if headers and values.get("saveUserDataHeader", False):
             values['headers'] = headers
     if jso.get("review", False):
         udata = ""
