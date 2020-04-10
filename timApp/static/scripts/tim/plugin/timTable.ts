@@ -186,6 +186,7 @@ export interface TimTable {
     filterRow?: boolean;
     cbColumn?: boolean;
     nrColumn?: boolean;
+    charRow?: boolean;
     maxRows?: string;
     maxCols?: string;
     button?: string;
@@ -428,9 +429,19 @@ export enum ClearSort {
                        [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(), forcedEditable: isInForcedEditMode()}"
                        class="timTableTable"
                        [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">
+                    <col class="nrcolumn" *ngIf="data.nrColumn" />
+                    <col *ngIf="data.cbColumn" />
                     <col *ngFor="let c of columns; let i = index" [span]="c.span" [id]="c.id"
                          [ngStyle]="stylingForColumn(c, i)"/>
                     <thead>
+                    <tr *ngIf="data.charRow"> <!--Char coordinate row -->
+                        <td class="nrcolumn charRow" *ngIf="data.nrColumn"></td>
+                        <td class="charRow" *ngIf="data.cbColumn"></td>
+                        <td class="charRow" [hidden]="!showColumn(coli)"
+                            *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
+                            <span [innerText]="coliToLetters(coli)"></span>
+                        </td>
+                    </tr>
                     <tr *ngIf="data.headers"> <!-- Header row -->
                         <td class="nrcolumn totalnr" *ngIf="data.nrColumn"
                             (click)="handleClickClearFilters()"
@@ -881,6 +892,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      */
     public isInForcedEditMode() {
         return this.forcedEditMode;
+    }
+
+    public coliToLetters(coli: number) {
+        return colnumToLetters(coli);
     }
 
     /**
@@ -1771,7 +1786,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
     }
 
-    async smallEditorLostFocus(ev: unknown) {
+    async smallEditorLostFocus(_ev: unknown) {
         if (this.hide.editorButtons) { // Autosave when no editorButtons
             await this.saveCurrentCell();
             // this.closeSmallEditor();
@@ -2133,10 +2148,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param {number} coli Column index
      */
     private async openCell(rowi: number, coli: number) {
+        /*
         const modal: CellEntity = {
             cell: "",
         };
-
+        */
         rowi = this.constrainRowIndex(rowi);
         coli = this.constrainColumnIndex(rowi, coli);
 
@@ -2537,6 +2553,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param index col index
      */
     stylingForColumn(col: IColumn, index: number) {
+        /*
+        if (this.data.nrColumn) {
+            index--;
+            if (index < 0) { return; }
+        }
+        */
+
         const styles: { [index: string]: string } = {};
 
         const def = this.data.table.defcols;

@@ -2,7 +2,7 @@
 TIM example plugin: a tableFormndrome checker.
 """
 import json
-import os
+
 from dataclasses import dataclass, asdict, field
 from typing import Union, List, Optional, Dict, Any
 
@@ -68,6 +68,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     maxWidth: Union[str, Missing] = missing
     minWidth: Union[str, Missing, None] = missing
     nrColumn: Union[bool, Missing, None] = missing
+    charRow: Union[bool, Missing, None] = missing
     open: Union[bool, Missing] = True
     openButtonText: Union[str, Missing, None] = missing
     realnames: Union[bool, Missing] = missing

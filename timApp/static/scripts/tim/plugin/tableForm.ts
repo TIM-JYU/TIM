@@ -61,6 +61,7 @@ const TableFormMarkup = t.intersection([
 
         cbColumn: t.boolean,
         nrColumn: t.boolean,
+        charRow: t.boolean,
         groups: t.array(t.string),
         report: nullable(t.boolean),
         reportButton: nullable(t.string),
@@ -508,6 +509,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
 
         this.data.cbColumn = this.markup.cbColumn;
         this.data.nrColumn = this.markup.nrColumn;
+        this.data.charRow = this.markup.charRow;
         this.data.filterRow = this.markup.filterRow;
         this.data.maxRows = this.markup.maxRows;
         this.data.maxCols = this.markup.maxCols;
