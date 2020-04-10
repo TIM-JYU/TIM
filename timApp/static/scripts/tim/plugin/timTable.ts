@@ -187,6 +187,7 @@ export interface TimTable {
     cbColumn?: boolean;
     nrColumn?: boolean;
     charRow?: boolean;
+    saveUserDataHeader?: boolean;
     maxRows?: string;
     maxCols?: string;
     button?: string;
@@ -1212,14 +1213,29 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.error = "";
         this.isRunning = true;
         const url = this.pluginMeta.getAnswerUrl();
-        const params = {
+        // noinspection UnnecessaryLocalVariableJS
+        const params1 = {
             input: {
                 answers: {
                     userdata: this.userdata,
-                    headers: this.data.headers ? this.data.headers : undefined,
+                    // headers: this.data.headers ? this.data.headers : undefined,
                 },
             },
         };
+        let params = params1;
+
+        if (this.data.saveUserDataHeader) {
+            // noinspection UnnecessaryLocalVariableJS
+            const params2 = {
+                input: {
+                    answers: {
+                        userdata: this.userdata,
+                        headers: this.data.headers ? this.data.headers : undefined,
+                    },
+                },
+            };
+            params = params2;
+        }
 
         const r = await to($http.put<string[]>(url, params));
 
