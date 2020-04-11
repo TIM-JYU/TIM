@@ -1,5 +1,6 @@
 import copy
 import json
+import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 from xml.sax.saxutils import quoteattr
 from flask import Blueprint
@@ -124,6 +125,21 @@ def prepare_multi_for_dumbo(timtable_list):
     for table in timtable_list:
         prepare_for_dumbo(table[MARKUP])
 
+CELL_FINDER = re.compile("([A-Z]+)([0-9]+)[!0-9]*")
+
+def row_key(s):
+    """
+    Make a sort key for table cell address.  For example
+       B3: cat => 0003B
+       A => A
+       23 => 23
+    :param s: string whre key is calculated
+    :return: key for sorting by row numbers
+    """
+    parts = CELL_FINDER.search(s)
+    if not parts:
+        return s
+    return f'{parts[2]:0>4}{parts[1]}'
 
 def tim_table_get_html(jso, review):
     """
@@ -148,11 +164,20 @@ def tim_table_get_html(jso, review):
         ucells = userdata["cells"]
         if not ucells:
             return ""
-        for key in ucells:
-            udata += key + ": " + json.dumps(ucells[key]) + "\n"
+        if values.get("sortUserData", True):
+            cells = []
+            for key in ucells:
+                cells.append((row_key(key), key + ": " + json.dumps(ucells[key])))
+            cells.sort(key=lambda c: c[0])
+            for c in cells:
+                udata += c[1] +"\n"
+        else:
+            for key in ucells:
+                udata += key + ": " + json.dumps(ucells[key]) + "\n"
         s = f'<pre>{udata}</pre>'
         return s
     attrs = json.dumps(values)
+    # attrs = attrs.replace('"cell": "None"', '"cell": ""')
     runner = 'tim-table'
     s = f'<{runner} bind-data={quoteattr(attrs)}></{runner}>'
     return s
@@ -306,11 +331,12 @@ def add_row(plug: Plugin, row_id: int):
     if is_in_global_append_mode(plug):
         unique_id = pop_unique_row_id(plug)
         rows[row_id][ID] = unique_id
-    for i in range(len(row)):
-        if is_primitive(row[i]):
-            row[i] = {CELL: ''}
-        else:
-            row[i][CELL] = ''
+    if row:
+        for i in range(len(row)):
+            if is_primitive(row[i]):
+                row[i] = {CELL: ''}
+            else:
+                row[i][CELL] = ''
     if row_id < len(rows) - 1:
         datablock_entries = construct_datablock_entry_list_from_yaml(plug)
         for entry in datablock_entries:
@@ -723,6 +749,10 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
                 row_data = row[ROW]
             except KeyError:
                 return abort(400)
+            if row_data == None:
+                row_data = []
+                rows[row_id] = { ROW: row_data}
+
             if len(row_data) <= col_id:
                 if attribute == "CLEAR":
                     continue
@@ -777,6 +807,9 @@ def set_value_to_table(plug, row_id, col_id, value):
         row_data = row[ROW]
     except KeyError:
         return abort(400)
+    if row_data == None:
+        row_data = []
+        rows[row_id] = {ROW: row_data}
     if len(row_data) <= col_id:
         for ic in range(len(row_data), col_id + 1):
             row_data.append('')
@@ -866,7 +899,7 @@ def tim_table_save_multi_cell_value(cells_to_save, docid, parid, must_call_dumbo
     else:
         verify_edit_access(d)
 
-    if not is_datablock(yaml):
+    if not is_datablock(yaml) and data_input_mode:
         create_datablock(yaml[TABLE])
 
     for c in cells_to_save:
@@ -1091,6 +1124,9 @@ def prepare_for_dumbo(values):
             rowdata = row[ROW]
         else:
             rowdata = []
+        if rowdata == None:
+            rowdata = []
+
         for i in range(len(rowdata)):
             cell = rowdata[i]
             if is_of_unconvertible_type(cell):

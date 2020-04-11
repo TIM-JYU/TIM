@@ -1657,6 +1657,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 if (cell.underSpanOf) {
                     continue;
                 }
+                if (cell.cell == "None") {
+                    cell.cell = "";
+                }
                 cell.renderIndexX = renderIndexX;
                 cell.renderIndexY = y;
                 renderIndexX++;
