@@ -130,7 +130,8 @@ CELL_FINDER = re.compile("([A-Z]+)([0-9]+)[!0-9]*")
 def row_key(s):
     """
     Make a sort key for table cell address.  For example
-       B3: cat => 0003B
+       AB3: cat => 0003 AB
+       E17: dog => 0017  E
        A => A
        23 => 23
     :param s: string whre key is calculated
@@ -139,7 +140,7 @@ def row_key(s):
     parts = CELL_FINDER.search(s)
     if not parts:
         return s
-    return f'{parts[2]:0>4}{parts[1]}'
+    return f'{parts[2]:0>4}{parts[1]:>3}'
 
 def tim_table_get_html(jso, review):
     """
@@ -176,6 +177,7 @@ def tim_table_get_html(jso, review):
                 udata += key + ": " + json.dumps(ucells[key]) + "\n"
         s = f'<pre>{udata}</pre>'
         return s
+    # Not review
     attrs = json.dumps(values)
     # attrs = attrs.replace('"cell": "None"', '"cell": ""')
     runner = 'tim-table'
@@ -753,12 +755,19 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
                 row_data = []
                 rows[row_id] = { ROW: row_data}
 
+            if isinstance(row_data, str):
+                if attribute == "CLEAR":
+                    continue
+                row_data = [row_data]
+                rows[row_id] = { ROW: row_data}
+
             if len(row_data) <= col_id:
                 if attribute == "CLEAR":
                     continue
                 # return abort(400)
                 for ic in range(len(row_data), col_id+1):
                     row_data.append('')
+
             cell = row_data[col_id]
             if is_primitive(cell):
                 if attribute != "CLEAR":
@@ -809,6 +818,12 @@ def set_value_to_table(plug, row_id, col_id, value):
         return abort(400)
     if row_data == None:
         row_data = []
+        rows[row_id] = {ROW: row_data}
+    if isinstance(row_data, str):
+        if col_id == 0:
+            rows[row_id] = {ROW: value}
+            return
+        row_data = [row_data]
         rows[row_id] = {ROW: row_data}
     if len(row_data) <= col_id:
         for ic in range(len(row_data), col_id + 1):

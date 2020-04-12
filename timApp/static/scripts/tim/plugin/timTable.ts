@@ -2159,6 +2159,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (h != null && w != null) {
             scrollToViewInsideParent(tablecell[0], parent[0], w, 3 * h, w, h);
         }
+        // this.updateSmallEditorPosition(); // TODO: vesa added here, because somtiems it did not update the pos
     }
 
     /**
@@ -2295,10 +2296,18 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (!this.currentCell || !editInputElement) {
             return;
         }
-        const rowi = this.currentCell.row;
-        const coli = this.currentCell.col;
+        let rowi = this.currentCell.row;
+        let coli = this.currentCell.col;
         const sr = this.permTableToScreen[rowi];
         const table = $(this.tableElem.nativeElement);
+        if (rowi >= this.cellDataMatrix.length) {
+            rowi--;
+            if (rowi < 0) { return; }
+        }
+        if (coli >= this.cellDataMatrix[rowi].length) {
+            coli--;
+            if (coli < 0) { return; }
+        }
         const cell = this.cellDataMatrix[rowi][coli];
         if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
             return; // we should never be able to get here
@@ -2707,6 +2716,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             rowId = this.cellDataMatrix.length;
         }
 
+        if (this.currentCell && rowId <= this.currentCell?.row) {
+            this.closeSmallEditor();
+        }
+
         if (this.isInGlobalAppendMode()) {
             const response = await to($http.post<TimTable>("/timTable/addUserSpecificRow",
                 {docId, parId}));
@@ -2732,6 +2745,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     async removeRow(rowId: number) {
         if (this.viewctrl == null || !this.data.table.rows) {
             return;
+        }
+
+        if (this.currentCell && rowId <= this.currentCell?.row) {
+            this.closeSmallEditor();
         }
 
         const datablockOnly = this.isInDataInputMode();
@@ -2795,6 +2812,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (colId < 0) {
             colId = rowLen;
         }
+
+        if (this.currentCell && colId <= this.currentCell?.col) {
+            this.closeSmallEditor();
+        }
+
         const response = await to($http.post<TimTable>(route,
             {docId, parId, colId, rowLen}));
         if (!response.ok) {
@@ -2821,6 +2843,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         if (colId < 0) {
             return;
+        }
+
+        if (this.currentCell && colId <= this.currentCell?.col) {
+            this.closeSmallEditor();
         }
 
         const response = await to($http.post<TimTable>("/timTable/removeColumn",
