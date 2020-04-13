@@ -390,9 +390,14 @@ class Stats extends WithGtools {
         }
     }
 
-    addValue(fieldName: string, value: number, max: number = 1e100) {
+    ensureCounter(fieldName: string): StatCounter {
         let sc: StatCounter = this.counters[fieldName];
         if ( sc === undefined ) { sc = new StatCounter(); this.counters[fieldName] = sc; }
+        return sc;
+    }
+
+    addValue(fieldName: string, value: number, max: number = 1e100) {
+        let sc: StatCounter = this.ensureCounter(fieldName);
         if ( isNaN(value) ) { return; }
         const v = Math.min(value, max);
         sc.addValue(v);
@@ -405,10 +410,11 @@ class Stats extends WithGtools {
         }
         for (let i = start; i <= end; i++) {
             const name = fieldName + i.toString();
+            const sc = this.ensureCounter(name);
             let v = this.gtools.tools.getDouble(name, NaN);
             if ( isNaN(v) ) { continue; }
             v = Math.min(v, maxv);
-            this.addValue(name, v);
+            sc.addValue(v);
         }
     }
 
@@ -416,11 +422,12 @@ class Stats extends WithGtools {
         const maxv = 1e100;
         const fields = widenFields([...fieldNames]);
         for (const name of fields) {
+            const sc = this.ensureCounter(name);
             let v = this.gtools.tools.getDouble(name, NaN);
             if ( isNaN(v) ) { continue; }
             v = Math.min(v, maxv);
             // this.print(name + ": " + v);
-            this.addValue(name, v);
+            sc.addValue(v);
         }
     }
 
