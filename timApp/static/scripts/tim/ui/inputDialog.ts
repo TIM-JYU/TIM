@@ -3,23 +3,22 @@ import {DialogController} from "tim/ui/dialogController";
 import {Result} from "../util/utils";
 import {registerDialogComponent, showDialog} from "./dialog";
 
-type InputDialogParams<T> = {
-    defaultValue: string;
-    validator: (s: string) => Promise<Result<T, string>>;
-    title: string;
-    text: string;
-    okText?: string;
-    cancelText?: string;
-    isInput: true;
-} | {
-    isInput: false;
-    title: string;
-    text: string;
-    okText?: string;
-    cancelText?: string;
-    okValue: T;
-    validator?: () => Promise<Result<T, string>>;
-};
+export enum InputDialogKind {
+    NoValidator,
+    ValidatorOnly,
+    InputAndValidator,
+}
+
+type InputDialogParams<T> =
+    {
+        title: string;
+        text: string;
+        okText?: string;
+        cancelText?: string;
+    }
+    & ({ isInput: InputDialogKind.NoValidator, okValue: T } |
+    { isInput: InputDialogKind.ValidatorOnly, validator: () => Promise<Result<T, string>> } |
+    { isInput: InputDialogKind.InputAndValidator, defaultValue: string, validator: (s: string) => Promise<Result<T, string>> });
 
 class InputDialogCtrl<T> extends DialogController<{ params: InputDialogParams<T> }, T> {
     static component = "timInputDialog";
@@ -27,7 +26,7 @@ class InputDialogCtrl<T> extends DialogController<{ params: InputDialogParams<T>
     private value = "";
     private error?: string;
     private focus = false;
-    private isInput = true;
+    private isInput = false;
 
     protected getTitle() {
         return this.resolve.params.title;
@@ -35,9 +34,9 @@ class InputDialogCtrl<T> extends DialogController<{ params: InputDialogParams<T>
 
     $onInit() {
         super.$onInit();
-        if (!this.resolve.params.isInput) {
+        this.isInput = this.resolve.params.isInput == InputDialogKind.InputAndValidator;
+        if (this.resolve.params.isInput !== InputDialogKind.InputAndValidator) {
             this.value = "-";
-            this.isInput = false;
         } else {
             this.value = this.resolve.params.defaultValue;
         }
@@ -52,7 +51,7 @@ class InputDialogCtrl<T> extends DialogController<{ params: InputDialogParams<T>
         if (!this.value) {
             return;
         }
-        if (this.resolve.params.isInput) {
+        if (this.resolve.params.isInput !== InputDialogKind.NoValidator) {
             const result = await this.resolve.params.validator(this.value);
             if (!result.ok) {
                 this.error = result.result;

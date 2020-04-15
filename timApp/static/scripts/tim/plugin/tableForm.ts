@@ -27,8 +27,7 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TaskId} from "tim/plugin/taskid";
 import {ViewCtrl} from "../document/viewctrl";
-import {IDocument} from "../item/IItem";
-import {showInputDialog} from "../ui/inputDialog";
+import {InputDialogKind, showInputDialog} from "../ui/inputDialog";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, nullable, withDefault} from "./attributes";
@@ -939,19 +938,18 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         const group = this.markup.groups[0];
 
         await showInputDialog({
-            okValue: true,
             text: "<b>Really remove the following users from group:</b> " + group + "<br>\n<pre>\n" + msg + "\n</pre>",
             title: "Remove users from group " + group,
-            isInput: false,
+            isInput: InputDialogKind.ValidatorOnly,
             validator: async () => {
                 const ulist = TableFormComponent.makeUserList(selUsers, 1, "", ",");
                 const r = await to($http.post<unknown>(
                     `/groups/removemember/${group}`,
                     {names: ulist.split(",")}));
                 if (r.ok) {
-                    return {ok: true, result: r.result.data};
+                    return {ok: true, result: r.result.data} as const;
                 } else {
-                    return {ok: false, result: r.result.data.error};
+                    return {ok: false, result: r.result.data.error} as const;
                 }
             },
         });

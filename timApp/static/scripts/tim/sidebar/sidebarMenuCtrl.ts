@@ -26,7 +26,7 @@ import {ILecture, ILectureListResponse2} from "../lecture/lecturetypes";
 import {ITemplateParams, showPrintDialog} from "../printing/printCtrl";
 import {showConsentDialog} from "../ui/consent";
 import {showMessageDialog} from "../ui/dialog";
-import {showInputDialog} from "../ui/inputDialog";
+import {InputDialogKind, showInputDialog} from "../ui/inputDialog";
 import {ADMIN_GROUPNAME, IGroup, TEACHERS_GROUPNAME} from "../user/IUser";
 import {setConsent} from "../user/settingsCtrl";
 import {Users, UserService} from "../user/userService";
@@ -496,7 +496,7 @@ export class SidebarMenuCtrl implements IController {
 
     private async createGroup() {
         const doc = await showInputDialog({
-            isInput: true,
+            isInput: InputDialogKind.InputAndValidator,
             defaultValue: "",
             text: "Enter name of the usergroup",
             title: "Create group",

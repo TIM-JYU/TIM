@@ -18,7 +18,7 @@ import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict, to} from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {getVisibilityVars} from "tim/timRoot";
-import {showInputDialog} from "tim/ui/inputDialog";
+import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {BookmarksController} from "../bookmark/bookmarks";
@@ -288,7 +288,7 @@ export class ViewCtrl implements IController {
         this.oldWidth = $(window).width() ?? 500;
         if (isPageDirty()) {
             showInputDialog({
-                isInput: false,
+                isInput: InputDialogKind.NoValidator,
                 text: "The page has been modified since the last reload. Refresh now?",
                 title: "Page was modified - reload?",
                 okValue: true,
@@ -883,7 +883,7 @@ export class ViewCtrl implements IController {
         } else {
             const r = await showInputDialog({
                 cancelText: "Dismiss",
-                isInput: false,
+                isInput: InputDialogKind.NoValidator,
                 okText: "Update",
                 okValue: true,
                 text: `There are ${this.pendingUpdatesCount()} pending paragraph updates.`,
