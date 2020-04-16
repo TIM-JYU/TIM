@@ -166,8 +166,12 @@ def get_angularscripts(index_file):
         bs = BeautifulSoup(html_data, 'lxml')
         scripts: List[bs4.element.Tag] = [e for e in bs.find_all('script')]
         n = BeautifulSoup("", 'lxml')
+        style = bs.find('link')
         for s in scripts:
             n.append(s)
+        # Only production config has extractCss enabled, so this will be None for a non-prod build.
+        if style:
+            n.append(style)
         return dict(angularscripts=str(n))
 
 
