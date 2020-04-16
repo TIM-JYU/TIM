@@ -39,7 +39,6 @@ TIM_SAFE_TAGS = [
     'hr',
     'input',
     'label',
-    'login-menu',
     'table',
     'tbody',
     'thead',
@@ -55,6 +54,7 @@ TIM_SAFE_TAGS = [
     'u',
     's',
     'style',
+    'tim-login-menu',
     'tim-plugin-loader',
     # plugin components:
     'cs-comtest-runner',

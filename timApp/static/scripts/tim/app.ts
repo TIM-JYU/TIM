@@ -10,7 +10,6 @@ import moment, {Moment} from "moment";
 import ngFileUpload from "ng-file-upload";
 import ngStorage from "ngstorage";
 import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
-import {tr} from "./ui/language";
 import {KEY_ENTER, KEY_S} from "./util/keycodes";
 import {injectProviders, injectServices} from "./util/ngimport";
 
@@ -129,10 +128,6 @@ timApp.filter("timtim", ["$filter", ($filter: IFilterService) => {
     return (date: Moment) => {
         return date.format("HH:mm:ss");
     };
-}]);
-
-timApp.filter("tr", [() => {
-    return tr;
 }]);
 
 timApp.directive("onSave", () => {

@@ -1,6 +1,6 @@
 import {saveCurrentScreenPar} from "../document/parhelpers";
 import {showMessageDialog} from "../ui/dialog";
-import {genericglobals} from "../util/globals";
+import {genericglobals, Locale} from "../util/globals";
 import {$http, $httpParamSerializer} from "../util/ngimport";
 import {to, ToReturn} from "../util/utils";
 import {ADMIN_GROUPNAME, IFullUser, IUser} from "./IUser";
@@ -53,6 +53,18 @@ export class UserService {
 
     public isLoggedIn() {
         return this.current.id > 0; // TODO: maybe !== 0
+    }
+
+    public getCurrentLocale(): Locale {
+        return genericglobals().locale;
+    }
+
+    public getCurrentLanguage(): "fi" | "en" {
+        const loc = this.getCurrentLocale();
+        if (loc === "fi") {
+            return loc;
+        }
+        return "en";
     }
 
     public korppiLogin(addUser: boolean) {

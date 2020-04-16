@@ -130,6 +130,7 @@ class SettingsTest(TimRouteTest):
                                  'last_answer_fetch': {},
                                  'use_document_word_list': False,
                                  'word_list': '',
+                                 'language': None,
                                  'custom_css': '',
                                  'disable_menu_hover': False,
                                  })
@@ -142,6 +143,7 @@ class SettingsTest(TimRouteTest):
                 'last_answer_fetch': {},
                 'use_document_word_list': True,
                 'word_list': 'cat\ndog',
+                'language': None,
                 'custom_css': 'somecss',
                 'disable_menu_hover': True,
             }
@@ -154,6 +156,7 @@ class SettingsTest(TimRouteTest):
                      'last_answer_fetch': {},
                      'use_document_word_list': True,
                      'word_list': 'cat\ndog',
+                     'language': None,
                      'custom_css': 'somecss',
                      'disable_menu_hover': True,
                  })
@@ -178,6 +181,7 @@ class SettingsTest(TimRouteTest):
                      'last_answer_fetch': {},
                      'use_document_word_list': True,
                      'word_list': 'cat\ndog',
+                     'language': None,
                      'custom_css': 'somecss',
                      'disable_menu_hover': True,
                  })

@@ -33,9 +33,12 @@ interface IConfig {
     gitBranch: string;
 }
 
+export type Locale = "fi" | "en-US";
+
 export interface IGenericGlobals {
     IS_TESTING: boolean;
     current_user: IFullUser;
+    locale: Locale;
     other_users: IUser[];
     bookmarks: IBookmarkGroup[];
     ANGULARMODULES: unknown[];

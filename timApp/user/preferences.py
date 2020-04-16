@@ -2,7 +2,7 @@ import os
 import re
 import sre_constants
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 import attr
 from flask import current_app
@@ -24,6 +24,7 @@ class Preferences:
     disable_menu_hover: bool = False
     word_list: str = ''
     email_exclude: str = ''
+    language: Optional[str] = None
     last_answer_fetch: Dict[str, str] = attr.Factory(dict)
     css_combined: str = attr.ib(init=False)
 

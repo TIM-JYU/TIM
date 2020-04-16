@@ -282,8 +282,7 @@ def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
         if u:
             nu = NewUser.query.get(u.email)
     if not (nu and nu.check_password(oldpass)):
-        return abort(400, 'Wrong temporary password. '
-                          'Please re-check your email to see the password.')
+        return abort(400, 'WrongTempPassword')
     return nu
 
 
@@ -298,11 +297,11 @@ def alt_signup_after():
     )
 
     if password != confirm:
-        return abort(400, 'Passwords do not match.')
+        return abort(400, 'PasswordsNotMatch')
 
     min_pass_len = current_app.config['MIN_PASSWORD_LENGTH']
     if len(password) < min_pass_len:
-        return abort(400, f'A password should contain at least {min_pass_len} characters.')
+        return abort(400, f'PasswordTooShort')
 
     save_came_from()
 
@@ -317,7 +316,7 @@ def alt_signup_after():
         u2 = User.get_by_name(username)
 
         if u2 is not None and u2.id != user_id:
-            return abort(400, 'User name already exists. Please try another one.')
+            return abort(400, 'UserAlreadyExists')
 
         # Use the existing user name; don't replace it with email
         username = user.name
@@ -331,7 +330,7 @@ def alt_signup_after():
         user.update_info(UserInfo(username=username, full_name=real_name, email=email, password=password))
     else:
         if User.get_by_name(username) is not None:
-            return abort(400, 'User name already exists. Please try another one.')
+            return abort(400, 'UserAlreadyExists')
         success_status = 'registered'
         user, _ = User.create_with_group(
             UserInfo(
@@ -387,10 +386,9 @@ def alt_login():
         # Protect from timing attacks.
         check_password_hash('', '$2b$12$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu')
 
-    error_msg = "Email address or password did not match."
-    home_org = current_app.config['HOME_ORGANIZATION']
+    error_msg = "EmailOrPasswordNotMatch"
     if is_possibly_home_org_account(email_or_username):
-        error_msg += f" You might not have a TIM account. {home_org} members can use the {home_org} login button."
+        error_msg = 'EmailOrPasswordNotMatchUseHaka'
     if is_xhr(request):
         return abort(403, error_msg)
     else:

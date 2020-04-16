@@ -257,5 +257,5 @@ a {#x initword: #} b
         User.get_anon().grant_access(d, AccessType.view)
         db.session.commit()
         self.logout()
-        r = self.get(u, as_tree=True).cssselect('.parContent login-menu')
+        r = self.get(u, as_tree=True).cssselect('.parContent tim-login-menu')
         self.assertTrue(r)

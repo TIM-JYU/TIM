@@ -172,7 +172,7 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
         </div>
     `,
 })
-class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
+export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
     t.TypeOf<typeof JsframeAll>,
     typeof JsframeAll> implements ITimComponent, IUserChanged, AfterViewInit, OnDestroy {
     iframesettings?: { sandbox: string, src: SafeResourceUrl, width: number, height: number };

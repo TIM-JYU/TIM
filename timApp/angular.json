@@ -13,6 +13,12 @@
       "root": "",
       "sourceRoot": ".",
       "prefix": "app",
+      "i18n": {
+        "sourceLocale": "en-US",
+        "locales": {
+          "fi": "i18n/messages.fi.xlf"
+        }
+      },
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
@@ -141,8 +147,22 @@
               "devServerTarget": "tim:serve:production"
             }
           }
+        },
+        "xliffmerge": {
+          "builder": "@ngx-i18nsupport/tooling:xliffmerge",
+          "options": {
+            "xliffmergeOptions": {
+              "defaultLanguage": "en-US",
+              "genDir": "i18n",
+              "languages": [
+                "fi"
+              ],
+              "beautifyOutput": true
+            }
+          }
         }
       }
-    }},
+    }
+  },
   "defaultProject": "tim"
 }

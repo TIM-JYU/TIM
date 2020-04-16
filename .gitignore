@@ -21,6 +21,7 @@
 /timApp/celerybeat-schedule.db
 /timApp/prodconfig.py
 /timApp/auth/saml/prod/settings.json
+/timApp/messages.xlf
 /timApp/modules/cs/data/
 /timApp/modules/cs/generated
 /timApp/modules/cs/java/cs/ComTest.jar

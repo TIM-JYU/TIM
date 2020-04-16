@@ -1,16 +1,25 @@
-import {IController} from "angular";
-import {timApp} from "tim/app";
 import {getURLParameter} from "tim/util/utils";
 import {inIframe} from "tim/plugin/util";
 import {$httpParamSerializer} from "tim/util/ngimport";
-import {showLoginDialog} from "./loginDialog";
+import {Component, OnInit} from "@angular/core";
+import {showLoginDialog} from "./login-dialog.component";
 import {Users} from "./userService";
 
 /**
- * A component that displays either button for opening login dialog or the user menu component
+ * Displays either a button for opening the login dialog or the user menu component
  * depending on whether the user is logged in.
  */
-class LoginMenuController implements IController {
+@Component({
+    selector: "tim-login-menu",
+    template: `
+<button *ngIf="!isLoggedIn()"
+        (click)="openLoginDialog()"
+        type="button"
+        class="btn btn-default" i18n="@@logIn">Log in</button>
+<tim-user-menu *ngIf="isLoggedIn()"></tim-user-menu>
+    `,
+})
+export class LoginMenuComponent implements OnInit {
 
     isLoggedIn() {
         return Users.isLoggedIn();
@@ -43,7 +52,7 @@ class LoginMenuController implements IController {
         void showLoginDialog({showSignup: false, addingToSession: false});
     }
 
-    $onInit() {
+    ngOnInit() {
         const opener = window.opener as Window | null;
         if (getURLParameter("sendLoginSuccessMsg") && opener) {
             opener.postMessage("loginOk", "*");
@@ -51,17 +60,3 @@ class LoginMenuController implements IController {
         }
     }
 }
-
-timApp.component("loginMenu", {
-    bindings: {},
-    controller: LoginMenuController,
-    template: `
-<button ng-if="!$ctrl.isLoggedIn()"
-        ng-click="$ctrl.openLoginDialog()"
-        type="button"
-        class="btn btn-default margin-4">
-    {{ 'Log in' | tr }}
-</button>
-<user-menu ng-if="$ctrl.isLoggedIn()"></user-menu>
-    `,
-});

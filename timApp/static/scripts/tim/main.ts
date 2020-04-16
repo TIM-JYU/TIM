@@ -9,7 +9,6 @@ import $ from "jquery";
 import * as answerbrowser from "tim/answer/answerbrowser3";
 import * as userlistController from "tim/answer/userlistController";
 import {timApp} from "tim/app";
-import * as bookmarkFolderBox from "tim/bookmark/bookmarkFolderBox";
 import * as bookmarks from "tim/bookmark/bookmarks";
 import * as templateList from "tim/document/editing/templateList";
 import * as questionController from "tim/document/question/questionController";
@@ -17,7 +16,7 @@ import * as viewctrl from "tim/document/viewctrl";
 import * as viewRangeNavigation from "tim/document/viewRangeNavigation";
 import {environment} from "tim/environments/environment";
 import * as indexCtrl from "tim/folder/indexCtrl";
-import * as startController from "tim/frontpage/startController";
+import {FrontPageComponent} from "tim/frontpage/front-page.component";
 import * as loadMap from "tim/gamification/loadMap";
 import * as manageCtrl from "tim/item/manageCtrl";
 import * as relevanceEdit from "tim/item/relevanceEdit";
@@ -32,12 +31,12 @@ import * as questionAskController from "tim/lecture/questionAskController";
 import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQuestionController";
 import * as searchBox from "tim/search/searchBox";
 import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
-import * as bootstrapPanel from "tim/ui/bootstrapPanel";
-import * as logo from "tim/ui/logo";
-import * as loginMenu from "tim/user/loginMenu";
+import * as bootstrapPanel from "tim/ui/bootstrap-panel.component";
+import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
+import {LogoComponent} from "tim/ui/logo.component";
+import {LoginMenuComponent} from "tim/user/login-menu.component";
 import * as timRoot from "tim/timRoot";
 import * as settingsCtrl from "tim/user/settingsCtrl";
-import * as userMenu from "tim/user/userMenu";
 import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
 import * as annotation from "tim/velp/annotation.component";
 import {AnnotationComponent} from "tim/velp/annotation.component";
@@ -68,21 +67,16 @@ if (environment.production) {
 }
 
 markAsUsed(
-    annotation,
     answerbrowser,
     answerToQuestionController,
-    bookmarkFolderBox,
     bookmarks,
     bootstrap,
-    bootstrapPanel,
     createLectureCtrl,
     indexCtrl,
     lectureController,
     lectureInfoController,
     lectureMenu,
     loadMap,
-    loginMenu,
-    logo,
     manageCtrl,
     questionAskController,
     questionController,
@@ -93,12 +87,10 @@ markAsUsed(
     settingsCtrl,
     showStatisticsToQuestionController,
     sidebarMenuCtrl,
-    startController,
     taggedDocumentList,
     templateList,
     timRoot,
     userlistController,
-    userMenu,
     velpSelection,
     viewctrl,
     viewRangeNavigation,
@@ -123,6 +115,10 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timDialogContainer", DialogContainerComponent);
     doDowngrade(dg, "timAddMember", AddMemberComponent);
     doDowngrade(dg, "timFooter", TimFooterComponent);
+    doDowngrade(dg, "timLoginMenu", LoginMenuComponent);
+    doDowngrade(dg, "timLogo", LogoComponent);
+    doDowngrade(dg, "bootstrapPanel", BootstrapPanelComponent);
+    doDowngrade(dg, "timStart", FrontPageComponent);
     return dg;
 }
 

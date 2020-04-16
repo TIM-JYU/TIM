@@ -40,6 +40,20 @@ export class SettingsCtrl implements IController {
     private user: IFullUser;
     private deletingAccount = false;
     private deleteConfirmName = "";
+    langs = [
+        {
+            code: null,
+            name: "Use web browser preference",
+        },
+        {
+            code: "en-US",
+            name: "English",
+        },
+        {
+            code: "fi",
+            name: "Finnish",
+        },
+    ];
 
     constructor() {
         this.user = settingsglobals().current_user;
@@ -135,6 +149,14 @@ timApp.component("timSettings", {
     controller: SettingsCtrl,
     template: `<h1>TIM settings</h1>
 <form>
+    <bootstrap-panel title="Preferred language">
+        <div class="form-inline">
+            <select class="form-control"
+                    ng-model="$ctrl.settings.language"
+                    ng-options="lng.code as lng.name for lng in $ctrl.langs">
+            </select>
+        </div>
+    </bootstrap-panel>
     <bootstrap-panel title="Styles">
         <span ng-if="$ctrl.cssFiles">Available themes:</span>
         <span ng-if="!$ctrl.cssFiles">There are no available themes.</span>

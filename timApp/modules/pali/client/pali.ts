@@ -60,8 +60,8 @@ function isPalindrome(s: string) {
                                [size]="cols">
                     </label>
                     <ng-container *ngIf="userword">
-                        <i title="This word is a palindrome" class="glyphicon glyphicon-ok" *ngIf="correct"></i>
-                        <i title="This word is not a palindrome" class="glyphicon glyphicon-remove"
+                        <i title="This word is a palindrome" i18n-title class="glyphicon glyphicon-ok" *ngIf="correct"></i>
+                        <i title="This word is not a palindrome" i18n-title class="glyphicon glyphicon-remove"
                            *ngIf="!correct"></i>
                     </ng-container>
                 </div>
@@ -85,7 +85,7 @@ function isPalindrome(s: string) {
     `,
     styleUrls: ["./pali.scss"],
 })
-class PaliComponent extends AngularPluginBase<t.TypeOf<typeof PluginMarkupFields>, t.TypeOf<typeof PluginFields>, typeof PluginFields>
+export class PaliComponent extends AngularPluginBase<t.TypeOf<typeof PluginMarkupFields>, t.TypeOf<typeof PluginFields>, typeof PluginFields>
     implements OnInit, OnDestroy {
     result?: string;
     error?: string;

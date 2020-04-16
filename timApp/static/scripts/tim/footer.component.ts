@@ -15,23 +15,26 @@ import {genericglobals} from "tim/util/globals";
                             col-sm-{{ layout.col_2_sm }} col-sm-offset-{{ layout.col_1_sm }}">
                         <div class="row">
                             <div class="col-xs-6">
-                                <p class="smallNote">TIM last updated:
+                                <p class="smallNote">
+                                    <ng-container i18n>TIM last updated</ng-container>:
                                     <ng-container *ngIf="hide.links">{{config.gitLastestCommitTimestamp}}
-                                        <br>Problems and questions: {{config.helpEmail}}
+                                        <br>
+                                        <ng-container i18n="@@probQuest">Problems and questions</ng-container>: {{config.helpEmail}}
                                     </ng-container>
                                     <ng-container *ngIf="!hide.links">
                                         <a href="/view/tim/muutoshistoria">{{config.gitLastestCommitTimestamp}}</a>
-                                        <br>Problems and questions:
+                                        <br>
+                                        <ng-container i18n="@@probQuest">Problems and questions</ng-container>:
                                         <a href="mailto:{{config.helpEmail}}">{{config.helpEmail}}</a>
                                     </ng-container>
                                     <ng-container *ngIf="config.gitBranch != 'master'">
-                                        (branch: {{config.gitBranch}})
+                                        (<ng-container i18n>branch</ng-container>: {{config.gitBranch}})
                                     </ng-container>
                                 </p>
                             </div>
                             <div class="col-xs-6 text-right smallNote">
-                                <a *ngIf="!hide.links" href="/view/tim/Rekisteriseloste">
-                                    Tietosuojalauseke, rekisteriseloste ja kerätyt tiedot
+                                <a *ngIf="!hide.links" href="/view/tim/Rekisteriseloste" i18n>
+                                    Privacy policy
                                 </a>
                             </div>
                         </div>

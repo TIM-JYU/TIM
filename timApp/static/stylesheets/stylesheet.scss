@@ -37,21 +37,17 @@ a .glyphicon {
 }
 
 .siteheader {
-    @include clearfix;
     height: 43px;
     border-bottom: $header-footer-border;
-    login-menu {
-        display: inline-block;
-        max-width: 37%;
+    display: flex;
+    align-items: center;
+    .logolink, tim-logo, & > img {
+        height: 100%;
+    }
 
-        .dropdown {
-            max-width: 100%;
-
-            .dropdown-toggle {
-                @include text-overflow;
-                max-width: 100%;
-            }
-        }
+    tim-login-menu {
+        flex: 1;
+        text-align: center;
     }
 }
 
@@ -985,10 +981,6 @@ button:disabled, input[type="submit"]:disabled, input[type="button"]:disabled, .
 
 .fullwidth {
     width: 100%;
-}
-
-.fullheight {
-    height: 100%;
 }
 
 .checkbox-td {

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import time
-from typing import Optional
+from dataclasses import dataclass
+from typing import Optional, List
 from urllib.parse import urlparse
 
+import bs4
 import requests
-from dataclasses import dataclass
-from flask import Response
+from bs4 import BeautifulSoup
+from flask import Response, send_file
 from flask import g, abort
 from flask import redirect
 from flask import render_template
@@ -23,8 +25,8 @@ from timApp.admin.routes import admin_bp
 from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
 from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
-from timApp.auth.saml import saml
 from timApp.auth.login import login_page
+from timApp.auth.saml import saml
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
     logged_in, current_user_in_lecture
 from timApp.bookmark.bookmarks import Bookmarks
@@ -68,7 +70,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_request_message, use_model, RouteException
-from timApp.util.flask.responsehelper import json_response, ok_response, text_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.search import search_routes
 from timApp.util.logger import log_info, log_debug, log_warning
 from timApp.util.utils import get_current_time
@@ -139,33 +141,73 @@ def inject_custom_css() -> dict:
 @app.context_processor
 def inject_angular_scripts() -> dict:
     """Provides the JavaScript files compiled by Angular."""
+    locale = get_locale()
     try:
-        with open('static/scripts/build/index.html') as f:
-            return dict(angularscripts=f.read())
+        # Angular compiler modifies the base href of index.html to redirect the scripts to correct location,
+        # but it does not work for TIM because the HTML is dynamically generated and modifying base href would break
+        # other links. So we modify the script by hand.
+        # TODO: Cache the modified result.
+        return get_angularscripts(f'static/scripts/build/{locale}/index.html')
     except FileNotFoundError:
-        raise Exception(
-            'TypeScript files have not been built (compiled JavaScript files are missing).\n'
-            'If this is a local development TIM instance, start the "bdw" NPM script (in timApp/package.json) '
-            'from your IDE.\n'
-            'If this is not a local TIM instance, run "./js" from TIM root.'
-        )
+        try:
+            return get_angularscripts(f'static/scripts/build/index.html')
+        except FileNotFoundError:
+            raise Exception(
+                'TypeScript files have not been built (compiled JavaScript files are missing).\n'
+                'If this is a local development TIM instance, start the "bdw" NPM script (in timApp/package.json) '
+                'from your IDE.\n'
+                'If this is not a local TIM instance, run "./js" from TIM root.'
+            )
+
+
+def get_angularscripts(index_file):
+    with open(index_file) as f:
+        html_data = f.read()
+        bs = BeautifulSoup(html_data, 'lxml')
+        scripts: List[bs4.element.Tag] = [e for e in bs.find_all('script')]
+        n = BeautifulSoup("", 'lxml')
+        for s in scripts:
+            n.append(s)
+        return dict(angularscripts=str(n))
+
+
+KNOWN_LANGUAGES = [
+    'fi',
+    'en-US',
+]
+
+
+def get_locale():
+    header_lang = request.accept_languages.best_match(KNOWN_LANGUAGES, default='en-US')
+    if not logged_in():
+        return header_lang
+    u = get_current_user_object()
+    lng = u.get_prefs().language
+    if lng in KNOWN_LANGUAGES:
+        return lng
+    return header_lang
 
 
 @app.context_processor
 def inject_user() -> dict:
     """"Injects the user object to all templates."""
-    return dict(
+    r = dict(
         current_user=get_current_user_object(),
         other_users=get_other_users_as_list(),
+        locale=get_locale(),
     )
+    if logged_in():
+        r['bookmarks'] = Bookmarks(get_current_user_object()).as_dict()
+    return r
 
 
-@app.context_processor
-def inject_bookmarks() -> dict:
-    """"Injects bookmarks to all templates."""
-    if not logged_in():
-        return {}
-    return dict(bookmarks=Bookmarks(User.query.get(get_current_user_id())).as_dict())
+@app.route('/js/<path:path>')
+def get_js_file(path: str):
+    locale = get_locale()
+    try:
+        return send_file(f'static/scripts/build/{locale}/{path}')
+    except FileNotFoundError:
+        return send_file(f'static/scripts/build/{path}')
 
 
 @app.route('/empty')

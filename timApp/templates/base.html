@@ -53,6 +53,7 @@ depends=(
             var current_user = {{ current_user.to_json(full=True)|tojson }};
             var other_users = {{ other_users|tojson }};
             var bookmarks = {{ bookmarks|tojson }};
+            var locale = {{locale|tojson}};
 
             var layout = {};
             layout.col_1_lg = {{col_1_lg|tojson}};
@@ -115,27 +116,26 @@ depends=(
                         col-xs-{{ col_2_xs }}
                         col-sm-{{ col_2_sm }}">
                 <div class="siteheader" ng-if="!$ctrl.hide.siteheader">
-                    <div class="hidden-lg hidden-md hamburger-placeholder pull-left" style="width: 27px; height: 1px"></div>
-                    <a ng-if="!$ctrl.hide.links" href="/"><tim-logo ng-if="!$ctrl.hide.logo"></tim-logo></a>
+                    <div class="hidden-lg hidden-md hamburger-placeholder" style="width: 27px; height: 1px"></div>
+                    <a class="logolink" title="To TIM main page" ng-if="!$ctrl.hide.links" href="/">
+                        <tim-logo ng-if="!$ctrl.hide.logo"></tim-logo>
+                    </a>
                     <tim-logo ng-if="$ctrl.hide.links && !$ctrl.hide.logo"></tim-logo>
-                    <div ng-show="!$ctrl.hide.search" style="padding-top:4px;" class="pull-right">
-                        <span class="timButton" ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
-                              title="Display search panel">
-                            <i class="glyphicon glyphicon-search"></i>
-                        </span>
-                    </div>
-                    <img ng-if="!$ctrl.hide.unilogo" alt="Jyväskylän yliopisto" class="pull-right" height="42"
-                         src="{{ url_for('static', filename='images/jyulogo.png') }}"/>
-                    <div>
-                        <bootstrap-panel ng-if="$ctrl.displaySearch" show-close="true"
-                                         class="search-panel" title="TIM document search"
-                                         close-fn="$ctrl.displaySearch = !$ctrl.displaySearch">
-                                <search-box></search-box>
-                        </bootstrap-panel>
-                    </div>
-                    <div ng-if="!$ctrl.hide.login" class="text-center text-nowrap">
-                        <login-menu></login-menu>
-                    </div>
+                    <tim-login-menu ng-if="!$ctrl.hide.login"></tim-login-menu>
+                    <img ng-if="!$ctrl.hide.unilogo"
+                         alt="Jyväskylän yliopisto"
+                         src="/static/images/jyulogo.png"/>
+                    <button ng-show="!$ctrl.hide.search"
+                            class="timButton"
+                            ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
+                            title="Display search panel">
+                        <i class="glyphicon glyphicon-search"></i>
+                    </button>
+                    <bootstrap-panel ng-if="$ctrl.displaySearch" show-close="true"
+                                     class="search-panel" title="TIM document search"
+                                     close-fn="$ctrl.displaySearch = !$ctrl.displaySearch">
+                        <search-box></search-box>
+                    </bootstrap-panel>
                 </div>
             </div>
             <div class="col-lg-{{ col_3_lg }}

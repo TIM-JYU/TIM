@@ -7,10 +7,13 @@ import {DialogComponent} from "tim/ui/dialog.component";
 import {AddMemberComponent} from "tim/ui/add-member.component";
 import {FormsModule} from "@angular/forms";
 import {TimAlertComponent} from "tim/ui/tim-alert.component";
+import {ErrorDescriptionComponent} from "tim/ui/error-description.component";
+import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {PluginFrameComponent} from "./plugin-frame.component";
 import {LoadingComponent} from "./loadingIndicator";
 import {MarkupErrorComponent} from "./markup-error.component";
 import {CloseButtonComponent} from "./close-button.component";
+
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -25,6 +28,8 @@ import {CloseButtonComponent} from "./close-button.component";
         CloseButtonComponent,
         AddMemberComponent,
         TimAlertComponent,
+        ErrorDescriptionComponent,
+        BootstrapPanelComponent,
     ],
     exports: [
         MarkupErrorComponent,
@@ -37,6 +42,8 @@ import {CloseButtonComponent} from "./close-button.component";
         CloseButtonComponent,
         AddMemberComponent,
         TimAlertComponent,
+        ErrorDescriptionComponent,
+        BootstrapPanelComponent,
     ],
     imports: [
         CommonModule,

@@ -49,7 +49,7 @@ global_drv.implicitly_wait(10)
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
-    login_dropdown_path = '//login-menu/user-menu/div/button'
+    login_dropdown_path = '//tim-login-menu/tim-user-menu/div/button'
     screenshot_dir = '/service/screenshots'
 
     def __init__(self, *args, **kwargs):
@@ -80,13 +80,13 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def login_browser_as(self, email: str, password: str, name: str):
         self.client.__exit__(None, None, None)
         self.goto('')
-        # self.save_screenshot('adsasd')
-        elem = self.drv.find_element_by_xpath('//login-menu/button')
+        elem = self.drv.find_element_by_xpath('//tim-login-menu/button')
         elem.click()
-        elem = self.find_element("login-dialog")
+        elem = self.find_element("tim-login-dialog")
         elem.find_element_by_xpath("//input[@type='text']").send_keys(email)
         elem.find_element_by_xpath("//input[@type='password']").send_keys(password)
-        elem.find_element_by_xpath("//button[@type='submit']").click()
+        login = elem.find_element_by_css_selector('button.center-block.timButton')  # Log in button
+        login.click()
         self.wait.until(ec.text_to_be_present_in_element((By.XPATH, self.login_dropdown_path), name))
         self.client.__enter__()
 

@@ -53,7 +53,7 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
         this.savePosSize();
     }
 
-    protected dismiss() {
+    dismiss() {
         this.resultDefer.reject("Dialog was closed from the X button");
         this.savePosSize();
     }

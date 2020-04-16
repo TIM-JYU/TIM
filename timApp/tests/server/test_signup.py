@@ -204,7 +204,7 @@ class TestSignUp(TimRouteTest):
              'email': email,
              'password': test_pw,
              'passconfirm': test_pw},
-            expect_content='Wrong temporary password. Please re-check your email to see the password.',
+            expect_content='WrongTempPassword',
             expect_status=400,
         )
 
@@ -234,7 +234,7 @@ class TestSignUp(TimRouteTest):
              'token': test_pws[-1],
              'password': test_pw,
              'passconfirm': 'somepwd1232'},
-            expect_content='Passwords do not match.',
+            expect_content='PasswordsNotMatch',
             expect_status=400)
         self.assertFalse(self.is_logged_in)
 
@@ -250,7 +250,7 @@ class TestSignUp(TimRouteTest):
              'token': test_pws[-1],
              'password': 'test',
              'passconfirm': 'test'},
-            expect_content='A password should contain at least 10 characters.',
+            expect_content='PasswordTooShort',
             expect_status=400,
         )
         self.assertFalse(self.is_logged_in)
@@ -267,7 +267,7 @@ class TestSignUp(TimRouteTest):
              'token': 'asdasd',
              'password': test_pw,
              'passconfirm': test_pw},
-            expect_content='Wrong temporary password. Please re-check your email to see the password.',
+            expect_content='WrongTempPassword',
             expect_status=400,
         )
         self.assertFalse(self.is_logged_in)
@@ -446,15 +446,13 @@ class TestSignUp(TimRouteTest):
             json_key='status')
 
     def test_login_fail(self):
-        basic_error = 'Email address or password did not match.'
-        jyu_error = basic_error + ' You might not have a TIM account. jyu.fi members can use the jyu.fi login button.'
         self.login(email='a@example.com', passw='somepass', force=True,
                    expect_status=403,
-                   expect_content=basic_error,
+                   expect_content='EmailOrPasswordNotMatch',
                    )
         self.login(email='a@jyu.fi', passw='somepass', force=True,
                    expect_status=403,
-                   expect_content=jyu_error,
+                   expect_content='EmailOrPasswordNotMatchUseHaka',
                    )
 
     def test_haka_invalid_settings(self):
