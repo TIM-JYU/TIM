@@ -115,28 +115,7 @@ depends=(
                         col-md-{{ col_2_md }}
                         col-xs-{{ col_2_xs }}
                         col-sm-{{ col_2_sm }}">
-                <div class="siteheader" ng-if="!$ctrl.hide.siteheader">
-                    <div class="hidden-lg hidden-md hamburger-placeholder" style="width: 27px; height: 1px"></div>
-                    <a class="logolink" title="To TIM main page" ng-if="!$ctrl.hide.links" href="/">
-                        <tim-logo ng-if="!$ctrl.hide.logo"></tim-logo>
-                    </a>
-                    <tim-logo ng-if="$ctrl.hide.links && !$ctrl.hide.logo"></tim-logo>
-                    <tim-login-menu ng-if="!$ctrl.hide.login"></tim-login-menu>
-                    <img ng-if="!$ctrl.hide.unilogo"
-                         alt="Jyväskylän yliopisto"
-                         src="/static/images/jyulogo.png"/>
-                    <button ng-show="!$ctrl.hide.search"
-                            class="timButton"
-                            ng-click="$ctrl.displaySearch = !$ctrl.displaySearch"
-                            title="Display search panel">
-                        <i class="glyphicon glyphicon-search"></i>
-                    </button>
-                    <bootstrap-panel ng-if="$ctrl.displaySearch" show-close="true"
-                                     class="search-panel" title="TIM document search"
-                                     close-fn="$ctrl.displaySearch = !$ctrl.displaySearch">
-                        <search-box></search-box>
-                    </bootstrap-panel>
-                </div>
+                <tim-site-header></tim-site-header>
             </div>
             <div class="col-lg-{{ col_3_lg }}
                         col-md-{{ col_3_md }}

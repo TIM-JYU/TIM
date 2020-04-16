@@ -27,6 +27,9 @@ import {HakaLoginComponent} from "tim/user/haka-login.component";
 import {LoginDialogComponent} from "tim/user/login-dialog.component";
 import {FrontPageComponent} from "tim/frontpage/front-page.component";
 import {BookmarkFolderBoxComponent} from "tim/bookmark/bookmark-folder-box.component";
+import {SiteHeaderComponent} from "tim/header/site-header.component";
+import {SearchBoxComponent} from "tim/search/search-box.component";
+import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -50,6 +53,8 @@ import {BookmarkFolderBoxComponent} from "tim/bookmark/bookmark-folder-box.compo
         LoginDialogComponent,
         FrontPageComponent,
         BookmarkFolderBoxComponent,
+        SiteHeaderComponent,
+        SearchBoxComponent,
     ],
     imports: [
         BrowserModule,
@@ -59,6 +64,7 @@ import {BookmarkFolderBoxComponent} from "tim/bookmark/bookmark-folder-box.compo
         DialogModule,
         NoopAnimationsModule,
         BsDropdownModule.forRoot(),
+        TypeaheadModule.forRoot(),
     ],
     providers: [
         {provide: HTTP_INTERCEPTORS, useClass: TimeStampToMomentConverter, multi: true},

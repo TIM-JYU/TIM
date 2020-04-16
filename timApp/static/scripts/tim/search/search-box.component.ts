@@ -2,15 +2,13 @@
  * A search box component.
  */
 
-import {IController} from "angular";
 import {ngStorage} from "ngstorage";
-import {timApp} from "../app";
+import {Component, Input, OnDestroy, OnInit} from "@angular/core";
 import {DocumentOrFolder, IItem, ITag, ITaggedItem} from "../item/IItem";
 import {relevanceSuggestions} from "../item/relevanceEdit";
 import {someglobals} from "../util/globals";
-import {KEY_ENTER} from "../util/keycodes";
 import {$http, $localStorage} from "../util/ngimport";
-import {Binding, to} from "../util/utils";
+import {to} from "../util/utils";
 import {SearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
 
 /**
@@ -95,52 +93,143 @@ export interface ITagSearchResult {
     matching_tags: ITag[]; // List of tags that matched the query.
 }
 
-export class SearchBoxCtrl implements IController {
+@Component({
+    selector: "tim-search-box",
+    template: `
+        <div class="input-group">
+            <input [(ngModel)]="query" name="searchField" (keydown.enter)="search()"
+                   type="text" focusMe
+                   title="Search documents with a keyword"
+                   placeholder="Input a search word"
+                   class="form-control" autocomplete="on">
+            <span class="input-group-addon btn" (click)="search()">
+                <tim-loading *ngIf="loading"></tim-loading>
+                <span *ngIf="!loading" class="glyphicon glyphicon-search"></span>
+        </span>
+            <span class="input-group-addon btn" (click)="advancedSearch = !advancedSearch"
+                  title="Toggle advanced search">
+                <span class="glyphicon glyphicon-menu-hamburger"></span>
+        </span>
+        </div>
+        <tim-alert *ngIf="errorMessage" severity="danger">
+            {{errorMessage}}
+        </tim-alert>
+        <div *ngIf="advancedSearch" title="Advanced search options">
+            <h5>Advanced search options</h5>
+            <div class="form-horizontal">
+                <div class="form-group" title="Write folder path to search from">
+                    <label for="folder-selector" class="col-sm-4 control-label font-weight-normal"
+                           style="text-align:left;">Search folder:</label>
+                    <div class="col-sm-8">
+                        <input [(ngModel)]="folder" name="folder-selector"
+                               type="text" class="form-control" id="folder-selector"
+                               placeholder="Input a folder to search"
+                               [typeahead]="folderSuggestions"
+                               [typeaheadMinLength]="1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="max-doc-results-selector" class="col-sm-4 control-label font-weight-normal"
+                           style="text-align:left;">Max results / doc:</label>
+                    <div class="col-sm-3" title="Input maximum number of results to get from a single document">
+                        <input [(ngModel)]="maxDocResults" name="max-doc-results-selector"
+                               type="number" class="form-control" id="max-doc-results-selector">
+                    </div>
+                    <label for="min-relevance-selector" class="col-sm-2 control-label font-weight-normal"
+                           style="text-align:left;">Relevance:</label>
+                    <div class="col-sm-3" title="Input minimum relevance value to include in results">
+                        <ng-template #customItemTemplate let-model="item">
+                            {{ model.name }}
+                        </ng-template>
+                        <input [(ngModel)]="relevanceThreshold" name="min-relevance-selector" type="number"
+                               class="form-control" id="min-relevance-selector"
+                               [typeaheadMinLength]="0"
+                               [typeaheadItemTemplate]="customItemTemplate"
+                               typeaheadOptionField="value"
+                               [typeaheadLatinize]="false"
+                               [typeahead]="suggestions">
+                    </div>
+                </div>
+
+                <div class="flex rw space-between">
+                    <div class="flex cl">
+                        <label class="font-weight-normal"
+                               title="Distinguish between upper and lower case letters">
+                            <input type="checkbox" [(ngModel)]="caseSensitive"> Case sensitive</label>
+                        <label class="font-weight-normal" title="Allow regular expressions">
+                            <input type="checkbox" [(ngModel)]="regex"> Regex</label>
+                        <label class="font-weight-normal" title="Leave plugin and setting contents out of the results">
+                            <input type="checkbox" [(ngModel)]="ignorePlugins"> Ignore plugins and settings</label>
+                        <label class="font-weight-normal" title="Search only whole words with one or more character">
+                            <input type="checkbox" [(ngModel)]="searchWholeWords"> Search whole words</label>
+                        <label class="font-weight-normal dropdown-item" title="Search from documents you own">
+                            <input type="checkbox" [(ngModel)]="searchOwned"> Search owned documents</label>
+                        <label class="font-weight-normal" title="Show result of each search in new window">
+                            <input type="checkbox" [(ngModel)]="createNewWindow"> Open new window for each
+                            search</label>
+                    </div>
+                    <div class="flex cl">
+                        <p>Search scope:</p>
+                        <label class="font-weight-normal" title="Search document content">
+                            <input type="checkbox" [(ngModel)]="searchContent"> Contents</label>
+                        <label class="font-weight-normal" title="Search document titles">
+                            <input type="checkbox" [(ngModel)]="searchTitles"> Titles</label>
+                        <label class="font-weight-normal" title="Search document tags">
+                            <input type="checkbox" [(ngModel)]="searchTags"> Tags</label>
+                        <label class="font-weight-normal" title="Search document paths">
+                            <input type="checkbox" [(ngModel)]="searchPaths"> Paths</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `,
+})
+export class SearchBoxComponent implements OnInit, OnDestroy {
     // Results and variables search results dialog needs to know:
     public results: IDocSearchResult[] = [];
     public resultErrorMessage: string | undefined; // Message displayed only in results dialog.
-    public tagMatchCount: number = 0;
-    public wordMatchCount: number = 0;
-    public titleMatchCount: number = 0;
-    public pathMatchCount: number = 0;
+    public tagMatchCount = 0;
+    public wordMatchCount = 0;
+    public titleMatchCount = 0;
+    public pathMatchCount = 0;
     public tagResults: ITagSearchResult[] = [];
     public titleResults: IDocSearchResult[] = [];
     public pathResults: IDocSearchResult[] = [];
     public incompleteSearchReason: string | undefined;
     public query: string = "";
-    public folder!: Binding<string, "<">;
+    @Input() folder?: string;
 
     // Route settings:
-    private regex: boolean = false; // Regular expressions.
-    private caseSensitive: boolean = false; // Take upper/lower case in account.
-    private advancedSearch: boolean = false; // Toggle advanced options panel.
-    private createNewWindow: boolean = false; // Open new dialog for each search.
-    private ignorePlugins: boolean = false; // Leave plugins out of the results.
-    private searchTitles: boolean = true; // Doc title search. On by default.
-    private searchTags: boolean = true; // Tag search. On by default.
-    private searchContent: boolean = true; // Content search. On by default.
-    private searchWholeWords: boolean = true; // Whole word search.
-    private searchOwned: boolean = false; // Limit search to docs owned by the user.
-    private searchPaths: boolean = false; // Search document paths.
-    private ignoreRelevance: boolean = false; // Don't limit results by relevance.
-    private relevanceThreshold: number = 1; // Exclude documents with < X relevance.
-    private suggestions = relevanceSuggestions;
+    regex = false; // Regular expressions.
+    caseSensitive = false; // Take upper/lower case in account.
+    advancedSearch = false; // Toggle advanced options panel.
+    createNewWindow = false; // Open new dialog for each search.
+    ignorePlugins = false; // Leave plugins out of the results.
+    searchTitles = true; // Doc title search.
+    searchTags = true; // Tag search.
+    searchContent = true; // Content search.
+    searchWholeWords = true; // Whole word search.
+    searchOwned = false; // Limit search to docs owned by the user.
+    searchPaths = false; // Search document paths.
+    private ignoreRelevance = false; // Don't limit results by relevance.
+    relevanceThreshold = 1; // Exclude documents with < X relevance.
+    suggestions = relevanceSuggestions;
 
-    // Controller's private attributes:
-    private errorMessage: string | undefined; // Message displayed only in search panel.
-    private focusMe: boolean = true;
-    private loading: boolean = false; // Display loading icon.
+    // Other attributes:
+    errorMessage: string | undefined; // Message displayed only in search panel.
+    loading = false; // Display loading icon.
     private item?: DocumentOrFolder = someglobals().curr_item;
     private storage: ngStorage.StorageService & {
         maxDocResultsStorage: null | string,
         relevanceThresholdStorage: null | string,
         searchWordStorage: null | string,
-        optionsStorage: null | boolean[]};
-    private folderSuggestions: string[] = []; // A list of folder path suggestions.
+        optionsStorage: null | boolean[]
+    };
+    folderSuggestions: string[] = []; // A list of folder path suggestions.
     private resultsDialog: SearchResultController | undefined; // The most recent search result dialog.
-    private maxDocResults: number = 1000;
-    private timeWarningLimit: number = 20; // Gives a warning about long search time if over this.
-    private timeout: number = 120; // Default timeout for search.
+    maxDocResults = 1000;
+    private timeWarningLimit = 20; // Gives a warning about long search time if over this.
+    private timeout = 120; // Default timeout for search.
 
     /**
      * SearchBox constructor.
@@ -155,13 +244,13 @@ export class SearchBoxCtrl implements IController {
         });
     }
 
-    $onInit() {
+    ngOnInit() {
         this.loadLocalStorage();
         this.defaultFolder();
         void this.loadFolderSuggestions();
     }
 
-    $onDestroy() {
+    ngOnDestroy() {
         this.updateLocalStorage();
     }
 
@@ -195,7 +284,7 @@ export class SearchBoxCtrl implements IController {
         }
         this.loading = false;
         if (this.results.length === 0 && this.tagResults.length === 0 &&
-                this.titleResults.length === 0 && this.pathResults.length === 0 && !this.errorMessage) {
+            this.titleResults.length === 0 && this.pathResults.length === 0 && !this.errorMessage) {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
             return;
         }
@@ -235,16 +324,6 @@ export class SearchBoxCtrl implements IController {
         this.resultsDialog = resultsDialog;
     }
 
-    /*
-     * Calls search function when Enter is pressed.
-     * @param event Keyboard event.
-     */
-    async keyPressed(event: KeyboardEvent) {
-        if (event.which === KEY_ENTER) {
-            await this.search();
-        }
-    }
-
     /**
      * Saves options and search word to local storage.
      */
@@ -279,8 +358,8 @@ export class SearchBoxCtrl implements IController {
         }
         if (this.storage.optionsStorage && this.storage.optionsStorage.length > 10) {
             [this.advancedSearch, this.caseSensitive, this.createNewWindow,
-            this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
-            this.searchOwned, this.searchContent, this.searchPaths] = this.storage.optionsStorage;
+                this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
+                this.searchOwned, this.searchContent, this.searchPaths] = this.storage.optionsStorage;
         }
     }
 
@@ -296,35 +375,36 @@ export class SearchBoxCtrl implements IController {
      * somefolder/somesubfolders -> somefolder
      */
     private defaultFolder() {
+        if (this.folder !== undefined) {
+            return;
+        }
+        if (!this.item) {
+            this.folder = "";
+            return;
+        }
+        if (this.item.isFolder) {
+            this.folder = this.item.path;
+        } else {
+            this.folder = this.item.location;
+        }
         if (!this.folder) {
-            if (!this.item) {
-                this.folder = "";
-                return;
-            }
-            if (this.item.isFolder) {
-                this.folder = this.item.path;
-            } else {
-                this.folder = this.item.location;
-            }
-            if (!this.folder) {
-                this.folder = "";
-            }
-            const path = this.folder.split("/");
-            if (path[0] === "users" && path.length >= 2) {
-                this.folder = `${path[0]}/${path[1]}`;
-                return;
-            }
-            if (path[0] === "kurssit" && path.length >= 3) {
-                this.folder = `${path[0]}/${path[1]}/${path[2]}`;
-                return;
-            }
-            if (path[0] === "kurssit" && path.length >= 2) {
-                return;
-            }
-            if (path.length > 1) {
-                this.folder = `${path[0]}`;
-                return;
-            }
+            this.folder = "";
+        }
+        const path = this.folder.split("/");
+        if (path[0] === "users" && path.length >= 2) {
+            this.folder = `${path[0]}/${path[1]}`;
+            return;
+        }
+        if (path[0] === "kurssit" && path.length >= 3) {
+            this.folder = `${path[0]}/${path[1]}/${path[2]}`;
+            return;
+        }
+        if (path[0] === "kurssit" && path.length >= 2) {
+            return;
+        }
+        if (path.length > 1) {
+            this.folder = `${path[0]}`;
+            return;
         }
     }
 
@@ -352,7 +432,7 @@ export class SearchBoxCtrl implements IController {
             url: "/search/paths",
         }));
         if (!r.ok) {
-            this.errorMessage = this.getErrorMessage(r.result);
+            this.errorMessage = r.result.data.error;
             this.pathResults = [];
             return;
         }
@@ -374,7 +454,7 @@ export class SearchBoxCtrl implements IController {
             url: "/search/titles",
         }));
         if (!r.ok) {
-            this.errorMessage = this.getErrorMessage(r.result);
+            this.errorMessage = r.result.data.error;
             this.titleResults = [];
             return;
         }
@@ -402,7 +482,7 @@ export class SearchBoxCtrl implements IController {
             url: "/search",
         }));
         if (!r.ok) {
-            this.errorMessage = this.getErrorMessage(r.result);
+            this.errorMessage = r.result.data.error;
             this.results = [];
             this.titleResults = [];
             return;
@@ -434,35 +514,11 @@ export class SearchBoxCtrl implements IController {
                 this.incompleteSearchReason = response.data.incomplete_search_reason;
             }
         } else {
-            this.errorMessage = this.getErrorMessage(r.result);
+            this.errorMessage = r.result.data.error;
             this.tagResults = [];
             return;
         }
 
-    }
-
-    /**
-     * Parses unusual kinds of error messages.
-     * @param {{data: {error: string}}} err Error response.
-     * @returns {string} An error message.
-     */
-    private getErrorMessage(err: {data: {error: string}}) {
-        let tempError = "";
-        if (err.data.error) {
-            tempError = err.data.error.toString();
-        }
-        if (err.data && tempError.length < 1) {
-            // Proxy error data is in raw HTML format, so this is to make it more readable.
-            tempError = removeHtmlTags(err.data.toString());
-            if (tempError.includes("Proxy Error")) {
-                tempError = tempError.replace("Proxy ErrorProxy Error", "Proxy Error ").
-                replace(".R", ". R").replace("&nbsp;", " ");
-            }
-        }
-        if (tempError.length < 1) {
-            tempError = "Unknown error";
-        }
-        return tempError;
     }
 
     /**
@@ -498,109 +554,4 @@ export class SearchBoxCtrl implements IController {
         this.errorMessage = undefined;
         this.resultErrorMessage = undefined;
     }
-
-    /**
-     * Format search button tooltip based on the situation.
-     * @returns {string} Tooltip, which is different depending on whether loading and input query states.
-     */
-    private searchButtonTooltip() {
-        if (this.query.length < 1) {
-            return "Input a search word to search";
-        }
-        if (this.loading) {
-            return `Please wait, searching '${this.query}'`;
-        } else {
-            return `Search with '${this.query}'`;
-        }
-    }
 }
-
-/**
- * Removes HTML tags, linebreaks and extra white spaces.
- * @param {string} str Raw html string.
- * @returns {string} Plain text string.
- */
-function removeHtmlTags(str: string) {
-    return str.replace(/<{1}[^<>]{1,}>{1}/g, " ").
-        replace(/(\r\n\t|\n|\r\t)/gm, " ").
-        replace(/\s+/g, " ").trim();
-}
-
-timApp.component("searchBox", {
-    bindings: {
-        folder: "<",
-    },
-    controller: SearchBoxCtrl,
-    template: `<div class="input-group">
-        <input ng-model="$ctrl.query" name="searchField" ng-keypress="$ctrl.keyPressed($event)"
-               type="text" focus-me="$ctrl.focusMe"
-               title="Search documents with a key word"
-               placeholder="Input a search word"
-               class="form-control" autocomplete="on">
-        <span class="input-group-addon btn" ng-click="$ctrl.search()" title="{{$ctrl.searchButtonTooltip()}}">
-                <span ng-show="$ctrl.loading" class="glyphicon glyphicon-refresh glyphicon-refresh-animate">
-                </span>
-                <span ng-hide="$ctrl.loading" class="glyphicon glyphicon-search"></span>
-        </span>
-        <span class="input-group-addon btn" ng-click="$ctrl.advancedSearch = !$ctrl.advancedSearch"
-            title="Toggle advanced search">
-                <span class="glyphicon glyphicon-menu-hamburger"></span>
-        </span>
-   </div>
-   <div ng-cloak ng-show="$ctrl.errorMessage" class="alert alert-warning">
-    <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
-   </div>
-   <div ng-if="$ctrl.advancedSearch" title="Advanced search options">
-      <h5>Advanced search options</h5>
-      <form class="form-horizontal">
-           <div class="form-group" title="Write folder path to search from">
-                <label for="folder-selector" class="col-sm-4 control-label font-weight-normal"
-                style="text-align:left;">Search folder:</label>
-                <div class="col-sm-8">
-                    <input ng-model="$ctrl.folder" name="folder-selector"
-                           type="text" class="form-control" id="folder-selector" placeholder="Input a folder to search"
-           uib-typeahead="f as f for f in $ctrl.folderSuggestions | filter:$viewValue | limitTo:15 | orderBy:'length'"
-                           typeahead-min-length="1">
-                </div>
-           </div>
-           <div class="form-group">
-                <label for="max-doc-results-selector" class="col-sm-4 control-label font-weight-normal"
-                style="text-align:left;">Max results / doc:</label>
-                <div class="col-sm-3" title="Input maximum number of results to get from a single document">
-                    <input ng-model="$ctrl.maxDocResults" name="max-doc-results-selector"
-                           type="number" class="form-control" id="max-doc-results-selector">
-                </div>
-                <label for="min-relevance-selector" class="col-sm-2 control-label font-weight-normal"
-                style="text-align:left;">Relevance:</label>
-                <div class="col-sm-3" title="Input minimum relevance value to include in results">
-                    <input ng-model="$ctrl.relevanceThreshold" name="min-relevance-selector" type="number"
-                            class="form-control" id="min-relevance-selector" typeahead-min-length="0"
-                            uib-typeahead="s.value as s.name for s in $ctrl.suggestions | orderBy:'-value'">
-                </div>
-           </div>
-
-        <label class="font-weight-normal" title="Distinguish between upper and lower case letters">
-            <input type="checkbox" ng-model="$ctrl.caseSensitive"> Case sensitive</label>
-        <label class="font-weight-normal" title="Allow regular expressions">
-            <input type="checkbox" ng-model="$ctrl.regex"> Regex</label>
-        <label class="font-weight-normal" title="Leave plugin and setting contents out of the results">
-            <input type="checkbox" ng-model="$ctrl.ignorePlugins"> Ignore plugins and settings</label>
-        <label class="font-weight-normal" title="Search only whole words with one or more character">
-            <input type="checkbox" ng-model="$ctrl.searchWholeWords"> Search whole words</label>
-        <label class="font-weight-normal dropdown-item" title="Search from documents you own">
-            <input type="checkbox" ng-model="$ctrl.searchOwned"> Search owned documents</label>
-        <label class="font-weight-normal" title="Show result of each search in new window">
-            <input type="checkbox" ng-model="$ctrl.createNewWindow"> Open new window for each search</label>
-        <h5 class="font-weight-normal">Search scope:</h5>
-        <label class="font-weight-normal" title="Search document content">
-            <input type="checkbox" ng-model="$ctrl.searchContent"> Contents</label>
-        <label class="font-weight-normal" title="Search document titles">
-            <input type="checkbox" ng-model="$ctrl.searchTitles"> Titles</label>
-        <label class="font-weight-normal" title="Search document tags">
-            <input type="checkbox" ng-model="$ctrl.searchTags"> Tags</label>
-        <label class="font-weight-normal" title="Search document paths">
-            <input type="checkbox" ng-model="$ctrl.searchPaths"> Paths</label>
-      </form>
-    </div>
-`,
-});

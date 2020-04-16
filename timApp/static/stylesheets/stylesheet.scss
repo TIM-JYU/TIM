@@ -1154,12 +1154,14 @@ p.docsettings {
         padding-right: $container-xs-padding;
     }
 }
+
 .search-panel {
-    position:absolute;
-    z-index:5;
-    right:0;
-    left:auto;
-    max-width:500px;
+    position: absolute;
+    z-index: 5;
+    right: 0;
+    top: 0;
+    left: auto;
+    max-width: 480px;
 }
 
 .search-result-dialog {

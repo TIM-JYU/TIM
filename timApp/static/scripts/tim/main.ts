@@ -29,7 +29,7 @@ import * as lectureInfoController from "tim/lecture/lectureInfoController";
 import * as lectureMenu from "tim/lecture/lectureMenu";
 import * as questionAskController from "tim/lecture/questionAskController";
 import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQuestionController";
-import * as searchBox from "tim/search/searchBox";
+import * as searchBox from "tim/search/search-box.component";
 import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrap-panel.component";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
@@ -58,6 +58,7 @@ import {CloseButtonComponent} from "tim/ui/close-button.component";
 import {DialogContainerComponent} from "tim/ui/angulardialog/dialog-container.component";
 import {AddMemberComponent} from "tim/ui/add-member.component";
 import {TimFooterComponent} from "tim/footer.component";
+import {SiteHeaderComponent} from "tim/header/site-header.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -119,6 +120,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timLogo", LogoComponent);
     doDowngrade(dg, "bootstrapPanel", BootstrapPanelComponent);
     doDowngrade(dg, "timStart", FrontPageComponent);
+    doDowngrade(dg, "timSiteHeader", SiteHeaderComponent);
     return dg;
 }
 

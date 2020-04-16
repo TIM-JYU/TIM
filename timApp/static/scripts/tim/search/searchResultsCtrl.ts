@@ -6,7 +6,7 @@ import {IScope} from "angular";
 import {DialogController} from "tim/ui/dialogController";
 import {ITag, TagType} from "../item/IItem";
 import {registerDialogComponent, showDialog} from "../ui/dialog";
-import {IDocSearchResult, ITagSearchResult, SearchBoxCtrl} from "./searchBox";
+import {IDocSearchResult, ITagSearchResult, SearchBoxComponent} from "./search-box.component";
 
 export interface ISearchResultDisplay {
     result: IDocSearchResult;
@@ -15,7 +15,7 @@ export interface ISearchResultDisplay {
     num_tag_results: number; // Same tag may contain the search word more than once.
 }
 
-export class SearchResultController extends DialogController<{ ctrl: SearchBoxCtrl }, {}> {
+export class SearchResultController extends DialogController<{ ctrl: SearchBoxComponent }, {}> {
     static component = "timSearchResults";
     static $inject = ["$element", "$scope"] as const;
     private results: IDocSearchResult[] = [];
@@ -31,7 +31,7 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCt
     private errorMessage: string | undefined;
     private allClosed = true;
     private collapsables = false; // True if there are any collapsable results.
-    private searchComponent: undefined | SearchBoxCtrl;
+    private searchComponent: undefined | SearchBoxComponent;
     private sortingOptions = [
             {value: "1", name: "Sort by relevance"},
             {value: "2", name: "Sort by title"},
@@ -61,9 +61,9 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCt
 
     /**
      * Get all data from the search controller.
-     * @param {SearchBoxCtrl} ctrl Controller which calls the search routes.
+     * @param {SearchBoxComponent} ctrl Controller which calls the search routes.
      */
-    public updateAttributes(ctrl: SearchBoxCtrl) {
+    public updateAttributes(ctrl: SearchBoxComponent) {
         this.collapsables = false;
         this.limitedDisplay = false;
         this.searchComponent = ctrl;
@@ -72,7 +72,7 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCt
         this.titleResults = ctrl.titleResults;
         this.pathResults = ctrl.pathResults;
         this.totalResults = ctrl.titleMatchCount + ctrl.tagMatchCount + ctrl.wordMatchCount + ctrl.pathMatchCount;
-        this.folder = ctrl.folder;
+        this.folder = ctrl.folder!;
         this.errorMessage = ctrl.resultErrorMessage;
         this.searchWord = ctrl.query;
         // If result count is over the threshold, skip paragraph grouping and previews.
@@ -346,7 +346,7 @@ registerDialogComponent(SearchResultController,
 `,
     });
 
-export async function showSearchResultDialog(r: SearchBoxCtrl) {
+export async function showSearchResultDialog(r: SearchBoxComponent) {
     return await showDialog(
         SearchResultController,
         {ctrl: () => r},
