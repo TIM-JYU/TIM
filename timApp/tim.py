@@ -205,9 +205,9 @@ def inject_user() -> dict:
 def get_js_file(path: str):
     locale = get_locale()
     try:
-        return send_file(f'static/scripts/build/{locale}/{path}')
+        return send_file(f'static/scripts/build/{locale}/{path}', conditional=True)
     except FileNotFoundError:
-        return send_file(f'static/scripts/build/{path}')
+        return send_file(f'static/scripts/build/{path}', conditional=True)
 
 
 @app.route('/empty')
