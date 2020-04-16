@@ -1,5 +1,10 @@
-// Wrap given text to max n chars length lines spliting from space
+/**
+ * Wrap the given text to lines of max n characters splitting from space.
+ */
 export function wrapText(s: string, n: number) {
+    if (n <= 0) {
+        return {modified: false, s: s};
+    }
     const lines = s.split("\n");
     let needJoin = false;
     for (let i = 0; i < lines.length; i++) {

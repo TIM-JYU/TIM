@@ -605,19 +605,12 @@ export class AceParEditor extends BaseParEditor {
         if (!r.modified) { return; }
         const editor = this.editor;
         let cursor = editor.selection.getCursor();
-        const index = editor.session.getDocument().positionToIndex(cursor, 0);
-        const range = editor.getSelection().getRange(); // new Range(0,0, 10000,1000);// $scope.editor.session.doc.indexToPosition(100000);
-        range.start.row = 0; // TODO: easier way to find full range
-        range.end.row = 1000;
-        range.start.column = 0;
-        range.end.column = 1000;
-        // $scope.setEditorText(r.s); // not good, undo does not work
-        editor.session.replace(range, r.s);
-        $timeout(() => {
-            cursor = editor.session.getDocument().indexToPosition(index, 0);
-            editor.selection.moveCursorToPosition(cursor);
-            editor.selection.clearSelection();
-        });
+        const sess = editor.getSession();
+        const index = sess.getDocument().positionToIndex(cursor, 0);
+        sess.setValue(r.s);
+        cursor = sess.getDocument().indexToPosition(index, 0);
+        editor.selection.moveCursorToPosition(cursor);
+        editor.selection.clearSelection();
     }
 
     setAutoCompletion(enable: boolean) {

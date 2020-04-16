@@ -11,6 +11,7 @@ import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$compile, $http, $rootScope, $sce, $timeout, $upload} from "tim/util/ngimport";
 import {copyToClipboard, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
+import {wrapText} from "tim/document/editing/utils";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import IAceEditor = Ace.Editor;
@@ -285,49 +286,6 @@ class LanguageTypes {
 }
 
 const languageTypes = new LanguageTypes();
-
-// Wrap given text to max n chars length lines spliting from space
-function wrapText(s: string, n: number) {
-    if (n <= 0) {
-        return {modified: false, s: s};
-    }
-    const lines = s.split("\n");
-    let needJoin = false;
-    for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
-        // lines[i] = "";
-        let sep = "";
-        if (line.length > n) {
-            lines[i] = "";
-            while (true) {
-                let p = -1;
-                if (line.length > n) {
-                    p = line.lastIndexOf(" ", n);
-                    if (p < 0) {
-                        p = line.indexOf(" ");
-                    } // long line
-                }
-                if (p < 0) {
-                    lines[i] += sep + line;
-                    break;
-                }
-                lines[i] += sep + line.substring(0, p);
-                line = line.substring(p + 1);
-                if (i + 1 < lines.length && (lines[i + 1].length > 0 && (!" 0123456789-".includes(lines[i + 1][0])))) {
-                    lines[i + 1] = line + " " + lines[i + 1];
-                    needJoin = true;
-                    break;
-                }
-                sep = "\n";
-                needJoin = true;
-            }
-        }
-    }
-    if (needJoin) {
-        return {modified: true, s: lines.join("\n")};
-    }
-    return {modified: false, s: s};
-}
 
 // =================================================================================================================
 

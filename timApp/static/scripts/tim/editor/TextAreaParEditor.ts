@@ -592,17 +592,9 @@ export class TextAreaParEditor extends BaseParEditor {
         if (!r.modified) { return; }
         const editor = this.editorElement;
         const start = editor.selectionStart;
-
-        // $scope.setEditorText(r.s);
-
-        // editor.select();
-        // $timeout(() => {
-        $(this.editor).val(r.s);
-        $timeout(() => {
-            editor.selectionStart = start;
-            editor.selectionEnd = start;
-        });
-        // });
+        editor.value = r.s;
+        editor.selectionStart = start;
+        editor.selectionEnd = start;
     }
 
     replaceSelected(begin: string, descDefault: string, mid: string, seltext: string, end: string) {
