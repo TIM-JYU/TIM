@@ -1619,21 +1619,20 @@ ${fhtml}
                 const start = this.edit.selectionStart;
 
                 this.usercode = r.s;
-                $timeout(() => {
-                    this.edit.selectionStart = start;
-                    this.edit.selectionEnd = start;
-                });
+                this.edit.value = r.s;
+                this.edit.selectionStart = start;
+                this.edit.selectionEnd = start;
             }
             if (this.editorIndex === 1 && this.aceEditor) {
                 const editor = this.aceEditor;
                 let cursor = editor.selection.getCursor();
-                const index = editor.session.getDocument().positionToIndex(cursor, 0);
+                const sess = editor.getSession();
+                const index = sess.getDocument().positionToIndex(cursor, 0);
                 this.usercode = r.s;
-                $timeout(() => {
-                    cursor = editor.session.getDocument().indexToPosition(index, 0);
-                    editor.selection.moveCursorToPosition(cursor);
-                    editor.selection.clearSelection();
-                });
+                sess.setValue(r.s);
+                cursor = sess.getDocument().indexToPosition(index, 0);
+                editor.selection.moveCursorToPosition(cursor);
+                editor.selection.clearSelection();
             }
 
         }
