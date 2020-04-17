@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, OnChanges, SimpleChanges} from "@angular/core";
 import {Users} from "tim/user/userService";
 import {$http, $httpParamSerializer} from "../util/ngimport";
 import {getStorage, setStorage, to} from "../util/utils";
@@ -10,7 +10,7 @@ function redirectTo(url: string) {
 export async function loadIdPs() {
     const result = await to($http.get<IDiscoveryFeedEntry[]>("/saml/feed"));
     if (result.ok) {
-        return result.result.data;
+        return result.result.data.sort((a, b) => getDisplayNameForCurrLang(a).localeCompare(getDisplayNameForCurrLang(b)));
     } else {
         return [];
     }
@@ -39,6 +39,14 @@ export function findIdPByScope(idps: IDiscoveryFeedEntry[], tmp: string) {
     return idps.find((idp) => idp.scopes.includes(tmp));
 }
 
+function getDisplayNameForCurrLang(idp: IDiscoveryFeedEntry) {
+    const found = idp.displayNames.find((dn) => dn.lang == Users.getCurrentLanguage());
+    if (found) {
+        return found.value;
+    }
+    return idp.displayNames[0].value;
+}
+
 @Component({
     selector: "tim-haka-login",
     template: `
@@ -48,15 +56,18 @@ export function findIdPByScope(idps: IDiscoveryFeedEntry[], tmp: string) {
                      alt="Federation logo"
                      i18n-alt>
             </a>
-            <label>
-                <ng-container i18n>Haka login</ng-container>
+            <div class="form-group">
+                <label for="haka-select">
+                    <ng-container i18n>Haka login</ng-container>
+                </label>
                 <select class="form-control"
-                        style="margin-top: 6px;"
+                        id="haka-select"
+                        style="margin-top: 6px"
                         [(ngModel)]="selectedIdp">
                     <option [ngValue]="undefined" disabled i18n>Select your home organization...</option>
                     <option *ngFor="let idp of idps" [ngValue]="idp">{{getName(idp)}}</option>
                 </select>
-            </label>
+            </div>
             <button [disabled]="!selectedIdp"
                     type="button"
                     (click)="login()"
@@ -66,33 +77,29 @@ export function findIdPByScope(idps: IDiscoveryFeedEntry[], tmp: string) {
         </div>
     `,
 })
-export class HakaLoginComponent {
+export class HakaLoginComponent implements OnChanges {
     selectedIdp?: IDiscoveryFeedEntry;
     @Input() idps: IDiscoveryFeedEntry[] = [];
     @Input() homeOrg?: string;
     @Input() addingUser?: boolean;
 
-    async $onInit() {
-        if (!this.idps) {
-            this.idps = await loadIdPs();
-        }
-        const last = getStorage("lastIdp");
-        if (typeof last === "string") {
-            const found = this.idps.find((idp) => idp.entityID === last);
-            if (found) {
-                this.selectedIdp = found;
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes.idps) {
+            const last = getStorage("lastIdp");
+            if (typeof last === "string") {
+                const found = this.idps.find((idp) => idp.entityID === last);
+                if (found) {
+                    this.selectedIdp = found;
+                }
             }
-        }
-        if (!this.selectedIdp && this.homeOrg) {
-            this.selectedIdp = findIdPByScope(this.idps, this.homeOrg);
+            if (!this.selectedIdp && this.homeOrg) {
+                this.selectedIdp = findIdPByScope(this.idps, this.homeOrg);
+            }
         }
     }
 
     getName(idp: IDiscoveryFeedEntry) {
-        const found = idp.displayNames.find((dn) => dn.lang == Users.getCurrentLanguage());
-        if (found) {
-            return found.value;
-        }
+        return getDisplayNameForCurrLang(idp);
     }
 
     login() {

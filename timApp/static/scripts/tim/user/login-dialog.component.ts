@@ -55,8 +55,7 @@ function getHomeOrgDisplay(s: string): string {
         <p class="text-center" i18n>
             Members from universities and other Haka organizations, please use Haka to log in.
         </p>
-        <tim-haka-login *ngIf="idps.length > 0"
-                    [idps]="idps"
+        <tim-haka-login [idps]="idps"
                     [homeOrg]="homeOrg"
                     [addingUser]="addingToSession"></tim-haka-login>
         <hr>
