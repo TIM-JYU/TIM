@@ -145,6 +145,7 @@ export interface HideValues {
     addCol?: boolean;
     delCol?: boolean;
     needFirstClick?: boolean;
+    sort?: boolean;
 }
 
 export interface IToolbarTemplate {
