@@ -173,6 +173,32 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         return v.substr(0, 5);
     }
 
+    // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic
+    /**
+     * Gets the cell class for toolbar
+     */
+    private getCellClassForToolbar(value: IToolbarTemplate): string {
+        let cls = "toolbarButton";
+        if (value.buttonClass) {
+            cls = " " + value.buttonClass;
+        } else if (value.class) {
+            cls += " " + value.class;
+        }
+        return cls;
+    }
+
+    // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic
+    /**
+     * Gets the cell style for toolbar
+     */
+    private getCellStyleForToolbar(value: IToolbarTemplate) {
+        if (value.buttonStyle) {
+            // @ts-ignore
+            return value.buttonStyle;
+        }
+        return value;
+    }
+
     // noinspection JSUnusedLocalSymbols
     private eventApi = {
         onClose: (api: unknown, color: string, $event: unknown) => {
@@ -303,8 +329,9 @@ registerDialogComponent(TimTableEditorToolbarController,
                         ng-click="$ctrl.setTextAlign('right')">
                     <i class="glyphicon glyphicon-align-right"></i>
                 </button>
-                <button class="timButton btn-xs" ng-repeat="r in $ctrl.activeTable.data.toolbarTemplates" ng-init="rowi = $index"
-                     ng-style="r" style="color:black;background-color:white" ng-click="$ctrl.setCell(r)" ng-bind-html="$ctrl.getCellForToolbar(r)">
+                <button class="btn-xs" ng-repeat="r in $ctrl.activeTable.data.toolbarTemplates" ng-init="rowi = $index"
+                     ng-class="$ctrl.getCellClassForToolbar(r)"
+                     ng-style="$ctrl.getCellStyleForToolbar(r)" ng-click="$ctrl.setCell(r)" ng-bind-html="$ctrl.getCellForToolbar(r)">
                      <!--{{$ctrl.getCellForToolbar(r)}}-->
                 </button>
                 <button class="timButton btn-xs"

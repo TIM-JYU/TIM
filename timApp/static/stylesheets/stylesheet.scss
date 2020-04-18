@@ -1336,3 +1336,9 @@ importdata-runner {
 [hidden] {
     display: none;
 }
+
+.toolbarButton {
+    @extend .timButton;
+    color: black;
+    background-color: white;
+}

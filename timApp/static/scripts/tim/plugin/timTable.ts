@@ -148,8 +148,12 @@ export interface HideValues {
 }
 
 export interface IToolbarTemplate {
+    color?: string;
     cell?: string;
     text?: string;
+    class?: string;
+    buttonClass?: string;
+    buttonStyle?: Record<string, string>;
 }
 
 export interface TimTable {
@@ -260,6 +264,7 @@ export interface IColumn { // extends IColumnStyles
 
 export interface ICell { // extends ICellStyles
     cell: CellType;
+    cls?: string;
     editorOpen?: boolean;
     colspan?: number;
     rowspan?: number;
@@ -489,7 +494,7 @@ export enum ClearSort {
                         <ng-container *ngFor="let td of cellDataMatrix[rowi]; let coli = index">
                             <td *ngIf="!td.underSpanOf"
                                 [hidden]="!showColumn(coli)"
-                                [class.activeCell]="isActiveCell(rowi, coli)"
+                                [class]="classForCell(rowi, coli)"
                                 [attr.colspan]="td.colspan"
                                 [attr.rowspan]="td.rowspan"
                                 [style]="stylingForCell(rowi, coli)"
@@ -591,6 +596,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     @ViewChild("buttonOpenBigEditor") private buttonOpenBigEditor!: ElementRef<HTMLButtonElement>;
     @ViewChildren("editInput") private editInputs!: QueryList<ElementRef<HTMLInputElement>>;
     private editInputStyles: string = "";
+    private editInputClass: string = "";
     headersStyle: Record<string, string> | null = null;
     button: string = "Tallenna";
     private noNeedFirstClick = false;
@@ -1099,6 +1105,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     async handleClickHeader(col: number) {
         await this.saveAndCloseSmallEditor();
+        if (this.hide.sort) { return; }
         let dir = this.sortDir[col];
         if (!dir) {
             dir = -1;
@@ -2387,6 +2394,15 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
     }
 
+    classForCell(rowi: number, coli: number) {
+        let cls = this.cellDataMatrix[rowi][coli].cls;
+        if (!cls) { cls = ""; }
+        cls += (this.isActiveCell(rowi, coli) ? " activeCell" : "");
+        return  cls;
+        //                                [class.activeCell]="isActiveCell(rowi, coli)"
+    }
+
+
     /**
      * Sets style attributes for cells
      * @param {number} rowi Table row index
@@ -2406,7 +2422,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         const def = this.data.table.defcells;
         if (def) {
-            this.applyStyle(styles, def, cellStyles);
+            this.cellDataMatrix[rowi][coli].cls = this.applyStyle(styles, def, cellStyles);
         }
 
         const defrange = this.data.table.defcellsrange;
@@ -2424,7 +2440,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         const cell = this.cellDataMatrix[rowi][coli];
 
-        this.applyStyle(styles, cell, cellStyles);
+        this.cellDataMatrix[rowi][coli].cls = this.applyStyle(styles, cell, cellStyles);
 
         if (this.data.maxWidth) {
             styles["max-width"] = this.data.maxWidth;
@@ -2669,13 +2685,19 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param styles The dictionary that will contain the final object styles
      * @param object The object that contains the user-given style attributes
      * @param validAttrs A set that contains the accepted style attributes
+     * @return posible class
      */
-    private applyStyle(styles: Record<string, string | number>, object: Record<string, unknown> | undefined, validAttrs: Set<string>) {
+    private applyStyle(styles: Record<string, string | number>, object: Record<string, unknown> | undefined, validAttrs: Set<string>): string {
         if (!object) {
-            return;
+            return "";
         }
+        let cls: string = "";
         for (const [key, value] of Object.entries(object)) {
             // At least fontSize needs to be a number, so we accept numbers too.
+            if (key === "class") {
+                cls = String(value);
+                continue;
+            }
             if (!validAttrs.has(key) || !StringOrNumber.is(value)) {
                 continue;
             }
@@ -2687,6 +2709,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
             styles[property] = value;
         }
+        return cls;
     }
 
     /**
@@ -2971,24 +2994,47 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     async handleToolbarSetCell(value: Record<string, string>) {
         const cellsToSave: CellAttrToSave[] = [];
         for (const [key, ss] of Object.entries(value)) {
-            let s = ss;
-            if (key.startsWith("$$")) {
-                continue;
-            }
-            if (key === "cell") {
-                if (this.currentCell) {
-                    this.currentCell.editedCellContent = s;
+            try {
+                let s = ss;
+                if (key.startsWith("$$")) {
+                    continue;
                 }
-                await this.saveToCurrentCell(s);  // TODO: think if this can be done with same query
-            } else {
-                // sometimes there is extra # in colors?
-                if (s.startsWith("##")) {
-                    s = s.substr(1);
+                if (key === "text") {
+                    continue;
                 }
-                for (const c of this.selectedCells.cells) {
-                    cellsToSave.push({col: c.x, row: c.y, key: key, c: s});
+                if (key === "buttonClass") {
+                    continue;
                 }
+                if (key === "buttonStyle") {
+                    continue;
+                }
+                if (key === "cell") {
+                    if (this.currentCell) {
+                        this.currentCell.editedCellContent = s;
+                    }
+                    await this.saveToCurrentCell(s);  // TODO: think if this can be done with same query
+                } else {
+                    // sometimes there is extra # in colors?
+                    if (s.startsWith("##")) {
+                        s = s.substr(1);
+                    }
+                    for (const c of this.selectedCells.cells) {
+                        if (key === "class") {
+                            const oldCls = this.cellDataMatrix[c.y][c.x].cls;
+                            if (oldCls) {
+                                if (!oldCls.includes(s)) {
+                                    s = oldCls + " " + s;
+                                } else {
+                                    continue;
+                                }
+                            }
+                        }
+                        cellsToSave.push({col: c.x, row: c.y, key: key, c: s});
+                    }
 
+                }
+            } catch (e) {
+                continue;
             }
         }
         if (cellsToSave) {
@@ -3054,6 +3100,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return;
         }
         this.editInputStyles = "";
+        this.editInputClass = "";
+        this.getEditInputElement()!.style.cssText = "";
+        this.getEditInputElement()!.className = "";
         const stylesNotToClear = [
             "position",
             "top",
@@ -3090,13 +3139,18 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (this.currentCell) {
             for (const c of cellsToSave) {
                 if (this.currentCell.row == c.row && this.currentCell.col == c.col) {
-                    const k: string = styleToHtml[c.key];
-                    if (k) {
-                        this.editInputStyles += k + ": " + c.c + ";";
+                    if (c.key === "class") {
+                        this.editInputClass += " " + c.c;
+                    } else {
+                        const k: string = styleToHtml[c.key];
+                        if (k) {
+                            this.editInputStyles += k + ": " + c.c + ";";
+                        }
                     }
                 }
             }
             this.getEditInputElement()!.style.cssText += " " + this.editInputStyles;
+            this.getEditInputElement()!.className += this.editInputClass;
         }
 
         if (this.task) {
