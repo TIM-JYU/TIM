@@ -266,6 +266,7 @@ export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, v
     urlStyle = {position: "absolute", top: "-10em", width: "50%"}; // hide the fake URL field
     homeOrg = genericglobals().homeOrganization;
     idps: IDiscoveryFeedEntry[] = [];
+    protected dialogName = "login";
 
     ngOnInit() {
         const params = this.data;

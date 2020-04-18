@@ -76,6 +76,7 @@ export class BookmarkDialogComponent extends AngularDialogComponent<IBookmark, I
     bookmark!: IBookmark; // ngOnInit
     includeParams?: boolean;
     includeHash?: boolean;
+    protected dialogName = "bookmark";
 
     ngOnInit() {
         this.bookmark = this.data;

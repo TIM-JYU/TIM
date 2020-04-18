@@ -11,6 +11,7 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
     @ViewChild(DialogFrame) frame?: DialogFrame;
 
     private resultDefer = new TimDefer<Result>();
+    protected abstract dialogName: string;
 
     // eslint-disable-next-line @typescript-eslint/tslint/config
     @HostListener("keydown.esc", ["$event"])
@@ -24,7 +25,7 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
     }
 
     getSavePrefix() {
-        return this.constructor.name;
+        return this.dialogName;
     }
 
     ngAfterViewInit() {
