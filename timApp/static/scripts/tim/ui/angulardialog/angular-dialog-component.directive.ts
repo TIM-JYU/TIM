@@ -1,9 +1,8 @@
-import {AfterViewInit, Directive, EventEmitter, Input, Output, ViewChild, HostListener} from "@angular/core";
+import {AfterViewInit, Directive, EventEmitter, HostListener, Input, Output, ViewChild} from "@angular/core";
 import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
 import {TimDefer} from "tim/util/timdefer";
 import {getStorage, setStorage} from "tim/util/utils";
 import * as t from "io-ts";
-import {KEY_ESC} from "tim/util/keycodes";
 
 @Directive()
 export abstract class AngularDialogComponent<Params, Result> implements AfterViewInit {
@@ -14,12 +13,10 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
     private resultDefer = new TimDefer<Result>();
 
     // eslint-disable-next-line @typescript-eslint/tslint/config
-    @HostListener("keydown", ["$event"])
+    @HostListener("keydown.esc", ["$event"])
     escPressed(e: KeyboardEvent) {
-        if (e.keyCode == KEY_ESC) {
-            this.dismiss();
-            e.stopPropagation();
-        }
+        this.dismiss();
+        e.stopPropagation();
     }
 
     get result() {
