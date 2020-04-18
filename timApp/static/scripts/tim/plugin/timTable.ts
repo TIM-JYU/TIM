@@ -3102,7 +3102,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
         this.editInputStyles = "";
         this.editInputClass = "";
-        this.getEditInputElement()!.style.cssText = "";
+        // this.getEditInputElement()!.style.cssText = "";
         this.getEditInputElement()!.className = "";
         const stylesNotToClear = [
             "position",
