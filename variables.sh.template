@@ -4,13 +4,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo variables.sh: Fill in appropriate variable values and comment this line. ; exit 1
 
-export TIM_HOST=http://localhost               # Hostname for the TIM instance
-export BROWSER_URL=http://localhost            # URL to use in JavaScript where relative URL does not work (e.g. certain iframes; only used by Stack plugin so far)
+export TIM_HOST=https://localhost               # Hostname for the TIM instance
+export BROWSER_URL=https://localhost            # URL to use in JavaScript where relative URL does not work (e.g. certain iframes; only used by Stack plugin so far)
 export TIM_IMAGE_TAG=$(${DIR}/get_latest_date.sh)   # TIM image tag to use
 export COMPOSE_PROJECT_NAME=tim                # Name of the Docker Compose project
 export TIM_ROOT=${DIR}                         # TIM root; do not modify
 export FILES_ROOT=${DIR}/timApp/tim_files      # Root directory for non-db storage (document content etc.)
-export NGINX_PORT=80                           # External port for nginx
 export CSPLUGIN_DEV_COMMAND=./startPlugins.sh  # Command to start csplugin when IS_DEVELOPMENT is true; use empty command if you want to debug it with SSH
 export TEXTFIELD_DEV_COMMAND=./startAll.sh     # Same as above but for textfield plugin
 export JSRUNNER_DEV_COMMAND=./startAll.sh      # Same as above but for jsrunner plugin

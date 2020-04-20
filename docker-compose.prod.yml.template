@@ -1,0 +1,23 @@
+version: "3.7"
+services:
+ tim:
+  tmpfs:
+   - /run
+ caddy:
+  image: caddy:2.0.0-rc.3
+  command: caddy reverse-proxy --from ${TIM_HOST} --to nginx
+  read_only: true
+  volumes:
+   - caddy_data:/data
+   - caddy_config:/config
+  ports:
+   - "80:80"
+   - "443:443"
+  depends_on:
+   - nginx
+ pali:
+  environment:
+    SHOW_TEMPLATES: "False"
+volumes:
+ caddy_data:
+ caddy_config:

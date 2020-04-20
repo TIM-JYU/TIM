@@ -125,4 +125,4 @@ services:
    args:
     MAIN_CONFIG: tim_dev.conf
   ports:
-   - "${NGINX_PORT}:80"
+   - "127.0.0.1:81:80"

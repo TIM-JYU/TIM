@@ -16,6 +16,7 @@ before_script:
 test:
   stage: test
   script:
+  - cp docker-compose.prod.yml.template docker-compose.prod.yml
   - cp variables.sh.template variables.sh
   - chmod +x variables.sh
   - sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh

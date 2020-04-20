@@ -34,14 +34,10 @@ sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh
 DOMAIN=$(dig +short -x $(dig +short myip.opendns.com @resolver1.opendns.com) | sed 's/.$//')
 sed -i "s/localhost/${DOMAIN}/" variables.sh
 sed -i "s/http/https/" variables.sh
-sed -i "s/NGINX_PORT=80/NGINX_PORT=127.0.0.1:81/" variables.sh
 ./dc pull --quiet
 ./npmi
 ./js
 ./up.sh
-
-# Set up HTTPS.
-docker run -d -p 80:80 -p 443:443 -v caddy_data:/data -v caddy_config:/config --network tim_default caddy caddy reverse-proxy --from ${DOMAIN} --to nginx
 
 echo Server URL is ${DOMAIN}
 echo TIM install script finished.

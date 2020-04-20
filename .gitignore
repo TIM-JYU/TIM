@@ -12,6 +12,7 @@
 .settings
 .stack-work/
 .webassets-cache/
+/docker-compose.prod.yml
 /Dumbo/**/*.iml
 /Dumbo/cache/
 /Dumbo/out/
