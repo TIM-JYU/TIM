@@ -17,7 +17,7 @@ import {to} from "../util/utils";
             <div class="col-lg-6 col-lg-offset-3">
                 <h1 class="text-center">TIM - The Interactive Material</h1>
             </div>
-            <div class="col-lg-3">
+            <div class="col-lg-3" *ngIf="isLoggedIn()">
                 <ng-container i18n>Language</ng-container>:
                 <tim-language-selector [saveOnChange]="true"></tim-language-selector>
             </div>
