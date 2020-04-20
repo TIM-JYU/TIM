@@ -7,7 +7,7 @@ import {getVisibilityVars} from "tim/timRoot";
     template: `
         <div class="siteheader" *ngIf="!hide.siteheader">
             <div class="hidden-lg hidden-md hamburger-placeholder" style="width: 27px; height: 1px"></div>
-            <a class="logolink" title="To TIM main page" *ngIf="!hide.links" href="/">
+            <a class="logolink" title="To TIM main page" i18n-title *ngIf="!hide.links" href="/">
                 <tim-logo *ngIf="!hide.logo"></tim-logo>
             </a>
             <tim-logo *ngIf="hide.links && !hide.logo"></tim-logo>
@@ -18,11 +18,14 @@ import {getVisibilityVars} from "tim/timRoot";
             <button *ngIf="!hide.search"
                     class="timButton"
                     (click)="displaySearch = !displaySearch"
-                    title="Display search panel">
+                    title="Display search panel"
+                    i18n-title>
                 <i class="glyphicon glyphicon-search"></i>
             </button>
             <bootstrap-panel *ngIf="displaySearch" [showClose]="true"
-                             class="search-panel" title="TIM document search"
+                             class="search-panel"
+                             title="TIM document search"
+                             i18n-title
                              (closed)="displaySearch = !displaySearch">
                 <tim-search-box></tim-search-box>
             </bootstrap-panel>

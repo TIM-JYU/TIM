@@ -29,14 +29,13 @@ import * as lectureInfoController from "tim/lecture/lectureInfoController";
 import * as lectureMenu from "tim/lecture/lectureMenu";
 import * as questionAskController from "tim/lecture/questionAskController";
 import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQuestionController";
-import * as searchBox from "tim/search/search-box.component";
 import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrap-panel.component";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {LogoComponent} from "tim/ui/logo.component";
 import {LoginMenuComponent} from "tim/user/login-menu.component";
 import * as timRoot from "tim/timRoot";
-import * as settingsCtrl from "tim/user/settingsCtrl";
+import {SettingsComponent} from "tim/user/settings.component";
 import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
 import * as annotation from "tim/velp/annotation.component";
 import {AnnotationComponent} from "tim/velp/annotation.component";
@@ -84,8 +83,6 @@ markAsUsed(
     relevanceEdit,
     reviewController,
     rightsEditor,
-    searchBox,
-    settingsCtrl,
     showStatisticsToQuestionController,
     sidebarMenuCtrl,
     taggedDocumentList,
@@ -121,6 +118,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "bootstrapPanel", BootstrapPanelComponent);
     doDowngrade(dg, "timStart", FrontPageComponent);
     doDowngrade(dg, "timSiteHeader", SiteHeaderComponent);
+    doDowngrade(dg, "timSettings", SettingsComponent);
     return dg;
 }
 

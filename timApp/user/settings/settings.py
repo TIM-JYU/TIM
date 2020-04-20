@@ -1,4 +1,5 @@
 """Routes for settings view."""
+from dataclasses import dataclass
 
 from flask import Blueprint, render_template, session, flash
 from flask import abort
@@ -20,7 +21,7 @@ from timApp.user.consentchange import ConsentChange
 from timApp.user.preferences import Preferences
 from timApp.user.settings.theme import get_available_themes
 from timApp.user.user import User, Consent
-from timApp.util.flask.requesthelper import get_option, verify_json_params, RouteException
+from timApp.util.flask.requesthelper import get_option, verify_json_params, RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
 
 settings_page = Blueprint('settings_page',
@@ -62,6 +63,22 @@ def save_settings():
     db.session.commit()
     show()  # Regenerate CSS
     return json_response(get_current_user_object().get_prefs())
+
+
+@dataclass
+class LangModel:
+    lang: str
+
+
+@settings_page.route('/save/lang', methods=['put'])
+@use_model(LangModel)
+def save_language_route(m: LangModel):
+    u = get_current_user_object()
+    prefs = u.get_prefs()
+    prefs.language = m.lang
+    u.set_prefs(prefs)
+    db.session.commit()
+    return ok_response()
 
 
 @settings_page.route('/get/<name>')

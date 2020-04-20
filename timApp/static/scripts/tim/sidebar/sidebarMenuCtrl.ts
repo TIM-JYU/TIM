@@ -28,7 +28,7 @@ import {showConsentDialog} from "../ui/consent";
 import {showMessageDialog} from "../ui/dialog";
 import {InputDialogKind, showInputDialog} from "../ui/inputDialog";
 import {ADMIN_GROUPNAME, IGroup, TEACHERS_GROUPNAME} from "../user/IUser";
-import {setConsent} from "../user/settingsCtrl";
+import {setConsent} from "../user/settings.component";
 import {Users, UserService} from "../user/userService";
 import {someglobals} from "../util/globals";
 import {$http, $localStorage} from "../util/ngimport";

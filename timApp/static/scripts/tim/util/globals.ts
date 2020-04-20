@@ -6,7 +6,7 @@ import {DocumentOrFolder, IDocument, IFolder, IFullDocument, IItem, ITranslation
 import {ILecture} from "../lecture/lecturetypes";
 import {HeaderIndexItem, IGroupWithSisuPath} from "../sidebar/sidebarMenuCtrl";
 import {IFullUser, IGroup, IUser, IUserListEntry} from "../user/IUser";
-import {INotification, ISettings} from "../user/settingsCtrl";
+import {ICssFile, INotification, ISettings} from "../user/settings.component";
 
 interface ILayout {
     col_1_lg: number;
@@ -110,7 +110,7 @@ export interface IManageGlobals extends IGenericGlobals {
 
 export interface ISettingsGlobals extends IGenericGlobals {
     settings: ISettings;
-    css_files: Array<{}>;
+    css_files: Array<ICssFile>;
     notifications: INotification[];
     notificationLimit: number;
 }

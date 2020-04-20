@@ -82,7 +82,7 @@
         <source>Toggle editing</source>
         <target state="translated">Vaihda muokkaustila päälle/pois</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmarkFolderBox.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
           <context context-type="linenumber">5</context>
         </context-group>
       </trans-unit>
@@ -90,11 +90,11 @@
         <source>Edit bookmark</source>
         <target state="translated">Muokkaa kirjanmerkkiä</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmarkFolderBox.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
           <context context-type="linenumber">14</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmarkFolderBox.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
           <context context-type="linenumber">29</context>
         </context-group>
       </trans-unit>
@@ -102,19 +102,67 @@
         <source>Remove bookmark</source>
         <target state="translated">Poista kirjanmerkki</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmarkFolderBox.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
           <context context-type="linenumber">18</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmarkFolderBox.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
           <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4ef9f9f6ec209de35b9465da7813c98c06a7d3b8" datatype="html">
+        <source>To TIM main page</source>
+        <target state="translated">TIMin etusivulle</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/site-header.component.ts</context>
+          <context context-type="linenumber">4</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1bfe89e7189d665f9233ff09497459dc3c4ff692" datatype="html">
+        <source>Display search panel</source>
+        <target state="translated">Näytä hakuvalikko</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/site-header.component.ts</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="04828339e604ec4929df577d4612ed76d9a02cca" datatype="html">
+        <source>TIM document search</source>
+        <target state="translated">TIMin dokumenttien haku</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/site-header.component.ts</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="32aa9f389001f310a85f3ad9741f33d046d9d9e5" datatype="html">
+        <source>Use web browser preference</source>
+        <target state="translated">Käytä web-selaimen asetusta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
+          <context context-type="linenumber">6</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a0843de0a64adcc7ee6a946408b6876cd8abdcae" datatype="html">
+        <source>English</source>
+        <target state="translated">englanti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
+          <context context-type="linenumber">7</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="823d6fc462954b9738a49970bc4f59dc9dc66d7d" datatype="html">
+        <source>Finnish</source>
+        <target state="translated">suomi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
+          <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4b9ac45e513aed03f2111217aa5612355a10a777" datatype="html">
         <source>Federation logo</source>
         <target state="translated">Federaation logo</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/hakaLogin.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
           <context context-type="linenumber">5</context>
         </context-group>
       </trans-unit>
@@ -122,16 +170,16 @@
         <source>Haka login</source>
         <target state="translated">Haka-kirjautuminen</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/hakaLogin.ts</context>
-          <context context-type="linenumber">9</context>
+          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
+          <context context-type="linenumber">10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="c7c0d03e9df44b8713513f18de3f5841860e499d" datatype="html">
         <source>Select your home organization...</source>
         <target state="translated">Valitse kotiorganisaatiosi...</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/hakaLogin.ts</context>
-          <context context-type="linenumber">13</context>
+          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
+          <context context-type="linenumber">16</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4dad0fa8e62469231d1ff7a1890d73d5b21bdfbe" datatype="html">
@@ -142,8 +190,8 @@
                 Kirjaudu sisään
             </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/hakaLogin.ts</context>
-          <context context-type="linenumber">20</context>
+          <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
+          <context context-type="linenumber">23</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1837bb4fa0224348534ce9ceb030f977c705aab4" datatype="html">
@@ -154,7 +202,7 @@
             Yliopistojen ja muiden Haka-organisaatioiden jäsenet, kirjautukaa Hakalla.
         </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">10</context>
         </context-group>
       </trans-unit>
@@ -166,52 +214,52 @@
             Muut, kirjautukaa TIM-tilillä.
         </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">18</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="d8666283a44af379917290f13da36a742b13cb8f" datatype="html">
         <source>Email or username</source>
         <target state="translated">Sähköpostiosoite tai käyttäjätunnus</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">23</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">22</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">64</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">63</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">74</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">73</context>
         </context-group>
       </trans-unit>
       <trans-unit id="c32ef07f8803a223a83ed17024b38e8d82292407" datatype="html">
         <source>Password</source>
         <target state="translated">Salasana</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">32</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">31</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">149</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">148</context>
         </context-group>
       </trans-unit>
       <trans-unit id="b87e81682959464211443afc3e23c506865d2eda" datatype="html">
         <source>I forgot my password</source>
         <target state="translated">Unohdin salasanani</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">39</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">38</context>
         </context-group>
       </trans-unit>
       <trans-unit id="f093d9574ab746b231504bd2cbb65f04bd7b00db" datatype="html">
         <source>Log in</source>
         <target state="translated">Kirjaudu sisään</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">42</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">41</context>
         </context-group>
       </trans-unit>
       <trans-unit id="f37d3ab91a762444aebe07ebb0c976062485da99" datatype="html">
@@ -222,8 +270,8 @@
             Etkö ole <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>-opiskelija tai henkilökuntaa eikä sinulla ole TIM-tiliä?
         </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">47</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">46</context>
         </context-group>
       </trans-unit>
       <trans-unit id="signUp" datatype="html">
@@ -234,28 +282,28 @@
             Rekisteröidy
         </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">51</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">50</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">33</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">35</context>
         </context-group>
       </trans-unit>
       <trans-unit id="25f636e6d18072dd76c5cee8e2507f75e762b293" datatype="html">
         <source>If you don't have an existing TIM or <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> account, you can create a TIM account here.</source>
         <target state="translated">Jos sinulla ei ole TIM-tiliä tai <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>-tunnusta, voit luoda TIM-tilin tässä.</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">57</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">56</context>
         </context-group>
       </trans-unit>
       <trans-unit id="f5edad1bd43015775e44ee044f85826628c57f20" datatype="html">
         <source>Please input your email address to receive a temporary password.</source>
         <target state="translated">Anna sähköpostiosoitteesi saadaksesi väliaikainen salasana.</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">58</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">57</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6e044e710c45fb651b2605771bce11a9587613e2" datatype="html">
@@ -266,20 +314,20 @@
             Salasanan vaihtamiseksi kirjoita sähköpostiosoitteesi tai käyttäjätunnuksesi.
         </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">60</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">59</context>
         </context-group>
       </trans-unit>
       <trans-unit id="05be332f50589af6426534bab0acc0ad6230af23" datatype="html">
         <source>Do not type anything here</source>
         <target state="translated">Älä kirjoita tähän mitään</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">76</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">75</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">85</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">84</context>
         </context-group>
       </trans-unit>
       <trans-unit id="63342d96da52b71c9cf58c5d868486e1a2bb4fdb" datatype="html">
@@ -290,8 +338,8 @@
             Jatka
         </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">91</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">90</context>
         </context-group>
       </trans-unit>
       <trans-unit id="bf844a41a29961b6dacc48a20eaf97bef0cf5013" datatype="html">
@@ -302,8 +350,8 @@
             Peruuta
         </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">96</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">95</context>
         </context-group>
       </trans-unit>
       <trans-unit id="09bf38cb8185384bee6940ce3dc3dbebe1ff9451" datatype="html">
@@ -314,24 +362,24 @@
                     TIM lähetti sinulle väliaikaisen salasanan. Kirjoita se alla olevaan kenttään.
                 </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">101</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">100</context>
         </context-group>
       </trans-unit>
       <trans-unit id="aace0783b57bf9c33b176f70a97790651fbaa6d1" datatype="html">
         <source>Password you received</source>
         <target state="translated">Salasana, jonka sait</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">112</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">111</context>
         </context-group>
       </trans-unit>
       <trans-unit id="ac10a3d9b59575640797c1a8e6aea642cf5d5e77" datatype="html">
         <source>Continue</source>
         <target state="translated">Jatka</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">118</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">117</context>
         </context-group>
       </trans-unit>
       <trans-unit id="09c879f51a8005ab14353af950310be78a8d8306" datatype="html">
@@ -342,16 +390,16 @@
                         Kirjoita nimesi (Sukunimi Etunimi)
                     </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">121</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">120</context>
         </context-group>
       </trans-unit>
       <trans-unit id="533b2b9a76ee1335cb44c01f0bfd50d43e9400b0" datatype="html">
         <source>Your name</source>
         <target state="translated">Nimesi</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">133</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">132</context>
         </context-group>
       </trans-unit>
       <trans-unit id="afec3156488bf3a3ebbc0acfcbce9163303b7fc5" datatype="html">
@@ -362,8 +410,8 @@
                         Luo uusi salasana
                     </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">137</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">136</context>
         </context-group>
       </trans-unit>
       <trans-unit id="30cb9d4f480427b60b5678c6f2fe576c2dca484a" datatype="html">
@@ -374,16 +422,16 @@
                         Kirjoita yllä oleva salasana uudelleen
                     </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">153</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">152</context>
         </context-group>
       </trans-unit>
       <trans-unit id="883b6eafc310403c511bb87ef630648a33bda95b" datatype="html">
         <source>Retype password</source>
         <target state="translated">Kirjoita salasana uudelleen</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">165</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">164</context>
         </context-group>
       </trans-unit>
       <trans-unit id="dbbff4841c879aa12a3c7b8bac700c358d7761b5" datatype="html">
@@ -392,8 +440,8 @@
         <target state="translated">Valmis
                 </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">171</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">170</context>
         </context-group>
       </trans-unit>
       <trans-unit id="a713deb8897be067b2f824ae32d7d464f6bb5803" datatype="html">
@@ -404,8 +452,8 @@
                 Kiitos!
             </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">174</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">173</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6b1f788d28948c80a3fc06650a27116052551dfa" datatype="html">
@@ -416,8 +464,8 @@
                 Tietosi päivitettiin onnistuneesti.
             </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">177</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">176</context>
         </context-group>
       </trans-unit>
       <trans-unit id="af0f898e4b116928b4ea18701d38a695056dae53" datatype="html">
@@ -432,8 +480,16 @@
                 sivun kirjautuaksesi sisään.
             </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">180</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">179</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="fe46ccaae902ce974e2441abe752399288298619" datatype="html">
+        <source>Language</source>
+        <target state="translated">Kieli</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">7</context>
         </context-group>
       </trans-unit>
       <trans-unit id="f4e529ae5ffd73001d1ff4bbdeeb0a72e342e5c8" datatype="html">
@@ -444,43 +500,43 @@
           <context context-type="linenumber">1</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginDialog.ts</context>
-          <context context-type="linenumber">195</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
+          <context context-type="linenumber">194</context>
         </context-group>
       </trans-unit>
       <trans-unit id="920c47a110d2e268a615c850abc8001c5edf08b1" datatype="html">
         <source>My courses</source>
         <target state="translated">Omat kurssit</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">12</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">14</context>
         </context-group>
       </trans-unit>
       <trans-unit id="80b0b6f961c0411133f21e6bda477f8e05376e2e" datatype="html">
         <source>TIM-esittely</source>
         <target state="translated">TIM-esittely</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">21</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">23</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3ccabfc3dc288eaa2355ba43298c739f85951ec3" datatype="html">
         <source>Get started</source>
         <target state="translated">Aloita tästä</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">25</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">27</context>
         </context-group>
       </trans-unit>
       <trans-unit id="logIn" datatype="html">
         <source>Log in</source>
         <target state="translated">Kirjaudu sisään</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">27</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">29</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/loginMenu.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/login-menu.component.ts</context>
           <context context-type="linenumber">5</context>
         </context-group>
       </trans-unit>
@@ -488,19 +544,19 @@
         <source>Create a TIM account</source>
         <target state="translated">Luo TIM-tili</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">31</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">33</context>
         </context-group>
       </trans-unit>
       <trans-unit id="myDocuments" datatype="html">
         <source>My documents</source>
         <target state="translated">Omat dokumentit</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">37</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">39</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/userMenu.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">13</context>
         </context-group>
       </trans-unit>
@@ -508,84 +564,84 @@
         <source>All documents</source>
         <target state="translated">Kaikki dokumentit</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">39</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">41</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4b030aec9d249839c2650d7f368a64270aa1c7e9" datatype="html">
         <source>Available courses</source>
         <target state="translated">Nykyiset kurssit</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">41</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">43</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5bc0b6a606a64cbe811f90b3622c3c3db16bde15" datatype="html">
         <source>Create a new document</source>
         <target state="translated">Luo uusi dokumentti</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">44</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">46</context>
         </context-group>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">48</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">50</context>
         </context-group>
       </trans-unit>
       <trans-unit id="ad9b1cc84c23aa880279f321f780d50198b92f23" datatype="html">
         <source>My document</source>
         <target state="translated">Oma dokumentti</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">52</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">54</context>
         </context-group>
       </trans-unit>
       <trans-unit id="293731fdfcc972b09460085bf45a32b69df177b1" datatype="html">
         <source>What is TIM?</source>
         <target state="translated">Mikä on TIM?</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">62</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">64</context>
         </context-group>
       </trans-unit>
       <trans-unit id="e130474470be8d503974d5ffaf07da234b314f55" datatype="html">
         <source>TIM is a document-based cloud service for producing interactive materials.</source>
         <target state="translated">TIM on dokumenttipohjainen pilvipalvelu interaktiivisten materiaalien tuottamiseksi.</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">63</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">65</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5499b81e5db6d551e39b1731b360d787148bfea2" datatype="html">
         <source>Introduction</source>
         <target state="translated">Esittely</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">70</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">72</context>
         </context-group>
       </trans-unit>
       <trans-unit id="228d71f5479ac5dc6c28bbb8f43d39587981c9dd" datatype="html">
         <source>User guide</source>
         <target state="translated">Käyttöohje</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">71</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">73</context>
         </context-group>
       </trans-unit>
       <trans-unit id="0fc4fead01c0fcc72a604f8b524a20d29c693bb1" datatype="html">
         <source>Examples <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/></source>
         <target state="translated">Esimerkkejä</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">75</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">77</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7bc573e95978869f1500a5dc24210a86a4fc9a6e" datatype="html">
         <source>TIM's possibilities</source>
         <target state="translated">TIMin mahdollisuuksia</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">77</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">79</context>
         </context-group>
       </trans-unit>
       <trans-unit id="eeaab5a9148764012f41d7319a028efa46e7b3f1" datatype="html">
@@ -594,8 +650,8 @@
         <target state="translated">
                         Eri ohjelmointikieliä</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">78</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">80</context>
         </context-group>
       </trans-unit>
       <trans-unit id="e64d502a38b76958185bf9670f134ad20b34d2e6" datatype="html">
@@ -604,8 +660,8 @@
         <target state="translated">
                         Käyttö eri oppiaineissa</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">80</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">82</context>
         </context-group>
       </trans-unit>
       <trans-unit id="059958141a4c865bf802ae5c361bcb5eef8e38ef" datatype="html">
@@ -615,15 +671,15 @@
         <target state="translated"><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/> suomeksi
             </target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/startController.ts</context>
-          <context context-type="linenumber">86</context>
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">88</context>
         </context-group>
       </trans-unit>
       <trans-unit id="06333ace6f7bc82aca8a957f88145ab96f47eb94" datatype="html">
         <source>and <x id="ICU" equiv-text="{numSession(), plural, =1 {...} other {...}}"/></source>
         <target state="translated">ja <x id="ICU" equiv-text="{numSession(), plural, =1 {...} other {...}}"/></target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/userMenu.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">5</context>
         </context-group>
       </trans-unit>
@@ -631,7 +687,7 @@
         <source>{VAR_PLURAL, plural, =1 {one other} other {<x id="INTERPOLATION" equiv-text="{{numSession()}}"/> others} }</source>
         <target state="translated">{VAR_PLURAL, plural, =1 {yksi muu} other {<x id="INTERPOLATION" equiv-text="{{numSession()}}"/> muuta} }</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/userMenu.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">5</context>
         </context-group>
       </trans-unit>
@@ -639,7 +695,7 @@
         <source>You're logged in</source>
         <target state="translated">Olet kirjautunut sisään</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/userMenu.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">3</context>
         </context-group>
       </trans-unit>
@@ -647,7 +703,7 @@
         <source>Add a user to this session</source>
         <target state="translated">Lisää käyttäjä istuntoon</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/userMenu.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
@@ -655,7 +711,7 @@
         <source>Log everyone out</source>
         <target state="translated">Kirjaa kaikki ulos</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/userMenu.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">22</context>
         </context-group>
       </trans-unit>
@@ -663,7 +719,7 @@
         <source>Log out</source>
         <target state="translated">Kirjaudu ulos</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/userMenu.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">23</context>
         </context-group>
       </trans-unit>
@@ -671,7 +727,7 @@
         <source>Log <x id="INTERPOLATION" equiv-text="{{ u.real_name }}"/> out</source>
         <target state="translated">Kirjaa <x id="INTERPOLATION" equiv-text="{{ u.real_name }}"/> ulos</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/userMenu.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">28</context>
         </context-group>
       </trans-unit>

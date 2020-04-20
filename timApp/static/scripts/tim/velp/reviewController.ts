@@ -72,7 +72,7 @@ export class ReviewController {
     private annotations: Annotation[];
     public zIndex: number;
     private scope: IScope;
-    private velpBadge?: HTMLElementTagNameMap["input"];
+    private velpBadge?: HTMLInputElement;
     private velpBadgePar?: string;
     private velpSelection?: VelpSelectionController; // initialized through onInit
     public velpMode: boolean;
@@ -324,7 +324,7 @@ export class ReviewController {
     /**
      * Creates the velp badge button (the button with letter 'V' on it).
      */
-    createVelpBadge(par: string): HTMLElementTagNameMap["input"] {
+    createVelpBadge(par: string): HTMLInputElement {
         this.velpBadgePar = par;
         if (this.velpBadge) {
             // $compile(this.velpBadge)(this);

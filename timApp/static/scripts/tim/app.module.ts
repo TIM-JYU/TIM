@@ -30,6 +30,9 @@ import {BookmarkFolderBoxComponent} from "tim/bookmark/bookmark-folder-box.compo
 import {SiteHeaderComponent} from "tim/header/site-header.component";
 import {SearchBoxComponent} from "tim/search/search-box.component";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
+import {SettingsComponent} from "tim/user/settings.component";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {LanguageSelectorComponent} from "tim/user/language-selector.component";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -55,6 +58,8 @@ import {TypeaheadModule} from "ngx-bootstrap/typeahead";
         BookmarkFolderBoxComponent,
         SiteHeaderComponent,
         SearchBoxComponent,
+        SettingsComponent,
+        LanguageSelectorComponent,
     ],
     imports: [
         BrowserModule,
@@ -65,6 +70,7 @@ import {TypeaheadModule} from "ngx-bootstrap/typeahead";
         NoopAnimationsModule,
         BsDropdownModule.forRoot(),
         TypeaheadModule.forRoot(),
+        TooltipModule.forRoot(),
     ],
     providers: [
         {provide: HTTP_INTERCEPTORS, useClass: TimeStampToMomentConverter, multi: true},

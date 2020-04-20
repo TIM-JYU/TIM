@@ -14,10 +14,12 @@ import {to} from "../util/utils";
     selector: "tim-start",
     template: `
         <div class="row">
-            <div class="col-lg-8 col-lg-offset-2">
+            <div class="col-lg-6 col-lg-offset-3">
                 <h1 class="text-center">TIM - The Interactive Material</h1>
             </div>
-            <div class="col-lg-2">
+            <div class="col-lg-3">
+                <ng-container i18n>Language</ng-container>:
+                <tim-language-selector [saveOnChange]="true"></tim-language-selector>
             </div>
         </div>
         <div class="row">
