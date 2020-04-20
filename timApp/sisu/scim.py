@@ -312,7 +312,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
         ms.set_expired()
     p = parse_sisu_group_display_name(args.displayName)
     if not p:
-        raise SCIMException(422, f'Unexpected displayName format: {args.displayName}')
+        raise SCIMException(422, f'Unexpected displayName format: "{args.displayName}" (externalId: "{external_id}")')
     ug.display_name = args.displayName
     emails = [m.email for m in args.members if m.email is not None]
     unique_emails = set(emails)
