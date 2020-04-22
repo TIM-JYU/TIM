@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python3 field.py
+gunicorn --config /py/plugin_gunicorn.py field:app

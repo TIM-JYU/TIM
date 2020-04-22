@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python3 pali.py
+gunicorn --config /py/plugin_gunicorn.py pali:app

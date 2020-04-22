@@ -128,6 +128,8 @@ services:
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
+  tmpfs:
+   - /tmp
  fields:
   image: timimages/tim:${TIM_IMAGE_TAG}
   build: ./timApp/modules/fields
@@ -140,6 +142,8 @@ services:
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
+  tmpfs:
+   - /tmp
  jsrunner:
   image: timimages/tim:${TIM_IMAGE_TAG}
   #build: ./timApp/modules/multisave
@@ -164,6 +168,8 @@ services:
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
+  tmpfs:
+   - /tmp
  feedback:
   image: timimages/tim:${TIM_IMAGE_TAG}
   volumes:
@@ -175,6 +181,8 @@ services:
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
+  tmpfs:
+   - /tmp
  nginx:
   image: timimages/local_nginx:compose
   build:
