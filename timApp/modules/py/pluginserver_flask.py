@@ -335,12 +335,12 @@ def register_routes(app, html_schema: Type[Schema], csrf=None, pre=""):
     def handle_invalid_request(error: UnprocessableEntity):
         return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
 
-    @app.route(pre+'/multihtml/', methods=['post'])
+    @app.route(pre+'/multihtml', methods=['post'])
     def multihtml():
         ret = render_multihtml(request.get_json(), html_schema())
         return ret
 
-    @app.route(pre+'/multimd/', methods=['post'])
+    @app.route(pre+'/multimd', methods=['post'])
     def multimd():
         ret = render_multimd(request.get_json(), html_schema())
         return ret

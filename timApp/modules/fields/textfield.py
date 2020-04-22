@@ -86,13 +86,13 @@ size="{{cols}}"></span></label>
 TextFieldHtmlSchema = class_schema(TextfieldHtmlModel)
 TextfieldAnswerSchema = class_schema(TextfieldAnswerModel)
 
-@textfield_route.route('/multihtml/', methods=['post'])
+@textfield_route.route('/multihtml', methods=['post'])
 def tf_multihtml():
     ret = render_multihtml(request.get_json(), TextFieldHtmlSchema())
     return ret
 
 
-@textfield_route.route('/answer/', methods=['put'])
+@textfield_route.route('/answer', methods=['put'])
 @use_args(TextfieldAnswerSchema(), locations=("json",))
 def answer(args: TextfieldAnswerModel):
     web = {}
@@ -117,7 +117,6 @@ def answer(args: TextfieldAnswerModel):
     return jsonify(result)
 
 
-@textfield_route.route('/reqs/')
 @textfield_route.route('/reqs')
 def reqs():
     templates = [

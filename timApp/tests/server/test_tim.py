@@ -362,12 +362,12 @@ class TimTest(TimRouteTest):
             self.create_doc(expect_status=400,
                             expect_content='The CSRF token is missing.',
                             )
-            self.json_post('/tape/multihtml/', [])
-            self.json_post('/qst/multihtml/', [])
-            self.json_post('/timTable/multihtml/', [])
-            self.json_post('/qst/multimd/', [])
-            self.json_post('/timTable/multimd/', [])
-            self.json_put('/qst/answer/',
+            self.json_post('/tape/multihtml', [])
+            self.json_post('/qst/multihtml', [])
+            self.json_post('/timTable/multihtml', [])
+            self.json_post('/qst/multimd', [])
+            self.json_post('/timTable/multimd', [])
+            self.json_put('/qst/answer',
                           {
                               'info': {
                                   'earlier_answers': 0,

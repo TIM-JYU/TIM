@@ -97,12 +97,12 @@ NumericfieldHtmlSchema = class_schema(NumericfieldHtmlModel)
 NumericfieldAnswerSchema = class_schema(NumericfieldAnswerModel)
 
 
-@numericfield_route.route('/multihtml/', methods=['post'])
+@numericfield_route.route('/multihtml', methods=['post'])
 def nf_multihtml():
     ret = render_multihtml(request.get_json(), NumericfieldHtmlSchema())
     return ret
 
-@numericfield_route.route('/multimd/', methods=['post'])
+@numericfield_route.route('/multimd', methods=['post'])
 def nf_multimd():
     ret = render_multimd(request.get_json(), NumericfieldHtmlSchema)
     return ret
@@ -123,7 +123,7 @@ def get_double(c):
         return float(c)
     return 0
 
-@numericfield_route.route('/answer/', methods=['put'])
+@numericfield_route.route('/answer', methods=['put'])
 @use_args(NumericfieldAnswerSchema(), locations=("json",))
 def answer(args: NumericfieldAnswerModel):
     web = {}
@@ -172,7 +172,6 @@ def answer(args: NumericfieldAnswerModel):
     return jsonify(result)
 
 
-@numericfield_route.route('/reqs/')
 @numericfield_route.route('/reqs')
 def reqs():
     templates = ["""``` {#PLUGINNAMEHERE plugin="numericfield"}

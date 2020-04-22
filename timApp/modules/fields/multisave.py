@@ -70,13 +70,12 @@ def render_static_multisave(m: MultisaveHtmlModel):
 MultisaveHtmlSchema = class_schema(MultisaveHtmlModel)
 
 
-@multisave_route.route('/multihtml/', methods=['post'])
+@multisave_route.route('/multihtml', methods=['post'])
 def ms_multihtml():
     ret = render_multihtml(request.get_json(), MultisaveHtmlSchema())
     return ret
 
 
-@multisave_route.route('/reqs/')
 @multisave_route.route('/reqs')
 def reqs():
     templates = ["""

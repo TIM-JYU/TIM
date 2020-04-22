@@ -424,7 +424,7 @@ def tableform_get_fields(
     return r
 
 
-@tableForm_plugin.route('/answer/', methods=['put'])
+@tableForm_plugin.route('/answer', methods=['put'])
 @csrf.exempt
 @use_args(TableFormAnswerSchema(), locations=("json",))
 def answer(args: TableFormAnswerModel):
@@ -442,7 +442,6 @@ def answer(args: TableFormAnswerModel):
     return jsonify(result)
 
 
-@tableForm_plugin.route('/reqs/')
 @tableForm_plugin.route('/reqs')
 def reqs():
     templates = ["""

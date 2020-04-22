@@ -86,13 +86,13 @@ DropdownHtmlSchema = class_schema(DropdownHtmlModel)
 DropdownAnswerSchema = class_schema(DropdownAnswerModel)
 
 
-@dropdown_route.route('/multihtml/', methods=['post'])
+@dropdown_route.route('/multihtml', methods=['post'])
 def dropdown_multihtml():
     ret = render_multihtml(request.get_json(), DropdownHtmlSchema())
     return ret
 
 
-@dropdown_route.route('/answer/', methods=['put'])
+@dropdown_route.route('/answer', methods=['put'])
 @use_args(DropdownAnswerSchema(), locations=("json",))
 def answer(args: DropdownAnswerModel):
     web = {}
@@ -112,7 +112,6 @@ def answer(args: DropdownAnswerModel):
     return jsonify(result)
 
 
-@dropdown_route.route('/reqs/')
 @dropdown_route.route('/reqs')
 def reqs():
     templates = ["""{#test:dropdown words: [option 1, option 2, option 3]#}""", """

@@ -94,7 +94,7 @@ def render_static_pali(m: PaliHtmlModel):
 app = create_app(__name__, PaliHtmlSchema)
 
 
-@app.route('/answer/', methods=['put'])
+@app.route('/answer', methods=['put'])
 @use_args(PaliAnswerSchema(), locations=("json",))
 def answer(args: PaliAnswerModel):
     web = {}
@@ -136,7 +136,6 @@ def check_letters(word: str, needed_len: int) -> bool:
     return len(re.sub("[^[A-ZÅÄÖ]", "", s)) == needed_len
 
 
-@app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
     templates = ["""

@@ -511,7 +511,7 @@ class TimRouteTest(TimDbTest):
                     expect_content=None, expect_status=200,
                     **kwargs):
         return self.json_put(
-            f'/{plugin_type}/{task_id}/answer/',
+            f'/{plugin_type}/{task_id}/answer',
             {"input": user_input,
              "ref_from": {'docId': ref_from[0], 'par': ref_from[1]} if ref_from else None,
              "abData": {"saveTeacher": save_teacher,
@@ -525,7 +525,7 @@ class TimRouteTest(TimDbTest):
         )
 
     def post_answer_no_abdata(self, plugin_type, task_id, user_input, ref_from=None, **kwargs):
-        return self.json_put(f'/{plugin_type}/{task_id}/answer/',
+        return self.json_put(f'/{plugin_type}/{task_id}/answer',
                              {"input": user_input,
                               "ref_from": {'docId': ref_from[0], 'par': ref_from[1]} if ref_from else None,
                               }, **kwargs)

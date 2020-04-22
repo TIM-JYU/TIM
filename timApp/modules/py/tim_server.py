@@ -187,7 +187,7 @@ class TimServer(http.server.BaseHTTPRequestHandler):
             return self.do_answer(query)
 
         do_headers(self, 'text/plain')
-        return self.wout("Unknow query: " + self.path)
+        return self.wout("Unknown query: " + self.path)
 
     def do_answer(self, query: QueryClass):
         """Do answer route.

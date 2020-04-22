@@ -310,7 +310,6 @@ TimMenuHtmlSchema = class_schema(TimMenuHtmlModel)
 timMenu_plugin = create_blueprint(__name__, 'timMenu', TimMenuHtmlSchema, csrf)
 
 
-@timMenu_plugin.route('/reqs/')
 @timMenu_plugin.route('/reqs')
 def reqs():
     # Note: selecting the whole line doesn't work with underscore in some devices, so

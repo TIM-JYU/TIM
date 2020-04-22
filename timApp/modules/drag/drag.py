@@ -92,7 +92,7 @@ DragAnswerSchema = class_schema(DragAnswerModel)
 app = create_app(__name__, DragHtmlSchema)
 
 
-@app.route('/answer/', methods=['put'])
+@app.route('/answer', methods=['put'])
 @use_args(DragAnswerSchema(), locations=("json",))
 def answer(args: DragAnswerModel):
     web = {}
@@ -107,7 +107,6 @@ def answer(args: DragAnswerModel):
 
     return jsonify(result)
 
-@app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
     templates = ["""

@@ -77,7 +77,6 @@ class RelativeDataBlockValue:
         self.column = column
         self.data = data
 
-@timTable_plugin.route("reqs/")
 @timTable_plugin.route("reqs")
 def tim_table_reqs():
     reqs = {
@@ -102,7 +101,7 @@ def tim_table_multihtml_direct(jsondata):
     return json.dumps(multi)
 
 
-@timTable_plugin.route("multihtml/", methods=["POST"])
+@timTable_plugin.route("multihtml", methods=["POST"])
 @csrf.exempt
 def tim_table_multihtml():
     """
@@ -185,7 +184,7 @@ def tim_table_get_html(jso, review):
     return s
 
 
-@timTable_plugin.route("multimd/", methods=["POST"])
+@timTable_plugin.route("multimd", methods=["POST"])
 @csrf.exempt
 def tim_table_multimd():
     """
@@ -268,7 +267,7 @@ def tim_table_add_user_specific_row():
     db.session.commit()
     return json_response(prepare_for_and_call_dumbo(plug))
 
-@timTable_plugin.route("answer/", methods=["PUT"])
+@timTable_plugin.route("answer", methods=["PUT"])
 @csrf.exempt
 def timTable_answer():
     return timTable_answer_jso(request.get_json())

@@ -236,7 +236,7 @@ def convert_data(data: List[str], field_names: List[str], separator: str) -> Fie
     return conv_data_csv(data, field_names, separator)
 
 
-@importData_plugin.route('/answer/', methods=['put'])
+@importData_plugin.route('/answer', methods=['put'])
 @csrf.exempt
 @use_args(ImportDataAnswerSchema(), locations=("json",))
 def answer(args: ImportDataAnswerModel):
@@ -340,7 +340,6 @@ def answer(args: ImportDataAnswerModel):
     return jsonify(jsonresp)
 
 
-@importData_plugin.route('/reqs/')
 @importData_plugin.route('/reqs')
 def reqs():
     templates = ["""

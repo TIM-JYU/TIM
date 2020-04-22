@@ -144,19 +144,19 @@ GoalTableHtmlSchema = class_schema(GoalTableHtmlModel)
 GoalTableAnswerSchema = class_schema(GoalTableAnswerModel)
 
 
-@goaltable_route.route('/multihtml/', methods=['post'])
+@goaltable_route.route('/multihtml', methods=['post'])
 def goaltable_multihtml():
     ret = render_multihtml(request.get_json(), GoalTableHtmlSchema())
     return ret
 
 
-@goaltable_route.route('/multimd/', methods=['post'])
+@goaltable_route.route('/multimd', methods=['post'])
 def goaltable_multimd():
     ret = render_multimd(request.get_json(), GoalTableHtmlSchema)
     return ret
 
 
-@goaltable_route.route('/answer/', methods=['put'])
+@goaltable_route.route('/answer', methods=['put'])
 @use_args(GoalTableAnswerSchema(), locations=("json",))
 def goaltable_answer(args: GoalTableAnswerModel):
     web = {}
@@ -193,7 +193,6 @@ goals:
 ```""",
 ]
 
-@goaltable_route.route('/reqs/')
 @goaltable_route.route('/reqs')
 def goaltable_reqs():
     return jsonify({

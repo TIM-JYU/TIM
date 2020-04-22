@@ -94,7 +94,7 @@ FeedbackAnswerSchema = class_schema(FeedbackAnswerModel)
 
 app = create_app(__name__, FeedbackHtmlSchema)
 
-@app.route('/answer/', methods=['put'])
+@app.route('/answer', methods=['put'])
 @use_args(FeedbackAnswerSchema(), locations=("json",))
 def answer(args: FeedbackAnswerModel):
     web = {}
@@ -118,7 +118,6 @@ def answer(args: FeedbackAnswerModel):
     return jsonify(result)
 
 
-@app.route('/reqs/')
 @app.route('/reqs')
 def reqs():
     templates = ["""#- {area="dropdowntask1" .task}

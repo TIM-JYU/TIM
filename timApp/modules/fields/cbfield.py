@@ -45,13 +45,13 @@ size="{{cols}}"></span></label>
 CbfieldHtmlSchema = class_schema(CbfieldHtmlModel)
 
 
-@cbfield_route.route('/multihtml/', methods=['post'])
+@cbfield_route.route('/multihtml', methods=['post'])
 def cb_multihtml():
     ret = render_multihtml(request.get_json(), CbfieldHtmlSchema())
     return ret
 
 
-@cbfield_route.route('/answer/', methods=['put'])
+@cbfield_route.route('/answer', methods=['put'])
 @use_args(TextfieldAnswerSchema(), locations=("json",))
 def cb_answer(args: TextfieldAnswerModel):
     web = {}
@@ -68,7 +68,6 @@ def cb_answer(args: TextfieldAnswerModel):
     return jsonify(result)
 
 
-@cbfield_route.route('/reqs/')
 @cbfield_route.route('/reqs')
 def cb_reqs():
     return jsonify({

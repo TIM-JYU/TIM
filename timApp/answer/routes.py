@@ -391,7 +391,8 @@ def multisendemail(task_id_ext: str):
     return ok_response()
 
 
-@answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['PUT'])
+@answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['put'])
+@answers.route("/<plugintype>/<task_id_ext>/answer", methods=['put'])
 def post_answer(plugintype: str, task_id_ext: str):
     """Saves the answer submitted by user for a plugin in the database.
 

@@ -44,7 +44,6 @@ class QuestionInDocument:
     isPreamble: bool
 
 
-@qst_plugin.route("/qst/mcq/reqs/")
 @qst_plugin.route("/qst/mcq/reqs")
 def qst_mcq_reqs():
     reqs = {
@@ -57,7 +56,6 @@ def qst_mcq_reqs():
     return json_response(reqs)
 
 
-@qst_plugin.route("/qst/mmcq/reqs/")
 @qst_plugin.route("/qst/mmcq/reqs")
 def qst_mmcq_reqs():
     reqs = {
@@ -70,7 +68,6 @@ def qst_mmcq_reqs():
     return json_response(reqs)
 
 
-@qst_plugin.route("/qst/reqs/")
 @qst_plugin.route("/qst/reqs")
 def qst_reqs():
     reqs = {
@@ -83,7 +80,7 @@ def qst_reqs():
     return json_response(reqs)
 
 
-@qst_plugin.route("/qst/mcq/answer/", methods=["PUT"])
+@qst_plugin.route("/qst/mcq/answer", methods=["PUT"])
 @csrf.exempt
 def qst_mcq_answer():
     jsondata = request.get_json()
@@ -91,7 +88,7 @@ def qst_mcq_answer():
     return qst_answer_jso(AnswerSchema().load(jsondata))
 
 
-@qst_plugin.route("/qst/mmcq/answer/", methods=["PUT"])
+@qst_plugin.route("/qst/mmcq/answer", methods=["PUT"])
 @csrf.exempt
 def qst_mmcq_answer():
     jsondata = request.get_json()
@@ -134,7 +131,7 @@ class QstAnswerModel(GenericAnswerModel[QstInputModel, QstMarkupModel, QstStateM
 AnswerSchema = class_schema(QstAnswerModel)
 
 
-@qst_plugin.route("/qst/answer/", methods=["PUT"])
+@qst_plugin.route("/qst/answer", methods=["PUT"])
 @csrf.exempt
 @use_model(QstAnswerModel)
 def qst_answer(m):
@@ -176,7 +173,7 @@ def is_review(jso):
     return result
 
 
-@qst_plugin.route("/qst/multihtml/", methods=["POST"])
+@qst_plugin.route("/qst/multihtml", methods=["POST"])
 @csrf.exempt
 def qst_multihtml():
     jsondata = request.get_json()
@@ -263,7 +260,7 @@ def convert_mcq_to_qst(jso, is_mmcq=False):
     qjso["points"] = points
 
 
-@qst_plugin.route("/qst/mcq/multihtml/", methods=["POST"])
+@qst_plugin.route("/qst/mcq/multihtml", methods=["POST"])
 @csrf.exempt
 def qst__mcq_multihtml():
     jsondata = request.get_json()
@@ -274,7 +271,7 @@ def qst__mcq_multihtml():
     return json_response(multi)
 
 
-@qst_plugin.route("/qst/mmcq/multihtml/", methods=["POST"])
+@qst_plugin.route("/qst/mmcq/multihtml", methods=["POST"])
 @csrf.exempt
 def qst__mmcq_multihtml():
     jsondata = request.get_json()
@@ -285,7 +282,7 @@ def qst__mmcq_multihtml():
     return json_response(multi)
 
 
-@qst_plugin.route("/qst/multimd/", methods=["POST"])
+@qst_plugin.route("/qst/multimd", methods=["POST"])
 @csrf.exempt
 def qst_multimd():
     jsondata = request.get_json()
@@ -296,7 +293,6 @@ def qst_multimd():
 
 
 @qst_plugin.route("/qst/mcq/multimd", methods=["POST"])
-@qst_plugin.route("/qst/mcq/multimd/", methods=["POST"])
 @csrf.exempt
 def qst_mcq_multimd():
     jsondata = request.get_json()
@@ -307,7 +303,6 @@ def qst_mcq_multimd():
 
 
 @qst_plugin.route("/qst/mmcq/multimd", methods=["POST"])
-@qst_plugin.route("/qst/mmcq/multimd/", methods=["POST"])
 @csrf.exempt
 def qst_mmcq_multimd():
     jsondata = request.get_json()

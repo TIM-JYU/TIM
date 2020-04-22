@@ -48,13 +48,13 @@ size="{{cols}}"></span></label>
 RbfieldHtmlSchema = class_schema(RbfieldHtmlModel)
 
 
-@rbfield_route.route('/multihtml/', methods=['post'])
+@rbfield_route.route('/multihtml', methods=['post'])
 def rb_multihtml():
     ret = render_multihtml(request.get_json(), RbfieldHtmlSchema())
     return ret
 
 
-@rbfield_route.route('/answer/', methods=['put'])
+@rbfield_route.route('/answer', methods=['put'])
 @use_args(TextfieldAnswerSchema(), locations=("json",))
 def rb_answer(args: TextfieldAnswerModel):
     web = {}
@@ -71,7 +71,6 @@ def rb_answer(args: TextfieldAnswerModel):
     return jsonify(result)
 
 
-@rbfield_route.route('/reqs/')
 @rbfield_route.route('/reqs')
 def rb_reqs():
     return jsonify({

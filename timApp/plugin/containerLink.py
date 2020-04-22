@@ -111,7 +111,7 @@ def call_plugin_generic(plugin: str, method: str, route: str, data=None, headers
     if route == 'multimd' and (plugin == "mmcq" or plugin == "mcq"):  # hack to handle mcq and mmcq in tim by qst
         plug = get_plugin('qst')
         host = plug['host'] + plugin + '/'
-    url = host + route + "/"
+    url = host + route
     try:
         r = do_request(method, url, data, params, headers, read_timeout)
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:
