@@ -14,7 +14,7 @@ from werkzeug.exceptions import HTTPException
 from werkzeug.wrappers import BaseRequest
 
 from marshmallow_dataclass import class_schema
-from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.sessioninfo import get_current_user_object, logged_in
 from timApp.timdb.exceptions import InvalidReferenceException
 from timApp.user.user import Consent
 from utils import DurationSchema
@@ -127,8 +127,13 @@ def get_request_time():
 
 
 def get_request_message(status_code=None, include_body=False):
+    # Optimization: don't try to access database if not logged in.
+    if not logged_in():
+        name = 'Anonymous'
+    else:
+        name = get_current_user_object().name
     msg = f"""
-{get_current_user_object().name}
+{name}
 [{request.headers.get("X-Forwarded-For") or request.remote_addr}]:
 {request.method}
 {request.full_path if request.query_string else request.path}

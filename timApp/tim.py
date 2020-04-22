@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import time
 from dataclasses import dataclass
 from typing import Optional, List
@@ -27,8 +26,7 @@ from timApp.answer.routes import answers
 from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
 from timApp.auth.login import login_page
 from timApp.auth.saml import saml
-from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, get_current_user_id, \
-    logged_in, current_user_in_lecture
+from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, logged_in, current_user_in_lecture
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.bookmark.routes import bookmarks, add_to_course_bookmark
 from timApp.document.course.routes import course_blueprint
@@ -65,7 +63,6 @@ from timApp.tim_app import app, default_secret
 from timApp.upload.upload import upload
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
-from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
@@ -326,10 +323,9 @@ def disable_cache_for_testing(response):
 
 def should_log_request():
     p = request.path
-    # don't log OpenID completion URL because it contains email etc.
-    if p.startswith('/openIDLogin') and b'&openid_complete=yes' in request.query_string:
-        return False
     if p.startswith('/static/'):
+        return False
+    if p.startswith('/js/'):
         return False
     if p == '/favicon.ico':
         return False
