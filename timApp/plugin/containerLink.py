@@ -113,17 +113,21 @@ def call_plugin_generic(plugin: str, method: str, route: str, data=None, headers
         host = plug['host'] + plugin + '/'
     url = host + route + "/"
     try:
-        return do_request(method, url, data, params, headers, read_timeout)
+        r = do_request(method, url, data, params, headers, read_timeout)
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:
         log_warning(f'Connection failed to plugin {plugin}: {e}')
         raise PluginException(f"Could not connect to {plugin} ({url}).")
     except requests.exceptions.ReadTimeout as e:
         log_warning(f'Read timeout occurred for plugin {plugin} in route {route}: {e}')
         raise PluginException(f"Read timeout occurred when calling {plugin}.")
+    else:
+        if r.status_code >= 500:
+            raise PluginException(f'Got response with status code {r.status_code}')
+        return r.text
 
 
-def do_request(method, url, data, params, headers, read_timeout):
-    request = requests.request(
+def do_request(method, url, data, params, headers, read_timeout) -> requests.Response:
+    resp = requests.request(
         method,
         url,
         data=data,
@@ -131,8 +135,8 @@ def do_request(method, url, data, params, headers, read_timeout):
         headers=headers,
         params=params,
     )
-    request.encoding = 'utf-8'
-    return request.text
+    resp.encoding = 'utf-8'
+    return resp
 
 
 # Not used currently.
