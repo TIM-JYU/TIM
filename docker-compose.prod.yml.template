@@ -17,7 +17,7 @@ services:
   depends_on:
    - nginx
   environment:
-   CADDY_DOMAINS: ${CADDY_DOMAINS}
+   CADDY_DOMAINS: ${CADDY_DOMAINS:?}
  pali:
   environment:
     SHOW_TEMPLATES: "False"

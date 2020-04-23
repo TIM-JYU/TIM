@@ -29,7 +29,7 @@ services:
    args:
     MAIN_CONFIG: tim_dev.conf
  tests:
-  image: timimages/tim:${TIM_IMAGE_TAG}
+  image: timimages/tim:${TIM_IMAGE_TAG:?}
   command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"
   volumes:
    - .:/service:rw
@@ -47,8 +47,8 @@ services:
   read_only: true
 # Disable some images and services that are not used in tests.
  stack-api-server:
-  image: timimages/tim:${TIM_IMAGE_TAG}
+  image: timimages/tim:${TIM_IMAGE_TAG:?}
   command: "sleep infinity"
  timagent:
-  image: timimages/tim:${TIM_IMAGE_TAG}
+  image: timimages/tim:${TIM_IMAGE_TAG:?}
   command: "sleep infinity"
