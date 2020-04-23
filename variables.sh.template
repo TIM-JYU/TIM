@@ -10,6 +10,7 @@ export CADDY_EXTRA_CONFIG='
 
 ' # Extra configuration to add to Caddyfile
 export TIM_IMAGE_TAG=$(${DIR}/get_latest_date.sh)   # TIM image tag to use
+export PG_MAX_CONNECTIONS=200                  # Maximum number of allowed connections to PostgreSQL
 export COMPOSE_PROJECT_NAME=tim                # Name of the Docker Compose project
 export TIM_ROOT=${DIR}                         # TIM root; do not modify
 export FILES_ROOT=${DIR}/timApp/tim_files      # Root directory for non-db storage (document content etc.)
