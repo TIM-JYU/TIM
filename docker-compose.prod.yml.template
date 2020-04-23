@@ -18,6 +18,7 @@ services:
    - nginx
   environment:
    CADDY_DOMAINS: ${CADDY_DOMAINS:?}
+   CADDY_EXTRA_CONFIG: ${CADDY_EXTRA_CONFIG:?}
  pali:
   environment:
     SHOW_TEMPLATES: "False"
