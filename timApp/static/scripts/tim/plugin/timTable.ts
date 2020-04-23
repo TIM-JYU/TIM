@@ -132,6 +132,13 @@ export interface CellAttrToSave {
     key: string;
 }
 
+export interface IRectLimits {
+    minx: number;
+    maxx: number;
+    miny: number;
+    maxy: number;
+}
+
 export interface HideValues {
     edit?: boolean;
     insertMenu?: boolean;
@@ -155,6 +162,7 @@ export interface IToolbarTemplate {
     buttonClass?: string;
     style?: Record<string, string>;
     buttonStyle?: Record<string, string>;
+    rect?: Record<string, IToolbarTemplate>;
 }
 
 export interface TimTable {
@@ -2992,8 +3000,37 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
     }
 
-    async handleToolbarSetCell(value: IToolbarTemplate) {
-        const cellsToSave: CellAttrToSave[] = [];
+    findRectLimits(cells: CellIndex[]): IRectLimits {
+        const r: IRectLimits = {
+            minx: 1e100,
+            maxx: -1,
+            miny: 1e100,
+            maxy: -1,
+        };
+        for (const c of cells) {
+            if (c.x < r.minx) { r.minx = c.x; }
+            if (c.x > r.maxx) { r.maxx = c.x; }
+            if (c.y < r.miny) { r.miny = c.y; }
+            if (c.y > r.maxy) { r.maxy = c.y; }
+        }
+        return r;
+    }
+
+    getRectValue(rect: Record<string, IToolbarTemplate>, rectLimits: IRectLimits, c: CellIndex): IToolbarTemplate {
+        if (rectLimits.minx == c.x && rectLimits.miny == c.y) { return rect.lt; }
+        if (rectLimits.maxx == c.x && rectLimits.miny == c.y) { return rect.rt; }
+        if (rectLimits.miny == c.y) { return rect.t; }
+
+        if (rectLimits.minx == c.x && rectLimits.maxy == c.y) { return rect.lb; }
+        if (rectLimits.maxx == c.x && rectLimits.maxy == c.y) { return rect.rb; }
+        if (rectLimits.maxy == c.y) { return rect.b; }
+
+        if (rectLimits.minx == c.x) { return rect.l; }
+        if (rectLimits.maxx == c.x) { return rect.r; }
+        return rect.c;
+    }
+
+    doHandleToolbarSetCell(value: IToolbarTemplate, cellsToSave: CellAttrToSave[], cells: CellIndex[]) {
         for (const [key, ss] of Object.entries(value)) {
             try {
                 if (key.startsWith("$$")) {
@@ -3004,7 +3041,19 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     if (this.currentCell) {
                         this.currentCell.editedCellContent = svalue;
                     }
-                    await this.saveToCurrentCell(svalue);  // TODO: think if this can be done with same query
+                    this.saveToCurrentCell(svalue).then();  // TODO: think if this can be done with same query
+                    continue;
+                }
+                if (key === "rect") {
+                    const rectLimits = this.findRectLimits(cells);
+                    const rect = value.rect;
+                    if (!rect) { continue; }
+                    for (const c of cells) {
+                        const cell = [c];
+                        const val = this.getRectValue(rect, rectLimits, c);
+                        if (!val) { continue; }
+                        this.doHandleToolbarSetCell(val, cellsToSave, cell);
+                    }
                     continue;
                 }
                 if (key === "style") {
@@ -3015,11 +3064,12 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     // eslint-disable-next-line guard-for-in
                     for (const skey in vstyle) {
                         // sometimes there is extra # in colors?
-                        let s = vstyle[skey];
-                        if (s.startsWith("##")) {
-                            s = s.substr(1);
+                        let cellStyle = vstyle[skey];
+                        if (cellStyle.startsWith("##")) {
+                            cellStyle = cellStyle.substr(1);
                         }
-                        for (const c of this.selectedCells.cells) {
+                        for (const c of cells) {
+                            let s = cellStyle;
                             if (skey === "class") {
                                 const oldCls = this.cellDataMatrix[c.y][c.x].class;
                                 if (oldCls) { // todo toggle
@@ -3036,6 +3086,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 // continue;
             } // for key
         }
+    }
+
+    async handleToolbarSetCell(value: IToolbarTemplate) {
+        const cellsToSave: CellAttrToSave[] = [];
+        this.doHandleToolbarSetCell(value, cellsToSave, this.selectedCells.cells);
         if (cellsToSave) {
             await this.setCellStyleAttribute(cellsToSave, true);
         }
