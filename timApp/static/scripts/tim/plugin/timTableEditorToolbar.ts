@@ -4,7 +4,7 @@ import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {HideValues, IToolbarTemplate, TimTableComponent} from "./timTable";
 
 export interface ITimTableToolbarCallbacks {
-    setCell: (value: Record<string, string>) => void;
+    setCell: (value: IToolbarTemplate) => void;
     addToTemplates: () => void;
     addColumn: (offset: number) => void;
     addRow: (offset: number) => void;
@@ -116,7 +116,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      */
     private setTextAlign(value: string) {
        //  this.callbacks.setTextAlign(value);
-        this.callbacks.setCell({textAlign: value});
+        this.callbacks.setCell({ style: {textAlign: value}});
     }
 
     // noinspection JSUnusedLocalSymbols
@@ -132,7 +132,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      * Clears cell format
      */
     private clearFormat() {
-        this.callbacks.setCell({CLEAR: "ALL"});
+        this.callbacks.setCell({ style: {CLEAR: "ALL"}});
     }
 
     // noinspection JSUnusedLocalSymbols
@@ -181,8 +181,8 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         let cls = "toolbarButton";
         if (value.buttonClass) {
             cls = " " + value.buttonClass;
-        } else if (value.class) {
-            cls += " " + value.class;
+        } else if (value.style && value.style.class) {
+            cls += " " + value.style.class;
         }
         return cls;
     }
@@ -196,7 +196,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
             // @ts-ignore
             return value.buttonStyle;
         }
-        return value;
+        return value.style;
     }
 
     // noinspection JSUnusedLocalSymbols
@@ -214,7 +214,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     private static onColorPickerClose(color: string) {
         if (instance) {
             instance.previousBackgroundColor = instance.cellBackgroundColor;
-            instance.callbacks.setCell({backgroundColor: "#" + color});
+            instance.callbacks.setCell({ style: {backgroundColor: "#" + color}});
         }
     }
 
@@ -225,7 +225,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
 
     // noinspection JSUnusedLocalSymbols
     private applyBackgroundColor() {
-        this.callbacks.setCell({backgroundColor: "#" + this.previousBackgroundColor});
+        this.callbacks.setCell({ style: {backgroundColor: "#" + this.previousBackgroundColor}});
     }
 
     // noinspection JSUnusedLocalSymbols

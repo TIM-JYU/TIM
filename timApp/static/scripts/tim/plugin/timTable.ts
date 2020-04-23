@@ -149,11 +149,11 @@ export interface HideValues {
 }
 
 export interface IToolbarTemplate {
-    color?: string;
     cell?: string;
     text?: string;
     class?: string;
     buttonClass?: string;
+    style?: Record<string, string>;
     buttonStyle?: Record<string, string>;
 }
 
@@ -265,7 +265,7 @@ export interface IColumn { // extends IColumnStyles
 
 export interface ICell { // extends ICellStyles
     cell: CellType;
-    cls?: string;
+    class?: string;
     editorOpen?: boolean;
     colspan?: number;
     rowspan?: number;
@@ -2396,7 +2396,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     classForCell(rowi: number, coli: number) {
-        let cls = this.cellDataMatrix[rowi][coli].cls;
+        let cls = this.cellDataMatrix[rowi][coli].class;
         if (!cls) { cls = ""; }
         cls += (this.isActiveCell(rowi, coli) ? " activeCell" : "");
         return  cls;
@@ -2423,7 +2423,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         const def = this.data.table.defcells;
         if (def) {
-            this.cellDataMatrix[rowi][coli].cls = this.applyStyle(styles, def, cellStyles);
+            this.cellDataMatrix[rowi][coli].class = this.applyStyle(styles, def, cellStyles);
         }
 
         const defrange = this.data.table.defcellsrange;
@@ -2441,7 +2441,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         const cell = this.cellDataMatrix[rowi][coli];
 
-        this.cellDataMatrix[rowi][coli].cls = this.applyStyle(styles, cell, cellStyles);
+        this.cellDataMatrix[rowi][coli].class = this.applyStyle(styles, cell, cellStyles);
 
         if (this.data.maxWidth) {
             styles["max-width"] = this.data.maxWidth;
@@ -2992,51 +2992,49 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
     }
 
-    async handleToolbarSetCell(value: Record<string, string>) {
+    async handleToolbarSetCell(value: IToolbarTemplate) {
         const cellsToSave: CellAttrToSave[] = [];
         for (const [key, ss] of Object.entries(value)) {
             try {
-                let s = ss;
                 if (key.startsWith("$$")) {
                     continue;
                 }
-                if (key === "text") {
-                    continue;
-                }
-                if (key === "buttonClass") {
-                    continue;
-                }
-                if (key === "buttonStyle") {
-                    continue;
-                }
                 if (key === "cell") {
+                    const svalue = String(ss);
                     if (this.currentCell) {
-                        this.currentCell.editedCellContent = s;
+                        this.currentCell.editedCellContent = svalue;
                     }
-                    await this.saveToCurrentCell(s);  // TODO: think if this can be done with same query
-                } else {
-                    // sometimes there is extra # in colors?
-                    if (s.startsWith("##")) {
-                        s = s.substr(1);
+                    await this.saveToCurrentCell(svalue);  // TODO: think if this can be done with same query
+                    continue;
+                }
+                if (key === "style") {
+                    if (!value.style) {
+                        continue;
                     }
-                    for (const c of this.selectedCells.cells) {
-                        if (key === "class") {
-                            const oldCls = this.cellDataMatrix[c.y][c.x].cls;
-                            if (oldCls) {
-                                if (!oldCls.includes(s)) {
-                                    s = oldCls + " " + s;
-                                } else {
-                                    continue;
+                    const vstyle: Record<string, string> = value.style;
+                    // eslint-disable-next-line guard-for-in
+                    for (const skey in vstyle) {
+                        // sometimes there is extra # in colors?
+                        let s = vstyle[skey];
+                        if (s.startsWith("##")) {
+                            s = s.substr(1);
+                        }
+                        for (const c of this.selectedCells.cells) {
+                            if (skey === "class") {
+                                const oldCls = this.cellDataMatrix[c.y][c.x].class;
+                                if (oldCls) { // todo toggle
+                                    if (!oldCls.includes(s)) {
+                                        s = oldCls + " " + s;
+                                    }
                                 }
                             }
+                            cellsToSave.push({col: c.x, row: c.y, key: skey, c: s});
                         }
-                        cellsToSave.push({col: c.x, row: c.y, key: key, c: s});
                     }
-
                 }
             } catch (e) {
-                continue;
-            }
+                // continue;
+            } // for key
         }
         if (cellsToSave) {
             await this.setCellStyleAttribute(cellsToSave, true);
@@ -3053,7 +3051,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const rowId = this.activeCell.row;
         const colId = this.activeCell.col;
         const cellObj = this.cellDataMatrix[rowId][colId];
-        const templ: Record<string, string> = {};
+        const templ: IToolbarTemplate = {};
         let value;
 
         if (!this.task) {
@@ -3075,7 +3073,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             if (typeof val !== "string") {
                 continue;
             }
-            templ[key] = val;
+            if (!templ.style) {
+                templ.style = {};
+            }
+            templ.style[key] = val;
         }
         templ.cell = value;
         if (this.data.toolbarTemplates === undefined) {
