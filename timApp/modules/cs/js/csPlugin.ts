@@ -2106,7 +2106,7 @@ ${fhtml}
         this.runSuccess = false;
         this.runError = false;
         this.result = "";
-        this.viewCode = false;
+        this.viewCode = this.attrs.viewCode;
         if (this.editorModeIndecies[this.editorMode] > 1) {
             this.initUserCode = true;
             this.showOtherEditor(this.editorMode);
