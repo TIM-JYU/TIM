@@ -5,16 +5,19 @@ services:
    - /run
  caddy:
   image: caddy:2.0.0-rc.3
-  command: caddy reverse-proxy --from ${TIM_HOST} --to nginx
+  command: caddy run --config /etc/caddy/Caddyfile
   read_only: true
   volumes:
    - caddy_data:/data
    - caddy_config:/config
+   - ./Caddyfile:/etc/caddy/Caddyfile:ro
   ports:
    - "80:80"
    - "443:443"
   depends_on:
    - nginx
+  environment:
+   CADDY_DOMAINS: ${CADDY_DOMAINS}
  pali:
   environment:
     SHOW_TEMPLATES: "False"

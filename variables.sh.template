@@ -5,7 +5,10 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo variables.sh: Fill in appropriate variable values and comment this line. ; exit 1
 
 export TIM_HOST=https://localhost               # Hostname for the TIM instance
-export BROWSER_URL=https://localhost            # URL to use in JavaScript where relative URL does not work (e.g. certain iframes; only used by Stack plugin so far)
+export CADDY_DOMAINS=localhost                  # Domain(s) for Caddy server (comma separated); not used locally
+export CADDY_EXTRA_CONFIG='
+
+' # Extra configuration to add to Caddyfile
 export TIM_IMAGE_TAG=$(${DIR}/get_latest_date.sh)   # TIM image tag to use
 export COMPOSE_PROJECT_NAME=tim                # Name of the Docker Compose project
 export TIM_ROOT=${DIR}                         # TIM root; do not modify

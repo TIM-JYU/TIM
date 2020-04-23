@@ -257,7 +257,7 @@ services:
    # - ./stack/cas/castext/jsxgraphapi.block.php:/var/www/html/stack/cas/castext/jsxgraph.block.php
   restart: unless-stopped
   environment:
-   BROWSER_URL: ${BROWSER_URL}
+   BROWSER_URL: ${TIM_HOST}
  oiko:
   image: timimages/tim:${TIM_IMAGE_TAG}
   command: gunicorn -b 0.0.0.0:5000 app:app

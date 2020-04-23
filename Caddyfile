@@ -1,0 +1,5 @@
+{$CADDY_DOMAINS} {
+  reverse_proxy http://nginx
+}
+
+{$CADDY_EXTRA_CONFIG}
