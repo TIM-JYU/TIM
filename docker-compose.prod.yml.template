@@ -19,6 +19,7 @@ services:
   environment:
    CADDY_DOMAINS: ${CADDY_DOMAINS:?}
    CADDY_EXTRA_CONFIG: ${CADDY_EXTRA_CONFIG:?}
+  restart: unless-stopped
  pali:
   environment:
     SHOW_TEMPLATES: "False"
