@@ -118,7 +118,7 @@ class UserOrigin(Enum):
 
 @dataclass
 class UserInfo:
-    username: str
+    username: Optional[str] = None
     email: Optional[str] = None
     full_name: Optional[str] = None
     given_name: Optional[str] = None
@@ -481,7 +481,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             self,
             info: UserInfo,
     ):
-        if self.name and self.name != info.username:
+        if info.username and self.name != info.username:
             group = self.get_personal_group()
             self.name = info.username
             group.name = info.username
