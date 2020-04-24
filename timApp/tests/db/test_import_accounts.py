@@ -45,11 +45,7 @@ class AccountImportTest(TimDbTest):
     def write_and_test(self, accounts: List[UserInfo], username_is_email=False, expected_existing=None):
         if expected_existing is None:
             expected_existing = []
-        csv_path = os.path.join(self.test_files_path, 'import.csv')
-        with open(csv_path, 'w') as f:
-            w = csv.writer(f, delimiter=';')
-            for a in accounts:
-                w.writerow((a.email, a.full_name, a.username))
+        csv_path = self.write_test_csv(accounts)
         _, existing = import_accounts(csv_path, 'testpass')
         self.assertEqual(set(expected_existing), set(u.name for u in existing))
         for a in accounts:
@@ -65,3 +61,16 @@ class AccountImportTest(TimDbTest):
                 self.assertEqual(a.email, u.name)
             else:
                 self.assertEqual(a.username, u.name)
+
+    def write_test_csv(self, accounts):
+        csv_path = os.path.join(self.test_files_path, 'import.csv')
+        with open(csv_path, 'w') as f:
+            w = csv.writer(f, delimiter=';')
+            for a in accounts:
+                w.writerow((a.email, a.full_name, a.username))
+        return csv_path
+
+    def test_import_no_password(self):
+        csv_path = self.write_test_csv([UserInfo(full_name='Testing User', username='t@example.com')])
+        added, _ = import_accounts(csv_path, '')
+        self.assertIsNone(added[0].pass_)

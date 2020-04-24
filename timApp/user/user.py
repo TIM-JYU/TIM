@@ -303,7 +303,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             is_admin: bool = False,
             uid: Optional[int] = None,
     ) -> Tuple['User', UserGroup]:
-        p_hash = create_password_hash(info.password) if info.password is not None else (info.password_hash or '')
+        p_hash = create_password_hash(info.password) if info.password is not None else info.password_hash
         # noinspection PyArgumentList
         user = User(
             id=uid,

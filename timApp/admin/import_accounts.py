@@ -18,7 +18,7 @@ def import_accounts(file: str, password: str) -> Tuple[List[User], List[User]]:
     added = []
     with open(file) as csvfile:
         reader = csv.reader(csvfile, delimiter=';')
-        pwhash = create_password_hash(password)
+        pwhash = create_password_hash(password) if password else None
         for row in reader:
             if len(row) != 3:
                 raise ImportException(f'All rows must have 3 fields, found a row with {len(row)} fields: {row}')
