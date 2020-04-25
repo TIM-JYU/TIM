@@ -3017,6 +3017,21 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getRectValue(rect: Record<string, IToolbarTemplate>, rectLimits: IRectLimits, c: CellIndex): IToolbarTemplate {
+        if (rectLimits.minx == rectLimits.maxx && rectLimits.miny == rectLimits.maxy) { return rect.one; }
+
+        if (rectLimits.minx == rectLimits.maxx) { // one column
+            if (rectLimits.miny == c.y) { return rect.c1t; }
+            if (rectLimits.maxy == c.y) { return rect.c1b; }
+            return rect.c1c;
+        }
+
+        if (rectLimits.miny == rectLimits.maxy) { // one row
+            if (rectLimits.minx == c.x) { return rect.r1l; }
+            if (rectLimits.maxx == c.x) { return rect.r1r; }
+            return rect.r1c;
+        }
+
+        // Now we have at least 2x2 rect
         if (rectLimits.minx == c.x && rectLimits.miny == c.y) { return rect.lt; }
         if (rectLimits.maxx == c.x && rectLimits.miny == c.y) { return rect.rt; }
         if (rectLimits.miny == c.y) { return rect.t; }
