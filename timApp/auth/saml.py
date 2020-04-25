@@ -130,7 +130,7 @@ def get_haka_metadata_from_url(url: str) -> str:
 def prepare_flask_request(r: Request):
     url_data = urlparse(r.url)
     return {
-        'https': 'on' if r.scheme == 'https' else 'off',
+        'https': 'on',
         'http_host': r.host,
         'server_port': url_data.port,
         'script_name': r.path,
