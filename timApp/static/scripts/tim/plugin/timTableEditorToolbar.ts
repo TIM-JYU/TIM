@@ -169,8 +169,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         let v = value.text;
         if (!v) { v = value.cell; }
         if (!v) { return "\u2003"; } // &#8195  em space &emsp;
+        v = "" + v;
         // v = v.replace('$', '');
-        return v.substr(0, 5);
+        return v.substr(0, Math.min(v.length, 5));
     }
 
     // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic
@@ -336,7 +337,7 @@ registerDialogComponent(TimTableEditorToolbarController,
                 </button>
                 <button class="timButton btn-xs"
                         ng-hide="$ctrl.hide.addToTemplates"
-                        title="Add current cell to templates"
+                        title="Add current cell(s) to templates"
                         ng-click="$ctrl.addToTemplates()">
                     <i class="glyphicon glyphicon-star-empty"></i>
                 </button>

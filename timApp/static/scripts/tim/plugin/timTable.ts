@@ -60,9 +60,9 @@ import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import deepEqual from "deep-equal";
 import {Subscription} from "rxjs";
 import {openEditorSimple} from "tim/editor/pareditorOpen";
+import angular from "angular";
 import {onClick} from "../document/eventhandlers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
@@ -163,6 +163,7 @@ export interface IToolbarTemplate {
     style?: Record<string, string>;
     buttonStyle?: Record<string, string>;
     rect?: Record<string, IToolbarTemplate>;
+    area?: (IToolbarTemplate|undefined)[][];
 }
 
 export interface TimTable {
@@ -238,22 +239,24 @@ export interface ITable { // extends ITableStyles
 
 export interface DataEntity {
     type: "Relative" | "Abstract";
-    cells: CellDataEntity;
+    cells: ICellDataEntity;
 }
 
-export interface CellIndex {
+export interface ICellIndex {
     x: number;
     y: number;
 }
 
-export interface SelectedCells {
-    cells: CellIndex[];   // List of original cell indecies inside selected area
+export interface ISelectedCells {
+    cells: ICellIndex[];   // List of original cell indecies inside selected area
     srows: boolean[];     // table for screen indecies selected
     scol1: number;        // screen index for first selected column
     scol2: number;        // screen index for last selected column
+    srow1: number;        // screen index for first selected row
+    srow2: number;        // screen index for last selected row
 }
 
-export interface CellDataEntity {
+export interface ICellDataEntity {
     [key: string]: CellEntity;
 }
 
@@ -271,13 +274,18 @@ export interface IColumn { // extends IColumnStyles
     [key: string]: unknown;
 }
 
+export interface ICellCoord {
+    row: number;
+    col: number;
+}
+
 export interface ICell { // extends ICellStyles
     cell: CellType;
     class?: string;
     editorOpen?: boolean;
     colspan?: number;
     rowspan?: number;
-    underSpanOf?: { row: number, col: number };
+    underSpanOf?: ICellCoord;
     renderIndexX?: number;
     renderIndexY?: number; // TODO: Is this useless?
     styleCache?: Record<string, string>; // cache of computed styles for this cell
@@ -572,9 +580,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private isRunning = false;
     public taskBorders = false;
     currentCell?: ICurrentCell; // the cell currently being edited
-    public activeCell?: { row: number, col: number };
-    public startCell?: { row: number, col: number };
-    private selectedCells: SelectedCells = {cells: [], srows: [], scol1: 0, scol2: 0};
+    public activeCell?: ICellCoord;
+    public startCell?: ICellCoord;
+    private selectedCells: ISelectedCells = {cells: [], srows: [], scol1: 0, scol2: 0, srow1: 0, srow2: 0};
     public shiftDown = false;
     public cbAllFilter = false;
     public cbs: boolean[] = [];
@@ -1350,20 +1358,22 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.selectedCells.srows = [];
     }
 
-    getSelectedCells(row: number, col: number): SelectedCells {
-        const ret: CellIndex[] = [];
+    getSelectedCells(row: number, col: number): ISelectedCells {
+        const ret: ICellIndex[] = [];
         const srows: boolean[] = [];
 
         const scol = col;
         const srow = this.permTableToScreen[row];
         if (scol == undefined || srow < 0) {
-            return {cells: ret, srows: [], scol1: 0, scol2: 0};
+            return {cells: ret, srows: [], scol1: 0, scol2: 0, srow1: 0, srow2: 0};
         }
 
         let sx1 = scol;
         let sx2 = scol;
         let sy1 = srow;
         let sy2 = srow;
+        let ymin = 1000000;
+        let ymax = 0;
         if (this.startCell) {
             const sscol = this.startCell.col; // start screen...
             const ssrow = this.permTableToScreen[this.startCell.row];
@@ -1384,9 +1394,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 }
                 srows[sy] = true;
                 ret.push({x: sx, y: y});
+                ymin = Math.min(y, ymin);
+                ymax = Math.max(y, ymax);
             }
         }
-        return {cells: ret, srows: srows, scol1: sx1, scol2: sx2};
+        return {cells: ret, srows: srows, scol1: sx1, scol2: sx2, srow1: ymin, srow2: ymax};
     }
 
     /**
@@ -1396,12 +1408,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param {string} parId Paragraph id
      * @param {number} row  Row index
      * @param {number} col Column index
+     * @param {ISelectedCells} selectedCells cells to fill with that content
      */
-    async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number) {
+    async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number, selectedCells: ISelectedCells) {
+        if (row >= this.cellDataMatrix.length || col >= this.cellDataMatrix[row].length) { return; }
         const cellsToSave: CellToSave[] = [];
         if (this.task) {
             // const cells = this.getSelectedCells(row, col);
-            for (const c of this.selectedCells.cells) {
+            for (const c of selectedCells.cells) {
                 cellsToSave.push({c: cellContent, row: c.y, col: c.x});
                 this.setUserContent(c.y, c.x, cellContent);
             }
@@ -1415,7 +1429,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return;
         }
 
-        for (const c of this.selectedCells.cells) {
+        for (const c of selectedCells.cells) {
             cellsToSave.push({c: cellContent, row: c.y, col: c.x});
         }
         const response = await to($http.post<CellResponse[]>("/timTable/saveMultiCell", {
@@ -1467,7 +1481,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             "Edit table cell", "timTableCell");
         curr.editorOpen = false;
         if (result.type == "save" && result.text != curr.editedCellInitialContent) {
-            await this.saveCells(result.text, docId, parId, curr.row, curr.col);
+            await this.saveCells(result.text, docId, parId, curr.row, curr.col, this.selectedCells);
             // ctrl.cellDataMatrix[row][col] = result.text
             curr.editedCellContent = result.text;
             this.closeSmallEditor();
@@ -1588,6 +1602,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param {ICell} targetCell The ICell instance to which the attributes are applied to.
      */
     private applyCellEntityAttributesToICell(sourceCell: CellEntity, targetCell: ICell) {
+        targetCell.styleCache = undefined
         if (isPrimitiveCell(sourceCell)) {
             targetCell.cell = this.cellToString(sourceCell);
             return;
@@ -1628,9 +1643,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     /**
      * Combines datablock data
-     * @param {CellDataEntity} cells: cells part of tabledatablock
+     * @param {ICellDataEntity} cells: cells part of tabledatablock
      */
-    public processDataBlock(cells: CellDataEntity) {
+    public processDataBlock(cells: ICellDataEntity) {
         const alphaRegExp = /([A-Z]*)/;
         for (const [item, value] of Object.entries(cells)) {
             const alpha = alphaRegExp.exec(item);
@@ -1720,7 +1735,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param {{col: number, row: number}} address row and column index
      * @returns {boolean} true if valid
      */
-    checkThatAddIsValid(address: { col: number; row: number }): boolean {
+    checkThatAddIsValid(address: ICellCoord): boolean {
         return (address.col >= 0 && address.row >= 0);
     }
 
@@ -2071,7 +2086,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param y The original Y coordinate (original row index) of the source cell.
      * @param direction The direction.
      */
-    private getNextCell(x: number, y: number, direction: Direction): { row: number, col: number } | null {
+    private getNextCell(x: number, y: number, direction: Direction): ICellCoord | null {
         let sourceCell = this.cellDataMatrix[y][x];
         while (sourceCell.underSpanOf) {
             sourceCell = this.cellDataMatrix[sourceCell.underSpanOf.row][sourceCell.underSpanOf.col];
@@ -2280,15 +2295,15 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             const value = this.currentCell.editedCellContent;
 
             if (this.currentCell.editedCellInitialContent != value) {
-                await this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col);
+                await this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col, this.selectedCells);
                 return true;
             }
         }
         return false;
     }
 
-    private async saveToCurrentCell(value: string) {
-        if (!this.viewctrl || !this.activeCell) {
+    private async saveToCell(cell: ICellCoord | undefined, value: string, selectedCells: ISelectedCells) {
+        if (!this.viewctrl || !cell) {
             return;
         }
         const parId = this.getOwnParId();
@@ -2297,12 +2312,18 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
 
         const docId = this.viewctrl.item.id;
-        const rowId = this.activeCell.row;
-        const colId = this.activeCell.col;
+        const rowId = cell.row;
+        const colId = cell.col;
 
-        await this.saveCells(value, docId, parId, rowId, colId);
+        await this.saveCells(value, docId, parId, rowId, colId, selectedCells);
         return true;
     }
+
+    /*
+    private async saveToCurrentCell(value: string) {
+        return this.saveToCell(this.activeCell, value, this.selectedCells);
+    }
+    */
 
     /**
      * Updates position of the small cell editor (if it is open).
@@ -3000,7 +3021,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
     }
 
-    findRectLimits(cells: CellIndex[]): IRectLimits {
+    findRectLimits(cells: ICellIndex[]): IRectLimits {
         const r: IRectLimits = {
             minx: 1e100,
             maxx: -1,
@@ -3016,7 +3037,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return r;
     }
 
-    getRectValue(rect: Record<string, IToolbarTemplate>, rectLimits: IRectLimits, c: CellIndex): IToolbarTemplate {
+    getRectValue(rect: Record<string, IToolbarTemplate>, rectLimits: IRectLimits, c: ICellIndex): IToolbarTemplate {
         if (rectLimits.minx == rectLimits.maxx && rectLimits.miny == rectLimits.maxy) { return rect.one; }
 
         if (rectLimits.minx == rectLimits.maxx) { // one column
@@ -3045,18 +3066,25 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return rect.c;
     }
 
-    doHandleToolbarSetCell(value: IToolbarTemplate, cellsToSave: CellAttrToSave[], cells: CellIndex[]) {
+    doHandleToolbarSetCell(cell: ICellCoord | undefined, value: IToolbarTemplate,
+                           cellsToSave: CellAttrToSave[], cells: ICellIndex[], selectedCells: ISelectedCells) {
+        if (!cell || cell.row >= this.cellDataMatrix.length || cell.col >= this.cellDataMatrix[cell.row].length) { return; }
         for (const [key, ss] of Object.entries(value)) {
             try {
                 if (key.startsWith("$$")) {
                     continue;
                 }
                 if (key === "cell") {
+                    if (!cell) { continue; }
                     const svalue = String(ss);
-                    if (this.currentCell) {
+                    if (this.currentCell && this.currentCell.row == cell.row && this.currentCell.col == cell.col) {
                         this.currentCell.editedCellContent = svalue;
                     }
-                    this.saveToCurrentCell(svalue).then();  // TODO: think if this can be done with same query
+                    // this.saveToCell(cell, svalue, selectedCells).then();  // TODO: think if this can be done with same query
+                    for (const c of cells) {
+                        cellsToSave.push({col: c.x, row: c.y, key: "cell", c: svalue});
+                    }
+                    this.cellDataMatrix[cell.row][cell.col].cell = svalue;
                     continue;
                 }
                 if (key === "rect") {
@@ -3064,10 +3092,32 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     const rect = value.rect;
                     if (!rect) { continue; }
                     for (const c of cells) {
-                        const cell = [c];
+                        const ccells = [c];
                         const val = this.getRectValue(rect, rectLimits, c);
                         if (!val) { continue; }
-                        this.doHandleToolbarSetCell(val, cellsToSave, cell);
+                        this.doHandleToolbarSetCell(cell, val, cellsToSave, ccells, this.selectedCells);
+                    }
+                    continue;
+                }
+                if (key === "area") {
+                    const area = value.area;
+                    if (!area || !cell) { continue; }
+
+                    for (let r = 0; r < area.length; r++) {
+                        const cellIdx = {row: cell.row + r, col: cell.col};
+                        for (let c = 0; c < area[r].length; c++) {
+                            cellIdx.col = cell.col + c;
+                            const celXY = {x: cellIdx.col, y: cellIdx.row};
+                            const ccells = [celXY];
+                            const selCels: ISelectedCells = {cells: [celXY], srows: [],
+                                                             scol1: cellIdx.col, scol2: cellIdx.col,
+                                                             srow1: cellIdx.row, srow2: cellIdx.row};
+                            const val = area[r][c];
+                            if (!val) {
+                                continue;
+                            }
+                            this.doHandleToolbarSetCell(cellIdx, val, cellsToSave, ccells, selCels);
+                        }
                     }
                     continue;
                 }
@@ -3105,29 +3155,27 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     async handleToolbarSetCell(value: IToolbarTemplate) {
         const cellsToSave: CellAttrToSave[] = [];
-        this.doHandleToolbarSetCell(value, cellsToSave, this.selectedCells.cells);
+        this.doHandleToolbarSetCell(this.activeCell, value, cellsToSave, this.selectedCells.cells, this.selectedCells);
         if (cellsToSave) {
             await this.setCellStyleAttribute(cellsToSave, true);
         }
         this.c();
     }
 
-    async handleToolbarAddToTemplates() {
+     getTemplContent(rowId: number, colId: number) {
         const parId = this.getOwnParId();
-        if (!this.activeCell || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
-            return;
+        if (!this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
+            return undefined;
         }
-
-        const rowId = this.activeCell.row;
-        const colId = this.activeCell.col;
         const cellObj = this.cellDataMatrix[rowId][colId];
         const templ: IToolbarTemplate = {};
         let value;
 
-        if (!this.task) {
-            value = await this.getCellData(this.viewctrl.item.id, parId, rowId, colId);
+        if (this.task) {
+            value = this.getCellContentString(rowId, colId);
         } else {
             value = this.getCellContentString(rowId, colId);
+            // value = await this.getCellData(this.viewctrl.item.id, parId, rowId, colId);
         }
 
         for (const [key, val] of Object.entries(cellObj)) {
@@ -3137,7 +3185,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             if (key.startsWith("$$")) {
                 continue;
             }
-            if (key == "cell" && !val) {
+            if ((key == "cell") || (key == "class" && !val)) {
                 continue;
             }
             if (typeof val !== "string") {
@@ -3149,21 +3197,56 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             templ.style[key] = val;
         }
         templ.cell = value;
+        return templ;
+    }
+
+    handleToolbarAddToTemplates() {
+        const parId = this.getOwnParId();
+        if (!this.activeCell || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
+            return;
+        }
+        let templ: IToolbarTemplate | undefined = {};
+        if (this.selectedCells.cells && this.selectedCells.cells.length > 1) { // do area template
+            const iy1 = this.selectedCells.srow1;
+            const iy2 = this.selectedCells.srow2;
+            const ix1 = this.selectedCells.scol1;
+            const ix2 = this.selectedCells.scol2;
+            const tempArea: IToolbarTemplate = {text: "",
+                area: new Array(iy2 - iy1 + 1).
+                      fill(undefined).map(() => new Array(ix2 - ix1 + 1).fill(undefined))};
+            for (const c of this.selectedCells.cells) {
+                const ix = c.x;
+                const iy = c.y;
+                templ = this.getTemplContent(iy, ix);
+                if (!templ || !tempArea.area) { continue; }
+                tempArea.area[iy - iy1][ix - ix1] = templ;
+                if (templ.text) {
+                    tempArea.text += templ.text;
+                } else if (templ.cell) {
+                    tempArea.text += templ.cell;
+                }
+            }
+            templ = tempArea;
+        } else { // Just on shell
+            const rowId = this.activeCell.row;
+            const colId = this.activeCell.col;
+            templ = this.getTemplContent(rowId, colId);
+        }
+        if (!templ) { return; }
         if (this.data.toolbarTemplates === undefined) {
             this.data.toolbarTemplates = [];
         }
         let isUnique = true;
         for (const ob of this.data.toolbarTemplates) {
-            // eslint-disable-next-line @typescript-eslint/tslint/config
-            if (deepEqual(ob, templ)) {
+            if (angular.equals(ob, templ)) {
                 isUnique = false;
                 break;
             }
         }
         if (isUnique) {
             this.data.toolbarTemplates.push(templ);
+            this.c();
         }
-        this.c();
     }
 
     clearSmallEditorStyles() {
@@ -3253,7 +3336,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         // Update display
         this.reInitialize();
-
+        this.c();
     }
 
     /**
