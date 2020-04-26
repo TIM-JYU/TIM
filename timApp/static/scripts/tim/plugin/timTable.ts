@@ -1602,7 +1602,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param {ICell} targetCell The ICell instance to which the attributes are applied to.
      */
     private applyCellEntityAttributesToICell(sourceCell: CellEntity, targetCell: ICell) {
-        targetCell.styleCache = undefined
+        targetCell.styleCache = undefined;
         if (isPrimitiveCell(sourceCell)) {
             targetCell.cell = this.cellToString(sourceCell);
             return;
