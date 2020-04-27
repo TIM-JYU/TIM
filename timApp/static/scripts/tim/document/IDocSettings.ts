@@ -6,10 +6,22 @@ interface IMacros {
     stampformat?: string;
 }
 
+export interface ILoginHideSettings {
+    hakaLogin?: boolean;
+    emailLogin?: boolean;
+    signup?: boolean;
+    passwordRecovery?: boolean;
+}
+
+export interface ILoginSettings {
+    hide?: ILoginHideSettings;
+}
+
 export interface IDocSettings {
     show_velps?: boolean;
     macros?: IMacros;
     custom_stamp_model?: string;
     course_main?: string;
     form_mode?: boolean;
+    login?: ILoginSettings;
 }

@@ -7,8 +7,9 @@ import * as onEnter from "tim/ui/onEnter";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component} from "@angular/core";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {saveCurrentScreenPar} from "../document/parhelpers";
-import {genericglobals} from "../util/globals";
+import {documentglobals, genericglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {capitalizeFirstLetter, IOkResponse, markAsUsed, to, ToReturn} from "../util/utils";
 import * as hakaLogin from "./haka-login.component";
@@ -52,17 +53,20 @@ function getHomeOrgDisplay(s: string): string {
 <div class="row">
     <div class="col-sm-12">
     <ng-container *ngIf="!showSignup">
-        <p class="text-center" i18n>
-            Members from universities and other Haka organizations, please use Haka to log in.
-        </p>
-        <tim-haka-login [idps]="idps"
+        <ng-container *ngIf="!hideVars.hakaLogin">
+            <p class="text-center" i18n>
+                Members from universities and other Haka organizations, please use Haka to log in.
+            </p>
+            <tim-haka-login [idps]="idps"
                     [homeOrg]="homeOrg"
                     [addingUser]="addingToSession"></tim-haka-login>
-        <hr>
-        <p class="text-center" i18n>
-            Others, please log in with your TIM account.
-        </p>
+            <hr>
+            <p class="text-center" i18n>
+                Others, please log in with your TIM account.
+            </p>
+        </ng-container>
 
+        <ng-container *ngIf="!hideVars.emailLogin">
         <div class="form-group">
             <label for="email" class="control-label" i18n>Email or username</label>
             <input class="form-control"
@@ -80,22 +84,28 @@ function getHomeOrgDisplay(s: string): string {
                    [(ngModel)]="loginForm.password"
                    (keydown.enter)="loginWithEmail()"
                    type="password">
-            <p class="text-smaller"><a href="#" (click)="forgotPassword()" i18n>I forgot my password</a></p>
+            <p *ngIf="!hideVars.passwordRecovery" class="text-smaller"><a href="#" (click)="forgotPassword()" i18n>I forgot my password</a></p>
         </div>
+
 
         <button class="center-block timButton" (click)="loginWithEmail()" i18n>Log in</button>
         <tim-alert severity="danger" *ngIf="loginError">
             <tim-error-description [error]="loginError"></tim-error-description>
         </tim-alert>
-        <hr>
-        <p class="text-center" *ngIf="!showSignup" i18n>
-            Not a {{getHomeOrgDisplayName()}} student or staff member and don't have a TIM account?
-        </p>
-        <button *ngIf="!showSignup" class="center-block timButton" type="button"
+        </ng-container>
+
+        <ng-container *ngIf="!hideVars.signup">
+            <hr>
+            <p class="text-center" *ngIf="!showSignup" i18n>
+                Not a {{getHomeOrgDisplayName()}} student or staff member and don't have a TIM account?
+            </p>
+            <button *ngIf="!showSignup" class="center-block timButton" type="button"
                 (click)="beginSignup()" i18n="@@signUp">
-            Sign up
-        </button>
+                Sign up
+            </button>
+        </ng-container>
     </ng-container>
+
     <div class="form" *ngIf="showSignup">
         <div class="text-center" *ngIf="!resetPassword">
             <p i18n>If you don't have an existing TIM or {{getHomeOrgDisplayName()}} account, you can create a TIM account here.</p>
@@ -242,6 +252,7 @@ function getHomeOrgDisplay(s: string): string {
     `,
 })
 export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, void> {
+    hideVars: IVisibilityVars = getVisibilityVars();
     showSignup?: boolean; // Show sign up form instead of log in.
     private loggingout = false;
     loginForm = {email: "", password: ""};

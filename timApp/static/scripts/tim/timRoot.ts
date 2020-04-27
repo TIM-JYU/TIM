@@ -21,6 +21,10 @@ export interface IVisibilityVars {
     settings?: boolean;
     unilogo?: boolean;
     velps?: boolean;
+    hakaLogin?: boolean;
+    emailLogin?: boolean;
+    signup?: boolean;
+    passwordRecovery?: boolean;
 }
 
 
@@ -69,7 +73,7 @@ function hideTopButtonsStuff(hide: IVisibilityVars) {
 export function getVisibilityVars() {
     const params = getUrlParams();
     const g = someglobals();
-    const hide: IVisibilityVars = {};
+    let hide: IVisibilityVars = {};
     if (isDocumentGlobals(g)) {
         if (g.hideLinks) {
             hideLinkStuff(hide);
@@ -79,6 +83,9 @@ export function getVisibilityVars() {
         }
         if (g.hideTopButtons) {
             hideTopButtonsStuff(hide);
+        }
+        if (g.docSettings.login) {
+            hide = {...hide, ...g.docSettings.login?.hide};
         }
     }
     if (params.get("hide_top_buttons")) {
