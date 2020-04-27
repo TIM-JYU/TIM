@@ -1,8 +1,8 @@
 import {getUrlParams} from "tim/util/utils";
 import {IDocumentGlobals, someglobals, SomeGlobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
-import {timApp} from "./app";
 import {ILoginSettings} from "tim/document/IDocSettings";
+import {timApp} from "./app";
 
 export interface IVisibilityVars {
     footer?: boolean;
