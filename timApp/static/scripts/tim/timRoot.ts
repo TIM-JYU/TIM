@@ -2,6 +2,7 @@ import {getUrlParams} from "tim/util/utils";
 import {IDocumentGlobals, someglobals, SomeGlobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import {timApp} from "./app";
+import {ILoginSettings} from "tim/document/IDocSettings";
 
 export interface IVisibilityVars {
     footer?: boolean;
@@ -21,6 +22,10 @@ export interface IVisibilityVars {
     settings?: boolean;
     unilogo?: boolean;
     velps?: boolean;
+    hakaLogin?: boolean;
+    emailLogin?: boolean;
+    signup?: boolean;
+    passwordRecovery?: boolean;
 }
 
 
@@ -66,6 +71,13 @@ function hideTopButtonsStuff(hide: IVisibilityVars) {
     // hide.login = true; // TODO: Should login be hidden or not?
 }
 
+function hideLoginOptions(hide: IVisibilityVars, loginSettings: ILoginSettings) {
+    hide.hakaLogin = loginSettings.hideHaka;
+    hide.signup = loginSettings.hideSignup;
+    hide.passwordRecovery = loginSettings.hidePasswordRecovery;
+    hide.emailLogin = loginSettings.hideEmailLogin;
+}
+
 export function getVisibilityVars() {
     const params = getUrlParams();
     const g = someglobals();
@@ -79,6 +91,9 @@ export function getVisibilityVars() {
         }
         if (g.hideTopButtons) {
             hideTopButtonsStuff(hide);
+        }
+        if (g.docSettings.login) {
+            hideLoginOptions(hide, g.docSettings.login);
         }
     }
     if (params.get("hide_top_buttons")) {
