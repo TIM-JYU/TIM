@@ -71,17 +71,10 @@ function hideTopButtonsStuff(hide: IVisibilityVars) {
     // hide.login = true; // TODO: Should login be hidden or not?
 }
 
-function hideLoginOptions(hide: IVisibilityVars, loginSettings: ILoginSettings) {
-    hide.hakaLogin = loginSettings.hideHaka;
-    hide.signup = loginSettings.hideSignup;
-    hide.passwordRecovery = loginSettings.hidePasswordRecovery;
-    hide.emailLogin = loginSettings.hideEmailLogin;
-}
-
 export function getVisibilityVars() {
     const params = getUrlParams();
     const g = someglobals();
-    const hide: IVisibilityVars = {};
+    let hide: IVisibilityVars = {};
     if (isDocumentGlobals(g)) {
         if (g.hideLinks) {
             hideLinkStuff(hide);
@@ -93,7 +86,7 @@ export function getVisibilityVars() {
             hideTopButtonsStuff(hide);
         }
         if (g.docSettings.login) {
-            hideLoginOptions(hide, g.docSettings.login);
+            hide = {...hide, ...g.docSettings.login?.hide};
         }
     }
     if (params.get("hide_top_buttons")) {
