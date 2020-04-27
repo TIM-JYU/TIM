@@ -23,6 +23,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
+            "i18nMissingTranslation": "error",
             "outputPath": "static/scripts/build",
             "deleteOutputPath": false,
             "index": "static/scripts/tim/index.html",
