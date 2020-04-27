@@ -786,7 +786,8 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
                         pass
 
     if cell_data_to_save:
-        tim_table_add_multi_cell_value(cell_data_to_save, d, plug, False)
+        multi = []
+        tim_table_add_multi_cell_value(cell_data_to_save, d, plug, multi, False)
     save_plugin(plug)
     return prepare_for_and_call_dumbo(plug)  # Do we need this because the table is already ok???
 
@@ -897,7 +898,7 @@ def tim_table_save_cell_list():
     return tim_table_save_cell_value(cell_content, docid, parid, row, col)
 
 
-def tim_table_add_multi_cell_value(cells_to_save, d, plug, must_call_dumbo=True):
+def tim_table_add_multi_cell_value(cells_to_save, d, plug, multi, must_call_dumbo=True):
     data_input_mode = is_in_datainput_mode(plug)
 
     yaml = plug.values
@@ -934,7 +935,7 @@ def tim_table_add_multi_cell_value(cells_to_save, d, plug, must_call_dumbo=True)
 def tim_table_save_multi_cell_value(cells_to_save, docid, parid, must_call_dumbo=True):
     multi = []
     d, plug = get_plugin_from_paragraph(docid, parid)
-    tim_table_add_multi_cell_value(cells_to_save, d, plug, must_call_dumbo)
+    tim_table_add_multi_cell_value(cells_to_save, d, plug, multi, must_call_dumbo)
     save_plugin(plug)
     return json_response(multi)
 
