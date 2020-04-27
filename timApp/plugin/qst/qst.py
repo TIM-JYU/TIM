@@ -1,5 +1,6 @@
 """Routes for qst (question) plugin."""
 import json
+import random
 import re
 from dataclasses import dataclass
 from typing import Dict, Optional, List, Union, Any
@@ -118,6 +119,7 @@ class QstMarkupModel(GenericMarkupModel):
     questionTitle: Union[str, None, Missing] = missing
     questionType: Union[str, None, Missing] = missing
     rows: Union[Any, Missing] = missing
+    randomizedRows: Union[int, Missing, None] = missing
 
 
 QstStateModel = List[List[str]]
@@ -143,8 +145,12 @@ def qst_answer_jso(m: QstAnswerModel):
     answers = m.input.answers
     spoints = m.markup.points
     markup = m.markup
+    info = m.info
     if spoints:
         points_table = create_points_table(spoints)
+        if m.markup.randomizedRows and info and info.user_id:
+            rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, info.user_id)
+            points_table = qst_set_array_order(points_table,rand_arr)
         points = calculate_points_from_json_answer(answers, points_table)
         minpoints = markup.minpoints if markup.minpoints is not missing else -1e20
         maxpoints = markup.maxpoints if markup.maxpoints is not missing else 1e20
@@ -154,7 +160,6 @@ def qst_answer_jso(m: QstAnswerModel):
             points = maxpoints
         tim_info["points"] = points
 
-    info = m.info
     result = False
     if info and info.max_answers and info.max_answers <= info.earlier_answers + 1:
         result = True
@@ -535,10 +540,52 @@ qst_attrs = {
 }
 
 
+def qst_rand_array(max,count, user_id):
+    if (count > max):
+        count = max
+    ret = []
+    seed_array = []
+    orig = list(range(max))
+    #Temp seed generator
+    for char in user_id:
+        seed_array.append(int(char,36))
+    seed = int(''.join(map(str,seed_array)))
+    random.seed(seed)
+    random.shuffle(orig)
+    for i in range(count):
+        ret.append(orig[i])
+    return ret
+
+
+def qst_set_array_order(arr, order_array):
+    ret = []
+    for i in range(len(order_array)):
+        ret.append(arr[order_array[i]])
+    return ret
+
+
+def qst_pick_expls(orig_expls, order_array):
+    ret = {}
+    for i in range(len(order_array)):
+        pos = str(order_array[i]+1)
+        picked = orig_expls.get(pos, None)
+        if picked is not None:
+            ret[str(i+1)] = picked
+    return ret
+
+
 def qst_get_html(jso, review):
     result = False
     info = jso['info']
     markup = jso['markup']
+    #Move to normalize?
+    rcount = markup.get('randomizedRows', 0)
+    rows = markup.get('rows',[])
+    if rcount > 0:
+        # markup['rows'] = qst_randomize_rows(rows,rcount,jso['user_id'])
+        rand_arr = qst_rand_array(len(rows),rcount, jso['user_id'])
+        markup['rows'] = qst_set_array_order(rows, rand_arr)
+        markup['expl'] = qst_pick_expls(markup['expl'], rand_arr)
     markup = normalize_question_json(markup,
                                      allow_top_level_keys=
                                      qst_attrs)
