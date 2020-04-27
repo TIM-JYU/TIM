@@ -1734,6 +1734,7 @@ ${fhtml}
                 }
                 this.error = msg;
                 this.isRunning = false;
+                this.runError = true;
                 return;
             }
         }
