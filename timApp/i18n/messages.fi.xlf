@@ -194,28 +194,28 @@
           <context context-type="linenumber">23</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="1837bb4fa0224348534ce9ceb030f977c705aab4" datatype="html">
+      <trans-unit id="56dd69f1007a11032f7355ec8ff9418993da309c" datatype="html">
         <source>
-            Members from universities and other Haka organizations, please use Haka to log in.
-        </source>
+                Members from universities and other Haka organizations, please use Haka to log in.
+            </source>
         <target state="translated">
-            Yliopistojen ja muiden Haka-organisaatioiden jäsenet, kirjautukaa Hakalla.
-        </target>
+                Yliopistojen ja muiden Haka-organisaatioiden jäsenet, kirjautukaa Hakalla.
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">10</context>
+          <context context-type="linenumber">11</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5c3bd8c0984f0c7049daef4e6d2ff0832c2ae919" datatype="html">
+      <trans-unit id="95d4940087935177c3032201956e90c889172365" datatype="html">
         <source>
-            Others, please log in with your TIM account.
-        </source>
+                Others, please log in with your TIM account.
+            </source>
         <target state="translated">
-            Muut, kirjautukaa TIM-tilillä.
-        </target>
+                Muut, kirjautukaa TIM-tilillä.
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">17</context>
+          <context context-type="linenumber">18</context>
         </context-group>
       </trans-unit>
       <trans-unit id="d8666283a44af379917290f13da36a742b13cb8f" datatype="html">
@@ -223,15 +223,15 @@
         <target state="translated">Sähköpostiosoite tai käyttäjätunnus</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">22</context>
+          <context context-type="linenumber">25</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">63</context>
+          <context context-type="linenumber">72</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">73</context>
+          <context context-type="linenumber">82</context>
         </context-group>
       </trans-unit>
       <trans-unit id="c32ef07f8803a223a83ed17024b38e8d82292407" datatype="html">
@@ -239,11 +239,11 @@
         <target state="translated">Salasana</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">31</context>
+          <context context-type="linenumber">34</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">148</context>
+          <context context-type="linenumber">157</context>
         </context-group>
       </trans-unit>
       <trans-unit id="b87e81682959464211443afc3e23c506865d2eda" datatype="html">
@@ -251,7 +251,7 @@
         <target state="translated">Unohdin salasanani</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">38</context>
+          <context context-type="linenumber">41</context>
         </context-group>
       </trans-unit>
       <trans-unit id="f093d9574ab746b231504bd2cbb65f04bd7b00db" datatype="html">
@@ -259,19 +259,19 @@
         <target state="translated">Kirjaudu sisään</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">41</context>
+          <context context-type="linenumber">45</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="f37d3ab91a762444aebe07ebb0c976062485da99" datatype="html">
+      <trans-unit id="a8ffa7a3dd44f39a677e57d4d3d5a2281ef94b12" datatype="html">
         <source>
-            Not a <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> student or staff member and don't have a TIM account?
-        </source>
+                Not a <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> student or staff member and don't have a TIM account?
+            </source>
         <target state="translated">
-            Etkö ole <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>-opiskelija tai henkilökuntaa eikä sinulla ole TIM-tiliä?
-        </target>
+                Etkö ole <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>-opiskelija tai henkilökuntaa eikä sinulla ole TIM-tiliä?
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">46</context>
+          <context context-type="linenumber">53</context>
         </context-group>
       </trans-unit>
       <trans-unit id="signUp" datatype="html">
@@ -283,7 +283,7 @@
         </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">50</context>
+          <context context-type="linenumber">57</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
@@ -295,7 +295,7 @@
         <target state="translated">Jos sinulla ei ole TIM-tiliä tai <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>-tunnusta, voit luoda TIM-tilin tässä.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">56</context>
+          <context context-type="linenumber">65</context>
         </context-group>
       </trans-unit>
       <trans-unit id="f5edad1bd43015775e44ee044f85826628c57f20" datatype="html">
@@ -303,7 +303,7 @@
         <target state="translated">Anna sähköpostiosoitteesi saadaksesi väliaikainen salasana.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">57</context>
+          <context context-type="linenumber">66</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6e044e710c45fb651b2605771bce11a9587613e2" datatype="html">
@@ -315,7 +315,7 @@
         </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">59</context>
+          <context context-type="linenumber">68</context>
         </context-group>
       </trans-unit>
       <trans-unit id="05be332f50589af6426534bab0acc0ad6230af23" datatype="html">
@@ -323,11 +323,11 @@
         <target state="translated">Älä kirjoita tähän mitään</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">75</context>
+          <context context-type="linenumber">84</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">84</context>
+          <context context-type="linenumber">93</context>
         </context-group>
       </trans-unit>
       <trans-unit id="63342d96da52b71c9cf58c5d868486e1a2bb4fdb" datatype="html">
@@ -339,7 +339,7 @@
         </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">90</context>
+          <context context-type="linenumber">99</context>
         </context-group>
       </trans-unit>
       <trans-unit id="bf844a41a29961b6dacc48a20eaf97bef0cf5013" datatype="html">
@@ -351,7 +351,7 @@
         </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">95</context>
+          <context context-type="linenumber">104</context>
         </context-group>
       </trans-unit>
       <trans-unit id="09bf38cb8185384bee6940ce3dc3dbebe1ff9451" datatype="html">
@@ -363,7 +363,7 @@
                 </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">100</context>
+          <context context-type="linenumber">109</context>
         </context-group>
       </trans-unit>
       <trans-unit id="aace0783b57bf9c33b176f70a97790651fbaa6d1" datatype="html">
@@ -371,7 +371,7 @@
         <target state="translated">Salasana, jonka sait</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">111</context>
+          <context context-type="linenumber">120</context>
         </context-group>
       </trans-unit>
       <trans-unit id="ac10a3d9b59575640797c1a8e6aea642cf5d5e77" datatype="html">
@@ -379,7 +379,7 @@
         <target state="translated">Jatka</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">117</context>
+          <context context-type="linenumber">126</context>
         </context-group>
       </trans-unit>
       <trans-unit id="09c879f51a8005ab14353af950310be78a8d8306" datatype="html">
@@ -391,7 +391,7 @@
                     </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">120</context>
+          <context context-type="linenumber">129</context>
         </context-group>
       </trans-unit>
       <trans-unit id="533b2b9a76ee1335cb44c01f0bfd50d43e9400b0" datatype="html">
@@ -399,7 +399,7 @@
         <target state="translated">Nimesi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">132</context>
+          <context context-type="linenumber">141</context>
         </context-group>
       </trans-unit>
       <trans-unit id="afec3156488bf3a3ebbc0acfcbce9163303b7fc5" datatype="html">
@@ -411,7 +411,7 @@
                     </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">136</context>
+          <context context-type="linenumber">145</context>
         </context-group>
       </trans-unit>
       <trans-unit id="30cb9d4f480427b60b5678c6f2fe576c2dca484a" datatype="html">
@@ -423,7 +423,7 @@
                     </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">152</context>
+          <context context-type="linenumber">161</context>
         </context-group>
       </trans-unit>
       <trans-unit id="883b6eafc310403c511bb87ef630648a33bda95b" datatype="html">
@@ -431,7 +431,7 @@
         <target state="translated">Kirjoita salasana uudelleen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">164</context>
+          <context context-type="linenumber">173</context>
         </context-group>
       </trans-unit>
       <trans-unit id="dbbff4841c879aa12a3c7b8bac700c358d7761b5" datatype="html">
@@ -441,7 +441,7 @@
                 </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">170</context>
+          <context context-type="linenumber">179</context>
         </context-group>
       </trans-unit>
       <trans-unit id="a713deb8897be067b2f824ae32d7d464f6bb5803" datatype="html">
@@ -453,7 +453,7 @@
             </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">173</context>
+          <context context-type="linenumber">182</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6b1f788d28948c80a3fc06650a27116052551dfa" datatype="html">
@@ -465,7 +465,7 @@
             </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">176</context>
+          <context context-type="linenumber">185</context>
         </context-group>
       </trans-unit>
       <trans-unit id="af0f898e4b116928b4ea18701d38a695056dae53" datatype="html">
@@ -481,7 +481,7 @@
             </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">179</context>
+          <context context-type="linenumber">188</context>
         </context-group>
       </trans-unit>
       <trans-unit id="fe46ccaae902ce974e2441abe752399288298619" datatype="html">
@@ -501,7 +501,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">194</context>
+          <context context-type="linenumber">203</context>
         </context-group>
       </trans-unit>
       <trans-unit id="920c47a110d2e268a615c850abc8001c5edf08b1" datatype="html">
