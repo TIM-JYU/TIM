@@ -4,28 +4,74 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo variables.sh: Fill in appropriate variable values and comment this line. ; exit 1
 
-export TIM_HOST=https://localhost               # Hostname for the TIM instance
-export CADDY_DOMAINS='localhost'                  # Domain(s) for Caddy server (comma separated); not used locally
+# Hostname for the TIM instance.
+# For local development, you can enable HTTPS by changing http -> https and installing a server in the host machine
+# that proxies to localhost port 81.
+# Some debugging tools may not work well with HTTPS.
+export TIM_HOST=http://localhost
+
+# Domain(s) for Caddy server (separate with comma and space); not used locally.
+export CADDY_DOMAINS='localhost'
+
+# Extra configuration to add to Caddyfile.
 export CADDY_EXTRA_CONFIG='
 
-' # Extra configuration to add to Caddyfile
-export TIM_IMAGE_TAG=$(${DIR}/get_latest_date.sh)   # TIM image tag to use
-export PG_MAX_CONNECTIONS=200                  # Maximum number of allowed connections to PostgreSQL
-export COMPOSE_PROJECT_NAME=tim                # Name of the Docker Compose project
-export TIM_ROOT=${DIR}                         # TIM root; do not modify
-export FILES_ROOT=${DIR}/timApp/tim_files      # Root directory for non-db storage (document content etc.)
-export CSPLUGIN_DEV_COMMAND=./startPlugins.sh  # Command to start csplugin when IS_DEVELOPMENT is true; use empty command if you want to debug it with SSH
-export TEXTFIELD_DEV_COMMAND=./startAll.sh     # Same as above but for textfield plugin
-export JSRUNNER_DEV_COMMAND=./startAll.sh      # Same as above but for jsrunner plugin
-export SVNPLUGIN_DEV_COMMAND=./startAll.sh     # Same as above but for svn plugin
-export PALI_DEV_COMMAND=./startAll.sh          # Same as above but for pali plugin
-export FEEDBACK_DEV_COMMAND=./startAll.sh      # Same as above but for feedback plugin
-export DRAG_DEV_COMMAND=./startAll.sh          # Same as above but for drag plugin
-export IMAGEX_DEV_COMMAND=./startAll.sh        # Same as above but for imagex plugin
-export IS_DEVELOPMENT=false                    # Whether this is a local development instance (needed for e.g. PyCharm)
-export CONFIG_FILE=''                          # Location of config file to use in addition to defaultconfig;
-                                                # OK to be empty when running locally
-export LOG_DIR=${DIR}/tim_logs                 # Location of log directory; will be mapped for TIM container at /service/tim_logs
+'
+
+# TIM image tag to use. Do not modify; it is computed automatically.
+export TIM_IMAGE_TAG=$(${DIR}/get_latest_date.sh)
+
+# Maximum number of allowed connections to PostgreSQL.
+export PG_MAX_CONNECTIONS=200
+
+# Name of the Docker Compose project. Modify only if there are multiple TIM instances in the same host.
+export COMPOSE_PROJECT_NAME=tim
+
+# TIM root directory; do not modify.
+export TIM_ROOT=${DIR}
+
+# Root directory for non-db storage (document content, uploaded files, etc.).
+export FILES_ROOT=${DIR}/timApp/tim_files
+
+# Whether this is a local development instance (needed for e.g. PyCharm).
+export IS_DEVELOPMENT=false
+
+# Command to start csplugin when IS_DEVELOPMENT is true; use empty command if you want to debug it with SSH.
+export CSPLUGIN_DEV_COMMAND=./startPlugins.sh
+
+# Same as above but for textfield plugin.
+export TEXTFIELD_DEV_COMMAND=./startAll.sh
+
+# Same as above but for jsrunner plugin.
+export JSRUNNER_DEV_COMMAND=./startAll.sh
+
+# Same as above but for svn plugin.
+export SVNPLUGIN_DEV_COMMAND=./startAll.sh
+
+# Same as above but for pali plugin.
+export PALI_DEV_COMMAND=./startAll.sh
+
+# Same as above but for feedback plugin.
+export FEEDBACK_DEV_COMMAND=./startAll.sh
+
+# Same as above but for drag plugin.
+export DRAG_DEV_COMMAND=./startAll.sh
+
+# Same as above but for imagex plugin.
+export IMAGEX_DEV_COMMAND=./startAll.sh
+
+# Location of config file to use in addition to defaultconfig; can be empty when running locally.
+export CONFIG_FILE=''
+
+# Location of log directory; will be mapped for TIM container at /service/tim_logs.
+export LOG_DIR=${DIR}/tim_logs
+
+# NGINX_PORT is used for development only, based on whether HTTPS is enabled.
+if [[ $TIM_HOST == https* ]]; then
+  export NGINX_PORT=81
+else
+  export NGINX_PORT=80
+fi
 
 # To print the concrete values of these variables, you can use:
 # env - bash -c ". ./variables.sh && env | grep -Ev '^(_|PWD|SHLVL)='"

@@ -95,5 +95,7 @@ HAKA_METADATA_URL_PROD = 'https://haka.funet.fi/metadata/haka-metadata.xml'
 HAKA_METADATA_FINGERPRINT_PROD = '6212391dfbd2874425a7fdd5ac8dd0bd5cd50d2f'
 
 HOME_ORGANIZATION = 'jyu.fi'
-SESSION_COOKIE_SAMESITE = 'None'  # Required for Aalto iframe to work.
-SESSION_COOKIE_SECURE = True  # Required by Chrome due to SameSite=None setting.
+
+HAS_HTTPS = TIM_HOST.startswith('https:')
+SESSION_COOKIE_SAMESITE = 'None' if HAS_HTTPS else None  # Required for Aalto iframe to work.
+SESSION_COOKIE_SECURE = HAS_HTTPS  # Required by Chrome due to SameSite=None setting.
