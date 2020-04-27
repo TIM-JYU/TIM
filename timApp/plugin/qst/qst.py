@@ -119,7 +119,7 @@ class QstMarkupModel(GenericMarkupModel):
     questionTitle: Union[str, None, Missing] = missing
     questionType: Union[str, None, Missing] = missing
     rows: Union[Any, Missing] = missing
-    randomizedRows: Union[int, Missing, None] = missing
+    randomizedRows: Union[int, Missing] = missing
 
 
 QstStateModel = List[List[str]]
@@ -580,6 +580,8 @@ def qst_get_html(jso, review):
     markup = jso['markup']
     #Move to normalize?
     rcount = markup.get('randomizedRows', 0)
+    if rcount is None:
+        rcount = 0
     rows = markup.get('rows',[])
     if rcount > 0:
         # markup['rows'] = qst_randomize_rows(rows,rcount,jso['user_id'])
