@@ -29,8 +29,7 @@ export interface IVisibilityVars {
 
 
 function isDocumentGlobals(g: SomeGlobals): g is IDocumentGlobals {
-    // noinspection PointlessBooleanExpressionJS
-    return g.curr_item?.isFolder === false;
+    return "docSettings" in g;
 }
 
 
