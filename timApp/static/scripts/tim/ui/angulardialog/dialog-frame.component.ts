@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import {Component, ViewChild} from "@angular/core";
+import {Component, ElementRef, ViewChild} from "@angular/core";
 import {ISize} from "tim/util/utils";
 import {Size} from "angular2-draggable/lib/models/size";
 import {Position, IPosition} from "angular2-draggable/lib/models/position";
@@ -49,7 +49,7 @@ class ResizableDraggableWrapper {
                  [handle]="draghandle"
                  [position]="position"
                  class="modal-dialog modal-md"
-                 style="pointer-events: auto">
+                 style="pointer-events: auto" #dialogContents>
                 <div #draghandle
                      class="draghandle drag"
                      [ngClass]="{attached: !canDrag()}">
@@ -91,6 +91,7 @@ export class DialogFrame {
     private oldSize: ISize = {width: 600, height: 400};
     @ViewChild("resizable") private ngResizable!: IAngularResizableDirectivePublic;
     @ViewChild("draggable") private ngDraggable!: AngularDraggableDirective;
+    @ViewChild("dialogContents") dialogContents!: ElementRef;
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};
 

@@ -1,7 +1,16 @@
-import {AfterViewInit, Directive, EventEmitter, HostListener, Input, Output, ViewChild} from "@angular/core";
+import {
+    AfterViewInit,
+    Directive,
+    ElementRef,
+    EventEmitter,
+    HostListener,
+    Input,
+    Output,
+    ViewChild,
+} from "@angular/core";
 import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
 import {TimDefer} from "tim/util/timdefer";
-import {getStorage, setStorage} from "tim/util/utils";
+import {getOutOffsetVisible, getStorage, setStorage} from "tim/util/utils";
 import * as t from "io-ts";
 
 export interface IDialogOptions {
@@ -62,11 +71,10 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
             this.frame.setPos({x: savedPos[0], y: clamp(savedPos[1], 0, window.innerHeight)});
         }
 
-        // TODO: Better way to clamp width and height of the viewport
-        let {width, height} = this.frame.resizable.getSize();
-        width = Math.min(width, window.innerWidth);
-        height = Math.min(height, window.innerHeight);
-        this.frame.resizable.getSize().set({ width, height});
+        const rect = getOutOffsetVisible(this.frame.dialogContents.nativeElement as Element);
+        const {width, height} = this.frame.resizable.getSize();
+        // TODO: Compute the new width/height from the offset rect
+        this.frame.resizable.getSize().set({ width: width, height: height + rect.top});
 
         this.frame.resizable.doResize();
     }
