@@ -120,9 +120,10 @@ class QstMarkupModel(GenericMarkupModel):
     questionType: Union[str, None, Missing] = missing
     rows: Union[Any, Missing] = missing
     randomizedRows: Union[int, Missing] = missing
+    randomSeed: Union[int, Missing] = missing
 
 
-QstStateModel = List[List[str]]
+QstStateModel = Union[List[List[str]], Dict[str, Union[List[List[str]],List[int]]]]
 
 
 @dataclass
@@ -146,10 +147,23 @@ def qst_answer_jso(m: QstAnswerModel):
     spoints = m.markup.points
     markup = m.markup
     info = m.info
+    rand_arr = None
+    prev_state = m.state
+    #if prev state is not none, get order from there
+    if prev_state is not None:
+        try:
+            rand_arr = prev_state.get('order')
+        except AttributeError:
+            pass
+
+    if rand_arr is not None and m.markup.randomizedRows and info and info.user_id:
+        random_seed = m.markup.randomSeed
+        if random_seed is None or random_seed is missing:
+            random_seed = 0
+        rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, info.user_id, random_seed)
     if spoints:
         points_table = create_points_table(spoints)
-        if m.markup.randomizedRows and info and info.user_id:
-            rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, info.user_id)
+        if rand_arr is not None:
             points_table = qst_set_array_order(points_table,rand_arr)
         points = calculate_points_from_json_answer(answers, points_table)
         minpoints = markup.minpoints if markup.minpoints is not missing else -1e20
@@ -160,6 +174,9 @@ def qst_answer_jso(m: QstAnswerModel):
             points = maxpoints
         tim_info["points"] = points
 
+    if rand_arr is not None:
+        #TODO: Schema?
+        answers = {'c': answers, 'order': rand_arr}
     result = False
     if info and info.max_answers and info.max_answers <= info.earlier_answers + 1:
         result = True
@@ -540,7 +557,7 @@ qst_attrs = {
 }
 
 
-def qst_rand_array(max,count, user_id):
+def qst_rand_array(max,count, user_id, random_seed=0):
     if (count > max):
         count = max
     ret = []
@@ -550,7 +567,7 @@ def qst_rand_array(max,count, user_id):
     for char in user_id:
         seed_array.append(int(char,36))
     seed = int(''.join(map(str,seed_array)))
-    random.seed(seed)
+    random.seed(seed+random_seed)
     random.shuffle(orig)
     for i in range(count):
         ret.append(orig[i])
@@ -574,20 +591,38 @@ def qst_pick_expls(orig_expls, order_array):
     return ret
 
 
+# def qst_fill_array_with_order(vals, order, target_len):
+#     pass
+
+
 def qst_get_html(jso, review):
     result = False
     info = jso['info']
     markup = jso['markup']
-    #Move to normalize?
-    rcount = markup.get('randomizedRows', 0)
-    if rcount is None:
-        rcount = 0
+    rand_arr = None
+    prev_state = jso.get('state', None)
+    if prev_state:
+        try:
+            rand_arr = prev_state.get('order')
+            jso['state'] = prev_state.get('c')
+        except AttributeError:
+            pass
     rows = markup.get('rows',[])
-    if rcount > 0:
-        # markup['rows'] = qst_randomize_rows(rows,rcount,jso['user_id'])
-        rand_arr = qst_rand_array(len(rows),rcount, jso['user_id'])
+    #Move randomizedRows to normalize?
+    if not prev_state and rand_arr is None: # no previous answer, check markup for new order
+        rcount = markup.get('randomizedRows', 0)
+        if rcount is None:
+            rcount = 0
+        if rcount > 0:
+            # markup['rows'] = qst_randomize_rows(rows,rcount,jso['user_id'])
+            random_seed = markup.get('randomSeed', 0)
+            if random_seed is None:
+                random_seed = 0
+            rand_arr = qst_rand_array(len(rows),rcount, jso['user_id'], random_seed)
+    if rand_arr is not None: # specific order found in prev.ans or markup
         markup['rows'] = qst_set_array_order(rows, rand_arr)
         markup['expl'] = qst_pick_expls(markup['expl'], rand_arr)
+
     markup = normalize_question_json(markup,
                                      allow_top_level_keys=
                                      qst_attrs)
