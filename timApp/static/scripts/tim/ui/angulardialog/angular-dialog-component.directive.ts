@@ -8,6 +8,16 @@ export interface IDialogParams {
     resetSize?: boolean;
 }
 
+function clamp(val: number, min: number, max: number) {
+    if (val < min) {
+        return min;
+    }
+    if (val > max) {
+        return max;
+    }
+    return val;
+}
+
 @Directive()
 export abstract class AngularDialogComponent<Params, Result> implements AfterViewInit {
     @Input() data!: Params;
@@ -49,8 +59,15 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
         }
         const savedPos = getStorage(this.getPosKey());
         if (TwoTuple.is(savedPos)) {
-            this.frame.setPos({x: savedPos[0], y: savedPos[1]});
+            this.frame.setPos({x: savedPos[0], y: clamp(savedPos[1], 0, window.innerHeight)});
         }
+
+        // TODO: Better way to clamp width and height of the viewport
+        let {width, height} = this.frame.resizable.getSize();
+        width = Math.min(width, window.innerWidth);
+        height = Math.min(height, window.innerHeight);
+        this.frame.resizable.getSize().set({ width, height});
+
         this.frame.resizable.doResize();
     }
 

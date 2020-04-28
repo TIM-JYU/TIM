@@ -24,7 +24,7 @@ export interface IDialogInstanceEvent {
 export class DialogHostDirective implements OnInit {
     @Input() timDialogHost!: DialogConstructor;
     @Input() hostData: unknown;
-    @Input() dialogParams!: IDialogParams;
+    @Input() dialogParams?: IDialogParams;
     @Input() instanceId!: number;
     @Output() instanceCreated = new EventEmitter<IDialogInstanceEvent>();
     @Output() instanceClosed = new EventEmitter<IDialogInstanceEvent>();
