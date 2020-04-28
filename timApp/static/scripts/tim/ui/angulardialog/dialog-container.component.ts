@@ -2,7 +2,7 @@ import {Component, NgZone} from "@angular/core";
 import {TimDefer} from "tim/util/timdefer";
 import {DialogService} from "tim/ui/angulardialog/dialog.service";
 import {DialogConstructor, IDialogInstanceEvent} from "tim/ui/angulardialog/dialog-host.directive";
-import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {AngularDialogComponent, IDialogParams} from "tim/ui/angulardialog/angular-dialog-component.directive";
 
 let nextDialogId = 0;
 
@@ -10,6 +10,7 @@ interface IDialogEntry {
     comp: DialogConstructor;
     data: unknown;
     id: number;
+    dialogParams?: IDialogParams;
 }
 
 @Component({
@@ -19,6 +20,7 @@ interface IDialogEntry {
              [timDialogHost]="c.comp"
              [hostData]="c.data"
              [instanceId]="c.id"
+             [dialogParams]="c.dialogParams"
              (instanceCreated)="created($event)"
              (instanceClosed)="closed($event)"></div>
     `,
@@ -47,12 +49,13 @@ export class DialogContainerComponent {
         this.dialogs.splice(f, 1);
     }
 
-    add<P, R>(dialog: new(...args: unknown[]) => AngularDialogComponent<P, R>, params: P): Promise<AngularDialogComponent<P, R>> {
+    add<P, R>(dialog: new(...args: unknown[]) => AngularDialogComponent<P, R>, params: P, dialogParams?: IDialogParams): Promise<AngularDialogComponent<P, R>> {
         return this.zone.run(() => {
             const p = {
                 comp: dialog as DialogConstructor,
                 data: params,
                 id: nextDialogId,
+                dialogParams,
             };
             nextDialogId++;
             const defer = new TimDefer<AngularDialogComponent<P, R>>();

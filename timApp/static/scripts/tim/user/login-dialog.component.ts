@@ -440,7 +440,7 @@ export async function showLoginDialog(params: ILoginParams) {
     if (instance) {
         return;
     }
-    const dialog = angularDialog.open(LoginDialogComponent, params);
+    const dialog = angularDialog.open(LoginDialogComponent, params, { resetSize: true });
     instance = await dialog;
     await to(instance.result);
     instance = undefined;

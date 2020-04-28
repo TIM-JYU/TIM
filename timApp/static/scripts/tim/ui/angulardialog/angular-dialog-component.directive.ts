@@ -4,11 +4,16 @@ import {TimDefer} from "tim/util/timdefer";
 import {getStorage, setStorage} from "tim/util/utils";
 import * as t from "io-ts";
 
+export interface IDialogParams {
+    resetSize?: boolean;
+}
+
 @Directive()
 export abstract class AngularDialogComponent<Params, Result> implements AfterViewInit {
     @Input() data!: Params;
     @Output() closeWithResult = new EventEmitter<Result>();
     @ViewChild(DialogFrame) frame?: DialogFrame;
+    @Input() dialogParams?: IDialogParams;
 
     private resultDefer = new TimDefer<Result>();
     protected abstract dialogName: string;
@@ -34,9 +39,13 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
         }
         this.frame.closeFn = () => this.dismiss();
         const TwoTuple = t.tuple([t.number, t.number]);
-        const savedSize = getStorage(this.getSizeKey());
-        if (TwoTuple.is(savedSize)) {
-            this.frame.resizable.getSize().set({width: savedSize[0], height: savedSize[1]});
+        if (this.dialogParams?.resetSize) {
+            this.frame.resizable.resetSize();
+        } else {
+            const savedSize = getStorage(this.getSizeKey());
+            if (TwoTuple.is(savedSize)) {
+                this.frame.resizable.getSize().set({width: savedSize[0], height: savedSize[1]});
+            }
         }
         const savedPos = getStorage(this.getPosKey());
         if (TwoTuple.is(savedPos)) {
