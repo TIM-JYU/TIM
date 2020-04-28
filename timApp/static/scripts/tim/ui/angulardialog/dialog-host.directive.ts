@@ -9,7 +9,7 @@ import {
     ViewContainerRef,
 } from "@angular/core";
 import {to2} from "tim/util/utils";
-import {AngularDialogComponent, IDialogParams} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {AngularDialogComponent, IDialogOptions} from "tim/ui/angulardialog/angular-dialog-component.directive";
 
 export type DialogConstructor = new (...args: unknown[]) => AngularDialogComponent<unknown, unknown>;
 
@@ -24,7 +24,7 @@ export interface IDialogInstanceEvent {
 export class DialogHostDirective implements OnInit {
     @Input() timDialogHost!: DialogConstructor;
     @Input() hostData: unknown;
-    @Input() dialogParams?: IDialogParams;
+    @Input() dialogOptions?: IDialogOptions;
     @Input() instanceId!: number;
     @Output() instanceCreated = new EventEmitter<IDialogInstanceEvent>();
     @Output() instanceClosed = new EventEmitter<IDialogInstanceEvent>();
@@ -43,7 +43,7 @@ export class DialogHostDirective implements OnInit {
         this.viewContainerRef.clear();
         const ref = this.viewContainerRef.createComponent(componentFactory);
         ref.instance.data = this.hostData;
-        ref.instance.dialogParams = this.dialogParams;
+        ref.instance.dialogOptions = this.dialogOptions;
         const event = {instance: ref.instance, id: this.instanceId};
         this.cdr.detectChanges();
         this.instanceCreated.emit(event);
