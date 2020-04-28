@@ -149,14 +149,14 @@ def qst_answer_jso(m: QstAnswerModel):
     info = m.info
     rand_arr = None
     prev_state = m.state
-    #if prev state is not none, get order from there
+    #if prev state is not none, try to get order from there
     if prev_state is not None:
         try:
             rand_arr = prev_state.get('order')
         except AttributeError:
             pass
-
-    if rand_arr is not None and m.markup.randomizedRows and info and info.user_id:
+    # if prev state is none, check if markup wants random order
+    if prev_state is None and rand_arr is None and m.markup.randomizedRows and info and info.user_id:
         random_seed = m.markup.randomSeed
         if random_seed is None or random_seed is missing:
             random_seed = 0
