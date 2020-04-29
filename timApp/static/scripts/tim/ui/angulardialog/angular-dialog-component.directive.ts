@@ -1,7 +1,6 @@
 import {
     AfterViewInit,
     Directive,
-    ElementRef,
     EventEmitter,
     HostListener,
     Input,
@@ -10,7 +9,7 @@ import {
 } from "@angular/core";
 import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
 import {TimDefer} from "tim/util/timdefer";
-import {getOutOffsetVisible, getStorage, setStorage} from "tim/util/utils";
+import {getStorage, getViewPortSize, setStorage} from "tim/util/utils";
 import * as t from "io-ts";
 
 export interface IDialogOptions {
@@ -68,15 +67,27 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
         }
         const savedPos = getStorage(this.getPosKey());
         if (TwoTuple.is(savedPos)) {
-            this.frame.setPos({x: savedPos[0], y: clamp(savedPos[1], 0, window.innerHeight)});
+            this.frame.setPos({x: savedPos[0], y: savedPos[1]});
         }
-
-        const rect = getOutOffsetVisible(this.frame.dialogContents.nativeElement as Element);
-        const {width, height} = this.frame.resizable.getSize();
-        // TODO: Compute the new width/height from the offset rect
-        this.frame.resizable.getSize().set({ width: width, height: height + rect.top});
-
+        this.fixPosSizeInbounds();
         this.frame.resizable.doResize();
+    }
+
+    fixPosSizeInbounds() {
+        const vp = getViewPortSize();
+
+        // First clamp the frame so it fits inside the viewport
+        let {width, height} = this.frame!.resizable.getSize();
+        width = Math.min(width, vp.width);
+        height = Math.min(height, vp.height);
+
+        // Then clamp x/y so that the element is at least within the viewport
+        let {x, y} = this.frame!.resizable.getPos();
+        x = clamp(x, 0, vp.width - width);
+        y = clamp(y, 0, vp.height - height);
+
+        this.frame!.resizable.getSize().set({ width, height});
+        this.frame!.setPos({x, y});
     }
 
     close(r: Result) {

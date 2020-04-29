@@ -49,7 +49,7 @@ class ResizableDraggableWrapper {
                  [handle]="draghandle"
                  [position]="position"
                  class="modal-dialog modal-md"
-                 style="pointer-events: auto" #dialogContents>
+                 style="pointer-events: auto">
                 <div #draghandle
                      class="draghandle drag"
                      [ngClass]="{attached: !canDrag()}">
@@ -91,7 +91,6 @@ export class DialogFrame {
     private oldSize: ISize = {width: 600, height: 400};
     @ViewChild("resizable") private ngResizable!: IAngularResizableDirectivePublic;
     @ViewChild("draggable") private ngDraggable!: AngularDraggableDirective;
-    @ViewChild("dialogContents") dialogContents!: ElementRef;
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};
 
