@@ -86,7 +86,7 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
         x = clamp(x, 0, vp.width - width);
         y = clamp(y, 0, vp.height - height);
 
-        this.frame!.resizable.getSize().set({ width, height});
+        this.frame!.resizable.getSize().set({width, height});
         this.frame!.setPos({x, y});
     }
 

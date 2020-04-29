@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import {Component, ElementRef, ViewChild} from "@angular/core";
+import {Component, ViewChild} from "@angular/core";
 import {ISize} from "tim/util/utils";
 import {Size} from "angular2-draggable/lib/models/size";
 import {Position, IPosition} from "angular2-draggable/lib/models/position";
