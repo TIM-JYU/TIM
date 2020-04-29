@@ -1,4 +1,5 @@
 from lxml import html
+from json import loads
 
 from timApp.auth.accesstype import AccessType
 from timApp.tests.browser.browsertest import BrowserTest
@@ -181,3 +182,72 @@ rows:
         self.assertTrue('error' not in r)
         answers = self.get_task_answers(f'{d.id}.t', self.current_user)
         self.assertEqual(None, answers[0]['points'])  # Should be hidden.
+
+    def test_question_shuffle(self):
+        """
+        make shuffled qst, answer with user2, remove shuffle, answer with user3, answer again with user2
+        user2 points should be based on original shuffle even after shuffle removal
+        user3 points should be based on non-shuffled rows
+        """
+        self.login_test1()
+        d = self.create_doc()
+        pars = d.document.add_text("""
+#- {#t plugin="qst" dquestion="true"}
+answerFieldType: checkbox
+expl: {}
+headers:
+- '1'
+- '2'
+- '3'
+matrixType: checkbox
+points: 1:1;2:-0.2;3:-0.2|1:-0.2;2:1;3:-0.2|1:-0.2;2:-0.2;3:1
+questionText: Testi
+questionTitle: Testi3
+questionType: matrix
+rows:
+- First
+- Second
+- Third
+randomizedRows: 2
+""")
+        self.test_user_2.grant_access(d, AccessType.view)
+        self.test_user_3.grant_access(d, AccessType.view)
+        db.session.commit()
+        db.session.refresh(d)
+        self.login_test2()
+        self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"], ["1", "2"]]})
+        answers = self.get_task_answers(f'{d.id}.t', self.current_user)
+        order_with_shuffle = loads(answers[0].get('content', {})).get('order')
+        self.login_test1()
+        d.document.delete_paragraph(pars[0].get_id())
+        d.document.add_text("""
+#- {#t plugin="qst" dquestion="true"}
+answerFieldType: checkbox
+expl: {}
+headers:
+- '1'
+- '2'
+- '3'
+matrixType: checkbox
+points: 1:1;2:-0.2;3:-0.2|1:-0.2;2:1;3:-0.2|1:-0.2;2:-0.2;3:1
+questionText: Testi
+questionTitle: Testi3
+questionType: matrix
+rows:
+- First
+- Second
+- Third
+        """)
+        db.session.commit()
+        db.session.refresh(d)
+        self.login_test3()
+        self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["1"], ["1", "2"], ["2", "3"]]})
+        answers = self.get_task_answers(f'{d.id}.t', self.current_user)
+        self.assertEqual(2.6, answers[0]['points'])
+        self.login_test2()
+        self.post_answer('qst', f'{d.id}.t',
+                         user_input={"answers": [[str(order_with_shuffle[0] + 1)], [str(order_with_shuffle[1] + 1)]]})
+        answers = self.get_task_answers(f'{d.id}.t', self.current_user)
+        order_without_shuffle = loads(answers[0].get('content', {})).get('order')
+        self.assertEqual(order_with_shuffle, order_without_shuffle)
+        self.assertEqual(2, answers[0]['points'])
