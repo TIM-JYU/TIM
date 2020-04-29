@@ -163,9 +163,12 @@ def qst_answer_jso(m: QstAnswerModel):
             random_seed = 0
         rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, info.user_id, random_seed)
     if spoints:
-        points_table = create_points_table(spoints)
         if rand_arr is not None:
-            points_table = qst_set_array_order(points_table,rand_arr)
+            spoints = spoints.split('|')
+            spoints = qst_set_array_order(spoints, rand_arr)
+            spoints = '|'.join(spoints)
+            m.markup.points = spoints
+        points_table = create_points_table(spoints)
         points = calculate_points_from_json_answer(answers, points_table)
         minpoints = markup.minpoints if markup.minpoints is not missing else -1e20
         maxpoints = markup.maxpoints if markup.maxpoints is not missing else 1e20
@@ -642,6 +645,13 @@ def qst_get_html(jso, review):
     if not result:
         markup.pop('points', None)
         markup.pop('expl', None)
+    elif rand_arr is not None:
+        points = markup.get('points')
+        if points:
+            points = points.split('|')
+            points = qst_set_array_order(points, rand_arr)
+            markup['points'] = '|'.join(points)
+
     jso['show_result'] = result
 
     if review:
