@@ -177,8 +177,11 @@ def qst_answer_jso(m: QstAnswerModel):
     if rand_arr is not None:
         #TODO: Schema?
         answers = {'c': answers, 'order': rand_arr}
+        m.markup.rows = qst_set_array_order(m.markup.rows, rand_arr)
+        m.markup.expl = qst_pick_expls(m.markup.expl, rand_arr)
+
     result = False
-    if info and info.max_answers and info.max_answers <= info.earlier_answers + 1:
+    if info and info.max_answers and info.max_answers <= info.earlier_answers + 1 and prev_state != answers:
         result = True
     jsonmarkup = m.markup.get_visible_data()
     convert_md([jsonmarkup], options=DumboOptions.default())  # TODO get mathtype from doc settings?
