@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 import os
 import subprocess
 from datetime import timedelta
@@ -38,12 +39,21 @@ DB_URI = f"postgresql://postgres:{DB_PASSWORD}@postgresql:5432/{TIM_NAME}"
 SASS_GEN_PATH = Path('generated')
 TEMPLATES_AUTO_RELOAD = True
 SQLALCHEMY_DATABASE_URI = DB_URI
-SQLALCHEMY_POOL_SIZE = 2
+cpus = multiprocessing.cpu_count()
+
+# If PG_MAX_CONNECTIONS is not defined (possible when running from IDE), we use a default value that gives
+# pool size 2.
+PG_MAX_CONNECTIONS = os.environ.get('PG_MAX_CONNECTIONS')
+max_pool_all_workers = int(PG_MAX_CONNECTIONS or cpus * 3 + 5) - 5
+SQLALCHEMY_POOL_SIZE = (max_pool_all_workers // cpus) - 1
 SQLALCHEMY_POOL_TIMEOUT = 15
-SQLALCHEMY_MAX_OVERFLOW = 100
+SQLALCHEMY_MAX_OVERFLOW = (max_pool_all_workers - SQLALCHEMY_POOL_SIZE * cpus) // cpus
 LAST_EDITED_BOOKMARK_LIMIT = 15
 LAST_READ_BOOKMARK_LIMIT = 15
+
 PLUGIN_COUNT_LAZY_LIMIT = 20
+QST_PLUGIN_PORT = 5000
+PLUGIN_CONNECT_TIMEOUT = 0.5
 
 # When enabled, the readingtypes on_screen and hover_par will not be saved in the database.
 DISABLE_AUTOMATIC_READINGS = False
@@ -53,7 +63,7 @@ WUFF_EMAIL = 'wuff@tim.jyu.fi'
 NOREPLY_EMAIL = 'no-reply@tim.jyu.fi'
 GLOBAL_NOTIFICATION_FILE = '/tmp/global_notification.html'
 
-QST_PLUGIN_PORT = 5000
+
 GIT_LATEST_COMMIT_TIMESTAMP = subprocess.run(["git", "log", "-1", "--date=format:%d.%m.%Y %H:%M:%S", "--format=%cd"],
                                              stdout=subprocess.PIPE).stdout.decode().strip()
 GIT_BRANCH = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], stdout=subprocess.PIPE).stdout.decode().strip()

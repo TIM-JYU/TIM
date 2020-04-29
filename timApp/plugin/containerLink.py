@@ -116,10 +116,10 @@ def call_plugin_generic(plugin: str, method: str, route: str, data=None, headers
         r = do_request(method, url, data, params, headers, read_timeout)
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:
         log_warning(f'Connection failed to plugin {plugin}: {e}')
-        raise PluginException(f"Could not connect to {plugin} ({url}).")
+        raise PluginException(f"Connect timeout when calling {plugin} ({url}).")
     except requests.exceptions.ReadTimeout as e:
         log_warning(f'Read timeout occurred for plugin {plugin} in route {route}: {e}')
-        raise PluginException(f"Read timeout occurred when calling {plugin}.")
+        raise PluginException(f"Read timeout when calling {plugin} ({url}).")
     else:
         if r.status_code >= 500:
             raise PluginException(f'Got response with status code {r.status_code}')
@@ -131,7 +131,7 @@ def do_request(method, url, data, params, headers, read_timeout) -> requests.Res
         method,
         url,
         data=data,
-        timeout=(0.5, read_timeout),
+        timeout=(current_app.config['PLUGIN_CONNECT_TIMEOUT'], read_timeout),
         headers=headers,
         params=params,
     )

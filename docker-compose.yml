@@ -29,6 +29,7 @@ services:
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST:?}
+   PG_MAX_CONNECTIONS: ${PG_MAX_CONNECTIONS:?}
   restart: unless-stopped
   networks:
    - db

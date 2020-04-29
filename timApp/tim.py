@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import time
 from dataclasses import dataclass
 from typing import Optional, List
@@ -393,9 +394,17 @@ def init_app():
     if app.config['PROFILE']:
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',), restrictions=[100])
 
-    log_info(f'Debug mode: {app.config["DEBUG"]}')
-    log_info(f'Profiling: {app.config["PROFILE"]}')
-    log_info(f'Using database: {app.config["DB_URI"]}')
+    for var in [
+        'DB_URI',
+        'DEBUG',
+        'MAIL_HOST',
+        'PG_MAX_CONNECTIONS',
+        'PLUGIN_CONNECT_TIMEOUT',
+        'PROFILE',
+        'SQLALCHEMY_MAX_OVERFLOW',
+        'SQLALCHEMY_POOL_SIZE',
+    ]:
+        log_info(f'{var}: {app.config.get(var, "(undefined)")}')
     if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
         log_warning('secret file not found, using default values - do not run in production!')
     else:

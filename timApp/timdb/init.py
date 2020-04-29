@@ -48,12 +48,14 @@ def initialize_database(create_docs: bool = True) -> None:
     files_root_path = get_files_path()
     db_uri = app.config['DB_URI']
     was_created = postgre_create_database(db_uri)
-    log_info(f'Database {db_uri} {"was created" if was_created else "exists"}.')
+    if was_created:
+        log_info(f'Database {db_uri} was created.')
     timdb = TimDb(files_root_path=files_root_path)
     sess = timdb.session
     if database_has_tables():
-        log_info('Initial data already exists, skipping DB initialization.')
+        pass
     else:
+        log_info('Creating database tables...')
         db.create_all()
         if not app.config['TESTING']:
             with app.app_context():
