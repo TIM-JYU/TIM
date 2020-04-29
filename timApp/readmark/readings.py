@@ -109,7 +109,7 @@ def get_common_readings(usergroup_ids: List[int], doc: Document, filter_conditio
     # If we're in exam mode and all pars are unread, we're likely reading for the first time
     # Thus mark everything read and query data again
     # TODO: Maybe manually fill in user_par_readings and pars to reduce DB queries?
-    if check_rights(doc.settings.exam_mode(), doc.docinfo.rights) and len(pars) == 0:
+    if doc.settings is not None and check_rights(doc.settings.exam_mode(), doc.docinfo.rights) and len(pars) == 0:
         for u in usergroup_ids:
             mark_all_read(u, doc)
         db.session.commit()
