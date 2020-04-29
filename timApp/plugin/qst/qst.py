@@ -123,6 +123,10 @@ class QstMarkupModel(GenericMarkupModel):
     randomSeed: Union[int, Missing] = missing
 
 
+#Store answer in original row order if no randomizedRows specified in markup:
+#[["1"], [], ["1"], ["2"]]
+#Otherwise specify order in which rows were presented
+#{"c": [["1"], ["2"], ["3"], []], "order": [3, 7, 4, 5]}
 QstStateModel = Union[List[List[str]], Dict[str, Union[List[List[str]],List[int]]]]
 
 
@@ -150,11 +154,8 @@ def qst_answer_jso(m: QstAnswerModel):
     rand_arr = None
     prev_state = m.state
     #if prev state is not none, try to get order from there
-    if prev_state is not None:
-        try:
-            rand_arr = prev_state.get('order')
-        except AttributeError:
-            pass
+    if prev_state is not None and isinstance(prev_state, dict):
+        rand_arr = prev_state.get('order')
     # if prev state is none, check if markup wants random order
     if prev_state is None and rand_arr is None and m.markup.randomizedRows and info and info.user_id:
         random_seed = m.markup.randomSeed
@@ -561,15 +562,18 @@ qst_attrs = {
 }
 
 
-def qst_rand_array(max,count, user_id, random_seed=0):
-    if (count > max):
-        count = max
+def qst_rand_array(max_count: int, count: int, seed_word: str, random_seed=0):
+    """
+    get array of count integers between 0-max_count using word and extra number as seed
+    """
+    if (count > max_count):
+        count = max_count
     ret = []
     seed_array = []
-    orig = list(range(max))
+    orig = list(range(max_count))
     #Temp seed generator
-    for char in user_id:
-        seed_array.append(int(char,36))
+    for char in seed_word:
+        seed_array.append(int(char, 36))
     seed = int(''.join(map(str,seed_array)))
     random.seed(seed+random_seed)
     random.shuffle(orig)
@@ -578,14 +582,23 @@ def qst_rand_array(max,count, user_id, random_seed=0):
     return ret
 
 
-def qst_set_array_order(arr, order_array):
+def qst_set_array_order(arr: list, order_array: list):
+    """
+    pick items from arr in order given by order_array
+    """
     ret = []
     for i in range(len(order_array)):
-        ret.append(arr[order_array[i]])
+        try:
+            ret.append(arr[order_array[i]])
+        except IndexError:
+            pass
     return ret
 
 
-def qst_pick_expls(orig_expls, order_array):
+def qst_pick_expls(orig_expls: dict, order_array: list):
+    """
+    pick items from dict where keys are str converted integers in order given by order_array
+    """
     ret = {}
     for i in range(len(order_array)):
         pos = str(order_array[i]+1)
@@ -595,22 +608,15 @@ def qst_pick_expls(orig_expls, order_array):
     return ret
 
 
-# def qst_fill_array_with_order(vals, order, target_len):
-#     pass
-
-
 def qst_get_html(jso, review):
     result = False
     info = jso['info']
     markup = jso['markup']
     rand_arr = None
     prev_state = jso.get('state', None)
-    if prev_state:
-        try:
-            rand_arr = prev_state.get('order')
-            jso['state'] = prev_state.get('c')
-        except AttributeError:
-            pass
+    if prev_state and isinstance(prev_state, dict):
+        rand_arr = prev_state.get('order')
+        jso['state'] = prev_state.get('c')
     rows = markup.get('rows',[])
     #Move randomizedRows to normalize?
     if not prev_state and rand_arr is None: # no previous answer, check markup for new order
