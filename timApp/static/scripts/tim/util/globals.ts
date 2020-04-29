@@ -90,6 +90,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     linked_groups: IGroupWithSisuPath[] | null;
     current_view_range?: IViewRangeUnnamed | null;
     nav_ranges?: IViewRange[];
+    exam_mode: boolean;
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {

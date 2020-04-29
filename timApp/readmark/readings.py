@@ -10,6 +10,7 @@ from timApp.readmark.readparagraph import ReadParagraph
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time
+from timApp.item.routes import check_rights
 
 
 def get_read_expiry_condition(delta: timedelta):
@@ -84,21 +85,37 @@ def copy_readings(src_par: DocParagraph, dest_par: DocParagraph):
 
 
 def get_common_readings(usergroup_ids: List[int], doc: Document, filter_condition=None):
-    users: List[DefaultDict[str, DefaultDict[ReadParagraphType, ReadParagraph]]] = []
-    for u in usergroup_ids:
-        reading_map = defaultdict(lambda: defaultdict(lambda: ReadParagraph(par_hash=None)))
-        rs = get_readings(u, doc, filter_condition)
-        for r in rs:
-            reading_map[r.par_id][r.type] = r
-        users.append(reading_map)
-    common_par_ids = users[0].keys()
-    for r in users[1:]:
-        common_par_ids &= r.keys()
-    # If the hashes are not the same for every user, it means someone has not read the latest one. We remove
-    # such paragraphs.
-    # TODO: How to handle different types of readings for a group?
-    final_pars = [par_id for par_id in common_par_ids if all(
-        (read_pars[par_id][ReadParagraphType.click_red].par_hash == users[0][par_id][ReadParagraphType.click_red].par_hash) for read_pars in users)]
-    for key in final_pars:
-        for k, v in users[0][key].items():
+
+    def query_readings():
+        users: List[DefaultDict[str, DefaultDict[ReadParagraphType, ReadParagraph]]] = []
+        for u in usergroup_ids:
+            reading_map = defaultdict(lambda: defaultdict(lambda: ReadParagraph(par_hash=None)))
+            rs = get_readings(u, doc, filter_condition)
+            for r in rs:
+                reading_map[r.par_id][r.type] = r
+            users.append(reading_map)
+        common_par_ids = users[0].keys()
+        for r in users[1:]:
+            common_par_ids &= r.keys()
+        # If the hashes are not the same for every user, it means someone has not read the latest one. We remove
+        # such paragraphs.
+        # TODO: How to handle different types of readings for a group?
+        return users, [par_id for par_id in common_par_ids if all(
+            (read_pars[par_id][ReadParagraphType.click_red].par_hash
+                == users[0][par_id][ReadParagraphType.click_red].par_hash) for read_pars in users)]
+
+    # First, query readings normally
+    user_par_readings, pars = query_readings()
+
+    # If we're in exam mode and all pars are unread, we're likely reading for the first time
+    # Thus mark everything read and query data again
+    # TODO: Maybe manually fill in user_par_readings and pars to reduce DB queries?
+    if check_rights(doc.settings.exam_mode(), doc.docinfo.rights) and len(pars) == 0:
+        for u in usergroup_ids:
+            mark_all_read(u, doc)
+        db.session.commit()
+        user_par_readings, pars = query_readings()
+
+    for key in pars:
+        for k, v in user_par_readings[0][key].items():
             yield v

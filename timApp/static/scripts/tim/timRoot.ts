@@ -69,6 +69,15 @@ function hideTopButtonsStuff(hide: IVisibilityVars) {
     // hide.login = true; // TODO: Should login be hidden or not?
 }
 
+// TODO: What things should be hidden in exam mode?
+function hideExamModeElements(hide: IVisibilityVars) {
+    hide.links = true;
+    hide.bookmarks = true;
+    hide.settings = true;
+    hide.hamburger = true;
+    hide.header = true;
+}
+
 export function getVisibilityVars() {
     const params = getUrlParams();
     const g = someglobals();
@@ -85,6 +94,9 @@ export function getVisibilityVars() {
         }
         if (g.docSettings.login) {
             hide = {...hide, ...g.docSettings.login?.hide};
+        }
+        if (g.exam_mode) {
+            hideExamModeElements(hide);
         }
     }
     if (params.get("hide_top_buttons")) {

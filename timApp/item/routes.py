@@ -72,6 +72,7 @@ view_page = Blueprint('view_page',
 DocumentSlice = Tuple[List[DocParagraph], IndexedViewRange]
 ViewRange = Union[RequestedViewRange, IndexedViewRange]
 
+
 def get_partial_document(doc: Document, view_range: ViewRange) -> DocumentSlice:
     all_pars = doc.get_paragraphs()
 
@@ -139,6 +140,7 @@ class ViewModel:
                 raise ValidationError('b and e must be of same type (int or string).')
         if self.e is not None and self.size is not None:
             raise ValidationError('Cannot provide e and size parameters at the same time.')
+
 
 ViewModelSchema = class_schema(ViewModel)()
 
@@ -368,7 +370,8 @@ def view(item_path, template_name, route="view"):
     preamble_count = 0
     if load_preamble or view_range.starts_from_beginning:
         try:
-            preamble_pars = doc.insert_preamble_pars([INCLUDE_IN_PARTS_CLASS_NAME] if not view_range.starts_from_beginning else None)
+            preamble_pars = doc.insert_preamble_pars(
+                [INCLUDE_IN_PARTS_CLASS_NAME] if not view_range.starts_from_beginning else None)
         except PreambleException as e:
             flash(e)
         else:
@@ -550,8 +553,9 @@ def view(item_path, template_name, route="view"):
         access=access,
         hide_links=should_hide_links(doc_settings, rights),
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
-        pars_only=m.pars_only,
+        pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
+        exam_mode=is_exam_mode(doc_settings, rights),
         route=route,
         edit_mode=edit_mode,
         item=doc_info,
@@ -627,6 +631,14 @@ def should_hide_links(settings: DocSettings, rights: dict):
 
 def should_hide_top_buttons(settings: DocSettings, rights: dict):
     return check_rights(settings.hide_top_buttons(), rights)
+
+
+def should_hide_paragraphs(settings: DocSettings, rights: dict):
+    return check_rights(settings.pars_only(), rights)
+
+
+def is_exam_mode(settings: DocSettings, rights: dict):
+    return check_rights(settings.exam_mode(), rights)
 
 
 def check_rights(hide_type: str, rights: dict):
