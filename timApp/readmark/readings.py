@@ -10,12 +10,12 @@ from timApp.readmark.readparagraph import ReadParagraph
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time
-from timApp.item.routes import check_rights
+from timApp.user.user import check_rights
 
 
 def get_read_expiry_condition(delta: timedelta):
     return ((ReadParagraph.type == ReadParagraphType.click_red) |
-           (ReadParagraph.timestamp > get_current_time() - delta))
+            (ReadParagraph.timestamp > get_current_time() - delta))
 
 
 def get_readings(usergroup_id: int, doc: Document, filter_condition=None) -> List[ReadParagraph]:
@@ -85,7 +85,6 @@ def copy_readings(src_par: DocParagraph, dest_par: DocParagraph):
 
 
 def get_common_readings(usergroup_ids: List[int], doc: Document, filter_condition=None):
-
     def query_readings():
         users: List[DefaultDict[str, DefaultDict[ReadParagraphType, ReadParagraph]]] = []
         for u in usergroup_ids:
@@ -102,7 +101,7 @@ def get_common_readings(usergroup_ids: List[int], doc: Document, filter_conditio
         # TODO: How to handle different types of readings for a group?
         return users, [par_id for par_id in common_par_ids if all(
             (read_pars[par_id][ReadParagraphType.click_red].par_hash
-                == users[0][par_id][ReadParagraphType.click_red].par_hash) for read_pars in users)]
+             == users[0][par_id][ReadParagraphType.click_red].par_hash) for read_pars in users)]
 
     # First, query readings normally
     user_par_readings, pars = query_readings()

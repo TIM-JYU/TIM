@@ -52,7 +52,7 @@ from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException, PreambleException
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
-from timApp.user.user import User
+from timApp.user.user import User, check_rights
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
 from timApp.user.userutils import DeletedUserException
@@ -639,21 +639,6 @@ def should_hide_paragraphs(settings: DocSettings, rights: dict):
 
 def is_exam_mode(settings: DocSettings, rights: dict):
     return check_rights(settings.exam_mode(), rights)
-
-
-def check_rights(hide_type: str, rights: dict):
-    """
-    Checks whether the user has the correct rights rights not to hide links or the buttons in the top of the
-    page from them.
-
-    :param hide_type What elements to hide in the document.
-    :param rights Which user roles the elements should be hidden from.
-    :return Should the elements be hidden from the user.
-    """
-    return {'view': not rights['editable'] and not rights['see_answers'],
-            'edit': not rights['see_answers'],
-            'see_answers': not rights['teacher'],
-            'teacher': not rights['manage']}.get(hide_type, False)
 
 
 @view_page.route('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')

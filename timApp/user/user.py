@@ -667,3 +667,18 @@ def get_membership_end(u: User, group_ids: Set[int]):
             max(m.membership_end for m in relevant_memberships)
         )
     return membership_end
+
+
+def check_rights(hide_type: str, rights: dict):
+    """
+    Checks whether the user has the correct rights rights not to hide links or the buttons in the top of the
+    page from them.
+
+    :param hide_type What elements to hide in the document.
+    :param rights Which user roles the elements should be hidden from.
+    :return Should the elements be hidden from the user.
+    """
+    return {'view': not rights['editable'] and not rights['see_answers'],
+            'edit': not rights['see_answers'],
+            'see_answers': not rights['teacher'],
+            'teacher': not rights['manage']}.get(hide_type, False)
