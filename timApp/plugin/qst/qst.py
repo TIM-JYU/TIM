@@ -174,6 +174,7 @@ def qst_answer_jso(m: QstAnswerModel):
             points = maxpoints
         tim_info["points"] = points
 
+    webstate = answers
     if rand_arr is not None:
         #TODO: Schema?
         answers = {'c': answers, 'order': rand_arr}
@@ -189,7 +190,7 @@ def qst_answer_jso(m: QstAnswerModel):
     if not markup.show_points():
         jsonmarkup.pop('expl', None)
         jsonmarkup.pop('points', None)
-    web = {'result': "Vastattu", 'markup': jsonmarkup if result else None, 'show_result': result, 'state': save}
+    web = {'result': "Vastattu", 'markup': jsonmarkup if result else None, 'show_result': result, 'state': webstate}
     return json_response({'save': save, 'web': web, "tim_info": tim_info})
 
 
