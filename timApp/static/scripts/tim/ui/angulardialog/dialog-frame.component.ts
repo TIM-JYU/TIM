@@ -10,6 +10,7 @@ export interface IAngularResizableDirectivePublic {
     _currPos: Position;
 
     doResize(): void;
+    resetSize(): void;
 }
 
 class ResizableDraggableWrapper {
@@ -26,6 +27,10 @@ class ResizableDraggableWrapper {
 
     doResize() {
         this.ngResizable.doResize();
+    }
+
+    resetSize() {
+        this.ngResizable.resetSize();
     }
 }
 
