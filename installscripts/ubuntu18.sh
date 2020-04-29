@@ -31,10 +31,10 @@ sudo -u ubuntu git submodule update --init
 sudo -u ubuntu cp variables.sh.template variables.sh
 sudo -u ubuntu cp docker-compose.prod.yml.template docker-compose.prod.yml
 chmod u+x variables.sh
-sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh
+sed -i 's/^echo variables.sh/#echo variables.sh/' variables.sh
 DOMAIN=$(dig +short -x $(dig +short myip.opendns.com @resolver1.opendns.com) | sed 's/.$//')
 sed -i "s/localhost/${DOMAIN}/" variables.sh
-sed -i "s/http/https/" variables.sh
+sed -i "s/http:/https:/" variables.sh
 echo Pulling Docker images...
 ./dc pull --quiet
 ./npmi
