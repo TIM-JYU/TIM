@@ -246,7 +246,7 @@ rows:
         self.assertEqual(2.6, answers[0]['points'])
         self.login_test2()
         self.post_answer('qst', f'{d.id}.t',
-                         user_input={"answers": [[str(order_with_shuffle[0] + 1)], [str(order_with_shuffle[1] + 1)]]})
+                         user_input={"answers": [[str(order_with_shuffle[0])], [str(order_with_shuffle[1])]]})
         answers = self.get_task_answers(f'{d.id}.t', self.current_user)
         order_without_shuffle = loads(answers[0].get('content', {})).get('order')
         self.assertEqual(order_with_shuffle, order_without_shuffle)

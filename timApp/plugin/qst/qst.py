@@ -121,6 +121,7 @@ class QstMarkupModel(GenericMarkupModel):
     rows: Union[Any, Missing] = missing
     randomizedRows: Union[int, Missing] = missing
     randomSeed: Union[int, Missing] = missing
+    doNotMove: Union[List[int], Missing, None] = missing
 
 
 # Store answer in original row order if no randomizedRows specified in markup:
@@ -146,6 +147,9 @@ def qst_answer(m):
 
 
 def qst_filter_markup_points(points: str, question_type: str, rand_arr: List[int]) -> str:
+    """
+    filter markup's points field based on pre-generated array
+    """
     # TODO: Use constants
     if question_type == 'true-false' or question_type == 'matrix':
         # point format 1:1;2:-0.5|1:-0.5;2:1 where | splits rows input, ; column input
@@ -581,13 +585,13 @@ qst_attrs = {
 
 def qst_rand_array(max_count: int, count: int, seed_word: str, random_seed=0) -> List[int]:
     """
-    get array of count integers between 0-max_count using word and extra number as seed
+    get array of count integers between 1 and max_count (incl.) using word and extra number as seed
     """
     if count > max_count:
         count = max_count
     ret = []
     seed_array = []
-    orig = list(range(max_count))
+    orig = list(range(1,max_count+1))
     # Temp seed generator
     for char in seed_word:
         seed_array.append(int(char, 36))
@@ -605,11 +609,12 @@ T = TypeVar('T')
 def qst_set_array_order(arr: List[T], order_array: List[int]) -> List[T]:
     """
     pick items from arr in order given by order_array
+    indices start from 1
     """
     ret = []
     for val in order_array:
         try:
-            ret.append(arr[val])
+            ret.append(arr[val-1])
         except IndexError:
             pass
     return ret
@@ -618,10 +623,11 @@ def qst_set_array_order(arr: List[T], order_array: List[int]) -> List[T]:
 def qst_pick_expls(orig_expls: Dict[str, T], order_array: List[int]) -> Dict[str, T]:
     """
     pick items from dict where keys are str converted integers in order given by order_array
+    indices start from 1
     """
     ret = {}
     for i, val in enumerate(order_array):
-        pos = str(val+1)
+        pos = str(val)
         picked = orig_expls.get(pos, None)
         if picked is not None:
             ret[str(i+1)] = picked
