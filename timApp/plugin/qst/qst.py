@@ -163,11 +163,19 @@ def qst_answer_jso(m: QstAnswerModel):
             random_seed = 0
         rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, info.user_id, random_seed)
     if spoints:
-        if rand_arr is not None:
-            spoints = spoints.split('|')
-            spoints = qst_set_array_order(spoints, rand_arr)
-            spoints = '|'.join(spoints)
-            m.markup.points = spoints
+        if rand_arr:
+            question_type = m.markup.questionType
+            if question_type == 'true-false' or question_type == 'matrix':
+                spoints = spoints.split('|')
+                spoints = qst_set_array_order(spoints, rand_arr)
+                spoints = '|'.join(spoints)
+                m.markup.points = spoints
+            else:
+                spoints = create_points_table(spoints)[0]
+                spoints = qst_pick_expls(spoints, rand_arr)
+                filtered_points = ';'.join(str(key) + ':' + str(val) for [key, val] in spoints.items())
+                m.markup.points = filtered_points
+                spoints = filtered_points
         points_table = create_points_table(spoints)
         points = calculate_points_from_json_answer(answers, points_table)
         minpoints = markup.minpoints if markup.minpoints is not missing else -1e20
@@ -648,9 +656,18 @@ def qst_get_html(jso, review):
     elif rand_arr is not None:
         points = markup.get('points')
         if points:
-            points = points.split('|')
-            points = qst_set_array_order(points, rand_arr)
-            markup['points'] = '|'.join(points)
+            question_type = markup.get('questionType')
+            #TODO: Use constants
+            if question_type == 'true-false' or question_type == 'matrix':
+                # point format 1:1;2:-0.5|1:-0.5;2:1 where | splits rows input, ; column input
+                points = points.split('|')
+                points = qst_set_array_order(points, rand_arr)
+                markup['points'] = '|'.join(points)
+            else:
+                # point format 1:1;2:-0.5;3:-0.5 where ; splits row input
+                points = create_points_table(points)[0]
+                points = qst_pick_expls(points,rand_arr)
+                markup['points'] = ';'.join(str(key)+':'+str(val) for [key, val] in points.items())
 
     jso['show_result'] = result
 
