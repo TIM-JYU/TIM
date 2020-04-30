@@ -593,16 +593,17 @@ def qst_rand_array(max_count: int, randoms: int, seed_word: str, random_seed=0, 
     :param randoms: how many random numbers to fill the array with
     :param seed_word: input word to generate random seed
     :param random_seed: extra number to edit the seed
-    :param locks: positions that can't be shuffled, indexing starting from 1. Any position over max_count will lock
-    a position from the end of the return array
+    :param locks: positions that can't be shuffled, indexing starting from 1. Any position over max_count will be
+    interpreted as max_count
     :return: shuffled array of integers of up to max_count values
     """
     if locks is None:
         locks = []
+    for i, val in enumerate(locks):
+        if val > max_count:
+            locks[i] = max_count
     locks = list(set(locks))
     locks.sort()
-    if len(locks) > max_count:
-        locks = locks[:max_count]
     total = randoms + len(locks)
     if total > max_count:
         total = max_count
@@ -626,15 +627,8 @@ def qst_rand_array(max_count: int, randoms: int, seed_word: str, random_seed=0, 
     random.shuffle(orig)
     for i in range(1, total + 1):
         if len(locks) >= total - len(ret):
-            if locks[0] == i:
-                ret.append(i)
-                locks.pop(0)
-            elif locks[0] <= max_count:
-                ret.append(locks[0])
-                locks.pop(0)
-            else:
-                ret.append(max_count - len(locks) + 1)
-                locks.pop(0)
+            ret.append(locks[0])
+            locks.pop(0)
         elif len(locks) > 0 and locks[0] == i:
             ret.append(i)
             locks.pop(0)
