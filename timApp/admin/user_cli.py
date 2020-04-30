@@ -1,5 +1,7 @@
+import csv
+from dataclasses import dataclass
 from pprint import pprint
-from typing import List, Optional, Set, Dict, Any
+from typing import List, Optional, Set, Iterable
 
 import click
 from flask import abort
@@ -65,16 +67,47 @@ def addtohomeorg(name: str) -> None:
 @click.argument('primary')
 @click.argument('secondary')
 def merge(primary: str, secondary: str) -> None:
-    """Merges two users by moving data from secondary account to primary account.
-
-    This does not delete accounts.
+    """Merges two users by moving data from secondary account to primary account,
+    and soft-deletes the secondary account.
     """
     moved_data = find_and_merge_users(primary, secondary)
+    find_and_soft_delete(secondary)
     db.session.commit()
     pprint(moved_data)
 
 
-def find_and_merge_users(primary: str, secondary: str) -> Dict[str, Any]:
+@dataclass
+class MergeResult:
+    primary: User
+    secondary: User
+    owned_lectures: int = 0
+    lectureanswers: int = 0
+    messages: int = 0
+    answers: int = 0
+    annotations: int = 0
+    velps: int = 0
+    readparagraphs: int = 0
+    notes: int = 0
+    accesses: int = 0
+
+
+@user_cli.command()
+@click.argument('csvfile', type=click.File())
+def mass_merge(csvfile: Iterable[str]) -> None:
+    """Merges multiple users as specified in the given CSV file.
+    """
+    reader = csv.reader(csvfile, delimiter=';')
+    for row in reader:
+        if len(row) != 2:
+            raise click.UsageError(f'CSV file has a row with wrong number of columns: {row}')
+        primary, secondary = row[0], row[1]
+        result = find_and_merge_users(primary, secondary)
+        click.echo(str(result))
+        find_and_soft_delete(secondary)
+    db.session.commit()
+
+
+def find_and_merge_users(primary: str, secondary: str) -> MergeResult:
     u_prim = User.get_by_name(primary)
     u_sec = User.get_by_name(secondary)
     if not u_prim:
@@ -84,7 +117,7 @@ def find_and_merge_users(primary: str, secondary: str) -> Dict[str, Any]:
     return do_merge_users(u_prim, u_sec)
 
 
-def do_merge_users(u_prim: User, u_sec: User) -> Dict[str, Any]:
+def do_merge_users(u_prim: User, u_sec: User) -> MergeResult:
     if u_prim.is_special:
         return abort(400, f'User {u_prim.name} is a special user')
     if u_sec.is_special:
@@ -94,10 +127,10 @@ def do_merge_users(u_prim: User, u_sec: User) -> Dict[str, Any]:
     if not has_anything_in_common(u_prim, u_sec):
         return abort(400, f'Users {u_prim.name} and {u_sec.name} do not appear to be duplicates. '
                           f'Merging not allowed to prevent accidental errors.')
-    moved_data = {}
+    moved_data = MergeResult(u_prim, u_sec)
     for a in ('owned_lectures', 'lectureanswers', 'messages', 'answers', 'annotations', 'velps'):
         a_alt = a + '_alt'
-        moved_data[a] = len(getattr(u_sec, a_alt))
+        setattr(moved_data, a, len(getattr(u_sec, a_alt)))
         getattr(u_prim, a_alt).extend(getattr(u_sec, a_alt))
         setattr(u_sec, a_alt, [])
     u_prim_group = u_prim.get_personal_group()
@@ -109,7 +142,7 @@ def do_merge_users(u_prim: User, u_sec: User) -> Dict[str, Any]:
         move_document(d, u_prim_folder)
     for a in ('readparagraphs', 'notes', 'accesses'):
         a_alt = a + '_alt'
-        moved_data[a] = len(getattr(u_sec_group, a_alt))
+        setattr(moved_data, a, len(getattr(u_sec_group, a_alt)))
         if a == 'accesses':
             getattr(u_prim_group, a_alt).update(getattr(u_sec_group, a_alt))
             setattr(u_sec_group, a_alt, {})
@@ -122,7 +155,7 @@ def do_merge_users(u_prim: User, u_sec: User) -> Dict[str, Any]:
     for key, a in u_prim_group.accesses_alt.items():
         assert u_sec_folder.block is not None
         if a.block_id == u_sec_folder.block.id and a.type == AccessType.owner.value:
-            moved_data['accesses'] -= 1
+            moved_data.accesses -= 1
             u_prim_group.accesses_alt.pop(key)
             u_sec_group.accesses_alt[key] = a
             break
@@ -133,6 +166,7 @@ def do_merge_users(u_prim: User, u_sec: User) -> Dict[str, Any]:
 @click.argument('name')
 def soft_delete(name: str) -> None:
     find_and_soft_delete(name)
+    db.session.commit()
 
 
 def find_and_soft_delete(name: str) -> None:
@@ -140,7 +174,6 @@ def find_and_soft_delete(name: str) -> None:
     if not u:
         raise RouteException('User not found.')
     do_soft_delete(u)
-    db.session.commit()
 
 
 def do_soft_delete(u: User) -> None:

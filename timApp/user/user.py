@@ -273,6 +273,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     velps = db.relationship('Velp', back_populates='creator', lazy='dynamic')
     velps_alt = db.relationship('Velp')
 
+    def __repr__(self):
+        return f'<User(id={self.id}, name={self.name}, email={self.email}, real_name={self.real_name})>'
+
     @property
     def logged_in(self):
         return self.id > 0

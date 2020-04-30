@@ -48,62 +48,54 @@ class MergeTest(TimRouteTest):
         d = self.create_doc()
         path = d.path
         r = find_and_merge_users('testuser2', 'testuser1')
-        self.assertEqual({
-            'accesses': 3,
-            'annotations': 0,
-            'answers': 0,
-            'lectureanswers': 0,
-            'messages': 0,
-            'notes': 0,
-            'owned_lectures': 0,
-            'readparagraphs': 0,
-            'velps': 0,
-        }, r)
+        self.assertEqual(3, r.accesses)
+        self.assertEqual(0, r.annotations)
+        self.assertEqual(0, r.answers)
+        self.assertEqual(0, r.lectureanswers)
+        self.assertEqual(0, r.messages)
+        self.assertEqual(0, r.notes)
+        self.assertEqual(0, r.owned_lectures)
+        self.assertEqual(0, r.readparagraphs)
+        self.assertEqual(0, r.velps)
         db.session.commit()
         self.assertIsNone(DocEntry.find_by_path(path))
         #db.session.refresh(self.test_user_1.get_personal_group())
         #db.session.refresh(self.test_user_2.get_personal_group())
         r = find_and_merge_users('testuser2', 'testuser1')
-        self.assertEqual({
-            'accesses': 0,
-            'annotations': 0,
-            'answers': 0,
-            'lectureanswers': 0,
-            'messages': 0,
-            'notes': 0,
-            'owned_lectures': 0,
-            'readparagraphs': 0,
-            'velps': 0,
-        }, r)
+        self.assertEqual(0, r.accesses)
+        self.assertEqual(0, r.annotations)
+        self.assertEqual(0, r.answers)
+        self.assertEqual(0, r.lectureanswers)
+        self.assertEqual(0, r.messages)
+        self.assertEqual(0, r.notes)
+        self.assertEqual(0, r.owned_lectures)
+        self.assertEqual(0, r.readparagraphs)
+        self.assertEqual(0, r.velps)
         db.session.commit()
         db.session.refresh(self.test_user_1.get_personal_group())
         db.session.refresh(self.test_user_2.get_personal_group())
         r = find_and_merge_users('testuser1', 'testuser2')
-        self.assertEqual({
-            'accesses': 3,
-            'annotations': 0,
-            'answers': 0,
-            'lectureanswers': 0,
-            'messages': 0,
-            'notes': 0,
-            'owned_lectures': 0,
-            'readparagraphs': 0,
-            'velps': 0,
-        }, r)
+        self.assertEqual(3, r.accesses)
+        self.assertEqual(0, r.annotations)
+        self.assertEqual(0, r.answers)
+        self.assertEqual(0, r.lectureanswers)
+        self.assertEqual(0, r.messages)
+        self.assertEqual(0, r.notes)
+        self.assertEqual(0, r.owned_lectures)
+        self.assertEqual(0, r.readparagraphs)
+        self.assertEqual(0, r.velps)
         db.session.commit()
         self.assertIsNotNone(DocEntry.find_by_path(path))
         r = find_and_merge_users('testuser1', 'testuser2')
-        self.assertEqual({
-            'accesses': 0,
-            'annotations': 0,
-            'answers': 0,
-            'lectureanswers': 0,
-            'messages': 0,
-            'notes': 0,
-            'owned_lectures': 0,
-            'readparagraphs': 0,
-            'velps': 0,
-        }, r)
+        self.assertEqual(0, r.accesses)
+        self.assertEqual(0, r.annotations)
+        self.assertEqual(0, r.answers)
+        self.assertEqual(0, r.lectureanswers)
+        self.assertEqual(0, r.messages)
+        self.assertEqual(0, r.notes)
+        self.assertEqual(0, r.owned_lectures)
+        self.assertEqual(0, r.readparagraphs)
+        self.assertEqual(0, r.velps)
         db.session.commit()
 
         find_and_soft_delete('testuser2')
