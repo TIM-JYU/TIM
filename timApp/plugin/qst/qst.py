@@ -121,7 +121,7 @@ class QstMarkupModel(GenericMarkupModel):
     rows: Union[Any, Missing] = missing
     randomizedRows: Union[int, Missing] = missing
     randomSeed: Union[int, Missing] = missing
-    doNotMove: Union[List[int], Missing, None] = missing
+    doNotMove: Union[List[int], Missing] = missing
 
 
 # Store answer in original row order if no randomizedRows specified in markup:
@@ -599,6 +599,7 @@ def qst_rand_array(max_count: int, randoms: int, seed_word: str, random_seed=0, 
     """
     if locks is None:
         locks = []
+    locks = list(set(locks))
     locks.sort()
     if len(locks) > max_count:
         locks = locks[:max_count]
@@ -627,6 +628,9 @@ def qst_rand_array(max_count: int, randoms: int, seed_word: str, random_seed=0, 
         if len(locks) >= total - len(ret):
             if locks[0] == i:
                 ret.append(i)
+                locks.pop(0)
+            elif locks[0] <= max_count:
+                ret.append(locks[0])
                 locks.pop(0)
             else:
                 ret.append(max_count - len(locks) + 1)
@@ -689,6 +693,15 @@ def qst_get_html(jso, review):
             # markup['rows'] = qst_randomize_rows(rows,rcount,jso['user_id'])
             random_seed = markup.get('randomSeed', 0)
             locks = markup.get('doNotMove',[])
+            # TODO: MarkupModel should handle these checks?
+            if locks is None:
+                locks = []
+            if isinstance(locks, int):
+                locks = [locks]
+            for val in locks:
+                if not isinstance(val, int):
+                    locks=[]
+                    break
             if random_seed is None:
                 random_seed = 0
             rand_arr = qst_rand_array(len(rows), rcount, jso['user_id'], random_seed, locks)
