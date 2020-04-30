@@ -2,6 +2,7 @@ import {IPromise} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {getActiveDocument} from "tim/document/activedocument";
+import {documentglobals} from "tim/util/globals";
 import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
@@ -243,6 +244,12 @@ export async function initReadings(item: IItem) {
             markParRead($this, ReadingType.HoverPar);
         }
     });
+
+    // TODO: Check that doc globals do exist
+    const docGlobals = documentglobals();
+    if (docGlobals.shouldMarkAllRead) {
+        await markAllAsRead();
+    }
 
     if (Users.isLoggedIn()) {
         await $timeout(10000);

@@ -470,7 +470,7 @@ def view(item_path, template_name, route="view"):
         do_lazy = m.lazy if m.lazy is not None else doc_settings.lazy(
             default=plugin_count >= current_app.config['PLUGIN_COUNT_LAZY_LIMIT'])
 
-    texts, js_paths, css_paths = post_process_pars(
+    texts, js_paths, css_paths, should_mark_all_read = post_process_pars(
         doc,
         xs,
         current_list_user or current_user,
@@ -588,6 +588,7 @@ def view(item_path, template_name, route="view"):
         linked_groups=linked_groups,
         current_view_range=view_range,
         nav_ranges=nav_ranges,
+        should_mark_all_read=should_mark_all_read,
     )
 
 

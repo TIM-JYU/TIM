@@ -16,8 +16,8 @@ from timApp.readmark.readmarkcollection import ReadMarkCollection
 from timApp.markdown.markdownconverter import expand_macros, create_environment
 from timApp.plugin.pluginControl import pluginify
 from timApp.auth.sessioninfo import get_session_usergroup_ids, get_current_user_object
-from timApp.user.user import User
-from timApp.readmark.readings import get_common_readings, get_read_expiry_condition
+from timApp.user.user import User, check_rights
+from timApp.readmark.readings import get_common_readings, get_read_expiry_condition, has_anything_read
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
@@ -25,7 +25,7 @@ from timApp.util.utils import getdatetime, get_boolean
 
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??
 def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False,
-                      load_plugin_states=True) -> Tuple[List[dict], List[str], List[str]]:
+                      load_plugin_states=True) -> Tuple[List[dict], List[str], List[str], bool]:
     taketime("start pluginify")
     final_pars, js_paths, css_paths, _ = pluginify(
         doc,
@@ -37,6 +37,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         load_states=load_plugin_states,
     )
     taketime("end pluginify")
+    should_mark_all_read = False
     settings = doc.get_settings()
     macroinfo = settings.get_macroinfo()
     user_macros = macroinfo.get_user_specific_macros(user)
@@ -59,7 +60,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
 
     if edit_window:
         # Skip readings and notes
-        return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths
+        return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths, should_mark_all_read
 
     if settings.show_authors():
         authors = doc.get_changelog(-1).get_authorinfo(pars)
@@ -109,9 +110,19 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     group = curr_user.get_personal_group().id
     if curr_user.logged_in:
         # taketime("readings begin")
-        readings = get_common_readings(get_session_usergroup_ids(),
-                                       doc,
-                                       get_read_expiry_condition(settings.read_expiry()))
+
+        usergroup_ids = get_session_usergroup_ids()
+
+        # If we're in exam mode and we're visiting the page for the first time, mark everything read
+        # TODO: Maybe turn it into a general is_first_read boolean?
+        if check_rights(doc.get_settings().exam_mode(), doc.docinfo.rights) and \
+                not has_anything_read(usergroup_ids, doc):
+            should_mark_all_read = True
+            readings = []
+        else:
+            readings = get_common_readings(usergroup_ids,
+                                        doc,
+                                        get_read_expiry_condition(settings.read_expiry()))
         taketime("readings end")
         for r in readings:  # type: ReadParagraph
             key = (r.par_id, r.doc_id)
@@ -150,7 +161,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                 p['notes'].append(UserNoteAndUser(user=u, note=n, editable=editable, private=private))
     # taketime("notes mixed")
 
-    return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths
+    return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths, should_mark_all_read
 
 
 def process_areas(settings, pars: List[DocParagraph], macros, delimiter, env) -> List[Dict]:

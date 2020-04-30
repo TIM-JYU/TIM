@@ -91,6 +91,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     current_view_range?: IViewRangeUnnamed | null;
     nav_ranges?: IViewRange[];
     exam_mode: boolean;
+    shouldMarkAllRead: boolean;
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {
