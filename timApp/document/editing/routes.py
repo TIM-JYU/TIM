@@ -442,9 +442,9 @@ def par_response(pars: List[DocParagraph],
                             old_exported = old_par.get_exported_markdown()
                     trdiff = {'old': old_exported, 'new': newest_exported}
 
-    pars, js_paths, css_paths = post_process_pars(doc, pars, current_user, edit_window=preview)
+    pars, js_paths, css_paths, _ = post_process_pars(doc, pars, current_user, edit_window=preview)
 
-    changed_pars, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
+    changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
     original_par = edit_request.original_par if edit_request else None
 
     if spellcheck:

@@ -666,7 +666,7 @@ def check_updated_pars(doc_id, major, minor):
     # taketime("after rights")
     for diff in diffs:  # about < 1 ms
         if diff.get('content'):
-            pars, js_paths, css_paths = post_process_pars(
+            pars, js_paths, css_paths, _ = post_process_pars(
                 d,
                 diff['content'],
                 get_current_user_object(),
