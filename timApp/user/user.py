@@ -5,6 +5,8 @@ from typing import List, Tuple
 from typing import Optional, Union, Set
 
 from dataclasses import dataclass, field
+
+from sqlalchemy import func
 from sqlalchemy.orm import Query, joinedload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -341,11 +343,14 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return User.query.filter_by(email=email).first()
 
     @staticmethod
-    def get_by_email_or_username(email_or_username: str) -> Optional['User']:
-        u = User.get_by_email(email_or_username)
+    def get_by_email_case_insensitive_or_username(email_or_username: str) -> List['User']:
+        users = User.query.filter(func.lower(User.email).in_([email_or_username])).all()
+        if users:
+            return users
+        u = User.get_by_name(email_or_username)
         if u:
-            return u
-        return User.get_by_name(email_or_username)
+            return [u]
+        return []
 
     @property
     def email_name_part(self):

@@ -31,7 +31,7 @@ from timApp.user.user import User, UserOrigin, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import create_anonymous_user
 from timApp.user.userutils import create_password_hash, check_password_hash
-from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr, use_model
+from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr, use_model, RouteException
 from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response, error_generic
 from timApp.util.logger import log_error, log_warning
 
@@ -372,8 +372,9 @@ def alt_login():
 
     email_or_username = convert_email_to_lower(email_or_username)
 
-    user = User.get_by_email_or_username(email_or_username)
-    if user is not None:
+    users = User.get_by_email_case_insensitive_or_username(email_or_username)
+    if len(users) == 1:
+        user = users[0]
         old_hash = user.pass_
         if user.check_password(password, allow_old=True, update_if_old=True):
             # Check if the users' group exists
@@ -389,9 +390,11 @@ def alt_login():
             if old_hash != user.pass_:
                 db.session.commit()
             return finish_login()
-    else:
+    elif not users:
         # Protect from timing attacks.
         check_password_hash('', '$2b$12$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu')
+    else:
+        raise RouteException('AmbiguousAccount')
 
     error_msg = "EmailOrPasswordNotMatch"
     if is_possibly_home_org_account(email_or_username):

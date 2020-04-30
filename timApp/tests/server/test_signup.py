@@ -190,6 +190,32 @@ class TestSignUp(TimRouteTest):
             json_key='status')
         self.login(force=True, email=email, passw=test_pw)
 
+    def test_login_case_insensitive(self):
+        email = 'SomeOneCase2@example.com'
+        User.create_with_group(UserInfo(
+            username=email,
+            email=email,
+            full_name='Some One',
+            password='testing'
+        ))
+        db.session.commit()
+        self.login(email=email.lower(), passw='testing', force=True)
+        email = 'SomeOnecase2@example.com'
+        User.create_with_group(UserInfo(
+            username=email,
+            email=email,
+            full_name='Some One',
+            password='testing'
+        ))
+        db.session.commit()
+        self.login(
+            email=email.lower(),
+            passw='testing',
+            force=True,
+            expect_status=400,
+            expect_content='AmbiguousAccount',
+        )
+
     def test_signup(self):
         email = 'testingsignup@example.com'
         self.json_post(

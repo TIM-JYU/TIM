@@ -54,12 +54,24 @@
           <context context-type="linenumber">10</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="e214083f21300fbb395dce22c288c59eaa978cbd" datatype="html">
+        <source>
+                Two different accounts for this email were found. Please contact TIM administrators to merge them.
+            </source>
+        <target state="translated">
+                Sähköpostiosoitteelle löytyi kaksi eri tiliä. Ota yhteyttä TIM-ylläpitäjiin niiden yhdistämiseksi.
+            </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="820123f94067dd237fe9e9be74f7b073ec7c5a5d" datatype="html">
         <source>Unknown error: <x id="INTERPOLATION" equiv-text="{{error}}"/></source>
         <target state="translated">Tuntematon virhe: <x id="INTERPOLATION" equiv-text="{{error}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
-          <context context-type="linenumber">11</context>
+          <context context-type="linenumber">14</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6d6968cb33ce9daad70a5f0e4832d46061332d09" datatype="html">

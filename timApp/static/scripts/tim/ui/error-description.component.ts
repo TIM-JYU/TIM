@@ -12,6 +12,9 @@ import {Input, Component} from "@angular/core";
             <ng-container *ngSwitchCase="'PasswordsNotMatch'" i18n>Passwords do not match.</ng-container>
             <ng-container *ngSwitchCase="'PasswordTooShort'" i18n>Password is too short.</ng-container>
             <ng-container *ngSwitchCase="'UserAlreadyExists'" i18n>User already exists.</ng-container>
+            <ng-container *ngSwitchCase="'AmbiguousAccount'" i18n>
+                Two different accounts for this email were found. Please contact TIM administrators to merge them.
+            </ng-container>
             <ng-container *ngSwitchDefault i18n>Unknown error: {{error}}</ng-container>
         </ng-container>
     `,
