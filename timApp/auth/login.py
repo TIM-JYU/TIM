@@ -230,6 +230,7 @@ class AltSignupModel:
 def alt_signup(m: AltSignupModel):
     email_or_username = m.email
     fail = False
+    is_email = False
     if not is_valid_email(email_or_username):
         u = User.get_by_name(email_or_username)
         if not u:
@@ -239,7 +240,8 @@ def alt_signup(m: AltSignupModel):
         else:
             email = u.email
     else:
-        email = email_or_username
+        is_email = True
+        email = email_or_username.lower()
 
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
@@ -253,8 +255,8 @@ def alt_signup(m: AltSignupModel):
 
     # Real users should never submit the url parameter.
     # It is meant for catching bots.
-    if m.url and not (email_or_username.endswith('.fi') or email_or_username.endswith('@gmail.com')):
-        log_warning(f'Bot registration attempt: {email_or_username}, URL: {m.url}')
+    if is_email and m.url and not (email.endswith('.fi') or email.endswith('@gmail.com')):
+        log_warning(f'Bot registration attempt: {email}, URL: {m.url}')
         fail = True
 
     if fail:
@@ -286,29 +288,32 @@ def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
     return nu
 
 
-@login_page.route("/altsignup2", methods=['POST'])
-def alt_signup_after():
-    email_or_username, confirm, password, real_name, temp_pass = verify_json_params(
-        'email',
-        'passconfirm',
-        'password',
-        'realname',
-        'token',
-    )
+@dataclass
+class AltSignup2Model:
+    email: str
+    passconfirm: str
+    password: str
+    realname: str
+    token: str
 
-    if password != confirm:
+
+@login_page.route("/altsignup2", methods=['POST'])
+@use_model(AltSignup2Model)
+def alt_signup_after(m: AltSignup2Model):
+    if m.password != m.passconfirm:
         return abort(400, 'PasswordsNotMatch')
 
     min_pass_len = current_app.config['MIN_PASSWORD_LENGTH']
-    if len(password) < min_pass_len:
+    if len(m.password) < min_pass_len:
         return abort(400, f'PasswordTooShort')
 
     save_came_from()
+    email_or_username = convert_email_to_lower(m.email)
 
-    nu = check_temp_pw(email_or_username, temp_pass)
+    nu = check_temp_pw(email_or_username, m.token)
     email = nu.email
     username = email
-
+    real_name = m.realname
     user = User.get_by_email(email)
     if user is not None:
         # User with this email already exists
@@ -327,7 +332,7 @@ def alt_signup_after():
         if not user.is_email_user:
             real_name = user.real_name
 
-        user.update_info(UserInfo(username=username, full_name=real_name, email=email, password=password))
+        user.update_info(UserInfo(username=username, full_name=real_name, email=email, password=m.password))
     else:
         if User.get_by_name(username) is not None:
             return abort(400, 'UserAlreadyExists')
@@ -337,7 +342,7 @@ def alt_signup_after():
                 username=username,
                 full_name=real_name,
                 email=email,
-                password=password,
+                password=m.password,
                 origin=UserOrigin.Email,
             )
         )
@@ -364,6 +369,8 @@ def alt_login():
     email_or_username = request.form['email']
     password = request.form['password']
     session['adding_user'] = request.form.get('add_user', 'false').lower() == 'true'
+
+    email_or_username = convert_email_to_lower(email_or_username)
 
     user = User.get_by_email_or_username(email_or_username)
     if user is not None:
@@ -394,6 +401,12 @@ def alt_login():
     else:
         flash(error_msg, 'loginmsg')
     return finish_login(ready=False)
+
+
+def convert_email_to_lower(email_or_username):
+    if is_valid_email(email_or_username):
+        return email_or_username.lower()
+    return email_or_username
 
 
 def save_came_from():

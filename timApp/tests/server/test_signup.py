@@ -173,6 +173,23 @@ class TestSignUp(TimRouteTest):
         NewUser.query.delete()
         db.session.commit()
 
+    def test_signup_case_insensitive(self):
+        email = 'SomeOneCase@example.com'
+        self.json_post(
+            '/altsignup',
+            {'email': email})
+        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('someonecase@example.com',)])
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'email': email,
+             'token': test_pws[-1],
+             'password': test_pw,
+             'passconfirm': test_pw},
+            expect_contains='registered',
+            json_key='status')
+        self.login(force=True, email=email, passw=test_pw)
+
     def test_signup(self):
         email = 'testingsignup@example.com'
         self.json_post(
