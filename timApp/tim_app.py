@@ -11,6 +11,7 @@ from typing import Optional
 from flask import Flask
 from flask_migrate import Migrate
 from flask_wtf import CSRFProtect
+from sqlalchemy import func
 from sqlalchemy.sql.ddl import CreateTable
 
 from timApp.answer.answer import Answer, AnswerSaver
@@ -62,12 +63,8 @@ from timApp.velp.velp_models import Velp, VelpContent, VelpGroup, VelpGroupDefau
     LabelInVelp, AnnotationComment
 
 
-def reg_models(*_):
-    pass
-
-
-# All SQLAlchemy models must be imported in this module. To avoid "unused import" warnings, we pass them to a function.
-reg_models(
+# All SQLAlchemy models must be imported in this module.
+all_models = (
     AccessTypeModel,
     Annotation,
     AnnotationComment,
@@ -164,6 +161,16 @@ app.jinja_env.add_extension('jinja2.ext.do')
 mimetypes.add_type('text/plain', '.scss')
 
 app.json_encoder = TimJsonEncoder
+
+
+@app.shell_context_processor
+def make_shell_context():
+    ctx = {
+        c.__name__: c for c in all_models
+    }
+    ctx['db'] = db
+    ctx['func'] = func
+    return ctx
 
 
 def print_schema(bind: Optional[str] = None):
