@@ -1,13 +1,14 @@
 from pprint import pprint
-from typing import List
+from typing import List, Optional, Set, Dict, Any
 
 import click
 from flask import abort
 from flask.cli import AppGroup
 
+from timApp.admin.import_accounts import import_accounts_impl
 from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import move_document
-from timApp.tim_app import app, get_home_organization_group
+from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
 from timApp.user.user import User, UserInfo
@@ -15,7 +16,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 
 
-def create_user_info_set(u: User):
+def create_user_info_set(u: User) -> Set[str]:
     """Returns a set of strings constructed from various parts of user info.
     This set is meant to be intersected with another user to determine whether they have anything in common.
     """
@@ -29,7 +30,7 @@ def create_user_info_set(u: User):
     }
 
 
-def has_anything_in_common(u1: User, u2: User):
+def has_anything_in_common(u1: User, u2: User) -> bool:
     u1_set = create_user_info_set(u1)
     u2_set = create_user_info_set(u2)
     if u1_set & u2_set:
@@ -43,27 +44,27 @@ user_cli = AppGroup('user')
 
 @user_cli.command()
 @click.argument('name')
-def addtohomeorg(name: str):
+def addtohomeorg(name: str) -> None:
     """Adds a user to the home organization group.
     """
     u = User.get_by_name(name)
     if not u:
-        print('User not found.')
+        click.echo('User not found.')
         return
     if u.is_email_user:
-        print('User is email user, so should not be added to home organization.')
+        click.echo('User is email user, so should not be added to home organization.')
         return
     if u.add_to_group(get_home_organization_group(), added_by=None):
-        print('Added.')
+        click.echo('Added.')
     else:
-        print('User already belongs to home organization.')
+        click.echo('User already belongs to home organization.')
     db.session.commit()
 
 
 @user_cli.command()
 @click.argument('primary')
 @click.argument('secondary')
-def merge(primary, secondary):
+def merge(primary: str, secondary: str) -> None:
     """Merges two users by moving data from secondary account to primary account.
 
     This does not delete accounts.
@@ -71,10 +72,9 @@ def merge(primary, secondary):
     moved_data = find_and_merge_users(primary, secondary)
     db.session.commit()
     pprint(moved_data)
-    return moved_data
 
 
-def find_and_merge_users(primary: str, secondary: str):
+def find_and_merge_users(primary: str, secondary: str) -> Dict[str, Any]:
     u_prim = User.get_by_name(primary)
     u_sec = User.get_by_name(secondary)
     if not u_prim:
@@ -84,7 +84,7 @@ def find_and_merge_users(primary: str, secondary: str):
     return do_merge_users(u_prim, u_sec)
 
 
-def do_merge_users(u_prim: User, u_sec: User):
+def do_merge_users(u_prim: User, u_sec: User) -> Dict[str, Any]:
     if u_prim.is_special:
         return abort(400, f'User {u_prim.name} is a special user')
     if u_sec.is_special:
@@ -120,6 +120,7 @@ def do_merge_users(u_prim: User, u_sec: User):
     # * all users are allowed to have at most one personal folder
     # * if we don't restore access for secondary user, a new personal folder would be created when logging in
     for key, a in u_prim_group.accesses_alt.items():
+        assert u_sec_folder.block is not None
         if a.block_id == u_sec_folder.block.id and a.type == AccessType.owner.value:
             moved_data['accesses'] -= 1
             u_prim_group.accesses_alt.pop(key)
@@ -130,11 +131,11 @@ def do_merge_users(u_prim: User, u_sec: User):
 
 @user_cli.command()
 @click.argument('name')
-def soft_delete(name: str):
+def soft_delete(name: str) -> None:
     find_and_soft_delete(name)
 
 
-def find_and_soft_delete(name: str):
+def find_and_soft_delete(name: str) -> None:
     u = User.get_by_name(name)
     if not u:
         raise RouteException('User not found.')
@@ -142,7 +143,7 @@ def find_and_soft_delete(name: str):
     db.session.commit()
 
 
-def do_soft_delete(u: User):
+def do_soft_delete(u: User) -> None:
     d_suffix = '_deleted'
     if u.name.endswith(d_suffix) or u.email.endswith(d_suffix):
         raise RouteException('User is already soft-deleted.')
@@ -163,7 +164,7 @@ def create(
         email: str,
         password: str,
         admin: bool,
-):
+) -> None:
     """Creates or updates a user."""
 
     user = User.query.filter_by(name=username).first()
@@ -187,7 +188,7 @@ def create(
 
 
 @user_cli.command()
-def fix_aalto_student_ids():
+def fix_aalto_student_ids() -> None:
     users_to_fix: List[User] = UserGroup.query.filter(
         UserGroup.name.in_(['aalto19test', 'cs-a1141-2017-2018'])).join(User, UserGroup.users).with_entities(
         User).all()
@@ -199,3 +200,32 @@ def fix_aalto_student_ids():
         )])
     db.session.commit()
     click.echo(f'Updated {len(users_to_fix)} users.')
+
+
+@user_cli.command('import')
+@click.option(
+    '--csvfile',
+    type=click.Path(exists=True),
+    required=True,
+    help='CSV file from which to read user accounts; format: email;full name;username',
+)
+@click.option(
+    '--password',
+    help='common password for all accounts',
+)
+def import_accounts(csvfile: str, password: Optional[str]) -> None:
+    added, existing = import_accounts_impl(csvfile, password)
+    total = len(added) + len(existing)
+    click.echo(f'Processed {total} accounts.')
+    if added:
+        click.echo(f'Added the following {len(added)} accounts:')
+    else:
+        click.echo(f'No new accounts were added.')
+    for u in added:
+        click.echo(u.name)
+    if existing:
+        click.echo(f'Updated the following {len(existing)} existing accounts:')
+    else:
+        click.echo(f'No existing accounts were updated.')
+    for u in existing:
+        click.echo(u.name)

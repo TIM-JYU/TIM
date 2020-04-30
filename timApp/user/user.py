@@ -393,7 +393,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             index = str(int(index or 1) + 1)
         return basename + index
 
-    def get_personal_folder(self):
+    def get_personal_folder(self) -> Folder:
         return self.personal_folder_prop
 
     @cached_property

@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Dict
 
 import attr
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
+from timApp.auth.auth_models import BlockAccess
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists
@@ -80,7 +81,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         back_populates='usergroup',
         lazy='dynamic',
     )
-    accesses_alt = db.relationship(
+    accesses_alt: Dict[str, BlockAccess] = db.relationship(
         'BlockAccess',
         collection_class=attribute_mapped_collection('group_collection_key'),
         cascade='all, delete-orphan',

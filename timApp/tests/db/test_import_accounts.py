@@ -2,7 +2,7 @@ import csv
 import os
 from typing import List
 
-from timApp.admin.import_accounts import import_accounts, ImportException
+from timApp.admin.import_accounts import import_accounts_impl, ImportException
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.user.user import User, UserInfo
 
@@ -46,7 +46,7 @@ class AccountImportTest(TimDbTest):
         if expected_existing is None:
             expected_existing = []
         csv_path = self.write_test_csv(accounts)
-        _, existing = import_accounts(csv_path, 'testpass')
+        _, existing = import_accounts_impl(csv_path, 'testpass')
         self.assertEqual(set(expected_existing), set(u.name for u in existing))
         for a in accounts:
             if a.email:
@@ -77,12 +77,20 @@ class AccountImportTest(TimDbTest):
 
     def test_import_no_password(self):
         csv_path = self.write_test_csv([UserInfo(full_name='Testing User', username='t@example.com')])
-        added, _ = import_accounts(csv_path, '')
+        added, _ = import_accounts_impl(csv_path, '')
         self.assertIsNone(added[0].pass_)
 
     def test_import_existing_no_name(self):
         csv_path = self.write_test_csv(
             [UserInfo(full_name='Testing User 2', email='t2@example.com')],
             include_username=False)
-        added, _ = import_accounts(csv_path, '')
-        _, existing = import_accounts(csv_path, '')
+        added, _ = import_accounts_impl(csv_path, '')
+        _, existing = import_accounts_impl(csv_path, '')
+
+    def test_import_lowercase(self):
+        csv_path = self.write_test_csv(
+            [UserInfo(full_name='Testing User 3', email='T3@example.com')],
+            include_username=False)
+        import_accounts_impl(csv_path, '')
+        self.assertIsNone(User.get_by_email('T3@example.com'))
+        self.assertIsNotNone(User.get_by_email('t3@example.com'))
