@@ -180,7 +180,10 @@ def qst_answer_jso(m: QstAnswerModel):
         random_seed = m.markup.randomSeed
         if random_seed is None or random_seed is missing:
             random_seed = 0
-        rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, info.user_id, random_seed)
+        locks = m.markup.doNotMove
+        if locks is None or locks is missing:
+            locks = []
+        rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, info.user_id, random_seed,locks)
     if spoints:
         if rand_arr:
             question_type = m.markup.questionType
@@ -583,23 +586,56 @@ qst_attrs = {
 }
 
 
-def qst_rand_array(max_count: int, count: int, seed_word: str, random_seed=0) -> List[int]:
+def qst_rand_array(max_count: int, randoms: int, seed_word: str, random_seed=0, locks: List[int] = None) -> List[int]:
     """
     get array of count integers between 1 and max_count (incl.) using word and extra number as seed
+    :param max_count: highest possible number (incl.) and max return list length
+    :param randoms: how many random numbers to fill the array with
+    :param seed_word: input word to generate random seed
+    :param random_seed: extra number to edit the seed
+    :param locks: positions that can't be shuffled, indexing starting from 1. Any position over max_count will lock
+    a position from the end of the return array
+    :return: shuffled array of integers of up to max_count values
     """
-    if count > max_count:
-        count = max_count
+    if locks is None:
+        locks = []
+    locks.sort()
+    if len(locks) > max_count:
+        locks = locks[:max_count]
+    total = randoms + len(locks)
+    if total > max_count:
+        total = max_count
     ret = []
     seed_array = []
     orig = list(range(1,max_count+1))
+    for i, val in enumerate(locks):
+        if len(orig) == 0:
+            break
+        if val > max_count:
+            orig.pop(len(orig) - 1)
+        try:
+            orig.pop(val - 1 - i)
+        except IndexError:
+            pass
     # Temp seed generator
     for char in seed_word:
         seed_array.append(int(char, 36))
     seed = int(''.join(map(str, seed_array)))
     random.seed(seed+random_seed)
     random.shuffle(orig)
-    for i in range(count):
-        ret.append(orig[i])
+    for i in range(1, total + 1):
+        if len(locks) >= total - len(ret):
+            if locks[0] == i:
+                ret.append(i)
+                locks.pop(0)
+            else:
+                ret.append(max_count - len(locks) + 1)
+                locks.pop(0)
+        elif len(locks) > 0 and locks[0] == i:
+            ret.append(i)
+            locks.pop(0)
+        else:
+            ret.append(orig.pop(0))
     return ret
 
 
@@ -652,9 +688,10 @@ def qst_get_html(jso, review):
         if rcount > 0:
             # markup['rows'] = qst_randomize_rows(rows,rcount,jso['user_id'])
             random_seed = markup.get('randomSeed', 0)
+            locks = markup.get('doNotMove',[])
             if random_seed is None:
                 random_seed = 0
-            rand_arr = qst_rand_array(len(rows), rcount, jso['user_id'], random_seed)
+            rand_arr = qst_rand_array(len(rows), rcount, jso['user_id'], random_seed, locks)
     if rand_arr is not None:  # specific order found in prev.ans or markup
         markup['rows'] = qst_set_array_order(rows, rand_arr)
         markup['expl'] = qst_pick_expls(markup['expl'], rand_arr)
