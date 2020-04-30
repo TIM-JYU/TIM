@@ -3,7 +3,7 @@ import json
 import random
 import re
 from dataclasses import dataclass
-from typing import Dict, Optional, List, Union, Any
+from typing import Dict, Optional, List, Union, Any, TypeVar
 from xml.sax.saxutils import quoteattr
 
 import yaml
@@ -123,11 +123,11 @@ class QstMarkupModel(GenericMarkupModel):
     randomSeed: Union[int, Missing] = missing
 
 
-#Store answer in original row order if no randomizedRows specified in markup:
-#[["1"], [], ["1"], ["2"]]
-#Otherwise specify order in which rows were presented
-#{"c": [["1"], ["2"], ["3"], []], "order": [3, 7, 4, 5]}
-QstStateModel = Union[List[List[str]], Dict[str, Union[List[List[str]],List[int]]]]
+# Store answer in original row order if no randomizedRows specified in markup:
+# [["1"], [], ["1"], ["2"]]
+# Otherwise specify order in which rows were presented
+# {"c": [["1"], ["2"], ["3"], []], "order": [3, 7, 4, 5]}
+QstStateModel = Union[List[List[str]], Dict[str, Union[List[List[str]], List[int]]]]
 
 
 @dataclass
@@ -145,6 +145,21 @@ def qst_answer(m):
     return qst_answer_jso(m)
 
 
+def qst_filter_markup_points(points: str, question_type: str, rand_arr: List[int]) -> str:
+    # TODO: Use constants
+    if question_type == 'true-false' or question_type == 'matrix':
+        # point format 1:1;2:-0.5|1:-0.5;2:1 where | splits rows input, ; column input
+        ret = points.split('|')
+        ret = qst_set_array_order(ret, rand_arr)
+        ret = '|'.join(ret)
+    else:
+        # point format 1:1;2:-0.5;3:-0.5 where ; splits row input
+        ret = create_points_table(points)[0]
+        ret = qst_pick_expls(ret, rand_arr)
+        ret = ';'.join(str(key) + ':' + str(val) for [key, val] in ret.items())
+    return ret
+
+
 def qst_answer_jso(m: QstAnswerModel):
     tim_info = {}
     answers = m.input.answers
@@ -153,8 +168,8 @@ def qst_answer_jso(m: QstAnswerModel):
     info = m.info
     rand_arr = None
     prev_state = m.state
-    #if prev state is not none, try to get order from there
-    if prev_state is not None and isinstance(prev_state, dict):
+    # if prev state exists, try to get order from there
+    if isinstance(prev_state, dict):
         rand_arr = prev_state.get('order')
     # if prev state is none, check if markup wants random order
     if prev_state is None and rand_arr is None and m.markup.randomizedRows and info and info.user_id:
@@ -165,17 +180,8 @@ def qst_answer_jso(m: QstAnswerModel):
     if spoints:
         if rand_arr:
             question_type = m.markup.questionType
-            if question_type == 'true-false' or question_type == 'matrix':
-                spoints = spoints.split('|')
-                spoints = qst_set_array_order(spoints, rand_arr)
-                spoints = '|'.join(spoints)
-                m.markup.points = spoints
-            else:
-                spoints = create_points_table(spoints)[0]
-                spoints = qst_pick_expls(spoints, rand_arr)
-                filtered_points = ';'.join(str(key) + ':' + str(val) for [key, val] in spoints.items())
-                m.markup.points = filtered_points
-                spoints = filtered_points
+            spoints = qst_filter_markup_points(spoints, question_type, rand_arr)
+            m.markup.points = spoints
         points_table = create_points_table(spoints)
         points = calculate_points_from_json_answer(answers, points_table)
         minpoints = markup.minpoints if markup.minpoints is not missing else -1e20
@@ -188,7 +194,7 @@ def qst_answer_jso(m: QstAnswerModel):
 
     webstate = answers
     if rand_arr is not None:
-        #TODO: Schema?
+        # TODO: Schema?
         answers = {'c': answers, 'order': rand_arr}
         m.markup.rows = qst_set_array_order(m.markup.rows, rand_arr)
         m.markup.expl = qst_pick_expls(m.markup.expl, rand_arr)
@@ -573,19 +579,19 @@ qst_attrs = {
 }
 
 
-def qst_rand_array(max_count: int, count: int, seed_word: str, random_seed=0):
+def qst_rand_array(max_count: int, count: int, seed_word: str, random_seed=0) -> List[int]:
     """
     get array of count integers between 0-max_count using word and extra number as seed
     """
-    if (count > max_count):
+    if count > max_count:
         count = max_count
     ret = []
     seed_array = []
     orig = list(range(max_count))
-    #Temp seed generator
+    # Temp seed generator
     for char in seed_word:
         seed_array.append(int(char, 36))
-    seed = int(''.join(map(str,seed_array)))
+    seed = int(''.join(map(str, seed_array)))
     random.seed(seed+random_seed)
     random.shuffle(orig)
     for i in range(count):
@@ -593,26 +599,29 @@ def qst_rand_array(max_count: int, count: int, seed_word: str, random_seed=0):
     return ret
 
 
-def qst_set_array_order(arr: list, order_array: list):
+T = TypeVar('T')
+
+
+def qst_set_array_order(arr: List[T], order_array: List[int]) -> List[T]:
     """
     pick items from arr in order given by order_array
     """
     ret = []
-    for i in range(len(order_array)):
+    for val in order_array:
         try:
-            ret.append(arr[order_array[i]])
+            ret.append(arr[val])
         except IndexError:
             pass
     return ret
 
 
-def qst_pick_expls(orig_expls: dict, order_array: list):
+def qst_pick_expls(orig_expls: Dict[str, T], order_array: List[int]) -> Dict[str, T]:
     """
     pick items from dict where keys are str converted integers in order given by order_array
     """
     ret = {}
-    for i in range(len(order_array)):
-        pos = str(order_array[i]+1)
+    for i, val in enumerate(order_array):
+        pos = str(val+1)
         picked = orig_expls.get(pos, None)
         if picked is not None:
             ret[str(i+1)] = picked
@@ -628,9 +637,9 @@ def qst_get_html(jso, review):
     if prev_state and isinstance(prev_state, dict):
         rand_arr = prev_state.get('order')
         jso['state'] = prev_state.get('c')
-    rows = markup.get('rows',[])
-    #Move randomizedRows to normalize?
-    if not prev_state and rand_arr is None: # no previous answer, check markup for new order
+    rows = markup.get('rows', [])
+    # Move randomizedRows to normalize?
+    if not prev_state and rand_arr is None:  # no previous answer, check markup for new order
         rcount = markup.get('randomizedRows', 0)
         if rcount is None:
             rcount = 0
@@ -639,8 +648,8 @@ def qst_get_html(jso, review):
             random_seed = markup.get('randomSeed', 0)
             if random_seed is None:
                 random_seed = 0
-            rand_arr = qst_rand_array(len(rows),rcount, jso['user_id'], random_seed)
-    if rand_arr is not None: # specific order found in prev.ans or markup
+            rand_arr = qst_rand_array(len(rows), rcount, jso['user_id'], random_seed)
+    if rand_arr is not None:  # specific order found in prev.ans or markup
         markup['rows'] = qst_set_array_order(rows, rand_arr)
         markup['expl'] = qst_pick_expls(markup['expl'], rand_arr)
 
@@ -648,7 +657,8 @@ def qst_get_html(jso, review):
                                      allow_top_level_keys=
                                      qst_attrs)
     jso['markup'] = markup
-    if info and info['max_answers'] and get_num_value(info,'max_answers', 1) <= get_num_value(info,'earlier_answers', 0):
+    if info and info['max_answers'] \
+            and get_num_value(info, 'max_answers', 1) <= get_num_value(info, 'earlier_answers', 0):
         result = True
     if not result:
         markup.pop('points', None)
@@ -657,17 +667,8 @@ def qst_get_html(jso, review):
         points = markup.get('points')
         if points:
             question_type = markup.get('questionType')
-            #TODO: Use constants
-            if question_type == 'true-false' or question_type == 'matrix':
-                # point format 1:1;2:-0.5|1:-0.5;2:1 where | splits rows input, ; column input
-                points = points.split('|')
-                points = qst_set_array_order(points, rand_arr)
-                markup['points'] = '|'.join(points)
-            else:
-                # point format 1:1;2:-0.5;3:-0.5 where ; splits row input
-                points = create_points_table(points)[0]
-                points = qst_pick_expls(points,rand_arr)
-                markup['points'] = ';'.join(str(key)+':'+str(val) for [key, val] in points.items())
+            points = qst_filter_markup_points(points, question_type, rand_arr)
+            markup['points'] = points
 
     jso['show_result'] = result
 
