@@ -681,11 +681,17 @@ def qst_get_html(jso, review):
     # Move randomizedRows to normalize?
     if not prev_state and rand_arr is None:  # no previous answer, check markup for new order
         rcount = markup.get('randomizedRows', 0)
+        # TODO: try to convert string
+        if not isinstance(rcount, int):
+            rcount = 0
         if rcount is None:
             rcount = 0
         if rcount > 0:
             # markup['rows'] = qst_randomize_rows(rows,rcount,jso['user_id'])
             random_seed = markup.get('randomSeed', 0)
+            # TODO: use random seed generation within qst_rand_array if seed was string
+            if not isinstance(random_seed, int):
+                random_seed = 0
             locks = markup.get('doNotMove',[])
             # TODO: MarkupModel should handle these checks?
             if locks is None:
