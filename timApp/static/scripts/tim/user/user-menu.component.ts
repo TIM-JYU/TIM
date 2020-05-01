@@ -1,8 +1,8 @@
 import {Component} from "@angular/core";
+import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {IUser} from "./IUser";
 import {showLoginDialog} from "./login-dialog.component";
 import {Users} from "./userService";
-import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 
 /**
  * Displays the current user name and the number of additional
