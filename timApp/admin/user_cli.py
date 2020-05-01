@@ -1,11 +1,13 @@
 import csv
+import itertools
 from dataclasses import dataclass
 from pprint import pprint
-from typing import List, Optional, Set, Iterable
+from typing import List, Optional, Set, Iterable, Tuple
 
 import click
 from flask import abort
 from flask.cli import AppGroup
+from sqlalchemy import func  # type: ignore
 
 from timApp.admin.import_accounts import import_accounts_impl
 from timApp.auth.accesstype import AccessType
@@ -262,3 +264,36 @@ def import_accounts(csvfile: str, password: Optional[str]) -> None:
         click.echo(f'No existing accounts were updated.')
     for u in existing:
         click.echo(u.name)
+
+
+@user_cli.command()
+def find_duplicate_accounts() -> None:
+    dupes = find_duplicate_accounts_by_email()
+    for primary, secondarys in dupes:
+        for s in secondarys:
+            click.echo(f'{primary.name};{s.name}')
+
+
+def find_duplicate_accounts_by_email() -> List[Tuple[User, Set[User]]]:
+    email_lwr = func.lower(User.email)
+    dupes: List[User] = User.query.filter(
+        email_lwr.in_(User.query.group_by(email_lwr).having(func.count('*') > 1).with_entities(email_lwr).all())
+    ).order_by(User.email).all()
+    result = []
+    dupegroups = [list(g) for _, g in (itertools.groupby(dupes, lambda u: u.email.lower()))]
+
+    for group in dupegroups:
+        non_email_users = [u for u in group if not u.is_email_user]
+        lowercase_email_users = [u for u in group if u.email.islower()]
+        rest = set(group)
+        if len(non_email_users) == 1:
+            primary = non_email_users[0]
+        elif len(non_email_users) > 1:
+            raise Exception(f'Could not determine which account should be the primary one: {group}')
+        elif not lowercase_email_users:
+            primary = group[0]
+        else:
+            primary = lowercase_email_users[0]
+        rest.remove(primary)
+        result.append((primary, rest))
+    return result
