@@ -62,6 +62,8 @@ from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
+from timApp.readmark.readings import mark_all_read
+from timApp.auth.sessioninfo import get_session_usergroup_ids
 
 DEFAULT_RELEVANCE = 10
 
@@ -547,6 +549,11 @@ def view(item_path, template_name, route="view"):
                 next_range.to_json('Next'),
                 last_range.to_json('Last'),
             ]
+
+    if should_mark_all_read:
+        for group_id in get_session_usergroup_ids():
+            mark_all_read(group_id, doc)
+        db.session.commit()
 
     return render_template(
         template_name,

@@ -245,12 +245,6 @@ export async function initReadings(item: IItem) {
         }
     });
 
-    // TODO: Check that doc globals do exist
-    const docGlobals = documentglobals();
-    if (docGlobals.shouldMarkAllRead) {
-        await markAllAsRead();
-    }
-
     if (Users.isLoggedIn()) {
         await $timeout(10000);
         await to($http.post("/bookmarks/markLastRead/" + item.id, {}));
