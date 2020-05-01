@@ -114,7 +114,6 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         usergroup_ids = get_session_usergroup_ids()
 
         # If we're in exam mode and we're visiting the page for the first time, mark everything read
-        # TODO: Maybe turn it into a general is_first_read boolean?
         if check_rights(doc.get_settings().exam_mode(), doc.docinfo.rights) and \
                 not has_anything_read(usergroup_ids, doc):
             should_mark_all_read = True

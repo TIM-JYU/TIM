@@ -70,7 +70,6 @@ function hideTopButtonsStuff(hide: IVisibilityVars) {
     // hide.login = true; // TODO: Should login be hidden or not?
 }
 
-// TODO: What things should be hidden in exam mode?
 function hideExamModeElements(hide: IVisibilityVars) {
     hide.links = true;
     hide.bookmarks = true;
