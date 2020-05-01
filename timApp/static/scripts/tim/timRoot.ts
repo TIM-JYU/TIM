@@ -25,6 +25,7 @@ export interface IVisibilityVars {
     emailLogin?: boolean;
     signup?: boolean;
     passwordRecovery?: boolean;
+    userMenuOptions?: boolean;
 }
 
 
@@ -76,6 +77,8 @@ function hideExamModeElements(hide: IVisibilityVars) {
     hide.settings = true;
     hide.hamburger = true;
     hide.header = true;
+    hide.search = true;
+    hide.userMenuOptions = true;
 }
 
 export function getVisibilityVars() {

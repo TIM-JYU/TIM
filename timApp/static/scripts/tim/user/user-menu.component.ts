@@ -2,6 +2,7 @@ import {Component} from "@angular/core";
 import {IUser} from "./IUser";
 import {showLoginDialog} from "./login-dialog.component";
 import {Users} from "./userService";
+import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 
 /**
  * Displays the current user name and the number of additional
@@ -20,13 +21,15 @@ import {Users} from "./userService";
                 *dropdownMenu
                 role="menu"
                 aria-labelledby="single-button">
-                <li role="menuitem"><a
-                        href="/view/{{ getCurrentUser().folder.path }}" i18n="@@myDocuments">My documents</a></li>
-                <li role="menuitem"><a
-                        (click)="addUser()"
-                        href="#">
-                    <ng-container i18n="@@addToSession">Add a user to this session</ng-container>...</a></li>
-                <li class="divider"></li>
+                <ng-container *ngIf="!hideOptions.userMenuOptions">
+                    <li role="menuitem"><a
+                            href="/view/{{ getCurrentUser().folder.path }}" i18n="@@myDocuments">My documents</a></li>
+                    <li role="menuitem"><a
+                            (click)="addUser()"
+                            href="#">
+                        <ng-container i18n="@@addToSession">Add a user to this session</ng-container>...</a></li>
+                    <li class="divider"></li>
+                </ng-container>
                 <li *ngIf="!loggingout" role="menuitem">
                     <a (click)="beginLogout($event)"
                        href="#" [ngSwitch]="numSession() > 0">
@@ -43,6 +46,7 @@ import {Users} from "./userService";
     `,
 })
 export class UserMenuComponent {
+    hideOptions: IVisibilityVars = getVisibilityVars();
     loggingout = false;
 
     isLoggedIn = () => Users.isLoggedIn();
