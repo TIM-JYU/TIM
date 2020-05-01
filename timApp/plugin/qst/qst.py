@@ -602,6 +602,8 @@ def qst_rand_array(max_count: int, randoms: int, seed_word: str, random_seed=0, 
     for i, val in enumerate(locks):
         if val > max_count:
             locks[i] = max_count
+        elif val < 1:
+            locks[i] = 1
     locks = list(set(locks))
     locks.sort()
     total = randoms + len(locks)
