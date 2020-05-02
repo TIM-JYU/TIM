@@ -34,6 +34,7 @@ from timApp.user.userutils import create_password_hash, check_password_hash
 from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr, use_model, RouteException
 from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response, error_generic
 from timApp.util.logger import log_error, log_warning
+from timApp.util.utils import is_valid_email
 
 login_page = Blueprint('login_page',
                        __name__,
@@ -47,10 +48,6 @@ def get_real_name(email):
     parts = email[0:atindex].split('.')
     parts2 = [part.capitalize() if len(part) > 1 else part.capitalize() + '.' for part in parts]
     return ' '.join(parts2)
-
-
-def is_valid_email(email):
-    return re.match('^[\w.-]+@([\w-]+\.)+[\w-]+$', email) is not None
 
 
 @login_page.route("/logout", methods=['POST'])

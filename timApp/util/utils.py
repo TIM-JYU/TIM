@@ -311,3 +311,7 @@ def get_alias(name: str) -> str:
 fin_timezone = pytz.timezone('Europe/Helsinki')
 temp_folder_path = Path('/tmp')
 cache_folder_path = Path('/cache')
+
+
+def is_valid_email(email: str) -> bool:
+    return re.match('^[\w.-]+@([\w-]+\.)+[\w-]+$', email) is not None

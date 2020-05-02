@@ -1,6 +1,7 @@
 import csv
 from typing import Tuple, List, Optional
 
+from timApp.util.utils import is_valid_email
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
 from timApp.user.userutils import create_password_hash
@@ -25,6 +26,9 @@ def import_accounts_impl(file: str, password: Optional[str]) -> Tuple[List[User]
             u = None
             if not email and not name:
                 raise ImportException('Either name or email must be provided')
+            if email:
+                if not is_valid_email(email):
+                    raise ImportException(f'Not a valid email: {email}')
             if name:
                 u = User.get_by_name(name)
             if not u:

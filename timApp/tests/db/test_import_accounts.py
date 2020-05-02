@@ -94,3 +94,11 @@ class AccountImportTest(TimDbTest):
         import_accounts_impl(csv_path, '')
         self.assertIsNone(User.get_by_email('T3@example.com'))
         self.assertIsNotNone(User.get_by_email('t3@example.com'))
+
+    def test_invalid_email(self):
+        accounts = [
+            UserInfo(email='x', full_name='Real Name 1', username=''),
+        ]
+        with self.assertRaises(ImportException) as e:
+            self.write_and_test(accounts)
+        self.assertEqual('Not a valid email: x', e.exception.args[0])
