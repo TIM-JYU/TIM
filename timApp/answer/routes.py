@@ -5,7 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict
 
-from flask import Blueprint
+from flask import Blueprint, session
 from flask import Response
 from flask import abort
 from flask import request
@@ -407,6 +407,13 @@ def post_answer(plugintype: str, task_id_ext: str):
     d.document.insert_preamble_pars()
 
     curr_user = get_current_user_object()
+
+    # It is rare but possible that the current user has been deleted (for example as the result of merging 2 accounts).
+    # We assume it's the case here, so we clear the session and ask to log in again.
+    if curr_user.is_deleted:
+        session.clear()
+        raise AccessDenied('Please refresh the page and log in again.')
+
     ptype = PluginType(plugintype)
     answerdata, = verify_json_params('input')
     answer_browser_data, answer_options = verify_json_params('abData', 'options', require=False, default={})

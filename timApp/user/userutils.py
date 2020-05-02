@@ -37,6 +37,10 @@ class NoSuchUserException(TimDbException):
         self.user_id = user_id
 
 
+class DeletedUserException(Exception):
+    pass
+
+
 def get_anon_group_id() -> int:
     global ANON_GROUP_ID
     if ANON_GROUP_ID is not None:

@@ -1,6 +1,6 @@
 import traceback
 
-from flask import request, abort, render_template, session, flash, Flask
+from flask import request, abort, render_template, session, flash, Flask, redirect
 from markupsafe import Markup
 from marshmallow import ValidationError
 
@@ -15,7 +15,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.sisu.sisu import IncorrectSettings, SisuError
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
-from timApp.user.userutils import NoSuchUserException
+from timApp.user.userutils import NoSuchUserException, DeletedUserException
 from timApp.util.flask.requesthelper import JSONException, get_request_message, RouteException
 from timApp.util.flask.responsehelper import error_generic
 from timApp.util.logger import log_error
@@ -83,6 +83,11 @@ def register_errorhandlers(app: Flask):
             flash(f'Your user id ({error.user_id}) was not found in the database. Clearing session automatically.')
             return logout()
         return error_generic(error.description, 500)
+
+    @app.errorhandler(DeletedUserException)
+    def handle_user_deleted(error):
+        session.clear()
+        return redirect('/')
 
     ##############
     # HTTP codes #

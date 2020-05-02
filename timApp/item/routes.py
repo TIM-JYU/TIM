@@ -55,6 +55,7 @@ from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
+from timApp.user.userutils import DeletedUserException
 from timApp.util.flask.requesthelper import verify_json_params, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
 from timApp.util.logger import log_error
@@ -356,6 +357,10 @@ def view(item_path, template_name, route="view"):
 
     teacher_or_see_answers = route in ('teacher', 'answers')
     current_user = get_current_user_object() if logged_in() else None
+
+    if current_user and current_user.is_deleted:
+        raise DeletedUserException()
+
     doc_settings = doc.get_settings(current_user)
 
     # Used later to get partitioning with preambles included correct.

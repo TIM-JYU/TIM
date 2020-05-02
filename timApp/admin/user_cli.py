@@ -15,7 +15,7 @@ from timApp.document.docinfo import move_document
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
-from timApp.user.user import User, UserInfo
+from timApp.user.user import User, UserInfo, deleted_user_suffix
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 
@@ -179,10 +179,13 @@ def find_and_soft_delete(name: str) -> None:
 
 
 def do_soft_delete(u: User) -> None:
-    d_suffix = '_deleted'
-    if u.name.endswith(d_suffix) or u.email.endswith(d_suffix):
+    if u.name.endswith(deleted_user_suffix) or u.email.endswith(deleted_user_suffix):
         raise RouteException('User is already soft-deleted.')
-    u.update_info(UserInfo(username=u.name + d_suffix, email=u.email + d_suffix, full_name=u.real_name))
+    u.update_info(UserInfo(
+        username=u.name + deleted_user_suffix,
+        email=u.email + deleted_user_suffix,
+        full_name=u.real_name,
+    ))
 
 
 @user_cli.command()

@@ -105,3 +105,29 @@ class MergeTest(TimRouteTest):
             find_and_soft_delete('testuser2')
         with self.assertRaises(RouteException):
             find_and_soft_delete('testuser2_deleted')
+
+
+class UserDeleteTest(TimRouteTest):
+    def test_deleted_user_logout(self):
+        u, _ = User.create_with_group(UserInfo(username='m@example.com', email='m@example.com', full_name='M'))
+        db.session.commit()
+        self.get('/')
+        self.login(username='m@example.com')
+        d = self.create_doc()
+        find_and_soft_delete('m@example.com')
+        db.session.commit()
+        self.get(d.url, expect_status=302, expect_content='')
+        self.get(d.url, expect_status=403)
+        self.login(username='m@example.com_deleted')
+        self.post_answer(
+            'x', f'{d.id}.t',
+            user_input={},
+            expect_status=403,
+            expect_content='Please refresh the page and log in again.',
+        )
+        self.post_answer(
+            'x', f'{d.id}.t',
+            user_input={},
+            expect_status=400,
+            expect_content='Task not found in the document: t',
+        )

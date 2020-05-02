@@ -156,6 +156,9 @@ def last_name_to_last(full_name: Optional[str]):
     return full_name
 
 
+deleted_user_suffix = '_deleted'
+
+
 class User(db.Model, TimeStampMixin, SCIMEntity):
     """A user account.
 
@@ -281,6 +284,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     @property
     def logged_in(self):
         return self.id > 0
+
+    @property
+    def is_deleted(self):
+        return self.name.endswith(deleted_user_suffix) and self.email.endswith(deleted_user_suffix)
 
     @cached_property
     def is_admin(self):
