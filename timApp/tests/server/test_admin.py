@@ -45,12 +45,13 @@ class MergeTest(TimRouteTest):
             with self.assertRaises(BadRequest):
                 find_and_merge_users('testuser1', u)
 
-        d = self.create_doc()
+        d = self.create_doc(initial_par="#- {plugin=textfield #t}")
+        self.post_answer('textfield', f'{d.id}.t', user_input={'c': 'x'})
         path = d.path
         r = find_and_merge_users('testuser2', 'testuser1')
         self.assertEqual(3, r.accesses)
         self.assertEqual(0, r.annotations)
-        self.assertEqual(0, r.answers)
+        self.assertEqual(1, r.answers)
         self.assertEqual(0, r.lectureanswers)
         self.assertEqual(0, r.messages)
         self.assertEqual(0, r.notes)
@@ -77,7 +78,7 @@ class MergeTest(TimRouteTest):
         r = find_and_merge_users('testuser1', 'testuser2')
         self.assertEqual(3, r.accesses)
         self.assertEqual(0, r.annotations)
-        self.assertEqual(0, r.answers)
+        self.assertEqual(1, r.answers)
         self.assertEqual(0, r.lectureanswers)
         self.assertEqual(0, r.messages)
         self.assertEqual(0, r.notes)
