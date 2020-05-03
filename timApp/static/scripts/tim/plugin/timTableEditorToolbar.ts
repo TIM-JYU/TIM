@@ -327,7 +327,7 @@ registerDialogComponent(TimTableEditorToolbarController,
                         ng-hide="$ctrl.hide.colorPicker"
                         ng-click="$ctrl.applyBackgroundColor()">Apply color
                 </button>
-                <button class="timButton btn-xs"
+                <button clasAs="timButton btn-xs"
                         ng-hide="$ctrl.hide.alignLeft"
                         title="Align left"
                         ng-click="$ctrl.setTextAlign('left')">
