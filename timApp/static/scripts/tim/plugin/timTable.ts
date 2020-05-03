@@ -164,6 +164,8 @@ export interface IToolbarTemplate {
     buttonStyle?: Record<string, string>;
     rect?: Record<string, IToolbarTemplate>;
     area?: (IToolbarTemplate|undefined)[][];
+    title?: string;
+    onlyEmpty?: boolean;
 }
 
 export interface TimTable {
@@ -213,6 +215,7 @@ export interface TimTable {
     header?: string;
     footer?: string;
     stem?: string;
+    disabaleSelect?: boolean;
 }
 
 interface Rng {
@@ -434,7 +437,7 @@ export enum ClearSort {
     selector: "tim-table",
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders}" class="timTableRunDiv no-popup-menu"
+        <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders, disableSelect: disableSelect}" class="timTableRunDiv no-popup-menu"
              [style.max-height]="maxRows"
              [style.width]="maxCols"
         >
@@ -459,7 +462,7 @@ export enum ClearSort {
                     <thead>
                     <tr *ngIf="data.charRow"> <!--Char coordinate row -->
                         <td class="nrcolumn charRow" *ngIf="data.nrColumn"></td>
-                        <td class="charRow" *ngIf="data.cbColumn"></td>
+                        <td class="cbColumn charRow" *ngIf="data.cbColumn"></td>
                         <td class="charRow" [hidden]="!showColumn(coli)"
                             *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
                             <span [innerText]="coliToLetters(coli)"></span>
@@ -505,7 +508,7 @@ export enum ClearSort {
                         [hidden]="!showRow(rowi)"
                     >
                         <td class="nrcolumn" *ngIf="data.nrColumn">{{i + 1}}</td>
-                        <td *ngIf="data.cbColumn">
+                        <td class="cbColumn" *ngIf="data.cbColumn">
                             <input type="checkbox" [(ngModel)]="cbs[rowi]" (ngModelChange)="handleChangeCheckbox(rowi)">
                         </td>
                         <ng-container *ngFor="let td of cellDataMatrix[rowi]; let coli = index">
@@ -618,6 +621,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     button: string = "Tallenna";
     private noNeedFirstClick = false;
     hide: HideValues = { editorPosition: true};
+    disableSelect: boolean = true;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -750,6 +754,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.viewctrl.addTable(this, parId);
         }
         this.currentHiddenRows = (this.data.hiddenRows ?? []).slice();
+        this.disableSelect = this.data.disabaleSelect ?? true;
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
@@ -3082,6 +3087,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     }
                     // this.saveToCell(cell, svalue, selectedCells).then();  // TODO: think if this can be done with same query
                     for (const c of cells) {
+                        if (value.onlyEmpty) {
+                            const cvalue = this.cellDataMatrix[c.y][c.x];
+                            if (cvalue.cell) { continue; }
+                        }
                         cellsToSave.push({col: c.x, row: c.y, key: "cell", c: svalue});
                     }
                     this.cellDataMatrix[cell.row][cell.col].cell = svalue;
@@ -3134,16 +3143,24 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                             cellStyle = cellStyle.substr(1);
                         }
                         for (const c of cells) {
+                            if (value.onlyEmpty) {
+                                const cvalue = this.cellDataMatrix[c.y][c.x];
+                                if (cvalue.cell) { continue; }
+                            }
                             let s = cellStyle;
                             if (skey === "class") {
                                 const oldCls = this.cellDataMatrix[c.y][c.x].class;
                                 if (oldCls) { // todo toggle
                                     if (!oldCls.includes(s)) {
                                         s = oldCls + " " + s;
+                                    } else {
+                                        s = "";
                                     }
                                 }
                             }
-                            cellsToSave.push({col: c.x, row: c.y, key: skey, c: s});
+                            if (s) {
+                                cellsToSave.push({col: c.x, row: c.y, key: skey, c: s});
+                            }
                         }
                     }
                 }

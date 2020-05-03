@@ -54,3 +54,27 @@ td input[type="text"] {
   padding-left: 2em;
   margin: auto;
 }
+
+td.nrcolumn {
+    font-size: smaller;
+    text-align: right;
+}
+td.charRow {
+    font-size: smaller;
+    text-align: center;
+    border-bottom: none !important;  /* prevent no border top from cell below */
+}
+
+
+td.header {
+    border-bottom: none !important;  /* prevent no border top from cell below */
+}
+
+td.nrcolumn.charRow {
+    visibility: hidden;
+}
+
+td.cbColumn.charRow {
+    visibility: hidden;
+}
+

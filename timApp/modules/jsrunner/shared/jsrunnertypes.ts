@@ -29,6 +29,7 @@ export const JsrunnerMarkup = t.intersection([
         timeout: Max1000,
         open: t.boolean,
         showInView: t.boolean,
+        confirmText: t.string,
     }),
     GenericPluginMarkup,
     t.type({

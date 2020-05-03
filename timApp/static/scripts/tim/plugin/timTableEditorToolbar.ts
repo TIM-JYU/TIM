@@ -176,6 +176,16 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
 
     // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic
     /**
+     * Gets the cell text for toolbar
+     */
+    private getTitleForToolbar(value: IToolbarTemplate) {
+        const v = value.title;
+        if (!v) { return null; } // &#8195  em space &emsp;
+        return v;
+    }
+
+    // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic
+    /**
      * Gets the cell class for toolbar
      */
     private getCellClassForToolbar(value: IToolbarTemplate): string {
@@ -193,11 +203,15 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      * Gets the cell style for toolbar
      */
     private getCellStyleForToolbar(value: IToolbarTemplate) {
+        let ret = value.style;
         if (value.buttonStyle) {
             // @ts-ignore
-            return value.buttonStyle;
+            ret = value.buttonStyle;
         }
-        return value.style;
+        if (!ret) { return ret; }
+        let sret = JSON.stringify(ret);
+        sret = sret.replace(/"/g, "").replace("{", "").replace("}", "").replace(/:/g, ": ");
+        return sret;
     }
 
     // noinspection JSUnusedLocalSymbols
@@ -268,6 +282,7 @@ export function openTableEditorToolbar(p: ITimTableEditorToolbarParams) {
     }
 }
 
+// noinspection JSUnusedLocalSymbols
 export function hideToolbar(closingTable: object) {
     if (instance) {
         // instance.hideIfActiveTable(closingTable);
@@ -300,7 +315,7 @@ registerDialogComponent(TimTableEditorToolbarController,
                 </div>
             </div>
         </div>
-        <div class="row">
+        <div class="row timTableToolbarRow">
             <div class="col-xs-12" id="timTableToolbarRow">
                 <color-picker ng-model="$ctrl.cellBackgroundColor"
                               ng-hide="$ctrl.hide.colorPicker"
@@ -332,7 +347,8 @@ registerDialogComponent(TimTableEditorToolbarController,
                 </button>
                 <button class="btn-xs" ng-repeat="r in $ctrl.activeTable.data.toolbarTemplates" ng-init="rowi = $index"
                      ng-class="$ctrl.getCellClassForToolbar(r)"
-                     ng-style="$ctrl.getCellStyleForToolbar(r)" ng-click="$ctrl.setCell(r)" ng-bind-html="$ctrl.getCellForToolbar(r)">
+                     ng-style="$ctrl.getCellStyleForToolbar(r)" ng-click="$ctrl.setCell(r)" ng-bind-html="$ctrl.getCellForToolbar(r)"
+                     title={{$ctrl.getTitleForToolbar(r)}}>
                      <!--{{$ctrl.getCellForToolbar(r)}}-->
                 </button>
                 <button class="timButton btn-xs"

@@ -292,6 +292,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     program: Union[str, Missing] = missing
     overrideGrade: bool = False
     showInView: bool = False
+    confirmText: Union[str, Missing] = missing
     timeout: Union[int, Missing] = missing
     updateFields: Union[List[str], Missing] = missing
 
