@@ -391,8 +391,12 @@ class DocParagraph:
             macroinfo = settings.get_macroinfo()
         macros = macroinfo.get_macros(nocache=self.get_nocache())
 
-        if self.insert_rnds(md + macros.get("username", "")):  # TODO: RND_SEED: check what seed should be used, is this used to plugins?
-            macros = {**macros, **self.__rands}
+        try:
+            if self.insert_rnds(md + macros.get("username", "")):  # TODO: RND_SEED: check what seed should be used, is this used to plugins?
+                macros = {**macros, **self.__rands}
+        except Exception as err:
+            # raise Exception('Error in rnd: ' + str(err)) from err
+            pass  # TODO: show exception to user!
         return expand_macros(md, macros, settings, macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
 
     def get_title(self) -> Optional[str]:
