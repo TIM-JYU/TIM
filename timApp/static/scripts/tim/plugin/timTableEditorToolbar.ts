@@ -327,7 +327,7 @@ registerDialogComponent(TimTableEditorToolbarController,
                         ng-hide="$ctrl.hide.colorPicker"
                         ng-click="$ctrl.applyBackgroundColor()">Apply color
                 </button>
-                <button clasAs="timButton btn-xs"
+                <button class="timButton btn-xs"
                         ng-hide="$ctrl.hide.alignLeft"
                         title="Align left"
                         ng-click="$ctrl.setTextAlign('left')">
@@ -348,8 +348,7 @@ registerDialogComponent(TimTableEditorToolbarController,
                 <button class="btn-xs" ng-repeat="r in $ctrl.activeTable.data.toolbarTemplates" ng-init="rowi = $index"
                      ng-class="$ctrl.getCellClassForToolbar(r)"
                      ng-style="$ctrl.getCellStyleForToolbar(r)" ng-click="$ctrl.setCell(r)" ng-bind-html="$ctrl.getCellForToolbar(r)"
-                     title={{$ctrl.getTitleForToolbar(r)}}>
-                     <!--{{$ctrl.getCellForToolbar(r)}}-->
+                     title="{{$ctrl.getTitleForToolbar(r)}}">
                 </button>
                 <button class="timButton btn-xs"
                         ng-hide="$ctrl.hide.addToTemplates"
