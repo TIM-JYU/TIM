@@ -52,7 +52,7 @@ from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException, PreambleException
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
-from timApp.user.user import User
+from timApp.user.user import User, check_rights
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
 from timApp.user.userutils import DeletedUserException
@@ -62,6 +62,8 @@ from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
+from timApp.readmark.readings import mark_all_read
+from timApp.auth.sessioninfo import get_session_usergroup_ids
 
 DEFAULT_RELEVANCE = 10
 
@@ -71,6 +73,7 @@ view_page = Blueprint('view_page',
 
 DocumentSlice = Tuple[List[DocParagraph], IndexedViewRange]
 ViewRange = Union[RequestedViewRange, IndexedViewRange]
+
 
 def get_partial_document(doc: Document, view_range: ViewRange) -> DocumentSlice:
     all_pars = doc.get_paragraphs()
@@ -139,6 +142,7 @@ class ViewModel:
                 raise ValidationError('b and e must be of same type (int or string).')
         if self.e is not None and self.size is not None:
             raise ValidationError('Cannot provide e and size parameters at the same time.')
+
 
 ViewModelSchema = class_schema(ViewModel)()
 
@@ -368,7 +372,8 @@ def view(item_path, template_name, route="view"):
     preamble_count = 0
     if load_preamble or view_range.starts_from_beginning:
         try:
-            preamble_pars = doc.insert_preamble_pars([INCLUDE_IN_PARTS_CLASS_NAME] if not view_range.starts_from_beginning else None)
+            preamble_pars = doc.insert_preamble_pars(
+                [INCLUDE_IN_PARTS_CLASS_NAME] if not view_range.starts_from_beginning else None)
         except PreambleException as e:
             flash(e)
         else:
@@ -467,7 +472,7 @@ def view(item_path, template_name, route="view"):
         do_lazy = m.lazy if m.lazy is not None else doc_settings.lazy(
             default=plugin_count >= current_app.config['PLUGIN_COUNT_LAZY_LIMIT'])
 
-    texts, js_paths, css_paths = post_process_pars(
+    post_process_result = post_process_pars(
         doc,
         xs,
         current_list_user or current_user,
@@ -476,13 +481,13 @@ def view(item_path, template_name, route="view"):
         load_plugin_states=not hide_answers,
     )
     if index is None:
-        index = get_index_from_html_list(t['html'] for t in texts)
+        index = get_index_from_html_list(t['html'] for t in post_process_result.texts)
         doc_hash = get_doc_version_hash(doc_info)
         save_index(index, index_cache_folder / f"{doc_hash}.json")
 
     # If index was in cache, partitioning will be done earlier.
     if view_range.is_restricted and contents_have_changed:
-        texts = partition_texts(texts, view_range, preamble_count)
+        post_process_result.texts = partition_texts(post_process_result.texts, view_range, preamble_count)
 
     if hide_names_in_teacher(doc_info) or should_hide_names:
         for entry in user_list:
@@ -498,10 +503,10 @@ def view(item_path, template_name, route="view"):
     if doctemps:
         reqs["usertemps"] = doctemps
     if is_slide:
-        js_paths.append('tim/document/slide')
+        post_process_result.js_paths.append('tim/document/slide')
     angular_module_names = []
     if teacher_or_see_answers:
-        js_paths.append('angular-ui-grid')
+        post_process_result.js_paths.append('angular-ui-grid')
         angular_module_names += get_grid_modules()
     taketime("before render")
     nav_ranges = []
@@ -545,22 +550,28 @@ def view(item_path, template_name, route="view"):
                 last_range.to_json('Last'),
             ]
 
+    if post_process_result.should_mark_all_read:
+        for group_id in get_session_usergroup_ids():
+            mark_all_read(group_id, doc)
+        db.session.commit()
+
     return render_template(
         template_name,
         access=access,
         hide_links=should_hide_links(doc_settings, rights),
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
-        pars_only=m.pars_only,
+        pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
+        exam_mode=is_exam_mode(doc_settings, rights),
         route=route,
         edit_mode=edit_mode,
         item=doc_info,
-        text=texts,
+        text=post_process_result.texts,
         headers=index,
         plugin_users=user_list,
         version=doc.get_version(),
-        js=js_paths,
-        cssFiles=css_paths,
+        js=post_process_result.js_paths,
+        cssFiles=post_process_result.css_paths,
         jsMods=angular_module_names,
         doc_css=doc_css,
         start_index=view_range.start_index,
@@ -584,6 +595,7 @@ def view(item_path, template_name, route="view"):
         linked_groups=linked_groups,
         current_view_range=view_range,
         nav_ranges=nav_ranges,
+        should_mark_all_read=post_process_result.should_mark_all_read,
     )
 
 
@@ -629,19 +641,12 @@ def should_hide_top_buttons(settings: DocSettings, rights: dict):
     return check_rights(settings.hide_top_buttons(), rights)
 
 
-def check_rights(hide_type: str, rights: dict):
-    """
-    Checks whether the user has the correct rights rights not to hide links or the buttons in the top of the
-    page from them.
+def should_hide_paragraphs(settings: DocSettings, rights: dict):
+    return check_rights(settings.pars_only(), rights)
 
-    :param hide_type What elements to hide in the document.
-    :param rights Which user roles the elements should be hidden from.
-    :return Should the elements be hidden from the user.
-    """
-    return {'view': not rights['editable'] and not rights['see_answers'],
-            'edit': not rights['see_answers'],
-            'see_answers': not rights['teacher'],
-            'teacher': not rights['manage']}.get(hide_type, False)
+
+def is_exam_mode(settings: DocSettings, rights: dict):
+    return check_rights(settings.exam_mode(), rights)
 
 
 @view_page.route('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')
@@ -668,7 +673,7 @@ def check_updated_pars(doc_id, major, minor):
     # taketime("after rights")
     for diff in diffs:  # about < 1 ms
         if diff.get('content'):
-            pars, js_paths, css_paths = post_process_pars(
+            post_process_result = post_process_pars(
                 d,
                 diff['content'],
                 get_current_user_object(),
@@ -676,11 +681,11 @@ def check_updated_pars(doc_id, major, minor):
             )
             diff['content'] = {
                 'texts': render_template('partials/paragraphs.html',
-                                         text=pars,
+                                         text=post_process_result.texts,
                                          item={'rights': rights},
                                          preview=False),
-                'js': js_paths,
-                'css': css_paths,
+                'js': post_process_result.js_paths,
+                'css': post_process_result.css_paths,
             }
     # taketime("after for diffs")
     return json_response({'diff': diffs,

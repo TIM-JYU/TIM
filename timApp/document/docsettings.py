@@ -103,6 +103,7 @@ class DocSettings:
     bookmark_key = 'bookmarks'
     lazy_key = 'lazy'
     hide_links_key = 'hide_links'
+    pars_only_key = 'pars_only'
     hide_top_buttons_key = 'hide_top_buttons'
     point_sum_rule_key = 'point_sum_rule'
     max_points_key = 'max_points'
@@ -132,6 +133,7 @@ class DocSettings:
     allow_self_confirm_from_key = 'allow_self_confirm_from'
     auto_confirm_key = 'auto_confirm'
     expire_next_doc_message_key = 'expire_next_doc_message'
+    exam_mode_key = "exam_mode"
 
     urlmacros_tester = re.compile("[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/]+")
 
@@ -303,6 +305,12 @@ class DocSettings:
 
     def hide_top_buttons(self, default=None):
         return self.__dict.get(self.hide_top_buttons_key, default)
+
+    def pars_only(self, default=None):
+        return self.__dict.get(self.pars_only_key, default)
+
+    def exam_mode(self, default=None):
+        return self.__dict.get(self.exam_mode_key, default)
 
     def point_sum_rule(self, default=None):
         psr_dict = self.__dict.get(self.point_sum_rule_key, default)

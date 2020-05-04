@@ -1,5 +1,5 @@
 {% set editline = '' %}
-{%- if item.rights.editable or item.rights.can_comment -%}
+{%- if not exam_mode and (item.rights.editable or item.rights.can_comment) -%}
     {%- set editline = '<div class="editline" tabindex="0" title="Click to edit this paragraph"></div>' -%}
 {%- endif -%}
 
@@ -144,7 +144,7 @@
         {%- endif -%}
 
         {{ editline|safe }}
-        {%- if not disable_read_markings and not t.from_preamble and t.status -%}
+        {%- if not should_mark_all_read and not t.from_preamble and t.status -%}
             <div class="{{ t.status.class_str() }}"
                  title="Click to mark this paragraph as read"
                  {% for r in t.status.marks %}

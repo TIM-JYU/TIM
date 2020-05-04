@@ -14,14 +14,28 @@ from timApp.util.utils import get_current_time
 
 def get_read_expiry_condition(delta: timedelta):
     return ((ReadParagraph.type == ReadParagraphType.click_red) |
-           (ReadParagraph.timestamp > get_current_time() - delta))
+            (ReadParagraph.timestamp > get_current_time() - delta))
 
 
 def get_readings(usergroup_id: int, doc: Document, filter_condition=None) -> List[ReadParagraph]:
+    return get_readings_filtered_query(usergroup_id, doc, filter_condition).all()
+
+
+def has_anything_read(usergroup_ids: List[int], doc: Document) -> bool:
+    # Custom query for speed
+    ids = doc.get_referenced_document_ids()
+    ids.add(doc.doc_id)
+    query = ReadParagraph.query.filter(ReadParagraph.doc_id.in_(ids)
+                                       & (ReadParagraph.usergroup_id.in_(usergroup_ids)
+                                          & (ReadParagraph.type == ReadParagraphType.click_red)))
+    return db.session.query(query.exists()).scalar()
+
+
+def get_readings_filtered_query(usergroup_id: int, doc: Document, filter_condition=None) -> Query:
     q = get_readings_query(usergroup_id, doc)
     if filter_condition is not None:
         q = q.filter(filter_condition)
-    return q.all()
+    return q
 
 
 def get_readings_query(usergroup_id: int, doc: Document) -> Query:
@@ -98,7 +112,8 @@ def get_common_readings(usergroup_ids: List[int], doc: Document, filter_conditio
     # such paragraphs.
     # TODO: How to handle different types of readings for a group?
     final_pars = [par_id for par_id in common_par_ids if all(
-        (read_pars[par_id][ReadParagraphType.click_red].par_hash == users[0][par_id][ReadParagraphType.click_red].par_hash) for read_pars in users)]
+        (read_pars[par_id][ReadParagraphType.click_red].par_hash == users[0][par_id][
+            ReadParagraphType.click_red].par_hash) for read_pars in users)]
     for key in final_pars:
         for k, v in users[0][key].items():
             yield v
