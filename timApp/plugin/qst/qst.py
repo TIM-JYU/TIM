@@ -192,7 +192,8 @@ def qst_answer_jso(m: QstAnswerModel):
         locks = m.markup.doNotMove
         if locks is None or locks is missing:
             locks = []
-        rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, info.user_id, random_seed,locks)
+        seed_string = info.user_id + m.taskID
+        rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, seed_string, random_seed,locks)
     if spoints:
         if rand_arr:
             question_type = m.markup.questionType
@@ -634,7 +635,10 @@ def qst_rand_array(max_count: int, randoms: int, seed_word: str, random_seed=0, 
             pass
     # Temp seed generator
     for char in seed_word:
-        seed_array.append(int(char, 36))
+        try:
+            seed_array.append(int(char, 36))
+        except ValueError:
+            pass
     seed = int(''.join(map(str, seed_array)))
     random.seed(seed+random_seed)
     random.shuffle(orig)
@@ -717,7 +721,8 @@ def qst_get_html(jso, review):
                     break
             if random_seed is None:
                 random_seed = 0
-            rand_arr = qst_rand_array(len(rows), rcount, jso['user_id'], random_seed, locks)
+            seed_string = jso.get('user_id', "") + jso.get('taskID', "")
+            rand_arr = qst_rand_array(len(rows), rcount, seed_string, random_seed, locks)
     if rand_arr is not None:  # specific order found in prev.ans or markup
         markup['rows'] = qst_set_array_order(rows, rand_arr)
         markup['expl'] = qst_pick_expls(markup['expl'], rand_arr)
