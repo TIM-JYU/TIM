@@ -45,6 +45,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     private stem: string = "";
     private savedAnswer: AnswerTable = [];
     private newAnswer: AnswerTable = [];
+    private changes = false;
     protected pluginMeta: PluginMeta;
     private saveResponse: { saved: boolean, message: (string | undefined) } = {saved: false, message: undefined};
     // Duplicate attrs for ITimComp compatibility
@@ -65,7 +66,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     isUnSaved(userChange?: boolean | undefined): boolean {
-        return JSON.stringify(this.savedAnswer) != JSON.stringify(this.newAnswer);
+        return this.changes;
     }
 
     async save(): Promise<{ saved: boolean; message: string | undefined; }> {
@@ -118,8 +119,14 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         return this.attrs.markup.isTask;
     }
 
+    private checkChanges() {
+        this.changes = (JSON.stringify(this.savedAnswer) != JSON.stringify(this.newAnswer));
+    }
+
+
     private updateAnswer(at: AnswerTable) {
         this.newAnswer = at;
+        this.checkChanges();
     }
 
     private getQuestionTitle() {
