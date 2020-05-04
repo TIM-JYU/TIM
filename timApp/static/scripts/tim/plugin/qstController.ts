@@ -145,7 +145,7 @@ class QstController implements IController, ITimComponent {
             answerTable: this.attrs.state ?? [],
             showCorrectChoices: this.attrs.show_result,
             showExplanations: this.attrs.show_result,
-            enabled: !this.attrs.markup.invalid
+            enabled: !this.attrs.markup.invalid,
         });
         this.result = "";
         this.button = this.attrs.markup.button ?? "Save";
