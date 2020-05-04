@@ -124,11 +124,20 @@ class QstMarkupModel(GenericMarkupModel):
     doNotMove: Union[List[int], Missing] = missing
 
 
-# Store answer in original row order if no randomizedRows specified in markup:
-# [["1"], [], ["1"], ["2"]]
-# Otherwise specify order in which rows were presented
-# {"c": [["1"], ["2"], ["3"], []], "order": [3, 7, 4, 5]}
-QstStateModel = Union[List[List[str]], Dict[str, Union[List[List[str]], List[int]]]]
+QstBasicState = List[List[str]]
+
+
+@dataclass
+class QstRandomState:
+    # Store answer in original row order if no randomizedRows specified in markup:
+    # [["1"], [], ["1"], ["2"]]
+    # Otherwise specify order in which rows were presented
+    # {"c": [["1"], ["2"], ["3"], []], "order": [3, 7, 4, 5]}
+    c: QstBasicState
+    order: List[int]
+
+
+QstStateModel = Union[QstBasicState, QstRandomState]
 
 
 @dataclass
@@ -173,8 +182,8 @@ def qst_answer_jso(m: QstAnswerModel):
     rand_arr = None
     prev_state = m.state
     # if prev state exists, try to get order from there
-    if isinstance(prev_state, dict):
-        rand_arr = prev_state.get('order')
+    if isinstance(prev_state, QstRandomState):
+        rand_arr = prev_state.order
     # if prev state is none, check if markup wants random order
     if prev_state is None and rand_arr is None and m.markup.randomizedRows and info and info.user_id:
         random_seed = m.markup.randomSeed
