@@ -118,14 +118,18 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     private checkChanges() {
-        this.changes = !deepEqual(this.savedAnswer, this.newAnswer);;
+        this.changes = !deepEqual(this.savedAnswer, this.newAnswer);
     }
 
 
-    private updateAnswer(at: AnswerTable) {
+    private updateAnswer(at: AnswerTable, fake?: boolean) {
         this.result = "";
         this.newAnswer = at;
-        this.checkChanges();
+        if (fake) {
+            this.savedAnswer = [...at];
+        } else {
+            this.checkChanges();
+        }
     }
 
     private getQuestionTitle() {

@@ -210,7 +210,7 @@ class AnswerSheetController implements IController {
     private pointsTable: Array<{[p: string]: string}> = [];
     private userpoints?: number;
     private disabled?: boolean;
-    private onAnswerChange!: Binding<() => ((at: AnswerTable) => void) | undefined, "&">;
+    private onAnswerChange!: Binding<() => ((at: AnswerTable, fake?: boolean) => void) | undefined, "&">;
 
     constructor(element: JQLite) {
         this.element = element;
@@ -229,7 +229,7 @@ class AnswerSheetController implements IController {
 
             // Do a fake update; without this "no answer" is not registered properly if the user never clicks
             // the answer sheet.
-            this.signalUpdate();
+            this.signalUpdate(true);
         } else if (adata) {
             this.answerMatrix = this.answerMatrixFromTable(adata.currentValue);
         }
@@ -463,10 +463,10 @@ class AnswerSheetController implements IController {
         return this.json.answerFieldType === "checkbox";
     }
 
-    private signalUpdate() {
+    private signalUpdate(fake?: boolean) {
         const c = this.onAnswerChange();
         if (c) {
-            c(this.tableFromAnswerMatrix(this.answerMatrix));
+            c(this.tableFromAnswerMatrix(this.answerMatrix), fake);
         }
     }
 }
