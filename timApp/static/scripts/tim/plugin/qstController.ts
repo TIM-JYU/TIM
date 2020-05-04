@@ -13,8 +13,7 @@ import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 import {IGenericPluginTopLevelFields, IPluginAttributes} from "./attributes";
-import {pluginBindings, PluginMeta} from "./util";
-import {TaskId} from "./taskid";
+import {PluginBaseCommon, pluginBindings, PluginMeta} from "./util";
 
 // Represents fields that are not actually stored in plugin markup but that are added by TIM alongside markup
 // in view route so that extra information can be passed to qst component. TODO: they should not be inside markup.
@@ -25,7 +24,7 @@ interface IQstExtraInfo {
 
 type IQstAttributes = IPluginAttributes<IQuestionMarkup & IQstExtraInfo, AnswerTable>;
 
-class QstController implements IController, ITimComponent {
+class QstController extends PluginBaseCommon implements IController, ITimComponent {
     static $inject = ["$element"];
     private error?: string;
     private isRunning: boolean = false;
@@ -44,14 +43,16 @@ class QstController implements IController, ITimComponent {
     private button: string = "";
     private resetText: string = "";
     private stem: string = "";
+    private savedAnswer: AnswerTable = [];
     private newAnswer: AnswerTable = [];
-    private pluginMeta: PluginMeta;
+    protected pluginMeta: PluginMeta;
     private saveResponse: { saved: boolean, message: (string | undefined) } = {saved: false, message: undefined};
     // Duplicate attrs for ITimComp compatibility
     // TODO: Extend PluginBase
     public attrsall!: IGenericPluginTopLevelFields<IQuestionMarkup>;
 
-    constructor(private element: JQLite) {
+    constructor(public element: JQLite) {
+        super();
         this.pluginMeta = new PluginMeta(element);
         this.updateAnswer = this.updateAnswer.bind(this);
         this.errors = [];
@@ -59,51 +60,12 @@ class QstController implements IController, ITimComponent {
         this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
     }
 
-    /**
-     * Returns the name given to the plugin.
-     */
-    getName(): string | undefined {
-        const taskId = this.pluginMeta.getTaskId();
-        if (taskId) {
-            return taskId.name;
-        }
-    }
-
     getContent() {
         return JSON.stringify(this.newAnswer);
     }
 
-    getAreas(): string[] {
-        const returnList: string[] = [];
-        const parents = this.element.parents(".area");
-        if (parents[0]) {
-            const areaList = parents[0].classList;
-            areaList.forEach(
-                (value) => {
-                    const m = value.match(/^area_(\S+)$/);
-                    if (m) {
-                        returnList.push(m[1]);
-                    }
-                },
-            );
-        }
-        return returnList;
-    }
-
-    getTaskId(): TaskId | undefined {
-        return this.pluginMeta.getTaskId();
-    }
-
-    belongsToArea(area: string): boolean {
-        return this.getAreas().includes(area);
-    }
-
-    isForm() {
-        return false;
-    }
-
     isUnSaved(userChange?: boolean | undefined): boolean {
-        return false;
+        return JSON.stringify(this.savedAnswer) != JSON.stringify(this.newAnswer);
     }
 
     async save(): Promise<{ saved: boolean; message: string | undefined; }> {
@@ -114,22 +76,6 @@ class QstController implements IController, ITimComponent {
             this.saveResponse.message = undefined;
             return this.saveResponse;
         }
-    }
-
-    public getPar() {
-        return this.element.parents(".par");
-    }
-
-    resetField(): string | undefined {
-        return undefined;
-    }
-
-    supportsSetAnswer(): boolean {
-        return false;
-    }
-
-    setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
-        return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 
     public $onInit() {
@@ -152,6 +98,7 @@ class QstController implements IController, ITimComponent {
         this.resetText = this.attrs.markup.resetText ?? "Reset";
         this.stem = this.attrs.markup.stem ?? "";
         this.newAnswer = this.preview.answerTable;
+        this.savedAnswer = [...this.newAnswer];
     }
 
     public $postLink() {
@@ -298,13 +245,13 @@ qstApp.component("qstRunner", {
         vctrl: "?^timView",
     },
     template: `
-<div class="csRunDiv qst no-popup-menu" ng-if="$ctrl.isTask()">
+<div class="csRunDiv qst no-popup-menu" ng-class="{warnFrame: $ctrl.isUnSaved()}" ng-if="$ctrl.isTask()">
     <h4 ng-if="::$ctrl.getHeader()" ng-bind-html="::$ctrl.getHeader()"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <dynamic-answer-sheet
             questiondata="$ctrl.preview"
             on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
-    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid()"
+    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || !$ctrl.isUnSaved()"
             ng-click="$ctrl.saveText()"></button>
     &nbsp;&nbsp;
     <a class="questionAddedNew" ng-show="$ctrl.checkQstMode() && !$ctrl.isInvalid()" ng-click="$ctrl.questionClicked()">
