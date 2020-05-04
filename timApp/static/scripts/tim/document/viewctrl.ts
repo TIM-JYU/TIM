@@ -17,7 +17,7 @@ import {setViewCtrl} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
 import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict, to} from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
-import {getVisibilityVars} from "tim/timRoot";
+import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
@@ -115,6 +115,7 @@ export enum RegexOption {
 }
 
 export class ViewCtrl implements IController {
+    private hideParams: IVisibilityVars = getVisibilityVars();
     private notification: string = "";
     private videoElements = new Map<string, HTMLVideoElement>();
     clipMeta: IClipboardMeta = {allowPasteContent: false, allowPasteRef: false, empty: true};
@@ -446,7 +447,10 @@ export class ViewCtrl implements IController {
             }
         });
         this.reviewCtrl.loadDocumentAnnotations();
-        this.editingHandler.insertHelpPar();
+        // TODO: Currently editline hiding is done by exam mode on backend side but by a general bool on frontend
+        if (!this.hideParams.editLine) {
+            this.editingHandler.insertHelpPar();
+        }
         this.viewRangeInfo.loadRanges();
 
         if (this.teacherMode) {
