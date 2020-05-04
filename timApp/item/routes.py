@@ -487,7 +487,7 @@ def view(item_path, template_name, route="view"):
 
     # If index was in cache, partitioning will be done earlier.
     if view_range.is_restricted and contents_have_changed:
-        texts = partition_texts(post_process_result.texts, view_range, preamble_count)
+        post_process_result.texts = partition_texts(post_process_result.texts, view_range, preamble_count)
 
     if hide_names_in_teacher(doc_info) or should_hide_names:
         for entry in user_list:
