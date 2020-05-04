@@ -76,7 +76,6 @@ function hideExamModeElements(hide: IVisibilityVars) {
     hide.links = true;
     hide.bookmarks = true;
     hide.settings = true;
-    hide.hamburger = true;
     hide.header = true;
     hide.search = true;
     hide.userMenuOptions = true;
