@@ -121,7 +121,7 @@ class QstMarkupModel(GenericMarkupModel):
     rows: Union[Any, Missing] = missing
     randomizedRows: Union[int, Missing] = missing
     randomSeed: Union[int, Missing] = missing
-    doNotMove: Union[List[int], Missing] = missing
+    doNotMove: Union[List[int], int, Missing] = missing
 
 
 QstBasicState = List[List[str]]
@@ -192,6 +192,8 @@ def qst_answer_jso(m: QstAnswerModel):
         locks = m.markup.doNotMove
         if locks is None or locks is missing:
             locks = []
+        if isinstance(locks, int):
+            locks = [locks]
         seed_string = info.user_id + m.taskID
         rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, seed_string, random_seed,locks)
     if spoints:
