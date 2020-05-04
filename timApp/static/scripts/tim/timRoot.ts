@@ -81,6 +81,7 @@ function hideExamModeElements(hide: IVisibilityVars) {
     hide.userMenuOptions = true;
     hide.editLine = true;
     hide.noteBadgeButton = true;
+    hide.footer = true;
 }
 
 export function getVisibilityVars() {
