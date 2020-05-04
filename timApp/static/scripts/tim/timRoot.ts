@@ -27,6 +27,7 @@ export interface IVisibilityVars {
     passwordRecovery?: boolean;
     userMenuOptions?: boolean;
     editLine?: boolean;
+    noteBadgeButton?: boolean;
 }
 
 
@@ -80,6 +81,7 @@ function hideExamModeElements(hide: IVisibilityVars) {
     hide.search = true;
     hide.userMenuOptions = true;
     hide.editLine = true;
+    hide.noteBadgeButton = true;
 }
 
 export function getVisibilityVars() {

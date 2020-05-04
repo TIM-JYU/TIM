@@ -115,7 +115,7 @@ export enum RegexOption {
 }
 
 export class ViewCtrl implements IController {
-    private hideParams: IVisibilityVars = getVisibilityVars();
+    private hideVars: IVisibilityVars = getVisibilityVars();
     private notification: string = "";
     private videoElements = new Map<string, HTMLVideoElement>();
     clipMeta: IClipboardMeta = {allowPasteContent: false, allowPasteRef: false, empty: true};
@@ -448,7 +448,7 @@ export class ViewCtrl implements IController {
         });
         this.reviewCtrl.loadDocumentAnnotations();
         // TODO: Currently editline hiding is done by exam mode on backend side but by a general bool on frontend
-        if (!this.hideParams.editLine) {
+        if (!this.hideVars.editLine) {
             this.editingHandler.insertHelpPar();
         }
         this.viewRangeInfo.loadRanges();

@@ -3,6 +3,7 @@ import $ from "jquery";
 import {Moment} from "moment";
 import {openEditor} from "tim/editor/pareditorOpen";
 import {getCurrentEditor} from "tim/editor/editorScope";
+import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {IPluginInfoResponse} from "../editor/parCompiler";
 import {PareditorController} from "../editor/pareditor";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
@@ -34,6 +35,7 @@ export interface INote {
 }
 
 export class NotesHandler {
+    private hideVars: IVisibilityVars = getVisibilityVars();
     public sc: IScope;
     public viewctrl: ViewCtrl;
     public noteBadgePar: JQuery | undefined;
@@ -235,6 +237,7 @@ export class NotesHandler {
      * @param par - Element where the badge needs to be attached
      */
     updateNoteBadge(par: Paragraph) {
+        if (this.hideVars.noteBadgeButton) { return; }
         if (!par) { return; }
         if (!isActionablePar(par)) {
             return;
