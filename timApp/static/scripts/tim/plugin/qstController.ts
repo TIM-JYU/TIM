@@ -125,6 +125,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
 
 
     private updateAnswer(at: AnswerTable) {
+        this.result = "";
         this.newAnswer = at;
         this.checkChanges();
     }
@@ -231,9 +232,9 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
             this.preview.showExplanations = true;
             this.preview.showCorrectChoices = true;
         }
-        if (this.result === "saved") {
-            this.saveResponse.saved = true;
-        }
+        this.saveResponse.saved = true;
+        this.savedAnswer = this.newAnswer;
+        this.checkChanges();
         return this.saveResponse;
     }
 
