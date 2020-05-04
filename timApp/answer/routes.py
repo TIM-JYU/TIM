@@ -371,7 +371,7 @@ def send_email(args: SendEmailModel):
     return ok_response()
 
 
-@answers.route("/multiSendEmail/<task_id_ext>/", methods=['POST'])
+@answers.route("/multiSendEmail/<task_id_ext>", methods=['POST'])
 def multisendemail(task_id_ext: str):
     tid = TaskId.parse(task_id_ext)
     d = get_doc_or_abort(tid.doc_id)
