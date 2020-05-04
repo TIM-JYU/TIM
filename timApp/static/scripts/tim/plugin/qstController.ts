@@ -3,6 +3,7 @@
  */
 import {IController} from "angular";
 import angular from "angular";
+import deepEqual from "deep-equal";
 import {getParId} from "../document/parhelpers";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
@@ -47,7 +48,6 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     private newAnswer: AnswerTable = [];
     private changes = false;
     protected pluginMeta: PluginMeta;
-    private saveResponse: { saved: boolean, message: (string | undefined) } = {saved: false, message: undefined};
     // Duplicate attrs for ITimComp compatibility
     // TODO: Extend PluginBase
     public attrsall!: IGenericPluginTopLevelFields<IQuestionMarkup>;
@@ -73,9 +73,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         if (this.isUnSaved()) {
             return this.doSaveText(false);
         } else {
-            this.saveResponse.saved = false;
-            this.saveResponse.message = undefined;
-            return this.saveResponse;
+            return {saved: false, message: undefined};
         }
     }
 
@@ -120,7 +118,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     private checkChanges() {
-        this.changes = (JSON.stringify(this.savedAnswer) != JSON.stringify(this.newAnswer));
+        this.changes = !deepEqual(this.savedAnswer, this.newAnswer);;
     }
 
 
@@ -220,8 +218,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
             this.isRunning = false;
             this.errors.push(r.result.data.error);
             this.error = "Ikuinen silmukka tai jokin muu vika?";
-            this.saveResponse.message = r.result.data.error;
-            return this.saveResponse;
+            return {saved: false, message: r.result.data.error};
         }
         const data = r.result.data;
         this.isRunning = false;
@@ -232,10 +229,9 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
             this.preview.showExplanations = true;
             this.preview.showCorrectChoices = true;
         }
-        this.saveResponse.saved = true;
         this.savedAnswer = this.newAnswer;
         this.checkChanges();
-        return this.saveResponse;
+        return {saved: true, message: undefined};
     }
 
     protected getElement() {

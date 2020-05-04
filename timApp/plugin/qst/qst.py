@@ -129,14 +129,14 @@ QstBasicState = List[List[str]]
 
 @dataclass
 class QstRandomState:
-    # Store answer in original row order if no randomizedRows specified in markup:
-    # [["1"], [], ["1"], ["2"]]
-    # Otherwise specify order in which rows were presented
-    # {"c": [["1"], ["2"], ["3"], []], "order": [3, 7, 4, 5]}
     c: QstBasicState
     order: List[int]
 
 
+# Store answer in original row order if no randomizedRows specified in markup:
+# [["1"], [], ["1"], ["2"]]
+# Otherwise specify order in which rows were presented
+# {"c": [["1"], ["2"], ["3"], []], "order": [3, 7, 4, 5]}
 QstStateModel = Union[QstBasicState, QstRandomState]
 
 
