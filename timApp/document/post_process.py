@@ -2,6 +2,7 @@
 from collections import defaultdict
 from datetime import datetime
 from typing import List, Dict, DefaultDict, Tuple
+from dataclasses import dataclass
 
 import pytz
 from flask import flash
@@ -23,9 +24,17 @@ from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
 
 
+@dataclass
+class PostProcessResult:
+    texts: List[dict]
+    js_paths: List[str]
+    css_paths: List[str]
+    should_mark_all_read: bool
+
+
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??
 def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False,
-                      load_plugin_states=True) -> Tuple[List[dict], List[str], List[str], bool]:
+                      load_plugin_states=True) -> PostProcessResult:
     taketime("start pluginify")
     final_pars, js_paths, css_paths, _ = pluginify(
         doc,
@@ -60,7 +69,12 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
 
     if edit_window:
         # Skip readings and notes
-        return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths, should_mark_all_read
+        return PostProcessResult(
+            texts=process_areas(settings, final_pars, macros, delimiter, env),
+            js_paths=js_paths,
+            css_paths=css_paths,
+            should_mark_all_read=should_mark_all_read
+        )
 
     if settings.show_authors():
         authors = doc.get_changelog(-1).get_authorinfo(pars)
@@ -120,8 +134,8 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
             readings = []
         else:
             readings = get_common_readings(usergroup_ids,
-                                        doc,
-                                        get_read_expiry_condition(settings.read_expiry()))
+                                           doc,
+                                           get_read_expiry_condition(settings.read_expiry()))
         taketime("readings end")
         for r in readings:  # type: ReadParagraph
             key = (r.par_id, r.doc_id)
@@ -160,7 +174,12 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
                 p['notes'].append(UserNoteAndUser(user=u, note=n, editable=editable, private=private))
     # taketime("notes mixed")
 
-    return process_areas(settings, final_pars, macros, delimiter, env), js_paths, css_paths, should_mark_all_read
+    return PostProcessResult(
+        texts=process_areas(settings, final_pars, macros, delimiter, env),
+        js_paths=js_paths,
+        css_paths=css_paths,
+        should_mark_all_read=should_mark_all_read
+    )
 
 
 def process_areas(settings, pars: List[DocParagraph], macros, delimiter, env) -> List[Dict]:

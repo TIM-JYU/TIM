@@ -442,28 +442,28 @@ def par_response(pars: List[DocParagraph],
                             old_exported = old_par.get_exported_markdown()
                     trdiff = {'old': old_exported, 'new': newest_exported}
 
-    pars, js_paths, css_paths, _ = post_process_pars(doc, pars, current_user, edit_window=preview)
+    post_process_result = post_process_pars(doc, pars, current_user, edit_window=preview)
 
-    changed_pars, _, _, _ = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
+    changed_post_process_result = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
     original_par = edit_request.original_par if edit_request else None
 
     if spellcheck:
-        proofed_text = proofread_pars(pars)
-        for p, r in zip(pars, proofed_text):
+        proofed_text = proofread_pars(post_process_result.texts)
+        for p, r in zip(post_process_result.texts, proofed_text):
             p['html'] = r.new_html
 
     r = json_response({'texts': render_template('partials/paragraphs.html',
-                                                text=pars,
+                                                text=post_process_result.texts,
                                                 item={'rights': get_rights(doc.get_docinfo())},
                                                 preview=preview),
-                       'js': js_paths,
-                       'css': css_paths,
+                       'js': post_process_result.js_paths,
+                       'css': post_process_result.css_paths,
                        'trdiff': trdiff,
                        'changed_pars': {p['id']: render_template('partials/paragraphs.html',
                                                                  text=[p],
                                                                  item={'rights': get_rights(doc.get_docinfo())}) for p
                                         in
-                                        changed_pars},
+                                        changed_post_process_result.texts},
                        'version': new_doc_version,
                        'duplicates': duplicates,
                        'original_par': {'md': original_par.get_markdown(),

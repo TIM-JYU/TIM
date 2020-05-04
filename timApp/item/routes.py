@@ -472,7 +472,7 @@ def view(item_path, template_name, route="view"):
         do_lazy = m.lazy if m.lazy is not None else doc_settings.lazy(
             default=plugin_count >= current_app.config['PLUGIN_COUNT_LAZY_LIMIT'])
 
-    texts, js_paths, css_paths, should_mark_all_read = post_process_pars(
+    post_process_result = post_process_pars(
         doc,
         xs,
         current_list_user or current_user,
@@ -481,13 +481,13 @@ def view(item_path, template_name, route="view"):
         load_plugin_states=not hide_answers,
     )
     if index is None:
-        index = get_index_from_html_list(t['html'] for t in texts)
+        index = get_index_from_html_list(t['html'] for t in post_process_result.texts)
         doc_hash = get_doc_version_hash(doc_info)
         save_index(index, index_cache_folder / f"{doc_hash}.json")
 
     # If index was in cache, partitioning will be done earlier.
     if view_range.is_restricted and contents_have_changed:
-        texts = partition_texts(texts, view_range, preamble_count)
+        texts = partition_texts(post_process_result.texts, view_range, preamble_count)
 
     if hide_names_in_teacher(doc_info) or should_hide_names:
         for entry in user_list:
@@ -503,10 +503,10 @@ def view(item_path, template_name, route="view"):
     if doctemps:
         reqs["usertemps"] = doctemps
     if is_slide:
-        js_paths.append('tim/document/slide')
+        post_process_result.js_paths.append('tim/document/slide')
     angular_module_names = []
     if teacher_or_see_answers:
-        js_paths.append('angular-ui-grid')
+        post_process_result.js_paths.append('angular-ui-grid')
         angular_module_names += get_grid_modules()
     taketime("before render")
     nav_ranges = []
@@ -550,7 +550,7 @@ def view(item_path, template_name, route="view"):
                 last_range.to_json('Last'),
             ]
 
-    if should_mark_all_read:
+    if post_process_result.should_mark_all_read:
         for group_id in get_session_usergroup_ids():
             mark_all_read(group_id, doc)
         db.session.commit()
@@ -566,12 +566,12 @@ def view(item_path, template_name, route="view"):
         route=route,
         edit_mode=edit_mode,
         item=doc_info,
-        text=texts,
+        text=post_process_result.texts,
         headers=index,
         plugin_users=user_list,
         version=doc.get_version(),
-        js=js_paths,
-        cssFiles=css_paths,
+        js=post_process_result.js_paths,
+        cssFiles=post_process_result.css_paths,
         jsMods=angular_module_names,
         doc_css=doc_css,
         start_index=view_range.start_index,
@@ -595,7 +595,7 @@ def view(item_path, template_name, route="view"):
         linked_groups=linked_groups,
         current_view_range=view_range,
         nav_ranges=nav_ranges,
-        should_mark_all_read=should_mark_all_read,
+        should_mark_all_read=post_process_result.should_mark_all_read,
     )
 
 
@@ -673,7 +673,7 @@ def check_updated_pars(doc_id, major, minor):
     # taketime("after rights")
     for diff in diffs:  # about < 1 ms
         if diff.get('content'):
-            pars, js_paths, css_paths, _ = post_process_pars(
+            post_process_result = post_process_pars(
                 d,
                 diff['content'],
                 get_current_user_object(),
@@ -681,11 +681,11 @@ def check_updated_pars(doc_id, major, minor):
             )
             diff['content'] = {
                 'texts': render_template('partials/paragraphs.html',
-                                         text=pars,
+                                         text=post_process_result.texts,
                                          item={'rights': rights},
                                          preview=False),
-                'js': js_paths,
-                'css': css_paths,
+                'js': post_process_result.js_paths,
+                'css': post_process_result.css_paths,
             }
     # taketime("after for diffs")
     return json_response({'diff': diffs,
