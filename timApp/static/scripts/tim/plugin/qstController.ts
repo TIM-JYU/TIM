@@ -5,15 +5,16 @@ import {IController} from "angular";
 import angular from "angular";
 import {getParId} from "../document/parhelpers";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
-import {ViewCtrl} from "../document/viewctrl";
+import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {LectureController} from "../lecture/lectureController";
 import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
 import {showQuestionAskDialog} from "../lecture/questionAskController";
 import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
-import {IPluginAttributes} from "./attributes";
+import {IGenericPluginTopLevelFields, IPluginAttributes} from "./attributes";
 import {pluginBindings, PluginMeta} from "./util";
+import {TaskId} from "./taskid";
 
 // Represents fields that are not actually stored in plugin markup but that are added by TIM alongside markup
 // in view route so that extra information can be passed to qst component. TODO: they should not be inside markup.
@@ -24,7 +25,7 @@ interface IQstExtraInfo {
 
 type IQstAttributes = IPluginAttributes<IQuestionMarkup & IQstExtraInfo, AnswerTable>;
 
-class QstController implements IController {
+class QstController implements IController, ITimComponent {
     static $inject = ["$element"];
     private error?: string;
     private isRunning: boolean = false;
@@ -45,6 +46,10 @@ class QstController implements IController {
     private stem: string = "";
     private newAnswer: AnswerTable = [];
     private pluginMeta: PluginMeta;
+    private saveResponse: { saved: boolean, message: (string | undefined) } = {saved: false, message: undefined};
+    // Duplicate attrs for ITimComp compatibility
+    // TODO: Extend PluginBase
+    public attrsall!: IGenericPluginTopLevelFields<IQuestionMarkup>;
 
     constructor(private element: JQLite) {
         this.pluginMeta = new PluginMeta(element);
@@ -54,15 +59,94 @@ class QstController implements IController {
         this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
     }
 
+    /**
+     * Returns the name given to the plugin.
+     */
+    getName(): string | undefined {
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId) {
+            return taskId.name;
+        }
+    }
+
+    getContent() {
+        return JSON.stringify(this.newAnswer);
+    }
+
+    getAreas(): string[] {
+        const returnList: string[] = [];
+        const parents = this.element.parents(".area");
+        if (parents[0]) {
+            const areaList = parents[0].classList;
+            areaList.forEach(
+                (value) => {
+                    const m = value.match(/^area_(\S+)$/);
+                    if (m) {
+                        returnList.push(m[1]);
+                    }
+                },
+            );
+        }
+        return returnList;
+    }
+
+    getTaskId(): TaskId | undefined {
+        return this.pluginMeta.getTaskId();
+    }
+
+    belongsToArea(area: string): boolean {
+        return this.getAreas().includes(area);
+    }
+
+    isForm() {
+        return false;
+    }
+
+    isUnSaved(userChange?: boolean | undefined): boolean {
+        return false;
+    }
+
+    async save(): Promise<{ saved: boolean; message: string | undefined; }> {
+        if (this.isUnSaved()) {
+            return this.doSaveText(false);
+        } else {
+            this.saveResponse.saved = false;
+            this.saveResponse.message = undefined;
+            return this.saveResponse;
+        }
+    }
+
+    public getPar() {
+        return this.element.parents(".par");
+    }
+
+    resetField(): string | undefined {
+        return undefined;
+    }
+
+    supportsSetAnswer(): boolean {
+        return false;
+    }
+
+    setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
+        return {ok: false, message: "Plugin doesn't support setAnswer"};
+    }
+
     public $onInit() {
+        if (this.vctrl) {
+            this.vctrl.addTimComponent(this);
+        }
         this.lctrl = this.vctrl && this.vctrl.lectureCtrl || LectureController.createAndInit(this.vctrl);
         this.isLecturer = (this.lctrl && this.lctrl.isLecturer) || false;
         this.attrs = JSON.parse(this.json) as IQstAttributes;
+        this.attrsall = JSON.parse(this.json) as IGenericPluginTopLevelFields<IQuestionMarkup>;
         // console.log(this.attrs);
-        this.preview = makePreview(this.attrs.markup, {answerTable: this.attrs.state ?? [],
-                                                        showCorrectChoices: this.attrs.show_result,
-                                                        showExplanations: this.attrs.show_result,
-                                                        enabled: !this.attrs.markup.invalid});
+        this.preview = makePreview(this.attrs.markup, {
+            answerTable: this.attrs.state ?? [],
+            showCorrectChoices: this.attrs.show_result,
+            showExplanations: this.attrs.show_result,
+            enabled: !this.attrs.markup.invalid
+        });
         this.result = "";
         this.button = this.attrs.markup.button ?? "Save";
         this.resetText = this.attrs.markup.resetText ?? "Reset";
@@ -181,7 +265,8 @@ class QstController implements IController {
             this.isRunning = false;
             this.errors.push(r.result.data.error);
             this.error = "Ikuinen silmukka tai jokin muu vika?";
-            return;
+            this.saveResponse.message = r.result.data.error;
+            return this.saveResponse;
         }
         const data = r.result.data;
         this.isRunning = false;
@@ -192,6 +277,10 @@ class QstController implements IController {
             this.preview.showExplanations = true;
             this.preview.showCorrectChoices = true;
         }
+        if (this.result === "saved") {
+            this.saveResponse.saved = true;
+        }
+        return this.saveResponse;
     }
 
     protected getElement() {

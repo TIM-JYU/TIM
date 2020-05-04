@@ -583,6 +583,8 @@ qst_attrs = {
     'lazy',
     'resetText',
     'stem',
+    'hideBrowser',
+    'tag'
 }
 
 
