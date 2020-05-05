@@ -17,11 +17,7 @@ def setup_logging(app: Flask) -> None:
     if not app.config['TESTING']:
         logging.getLogger('alembic').level = logging.INFO
     formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s ')
-    if not os.path.exists(app.config['LOG_DIR']):
-        try:
-            os.mkdir(app.config['LOG_DIR'])
-        except FileExistsError:
-            pass
+    os.makedirs(app.config['LOG_DIR'], exist_ok=True)
     file_handler = logging.FileHandler(app.config['LOG_PATH'])
     file_handler.setLevel(app.config['LOG_LEVEL'])
     file_handler.setFormatter(formatter)

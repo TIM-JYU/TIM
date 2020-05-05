@@ -134,7 +134,6 @@ app.jinja_env.lstrip_blocks = True
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
 setup_logging(app)
-default_secret = app.config['SECRET_KEY']
 
 # Compress(app)
 

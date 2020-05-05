@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 import time
 from dataclasses import dataclass
 from typing import Optional, List
@@ -30,6 +29,7 @@ from timApp.auth.saml import saml
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, logged_in, current_user_in_lecture
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.bookmark.routes import bookmarks, add_to_course_bookmark
+from timApp.defaultconfig import SECRET_KEY
 from timApp.document.course.routes import course_blueprint
 from timApp.document.course.validate import is_course
 from timApp.document.create_item import get_templates_for_folder
@@ -60,7 +60,7 @@ from timApp.printing.print import print_blueprint
 from timApp.readmark.routes import readings
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
-from timApp.tim_app import app, default_secret
+from timApp.tim_app import app
 from timApp.upload.upload import upload
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
@@ -70,7 +70,7 @@ from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_request_message, use_model, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.search import search_routes
-from timApp.util.logger import log_info, log_debug, log_warning
+from timApp.util.logger import log_info, log_debug
 from timApp.util.utils import get_current_time
 from timApp.velp.annotation import annotations
 from timApp.velp.velp import velps
@@ -405,10 +405,9 @@ def init_app():
         'SQLALCHEMY_POOL_SIZE',
     ]:
         log_info(f'{var}: {app.config.get(var, "(undefined)")}')
-    if not app.config.from_pyfile(app.config['SECRET_FILE_PATH'], silent=True):
-        log_warning('secret file not found, using default values - do not run in production!')
-    else:
-        assert default_secret != app.config['SECRET_KEY']
+    if not app.config['DEBUG']:
+        if app.config['SECRET_KEY'] == SECRET_KEY:
+            raise Exception('SECRET_KEY must not be the same as default SECRET_KEY when DEBUG=False')
     return app
 
 
