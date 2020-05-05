@@ -27,6 +27,7 @@ def get_asked_json_by_hash(json_hash: str) -> Optional[AskedJson]:
 
 FIELD_NAME_MAP = dict(
     answerfieldtype='answerFieldType',
+    donotmove='doNotMove',
     expl='expl',
     headers='headers',
     matrixtype='matrixType',
@@ -35,6 +36,7 @@ FIELD_NAME_MAP = dict(
     questiontext='questionText',
     questiontitle='questionTitle',
     questiontype='questionType',
+    randomizedrows='randomizedRows',
     rows='rows',
     timelimit='timeLimit',
     title='questionTitle',

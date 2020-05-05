@@ -697,7 +697,6 @@ def qst_get_html(jso, review):
         rand_arr = prev_state.get('order')
         jso['state'] = prev_state.get('c')
     rows = markup.get('rows', [])
-    # Move randomizedRows to normalize?
     if not prev_state and rand_arr is None:  # no previous answer, check markup for new order
         rcount = markup.get('randomizedRows', 0)
         # TODO: try to convert string
