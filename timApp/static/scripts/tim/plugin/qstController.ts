@@ -123,11 +123,11 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
 
 
     private updateAnswer(at: AnswerTable, fake?: boolean) {
-        this.result = "";
         this.newAnswer = at;
         if (fake) {
             this.savedAnswer = [...at];
         } else {
+            this.result = "";
             this.checkChanges();
         }
     }
