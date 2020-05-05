@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import datetime, timezone, timedelta
 from typing import Optional, Tuple, List
 
 from flask import flash
@@ -76,12 +77,13 @@ def verify_access(
         message: Optional[str] = None,
         check_duration=False,
         check_parents=False,
+        grace_period=timedelta(seconds=0),
 ):
     u = get_current_user_object()
-    has_access = u.has_access(b, access_type)
+    has_access = u.has_access(b, access_type, grace_period)
     if not has_access and check_parents:
         # Only uploaded files and images have a parent so far.
-        for x in (u.has_access(p, access_type) for p in b.parents):
+        for x in (u.has_access(p, access_type, grace_period) for p in b.parents):
             if x:
                 has_access = x
                 break
@@ -334,22 +336,41 @@ def get_orig_doc_and_par_id_from_request() -> Tuple[int, str]:
     return doc_id, par_id
 
 
+@dataclass
+class TaskAccessVerification:
+    plugin: Plugin
+    access: BlockAccess
+    is_expired: bool  # True if grace period is allowed and the current time is within the grace period.
+
+
 def verify_task_access(
         d: DocInfo,
         task_id: TaskId,
         access_type: AccessType,
         required_task_access_level: TaskIdAccess,
-        context_user: User = None,
-) -> Plugin:
+        context_user: Optional[User] = None,
+        allow_grace_period: bool = False,
+) -> TaskAccessVerification:
     assert d.id == task_id.doc_id
     u = get_current_user_object()
     doc, found_plugin = get_plugin_from_request(d.document, task_id, context_user or u)
-    verify_access(doc.get_docinfo(), access_type)
+    access = verify_access(doc.get_docinfo(), access_type, require=False)
+    is_expired = False
+    if not access:
+        if not allow_grace_period:
+            raise AccessDenied(f'No access for task {d.id}.{task_id.task_name}')
+        access = verify_access(doc.get_docinfo(), access_type, grace_period=doc.get_settings().answer_grace_period())
+        is_expired = True
+
     if found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly and \
             required_task_access_level == TaskIdAccess.ReadWrite and \
             not u.has_teacher_access(doc.get_docinfo()):
         abort(403, f'This task/field {task_id.task_name} is readonly and thus only writable for teachers.')
-    return found_plugin
+    return TaskAccessVerification(
+        plugin=found_plugin,
+        access=access,
+        is_expired=is_expired,
+    )
 
 
 def grant_access_to_session_users(i: ItemOrBlock):

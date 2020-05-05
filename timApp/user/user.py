@@ -527,7 +527,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             if puc.user_collection_key not in self.uniquecodes:
                 self.uniquecodes[puc.user_collection_key] = puc
 
-    def has_some_access(self, i: ItemOrBlock, vals: Set[int], allow_admin: bool = True) -> Optional[BlockAccess]:
+    def has_some_access(
+            self,
+            i: ItemOrBlock,
+            vals: Set[int],
+            allow_admin: bool = True,
+            grace_period: timedelta = timedelta(seconds=0),
+    ) -> Optional[BlockAccess]:
         if allow_admin and self.is_admin:
             return BlockAccess(block_id=i.id,
                                accessible_from=datetime.min.replace(tzinfo=timezone.utc),
@@ -551,12 +557,20 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                     continue
             if a.type not in vals:
                 continue
-            if (a.accessible_from or maxdate) <= now < (a.accessible_to or maxdate):
+            to_time = a.accessible_to
+            if to_time is not None:
+                to_time += grace_period
+            if (a.accessible_from or maxdate) <= now < (to_time or maxdate):
                 return a
         return None
 
-    def has_access(self, i: ItemOrBlock, access: AccessType) -> Optional[BlockAccess]:
-        return self.has_some_access(i, access_sets[access])
+    def has_access(
+            self,
+            i: ItemOrBlock,
+            access: AccessType,
+            grace_period=timedelta(seconds=0),
+    ) -> Optional[BlockAccess]:
+        return self.has_some_access(i, access_sets[access], grace_period=grace_period)
 
     def has_view_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
         return self.has_some_access(i, view_access_set)

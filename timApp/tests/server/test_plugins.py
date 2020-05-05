@@ -457,16 +457,17 @@ type: upload
         self.check_save_points(TEST_USER_2_ID, answer_id, None, 200, self.ok_resp)
 
         self.login_test2()
-        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
-        self.check_save_points(TEST_USER_2_ID, answer_id, 1, 403, self.permission_error)
+        err = {'error': f'No access for task {d.id}.mmcqexample'}
+        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, err)
+        self.check_save_points(TEST_USER_2_ID, answer_id, 1, 403, err)
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
         self.post_answer(plugin_type, task_id, [True, False, False])
         answer_list = self.get_task_answers(task_id)
         answer_id2 = answer_list[0]['id']
-        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
+        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, err)
         self.check_save_points(TEST_USER_2_ID, answer_id, 1, 403, self.answer_error)
-        self.check_save_points(TEST_USER_1_ID, answer_id2, 1, 403, self.permission_error)
+        self.check_save_points(TEST_USER_1_ID, answer_id2, 1, 403, err)
 
         self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 400, cannot_give_custom)
         p = Plugin.from_task_id(task_id, user=get_current_user_object())
@@ -479,7 +480,7 @@ type: upload
 
         self.test_user_2.grant_access(d, AccessType.see_answers)
         db.session.commit()
-        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, self.permission_error)
+        self.check_save_points(TEST_USER_1_ID, answer_id, 1, 403, err)
         self.test_user_2.grant_access(d, AccessType.teacher)
         db.session.commit()
         self.check_save_points(TEST_USER_1_ID, answer_id, 1, 200, self.ok_resp)

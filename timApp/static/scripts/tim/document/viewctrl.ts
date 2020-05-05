@@ -19,6 +19,7 @@ import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict, to} from "
 import {TimDefer} from "tim/util/timdefer";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
+import {showMessageDialog} from "tim/ui/dialog";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {BookmarksController} from "../bookmark/bookmarks";
@@ -1082,6 +1083,10 @@ export class ViewCtrl implements IController {
         const prefix = a.getKeyPrefix();
         const key = prefix + a.annotation.id;
         this.anns.delete(key);
+    }
+
+    notifyTimeup() {
+        showMessageDialog("Time is up. You can still save answers for a while, but they will be marked invalid by default.");
     }
 }
 

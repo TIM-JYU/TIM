@@ -123,7 +123,8 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
         raise RouteException('User not found')
     try:
         tid.block_id_hint = None  # TODO: this should only be done in preview?
-        plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite, context_user=ctx_user)
+        vr = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite, context_user=ctx_user)
+        plugin = vr.plugin
     except (PluginException, TimDbException) as e:
         return abort(400, str(e))
 
@@ -468,7 +469,15 @@ def post_answer(plugintype: str, task_id_ext: str):
                 raise PluginException(f'User {user_id} not found')
             users = [ctx_user]  # TODO: Vesa's hack to save answer to student
     try:
-        plugin = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite, context_user=ctx_user)
+        vr = verify_task_access(
+            d,
+            tid,
+            AccessType.view,
+            TaskIdAccess.ReadWrite,
+            context_user=ctx_user,
+            allow_grace_period=True,
+        )
+        plugin = vr.plugin
     except (PluginException, TimDbException) as e:
         raise PluginException(str(e))
 
@@ -564,6 +573,9 @@ def post_answer(plugintype: str, task_id_ext: str):
             pass
         if (not is_teacher and should_save_answer) or ( 'savedata' in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(len(old_answers), tim_info)
+            if vr.is_expired:
+                is_valid = False
+                explanation = 'Your view access to this document has expired, so this answer was saved but marked as invalid.'
             points_given_by = None
             if answer_browser_data.get('giveCustomPoints'):
                 try:
@@ -750,7 +762,8 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
         if not (curr_user.has_teacher_access(dib) or (allow_non_teacher and t_id.doc_id == current_doc.id) or (curr_user.has_view_access(dib) and dib.document.get_own_settings().get("allow_external_jsrunner", False))):
             return abort(403, f'Missing teacher access for document {dib.id}')
         try:
-            plugin = verify_task_access(dib, t_id, AccessType.view, TaskIdAccess.ReadWrite)  # , context_user=ctx_user)
+            vr = verify_task_access(dib, t_id, AccessType.view, TaskIdAccess.ReadWrite)  # , context_user=ctx_user)
+            plugin = vr.plugin
         except TaskNotFoundException as e:
             if not allow_missing:
                 if ignore_missing:
@@ -942,7 +955,7 @@ def get_task_info(task_id):
     try:
         plugin = Plugin.from_task_id(task_id, user=get_current_user_object())
         d = get_doc_or_abort(plugin.task_id.doc_id)
-        verify_view_access(d)
+        verify_task_access(d, plugin.task_id, AccessType.view, TaskIdAccess.ReadOnly, allow_grace_period=True)
         tim_vars = find_tim_vars(plugin)
     except PluginException as e:
         return abort(400, str(e))
@@ -1204,7 +1217,7 @@ def get_state(args: GetStateModel):
     par_id, user_id, answer_id, review = args.par_id, args.user_id, args.answer_id, args.review
 
     try:
-        answer, doc_id = verify_answer_access(answer_id, user_id)
+        answer, doc_id = verify_answer_access(answer_id, user_id, allow_grace_period=True)
     except PluginException as e:
         return abort(400, str(e))
     doc = Document(doc_id)
@@ -1255,6 +1268,7 @@ def verify_answer_access(
         user_id: int,
         require_teacher_if_not_own=False,
         required_task_access_level: TaskIdAccess = TaskIdAccess.ReadOnly,
+        allow_grace_period: bool = False,
 ) -> Tuple[Answer, int]:
     answer: Answer = Answer.query.get(answer_id)
     if answer is None:
@@ -1276,7 +1290,7 @@ def verify_answer_access(
         else:
             verify_task_access(d, tid, AccessType.see_answers, required_task_access_level)
     else:
-        verify_task_access(d, tid, AccessType.view, required_task_access_level)
+        verify_task_access(d, tid, AccessType.view, required_task_access_level, allow_grace_period=allow_grace_period)
         if not any(a.id == user_id for a in answer.users_all):
             abort(403, "You don't have access to this answer.")
     return answer, tid.doc_id

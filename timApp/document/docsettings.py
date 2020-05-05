@@ -133,7 +133,8 @@ class DocSettings:
     allow_self_confirm_from_key = 'allow_self_confirm_from'
     auto_confirm_key = 'auto_confirm'
     expire_next_doc_message_key = 'expire_next_doc_message'
-    exam_mode_key = "exam_mode"
+    exam_mode_key = 'exam_mode'
+    answer_grace_period_key = 'answer_grace_period'
 
     urlmacros_tester = re.compile("[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/]+")
 
@@ -406,6 +407,12 @@ class DocSettings:
 
     def auto_confirm(self):
         return self.__dict.get(self.auto_confirm_key)
+
+    def answer_grace_period(self) -> timedelta:
+        r = self.__dict.get(self.answer_grace_period_key, 5)
+        if not isinstance(r, int):
+            return timedelta(minutes=5)
+        return timedelta(minutes=r)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

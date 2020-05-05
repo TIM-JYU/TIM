@@ -85,7 +85,7 @@
                end-time="{{ access.accessible_to.timestamp() * 1000 }}"
                interval="1000"
                max-time-unit="'day'"
-               finish-callback="reload()">
+               finish-callback="$ctrl.notifyTimeup()">
                {% raw %}{{ days > 0 ? days + ' day' + daysS + ' +' : '' }} {{ hhours }}:{{ mminutes }}:{{ sseconds }}{% endraw %}
     </timer>
     </span>
