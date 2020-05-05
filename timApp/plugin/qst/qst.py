@@ -107,6 +107,7 @@ class QstInputModel:
 class QstMarkupModel(GenericMarkupModel):
     class Meta:
         unknown = EXCLUDE
+
     points: Union[str, Missing] = missing
     minpoints: Union[float, Missing] = missing
     maxpoints: Union[float, Missing] = missing
@@ -195,7 +196,7 @@ def qst_answer_jso(m: QstAnswerModel):
         if isinstance(locks, int):
             locks = [locks]
         seed_string = info.user_id + m.taskID
-        rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, seed_string, random_seed,locks)
+        rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, seed_string, random_seed, locks)
     if spoints:
         if rand_arr:
             question_type = m.markup.questionType
@@ -600,7 +601,11 @@ qst_attrs = {
 }
 
 
-def qst_rand_array(max_count: int, randoms: int, seed_word: str, random_seed=0, locks: List[int] = None) -> List[int]:
+def qst_rand_array(max_count: int,
+                   randoms: int,
+                   seed_word: str,
+                   random_seed: int = 0,
+                   locks: Optional[List[int]] = None) -> List[int]:
     """
     get array of count integers between 1 and max_count (incl.) using word and extra number as seed
     :param max_count: highest possible number (incl.) and max return list length
@@ -625,7 +630,7 @@ def qst_rand_array(max_count: int, randoms: int, seed_word: str, random_seed=0, 
         total = max_count
     ret = []
     seed_array = []
-    orig = list(range(1,max_count+1))
+    orig = list(range(1, max_count + 1))
     for i, val in enumerate(locks):
         if len(orig) == 0:
             break
@@ -642,7 +647,7 @@ def qst_rand_array(max_count: int, randoms: int, seed_word: str, random_seed=0, 
         except ValueError:
             pass
     seed = int(''.join(map(str, seed_array)))
-    random.seed(seed+random_seed)
+    random.seed(seed + random_seed)
     random.shuffle(orig)
     for i in range(1, total + 1):
         if len(locks) >= total - len(ret):
@@ -667,7 +672,7 @@ def qst_set_array_order(arr: List[T], order_array: List[int]) -> List[T]:
     ret = []
     for val in order_array:
         try:
-            ret.append(arr[val-1])
+            ret.append(arr[val - 1])
         except IndexError:
             pass
     return ret
@@ -683,7 +688,7 @@ def qst_pick_expls(orig_expls: Dict[str, T], order_array: List[int]) -> Dict[str
         pos = str(val)
         picked = orig_expls.get(pos, None)
         if picked is not None:
-            ret[str(i+1)] = picked
+            ret[str(i + 1)] = picked
     return ret
 
 
@@ -710,7 +715,7 @@ def qst_get_html(jso, review):
             # TODO: use random seed generation within qst_rand_array if seed was string
             if not isinstance(random_seed, int):
                 random_seed = 0
-            locks = markup.get('doNotMove',[])
+            locks = markup.get('doNotMove', [])
             # TODO: MarkupModel should handle these checks?
             if locks is None:
                 locks = []
@@ -718,7 +723,7 @@ def qst_get_html(jso, review):
                 locks = [locks]
             for val in locks:
                 if not isinstance(val, int):
-                    locks=[]
+                    locks = []
                     break
             if random_seed is None:
                 random_seed = 0
@@ -772,7 +777,7 @@ def qst_get_md(jso):
     # attrs = json.dumps(jso)
     user_print = jso.get('userPrint', False)
 
-    print_reason = get_num_value(info,'max_answers', 1) <= get_num_value(info,'earlier_answers', 0)
+    print_reason = get_num_value(info, 'max_answers', 1) <= get_num_value(info, 'earlier_answers', 0)
 
     header = markup.get('header', '')
     footer = markup.get('footer', '')
@@ -828,7 +833,7 @@ def qst_get_md(jso):
     for row in rows:
         if type(row) is not str:
             continue
-        exp = expl.get(str(idx+1),'')
+        exp = expl.get(str(idx + 1), '')
         lbox = ''
         sep = ''
         lh = len(headers)
@@ -841,7 +846,7 @@ def qst_get_md(jso):
             cell_points = 0
             boxdef = boxdefault
             if user_print and user_answer:
-                ua = uidx < len(user_answer) and str(ui+1) in user_answer[uidx]
+                ua = uidx < len(user_answer) and str(ui + 1) in user_answer[uidx]
                 if len(points_table) > uidx:
                     cell_points = get_num_value(points_table[uidx], str(ui + 1), 0)
                 box = leftbox
