@@ -253,7 +253,7 @@ qstApp.component("qstRunner", {
         vctrl: "?^timView",
     },
     template: `
-<div class="csRunDiv qst no-popup-menu" ng-class="{warnFrame: $ctrl.isUnSaved()}" ng-if="$ctrl.isTask()">
+<div class="csRunDiv qst no-popup-menu" ng-if="$ctrl.isTask()">
     <h4 ng-if="::$ctrl.getHeader()" ng-bind-html="::$ctrl.getHeader()"></h4>
     <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
     <dynamic-answer-sheet
