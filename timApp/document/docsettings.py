@@ -135,6 +135,8 @@ class DocSettings:
     expire_next_doc_message_key = 'expire_next_doc_message'
     exam_mode_key = 'exam_mode'
     answer_grace_period_key = 'answer_grace_period'
+    document_themes_key = 'document_themes'
+    override_user_themes_key = 'override_user_themes'
 
     urlmacros_tester = re.compile("[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/]+")
 
@@ -413,6 +415,14 @@ class DocSettings:
         if not isinstance(r, int):
             return timedelta(minutes=5)
         return timedelta(minutes=r)
+
+    def document_themes(self) -> List[str]:
+        res = self.__dict.get(self.document_themes_key, [])
+        return res if isinstance(res, list) else []
+
+    def override_user_themes(self) -> bool:
+        return self.__dict.get(self.override_user_themes_key, False)
+
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

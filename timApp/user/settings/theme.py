@@ -32,6 +32,14 @@ class Theme:
             self.description = 'No description.'
         return self
 
+    def __eq__(self, other):
+        if isinstance(other, Theme):
+            return self.filename == other.filename
+        return False
+
+    def __hash__(self):
+        return hash(self.filename)
+
 
 def get_available_themes() -> List[Theme]:
     return [Theme(file[:-5]).load() for file in os.listdir(THEME_DIR) if file.endswith('.scss')]

@@ -65,8 +65,7 @@ from timApp.util.utils import remove_path_special_chars, seq_to_str
 from timApp.readmark.readings import mark_all_read
 from timApp.auth.sessioninfo import get_session_usergroup_ids
 from timApp.user.settings.theme import Theme
-from timApp.user.preferences import static_folder
-from timApp.user.settings.theme_css import generate_theme
+from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
 
 DEFAULT_RELEVANCE = 10
 
@@ -558,14 +557,14 @@ def view(item_path, template_name, route="view"):
             mark_all_read(group_id, doc)
         db.session.commit()
 
-    exam_mode = is_exam_mode(doc_settings, rights)
-
+    document_themes = [Theme(f) for f in doc_settings.document_themes()]
     override_theme = None
-    # TODO: Make a more general "override theme" docsetting
-    if exam_mode:
-        exam_mode_theme = current_user.get_prefs().themes if current_user else []
-        exam_mode_theme.append(Theme("hide_focus"))
-        override_theme = generate_theme(exam_mode_theme, static_folder / current_app.config['SASS_GEN_PATH'])
+    if document_themes:
+        # If we doc themes are not overridden, they are merged with user themes
+        user_themes = current_user.get_prefs().themes if current_user else []
+        if user_themes and not doc_settings.override_user_themes():
+            document_themes = list(set().union(document_themes, user_themes))
+        override_theme = generate_theme(document_themes, get_default_scss_gen_dir())
 
     return render_template(
         template_name,
@@ -574,7 +573,7 @@ def view(item_path, template_name, route="view"):
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
         pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
-        exam_mode=exam_mode,
+        exam_mode=is_exam_mode(doc_settings, rights),
         route=route,
         edit_mode=edit_mode,
         item=doc_info,
