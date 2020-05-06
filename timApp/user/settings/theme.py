@@ -2,17 +2,17 @@ import os
 import re
 from pathlib import Path
 from typing import List
+from dataclasses import dataclass, field
 
 from werkzeug.utils import secure_filename
 
 THEME_DIR = Path('static/stylesheets/themes')
 
 
+@dataclass
 class Theme:
-
-    def __init__(self, filename: str):
-        self.filename = secure_filename(filename)
-        self.description = 'No description.'
+    filename: str = field(hash=True)
+    description: str = field(init=False, default='No description')
 
     def exists(self):
         return self.get_path().exists()
@@ -32,17 +32,9 @@ class Theme:
             self.description = 'No description.'
         return self
 
-    def __eq__(self, other):
-        if isinstance(other, Theme):
-            return self.filename == other.filename
-        return False
-
-    def __hash__(self):
-        return hash(self.filename)
-
 
 def get_theme_path(filename: str) -> Path:
-    return THEME_DIR / f'{filename}.scss'
+    return THEME_DIR / f'{secure_filename(filename)}.scss'
 
 
 def theme_exists(filename: str) -> bool:
