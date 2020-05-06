@@ -377,7 +377,7 @@ def after_request(resp: Response):
     resp.set_cookie(
         'XSRF-TOKEN',
         token,
-        samesite='None',
+        samesite=app.config['SESSION_COOKIE_SAMESITE'],
         secure=app.config['SESSION_COOKIE_SECURE'],
     )
     return resp
