@@ -1,19 +1,19 @@
 /**
  * Created by vesal on 28.12.2016.
  */
-import {IController} from "angular";
-import angular from "angular";
+import angular, {IController} from "angular";
+import deepEqual from "deep-equal";
 import {getParId} from "../document/parhelpers";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
-import {ViewCtrl} from "../document/viewctrl";
+import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {LectureController} from "../lecture/lectureController";
 import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
 import {showQuestionAskDialog} from "../lecture/questionAskController";
 import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
-import {IPluginAttributes} from "./attributes";
-import {pluginBindings, PluginMeta} from "./util";
+import {IGenericPluginTopLevelFields} from "./attributes";
+import {PluginBaseCommon, pluginBindings, PluginMeta} from "./util";
 
 // Represents fields that are not actually stored in plugin markup but that are added by TIM alongside markup
 // in view route so that extra information can be passed to qst component. TODO: they should not be inside markup.
@@ -22,9 +22,12 @@ interface IQstExtraInfo {
     isTask: boolean;
 }
 
-type IQstAttributes = IPluginAttributes<IQuestionMarkup & IQstExtraInfo, AnswerTable>;
+interface IQstAttributes extends IGenericPluginTopLevelFields<IQuestionMarkup & IQstExtraInfo> {
+    state: AnswerTable | null;
+    show_result: boolean;
+}
 
-class QstController implements IController {
+class QstController extends PluginBaseCommon implements IController, ITimComponent {
     static $inject = ["$element"];
     private error?: string;
     private isRunning: boolean = false;
@@ -38,15 +41,18 @@ class QstController implements IController {
     private plugin?: string;
     private json!: Binding<string, "@">;
     private cursor: string;
-    private attrs!: IQstAttributes; // $onInit
+    attrsall!: IQstAttributes; // $onInit
     private preview!: IPreviewParams; // $onInit
     private button: string = "";
     private resetText: string = "";
     private stem: string = "";
-    private newAnswer: AnswerTable = [];
-    private pluginMeta: PluginMeta;
+    private savedAnswer?: AnswerTable;
+    private newAnswer?: AnswerTable;
+    private changes = false;
+    protected pluginMeta: PluginMeta;
 
-    constructor(private element: JQLite) {
+    constructor(public element: JQLite) {
+        super();
         this.pluginMeta = new PluginMeta(element);
         this.updateAnswer = this.updateAnswer.bind(this);
         this.errors = [];
@@ -54,20 +60,39 @@ class QstController implements IController {
         this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
     }
 
+    getContent() {
+        return JSON.stringify(this.newAnswer);
+    }
+
+    isUnSaved(userChange?: boolean | undefined): boolean {
+        return this.changes;
+    }
+
+    async save(): Promise<{ saved: boolean; message: string | undefined; }> {
+        if (this.isUnSaved()) {
+            return this.doSaveText(false);
+        } else {
+            return {saved: false, message: undefined};
+        }
+    }
+
     public $onInit() {
+        if (this.vctrl) {
+            this.vctrl.addTimComponent(this);
+        }
         this.lctrl = this.vctrl && this.vctrl.lectureCtrl || LectureController.createAndInit(this.vctrl);
         this.isLecturer = (this.lctrl && this.lctrl.isLecturer) || false;
-        this.attrs = JSON.parse(this.json) as IQstAttributes;
-        // console.log(this.attrs);
-        this.preview = makePreview(this.attrs.markup, {answerTable: this.attrs.state ?? [],
-                                                        showCorrectChoices: this.attrs.show_result,
-                                                        showExplanations: this.attrs.show_result,
-                                                        enabled: !this.attrs.markup.invalid});
+        this.attrsall = JSON.parse(this.json) as IQstAttributes;
+        this.preview = makePreview(this.attrsall.markup, {
+            answerTable: this.attrsall.state ?? [],
+            showCorrectChoices: this.attrsall.show_result,
+            showExplanations: this.attrsall.show_result,
+            enabled: !this.attrsall.markup.invalid,
+        });
         this.result = "";
-        this.button = this.attrs.markup.button ?? "Save";
-        this.resetText = this.attrs.markup.resetText ?? "Reset";
-        this.stem = this.attrs.markup.stem ?? "";
-        this.newAnswer = this.preview.answerTable;
+        this.button = this.attrsall.markup.button ?? "Save";
+        this.resetText = this.attrsall.markup.resetText ?? "Reset";
+        this.stem = this.attrsall.markup.stem ?? "";
     }
 
     public $postLink() {
@@ -76,27 +101,40 @@ class QstController implements IController {
     }
 
     private getHeader() {
-        return this.attrs.markup.header;
+        return this.attrsall.markup.header;
     }
 
     private getFooter() {
-        return this.attrs.markup.footer;
+        return this.attrsall.markup.footer;
     }
 
     private isTask() {
-        return this.attrs.markup.isTask;
+        return this.attrsall.markup.isTask;
+    }
+
+    private checkChanges() {
+        this.changes = !deepEqual(this.savedAnswer, this.newAnswer);
     }
 
     private updateAnswer(at: AnswerTable) {
+        // updateAnswer is called always at least once from dynamicAnswerSheet (see the $onChanges in that file).
+        // Upon first call, we record the currently saved answer.
+        if (this.newAnswer === undefined) {
+            this.savedAnswer = at;
+        }
         this.newAnswer = at;
+        this.checkChanges();
+        if (this.changes) {
+            this.result = undefined;
+        }
     }
 
     private getQuestionTitle() {
-        return this.attrs.markup.questionTitle;
+        return this.attrsall.markup.questionTitle;
     }
 
     private getQuestionTitleShort() {
-        return this.attrs.markup.questionTitle;
+        return this.attrsall.markup.questionTitle;
     }
 
     private questionClicked() {
@@ -139,7 +177,7 @@ class QstController implements IController {
     }
 
     private isInvalid() {
-        return this.attrs.markup.invalid;
+        return this.attrsall.markup.invalid;
     }
 
     private async doSaveText(nosave: boolean) {
@@ -181,7 +219,7 @@ class QstController implements IController {
             this.isRunning = false;
             this.errors.push(r.result.data.error);
             this.error = "Ikuinen silmukka tai jokin muu vika?";
-            return;
+            return {saved: false, message: r.result.data.error};
         }
         const data = r.result.data;
         this.isRunning = false;
@@ -192,6 +230,9 @@ class QstController implements IController {
             this.preview.showExplanations = true;
             this.preview.showCorrectChoices = true;
         }
+        this.savedAnswer = this.newAnswer;
+        this.checkChanges();
+        return {saved: true, message: undefined};
     }
 
     protected getElement() {
@@ -215,7 +256,7 @@ qstApp.component("qstRunner", {
     <dynamic-answer-sheet
             questiondata="$ctrl.preview"
             on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
-    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid()"
+    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || !$ctrl.isUnSaved()"
             ng-click="$ctrl.saveText()"></button>
     &nbsp;&nbsp;
     <a class="questionAddedNew" ng-show="$ctrl.checkQstMode() && !$ctrl.isInvalid()" ng-click="$ctrl.questionClicked()">

@@ -5,20 +5,6 @@ So, do NOT import anything client-side-specific (like AngularJS) in this module 
 
 import * as t from "io-ts";
 
-export interface IPluginAttributes<Markup extends IGenericPluginMarkup, State> {
-    markup: Markup;
-    doLazy: boolean;
-    anonymous: boolean;
-    info: {};
-    preview: boolean;
-    show_result: boolean; // not in csplugin
-    state: State | null; // not in csplugin
-    targetFormat: string;
-    taskID: string;
-    taskIDExt: string;
-    userPrint: boolean;
-}
-
 // Attributes that are valid for all plugins.
 export const GenericPluginMarkup = t.partial({
     answerLimit: t.Integer,
