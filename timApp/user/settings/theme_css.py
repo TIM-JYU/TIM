@@ -8,6 +8,27 @@ class ThemeNotFoundException(Exception):
     pass
 
 
+def generate_theme(themes: List[Theme], gen_dir: Path) -> str:
+    """Generates an SCSS file based on the given themes.
+
+    Uses generate_theme_scss to first generate a theme file and then
+    returns the name of the generated theme using get_combined_css_filename.
+
+    If a provided theme file doesn't exist, a default style file is returned with no themes applied.
+
+    :param themes: The list of themes.
+    :param gen_dir: The directory where the SCSS file should be generated.
+    :return: The name of the generated SCSS file ready to be used.
+
+    """
+    try:
+        generate_theme_scss(themes, gen_dir)
+    except ThemeNotFoundException:
+        themes = []
+        generate_theme_scss(themes, gen_dir)
+    return get_combined_css_filename(themes)
+
+
 def generate_theme_scss(themes: List[Theme], gen_dir: Path) -> None:
     """Generates an SCSS file based on the given theme names.
 
