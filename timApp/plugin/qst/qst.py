@@ -123,7 +123,7 @@ class QstMarkupModel(GenericMarkupModel):
     randomizedRows: Union[int, Missing] = missing
     randomSeed: Union[int, Missing] = missing
     doNotMove: Union[List[int], int, Missing] = missing
-    defaultPoints: Union[float, Missing] = missing
+    defaultPoints: Union[int, float, Missing] = missing
 
 
 QstBasicState = List[List[str]]
@@ -594,14 +594,18 @@ qst_attrs = {
     'answerLimit',
     'button',
     'buttonText',
+    'defaultPoints'
+    'doNotMove'
     'footer',
     'header',
+    'hideBrowser',
     'isTask',
     'lazy',
+    'randomizedRows',
     'resetText',
+    'showPoints',
     'stem',
-    'hideBrowser',
-    'tag'
+    'tag',
 }
 
 
@@ -978,7 +982,7 @@ def create_points_table(points):
 
 def calculate_points_from_json_answer(single_answers: List[List[str]],
                                       points_table,
-                                      default_points: Optional[float] = 0):
+                                      default_points: float = 0):
     points = 0.0
     for (oneAnswer, point_row) in zip(single_answers, points_table):
         for oneLine in oneAnswer:
