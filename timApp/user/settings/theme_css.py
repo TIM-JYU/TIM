@@ -27,11 +27,13 @@ def generate_theme(themes: List[Theme], gen_dir: Path) -> str:
 
     If a provided theme file doesn't exist, a default style file is returned with no themes applied.
 
-    :param themes: The list of themes.
+    :param themes: The list of themes. Themes will be sorted by name before processing.
     :param gen_dir: The directory where the SCSS file should be generated.
     :return: The name of the generated SCSS file ready to be used.
 
     """
+    themes = themes.copy()
+    themes.sort(key=lambda thm: thm.filename)
     try:
         generate_theme_scss(themes, gen_dir)
     except ThemeNotFoundException:
@@ -69,8 +71,6 @@ def generate_theme_scss(themes: List[Theme], gen_dir: Path) -> None:
     for t in themes:
         if not t.exists():
             raise ThemeNotFoundException(t.filename)
-    themes = themes.copy()
-    themes.sort(key=lambda thm: thm.filename)
     combined = get_combined_css_filename(themes)
     file_path = gen_dir / f'{combined}.scss'
     if file_path.exists():
