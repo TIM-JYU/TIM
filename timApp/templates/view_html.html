@@ -33,7 +33,7 @@
 
     {# If we are in exam mode, hide elements that focus on text #}
     {% if exam_mode %}
-        {{ scss("stylesheets/hide_focus") }}
+        <link rel="stylesheet" href="{{ url_for('static', filename='stylesheets/hide_focus.css') }}">
     {% endif %}
 
     <script class="global-vars">

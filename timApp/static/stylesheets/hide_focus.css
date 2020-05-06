@@ -1,0 +1,11 @@
+.par.lightselect, .par.selected {
+  background-color: transparent;
+}
+
+.parContent:focus {
+    box-shadow: none;
+}
+
+.editline:focus {
+  outline: none;
+}
