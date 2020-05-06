@@ -31,6 +31,11 @@
         {% include 'partials/doc_customcss.html' %}
     {% endblock %}
 
+    {# If we are in exam mode, hide elements that focus on text #}
+    {% if exam_mode %}
+        {{ scss("stylesheets/hide_focus") }}
+    {% endif %}
+
     <script class="global-vars">
         var noBrowser = {{ no_browser|tojson }};
         var showIndex = {{(headers|length > 0)|tojson}};
