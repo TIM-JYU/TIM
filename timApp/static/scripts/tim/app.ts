@@ -1,4 +1,11 @@
-import angular, {ICompileProvider, IFilterService, IHttpProvider, IHttpResponseTransformer, IModule} from "angular";
+import angular, {
+    ICompileProvider, IExceptionHandlerService,
+    IFilterService,
+    IHttpProvider,
+    IHttpResponseTransformer,
+    IModule,
+    IParseService, IRootScopeService
+} from "angular";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
 import ngSanitize from "angular-sanitize";
@@ -144,6 +151,44 @@ timApp.directive("onSave", () => {
         });
     };
 });
+
+
+// https://stackoverflow.com/questions/34575510/angular-ng-click-issues-on-safari-with-ios-8-3/34579185#34579185
+// https://stackoverflow.com/questions/18421732/angularjs-how-to-override-directive-ngclick
+// https://github.com/angular/angular.js/blob/master/src/ng/directive/ngEventDirs.js#L62
+
+timApp.config(["$provide", ($provide: IModule) => {
+    $provide.decorator("ngClickDirective", ["$delegate", ($delegate: IDelegate[]) => {
+        $delegate.shift();
+        return $delegate;
+    }]);
+}]);
+
+timApp.directive("ngClick", ["$parse", "$rootScope", "$exceptionHandler", ($parse: IParseService, $rootScope: IRootScopeService, $exceptionHandler: IExceptionHandlerService) => {
+    return {
+        restrict: "A",
+        replace: false,
+        compile: ($element, attrs) => {
+                const fn = $parse(attrs.ngClick as string);
+                return (scope, element) => {
+                    element.on("touchstart click", (event) => {
+                        // eslint-disable-next-line @typescript-eslint/tslint/config
+                        const callback = () => fn(scope, {$event: event});
+
+                        if (!$rootScope.$$phase) {
+                            scope.$apply(callback);
+                        } else {
+                            try {
+                                callback();
+                            } catch (e) {
+                                $exceptionHandler(e as Error);
+                            }
+                        }
+                    });
+                };
+            },
+    };
+}]);
 
 timApp.config(injectProviders);
 timApp.run(injectServices);
