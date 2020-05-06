@@ -19,6 +19,7 @@ import ngStorage from "ngstorage";
 import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
 import {KEY_ENTER, KEY_S} from "./util/keycodes";
 import {injectProviders, injectServices} from "./util/ngimport";
+import TriggeredEvent = JQuery.TriggeredEvent;
 
 moment.updateLocale("en", {
     week: {dow: 1, doy: 4}, // set Monday as the first day of the week
@@ -161,29 +162,42 @@ timApp.directive("onSave", () => {
 // * On iOS Safari, `touchstart` is fired right away, but `click` only after a focus on the element
 //
 // In addition, AngularJS seems to consume events: if `touchstart` is fired (even if it was bubbled up),
-// no `click` is fired
+// `click` is consumed as well, which prevents another relevant `click` event from firing.
 //
-// The fix below appends additional functionality to ngClick directive to fire on `touchstart` event
-// In addition, the event target is checked to prevent bubbled touch events to run. That way proper click events
-// Angular 9's `click` events are fired too.
+// The fix below replaces the original ngClick directive with custom one that installs both click and touchstart events.
+// In addition, if `touchstart` event is fired, the `click` handler is replaced with the one that doesn't propagate,
+// which allows inner elements (like the read/change mark) to be dismissed.
 //
 // More info:
 // https://stackoverflow.com/questions/34575510/angular-ng-click-issues-on-safari-with-ios-8-3/34579185#34579185
+// https://stackoverflow.com/questions/18421732/angularjs-how-to-override-directive-ngclick
 // https://github.com/angular/angular.js/blob/master/src/ng/directive/ngEventDirs.js#L62
+
+timApp.config(["$provide", ($provide: IModule) => {
+    $provide.decorator("ngClickDirective", ["$delegate", ($delegate: IDelegate[]) => {
+        $delegate.shift();
+        return $delegate;
+    }]);
+}]);
 
 timApp.directive("ngClick", ["$parse", ($parse: IParseService) => {
     return {
         restrict: "A",
         link: (scope, elem, attrs) => {
             const fn = $parse(attrs.ngClick as string);
-            elem.on("touchstart", (event) => {
-                if (event.target != event.currentTarget) {
-                    return;
+            const handlePopDown = (event: TriggeredEvent) => {
+                if (event.type == "touchstart") {
+                    // If touchstart is fired, we know we have touch support. In that case disable `click` and prevent
+                    // its propagation to other elements. That way non-AngularJS elements will still be clickable.
+                    elem.off("click", handlePopDown).on("click", (e) => {
+                       e.preventDefault();
+                       e.stopPropagation();
+                    });
                 }
-
                 // eslint-disable-next-line @typescript-eslint/tslint/config
                 scope.$apply(() => fn(scope, {$event: event}));
-            });
+            };
+            elem.on("touchstart click", handlePopDown);
         },
     };
 }]);
