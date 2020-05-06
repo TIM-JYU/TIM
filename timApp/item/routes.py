@@ -64,6 +64,9 @@ from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
 from timApp.readmark.readings import mark_all_read
 from timApp.auth.sessioninfo import get_session_usergroup_ids
+from timApp.user.settings.theme import Theme
+from timApp.user.preferences import static_folder
+from timApp.user.settings.theme_css import generate_theme
 
 DEFAULT_RELEVANCE = 10
 
@@ -555,6 +558,15 @@ def view(item_path, template_name, route="view"):
             mark_all_read(group_id, doc)
         db.session.commit()
 
+    exam_mode = is_exam_mode(doc_settings, rights)
+
+    override_theme = None
+    # TODO: Make a more general "override theme" docsetting
+    if exam_mode:
+        exam_mode_theme = current_user.get_prefs().themes if current_user else []
+        exam_mode_theme.append(Theme("hide_focus"))
+        override_theme = generate_theme(exam_mode_theme, static_folder / current_app.config['SASS_GEN_PATH'])
+
     return render_template(
         template_name,
         access=access,
@@ -562,7 +574,7 @@ def view(item_path, template_name, route="view"):
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
         pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
-        exam_mode=is_exam_mode(doc_settings, rights),
+        exam_mode=exam_mode,
         route=route,
         edit_mode=edit_mode,
         item=doc_info,
@@ -596,6 +608,7 @@ def view(item_path, template_name, route="view"):
         current_view_range=view_range,
         nav_ranges=nav_ranges,
         should_mark_all_read=post_process_result.should_mark_all_read,
+        override_theme=override_theme,
     )
 
 

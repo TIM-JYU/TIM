@@ -80,7 +80,7 @@ depends=(
         </script>
         {{ angularscripts|safe }}
         {% block stylesheet %}
-            {{ scss(config.SASS_GEN_PATH / prefs.css_combined) }}
+            {{ scss(config.SASS_GEN_PATH / (override_theme|default(prefs.css_combined, true))) }}
         {% endblock %}
 
         {% block customcss %}
