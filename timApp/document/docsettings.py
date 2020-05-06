@@ -1,7 +1,12 @@
 import json
 import re
 from datetime import timedelta
-from typing import Optional, List, Dict, Tuple, Iterable
+from typing import Optional, List, Dict, Tuple, Iterable, TypeVar, Any
+
+from dataclasses import dataclass, fields
+from marshmallow import ValidationError
+from marshmallow.fields import Field
+from marshmallow_dataclass import field_for_schema
 
 import yaml
 from flask.globals import request, g
@@ -85,6 +90,26 @@ def add_url_macros(yaml_vals):
     del yaml_vals.values[DocSettings.urlmacros_key]
 
 
+# TODO: Start moving DocSettings keys to this dataclass
+@dataclass
+class DocSettingTypes:
+    themes: List[str]
+    override_user_themes: bool
+
+
+doc_setting_field_map: Dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
+
+
+T = TypeVar('T')
+
+
+def get_setting_or_default(name: str, value: Any, default: T) -> T:
+    try:
+        return doc_setting_field_map[name].deserialize(value)
+    except ValidationError:
+        return default
+
+
 class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
     css_key = 'css'
@@ -135,8 +160,6 @@ class DocSettings:
     expire_next_doc_message_key = 'expire_next_doc_message'
     exam_mode_key = 'exam_mode'
     answer_grace_period_key = 'answer_grace_period'
-    document_themes_key = 'document_themes'
-    override_user_themes_key = 'override_user_themes'
 
     urlmacros_tester = re.compile("[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/]+")
 
@@ -416,13 +439,13 @@ class DocSettings:
             return timedelta(minutes=5)
         return timedelta(minutes=r)
 
-    def document_themes(self) -> List[str]:
-        res = self.__dict.get(self.document_themes_key, [])
-        return res if isinstance(res, list) else []
+    def themes(self) -> List[str]:
+        setting_name = 'themes'
+        return get_setting_or_default(setting_name, self.__dict.get(setting_name), [])
 
-    def override_user_themes(self) -> bool:
-        return self.__dict.get(self.override_user_themes_key, False)
-
+    def override_user_themes(self, setting_name=None) -> bool:
+        setting_name = 'override_user_themes'
+        return get_setting_or_default(setting_name, self.__dict.get(setting_name), False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

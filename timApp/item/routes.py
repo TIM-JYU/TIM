@@ -557,7 +557,7 @@ def view(item_path, template_name, route="view"):
             mark_all_read(group_id, doc)
         db.session.commit()
 
-    document_themes = [Theme(f) for f in doc_settings.document_themes() if theme_exists(f)]
+    document_themes = [Theme(f) for f in doc_settings.themes() if theme_exists(f)]
     override_theme = None
     if document_themes:
         # If we doc themes are not overridden, they are merged with user themes
