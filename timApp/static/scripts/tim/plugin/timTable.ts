@@ -573,7 +573,9 @@ export enum ClearSort {
             </div>
             <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton">
                 <p class="csRunMenu">
-                    <button class="timButton" *ngIf="task && button" (click)="handleClickSave()">{{button}}</button>
+                    <button class="timButton" [disabled]="!edited" *ngIf="task && button" (click)="handleClickSave()">{{button}}</button>
+                    &nbsp;
+                    <span [hidden]="!result">{{result}}</span>
                 </p>
             </div>
             <p class="plgfooter" *ngIf="data.footer" [innerHtml]="data.footer"></p>
@@ -639,6 +641,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private noNeedFirstClick = false;
     hide: HideValues = { editorPosition: true};
     disableSelect: boolean = true;
+    private result?: string;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -1274,7 +1277,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (!this.task) {
             return;
         }
-        this.edited = false;
         this.error = "";
         this.isRunning = true;
         const url = this.pluginMeta.getAnswerUrl();
@@ -1302,8 +1304,15 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             params = params2;
         }
 
-        const r = await to($http.put<string[]>(url, params));
-
+        const r = await to($http.put<{
+            web: {
+                result: string,
+            },
+        }>(url, params));
+        if (r.ok) {
+            this.edited = false;
+            this.result = r.result.data.web.result;
+        }
         this.isRunning = false;
         return r;
     }
@@ -1464,6 +1473,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.data.saveCallBack(cellsToSave, true);
             }
             this.edited = true;
+            this.result = "";
             if (this.data.autosave) {
                 await this.sendDataBlockAsync();
             }
@@ -3479,6 +3489,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.data.saveStyleCallBack(cellsToSave, colValuesAreSame);
             }
             this.edited = true;
+            this.result = "";
             if (this.data.autosave) {
                 await this.sendDataBlockAsync();
             }
