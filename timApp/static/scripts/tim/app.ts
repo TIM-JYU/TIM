@@ -4,7 +4,7 @@ import angular, {
     IHttpProvider,
     IHttpResponseTransformer,
     IModule,
-    IParseService, IRootScopeService
+    IParseService,
 } from "angular";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
