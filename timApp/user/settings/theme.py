@@ -18,10 +18,10 @@ class Theme:
         return self.get_path().exists()
 
     def get_path(self):
-        return THEME_DIR / f'{self.filename}.scss'
+        return get_theme_path(self.filename)
 
     def load(self):
-        with open(self.get_path(), 'r', encoding='utf-8') as f:
+        with self.get_path().open('r', encoding='utf-8') as f:
             comment = f.readline()
             if comment.startswith('@charset'):
                 comment = f.readline()
@@ -39,6 +39,14 @@ class Theme:
 
     def __hash__(self):
         return hash(self.filename)
+
+
+def get_theme_path(filename: str) -> Path:
+    return THEME_DIR / f'{filename}.scss'
+
+
+def theme_exists(filename: str) -> bool:
+    return get_theme_path(filename).exists()
 
 
 def get_available_themes() -> List[Theme]:
