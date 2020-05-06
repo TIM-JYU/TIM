@@ -3,17 +3,18 @@
  */
 import {IController} from "angular";
 import angular from "angular";
+import deepEqual from "deep-equal";
 import {getParId} from "../document/parhelpers";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
-import {ViewCtrl} from "../document/viewctrl";
+import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {LectureController} from "../lecture/lectureController";
 import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
 import {showQuestionAskDialog} from "../lecture/questionAskController";
 import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
-import {IPluginAttributes} from "./attributes";
-import {pluginBindings, PluginMeta} from "./util";
+import {IGenericPluginTopLevelFields, IPluginAttributes} from "./attributes";
+import {PluginBaseCommon, pluginBindings, PluginMeta} from "./util";
 
 // Represents fields that are not actually stored in plugin markup but that are added by TIM alongside markup
 // in view route so that extra information can be passed to qst component. TODO: they should not be inside markup.
@@ -24,7 +25,7 @@ interface IQstExtraInfo {
 
 type IQstAttributes = IPluginAttributes<IQuestionMarkup & IQstExtraInfo, AnswerTable>;
 
-class QstController implements IController {
+class QstController extends PluginBaseCommon implements IController, ITimComponent {
     static $inject = ["$element"];
     private error?: string;
     private isRunning: boolean = false;
@@ -43,10 +44,16 @@ class QstController implements IController {
     private button: string = "";
     private resetText: string = "";
     private stem: string = "";
+    private savedAnswer: AnswerTable = [];
     private newAnswer: AnswerTable = [];
-    private pluginMeta: PluginMeta;
+    private changes = false;
+    protected pluginMeta: PluginMeta;
+    // Duplicate attrs for ITimComp compatibility
+    // TODO: Extend PluginBase
+    public attrsall!: IGenericPluginTopLevelFields<IQuestionMarkup>;
 
-    constructor(private element: JQLite) {
+    constructor(public element: JQLite) {
+        super();
         this.pluginMeta = new PluginMeta(element);
         this.updateAnswer = this.updateAnswer.bind(this);
         this.errors = [];
@@ -54,20 +61,43 @@ class QstController implements IController {
         this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
     }
 
+    getContent() {
+        return JSON.stringify(this.newAnswer);
+    }
+
+    isUnSaved(userChange?: boolean | undefined): boolean {
+        return this.changes;
+    }
+
+    async save(): Promise<{ saved: boolean; message: string | undefined; }> {
+        if (this.isUnSaved()) {
+            return this.doSaveText(false);
+        } else {
+            return {saved: false, message: undefined};
+        }
+    }
+
     public $onInit() {
+        if (this.vctrl) {
+            this.vctrl.addTimComponent(this);
+        }
         this.lctrl = this.vctrl && this.vctrl.lectureCtrl || LectureController.createAndInit(this.vctrl);
         this.isLecturer = (this.lctrl && this.lctrl.isLecturer) || false;
         this.attrs = JSON.parse(this.json) as IQstAttributes;
+        this.attrsall = JSON.parse(this.json) as IGenericPluginTopLevelFields<IQuestionMarkup>;
         // console.log(this.attrs);
-        this.preview = makePreview(this.attrs.markup, {answerTable: this.attrs.state ?? [],
-                                                        showCorrectChoices: this.attrs.show_result,
-                                                        showExplanations: this.attrs.show_result,
-                                                        enabled: !this.attrs.markup.invalid});
+        this.preview = makePreview(this.attrs.markup, {
+            answerTable: this.attrs.state ?? [],
+            showCorrectChoices: this.attrs.show_result,
+            showExplanations: this.attrs.show_result,
+            enabled: !this.attrs.markup.invalid,
+        });
         this.result = "";
         this.button = this.attrs.markup.button ?? "Save";
         this.resetText = this.attrs.markup.resetText ?? "Reset";
         this.stem = this.attrs.markup.stem ?? "";
         this.newAnswer = this.preview.answerTable;
+        this.savedAnswer = [...this.newAnswer];
     }
 
     public $postLink() {
@@ -87,8 +117,19 @@ class QstController implements IController {
         return this.attrs.markup.isTask;
     }
 
-    private updateAnswer(at: AnswerTable) {
+    private checkChanges() {
+        this.changes = !deepEqual(this.savedAnswer, this.newAnswer);
+    }
+
+
+    private updateAnswer(at: AnswerTable, fake?: boolean) {
         this.newAnswer = at;
+        if (fake) {
+            this.savedAnswer = [...at];
+        } else {
+            this.result = "";
+            this.checkChanges();
+        }
     }
 
     private getQuestionTitle() {
@@ -181,7 +222,7 @@ class QstController implements IController {
             this.isRunning = false;
             this.errors.push(r.result.data.error);
             this.error = "Ikuinen silmukka tai jokin muu vika?";
-            return;
+            return {saved: false, message: r.result.data.error};
         }
         const data = r.result.data;
         this.isRunning = false;
@@ -192,6 +233,9 @@ class QstController implements IController {
             this.preview.showExplanations = true;
             this.preview.showCorrectChoices = true;
         }
+        this.savedAnswer = this.newAnswer;
+        this.checkChanges();
+        return {saved: true, message: undefined};
     }
 
     protected getElement() {
@@ -215,7 +259,7 @@ qstApp.component("qstRunner", {
     <dynamic-answer-sheet
             questiondata="$ctrl.preview"
             on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
-    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid()"
+    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || !$ctrl.isUnSaved()"
             ng-click="$ctrl.saveText()"></button>
     &nbsp;&nbsp;
     <a class="questionAddedNew" ng-show="$ctrl.checkQstMode() && !$ctrl.isInvalid()" ng-click="$ctrl.questionClicked()">
