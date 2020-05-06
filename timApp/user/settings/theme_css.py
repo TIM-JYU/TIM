@@ -1,11 +1,22 @@
 from pathlib import Path
 from typing import List
-
+from flask import current_app
 from timApp.user.settings.theme import Theme
+
+static_folder = Path('static')
 
 
 class ThemeNotFoundException(Exception):
     pass
+
+
+def get_default_scss_gen_dir() -> Path:
+    """Returns the default path into which generated SCSS files should be put into
+
+    :return: Default path for generated SCSS files
+
+    """
+    return static_folder / current_app.config['SASS_GEN_PATH']
 
 
 def generate_theme(themes: List[Theme], gen_dir: Path) -> str:
@@ -58,6 +69,8 @@ def generate_theme_scss(themes: List[Theme], gen_dir: Path) -> None:
     for t in themes:
         if not t.exists():
             raise ThemeNotFoundException(t.filename)
+    themes = themes.copy()
+    themes.sort(key=lambda thm: thm.filename)
     combined = get_combined_css_filename(themes)
     file_path = gen_dir / f'{combined}.scss'
     if file_path.exists():

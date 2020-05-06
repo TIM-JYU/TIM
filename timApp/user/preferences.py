@@ -5,15 +5,11 @@ from pathlib import Path
 from typing import Dict, Optional, List
 
 import attr
-from flask import current_app
 
 from timApp.item.item import Item
 from timApp.user.settings.theme import Theme
-from timApp.user.settings.theme_css import generate_theme
+from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
 from timApp.util.utils import cached_property
-
-
-static_folder = Path('static')
 
 
 @attr.s(auto_attribs=True)
@@ -34,12 +30,11 @@ class Preferences:
         return Preferences(**j)
 
     def __attrs_post_init__(self):
-        self.css_combined = generate_theme(self.themes, static_folder / current_app.config['SASS_GEN_PATH'])
+        self.css_combined = generate_theme(self.themes, get_default_scss_gen_dir())
 
     @property
     def themes(self) -> List[Theme]:
         css_file_list = [css for css, v in self.css_files.items() if v]
-        css_file_list.sort()
         return [Theme(f) for f in css_file_list]
 
     @cached_property
