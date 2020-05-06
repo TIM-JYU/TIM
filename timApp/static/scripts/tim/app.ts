@@ -153,42 +153,41 @@ timApp.directive("onSave", () => {
 });
 
 
+// Minimal fix for clicks not registering in AngularJS components
+// Some mobile browsers don't fire a `click` event right away, which causes a "double tap" problem in which
+// certain buttons need to be tapped twice before an event handler fires.
+// The behaviour appears to be different on different browsers:
+// * On Chrome both `click` and `touchstart` events are fired when a button is tapped
+// * On iOS Safari, `touchstart` is fired right away, but `click` only after a focus on the element
+//
+// In addition, AngularJS seems to consume events: if `touchstart` is fired (even if it was bubbled up),
+// no `click` is fired
+//
+// The fix below appends additional functionality to ngClick directive to fire on `touchstart` event
+// In addition, the event target is checked to prevent bubbled touch events to run. That way proper click events
+// Angular 9's `click` events are fired too.
+//
+// More info:
 // https://stackoverflow.com/questions/34575510/angular-ng-click-issues-on-safari-with-ios-8-3/34579185#34579185
-// https://stackoverflow.com/questions/18421732/angularjs-how-to-override-directive-ngclick
 // https://github.com/angular/angular.js/blob/master/src/ng/directive/ngEventDirs.js#L62
 
-timApp.config(["$provide", ($provide: IModule) => {
-    $provide.decorator("ngClickDirective", ["$delegate", ($delegate: IDelegate[]) => {
-        $delegate.shift();
-        return $delegate;
-    }]);
-}]);
-
-timApp.directive("ngClick", ["$parse", "$rootScope", "$exceptionHandler", ($parse: IParseService, $rootScope: IRootScopeService, $exceptionHandler: IExceptionHandlerService) => {
+timApp.directive("ngClick", ["$parse", ($parse: IParseService) => {
     return {
         restrict: "A",
-        replace: false,
-        compile: ($element, attrs) => {
-                const fn = $parse(attrs.ngClick as string);
-                return (scope, element) => {
-                    element.on("touchstart click", (event) => {
-                        // eslint-disable-next-line @typescript-eslint/tslint/config
-                        const callback = () => fn(scope, {$event: event});
+        link: (scope, elem, attrs) => {
+            const fn = $parse(attrs.ngClick as string);
+            elem.on("touchstart", (event) => {
+                if (event.target != event.currentTarget) {
+                    return;
+                }
 
-                        if (!$rootScope.$$phase) {
-                            scope.$apply(callback);
-                        } else {
-                            try {
-                                callback();
-                            } catch (e) {
-                                $exceptionHandler(e as Error);
-                            }
-                        }
-                    });
-                };
-            },
+                // eslint-disable-next-line @typescript-eslint/tslint/config
+                scope.$apply(() => fn(scope, {$event: event}));
+            });
+        },
     };
 }]);
+
 
 timApp.config(injectProviders);
 timApp.run(injectServices);
