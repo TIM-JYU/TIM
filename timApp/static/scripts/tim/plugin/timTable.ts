@@ -626,7 +626,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     maxCols = maxContentOrFitContent();
     permTable: number[] = [];
     private permTableToScreen: number[] = []; // inverse perm table to get screencoordinate for row
-    private edited = false;
+    edited = false;
     @ViewChild("editInput") private editInput?: ElementRef<HTMLInputElement>;
     @ViewChild("inlineEditor") private editorDiv!: ElementRef<HTMLDivElement>;
     @ViewChild("inlineEditorButtons") private editorButtons!: ElementRef<HTMLDivElement>;
@@ -641,7 +641,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private noNeedFirstClick = false;
     hide: HideValues = { editorPosition: true};
     disableSelect: boolean = true;
-    private result?: string;
+    result?: string;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
