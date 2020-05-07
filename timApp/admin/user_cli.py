@@ -17,6 +17,7 @@ from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
 from timApp.user.user import User, UserInfo, deleted_user_suffix
 from timApp.user.usergroup import UserGroup
+from timApp.user.userutils import check_password_hash
 from timApp.util.flask.requesthelper import RouteException
 
 
@@ -267,6 +268,43 @@ def import_accounts(csvfile: str, password: Optional[str]) -> None:
         click.echo(f'No existing accounts were updated.')
     for u in existing:
         click.echo(u.name)
+
+
+@user_cli.command()
+@click.option(
+    '--csvfile',
+    type=click.File(),
+    required=True,
+    help='CSV file from which to read passwords; format: email;password;password hash',
+)
+@click.option(
+    '--verify/--no-verify',
+    default=True,
+    help='whether to verify that the password hash matches the password',
+)
+def import_passwords(csvfile: Iterable[str], verify: bool) -> None:
+    for row in csv.reader(csvfile, delimiter=';'):
+        if len(row) != 3:
+            raise click.UsageError(f'Wrong amount of columns in row {row}')
+        email = row[0]
+        if not email:
+            raise click.UsageError(f'Email missing in row')
+        password = row[1]
+        pw_hash = row[2]
+        if not pw_hash:
+            raise click.UsageError(f'Password hash missing in row')
+        if not password:
+            raise click.UsageError(f'Password missing in row')
+        if verify:
+            if not check_password_hash(password, pw_hash):
+                raise click.UsageError(f'Password does not match hash: {password} {pw_hash}')
+        u = User.get_by_email(email)
+        if not u:
+            raise click.UsageError(f'User not found: {email}')
+        u.pass_ = pw_hash
+        click.echo(f'Imported password {password} for {email}')
+
+    db.session.commit()
 
 
 @user_cli.command()
