@@ -42,7 +42,8 @@ class DropdownInputModel:
 
     @validates('selectedWord')
     def validate_selected_word(self, word):
-        if not word:
+        # TODO: Check whether to skip undefined inputs or save empty strings
+        if word != "" and not word:
             raise ValidationError('Must not be empty.')
 
 
