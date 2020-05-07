@@ -110,3 +110,6 @@ SESSION_COOKIE_SAMESITE = 'None' if HAS_HTTPS else None  # Required for Aalto if
 SESSION_COOKIE_SECURE = HAS_HTTPS  # Required by Chrome due to SameSite=None setting.
 
 BOOKMARKS_ENABLED = True
+
+# If False, only admins can create folders and documents.
+ALLOW_CREATE_DOCUMENTS = True

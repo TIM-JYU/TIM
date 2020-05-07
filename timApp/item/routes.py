@@ -21,7 +21,7 @@ from marshmallow import ValidationError
 from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_rights, has_edit_access, get_doc_or_abort, verify_manage_access
+    get_rights, has_edit_access, get_doc_or_abort, verify_manage_access, AccessDenied
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, current_user_in_lecture, \
     save_last_page
@@ -716,6 +716,8 @@ class CreateItemModel:
 @view_page.route("/createItem", methods=["POST"])
 @use_model(CreateItemModel)
 def create_item_route(m: CreateItemModel):
+    if not app.config['ALLOW_CREATE_DOCUMENTS'] and not get_current_user_object().is_admin:
+        raise AccessDenied('Creating items is disabled.')
     return json_response(create_item_direct(m))
 
 
