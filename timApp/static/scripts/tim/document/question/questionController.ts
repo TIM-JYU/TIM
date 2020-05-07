@@ -155,6 +155,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private dateTimeOptions: EonasdanBootstrapDatetimepicker.SetOptions;
     private question: IAskedJsonJson;
     private ui: IQuestionUI;
+    private randomization: boolean = false;
     private rows: IExtendedRow[];
     private columns: Array<unknown>; // TODO give accurate type
     private columnHeaders: IHeader[];
