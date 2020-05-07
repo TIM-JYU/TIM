@@ -1,7 +1,5 @@
-import os
 import re
 import sre_constants
-from pathlib import Path
 from typing import Dict, Optional, List
 
 import attr
