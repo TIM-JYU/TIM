@@ -14,6 +14,7 @@ export const moduleDefs = [dropdownApp];
 
 const DropdownMarkup = t.intersection([
     t.partial({
+        tag: nullable(t.string),
         words: t.array(t.string),
     }),
     GenericPluginMarkup,
@@ -46,6 +47,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     private forceSave = false;
     private radio?: boolean;
     private shuffle?: boolean;
+    private changes = false;
 
     getDefaultMarkup() {
         return {};
@@ -73,7 +75,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
      */
     addToCtrl() {
-        this.vctrl.addTimComponent(this);
+        this.vctrl.addTimComponent(this, this.attrs.tag);
     }
 
     /**
@@ -110,6 +112,8 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
 
         if (r.ok) {
+            this.changes = false;
+            this.updateListenerMultisaves(true);
             const data = r.result.data;
             this.error = data.web.error;
         } else {
@@ -118,12 +122,35 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         return {saved: r.ok, message: this.error};
     }
 
-    selfSave() {
+    updateSelection() {
+        if (!this.changes) {
+            this.changes = true;
+            this.updateListenerMultisaves(false);
+        }
         if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.save();
         }
     }
 
+    updateListenerMultisaves(saved: boolean) {
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        const doctask = taskId.docTask();
+        if (this.attrs.tag && this.vctrl) {
+            const listeners = this.vctrl.getListenerMultisaves(this.attrs.tag);
+            if (listeners) {
+                listeners.forEach((listener) => {
+                    if (saved) {
+                        listener.informAboutSaved(doctask);
+                    } else {
+                        listener.informAboutUnsaved(doctask);
+                    }
+                });
+            }
+        }
+    }
     /**
      * Force the plugin to save its information.
      *
@@ -153,7 +180,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     isUnSaved() {
-        return false; // TODO
+        return this.changes;
     }
 
     supportsSetAnswer(): boolean {
@@ -176,13 +203,14 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
                 message = "Couldn't find related content (\"c\")";
             }
         }
-        // this.initialValue = this.selectedWord;
+        this.changes = false;
         return {ok: ok, message: message};
 
     }
 
     resetField(): undefined {
         this.selectedWord = "";
+        this.changes = false;
         return undefined;
     }
 
@@ -205,14 +233,15 @@ dropdownApp.component("dropdownRunner", {
                       name="selection"
                       value="{{item}}"
                       ng-model="$ctrl.selectedWord"
-                      ng-change="::$ctrl.selfSave()">
+                      ng-change="::$ctrl.updateSelection()">
         {{item}}
         </label>
         </li>
         <select ng-if="::!$ctrl.radio"
                 ng-model="$ctrl.selectedWord"
                 ng-options="item for item in $ctrl.wordList"
-                ng-change="::$ctrl.selfSave()">
+                ng-change="::$ctrl.updateSelection()"
+                ng-class="{warnFrame: $ctrl.isUnSaved()}">
         </select>
         </span></label>
     </div>

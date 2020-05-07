@@ -32,9 +32,9 @@ input:focus.alertframe {
 .savedtext {
     display: inline-block;
     white-space: nowrap;
-    -webkit-animation: fadeOut 2s;
-    animation: fadeOut 2s;
-    animation-fill-mode: forwards;
+    /*-webkit-animation: fadeOut 2s;*/
+    /*animation: fadeOut 2s;*/
+    /*animation-fill-mode: forwards;*/
 }
 
 @-webkit-keyframes fadeOut {

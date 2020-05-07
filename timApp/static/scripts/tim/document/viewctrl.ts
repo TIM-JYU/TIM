@@ -49,6 +49,7 @@ import {PopupMenuController} from "./popupMenu";
 import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
 import {IMenuFunctionEntry} from "./viewutils";
+import {MultisaveController} from "../../../../modules/fields/js/multisave";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar, ParRefController);
 
@@ -147,6 +148,8 @@ export class ViewCtrl implements IController {
     private timComponentArrays: Map<string, ITimComponent[]> = new Map();
     private timComponentTags: Map<string, string[]> = new Map();
     private userChangeListeners: Map<string, IUserChanged> = new Map();
+
+    private listenerMultisaves = new Map<string, MultisaveController[]>();
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document: Document;
@@ -519,6 +522,26 @@ export class ViewCtrl implements IController {
 
     public getTableForm(taskId: string) {
         return this.tableForms.get(taskId);
+    }
+
+    public getListenerMultisaves(tag: string) {
+        return this.listenerMultisaves.get(tag);
+    }
+
+    public addListenerMultisave(controller: MultisaveController) {
+        const tags = controller.getTags();
+        if (tags) {
+            tags.forEach((tag) => {
+                const prevListeners = this.listenerMultisaves.get(tag);
+                if (prevListeners != undefined) {
+                    prevListeners.push(controller);
+                    this.listenerMultisaves.set(tag, prevListeners);
+                } else {
+                    this.listenerMultisaves.set(tag, [controller]);
+                }
+            });
+
+        }
     }
 
     public addJsRunner(runner: IJsRunner, taskId: string) {

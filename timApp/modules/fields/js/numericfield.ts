@@ -413,6 +413,10 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     getAttributeType() {
         return NumericfieldAll;
     }
+
+    inputChange() {
+        this.result = "";
+    }
 }
 
 /**

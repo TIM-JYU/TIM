@@ -4,7 +4,7 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, IncludeUsersOption, Info, withDefault} from "tim/plugin/attributes";
+import {GenericPluginMarkup, IncludeUsersOption, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {Users} from "tim/user/userService";
 import {$http} from "tim/util/ngimport";
@@ -36,6 +36,7 @@ const multisaveMarkup = t.intersection([
         emailMode: withDefault(t.boolean, false),
         autoUpdateDuplicates: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
+        listener: withDefault(t.boolean, false),
     }),
 ]);
 const multisaveAll = t.intersection([
@@ -59,6 +60,8 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
     private emailbccme: boolean = true;
     private emailtim: boolean = true;
     private emailMsg: string = "";
+    private unsavedTimComps: Set<string> = new Set<string>();
+    private hasUnsavedTargets: boolean = false;
 
     getDefaultMarkup() {
         return {};
@@ -72,6 +75,9 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         super.$onInit();
         if (this.attrs.emailRecipients) {
             this.emaillist = this.attrs.emailRecipients.join("\n");
+        }
+        if (this.attrs.listener && this.vctrl) {
+            this.vctrl.addListenerMultisave(this);
         }
         this.emailbody = this.attrs.emailPreMsg;
         this.emailsubject = this.attrs.emailSubject;
@@ -250,6 +256,26 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         }
     }
 
+    public getTags(): string[] | undefined {
+        return this.attrs.tags;
+    }
+
+    public informAboutUnsaved(taskId: string) {
+        this.unsavedTimComps.add(taskId);
+        this.hasUnsavedTargets = true;
+    }
+
+    public informAboutSaved(taskId: string) {
+        this.unsavedTimComps.delete(taskId);
+        if (this.unsavedTimComps.size == 0) {
+            this.hasUnsavedTargets = false;
+        }
+    }
+
+    allSaved(): boolean {
+        return (this.attrs.listener && !this.hasUnsavedTargets);
+    }
+
     getAttributeType() {
         return multisaveAll;
     }
@@ -273,7 +299,7 @@ multisaveApp.component("multisaveRunner", {
                             group="$ctrl.attrs.group">
     </sisu-assessment-export>
     <button class="timButton"
-            ng-disabled="$ctrl.loading"
+            ng-disabled="$ctrl.allSaved()"
             ng-if="!$ctrl.showEmailForm && $ctrl.buttonText() && !$ctrl.attrs.destCourse"
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}

@@ -31,6 +31,7 @@ class DropdownMarkupModel(GenericMarkupModel):
     shuffle: Union[bool, Missing] = missing
     autosave: Union[bool, Missing] = missing
     answers: Union[bool, Missing] = missing
+    tag: Union[str, Missing, None] = missing
 
 
 @dataclass
