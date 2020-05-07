@@ -17,10 +17,10 @@ import moment, {Moment} from "moment";
 import ngFileUpload from "ng-file-upload";
 import ngStorage from "ngstorage";
 import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
+import {UAParser} from "ua-parser-js";
 import {KEY_ENTER, KEY_S} from "./util/keycodes";
 import {injectProviders, injectServices} from "./util/ngimport";
 import TriggeredEvent = JQuery.TriggeredEvent;
-import {UAParser} from "ua-parser-js";
 
 moment.updateLocale("en", {
     week: {dow: 1, doy: 4}, // set Monday as the first day of the week
