@@ -3095,8 +3095,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                             if (cvalue.cell) { continue; }
                         }
                         cellsToSave.push({col: c.x, row: c.y, key: "cell", c: svalue});
+                        this.cellDataMatrix[c.y][c.x].cell = svalue;
                     }
-                    this.cellDataMatrix[cell.row][cell.col].cell = svalue;
                     continue;
                 }
                 if (key === "rect") {
@@ -3194,13 +3194,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     return areaClearOrSet;
                 }
 
-                if (key.includes("tyle")) {
+                if (key.includes("tyle")) {  // because there is Style and style
                     let toggle = true;
                     let toggleAreaClearOrSet = 0; // 1 = set, 2 = clear, first set or clear decides what to do
                     let sstyle: Record<string, string> | undefined;
                     if (key == "style") {
                         sstyle = value.style;
-                        toggleAreaClearOrSet = 1;
+                        toggleAreaClearOrSet = 1; // TODO: enum
                         toggle = false;
                     }
                     if (key == "removeStyle") {
