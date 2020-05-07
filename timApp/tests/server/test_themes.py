@@ -13,7 +13,7 @@ def get_theme_style_name(html: HtmlElement):
     return basename(url.path)
 
 
-class DocSettingsTest(TimRouteTest):
+class DocThemesTest(TimRouteTest):
     def test_theme_overrides(self):
         self.login_test1()
         self.current_user.set_prefs(Preferences(css_files={
