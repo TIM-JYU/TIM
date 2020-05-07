@@ -267,7 +267,7 @@ class AnswerSheetController implements IController {
         if (idxStr in rowPoints) {
             const pointVal = rowPoints[idxStr];
             if (pointVal != "0") {
-            return rowPoints[idxStr];
+                return pointVal;
             }
         }
         return null;
