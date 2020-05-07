@@ -38,6 +38,8 @@ import {documentglobals} from "../util/globals";
 import {$compile, $filter, $http, $interval, $localStorage, $timeout} from "../util/ngimport";
 import {AnnotationComponent} from "../velp/annotation.component";
 import {ReviewController} from "../velp/reviewController";
+// TODO: Replace with interface
+import {MultisaveController} from "../../../../modules/fields/js/multisave";
 import {diffDialog} from "./diffDialog";
 import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
@@ -49,7 +51,6 @@ import {PopupMenuController} from "./popupMenu";
 import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
 import {IMenuFunctionEntry} from "./viewutils";
-import {MultisaveController} from "../../../../modules/fields/js/multisave";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar, ParRefController);
 
