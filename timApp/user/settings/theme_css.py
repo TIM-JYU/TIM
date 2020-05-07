@@ -1,11 +1,45 @@
 from pathlib import Path
 from typing import List
-
+from flask import current_app
 from timApp.user.settings.theme import Theme
+
+static_folder = Path('static')
 
 
 class ThemeNotFoundException(Exception):
     pass
+
+
+def get_default_scss_gen_dir() -> Path:
+    """Returns the default path into which generated SCSS files should be put into
+
+    :return: Default path for generated SCSS files
+
+    """
+    return static_folder / current_app.config['SASS_GEN_PATH']
+
+
+def generate_theme(themes: List[Theme], gen_dir: Path) -> str:
+    """Generates an SCSS file based on the given themes.
+
+    Uses generate_theme_scss to first generate a theme file and then
+    returns the name of the generated theme using get_combined_css_filename.
+
+    If a provided theme file doesn't exist, a default style file is returned with no themes applied.
+
+    :param themes: The list of themes. Themes will be sorted by name before processing.
+    :param gen_dir: The directory where the SCSS file should be generated.
+    :return: The name of the generated SCSS file ready to be used.
+
+    """
+    themes = themes.copy()
+    themes.sort(key=lambda thm: thm.filename)
+    try:
+        generate_theme_scss(themes, gen_dir)
+    except ThemeNotFoundException:
+        themes = []
+        generate_theme_scss(themes, gen_dir)
+    return get_combined_css_filename(themes)
 
 
 def generate_theme_scss(themes: List[Theme], gen_dir: Path) -> None:

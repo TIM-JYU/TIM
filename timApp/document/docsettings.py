@@ -1,7 +1,12 @@
 import json
 import re
 from datetime import timedelta
-from typing import Optional, List, Dict, Tuple, Iterable
+from typing import Optional, List, Dict, Tuple, Iterable, TypeVar, Any
+
+from dataclasses import dataclass, fields
+from marshmallow import ValidationError
+from marshmallow.fields import Field
+from marshmallow_dataclass import field_for_schema
 
 import yaml
 from flask.globals import request, g
@@ -83,6 +88,19 @@ def add_url_macros(yaml_vals):
                 except TypeError:
                     pass
     del yaml_vals.values[DocSettings.urlmacros_key]
+
+
+# TODO: Start moving DocSettings keys to this dataclass
+@dataclass
+class DocSettingTypes:
+    themes: List[str]
+    override_user_themes: bool
+
+
+doc_setting_field_map: Dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
+
+
+T = TypeVar('T')
 
 
 class DocSettings:
@@ -167,6 +185,12 @@ class DocSettings:
     @staticmethod
     def parse_values(par) -> YamlBlock:
         return YamlBlock.from_markdown(par.get_markdown())
+
+    def get_setting_or_default(self, name: str, default: T) -> T:
+        try:
+            return doc_setting_field_map[name].deserialize(self.__dict.get(name))
+        except ValidationError:
+            return default
 
     def __init__(self, doc: 'Document', settings_dict: Optional[YamlBlock] = None):
         self.doc = doc
@@ -413,6 +437,12 @@ class DocSettings:
         if not isinstance(r, int):
             return timedelta(minutes=5)
         return timedelta(minutes=r)
+
+    def themes(self) -> List[str]:
+        return self.get_setting_or_default('themes', [])
+
+    def override_user_themes(self) -> bool:
+        return self.get_setting_or_default('override_user_themes', False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

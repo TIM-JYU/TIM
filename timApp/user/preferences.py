@@ -1,19 +1,13 @@
-import os
 import re
 import sre_constants
-from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import attr
-from flask import current_app
 
 from timApp.item.item import Item
 from timApp.user.settings.theme import Theme
-from timApp.user.settings.theme_css import generate_theme_scss, ThemeNotFoundException, get_combined_css_filename
+from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
 from timApp.util.utils import cached_property
-
-
-static_folder = Path('static')
 
 
 @attr.s(auto_attribs=True)
@@ -34,15 +28,12 @@ class Preferences:
         return Preferences(**j)
 
     def __attrs_post_init__(self):
+        self.css_combined = generate_theme(self.themes, get_default_scss_gen_dir())
+
+    @property
+    def themes(self) -> List[Theme]:
         css_file_list = [css for css, v in self.css_files.items() if v]
-        css_file_list.sort()
-        theme_list = [Theme(f) for f in css_file_list]
-        try:
-            generate_theme_scss(theme_list, static_folder / current_app.config['SASS_GEN_PATH'])
-        except ThemeNotFoundException:
-            theme_list = []
-            generate_theme_scss(theme_list, static_folder / current_app.config['SASS_GEN_PATH'])
-        self.css_combined = get_combined_css_filename(theme_list)
+        return [Theme(f) for f in css_file_list]
 
     @cached_property
     def excluded_email_paths(self):

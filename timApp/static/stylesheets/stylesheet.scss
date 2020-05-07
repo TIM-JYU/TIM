@@ -679,11 +679,11 @@ p.caption {
     }
 
     &.lightselect {
-        background-color: #f7f7f7;
+        background-color: $lightselect-color;
     }
 
     &.selected {
-        background-color: lightgray;
+        background-color: $parselect-color;
     }
 
     &.marked {
@@ -1290,12 +1290,12 @@ importdata-runner {
 }
 
 .parContent:focus {
-    box-shadow: -3px 0 lightblue;
+    box-shadow: -3px 0 $focus-bar-color;
     outline: none;
 }
 
 .editline:focus {
-    outline: lightblue solid 2px;
+    outline: $focus-bar-color solid 2px;
 }
 
 .view-range-container {

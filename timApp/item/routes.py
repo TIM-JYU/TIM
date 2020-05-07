@@ -64,6 +64,8 @@ from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
 from timApp.readmark.readings import mark_all_read
 from timApp.auth.sessioninfo import get_session_usergroup_ids
+from timApp.user.settings.theme import Theme, theme_exists
+from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
 
 DEFAULT_RELEVANCE = 10
 
@@ -555,6 +557,15 @@ def view(item_path, template_name, route="view"):
             mark_all_read(group_id, doc)
         db.session.commit()
 
+    document_themes = [Theme(f) for f in doc_settings.themes() if theme_exists(f)]
+    override_theme = None
+    if document_themes:
+        # If the user themes are not overridden, they are merged with document themes
+        user_themes = current_user.get_prefs().themes if current_user else []
+        if user_themes and not doc_settings.override_user_themes():
+            document_themes = list(set().union(document_themes, user_themes))
+        override_theme = generate_theme(document_themes, get_default_scss_gen_dir())
+
     return render_template(
         template_name,
         access=access,
@@ -596,6 +607,7 @@ def view(item_path, template_name, route="view"):
         current_view_range=view_range,
         nav_ranges=nav_ranges,
         should_mark_all_read=post_process_result.should_mark_all_read,
+        override_theme=override_theme,
     )
 
 
