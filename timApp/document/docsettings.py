@@ -103,13 +103,6 @@ doc_setting_field_map: Dict[str, Field] = {f.name: field_for_schema(f.type) for 
 T = TypeVar('T')
 
 
-def get_setting_or_default(name: str, value: Any, default: T) -> T:
-    try:
-        return doc_setting_field_map[name].deserialize(value)
-    except ValidationError:
-        return default
-
-
 class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
     css_key = 'css'
@@ -192,6 +185,12 @@ class DocSettings:
     @staticmethod
     def parse_values(par) -> YamlBlock:
         return YamlBlock.from_markdown(par.get_markdown())
+
+    def get_setting_or_default(self, name: str, default: T) -> T:
+        try:
+            return doc_setting_field_map[name].deserialize(self.__dict.get(name))
+        except ValidationError:
+            return default
 
     def __init__(self, doc: 'Document', settings_dict: Optional[YamlBlock] = None):
         self.doc = doc
@@ -440,12 +439,10 @@ class DocSettings:
         return timedelta(minutes=r)
 
     def themes(self) -> List[str]:
-        setting_name = 'themes'
-        return get_setting_or_default(setting_name, self.__dict.get(setting_name), [])
+        return self.get_setting_or_default('themes', [])
 
-    def override_user_themes(self, setting_name=None) -> bool:
-        setting_name = 'override_user_themes'
-        return get_setting_or_default(setting_name, self.__dict.get(setting_name), False)
+    def override_user_themes(self) -> bool:
+        return self.get_setting_or_default('override_user_themes', False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
