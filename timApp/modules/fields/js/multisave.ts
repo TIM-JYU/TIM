@@ -262,7 +262,9 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
 
     public informAboutUnsaved(taskId: string) {
         this.unsavedTimComps.add(taskId);
+        // TODO: merge hasUnsavedTargets and isSaved or rename with more specific names
         this.hasUnsavedTargets = true;
+        this.isSaved = false;
     }
 
     public informAboutSaved(taskId: string) {
