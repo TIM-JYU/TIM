@@ -14,7 +14,7 @@ export const moduleDefs = [dropdownApp];
 
 const DropdownMarkup = t.intersection([
     t.partial({
-        tag: nullable(t.string),
+        tag: t.string,
         words: t.array(t.string),
     }),
     GenericPluginMarkup,
@@ -22,6 +22,7 @@ const DropdownMarkup = t.intersection([
         // All withDefaults should come here, NOT in t.partial.
         answers: withDefault(t.boolean, false),
         autosave: withDefault(t.boolean, false),
+        hasListeners: withDefault(t.boolean, false),
         instruction: withDefault(t.boolean, false),
         radio: withDefault(t.boolean, false),
         shuffle: withDefault(t.boolean, false),
@@ -130,7 +131,9 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     updateSelection() {
         if (!this.changes) {
             this.changes = true;
-            this.updateListenerMultisaves(false);
+            if (this.attrs.hasListeners) {
+                this.updateListenerMultisaves(false);
+            }
         }
         if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.save();
@@ -138,24 +141,17 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     updateListenerMultisaves(saved: boolean) {
+        if (!this.vctrl) {
+            return;
+        }
         const taskId = this.pluginMeta.getTaskId();
         if (!taskId) {
             return;
         }
         const doctask = taskId.docTask();
-        if (this.attrs.tag && this.vctrl) {
-            const listeners = this.vctrl.getListenerMultisaves(this.attrs.tag);
-            if (listeners) {
-                listeners.forEach((listener) => {
-                    if (saved) {
-                        listener.informAboutSaved(doctask);
-                    } else {
-                        listener.informAboutUnsaved(doctask);
-                    }
-                });
-            }
-        }
+        this.vctrl.informMultisavesAboutChanges(doctask, saved, this.attrs.tag);
     }
+
     /**
      * Force the plugin to save its information.
      *

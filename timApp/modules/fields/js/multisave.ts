@@ -267,6 +267,46 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         this.isSaved = false;
     }
 
+    private addNewUnsaved(taskId: string) {
+        this.unsavedTimComps.add(taskId);
+        this.hasUnsavedTargets = true;
+        this.isSaved = false;
+    }
+
+    public informAboutChanges(taskId: string, saved: boolean, tag?: string) {
+        if (!this.attrs.listener) {
+            return;
+        }
+        if (saved) {
+            if (this.unsavedTimComps.delete(taskId)) {
+                if (this.unsavedTimComps.size == 0) {
+                    this.hasUnsavedTargets = false;
+                }
+            }
+            return;
+        }
+        // TODO: check here if taskId already in this.unsavedTimComps to ignore input spam?
+        if (this.attrs.tags && tag && this.attrs.tags.includes(tag)) {
+            this.addNewUnsaved(taskId);
+            return;
+        }
+        if (this.attrs.fields) {
+            let reg: RegExp;
+            for (const f of this.attrs.fields) {
+                // TODO: Handle fields from other docs pasted as reference
+                reg = new RegExp(`^${this.vctrl.docId + "." + f}$`);
+                if (reg.test(taskId)) {
+                    this.addNewUnsaved(taskId);
+                    return;
+                }
+            }
+        }
+        if (!this.attrs.areas && !this.attrs.fields && !this.attrs.tags) {
+            // TODO: Check if task in this.areas or in multisave's own area?
+            this.addNewUnsaved(taskId);
+        }
+    }
+
     public informAboutSaved(taskId: string) {
         this.unsavedTimComps.delete(taskId);
         if (this.unsavedTimComps.size == 0) {

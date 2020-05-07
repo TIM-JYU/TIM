@@ -150,7 +150,7 @@ export class ViewCtrl implements IController {
     private timComponentTags: Map<string, string[]> = new Map();
     private userChangeListeners: Map<string, IUserChanged> = new Map();
 
-    private listenerMultisaves = new Map<string, MultisaveController[]>();
+    private listenerMultisaves = new Set<MultisaveController>();
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document: Document;
@@ -525,24 +525,14 @@ export class ViewCtrl implements IController {
         return this.tableForms.get(taskId);
     }
 
-    public getListenerMultisaves(tag: string) {
-        return this.listenerMultisaves.get(tag);
+    public informMultisavesAboutChanges(taskId: string, saved: boolean, tag?: string) {
+        this.listenerMultisaves.forEach((multisave) => {
+            multisave.informAboutChanges(taskId, saved, tag);
+        });
     }
 
     public addListenerMultisave(controller: MultisaveController) {
-        const tags = controller.getTags();
-        if (tags) {
-            tags.forEach((tag) => {
-                const prevListeners = this.listenerMultisaves.get(tag);
-                if (prevListeners != undefined) {
-                    prevListeners.push(controller);
-                    this.listenerMultisaves.set(tag, prevListeners);
-                } else {
-                    this.listenerMultisaves.set(tag, [controller]);
-                }
-            });
-
-        }
+        this.listenerMultisaves.add(controller);
     }
 
     public addJsRunner(runner: IJsRunner, taskId: string) {

@@ -32,7 +32,7 @@ class DropdownMarkupModel(GenericMarkupModel):
     autosave: Union[bool, Missing] = missing
     answers: Union[bool, Missing] = missing
     tag: Union[str, Missing, None] = missing
-
+    hasListeners: Union[bool, Missing] = missing
 
 @dataclass
 class DropdownInputModel:
