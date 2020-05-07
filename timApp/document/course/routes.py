@@ -2,7 +2,7 @@
 Contains course related routes.
 """
 
-from flask import Blueprint
+from flask import Blueprint, current_app
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.sessioninfo import get_current_user_object
@@ -35,6 +35,8 @@ def get_documents_from_bookmark_folder(foldername):
     :param foldername:
     :return:
     """
+    if not current_app.config['BOOKMARKS_ENABLED']:
+        return json_response([])
     folder = None
     paths = []
     bookmark_folders = Bookmarks(get_current_user_object())

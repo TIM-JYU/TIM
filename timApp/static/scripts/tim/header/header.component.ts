@@ -191,7 +191,7 @@ export class HeaderComponent implements OnInit {
      */
     private async checkIfBookmarked() {
         this.bookmarked = false;
-        if (!Users.isLoggedIn()) {
+        if (!Users.isLoggedIn() || genericglobals().bookmarks == null) {
             return;
         }
         const response = await this.bookmarkService.getBookmarks();

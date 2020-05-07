@@ -108,3 +108,5 @@ HOME_ORGANIZATION = 'jyu.fi'
 HAS_HTTPS = TIM_HOST.startswith('https:')
 SESSION_COOKIE_SAMESITE = 'None' if HAS_HTTPS else None  # Required for Aalto iframe to work.
 SESSION_COOKIE_SECURE = HAS_HTTPS  # Required by Chrome due to SameSite=None setting.
+
+BOOKMARKS_ENABLED = True

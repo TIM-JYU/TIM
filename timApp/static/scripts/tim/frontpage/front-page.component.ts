@@ -24,7 +24,8 @@ import {to} from "../util/utils";
         </div>
         <div class="row">
             <div class="col-md-7 col-md-offset-3">
-                <tim-bookmark-folder-box [bookmarks]="bookmarks"
+                <tim-bookmark-folder-box *ngIf="bookmarks"
+                                         [bookmarks]="bookmarks"
                                          displayName="My courses"
                                          i18n-displayName
                                          bookmarkFolderName="My courses">
@@ -108,12 +109,12 @@ import {to} from "../util/utils";
 export class FrontPageComponent implements IController {
     creatingNew: boolean;
     private docListOpen: boolean;
-    bookmarks: IBookmarkGroup[]; // For My courses.
+    bookmarks?: IBookmarkGroup[]; // For My courses.
 
     constructor() {
         this.creatingNew = false;
         this.docListOpen = false;
-        this.bookmarks = genericglobals().bookmarks;
+        this.bookmarks = genericglobals().bookmarks ?? undefined;
     }
 
     getCurrentUserFolderPath() {

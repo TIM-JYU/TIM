@@ -40,7 +40,7 @@ export interface IGenericGlobals {
     current_user: IFullUser;
     locale: Locale;
     other_users: IUser[];
-    bookmarks: IBookmarkGroup[];
+    bookmarks: IBookmarkGroup[] | null;
     ANGULARMODULES: unknown[];
     JSMODULES: string[];
     curr_item?: DocumentOrFolder;

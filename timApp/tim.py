@@ -77,11 +77,10 @@ from timApp.velp.velp import velps
 
 cache.init_app(app)
 
-for bp in [
+blueprints = [
     admin_bp,
     annotations,
     answers,
-    bookmarks,
     clipboard,
     course_blueprint,
     doc_bp,
@@ -117,7 +116,12 @@ for bp in [
     tape_plugin,
     timMenu_plugin,
     timTable_plugin,
-]:
+]
+
+if app.config['BOOKMARKS_ENABLED']:
+    app.register_blueprint(bookmarks)
+
+for bp in blueprints:
     app.register_blueprint(bp)
 
 
@@ -198,7 +202,7 @@ def inject_user() -> dict:
         other_users=get_other_users_as_list(),
         locale=get_locale(),
     )
-    if logged_in():
+    if logged_in() and app.config['BOOKMARKS_ENABLED']:
         r['bookmarks'] = Bookmarks(get_current_user_object()).as_dict()
     return r
 

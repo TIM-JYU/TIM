@@ -34,7 +34,7 @@ export class BookmarksController implements IController {
 
     $onInit() {
         if (!this.data) {
-            this.data = clone(genericglobals().bookmarks);
+            this.data = clone(genericglobals().bookmarks) ?? undefined;
         }
         if (this.userId && !this.data) {
             void this.refresh();

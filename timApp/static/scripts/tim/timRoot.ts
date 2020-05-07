@@ -105,6 +105,12 @@ export function getVisibilityVars() {
             hideExamModeElements(hide);
         }
     }
+
+    // If bookmarks are globally disabled, don't show the tab.
+    if (g.bookmarks == null) {
+        hide.bookmarks = true;
+    }
+
     if (params.get("hide_top_buttons")) {
         hideTopButtonsStuff(hide);
     }

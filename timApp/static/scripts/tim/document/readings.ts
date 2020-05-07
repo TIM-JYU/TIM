@@ -2,6 +2,7 @@ import {IPromise} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {getActiveDocument} from "tim/document/activedocument";
+import {genericglobals} from "tim/util/globals";
 import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
@@ -244,7 +245,7 @@ export async function initReadings(item: IItem) {
         }
     });
 
-    if (Users.isLoggedIn()) {
+    if (Users.isLoggedIn() && genericglobals().bookmarks != null) {
         await $timeout(10000);
         await to($http.post("/bookmarks/markLastRead/" + item.id, {}));
     }
