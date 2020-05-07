@@ -560,7 +560,7 @@ def view(item_path, template_name, route="view"):
     document_themes = [Theme(f) for f in doc_settings.themes() if theme_exists(f)]
     override_theme = None
     if document_themes:
-        # If the doc themes are not overridden, they are merged with user themes
+        # If the user themes are not overridden, they are merged with document themes
         user_themes = current_user.get_prefs().themes if current_user else []
         if user_themes and not doc_settings.override_user_themes():
             document_themes = list(set().union(document_themes, user_themes))
