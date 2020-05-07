@@ -175,6 +175,7 @@ timApp.directive("onSave", () => {
 
 timApp.config(["$provide", ($provide: IModule) => {
     $provide.decorator("ngClickDirective", ["$delegate", ($delegate: IDelegate[]) => {
+        // Remove the "native" ngClick handler
         $delegate.shift();
         return $delegate;
     }]);
@@ -185,11 +186,11 @@ timApp.directive("ngClick", ["$parse", ($parse: IParseService) => {
         restrict: "A",
         link: (scope, elem, attrs) => {
             const fn = $parse(attrs.ngClick as string);
-            const handlePopDown = (event: TriggeredEvent) => {
+            const handleClickAndTouch = (event: TriggeredEvent) => {
                 if (event.type == "touchstart") {
                     // If touchstart is fired, we know we have touch support. In that case disable `click` and prevent
                     // its propagation to other elements. That way non-AngularJS elements will still be clickable.
-                    elem.off("click", handlePopDown).on("click", (e) => {
+                    elem.off("click", handleClickAndTouch).on("click", (e) => {
                        e.preventDefault();
                        e.stopPropagation();
                     });
@@ -197,7 +198,7 @@ timApp.directive("ngClick", ["$parse", ($parse: IParseService) => {
                 // eslint-disable-next-line @typescript-eslint/tslint/config
                 scope.$apply(() => fn(scope, {$event: event}));
             };
-            elem.on("touchstart click", handlePopDown);
+            elem.on("touchstart click", handleClickAndTouch);
         },
     };
 }]);
