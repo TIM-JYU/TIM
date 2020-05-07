@@ -5,14 +5,15 @@ from typing import List
 from dataclasses import dataclass, field
 
 from werkzeug.utils import secure_filename
+from timApp.util.utils import cached_property
+
 
 THEME_DIR = Path('static/stylesheets/themes')
 
 
-@dataclass
+@dataclass(eq=True, frozen=True)
 class Theme:
-    filename: str = field(hash=True)
-    description: str = field(init=False, default='No description')
+    filename: str
 
     def exists(self):
         return self.get_path().exists()
@@ -20,17 +21,17 @@ class Theme:
     def get_path(self):
         return get_theme_path(self.filename)
 
-    def load(self):
+    @cached_property
+    def description(self):
         with self.get_path().open('r', encoding='utf-8') as f:
             comment = f.readline()
             if comment.startswith('@charset'):
                 comment = f.readline()
         m = re.match(r'/\* ([^*]+) \*/', comment)
         if m is not None:
-            self.description = m.groups()[0]
+            return m.groups()[0]
         else:
-            self.description = 'No description.'
-        return self
+            return 'No description.'
 
 
 def get_theme_path(filename: str) -> Path:
@@ -42,4 +43,4 @@ def theme_exists(filename: str) -> bool:
 
 
 def get_available_themes() -> List[Theme]:
-    return [Theme(file[:-5]).load() for file in os.listdir(THEME_DIR) if file.endswith('.scss')]
+    return [Theme(file[:-5]) for file in os.listdir(THEME_DIR) if file.endswith('.scss')]
