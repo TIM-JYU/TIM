@@ -159,6 +159,8 @@ export interface IToolbarTemplate {
     cell?: string;
     text?: string;
     class?: string;
+    removeStyle?: Record<string, string>;
+    toggleStyle?: Record<string, string>;
     buttonClass?: string;
     style?: Record<string, string>;
     buttonStyle?: Record<string, string>;
@@ -166,6 +168,7 @@ export interface IToolbarTemplate {
     area?: (IToolbarTemplate|undefined)[][];
     title?: string;
     onlyEmpty?: boolean;
+    toggle?: boolean;
 }
 
 export interface TimTable {
@@ -3130,38 +3133,92 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     }
                     continue;
                 }
-                if (key === "style") {
-                    if (!value.style) {
-                        continue;
-                    }
-                    const vstyle: Record<string, string> = value.style;
+                function handleStyleList(table: TimTableComponent, vstyle: Record<string, string> | undefined,
+                                         c: ICellIndex,
+                                         toggle: boolean, areaClearOrSet: number): number {
+                    if (!vstyle) { return areaClearOrSet; }
                     // eslint-disable-next-line guard-for-in
                     for (const skey in vstyle) {
                         // sometimes there is extra # in colors?
+                        let clearOrSet = 0; // 1 = set, 2 = clear
                         let cellStyle = vstyle[skey];
                         if (cellStyle.startsWith("##")) {
                             cellStyle = cellStyle.substr(1);
                         }
-                        for (const c of cells) {
-                            if (value.onlyEmpty) {
-                                const cvalue = this.cellDataMatrix[c.y][c.x];
-                                if (cvalue.cell) { continue; }
-                            }
-                            let s = cellStyle;
-                            if (skey === "class") {
-                                const oldCls = this.cellDataMatrix[c.y][c.x].class;
-                                if (oldCls) { // todo toggle
-                                    if (!oldCls.includes(s)) {
-                                        s = oldCls + " " + s;
-                                    } else {
-                                        s = "";
-                                    }
+                        let s = cellStyle;
+                        let change = false;
+                        if (skey === "class") {
+                            const oldCls = table.cellDataMatrix[c.y][c.x].class;
+                            if (oldCls) { // todo toggle
+                                if (!oldCls.includes(s)) { // is not allredy in classes
+                                    s = oldCls + " " + s;
+                                    clearOrSet = 1;
+                                } else if (!toggle && areaClearOrSet != 2) {
+                                    s = "";
+                                    clearOrSet = 1;
+                                } else {
+                                    s = oldCls.replace(s, "");
+                                    change = true;
+                                    clearOrSet = 2;
                                 }
+                            } else {
+                                if (areaClearOrSet == 2) {
+                                    s = "";
+                                }
+                                clearOrSet = 1;
                             }
-                            if (s) {
-                                cellsToSave.push({col: c.x, row: c.y, key: skey, c: s});
+                        } else {
+                            if (toggle && areaClearOrSet == 0 || areaClearOrSet == 2) {
+                                if (areaClearOrSet == 2) {
+                                    s = "";
+                                }
+                                const styleCache = table.cellDataMatrix[c.y][c.x].styleCache;
+                                if (styleCache && skey in styleCache && styleCache[skey]) {
+                                    s = "";
+                                    change = true;
+                                    clearOrSet = 2;
+                                } else {
+                                    clearOrSet = 1;
+                                }
+                            } else {
+                                clearOrSet = 1;
                             }
                         }
+                        if (!areaClearOrSet && toggle) {
+                            areaClearOrSet = clearOrSet;
+                        }
+                        if (s || change) {
+                            cellsToSave.push({col: c.x, row: c.y, key: skey, c: s});
+                        }
+                    }
+                    return areaClearOrSet;
+                }
+
+                if (key.includes("tyle")) {
+                    let toggle = true;
+                    let toggleAreaClearOrSet = 0; // 1 = set, 2 = clear, first set or clear decides what to do
+                    let sstyle: Record<string, string> | undefined;
+                    if (key == "style") {
+                        sstyle = value.style;
+                        toggleAreaClearOrSet = 1;
+                        toggle = false;
+                    }
+                    if (key == "removeStyle") {
+                        sstyle = value.removeStyle;
+                        toggleAreaClearOrSet = 2;
+                        toggle = false;
+                    }
+                    if (key == "toggleStyle") {
+                        sstyle = value.toggleStyle;
+                    }
+                    if (!sstyle) { continue; }
+                    for (const c of cells) {
+                        if (value.onlyEmpty) {
+                            const cvalue = this.cellDataMatrix[c.y][c.x];
+                            if (cvalue.cell) { continue; }
+                        }
+                        toggleAreaClearOrSet = handleStyleList(this, sstyle, c, toggle, toggleAreaClearOrSet);
+                        toggle = false; // used only on first round
                     }
                 }
             } catch (e) {

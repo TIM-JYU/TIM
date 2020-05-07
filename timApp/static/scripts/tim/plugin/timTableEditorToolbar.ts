@@ -42,7 +42,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.callbacks = this.resolve.params.callbacks;
         this.activeTable = this.resolve.params.activeTable;
         this.hide = this.activeTable.data.hide;
-        this.draggable.setCloseFn(undefined); // Hides the close button
+        // this.draggable.setCloseFn(undefined); // Hides the close button
         // if (this.activeTable.data.lockCellCount) {
         //     this.lockCellCount = this.activeTable.data.lockCellCount;
         // }
@@ -194,6 +194,8 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
             cls = " " + value.buttonClass;
         } else if (value.style && value.style.class) {
             cls += " " + value.style.class;
+        } else if (value.toggleStyle && value.toggleStyle.class) {
+            cls += " " + value.toggleStyle.class;
         }
         return cls;
     }
@@ -204,6 +206,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      */
     private getCellStyleForToolbar(value: IToolbarTemplate) {
         let ret = value.style;
+        if (!ret) { ret = value.toggleStyle; }
         if (value.buttonStyle) {
             // @ts-ignore
             ret = value.buttonStyle;
@@ -278,6 +281,7 @@ export function openTableEditorToolbar(p: ITimTableEditorToolbarParams) {
             {
                 forceMaximized: false,
                 showMinimizeButton: false,
+                // absolute: true,
             });
     }
 }
