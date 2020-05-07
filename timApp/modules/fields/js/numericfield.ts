@@ -460,7 +460,7 @@ numericfieldApp.component("numericfieldRunner", {
     <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || $ctrl.readonly"
+            ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>

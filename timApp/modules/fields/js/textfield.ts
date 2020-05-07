@@ -476,7 +476,7 @@ textfieldApp.component("textfieldRunner", {
     <div ng-if="$ctrl.errormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.errormessage"></div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || $ctrl.readonly"
+            ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
