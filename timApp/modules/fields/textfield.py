@@ -39,6 +39,7 @@ class TextfieldMarkupModel(GenericMarkupModel):
     tag: Union[str, Missing, None] = missing
     textarea: Union[bool, Missing] = missing
     validinput: Union[str, Missing, None] = missing
+    hasListeners: Union[bool, Missing] = missing
 
 
 @dataclass

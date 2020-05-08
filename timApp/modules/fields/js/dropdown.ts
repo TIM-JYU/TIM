@@ -138,7 +138,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     updateListenerMultisaves(saved: boolean) {
-        if (this.attrs.hasListeners || !this.vctrl) {
+        if (!this.attrs.hasListeners || !this.vctrl) {
             return;
         }
         const taskId = this.pluginMeta.getTaskId();

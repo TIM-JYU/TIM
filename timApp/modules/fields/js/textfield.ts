@@ -425,7 +425,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     // TODO: Generic, move
     updateListenerMultisaves(saved: boolean) {
-        if (this.attrs.hasListeners || !this.vctrl) {
+        if (!this.attrs.hasListeners || !this.vctrl) {
             return;
         }
         const taskId = this.pluginMeta.getTaskId();
