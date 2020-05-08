@@ -372,7 +372,7 @@ function makeTemplate() {
                       ng-attr-placeholder="{{$ctrl.placeholder}}"></textarea>
             </div>
             <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
-            <div class="csRunNotSaved" ng-show="$ctrl.notSaved"></div>
+            <div class="csRunNotSaved" ng-show="$ctrl.isUnSaved()"></div>
         </div>
         <pre class="csRunPost" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.postcode}}</pre>
     </div>
@@ -407,7 +407,11 @@ function makeTemplate() {
     <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
         <p class="csRunMenu">
             <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
+<<<<<<< 4dfc0100bebced576d523718d1df682ada4f4393
                     ng-disabled="$ctrl.isRunning || $ctrl.preventSave"
+=======
+                    ng-disabled="$ctrl.isRunning || (!$ctrl.isUnSaved() && $ctrl.isText)"
+>>>>>>> Saveindicators for csplug type 'text'
                     class="timButton btn-sm"
                     title="(Ctrl-S)"
                     ng-click="$ctrl.runCode()"
