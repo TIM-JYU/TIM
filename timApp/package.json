@@ -74,7 +74,8 @@
     "type-zoo": "^3.4.1",
     "typescript-json-serializer": "^1.4.4",
     "url-search-params-polyfill": "^7.0.0",
-    "zone.js": "~0.10.3"
+    "zone.js": "~0.10.3",
+    "ua-parser-js": "^0.7.21"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.901.1",
@@ -123,7 +124,6 @@
     "replace-in-file": "^4.2.0",
     "ts-node": "~7.0.0",
     "tslint": "^5.20.1",
-    "typescript": "^3.8.3",
-    "ua-parser-js": "^0.7.21"
+    "typescript": "^3.8.3"
   }
 }
