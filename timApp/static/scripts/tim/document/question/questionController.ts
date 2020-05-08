@@ -708,7 +708,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                     points += separator;
                     separator2 = "";
                     for (const currentColumn of r.columns) {
-                        if (currentColumn.points !== "" && currentColumn.points != "0") {
+                        if (currentColumn.points !== "") {
                             points += separator2;
                             const id = currentColumn.id + 1;
                             points += id.toString() + ":" + parseFloat(currentColumn.points) || 0;
@@ -723,7 +723,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             for (const r of this.rows) {
                 points += separator;
                 const currentColumn = r.columns[0];
-                if (currentColumn.points !== "" && currentColumn.points != "0") {
+                if (currentColumn.points !== "") {
                     points += separator2;
                     const id = r.id;
                     points += id.toString() + ":" + parseFloat(currentColumn.points) || 0;

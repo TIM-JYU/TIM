@@ -123,6 +123,7 @@ class QstMarkupModel(GenericMarkupModel):
     randomizedRows: Union[int, Missing] = missing
     randomSeed: Union[int, Missing] = missing
     doNotMove: Union[List[int], int, Missing] = missing
+    defaultPoints: Union[int, float, Missing] = missing
 
 
 QstBasicState = List[List[str]]
@@ -203,7 +204,10 @@ def qst_answer_jso(m: QstAnswerModel):
             spoints = qst_filter_markup_points(spoints, question_type, rand_arr)
             m.markup.points = spoints
         points_table = create_points_table(spoints)
-        points = calculate_points_from_json_answer(answers, points_table)
+        default_points = m.markup.defaultPoints
+        if default_points is None or default_points is missing:
+            default_points = 0
+        points = calculate_points_from_json_answer(answers, points_table, default_points)
         minpoints = markup.minpoints if markup.minpoints is not missing else -1e20
         maxpoints = markup.maxpoints if markup.maxpoints is not missing else 1e20
         if points < minpoints:
@@ -590,14 +594,18 @@ qst_attrs = {
     'answerLimit',
     'button',
     'buttonText',
+    'defaultPoints'
+    'doNotMove'
     'footer',
     'header',
+    'hideBrowser',
     'isTask',
     'lazy',
+    'randomizedRows',
     'resetText',
+    'showPoints',
     'stem',
-    'hideBrowser',
-    'tag'
+    'tag',
 }
 
 
@@ -972,12 +980,16 @@ def create_points_table(points):
     return points_table
 
 
-def calculate_points_from_json_answer(single_answers: List[List[str]], points_table):
+def calculate_points_from_json_answer(single_answers: List[List[str]],
+                                      points_table,
+                                      default_points: float = 0):
     points = 0.0
     for (oneAnswer, point_row) in zip(single_answers, points_table):
         for oneLine in oneAnswer:
             if oneLine in point_row:
                 points += point_row[oneLine]
+            else:
+                points += default_points
     return points
 
 

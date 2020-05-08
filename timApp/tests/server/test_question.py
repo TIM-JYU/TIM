@@ -201,6 +201,7 @@ headers:
 - '3'
 matrixType: checkbox
 points: 1:1;2:-0.2;3:-0.2|1:-0.2;2:1;3:-0.2|1:-0.2;2:-0.2;3:1
+default_points: -0.4
 questionText: Testi
 questionTitle: Testi3
 questionType: matrix
@@ -251,3 +252,51 @@ rows:
         order_without_shuffle = loads(answers[0].get('content', {})).get('order')
         self.assertEqual(order_with_shuffle, order_without_shuffle)
         self.assertEqual(2, answers[0]['points'])
+
+    def test_question_default_points(self):
+        self.login_test1()
+        d = self.create_doc()
+        pars = d.document.add_text("""
+#- {#t plugin="qst" dquestion="true"}
+answerFieldType: checkbox
+expl: {}
+headers:
+- '1'
+- '2'
+- '3'
+matrixType: checkbox
+points: 1:1;2:0|2:1|3:1;2:0
+defaultPoints: -2
+questionText: Testi
+questionTitle: Testi3
+questionType: matrix
+rows:
+- First
+- Second
+- Third
+        """)
+        self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["1"], ["1", "2"], ["2", "3"]]})
+        answers = self.get_task_answers(f'{d.id}.t', self.current_user)
+        self.assertEqual(1, answers[0]['points'])
+        d.document.delete_paragraph(pars[0].get_id())
+        d.document.add_text("""
+#- {#t dquestion="true" plugin="qst"}
+answerFieldType: radio
+expl: {}
+headers: []
+points: 1:1;3:0
+questionText: test
+questionTitle: test
+questionType: radio-vertical
+defaultPoints: -2
+rows:
+- Right
+- Wrong
+- No answer
+                """)
+        self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["3"]]})
+        answers = self.get_task_answers(f'{d.id}.t', self.current_user)
+        self.assertEqual(0, answers[0]['points'])
+        self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"]]})
+        answers = self.get_task_answers(f'{d.id}.t', self.current_user)
+        self.assertEqual(-2, answers[0]['points'])
