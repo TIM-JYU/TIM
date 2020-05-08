@@ -2972,6 +2972,7 @@ csApp.component("csTextRunner", {
           class="stem"
           ng-bind-html="::$ctrl.stem"></span>
     <input class="csTinyText no-popup-menu"
+           ng-class="{warnFrame: $ctrl.isUnSaved()}"
            ng-hide="$ctrl.noeditor && !$ctrl.viewCode"
            size="{{::$ctrl.cols}}"
            ng-model="$ctrl.usercode"
@@ -2979,7 +2980,7 @@ csApp.component("csTextRunner", {
            ng-attr-placeholder="{{$ctrl.placeholder}}"
            ng-keypress="$ctrl.runCodeIfCR($event);"/>
     <button ng-if="::$ctrl.isRun"
-            ng-disabled="$ctrl.isRunning || $ctrl.preventSave"
+            ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.preventSave"
             class = "timButton"
             title="(Ctrl-S)"
             ng-click="$ctrl.runCode();"

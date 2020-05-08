@@ -845,7 +845,7 @@ class Text(Language):
         showname = self.filename
         if showname == "prg":
             showname = ""
-        saved_text = get_param(self.query, "savedText", "Saved {0}")
+        saved_text = get_param(self.query, "savedText", "Saved")
         code, out, err, pwddir = (0, "", saved_text.format(showname), "")
         return code, out, err, pwddir
 
