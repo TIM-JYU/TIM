@@ -407,7 +407,7 @@ function makeTemplate() {
     <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
         <p class="csRunMenu">
             <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
-                    ng-disabled="$ctrl.isRunning || $ctlr.preventSave"
+                    ng-disabled="$ctrl.isRunning || $ctrl.preventSave"
                     class="timButton btn-sm"
                     title="(Ctrl-S)"
                     ng-click="$ctrl.runCode()"
