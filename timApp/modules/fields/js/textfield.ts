@@ -58,6 +58,7 @@ const TextfieldAll = t.intersection([
 ]);
 
 class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t.TypeOf<typeof TextfieldAll>, typeof TextfieldAll> implements ITimComponent {
+    private changes = false;
     private result?: string;
     private isRunning = false;
     private userword = "";
@@ -147,7 +148,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
                 this.applyStyling(content.styles);
             }
         }
-        this.initialValue = this.userword;
+        this.changes = false;
+        this.updateListenerMultisaves(true);
         return {ok: ok, message: message};
 
     }
@@ -192,6 +194,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         } else { this.userword = this.attrs.initword ?? ""; }
         this.initialValue = this.userword;
         this.result = undefined;
+        this.changes = false;
+        this.updateListenerMultisaves(true);
     }
 
     /**
@@ -296,10 +300,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isUnSaved() {
-        if (this.initialValue != this.userword) {
-            this.hideSavedText = true;
-        }
-        return (!this.attrs.nosave && this.initialValue != this.userword);
+        // if (this.initialValue != this.userword) {
+        //         //     this.hideSavedText = true;
+        //         // }
+        return (!this.attrs.nosave && this.changes);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -361,6 +365,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.errormessage = data.web.error ?? "";
             this.result = data.web.result;
             this.initialValue = this.userword;
+            this.changes = false;
+            this.updateListenerMultisaves(true);
             this.hideSavedText = false;
             this.redAlert = false;
             this.saveResponse.saved = true;
@@ -411,6 +417,26 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     isForm(): boolean {
         return this.attrs.form;
     }
+
+    updateInput() {
+        if (!this.changes) {
+            this.changes = true;
+            this.updateListenerMultisaves(false);
+        }
+    }
+
+    // TODO: Generic, move
+    updateListenerMultisaves(saved: boolean) {
+        if (this.attrs.hasListeners || !this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        const doctask = taskId.docTask();
+        this.vctrl.informMultisavesAboutChanges(doctask, saved, (this.attrs.tag ? this.attrs.tag : undefined));
+    }
 }
 
 // noinspection CssInvalidFunction
@@ -439,6 +465,7 @@ textfieldApp.component("textfieldRunner", {
                ng-model="$ctrl.userword"
                ng-blur="::$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.autoSave() && $ctrl.changeFocus()"
+               ng-change="$ctrl.updateInput()"
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
                ng-pattern="$ctrl.getPattern()"

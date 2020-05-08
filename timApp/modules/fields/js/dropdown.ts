@@ -22,7 +22,6 @@ const DropdownMarkup = t.intersection([
         // All withDefaults should come here, NOT in t.partial.
         answers: withDefault(t.boolean, false),
         autosave: withDefault(t.boolean, false),
-        hasListeners: withDefault(t.boolean, false),
         instruction: withDefault(t.boolean, false),
         radio: withDefault(t.boolean, false),
         shuffle: withDefault(t.boolean, false),
@@ -131,9 +130,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     updateSelection() {
         if (!this.changes) {
             this.changes = true;
-            if (this.attrs.hasListeners) {
-                this.updateListenerMultisaves(false);
-            }
+            this.updateListenerMultisaves(false);
         }
         if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.save();
@@ -141,7 +138,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     updateListenerMultisaves(saved: boolean) {
-        if (!this.vctrl) {
+        if (this.attrs.hasListeners || !this.vctrl) {
             return;
         }
         const taskId = this.pluginMeta.getTaskId();
@@ -205,6 +202,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             }
         }
         this.changes = false;
+        this.updateListenerMultisaves(true);
         return {ok: ok, message: message};
 
     }
@@ -212,6 +210,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     resetField(): undefined {
         this.selectedWord = "";
         this.changes = false;
+        this.updateListenerMultisaves(true);
         return undefined;
     }
 
