@@ -21,7 +21,7 @@ test:
   - chmod +x variables.sh
   - sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh
   - export IS_TESTING=true
-  - ./dc pull tim
+  - ./dc pull --quiet tim
   - ./dc run --rm --no-deps --workdir /service tim mypy -p timApp
   - ./dc pull --quiet
   - ./npmi
