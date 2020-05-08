@@ -1,11 +1,15 @@
 import csv
 import itertools
+import smtplib
+import time
 from dataclasses import dataclass
+from email.mime.text import MIMEText
+from io import TextIOWrapper
 from pprint import pprint
-from typing import List, Optional, Set, Iterable, Tuple
+from typing import List, Optional, Set, Tuple
 
 import click
-from flask import abort
+from flask import abort, current_app
 from flask.cli import AppGroup
 from sqlalchemy import func  # type: ignore
 
@@ -96,7 +100,7 @@ class MergeResult:
 
 @user_cli.command()
 @click.argument('csvfile', type=click.File())
-def mass_merge(csvfile: Iterable[str]) -> None:
+def mass_merge(csvfile: TextIOWrapper) -> None:
     """Merges multiple users as specified in the given CSV file.
     """
     reader = csv.reader(csvfile, delimiter=';')
@@ -282,7 +286,7 @@ def import_accounts(csvfile: str, password: Optional[str]) -> None:
     default=True,
     help='whether to verify that the password hash matches the password',
 )
-def import_passwords(csvfile: Iterable[str], verify: bool) -> None:
+def import_passwords(csvfile: TextIOWrapper, verify: bool) -> None:
     for row in csv.reader(csvfile, delimiter=';'):
         if len(row) != 3:
             raise click.UsageError(f'Wrong amount of columns in row {row}')
@@ -338,3 +342,103 @@ def find_duplicate_accounts_by_email() -> List[Tuple[User, Set[User]]]:
         rest.remove(primary)
         result.append((primary, rest))
     return result
+
+
+@user_cli.command('send-email')
+@click.option(
+    '--template',
+    type=click.File(),
+    required=True,
+    help='Template file for the email. Available placeholders: {password}, {fullname}, {lastname}.',
+)
+@click.option(
+    '--subject',
+    required=True,
+    help='CSV file with rows email;password',
+)
+@click.option(
+    '--mail-from',
+    required=True,
+    help='from address for the emails',
+)
+@click.option(
+    '--reply-to',
+    help='from address for the emails',
+)
+@click.option(
+    '--passwords',
+    type=click.File(),
+    required=True,
+    help='CSV file with rows email;password',
+)
+@click.option(
+    '--delay',
+    type=float,
+    required=True,
+    help='How much to wait between two emails',
+)
+@click.option(
+    '--dry-run/--no-dry-run',
+    default=True,
+    help='Dry run',
+)
+def send_email_cmd(
+        template: TextIOWrapper,
+        subject: str,
+        mail_from: str,
+        reply_to: Optional[str],
+        passwords: TextIOWrapper,
+        dry_run: bool,
+        delay: float,
+) -> None:
+    template_text = template.read()
+    s = smtplib.SMTP(current_app.config['MAIL_HOST']) if not dry_run else None
+    log_file = open('send_email_log.txt', 'w', encoding='utf8', newline='\n')
+    error_log_file = open('send_email_error_log.txt', 'w', encoding='utf8', newline='\n')
+    error_users_file = open('send_email_error_users.txt', 'w', encoding='utf8', newline='\n')
+    sep = '--------------------------'
+    for row in csv.reader(passwords, delimiter=';'):
+        email = row[0]
+        password = row[1]
+        u = User.get_by_email(email)
+        if not u:
+            click.echo(f'Email not found: {email}')
+            continue
+        lastname = u.last_name if u.last_name is not None else u.real_name.split(' ')[0]
+        msg = (
+            template_text
+                .replace('{password}', password)
+                .replace('{fullname}', u.pretty_full_name)
+                .replace('{lastname}', lastname)
+        )
+        mime_msg = MIMEText(msg)
+        mime_msg['Subject'] = subject
+        mime_msg['From'] = mail_from
+        mime_msg['To'] = email
+
+        if reply_to:
+            mime_msg.add_header('Reply-To', reply_to)
+
+        time.sleep(delay)
+
+        if not s:
+            click.echo(f'Email would be sent to {email}')
+            log_file.write(f'Email would be sent to {email}:\n{sep}\n{msg}\n{sep}\n')
+            continue
+        try:
+            s.sendmail(mail_from, [email], mime_msg.as_string())
+        except (smtplib.SMTPSenderRefused,
+                smtplib.SMTPRecipientsRefused,
+                smtplib.SMTPHeloError,
+                smtplib.SMTPDataError,
+                smtplib.SMTPNotSupportedError) as e:
+            err = f'Error sending mail to {email}: {e}'
+            click.echo(err)
+            error_log_file.write(f'{err}\n')
+            error_users_file.write(f'{email};{password}\n')
+        else:
+            click.echo(f'Email sent to {email}')
+            log_file.write(f'Email sent to {email}:\n{sep}\n{msg}\n{sep}\n')
+    log_file.close()
+    error_log_file.close()
+    error_users_file.close()

@@ -307,7 +307,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         if self.given_name and self.last_name:
             return f'{self.given_name} {self.last_name}'
-        return self.real_name if self.real_name is not None else '(real_name is null)'
+        if self.real_name is None:
+            return '(real_name is null)'
+        parts = self.real_name.split(' ')
+        if len(parts) == 1:
+            return self.real_name
+        return ' '.join(parts[1:]) + ' ' + parts[0]
 
     @staticmethod
     def create_with_group(

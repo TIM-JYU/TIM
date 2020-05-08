@@ -133,14 +133,14 @@ class NotifyTest(NotifyTestBase):
         pars = d.document.get_paragraphs()
         self.assertEqual({
             'mail_from': mail_from,
-            'msg': f'Paragraph added by Test user 1: {url}#{pars[-1].get_id()}'
+            'msg': f'Paragraph added by user 1 Test: {url}#{pars[-1].get_id()}'
             ' '
             f'(changes: http://localhost/diff/{d.id}/4/0/5/0 )\n'
             '\n'
             f'{pars[-1].get_markdown()}',
             'rcpt': self.test_user_2.email,
             'reply_to': self.test_user_1.email,
-            'subject': f'Test user 1 added a paragraph to the document {title}'
+            'subject': f'user 1 Test added a paragraph to the document {title}'
         }, sent_mails_in_testing[-1])
 
     def test_revoke_view_no_email(self):
@@ -167,13 +167,13 @@ stem: test
         process_pending_notifications()
         self.assertEqual(
             {'mail_from': 'no-reply@tim.jyu.fi',
-             'msg': 'Comment posted by Test user 1: '
+             'msg': 'Comment posted by user 1 Test: '
              f'http://localhost/answers/{d.path}?task=t&user=testuser1\n'
                     '\n'
                     'Hello',
              'rcpt': 'test2@example.com',
              'reply_to': 'test1@example.com',
-             'subject': f'Test user 1 posted a comment to the document {title}'},
+             'subject': f'user 1 Test posted a comment to the document {title}'},
             sent_mails_in_testing[-1])
         pns = PendingNotification.query.filter_by(doc_id=d.id).all()
         for p in pns:
@@ -253,7 +253,7 @@ class CutPasteNotifyTest(NotifyTestBase):
         mail_from = 'no-reply@tim.jyu.fi'
         self.assertEqual({
             'mail_from': mail_from,
-            'msg': 'Paragraph deleted by Test user 1: '
+            'msg': 'Paragraph deleted by user 1 Test: '
                    f'{d.url} (changes: '
                    f'http://localhost/diff/{d.id}/3/0/5/0 )\n'
                    '\n'
@@ -264,13 +264,13 @@ class CutPasteNotifyTest(NotifyTestBase):
                    'test',
             'rcpt': 'test2@example.com',
             'reply_to': 'test1@example.com',
-            'subject': 'Test user 1 deleted a paragraph from the document document 2'},
+            'subject': 'user 1 Test deleted a paragraph from the document document 2'},
             sent_mails_in_testing[-1])
         self.paste(d, par_after=par3)
         process_pending_notifications()
         self.assertEqual({
             'mail_from': mail_from,
-            'msg': 'Paragraph added by Test user 1: '
+            'msg': 'Paragraph added by user 1 Test: '
             f'http://localhost/view/users/test-user-1/doc1#{par.get_id()} (changes: '
                    f'http://localhost/diff/{d.id}/5/0/7/0 )\n'
                    '\n'
@@ -281,5 +281,5 @@ class CutPasteNotifyTest(NotifyTestBase):
                    'test',
             'rcpt': 'test2@example.com',
             'reply_to': 'test1@example.com',
-            'subject': 'Test user 1 added a paragraph to the document document 2'},
+            'subject': 'user 1 Test added a paragraph to the document document 2'},
             sent_mails_in_testing[-1])
