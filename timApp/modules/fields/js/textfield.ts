@@ -300,9 +300,6 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isUnSaved() {
-        // if (this.initialValue != this.userword) {
-        //         //     this.hideSavedText = true;
-        //         // }
         return (!this.attrs.nosave && this.changes);
     }
 
@@ -421,6 +418,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     updateInput() {
         if (!this.changes) {
             this.changes = true;
+            this.hideSavedText = true;
             this.updateListenerMultisaves(false);
         }
     }
@@ -485,6 +483,7 @@ textfieldApp.component("textfieldRunner", {
                ng-blur="::$ctrl.autoSave()"
                ng-keydown="::$ctrl.attrs.autogrow && $ctrl.autoGrow()"
                ng-keyup="::$ctrl.attrs.autogrow && $ctrl.autoGrow()"
+               ng-change="$ctrl.updateInput()"
                ng-model-options="::$ctrl.modelOpts"
                ng-trim="false"
                ng-pattern="$ctrl.getPattern()"

@@ -60,6 +60,7 @@ const NumericfieldAll = t.intersection([
 ]);
 
 class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMarkup>, t.TypeOf<typeof NumericfieldAll>, typeof NumericfieldAll> implements ITimComponent {
+    private changes = false;
     private result?: string;
     private isRunning = false;
     private numericvalue?: string;
@@ -186,6 +187,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             }
         }
         this.initialValue = this.numericvalue;
+        this.changes = false;
+        this.updateListenerMultisaves(true);
         return {ok: ok, message: message};
 
     }
@@ -222,6 +225,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         }
         this.initialValue = this.numericvalue;
         this.result = undefined;
+        this.changes = false;
+        this.updateListenerMultisaves(true);
     }
 
     /**
@@ -328,10 +333,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isUnSaved() {
-        if (this.initialValue != this.numericvalue) {
-            this.hideSavedText = true;
-        }
-        return (!this.attrs.nosave && this.initialValue != this.numericvalue);
+        return (!this.attrs.nosave && this.changes);
     }
 
     /**
@@ -374,6 +376,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             if (this.result === "saved") {
                 this.numericvalue = data.web.value.toString();
                 this.initialValue = this.numericvalue;
+                this.changes = false;
+                this.updateListenerMultisaves(true);
                 this.hideSavedText = false;
                 this.redAlert = false;
                 this.saveResponse.saved = true;
@@ -414,8 +418,24 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         return NumericfieldAll;
     }
 
-    inputChange() {
-        this.result = "";
+    updateInput() {
+        if (!this.changes) {
+            this.changes = true;
+            this.hideSavedText = true;
+            this.updateListenerMultisaves(false);
+        }
+    }
+
+    updateListenerMultisaves(saved: boolean) {
+        if (this.attrs.hasListeners || !this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        const doctask = taskId.docTask();
+        this.vctrl.informMultisavesAboutChanges(doctask, saved, (this.attrs.tag ? this.attrs.tag : undefined));
     }
 }
 
@@ -446,6 +466,7 @@ numericfieldApp.component("numericfieldRunner", {
                ng-model="$ctrl.numericvalue"
                ng-blur="$ctrl.autoSave()"
                ng-keydown="$event.keyCode === 13 && $ctrl.autoSave() && $ctrl.changeFocus()"
+               ng-change="$ctrl.updateInput()"
                ng-model-options="::$ctrl.modelOpts"
                ng-change="$ctrl.checkNumericfield()"
                ng-trim="false"
