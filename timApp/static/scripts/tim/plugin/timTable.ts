@@ -3076,6 +3076,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     doHandleToolbarSetCell(cell: ICellCoord | undefined, value: IToolbarTemplate,
                            cellsToSave: CellAttrToSave[], cells: ICellIndex[], selectedCells: ISelectedCells) {
+        // no close your eyes!  This is not for children
         if (!cell || cell.row >= this.cellDataMatrix.length || cell.col >= this.cellDataMatrix[cell.row].length) { return; }
         for (const [key, ss] of Object.entries(value)) {
             try {
@@ -3142,25 +3143,32 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                         // sometimes there is extra # in colors?
                         let clearOrSet = 0; // 1 = set, 2 = clear
                         let cellStyle = vstyle[skey];
-                        if (cellStyle.startsWith("##")) {
+                        if (!Array.isArray(cellStyle) && cellStyle.startsWith("##")) {
                             cellStyle = cellStyle.substr(1);
                         }
                         let s = cellStyle;
                         let change = false;
-                        if (skey === "class") {
+                        if (skey === "class") { // includes so that it is possible to use class1, class2
                             const oldCls = table.cellDataMatrix[c.y][c.x].class;
                             if (oldCls) { // todo toggle
-                                if (!oldCls.includes(s)) { // is not allredy in classes
-                                    s = oldCls + " " + s;
-                                    clearOrSet = 1;
-                                } else if (!toggle && areaClearOrSet != 2) {
-                                    s = "";
-                                    clearOrSet = 1;
-                                } else {
-                                    s = oldCls.replace(s, "");
-                                    change = true;
-                                    clearOrSet = 2;
+                                let clss;
+                                let newCls = oldCls;
+                                if (Array.isArray(s)) { clss = s; } else { clss = [s]; }
+
+                                for (const as1 of clss) {
+                                    const s1: string = "" + as1;
+                                    if (!newCls.includes(s1) && areaClearOrSet != 2) { // is not allredy in classes
+                                        newCls = newCls + " " + s1;
+                                        clearOrSet = 1;
+                                    } else if (!toggle && areaClearOrSet != 2) {
+                                        newCls = "";
+                                        clearOrSet = 1;
+                                    } else {
+                                        newCls = newCls.replace(s1, "");
+                                        clearOrSet = 2;
+                                    }
                                 }
+                                if (newCls != oldCls) { s = newCls.trim(); change = true; } else { s = ""; };
                             } else {
                                 if (areaClearOrSet == 2) {
                                     s = "";

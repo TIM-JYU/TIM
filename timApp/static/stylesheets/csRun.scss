@@ -240,6 +240,16 @@ li span.stem {
     padding-top: 0;
 }
 
+.csPluginCountItems {
+    font-size: x-small;
+    right: 1em;
+    position: absolute;
+}
+
+.csPluginCountError {
+    color: red;
+    margin-top: 0.7em;
+}
 .sortitem {
   box-sizing: content-box;
 }

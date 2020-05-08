@@ -392,6 +392,14 @@ function makeTemplate() {
                      ng-trim="false"
                      placeholder="{{::$ctrl.argsplaceholder}}"></span>
     </div>
+    <div ng-if="$ctrl.countItems" class="csPluginCountItems">
+        <span ng-if="$ctrl.countLines">Lines: <span>{{$ctrl.lineCount}}</span></span>
+        <span ng-if="$ctrl.countWords">Words: <span>{{$ctrl.wordCount}}</span></span>
+        <span ng-if="$ctrl.countChars">Chars: <span>{{$ctrl.charCount}}</span></span>
+    </div>    
+    <div ng-if="$ctrl.countError" class="csPluginCountError">
+        <p>{{$ctrl.countError}}</p>
+    </div>    
     <p class="csRunSnippets" ng-if="::$ctrl.buttons">
         <button ng-repeat="item in ::$ctrl.buttons" ng-click="$ctrl.addText(item)">{{$ctrl.addTextHtml(item)}}</button>
         &nbsp;&nbsp;
@@ -399,7 +407,7 @@ function makeTemplate() {
     <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
         <p class="csRunMenu">
             <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
-                    ng-disabled="$ctrl.isRunning"
+                    ng-disabled="$ctrl.isRunning || $ctlr.preventSave"
                     class="timButton btn-sm"
                     title="(Ctrl-S)"
                     ng-click="$ctrl.runCode()"
@@ -591,6 +599,22 @@ const Example = t.type({
     title: t.string,
 });
 
+interface ICountLimit {
+    show?: boolean;
+    min?: number;
+    max?: number;
+    text?: string;
+}
+
+interface ICountType {
+    preventSave?: boolean;
+    tooManyWord?: string;
+    tooFewWord?: string;
+    lines?: ICountLimit;
+    words?: ICountLimit;
+    chars?: ICountLimit;
+}
+
 const CsMarkupOptional = t.partial({
     // TODO: this gets deleted in server but only conditionally,
     //  decide if this should be here.
@@ -639,6 +663,7 @@ const CsMarkupOptional = t.partial({
     wrap:  t.Integer,
     borders: withDefault(t.boolean, true),
     iframeopts: t.string,
+    count: t.any,
 });
 
 const CsMarkupDefaults = t.type({
@@ -873,6 +898,15 @@ class CsController extends CsBase implements ITimComponent {
     private iframedefer?: TimDefer<IFrameLoad>;
     private iframemessageHandler?: (e: MessageEvent) => void;
     private savedvals?: { args: string; input: string; code: string };
+    private countItems: boolean = false;
+    private countLines: boolean = false;
+    private countWords: boolean = false;
+    private countChars: boolean = false;
+    private lineCount: number = 0;
+    private wordCount: number = 0;
+    private charCount: number = 0;
+    private countError: string = "";
+    private preventSave: boolean = false;
 
     constructor(scope: IScope, element: JQLite) {
         super(scope, element);
@@ -1332,6 +1366,13 @@ ${fhtml}
         this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
         this.initSaved();
         this.vctrl.addTimComponent(this);
+        if (this.attrs.count) {
+            const count = this.attrs.count;
+            this.countLines = !!count.lines;
+            this.countWords = !!count.words;
+            this.countChars = !!count.chars;
+            this.countItems = this.countLines || this.countWords || this.countChars;
+        }
     }
 
     async $postLink() {
@@ -1397,6 +1438,43 @@ ${fhtml}
         };
     }
 
+    doCountWords(str: string) {
+        const matches = str.match(/[\w\d\’\'-åäöÅÄÖ]+/gi);
+        return matches ? matches.length : 0;
+    }
+
+    checkCountLimits(limits: any | undefined, count: number, countType: string): string {
+        if (!limits) { return ""; }
+        if (!this.attrs.count) { return ""; }
+        const tooFew = this.attrs.count.tooFewWord || "Too few";
+        const tooMany = this.attrs.count.tooManyWord || "Too Many";
+        const cType = limits.text || countType;
+        if (limits.min && count < limits.min) { return " " + tooFew + " " + cType + ", min: " + limits.min + "."; }
+        if (limits.max && count > limits.max) { return " " + tooMany + " " + cType + ", max: " + limits.max + "."; }
+        return "";
+    }
+
+    doCountItems() {
+        if (!this.attrs.count) { return; }
+        const s = this.usercode;
+        this.charCount = s.length;
+        let lcount = 0;
+        if (s.length > 0) { lcount = 1; }
+        for (const c of s) {
+            if (c=="\n") {
+                lcount++;
+            }
+        }
+        this.wordCount = this.doCountWords(s);
+        this.lineCount = lcount;
+        let countError: string = "";
+        countError += this.checkCountLimits(this.attrs.count.lines, this.lineCount, "lines");
+        countError += this.checkCountLimits(this.attrs.count.words, this.wordCount, "words");
+        countError += this.checkCountLimits(this.attrs.count.chars, this.charCount, "chars");
+        this.countError = countError;
+        this.preventSave = this.attrs.count.preventSave && countError !== "";
+    }
+
     async $doCheck() {
 
         // Only the properties
@@ -1425,6 +1503,10 @@ ${fhtml}
             if (this.wrap.auto) {
                 this.checkWrap();
             }
+            if (this.countItems) {
+                this.doCountItems();
+            }
+
             anyChanged = true;
         }
 
