@@ -3,6 +3,7 @@ import {Component, OnInit} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {BookmarkService} from "tim/bookmark/bookmark.service";
 import {TagService} from "tim/item/tag.service";
+import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {IBookmarkGroup} from "../bookmark/bookmarks";
 import {IDocSettings} from "../document/IDocSettings";
 import {DocumentOrFolder, IFolder, isRootFolder, ITag, ITranslation, TagType} from "../item/IItem";
@@ -41,33 +42,36 @@ interface IItemLink {
   template: `
 <div *ngIf="!hideLinks && item">
     <div class="pull-right">
-        <button *ngIf="showAddToMyCourses()"
+        <button *ngIf="!hideVars.headerDocumentActions && showAddToMyCourses()"
                 (click)="addToBookmarkFolder()"
                 title="Add this page to 'My courses' bookmark folder"
                 class="timButton label">
             Add to My courses
         </button>
         <span *ngFor="let tr of translations">
-        <a class="label label-primary"
-           href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id }}</a> </span>
+            <a class="label label-primary" href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id }}</a>
+        </span>
     </div>
-    <div class="nav nav-tabs">
-        <li *ngFor="let link of itemLinks"
-            role="presentation"
-            [ngClass]="{active: isActive(link)}">
-            <a href="/{{ link.route }}/{{ item.path }}">{{ link.title }}</a>
-        </li>
-    </div>
-    <ol class="breadcrumb">
-        <li *ngFor="let c of crumbs">
-            <a href="/{{ route }}/{{ c.path }}">{{ c.title }}</a>
-        </li>
-        <li class="active">{{ item.title }}</li>
-    </ol>
+    <ng-container *ngIf="!hideVars.headerNav">
+        <div class="nav nav-tabs">
+            <li *ngFor="let link of itemLinks"
+                role="presentation"
+                [ngClass]="{active: isActive(link)}">
+                <a href="/{{ link.route }}/{{ item.path }}">{{ link.title }}</a>
+            </li>
+        </div>
+        <ol class="breadcrumb">
+            <li *ngFor="let c of crumbs">
+                <a href="/{{ route }}/{{ c.path }}">{{ c.title }}</a>
+            </li>
+            <li class="active">{{ item.title }}</li>
+        </ol>
+    </ng-container>
 </div>
   `,
 })
 export class HeaderComponent implements OnInit {
+    public hideVars: IVisibilityVars = getVisibilityVars();
     // To show a button that adds the document to bookmark folder 'My courses'.
     private taggedAsCourse = false;
     public item?: DocumentOrFolder = genericglobals().curr_item;

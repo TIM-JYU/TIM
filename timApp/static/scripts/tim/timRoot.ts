@@ -28,6 +28,8 @@ export interface IVisibilityVars {
     userMenuOptions?: boolean;
     editLine?: boolean;
     noteBadgeButton?: boolean;
+    headerNav?: boolean;
+    headerDocumentActions?: boolean;
 }
 
 
@@ -76,7 +78,8 @@ function hideExamModeElements(hide: IVisibilityVars) {
     hide.links = true;
     hide.bookmarks = true;
     hide.settings = true;
-    hide.header = true;
+    hide.headerNav = true;
+    hide.headerDocumentActions = true;
     hide.search = true;
     hide.userMenuOptions = true;
     hide.editLine = true;
