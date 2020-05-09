@@ -10,6 +10,7 @@ export interface ITimTableToolbarCallbacks {
     addRow: (offset: number) => void;
     removeColumn: () => void;
     removeRow: () => void;
+    closeEditor: () => void;
 }
 
 export interface ITimTableEditorToolbarParams {
@@ -78,8 +79,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     public hideThis() {
         this.close("");
         this.visible = false;
-        this.scope.$apply();
+        // this.scope.$apply();
         instance = undefined;
+        this.callbacks.closeEditor();
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -123,7 +125,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     /**
      * Sets the cell by template
      */
-    private setCell(value: Record<string, string>) {
+    public setCell(value: IToolbarTemplate) { // } Record<string, string>) {
         this.callbacks.setCell(value);
     }
 
@@ -271,8 +273,33 @@ export function isToolbarEnabled() {
     return true;
 }
 
+export function handleToolbarKey(ev: KeyboardEvent, toolBarTemplates: IToolbarTemplate[] | undefined) {
+    if (!instance || !toolBarTemplates) { return true; }
+    for (const templ of toolBarTemplates) {
+        if (!templ || !templ.shortcut) { continue; }
+        const k = templ.shortcut.split("+");
+        let key = k[0];
+        let mod = "";
+        if (k.length >= 2) {
+            mod = k[0];
+            key = k[1];
+        }
+        const evmod = (ev.altKey ? "a" : "") + (ev.ctrlKey ? "c" : "") + (ev.shiftKey ? "s" : "");
+        if (mod != evmod) { continue; }
+        if (ev.key === key) {
+                instance.setCell(templ);
+            return true;
+        }
+    }
+    return false;
+}
+
+export function isToolbarOpen() {
+    return !!instance;
+}
+
 export function openTableEditorToolbar(p: ITimTableEditorToolbarParams) {
-    if (instance) {
+    if (instance && !instance.closed) {
         instance.show(p.callbacks, p.activeTable);
     } else {
         showDialog(

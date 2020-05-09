@@ -15,7 +15,7 @@ type ModalScope =
 export abstract class DialogController<T, Ret> implements IController {
     public readonly ret!: Ret; // only used for typing
     public readonly resolve!: Binding<T, "<">;
-    protected closed = false;
+    public closed = false;
     protected readonly draggable!: Require<DraggableController>;
     private readonly modalInstance!: Binding<IModalInstance<DialogController<unknown, unknown>>, "<">;
 

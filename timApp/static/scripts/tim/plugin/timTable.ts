@@ -85,7 +85,7 @@ import {$http, $timeout} from "../util/ngimport";
 import {maxContentOrFitContent, scrollToViewInsideParent, StringOrNumber, to} from "../util/utils";
 import {copyToClipboard} from "../util/utils";
 import {TaskId} from "./taskid";
-import {hideToolbar, isToolbarEnabled, openTableEditorToolbar} from "./timTableEditorToolbar";
+import {handleToolbarKey, hideToolbar, isToolbarEnabled, isToolbarOpen, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
 const sortLang: string = "fi";
@@ -160,6 +160,7 @@ export interface IToolbarTemplate {
     cell?: string;
     text?: string;
     class?: string;
+    shortcut?: string;
     removeStyle?: Record<string, string>;
     toggleStyle?: Record<string, string>;
     buttonClass?: string;
@@ -219,7 +220,7 @@ export interface TimTable {
     header?: string;
     footer?: string;
     stem?: string;
-    disabaleSelect?: boolean;
+    disableSelect?: boolean;
 }
 
 interface Rng {
@@ -441,13 +442,14 @@ export enum ClearSort {
     selector: "tim-table",
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders, disableSelect: disableSelect}" class="timTableRunDiv no-popup-menu"
+        <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders}" class="timTableRunDiv no-popup-menu"
              [style.max-height]="maxRows"
              [style.width]="maxCols"
         >
             <h4 *ngIf="data.header" [innerHtml]="data.header"></h4>
             <p *ngIf="data.stem" class="stem" [innerHtml]="data.stem"></p>
-            <div class="timTableContentDiv no-highlight">
+            <div class="timTableContentDiv no-highlight"
+                 [ngClass]="{disableSelect: disableSelect}">
                 <div class="buttonsCol">
                     <button class="timButton" title="Remove column"
                             *ngIf="delColEnabled()"
@@ -456,7 +458,8 @@ export enum ClearSort {
                             (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
                 </div>
                 <table #tableElem
-                       [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(), forcedEditable: isInForcedEditMode()}"
+                       [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(),
+                                  forcedEditable: isInForcedEditMode()}"
                        class="timTableTable"
                        [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">
                     <col class="nrcolumn" *ngIf="data.nrColumn" />
@@ -671,6 +674,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.hide = {...this.hide, ...this.data.hide};
         }
 
+        this.disableSelect = this.data.disableSelect ?? false;
         this.noNeedFirstClick = this.hide.needFirstClick ?? false;
 
         if (typeof this.data.button !== "undefined") {
@@ -758,7 +762,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.viewctrl.addTable(this, parId);
         }
         this.currentHiddenRows = (this.data.hiddenRows ?? []).slice();
-        this.disableSelect = this.data.disabaleSelect ?? true;
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
@@ -872,6 +875,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     addRow: (offset) => this.handleToolbarAddRow(offset),
                     removeColumn: () => this.handleToolbarRemoveColumn(),
                     removeRow: () => this.handleToolbarRemoveRow(),
+                    closeEditor: () => this.closeSmallEditor(),
                 }, activeTable: this,
             });
         }
@@ -1972,6 +1976,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.currentCell = undefined;
                 return ChangeDetectionHint.NeedToTrigger;
             }
+        } else if (handleToolbarKey(ev, this.data.toolbarTemplates)) {
+                ev.preventDefault();
+                return ChangeDetectionHint.NeedToTrigger;
         } else if (!this.currentCell && ev.ctrlKey && isArrowKey(ev)) {
             if (await this.handleArrowMovement(ev)) {
                 ev.preventDefault();
@@ -2240,7 +2247,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private async openCellForEditing(rowi: number, coli: number, event?: MouseEvent) {
 
         const parId = this.getOwnParId();
-        if (!this.isInEditMode() || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
+
+        if (!this.isInEditMode() || !this.viewctrl || !parId ||
+            (this.currentCell && this.currentCell.editorOpen)) {
             return;
         }
 
@@ -2276,13 +2285,16 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             } else {
                 value = this.getCellContentString(rowi, coli);
             }
-            this.currentCell = {
-                row: rowi,
-                col: coli,
-                editorOpen: false,
-                editedCellContent: value,
-                editedCellInitialContent: value,
-            };
+            if (isToolbarOpen()) {
+                this.currentCell = {
+                    row: rowi,
+                    col: coli,
+                    editorOpen: false,
+                    editedCellContent: value,
+                    editedCellInitialContent: value,
+                };
+            }
+            // XXXX
             // Workaround: For some reason, if initial value is empty, the model is not always reflected in DOM.
             this.shouldSelectInputText = true;
             if (this.editInput) {
@@ -2988,6 +3000,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      */
     private closeSmallEditor() {
         this.currentCell = undefined;
+        // if (this.editInput) {
+        //     this.editInput.nativeElement.style.display = "none";
+        // }
+        this.c();
     }
 
     /**
