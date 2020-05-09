@@ -1,10 +1,11 @@
 import {Pipe, PipeTransform} from "@angular/core";
 import {DomSanitizer} from "@angular/platform-browser";
+import DOMPurify from "dompurify";
 
 @Pipe({
-    name: "trust_html",
+    name: "purify",
 })
-export class TrustHtmlPipe implements PipeTransform {
+export class PurifyPipe implements PipeTransform {
 
     constructor(protected sanitizer: DomSanitizer) {
     }
@@ -13,6 +14,6 @@ export class TrustHtmlPipe implements PipeTransform {
         if (typeof value !== "string") {
             return value;
         }
-        return this.sanitizer.bypassSecurityTrustHtml(value);
+        return this.sanitizer.bypassSecurityTrustHtml(DOMPurify.sanitize(value));
     }
 }

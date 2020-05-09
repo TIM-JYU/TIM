@@ -63,6 +63,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {Subscription} from "rxjs";
 import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
+import {PurifyModule} from "tim/util/purify.module";
 import {onClick} from "../document/eventhandlers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
@@ -522,7 +523,7 @@ export enum ClearSort {
                                 [attr.rowspan]="td.rowspan"
                                 [style]="stylingForCell(rowi, coli)"
                                 (click)="handleClickCell(rowi, coli, $event)"
-                                [innerHtml]="td.cell | trust_html">
+                                [innerHtml]="td.cell | purify">
                                 <!--                                <div [innerHtml]="td.cell"></div>-->
                             </td>
                         </ng-container> <!-- one cell -->
@@ -3622,6 +3623,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
+        PurifyModule,
     ],
     exports: [TimTableComponent],
 })
