@@ -371,7 +371,7 @@ function makeTemplate() {
                       ng-trim="false"
                       ng-attr-placeholder="{{$ctrl.placeholder}}"></textarea>
             </div>
-            <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode"></div>
+            <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
             <div class="csRunNotSaved" ng-show="$ctrl.notSaved"></div>
         </div>
         <pre class="csRunPost" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.postcode}}</pre>
@@ -448,7 +448,7 @@ function makeTemplate() {
                   class="inputSmall"
                   style="float: right;"
                   title="Run time in sec {{$ctrl.runtime}}">{{$ctrl.oneruntime}}</span>
-            <span ng-if="$ctrl.wrap.n!=-1" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
+            <span ng-if="$ctrl.wrap.n!=-1 && !$ctrl.hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
                 <button class="timButton" title="Click to reformat text for given line length" ng-click="$ctrl.checkWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
                 </button>
                 <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto" style="position: relative;top: 0.3em;"/>
@@ -664,6 +664,7 @@ const CsMarkupOptional = t.partial({
     borders: withDefault(t.boolean, true),
     iframeopts: t.string,
     count: t.any,
+    hide: t.any,
 });
 
 const CsMarkupDefaults = t.type({
@@ -907,6 +908,7 @@ class CsController extends CsBase implements ITimComponent {
     private charCount: number = 0;
     private countError: string = "";
     private preventSave: boolean = false;
+    private hide = {};
 
     constructor(scope: IScope, element: JQLite) {
         super(scope, element);
@@ -1289,6 +1291,7 @@ ${fhtml}
 
     $onInit() {
         super.$onInit();
+        this.hide = this.attrsall.markup.hide || {};
        //  if ( typeof this.attrs.borders !== 'undefined' ) this.attrs.borders = true;
         this.buttons = this.getTemplateButtons();
         const rt = this.rtype;

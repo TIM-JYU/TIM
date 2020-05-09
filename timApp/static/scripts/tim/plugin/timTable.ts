@@ -3161,7 +3161,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                                         newCls = newCls + " " + s1;
                                         clearOrSet = 1;
                                     } else if (!toggle && areaClearOrSet != 2) {
-                                        newCls = "";
+                                        // newCls = "";  // no need to do anything because it was there
                                         clearOrSet = 1;
                                     } else {
                                         newCls = newCls.replace(s1, "");

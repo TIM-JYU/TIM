@@ -869,7 +869,7 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
                         c_field = task_content_name_map[f'{task_id.doc_task}.{field}']
                         if c_field not in content:
                             content[c_field] = None
-                elif field == "JSSTRING":  # TODO check if this should be ALL ???
+                elif field == "JSSTRING":  # TODO check if this should be ALL!  No this is for settings using string
                     if not an or json.dumps(content) != value:
                         new_answer = True
                     content = json.loads(value) # TODO: shoud this be inside if
