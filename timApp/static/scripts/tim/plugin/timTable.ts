@@ -171,6 +171,7 @@ export interface IToolbarTemplate {
     title?: string;
     onlyEmpty?: boolean;
     toggle?: boolean;
+    delta?: Record<string, number>;
 }
 
 export interface TimTable {
@@ -206,8 +207,8 @@ export interface TimTable {
     singleLine?: boolean;
     filterRow?: boolean;
     cbColumn?: boolean;
-    nrColumn?: boolean;
-    charRow?: boolean;
+    nrColumn?: boolean | number;
+    charRow?: boolean | number;
     saveUserDataHeader?: boolean;
     maxRows?: string;
     maxCols?: string;
@@ -514,7 +515,7 @@ export enum ClearSort {
                         [style]="stylingForRow(rowi)"
                         [hidden]="!showRow(rowi)"
                     >
-                        <td class="nrcolumn" *ngIf="data.nrColumn">{{i + 1}}</td>
+                        <td class="nrcolumn" *ngIf="data.nrColumn">{{i + nrColStart}}</td>
                         <td class="cbColumn" *ngIf="data.cbColumn">
                             <input type="checkbox" [(ngModel)]="cbs[rowi]" (ngModelChange)="handleChangeCheckbox(rowi)">
                         </td>
@@ -608,6 +609,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private currentHiddenRows: number[] = [];
     private rowDelta = 0;
     private colDelta = 0;
+    private nrColStart = 1;
+    private intRowStart = 1;
+    private intRow = false;
     cbFilter = false;
     filterRow = false;
     maxRows = "2000em";
@@ -672,6 +676,16 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     async ngOnInit() {
         if (this.data.hide) {
             this.hide = {...this.hide, ...this.data.hide};
+        }
+
+        if (typeof this.data.nrColumn === "number") { // for backward compatibility
+            this.nrColStart = this.data.nrColumn;
+            this.data.nrColumn = true; // nrColumn in this code is supposed to be boolean
+        }
+        if (typeof this.data.charRow === "number") { // for backward compatibility
+            this.intRowStart = this.data.charRow;
+            this.intRow = true;
+            this.data.charRow = true; // charRow in this code is supposed to be boolean
         }
 
         this.disableSelect = this.data.disableSelect ?? false;
@@ -932,6 +946,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     public coliToLetters(coli: number) {
+        if (this.intRow) {
+            return this.intRowStart + coli;
+        }
         return colnumToLetters(coli);
     }
 
@@ -2009,6 +2026,12 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return this.doCellMovement(Direction.Up, true);
         }
         return ChangeDetectionHint.DoNotTrigger;
+    }
+
+    private doCellMovementN(n: number, direction: Direction, needLastDir?: boolean) {
+        for (let i = 0; i < n; i++) {
+            this.doCellMovement(direction, needLastDir);
+        }
     }
 
     /**
@@ -3258,10 +3281,25 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (cellsToSave) {
             await this.setCellStyleAttribute(cellsToSave, true);
         }
+        if (this.selectedCells.cells.length === 1 && value.delta) {
+           //
+            if (value.delta.x > 0) {
+                this.doCellMovementN(value.delta.x, Direction.Right, false);
+            }
+            if (value.delta.x < 0) {
+                this.doCellMovementN(-value.delta.x, Direction.Left, false);
+            }
+            if (value.delta.y > 0) {
+                this.doCellMovementN(value.delta.y, Direction.Down, false);
+            }
+            if (value.delta.y < 0) {
+                this.doCellMovementN(-value.delta.y, Direction.Up, false);
+            }
+        }
         this.c();
     }
 
-     getTemplContent(rowId: number, colId: number) {
+    getTemplContent(rowId: number, colId: number) {
         const parId = this.getOwnParId();
         if (!this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
             return undefined;
