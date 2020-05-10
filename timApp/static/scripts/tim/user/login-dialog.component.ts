@@ -5,11 +5,11 @@
 import * as focusMe from "tim/ui/focusMe";
 import * as onEnter from "tim/ui/onEnter";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component} from "@angular/core";
+import {Component, ElementRef, ViewChild} from "@angular/core";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {saveCurrentScreenPar} from "../document/parhelpers";
-import {documentglobals, genericglobals} from "../util/globals";
+import {genericglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {capitalizeFirstLetter, IOkResponse, markAsUsed, to, ToReturn} from "../util/utils";
 import * as hakaLogin from "./haka-login.component";
@@ -71,6 +71,7 @@ function getHomeOrgDisplay(s: string): string {
             <label for="email" class="control-label" i18n>Email or username</label>
             <input class="form-control"
                    id="email"
+                   #loginEmail
                    [(ngModel)]="loginForm.email"
                    (keydown.enter)="pw.focus()"
                    type="text">
@@ -286,6 +287,8 @@ export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, v
     protected extraVerticalSize = 75;
     loggingIn = false;
 
+    @ViewChild("loginEmail") private loginField!: ElementRef<HTMLInputElement>;
+
     ngOnInit() {
         const params = this.data;
         if (params) {
@@ -302,6 +305,13 @@ export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, v
         (async () => {
             this.idps = await loadIdPs();
         })();
+    }
+
+    ngAfterViewInit() {
+        super.ngAfterViewInit();
+        if (this.hideVars.hakaLogin) {
+            this.loginField.nativeElement.focus();
+        }
     }
 
     getHomeOrgDisplayName() {
