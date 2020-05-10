@@ -113,3 +113,6 @@ BOOKMARKS_ENABLED = True
 
 # If False, only admins can create folders and documents.
 ALLOW_CREATE_DOCUMENTS = True
+
+EMAIL_REGISTRATION_ENABLED = True
+HAKA_ENABLED = True

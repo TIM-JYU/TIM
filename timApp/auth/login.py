@@ -225,6 +225,8 @@ class AltSignupModel:
 @login_page.route("/altsignup", methods=['POST'])
 @use_model(AltSignupModel)
 def alt_signup(m: AltSignupModel):
+    if not current_app.config['EMAIL_REGISTRATION_ENABLED']:
+        raise AccessDenied('Email registration is disabled.')
     email_or_username = m.email
     fail = False
     is_email = False
@@ -394,7 +396,7 @@ def alt_login():
         raise RouteException('AmbiguousAccount')
 
     error_msg = "EmailOrPasswordNotMatch"
-    if is_possibly_home_org_account(email_or_username):
+    if is_possibly_home_org_account(email_or_username) and current_app.config['HAKA_ENABLED']:
         error_msg = 'EmailOrPasswordNotMatchUseHaka'
     if is_xhr(request):
         return abort(403, error_msg)

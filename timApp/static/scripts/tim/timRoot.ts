@@ -114,6 +114,15 @@ export function getVisibilityVars() {
         hide.bookmarks = true;
     }
 
+    if (!g.config.hakaEnabled) {
+        hide.hakaLogin = true;
+    }
+
+    if (!g.config.emailRegistrationEnabled) {
+        hide.signup = true;
+        hide.passwordRecovery = true;
+    }
+
     if (params.get("hide_top_buttons")) {
         hideTopButtonsStuff(hide);
     }

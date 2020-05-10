@@ -77,6 +77,8 @@ depends=(
             config.gitLastestCommitTimestamp = {{config.GIT_LATEST_COMMIT_TIMESTAMP|tojson}};
             config.helpEmail = {{config.HELP_EMAIL|tojson}};
             config.gitBranch = {{config.GIT_BRANCH|tojson}};
+            config.hakaEnabled = {{config.HAKA_ENABLED|tojson}};
+            config.emailRegistrationEnabled = {{config.EMAIL_REGISTRATION_ENABLED|tojson}};
         </script>
         {{ angularscripts|safe }}
         {% block stylesheet %}

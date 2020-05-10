@@ -31,6 +31,8 @@ interface IConfig {
     gitLastestCommitTimestamp: string;
     helpEmail: string;
     gitBranch: string;
+    hakaEnabled: boolean;
+    emailRegistrationEnabled: boolean;
 }
 
 export type Locale = "fi" | "en-US";
