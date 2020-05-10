@@ -169,7 +169,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      */
     private getCellForToolbar(value: IToolbarTemplate) {
         let v = value.text;
+        if (v === "notext") { return undefined; }
         if (!v) { v = value.cell; }
+        if (!v) { v = value.toggleCell; }
         if (!v) { return "\u2003"; } // &#8195  em space &emsp;
         v = "" + v;
         // v = v.replace('$', '');
@@ -200,6 +202,20 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
             cls += " " + value.toggleStyle.class;
         }
         return cls;
+    }
+
+    // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic
+    /**
+     * Gets the cell inner class for toolbar
+     */
+    private getIClassForToolbar(value: IToolbarTemplate): string | undefined {
+        if (value.iClass) {
+            if (value.iClass.includes("glyphicon")) {
+                return "glyphicon " + value.iClass;
+            }
+            return value.iClass;
+        }
+        return undefined;
     }
 
     // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic
@@ -267,6 +283,55 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     private removeRow() {
         this.callbacks.removeRow();
     }
+
+    private borderRect() {
+        const brect = {
+            // eslint-disable-next-line quote-props
+            rect: {
+                b: {style: {class: "bb"}},
+                c1b: {style: {class: "bb bl br"}},
+                c1c: {style: {class: "bl br"}},
+                c1t: {style: {class: "bt bl br"}},
+                l: {style: {class: "bl"}},
+                lb: {style: {class: "bb bl"}},
+                lt: {style: {class: "bt bl"}},
+                one: {style: {class: "bt bl bb br"}},
+                r: {style: {class: "br"}},
+                r1c: {style: {class: "bt bb"}},
+                r1l: {style: {class: "bt bl bb"}},
+                r1r: {style: {class: "bt br bb"}},
+                rb: {style: {class: "bb br"}},
+                rt: {style: {class: "bt br"}},
+                t: {style: {class: "bt"}},
+            }};
+        this.setCell(brect);
+    }
+
+    private removeBorders() {
+        const removeBrd = {
+          removeStyle: {
+              class: ["bt", "br", "bl", "bb"],
+          },
+        };
+        this.setCell(removeBrd);
+    }
+
+    public applyTemplate(templ: IToolbarTemplate) {
+        if (templ.commands) {
+            for (const cmd of templ.commands) {
+                const c = cmd.split(" ");
+                const cmds = c[0];
+                const param = c[1] ?? "";
+                if (cmds === "clearFormat") { this.clearFormat(); }
+                if (cmds === "applyBackgroundColor") { this.applyBackgroundColor(); }
+                if (cmds === "setTextAlign") { this.setTextAlign(param); }
+                if (cmds === "addToTemplates") { this.addToTemplates(); }
+                if (cmds === "borderRect") { this.borderRect(); }
+                if (cmds === "removeBorders") { this.removeBorders(); }
+            }
+        }
+        this.setCell(templ);
+    }
 }
 
 export function isToolbarEnabled() {
@@ -284,10 +349,18 @@ export function handleToolbarKey(ev: KeyboardEvent, toolBarTemplates: IToolbarTe
             mod = k[0];
             key = k[1];
         }
+        if (templ.chars) { // regexp for keys to use
+            if (ev.key.match("^" + templ.chars + "$")) {
+                templ.cell = ev.key;
+                instance.applyTemplate(templ);
+                return true;
+            }
+            continue;
+        }
         const evmod = (ev.altKey ? "a" : "") + (ev.ctrlKey ? "c" : "") + (ev.shiftKey ? "s" : "");
         if (mod != evmod) { continue; }
         if (ev.key === key) {
-                instance.setCell(templ);
+            instance.applyTemplate(templ);
             return true;
         }
     }
@@ -377,9 +450,11 @@ registerDialogComponent(TimTableEditorToolbarController,
                     <i class="glyphicon glyphicon-align-right"></i>
                 </button>
                 <button class="btn-xs" ng-repeat="r in $ctrl.activeTable.data.toolbarTemplates" ng-init="rowi = $index"
+                     ng-hide="r.hide"
                      ng-class="$ctrl.getCellClassForToolbar(r)"
-                     ng-style="$ctrl.getCellStyleForToolbar(r)" ng-click="$ctrl.setCell(r)" ng-bind-html="$ctrl.getCellForToolbar(r)"
-                     title="{{$ctrl.getTitleForToolbar(r)}}">
+                     ng-style="$ctrl.getCellStyleForToolbar(r)" ng-click="$ctrl.applyTemplate(r)" 
+                     title="{{$ctrl.getTitleForToolbar(r)}}">{{$ctrl.getCellForToolbar(r)}}
+                     <i ng-class="$ctrl.getIClassForToolbar(r)"></i>
                 </button>
                 <button class="timButton btn-xs"
                         ng-hide="$ctrl.hide.addToTemplates"

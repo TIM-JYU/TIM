@@ -161,9 +161,12 @@ export interface IToolbarTemplate {
     text?: string;
     class?: string;
     shortcut?: string;
-    removeStyle?: Record<string, string>;
+    chars?: string;
+    removeStyle?: Record<string, string | string[]>;
     toggleStyle?: Record<string, string>;
+    toggleCell?: string;
     buttonClass?: string;
+    iClass?: string; // class for inner part, mostly like glyphicon-star-empty
     style?: Record<string, string>;
     buttonStyle?: Record<string, string>;
     rect?: Record<string, IToolbarTemplate>;
@@ -172,6 +175,8 @@ export interface IToolbarTemplate {
     onlyEmpty?: boolean;
     toggle?: boolean;
     delta?: Record<string, number>;
+    hide?: boolean;
+    commands?: string[];
 }
 
 export interface TimTable {
@@ -609,7 +614,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private currentHiddenRows: number[] = [];
     private rowDelta = 0;
     private colDelta = 0;
-    private nrColStart = 1;
+    public nrColStart = 1;  // what number we start column numbers if it is numbered
     private intRowStart = 1;
     private intRow = false;
     cbFilter = false;
@@ -1256,7 +1261,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return;
         }
         await this.saveAndCloseSmallEditor();
-        this.sendDataBlockAsync();
+        await this.sendDataBlockAsync();
     }
 
     async sendDataBlockAsync() {
@@ -1454,7 +1459,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             }
             this.edited = true;
             if (this.data.autosave) {
-                this.sendDataBlockAsync();
+                await this.sendDataBlockAsync();
             }
             return;
         }
@@ -2028,9 +2033,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return ChangeDetectionHint.DoNotTrigger;
     }
 
-    private doCellMovementN(n: number, direction: Direction, needLastDir?: boolean) {
+    private async doCellMovementN(n: number, direction: Direction, needLastDir?: boolean) {
         for (let i = 0; i < n; i++) {
-            this.doCellMovement(direction, needLastDir);
+            await this.doCellMovement(direction, needLastDir, true);
         }
     }
 
@@ -2039,8 +2044,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * or last edited cell.
      * @param direction The direction that the cell edit mode should move to.
      * @param needLastDir Whether to read x/y from previous direction
+     * @param forceOne Prevent selection even Shift is down
      */
-    private async doCellMovement(direction: Direction, needLastDir?: boolean): Promise<ChangeDetectionHint> {
+    private async doCellMovement(direction: Direction, needLastDir?: boolean, forceOne: boolean = false): Promise<ChangeDetectionHint> {
         if (!this.activeCell) {
             return ChangeDetectionHint.DoNotTrigger;
         }
@@ -2114,7 +2120,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return ChangeDetectionHint.NeedToTrigger;
         }
 
-        this.setActiveCell(nextCell.row, nextCell.col);
+        this.setActiveCell(nextCell.row, nextCell.col, forceOne);
         return ChangeDetectionHint.NeedToTrigger;
     }
 
@@ -2198,7 +2204,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return columnIndex;
     }
 
-    private setActiveCell(rowi: number, coli: number) {
+    private setActiveCell(rowi: number, coli: number, forceOne: boolean = false) {
         this.clearSmallEditorStyles();
 
         let cell = this.cellDataMatrix[rowi][coli];
@@ -2208,7 +2214,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             cell = this.cellDataMatrix[rowi][coli];
         }
         this.activeCell = {row: rowi, col: coli};
-        if (!this.shiftDown) {
+        if (!this.shiftDown || forceOne) {
             this.startCell = {row: rowi, col: coli};
         }
         this.selectedCells = this.getSelectedCells(rowi, coli);
@@ -2346,6 +2352,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return false;
     }
 
+    /*
     private async saveToCell(cell: ICellCoord | undefined, value: string, selectedCells: ISelectedCells) {
         if (!this.viewctrl || !cell) {
             return;
@@ -2362,6 +2369,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         await this.saveCells(value, docId, parId, rowId, colId, selectedCells);
         return true;
     }
+    */
 
     /*
     private async saveToCurrentCell(value: string) {
@@ -3115,7 +3123,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     doHandleToolbarSetCell(cell: ICellCoord | undefined, value: IToolbarTemplate,
-                           cellsToSave: CellAttrToSave[], cells: ICellIndex[], selectedCells: ISelectedCells) {
+                           cellsToSave: CellAttrToSave[], cells: ICellIndex[]) { // , selectedCells: ISelectedCells) {
         // no close your eyes!  This is not for children
         if (!cell || cell.row >= this.cellDataMatrix.length || cell.col >= this.cellDataMatrix[cell.row].length) { return; }
         for (const [key, ss] of Object.entries(value)) {
@@ -3123,20 +3131,28 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 if (key.startsWith("$$")) {
                     continue;
                 }
-                if (key === "cell") {
+                if (key === "cell" || key === "toggleCell") {
                     if (!cell) { continue; }
-                    const svalue = String(ss);
-                    if (this.currentCell && this.currentCell.row == cell.row && this.currentCell.col == cell.col) {
-                        this.currentCell.editedCellContent = svalue;
-                    }
+                    let newValue = String(ss);
+                    let currentKey = key;
                     // this.saveToCell(cell, svalue, selectedCells).then();  // TODO: think if this can be done with same query
                     for (const c of cells) {
                         if (value.onlyEmpty) {
                             const cvalue = this.cellDataMatrix[c.y][c.x];
                             if (cvalue.cell) { continue; }
                         }
-                        cellsToSave.push({col: c.x, row: c.y, key: "cell", c: svalue});
-                        this.cellDataMatrix[c.y][c.x].cell = svalue;
+                        if (currentKey === "toggleCell") {
+                            const oldvalue = this.cellDataMatrix[c.y][c.x].cell;
+                            if (oldvalue === newValue) {
+                                newValue = "";
+                            }
+                            currentKey = "cell"; // no more toggle in next cells, do like this cell
+                        }
+                        cellsToSave.push({col: c.x, row: c.y, key: "cell", c: newValue});
+                        this.cellDataMatrix[c.y][c.x].cell = newValue;
+                    }
+                    if (this.currentCell && this.currentCell.row == cell.row && this.currentCell.col == cell.col) {
+                        this.currentCell.editedCellContent = newValue;
                     }
                     continue;
                 }
@@ -3148,7 +3164,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                         const ccells = [c];
                         const val = this.getRectValue(rect, rectLimits, c);
                         if (!val) { continue; }
-                        this.doHandleToolbarSetCell(cell, val, cellsToSave, ccells, this.selectedCells);
+                        this.doHandleToolbarSetCell(cell, val, cellsToSave, ccells); // , this.selectedCells);
                     }
                     continue;
                 }
@@ -3162,19 +3178,19 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                             cellIdx.col = cell.col + c;
                             const celXY = {x: cellIdx.col, y: cellIdx.row};
                             const ccells = [celXY];
-                            const selCels: ISelectedCells = {cells: [celXY], srows: [],
-                                                             scol1: cellIdx.col, scol2: cellIdx.col,
-                                                             srow1: cellIdx.row, srow2: cellIdx.row};
+                            // const selCels: ISelectedCells = {cells: [celXY], srows: [],
+                            //                                 scol1: cellIdx.col, scol2: cellIdx.col,
+                            //                                 srow1: cellIdx.row, srow2: cellIdx.row};
                             const val = area[r][c];
                             if (!val) {
                                 continue;
                             }
-                            this.doHandleToolbarSetCell(cellIdx, val, cellsToSave, ccells, selCels);
+                            this.doHandleToolbarSetCell(cellIdx, val, cellsToSave, ccells); // , selCels);
                         }
                     }
                     continue;
                 }
-                function handleStyleList(table: TimTableComponent, vstyle: Record<string, string> | undefined,
+                function handleStyleList(table: TimTableComponent, vstyle: Record<string, string | string[]> | undefined,
                                          c: ICellIndex,
                                          toggle: boolean, areaClearOrSet: number): number {
                     if (!vstyle) { return areaClearOrSet; }
@@ -3208,7 +3224,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                                         clearOrSet = 2;
                                     }
                                 }
-                                if (newCls != oldCls) { s = newCls.trim(); change = true; } else { s = ""; };
+                                if (newCls != oldCls) { s = newCls.trim(); change = true; } else { s = ""; }
                             } else {
                                 if (areaClearOrSet == 2) {
                                     s = "";
@@ -3236,6 +3252,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                             areaClearOrSet = clearOrSet;
                         }
                         if (s || change) {
+                            s = String(s);
                             cellsToSave.push({col: c.x, row: c.y, key: skey, c: s});
                         }
                     }
@@ -3245,7 +3262,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 if (key.includes("tyle")) {  // because there is Style and style
                     let toggle = true;
                     let toggleAreaClearOrSet = 0; // 1 = set, 2 = clear, first set or clear decides what to do
-                    let sstyle: Record<string, string> | undefined;
+                    let sstyle: Record<string, string | string[]> | undefined;
                     if (key == "style") {
                         sstyle = value.style;
                         toggleAreaClearOrSet = 1; // TODO: enum
@@ -3277,23 +3294,23 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     async handleToolbarSetCell(value: IToolbarTemplate) {
         const cellsToSave: CellAttrToSave[] = [];
-        this.doHandleToolbarSetCell(this.activeCell, value, cellsToSave, this.selectedCells.cells, this.selectedCells);
+        this.doHandleToolbarSetCell(this.activeCell, value, cellsToSave, this.selectedCells.cells); // , this.selectedCells);
         if (cellsToSave) {
             await this.setCellStyleAttribute(cellsToSave, true);
         }
         if (this.selectedCells.cells.length === 1 && value.delta) {
            //
             if (value.delta.x > 0) {
-                this.doCellMovementN(value.delta.x, Direction.Right, false);
+                await this.doCellMovementN(value.delta.x, Direction.Right, false);
             }
             if (value.delta.x < 0) {
-                this.doCellMovementN(-value.delta.x, Direction.Left, false);
+                await this.doCellMovementN(-value.delta.x, Direction.Left, false);
             }
             if (value.delta.y > 0) {
-                this.doCellMovementN(value.delta.y, Direction.Down, false);
+                await this.doCellMovementN(value.delta.y, Direction.Down, false);
             }
             if (value.delta.y < 0) {
-                this.doCellMovementN(-value.delta.y, Direction.Up, false);
+                await this.doCellMovementN(-value.delta.y, Direction.Up, false);
             }
         }
         this.c();
@@ -3455,7 +3472,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             }
             this.edited = true;
             if (this.data.autosave) {
-                this.sendDataBlockAsync();
+                await this.sendDataBlockAsync();
             }
             return;
         }
@@ -3619,7 +3636,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return false;
     }
 
-    setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(_content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 
