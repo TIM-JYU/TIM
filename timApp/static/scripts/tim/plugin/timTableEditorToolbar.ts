@@ -11,6 +11,7 @@ export interface ITimTableToolbarCallbacks {
     removeColumn: () => void;
     removeRow: () => void;
     closeEditor: () => void;
+    isEdit: () => boolean;
 }
 
 export interface ITimTableEditorToolbarParams {
@@ -317,6 +318,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     }
 
     public applyTemplate(templ: IToolbarTemplate) {
+        if (templ.notInEdit && this.callbacks.isEdit()) {
+            return;
+        }
         if (templ.commands) {
             for (const cmd of templ.commands) {
                 const c = cmd.split(" ");

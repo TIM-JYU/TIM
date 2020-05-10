@@ -177,6 +177,7 @@ export interface IToolbarTemplate {
     delta?: Record<string, number>;
     hide?: boolean;
     commands?: string[];
+    notInEdit?: boolean;
 }
 
 export interface TimTable {
@@ -895,9 +896,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     removeColumn: () => this.handleToolbarRemoveColumn(),
                     removeRow: () => this.handleToolbarRemoveRow(),
                     closeEditor: () => this.closeSmallEditor(),
+                    isEdit: () => this.isEdit(),
                 }, activeTable: this,
             });
         }
+    }
+
+    private isEdit(): boolean {
+        return !!this.currentCell ;
     }
 
     // private onClick = (e: MouseEvent) => {
@@ -2116,7 +2122,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
 
         if (this.currentCell) {
-            await this.openCell(nextCell.row, nextCell.col);
+            await this.openCell(nextCell.row, nextCell.col, forceOne);
             return ChangeDetectionHint.NeedToTrigger;
         }
 
@@ -2242,8 +2248,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * Clicks specified cell or hops opposite side of the table
      * @param {number} rowi Row index
      * @param {number} coli Column index
+     * @param {boolean} forceOne should it force selection just one cell
      */
-    private async openCell(rowi: number, coli: number) {
+    private async openCell(rowi: number, coli: number, forceOne: boolean = false) {
         /*
         const modal: CellEntity = {
             cell: "",
@@ -2252,7 +2259,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         rowi = this.constrainRowIndex(rowi);
         coli = this.constrainColumnIndex(rowi, coli);
 
-        await this.openCellForEditing(rowi, coli);
+        await this.openCellForEditing(rowi, coli, undefined, forceOne);
     }
 
     /**
@@ -2272,8 +2279,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param rowi The row index.
      * @param coli The column index.
      * @param event The mouse event, if the cell was clicked.
+     * @param forceOne should selection be forced to just one cell
      */
-    private async openCellForEditing(rowi: number, coli: number, event?: MouseEvent) {
+    private async openCellForEditing(rowi: number, coli: number, event?: MouseEvent, forceOne: boolean = false) {
 
         const parId = this.getOwnParId();
 
@@ -2330,7 +2338,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.editInput.nativeElement.value = value;
             }
         }
-        this.setActiveCell(rowi, coli);
+        this.setActiveCell(rowi, coli, forceOne);
     }
 
     /**
