@@ -279,6 +279,9 @@ export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, v
     idps: IDiscoveryFeedEntry[] = [];
     protected dialogName = "login";
 
+    // Reserve space for possible login error so that it will be directly visible and not behind a scrollbar.
+    protected extraVerticalSize = 75;
+
     ngOnInit() {
         const params = this.data;
         if (params) {

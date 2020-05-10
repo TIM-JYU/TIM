@@ -35,6 +35,7 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
 
     private resultDefer = new TimDefer<Result>();
     protected abstract dialogName: string;
+    protected extraVerticalSize = 0;
 
     // eslint-disable-next-line @typescript-eslint/tslint/config
     @HostListener("keydown.esc", ["$event"])
@@ -79,7 +80,7 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
         // First clamp the frame so it fits inside the viewport
         let {width, height} = this.frame!.resizable.getSize();
         width = Math.min(width, vp.width);
-        height = Math.min(height, vp.height);
+        height = Math.min(height + this.extraVerticalSize, vp.height);
 
         // Then clamp x/y so that the element is at least within the viewport
         let {x, y} = this.frame!.resizable.getPos();
