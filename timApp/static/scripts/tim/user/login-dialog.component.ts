@@ -88,7 +88,10 @@ function getHomeOrgDisplay(s: string): string {
         </div>
 
 
-        <button class="center-block timButton" (click)="loginWithEmail()" i18n>Log in</button>
+        <div class="flex cl align-center">
+            <button [disabled]="loggingIn" class="timButton" (click)="loginWithEmail()" i18n>Log in</button>
+            <tim-loading *ngIf="loggingIn"></tim-loading>
+        </div>
         <tim-alert severity="danger" *ngIf="loginError">
             <tim-error-description [error]="loginError"></tim-error-description>
         </tim-alert>
@@ -281,6 +284,7 @@ export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, v
 
     // Reserve space for possible login error so that it will be directly visible and not behind a scrollbar.
     protected extraVerticalSize = 75;
+    loggingIn = false;
 
     ngOnInit() {
         const params = this.data;
@@ -316,14 +320,19 @@ export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, v
     }
 
     public async loginWithEmail() {
+        if (this.loggingIn) {
+            return;
+        }
+        this.loginError = undefined;
+        this.loggingIn = true;
         const result = await Users.loginWithEmail(
             this.loginForm.email,
             this.loginForm.password,
             this.addingToSession);
+        this.loggingIn = false;
         if (!result.ok) {
             this.loginError = result.result.data.error;
         } else {
-            this.loginError = undefined;
             if (!this.addingToSession) {
                 saveCurrentScreenPar();
                 window.location.reload();

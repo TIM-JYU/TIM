@@ -85,7 +85,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         elem = self.find_element("tim-login-dialog")
         elem.find_element_by_xpath("//input[@type='text']").send_keys(email)
         elem.find_element_by_xpath("//input[@type='password']").send_keys(password)
-        login = elem.find_element_by_css_selector('button.center-block.timButton')  # Log in button
+        login = elem.find_element_by_css_selector('.flex.cl.align-center > .timButton')  # Log in button
         login.click()
         self.wait.until(ec.text_to_be_present_in_element((By.XPATH, self.login_dropdown_path), name))
         self.client.__enter__()
