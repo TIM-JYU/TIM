@@ -525,7 +525,7 @@ export class ViewCtrl implements IController {
         return this.tableForms.get(taskId);
     }
 
-    public informMultisavesAboutChanges(taskId: string, saved: boolean, tag?: string) {
+    public informMultisavesAboutChanges(taskId: TaskId, saved: boolean, tag?: string) {
         this.listenerMultisaves.forEach((multisave) => {
             multisave.informAboutChanges(taskId, saved, tag);
         });

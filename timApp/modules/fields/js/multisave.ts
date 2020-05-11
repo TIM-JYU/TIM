@@ -4,11 +4,12 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, IncludeUsersOption, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {GenericPluginMarkup, IncludeUsersOption, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {Users} from "tim/user/userService";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import {TaskId} from "tim/plugin/taskid";
 import {GroupType, Sisu} from "./sisuassessmentexport";
 
 const multisaveApp = angular.module("multisaveApp", ["ngSanitize", Sisu.name]);
@@ -260,25 +261,19 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         return this.attrs.tags;
     }
 
-    public informAboutUnsaved(taskId: string) {
-        this.unsavedTimComps.add(taskId);
-        // TODO: merge hasUnsavedTargets and isSaved or rename with more specific names
-        this.hasUnsavedTargets = true;
-        this.isSaved = false;
-    }
-
     private addNewUnsaved(taskId: string) {
         this.unsavedTimComps.add(taskId);
         this.hasUnsavedTargets = true;
         this.isSaved = false;
     }
 
-    public informAboutChanges(taskId: string, saved: boolean, tag?: string) {
+    public informAboutChanges(taskId: TaskId, saved: boolean, tag?: string) {
         if (!this.attrs.listener) {
             return;
         }
+        const docTask = taskId.docTask();
         if (saved) {
-            if (this.unsavedTimComps.delete(taskId)) {
+            if (this.unsavedTimComps.delete(docTask)) {
                 if (this.unsavedTimComps.size == 0) {
                     this.hasUnsavedTargets = false;
                 }
@@ -287,7 +282,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         }
         // TODO: check here if taskId already in this.unsavedTimComps to ignore input spam?
         if (this.attrs.tags && tag && this.attrs.tags.includes(tag)) {
-            this.addNewUnsaved(taskId);
+            this.addNewUnsaved(docTask);
             return;
         }
         if (this.attrs.fields) {
@@ -295,15 +290,15 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             for (const f of this.attrs.fields) {
                 // TODO: Handle fields from other docs pasted as reference
                 reg = new RegExp(`^${this.vctrl.docId + "." + f}$`);
-                if (reg.test(taskId)) {
-                    this.addNewUnsaved(taskId);
+                if (reg.test(docTask)) {
+                    this.addNewUnsaved(docTask);
                     return;
                 }
             }
         }
         if (!this.attrs.areas && !this.attrs.fields && !this.attrs.tags) {
             // TODO: Check if task in this.areas or in multisave's own area?
-            this.addNewUnsaved(taskId);
+            this.addNewUnsaved(docTask);
         }
     }
 

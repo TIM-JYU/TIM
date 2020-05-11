@@ -434,8 +434,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if (!taskId) {
             return;
         }
-        const doctask = taskId.docTask();
-        this.vctrl.informMultisavesAboutChanges(doctask, saved, (this.attrs.tag ? this.attrs.tag : undefined));
+        this.vctrl.informMultisavesAboutChanges(taskId, saved, (this.attrs.tag ? this.attrs.tag : undefined));
     }
 }
 
