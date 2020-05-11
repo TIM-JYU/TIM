@@ -413,6 +413,10 @@ function makeTemplate() {
                     ng-click="$ctrl.runCode()"
                     ng-bind-html="::$ctrl.buttonText()"></button>
             &nbsp&nbsp
+            <span ng-if="$ctrl.savedText"
+                    class="savedText"
+                    ng-bind-html="$ctrl.savedText"></span>
+            &nbsp&nbsp
             <button ng-if="::$ctrl.isTest"
                     ng-disabled="$ctrl.isRunning"
                     ng-click="$ctrl.runTest()"
@@ -909,6 +913,7 @@ class CsController extends CsBase implements ITimComponent {
     private countError: string = "";
     private preventSave: boolean = false;
     private hide = {};
+    private savedText: string = "";
 
     constructor(scope: IScope, element: JQLite) {
         super(scope, element);
@@ -1376,6 +1381,9 @@ ${fhtml}
             this.countChars = !!count.chars;
             this.countItems = this.countLines || this.countWords || this.countChars;
         }
+        if (this.isText) {
+            this.preventSave = true;
+        }
     }
 
     async $postLink() {
@@ -1475,7 +1483,11 @@ ${fhtml}
         countError += this.checkCountLimits(this.attrs.count.words, this.wordCount, "words");
         countError += this.checkCountLimits(this.attrs.count.chars, this.charCount, "chars");
         this.countError = countError;
-        this.preventSave = this.attrs.count.preventSave && countError !== "";
+        this.preventSave = this.attrs.count.preventSave && countError !== "" || !this.isChanged();
+    }
+
+    isChanged(): boolean {
+        return this.isUnSaved();
     }
 
     async $doCheck() {
@@ -1508,7 +1520,10 @@ ${fhtml}
             }
             if (this.countItems) {
                 this.doCountItems();
+            } else {
+                if (this.isText) {this.preventSave = !this.isChanged();}
             }
+            if (this.isText) {this.savedText = "";}
 
             anyChanged = true;
         }
@@ -1865,6 +1880,7 @@ ${fhtml}
                 "-replyHTML"?: string,
                 "-replyMD"?: string,
             },
+            savedNew: number,
         }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
         if (r.ok) {
@@ -1875,6 +1891,11 @@ ${fhtml}
             const runtime = (data.web.runtime ?? "").trim();
             this.oneruntime = "" + tsruntime + " " + runtime.split(" ", 1)[0];
             this.runtime = "\nWhole: " + tsruntime + "\ncsPlugin: " + runtime;
+            if (this.isText && data.savedNew) {
+                this.savedText = data.web.error ?? "saved";
+                this.preventSave = true;
+                data.web.error = "";
+            }
             if (data.web.pwd) {
                 ConsolePWD.setPWD(data.web.pwd, this);
             }
@@ -2958,11 +2979,15 @@ csApp.component("csTextRunner", {
            ng-attr-placeholder="{{$ctrl.placeholder}}"
            ng-keypress="$ctrl.runCodeIfCR($event);"/>
     <button ng-if="::$ctrl.isRun"
-            ng-disabled="$ctrl.isRunning"
+            ng-disabled="$ctrl.isRunning || $ctrl.preventSave"
             class = "timButton"
             title="(Ctrl-S)"
             ng-click="$ctrl.runCode();"
             ng-bind-html="::$ctrl.buttonText()"></button>
+            <span ng-if="$ctrl.savedText"
+                class="savedText"
+                ng-bind-html="$ctrl.savedText"></span>
+
     &nbsp;&nbsp;<a href=""
                    ng-if="$ctrl.muokattu"
                    ng-click="$ctrl.initCode();">{{::$ctrl.resetText}}</a>&nbsp;&nbsp;
