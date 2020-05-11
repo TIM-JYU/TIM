@@ -15,5 +15,5 @@ fi
 
 echo Backing up PostgreSQL database...
 filename="$1/dump_$(date +%d-%m-%Y"_"%H_%M_%S).sql.gz"
-${DIR}/docker-compose.sh exec -T postgresql pg_dumpall --clean -h postgresql -p 5432 -U postgres | gzip > ${filename}
+${DIR}/docker-compose.sh exec -T postgresql pg_dumpall --clean -h localhost -p 5432 -U postgres | gzip > ${filename}
 echo Done, backup saved to ${filename}.

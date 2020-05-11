@@ -15,5 +15,5 @@ if [ "$answer" != "yes" ]; then
 fi
 
 echo Restoring PostgreSQL database...
-zcat "$1" | docker exec -i $(./docker-compose.sh ps -q postgresql) psql -h postgresql -p 5432 -U postgres
+zcat "$1" | docker exec -i $(./docker-compose.sh ps -q postgresql) psql -h localhost -p 5432 -U postgres
 echo Done.
