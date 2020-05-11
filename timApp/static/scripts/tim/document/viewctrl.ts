@@ -922,6 +922,7 @@ export class ViewCtrl implements IController {
     }
 
     setHeaderLinks() {
+        if (documentglobals().exam_mode) { return; }
         const pars = $(".parContent");
         pars.each((index, elem) => {
             const p = $(elem);
