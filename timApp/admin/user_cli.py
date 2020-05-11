@@ -402,7 +402,9 @@ def send_email_cmd(
         password = row[1]
         u = User.get_by_email(email)
         if not u:
-            click.echo(f'Email not found: {email}')
+            email_err = f'Email not found: {email}'
+            click.echo(email_err)
+            error_log_file.write(f'{email_err}\n')
             continue
         lastname = u.last_name if u.last_name is not None else u.real_name.split(' ')[0]
         msg = (
@@ -410,6 +412,7 @@ def send_email_cmd(
                 .replace('{password}', password)
                 .replace('{fullname}', u.pretty_full_name)
                 .replace('{lastname}', lastname)
+                .replace('{email}', email)
         )
         mime_msg = MIMEText(msg)
         mime_msg['Subject'] = subject
