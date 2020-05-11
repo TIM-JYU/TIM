@@ -13,6 +13,9 @@ body {
 
 a:visited {
     color: $link-visited-color;
+    &.label {
+        color: $label-visited-color;
+    }
 }
 
 a .glyphicon {
