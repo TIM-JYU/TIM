@@ -245,3 +245,13 @@ hi
         self.assertEqual(1, len(comments))
         names = r.cssselect('.notes > .note > .username')
         self.assertEqual(0, len(names))
+
+    def test_comment_in_translation(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="test")
+        d = self.create_translation(d)
+        par = d.document.get_paragraphs()[0]
+        r = self.post_comment(par, public=True, text='test')
+        note_id = get_note_id_from_json(r)
+        note = self.get(f'/note/{note_id}')
+        self.assertEqual('test', note['text'])

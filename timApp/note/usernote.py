@@ -45,7 +45,8 @@ class UserNote(db.Model):
     block = db.relationship('Block')
 
     def to_json(self):
-        d = self.block.docentries[0]
+        tr = self.block.translation
+        d = tr if tr else self.block.docentries[0]
         return {
             'id': self.id,
             'doc_id': self.doc_id,
