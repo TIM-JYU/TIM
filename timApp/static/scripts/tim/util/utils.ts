@@ -677,6 +677,8 @@ export function isIE() {
     return getBrowserKind() == BrowserKind.IE;
 }
 
+// Adapted from
+// https://github.com/faisalman/ua-parser-js/blob/43169ce1da9787eee41225d0429762e07eb2c077/src/ua-parser.js#L752-L754
 const iOSPatterns = [
     /cfnetwork\/.+darwin/i,
     /ip[honead]{2,4}(?:.*os\s([\w]+)\slike\smac|;\sopera)/i,
