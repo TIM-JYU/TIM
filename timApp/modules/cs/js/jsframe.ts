@@ -9,6 +9,7 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     AfterViewInit,
     ApplicationRef,
+    ChangeDetectorRef,
     Component,
     DoBootstrap,
     ElementRef,
@@ -17,9 +18,9 @@ import {
     StaticProvider,
     ViewChild,
 } from "@angular/core";
-import {BrowserModule, SafeResourceUrl} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {HttpClientModule} from "@angular/common/http";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -31,6 +32,7 @@ const JsframeMarkup = t.intersection([
     t.partial({
         type: t.string,
         beforeOpen: t.string,
+        saveButton: t.string,
         showButton: t.string,
         srchtml: t.string,
         iframeopts: t.string,
@@ -141,7 +143,6 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
             <h4 *ngIf="header" [innerHtml]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
             <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen"></p>
-
             <div *ngIf="isOpen && iframesettings" id="output" class="jsFrameContainer jsframeOutput">
                 <iframe #frame
                         class='showJsframe jsframeFrame'
@@ -160,6 +161,10 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
                 <button class="timButton btn-sm" *ngIf="isOpen && !norun" [disabled]="isRunning" title="(Ctrl-S)"
                         (click)="getData('getDataSave')"
                         [innerHtml]="button"></button>
+                <button class="timButton btn-sm" *ngIf="saveButton"
+                        (click)="getData('getDataSave')"
+                        [disabled]="!isUnSaved()" [innerHtml]="saveButton"></button>
+                &nbsp;
                 <span class="jsframe message"
                       *ngIf="message"
                       [innerHtml]="message"></span>
@@ -180,7 +185,10 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     typeof JsframeAll> implements ITimComponent, IUserChanged, AfterViewInit, OnDestroy {
     iframesettings?: { sandbox: string, src: SafeResourceUrl, width: number, height: number };
     private ab?: AnswerBrowserController;
-    private edited: boolean = false;
+
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer);
+    }
 
     get english() {
         return this.markup.lang === "en";
@@ -196,6 +204,10 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
 
     get norun() {
         return this.markup.norun;
+    }
+
+    get saveButton() {
+        return this.markup.saveButton;
     }
 
     buttonText() {
@@ -224,6 +236,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     isRunning: boolean = false;
     isOpen: boolean = false;
     button: string = "";
+    edited: boolean = false;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -231,6 +244,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     private htmlUrl: string = "";
     private initData: string = "";
     private userName?: string;
+
 
     private saveResponse: { saved: boolean, message: (string | undefined) } = {saved: false, message: undefined};
     private channel?: MessageChannel;
@@ -431,25 +445,30 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         if (!r.ok) {
             this.error = r.result.data.error;
             this.saveResponse.saved = false;
+            this.c();
             return this.saveResponse;
         }
         if (!r.result.data.web) {
             this.error = "No web reply from csPlugin!";
             this.saveResponse.saved = false;
+            this.c();
             return this.saveResponse;
         }
         if (r.result.data.web.error) {
             this.error = r.result.data.web.error;
             this.saveResponse.saved = false;
+            this.c();
             return this.saveResponse;
         }
         this.edited = false;
         if (r.result.data.web.console) {
             this.console = r.result.data.web.console;
             this.saveResponse.saved = true;
+            this.c();
             return this.saveResponse;
         }
         this.saveResponse.saved = true;
+        this.c();
         return this.saveResponse;
     }
 
@@ -472,6 +491,13 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             this.runSend(data);
         }
         return data;
+    }
+
+    /**
+     * Force change detection.
+     */
+    c() {
+        this.cdr.detectChanges();
     }
 
     setData<T extends JSFrameData>(data: T, save = false) {
@@ -523,7 +549,9 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
                 this.getDataReady(d.data);
             }
             if (msg === "update") {
+                this.console = "";
                 this.edited = true;
+                this.c();
             }
             if (msg === "datasave") {
                 this.getDataReady(d.data, true);

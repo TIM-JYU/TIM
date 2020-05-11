@@ -22,6 +22,11 @@
     border-right-width: thick;
 }
 
+.jsframe.warnFrame {
+    border-right-color: gold;
+    border-right-width: thick;
+}
+
 .csRunArea {
 	width: 50em;
 }
