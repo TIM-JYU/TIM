@@ -16,7 +16,7 @@ import humanizeDuration from "humanize-duration";
 import moment, {Moment} from "moment";
 import ngFileUpload from "ng-file-upload";
 import ngStorage from "ngstorage";
-import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
+import {convertDateStringsToMoments, isIOS, markAsUsed} from "tim/util/utils";
 import {KEY_ENTER, KEY_S} from "./util/keycodes";
 import {injectProviders, injectServices} from "./util/ngimport";
 import TriggeredEvent = JQuery.TriggeredEvent;
@@ -172,35 +172,36 @@ timApp.directive("onSave", () => {
 // https://stackoverflow.com/questions/34575510/angular-ng-click-issues-on-safari-with-ios-8-3/34579185#34579185
 // https://github.com/angular/angular.js/blob/master/src/ng/directive/ngEventDirs.js#L62
 
+if (isIOS()) {
     timApp.directive("ngClick",
-    ["$parse", "$rootScope", "$exceptionHandler",
-        ($parse: IParseService, $rootScope: IRootScopeService, $exceptionHandler: IExceptionHandlerService) => {
-            return {
-                restrict: "A",
-                compile: ($el, attr) => {
-                    const fn = $parse(attr.ngClick as string);
-                    return (scope, el) => {
-                        const handleClickAndTouch = (event: TriggeredEvent) => {
-                            // eslint-disable-next-line @typescript-eslint/tslint/config
-                            const callback = () => fn(scope, {$event: event});
+        ["$parse", "$rootScope", "$exceptionHandler",
+            ($parse: IParseService, $rootScope: IRootScopeService, $exceptionHandler: IExceptionHandlerService) => {
+                return {
+                    restrict: "A",
+                    compile: ($el, attr) => {
+                        const fn = $parse(attr.ngClick as string);
+                        return (scope, el) => {
+                            const handleClickAndTouch = (event: TriggeredEvent) => {
+                                // eslint-disable-next-line @typescript-eslint/tslint/config
+                                const callback = () => fn(scope, {$event: event});
 
-                            if (!$rootScope.$$phase) {
-                                scope.$apply(callback);
-                            } else {
-                                try {
-                                    callback();
-                                } catch (e) {
-                                    $exceptionHandler(e as Error);
+                                if (!$rootScope.$$phase) {
+                                    scope.$apply(callback);
+                                } else {
+                                    try {
+                                        callback();
+                                    } catch (e) {
+                                        $exceptionHandler(e as Error);
+                                    }
                                 }
-                            }
+                            };
+
+                            el.on("touchstart click", handleClickAndTouch);
                         };
-
-                        el.on("touchstart click", handleClickAndTouch);
-                    };
-                },
-            };
-        }]);
-
+                    },
+                };
+            }]);
+}
 
 timApp.config(injectProviders);
 timApp.run(injectServices);

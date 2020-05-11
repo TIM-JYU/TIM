@@ -678,6 +678,15 @@ export function isIE() {
     return getBrowserKind() == BrowserKind.IE;
 }
 
+const iOSPatterns = [
+    /cfnetwork\/.+darwin/i,
+    /ip[honead]{2,4}(?:.*os\s([\w]+)\slike\smac|;\sopera)/i,
+];
+export function isIOS(): boolean {
+    const userAgent = navigator.userAgent;
+    return iOSPatterns.some((regex) => regex.test(userAgent));
+}
+
 /**
  * On Firefox, we need max-content in timTable to get rid of the horizontal scrollbar.
  * On the other hand, max-content does not work well in Chrome because it makes some columns too wide.
