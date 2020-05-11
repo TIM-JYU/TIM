@@ -107,6 +107,9 @@ type MessageFromFrame =
 } | {
     msg: "datasave";
     data: JSFrameData;
+} | {
+    msg: "update";
+    data: JSFrameData;
 };
 
 
@@ -134,7 +137,8 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
 @Component({
     selector: "jsframe-runner",
     template: `
-        <div [ngClass]="{csRunDiv: borders}" class="math que jsframe no-popup-menu">
+        <div [ngClass]="{'warnFrame': isUnSaved(), 'csRunDiv': borders}" class="math que jsframe no-popup-menu">
+            wtf
             <h4 *ngIf="header" [innerHtml]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
             <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen"></p>
@@ -177,6 +181,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     typeof JsframeAll> implements ITimComponent, IUserChanged, AfterViewInit, OnDestroy {
     iframesettings?: { sandbox: string, src: SafeResourceUrl, width: number, height: number };
     private ab?: AnswerBrowserController;
+    private edited: boolean = false;
 
     get english() {
         return this.markup.lang === "en";
@@ -439,6 +444,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             this.saveResponse.saved = false;
             return this.saveResponse;
         }
+        this.edited = false;
         if (r.result.data.web.console) {
             this.console = r.result.data.web.console;
             this.saveResponse.saved = true;
@@ -497,7 +503,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     isUnSaved() {
-        return false;  // TODO: compare datas
+        return this.edited;  // TODO: compare datas
     }
 
     send(obj: MessageToFrame) {
@@ -516,6 +522,9 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             const msg = d.msg;
             if (msg === "data") {
                 this.getDataReady(d.data);
+            }
+            if (msg === "update") {
+                this.edited = true;
             }
             if (msg === "datasave") {
                 this.getDataReady(d.data, true);

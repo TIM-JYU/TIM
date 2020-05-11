@@ -199,6 +199,9 @@ JSREADYHTML['simpleDrawIO'] = """
 		var name = null;
 		var drw = null;
 		var iframe = null;
+		var justExported = false;
+		var wantSave = false;
+		var justAutosaved = false;
 
 		function edit(elt)
 		{
@@ -250,9 +253,15 @@ JSREADYHTML['simpleDrawIO'] = """
 				{
 					var msg = JSON.parse(evt.data);
 					
+					// Exporting causes extra autosave commands so we need to deal with them
+					if (msg.event == 'autosave' && this.justAutosaved) {
+					        this.justAutosaved = false;
+					        return;
+                    }
 					// If configure=1 URL parameter is used the application
 					// waits for this message. For configuration options see
 					// https://desk.draw.io/support/solutions/articles/16000058316
+
 					if (msg.event == 'configure')
 					{
 						// Configuration example
@@ -280,24 +289,37 @@ JSREADYHTML['simpleDrawIO'] = """
 					}
 					else if (msg.event == 'export')
 					{
-						// Extracts SVG DOM from data URI to enable links
+                        // Extracts SVG DOM from data URI to enable links
 						var svg = atob(msg.data.substring(msg.data.indexOf(',') + 1));
 						// elt.innerHTML = svg;
 						setData({'c': svg});
 						// localStorage.setItem(name, JSON.stringify({lastModified: new Date(), data: svg}));
 						// localStorage.removeItem('.draft-' + name);
 						draft = null;
-						if ( window.port2 )	window.port2.postMessage({msg:"datasave", data: getData()});
-						close();
+						
+						if (this.wantSave) {
+						    this.wantSave = false;
+						    if ( window.port2 )	window.port2.postMessage({msg:"datasave", data: getData()});
+						    close();
+                        }
+                        else {
+                            if ( window.port2 )	window.port2.postMessage({msg:"update", data: getData()});
+					    }
 					}
 					else if (msg.event == 'autosave')
 					{
+					    // Used to tell plugin about updates via exports
+					    this.justAutosaved = true;
+						drw.postMessage(JSON.stringify({action: 'export',
+							format: 'xmlsvg', xml: msg.xml, spin: 'Updating page'}), '*');
 						// localStorage.setItem('.draft-' + name, JSON.stringify({lastModified: new Date(), xml: msg.xml}));
 					}
 					else if (msg.event == 'save')
 					{
+                        this.justAutosaved = true;
 						drw.postMessage(JSON.stringify({action: 'export',
 							format: 'xmlsvg', xml: msg.xml, spin: 'Updating page'}), '*');
+                        this.wantSave = true;
 						// localStorage.setItem('.draft-' + name, JSON.stringify({lastModified: new Date(), xml: msg.xml}));
 					}
 					else if (msg.event == 'exit')
