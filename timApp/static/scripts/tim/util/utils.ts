@@ -626,8 +626,7 @@ export function getClipboardHelper(): HTMLTextAreaElement {
 export function copyToClipboard(s: string) {
     const e1 = getClipboardHelper();
     e1.value = s;
-    const isIOS = navigator.userAgent.match(/ipad|ipod|iphone/i);
-    if (isIOS) {
+    if (isIOS()) {
         // e1.contentEditable = true;
         e1.readOnly = true;
         const range = document.createRange();
