@@ -202,6 +202,7 @@ JSREADYHTML['simpleDrawIO'] = """
 		var justExported = false;
 		var wantSave = false;
 		var justAutosaved = false;
+        var receiveEvent;
 
 		function edit(elt)
 		{
@@ -330,7 +331,11 @@ JSREADYHTML['simpleDrawIO'] = """
 					}
 				}
 			};
-
+			
+            if(receiveEvent){
+                window.removeEventListener('message', receiveEvent)
+            }
+            receiveEvent = receive;
 			window.addEventListener('message', receive);
 			if ( TIMJS.frm ) {
 			    iframe.setAttribute('src', editor);
