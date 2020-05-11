@@ -407,11 +407,7 @@ function makeTemplate() {
     <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
         <p class="csRunMenu">
             <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
-<<<<<<< 4dfc0100bebced576d523718d1df682ada4f4393
-                    ng-disabled="$ctrl.isRunning || $ctrl.preventSave"
-=======
-                    ng-disabled="$ctrl.isRunning || (!$ctrl.isUnSaved() && $ctrl.isText)"
->>>>>>> Saveindicators for csplug type 'text'
+                    ng-disabled="$ctrl.isRunning || $ctrl.preventSave || (!$ctrl.isUnSaved() && $ctrl.isText)"
                     class="timButton btn-sm"
                     title="(Ctrl-S)"
                     ng-click="$ctrl.runCode()"
