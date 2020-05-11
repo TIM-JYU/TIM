@@ -138,7 +138,6 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
     selector: "jsframe-runner",
     template: `
         <div [ngClass]="{'warnFrame': isUnSaved(), 'csRunDiv': borders}" class="math que jsframe no-popup-menu">
-            wtf
             <h4 *ngIf="header" [innerHtml]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
             <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen"></p>
