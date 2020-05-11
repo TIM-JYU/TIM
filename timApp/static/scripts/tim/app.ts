@@ -17,7 +17,6 @@ import moment, {Moment} from "moment";
 import ngFileUpload from "ng-file-upload";
 import ngStorage from "ngstorage";
 import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
-import {UAParser} from "ua-parser-js";
 import {KEY_ENTER, KEY_S} from "./util/keycodes";
 import {injectProviders, injectServices} from "./util/ngimport";
 import TriggeredEvent = JQuery.TriggeredEvent;
@@ -173,8 +172,6 @@ timApp.directive("onSave", () => {
 // https://stackoverflow.com/questions/34575510/angular-ng-click-issues-on-safari-with-ios-8-3/34579185#34579185
 // https://github.com/angular/angular.js/blob/master/src/ng/directive/ngEventDirs.js#L62
 
-const ua = new UAParser();
-if (ua.getOS().name == "iOS") {
     timApp.directive("ngClick",
     ["$parse", "$rootScope", "$exceptionHandler",
         ($parse: IParseService, $rootScope: IRootScopeService, $exceptionHandler: IExceptionHandlerService) => {
@@ -203,7 +200,6 @@ if (ua.getOS().name == "iOS") {
                 },
             };
         }]);
-}
 
 
 timApp.config(injectProviders);
