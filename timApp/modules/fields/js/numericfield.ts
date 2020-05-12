@@ -3,7 +3,7 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
@@ -188,7 +188,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         }
         this.initialValue = this.numericvalue;
         this.changes = false;
-        this.updateListenerMultisaves(true);
+        this.updateListenerMultisaves(ChangeType.Saved);
         return {ok: ok, message: message};
 
     }
@@ -226,7 +226,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.initialValue = this.numericvalue;
         this.result = undefined;
         this.changes = false;
-        this.updateListenerMultisaves(true);
+        this.updateListenerMultisaves(ChangeType.Saved);
     }
 
     /**
@@ -377,7 +377,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 this.numericvalue = data.web.value.toString();
                 this.initialValue = this.numericvalue;
                 this.changes = false;
-                this.updateListenerMultisaves(true);
+                this.updateListenerMultisaves(ChangeType.Saved);
                 this.hideSavedText = false;
                 this.redAlert = false;
                 this.saveResponse.saved = true;
@@ -422,19 +422,19 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if (!this.changes) {
             this.changes = true;
             this.hideSavedText = true;
-            this.updateListenerMultisaves(false);
+            this.updateListenerMultisaves(ChangeType.Modified);
         }
     }
 
-    updateListenerMultisaves(saved: boolean) {
-        if (!this.attrs.hasListeners || !this.vctrl) {
+    updateListenerMultisaves(state: ChangeType) {
+        if (!this.vctrl) {
             return;
         }
         const taskId = this.pluginMeta.getTaskId();
         if (!taskId) {
             return;
         }
-        this.vctrl.informMultisavesAboutChanges(taskId, saved, (this.attrs.tag ? this.attrs.tag : undefined));
+        this.vctrl.informChangeListeners(taskId, state, (this.attrs.tag ? this.attrs.tag : undefined));
     }
 }
 

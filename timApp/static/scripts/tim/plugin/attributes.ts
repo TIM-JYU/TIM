@@ -12,7 +12,6 @@ export const GenericPluginMarkup = t.partial({
     buttonText: nullable(t.string),
     footer: t.string,
     header: nullable(t.string),
-    hasListeners: t.boolean, // TODO: better name
     lazy: t.boolean,
     resetText: nullable(t.string),
     stem: nullable(t.string),

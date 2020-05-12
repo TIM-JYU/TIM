@@ -45,7 +45,6 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     validinput: Union[str, Missing, None] = missing
     verticalkeys: Union[bool, Missing] = missing
     wheel: Union[bool, Missing] = missing
-    hasListeners: Union[bool, Missing] = missing
 
 
 @dataclass

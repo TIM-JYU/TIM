@@ -3,7 +3,7 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
@@ -98,7 +98,6 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         if (this.selectedWord == undefined) {
             this.selectedWord = "";
         }
-        console.log(this.selectedWord);
         const params = {
             input: {
                 nosave: false,
@@ -118,7 +117,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
         if (r.ok) {
             this.changes = false;
-            this.updateListenerMultisaves(true);
+            this.updateListenerMultisaves(ChangeType.Saved);
             const data = r.result.data;
             this.error = data.web.error;
         } else {
@@ -130,22 +129,22 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     updateSelection() {
         if (!this.changes) {
             this.changes = true;
-            this.updateListenerMultisaves(false);
+            this.updateListenerMultisaves(ChangeType.Modified);
         }
         if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.save();
         }
     }
 
-    updateListenerMultisaves(saved: boolean) {
-        if (!this.attrs.hasListeners || !this.vctrl) {
+    updateListenerMultisaves(state: ChangeType) {
+        if (!this.vctrl) {
             return;
         }
         const taskId = this.pluginMeta.getTaskId();
         if (!taskId) {
             return;
         }
-        this.vctrl.informMultisavesAboutChanges(taskId, saved, this.attrs.tag);
+        this.vctrl.informChangeListeners(taskId, state, this.attrs.tag);
     }
 
     /**
@@ -201,7 +200,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             }
         }
         this.changes = false;
-        this.updateListenerMultisaves(true);
+        this.updateListenerMultisaves(ChangeType.Saved);
         return {ok: ok, message: message};
 
     }
@@ -209,7 +208,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     resetField(): undefined {
         this.selectedWord = "";
         this.changes = false;
-        this.updateListenerMultisaves(true);
+        this.updateListenerMultisaves(ChangeType.Saved);
         return undefined;
     }
 

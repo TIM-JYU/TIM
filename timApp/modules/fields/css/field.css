@@ -25,16 +25,9 @@ input:focus.alertframe {
     border-color: red !important;
 }
 
-/*
-/ Showing "Saved!" text until fadeOut.
-/ Existing issue: can't redo Saved! text without page refresh.
- */
 .savedtext {
     display: inline-block;
     white-space: nowrap;
-    /*-webkit-animation: fadeOut 2s;*/
-    /*animation: fadeOut 2s;*/
-    /*animation-fill-mode: forwards;*/
 }
 
 @-webkit-keyframes fadeOut {

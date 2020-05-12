@@ -32,7 +32,6 @@ class DropdownMarkupModel(GenericMarkupModel):
     autosave: Union[bool, Missing] = missing
     answers: Union[bool, Missing] = missing
     tag: Union[str, Missing, None] = missing
-    hasListeners: Union[bool, Missing] = missing
 
 @dataclass
 class DropdownInputModel:
@@ -42,9 +41,7 @@ class DropdownInputModel:
 
     @validates('selectedWord')
     def validate_selected_word(self, word):
-        # TODO: Check whether to skip undefined inputs or save empty strings
-        if word != "" and not word:
-            raise ValidationError('Must not be empty.')
+        pass
 
 
 @dataclass

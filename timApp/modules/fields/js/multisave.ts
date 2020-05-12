@@ -3,12 +3,12 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, IChangeListener, ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, IncludeUsersOption, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {Users} from "tim/user/userService";
 import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {escapeRegExp, to} from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
 import {GroupType, Sisu} from "./sisuassessmentexport";
 
@@ -49,7 +49,9 @@ const multisaveAll = t.intersection([
     }),
 ]);
 
-export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMarkup>, t.TypeOf<typeof multisaveAll>, typeof multisaveAll> {
+export class MultisaveController
+    extends PluginBase<t.TypeOf<typeof multisaveMarkup>, t.TypeOf<typeof multisaveAll>, typeof multisaveAll>
+    implements IChangeListener {
     private isSaved = false;
     private vctrl!: ViewCtrl;
     private savedFields: number = 0;
@@ -78,7 +80,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             this.emaillist = this.attrs.emailRecipients.join("\n");
         }
         if (this.attrs.listener && this.vctrl) {
-            this.vctrl.addListenerMultisave(this);
+            this.vctrl.addChangeListener(this);
         }
         this.emailbody = this.attrs.emailPreMsg;
         this.emailsubject = this.attrs.emailSubject;
@@ -267,12 +269,12 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         this.isSaved = false;
     }
 
-    public informAboutChanges(taskId: TaskId, saved: boolean, tag?: string) {
+    public informAboutChanges(taskId: TaskId, state: ChangeType, tag?: string) {
         if (!this.attrs.listener) {
             return;
         }
         const docTask = taskId.docTask();
-        if (saved) {
+        if (state == ChangeType.Saved) {
             if (this.unsavedTimComps.delete(docTask)) {
                 if (this.unsavedTimComps.size == 0) {
                     this.hasUnsavedTargets = false;
@@ -289,7 +291,7 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
             let reg: RegExp;
             for (const f of this.attrs.fields) {
                 // TODO: Handle fields from other docs pasted as reference
-                reg = new RegExp(`^${this.vctrl.docId + "." + f}$`);
+                reg = new RegExp(`^${this.vctrl.docId + escapeRegExp(".") + f}$`);
                 if (reg.test(docTask)) {
                     this.addNewUnsaved(docTask);
                     return;
@@ -299,13 +301,6 @@ export class MultisaveController extends PluginBase<t.TypeOf<typeof multisaveMar
         if (!this.attrs.areas && !this.attrs.fields && !this.attrs.tags) {
             // TODO: Check if task in this.areas or in multisave's own area?
             this.addNewUnsaved(docTask);
-        }
-    }
-
-    public informAboutSaved(taskId: string) {
-        this.unsavedTimComps.delete(taskId);
-        if (this.unsavedTimComps.size == 0) {
-            this.hasUnsavedTargets = false;
         }
     }
 

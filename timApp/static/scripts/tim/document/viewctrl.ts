@@ -38,8 +38,6 @@ import {documentglobals} from "../util/globals";
 import {$compile, $filter, $http, $interval, $localStorage, $timeout} from "../util/ngimport";
 import {AnnotationComponent} from "../velp/annotation.component";
 import {ReviewController} from "../velp/reviewController";
-// TODO: Replace with interface
-import {MultisaveController} from "../../../../modules/fields/js/multisave";
 import {diffDialog} from "./diffDialog";
 import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
@@ -53,6 +51,10 @@ import {ViewRangeInfo} from "./viewRangeInfo";
 import {IMenuFunctionEntry} from "./viewutils";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar, ParRefController);
+
+export interface IChangeListener {
+    informAboutChanges: (taskId: TaskId, state: ChangeType, tag?: string) => void;
+}
 
 export interface ITimComponent {
     attrsall?: IGenericPluginTopLevelFields<IGenericPluginMarkup>; // TimTable does not have attrsall - that's why it's optional.
@@ -117,6 +119,11 @@ export enum RegexOption {
     DontPrependCurrentDocId,
 }
 
+export enum ChangeType {
+    Saved,
+    Modified,
+}
+
 export class ViewCtrl implements IController {
     private hideVars: IVisibilityVars = getVisibilityVars();
     private notification: string = "";
@@ -150,7 +157,7 @@ export class ViewCtrl implements IController {
     private timComponentTags: Map<string, string[]> = new Map();
     private userChangeListeners: Map<string, IUserChanged> = new Map();
 
-    private listenerMultisaves = new Set<MultisaveController>();
+    private inputChangeListeners = new Set<IChangeListener>();
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document: Document;
@@ -525,14 +532,14 @@ export class ViewCtrl implements IController {
         return this.tableForms.get(taskId);
     }
 
-    public informMultisavesAboutChanges(taskId: TaskId, saved: boolean, tag?: string) {
-        this.listenerMultisaves.forEach((multisave) => {
-            multisave.informAboutChanges(taskId, saved, tag);
+    public informChangeListeners(taskId: TaskId, state: ChangeType, tag?: string) {
+        this.inputChangeListeners.forEach((listener) => {
+            listener.informAboutChanges(taskId, state, tag);
         });
     }
 
-    public addListenerMultisave(controller: MultisaveController) {
-        this.listenerMultisaves.add(controller);
+    public addChangeListener(controller: IChangeListener) {
+        this.inputChangeListeners.add(controller);
     }
 
     public addJsRunner(runner: IJsRunner, taskId: string) {
