@@ -1,0 +1,13 @@
+diff --git a/node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_print.scss b/node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_print.scss
+index 564f304..2cb7e18 100644
+--- a/node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_print.scss
++++ b/node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_print.scss
+@@ -93,7 +93,7 @@
+   .table-bordered {
+     th,
+     td {
+-      border: 1px solid #ddd !important;
++      border: 1px solid #ddd;
+     }
+   }
+ }
