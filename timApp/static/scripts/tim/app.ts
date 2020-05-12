@@ -1,4 +1,11 @@
-import angular, {ICompileProvider, IFilterService, IHttpProvider, IHttpResponseTransformer, IModule} from "angular";
+import angular, {
+    ICompileProvider, IExceptionHandlerService,
+    IFilterService,
+    IHttpProvider,
+    IHttpResponseTransformer,
+    IModule,
+    IParseService, IRootScopeService,
+} from "angular";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
 import ngSanitize from "angular-sanitize";
@@ -9,9 +16,10 @@ import humanizeDuration from "humanize-duration";
 import moment, {Moment} from "moment";
 import ngFileUpload from "ng-file-upload";
 import ngStorage from "ngstorage";
-import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
+import {convertDateStringsToMoments, isIOS, markAsUsed} from "tim/util/utils";
 import {KEY_ENTER, KEY_S} from "./util/keycodes";
 import {injectProviders, injectServices} from "./util/ngimport";
+import TriggeredEvent = JQuery.TriggeredEvent;
 
 moment.updateLocale("en", {
     week: {dow: 1, doy: 4}, // set Monday as the first day of the week
@@ -144,6 +152,56 @@ timApp.directive("onSave", () => {
         });
     };
 });
+
+
+// Minimal fix for clicks not registering in AngularJS components on iOS devices
+// On Safari on iOS, `click` event right away, which causes a "double tap" problem in which
+// certain buttons need to be tapped twice before an event handler fires.
+// The behaviour appears to be different on different browsers:
+// * On Chrome both `click` and `touchstart` events are fired when a button is tapped, which works fine.
+// * On iOS Safari, `touchstart` is fired right away, but `click` only after a focus on the element.
+//
+// In addition, Safari seems to consume events: if `touchstart` is fired (even if it was bubbled up),
+// `click` is consumed as well, which prevents another relevant `click` event from firing.
+//
+// The fix below adds an **additional** ngClick directive on iOS that installs both click and touchstart events.
+// On iOS `touchstart` event seems to consume the underlying `click` events, which fixes the issue.
+// On PCs this fix doesn't work (it actually causes a doubleclick issue), which is why it's disabled.
+//
+// More info:
+// https://stackoverflow.com/questions/34575510/angular-ng-click-issues-on-safari-with-ios-8-3/34579185#34579185
+// https://github.com/angular/angular.js/blob/master/src/ng/directive/ngEventDirs.js#L62
+
+if (isIOS()) {
+    timApp.directive("ngClick",
+        ["$parse", "$rootScope", "$exceptionHandler",
+            ($parse: IParseService, $rootScope: IRootScopeService, $exceptionHandler: IExceptionHandlerService) => {
+                return {
+                    restrict: "A",
+                    compile: ($el, attr) => {
+                        const fn = $parse(attr.ngClick as string);
+                        return (scope, el) => {
+                            const handleClickAndTouch = (event: TriggeredEvent) => {
+                                // eslint-disable-next-line @typescript-eslint/tslint/config
+                                const callback = () => fn(scope, {$event: event});
+
+                                if (!$rootScope.$$phase) {
+                                    scope.$apply(callback);
+                                } else {
+                                    try {
+                                        callback();
+                                    } catch (e) {
+                                        $exceptionHandler(e as Error);
+                                    }
+                                }
+                            };
+
+                            el.on("touchstart click", handleClickAndTouch);
+                        };
+                    },
+                };
+            }]);
+}
 
 timApp.config(injectProviders);
 timApp.run(injectServices);

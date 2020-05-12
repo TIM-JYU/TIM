@@ -626,8 +626,7 @@ export function getClipboardHelper(): HTMLTextAreaElement {
 export function copyToClipboard(s: string) {
     const e1 = getClipboardHelper();
     e1.value = s;
-    const isIOS = navigator.userAgent.match(/ipad|ipod|iphone/i);
-    if (isIOS) {
+    if (isIOS()) {
         // e1.contentEditable = true;
         e1.readOnly = true;
         const range = document.createRange();
@@ -676,6 +675,17 @@ export function isFirefox() {
 
 export function isIE() {
     return getBrowserKind() == BrowserKind.IE;
+}
+
+// Adapted from
+// https://github.com/faisalman/ua-parser-js/blob/43169ce1da9787eee41225d0429762e07eb2c077/src/ua-parser.js#L752-L754
+const iOSPatterns = [
+    /cfnetwork\/.+darwin/i,
+    /ip[honead]{2,4}(?:.*os\s([\w]+)\slike\smac|;\sopera)/i,
+];
+export function isIOS(): boolean {
+    const userAgent = navigator.userAgent;
+    return iOSPatterns.some((regex) => regex.test(userAgent));
 }
 
 /**
