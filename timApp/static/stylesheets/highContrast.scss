@@ -1,0 +1,9 @@
+// Fixes for high contrast mode on Windows
+// Currently only supported properly by Edge
+// TODO: Update to `forced-colors` media selector once it becomes a standard
+@media screen and (-ms-high-contrast: active) {
+  .timButton.btn-toggled {
+    -ms-high-contrast-adjust: none;
+    background-color: #00dd00;
+  }
+}
