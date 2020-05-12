@@ -513,6 +513,10 @@ p.caption {
 
 .timButton, .editorButton {
     @extend .btn, .btn-primary;
+
+    &.btn-toggled {
+        background-color: $button-toggle-color;
+    }
 }
 
 .editMenuButton {

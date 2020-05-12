@@ -139,13 +139,8 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     }
 
     // noinspection JSUnusedLocalSymbols
-    private pinSelected() {
-        const style: Record<string, string> = {};
-        if (!this.activeTable) { return style; }
-        if (this.activeTable.shiftDown) {
-            style.background = "black";
-        }
-        return style;
+    private pinToggled(): boolean {
+        return this.activeTable?.shiftDown ?? false;
     }
 
     // noinspection JSUnusedLocalSymbols
@@ -484,10 +479,9 @@ registerDialogComponent(TimTableEditorToolbarController,
                         ng-click="$ctrl.clearFormat()">
                     <i class="glyphicon glyphicon-trash"></i>
                 </button>
-                <button class="timButton btn-xs"
+                <button ng-class="['timButton', 'btn-xs', {'btn-toggled': $ctrl.pinToggled()}]"
                         ng-hide="$ctrl.hide.changePin"
                         title="Pin area corner"
-                        ng-style="$ctrl.pinSelected()"
                         ng-click="$ctrl.changePin()">
                     <i class="glyphicon glyphicon-pushpin"></i>
                 </button>
