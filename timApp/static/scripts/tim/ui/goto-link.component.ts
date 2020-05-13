@@ -24,7 +24,7 @@ export class GotoLinkComponent {
 
     startGoto() {
         this.isGoing = true;
-        const waitTime = Math.random() * this.maxWait * 1000;
+        const waitTime = Math.random() * Math.max(this.maxWait, 0) * 1000;
         const realResetTime = Math.max(this.resetTime * 1000, waitTime);
 
         setTimeout(() => {
