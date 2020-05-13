@@ -16,7 +16,7 @@
         {% elif access.expired %}
             Your access to this item has expired {{ access.accessible_to | timreldatetime }}.
         {% elif access.future %}
-            You can access this item in {{ access.accessible_from | timreldatetime }}.
+            <tim-access-countdown bind-wait-time="{{ access.time_until_access_start }}"></tim-access-countdown>
         {% else %}
             You don't have access to this item.
         {% endif %}

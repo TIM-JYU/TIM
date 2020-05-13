@@ -1,0 +1,31 @@
+import {Component, Input, OnInit} from "@angular/core";
+import {documentglobals} from "tim/util/globals";
+
+
+@Component({
+    selector: "tim-access-countdown",
+    template: `
+        <ng-container *ngIf="countDown >= 0" i18n>
+            You will be able to access this { item.isFolder, select, true {folder} false {document} } in {{ countDown }} seconds.
+        </ng-container>
+        <ng-container *ngIf="countDown < 0" i18n>
+            You can access the { item.isFolder, select, true { folder } false { document } } now. <a href="">Refresh the page</a>.
+        </ng-container>
+    `,
+})
+export class AccessCountdownComponent implements OnInit {
+    item = documentglobals().curr_item;
+    @Input() waitTime!: number;
+    countDown!: number;
+    private timer!: number;
+
+    ngOnInit() {
+        this.countDown = Math.ceil(this.waitTime + Math.random() * 15);
+        this.timer = window.setInterval(() => {
+            this.countDown -= 1;
+            if (this.countDown < 0) {
+                window.clearInterval(this.timer);
+            }
+        }, 1000);
+    }
+}

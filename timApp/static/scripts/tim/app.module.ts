@@ -33,6 +33,7 @@ import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import {SettingsComponent} from "tim/user/settings.component";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {LanguageSelectorComponent} from "tim/user/language-selector.component";
+import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -60,6 +61,7 @@ import {LanguageSelectorComponent} from "tim/user/language-selector.component";
         SearchBoxComponent,
         SettingsComponent,
         LanguageSelectorComponent,
+        AccessCountdownComponent,
     ],
     imports: [
         BrowserModule,

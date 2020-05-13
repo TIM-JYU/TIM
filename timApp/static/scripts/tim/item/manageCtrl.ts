@@ -8,8 +8,8 @@ import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
 import {manageglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
-import {clone, markAsUsed, to} from "../util/utils";
-import {IDocument, IFolder, IFullDocument, IItem, IEditableTranslation, redirectToItem} from "./IItem";
+import {capitalizeFirstLetter, clone, markAsUsed, to} from "../util/utils";
+import {IDocument, IFolder, IFullDocument, IItem, IEditableTranslation, redirectToItem, getItemTypeName} from "./IItem";
 
 markAsUsed(copyFolder);
 
@@ -57,7 +57,7 @@ export class PermCtrl implements IController {
         this.accessTypes = manageglobals().accessTypes;
         this.orgs = manageglobals().orgs;
         this.item = manageglobals().curr_item;
-        this.objName = this.item.isFolder ? "Folder" : "Document";
+        this.objName = capitalizeFirstLetter(getItemTypeName(this.item));
         this.newFolderName = this.item.location;
         this.newAlias = {location: this.newFolderName};
 

@@ -58,6 +58,7 @@ import {DialogContainerComponent} from "tim/ui/angulardialog/dialog-container.co
 import {AddMemberComponent} from "tim/ui/add-member.component";
 import {TimFooterComponent} from "tim/footer.component";
 import {SiteHeaderComponent} from "tim/header/site-header.component";
+import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -119,6 +120,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timStart", FrontPageComponent);
     doDowngrade(dg, "timSiteHeader", SiteHeaderComponent);
     doDowngrade(dg, "timSettings", SettingsComponent);
+    doDowngrade(dg, "timAccessCountdown", AccessCountdownComponent);
     return dg;
 }
 

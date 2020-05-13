@@ -183,9 +183,16 @@ class DurationTest(TimRouteTest):
         self.login_test3()
         self.test_user_3.grant_access(d, AccessType.view, accessible_from=get_current_time() + timedelta(days=1))
         db.session.commit()
-        self.get(d.url_relative,
-                 expect_status=403,
-                 expect_contains='You can access this item in 23 hours from now.')
+        r = self.get(
+            d.url_relative,
+            expect_status=403,
+            as_tree=True,
+        )
+        cntdwn = r.cssselect('tim-access-countdown')[0]
+        waittime = float(cntdwn.attrib['bind-wait-time'])
+        diff = 24 * 3600 - waittime
+        self.assertLess(0, diff)
+        self.assertGreater(5, diff)
         self.test_user_3.grant_access(d, AccessType.view, accessible_to=get_current_time() - timedelta(days=1))
         db.session.commit()
         self.get(d.url_relative,

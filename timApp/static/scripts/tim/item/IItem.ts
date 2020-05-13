@@ -154,3 +154,7 @@ export interface IEditableTranslation extends ITranslation {
     old_langid: string;
     old_title: string;
 }
+
+export function getItemTypeName(i: DocumentOrFolder) {
+    return i.isFolder ? "folder" : "document";
+}

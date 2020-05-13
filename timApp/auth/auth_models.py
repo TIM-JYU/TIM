@@ -1,3 +1,5 @@
+from typing import Optional
+
 from timApp.auth.accesstype import AccessType
 from timApp.timdb.sqa import db, include_if_loaded
 from timApp.util.utils import get_current_time
@@ -73,6 +75,12 @@ class BlockAccess(db.Model):
     @property
     def duration_expired(self):
         return self.duration_to and get_current_time() >= self.duration_to
+
+    @property
+    def time_until_access_start(self) -> Optional[float]:
+        if self.accessible_from is None:
+            return None
+        return (self.accessible_from - get_current_time()).total_seconds()
 
     @property
     def seconds_left(self):
