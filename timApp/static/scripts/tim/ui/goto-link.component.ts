@@ -9,7 +9,8 @@ import {Component, Input} from "@angular/core";
         </button>
         <span class="load-text" *ngIf="isGoing">
             <tim-loading></tim-loading>
-            {{waitText}}
+            <ng-template [ngIf]="waitText" [ngIfElse]="defaultText">{{waitText}}</ng-template>
+            <ng-template #defaultText i18n>Loading, please wait.</ng-template>
         </span>
         </div>
     `,
@@ -17,7 +18,7 @@ import {Component, Input} from "@angular/core";
 })
 export class GotoLinkComponent {
     @Input() href = "#";
-    @Input() waitText = "Loading, please wait.";
+    @Input() waitText?: string;
     @Input() resetTime = 15;
     @Input() maxWait = 0;
     isGoing = false;

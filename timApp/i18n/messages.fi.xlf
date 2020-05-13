@@ -74,6 +74,14 @@
           <context context-type="linenumber">14</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6ef67740e0ab796daaad1d2f719d1230272f298c" datatype="html">
+        <source>Loading, please wait.</source>
+        <target state="translated">Ladataan, odota.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
+          <context context-type="linenumber">9</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="6d6968cb33ce9daad70a5f0e4832d46061332d09" datatype="html">
         <source>This word is a palindrome</source>
         <target state="translated">Tämä sana on palindromi</target>
