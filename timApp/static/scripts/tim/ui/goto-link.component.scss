@@ -1,11 +1,15 @@
-div.goto-link-container {
+:host {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
 
   & .load-text {
-    padding-left: 0.5em;
-    padding-right: 0.5em;
+    padding-left: 0.6em;
+    padding-right: 0.6em;
+
+    & > span {
+      padding-left: 0.3em;
+    }
   }
 }

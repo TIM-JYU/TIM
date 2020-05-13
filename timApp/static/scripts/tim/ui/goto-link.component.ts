@@ -3,15 +3,15 @@ import {Component, Input} from "@angular/core";
 @Component({
     selector: "tim-goto-link",
     template: `
-        <div class="goto-link-container">
         <button [disabled]="isGoing" (click)="startGoto()" class="timButton">
             <ng-content></ng-content>
         </button>
-        <span class="load-text" *ngIf="isGoing">
+        <div class="load-text" *ngIf="isGoing">
             <tim-loading></tim-loading>
-            <ng-template [ngIf]="waitText" [ngIfElse]="defaultText">{{waitText}}</ng-template>
-            <ng-template #defaultText i18n>Loading, please wait.</ng-template>
-        </span>
+            <span>
+                <ng-template [ngIf]="waitText" [ngIfElse]="defaultText">{{waitText}}</ng-template>
+                <ng-template #defaultText i18n>Loading, please wait.</ng-template>
+            </span>
         </div>
     `,
     styleUrls: ["./goto-link.component.scss"],
