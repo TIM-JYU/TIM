@@ -4,6 +4,12 @@
   align-items: center;
   justify-content: center;
 
+  a.disabled {
+    pointer-events: none;
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+
   & .load-text {
     padding-left: 0.6em;
     padding-right: 0.6em;

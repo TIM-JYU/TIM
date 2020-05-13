@@ -139,6 +139,7 @@ TIM_SAFE_ATTRS = frozenset([
     'max-wait',
     'wait-text',
     'reset-time',
+    'is-button',
 ])
 
 c = Cleaner(
