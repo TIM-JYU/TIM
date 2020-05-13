@@ -16,11 +16,11 @@ import {Component, Input} from "@angular/core";
     styleUrls: ["./goto-link.component.scss"],
 })
 export class GotoLinkComponent {
-    @Input() href: string = "#";
-    @Input() waitText: string = "Loading, please wait.";
-    @Input() resetTime: number = 15;
-    @Input() maxWait: number = 0;
-    isGoing: boolean = false;
+    @Input() href = "#";
+    @Input() waitText = "Loading, please wait.";
+    @Input() resetTime = 15;
+    @Input() maxWait = 0;
+    isGoing = false;
 
     startGoto() {
         this.isGoing = true;
