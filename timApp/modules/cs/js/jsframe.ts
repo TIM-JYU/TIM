@@ -75,7 +75,6 @@ interface JSFrameData {
 
 interface JSFrameWindow extends Window {
     getData?(): JSFrameData;
-    close?(): void
     setData?(state: JSFrameData): void;
 }
 
