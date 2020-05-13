@@ -4,7 +4,7 @@ import {Component, Input} from "@angular/core";
     selector: "tim-goto-link",
     template: `
         <div class="goto-link-container">
-        <button [disabled]="isGoing" (click)="startGoto()" class="timButton btn-primary">
+        <button [disabled]="isGoing" (click)="startGoto()" class="timButton">
             <ng-content></ng-content>
         </button>
         <span class="load-text" *ngIf="isGoing">
