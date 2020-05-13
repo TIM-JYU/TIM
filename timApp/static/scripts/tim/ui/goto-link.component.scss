@@ -1,0 +1,11 @@
+div.goto-link-container {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+
+  & .load-text {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+  }
+}
