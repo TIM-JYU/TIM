@@ -8,7 +8,7 @@ import {Component, Input} from "@angular/core";
             <ng-content></ng-content>
         </button>
         <span class="load-text" *ngIf="isGoing">
-            <i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
+            <tim-loading></tim-loading>
             {{waitText}}
         </span>
         </div>
