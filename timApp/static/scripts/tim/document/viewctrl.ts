@@ -72,6 +72,7 @@ export interface ITimComponent {
     setPluginWords?: (words: string[]) => void;
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
+    resetChanges: () => void;
     supportsSetAnswer: () => boolean;
     setAnswer: (content: {[index: string]: unknown}) => {ok: boolean, message: (string | undefined)};
     setData?(data: unknown, save: boolean): void;

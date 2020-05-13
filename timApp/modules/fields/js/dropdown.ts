@@ -43,6 +43,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     // noinspection JSMismatchedCollectionQueryUpdate
     private wordList?: string[];
     private selectedWord?: string;
+    private initialWord?: string;
     private vctrl!: ViewCtrl;
     private forceSave = false;
     private radio?: boolean;
@@ -126,6 +127,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             this.error = r.result.data?.error;
             this.connectionErrorMessage = this.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
         }
+        this.initialWord = this.selectedWord;
         return {saved: r.ok, message: this.error};
     }
 
@@ -172,6 +174,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         }
 
         this.selectedWord = undefined;
+        this.initialWord = this.selectedWord;
     }
 
     getAttributeType() {
@@ -204,15 +207,23 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         }
         this.changes = false;
         this.updateListenerMultisaves(ChangeType.Saved);
+        this.initialWord = this.selectedWord;
         return {ok: ok, message: message};
 
     }
 
     resetField(): undefined {
         this.selectedWord = "";
+        this.initialWord = this.selectedWord;
         this.changes = false;
         this.updateListenerMultisaves(ChangeType.Saved);
         return undefined;
+    }
+
+    resetChanges(): void {
+        this.selectedWord = this.initialWord;
+        this.changes = false;
+        this.updateListenerMultisaves(ChangeType.Saved);
     }
 
 }

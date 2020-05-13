@@ -121,6 +121,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         return undefined;
     }
 
+    resetChanges(): void {
+        this.userword = this.initialValue;
+        this.changes = false;
+        this.updateListenerMultisaves(ChangeType.Saved);
+    }
+
     supportsSetAnswer(): boolean {
         return true;
     }
@@ -504,6 +510,12 @@ textfieldApp.component("textfieldRunner", {
             ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
+    </button>
+    <button class="timButton"
+            ng-if="$ctrl.buttonText()"
+            ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.readonly"
+            ng-click="$ctrl.resetChanges()">
+        Undo
     </button>
     <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>

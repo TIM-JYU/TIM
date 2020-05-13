@@ -3683,6 +3683,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return undefined;
     }
 
+    resetChanges() {
+        // TODO set previous values
+    }
+
     supportsSetAnswer() {
         return false;
     }

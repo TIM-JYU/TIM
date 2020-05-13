@@ -199,6 +199,10 @@ export abstract class PluginBaseCommon {
     resetField(): undefined {
         return undefined;
     }
+
+    resetChanges(): void {
+
+    }
 }
 
 /**

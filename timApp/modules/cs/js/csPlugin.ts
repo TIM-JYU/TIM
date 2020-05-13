@@ -412,6 +412,10 @@ function makeTemplate() {
                     title="(Ctrl-S)"
                     ng-click="$ctrl.runCode()"
                     ng-bind-html="::$ctrl.buttonText()"></button>
+            <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
+            ng-disabled="$ctrl.isRunning || $ctrl.preventSave || (!$ctrl.isUnSaved() && $ctrl.isText)"
+            class = "timButton btn-sm"
+            ng-click="$ctrl.resetChanges()">Peruuta</button>
             &nbsp&nbsp
             <span ng-if="$ctrl.savedText"
                     class="savedText"
@@ -979,6 +983,12 @@ class CsController extends CsBase implements ITimComponent {
     resetField(): undefined {
         this.initCode();
         return undefined;
+    }
+
+    resetChanges(): void {
+        this.usercode = (this.savedvals ? this.savedvals.code : "");
+        this.userargs = (this.savedvals ? this.savedvals.args : "");
+        this.userinput = (this.savedvals ? this.savedvals.input : "");
     }
 
     svgImageSnippet() {
@@ -3001,6 +3011,10 @@ csApp.component("csTextRunner", {
             title="(Ctrl-S)"
             ng-click="$ctrl.runCode();"
             ng-bind-html="::$ctrl.buttonText()"></button>
+    <button ng-if="::$ctrl.isRun"
+            ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.preventSave"
+            class = "timButton"
+            ng-click="$ctrl.resetChanges()">Peruuta</button>
             <span ng-if="$ctrl.savedText"
                 class="savedText"
                 ng-bind-html="$ctrl.savedText"></span>

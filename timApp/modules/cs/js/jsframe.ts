@@ -75,7 +75,7 @@ interface JSFrameData {
 
 interface JSFrameWindow extends Window {
     getData?(): JSFrameData;
-
+    close?(): void
     setData?(state: JSFrameData): void;
 }
 
@@ -100,7 +100,8 @@ type MessageToFrame =
     data: JSFrameData;
 } | { msg: "init" }
     | { msg: "getData" }
-    | { msg: "getDataSave" };
+    | { msg: "getDataSave" }
+    | { msg: "close" };
 
 type MessageFromFrame =
     | {
@@ -164,6 +165,10 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
                 <button class="timButton btn-sm" *ngIf="saveButton"
                         (click)="getData('getDataSave')"
                         [disabled]="!isUnSaved()" [innerHtml]="saveButton"></button>
+                &nbsp;
+                <button class="timButton btn-sm" *ngIf="saveButton"
+                        (click)="resetChanges()"
+                        [disabled]="!isUnSaved()">Peruuta</button>
                 &nbsp;
                 <span class="jsframe message"
                       *ngIf="message"
@@ -239,6 +244,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     button: string = "";
     edited: boolean = false;
     connectionErrorMessage?: string;
+    private prevdata?: JSFrameData;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -283,6 +289,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             this.isOpen = true;
         }
         const data = this.getDataFromMarkup();
+        this.prevdata = data;
         if (data) {
             this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n";
         }
@@ -465,6 +472,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             return this.saveResponse;
         }
         this.edited = false;
+        this.prevdata = unwrapAllC(data);
         if (r.result.data.web.console) {
             this.console = r.result.data.web.console;
             this.saveResponse.saved = true;
@@ -487,6 +495,16 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.send({msg: msg});
     }
 
+    resetChanges() {
+        if (!this.prevdata) {
+            return;
+        }
+        this.setData(this.prevdata, false, true);
+        this.send({msg: "close"});
+        this.edited = false;
+        this.c();
+    }
+
     getDataReady<T extends JSFrameData>(data: T, dosave = false) {
         if (data.message) {
             this.message = data.message;
@@ -504,8 +522,8 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.cdr.detectChanges();
     }
 
-    setData<T extends JSFrameData>(data: T, save = false) {
-        if (this.iframesettings) {
+    setData<T extends JSFrameData>(data: T, save = false, keepHeight = false) {
+        if (this.iframesettings && !keepHeight) {
             this.iframesettings.height = 900;
         }
         if (save) {

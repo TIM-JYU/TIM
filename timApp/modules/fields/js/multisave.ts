@@ -38,6 +38,7 @@ const multisaveMarkup = t.intersection([
         autoUpdateDuplicates: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
         listener: withDefault(t.boolean, false),
+        reset: withDefault(t.boolean, false),
     }),
 ]);
 const multisaveAll = t.intersection([
@@ -72,6 +73,10 @@ export class MultisaveController
 
     buttonText() {
         return super.buttonText() || (this.attrs.emailMode && "Send email") || "Save";
+    }
+
+    get reset() {
+        return this.attrs.reset;
     }
 
     $onInit() {
@@ -139,27 +144,15 @@ export class MultisaveController
         this.showEmailForm = !this.showEmailForm;
     }
 
-    /**
-     * Calls the save method of all ITimComponent plugins that match the given attributes
-     * - Save all plugins defined in "fields" attribute that match the given regexp
-     * - Save all plugins that are in the areas defined by "areas" attribute
-     * - If fields/areas are not given then save only plugins in the same area with the multisave plugin
-     * - If fields/areas are not given and multisave is not within any areas then just call save for every ITimComponent
-     *   plugin in the same document
-     */
-    async save() {
-        if (this.attrs.emailMode) {
-            this.toggleEmailForm();
-            return;
-        }
-        let componentsToSave: ITimComponent[] = [];
+    findTargetTasks(): ITimComponent[] {
+        let targets: ITimComponent[] = [];
         // TODO: get components from vctrl.timComponentArrays in case of duplicates
         if (this.attrs.fields) {
             for (const i of this.attrs.fields) {
                 const timComponents = this.vctrl.getTimComponentsByRegex(i, RegexOption.PrependCurrentDocId);
                 for (const v of timComponents) {
-                    if (!componentsToSave.includes(v)) {
-                        componentsToSave.push(v);
+                    if (!targets.includes(v)) {
+                        targets.push(v);
                     }
                 }
             }
@@ -169,8 +162,8 @@ export class MultisaveController
             for (const i of this.attrs.areas) {
                 const timComponents = this.vctrl.getTimComponentsByArea(i);
                 for (const v of timComponents) {
-                    if (!componentsToSave.includes(v)) {
-                        componentsToSave.push(v);
+                    if (!targets.includes(v)) {
+                        targets.push(v);
                     }
                 }
             }
@@ -179,8 +172,8 @@ export class MultisaveController
             for (const i of this.attrs.tags) {
                 const timComponents = this.vctrl.getTimComponentsByTag(i);
                 for (const v of timComponents) {
-                    if (!componentsToSave.includes(v)) {
-                        componentsToSave.push(v);
+                    if (!targets.includes(v)) {
+                        targets.push(v);
                     }
                 }
             }
@@ -195,13 +188,30 @@ export class MultisaveController
 
         // no given followids or areas but the plugin is inside an area
         if (!this.attrs.fields && !this.attrs.areas && !this.attrs.tags && ownArea) {
-            componentsToSave = this.vctrl.getTimComponentsByArea(ownArea);
+            targets = this.vctrl.getTimComponentsByArea(ownArea);
         }
 
         // no given followids / areas and no own area found
         if (!this.attrs.fields && !this.attrs.areas && !this.attrs.tags && !ownArea) {
-            componentsToSave = this.vctrl.getTimComponentsByRegex(".*", RegexOption.DontPrependCurrentDocId);
+            targets = this.vctrl.getTimComponentsByRegex(".*", RegexOption.DontPrependCurrentDocId);
         }
+        return targets;
+    }
+
+    /**
+     * Calls the save method of all ITimComponent plugins that match the given attributes
+     * - Save all plugins defined in "fields" attribute that match the given regexp
+     * - Save all plugins that are in the areas defined by "areas" attribute
+     * - If fields/areas are not given then save only plugins in the same area with the multisave plugin
+     * - If fields/areas are not given and multisave is not within any areas then just call save for every ITimComponent
+     *   plugin in the same document
+     */
+    async save() {
+        if (this.attrs.emailMode) {
+            this.toggleEmailForm();
+            return;
+        }
+        const componentsToSave = this.findTargetTasks();
 
         const promises = [];
         for (const v of componentsToSave) {
@@ -311,6 +321,13 @@ export class MultisaveController
     getAttributeType() {
         return multisaveAll;
     }
+
+    resetChanges() {
+        const targets = this.findTargetTasks();
+        for (const target of targets) {
+            target.resetChanges();
+        }
+    }
 }
 
 multisaveApp.component("multisaveRunner", {
@@ -335,6 +352,12 @@ multisaveApp.component("multisaveRunner", {
             ng-if="!$ctrl.showEmailForm && $ctrl.buttonText() && !$ctrl.attrs.destCourse"
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}
+    </button>
+    <button class="timButton"
+            ng-disabled="$ctrl.allSaved()"
+            ng-if="!$ctrl.showEmailForm && $ctrl.reset && !$ctrl.attrs.destCourse"
+            ng-click="$ctrl.resetChanges()">
+        Peruuta
     </button>
     <p class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</p>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->

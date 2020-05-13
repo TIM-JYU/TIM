@@ -11,7 +11,7 @@ export const communicationJS = `
     function onMessage(event) {
         // console.log(event.data);
         // console.log(event.origin);
-
+        console.log("IFRAMEUTILS");
         if (event.data.msg === "setData") {
             if (window.setData) {
                 setData(event.data.data);
@@ -25,6 +25,9 @@ export const communicationJS = `
         }
         if (event.data.msg === "getDataSave") {
             window.port2.postMessage({msg: "datasave", data: getData()});
+        }
+        if (event.data.msg === "close") {
+            close();
         }
     }
 

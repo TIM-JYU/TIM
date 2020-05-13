@@ -205,6 +205,20 @@ JSREADYHTML['simpleDrawIO'] = """
         var justAutosaved = false;
         var receiveEvent;
 
+        var close = function()
+        {
+            if(receiveEvent){
+                window.removeEventListener('message', receiveEvent)
+            }
+            // window.removeEventListener('message', receive);
+            if ( TIMJS.frm ) {
+                document.body.removeChild(iframe);
+            } else {
+                drw.close();
+            }    
+            drw = null;
+        };
+
         function edit(elt)
         {
             if ( TIMJS.options && TIMJS.options.fullscreen ) { 
@@ -222,20 +236,11 @@ JSREADYHTML['simpleDrawIO'] = """
             }
             elt =  document.getElementById('diagram');
             if ( TIMJS.frm ) {
-               var iframe = document.createElement('iframe');
+               iframe = document.createElement('iframe');
                iframe.setAttribute('frameborder', '0');
             }   
 
-            var close = function()
-            {
-                window.removeEventListener('message', receive);
-                if ( TIMJS.frm ) {
-                    document.body.removeChild(iframe);
-                } else {
-                    drw.close();
-                }    
-                drw = null;
-            };
+
 
             var draft = null; // localStorage.getItem('.draft-' + name);
                         

@@ -239,6 +239,17 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         return {saved: true, message: undefined};
     }
 
+    resetChanges(): void {
+        this.newAnswer = this.savedAnswer;
+        this.preview = makePreview(this.attrsall.markup, {
+            answerTable: this.savedAnswer,
+            showCorrectChoices: this.attrsall.show_result,
+            showExplanations: this.attrsall.show_result,
+            enabled: !this.attrsall.markup.invalid,
+        });
+        this.checkChanges();
+    }
+
     protected getElement() {
         return this.element;
     }
@@ -262,6 +273,8 @@ qstApp.component("qstRunner", {
             on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
     <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || !$ctrl.isUnSaved()"
             ng-click="$ctrl.saveText()"></button>
+    <button class="timButton" ng-bind-html="$ctrl.resetText" ng-if="$ctrl.resetText" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || !$ctrl.isUnSaved()"
+            ng-click="$ctrl.resetChanges()"></button>
     &nbsp;&nbsp;
     <a class="questionAddedNew" ng-show="$ctrl.checkQstMode() && !$ctrl.isInvalid()" ng-click="$ctrl.questionClicked()">
         <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
