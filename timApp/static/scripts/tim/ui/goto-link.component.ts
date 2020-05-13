@@ -3,15 +3,9 @@ import {Component, Input} from "@angular/core";
 @Component({
     selector: "tim-goto-link",
     template: `
-        <ng-template #content><ng-content></ng-content></ng-template>
-        <button *ngIf="isButton; else linkStyle" [disabled]="isGoing" (click)="startGoto()" class="timButton">
-                <ng-container *ngTemplateOutlet="content"></ng-container>
-        </button>
-        <ng-template #linkStyle>
-            <a [class.disabled]="isGoing" (click)="startGoto()">
-            <ng-container *ngTemplateOutlet="content"></ng-container>
+        <a [class.disabled]="isGoing" [class.timButton]="isButton" (click)="startGoto()">
+            <ng-content></ng-content>
         </a>
-        </ng-template>
         <div class="load-text" *ngIf="isGoing">
             <tim-loading></tim-loading>
             <span>
