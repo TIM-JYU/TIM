@@ -1,0 +1,22 @@
+p.hidden {
+    display: none;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+}
+
+div#content {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+img#logo {
+    width: 6em;
+}
+
+div#content > p {
+    font-size: 1.2em;
+}

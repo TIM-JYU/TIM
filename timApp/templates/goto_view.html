@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Redirect...</title>
+    <link href="{{ url_for('static', filename='images/favicon.ico') }}" rel="shortcut icon" type="image/x-icon"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheets/gotoPageStyle.css') }}">
+</head>
+<body>
+    <div id="content">
+        <img id="logo" src="{{ url_for('static', filename='images/tim-logo.svg') }}", alt="TIM Logo">
+        <img id="loading-icon" src="{{ url_for('static', filename='images/loading.gif') }}", alt="Loading...">
+        <p>{{display_text | safe}}</p>
+        <p id="direct-link" class="hidden"><a href="{{ url_for('view_page.view_document', doc_name=item_path) }}">Click here if you are not redirected</a></p>
+    </div>
+
+    <script>
+        setTimeout(function() {
+            window.location.href = "{{ url_for('view_page.view_document', doc_name=item_path) }}";
+        }, Math.random() * {{ wait_max * 1000 }});
+
+        setTimeout(function() {
+            document.getElementById("direct-link").classList.remove("hidden");
+        }, {{ direct_link_timer * 1000 }});
+    </script>
+</body>
+</html>

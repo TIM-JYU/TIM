@@ -158,7 +158,10 @@ def show_slide(doc_name):
 @view_page.route("/view/<path:doc_name>")
 def view_document(doc_name):
     taketime("route view begin")
-    ret = view(doc_name, 'view_html.html')
+    if 'goto' in request.args:
+        ret = goto_view(doc_name)
+    else:
+        ret = view(doc_name, 'view_html.html')
     taketime("route view end")
     return ret
 
@@ -267,6 +270,17 @@ def show_time(s):
 def get_module_ids(js_paths: List[str]):
     for jsfile in js_paths:
         yield jsfile.lstrip('/').rstrip('.js')
+
+
+def goto_view(item_path):
+    display_text = request.args.get('goto', type=str, default='Page is loading, please wait...')
+    wait_max = request.args.get('wait_max', type=int, default=0)
+    direct_link_timer = request.args.get('direct_link_timer', type=int, default=15)
+    return render_template('goto_view.html',
+                           item_path=item_path,
+                           display_text=display_text,
+                           wait_max=wait_max,
+                           direct_link_timer=direct_link_timer)
 
 
 def view(item_path, template_name, route="view"):
