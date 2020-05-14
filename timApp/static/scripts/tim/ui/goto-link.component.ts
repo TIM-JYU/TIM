@@ -18,14 +18,13 @@ import Timeout = NodeJS.Timeout;
     styleUrls: ["./goto-link.component.scss"],
 })
 export class GotoLinkComponent {
-    @Input() href = "#";
+    @Input() href = "";
     @Input() waitText?: string;
     @Input() resetTime = 15;
     @Input() maxWait = 0;
     @Input() isButton = false;
     @Input() target = "_self";
     isGoing = false;
-    resetTimeout?: Timeout;
 
     startGoto() {
         if (this.isGoing) { return; }
@@ -34,17 +33,15 @@ export class GotoLinkComponent {
         const realResetTime = Math.max(this.resetTime * 1000, waitTime);
 
         setTimeout(() => {
-            window.open(this.href, this.target);
-            this.isGoing = false;
-            if (this.resetTimeout) {
-                clearTimeout(this.resetTimeout);
-                this.resetTimeout = undefined;
+            if (this.href == "") {
+                window.location.reload();
+            } else {
+                window.open(this.href, this.target);
             }
         }, waitTime);
 
-        this.resetTimeout = setTimeout(() => {
+        setTimeout(() => {
            this.isGoing = false;
-           this.resetTimeout = undefined;
         }, realResetTime);
     }
 }
