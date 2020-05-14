@@ -10,7 +10,7 @@
     <div id="content">
         <img id="logo" src="{{ url_for('static', filename='images/tim-logo.svg') }}", alt="TIM Logo">
         <img id="loading-icon" src="{{ url_for('static', filename='images/loading.gif') }}", alt="Loading...">
-        <p>{{display_text | safe}}</p>
+        <p>{{ display_text }}</p>
         <p id="direct-link" class="hidden"><a href="{{ url_for('view_page.view_document', doc_name=item_path) }}">Click here if you are not redirected</a></p>
     </div>
 
