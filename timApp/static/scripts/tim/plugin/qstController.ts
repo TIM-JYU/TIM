@@ -49,7 +49,6 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     private resetText: string = "";
     private stem: string = "";
     private savedAnswer?: AnswerTable;
-    private undoText?: string;
     private newAnswer?: AnswerTable;
     private changes = false;
     protected pluginMeta: PluginMeta;
@@ -69,6 +68,10 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
 
     get disableUnchanged() {
         return this.attrsall.markup.disableUnchanged;
+    }
+
+    get undoText() {
+        return this.attrsall.markup.undoText;
     }
 
     isUnSaved(userChange?: boolean | undefined): boolean {
@@ -99,7 +102,6 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         this.result = "";
         this.button = this.attrsall.markup.button ?? this.attrsall.markup.buttonText ?? "Save";
         this.resetText = this.attrsall.markup.resetText ?? "Reset";
-        this.undoText = this.attrsall.markup.undoText;
         this.stem = this.attrsall.markup.stem ?? "";
     }
 
