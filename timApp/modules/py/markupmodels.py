@@ -129,6 +129,12 @@ class GenericMarkupModel(KnownMarkupFields):
     Hidden keys are never sent to browser.
     """
 
+    @dataclass
+    class UndoDict:
+        button: Union[str, None, Missing] = missing
+        title: Union[str, None, Missing] = missing
+        confirmation: Union[str, None, Missing] = missing
+
     button: Union[str, None, Missing] = missing
     buttonText: Union[str, None, Missing] = missing
     disableUnchanged: Union[bool, Missing, None] = missing
@@ -140,6 +146,7 @@ class GenericMarkupModel(KnownMarkupFields):
     resetText: Union[str, Missing, None] = missing
     showInView: Union[bool, Missing] = missing
     connectionErrorMessage: Union[str, Missing] = missing
+    undo: Union[UndoDict, Missing, None] = missing
 
     def get_visible_data(self):
         return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys and k != 'hidden_keys'}

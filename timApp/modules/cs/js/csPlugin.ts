@@ -412,10 +412,8 @@ function makeTemplate() {
                     title="(Ctrl-S)"
                     ng-click="$ctrl.runCode()"
                     ng-bind-html="::$ctrl.buttonText()"></button>
-            <button ng-if="::$ctrl.isRun && $ctrl.undoText"
-            ng-disabled="$ctrl.isRunning || $ctrl.preventSave || ($ctrl.disableUnchanged && !$ctrl.isUnSaved() && $ctrl.isText)"
-            class = "timButton btn-sm"
-            ng-click="$ctrl.resetChanges()">{{::$ctrl.undoText}}</button>
+            <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
+            ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
             &nbsp&nbsp
             <span ng-if="$ctrl.savedText"
                     class="savedText"
@@ -986,6 +984,9 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     resetChanges(): void {
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
+            return;
+        }
         this.usercode = (this.savedvals ? this.savedvals.code : "");
         this.userargs = (this.savedvals ? this.savedvals.args : "");
         this.userinput = (this.savedvals ? this.savedvals.input : "");
@@ -3009,11 +3010,9 @@ csApp.component("csTextRunner", {
             title="(Ctrl-S)"
             ng-click="$ctrl.runCode();"
             ng-bind-html="::$ctrl.buttonText()"></button>
-    <button ng-if="::$ctrl.isRun && $ctrl.undoText"
-            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.preventSave"
-            class = "timButton"
-            ng-click="$ctrl.resetChanges()">{{::$ctrl.undoText}}</button>
-            <span ng-if="$ctrl.savedText"
+    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
+            ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
+    <span ng-if="$ctrl.savedText"
                 class="savedText"
                 ng-bind-html="$ctrl.savedText"></span>
     <div ng-if="$ctrl.connectionErrorMessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionErrorMessage"></div>

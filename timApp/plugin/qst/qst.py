@@ -613,6 +613,7 @@ qst_attrs = {
     'stem',
     'tag',
     'connectionErrorMessage',
+    'undo',
 }
 
 

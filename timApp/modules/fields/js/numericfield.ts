@@ -153,6 +153,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     resetChanges(): void {
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
+            return;
+        }
         this.numericvalue = this.initialValue;
         this.changes = false;
         this.updateListenerMultisaves(ChangeType.Saved);
@@ -494,12 +497,7 @@ numericfieldApp.component("numericfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <button class="timButton"
-            ng-if="$ctrl.undoText"
-            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.readonly"
-            ng-click="$ctrl.resetChanges()">
-        {{::$ctrl.undoText}}
-    </button>
+    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
     <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,

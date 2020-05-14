@@ -70,8 +70,16 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         return this.attrsall.markup.disableUnchanged;
     }
 
-    get undoText() {
-        return this.attrsall.markup.undoText;
+    get undoButton() {
+        return this.attrsall.markup.undo && this.attrsall.markup.undo.button;
+    }
+
+    get undoTitle() {
+        return this.attrsall.markup.undo && this.attrsall.markup.undo.title;
+    }
+
+    get undoConfirmation() {
+        return this.attrsall.markup.undo && this.attrsall.markup.undo.confirmation;
     }
 
     isUnSaved(userChange?: boolean | undefined): boolean {
@@ -248,6 +256,9 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     resetChanges(): void {
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
+            return;
+        }
         this.newAnswer = this.savedAnswer;
         this.preview = makePreview(this.attrsall.markup, {
             answerTable: this.savedAnswer,
@@ -281,8 +292,8 @@ qstApp.component("qstRunner", {
             on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
     <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || ($ctrl.disableUnchanged && !$ctrl.isUnSaved())"
             ng-click="$ctrl.saveText()"></button>
-    <button class="timButton" ng-bind-html="$ctrl.undoText" ng-if="$ctrl.undoText" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || ($ctrl.disableUnchanged && !$ctrl.isUnSaved())"
-            ng-click="$ctrl.resetChanges()"></button>
+    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
+
     &nbsp;&nbsp;
     <a class="questionAddedNew" ng-show="$ctrl.checkQstMode() && !$ctrl.isInvalid()" ng-click="$ctrl.questionClicked()">
         <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>

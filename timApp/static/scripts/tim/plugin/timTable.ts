@@ -247,6 +247,11 @@ export interface TimTable {
     disableSelect?: boolean;
     savedText?: string;
     connectionErrorMessage?: string;
+    undo?: {
+        button?: string;
+        title?: string;
+        confirmation?: string;
+    };
 }
 
 interface Rng {
@@ -593,7 +598,7 @@ export enum ClearSort {
             <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton">
                 <p class="csRunMenu">
                     <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="task && button" (click)="handleClickSave()">{{button}}</button>
-                    <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="task && undoText" (click)="resetChanges()">{{undoText}}</button>
+                    <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="resetChanges($event)">{{undoButton}}</a>
                     <span [hidden]="!result">{{result}}</span>
                 </p>
             </div>
@@ -696,8 +701,16 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return this.data.disableUnchanged;
     }
 
-    get undoText() {
-        return this.data.undoText;
+    get undoButton() {
+        return this.data.undo && this.data.undo.button;
+    }
+
+    get undoTitle() {
+        return  this.data.undo && this.data.undo.title;
+    }
+
+    get undoConfirmation() {
+        return  this.data.undo && this.data.undo.confirmation;
     }
 
     private getEditInputElement() {
@@ -3702,8 +3715,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return undefined;
     }
 
-    resetChanges() {
-        // TODO: Check if all three are needed (or are enough)
+    resetChanges(e?: Event) {
+        if (e) {
+            e.preventDefault();
+        }
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
+            return;
+        }
+        // TODO: Check if all three are needed (need more)
         this.userdata = clone(this.prevUserdata);
         this.cellDataMatrix = clone(this.prevCellDataMatrix);
         this.data = clone(this.prevData);

@@ -165,9 +165,8 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
                         (click)="getData('getDataSave')"
                         [disabled]="disableUnchanged && !isUnSaved()" [innerHtml]="saveButton"></button>
                 &nbsp;
-                <button class="timButton btn-sm" *ngIf="undoText"
-                        (click)="resetChanges()"
-                        [disabled]="disableUnchanged && !isUnSaved()">{{undoText}}</button>
+                <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="resetChanges($event)">{{undoButton}}</a>
+
                 &nbsp;
                 <span class="jsframe message"
                       *ngIf="message"
@@ -217,10 +216,6 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
 
     get saveButton() {
         return this.markup.saveButton;
-    }
-
-    get undoText() {
-        return this.markup.undoText;
     }
 
     buttonText() {
@@ -502,8 +497,14 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.send({msg: msg});
     }
 
-    resetChanges() {
+    resetChanges(e?: Event) {
+        if (e) {
+            e.preventDefault();
+        }
         if (!this.prevdata) {
+            return;
+        }
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
             return;
         }
         this.setData(this.prevdata, false, true);

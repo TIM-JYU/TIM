@@ -246,8 +246,16 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.attrsall.access === "readonly";
     }
 
-    get undoText() {
-        return this.attrs.undoText;
+    get undoButton() {
+        return this.attrs.undo && this.attrs.undo.button;
+    }
+
+    get undoTitle() {
+        return this.attrs.undo && this.attrs.undo.title;
+    }
+
+    get undoConfirmation() {
+        return this.attrs.undo && this.attrs.undo.confirmation;
     }
 
     // Parsed form of json binding or default value if json was not valid.

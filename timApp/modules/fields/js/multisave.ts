@@ -74,6 +74,10 @@ export class MultisaveController
         return super.buttonText() || (this.attrs.emailMode && "Send email") || "Save";
     }
 
+    get listener() {
+        return this.attrs.listener;
+    }
+
     $onInit() {
         super.$onInit();
         if (this.attrs.emailRecipients) {
@@ -318,6 +322,9 @@ export class MultisaveController
     }
 
     resetChanges() {
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
+            return;
+        }
         const targets = this.findTargetTasks();
         for (const target of targets) {
             target.resetChanges();
@@ -343,17 +350,12 @@ multisaveApp.component("multisaveRunner", {
                             group="$ctrl.attrs.group">
     </sisu-assessment-export>
     <button class="timButton"
-            ng-disabled="$ctrl.allSaved()"
+            ng-disabled="($ctrl.disableUnchanged && $ctrl.allSaved())"
             ng-if="!$ctrl.showEmailForm && $ctrl.buttonText() && !$ctrl.attrs.destCourse"
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}
     </button>
-    <button class="timButton"
-            ng-disabled="$ctrl.allSaved()"
-            ng-if="$ctrl.undoText && !$ctrl.attrs.destCourse"
-            ng-click="$ctrl.resetChanges()">
-        {{::$ctrl.undoText}}
-    </button>
+    <a href="" ng-if="($ctrl.listener && !$ctrl.allSaved())" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
     <p class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</p>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
         <tim-close-button ng-click="$ctrl.toggleEmailForm()"></tim-close-button>
