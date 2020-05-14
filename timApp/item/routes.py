@@ -137,6 +137,10 @@ class ViewModel:
     nocache: bool = False
     pars_only: bool = False
     preamble: bool = False
+    goto: Optional[str] = None
+    wait_max: int = 0
+    direct_link_timer: int = 15
+
 
     def __post_init__(self):
         if self.b and self.e:
@@ -158,10 +162,7 @@ def show_slide(doc_name):
 @view_page.route("/view/<path:doc_name>")
 def view_document(doc_name):
     taketime("route view begin")
-    if 'goto' in request.args:
-        ret = goto_view(doc_name)
-    else:
-        ret = view(doc_name, 'view_html.html')
+    ret = view(doc_name, 'view_html.html')
     taketime("route view end")
     return ret
 
@@ -272,20 +273,21 @@ def get_module_ids(js_paths: List[str]):
         yield jsfile.lstrip('/').rstrip('.js')
 
 
-def goto_view(item_path):
-    display_text = request.args.get('goto', type=str, default='Page is loading, please wait...')
-    wait_max = request.args.get('wait_max', type=int, default=0)
-    direct_link_timer = request.args.get('direct_link_timer', type=int, default=15)
+def goto_view(item_path, model: ViewModel):
     return render_template('goto_view.html',
                            item_path=item_path,
-                           display_text=display_text,
-                           wait_max=wait_max,
-                           direct_link_timer=direct_link_timer)
+                           display_text=model.goto,
+                           wait_max=model.wait_max,
+                           direct_link_timer=model.direct_link_timer)
 
 
 def view(item_path, template_name, route="view"):
     taketime("view begin", zero=True)
     m: ViewModel = ViewModelSchema.load(request.args, unknown='EXCLUDE')
+
+    if m.goto:
+        return goto_view(item_path, m)
+
     usergroup = m.group
     g.viewmode = route in viewmode_routes
     g.route = route
