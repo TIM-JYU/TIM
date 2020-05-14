@@ -38,7 +38,6 @@ const multisaveMarkup = t.intersection([
         autoUpdateDuplicates: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
         listener: withDefault(t.boolean, false),
-        reset: withDefault(t.boolean, false),
     }),
 ]);
 const multisaveAll = t.intersection([
@@ -73,10 +72,6 @@ export class MultisaveController
 
     buttonText() {
         return super.buttonText() || (this.attrs.emailMode && "Send email") || "Save";
-    }
-
-    get reset() {
-        return this.attrs.reset;
     }
 
     $onInit() {
@@ -355,9 +350,9 @@ multisaveApp.component("multisaveRunner", {
     </button>
     <button class="timButton"
             ng-disabled="$ctrl.allSaved()"
-            ng-if="!$ctrl.showEmailForm && $ctrl.reset && !$ctrl.attrs.destCourse"
+            ng-if="$ctrl.undoText && !$ctrl.attrs.destCourse"
             ng-click="$ctrl.resetChanges()">
-        Peruuta
+        {{::$ctrl.undoText}}
     </button>
     <p class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</p>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->

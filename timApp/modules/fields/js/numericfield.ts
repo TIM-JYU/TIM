@@ -495,10 +495,10 @@ numericfieldApp.component("numericfieldRunner", {
         {{::$ctrl.buttonText()}}
     </button>
     <button class="timButton"
-            ng-if="$ctrl.buttonText()"
+            ng-if="$ctrl.undoText"
             ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.resetChanges()">
-        Undo
+        {{::$ctrl.undoText}}
     </button>
     <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>

@@ -34,7 +34,6 @@ class MultisaveMarkupModel(GenericMarkupModel):
     jumplink: Union[str, Missing, None] = missing
     jumptarget: Union[str, Missing, None] = missing
     listener: Union[bool, Missing] = False
-    reset: Union[bool, Missing] = False
     tags: Union[List[str], Missing] = missing
 
     # Sisu export-related fields; TODO: Should be a separate plugin.

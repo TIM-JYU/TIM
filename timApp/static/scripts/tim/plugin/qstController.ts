@@ -49,6 +49,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     private resetText: string = "";
     private stem: string = "";
     private savedAnswer?: AnswerTable;
+    private undoText?: string;
     private newAnswer?: AnswerTable;
     private changes = false;
     protected pluginMeta: PluginMeta;
@@ -98,6 +99,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         this.result = "";
         this.button = this.attrsall.markup.button ?? this.attrsall.markup.buttonText ?? "Save";
         this.resetText = this.attrsall.markup.resetText ?? "Reset";
+        this.undoText = this.attrsall.markup.undoText;
         this.stem = this.attrsall.markup.stem ?? "";
     }
 
@@ -277,7 +279,7 @@ qstApp.component("qstRunner", {
             on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
     <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || ($ctrl.disableUnchanged && !$ctrl.isUnSaved())"
             ng-click="$ctrl.saveText()"></button>
-    <button class="timButton" ng-bind-html="$ctrl.resetText" ng-if="$ctrl.resetText" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || ($ctrl.disableUnchanged && !$ctrl.isUnSaved())"
+    <button class="timButton" ng-bind-html="$ctrl.undoText" ng-if="$ctrl.undoText" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || ($ctrl.disableUnchanged && !$ctrl.isUnSaved())"
             ng-click="$ctrl.resetChanges()"></button>
     &nbsp;&nbsp;
     <a class="questionAddedNew" ng-show="$ctrl.checkQstMode() && !$ctrl.isInvalid()" ng-click="$ctrl.questionClicked()">

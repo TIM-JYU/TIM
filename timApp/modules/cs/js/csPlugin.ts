@@ -412,10 +412,10 @@ function makeTemplate() {
                     title="(Ctrl-S)"
                     ng-click="$ctrl.runCode()"
                     ng-bind-html="::$ctrl.buttonText()"></button>
-            <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
+            <button ng-if="::$ctrl.isRun && $ctrl.undoText"
             ng-disabled="$ctrl.isRunning || $ctrl.preventSave || ($ctrl.disableUnchanged && !$ctrl.isUnSaved() && $ctrl.isText)"
             class = "timButton btn-sm"
-            ng-click="$ctrl.resetChanges()">Peruuta</button>
+            ng-click="$ctrl.resetChanges()">{{::$ctrl.undoText}}</button>
             &nbsp&nbsp
             <span ng-if="$ctrl.savedText"
                     class="savedText"
@@ -3009,10 +3009,10 @@ csApp.component("csTextRunner", {
             title="(Ctrl-S)"
             ng-click="$ctrl.runCode();"
             ng-bind-html="::$ctrl.buttonText()"></button>
-    <button ng-if="::$ctrl.isRun"
+    <button ng-if="::$ctrl.isRun && $ctrl.undoText"
             ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.preventSave"
             class = "timButton"
-            ng-click="$ctrl.resetChanges()">Peruuta</button>
+            ng-click="$ctrl.resetChanges()">{{::$ctrl.undoText}}</button>
             <span ng-if="$ctrl.savedText"
                 class="savedText"
                 ng-bind-html="$ctrl.savedText"></span>

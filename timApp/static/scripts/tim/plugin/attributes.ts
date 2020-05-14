@@ -18,6 +18,7 @@ export const GenericPluginMarkup = t.partial({
     stem: nullable(t.string),
     hideBrowser: t.boolean,
     forceBrowser: t.boolean,
+    undoText: nullable(t.string),
     useCurrentUser: t.boolean,
     connectionErrorMessage: nullable(t.string),
 });

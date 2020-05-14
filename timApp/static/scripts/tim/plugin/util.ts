@@ -246,6 +246,10 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.attrsall.access === "readonly";
     }
 
+    get undoText() {
+        return this.attrs.undoText;
+    }
+
     // Parsed form of json binding or default value if json was not valid.
     attrsall: Readonly<A>;
     // Binding that has all the data as a JSON string.
