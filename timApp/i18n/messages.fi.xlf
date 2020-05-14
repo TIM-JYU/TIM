@@ -198,12 +198,12 @@
           <context context-type="linenumber">3</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6e14ee90ff0b4843206077b04c1143d4f0f88a04" datatype="html">
+      <trans-unit id="ae348c4e665a3e26cd8f588f42f1d3375b88aea5" datatype="html">
         <source>
-            You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> now. <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>Refresh the page<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.
+            You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> now. <x id="START_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;tim-goto-link>"/>Refresh the page<x id="CLOSE_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;/tim-goto-link>"/>.
         </source>
-        <target state="translated">
-            Pääset <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> nyt. <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>Virkistä sivu<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.
+        <target state="new">
+            Pääset <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> nyt. <x id="START_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;tim-goto-link>"/>Virkistä sivu<x id="CLOSE_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;/tim-goto-link>"/>.
         </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>

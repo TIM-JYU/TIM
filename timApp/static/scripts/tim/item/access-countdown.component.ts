@@ -11,7 +11,7 @@ import {documentglobals} from "tim/util/globals";
             You will be able to access this { item.isFolder, select, true {folder} false {document} } in {{ countDown }} seconds.
         </ng-container>
         <ng-container *ngIf="countDown < 0" i18n>
-            You can access the { item.isFolder, select, true { folder } false { document } } now. <a href="">Refresh the page</a>.
+            You can access the { item.isFolder, select, true { folder } false { document } } now. <tim-goto-link href="" [maxWait]="waitOffset">Refresh the page</tim-goto-link>.
         </ng-container>
     `,
 })
@@ -20,9 +20,10 @@ export class AccessCountdownComponent implements OnInit {
     @Input() waitTime!: number;
     countDown!: number;
     private timer!: number;
+    waitOffset = Math.random() * 15;
 
     ngOnInit() {
-        this.countDown = Math.ceil(this.waitTime + Math.random() * 15);
+        this.countDown = Math.ceil(this.waitTime + this.waitOffset);
         this.timer = window.setInterval(() => {
             this.countDown -= 1;
             if (this.countDown < 0) {
