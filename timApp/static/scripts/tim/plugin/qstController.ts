@@ -92,7 +92,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
             enabled: !this.attrsall.markup.invalid,
         });
         this.result = "";
-        this.button = this.attrsall.markup.button ?? "Save";
+        this.button = this.attrsall.markup.button ?? this.attrsall.markup.buttonText ?? "Save";
         this.resetText = this.attrsall.markup.resetText ?? "Reset";
         this.stem = this.attrsall.markup.stem ?? "";
     }
