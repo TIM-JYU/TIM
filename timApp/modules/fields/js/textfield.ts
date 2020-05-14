@@ -507,13 +507,13 @@ textfieldApp.component("textfieldRunner", {
     <div ng-if="$ctrl.errormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.errormessage"></div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
-            ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.readonly"
+            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
-            ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.readonly"
+            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.resetChanges()">
         Undo
     </button>

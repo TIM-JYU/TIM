@@ -163,11 +163,11 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
                         [innerHtml]="button"></button>
                 <button class="timButton btn-sm" *ngIf="saveButton"
                         (click)="getData('getDataSave')"
-                        [disabled]="!isUnSaved()" [innerHtml]="saveButton"></button>
+                        [disabled]="disableUnchanged && !isUnSaved()" [innerHtml]="saveButton"></button>
                 &nbsp;
                 <button class="timButton btn-sm" *ngIf="saveButton"
                         (click)="resetChanges()"
-                        [disabled]="!isUnSaved()">Peruuta</button>
+                        [disabled]="disableUnchanged && !isUnSaved()">Peruuta</button>
                 &nbsp;
                 <span class="jsframe message"
                       *ngIf="message"
@@ -193,6 +193,10 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
 
     constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
         super(el, http, domSanitizer);
+    }
+
+    get disableUnchanged() {
+        return this.attrsall.markup.disableUnchanged;
     }
 
     get english() {

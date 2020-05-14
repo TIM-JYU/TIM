@@ -407,13 +407,13 @@ function makeTemplate() {
     <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
         <p class="csRunMenu">
             <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
-                    ng-disabled="$ctrl.isRunning || $ctrl.preventSave || (!$ctrl.isUnSaved() && $ctrl.isText)"
+                    ng-disabled="$ctrl.isRunning || $ctrl.preventSave || ($ctrl.disableUnchanged && !$ctrl.isUnSaved() && $ctrl.isText)"
                     class="timButton btn-sm"
                     title="(Ctrl-S)"
                     ng-click="$ctrl.runCode()"
                     ng-bind-html="::$ctrl.buttonText()"></button>
             <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
-            ng-disabled="$ctrl.isRunning || $ctrl.preventSave || (!$ctrl.isUnSaved() && $ctrl.isText)"
+            ng-disabled="$ctrl.isRunning || $ctrl.preventSave || ($ctrl.disableUnchanged && !$ctrl.isUnSaved() && $ctrl.isText)"
             class = "timButton btn-sm"
             ng-click="$ctrl.resetChanges()">Peruuta</button>
             &nbsp&nbsp
@@ -1396,9 +1396,9 @@ ${fhtml}
             this.countChars = !!count.chars;
             this.countItems = this.countLines || this.countWords || this.countChars;
         }
-        if (this.isText) {
-            this.preventSave = true;
-        }
+        // if (this.isText) {
+        //     this.preventSave = true;
+        // }
     }
 
     async $postLink() {
@@ -1535,8 +1535,6 @@ ${fhtml}
             }
             if (this.countItems) {
                 this.doCountItems();
-            } else {
-                if (this.isText) {this.preventSave = !this.isChanged();}
             }
             if (this.isText) {this.savedText = "";}
 
@@ -3006,13 +3004,13 @@ csApp.component("csTextRunner", {
            ng-attr-placeholder="{{$ctrl.placeholder}}"
            ng-keypress="$ctrl.runCodeIfCR($event);"/>
     <button ng-if="::$ctrl.isRun"
-            ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.preventSave"
+            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.preventSave"
             class = "timButton"
             title="(Ctrl-S)"
             ng-click="$ctrl.runCode();"
             ng-bind-html="::$ctrl.buttonText()"></button>
     <button ng-if="::$ctrl.isRun"
-            ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.preventSave"
+            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.preventSave"
             class = "timButton"
             ng-click="$ctrl.resetChanges()">Peruuta</button>
             <span ng-if="$ctrl.savedText"

@@ -131,6 +131,7 @@ class GenericMarkupModel(KnownMarkupFields):
 
     button: Union[str, None, Missing] = missing
     buttonText: Union[str, None, Missing] = missing
+    disableUnchanged: Union[bool, Missing, None] = missing
     footer: Union[str, Missing] = missing
     forceBrowser: Union[bool, Missing, None] = missing
     globalField: Union[bool, Missing, None] = missing

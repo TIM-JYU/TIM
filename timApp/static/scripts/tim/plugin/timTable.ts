@@ -235,6 +235,7 @@ export interface TimTable {
     maxCols?: string;
     button?: string;
     autosave?: boolean;
+    disableUnchanged?: boolean
     // TODO: need self-explanatory name for this attribute
     //  could also use hideBrowser?
     nonUserSpecific?: boolean; // Whether (task-mode) table should react to user changes
@@ -591,7 +592,7 @@ export enum ClearSort {
             </div>
             <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton">
                 <p class="csRunMenu">
-                    <button class="timButton" [disabled]="!edited" *ngIf="task && button" (click)="handleClickSave()">{{button}}</button>
+                    <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="task && button" (click)="handleClickSave()">{{button}}</button>
                     &nbsp;
                     <span [hidden]="!result">{{result}}</span>
                 </p>
@@ -686,6 +687,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     get element(): JQuery<HTMLElement> {
         return $(this.el.nativeElement);
+    }
+
+    get disableUnchanged() {
+        return this.data.disableUnchanged;
     }
 
     private getEditInputElement() {

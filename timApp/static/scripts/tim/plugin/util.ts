@@ -223,6 +223,10 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.attrsall.markup;
     }
 
+    get disableUnchanged() {
+        return this.attrs.disableUnchanged;
+    }
+
     get footer() {
         return this.attrs.footer || null;
     }

@@ -66,6 +66,10 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         return JSON.stringify(this.newAnswer);
     }
 
+    get disableUnchanged() {
+        return this.attrsall.markup.disableUnchanged;
+    }
+
     isUnSaved(userChange?: boolean | undefined): boolean {
         return this.changes;
     }
@@ -271,9 +275,9 @@ qstApp.component("qstRunner", {
     <dynamic-answer-sheet
             questiondata="$ctrl.preview"
             on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
-    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || !$ctrl.isUnSaved()"
+    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || ($ctrl.disableUnchanged && !$ctrl.isUnSaved())"
             ng-click="$ctrl.saveText()"></button>
-    <button class="timButton" ng-bind-html="$ctrl.resetText" ng-if="$ctrl.resetText" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || !$ctrl.isUnSaved()"
+    <button class="timButton" ng-bind-html="$ctrl.resetText" ng-if="$ctrl.resetText" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || ($ctrl.disableUnchanged && !$ctrl.isUnSaved())"
             ng-click="$ctrl.resetChanges()"></button>
     &nbsp;&nbsp;
     <a class="questionAddedNew" ng-show="$ctrl.checkQstMode() && !$ctrl.isInvalid()" ng-click="$ctrl.questionClicked()">

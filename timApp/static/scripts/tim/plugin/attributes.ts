@@ -10,6 +10,7 @@ export const GenericPluginMarkup = t.partial({
     answerLimit: t.Integer,
     button: nullable(t.string),
     buttonText: nullable(t.string),
+    disableUnchanged: t.boolean,
     footer: t.string,
     header: nullable(t.string),
     lazy: t.boolean,
