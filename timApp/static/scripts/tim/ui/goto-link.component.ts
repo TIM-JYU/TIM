@@ -10,7 +10,7 @@ import Timeout = NodeJS.Timeout;
         <div class="load-text" *ngIf="isGoing">
             <tim-loading></tim-loading>
             <span>
-                <ng-template *ngIf="waitText else defaultText">{{waitText}}</ng-template>
+                <ng-container *ngIf="waitText else defaultText">{{waitText}}</ng-container>
                 <ng-template #defaultText i18n>Loading, please wait.</ng-template>
             </span>
         </div>
