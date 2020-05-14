@@ -22,6 +22,7 @@ export class GotoLinkComponent {
     @Input() resetTime = 15;
     @Input() maxWait = 0;
     @Input() isButton = false;
+    @Input() target = "_self";
     isGoing = false;
 
     startGoto() {
@@ -30,7 +31,7 @@ export class GotoLinkComponent {
         const realResetTime = Math.max(this.resetTime * 1000, waitTime);
 
         setTimeout(() => {
-            window.location.href = this.href;
+            window.open(this.href, this.target);
         }, waitTime);
 
         setTimeout(() => {
