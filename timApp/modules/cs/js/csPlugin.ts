@@ -414,7 +414,7 @@ function makeTemplate() {
                     ng-bind-html="::$ctrl.buttonText()"></button>
             &nbsp;
             <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
-            ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
+            ng-click="$ctrl.tryResetChanges();">{{::$ctrl.undoButton}}</a>
             &nbsp&nbsp
             <span ng-if="$ctrl.savedText"
                     class="savedText"
@@ -984,10 +984,14 @@ class CsController extends CsBase implements ITimComponent {
         return undefined;
     }
 
-    resetChanges(): void {
+    tryResetChanges(): void {
         if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
             return;
         }
+        this.resetChanges();
+    }
+
+    resetChanges(): void {
         this.usercode = (this.savedvals ? this.savedvals.code : "");
         this.userargs = (this.savedvals ? this.savedvals.args : "");
         this.userinput = (this.savedvals ? this.savedvals.input : "");
@@ -3013,7 +3017,7 @@ csApp.component("csTextRunner", {
             ng-bind-html="::$ctrl.buttonText()"></button>
     &nbsp;
     <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
-            ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
+            ng-click="$ctrl.tryResetChanges();">{{::$ctrl.undoButton}}</a>
     <span ng-if="$ctrl.savedText"
                 class="savedText"
                 ng-bind-html="$ctrl.savedText"></span>

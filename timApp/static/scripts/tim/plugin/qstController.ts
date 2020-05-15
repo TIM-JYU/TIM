@@ -255,10 +255,14 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         return {saved: true, message: undefined};
     }
 
-    resetChanges(): void {
+    tryResetChanges(): void {
         if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
             return;
         }
+        this.resetChanges();
+    }
+
+    resetChanges(): void {
         this.newAnswer = this.savedAnswer;
         this.preview = makePreview(this.attrsall.markup, {
             answerTable: this.savedAnswer,
@@ -293,7 +297,7 @@ qstApp.component("qstRunner", {
     <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || ($ctrl.disableUnchanged && !$ctrl.isUnSaved())"
             ng-click="$ctrl.saveText()"></button>
     &nbsp;
-    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
+    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.tryResetChanges();">{{::$ctrl.undoButton}}</a>
 
     &nbsp;&nbsp;
     <a class="questionAddedNew" ng-show="$ctrl.checkQstMode() && !$ctrl.isInvalid()" ng-click="$ctrl.questionClicked()">

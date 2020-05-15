@@ -121,10 +121,14 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         return undefined;
     }
 
-    resetChanges(): void {
+    tryResetChanges(): void {
         if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
             return;
         }
+        this.resetChanges();
+    }
+
+    resetChanges(): void {
         this.userword = this.initialValue;
         this.changes = false;
         this.updateListenerMultisaves(ChangeType.Saved);
@@ -515,7 +519,7 @@ textfieldApp.component("textfieldRunner", {
         {{::$ctrl.buttonText()}}
     </button>
     <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved() && $ctrl.undoButton" title="{{::$ctrl.undoTitle}}"
-            ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>    
+            ng-click="$ctrl.tryResetChanges();">{{::$ctrl.undoButton}}</a>    
     <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>

@@ -599,7 +599,7 @@ export enum ClearSort {
                 <p class="csRunMenu">
                     <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="task && button" (click)="handleClickSave()">{{button}}</button>
                     &nbsp;
-                    <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="resetChanges($event)">{{undoButton}}</a>
+                    <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="tryResetChanges($event)">{{undoButton}}</a>
                     <span [hidden]="!result">{{result}}</span>
                 </p>
             </div>
@@ -3716,13 +3716,17 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return undefined;
     }
 
-    resetChanges(e?: Event) {
+    tryResetChanges(e?: Event): void {
         if (e) {
             e.preventDefault();
         }
         if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
             return;
         }
+        this.resetChanges();
+    }
+
+    resetChanges() {
         // TODO: Check if all three are needed (need more)
         this.userdata = clone(this.prevUserdata);
         this.cellDataMatrix = clone(this.prevCellDataMatrix);
