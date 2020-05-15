@@ -4,7 +4,7 @@ import Timeout = NodeJS.Timeout;
 @Component({
     selector: "tim-goto-link",
     template: `
-        <a [class.disabled]="isGoing" [class.timButton]="isButton" (click)="startGoto()">
+        <a [class.disabled]="isGoing" [class.timButton]="isButton" (click)="startGoto()" [attr.aria-disabled]="isGoing">
             <ng-content></ng-content>
         </a>
         <div class="load-text" *ngIf="isGoing">
@@ -24,6 +24,7 @@ export class GotoLinkComponent {
     @Input() maxWait = 0;
     @Input() isButton = false;
     @Input() target = "_self";
+    @Input() openAt?: string;
     isGoing = false;
 
     startGoto() {
