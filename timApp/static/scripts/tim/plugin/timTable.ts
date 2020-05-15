@@ -98,7 +98,7 @@ import {
     hideToolbar,
     isToolbarEnabled,
     isToolbarOpen,
-    openTableEditorToolbar
+    openTableEditorToolbar,
 } from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
