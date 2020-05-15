@@ -234,7 +234,7 @@ def qst_answer_jso(m: QstAnswerModel):
         jsonmarkup.pop('expl', None)
         jsonmarkup.pop('points', None)
 
-    savedText = markup.savedText or "Vastattu"
+    savedText = markup.savedText or "Saved"
 
     web = {'result': savedText, 'markup': jsonmarkup if result else None, 'show_result': result, 'state': webstate}
     return json_response({'save': save, 'web': web, "tim_info": tim_info})

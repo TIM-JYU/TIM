@@ -2038,12 +2038,16 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         const keyCode = getKeyCode(ev);
         if (keyCode === KEY_DOWN) {
+            ev.preventDefault();
             return this.doCellMovement(Direction.Down, true);
         } else if (keyCode === KEY_RIGHT) {
+            ev.preventDefault();
             return this.doCellMovement(Direction.Right, true);
         } else if (keyCode === KEY_LEFT) {
+            ev.preventDefault();
             return this.doCellMovement(Direction.Left, true);
         } else if (keyCode === KEY_UP) {
+            ev.preventDefault();
             return this.doCellMovement(Direction.Up, true);
         }
         return ChangeDetectionHint.DoNotTrigger;
@@ -2251,7 +2255,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (h != null && w != null) {
             scrollToViewInsideParent(tablecell[0], parent[0], w, 3 * h, w, h);
         }
-        // this.updateSmallEditorPosition(); // TODO: vesa added here, because somtiems it did not update the pos
+        this.updateSmallEditorPosition(); // TODO: vesa added here, because somtiems it did not update the pos
     }
 
     /**
@@ -2332,7 +2336,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             } else {
                 value = this.getCellContentString(rowi, coli);
             }
-            if (isToolbarOpen()) {
+            if (true || isToolbarOpen()) { // TODO: why toolbar must be onpen?
                 this.currentCell = {
                     row: rowi,
                     col: coli,

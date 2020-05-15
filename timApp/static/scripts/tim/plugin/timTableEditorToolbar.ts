@@ -343,7 +343,7 @@ export function isToolbarEnabled() {
 }
 
 export function handleToolbarKey(ev: KeyboardEvent, toolBarTemplates: IToolbarTemplate[] | undefined) {
-    if (!instance || !toolBarTemplates) { return true; }
+    if (!instance || !toolBarTemplates) { return false; }
     for (const templ of toolBarTemplates) {
         if (!templ || !templ.shortcut) { continue; }
         const k = templ.shortcut.split("+");
