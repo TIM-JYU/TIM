@@ -124,6 +124,7 @@ class QstMarkupModel(GenericMarkupModel):
     randomSeed: Union[int, Missing] = missing
     doNotMove: Union[List[int], int, Missing] = missing
     defaultPoints: Union[int, float, Missing] = missing
+    savedText: Union[str, None, Missing] = missing
 
 
 QstBasicState = List[List[str]]
@@ -232,7 +233,10 @@ def qst_answer_jso(m: QstAnswerModel):
     if not markup.show_points():
         jsonmarkup.pop('expl', None)
         jsonmarkup.pop('points', None)
-    web = {'result': "Vastattu", 'markup': jsonmarkup if result else None, 'show_result': result, 'state': webstate}
+
+    savedText = markup.savedText or "Vastattu"
+
+    web = {'result': savedText, 'markup': jsonmarkup if result else None, 'show_result': result, 'state': webstate}
     return json_response({'save': save, 'web': web, "tim_info": tim_info})
 
 
