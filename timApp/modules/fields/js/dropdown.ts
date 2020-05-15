@@ -120,7 +120,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
         if (r.ok) {
             this.changes = false;
-            this.updateListenerMultisaves(ChangeType.Saved);
+            this.updateListeners(ChangeType.Saved);
             const data = r.result.data;
             this.error = data.web.error;
         } else {
@@ -134,14 +134,14 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     updateSelection() {
         if (!this.changes) {
             this.changes = true;
-            this.updateListenerMultisaves(ChangeType.Modified);
+            this.updateListeners(ChangeType.Modified);
         }
         if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.save();
         }
     }
 
-    updateListenerMultisaves(state: ChangeType) {
+    updateListeners(state: ChangeType) {
         if (!this.vctrl) {
             return;
         }
@@ -206,7 +206,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             }
         }
         this.changes = false;
-        this.updateListenerMultisaves(ChangeType.Saved);
+        this.updateListeners(ChangeType.Saved);
         this.initialWord = this.selectedWord;
         return {ok: ok, message: message};
 
@@ -216,14 +216,14 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         this.selectedWord = "";
         this.initialWord = this.selectedWord;
         this.changes = false;
-        this.updateListenerMultisaves(ChangeType.Saved);
+        this.updateListeners(ChangeType.Saved);
         return undefined;
     }
 
     resetChanges(): void {
         this.selectedWord = this.initialWord;
         this.changes = false;
-        this.updateListenerMultisaves(ChangeType.Saved);
+        this.updateListeners(ChangeType.Saved);
     }
 
 }

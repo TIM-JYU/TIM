@@ -1,6 +1,6 @@
 ﻿import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";
-import {ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {IUser} from "tim/user/IUser";
 import {$http} from "tim/util/ngimport";
@@ -474,6 +474,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             return this.saveResponse;
         }
         this.edited = false;
+        this.updateListeners();
         this.prevdata = unwrapAllC(data);
         if (r.result.data.web.console) {
             this.console = r.result.data.web.console;
@@ -514,7 +515,20 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.setData(this.prevdata, false, true);
         this.send({msg: "close"});
         this.edited = false;
+        this.updateListeners();
         this.c();
+    }
+
+    updateListeners() {
+        if (!this.viewctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.viewctrl.informChangeListeners(taskId, (this.edited ? ChangeType.Modified : ChangeType.Saved),
+            (this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined));
     }
 
     getDataReady<T extends JSFrameData>(data: T, dosave = false) {
@@ -585,6 +599,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             if (msg === "update") {
                 this.console = "";
                 this.edited = true;
+                this.updateListeners();
                 this.c();
             }
             if (msg === "datasave") {

@@ -131,7 +131,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     resetChanges(): void {
         this.userword = this.initialValue;
         this.changes = false;
-        this.updateListenerMultisaves(ChangeType.Saved);
+        this.updateListeners(ChangeType.Saved);
     }
 
     supportsSetAnswer(): boolean {
@@ -162,7 +162,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             }
         }
         this.changes = false;
-        this.updateListenerMultisaves(ChangeType.Saved);
+        this.updateListeners(ChangeType.Saved);
         return {ok: ok, message: message};
 
     }
@@ -208,7 +208,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.initialValue = this.userword;
         this.result = undefined;
         this.changes = false;
-        this.updateListenerMultisaves(ChangeType.Saved);
+        this.updateListeners(ChangeType.Saved);
     }
 
     /**
@@ -376,7 +376,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.result = data.web.result;
             this.initialValue = this.userword;
             this.changes = false;
-            this.updateListenerMultisaves(ChangeType.Saved);
+            this.updateListeners(ChangeType.Saved);
             this.hideSavedText = false;
             this.redAlert = false;
             this.saveResponse.saved = true;
@@ -432,12 +432,12 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (!this.changes) {
             this.changes = true;
             this.hideSavedText = true;
-            this.updateListenerMultisaves(ChangeType.Modified);
+            this.updateListeners(ChangeType.Modified);
         }
     }
 
     // TODO: Generic, move
-    updateListenerMultisaves(state: ChangeType) {
+    updateListeners(state: ChangeType) {
         if (!this.vctrl) {
             return;
         }

@@ -65,7 +65,7 @@ import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
 import {onClick} from "../document/eventhandlers";
-import {ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {ChangeType, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
 import {ComparatorFilter} from "../util/comparatorfilter";
 import {
@@ -84,6 +84,7 @@ import {
 import {$http, $timeout} from "../util/ngimport";
 import {
     clone,
+    copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
     maxContentOrFitContent,
@@ -91,9 +92,14 @@ import {
     StringOrNumber,
     to,
 } from "../util/utils";
-import {copyToClipboard} from "../util/utils";
 import {TaskId} from "./taskid";
-import {handleToolbarKey, hideToolbar, isToolbarEnabled, isToolbarOpen, openTableEditorToolbar} from "./timTableEditorToolbar";
+import {
+    handleToolbarKey,
+    hideToolbar,
+    isToolbarEnabled,
+    isToolbarOpen,
+    openTableEditorToolbar
+} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
 
@@ -247,6 +253,7 @@ export interface TimTable {
     disableSelect?: boolean;
     savedText?: string;
     connectionErrorMessage?: string;
+    tag?: string
     undo?: {
         button?: string;
         title?: string;
@@ -1362,6 +1369,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }>(url, params, {timeout: defaultTimeout}));
         if (r.ok) {
             this.edited = false;
+            this.updateListeners();
             this.prevCellDataMatrix = clone(this.cellDataMatrix);
             this.prevUserdata = clone(this.userdata);
             this.prevData = clone(this.data);
@@ -1384,6 +1392,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      */
     public confirmSaved() {
         this.edited = false;
+        this.updateListeners();
     }
 
     /*
@@ -1533,6 +1542,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.data.saveCallBack(cellsToSave, true);
             }
             this.edited = true;
+            this.updateListeners();
             this.result = "";
             if (this.data.autosave) {
                 await this.sendDataBlockAsync();
@@ -3554,6 +3564,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.data.saveStyleCallBack(cellsToSave, colValuesAreSame);
             }
             this.edited = true;
+            this.updateListeners();
             this.result = "";
             if (this.data.autosave) {
                 await this.sendDataBlockAsync();
@@ -3732,9 +3743,23 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.cellDataMatrix = clone(this.prevCellDataMatrix);
         this.data = clone(this.prevData);
         this.edited = false;
+        this.updateListeners();
         this.reInitialize();
         this.c();
     }
+
+    updateListeners() {
+        if (!this.viewctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.viewctrl.informChangeListeners(taskId, (this.edited ? ChangeType.Modified : ChangeType.Saved),
+            (this.data.tag ? this.data.tag : undefined));
+    }
+
 
     supportsSetAnswer() {
         return false;

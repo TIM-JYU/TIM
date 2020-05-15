@@ -162,7 +162,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     resetChanges(): void {
         this.numericvalue = this.initialValue;
         this.changes = false;
-        this.updateListenerMultisaves(ChangeType.Saved);
+        this.updateListeners(ChangeType.Saved);
     }
 
     // TODO: Do not support setAnswer if an attribute says not to
@@ -201,7 +201,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         }
         this.initialValue = this.numericvalue;
         this.changes = false;
-        this.updateListenerMultisaves(ChangeType.Saved);
+        this.updateListeners(ChangeType.Saved);
         return {ok: ok, message: message};
 
     }
@@ -239,7 +239,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.initialValue = this.numericvalue;
         this.result = undefined;
         this.changes = false;
-        this.updateListenerMultisaves(ChangeType.Saved);
+        this.updateListeners(ChangeType.Saved);
     }
 
     /**
@@ -390,7 +390,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 this.numericvalue = data.web.value.toString();
                 this.initialValue = this.numericvalue;
                 this.changes = false;
-                this.updateListenerMultisaves(ChangeType.Saved);
+                this.updateListeners(ChangeType.Saved);
                 this.hideSavedText = false;
                 this.redAlert = false;
                 this.saveResponse.saved = true;
@@ -435,11 +435,11 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if (!this.changes) {
             this.changes = true;
             this.hideSavedText = true;
-            this.updateListenerMultisaves(ChangeType.Modified);
+            this.updateListeners(ChangeType.Modified);
         }
     }
 
-    updateListenerMultisaves(state: ChangeType) {
+    updateListeners(state: ChangeType) {
         if (!this.vctrl) {
             return;
         }

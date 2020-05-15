@@ -5,7 +5,7 @@ import angular, {IController} from "angular";
 import deepEqual from "deep-equal";
 import {getParId} from "../document/parhelpers";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
-import {ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {ChangeType, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {LectureController} from "../lecture/lectureController";
 import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
 import {showQuestionAskDialog} from "../lecture/questionAskController";
@@ -131,7 +131,23 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     private checkChanges() {
+        const oldVal = this.changes;
         this.changes = !deepEqual(this.savedAnswer, this.newAnswer);
+        if (oldVal != this.changes) {
+            console.log("CHANGES HAPPENED");
+            this.updateListeners(this.changes ? ChangeType.Modified : ChangeType.Saved);
+        }
+    }
+
+    updateListeners(state: ChangeType) {
+        if (!this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.vctrl.informChangeListeners(taskId, state, (this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined));
     }
 
     private updateAnswer(at: AnswerTable) {

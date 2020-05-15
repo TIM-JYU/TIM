@@ -22,6 +22,7 @@ export const GenericPluginMarkup = t.partial({
     lazy: t.boolean,
     resetText: nullable(t.string),
     stem: nullable(t.string),
+    tag: nullable(t.string),
     hideBrowser: t.boolean,
     forceBrowser: t.boolean,
     undo: nullable(undoType),

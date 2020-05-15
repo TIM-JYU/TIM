@@ -3,7 +3,7 @@ import {Ace} from "ace-builds/src-noconflict/ace";
 import angular, {IController, IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {IAce} from "tim/editor/ace";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
@@ -369,7 +369,9 @@ function makeTemplate() {
                       rows="{{$ctrl.rows}}"
                       ng-model="$ctrl.usercode"
                       ng-trim="false"
-                      ng-attr-placeholder="{{$ctrl.placeholder}}"></textarea>
+                      ng-attr-placeholder="{{$ctrl.placeholder}}" 
+                    ng-keypress="$ctrl.textChanged()">
+            </textarea>
             </div>
             <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
             <div class="csRunNotSaved" ng-show="$ctrl.isUnSaved()"></div>
@@ -842,6 +844,7 @@ class CsController extends CsBase implements ITimComponent {
     private docLink: string;
     private docURL?: string;
     private edit!: HTMLTextAreaElement;
+    private edited: boolean = false;
     private editArea?: Element;
     private editorIndex: number;
     private editorMode!: number;
@@ -979,6 +982,24 @@ class CsController extends CsBase implements ITimComponent {
             this.savedvals.input !== this.userinput) && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
     }
 
+    textChanged(): void {
+        if(!this.edited){
+            this.edited = true;
+            this.updateListeners(ChangeType.Modified);
+        }
+    }
+
+    updateListeners(state: ChangeType) {
+        if (!this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.vctrl.informChangeListeners(taskId, state, (this.attrs.tag ? this.attrs.tag : undefined));
+    }
+
     resetField(): undefined {
         this.initCode();
         return undefined;
@@ -989,6 +1010,7 @@ class CsController extends CsBase implements ITimComponent {
             return;
         }
         this.resetChanges();
+        this.updateListeners(ChangeType.Saved);
     }
 
     resetChanges(): void {
@@ -1468,6 +1490,8 @@ ${fhtml}
             args: this.userargs,
             input: this.userinput,
         };
+        this.edited = false;
+        this.updateListeners(ChangeType.Saved);
     }
 
     doCountWords(str: string) {
@@ -3008,7 +3032,7 @@ csApp.component("csTextRunner", {
            ng-model="$ctrl.usercode"
            ng-trim="false"
            ng-attr-placeholder="{{$ctrl.placeholder}}"
-           ng-keypress="$ctrl.runCodeIfCR($event);"/>
+           ng-keypress="[$ctrl.runCodeIfCR($event), $ctrl.textChanged()]"/>
     <button ng-if="::$ctrl.isRun"
             ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.preventSave"
             class = "timButton"
