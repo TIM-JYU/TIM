@@ -71,15 +71,15 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     get undoButton() {
-        return this.attrsall.markup.undo && this.attrsall.markup.undo.button;
+        return this.attrsall.markup.undo?.button;
     }
 
     get undoTitle() {
-        return this.attrsall.markup.undo && this.attrsall.markup.undo.title;
+        return this.attrsall.markup.undo?.title;
     }
 
     get undoConfirmation() {
-        return this.attrsall.markup.undo && this.attrsall.markup.undo.confirmation;
+        return this.attrsall.markup.undo?.confirmation;
     }
 
     isUnSaved(userChange?: boolean | undefined): boolean {

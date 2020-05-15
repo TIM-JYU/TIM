@@ -702,15 +702,15 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     get undoButton() {
-        return this.data.undo && this.data.undo.button;
+        return this.data.undo?.button;
     }
 
     get undoTitle() {
-        return  this.data.undo && this.data.undo.title;
+        return  this.data.undo?.title;
     }
 
     get undoConfirmation() {
-        return  this.data.undo && this.data.undo.confirmation;
+        return  this.data.undo?.confirmation;
     }
 
     private getEditInputElement() {
