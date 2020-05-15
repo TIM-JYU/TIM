@@ -140,6 +140,7 @@ TIM_SAFE_ATTRS = frozenset([
     'wait-text',
     'reset-time',
     'is-button',
+    'open-at',
 ])
 
 c = Cleaner(
