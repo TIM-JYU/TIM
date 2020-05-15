@@ -511,9 +511,6 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         if (!this.prevdata) {
             return;
         }
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
-        }
         this.setData(this.prevdata, false, true);
         this.send({msg: "close"});
         this.edited = false;
