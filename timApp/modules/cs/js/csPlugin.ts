@@ -412,6 +412,7 @@ function makeTemplate() {
                     title="(Ctrl-S)"
                     ng-click="$ctrl.runCode()"
                     ng-bind-html="::$ctrl.buttonText()"></button>
+            &nbsp;
             <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
             ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
             &nbsp&nbsp
@@ -3010,6 +3011,7 @@ csApp.component("csTextRunner", {
             title="(Ctrl-S)"
             ng-click="$ctrl.runCode();"
             ng-bind-html="::$ctrl.buttonText()"></button>
+    &nbsp;
     <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
             ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
     <span ng-if="$ctrl.savedText"

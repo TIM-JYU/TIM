@@ -598,6 +598,7 @@ export enum ClearSort {
             <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton">
                 <p class="csRunMenu">
                     <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="task && button" (click)="handleClickSave()">{{button}}</button>
+                    &nbsp;
                     <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="resetChanges($event)">{{undoButton}}</a>
                     <span [hidden]="!result">{{result}}</span>
                 </p>

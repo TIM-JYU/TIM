@@ -292,6 +292,7 @@ qstApp.component("qstRunner", {
             on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
     <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || ($ctrl.disableUnchanged && !$ctrl.isUnSaved())"
             ng-click="$ctrl.saveText()"></button>
+    &nbsp;
     <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
 
     &nbsp;&nbsp;
