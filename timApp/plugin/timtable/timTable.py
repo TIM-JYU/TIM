@@ -278,10 +278,11 @@ def timTable_answer_jso(jsondata):
     answers = jsondata['input']['answers']
     spoints = jsondata['markup'].get('points')
     markup = jsondata['markup']
+    savedText = markup.get('savedText')
     result = ""
 
     save = answers
-    web = {'result': "Vastattu", 'markup': markup, 'show_result': result, 'state': save}
+    web = {'result': savedText, 'markup': markup, 'show_result': result, 'state': save}
     return json_response({'save': save, 'web': web, "tim_info": tim_info})
 
 
