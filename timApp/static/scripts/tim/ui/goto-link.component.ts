@@ -17,7 +17,11 @@ const OPEN_AT_WILDCARD = "*";
 @Component({
     selector: "tim-goto-link",
     template: `
-        <a [class.disabled]="linkDisabled" [class.timButton]="isButton" (click)="handleClick()" [attr.aria-disabled]="linkDisabled">
+        <a [class.disabled]="linkDisabled"
+           [attr.aria-disabled]="linkDisabled"
+           [class.timButton]="isButton"
+           [attr.role]="isButton ? 'button': null"
+           (click)="handleClick()">
             <ng-content></ng-content>
         </a>
         <div class="load-text" *ngIf="isCountdown" i18n>
