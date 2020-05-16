@@ -190,12 +190,12 @@
           <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="ac2cfd0a1ee53ea9ed75736416c682fa28864451" datatype="html">
+      <trans-unit id="92839e44d163420e3fd27f8bd9ac616bc3b3ff62" datatype="html">
         <source>
-            You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> in <x id="INTERPOLATION" equiv-text="{{ countDown }}"/> seconds.
+            You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> in <x id="INTERPOLATION" equiv-text="{{ humanizedCountdown }}"/>.
         </source>
-        <target state="translated">
-            Tämä <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> aukeaa <x id="INTERPOLATION" equiv-text="{{ countDown }}"/> sekunnin kuluttua.
+        <target state="new">
+            Tämä <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> aukeaa ajassa: <x id="INTERPOLATION" equiv-text="{{ humanizedCountdown }}"/>.
         </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
