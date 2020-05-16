@@ -20,8 +20,8 @@ const OPEN_AT_WILDCARD = "*";
         <a [class.disabled]="linkDisabled" [class.timButton]="isButton" (click)="handleClick()" [attr.aria-disabled]="linkDisabled">
             <ng-content></ng-content>
         </a>
-        <div class="load-text" *ngIf="isCountdown">
-            {{countdownText}}
+        <div class="load-text" *ngIf="isCountdown" i18n>
+            Opens in {{countdownText}}
         </div>
         <div class="load-text" *ngIf="isGoing">
             <tim-loading></tim-loading>
