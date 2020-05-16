@@ -366,6 +366,14 @@ def find_duplicate_accounts_by_email() -> List[Tuple[User, Set[User]]]:
     help='from address for the emails',
 )
 @click.option(
+    '--mail-host',
+    help='mail host to connect to',
+)
+@click.option(
+    '--login',
+    help='login info for mail host "user:pass"',
+)
+@click.option(
     '--passwords',
     type=click.File(),
     required=True,
@@ -387,12 +395,25 @@ def send_email_cmd(
         subject: str,
         mail_from: str,
         reply_to: Optional[str],
+        mail_host: Optional[str],
+        login: Optional[str],
         passwords: TextIOWrapper,
         dry_run: bool,
         delay: float,
 ) -> None:
     template_text = template.read()
-    s = smtplib.SMTP(current_app.config['MAIL_HOST']) if not dry_run else None
+    if mail_host is None:
+        mail_host = current_app.config['MAIL_HOST']
+    gmail_host = 'smtp.gmail.com'
+    port = 587 if mail_host == gmail_host else 0
+    s = smtplib.SMTP(mail_host, port) if not dry_run else None
+    if s and mail_host == gmail_host:
+        if not login:
+            raise click.UsageError('Login info is required for gmail')
+        s.ehlo()
+        s.starttls()
+        user, passw = login.split(':')
+        s.login(user, passw)
     log_file = open('send_email_log.txt', 'w', encoding='utf8', newline='\n')
     error_log_file = open('send_email_error_log.txt', 'w', encoding='utf8', newline='\n')
     error_users_file = open('send_email_error_users.txt', 'w', encoding='utf8', newline='\n')
@@ -442,6 +463,8 @@ def send_email_cmd(
         else:
             click.echo(f'Email sent to {email}')
             log_file.write(f'Email sent to {email}:\n{sep}\n{msg}\n{sep}\n')
+    if s:
+        s.quit()
     log_file.close()
     error_log_file.close()
     error_users_file.close()
