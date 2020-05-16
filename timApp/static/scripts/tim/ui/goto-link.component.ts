@@ -5,7 +5,7 @@ import {secondsToHHMMSS, to} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
 
 enum GotoLinkState {
-    Uninitalized,
+    Uninitialized,
     Ready,
     Countdown,
     Goto
@@ -43,7 +43,7 @@ export class GotoLinkComponent {
     @Input() openAt?: string;
     countDown = 0;
     linkDisabled = false;
-    linkState = GotoLinkState.Uninitalized;
+    linkState = GotoLinkState.Uninitialized;
     openTime?: moment.Moment;
 
     get isCountdown() {
@@ -83,7 +83,7 @@ export class GotoLinkComponent {
 
         this.linkDisabled = true;
 
-        if (this.linkState == GotoLinkState.Uninitalized) {
+        if (this.linkState == GotoLinkState.Uninitialized) {
             await this.resolveOpenAtTime();
             this.linkState = GotoLinkState.Ready;
         }
