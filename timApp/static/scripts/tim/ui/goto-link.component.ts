@@ -1,7 +1,7 @@
 import {Component, Input, OnInit} from "@angular/core";
 import moment from "moment";
 import {$http} from "tim/util/ngimport";
-import {time2String, to} from "tim/util/utils";
+import {secondsToHHMMSS, to} from "tim/util/utils";
 
 enum GotoLinkState {
     None,
@@ -56,7 +56,7 @@ export class GotoLinkComponent implements OnInit {
     }
 
     get countdownText() {
-        return time2String(this.countDown, true);
+        return secondsToHHMMSS(this.countDown);
     }
 
     async handleClick() {
@@ -105,6 +105,7 @@ export class GotoLinkComponent implements OnInit {
         const realResetTime = Math.max(this.resetTime * 1000, waitTime);
 
         setTimeout(() => {
+            // Special case: on empty href just reload the page to mimick the behaviour of <a>
             if (this.href == "") {
                 window.location.reload();
             } else {

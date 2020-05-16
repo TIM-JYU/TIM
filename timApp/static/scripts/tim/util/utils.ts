@@ -735,14 +735,18 @@ export function parseIframeopts(iframeopts: string) {
     return {sandbox};
 }
 
-export function time2String(time: number, padZero: boolean = false) {
+export function seconds2Time(seconds: number) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds - h * 3600) / 60);
+    const s = seconds - (h * 3600) - (m * 60);
+    return {hours: h, minutes: m, seconds: s};
+}
+
+export function secondsToHHMMSS(time: number) {
     if (!time) {
         return "";
     }
-    const h = Math.floor(time / 3600);
-    const m = Math.floor((time - h * 3600) / 60);
-    const s = time - (h * 3600) - (m * 60);
-
-    const pad = (tt: number) => `${padZero && tt < 10 ? "0" : ""}${tt}`;
-    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    const {hours, minutes, seconds} = seconds2Time(time);
+    const pad = (tt: number) => `${tt < 10 ? "0" : ""}${tt}`;
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }

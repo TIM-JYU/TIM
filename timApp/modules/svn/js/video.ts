@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {time2String, valueDefu, valueOr} from "tim/util/utils";
+import {seconds2Time, valueDefu, valueOr} from "tim/util/utils";
 
 const videoApp = angular.module("videoApp", ["ngSanitize"]);
 export const moduleDefs = [videoApp];
@@ -46,6 +46,27 @@ videoApp.component("videoZoom", {
 </p>
 `,
 });
+
+function time2String(time: number) {
+    if (!time) {
+        return "";
+    }
+    const {hours, minutes, seconds} = seconds2Time(time);
+    let hs;
+    let ms;
+    if (!hours) {
+        hs = "";
+    } else {
+        hs = hours + "h";
+    }
+    if (!hours && !minutes) {
+        ms = "";
+    } else {
+        ms = minutes + "m";
+    }
+    const ss = seconds + "s";
+    return hs + ms + ss;
+}
 
 function isYoutube(file: string) {
     if (!file) {
