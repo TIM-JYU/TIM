@@ -240,7 +240,7 @@ class QuestionTest(BrowserTest):
                 labels[i].click()
         savebtn = find_button_by_text(qst, 'Save')
         savebtn.click()
-        self.wait_until_text_present('qst-runner', 'Vastattu')
+        self.wait_until_text_present('qst-runner', 'Saved')
 
         # Move mouse out of button to prevent flaky screenshot.
         header = self.drv.find_element_by_css_selector('qst-runner h5')

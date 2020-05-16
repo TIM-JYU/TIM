@@ -158,7 +158,7 @@ rows:
                         'questionType': 'matrix',
                         'rows': ['x'],
                         'showPoints': False},
-             'result': 'Vastattu',
+             'result': 'Saved',
              'show_result': True,
              'state': [['2']]}, r['web'])
         self.assertTrue('error' not in r)
@@ -176,7 +176,7 @@ rows:
                         'questionType': 'matrix',
                         'rows': ['x'],
                         'showPoints': False},
-             'result': 'Vastattu',
+             'result': 'Saved',
              'show_result': True,
              'state': [['2']]}, r['web'])
         self.assertTrue('error' not in r)
