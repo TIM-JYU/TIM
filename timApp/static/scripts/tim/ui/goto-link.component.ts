@@ -5,7 +5,8 @@ import {secondsToHHMMSS, to} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
 
 enum GotoLinkState {
-    None,
+    Uninitalized,
+    Ready,
     Countdown,
     Goto
 }
@@ -32,7 +33,7 @@ const OPEN_AT_WILDCARD = "*";
     `,
     styleUrls: ["./goto-link.component.scss"],
 })
-export class GotoLinkComponent implements OnInit {
+export class GotoLinkComponent {
     @Input() href = "";
     @Input() waitText?: string;
     @Input() resetTime = 15;
@@ -42,14 +43,8 @@ export class GotoLinkComponent implements OnInit {
     @Input() openAt?: string;
     countDown = 0;
     linkDisabled = false;
-    linkState = GotoLinkState.None;
+    linkState = GotoLinkState.Uninitalized;
     openTime?: moment.Moment;
-
-    async ngOnInit() {
-        this.linkDisabled = true;
-        await this.resolveOpenAtTime();
-        this.linkDisabled = false;
-    }
 
     get isCountdown() {
         return this.linkState == GotoLinkState.Countdown;
@@ -87,6 +82,12 @@ export class GotoLinkComponent implements OnInit {
         if (this.isCountdown) { return; }
 
         this.linkDisabled = true;
+
+        if (this.linkState == GotoLinkState.Uninitalized) {
+            await this.resolveOpenAtTime();
+            this.linkState = GotoLinkState.Ready;
+        }
+
         if (this.openTime && this.openTime.isValid()) {
             const serverTime = await to($http.get<{time: number}>("/time"));
             // Fail silently here and hope the user clicks again so it can retry
@@ -137,7 +138,7 @@ export class GotoLinkComponent implements OnInit {
         }, waitTime);
 
         setTimeout(() => {
-           this.linkState = GotoLinkState.None;
+           this.linkState = GotoLinkState.Ready;
            this.linkDisabled = false;
         }, realResetTime);
     }
