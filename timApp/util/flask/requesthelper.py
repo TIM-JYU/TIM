@@ -132,11 +132,15 @@ def get_request_message(status_code=None, include_body=False):
         name = 'Anonymous'
     else:
         name = get_current_user_object().name
+    if current_app.config['LOG_HOST']:
+        url_or_path = request.url
+    else:
+        url_or_path = request.full_path if request.query_string else request.path
     msg = f"""
 {name}
 [{request.headers.get("X-Forwarded-For") or request.remote_addr}]:
 {request.method}
-{request.full_path if request.query_string else request.path}
+{url_or_path}
 {status_code or ""}
 {get_request_time()}""".replace('\n', ' ').strip()
     if not include_body or request.method not in ('POST', 'PUT', 'DELETE'):
