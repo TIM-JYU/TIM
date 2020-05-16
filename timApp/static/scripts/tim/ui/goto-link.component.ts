@@ -2,12 +2,16 @@ import {Component, Input, OnInit} from "@angular/core";
 import moment from "moment";
 import {$http} from "tim/util/ngimport";
 import {secondsToHHMMSS, to} from "tim/util/utils";
+import {IRight} from "tim/item/rightsEditor";
 
 enum GotoLinkState {
     None,
     Countdown,
     Goto
 }
+
+const VIEW_PATH = "/view/";
+const OPEN_AT_WILDCARD = "*";
 
 @Component({
     selector: "tim-goto-link",
@@ -41,10 +45,10 @@ export class GotoLinkComponent implements OnInit {
     linkState = GotoLinkState.None;
     openTime?: moment.Moment;
 
-    ngOnInit() {
-        if (this.openAt) {
-            this.openTime = moment.utc(this.openAt);
-        }
+    async ngOnInit() {
+        this.linkDisabled = true;
+        await this.resolveOpenAtTime();
+        this.linkDisabled = false;
     }
 
     get isCountdown() {
@@ -57,6 +61,25 @@ export class GotoLinkComponent implements OnInit {
 
     get countdownText() {
         return secondsToHHMMSS(this.countDown);
+    }
+
+    async resolveOpenAtTime() {
+        if (!this.openAt) { return; }
+
+        if (this.openAt == OPEN_AT_WILDCARD) {
+            const url = new URL(this.href, window.location.href);
+            const path = url.pathname;
+            // If the link goes to TIM, and it's a view, try to ask the opening time from the server
+            if (url.hostname == window.location.hostname && path.startsWith(VIEW_PATH)) {
+                const docPath = path.substring(VIEW_PATH.length);
+                const accessInfo = await to($http.get<IRight | null>(`/doc_view_info/${docPath}`));
+                if (accessInfo.ok) {
+                    this.openTime = accessInfo.result.data?.accessible_from;
+                }
+            }
+        } else {
+            this.openTime = moment.utc(this.openAt);
+        }
     }
 
     async handleClick() {

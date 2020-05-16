@@ -21,7 +21,7 @@ from marshmallow import ValidationError
 from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_rights, has_edit_access, get_doc_or_abort, verify_manage_access, AccessDenied
+    get_rights, has_edit_access, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, current_user_in_lecture, \
     save_last_page
@@ -204,6 +204,20 @@ def par_info(doc_id, par_id):
         'item': doc,
         'par_name': par_name,
     })
+
+
+@view_page.route("/doc_view_info/<path:doc_name>")
+def doc_access_info(doc_name):
+    doc_info = DocEntry.find_by_path(doc_name, fallback_to_id=True)
+    if not doc_info:
+        return abort(404)
+
+    try:
+        view_access = verify_view_access(doc_info, require=False, check_duration=True)
+    except ItemLockedException as ile:
+        view_access = ile.access
+
+    return json_response(view_access)
 
 
 @dataclass
