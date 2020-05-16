@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import moment from "moment";
 import {$http} from "tim/util/ngimport";
 import {secondsToHHMMSS, to} from "tim/util/utils";
