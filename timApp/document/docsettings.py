@@ -95,6 +95,7 @@ def add_url_macros(yaml_vals):
 class DocSettingTypes:
     themes: List[str]
     override_user_themes: bool
+    hide_sidemenu: Optional[str]
 
 
 doc_setting_field_map: Dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
@@ -443,6 +444,9 @@ class DocSettings:
 
     def override_user_themes(self) -> bool:
         return self.get_setting_or_default('override_user_themes', False)
+
+    def hide_sidemenu(self) -> Optional[str]:
+        return self.get_setting_or_default('hide_sidemenu', None)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
