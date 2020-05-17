@@ -1,6 +1,6 @@
 import traceback
 
-from flask import request, abort, render_template, session, flash, Flask, redirect
+from flask import request, abort, render_template, session, flash, Flask, redirect, current_app
 from markupsafe import Markup
 from marshmallow import ValidationError
 
@@ -75,6 +75,7 @@ def register_errorhandlers(app: Flask):
             access=error.access,
             msg=error.msg,
             next_doc=error.next_doc,
+            minimal=current_app.config['MINIMAL_DURATION_UNLOCK_UI']
         ), 403
 
     @app.errorhandler(NoSuchUserException)

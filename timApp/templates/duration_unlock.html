@@ -1,4 +1,14 @@
 {% extends 'item.html' %}
+{% block head %}
+    {{ super() }}
+    {% if minimal %}
+        <script class="global-vars">
+            var docSettings = {};
+            var exam_mode = true;
+            var hide_sidemenu = true;
+        </script>
+   {% endif %}
+{% endblock %}
 {% block content %}
     <div class="alert alert-warning">
         <i class="glyphicon glyphicon-warning-sign"></i>
