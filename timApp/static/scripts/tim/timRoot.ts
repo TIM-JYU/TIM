@@ -87,6 +87,13 @@ function hideExamModeElements(hide: IVisibilityVars) {
     hide.footer = true;
 }
 
+function hideSideMenu(hide: IVisibilityVars) {
+    hide.hamburger = true;
+    hide.bookmarks = true;
+    hide.index = true;
+    hide.settings = true;
+}
+
 export function getVisibilityVars() {
     const params = getUrlParams();
     const g = someglobals();
@@ -106,6 +113,9 @@ export function getVisibilityVars() {
         }
         if (g.exam_mode) {
             hideExamModeElements(hide);
+        }
+        if (g.hide_sidemenu) {
+            hideSideMenu(hide);
         }
     }
 

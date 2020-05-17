@@ -607,6 +607,7 @@ def view(item_path, template_name, route="view"):
         hide_links=should_hide_links(doc_settings, rights),
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
         pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
+        hide_sidemenu=should_hide_sidemenu(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
         exam_mode=is_exam_mode(doc_settings, rights),
         route=route,
@@ -690,6 +691,10 @@ def should_hide_top_buttons(settings: DocSettings, rights: dict):
 
 def should_hide_paragraphs(settings: DocSettings, rights: dict):
     return check_rights(settings.pars_only(), rights)
+
+
+def should_hide_sidemenu(settings: DocSettings, rights: dict):
+    return check_rights(settings.hide_sidemenu(), rights)
 
 
 def is_exam_mode(settings: DocSettings, rights: dict):
