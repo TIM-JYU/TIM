@@ -110,7 +110,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
         }
         const m = this.pluginMarkup();
-        if (m?.hideBrowser) {
+        if (m?.hideBrowser || this.viewctrl?.docSettings.hideBrowser) {
             this.hideBrowser = true;
             this.showPlaceholder = false;
         }

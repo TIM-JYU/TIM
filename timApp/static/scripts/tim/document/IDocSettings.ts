@@ -23,5 +23,6 @@ export interface IDocSettings {
     custom_stamp_model?: string;
     course_main?: string;
     form_mode?: boolean;
+    hideBrowser?: boolean;
     login?: ILoginSettings;
 }
