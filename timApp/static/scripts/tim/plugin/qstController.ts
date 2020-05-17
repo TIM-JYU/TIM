@@ -183,7 +183,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     private async doSaveText(nosave: boolean) {
-        this.error = "... saving ...";
+        this.error = "";
         this.isRunning = true;
 
         this.result = "";
@@ -214,14 +214,15 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
                 url,
                 data: params,
                 headers: {"Content-Type": "application/json"},
-                timeout: 20000,
+                timeout: 1,
             },
         ));
         if (!r.ok) {
             this.isRunning = false;
-            this.errors.push(r.result.data.error);
-            this.error = "Ikuinen silmukka tai jokin muu vika?";
-            return {saved: false, message: r.result.data.error};
+            this.errors.push(r.result.data?.error);
+            console.log(r);
+            this.error = r.result.data?.error ?? this.attrsall.markup.connectionerrormessage ?? "Ikuinen silmukka tai jokin muu vika?";
+            return {saved: false, message: r.result.data?.error ?? this.attrsall.markup.connectionerrormessage};
         }
         const data = r.result.data;
         this.isRunning = false;
@@ -268,6 +269,7 @@ qstApp.component("qstRunner", {
     </a>
     <span ng-show="$ctrl.result">{{$ctrl.result}}</span>
     <p class="plgfooter" ng-bind-html="::$ctrl.getFooter()"></p>
+    <div ng-if="$ctrl.error" class="error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
 </div>
 <div ng-if="!$ctrl.isTask()">
     <a class="questionAddedNew" ng-click="$ctrl.questionClicked()">

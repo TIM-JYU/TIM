@@ -352,8 +352,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (nosave) {
             params.input.nosave = true;
         }
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params));
+        const url = "asd" + this.pluginMeta.getAnswerUrl();
+        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params, {timeout: 20000}));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -391,7 +391,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
                 }
             }
         } else {
-            this.errormessage = r.result.data.error || "Syntax error or no reply from server?";
+            this.errormessage = r.result.data?.error ?? this.attrs.connectionerrormessage ?? "Syntax error or no reply from server?";
         }
         return this.saveResponse;
     }

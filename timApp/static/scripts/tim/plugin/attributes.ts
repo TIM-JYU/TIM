@@ -18,6 +18,7 @@ export const GenericPluginMarkup = t.partial({
     hideBrowser: t.boolean,
     forceBrowser: t.boolean,
     useCurrentUser: t.boolean,
+    connectionerrormessage: nullable(t.string),
 });
 
 export const Info = nullable(t.type({

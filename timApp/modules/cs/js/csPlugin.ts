@@ -1881,7 +1881,7 @@ ${fhtml}
                 "-replyMD"?: string,
             },
             savedNew: number,
-        }>({method: "PUT", url: url, data: params, timeout: 20000},
+        }>({method: "PUT", url: url, data: params, timeout: 1},
         ));
         if (r.ok) {
             this.isRunning = false;
