@@ -29,8 +29,8 @@ def get_latest_answers_query(task_id: TaskId, users: List[User]):
     return q
 
 
-def is_redundant_answer(content: str, existing_answers: List[Answer], ptype: Optional[PluginType]):
-    is_redundant = existing_answers and existing_answers[0].content == content
+def is_redundant_answer(content: str, existing_answers: List[Answer], ptype: Optional[PluginType], valid: bool):
+    is_redundant = existing_answers and (existing_answers[0].content == content and existing_answers[0].valid == valid)
     if is_redundant:
         return True
     if not existing_answers and ptype and ptype.type == 'rbfield' and json.loads(content)['c'] == '0':
@@ -66,7 +66,7 @@ def save_answer(users: List[User],
     if tags is None:
         tags = []
     existing_answers = get_common_answers(users, task_id)
-    if is_redundant_answer(content_str, existing_answers, plugintype) and not force_save:
+    if is_redundant_answer(content_str, existing_answers, plugintype, valid) and not force_save:
         if existing_answers:
             a = existing_answers[0]
             a.points = points
