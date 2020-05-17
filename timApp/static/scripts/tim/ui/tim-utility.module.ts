@@ -9,6 +9,7 @@ import {TimAlertComponent} from "tim/ui/tim-alert.component";
 import {ErrorDescriptionComponent} from "tim/ui/error-description.component";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {SaveButtonComponent} from "tim/user/settings.component";
+import {GotoLinkComponent} from "tim/ui/goto-link.component";
 import {PluginFrameComponent} from "./plugin-frame.component";
 import {LoadingComponent} from "./loadingIndicator";
 import {MarkupErrorComponent} from "./markup-error.component";
@@ -30,6 +31,7 @@ import {CloseButtonComponent} from "./close-button.component";
         ErrorDescriptionComponent,
         BootstrapPanelComponent,
         SaveButtonComponent,
+        GotoLinkComponent,
     ],
     exports: [
         MarkupErrorComponent,
@@ -44,6 +46,7 @@ import {CloseButtonComponent} from "./close-button.component";
         ErrorDescriptionComponent,
         BootstrapPanelComponent,
         SaveButtonComponent,
+        GotoLinkComponent,
     ],
     imports: [
         CommonModule,

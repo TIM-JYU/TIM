@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {valueDefu, valueOr} from "tim/util/utils";
+import {seconds2Time, valueDefu, valueOr} from "tim/util/utils";
 
 const videoApp = angular.module("videoApp", ["ngSanitize"]);
 export const moduleDefs = [videoApp];
@@ -51,23 +51,20 @@ function time2String(time: number) {
     if (!time) {
         return "";
     }
-    const h = Math.floor(time / 3600);
-    time = (time - h * 3600);
-    const m = Math.floor(time / 60);
-    const s = (time - m * 60);
+    const {hours, minutes, seconds} = seconds2Time(time);
     let hs;
     let ms;
-    if (!h) {
+    if (!hours) {
         hs = "";
     } else {
-        hs = h + "h";
+        hs = hours + "h";
     }
-    if (!h && !m) {
+    if (!hours && !minutes) {
         ms = "";
     } else {
-        ms = m + "m";
+        ms = minutes + "m";
     }
-    const ss = s + "s";
+    const ss = seconds + "s";
     return hs + ms + ss;
 }
 

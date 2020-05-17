@@ -98,6 +98,7 @@ TIM_SAFE_TAGS = [
     'tim-self-expire',
     'tim-mark-all-as-read',
     'tim-add-member',
+    'tim-goto-link',
 ]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
@@ -133,6 +134,13 @@ TIM_SAFE_ATTRS = frozenset([
 
     # tim-add-member
     'group',
+
+    # tim-goto-link
+    'max-wait',
+    'wait-text',
+    'reset-time',
+    'is-button',
+    'open-at',
 ])
 
 c = Cleaner(
