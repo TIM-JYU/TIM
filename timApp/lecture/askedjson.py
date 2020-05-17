@@ -36,6 +36,7 @@ FIELD_NAME_MAP = dict(
     questiontitle='questionTitle',
     questiontype='questionType',
     rows='rows',
+    savedText='savedText',
     timelimit='timeLimit',
     title='questionTitle',
     type='questionType',

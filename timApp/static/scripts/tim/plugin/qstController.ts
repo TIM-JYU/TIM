@@ -20,11 +20,13 @@ import {PluginBaseCommon, pluginBindings, PluginMeta} from "./util";
 interface IQstExtraInfo {
     invalid?: boolean;
     isTask: boolean;
+    savedText?: string;
 }
 
 interface IQstAttributes extends IGenericPluginTopLevelFields<IQuestionMarkup & IQstExtraInfo> {
     state: AnswerTable | null;
     show_result: boolean;
+    savedText: string;
 }
 
 class QstController extends PluginBaseCommon implements IController, ITimComponent {
@@ -224,7 +226,9 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         const data = r.result.data;
         this.isRunning = false;
         this.error = "";
-        this.result = data.web.result;
+        let result = data.web.result;
+        if (result == "Saved" && this.attrsall.markup.savedText) { result = this.attrsall.markup.savedText; }
+        this.result = result;
         if (data.web.markup && data.web.show_result) {
             this.preview = makePreview(data.web.markup, {answerTable: data.web.state, enabled: true});
             this.preview.showExplanations = true;

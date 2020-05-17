@@ -234,7 +234,7 @@ def qst_answer_jso(m: QstAnswerModel):
         jsonmarkup.pop('expl', None)
         jsonmarkup.pop('points', None)
 
-    savedText = markup.savedText or "Saved"
+    savedText = "Saved"  # markup.savedText or "Saved"
 
     web = {'result': savedText, 'markup': jsonmarkup if result else None, 'show_result': result, 'state': webstate}
     return json_response({'save': save, 'web': web, "tim_info": tim_info})
@@ -607,6 +607,7 @@ qst_attrs = {
     'lazy',
     'randomizedRows',
     'resetText',
+    'savedText',
     'showPoints',
     'stem',
     'tag',
@@ -796,7 +797,8 @@ def qst_get_md(jso):
     texboxw = markup.get('texboxw', '0.2')
     texboxh = markup.get('texboxh', '10')
     stem = markup.get('stem', '')
-    stem += '\par' if stem else ''
+    if stem:
+        stem += '\par'
     qjson = markup  # .get('json',{})
     question_text = qjson.get('questionText', '')
     question_type = qjson.get('questionType', '')

@@ -278,7 +278,7 @@ def timTable_answer_jso(jsondata):
     answers = jsondata['input']['answers']
     spoints = jsondata['markup'].get('points')
     markup = jsondata['markup']
-    savedText = markup.get('savedText', "Saved")
+    savedText = "Saved" #  markup.get('savedText', "Saved")  # Todo make this work
     result = ""
 
     save = answers

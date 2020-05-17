@@ -176,7 +176,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         if (!v) { return "\u2003"; } // &#8195  em space &emsp;
         v = "" + v;
         // v = v.replace('$', '');
-        return v.substr(0, Math.min(v.length, 5));
+        if (v === value.text && !value.favorite) { return v; }
+        if (v.length <= 5) { return v; }
+        return v.substr(0, Math.min(v.length, 5)) + "..";
     }
 
     // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic
@@ -184,7 +186,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      * Gets the cell text for toolbar
      */
     private getTitleForToolbar(value: IToolbarTemplate) {
-        const v = value.title;
+        let v = value.title;
+        if (!v) { v = value.cell; } // &#8195  em space &emsp;
+        if (!v) { v = value.text; } // &#8195  em space &emsp;
         if (!v) { return null; } // &#8195  em space &emsp;
         return v;
     }

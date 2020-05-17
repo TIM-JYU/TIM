@@ -178,6 +178,7 @@ export interface IToolbarTemplate {
     hide?: boolean;
     commands?: string[];
     notInEdit?: boolean;
+    favorite?: boolean;
 }
 
 export interface TimTable {
@@ -228,6 +229,8 @@ export interface TimTable {
     footer?: string;
     stem?: string;
     disableSelect?: boolean;
+    savedText?: string;
+
 }
 
 interface Rng {
@@ -1311,7 +1314,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }>(url, params));
         if (r.ok) {
             this.edited = false;
-            this.result = r.result.data.web.result;
+            let result = r.result.data.web.result;
+            const savedText = this.data.savedText;
+            if (result == "Saved" && savedText) { result = savedText; }
+            this.result = result;
+            // this.result = r.result.data.web.result;
         }
         this.isRunning = false;
         return r;
@@ -2336,7 +2343,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             } else {
                 value = this.getCellContentString(rowi, coli);
             }
-            if (true || isToolbarOpen()) { // TODO: why toolbar must be onpen?
+            if (true || isToolbarOpen()) { // TODO: why toolbar must be open?
                 this.currentCell = {
                     row: rowi,
                     col: coli,
@@ -3381,13 +3388,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (!this.activeCell || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
             return;
         }
-        let templ: IToolbarTemplate | undefined = {};
+        let templ: IToolbarTemplate | undefined = { favorite: true };
         if (this.selectedCells.cells && this.selectedCells.cells.length > 1) { // do area template
             const iy1 = this.selectedCells.srow1;
             const iy2 = this.selectedCells.srow2;
             const ix1 = this.selectedCells.scol1;
             const ix2 = this.selectedCells.scol2;
-            const tempArea: IToolbarTemplate = {text: "",
+            const tempArea: IToolbarTemplate = {text: "", favorite: true,
                 area: new Array(iy2 - iy1 + 1).
                       fill(undefined).map(() => new Array(ix2 - ix1 + 1).fill(undefined))};
             for (const c of this.selectedCells.cells) {
