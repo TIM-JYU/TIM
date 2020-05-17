@@ -22,7 +22,7 @@ export class AccessCountdownComponent implements OnInit {
     @Input() waitTime!: number;
     countDown!: number;
     private timer!: number;
-    waitOffset = Math.random() * 15;
+    waitOffset = Math.random() * 10;
     curLanguage = Users.getCurrentLanguage();
 
     get humanizedCountdown() {
