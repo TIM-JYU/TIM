@@ -212,12 +212,17 @@ def doc_access_info(doc_name):
     if not doc_info:
         return abort(404)
 
+    can_access = False
     try:
         view_access = verify_view_access(doc_info, require=False, check_duration=True)
+        can_access = view_access is not None
     except ItemLockedException as ile:
         view_access = ile.access
 
-    return json_response(view_access)
+    return json_response({
+        'can_access': can_access,
+        'right': view_access
+    })
 
 
 @dataclass

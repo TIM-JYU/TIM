@@ -74,16 +74,32 @@
           <context context-type="linenumber">14</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="09bb2c980cd8304b1bd6b52dd0cf4b0e83b31949" datatype="html">
-        <source>
-            Opens in <x id="INTERPOLATION" equiv-text="{{countdownText}}"/>
-        </source>
-        <target state="translated">
-            Aikaa avautumiseen: <x id="INTERPOLATION" equiv-text="{{countdownText}}"/>
-        </target>
+      <trans-unit id="16e04b1bd3f8e72f0d445e261ef85c6ca814f905" datatype="html">
+        <source>Your access expired <x id="INTERPOLATION" equiv-text="{{pastDueTime}}"/> ago.</source>
+        <target state="translated">Lukuoikeutesi dokumenttiin loppui <x id="INTERPOLATION" equiv-text="{{pastDueTime}}"/> sitten.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
-          <context context-type="linenumber">5</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="037213e16fa59766a1d7077686e8221552881240" datatype="html">
+        <source>You don't have permission to view that document.</source>
+        <target state="translated">Sinulla ei ole lukuoikeutta tähän dokumenttiin.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
+          <context context-type="linenumber">14</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3092aa6f72ce812bfb65a553b036a0e53b25198c" datatype="html">
+        <source>
+                Opens in <x id="INTERPOLATION" equiv-text="{{countdownText}}"/>.
+            </source>
+        <target state="translated">
+                Aikaa avautumiseen: <x id="INTERPOLATION" equiv-text="{{countdownText}}"/>.
+            </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
+          <context context-type="linenumber">16</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6ef67740e0ab796daaad1d2f719d1230272f298c" datatype="html">
@@ -91,7 +107,7 @@
         <target state="translated">Ladataan, odota.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
-          <context context-type="linenumber">12</context>
+          <context context-type="linenumber">23</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6d6968cb33ce9daad70a5f0e4832d46061332d09" datatype="html">
