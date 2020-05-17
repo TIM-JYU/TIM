@@ -58,7 +58,7 @@ class PluginTest(TimRouteTest):
         self.check_ok_answer(resp)
 
         resp = self.post_answer(plugin_type, task_id, [True, False, False])
-        self.check_failed_answer(resp)
+        self.check_failed_answer(resp, is_new=True) # save 1st answer after validity change
         resp = self.post_answer(plugin_type, task_id_ext, [True, False, False])
         self.check_failed_answer(resp)
         self.post_answer(plugin_type, task_id_ext_wrong, [True, False, False],
@@ -70,7 +70,7 @@ class PluginTest(TimRouteTest):
                          expect_status=400,
                          expect_content='Task not found in the document: mmcqexamplez')
 
-        doc.document.set_settings({'global_plugin_attrs': {'all': {'answerLimit': 2}}})
+        doc.document.set_settings({'global_plugin_attrs': {'all': {'answerLimit': 3}}})
         resp = self.post_answer(plugin_type, task_id, [True, True, False])
         self.check_ok_answer(resp)
 
@@ -109,6 +109,10 @@ class PluginTest(TimRouteTest):
              {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
               'content': '[true, true, false]',
               'points': 1.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
+             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID,
+                         'name': TEST_USER_1_USERNAME}],
+              'content': '[true, false, false]',
+              'points': 2.0, 'task_id': task_id, 'valid': False, 'last_points_modifier': None},
              {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
               'content': '[true, false, false]',
               'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None}],
