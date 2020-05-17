@@ -59,6 +59,7 @@ import {AddMemberComponent} from "tim/ui/add-member.component";
 import {TimFooterComponent} from "tim/footer.component";
 import {SiteHeaderComponent} from "tim/header/site-header.component";
 import {AccessCountdownComponent} from "tim/item/access-countdown.component";
+import {GotoLinkComponent} from "tim/ui/goto-link.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -121,6 +122,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timSiteHeader", SiteHeaderComponent);
     doDowngrade(dg, "timSettings", SettingsComponent);
     doDowngrade(dg, "timAccessCountdown", AccessCountdownComponent);
+    doDowngrade(dg, "timGotoLink", GotoLinkComponent);
     return dg;
 }
 

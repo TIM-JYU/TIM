@@ -21,7 +21,7 @@ from marshmallow import ValidationError
 from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_rights, has_edit_access, get_doc_or_abort, verify_manage_access, AccessDenied
+    get_rights, has_edit_access, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, current_user_in_lecture, \
     save_last_page
@@ -137,6 +137,10 @@ class ViewModel:
     nocache: bool = False
     pars_only: bool = False
     preamble: bool = False
+    goto: Optional[str] = None
+    wait_max: int = 0
+    direct_link_timer: int = 15
+
 
     def __post_init__(self):
         if self.b and self.e:
@@ -200,6 +204,20 @@ def par_info(doc_id, par_id):
         'item': doc,
         'par_name': par_name,
     })
+
+
+@view_page.route("/doc_view_info/<path:doc_name>")
+def doc_access_info(doc_name):
+    doc_info = DocEntry.find_by_path(doc_name, fallback_to_id=True)
+    if not doc_info:
+        return abort(404)
+
+    try:
+        view_access = verify_view_access(doc_info, require=False, check_duration=True)
+    except ItemLockedException as ile:
+        view_access = ile.access
+
+    return json_response(view_access)
 
 
 @dataclass
@@ -269,9 +287,21 @@ def get_module_ids(js_paths: List[str]):
         yield jsfile.lstrip('/').rstrip('.js')
 
 
+def goto_view(item_path, model: ViewModel):
+    return render_template('goto_view.html',
+                           item_path=item_path,
+                           display_text=model.goto,
+                           wait_max=model.wait_max,
+                           direct_link_timer=model.direct_link_timer)
+
+
 def view(item_path, template_name, route="view"):
     taketime("view begin", zero=True)
     m: ViewModel = ViewModelSchema.load(request.args, unknown='EXCLUDE')
+
+    if m.goto:
+        return goto_view(item_path, m)
+
     usergroup = m.group
     g.viewmode = route in viewmode_routes
     g.route = route

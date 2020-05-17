@@ -74,6 +74,26 @@
           <context context-type="linenumber">14</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="09bb2c980cd8304b1bd6b52dd0cf4b0e83b31949" datatype="html">
+        <source>
+            Opens in <x id="INTERPOLATION" equiv-text="{{countdownText}}"/>
+        </source>
+        <target state="translated">
+            Aikaa avautumiseen: <x id="INTERPOLATION" equiv-text="{{countdownText}}"/>
+        </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
+          <context context-type="linenumber">5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6ef67740e0ab796daaad1d2f719d1230272f298c" datatype="html">
+        <source>Loading, please wait.</source>
+        <target state="translated">Ladataan, odota.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
+          <context context-type="linenumber">12</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="6d6968cb33ce9daad70a5f0e4832d46061332d09" datatype="html">
         <source>This word is a palindrome</source>
         <target state="translated">Tämä sana on palindromi</target>
@@ -170,12 +190,12 @@
           <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="ac2cfd0a1ee53ea9ed75736416c682fa28864451" datatype="html">
+      <trans-unit id="92839e44d163420e3fd27f8bd9ac616bc3b3ff62" datatype="html">
         <source>
-            You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> in <x id="INTERPOLATION" equiv-text="{{ countDown }}"/> seconds.
+            You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> in <x id="INTERPOLATION" equiv-text="{{ humanizedCountdown }}"/>.
         </source>
-        <target state="translated">
-            Tämä <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> aukeaa <x id="INTERPOLATION" equiv-text="{{ countDown }}"/> sekunnin kuluttua.
+        <target state="new">
+            Tämä <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> aukeaa ajassa: <x id="INTERPOLATION" equiv-text="{{ humanizedCountdown }}"/>.
         </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
@@ -190,12 +210,12 @@
           <context context-type="linenumber">3</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6e14ee90ff0b4843206077b04c1143d4f0f88a04" datatype="html">
+      <trans-unit id="ae348c4e665a3e26cd8f588f42f1d3375b88aea5" datatype="html">
         <source>
-            You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> now. <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>Refresh the page<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.
+            You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> now. <x id="START_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;tim-goto-link>"/>Refresh the page<x id="CLOSE_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;/tim-goto-link>"/>.
         </source>
-        <target state="translated">
-            Pääset <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> nyt. <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>Virkistä sivu<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.
+        <target state="new">
+            Pääset <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> nyt. <x id="START_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;tim-goto-link>"/>Virkistä sivu<x id="CLOSE_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;/tim-goto-link>"/>.
         </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
