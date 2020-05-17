@@ -334,7 +334,7 @@ export class MultisaveController
     }
 
     allSaved(): boolean {
-        return (this.attrs.listener && !this.hasUnsavedTargets);
+        return (!this.attrs.listener || !this.hasUnsavedTargets);
     }
 
     getAttributeType() {
@@ -382,13 +382,13 @@ multisaveApp.component("multisaveRunner", {
         </p>
     </div> <!-- unsaved fields -->
     <button class="timButton"
-            ng-disabled="($ctrl.disableUnchanged && $ctrl.allSaved())"
+            ng-disabled="($ctrl.disableUnchanged && $ctrl.listener && $ctrl.allSaved())"
             ng-if="!$ctrl.showEmailForm && $ctrl.buttonText() && !$ctrl.attrs.destCourse"
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}
     </button>
     &nbsp;
-    <a href="" ng-if="($ctrl.undoButton && !$ctrl.allSaved())" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{::$ctrl.undoButton}}</a>
+    <a href="" ng-if="($ctrl.undoButton && (!$ctrl.listener || !$ctrl.allSaved()))" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{$ctrl.undoButton}}</a>
     <p class="savedtext" ng-if="$ctrl.isSaved && $ctrl.allSaved()">Saved</p>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
         <tim-close-button ng-click="$ctrl.toggleEmailForm()"></tim-close-button>
