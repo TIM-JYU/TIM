@@ -352,7 +352,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (nosave) {
             params.input.nosave = true;
         }
-        const url = "asd" + this.pluginMeta.getAnswerUrl();
+        const url = this.pluginMeta.getAnswerUrl();
         const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params, {timeout: 20000}));
         this.isRunning = false;
         if (r.ok) {

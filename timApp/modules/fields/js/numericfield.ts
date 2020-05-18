@@ -365,7 +365,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean, value: string}}>(url, params));
+        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean, value: string}}>(url, params, {timeout: 20000}));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -405,7 +405,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 }
             }
         } else {
-            this.errormessage = r.result.data.error;
+            this.errormessage = r.result.data?.error ?? this.attrs.connectionerrormessage ?? "Syntax error or no reply from server?";
         }
         return this.saveResponse;
     }
@@ -481,7 +481,7 @@ numericfieldApp.component("numericfieldRunner", {
       <span ng-if="::$ctrl.isPlainText()" class="plaintext" style="width: {{::$ctrl.cols}}em">{{$ctrl.numericvalue}}</span>
      </span></label>
     </div>
-    <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
+    <div ng-if="$ctrl.errormessage"  class="error" style="font-size: 12px" ng-bind-html="$ctrl.errormessage"></div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
             ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.readonly"

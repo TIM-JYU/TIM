@@ -828,6 +828,7 @@ class CsController extends CsBase implements ITimComponent {
     private code?: string;
     private codeInitialized: boolean = false;
     private comtestError?: string;
+    private connectionerrormessage?: string;
     private copyingFromTauno: boolean;
     private csparson: any;
     private cursor: string;
@@ -1770,6 +1771,7 @@ ${fhtml}
     }
 
     async doRunCode(runType: string, nosave: boolean, extraMarkUp?: IExtraMarkup) {
+        this.connectionerrormessage = "";
         if (this.isRunning) {
             return;
         } // do not run if previuos is still running
@@ -1958,6 +1960,10 @@ ${fhtml}
             if (data?.error) {
                 this.error = data.error;
                 this.errors.push(data.error);
+            }
+            if (!r.result.data)
+            {
+                this.connectionerrormessage = this.attrs.connectionerrormessage ?? this.error;
             }
         }
     }
@@ -2988,6 +2994,7 @@ csApp.component("csTextRunner", {
             <span ng-if="$ctrl.savedText"
                 class="savedText"
                 ng-bind-html="$ctrl.savedText"></span>
+    <div ng-if="$ctrl.connectionerrormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionerrormessage"></div>
 
     &nbsp;&nbsp;<a href=""
                    ng-if="$ctrl.muokattu"
