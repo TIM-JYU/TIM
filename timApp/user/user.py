@@ -551,6 +551,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if not b:
             return None
         now = get_current_time()
+        best_access = None
         for a in b.accesses.values():  # type: BlockAccess
             if a.usergroup not in self.groups:
                 name = a.usergroup.name
@@ -566,8 +567,14 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             if to_time is not None:
                 to_time += grace_period
             if (a.accessible_from or maxdate) <= now < (to_time or maxdate):
-                return a
-        return None
+                # If the end time of the access is unrestricted, there is no better access.
+                if to_time is None:
+                    return a
+                # If the end time of the access is restricted, there might be a better access,
+                # so we'll continue looping.
+                if best_access is None or best_access.accessible_to < a.accessible_to:
+                    best_access = a
+        return best_access
 
     def has_access(
             self,
