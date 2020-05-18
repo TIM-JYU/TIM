@@ -134,7 +134,7 @@ export class GotoLinkComponent {
         if (this.isUnauthorized) { return; }
 
         let curTime = moment();
-        if (this.closeTime || this.openTime) {
+        if (this.closeTime || this.openTime) {
             const serverTime = await to($http.get<{time: number}>("/time"));
             // Fail silently here and hope the user clicks again so it can retry
             if (!serverTime.ok) {
@@ -186,7 +186,7 @@ export class GotoLinkComponent {
         setTimeout(() => {
             // Special case: on empty href just reload the page to mimick the behaviour of <a>
             if (this.href == "") {
-                window.location.reload();
+                window.location.reload(true);
             } else {
                 window.open(this.href, this.target);
             }
