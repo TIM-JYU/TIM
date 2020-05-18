@@ -230,7 +230,7 @@ export interface TimTable {
     stem?: string;
     disableSelect?: boolean;
     savedText?: string;
-    connectionerrormessage?: string;
+    connectionErrorMessage?: string;
 
 }
 
@@ -583,7 +583,7 @@ export enum ClearSort {
                 </p>
             </div>
             <p class="plgfooter" *ngIf="data.footer" [innerHtml]="data.footer"></p>
-            <div *ngIf="connectionerrormessage" class="error" style="font-size: 12px" [innerHtml]="connectionerrormessage"></div>
+            <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
             <span class="error" *ngIf="error" [innerText]="error"></span>
         </div>
     `,
@@ -647,7 +647,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     hide: HideValues = { editorPosition: true};
     disableSelect: boolean = true;
     result?: string;
-    connectionerrormessage?: string;
+    connectionErrorMessage?: string;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -1283,7 +1283,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (!this.task) {
             return;
         }
-        this.connectionerrormessage = "";
+        this.connectionErrorMessage = "";
         this.error = "";
         this.isRunning = true;
         const url = this.pluginMeta.getAnswerUrl();
@@ -1324,7 +1324,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.result = result;
             // this.result = r.result.data.web.result;
         } else {
-            this.connectionerrormessage = r.result.data?.error ?? this.data.connectionerrormessage ?? "Syntax error or no reply from server?";
+            this.connectionErrorMessage = r.result.data?.error ?? this.data.connectionErrorMessage ?? "Syntax error or no reply from server?";
         }
         this.isRunning = false;
         return r;

@@ -611,7 +611,7 @@ qst_attrs = {
     'showPoints',
     'stem',
     'tag',
-    'connectionerrormessage',
+    'connectionErrorMessage',
 }
 
 

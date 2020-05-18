@@ -405,7 +405,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 }
             }
         } else {
-            this.errormessage = r.result.data?.error ?? this.attrs.connectionerrormessage ?? "Syntax error or no reply from server?";
+            this.errormessage = r.result.data?.error ?? this.attrs.connectionErrorMessage ?? "Syntax error or no reply from server?";
         }
         return this.saveResponse;
     }

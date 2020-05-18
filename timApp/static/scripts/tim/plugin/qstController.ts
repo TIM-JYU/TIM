@@ -221,8 +221,8 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
             this.isRunning = false;
             this.errors.push(r.result.data?.error);
             console.log(r);
-            this.error = r.result.data?.error ?? this.attrsall.markup.connectionerrormessage ?? "Ikuinen silmukka tai jokin muu vika?";
-            return {saved: false, message: r.result.data?.error ?? this.attrsall.markup.connectionerrormessage};
+            this.error = r.result.data?.error ?? this.attrsall.markup.connectionErrorMessage ?? "Ikuinen silmukka tai jokin muu vika?";
+            return {saved: false, message: r.result.data?.error ?? this.attrsall.markup.connectionErrorMessage};
         }
         const data = r.result.data;
         this.isRunning = false;
