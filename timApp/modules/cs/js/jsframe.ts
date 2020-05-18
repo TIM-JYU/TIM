@@ -4,7 +4,7 @@ import {ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {IUser} from "tim/user/IUser";
 import {$http} from "tim/util/ngimport";
-import {parseIframeopts, to} from "tim/util/utils";
+import {defaultErrorMessage, defaultTimeout, parseIframeopts, to} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     AfterViewInit,
@@ -172,6 +172,7 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
                       *ngIf="console"
                       [innerHtml]="console"></span>
             </p>
+                    <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
             <span class="csRunError"
                   *ngIf="error"
                   [innerHtml]="error"></span>
@@ -237,6 +238,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     isOpen: boolean = false;
     button: string = "";
     edited: boolean = false;
+    connectionErrorMessage?: string;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -418,6 +420,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     async runSend(data: unknown) {
+        this.connectionErrorMessage = undefined;
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             this.saveResponse.saved = false;
@@ -438,12 +441,13 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
 
         const r = await to($http<{
             web: { error?: string, console?: string },
-        }>({method: "PUT", url: url, data: params, timeout: 20000},
+        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
         ));
         this.isRunning = false;
 
         if (!r.ok) {
-            this.error = r.result.data.error;
+            this.error = r.result.data?.error;
+            this.connectionErrorMessage = this.error ?? this.attrsall.markup.connectionErrorMessage ?? defaultErrorMessage;
             this.saveResponse.saved = false;
             this.c();
             return this.saveResponse;

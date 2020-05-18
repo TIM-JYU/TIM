@@ -7,7 +7,7 @@ import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $timeout} from "tim/util/ngimport";
-import {to, valueOr} from "tim/util/utils";
+import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
 
 const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
 export const moduleDefs = [textfieldApp];
@@ -65,7 +65,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
     private initialValue = "";
-    private errormessage = "";
+    private errormessage?: string;
     private hideSavedText = true;
     private redAlert = false;
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
@@ -331,7 +331,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.saveResponse.message = "No changes";
             return this.saveResponse;
         }
-        this.errormessage = "";
+        this.errormessage = undefined;
         if (this.attrs.validinput) {
             if (!this.validityCheck(this.attrs.validinput)) {
                 this.errormessage = this.attrs.errormessage ?? "Input does not pass the RegEx: " + this.attrs.validinput;
@@ -353,7 +353,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params));
+        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params, {timeout: defaultTimeout}));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -391,7 +391,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
                 }
             }
         } else {
-            this.errormessage = r.result.data.error || "Syntax error or no reply from server?";
+            this.errormessage = r.result.data?.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
         }
         return this.saveResponse;
     }

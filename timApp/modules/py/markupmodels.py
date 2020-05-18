@@ -138,6 +138,7 @@ class GenericMarkupModel(KnownMarkupFields):
     lang: Union[str, None, Missing] = missing
     resetText: Union[str, Missing, None] = missing
     showInView: Union[bool, Missing] = missing
+    connectionErrorMessage: Union[str, Missing] = missing
 
     def get_visible_data(self):
         return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys and k != 'hidden_keys'}

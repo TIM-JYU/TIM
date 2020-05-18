@@ -7,7 +7,7 @@ import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {defaultErrorMessage, defaultTimeout, to} from "tim/util/utils";
 
 const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
 export const moduleDefs = [dropdownApp];
@@ -48,6 +48,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     private radio?: boolean;
     private shuffle?: boolean;
     private changes = false;
+    private connectionErrorMessage?: string;
 
     getDefaultMarkup() {
         return {};
@@ -94,6 +95,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     async doSave(nosave: boolean) {
+        this.connectionErrorMessage = undefined;
         // TODO: Check whether to skip undefined inputs or save empty strings
         if (this.selectedWord == undefined) {
             this.selectedWord = "";
@@ -113,7 +115,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         }
 
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
+        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params, {timeout: defaultTimeout}));
 
         if (r.ok) {
             this.changes = false;
@@ -121,7 +123,8 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             const data = r.result.data;
             this.error = data.web.error;
         } else {
-            this.error = r.result.data.error;
+            this.error = r.result.data?.error;
+            this.connectionErrorMessage = this.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
         }
         return {saved: r.ok, message: this.error};
     }
@@ -243,6 +246,7 @@ dropdownApp.component("dropdownRunner", {
         </select>
         </span></label>
     </div>
+    <div ng-if="$ctrl.connectionErrorMessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionErrorMessage"></div>
     <div class="error" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>

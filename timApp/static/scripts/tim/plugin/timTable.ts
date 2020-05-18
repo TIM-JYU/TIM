@@ -82,7 +82,14 @@ import {
     KEY_UP,
 } from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
-import {maxContentOrFitContent, scrollToViewInsideParent, StringOrNumber, to} from "../util/utils";
+import {
+    defaultErrorMessage,
+    defaultTimeout,
+    maxContentOrFitContent,
+    scrollToViewInsideParent,
+    StringOrNumber,
+    to,
+} from "../util/utils";
 import {copyToClipboard} from "../util/utils";
 import {TaskId} from "./taskid";
 import {handleToolbarKey, hideToolbar, isToolbarEnabled, isToolbarOpen, openTableEditorToolbar} from "./timTableEditorToolbar";
@@ -237,6 +244,7 @@ export interface TimTable {
     stem?: string;
     disableSelect?: boolean;
     savedText?: string;
+    connectionErrorMessage?: string;
 
 }
 
@@ -589,6 +597,7 @@ export enum ClearSort {
                 </p>
             </div>
             <p class="plgfooter" *ngIf="data.footer" [innerHtml]="data.footer"></p>
+            <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
             <span class="error" *ngIf="error" [innerText]="error"></span>
         </div>
     `,
@@ -652,6 +661,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     hide: HideValues = { editorPosition: true};
     disableSelect: boolean = true;
     result?: string;
+    connectionErrorMessage?: string;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -1287,6 +1297,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (!this.task) {
             return;
         }
+        this.connectionErrorMessage = undefined;
         this.error = "";
         this.isRunning = true;
         const url = this.pluginMeta.getAnswerUrl();
@@ -1318,7 +1329,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             web: {
                 result: string,
             },
-        }>(url, params));
+        }>(url, params, {timeout: defaultTimeout}));
         if (r.ok) {
             this.edited = false;
             let result = r.result.data.web.result;
@@ -1326,6 +1337,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             if (result == "Saved" && savedText) { result = savedText; }
             this.result = result;
             // this.result = r.result.data.web.result;
+        } else {
+            this.connectionErrorMessage = r.result.data?.error ?? this.data.connectionErrorMessage ?? defaultErrorMessage;
         }
         this.isRunning = false;
         return r;

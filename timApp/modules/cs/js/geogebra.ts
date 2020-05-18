@@ -6,7 +6,7 @@ import {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $sce, $timeout} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {defaultTimeout, to} from "tim/util/utils";
 import {Subscription} from "rxjs";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 
@@ -234,7 +234,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
 
         const r = await to($http<{
             web: {error?: string, console?: string},
-        }>({method: "PUT", url: url, data: params, timeout: 20000},
+        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
         ));
         this.isRunning = false;
 
