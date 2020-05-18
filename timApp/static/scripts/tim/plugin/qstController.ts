@@ -183,7 +183,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     private async doSaveText(nosave: boolean) {
-        this.error = "";
+        this.error = undefined;
         this.isRunning = true;
 
         this.result = "";
@@ -226,7 +226,6 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         }
         const data = r.result.data;
         this.isRunning = false;
-        this.error = "";
         let result = data.web.result;
         if (result == "Saved" && this.attrsall.markup.savedText) { result = this.attrsall.markup.savedText; }
         this.result = result;

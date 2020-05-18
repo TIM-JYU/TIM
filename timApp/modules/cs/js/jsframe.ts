@@ -420,7 +420,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     async runSend(data: unknown) {
-        this.connectionErrorMessage = "";
+        this.connectionErrorMessage = undefined;
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             this.saveResponse.saved = false;

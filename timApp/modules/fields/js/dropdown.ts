@@ -95,7 +95,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     async doSave(nosave: boolean) {
-        this.connectionErrorMessage = "";
+        this.connectionErrorMessage = undefined;
         // TODO: Check whether to skip undefined inputs or save empty strings
         if (this.selectedWord == undefined) {
             this.selectedWord = "";

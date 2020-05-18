@@ -1290,7 +1290,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (!this.task) {
             return;
         }
-        this.connectionErrorMessage = "";
+        this.connectionErrorMessage = undefined;
         this.error = "";
         this.isRunning = true;
         const url = this.pluginMeta.getAnswerUrl();

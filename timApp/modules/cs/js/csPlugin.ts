@@ -1773,7 +1773,7 @@ ${fhtml}
     }
 
     async doRunCode(runType: string, nosave: boolean, extraMarkUp?: IExtraMarkup) {
-        this.connectionErrorMessage = "";
+        this.connectionErrorMessage = undefined;
         if (this.isRunning) {
             return;
         } // do not run if previuos is still running

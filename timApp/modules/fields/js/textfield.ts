@@ -65,7 +65,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
     private initialValue = "";
-    private errormessage = "";
+    private errormessage?: string;
     private hideSavedText = true;
     private redAlert = false;
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
@@ -331,7 +331,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.saveResponse.message = "No changes";
             return this.saveResponse;
         }
-        this.errormessage = "";
+        this.errormessage = undefined;
         if (this.attrs.validinput) {
             if (!this.validityCheck(this.attrs.validinput)) {
                 this.errormessage = this.attrs.errormessage ?? "Input does not pass the RegEx: " + this.attrs.validinput;
