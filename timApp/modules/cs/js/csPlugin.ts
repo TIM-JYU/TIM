@@ -669,6 +669,7 @@ const CsMarkupOptional = t.partial({
     iframeopts: t.string,
     count: t.any,
     hide: t.any,
+    savedText: t.string,
 });
 
 const CsMarkupDefaults = t.type({
@@ -710,6 +711,7 @@ const CsMarkupDefaults = t.type({
     upload: withDefault(t.boolean, false),
     validityCheck: withDefault(t.string, ""),
     validityCheckMessage: withDefault(t.string, ""),
+    validityCheckForceSave: withDefault(t.boolean, false),
     viewCode: withDefault(t.boolean, false),
     words: withDefault(t.boolean, false),
     /* eslint-enable quote-props */
@@ -1773,6 +1775,7 @@ ${fhtml}
         if (this.isRunning) {
             return;
         } // do not run if previuos is still running
+        let noErrorClear = false;
         this.closeDocument();
         if (this.isSage) {
             await this.initSage(true);
@@ -1835,7 +1838,10 @@ ${fhtml}
                 this.error = msg;
                 this.isRunning = false;
                 this.runError = true;
-                return;
+                if (!this.attrs.validityCheckForceSave) {
+                    return;
+                }
+                noErrorClear = true;
             }
         }
 
@@ -1892,14 +1898,16 @@ ${fhtml}
             this.oneruntime = "" + tsruntime + " " + runtime.split(" ", 1)[0];
             this.runtime = "\nWhole: " + tsruntime + "\ncsPlugin: " + runtime;
             if (this.isText && data.savedNew) {
-                this.savedText = data.web.error ?? "saved";
+                // let savedText = "saved";
+                // this.savedText = data.web.error ?? "saved";
+                this.savedText = this.attrsall.markup.savedText ?? "saved";
                 this.preventSave = true;
                 data.web.error = "";
             }
             if (data.web.pwd) {
                 ConsolePWD.setPWD(data.web.pwd, this);
             }
-            this.error = data.web.error;
+            if (!noErrorClear) { this.error = data.web.error; }
             this.runSuccess = true;
 
             this.runError = this.error;
