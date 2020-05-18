@@ -416,7 +416,6 @@ function makeTemplate() {
             <span ng-if="$ctrl.savedText"
                     class="savedText"
                     ng-bind-html="$ctrl.savedText"></span>
-            <div ng-if="$ctrl.connectionerrormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionerrormessage"></div>
             &nbsp&nbsp
             <button ng-if="::$ctrl.isTest"
                     ng-disabled="$ctrl.isRunning"
@@ -459,6 +458,8 @@ function makeTemplate() {
                 <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto" style="position: relative;top: 0.3em;"/>
                 <input type="text" title="Choose linelength for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
             </span>
+            <div ng-if="$ctrl.connectionerrormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionerrormessage"></div>
+
             <!--
             <span ng-if="$ctrl.wrap.n!=-1" class="inputSmall" style="float: right;">
               <label title="Put 0 to no wrap">wrap: <input type="text"
