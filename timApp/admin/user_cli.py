@@ -199,7 +199,7 @@ def do_soft_delete(u: User) -> None:
 @click.option('--lastname', prompt='Last name', default='')
 @click.option('--email', prompt='Email', default='')
 @click.option('--password', prompt='Password', default='')
-@click.option('--admin', default=False, is_flag=True, prompt='Make this user an administrator?')
+@click.option('--admin/--no-admin', default=False, prompt='Make this user an administrator?')
 def create(
         username: str,
         firstname: str,
