@@ -6,7 +6,7 @@ import * as t from "io-ts";
 import {IJsRunner, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {copyToClipboard, to} from "tim/util/utils";
 import {AnswerReturnBrowser, ErrorList, IError, IncludeUsersOption, JsrunnerAll, JsrunnerMarkup} from "../../shared/jsrunnertypes";
 import "style-loader!../stylesheets/jsrunner.css";
 
@@ -162,6 +162,10 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         }
     }
 
+    public copyText() {
+        copyToClipboard(this.output);
+    }
+
     getAttributeType() {
         return JsrunnerAll;
     }
@@ -241,7 +245,13 @@ jsrunnerApp.component("jsRunner", {
     <pre ng-if="$ctrl.error">{{$ctrl.error.stackTrace}}</pre>
     <jsrunner-error ng-repeat="err in $ctrl.scriptErrors" e="err"></jsrunner-error>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <pre ng-if="$ctrl.output">{{$ctrl.output}}</pre>
+    <div ng-if="$ctrl.output">
+    <p class="pull-right">
+        <a class="smalltext" ng-click="$ctrl.copyText()" title="Copy to clipboard" 
+           style="position: absolute; right: 0;">copy</a>
+    </p>
+    <pre >{{$ctrl.output}}</pre>
+    </div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
     <div ng-if="::$ctrl.isFieldHelper()">
     <p ng-show="!$ctrl.isopen" ng-click="$ctrl.toggleFieldHelper()" >+ Show field list</p>
