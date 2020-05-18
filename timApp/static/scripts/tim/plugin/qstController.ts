@@ -214,7 +214,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
                 url,
                 data: params,
                 headers: {"Content-Type": "application/json"},
-                timeout: 1,
+                timeout: 20000,
             },
         ));
         if (!r.ok) {

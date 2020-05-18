@@ -416,6 +416,7 @@ function makeTemplate() {
             <span ng-if="$ctrl.savedText"
                     class="savedText"
                     ng-bind-html="$ctrl.savedText"></span>
+            <div ng-if="$ctrl.connectionerrormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionerrormessage"></div>
             &nbsp&nbsp
             <button ng-if="::$ctrl.isTest"
                     ng-disabled="$ctrl.isRunning"
@@ -1883,7 +1884,7 @@ ${fhtml}
                 "-replyMD"?: string,
             },
             savedNew: number,
-        }>({method: "PUT", url: url, data: params, timeout: 1},
+        }>({method: "PUT", url: url, data: params, timeout: 20000},
         ));
         if (r.ok) {
             this.isRunning = false;

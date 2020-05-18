@@ -87,6 +87,7 @@ import {copyToClipboard} from "../util/utils";
 import {TaskId} from "./taskid";
 import {handleToolbarKey, hideToolbar, isToolbarEnabled, isToolbarOpen, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
+import {nullable} from "tim/plugin/attributes";
 
 const sortLang: string = "fi";
 
@@ -230,6 +231,7 @@ export interface TimTable {
     stem?: string;
     disableSelect?: boolean;
     savedText?: string;
+    connectionerrormessage?: string;
 
 }
 
@@ -582,6 +584,7 @@ export enum ClearSort {
                 </p>
             </div>
             <p class="plgfooter" *ngIf="data.footer" [innerHtml]="data.footer"></p>
+            <div *ngIf="connectionerrormessage" class="error" style="font-size: 12px" [innerHtml]="connectionerrormessage"></div>
             <span class="error" *ngIf="error" [innerText]="error"></span>
         </div>
     `,
@@ -645,6 +648,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     hide: HideValues = { editorPosition: true};
     disableSelect: boolean = true;
     result?: string;
+    connectionerrormessage?: string;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -1280,6 +1284,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (!this.task) {
             return;
         }
+        this.connectionerrormessage = "";
         this.error = "";
         this.isRunning = true;
         const url = this.pluginMeta.getAnswerUrl();
@@ -1311,7 +1316,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             web: {
                 result: string,
             },
-        }>(url, params));
+        }>(url, params, {timeout: 20000}));
         if (r.ok) {
             this.edited = false;
             let result = r.result.data.web.result;
@@ -1319,6 +1324,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             if (result == "Saved" && savedText) { result = savedText; }
             this.result = result;
             // this.result = r.result.data.web.result;
+        } else {
+            this.connectionerrormessage = r.result.data?.error ?? this.data.connectionerrormessage ?? "Syntax error or no reply from server?";
         }
         this.isRunning = false;
         return r;

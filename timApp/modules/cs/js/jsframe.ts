@@ -172,6 +172,7 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
                       *ngIf="console"
                       [innerHtml]="console"></span>
             </p>
+                    <div *ngIf="connectionerrormessage" class="error" style="font-size: 12px" [innerHtml]="connectionerrormessage"></div>
             <span class="csRunError"
                   *ngIf="error"
                   [innerHtml]="error"></span>
@@ -237,6 +238,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     isOpen: boolean = false;
     button: string = "";
     edited: boolean = false;
+    connectionerrormessage?: string;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -418,6 +420,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     async runSend(data: unknown) {
+        this.connectionerrormessage = "";
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             this.saveResponse.saved = false;
@@ -443,7 +446,8 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.isRunning = false;
 
         if (!r.ok) {
-            this.error = r.result.data.error;
+            this.error = r.result.data?.error;
+            this.connectionerrormessage = this.error ?? this.attrsall.markup.connectionerrormessage ?? "Syntax error or no reply from server?";
             this.saveResponse.saved = false;
             this.c();
             return this.saveResponse;

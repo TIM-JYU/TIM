@@ -48,6 +48,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     private radio?: boolean;
     private shuffle?: boolean;
     private changes = false;
+    private connectionerrormessage?: string;
 
     getDefaultMarkup() {
         return {};
@@ -94,6 +95,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     async doSave(nosave: boolean) {
+        this.connectionerrormessage = "";
         // TODO: Check whether to skip undefined inputs or save empty strings
         if (this.selectedWord == undefined) {
             this.selectedWord = "";
@@ -113,7 +115,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         }
 
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
+        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params, {timeout: 20000}));
 
         if (r.ok) {
             this.changes = false;
@@ -121,7 +123,8 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             const data = r.result.data;
             this.error = data.web.error;
         } else {
-            this.error = r.result.data.error;
+            this.error = r.result.data?.error;
+            this.connectionerrormessage = this.error ?? this.attrs.connectionerrormessage ?? "Syntax error or no reply from server?";
         }
         return {saved: r.ok, message: this.error};
     }
@@ -243,6 +246,7 @@ dropdownApp.component("dropdownRunner", {
         </select>
         </span></label>
     </div>
+    <div ng-if="$ctrl.connectionerrormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionerrormessage"></div>
     <div class="error" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div>
