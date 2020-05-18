@@ -7,7 +7,7 @@ import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $timeout} from "tim/util/ngimport";
-import {to, valueOr} from "tim/util/utils";
+import {defaultTimeout, to, valueOr} from "tim/util/utils";
 
 const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
 export const moduleDefs = [textfieldApp];
@@ -353,7 +353,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params, {timeout: 20000}));
+        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params, {timeout: defaultTimeout}));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;

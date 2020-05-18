@@ -4,7 +4,7 @@ import {ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $sce} from "tim/util/ngimport";
-import {to, windowAsAny} from "tim/util/utils";
+import {defaultTimeout, to, windowAsAny} from "tim/util/utils";
 
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
 export const moduleDefs = [stackApp];
@@ -343,7 +343,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }>({
             data: params,
             method: "PUT",
-            timeout: 20000,
+            timeout: defaultTimeout,
             url: url,
         }));
         this.isRunning = false;
@@ -389,7 +389,7 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
         const r = await to($http<{
             web: {stackResult: StackResult, error?: string},
-        }>({method: "PUT", url: url, data: params, timeout: 20000},
+        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
         ));
         this.isRunning = false;
 

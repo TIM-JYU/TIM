@@ -4,7 +4,7 @@ import {ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {IUser} from "tim/user/IUser";
 import {$http} from "tim/util/ngimport";
-import {parseIframeopts, to} from "tim/util/utils";
+import {defaultTimeout, parseIframeopts, to} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     AfterViewInit,
@@ -441,7 +441,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
 
         const r = await to($http<{
             web: { error?: string, console?: string },
-        }>({method: "PUT", url: url, data: params, timeout: 20000},
+        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
         ));
         this.isRunning = false;
 

@@ -11,7 +11,7 @@ import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
 import {showQuestionAskDialog} from "../lecture/questionAskController";
 import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
-import {Binding, to} from "../util/utils";
+import {Binding, defaultTimeout, to} from "../util/utils";
 import {IGenericPluginTopLevelFields} from "./attributes";
 import {PluginBaseCommon, pluginBindings, PluginMeta} from "./util";
 
@@ -214,7 +214,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
                 url,
                 data: params,
                 headers: {"Content-Type": "application/json"},
-                timeout: 20000,
+                timeout: defaultTimeout,
             },
         ));
         if (!r.ok) {

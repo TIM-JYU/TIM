@@ -7,7 +7,7 @@ import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {defaultTimeout, to} from "tim/util/utils";
 
 const goalTableApp = angular.module("goalTableApp", ["ngSanitize"]);
 export const moduleDefs = [goalTableApp];
@@ -233,7 +233,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
         const r = await to($http<{
             web?: { result?: string, error?: string }
             error?: string,
-        }>({method: "PUT", url: url, data: params, timeout: 20000},
+        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
         ));
 
         this.isRunning = false;

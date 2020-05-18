@@ -8,6 +8,9 @@ import {$rootScope, $timeout} from "./ngimport";
 const blacklist = new Set(["name", "title", "completionDate"]);
 const UnknownRecord = t.record(t.string, t.unknown);
 
+export const defaultTimeout = 20000;
+
+
 // adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html
 export function convertDateStringsToMoments(input: unknown): unknown {
     if (!UnknownRecord.is(input)) {

@@ -9,7 +9,7 @@ import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$compile, $http, $rootScope, $sce, $timeout, $upload} from "tim/util/ngimport";
-import {copyToClipboard, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
+import {copyToClipboard, defaultTimeout, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {wrapText} from "tim/document/editing/utils";
 import {CellInfo} from "./embedded_sagecell";
@@ -1885,7 +1885,7 @@ ${fhtml}
                 "-replyMD"?: string,
             },
             savedNew: number,
-        }>({method: "PUT", url: url, data: params, timeout: 20000},
+        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
         ));
         if (r.ok) {
             this.isRunning = false;

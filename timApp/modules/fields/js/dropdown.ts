@@ -7,7 +7,7 @@ import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {defaultTimeout, to} from "tim/util/utils";
 
 const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
 export const moduleDefs = [dropdownApp];
@@ -115,7 +115,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         }
 
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params, {timeout: 20000}));
+        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params, {timeout: defaultTimeout}));
 
         if (r.ok) {
             this.changes = false;

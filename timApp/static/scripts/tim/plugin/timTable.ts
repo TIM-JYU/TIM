@@ -82,7 +82,7 @@ import {
     KEY_UP,
 } from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
-import {maxContentOrFitContent, scrollToViewInsideParent, StringOrNumber, to} from "../util/utils";
+import {defaultTimeout, maxContentOrFitContent, scrollToViewInsideParent, StringOrNumber, to} from "../util/utils";
 import {copyToClipboard} from "../util/utils";
 import {TaskId} from "./taskid";
 import {handleToolbarKey, hideToolbar, isToolbarEnabled, isToolbarOpen, openTableEditorToolbar} from "./timTableEditorToolbar";
@@ -1315,7 +1315,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             web: {
                 result: string,
             },
-        }>(url, params, {timeout: 20000}));
+        }>(url, params, {timeout: defaultTimeout}));
         if (r.ok) {
             this.edited = false;
             let result = r.result.data.web.result;
