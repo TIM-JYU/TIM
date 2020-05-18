@@ -88,6 +88,13 @@ import {TaskId} from "./taskid";
 import {handleToolbarKey, hideToolbar, isToolbarEnabled, isToolbarOpen, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
+
+function replaceAll(s: string, s1: string, s2: string): string {
+    const re = new RegExp(s1, "g");
+    return s.replace(re, s2);
+}
+
+
 const sortLang: string = "fi";
 
 const styleToHtml: Record<string, string> = {
@@ -2024,7 +2031,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         } else if (handleToolbarKey(ev, this.data.toolbarTemplates)) {
                 ev.preventDefault();
                 return ChangeDetectionHint.NeedToTrigger;
-        } else if (!this.currentCell && ev.ctrlKey && isArrowKey(ev)) {
+        } else if (!this.currentCell && (ev.ctrlKey || ev.altKey) && isArrowKey(ev)) {
             if (await this.handleArrowMovement(ev)) {
                 ev.preventDefault();
                 return ChangeDetectionHint.NeedToTrigger;
@@ -3249,7 +3256,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                                         // newCls = "";  // no need to do anything because it was there
                                         clearOrSet = 1;
                                     } else {
-                                        newCls = newCls.replace(s1, "");
+
+                                        newCls = replaceAll(newCls, s1, "");
                                         clearOrSet = 2;
                                     }
                                 }

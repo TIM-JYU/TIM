@@ -352,14 +352,16 @@ export function handleToolbarKey(ev: KeyboardEvent, toolBarTemplates: IToolbarTe
         if (!templ || !templ.shortcut) { continue; }
         const k = templ.shortcut.split("+");
         let key = k[0];
+        let ekey = ev.key;
+        if (ekey.charCodeAt(0) === 8211) { ekey = "-"; } // Mac Slash
         let mod = "";
         if (k.length >= 2) {
             mod = k[0];
             key = k[1];
         }
         if (templ.chars) { // regexp for keys to use
-            if (ev.key.match("^" + templ.chars + "$")) {
-                templ.cell = ev.key;
+            if (ekey.match("^" + templ.chars + "$")) {
+                templ.cell = ekey;
                 instance.applyTemplate(templ);
                 return true;
             }
@@ -367,7 +369,9 @@ export function handleToolbarKey(ev: KeyboardEvent, toolBarTemplates: IToolbarTe
         }
         const evmod = (ev.altKey ? "a" : "") + (ev.ctrlKey ? "c" : "") + (ev.shiftKey ? "s" : "");
         if (mod != evmod) { continue; }
-        if (ev.key === key) {
+        let code = ev.code;
+        if (code.startsWith("Key")) { code = code.substr(3).toLowerCase(); }
+        if (ekey === key || code === key) {
             instance.applyTemplate(templ);
             return true;
         }
