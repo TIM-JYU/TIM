@@ -87,7 +87,6 @@ import {copyToClipboard} from "../util/utils";
 import {TaskId} from "./taskid";
 import {handleToolbarKey, hideToolbar, isToolbarEnabled, isToolbarOpen, openTableEditorToolbar} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
-import {nullable} from "tim/plugin/attributes";
 
 const sortLang: string = "fi";
 
