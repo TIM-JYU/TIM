@@ -88,7 +88,7 @@ import {
     maxContentOrFitContent,
     scrollToViewInsideParent,
     StringOrNumber,
-    to
+    to,
 } from "../util/utils";
 import {copyToClipboard} from "../util/utils";
 import {TaskId} from "./taskid";
