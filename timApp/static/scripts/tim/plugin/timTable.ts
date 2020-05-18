@@ -82,7 +82,14 @@ import {
     KEY_UP,
 } from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
-import {defaultTimeout, maxContentOrFitContent, scrollToViewInsideParent, StringOrNumber, to} from "../util/utils";
+import {
+    defaultErrorMessage,
+    defaultTimeout,
+    maxContentOrFitContent,
+    scrollToViewInsideParent,
+    StringOrNumber,
+    to
+} from "../util/utils";
 import {copyToClipboard} from "../util/utils";
 import {TaskId} from "./taskid";
 import {handleToolbarKey, hideToolbar, isToolbarEnabled, isToolbarOpen, openTableEditorToolbar} from "./timTableEditorToolbar";
@@ -1324,7 +1331,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.result = result;
             // this.result = r.result.data.web.result;
         } else {
-            this.connectionErrorMessage = r.result.data?.error ?? this.data.connectionErrorMessage ?? "Syntax error or no reply from server?";
+            this.connectionErrorMessage = r.result.data?.error ?? this.data.connectionErrorMessage ?? defaultErrorMessage;
         }
         this.isRunning = false;
         return r;

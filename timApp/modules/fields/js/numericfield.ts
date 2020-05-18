@@ -7,7 +7,7 @@ import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
-import {defaultTimeout, to, valueOr} from "tim/util/utils";
+import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
 
 const numericfieldApp = angular.module("numericfieldApp", ["ngSanitize"]);
 export const moduleDefs = [numericfieldApp];
@@ -405,7 +405,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 }
             }
         } else {
-            this.errormessage = r.result.data?.error ?? this.attrs.connectionErrorMessage ?? "Syntax error or no reply from server?";
+            this.errormessage = r.result.data?.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
         }
         return this.saveResponse;
     }

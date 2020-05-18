@@ -7,7 +7,7 @@ import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
-import {defaultTimeout, to} from "tim/util/utils";
+import {defaultErrorMessage, defaultTimeout, to} from "tim/util/utils";
 
 const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
 export const moduleDefs = [dropdownApp];
@@ -124,7 +124,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             this.error = data.web.error;
         } else {
             this.error = r.result.data?.error;
-            this.connectionErrorMessage = this.error ?? this.attrs.connectionErrorMessage ?? "Syntax error or no reply from server?";
+            this.connectionErrorMessage = this.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
         }
         return {saved: r.ok, message: this.error};
     }

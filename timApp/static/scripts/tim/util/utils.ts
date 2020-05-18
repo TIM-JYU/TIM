@@ -8,6 +8,7 @@ import {$rootScope, $timeout} from "./ngimport";
 const blacklist = new Set(["name", "title", "completionDate"]);
 const UnknownRecord = t.record(t.string, t.unknown);
 
+export const defaultErrorMessage = "Syntax error or no reply from server?";
 export const defaultTimeout = 20000;
 
 

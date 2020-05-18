@@ -4,7 +4,7 @@ import {ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {IUser} from "tim/user/IUser";
 import {$http} from "tim/util/ngimport";
-import {defaultTimeout, parseIframeopts, to} from "tim/util/utils";
+import {defaultErrorMessage, defaultTimeout, parseIframeopts, to} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     AfterViewInit,
@@ -447,7 +447,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
 
         if (!r.ok) {
             this.error = r.result.data?.error;
-            this.connectionErrorMessage = this.error ?? this.attrsall.markup.connectionErrorMessage ?? "Syntax error or no reply from server?";
+            this.connectionErrorMessage = this.error ?? this.attrsall.markup.connectionErrorMessage ?? defaultErrorMessage;
             this.saveResponse.saved = false;
             this.c();
             return this.saveResponse;
