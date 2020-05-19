@@ -11,7 +11,7 @@ import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
 import {showQuestionAskDialog} from "../lecture/questionAskController";
 import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
-import {Binding, to} from "../util/utils";
+import {Binding, defaultTimeout, to} from "../util/utils";
 import {IGenericPluginTopLevelFields} from "./attributes";
 import {PluginBaseCommon, pluginBindings, PluginMeta} from "./util";
 
@@ -183,7 +183,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     private async doSaveText(nosave: boolean) {
-        this.error = "... saving ...";
+        this.error = undefined;
         this.isRunning = true;
 
         this.result = "";
@@ -214,18 +214,18 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
                 url,
                 data: params,
                 headers: {"Content-Type": "application/json"},
-                timeout: 20000,
+                timeout: defaultTimeout,
             },
         ));
         if (!r.ok) {
             this.isRunning = false;
-            this.errors.push(r.result.data.error);
-            this.error = "Ikuinen silmukka tai jokin muu vika?";
-            return {saved: false, message: r.result.data.error};
+            this.errors.push(r.result.data?.error);
+            console.log(r);
+            this.error = r.result.data?.error ?? this.attrsall.markup.connectionErrorMessage ?? "Ikuinen silmukka tai jokin muu vika?";
+            return {saved: false, message: r.result.data?.error ?? this.attrsall.markup.connectionErrorMessage};
         }
         const data = r.result.data;
         this.isRunning = false;
-        this.error = "";
         let result = data.web.result;
         if (result == "Saved" && this.attrsall.markup.savedText) { result = this.attrsall.markup.savedText; }
         this.result = result;
@@ -268,6 +268,7 @@ qstApp.component("qstRunner", {
     </a>
     <span ng-show="$ctrl.result">{{$ctrl.result}}</span>
     <p class="plgfooter" ng-bind-html="::$ctrl.getFooter()"></p>
+    <div ng-if="$ctrl.error" class="error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
 </div>
 <div ng-if="!$ctrl.isTask()">
     <a class="questionAddedNew" ng-click="$ctrl.questionClicked()">

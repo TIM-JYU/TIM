@@ -9,7 +9,7 @@ import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$compile, $http, $rootScope, $sce, $timeout, $upload} from "tim/util/ngimport";
-import {copyToClipboard, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
+import {copyToClipboard, defaultTimeout, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {wrapText} from "tim/document/editing/utils";
 import {CellInfo} from "./embedded_sagecell";
@@ -458,6 +458,8 @@ function makeTemplate() {
                 <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto" style="position: relative;top: 0.3em;"/>
                 <input type="text" title="Choose linelength for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
             </span>
+            <div ng-if="$ctrl.connectionErrorMessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionErrorMessage"></div>
+
             <!--
             <span ng-if="$ctrl.wrap.n!=-1" class="inputSmall" style="float: right;">
               <label title="Put 0 to no wrap">wrap: <input type="text"
@@ -830,6 +832,7 @@ class CsController extends CsBase implements ITimComponent {
     private code?: string;
     private codeInitialized: boolean = false;
     private comtestError?: string;
+    private connectionErrorMessage?: string;
     private copyingFromTauno: boolean;
     private csparson: any;
     private cursor: string;
@@ -1772,6 +1775,7 @@ ${fhtml}
     }
 
     async doRunCode(runType: string, nosave: boolean, extraMarkUp?: IExtraMarkup) {
+        this.connectionErrorMessage = undefined;
         if (this.isRunning) {
             return;
         } // do not run if previuos is still running
@@ -1887,7 +1891,7 @@ ${fhtml}
                 "-replyMD"?: string,
             },
             savedNew: number,
-        }>({method: "PUT", url: url, data: params, timeout: 20000},
+        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
         ));
         if (r.ok) {
             this.isRunning = false;
@@ -1966,6 +1970,10 @@ ${fhtml}
             if (data?.error) {
                 this.error = data.error;
                 this.errors.push(data.error);
+            }
+            if (!r.result.data)
+            {
+                this.connectionErrorMessage = this.attrs.connectionErrorMessage ?? this.error;
             }
         }
     }
@@ -2996,6 +3004,7 @@ csApp.component("csTextRunner", {
             <span ng-if="$ctrl.savedText"
                 class="savedText"
                 ng-bind-html="$ctrl.savedText"></span>
+    <div ng-if="$ctrl.connectionErrorMessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionErrorMessage"></div>
 
     &nbsp;&nbsp;<a href=""
                    ng-if="$ctrl.muokattu"

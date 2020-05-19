@@ -6,7 +6,16 @@ import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {editorChangeValue} from "../editor/editorScope";
 import {$http, $sce, $timeout} from "../util/ngimport";
-import {markAsUsed, MouseOrTouch, numOrStringToNumber, posToRelative, Require, to, valueOr} from "../util/utils";
+import {
+    defaultTimeout,
+    markAsUsed,
+    MouseOrTouch,
+    numOrStringToNumber,
+    posToRelative,
+    Require,
+    to,
+    valueOr,
+} from "../util/utils";
 import {TimDefer} from "../util/timdefer";
 import {
     CommonPropsT,
@@ -1772,7 +1781,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
             web: {
                 error?: string, result: string, tries: number, answer: IAnswerResponse,
             },
-        }>({method: "PUT", url, data: params, timeout: 20000},
+        }>({method: "PUT", url, data: params, timeout: defaultTimeout},
         ));
         this.isRunning = false;
         if (r.ok) {
@@ -1859,7 +1868,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
                 "-replyImage": string,
                 "-replyHTML": string,
             },
-        }>({method: "PUT", url, data: params, timeout: 20000},
+        }>({method: "PUT", url, data: params, timeout: defaultTimeout},
         ));
         this.isRunning = false;
         if (r.ok) {

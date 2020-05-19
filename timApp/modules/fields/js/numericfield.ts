@@ -7,7 +7,7 @@ import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
-import {to, valueOr} from "tim/util/utils";
+import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
 
 const numericfieldApp = angular.module("numericfieldApp", ["ngSanitize"]);
 export const moduleDefs = [numericfieldApp];
@@ -67,7 +67,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
     private initialValue?: string;
-    private errormessage = "";
+    private errormessage?: string;
     private hideSavedText = true;
     private redAlert = false;
     private saveResponse: { saved: boolean, message: (string | undefined) } = {saved: false, message: undefined};
@@ -341,7 +341,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * @param nosave true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
-        this.errormessage = "";
+        this.errormessage = undefined;
         if (this.attrs.validinput) {
             if (!this.validityCheck(this.attrs.validinput)) {
                 this.errormessage = this.attrs.errormessage ?? "Input does not pass the RegEx: " + this.attrs.validinput;
@@ -365,7 +365,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean, value: string}}>(url, params));
+        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean, value: string}}>(url, params, {timeout: defaultTimeout}));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -405,7 +405,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 }
             }
         } else {
-            this.errormessage = r.result.data.error;
+            this.errormessage = r.result.data?.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
         }
         return this.saveResponse;
     }
@@ -481,7 +481,7 @@ numericfieldApp.component("numericfieldRunner", {
       <span ng-if="::$ctrl.isPlainText()" class="plaintext" style="width: {{::$ctrl.cols}}em">{{$ctrl.numericvalue}}</span>
      </span></label>
     </div>
-    <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
+    <div ng-if="$ctrl.errormessage"  class="error" style="font-size: 12px" ng-bind-html="$ctrl.errormessage"></div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
             ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.readonly"

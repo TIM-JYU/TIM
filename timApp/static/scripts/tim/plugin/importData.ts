@@ -6,7 +6,7 @@ import * as t from "io-ts";
 import {ngStorage} from "ngstorage";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $localStorage} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {defaultTimeout, to} from "tim/util/utils";
 import {timApp} from "../app";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 
@@ -184,7 +184,7 @@ class ImportDataController extends PluginBase<t.TypeOf<typeof ImportDataMarkup>,
         const r = await to($http<{
             web?: { result?: string, error?: string }
             error?: string,
-        }>({method: "PUT", url: url, data: params, timeout: 20000},
+        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
         ));
 
         this.isRunning = false;
