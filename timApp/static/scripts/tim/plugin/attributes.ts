@@ -5,18 +5,27 @@ So, do NOT import anything client-side-specific (like AngularJS) in this module 
 
 import * as t from "io-ts";
 
+export const undoType = t.partial({
+    button: nullable(t.string),
+    title: nullable(t.string),
+    confirmation: nullable(t.string),
+});
+
 // Attributes that are valid for all plugins.
 export const GenericPluginMarkup = t.partial({
     answerLimit: t.Integer,
     button: nullable(t.string),
     buttonText: nullable(t.string),
+    disableUnchanged: t.boolean,
     footer: t.string,
     header: nullable(t.string),
     lazy: t.boolean,
     resetText: nullable(t.string),
     stem: nullable(t.string),
+    tag: nullable(t.string),
     hideBrowser: t.boolean,
     forceBrowser: t.boolean,
+    undo: nullable(undoType),
     useCurrentUser: t.boolean,
     connectionErrorMessage: nullable(t.string),
 });

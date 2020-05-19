@@ -115,6 +115,13 @@ def list_not_missing_fields(inst):
 
 
 @dataclass
+class UndoInfo:
+    button: Union[str, None, Missing] = missing
+    title: Union[str, None, Missing] = missing
+    confirmation: Union[str, None, Missing] = missing
+
+
+@dataclass
 class GenericMarkupModel(KnownMarkupFields):
     """Specifies which fields the editor can use in the plugin markup.
     This base class defines some fields that are applicable to all plugins.
@@ -131,6 +138,7 @@ class GenericMarkupModel(KnownMarkupFields):
 
     button: Union[str, None, Missing] = missing
     buttonText: Union[str, None, Missing] = missing
+    disableUnchanged: Union[bool, Missing, None] = missing
     footer: Union[str, Missing] = missing
     forceBrowser: Union[bool, Missing, None] = missing
     globalField: Union[bool, Missing, None] = missing
@@ -139,6 +147,7 @@ class GenericMarkupModel(KnownMarkupFields):
     resetText: Union[str, Missing, None] = missing
     showInView: Union[bool, Missing] = missing
     connectionErrorMessage: Union[str, Missing] = missing
+    undo: Union[UndoInfo, Missing, None] = missing
 
     def get_visible_data(self):
         return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys and k != 'hidden_keys'}

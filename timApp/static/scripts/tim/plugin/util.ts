@@ -199,6 +199,10 @@ export abstract class PluginBaseCommon {
     resetField(): undefined {
         return undefined;
     }
+
+    resetChanges(): void {
+
+    }
 }
 
 /**
@@ -219,6 +223,10 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
         return this.attrsall.markup;
     }
 
+    get disableUnchanged() {
+        return this.attrs.disableUnchanged;
+    }
+
     get footer() {
         return this.attrs.footer || null;
     }
@@ -236,6 +244,18 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
      */
     get readonly(): boolean {
         return this.attrsall.access === "readonly";
+    }
+
+    get undoButton() {
+        return this.attrs.undo?.button;
+    }
+
+    get undoTitle() {
+        return this.attrs.undo?.title;
+    }
+
+    get undoConfirmation() {
+        return this.attrs.undo?.confirmation;
     }
 
     // Parsed form of json binding or default value if json was not valid.

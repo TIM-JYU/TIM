@@ -65,7 +65,7 @@ import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
 import {onClick} from "../document/eventhandlers";
-import {ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {ChangeType, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
 import {ComparatorFilter} from "../util/comparatorfilter";
 import {
@@ -83,6 +83,8 @@ import {
 } from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
 import {
+    clone,
+    copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
     maxContentOrFitContent,
@@ -90,9 +92,14 @@ import {
     StringOrNumber,
     to,
 } from "../util/utils";
-import {copyToClipboard} from "../util/utils";
 import {TaskId} from "./taskid";
-import {handleToolbarKey, hideToolbar, isToolbarEnabled, isToolbarOpen, openTableEditorToolbar} from "./timTableEditorToolbar";
+import {
+    handleToolbarKey,
+    hideToolbar,
+    isToolbarEnabled,
+    isToolbarOpen,
+    openTableEditorToolbar,
+} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
 
@@ -235,6 +242,7 @@ export interface TimTable {
     maxCols?: string;
     button?: string;
     autosave?: boolean;
+    disableUnchanged?: boolean
     // TODO: need self-explanatory name for this attribute
     //  could also use hideBrowser?
     nonUserSpecific?: boolean; // Whether (task-mode) table should react to user changes
@@ -245,7 +253,12 @@ export interface TimTable {
     disableSelect?: boolean;
     savedText?: string;
     connectionErrorMessage?: string;
-
+    tag?: string
+    undo?: {
+        button?: string;
+        title?: string;
+        confirmation?: string;
+    };
 }
 
 interface Rng {
@@ -591,8 +604,9 @@ export enum ClearSort {
             </div>
             <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton">
                 <p class="csRunMenu">
-                    <button class="timButton" [disabled]="!edited" *ngIf="task && button" (click)="handleClickSave()">{{button}}</button>
+                    <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="task && button" (click)="handleClickSave()">{{button}}</button>
                     &nbsp;
+                    <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="tryResetChanges($event)">{{undoButton}}</a>
                     <span [hidden]="!result">{{result}}</span>
                 </p>
             </div>
@@ -607,10 +621,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     error: string = "";
     public viewctrl?: ViewCtrl;
     public cellDataMatrix: ICell[][] = [];  // this has all table data as original indecies (sort does not affect)
+    private prevCellDataMatrix: ICell[][] = [];
     public columns: IColumn[] = [];
     @Input() public data!: TimTable;
+    private prevData!: TimTable;
     private editRight = false;
     private userdata?: DataEntity = undefined;
+    private prevUserdata?: DataEntity = undefined;
     private editing = false;
     private forcedEditMode = false;
     task = false;
@@ -686,6 +703,22 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     get element(): JQuery<HTMLElement> {
         return $(this.el.nativeElement);
+    }
+
+    get disableUnchanged() {
+        return this.data.disableUnchanged;
+    }
+
+    get undoButton() {
+        return this.data.undo?.button;
+    }
+
+    get undoTitle() {
+        return  this.data.undo?.title;
+    }
+
+    get undoConfirmation() {
+        return  this.data.undo?.confirmation;
     }
 
     private getEditInputElement() {
@@ -808,6 +841,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
+
+        this.prevCellDataMatrix = clone(this.cellDataMatrix);
+        this.prevUserdata = clone(this.userdata);
+        this.prevData = clone(this.data);
 
         // For performance, we detach the automatic change detector for this component and call it manually.
         this.cdr.detach();
@@ -1332,6 +1369,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }>(url, params, {timeout: defaultTimeout}));
         if (r.ok) {
             this.edited = false;
+            this.updateListeners();
+            this.prevCellDataMatrix = clone(this.cellDataMatrix);
+            this.prevUserdata = clone(this.userdata);
+            this.prevData = clone(this.data);
             let result = r.result.data.web.result;
             const savedText = this.data.savedText;
             if (result == "Saved" && savedText) { result = savedText; }
@@ -1351,6 +1392,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      */
     public confirmSaved() {
         this.edited = false;
+        this.updateListeners();
     }
 
     /*
@@ -1500,6 +1542,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.data.saveCallBack(cellsToSave, true);
             }
             this.edited = true;
+            this.updateListeners();
             this.result = "";
             if (this.data.autosave) {
                 await this.sendDataBlockAsync();
@@ -3521,6 +3564,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.data.saveStyleCallBack(cellsToSave, colValuesAreSame);
             }
             this.edited = true;
+            this.updateListeners();
             this.result = "";
             if (this.data.autosave) {
                 await this.sendDataBlockAsync();
@@ -3682,6 +3726,40 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     resetField() {
         return undefined;
     }
+
+    tryResetChanges(e?: Event): void {
+        if (e) {
+            e.preventDefault();
+        }
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
+            return;
+        }
+        this.resetChanges();
+    }
+
+    resetChanges() {
+        // TODO: Check if all three are needed (need more)
+        this.userdata = clone(this.prevUserdata);
+        this.cellDataMatrix = clone(this.prevCellDataMatrix);
+        this.data = clone(this.prevData);
+        this.edited = false;
+        this.updateListeners();
+        this.reInitialize();
+        this.c();
+    }
+
+    updateListeners() {
+        if (!this.viewctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.viewctrl.informChangeListeners(taskId, (this.edited ? ChangeType.Modified : ChangeType.Saved),
+            (this.data.tag ? this.data.tag : undefined));
+    }
+
 
     supportsSetAnswer() {
         return false;

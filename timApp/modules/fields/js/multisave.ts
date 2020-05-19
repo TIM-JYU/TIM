@@ -8,7 +8,7 @@ import {GenericPluginMarkup, IncludeUsersOption, Info, withDefault} from "tim/pl
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {Users} from "tim/user/userService";
 import {$http} from "tim/util/ngimport";
-import {escapeRegExp, to} from "tim/util/utils";
+import {escapeRegExp, scrollToElement, to} from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
 import {GroupType, Sisu} from "./sisuassessmentexport";
 
@@ -37,7 +37,9 @@ const multisaveMarkup = t.intersection([
         emailMode: withDefault(t.boolean, false),
         autoUpdateDuplicates: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
+        nosave: withDefault(t.boolean, false),
         listener: withDefault(t.boolean, false),
+        livefeed: withDefault(t.boolean, false),
     }),
 ]);
 const multisaveAll = t.intersection([
@@ -72,6 +74,19 @@ export class MultisaveController
 
     buttonText() {
         return super.buttonText() || (this.attrs.emailMode && "Send email") || "Save";
+    }
+
+    get listener() {
+        return this.attrs.listener;
+    }
+
+    get livefeed() {
+        return this.attrs.livefeed;
+    }
+
+    get unsaveds() {
+        const arr = Array.from(this.unsavedTimComps);
+        return arr.map((name) => this.vctrl.getTimComponentByName(name));
     }
 
     $onInit() {
@@ -139,27 +154,24 @@ export class MultisaveController
         this.showEmailForm = !this.showEmailForm;
     }
 
-    /**
-     * Calls the save method of all ITimComponent plugins that match the given attributes
-     * - Save all plugins defined in "fields" attribute that match the given regexp
-     * - Save all plugins that are in the areas defined by "areas" attribute
-     * - If fields/areas are not given then save only plugins in the same area with the multisave plugin
-     * - If fields/areas are not given and multisave is not within any areas then just call save for every ITimComponent
-     *   plugin in the same document
-     */
-    async save() {
-        if (this.attrs.emailMode) {
-            this.toggleEmailForm();
-            return;
+    findTargetTasks(): ITimComponent[] {
+        let targets: ITimComponent[] = [];
+        if (this.listener) {
+            for (const unsaved of this.unsavedTimComps) {
+                const target = this.vctrl.getTimComponentByName(unsaved);
+                if (target) {
+                    targets.push(target);
+                }
+            }
+            return targets;
         }
-        let componentsToSave: ITimComponent[] = [];
         // TODO: get components from vctrl.timComponentArrays in case of duplicates
         if (this.attrs.fields) {
             for (const i of this.attrs.fields) {
                 const timComponents = this.vctrl.getTimComponentsByRegex(i, RegexOption.PrependCurrentDocId);
                 for (const v of timComponents) {
-                    if (!componentsToSave.includes(v)) {
-                        componentsToSave.push(v);
+                    if (!targets.includes(v)) {
+                        targets.push(v);
                     }
                 }
             }
@@ -169,8 +181,8 @@ export class MultisaveController
             for (const i of this.attrs.areas) {
                 const timComponents = this.vctrl.getTimComponentsByArea(i);
                 for (const v of timComponents) {
-                    if (!componentsToSave.includes(v)) {
-                        componentsToSave.push(v);
+                    if (!targets.includes(v)) {
+                        targets.push(v);
                     }
                 }
             }
@@ -179,8 +191,8 @@ export class MultisaveController
             for (const i of this.attrs.tags) {
                 const timComponents = this.vctrl.getTimComponentsByTag(i);
                 for (const v of timComponents) {
-                    if (!componentsToSave.includes(v)) {
-                        componentsToSave.push(v);
+                    if (!targets.includes(v)) {
+                        targets.push(v);
                     }
                 }
             }
@@ -195,13 +207,30 @@ export class MultisaveController
 
         // no given followids or areas but the plugin is inside an area
         if (!this.attrs.fields && !this.attrs.areas && !this.attrs.tags && ownArea) {
-            componentsToSave = this.vctrl.getTimComponentsByArea(ownArea);
+            targets = this.vctrl.getTimComponentsByArea(ownArea);
         }
 
         // no given followids / areas and no own area found
         if (!this.attrs.fields && !this.attrs.areas && !this.attrs.tags && !ownArea) {
-            componentsToSave = this.vctrl.getTimComponentsByRegex(".*", RegexOption.DontPrependCurrentDocId);
+            targets = this.vctrl.getTimComponentsByRegex(".*", RegexOption.DontPrependCurrentDocId);
         }
+        return targets;
+    }
+
+    /**
+     * Calls the save method of all ITimComponent plugins that match the given attributes
+     * - Save all plugins defined in "fields" attribute that match the given regexp
+     * - Save all plugins that are in the areas defined by "areas" attribute
+     * - If fields/areas are not given then save only plugins in the same area with the multisave plugin
+     * - If fields/areas are not given and multisave is not within any areas then just call save for every ITimComponent
+     *   plugin in the same document
+     */
+    async save() {
+        if (this.attrs.emailMode) {
+            this.toggleEmailForm();
+            return;
+        }
+        const componentsToSave = this.findTargetTasks();
 
         const promises = [];
         for (const v of componentsToSave) {
@@ -305,11 +334,27 @@ export class MultisaveController
     }
 
     allSaved(): boolean {
-        return (this.attrs.listener && !this.hasUnsavedTargets);
+        return (!this.attrs.listener || !this.hasUnsavedTargets);
     }
 
     getAttributeType() {
         return multisaveAll;
+    }
+
+    resetChanges() {
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
+            return;
+        }
+        const targets = this.findTargetTasks();
+        for (const target of targets) {
+            if (target) {
+                target.resetChanges();
+            }
+        }
+    }
+
+    scrollTo(target: ITimComponent) {
+        scrollToElement(target.getPar().children(".parContent")[0]);
     }
 }
 
@@ -330,13 +375,21 @@ multisaveApp.component("multisaveRunner", {
                             test-only="$ctrl.attrs.testOnly"
                             group="$ctrl.attrs.group">
     </sisu-assessment-export>
+    <div ng-if="$ctrl.livefeed && !$ctrl.allSaved()"> <!-- unsaved fields -->
+        Seuraavat kentät ovat tallentamatta:
+        <p ng-repeat="tag in $ctrl.unsaveds">
+            <a href="" ng-click="$ctrl.scrollTo(tag)">{{tag.getName()}}</a>
+        </p>
+    </div> <!-- unsaved fields -->
     <button class="timButton"
-            ng-disabled="$ctrl.allSaved()"
+            ng-disabled="($ctrl.disableUnchanged && $ctrl.listener && $ctrl.allSaved())"
             ng-if="!$ctrl.showEmailForm && $ctrl.buttonText() && !$ctrl.attrs.destCourse"
             ng-click="$ctrl.save()">
         {{::$ctrl.buttonText()}}
     </button>
-    <p class="savedtext" ng-if="$ctrl.isSaved">Saved {{$ctrl.savedFields}} fields!</p>
+    &nbsp;
+    <a href="" ng-if="($ctrl.undoButton && (!$ctrl.listener || !$ctrl.allSaved()))" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{$ctrl.undoButton}}</a>
+    <p class="savedtext" ng-if="$ctrl.isSaved && $ctrl.allSaved()">Saved</p>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
         <tim-close-button ng-click="$ctrl.toggleEmailForm()"></tim-close-button>
         <p><textarea ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea>
@@ -360,7 +413,7 @@ multisaveApp.component("multisaveRunner", {
             </button>
             <span class="savedtext" ng-if="$ctrl.emailMsg">Sent!</span>
         </p>
-    </div>
+    </div> <!-- email-->
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </span>
 `,

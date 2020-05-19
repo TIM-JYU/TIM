@@ -24,6 +24,18 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
         return this.markup.button ?? this.markup.buttonText;
     }
 
+    get undoButton() {
+        return this.markup.undo?.button;
+    }
+
+    get undoTitle() {
+        return this.markup.undo?.title;
+    }
+
+    get undoConfirmation() {
+        return this.markup.undo?.confirmation;
+    }
+
     get markup(): Readonly<MarkupType> {
         return this.attrsall.markup;
     }

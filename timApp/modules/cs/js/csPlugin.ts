@@ -3,7 +3,7 @@ import {Ace} from "ace-builds/src-noconflict/ace";
 import angular, {IController, IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {IAce} from "tim/editor/ace";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
@@ -369,7 +369,9 @@ function makeTemplate() {
                       rows="{{$ctrl.rows}}"
                       ng-model="$ctrl.usercode"
                       ng-trim="false"
-                      ng-attr-placeholder="{{$ctrl.placeholder}}"></textarea>
+                      ng-attr-placeholder="{{$ctrl.placeholder}}" 
+                    ng-keypress="$ctrl.textChanged()">
+            </textarea>
             </div>
             <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
             <div class="csRunNotSaved" ng-show="$ctrl.isUnSaved()"></div>
@@ -407,11 +409,15 @@ function makeTemplate() {
     <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
         <p class="csRunMenu">
             <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
-                    ng-disabled="$ctrl.isRunning || $ctrl.preventSave || (!$ctrl.isUnSaved() && $ctrl.isText)"
+                    ng-disabled="$ctrl.isRunning || $ctrl.preventSave || ($ctrl.disableUnchanged && !$ctrl.isUnSaved() && $ctrl.isText)"
                     class="timButton btn-sm"
                     title="(Ctrl-S)"
                     ng-click="$ctrl.runCode()"
                     ng-bind-html="::$ctrl.buttonText()"></button>
+            <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
+            ng-click="$ctrl.tryResetChanges();">
+                &nbsp;{{::$ctrl.undoButton}}
+            </a>
             &nbsp&nbsp
             <span ng-if="$ctrl.savedText"
                     class="savedText"
@@ -839,6 +845,7 @@ class CsController extends CsBase implements ITimComponent {
     private docLink: string;
     private docURL?: string;
     private edit!: HTMLTextAreaElement;
+    private edited: boolean = false;
     private editArea?: Element;
     private editorIndex: number;
     private editorMode!: number;
@@ -976,9 +983,41 @@ class CsController extends CsBase implements ITimComponent {
             this.savedvals.input !== this.userinput) && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
     }
 
+    textChanged(): void {
+        if(!this.edited){
+            this.edited = true;
+            this.updateListeners(ChangeType.Modified);
+        }
+    }
+
+    updateListeners(state: ChangeType) {
+        if (!this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.vctrl.informChangeListeners(taskId, state, (this.attrs.tag ? this.attrs.tag : undefined));
+    }
+
     resetField(): undefined {
         this.initCode();
         return undefined;
+    }
+
+    tryResetChanges(): void {
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
+            return;
+        }
+        this.resetChanges();
+        this.updateListeners(ChangeType.Saved);
+    }
+
+    resetChanges(): void {
+        this.usercode = (this.savedvals ? this.savedvals.code : "");
+        this.userargs = (this.savedvals ? this.savedvals.args : "");
+        this.userinput = (this.savedvals ? this.savedvals.input : "");
     }
 
     svgImageSnippet() {
@@ -1386,9 +1425,9 @@ ${fhtml}
             this.countChars = !!count.chars;
             this.countItems = this.countLines || this.countWords || this.countChars;
         }
-        if (this.isText) {
-            this.preventSave = true;
-        }
+        // if (this.isText) {
+        //     this.preventSave = true;
+        // }
     }
 
     async $postLink() {
@@ -1452,6 +1491,8 @@ ${fhtml}
             args: this.userargs,
             input: this.userinput,
         };
+        this.edited = false;
+        this.updateListeners(ChangeType.Saved);
     }
 
     doCountWords(str: string) {
@@ -1525,8 +1566,6 @@ ${fhtml}
             }
             if (this.countItems) {
                 this.doCountItems();
-            } else {
-                if (this.isText) {this.preventSave = !this.isChanged();}
             }
             if (this.isText) {this.savedText = "";}
 
@@ -2994,14 +3033,18 @@ csApp.component("csTextRunner", {
            ng-model="$ctrl.usercode"
            ng-trim="false"
            ng-attr-placeholder="{{$ctrl.placeholder}}"
-           ng-keypress="$ctrl.runCodeIfCR($event);"/>
+           ng-keypress="[$ctrl.runCodeIfCR($event), $ctrl.textChanged()]"/>
     <button ng-if="::$ctrl.isRun"
-            ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.preventSave"
+            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.preventSave"
             class = "timButton"
             title="(Ctrl-S)"
             ng-click="$ctrl.runCode();"
             ng-bind-html="::$ctrl.buttonText()"></button>
-            <span ng-if="$ctrl.savedText"
+    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
+            ng-click="$ctrl.tryResetChanges();">
+            &nbsp;{{::$ctrl.undoButton}}
+            </a>
+    <span ng-if="$ctrl.savedText"
                 class="savedText"
                 ng-bind-html="$ctrl.savedText"></span>
     <div ng-if="$ctrl.connectionErrorMessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionErrorMessage"></div>

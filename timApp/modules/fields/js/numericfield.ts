@@ -152,6 +152,19 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         return undefined;
     }
 
+    tryResetChanges(): void {
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
+            return;
+        }
+        this.resetChanges();
+    }
+
+    resetChanges(): void {
+        this.numericvalue = this.initialValue;
+        this.changes = false;
+        this.updateListeners(ChangeType.Saved);
+    }
+
     // TODO: Do not support setAnswer if an attribute says not to
     supportsSetAnswer(): boolean {
         return true;
@@ -188,7 +201,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         }
         this.initialValue = this.numericvalue;
         this.changes = false;
-        this.updateListenerMultisaves(ChangeType.Saved);
+        this.updateListeners(ChangeType.Saved);
         return {ok: ok, message: message};
 
     }
@@ -226,7 +239,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.initialValue = this.numericvalue;
         this.result = undefined;
         this.changes = false;
-        this.updateListenerMultisaves(ChangeType.Saved);
+        this.updateListeners(ChangeType.Saved);
     }
 
     /**
@@ -377,7 +390,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 this.numericvalue = data.web.value.toString();
                 this.initialValue = this.numericvalue;
                 this.changes = false;
-                this.updateListenerMultisaves(ChangeType.Saved);
+                this.updateListeners(ChangeType.Saved);
                 this.hideSavedText = false;
                 this.redAlert = false;
                 this.saveResponse.saved = true;
@@ -422,11 +435,11 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if (!this.changes) {
             this.changes = true;
             this.hideSavedText = true;
-            this.updateListenerMultisaves(ChangeType.Modified);
+            this.updateListeners(ChangeType.Modified);
         }
     }
 
-    updateListenerMultisaves(state: ChangeType) {
+    updateListeners(state: ChangeType) {
         if (!this.vctrl) {
             return;
         }
@@ -484,10 +497,11 @@ numericfieldApp.component("numericfieldRunner", {
     <div ng-if="$ctrl.errormessage"  class="error" style="font-size: 12px" ng-bind-html="$ctrl.errormessage"></div>
     <button class="timButton"
             ng-if="$ctrl.buttonText()"
-            ng-disabled="!$ctrl.isUnSaved() || $ctrl.isRunning || $ctrl.readonly"
+            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.readonly"
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
+    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.tryResetChanges();">{{::$ctrl.undoButton}}</a>
     <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,

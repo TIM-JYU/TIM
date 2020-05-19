@@ -5,7 +5,7 @@ import angular, {IController} from "angular";
 import deepEqual from "deep-equal";
 import {getParId} from "../document/parhelpers";
 import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
-import {ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {ChangeType, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {LectureController} from "../lecture/lectureController";
 import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
 import {showQuestionAskDialog} from "../lecture/questionAskController";
@@ -66,6 +66,22 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         return JSON.stringify(this.newAnswer);
     }
 
+    get disableUnchanged() {
+        return this.attrsall.markup.disableUnchanged;
+    }
+
+    get undoButton() {
+        return this.attrsall.markup.undo?.button;
+    }
+
+    get undoTitle() {
+        return this.attrsall.markup.undo?.title;
+    }
+
+    get undoConfirmation() {
+        return this.attrsall.markup.undo?.confirmation;
+    }
+
     isUnSaved(userChange?: boolean | undefined): boolean {
         return this.changes;
     }
@@ -92,7 +108,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
             enabled: !this.attrsall.markup.invalid,
         });
         this.result = "";
-        this.button = this.attrsall.markup.button ?? "Save";
+        this.button = this.attrsall.markup.button ?? this.attrsall.markup.buttonText ?? "Save";
         this.resetText = this.attrsall.markup.resetText ?? "Reset";
         this.stem = this.attrsall.markup.stem ?? "";
     }
@@ -115,7 +131,23 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     private checkChanges() {
+        const oldVal = this.changes;
         this.changes = !deepEqual(this.savedAnswer, this.newAnswer);
+        if (oldVal != this.changes) {
+            console.log("CHANGES HAPPENED");
+            this.updateListeners(this.changes ? ChangeType.Modified : ChangeType.Saved);
+        }
+    }
+
+    updateListeners(state: ChangeType) {
+        if (!this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.vctrl.informChangeListeners(taskId, state, (this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined));
     }
 
     private updateAnswer(at: AnswerTable) {
@@ -239,6 +271,24 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         return {saved: true, message: undefined};
     }
 
+    tryResetChanges(): void {
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
+            return;
+        }
+        this.resetChanges();
+    }
+
+    resetChanges(): void {
+        this.newAnswer = this.savedAnswer;
+        this.preview = makePreview(this.attrsall.markup, {
+            answerTable: this.savedAnswer,
+            showCorrectChoices: this.attrsall.show_result,
+            showExplanations: this.attrsall.show_result,
+            enabled: !this.attrsall.markup.invalid,
+        });
+        this.checkChanges();
+    }
+
     protected getElement() {
         return this.element;
     }
@@ -260,8 +310,12 @@ qstApp.component("qstRunner", {
     <dynamic-answer-sheet
             questiondata="$ctrl.preview"
             on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
-    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || !$ctrl.isUnSaved()"
+    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || ($ctrl.disableUnchanged && !$ctrl.isUnSaved())"
             ng-click="$ctrl.saveText()"></button>
+    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.tryResetChanges();">
+        &nbsp;{{::$ctrl.undoButton}}
+    </a>
+
     &nbsp;&nbsp;
     <a class="questionAddedNew" ng-show="$ctrl.checkQstMode() && !$ctrl.isInvalid()" ng-click="$ctrl.questionClicked()">
         <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>

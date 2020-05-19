@@ -1,6 +1,6 @@
 ﻿import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";
-import {ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {IUser} from "tim/user/IUser";
 import {$http} from "tim/util/ngimport";
@@ -75,7 +75,6 @@ interface JSFrameData {
 
 interface JSFrameWindow extends Window {
     getData?(): JSFrameData;
-
     setData?(state: JSFrameData): void;
 }
 
@@ -100,7 +99,8 @@ type MessageToFrame =
     data: JSFrameData;
 } | { msg: "init" }
     | { msg: "getData" }
-    | { msg: "getDataSave" };
+    | { msg: "getDataSave" }
+    | { msg: "close" };
 
 type MessageFromFrame =
     | {
@@ -163,7 +163,10 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
                         [innerHtml]="button"></button>
                 <button class="timButton btn-sm" *ngIf="saveButton"
                         (click)="getData('getDataSave')"
-                        [disabled]="!isUnSaved()" [innerHtml]="saveButton"></button>
+                        [disabled]="disableUnchanged && !isUnSaved()" [innerHtml]="saveButton"></button>
+                &nbsp;
+                <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="tryResetChanges($event)">{{undoButton}}</a>
+
                 &nbsp;
                 <span class="jsframe message"
                       *ngIf="message"
@@ -189,6 +192,10 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
 
     constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
         super(el, http, domSanitizer);
+    }
+
+    get disableUnchanged() {
+        return this.markup.disableUnchanged;
     }
 
     get english() {
@@ -239,6 +246,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     button: string = "";
     edited: boolean = false;
     connectionErrorMessage?: string;
+    private prevdata?: JSFrameData;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -283,6 +291,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             this.isOpen = true;
         }
         const data = this.getDataFromMarkup();
+        this.prevdata = data;
         if (data) {
             this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n";
         }
@@ -465,6 +474,8 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             return this.saveResponse;
         }
         this.edited = false;
+        this.updateListeners();
+        this.prevdata = unwrapAllC(data);
         if (r.result.data.web.console) {
             this.console = r.result.data.web.console;
             this.saveResponse.saved = true;
@@ -487,6 +498,39 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.send({msg: msg});
     }
 
+    tryResetChanges(e?: Event): void {
+        if (e) {
+            e.preventDefault();
+        }
+        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
+            return;
+        }
+        this.resetChanges();
+    }
+
+    resetChanges() {
+        if (!this.prevdata) {
+            return;
+        }
+        this.setData(this.prevdata, false, true);
+        this.send({msg: "close"});
+        this.edited = false;
+        this.updateListeners();
+        this.c();
+    }
+
+    updateListeners() {
+        if (!this.viewctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.viewctrl.informChangeListeners(taskId, (this.edited ? ChangeType.Modified : ChangeType.Saved),
+            (this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined));
+    }
+
     getDataReady<T extends JSFrameData>(data: T, dosave = false) {
         if (data.message) {
             this.message = data.message;
@@ -504,8 +548,8 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.cdr.detectChanges();
     }
 
-    setData<T extends JSFrameData>(data: T, save = false) {
-        if (this.iframesettings) {
+    setData<T extends JSFrameData>(data: T, save = false, keepHeight = false) {
+        if (this.iframesettings && !keepHeight) {
             this.iframesettings.height = 900;
         }
         if (save) {
@@ -555,6 +599,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             if (msg === "update") {
                 this.console = "";
                 this.edited = true;
+                this.updateListeners();
                 this.c();
             }
             if (msg === "datasave") {

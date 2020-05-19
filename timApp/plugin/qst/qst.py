@@ -598,7 +598,8 @@ qst_attrs = {
     'answerLimit',
     'button',
     'buttonText',
-    'defaultPoints'
+    'defaultPoints',
+    'disableUnchanged',
     'doNotMove'
     'footer',
     'header',
@@ -612,6 +613,7 @@ qst_attrs = {
     'stem',
     'tag',
     'connectionErrorMessage',
+    'undo',
 }
 
 
