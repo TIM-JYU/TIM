@@ -1,7 +1,7 @@
 import {Component, Input} from "@angular/core";
 import moment from "moment";
 import {$http} from "tim/util/ngimport";
-import {secondsToHHMMSS, to} from "tim/util/utils";
+import {secondsToHHMMSS, to, formatString} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
 import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
@@ -36,19 +36,26 @@ const OPEN_AT_WILDCARD = "*";
         </a>
         <div class="load-text">
             <ng-container *ngIf="isExpired">
-                <span class="error" i18n>Your access expired {{pastDueTime}} ago.</span>
+                <span class="error">
+                    <ng-container *ngIf="pastDueText else defaultPastDueText">{{formatString(pastDueText, pastDueTime)}}</ng-container>
+                    <ng-template #defaultPastDueText i18n>Your access expired {{pastDueTime}} ago.</ng-template>
+                </span>
             </ng-container>
             <ng-container *ngIf="isUnauthorized">
-                <span class="error" i18n>You don't have permission to view that document.</span>
+                <span class="error">
+                    <ng-container *ngIf="unauthorizedText else defaultUnauthorizedText">{{unauthorizedText}}</ng-container>
+                    <ng-template #defaultUnauthorizedText i18n>You don't have permission to view that document.</ng-template>
+                </span>
             </ng-container>
-            <ng-container *ngIf="isCountdown" i18n>
-                Opens in {{countdownText}}.
+            <ng-container *ngIf="isCountdown">
+                <ng-container *ngIf="countdownText else defaultCountdownText">{{formatString(countdownText, countdownTime)}}</ng-container>
+                <ng-template #defaultCountdownText i18n>Opens in {{countdownTime}}.</ng-template>
             </ng-container>
             <ng-container *ngIf="isGoing">
                 <tim-loading></tim-loading>
                 <span>
-                    <ng-container *ngIf="waitText else defaultText">{{waitText}}</ng-container>
-                    <ng-template #defaultText i18n>Loading, please wait.</ng-template>
+                    <ng-container *ngIf="waitText else defaultWaitText">{{waitText}}</ng-container>
+                    <ng-template #defaultWaitText i18n>Loading, please wait.</ng-template>
                 </span>
             </ng-container>
         </div>
@@ -58,6 +65,10 @@ const OPEN_AT_WILDCARD = "*";
 export class GotoLinkComponent {
     @Input() href = "";
     @Input() waitText?: string;
+    @Input() countdownText?: string;
+    @Input() unauthorizedText?: string;
+    @Input() pastDueText?: string;
+    @Input() timeLang?: string;
     @Input() resetTime = 15;
     @Input() maxWait = 0;
     @Input() isButton = false;
@@ -69,6 +80,8 @@ export class GotoLinkComponent {
     linkState = GotoLinkState.Uninitialized;
     openTime?: moment.Moment;
     closeTime?: moment.Moment;
+
+    formatString = formatString;
 
     get isCountdown() {
         return this.linkState == GotoLinkState.Countdown;
@@ -86,12 +99,12 @@ export class GotoLinkComponent {
         return this.linkState == GotoLinkState.Expired;
     }
 
-    get countdownText() {
+    get countdownTime() {
         return secondsToHHMMSS(this.countDown);
     }
 
     get pastDueTime() {
-        return humanizeDuration(this.pastDue * 1000, {language: Users.getCurrentLanguage()});
+        return humanizeDuration(this.pastDue * 1000, {language: this.timeLang ?? Users.getCurrentLanguage()});
     }
 
     async resolveOpenAtTime() {

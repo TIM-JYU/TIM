@@ -754,3 +754,12 @@ export function secondsToHHMMSS(time: number) {
     const pad = (tt: number) => `${tt < 10 ? "0" : ""}${tt}`;
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
+
+/**
+ * Formats a string in form "Text {i}" where `i` is the index of the item to insert.
+ * @param s Format string
+ * @param fmt Values to insert in place of templates "{i}"
+ */
+export function formatString(s: string, ...fmt: string[]) {
+    return fmt.reduce((str, val, i) => str.replace(`{${i}}`, val), s);
+}
