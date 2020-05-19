@@ -364,8 +364,15 @@ def is_possibly_home_org_account(email_or_username: str):
 
 @login_page.route("/altlogin", methods=['POST'])
 def alt_login():
+    def check_pw(u, pw, trimmed=False):
+        if u.check_password(pw, allow_old=True, update_if_old=True):
+            return True
+        if not trimmed:
+            return check_pw(u, pw.strip(), trimmed=True)
+        return False
+
     save_came_from()
-    email_or_username = request.form['email']
+    email_or_username = request.form['email'].strip()
     password = request.form['password']
     session['adding_user'] = request.form.get('add_user', 'false').lower() == 'true'
 
@@ -375,7 +382,7 @@ def alt_login():
     if len(users) == 1:
         user = users[0]
         old_hash = user.pass_
-        if user.check_password(password, allow_old=True, update_if_old=True):
+        if check_pw(user, password):
             # Check if the users' group exists
             try:
                 user.get_personal_group()
