@@ -242,6 +242,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
                 show_result: boolean,
                 state: AnswerTable,
                 markup: IQuestionMarkup,
+                error?: string;
             },
         }>({
                 method: "PUT",
