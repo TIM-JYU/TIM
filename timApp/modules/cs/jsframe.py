@@ -450,7 +450,9 @@ class DrawIO(JSframe):
             ma["readyHtml"] = "simpleDrawIO"
         height = ma.get("height", None)  # Automatic aspect ratio or height
         data = ma.get("data", {})
-        dopt =  data.get("options", {})
+        if isinstance(data, str):
+            data = {}
+        dopt = data.get("options", {})
         ar = data.get("aspectRatio", dopt.get('aspectRatio', None))
         if height and not ar:
             if not ma.get("data", None):
