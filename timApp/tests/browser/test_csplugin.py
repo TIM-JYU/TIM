@@ -51,3 +51,45 @@ type: python
 
         # TODO: Why is this slightly different from python_before_answer ?
         self.assert_same_screenshot(par, 'csplugin/python_after_answer_switch')
+
+    def test_csplugin_savebutton(self):
+        """
+        Check that savebutton is enabled/disabled by whatever is the current desired logic. For now:
+        disableUnchanged false or missing: savebutton always enabled
+        disableUnchanged true: savebutton disabled if saved and input doesn't change
+        """
+        def make_text_and_answer(self, d):
+            self.goto_document(d)
+            self.wait_until_present('#text textarea')
+            textarea = self.find_element_and_move_to('#text textarea')
+            # sleep(0.5)
+            textarea.send_keys('print("Hello world!")')
+            self.find_element('.breadcrumb .active').click()
+            par = self.find_element_avoid_staleness('#text > tim-plugin-loader > div')
+            runbutton = par.find_element_by_css_selector('button')
+            runbutton.click()
+            self.wait_until_present('.savedText')
+            self.wait_until_present('answerbrowser')
+            return par, textarea
+
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin #text}
+type: text
+        """)
+        par, textarea = make_text_and_answer(self, d)
+        textarea.click() # don't focus on savebutton
+        self.assert_same_screenshot(par, 'csplugin/nodisable_after_answer', attempts=2)
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin #text}
+type: text
+disableUnchanged: true
+                """)
+        par, textarea = make_text_and_answer(self, d)
+        textarea.click()
+        self.assert_same_screenshot(par, 'csplugin/disable_after_answer_noinput', attempts=2)
+        textarea.send_keys("more input, let me save")
+        self.assert_same_screenshot(par, 'csplugin/disable_after_answer_input', attempts=2)
+
+
