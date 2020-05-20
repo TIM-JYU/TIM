@@ -93,8 +93,13 @@ class AnswerTest(TimRouteTest):
         )
         exported[0]['email'] = 'xxx'
         self.json_post(
-            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            f'/importAnswers', {'answers': exported, 'doc': d.path, 'allow_missing_users': True},
             expect_content={'imported': 0, 'skipped_duplicates': 2, 'missing_users': ['xxx']},
+        )
+        self.json_post(
+            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            expect_content='Email(s) not found: xxx',
+            expect_status=400,
         )
 
         result: List[Answer] = self.test_user_1.answers.filter_by(task_id=f'{d.id}.t').order_by(Answer.id).all()

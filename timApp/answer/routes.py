@@ -54,7 +54,7 @@ from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields
-from timApp.util.utils import try_load_json
+from timApp.util.utils import try_load_json, seq_to_str
 from utils import Missing
 
 # TODO: Remove methods in util/answerutil where many "moved" here to avoid circular imports
@@ -1024,6 +1024,7 @@ class ExportedAnswer:
 class ImportAnswersModel:
     doc: str
     answers: List[ExportedAnswer]
+    allow_missing_users: bool = False
 
 
 @answers.route('/importAnswers', methods=['post'])
@@ -1043,15 +1044,19 @@ def import_answers(m: ImportAnswersModel):
     )
     existing_set = set((a.task_name, a.answered_on, a.valid, a.points, email) for a, email in existing_answers)
     dupes = 0
-    missing_users = set()
     users = {u.email: u for u in User.query.filter(User.email.in_([a.email for a in m.answers])).all()}
+    requested_users = set(a.email for a in m.answers)
+    missing_users = requested_users - set(users.keys())
+    if missing_users and not m.allow_missing_users:
+        raise RouteException(f'Email(s) not found: {seq_to_str(list(missing_users))}')
     m.answers.sort(key=lambda a: a.time)
     all_imported = []
     for a in m.answers:
         if (a.task, a.time, a.valid, a.points, a.email) not in existing_set:
             u = users.get(a.email)
             if not u:
-                missing_users.add(a.email)
+                if not m.allow_missing_users:
+                    raise Exception('Missing user should have been reported earlier')
                 continue
             imported_answer = Answer(
                 task_id=f'{d.id}.{a.task}',
