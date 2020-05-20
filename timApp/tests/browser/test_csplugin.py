@@ -99,7 +99,6 @@ disableUnchanged: true
         textarea.send_keys("more input, let me save")
         self.assertEqual(True, runbutton.is_enabled())
         self.should_not_exist('.savedText')
-        margin = self.find_element('.csRunNotSaved')
         self.assertEqual(True, margin.is_displayed())
 
 
