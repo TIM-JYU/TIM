@@ -52,11 +52,12 @@ type: python
         # TODO: Why is this slightly different from python_before_answer ?
         self.assert_same_screenshot(par, 'csplugin/python_after_answer_switch')
 
-    def test_csplugin_savebutton(self):
+    def test_csplugin_saveindicators(self):
         """
         Check that savebutton is enabled/disabled by whatever is the current desired logic. For now:
         disableUnchanged false or missing: savebutton always enabled
         disableUnchanged true: savebutton disabled if saved and input doesn't change
+        Also check yellow margin is (un)hidden and savedText (dis)appears
         """
         def make_text_and_answer(self, d):
             self.goto_document(d)
@@ -68,9 +69,9 @@ type: python
             par = self.find_element_avoid_staleness('#text > tim-plugin-loader > div')
             runbutton = par.find_element_by_css_selector('button')
             runbutton.click()
-            self.wait_until_present('.savedText')
             self.wait_until_present('answerbrowser')
-            return par, textarea
+            runbutton.is_enabled()
+            return par, textarea, runbutton
 
         self.login_browser_quick_test1()
         self.login_test1()
@@ -78,18 +79,27 @@ type: python
 #- {plugin=csPlugin #text}
 type: text
         """)
-        par, textarea = make_text_and_answer(self, d)
-        textarea.click() # don't focus on savebutton
-        self.assert_same_screenshot(par, 'csplugin/nodisable_after_answer', attempts=2)
+        par, textarea, runbutton = make_text_and_answer(self, d)
+        self.assertEqual(True, runbutton.is_enabled())
+        savedtext = self.find_element('.savedText')
+        self.assertEqual(True, savedtext.is_displayed())
+        margin = self.find_element('.csRunNotSaved')
+        self.assertEqual(False, margin.is_displayed())
         d = self.create_doc(initial_par="""
 #- {plugin=csPlugin #text}
 type: text
 disableUnchanged: true
                 """)
-        par, textarea = make_text_and_answer(self, d)
-        textarea.click()
-        self.assert_same_screenshot(par, 'csplugin/disable_after_answer_noinput', attempts=2)
+        par, textarea, runbutton = make_text_and_answer(self, d)
+        self.assertEqual(False, runbutton.is_enabled())
+        savedtext = self.find_element('.savedText')
+        self.assertEqual(True, savedtext.is_displayed())
+        margin = self.find_element('.csRunNotSaved')
+        self.assertEqual(False, margin.is_displayed())
         textarea.send_keys("more input, let me save")
-        self.assert_same_screenshot(par, 'csplugin/disable_after_answer_input', attempts=2)
+        self.assertEqual(True, runbutton.is_enabled())
+        self.should_not_exist('.savedText')
+        margin = self.find_element('.csRunNotSaved')
+        self.assertEqual(True, margin.is_displayed())
 
 
