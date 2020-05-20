@@ -1944,7 +1944,7 @@ ${fhtml}
                 // let savedText = "saved";
                 // this.savedText = data.web.error ?? "saved";
                 this.savedText = this.attrsall.markup.savedText ?? "saved";
-                this.preventSave = true;
+                // this.preventSave = true;
                 data.web.error = "";
             }
             if (data.web.pwd) {
