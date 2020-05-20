@@ -55,6 +55,20 @@ class AnswerTest(TimRouteTest):
                 answered_on=datetime(year=2020, month=5, day=19, hour=15, minute=33, second=27),
                 valid=True,
             ),
+            Answer(
+                task_id=f'{d.id}.t',
+                points=2,
+                content='xx',
+                answered_on=datetime(year=2020, month=5, day=18, hour=15, minute=33, second=27),
+                valid=True,
+            ),
+            Answer(
+                task_id=f'{d.id}.t',
+                points=2,
+                content='xx',
+                answered_on=datetime(year=2020, month=5, day=20, hour=15, minute=33, second=27),
+                valid=True,
+            ),
         ]
         for a in answers:
             self.current_user.answers.append(a)
@@ -71,14 +85,18 @@ class AnswerTest(TimRouteTest):
         self.make_admin(self.current_user)
         self.json_post(
             f'/importAnswers', {'answers': exported, 'doc': d.path},
-            expect_content={'imported': 1, 'skipped_duplicates': 0, 'missing_users': []},
+            expect_content={'imported': 3, 'skipped_duplicates': 0, 'missing_users': []},
         )
         self.json_post(
             f'/importAnswers', {'answers': exported, 'doc': d.path},
-            expect_content={'imported': 0, 'skipped_duplicates': 1, 'missing_users': []},
+            expect_content={'imported': 0, 'skipped_duplicates': 3, 'missing_users': []},
         )
         exported[0]['email'] = 'xxx'
         self.json_post(
             f'/importAnswers', {'answers': exported, 'doc': d.path},
-            expect_content={'imported': 0, 'skipped_duplicates': 0, 'missing_users': ['xxx']},
+            expect_content={'imported': 0, 'skipped_duplicates': 2, 'missing_users': ['xxx']},
         )
+
+        result: List[Answer] = self.test_user_1.answers.filter_by(task_id=f'{d.id}.t').order_by(Answer.id).all()
+        for a, b in zip(result, result[1:]):
+            self.assertLess(a.answered_on, b.answered_on)

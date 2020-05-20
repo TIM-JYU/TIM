@@ -1043,9 +1043,10 @@ def import_answers(m: ImportAnswersModel):
     )
     existing_set = set((a.task_name, a.answered_on, a.valid, a.points, email) for a, email in existing_answers)
     dupes = 0
-    imported = 0
     missing_users = set()
     users = {u.email: u for u in User.query.filter(User.email.in_([a.email for a in m.answers])).all()}
+    m.answers.sort(key=lambda a: a.time)
+    all_imported = []
     for a in m.answers:
         if (a.task, a.time, a.valid, a.points, a.email) not in existing_set:
             u = users.get(a.email)
@@ -1061,12 +1062,21 @@ def import_answers(m: ImportAnswersModel):
             )
             imported_answer.users_all.append(u)
             db.session.add(imported_answer)
-            imported += 1
+            all_imported.append(imported_answer)
         else:
             dupes += 1
+    db.session.flush()
+
+    # Sanity check: Make sure that the ids are in the same order as the timestamps of the answers - we currently rely on
+    # the fact that the latest answer has the largest id.
+    all_imported.sort(key=lambda a: a.id)
+    for a, b in zip(all_imported, all_imported[1:]):
+        if a.answered_on > b.answered_on:
+            raise Exception('Import bug: Answer ids were in different order than answer timestamps. Imported nothing.')
+
     db.session.commit()
     return json_response({
-        'imported': imported,
+        'imported': len(all_imported),
         'skipped_duplicates': dupes,
         'missing_users': list(missing_users),
     })
