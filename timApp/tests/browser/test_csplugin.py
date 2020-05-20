@@ -70,7 +70,7 @@ type: python
             runbutton = par.find_element_by_css_selector('button')
             runbutton.click()
             self.wait_until_present('answerbrowser')
-            return par, textarea, runbutton
+            return textarea, runbutton
 
         self.login_browser_quick_test1()
         self.login_test1()
@@ -78,7 +78,7 @@ type: python
 #- {plugin=csPlugin #text}
 type: text
         """)
-        par, textarea, runbutton = make_text_and_answer(self, d)
+        textarea, runbutton = make_text_and_answer(self, d)
         self.assertTrue(runbutton.is_enabled())
         savedtext = self.find_element('.savedText')
         self.assertTrue( savedtext.is_displayed())
@@ -89,7 +89,7 @@ type: text
 type: text
 disableUnchanged: true
                 """)
-        par, textarea, runbutton = make_text_and_answer(self, d)
+        textarea, runbutton = make_text_and_answer(self, d)
         self.assertFalse(runbutton.is_enabled())
         savedtext = self.find_element('.savedText')
         self.assertTrue(savedtext.is_displayed())
