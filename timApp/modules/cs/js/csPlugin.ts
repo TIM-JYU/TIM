@@ -9,7 +9,15 @@ import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$compile, $http, $rootScope, $sce, $timeout, $upload} from "tim/util/ngimport";
-import {copyToClipboard, defaultTimeout, getClipboardHelper, to, valueDefu, valueOr} from "tim/util/utils";
+import {
+    copyToClipboard,
+    defaultErrorMessage,
+    defaultTimeout,
+    getClipboardHelper,
+    to,
+    valueDefu,
+    valueOr,
+} from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {wrapText} from "tim/document/editing/utils";
 import {CellInfo} from "./embedded_sagecell";
@@ -1815,6 +1823,7 @@ ${fhtml}
 
     async doRunCode(runType: string, nosave: boolean, extraMarkUp?: IExtraMarkup) {
         this.connectionErrorMessage = undefined;
+        this.error = undefined;
         if (this.isRunning) {
             return;
         } // do not run if previuos is still running
@@ -2005,15 +2014,11 @@ ${fhtml}
         } else {
             this.isRunning = false;
             const data = r.result.data;
-            this.error = "Ikuinen silmukka tai jokin muu vika?";
             if (data?.error) {
                 this.error = data.error;
                 this.errors.push(data.error);
             }
-            if (!r.result.data)
-            {
-                this.connectionErrorMessage = this.attrs.connectionErrorMessage ?? this.error;
-            }
+            this.connectionErrorMessage = this.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
         }
     }
 
