@@ -611,11 +611,7 @@ export enum ClearSort {
                 </p>
             </div>
             <p class="plgfooter" *ngIf="data.footer" [innerHtml]="data.footer"></p>
-<<<<<<< HEAD
             <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
-            <span class="error" *ngIf="error" [innerText]="error"></span>
-=======
->>>>>>> jsrunner to every plugin ver 0.5 (only student)
         </div>
         <div class="timTableError"><pre class="error" *ngIf="error" [innerText]="error"></pre></div>
     `,
