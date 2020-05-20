@@ -13,7 +13,7 @@
 
 {%- macro end_area(open_areas) -%}
     </div>
-    {% if item.rights.editable or item.rights.can_comment %}
+    {% if not exam_mode and item.rights.editable %}
         {% for area in open_areas %}
             {% if open_areas[area] <= 3 %}
                 <div class="areaeditline areaeditline{{ open_areas[area] }}"
