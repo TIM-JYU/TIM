@@ -362,12 +362,10 @@ def is_possibly_home_org_account(email_or_username: str):
     ))
 
 
-def check_password_and_stripepd(user: User, password: str) -> bool:
+def check_password_and_stripped(user: User, password: str) -> bool:
     if user.check_password(password, allow_old=True, update_if_old=True):
         return True
-    if user.check_password(password.strip(), allow_old=True, update_if_old=True):
-        return True
-    return False
+    return user.check_password(password.strip(), allow_old=True, update_if_old=True)
 
 
 @login_page.route("/altlogin", methods=['POST'])
@@ -383,7 +381,7 @@ def alt_login():
     if len(users) == 1:
         user = users[0]
         old_hash = user.pass_
-        if check_password_and_stripepd(user, password):
+        if check_password_and_stripped(user, password):
             # Check if the users' group exists
             try:
                 user.get_personal_group()
