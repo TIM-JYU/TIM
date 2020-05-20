@@ -11,7 +11,7 @@ import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
 import {showQuestionAskDialog} from "../lecture/questionAskController";
 import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
-import {Binding, defaultTimeout, to} from "../util/utils";
+import {Binding, defaultErrorMessage, defaultTimeout, to} from "../util/utils";
 import {IGenericPluginTopLevelFields} from "./attributes";
 import {PluginBaseCommon, pluginBindings, PluginMeta} from "./util";
 
@@ -253,7 +253,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
             this.isRunning = false;
             this.errors.push(r.result.data?.error);
             console.log(r);
-            this.error = r.result.data?.error ?? this.attrsall.markup.connectionErrorMessage ?? "Ikuinen silmukka tai jokin muu vika?";
+            this.error = r.result.data?.error ?? this.attrsall.markup.connectionErrorMessage ?? defaultErrorMessage;
             return {saved: false, message: r.result.data?.error ?? this.attrsall.markup.connectionErrorMessage};
         }
         const data = r.result.data;
