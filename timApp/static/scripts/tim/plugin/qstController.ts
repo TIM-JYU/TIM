@@ -32,6 +32,7 @@ interface IQstAttributes extends IGenericPluginTopLevelFields<IQuestionMarkup & 
 class QstController extends PluginBaseCommon implements IController, ITimComponent {
     static $inject = ["$element"];
     private error?: string;
+    private log?: string;
     private isRunning: boolean = false;
     private result?: string;
     private taskId?: string;
@@ -215,6 +216,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     private async doSaveText(nosave: boolean) {
+        this.log = undefined;
         this.error = undefined;
         this.isRunning = true;
 
@@ -261,6 +263,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         let result = data.web.result;
         if (result == "Saved" && this.attrsall.markup.savedText) { result = this.attrsall.markup.savedText; }
         this.result = result;
+        this.log = data.web.error;
         if (data.web.markup && data.web.show_result) {
             this.preview = makePreview(data.web.markup, {answerTable: data.web.state, enabled: true});
             this.preview.showExplanations = true;
@@ -330,5 +333,6 @@ qstApp.component("qstRunner", {
     </a>
     <p class="questionNumber" ng-bind="$ctrl.getQuestionTitleShort()"></p>
 </div>
+<div ng-if="$ctrl.log" class="qstLog"  ng-bind-html="$ctrl.log"></div>
 `,
 });

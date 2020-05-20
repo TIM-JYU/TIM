@@ -372,7 +372,7 @@ class AnswerSheetController implements IController {
         }
         const arr: MatrixElement[][] = createArray(data.rows.length, data.rows[0].columns.length);
         if (this.isMatrix()) {
-            if (this.isText()) {
+            if (this.isText() || this.isInputText()) {
                 for (let i = 0; i < arr.length; i++) {
                     for (let j = 0; j < arr[i].length; j++) {
                         arr[i][j] = (table[i] || [])[j] || "";
@@ -422,7 +422,7 @@ class AnswerSheetController implements IController {
     private tableFromAnswerMatrix(matrix: MatrixElement[][]): AnswerTable {
         let table: AnswerTable = [];
         if (this.isMatrix()) {
-            if (this.isText()) {
+            if (this.isText() || this.isInputText()) {
                 table = matrix.map((row) => row.map((elem) => (elem || "").toString()));
             } else {
                 for (const row of matrix) {
@@ -456,6 +456,11 @@ class AnswerSheetController implements IController {
 
     private isText() {
         return this.json.answerFieldType === "text";
+    }
+
+    private isInputText() {
+        // @ts-ignore
+        return this.json.answerFieldType === "inputText";
     }
 
     private isRadio() {
@@ -519,6 +524,15 @@ timApp.component("dynamicAnswerSheet", {
                             ng-change="$ctrl.signalUpdate()"
                             ng-model="$ctrl.answerMatrix[rowi][coli]">
 </textarea>
+                    <input ng-if="$ctrl.isInputText()"
+                           ng-class="$ctrl.getInputClass(rowi, coli)"
+                           ng-disabled="$ctrl.disabled"
+                           ng-change="$ctrl.signalUpdate()"
+                           type="text"
+                           size="{{$ctrl.json.size || 3}}"
+                           name="{{$ctrl.getGroupName(rowi)}}"
+                           ng-model="$ctrl.answerMatrix[rowi][coli]"
+                           ng-value="$ctrl.answerMatrix[rowi][coli]">
                     <span ng-bind-html="$ctrl.getLabelText(row, col)"></span></label>
                 <p ng-if="(p = $ctrl.getPoints(rowi, coli)) != null" class="qst-points" ng-bind="p"></p>
             </td>

@@ -41,6 +41,7 @@ FIELD_NAME_MAP = dict(
     title='questionTitle',
     type='questionType',
     xpl='expl',
+    size='size',
 )
 KNOWN_TITLE_KEYS = {'TITLE', 'title', 'questionTitle'}
 MANDATORY_FIELDS = {'answerFieldType', 'headers', 'questionTitle', 'questionText', 'questionType', 'rows'}

@@ -125,6 +125,7 @@ class QstMarkupModel(GenericMarkupModel):
     doNotMove: Union[List[int], int, Missing] = missing
     defaultPoints: Union[int, float, Missing] = missing
     savedText: Union[str, None, Missing] = missing
+    size: Union[str, None, Missing] = missing
 
 
 QstBasicState = List[List[str]]
@@ -614,6 +615,7 @@ qst_attrs = {
     'tag',
     'connectionErrorMessage',
     'undo',
+    'size',
 }
 
 

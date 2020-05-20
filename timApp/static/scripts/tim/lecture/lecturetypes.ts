@@ -44,9 +44,9 @@ export type QuestionType =
     | "likert"
     | "";
 
-export type MatrixType = "textArea" | "radiobutton-horizontal" | "checkbox";
+export type MatrixType = "textArea" | "radiobutton-horizontal" | "checkbox" | "inputText";
 
-export type AnswerFieldType = "radio" | "checkbox" | "matrix" | "text"; // TODO matrix seems wrong
+export type AnswerFieldType = "radio" | "checkbox" | "matrix" | "text" | "inputText"; // TODO matrix seems wrong
 
 export interface IHeader {
     text: string;
