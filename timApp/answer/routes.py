@@ -38,6 +38,7 @@ from timApp.markdown.dumboclient import call_dumbo
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.notification.notify import multi_send_email
 from timApp.plugin.containerLink import call_plugin_answer
+from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, is_global, is_global_id, \
     find_task_ids, CachedPluginFinder
 from timApp.plugin.plugin import PluginType
@@ -586,6 +587,26 @@ def post_answer(plugintype: str, task_id_ext: str):
                     result['error'] = str(e)
                 else:
                     points_given_by = get_current_user_group()
+            if plugin.values.get("postProgram", None):
+                data = { 'points': points,
+                         'save_object': save_object,
+                         'tags':       tags,
+                         'is_valid':   is_valid,
+                         'force_answer': force_answer,
+                         }
+                try:
+                    params = JsRunnerParams(code=plugin.values["postProgram"], data=data)
+                    data, output = jsrunner_run(params)
+                    points = data.get("points", points)
+                    save_object = data.get("save_object", save_object)
+                    is_valid = data.get("is_valid", is_valid)
+                    force_answer = data.get("force_answer", force_answer)
+                    if output:  # TODO: korjaa tähän järkevä tulostus
+                        # return json_response({'web': {'error': output}})
+                        result["web"]["error"] = output;
+                except JsRunnerError as e:
+                    return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
+
             if points or save_object is not None or tags:
                 result['savedNew'] = save_answer(users,
                                                  tid,
