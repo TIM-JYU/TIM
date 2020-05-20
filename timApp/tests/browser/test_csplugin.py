@@ -70,7 +70,6 @@ type: python
             runbutton = par.find_element_by_css_selector('button')
             runbutton.click()
             self.wait_until_present('answerbrowser')
-            runbutton.is_enabled()
             return par, textarea, runbutton
 
         self.login_browser_quick_test1()
