@@ -362,15 +362,16 @@ def is_possibly_home_org_account(email_or_username: str):
     ))
 
 
+def check_password_and_stripepd(user: User, password: str) -> bool:
+    if user.check_password(password, allow_old=True, update_if_old=True):
+        return True
+    if user.check_password(password.strip(), allow_old=True, update_if_old=True):
+        return True
+    return False
+
+
 @login_page.route("/altlogin", methods=['POST'])
 def alt_login():
-    def check_pw(u, pw, trimmed=False):
-        if u.check_password(pw, allow_old=True, update_if_old=True):
-            return True
-        if not trimmed:
-            return check_pw(u, pw.strip(), trimmed=True)
-        return False
-
     save_came_from()
     email_or_username = request.form['email'].strip()
     password = request.form['password']
@@ -382,7 +383,7 @@ def alt_login():
     if len(users) == 1:
         user = users[0]
         old_hash = user.pass_
-        if check_pw(user, password):
+        if check_password_and_stripepd(user, password):
             # Check if the users' group exists
             try:
                 user.get_personal_group()
@@ -398,7 +399,8 @@ def alt_login():
             return finish_login()
     elif not users:
         # Protect from timing attacks.
-        check_password_hash('', '$2b$12$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu')
+        for _ in range(2):
+            check_password_hash('', '$2b$12$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu')
     else:
         raise RouteException('AmbiguousAccount')
 
