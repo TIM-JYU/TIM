@@ -79,25 +79,25 @@ type: python
 type: text
         """)
         par, textarea, runbutton = make_text_and_answer(self, d)
-        self.assertEqual(True, runbutton.is_enabled())
+        self.assertTrue(runbutton.is_enabled())
         savedtext = self.find_element('.savedText')
-        self.assertEqual(True, savedtext.is_displayed())
+        self.assertTrue( savedtext.is_displayed())
         margin = self.find_element('.csRunNotSaved')
-        self.assertEqual(False, margin.is_displayed())
+        self.assertFalse(margin.is_displayed())
         d = self.create_doc(initial_par="""
 #- {plugin=csPlugin #text}
 type: text
 disableUnchanged: true
                 """)
         par, textarea, runbutton = make_text_and_answer(self, d)
-        self.assertEqual(False, runbutton.is_enabled())
+        self.assertFalse(runbutton.is_enabled())
         savedtext = self.find_element('.savedText')
-        self.assertEqual(True, savedtext.is_displayed())
+        self.assertTrue(savedtext.is_displayed())
         margin = self.find_element('.csRunNotSaved')
-        self.assertEqual(False, margin.is_displayed())
+        self.assertFalse(margin.is_displayed())
         textarea.send_keys("more input, let me save")
-        self.assertEqual(True, runbutton.is_enabled())
+        self.assertTrue(runbutton.is_enabled())
         self.should_not_exist('.savedText')
-        self.assertEqual(True, margin.is_displayed())
+        self.assertTrue(margin.is_displayed())
 
 
