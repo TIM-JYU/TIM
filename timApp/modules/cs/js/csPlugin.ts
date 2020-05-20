@@ -16,7 +16,7 @@ import {
     getClipboardHelper,
     to,
     valueDefu,
-    valueOr
+    valueOr,
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {wrapText} from "tim/document/editing/utils";
