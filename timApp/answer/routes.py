@@ -3,6 +3,7 @@ import json
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict
 
 from flask import Blueprint, session
@@ -20,7 +21,8 @@ from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_common_answers, save_answer, get_all_answers, \
     valid_answers_query, valid_taskid_filter
-from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access, AccessDenied
+from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access, AccessDenied, \
+    verify_admin
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
     verify_view_access, get_plugin_from_request
@@ -49,7 +51,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.answerutil import period_handling
-from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException
+from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields
 from timApp.util.utils import try_load_json
@@ -983,6 +985,91 @@ def hide_points(a: Answer):
     if a.points is not None:
         j['points_hidden'] = True
     return j
+
+
+@answers.route('/exportAnswers/<path:doc_path>')
+def export_answers(doc_path: str):
+    d = DocEntry.find_by_path(doc_path)
+    if not d:
+        raise RouteException('Document not found')
+    verify_teacher_access(d)
+    answer_list: List[Tuple[Answer, str]] = (
+        Answer.query
+            .filter(Answer.task_id.startswith(f'{d.id}.'))
+            .join(User, Answer.users)
+            .with_entities(Answer, User.email)
+            .all()
+    )
+    return json_response([{
+        'email': email,
+        'content': a.content,
+        'valid': a.valid,
+        'points': a.points,
+        'time': a.answered_on,
+        'task': a.task_name,
+    } for a, email in answer_list])
+
+
+@dataclass
+class ExportedAnswer:
+    content: str
+    email: str
+    points: Union[int, float, None]
+    task: str
+    time: datetime
+    valid: bool
+
+
+@dataclass
+class ImportAnswersModel:
+    doc: str
+    answers: List[ExportedAnswer]
+
+
+@answers.route('/importAnswers', methods=['post'])
+@use_model(ImportAnswersModel)
+def import_answers(m: ImportAnswersModel):
+    d = DocEntry.find_by_path(m.doc)
+    if not d:
+        raise RouteException('Document not found')
+    verify_teacher_access(d)
+    verify_admin()
+    existing_answers: List[Tuple[Answer, str]] = (
+        Answer.query
+            .filter(Answer.task_id.startswith(f'{d.id}.'))
+            .join(User, Answer.users)
+            .with_entities(Answer, User.email)
+            .all()
+    )
+    existing_set = set((a.task_name, a.answered_on, a.valid, a.points, email) for a, email in existing_answers)
+    dupes = 0
+    imported = 0
+    missing_users = set()
+    users = {u.email: u for u in User.query.filter(User.email.in_([a.email for a in m.answers])).all()}
+    for a in m.answers:
+        if (a.task, a.time, a.valid, a.points, a.email) not in existing_set:
+            u = users.get(a.email)
+            if not u:
+                missing_users.add(a.email)
+                continue
+            imported_answer = Answer(
+                task_id=f'{d.id}.{a.task}',
+                valid=a.valid,
+                points=a.points,
+                content=a.content,
+                answered_on=a.time,
+            )
+            imported_answer.users_all.append(u)
+            db.session.add(imported_answer)
+            imported += 1
+        else:
+            dupes += 1
+    db.session.commit()
+    return json_response({
+        'imported': imported,
+        'skipped_duplicates': dupes,
+        'missing_users': list(missing_users),
+    })
 
 
 @answers.route("/getAnswers/<task_id>/<int:user_id>")

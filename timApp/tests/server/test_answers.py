@@ -1,12 +1,15 @@
+from datetime import datetime
 from typing import List
 
+from timApp.answer.answer import Answer
 from timApp.answer.answers import get_users_for_tasks, save_answer
 from timApp.plugin.taskid import TaskId
-from timApp.tests.db.timdbtest import TimDbTest
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 
 
-class AnswerTest(TimDbTest):
+class AnswerTest(TimRouteTest):
 
     def check_totals(self, user: User, task_ids: List[TaskId], task_count, total_points):
         self.assertEqual([{'user': user,
@@ -40,3 +43,42 @@ class AnswerTest(TimDbTest):
         save_answer([u], task_id2, 'content', 1000, [], True)
         self.check_totals(u, [task_id1], 1, 100.0)
         self.check_totals(u, [task_id1, task_id2], 2, 1100)
+
+    def test_export_import(self):
+        self.login_test1()
+        d = self.create_doc()
+        answers = [
+            Answer(
+                task_id=f'{d.id}.t',
+                points=2,
+                content='xx',
+                answered_on=datetime(year=2020, month=5, day=19, hour=15, minute=33, second=27),
+                valid=True,
+            ),
+        ]
+        for a in answers:
+            self.current_user.answers.append(a)
+        db.session.commit()
+
+        exported = self.get(f'/exportAnswers/{d.path}')
+
+        d = self.create_doc()
+        self.json_post(
+            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            expect_content='This action requires administrative rights.',
+            expect_status=403,
+        )
+        self.make_admin(self.current_user)
+        self.json_post(
+            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            expect_content={'imported': 1, 'skipped_duplicates': 0, 'missing_users': []},
+        )
+        self.json_post(
+            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            expect_content={'imported': 0, 'skipped_duplicates': 1, 'missing_users': []},
+        )
+        exported[0]['email'] = 'xxx'
+        self.json_post(
+            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            expect_content={'imported': 0, 'skipped_duplicates': 0, 'missing_users': ['xxx']},
+        )

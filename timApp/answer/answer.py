@@ -2,6 +2,7 @@ import json
 from sqlalchemy import func
 
 from timApp.answer.answer_models import UserAnswer
+from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db, include_if_loaded
 
 
@@ -55,6 +56,16 @@ class Answer(db.Model):
         if not u:
             return 1
         return u.get_answers_for_task(self.task_id).filter(Answer.id <= self.id).count()
+
+    @property
+    def task_name(self) -> str:
+        return TaskId.parse(
+            self.task_id,
+            require_doc_id=True,
+            allow_block_hint=False,
+            allow_custom_field=False,
+            allow_type=False,
+        ).task_name
 
     def to_json(self):
         return {
