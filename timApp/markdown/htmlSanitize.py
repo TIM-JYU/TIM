@@ -140,6 +140,7 @@ TIM_SAFE_ATTRS = frozenset([
     'reset-time',
     'is-button',
     'open-at',
+    'close-at',
     'wait-text',
     'countdown-text',
     'unauthorized-text',

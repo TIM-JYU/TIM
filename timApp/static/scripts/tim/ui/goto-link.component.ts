@@ -1,5 +1,5 @@
 import {Component, Input} from "@angular/core";
-import moment from "moment";
+import moment, {Moment} from "moment";
 import {$http} from "tim/util/ngimport";
 import {secondsToHHMMSS, to, formatString} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
@@ -21,7 +21,6 @@ enum GotoLinkState {
 }
 
 const VIEW_PATH = "/view/";
-const OPEN_AT_WILDCARD = "*";
 
 @Component({
     selector: "tim-goto-link",
@@ -73,12 +72,11 @@ export class GotoLinkComponent {
     @Input() isButton = false;
     @Input() target = "_self";
     @Input() openAt?: string;
+    @Input() closeAt?: string;
     countDown = 0;
     pastDue = 0;
     linkDisabled = false;
     linkState = GotoLinkState.Ready;
-    openTime?: moment.Moment;
-    closeTime?: moment.Moment;
 
     formatString = formatString;
 
@@ -106,31 +104,27 @@ export class GotoLinkComponent {
         return humanizeDuration(this.pastDue * 1000, {language: this.timeLang ?? Users.getCurrentLanguage()});
     }
 
-    async resolveOpenAtTime() {
-        if (!this.openAt) { return; }
+    async resolveAccess() {
+        const url = new URL(this.href, window.location.href);
+        const path = url.pathname;
 
-        if (this.openAt == OPEN_AT_WILDCARD) {
-            const url = new URL(this.href, window.location.href);
-            const path = url.pathname;
-            // If the link goes to TIM, and it's a view, try to ask the opening time from the server
-            // TODO: Separate open and close time checks into their own attributes
-            if (url.hostname == window.location.hostname && path.startsWith(VIEW_PATH)) {
-                const docPath = path.substring(VIEW_PATH.length);
-                const accessInfo = await to($http.get<IViewAccessStatus>(`/doc_view_info/${docPath}`));
-                if (accessInfo.ok && !accessInfo.result.data.can_access) {
-                    if (accessInfo.result.data.right) {
-                        this.openTime = accessInfo.result.data.right?.accessible_from;
-                        this.closeTime = accessInfo.result.data.right?.accessible_to;
-                        this.linkState = GotoLinkState.Ready;
-                    } else {
-                        this.linkState = GotoLinkState.Unauthorized;
-                    }
-                }
+        // If href points to a valid TIM document, check permissions
+        if (url.hostname == window.location.hostname && path.startsWith(VIEW_PATH)) {
+            const docPath = path.substring(VIEW_PATH.length);
+            const accessInfo = await to($http.get<IViewAccessStatus>(`/doc_view_info/${docPath}`));
+            if (accessInfo.ok) {
+                return {unauthorized: !accessInfo.result.data.can_access, access: accessInfo.result.data.right};
             }
-        } else {
-            this.openTime = moment.utc(this.openAt);
-            this.linkState = GotoLinkState.Ready;
         }
+        return {unauthorized: false, access: undefined};
+    }
+
+    parseTime(timeString?: string, wildcardValue?: Moment) {
+        if (!timeString) {
+            return wildcardValue;
+        }
+        const result = moment.utc(timeString);
+        return result.isValid() ? result : wildcardValue;
     }
 
     async handleClick() {
@@ -139,15 +133,19 @@ export class GotoLinkComponent {
 
         this.linkDisabled = true;
 
-        await this.resolveOpenAtTime();
+        const {unauthorized, access} = await this.resolveAccess();
 
-        if (this.isUnauthorized) {
+        if (unauthorized && !access) {
+            this.linkState = GotoLinkState.Unauthorized;
             this.startReset(this.resetTime);
             return;
         }
 
+        const openTime = this.parseTime(this.openAt, access?.accessible_from);
+        const closeTime = this.parseTime(this.closeAt, access?.accessible_to);
+
         let curTime = moment();
-        if (this.closeTime || this.openTime) {
+        if (closeTime || openTime) {
             const serverTime = await to($http.get<{time: number}>("/time"));
             // Fail silently here and hope the user clicks again so it can retry
             if (!serverTime.ok) {
@@ -157,18 +155,17 @@ export class GotoLinkComponent {
             curTime = moment.utc(serverTime.result.data.time);
         }
 
-        if (this.closeTime && this.closeTime.isValid() && this.closeTime.isBefore(curTime)) {
-            this.pastDue = this.closeTime.diff(curTime, "seconds");
+        if (closeTime?.isValid() && closeTime.isBefore(curTime)) {
+            this.pastDue = closeTime.diff(curTime, "seconds");
             this.linkState = GotoLinkState.Expired;
             this.startReset(this.resetTime);
             return;
         }
 
-        if (this.openTime && this.openTime.isValid()) {
-            this.countDown = this.openTime.diff(curTime, "seconds");
+        if (openTime?.isValid()) {
+            this.countDown = openTime.diff(curTime, "seconds");
         }
 
-        // No countdown needed, just start redirect normally
         if (this.countDown <= 0) {
             this.startGoto();
         } else {
@@ -194,24 +191,27 @@ export class GotoLinkComponent {
         setTimeout(() => {
            this.linkState = GotoLinkState.Ready;
            this.linkDisabled = false;
-        }, resetTime);
+        }, resetTime * 1000);
     }
 
     startGoto() {
         if (this.isGoing) { return; }
         this.linkDisabled = true;
         this.linkState = GotoLinkState.Goto;
-        const waitTime = Math.random() * Math.max(this.maxWait, 0) * 1000;
-        const realResetTime = Math.max(this.resetTime * 1000, waitTime);
+        const waitTime = Math.random() * Math.max(this.maxWait, 0);
+        const realResetTime = Math.max(this.resetTime, waitTime);
 
         setTimeout(() => {
             // Special case: on empty href just reload the page to mimic the behaviour of <a>
             if (this.href == "") {
+                // Note: the force-reload is deprecated: https://github.com/Microsoft/TypeScript/issues/28898
+                // TODO: Do we need force reloading? There is no consensus on whether this is supported by all browsers
+                //  anymore.
                 window.location.reload(true);
             } else {
                 window.open(this.href, this.target);
             }
-        }, waitTime);
+        }, waitTime * 1000);
 
         this.startReset(realResetTime);
     }
