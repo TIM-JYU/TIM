@@ -17,6 +17,7 @@ export const moduleDefs = [multisaveApp];
 
 const multisaveMarkup = t.intersection([
     t.partial({
+        allSavedText: t.string,
         areas: t.array(t.string),
         tags: t.array(t.string),
         emailPreMsg: t.string,
@@ -30,6 +31,8 @@ const multisaveMarkup = t.intersection([
         destCourse: t.string,
         includeUsers: IncludeUsersOption,
         testOnly: t.boolean,
+        savedText: t.string,
+        unsavedText: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -74,6 +77,18 @@ export class MultisaveController
 
     buttonText() {
         return super.buttonText() || (this.attrs.emailMode && "Send email") || "Save";
+    }
+
+    get allSavedText() {
+        return this.attrs.allSavedText;
+    }
+
+    get unsavedText() {
+        return this.attrs.unsavedText?.replace("{count}", this.unsavedTimComps.size.toString());
+    }
+
+    get savedText() {
+        return this.attrs.savedText ?? "Saved";
     }
 
     get listener() {
@@ -375,12 +390,20 @@ multisaveApp.component("multisaveRunner", {
                             test-only="$ctrl.attrs.testOnly"
                             group="$ctrl.attrs.group">
     </sisu-assessment-export>
-    <div ng-if="$ctrl.livefeed && !$ctrl.allSaved()"> <!-- unsaved fields -->
-        Seuraavat kentät ovat tallentamatta:
-        <p ng-repeat="tag in $ctrl.unsaveds">
-            <a href="" ng-click="$ctrl.scrollTo(tag)">{{tag.getName()}}</a>
-        </p>
+    <div ng-if="$ctrl.livefeed"> <!-- unsaved fields -->
+        <div ng-if="!$ctrl.allSaved()">
+            {{$ctrl.unsavedText}}
+            <ul>
+                <li ng-repeat="tag in $ctrl.unsaveds">
+                    <a href="" ng-click="$ctrl.scrollTo(tag)">{{tag.getName()}}</a>
+                </li>
+            </ul>
+        </div>
+        <div ng-if="$ctrl.allSaved()">
+            {{::$ctrl.allSavedText}}
+        </div>
     </div> <!-- unsaved fields -->
+    <div ng-if="!$ctrl.livefeed || !$ctrl.allSaved()">
     <button class="timButton"
             ng-disabled="($ctrl.disableUnchanged && $ctrl.listener && $ctrl.allSaved())"
             ng-if="!$ctrl.showEmailForm && $ctrl.buttonText() && !$ctrl.attrs.destCourse"
@@ -389,7 +412,8 @@ multisaveApp.component("multisaveRunner", {
     </button>
     &nbsp;
     <a href="" ng-if="($ctrl.undoButton && (!$ctrl.listener || !$ctrl.allSaved()))" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{$ctrl.undoButton}}</a>
-    <p class="savedtext" ng-if="$ctrl.isSaved && $ctrl.allSaved()">Saved</p>
+    <p class="savedtext" ng-if="$ctrl.isSaved && $ctrl.allSaved()">{{::$ctrl.savedText}}</p>
+    </div>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
         <tim-close-button ng-click="$ctrl.toggleEmailForm()"></tim-close-button>
         <p><textarea ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea>

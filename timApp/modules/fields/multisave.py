@@ -26,6 +26,7 @@ class MultisaveMarkupModel(GenericMarkupModel):
     areas: Union[List[str], Missing] = missing
     autoUpdateDuplicates: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
+    allSavedText: Union[str, Missing] = missing
     emailMode: Union[bool, Missing] = missing
     emailPreMsg: Union[str, Missing, None] = missing
     emailRecipients: Union[List[str], Missing] = missing
@@ -35,7 +36,9 @@ class MultisaveMarkupModel(GenericMarkupModel):
     jumptarget: Union[str, Missing, None] = missing
     listener: Union[bool, Missing] = False
     livefeed: Union[bool, Missing] = False
+    savedText: Union[str, Missing] = missing
     tags: Union[List[str], Missing] = missing
+    unsavedText: Union[str, Missing] = missing
 
     # Sisu export-related fields; TODO: Should be a separate plugin.
     destCourse: Union[str, Missing] = missing

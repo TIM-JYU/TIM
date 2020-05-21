@@ -2,6 +2,10 @@ from timApp.tests.browser.browsertest import BrowserTest
 
 
 class TextfieldPluginTest(BrowserTest):
+
+    def get_screenshot_tolerance(self):
+        return 10
+
     def test_textfield_numericfield_multisave(self):
         self.login_browser_quick_test1()
         self.login_test1()
@@ -27,6 +31,7 @@ autosave: false
         self.find_element('.breadcrumb .active').click()
         par = self.find_element_avoid_staleness('#pars')
         multisave = self.find_element_avoid_staleness('#t3 multisave-runner')
+        self.wait_until_present('#t3 div') # wait for ng-if to finish
         self.assert_same_screenshot(par, ['textfield/fields_before_answer'])
         runbutton = multisave.find_element_by_css_selector('button')
         runbutton.click()

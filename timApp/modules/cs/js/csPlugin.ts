@@ -1019,13 +1019,14 @@ class CsController extends CsBase implements ITimComponent {
             return;
         }
         this.resetChanges();
-        this.updateListeners(ChangeType.Saved);
     }
 
     resetChanges(): void {
         this.usercode = (this.savedvals ? this.savedvals.code : "");
         this.userargs = (this.savedvals ? this.savedvals.args : "");
         this.userinput = (this.savedvals ? this.savedvals.input : "");
+        this.edited = false;
+        this.updateListeners(ChangeType.Saved);
     }
 
     svgImageSnippet() {
