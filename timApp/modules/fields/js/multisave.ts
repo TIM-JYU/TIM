@@ -83,7 +83,7 @@ export class MultisaveController
     }
 
     get unsavedText() {
-        return this.attrs.unsavedText;
+        return this.attrs.unsavedText?.replace("{count}", this.unsavedTimComps.size.toString());
     }
 
     get listener() {
@@ -387,10 +387,12 @@ multisaveApp.component("multisaveRunner", {
     </sisu-assessment-export>
     <div ng-if="$ctrl.livefeed"> <!-- unsaved fields -->
         <div ng-if="!$ctrl.allSaved()">
-            {{::$ctrl.unsavedText}}
-            <p ng-repeat="tag in $ctrl.unsaveds">
-                <a href="" ng-click="$ctrl.scrollTo(tag)">{{tag.getName()}}</a>
-            </p>
+            {{$ctrl.unsavedText}}
+            <ul>
+                <li ng-repeat="tag in $ctrl.unsaveds">
+                    <a href="" ng-click="$ctrl.scrollTo(tag)">{{tag.getName()}}</a>
+                </li>
+            </ul>
         </div>
         <div ng-if="$ctrl.allSaved()">
             {{::$ctrl.allSavedText}}
