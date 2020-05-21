@@ -21,6 +21,7 @@
 /tim_logs/
 /timApp/celerybeat-schedule.db
 /timApp/prodconfig.py
+/timApp/hosts.json
 /timApp/auth/saml/prod/settings.json
 /timApp/messages.xlf
 /timApp/modules/cs/data/

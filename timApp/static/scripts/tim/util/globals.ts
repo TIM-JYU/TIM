@@ -27,12 +27,19 @@ interface ILayout {
     col_m_xs: number;
 }
 
+interface IHostConfig {
+    allowed: string[];
+    defaultwarning: string;
+    warnings: Record<string, string>;
+}
+
 interface IConfig {
     gitLastestCommitTimestamp: string;
     helpEmail: string;
     gitBranch: string;
     hakaEnabled: boolean;
     emailRegistrationEnabled: boolean;
+    hosts?: IHostConfig;
 }
 
 export type Locale = "fi" | "en-US";

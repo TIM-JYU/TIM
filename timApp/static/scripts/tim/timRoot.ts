@@ -1,6 +1,7 @@
 import {getUrlParams} from "tim/util/utils";
-import {IDocumentGlobals, someglobals, SomeGlobals} from "tim/util/globals";
+import {genericglobals, IDocumentGlobals, someglobals, SomeGlobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
+import {showMessageDialog} from "tim/ui/dialog";
 import {timApp} from "./app";
 
 export interface IVisibilityVars {
@@ -148,6 +149,44 @@ export function getVisibilityVars() {
 timApp.component("timRoot", {
     controller: class {
         private hide = getVisibilityVars();
+
+        $onInit() {
+            const g = genericglobals();
+            if (g.config.hosts && Users.isLoggedIn()) {
+                if (!g.config.hosts.allowed.includes(location.hostname)) {
+                    let message;
+                    for (const [key, val] of Object.entries(g.config.hosts.warnings)) {
+                        if (location.hostname.startsWith(key)) {
+                            message = val;
+                            break;
+                        }
+                    }
+                    if (!message) {
+                        message = g.config.hosts.defaultwarning;
+                    }
+                    const u = Users.getCurrent();
+                    const name = (u.last_name ?? u.real_name?.split(" ")[0] ?? "").toLowerCase();
+                    message = message.replace(/LASTNAME/g, name);
+                    if (name) {
+                        let letter;
+                        if (name.length === 1) {
+                            letter = name;
+                        } else if (name.startsWith("k")) {
+                            if (name.localeCompare("ko") < 0) {
+                                letter = "ka";
+                            } else {
+                                letter = "ko";
+                            }
+                        } else {
+                            letter = name[0];
+                        }
+                        message = message.replace(/LETTER/g, letter);
+                        localStorage.clear(); // Make sure the dialog is shown in default position.
+                        void showMessageDialog(message);
+                    }
+                }
+            }
+        }
     },
     template: `<div ng-transclude style="display: flex; min-height: 100vh; flex-direction: column"></div>`,
     transclude: true,

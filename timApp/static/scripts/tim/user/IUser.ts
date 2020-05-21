@@ -23,6 +23,7 @@ export interface IFullUser extends IUser {
     groups: IGroup[];
     consent: ConsentType | undefined;
     folder: IFolder;
+    last_name: string | null;
 }
 
 export interface IGroup {

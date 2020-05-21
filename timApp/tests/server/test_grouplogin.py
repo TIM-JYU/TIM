@@ -10,6 +10,7 @@ class GroupLoginTest(TimRouteTest):
         gid = self.get_test_user_1_group_id()
         one_user = {'current_user': {'email': 'test1@example.com', 'id': uid1, 'name': 'testuser1', 'consent': None,
                                      'real_name': TEST_USER_1_NAME,
+                                     'last_name': None,
                                      'group': {'id': gid, 'name': 'testuser1'},
                                      'groups': [{'id': gid, 'name': 'testuser1'}],
                                      }, 'other_users': []}
@@ -19,6 +20,7 @@ class GroupLoginTest(TimRouteTest):
         uid2 = resp['other_users'][0]['id']
         two_users = {'current_user': {'email': 'test1@example.com', 'id': uid1, 'name': 'testuser1', 'consent': None,
                                       'real_name': TEST_USER_1_NAME,
+                                      'last_name': None,
                                       'group': {'id': gid, 'name': 'testuser1'},
                                       'groups': [{'id': gid, 'name': 'testuser1'}],
                                       },
@@ -46,6 +48,7 @@ class GroupLoginTest(TimRouteTest):
         self.assertEqual({'current_user': {'email': None, 'consent': None,
                                            'id': 0,
                                            'name': 'Anonymous',
+                                           'last_name': None,
                                            'real_name': 'Anonymous user',
                                            'group': {'id': 1, 'name': 'Anonymous users'},
                                            'groups': [{'id': 1, 'name': 'Anonymous users'}],

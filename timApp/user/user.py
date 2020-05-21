@@ -680,6 +680,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 'groups': self.groups,
                 'folder': self.get_personal_folder(),
                 'consent': self.consent,
+                'last_name': self.last_name,
                 } if full else self.basic_info_dict
 
 
