@@ -7,6 +7,7 @@ from marshmallow import ValidationError
 from timApp.auth.accesshelper import AccessDenied, ItemLockedException
 from timApp.auth.login import logout
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docsettings import get_minimal_visibility_settings
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.markdown.dumboclient import DumboHTMLException
@@ -68,6 +69,7 @@ def register_errorhandlers(app: Flask):
             item = Folder.get_by_id(error.access.block_id)
         if not item:
             abort(404)
+        view_settings = get_minimal_visibility_settings(item.document if not is_folder else None)
         return render_template(
             'duration_unlock.html',
             item=item,
@@ -75,7 +77,7 @@ def register_errorhandlers(app: Flask):
             access=error.access,
             msg=error.msg,
             next_doc=error.next_doc,
-            minimal=current_app.config['MINIMAL_DURATION_UNLOCK_UI']
+            view_settings=view_settings
         ), 403
 
     @app.errorhandler(NoSuchUserException)
