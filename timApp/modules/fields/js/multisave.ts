@@ -390,6 +390,7 @@ multisaveApp.component("multisaveRunner", {
             {{::$ctrl.allSavedText}}
         </div>
     </div> <!-- unsaved fields -->
+    <div ng-if="!$ctrl.livefeed || !$ctrl.allSaved()">
     <button class="timButton"
             ng-disabled="($ctrl.disableUnchanged && $ctrl.listener && $ctrl.allSaved())"
             ng-if="!$ctrl.showEmailForm && $ctrl.buttonText() && !$ctrl.attrs.destCourse"
@@ -399,6 +400,7 @@ multisaveApp.component("multisaveRunner", {
     &nbsp;
     <a href="" ng-if="($ctrl.undoButton && (!$ctrl.listener || !$ctrl.allSaved()))" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{$ctrl.undoButton}}</a>
     <p class="savedtext" ng-if="$ctrl.isSaved && $ctrl.allSaved()">Saved</p>
+    </div>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
         <tim-close-button ng-click="$ctrl.toggleEmailForm()"></tim-close-button>
         <p><textarea ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea>
