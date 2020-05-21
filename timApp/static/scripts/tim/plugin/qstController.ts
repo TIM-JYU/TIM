@@ -135,7 +135,6 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         const oldVal = this.changes;
         this.changes = !deepEqual(this.savedAnswer, this.newAnswer);
         if (oldVal != this.changes) {
-            console.log("CHANGES HAPPENED");
             this.updateListeners(this.changes ? ChangeType.Modified : ChangeType.Saved);
         }
     }
