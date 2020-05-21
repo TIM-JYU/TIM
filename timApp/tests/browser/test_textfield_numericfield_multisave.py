@@ -7,7 +7,6 @@ class TextfieldPluginTest(BrowserTest):
         return 8
 
     def test_textfield_numericfield_multisave(self):
-        self.get_screenshot_tolerance()
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
