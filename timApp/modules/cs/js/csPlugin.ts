@@ -1025,6 +1025,7 @@ class CsController extends CsBase implements ITimComponent {
         this.usercode = (this.savedvals ? this.savedvals.code : "");
         this.userargs = (this.savedvals ? this.savedvals.args : "");
         this.userinput = (this.savedvals ? this.savedvals.input : "");
+        this.edited = false;
         this.updateListeners(ChangeType.Saved);
     }
 
