@@ -339,6 +339,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
             }
         }
         this.setCell(templ);
+        if (templ.closeEdit) { this.callbacks.closeEditor(); }
     }
 }
 

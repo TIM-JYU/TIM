@@ -200,6 +200,7 @@ export interface IToolbarTemplate {
     commands?: string[];
     notInEdit?: boolean;
     favorite?: boolean;
+    closeEdit?: boolean;  // if true, close small editor after done
 }
 
 export interface TimTable {
