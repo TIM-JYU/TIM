@@ -98,7 +98,6 @@ export function minimizeJson(json: IProcessedHeaders): IUnprocessedHeaders {
 function fixLineBreaks(s: string) {
     // var result = s.replace(" < "," &lt; ");
     // result = result.replace(" > "," &gt; ");
-    if (!s) { return ""; }
     const parts = s.split("!!");
     const result = parts[0];
     return result;
