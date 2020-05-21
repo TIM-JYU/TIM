@@ -31,6 +31,7 @@ const multisaveMarkup = t.intersection([
         destCourse: t.string,
         includeUsers: IncludeUsersOption,
         testOnly: t.boolean,
+        unsavedText: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -79,6 +80,10 @@ export class MultisaveController
 
     get allSavedText() {
         return this.attrs.allSavedText;
+    }
+
+    get unsavedText() {
+        return this.attrs.unsavedText;
     }
 
     get listener() {
@@ -382,6 +387,7 @@ multisaveApp.component("multisaveRunner", {
     </sisu-assessment-export>
     <div ng-if="$ctrl.livefeed"> <!-- unsaved fields -->
         <div ng-if="!$ctrl.allSaved()">
+            {{::$ctrl.unsavedText}}
             <p ng-repeat="tag in $ctrl.unsaveds">
                 <a href="" ng-click="$ctrl.scrollTo(tag)">{{tag.getName()}}</a>
             </p>
