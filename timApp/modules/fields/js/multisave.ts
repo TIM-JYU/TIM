@@ -17,6 +17,7 @@ export const moduleDefs = [multisaveApp];
 
 const multisaveMarkup = t.intersection([
     t.partial({
+        allSavedText: t.string,
         areas: t.array(t.string),
         tags: t.array(t.string),
         emailPreMsg: t.string,
@@ -74,6 +75,10 @@ export class MultisaveController
 
     buttonText() {
         return super.buttonText() || (this.attrs.emailMode && "Send email") || "Save";
+    }
+
+    get allSavedText() {
+        return this.attrs.allSavedText;
     }
 
     get listener() {
@@ -375,10 +380,15 @@ multisaveApp.component("multisaveRunner", {
                             test-only="$ctrl.attrs.testOnly"
                             group="$ctrl.attrs.group">
     </sisu-assessment-export>
-    <div ng-if="$ctrl.livefeed && !$ctrl.allSaved()"> <!-- unsaved fields -->
-        <p ng-repeat="tag in $ctrl.unsaveds">
-            <a href="" ng-click="$ctrl.scrollTo(tag)">{{tag.getName()}}</a>
-        </p>
+    <div ng-if="$ctrl.livefeed"> <!-- unsaved fields -->
+        <div ng-if="!$ctrl.allSaved()">
+            <p ng-repeat="tag in $ctrl.unsaveds">
+                <a href="" ng-click="$ctrl.scrollTo(tag)">{{tag.getName()}}</a>
+            </p>
+        </div>
+        <div ng-if="$ctrl.allSaved()">
+            {{::$ctrl.allSavedText}}
+        </div>
     </div> <!-- unsaved fields -->
     <button class="timButton"
             ng-disabled="($ctrl.disableUnchanged && $ctrl.listener && $ctrl.allSaved())"

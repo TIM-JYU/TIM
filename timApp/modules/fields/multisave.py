@@ -26,6 +26,7 @@ class MultisaveMarkupModel(GenericMarkupModel):
     areas: Union[List[str], Missing] = missing
     autoUpdateDuplicates: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
+    allSavedText: Union[str, Missing] = missing
     emailMode: Union[bool, Missing] = missing
     emailPreMsg: Union[str, Missing, None] = missing
     emailRecipients: Union[List[str], Missing] = missing
