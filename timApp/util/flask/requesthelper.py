@@ -3,9 +3,9 @@ import json
 import pprint
 import time
 import warnings
+from dataclasses import is_dataclass
 from typing import Optional, Type, TypeVar, Callable
 
-from dataclasses import is_dataclass
 from flask import Request, current_app, g, Response
 from flask import request, abort
 from marshmallow import ValidationError, Schema
@@ -136,13 +136,16 @@ def get_request_message(status_code=None, include_body=False):
         url_or_path = request.url
     else:
         url_or_path = request.full_path if request.query_string else request.path
+    ua = request.user_agent
     msg = f"""
 {name}
 [{request.headers.get("X-Forwarded-For") or request.remote_addr}]:
 {request.method}
 {url_or_path}
 {status_code or ""}
-{get_request_time()}""".replace('\n', ' ').strip()
+{get_request_time()}
+{ua.platform}/{ua.browser}/{ua.version}
+""".replace('\n', ' ').strip()
     if not include_body or request.method not in ('POST', 'PUT', 'DELETE'):
         return msg
     return f'{msg}\n\n{pprint.pformat(request.get_json(silent=True) or request.get_data(as_text=True))}'
