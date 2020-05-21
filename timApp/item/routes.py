@@ -29,7 +29,7 @@ from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
-from timApp.document.docsettings import DocSettings
+from timApp.document.docsettings import DocSettings, get_minimal_visibility_settings
 from timApp.document.document import get_index_from_html_list, dereference_pars, Document, viewmode_routes
 from timApp.document.post_process import post_process_pars
 from timApp.document.hide_names import hide_names_in_teacher
@@ -348,7 +348,7 @@ def view(item_path, template_name, route="view"):
     access = verify_view_access(doc_info, require=False, check_duration=True)
     if not access:
         if not logged_in():
-            return redirect_to_login()
+            return redirect_to_login(doc_info.document)
         else:
             abort(403)
 
@@ -363,7 +363,7 @@ def view(item_path, template_name, route="view"):
                 flash(f'Document has incorrect group tags: {seq_to_str(list(missing))}')
 
     if m.login and not logged_in():
-        return redirect_to_login()
+        return redirect_to_login(doc_info.document)
 
     piece_size = get_piece_size_from_cookie(request)
     areas = None
@@ -647,12 +647,14 @@ def view(item_path, template_name, route="view"):
     )
 
 
-def redirect_to_login():
+def redirect_to_login(item: Optional[Document]):
+    view_settings = get_minimal_visibility_settings(item)
     session['came_from'] = request.url
     session['anchor'] = request.args.get('anchor', '')
     return render_template('loginpage.html',
                            came_from=request.full_path,
-                           anchor=session['anchor']), 403
+                           anchor=session['anchor'],
+                           view_settings=view_settings), 403
 
 
 def get_items(folder: str, recurse=False):

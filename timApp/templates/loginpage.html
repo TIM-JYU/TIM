@@ -1,5 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
+{% block head %}
+    {{ super() }}
+    {% if view_settings %}
+        <script class="global-vars">
+            var docSettings = {};
+            var exam_mode = {{ view_settings.exam_mode|tojson }};
+            var hide_sidemenu = {{ view_settings.hide_sidemenu|tojson }};
+        </script>
+   {% endif %}
+{% endblock %}
 {% block content %}
     <div class="row">
         <div class="col-sm-6 col-sm-offset-3">

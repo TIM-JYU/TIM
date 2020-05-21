@@ -90,6 +90,20 @@ def add_url_macros(yaml_vals):
     del yaml_vals.values[DocSettings.urlmacros_key]
 
 
+@dataclass
+class MinimalVisibilitySettings:
+    exam_mode: bool = False
+    hide_sidemenu: bool = False
+
+
+def get_minimal_visibility_settings(item: Optional['Document']):
+    if not item:
+        return MinimalVisibilitySettings()
+    settings = item.get_settings()
+    return MinimalVisibilitySettings(exam_mode=settings.exam_mode() is not None,
+                                     hide_sidemenu=settings.hide_sidemenu() is not None)
+
+
 # TODO: Start moving DocSettings keys to this dataclass
 @dataclass
 class DocSettingTypes:
