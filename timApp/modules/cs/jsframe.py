@@ -386,7 +386,15 @@ JSREADYHTML['simpleDrawIO'] = """
             return {'c': data};
         }
         function setData(data) {
-            if ( !data || !data.c || Object.entries(data.c).length === 0 ) return;
+            if (!data) {
+                return;
+            }
+            if (!data.c) {
+                // "undo" call in plugin might call setData with undefined c so we need separate check
+                document.getElementById('diagram').innerHTML = initial;
+                return;
+            }
+            if (Object.entries(data.c).length === 0 ) return;
             let c = data.c;
             let d = String.fromCharCode(195);  // UTF-Escape for ä
             if ( c.indexOf(d) >= 0 ) {
