@@ -13,7 +13,6 @@ interface IViewAccessStatus {
 }
 
 enum GotoLinkState {
-    Uninitialized,
     Ready,
     Countdown,
     Goto,
@@ -77,7 +76,7 @@ export class GotoLinkComponent {
     countDown = 0;
     pastDue = 0;
     linkDisabled = false;
-    linkState = GotoLinkState.Uninitialized;
+    linkState = GotoLinkState.Ready;
     openTime?: moment.Moment;
     closeTime?: moment.Moment;
 
@@ -140,9 +139,7 @@ export class GotoLinkComponent {
 
         this.linkDisabled = true;
 
-        if (this.linkState == GotoLinkState.Uninitialized) {
-            await this.resolveOpenAtTime();
-        }
+        await this.resolveOpenAtTime();
 
         if (this.isUnauthorized) {
             this.startReset(this.resetTime);
