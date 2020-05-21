@@ -376,7 +376,6 @@ multisaveApp.component("multisaveRunner", {
                             group="$ctrl.attrs.group">
     </sisu-assessment-export>
     <div ng-if="$ctrl.livefeed && !$ctrl.allSaved()"> <!-- unsaved fields -->
-        Seuraavat kentät ovat tallentamatta:
         <p ng-repeat="tag in $ctrl.unsaveds">
             <a href="" ng-click="$ctrl.scrollTo(tag)">{{tag.getName()}}</a>
         </p>
