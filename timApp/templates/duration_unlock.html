@@ -1,11 +1,11 @@
 {% extends 'item.html' %}
 {% block head %}
     {{ super() }}
-    {% if minimal %}
+    {% if view_settings %}
         <script class="global-vars">
             var docSettings = {};
-            var exam_mode = true;
-            var hide_sidemenu = true;
+            var exam_mode = {{ view_settings.exam_mode|tojson }};
+            var hide_sidemenu = {{ view_settings.hide_sidemenu|tojson }};
         </script>
    {% endif %}
 {% endblock %}
