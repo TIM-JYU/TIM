@@ -31,6 +31,7 @@ const multisaveMarkup = t.intersection([
         destCourse: t.string,
         includeUsers: IncludeUsersOption,
         testOnly: t.boolean,
+        savedText: t.string,
         unsavedText: t.string,
     }),
     GenericPluginMarkup,
@@ -84,6 +85,10 @@ export class MultisaveController
 
     get unsavedText() {
         return this.attrs.unsavedText?.replace("{count}", this.unsavedTimComps.size.toString());
+    }
+
+    get savedText() {
+        return this.attrs.savedText ?? "Saved";
     }
 
     get listener() {
@@ -407,7 +412,7 @@ multisaveApp.component("multisaveRunner", {
     </button>
     &nbsp;
     <a href="" ng-if="($ctrl.undoButton && (!$ctrl.listener || !$ctrl.allSaved()))" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{$ctrl.undoButton}}</a>
-    <p class="savedtext" ng-if="$ctrl.isSaved && $ctrl.allSaved()">Saved</p>
+    <p class="savedtext" ng-if="$ctrl.isSaved && $ctrl.allSaved()">{{::$ctrl.savedText}}</p>
     </div>
     <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
         <tim-close-button ng-click="$ctrl.toggleEmailForm()"></tim-close-button>

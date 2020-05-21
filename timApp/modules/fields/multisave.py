@@ -36,6 +36,7 @@ class MultisaveMarkupModel(GenericMarkupModel):
     jumptarget: Union[str, Missing, None] = missing
     listener: Union[bool, Missing] = False
     livefeed: Union[bool, Missing] = False
+    savedText: Union[str, Missing] = missing
     tags: Union[List[str], Missing] = missing
     unsavedText: Union[str, Missing] = missing
 
