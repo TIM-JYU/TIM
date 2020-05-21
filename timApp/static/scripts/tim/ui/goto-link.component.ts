@@ -144,7 +144,10 @@ export class GotoLinkComponent {
             await this.resolveOpenAtTime();
         }
 
-        if (this.isUnauthorized) { return; }
+        if (this.isUnauthorized) {
+            this.startReset(this.resetTime);
+            return;
+        }
 
         let curTime = moment();
         if (this.closeTime || this.openTime) {
@@ -160,6 +163,7 @@ export class GotoLinkComponent {
         if (this.closeTime && this.closeTime.isValid() && this.closeTime.isBefore(curTime)) {
             this.pastDue = this.closeTime.diff(curTime, "seconds");
             this.linkState = GotoLinkState.Expired;
+            this.startReset(this.resetTime);
             return;
         }
 
@@ -189,6 +193,13 @@ export class GotoLinkComponent {
         }, 1000);
     }
 
+    startReset(resetTime: number) {
+        setTimeout(() => {
+           this.linkState = GotoLinkState.Ready;
+           this.linkDisabled = false;
+        }, resetTime);
+    }
+
     startGoto() {
         if (this.isGoing) { return; }
         this.linkDisabled = true;
@@ -197,7 +208,7 @@ export class GotoLinkComponent {
         const realResetTime = Math.max(this.resetTime * 1000, waitTime);
 
         setTimeout(() => {
-            // Special case: on empty href just reload the page to mimick the behaviour of <a>
+            // Special case: on empty href just reload the page to mimic the behaviour of <a>
             if (this.href == "") {
                 window.location.reload(true);
             } else {
@@ -205,9 +216,6 @@ export class GotoLinkComponent {
             }
         }, waitTime);
 
-        setTimeout(() => {
-           this.linkState = GotoLinkState.Ready;
-           this.linkDisabled = false;
-        }, realResetTime);
+        this.startReset(realResetTime);
     }
 }
