@@ -4,7 +4,7 @@ from timApp.tests.browser.browsertest import BrowserTest
 class TextfieldPluginTest(BrowserTest):
 
     def get_screenshot_tolerance(self):
-        return 10
+        return 13
 
     def test_textfield_numericfield_multisave(self):
         self.login_browser_quick_test1()
