@@ -10,7 +10,7 @@ export interface ITimTableToolbarCallbacks {
     addRow: (offset: number) => void;
     removeColumn: () => void;
     removeRow: () => void;
-    closeEditor: () => void;
+    closeEditor: (save: boolean) => void;
     isEdit: () => boolean;
 }
 
@@ -82,7 +82,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         this.visible = false;
         // this.scope.$apply();
         instance = undefined;
-        this.callbacks.closeEditor();
+        this.callbacks.closeEditor(false);
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -339,7 +339,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
             }
         }
         this.setCell(templ);
-        if (templ.closeEdit) { this.callbacks.closeEditor(); }
+        if (templ.closeEdit) { this.callbacks.closeEditor(true); }
     }
 }
 
@@ -359,6 +359,9 @@ export function handleToolbarKey(ev: KeyboardEvent, toolBarTemplates: IToolbarTe
         if (k.length >= 2) {
             mod = k[0];
             key = k[1];
+        }
+        if (mod === "" && key.length === 1 && instance.callbacks.isEdit()) {
+            continue;  // ei käytetä yhden näppäimen shortcutteja jos ollaan editissä
         }
         if (templ.chars) { // regexp for keys to use
             if (ekey.match("^" + templ.chars + "$")) {
