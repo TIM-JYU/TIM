@@ -614,7 +614,7 @@ qst_attrs = {
     'stem',
     'tag',
     'connectionErrorMessage',
-    'postProgram'
+    'postProgram',
     'undo',
     'size',
 }

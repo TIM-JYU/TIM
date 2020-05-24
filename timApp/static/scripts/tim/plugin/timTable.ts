@@ -956,7 +956,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     addRow: (offset) => this.handleToolbarAddRow(offset),
                     removeColumn: () => this.handleToolbarRemoveColumn(),
                     removeRow: () => this.handleToolbarRemoveRow(),
-                    closeEditor: () => this.closeSmallEditor(),
+                    closeEditor: (save: boolean) => this.saveCloseSmallEditor(save),
                     isEdit: () => this.isEdit(),
                 }, activeTable: this,
             });
@@ -1995,6 +1995,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         // Prevents unwanted scrolling in Firefox.
         if (ev.ctrlKey && isArrowKey(ev)) {
             ev.preventDefault();
+        }
+
+        if (ev.ctrlKey && ev.key === "s") {
+            this.saveAndCloseSmallEditor();
+            this.save();
+            ev.preventDefault();
+            this.c();
+            return; //  ChangeDetectionHint.NeedToTrigger;
         }
 
         if (!this.isSomeCellBeingEdited()) {
@@ -3133,6 +3141,15 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         //     this.editInput.nativeElement.style.display = "none";
         // }
         this.c();
+    }
+
+    private saveCloseSmallEditor(save: boolean) {
+        if (save) {
+            this.saveAndCloseSmallEditor();
+            this.c();
+            return;
+        }
+        this.closeSmallEditor();
     }
 
     /**
