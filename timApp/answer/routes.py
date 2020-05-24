@@ -640,6 +640,9 @@ def post_answer(plugintype: str, task_id_ext: str):
             upload.answer_id = result['savedNew']
 
     db.session.commit()
+    if result.get('web', {}).get('markup', None):
+        result['web'].pop('markup')
+
     return json_response(result)
 
 
@@ -1003,6 +1006,14 @@ def find_tim_vars(plugin: Plugin):
 def hide_points(a: Answer):
     j = a.to_json()
     j['points'] = None
+
+    c = j.get('content', None)
+    if c and c.find('"points": {') >= 0: # TODO: Hack for csPlugin
+        c = json.loads(c)
+        c.pop('points')
+        c = json.dumps(c)
+        j['content'] = c
+
     if a.points is not None:
         j['points_hidden'] = True
     return j
