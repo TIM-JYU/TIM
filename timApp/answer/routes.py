@@ -640,8 +640,8 @@ def post_answer(plugintype: str, task_id_ext: str):
             upload.answer_id = result['savedNew']
 
     db.session.commit()
-    if result.get('web', {}).get('markup', None):
-        result['web'].pop('markup')
+    if result.get('web', {}).get('markup', {}).get('postProgram'):
+        result['web']['markup'].pop('postProgram')  # TODO: stdy why someone puts markup here
 
     return json_response(result)
 
