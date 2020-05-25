@@ -39,6 +39,9 @@ function isAlreadyRead(readline: JQuery, readingType: ReadingType) {
 
 export async function markParRead(par: JQuery, readingType: ReadingType) {
     const readline = par.find(".readline");
+    if (readline.length === 0) {
+        return;
+    }
     const readClassName = readClasses[readingType];
     if (isAlreadyRead(readline, readingType)) {
         return;
