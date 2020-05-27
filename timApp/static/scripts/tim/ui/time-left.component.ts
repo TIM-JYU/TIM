@@ -79,7 +79,7 @@ export class TimeLeftComponent implements OnInit {
 
   private checkCountdown() {
     this.currentCountdown--;
-    const timeEnded = this.currentCountdown <= 0;
+    const timeEnded = this.currentCountdown < 0;
     if (timeEnded) {
       this.finishCallback.emit();
     }
