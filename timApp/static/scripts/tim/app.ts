@@ -2,7 +2,6 @@ import angular, {ICompileProvider, IFilterService, IHttpProvider, IHttpResponseT
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
 import ngSanitize from "angular-sanitize";
-import timer from "angular-timer";
 import uibootstrap from "angular-ui-bootstrap";
 import colorpicker from "angularjs-color-picker";
 import humanizeDuration from "humanize-duration";
@@ -17,17 +16,16 @@ moment.updateLocale("en", {
     week: {dow: 1, doy: 4}, // set Monday as the first day of the week
 });
 
-markAsUsed(ngMessages, timer, aedatetimepicker, ngSanitize,
+markAsUsed(ngMessages, aedatetimepicker, ngSanitize,
     uibootstrap, ngFileUpload, ngStorage, colorpicker);
 
 // timApp's Angular modules:
-// base: 'ngMessages', 'timer', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap'
+// base: 'ngMessages', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap'
 // item: 'ngFileUpload'
 // view_html: 'ngStorage' + plugin modules
 // teacher mode: 'ui.grid', 'ui.grid.cellNav', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize'
 export const timApp = angular.module("timApp", [
     "ngMessages",
-    "timer",
     "ae-datetimepicker",
     "ngSanitize",
     "ui.bootstrap",
