@@ -202,7 +202,6 @@ JSREADYHTML['simpleDrawIO'] = """
         var iframe = null;
         var justExported = false;
         var wantSave = false;
-        var justAutosaved = false;
         var receiveEvent;
 
         var close = function()
@@ -260,11 +259,6 @@ JSREADYHTML['simpleDrawIO'] = """
                 {
                     var msg = JSON.parse(evt.data);
                     
-                    // Exporting causes extra autosave commands so we need to deal with them
-                    if (msg.event == 'autosave' && this.justAutosaved) {
-                            this.justAutosaved = false;
-                            return;
-                    }
                     // If configure=1 URL parameter is used the application
                     // waits for this message. For configuration options see
                     // https://desk.draw.io/support/solutions/articles/16000058316
@@ -315,16 +309,14 @@ JSREADYHTML['simpleDrawIO'] = """
                     else if (msg.event == 'autosave')
                     {
                         // Used to tell plugin about updates via exports
-                        this.justAutosaved = true;
                         drw.postMessage(JSON.stringify({action: 'export',
                             format: 'xmlsvg'}), '*');
                         // localStorage.setItem('.draft-' + name, JSON.stringify({lastModified: new Date(), xml: msg.xml}));
                     }
                     else if (msg.event == 'save')
                     {
-                        this.justAutosaved = true;
                         drw.postMessage(JSON.stringify({action: 'export',
-                            format: 'xmlsvg', xml: msg.xml, spin: 'Updating page'}), '*');
+                            format: 'xmlsvg'}), '*');
                         this.wantSave = true;
                         // localStorage.setItem('.draft-' + name, JSON.stringify({lastModified: new Date(), xml: msg.xml}));
                     }
