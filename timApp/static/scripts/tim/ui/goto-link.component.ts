@@ -1,12 +1,11 @@
 import {Component, Input, ViewChild} from "@angular/core";
 import moment, {Moment} from "moment";
-import {$http} from "tim/util/ngimport";
-import {to, formatString} from "tim/util/utils";
+import {formatString, to2} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
 import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
 import {TimeLeftComponent} from "tim/ui/time-left.component";
-
+import {HttpClient} from "@angular/common/http";
 
 interface IViewAccessStatus {
     can_access: boolean;
@@ -82,6 +81,9 @@ export class GotoLinkComponent {
 
     formatString = formatString;
 
+    constructor(private http: HttpClient) {
+    }
+
     get isCountdown() {
         return this.linkState == GotoLinkState.Countdown;
     }
@@ -109,9 +111,9 @@ export class GotoLinkComponent {
         // If href points to a valid TIM document, check permissions
         if (url.hostname == window.location.hostname && path.startsWith(VIEW_PATH)) {
             const docPath = path.substring(VIEW_PATH.length);
-            const accessInfo = await to($http.get<IViewAccessStatus>(`/doc_view_info/${docPath}`));
+            const accessInfo = await to2(this.http.get<IViewAccessStatus>(`/doc_view_info/${docPath}`).toPromise());
             if (accessInfo.ok) {
-                return {unauthorized: !accessInfo.result.data.can_access, access: accessInfo.result.data.right};
+                return {unauthorized: !accessInfo.result.can_access, access: accessInfo.result.right};
             }
         }
         return {unauthorized: false, access: undefined};
@@ -144,13 +146,13 @@ export class GotoLinkComponent {
 
         let curTime = moment();
         if (closeTime || openTime) {
-            const serverTime = await to($http.get<{time: number}>("/time"));
+            const serverTime = await to2(this.http.get<{time: number}>("/time").toPromise());
             // Fail silently here and hope the user clicks again so it can retry
             if (!serverTime.ok) {
                 this.linkDisabled = false;
                 return;
             }
-            curTime = moment.utc(serverTime.result.data.time);
+            curTime = moment.utc(serverTime.result.time);
         }
 
         if (closeTime?.isValid() && closeTime.isBefore(curTime)) {

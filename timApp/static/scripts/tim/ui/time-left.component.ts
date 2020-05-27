@@ -1,10 +1,10 @@
 import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
 import humanizeDuration from "humanize-duration";
-import {formatString, secondsToHHMMSS, to} from "tim/util/utils";
+import {formatString, secondsToHHMMSS, to2} from "tim/util/utils";
 import {Users} from "tim/user/userService";
-import {$http} from "tim/util/ngimport";
 import Timeout = NodeJS.Timeout;
 import moment from "moment";
+import {HttpClient} from "@angular/common/http";
 
 const DAY_LIMIT = 24 * 60 * 60;
 
@@ -30,6 +30,9 @@ export class TimeLeftComponent implements OnInit {
   currentInterval?: Timeout;
   formatString = formatString;
 
+  constructor(private http: HttpClient) {
+  }
+
   get timeLeft() {
     let prefix = "";
     let time = this.currentCountdown;
@@ -45,11 +48,11 @@ export class TimeLeftComponent implements OnInit {
       return this.countdown;
     }
     if (this.endTime) {
-      const serverTime = await to($http.get<{time: moment.Moment}>("/time"));
+      const serverTime = await to2(this.http.get<{time: moment.Moment}>("/time").toPromise());
       if (!serverTime.ok) {
         return 0;
       }
-      return moment.utc(this.endTime).diff(serverTime.result.data.time.utc(), "seconds");
+      return moment.utc(this.endTime).diff(serverTime.result.time.utc(), "seconds");
     }
     return 0;
   }
