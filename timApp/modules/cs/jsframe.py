@@ -161,7 +161,8 @@ class ChartJS(JSframe):
         return
 
 
-JSREADYHTML['simpleDrawIO'] = open('jsframehtml/simpleDrawIO.html', 'r').read()
+with open('jsframehtml/simpleDrawIO.html', 'r', encoding='utf-8') as f:
+    JSREADYHTML['simpleDrawIO'] = f.read()
 
 # see: https://regex101.com/r/eEPcs2/1/
 # regexp to find text's inside svg
