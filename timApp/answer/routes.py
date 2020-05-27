@@ -256,10 +256,7 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
             tid = TaskId.parse(task_id)
             if tid.doc_id not in doc_map:
                 dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
-                if user_id != currid:
-                    verify_seeanswers_access(dib)
-                elif dib.document.get_settings().get('need_view_for_answers', False):
-                    verify_view_access(dib)
+                verify_seeanswers_access(dib)
                 doc_map[tid.doc_id] = dib.document
             if is_global_id(tid):
                 gtids.append(tid)
