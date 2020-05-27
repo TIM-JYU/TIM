@@ -2,7 +2,7 @@
 import json
 import random
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import Dict, Optional, List, Union, Any, TypeVar
 from xml.sax.saxutils import quoteattr
 
@@ -595,30 +595,23 @@ def mmcq_get_md(jso):
     return result
 
 
-qst_attrs = {
-    'answerLimit',
-    'button',
-    'buttonText',
+qst_own_attributes = {
     'defaultPoints',
-    'disableUnchanged',
-    'doNotMove'
-    'footer',
-    'header',
-    'hideBrowser',
+    'doNotMove',
     'isTask',
-    'lazy',
     'randomizedRows',
-    'resetText',
     'savedText',
-    'showPoints',
-    'stem',
-    'tag',
-    'connectionErrorMessage',
-    'postProgram',
-    'undo',
     'size',
+    'tag',
 }
 
+generic_attribute_names = set(f.name for f in fields(GenericMarkupModel))
+
+common = generic_attribute_names & qst_own_attributes
+if common:
+    raise Exception(f'qst_own_attributes does not need to list generic attributes: {common}')
+
+qst_attrs = qst_own_attributes.union(generic_attribute_names)
 
 def qst_rand_array(max_count: int,
                    randoms: int,

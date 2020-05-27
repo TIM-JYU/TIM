@@ -25,6 +25,7 @@ def get_asked_json_by_hash(json_hash: str) -> Optional[AskedJson]:
     return AskedJson.query.filter_by(hash=json_hash).first()
 
 
+# NOTE: Do NOT add more fields here for new qst attributes. These are ONLY for backward compatibility.
 FIELD_NAME_MAP = dict(
     answerfieldtype='answerFieldType',
     expl='expl',
@@ -36,12 +37,10 @@ FIELD_NAME_MAP = dict(
     questiontitle='questionTitle',
     questiontype='questionType',
     rows='rows',
-    savedText='savedText',
     timelimit='timeLimit',
     title='questionTitle',
     type='questionType',
     xpl='expl',
-    size='size',
 )
 KNOWN_TITLE_KEYS = {'TITLE', 'title', 'questionTitle'}
 MANDATORY_FIELDS = {'answerFieldType', 'headers', 'questionTitle', 'questionText', 'questionType', 'rows'}
