@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
 import humanizeDuration from "humanize-duration";
-import {secondsToHHMMSS, to} from "tim/util/utils";
+import {formatString, secondsToHHMMSS, to} from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import {$http} from "tim/util/ngimport";
 import Timeout = NodeJS.Timeout;
@@ -12,9 +12,9 @@ const DAY_LIMIT = 24 * 60 * 60;
   selector: "tim-time-left",
   template: `
     <ng-container>
-      <ng-container *ngIf="prefix else defaultPrefix">{{prefix}}</ng-container>{{timeLeft}}
+      <ng-container *ngIf="template else defaultPrefix">{{this.formatString(template, timeLeft)}}</ng-container>
+      <ng-template #defaultPrefix i18n>Time left: {{timeLeft}}</ng-template>
     </ng-container>
-    <ng-template #defaultPrefix i18n>Time left: </ng-template>
   `,
 })
 export class TimeLeftComponent implements OnInit {
@@ -22,12 +22,13 @@ export class TimeLeftComponent implements OnInit {
   @Input() countdown?: number;
   @Input() displayUnits: humanizeDuration.Unit[] = ["d"];
   @Input() noAutoStart: boolean = false;
-  @Input() prefix?: string;
+  @Input() template?: string;
   @Output() finishCallback: EventEmitter<void> = new EventEmitter();
 
   currentCountdown = 0;
   locale = Users.getCurrentLanguage();
   currentInterval?: Timeout;
+  formatString = formatString;
 
   get timeLeft() {
     let prefix = "";

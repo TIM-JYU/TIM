@@ -74,6 +74,14 @@
           <context context-type="linenumber">14</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="f732afba431983f317ee2ae813c6eba0871d47c7" datatype="html">
+        <source>Time left: <x id="INTERPOLATION" equiv-text="{{timeLeft}}"/></source>
+        <target state="translated">Aikaa jäljellä: <x id="INTERPOLATION" equiv-text="{{timeLeft}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
+          <context context-type="linenumber">4</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="16e04b1bd3f8e72f0d445e261ef85c6ca814f905" datatype="html">
         <source>Your access expired <x id="INTERPOLATION" equiv-text="{{pastDueTime}}"/> ago.</source>
         <target state="translated">Lukuoikeutesi dokumenttiin loppui <x id="INTERPOLATION" equiv-text="{{pastDueTime}}"/> sitten.</target>
@@ -90,9 +98,9 @@
           <context context-type="linenumber">19</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="80eb42e163eda0e3271ce171ba1242b953940f9c" datatype="html">
-        <source>Opens in <x id="INTERPOLATION" equiv-text="{{countdownTime}}"/>.</source>
-        <target state="translated">Aikaa avautumiseen: <x id="INTERPOLATION" equiv-text="{{countdownTime}}"/>.</target>
+      <trans-unit id="gotoOpensIn" datatype="html">
+        <source>Opens in <x id="INTERPOLATION" equiv-text="{{&quot;{&quot;}}"/>0<x id="INTERPOLATION_1" equiv-text="{{&quot;}&quot;}}"/>.</source>
+        <target state="translated">Aikaa avautumiseen: <x id="INTERPOLATION" equiv-text="{{&quot;{&quot;}}"/>0<x id="INTERPOLATION_1" equiv-text="{{&quot;}&quot;}}"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">24</context>
@@ -104,14 +112,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">30</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7ebcb099ec39a931331060f46e3a61e4e71524b4" datatype="html">
-        <source>Time left: </source>
-        <target state="translated">Aikaa jäljellä: </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
-          <context context-type="linenumber">5</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6d6968cb33ce9daad70a5f0e4832d46061332d09" datatype="html">

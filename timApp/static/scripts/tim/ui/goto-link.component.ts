@@ -1,10 +1,11 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, ViewChild} from "@angular/core";
 import moment, {Moment} from "moment";
 import {$http} from "tim/util/ngimport";
-import {secondsToHHMMSS, to, formatString} from "tim/util/utils";
+import {to, formatString} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
 import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
+import {TimeLeftComponent} from "tim/ui/time-left.component";
 
 
 interface IViewAccessStatus {
@@ -46,8 +47,8 @@ const VIEW_PATH = "/view/";
                 </span>
             </ng-container>
             <ng-container *ngIf="isCountdown">
-                <ng-container *ngIf="countdownText else defaultCountdownText">{{formatString(countdownText, countdownTime)}}</ng-container>
-                <ng-template #defaultCountdownText i18n>Opens in {{countdownTime}}.</ng-template>
+                <tim-time-left [template]="countdownText" [countdown]="countDown" (finishCallback)="startGoto()" [displayUnits]="[]" #timeLeftComponent></tim-time-left>
+                <ng-template i18n="@@gotoOpensIn">Opens in {{"{"}}0{{"}"}}.</ng-template>
             </ng-container>
             <ng-container *ngIf="isGoing">
                 <tim-loading></tim-loading>
@@ -63,7 +64,7 @@ const VIEW_PATH = "/view/";
 export class GotoLinkComponent {
     @Input() href = "";
     @Input() waitText?: string;
-    @Input() countdownText?: string;
+    @Input() countdownText?: string = $localize `:@@gotoOpensIn:Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
     @Input() unauthorizedText?: string;
     @Input() pastDueText?: string;
     @Input() timeLang?: string;
@@ -73,6 +74,7 @@ export class GotoLinkComponent {
     @Input() target = "_self";
     @Input() openAt?: string;
     @Input() closeAt?: string;
+    @ViewChild(TimeLeftComponent) timeLeftComponent!: TimeLeftComponent;
     countDown = 0;
     pastDue = 0;
     linkDisabled = false;
@@ -94,10 +96,6 @@ export class GotoLinkComponent {
 
     get isExpired() {
         return this.linkState == GotoLinkState.Expired;
-    }
-
-    get countdownTime() {
-        return secondsToHHMMSS(this.countDown);
     }
 
     get pastDueTime() {
@@ -177,14 +175,6 @@ export class GotoLinkComponent {
         // Allow clicking, but do nothing reasonable...
         this.linkDisabled = false;
         this.linkState = GotoLinkState.Countdown;
-
-        const timer = setInterval(() => {
-            this.countDown--;
-            if (this.countDown <= 0) {
-                clearInterval(timer);
-                this.startGoto();
-            }
-        }, 1000);
     }
 
     startReset(resetTime: number) {
