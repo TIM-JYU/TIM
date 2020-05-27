@@ -60,9 +60,12 @@ import {TimFooterComponent} from "tim/footer.component";
 import {SiteHeaderComponent} from "tim/header/site-header.component";
 import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 import {GotoLinkComponent} from "tim/ui/goto-link.component";
+import BackspaceDisabler from "backspace-disabler";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
+
+BackspaceDisabler.disable();
 
 if (environment.production) {
     enableProdMode();
