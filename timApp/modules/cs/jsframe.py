@@ -317,7 +317,7 @@ JSREADYHTML['simpleDrawIO'] = """
                         // Used to tell plugin about updates via exports
                         this.justAutosaved = true;
                         drw.postMessage(JSON.stringify({action: 'export',
-                            format: 'xmlsvg', xml: msg.xml, spin: 'Updating page'}), '*');
+                            format: 'xmlsvg'}), '*');
                         // localStorage.setItem('.draft-' + name, JSON.stringify({lastModified: new Date(), xml: msg.xml}));
                     }
                     else if (msg.event == 'save')
