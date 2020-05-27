@@ -632,6 +632,21 @@ def post_answer(plugintype: str, task_id_ext: str):
                                              plugintype=ptype)
         else:
             result['savedNew'] = None
+            if plugin.values.get("postProgram", None):
+                data = {'points': points,
+                        'save_object': save_object,
+                        'tags': tags,
+                        'is_valid': True,
+                        'force_answer': force_answer,
+                        }
+                try:
+                    params = JsRunnerParams(code=plugin.values["postProgram"], data=data)
+                    data, output = jsrunner_run(params)
+                    points = data.get("points", points)
+                    output += "\nPoints: " + str(points)
+                    result["web"]["error"] = output
+                except JsRunnerError as e:
+                    return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
         if result['savedNew'] is not None and upload is not None:
             # Associate this answer with the upload entry
             upload.answer_id = result['savedNew']
