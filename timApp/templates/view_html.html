@@ -81,14 +81,10 @@
 {% block rightside %}
     {% if access.accessible_to %}
         <span class="label label-default">
-        <tim-time-left ng-cloak
-               end-time="{{ access.accessible_to.timestamp() * 1000 }}"
-               interval="1000"
-               max-time-unit="'day'"
-               (finish-callback)="$ctrl.notifyTimeup()">
-               {% raw %}{{ days > 0 ? days + ' day' + daysS + ' +' : '' }} {{ hhours }}:{{ mminutes }}:{{ sseconds }}{% endraw %}
-        s</tim-time-left>
-    </span>
+            <tim-time-left ng-cloak
+                end-time="{{ access.accessible_to }}"
+                (finish-callback)="$ctrl.notifyTimeup()"></tim-time-left>
+        </span>
     {% endif %}
 
     {% if teacher_mode %}
