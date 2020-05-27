@@ -187,6 +187,7 @@ class DrawIO(JSframe):
         if isinstance(data, str):
             data = {}
         dopt = data.get("options", {})
+        templates = ma.get("templates", "");
         ar = data.get("aspectRatio", dopt.get('aspectRatio', None))
         if height and not ar:
             if not ma.get("data", None):
@@ -198,7 +199,15 @@ class DrawIO(JSframe):
         ma["iframeopts"] = ma.get("iframeopts", 'sandbox="allow-scripts allow-same-origin allow-popups"')
         ma["saveButton"] = ma.get("saveButton", "")
         # TODO: prevent user options if thereis
-        ma["options"] = {'fullscreen': ma.get("fullscreen", True)}
+        templates = ma.get("templates", "")
+        try:
+            templates = templates.replace('</mxlibrary>', '')
+            templates = templates.replace('<mxlibrary>', '')
+            templates = json.loads(templates)
+        except (AttributeError, json.decoder.JSONDecodeError):
+            pass
+
+        ma["options"] = {'fullscreen': ma.get("fullscreen", True), 'templates': templates}
         super().modify_query()
         return
 

@@ -87,6 +87,31 @@
                 }
             }
 
+            var templates = [];
+            if (TIMJS.options && TIMJS.options.templates) {
+                templates = [{
+                    "title": {
+                        "main": "Custom"
+                    },
+                    "entries": [{
+                        "id": "company-graphics",
+                        "title": {
+                            "main": "Graphics",
+                        },
+                        "desc": {
+                            "main": "Custom graphics",
+                        },
+                        "libs": [{
+                            "title": {
+                                "main": "Custom graphics",
+                            },
+                            "data": TIMJS.options.templates,
+                        }]
+                    }]
+                }];
+            }
+
+
             var receive = function (evt) {
                 if (evt.data.length > 0) {
                     var msg = JSON.parse(evt.data);
@@ -99,7 +124,10 @@
                         // Configuration example
                         drw.postMessage(JSON.stringify({
                             action: 'configure',
-                            config: {defaultFonts: ["Humor Sans", "Helvetica", "Times New Roman"]}
+                            config: {
+                                defaultFonts: ["Humor Sans", "Helvetica", "Times New Roman"],
+                                libraries: templates,
+                            }
                         }), '*');
                     } else if (msg.event == 'init') {
                         if (draft != null) {
