@@ -11,7 +11,10 @@ const DAY_LIMIT = 24 * 60 * 60;
 @Component({
   selector: "tim-time-left",
   template: `
-    <ng-container>Time left: {{timeLeft}}</ng-container>
+    <ng-container>
+      <ng-container *ngIf="prefix else defaultPrefix">{{prefix}}</ng-container>{{timeLeft}}
+    </ng-container>
+    <ng-template #defaultPrefix i18n>Time left: </ng-template>
   `,
 })
 export class TimeLeftComponent implements OnInit {
@@ -19,6 +22,7 @@ export class TimeLeftComponent implements OnInit {
   @Input() countdown?: number;
   @Input() displayUnits: humanizeDuration.Unit[] = ["d"];
   @Input() noAutoStart: boolean = false;
+  @Input() prefix?: string;
   @Output() finishCallback: EventEmitter<void> = new EventEmitter();
 
   currentCountdown = 0;

@@ -106,6 +106,14 @@
           <context context-type="linenumber">30</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7ebcb099ec39a931331060f46e3a61e4e71524b4" datatype="html">
+        <source>Time left: </source>
+        <target state="translated">Aikaa jäljellä: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
+          <context context-type="linenumber">5</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="6d6968cb33ce9daad70a5f0e4832d46061332d09" datatype="html">
         <source>This word is a palindrome</source>
         <target state="translated">Tämä sana on palindromi</target>
