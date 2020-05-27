@@ -11,7 +11,6 @@ export const communicationJS = `
     function onMessage(event) {
         // console.log(event.data);
         // console.log(event.origin);
-        console.log("IFRAMEUTILS");
         if (event.data.msg === "setData") {
             if (window.setData) {
                 setData(event.data.data);
