@@ -378,7 +378,7 @@ function makeTemplate() {
                       ng-model="$ctrl.usercode"
                       ng-trim="false"
                       ng-attr-placeholder="{{$ctrl.placeholder}}" 
-                    ng-change="$ctrl.textChanged()">
+                      ng-change="$ctrl.textChanged()">
             </textarea>
             </div>
             <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
@@ -392,6 +392,7 @@ function makeTemplate() {
         <div class="csRunCode"><textarea class="csRunArea csInputArea"
                                          rows={{::$ctrl.inputrows}}
                                          ng-model="$ctrl.userinput"
+                                         ng-change="$ctrl.textChanged()"
                                          ng-trim="false"
                                          placeholder="{{::$ctrl.inputplaceholder}}"></textarea></div>
     </div>
@@ -399,6 +400,7 @@ function makeTemplate() {
         <span><input type="text"
                      class="csArgsArea"
                      ng-model="$ctrl.userargs"
+                     ng-change="$ctrl.textChanged()"
                      ng-trim="false"
                      placeholder="{{::$ctrl.argsplaceholder}}"></span>
     </div>
@@ -985,6 +987,10 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     isUnSaved() {
+        return this.edited;
+    }
+
+    hasUnSavedInput(): boolean {
         return this.savedvals != null && (
             this.savedvals.code !== this.usercode ||
             this.savedvals.args !== this.userargs ||
@@ -992,7 +998,7 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     textChanged(): void {
-        const nowUnsaved = this.isUnSaved();
+        const nowUnsaved = this.hasUnSavedInput();
         if (!this.edited && nowUnsaved) {
             this.edited = true;
             this.updateListeners(ChangeType.Modified);
@@ -2737,6 +2743,7 @@ ${fhtml}
 <textarea class="csRunArea csrunEditorDiv"
           rows={{$ctrl.rows}}
           ng-model="$ctrl.usercode"
+          ng-change="$ctrl.textChanged()"
           ng-trim="false"
           placeholder="{{$ctrl.placeholder}}"></textarea>
 `;
