@@ -22,8 +22,11 @@ export class CountdownComponent implements OnInit {
   @Input() displayUnits: humanizeDuration.Unit[] = [];
   @Input() noAutoStart: boolean = false;
   @Input() template: string = "{0}";
-  @Output() finishCallback: EventEmitter<void> = new EventEmitter();
+  @Input() lowTimeThreshold: number = -1;
+  @Output() finishCallback: EventEmitter<void> = new EventEmitter<void>();
+  @Output() onLowTime: EventEmitter<void> = new EventEmitter<void>();
 
+  isLowTime = false;
   currentCountdown = 0;
   locale = Users.getCurrentLanguage();
   currentInterval?: Timeout;
@@ -77,11 +80,16 @@ export class CountdownComponent implements OnInit {
 
   reset() {
     this.currentInterval = undefined;
+    this.isLowTime = false;
   }
 
   private checkCountdown() {
     this.currentCountdown--;
     const timeEnded = this.currentCountdown < 0;
+    if (!this.isLowTime && this.currentCountdown < this.lowTimeThreshold) {
+      this.onLowTime.emit();
+      this.isLowTime = true;
+    }
     if (timeEnded) {
       this.finishCallback.emit();
     }
