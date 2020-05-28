@@ -4,10 +4,10 @@ import {showMessageDialog} from "tim/ui/dialog";
 @Component({
   selector: "tim-time-left",
   template: `
-    <span class="label label-default" [class.lowTime]="isLowTime" i18n>
+    <span class="label label-default" [class.low-time]="isLowTime" i18n>
       Time left: <tim-countdown [displayUnits]="['d']" [endTime]="endTime" [lowTimeThreshold]="60" (onFinish)="onTimeUp()" (onLowTime)="onLowTime()"></tim-countdown>
     </span>
-    <span class="lowTimeWarning alert alert-danger" *ngIf="isLowTime">The time is about to run out, please save your answers.</span>
+    <span class="low-time-warn alert alert-danger" *ngIf="isLowTime">The time is about to run out, please save your answers.</span>
   `,
   styleUrls: ["./time-left.component.scss"],
 })

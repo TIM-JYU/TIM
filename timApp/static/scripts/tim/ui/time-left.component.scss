@@ -5,7 +5,7 @@
   user-select: none;
 }
 
-span.lowTime {
+span.low-time {
   font-size: 1em;
   line-height: 1.8em;
   animation-name: low-time-anim;
@@ -14,7 +14,7 @@ span.lowTime {
   animation-direction: alternate-reverse;
 }
 
-span.lowTimeWarning {
+span.low-time-warn {
   margin-top: 2px;
   margin-bottom: 0;
   padding: 3px;
