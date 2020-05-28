@@ -145,13 +145,13 @@ export class GotoLinkComponent {
 
         let curTime = moment();
         if (closeTime || openTime) {
-            const serverTime = await to2(this.http.get<{time: number}>("/time").toPromise());
+            const serverTime = await to2(this.http.get<{time: Moment}>("/time").toPromise());
             // Fail silently here and hope the user clicks again so it can retry
             if (!serverTime.ok) {
                 this.linkDisabled = false;
                 return;
             }
-            curTime = moment.utc(serverTime.result.time);
+            curTime = serverTime.result.time.utc();
         }
 
         if (closeTime?.isValid() && closeTime.isBefore(curTime)) {
