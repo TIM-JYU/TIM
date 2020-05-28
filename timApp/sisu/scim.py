@@ -1,8 +1,7 @@
 import re
-from typing import List, Optional, Dict
-
-import attr
 from dataclasses import field, dataclass
+from typing import List, Optional, Dict, Any, Generator
+
 from flask import Blueprint, request, current_app, Response
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
@@ -37,7 +36,7 @@ class SCIMNameModel:
     givenName: str
     middleName: Optional[str] = None
 
-    def derive_full_name(self, last_name_first: bool):
+    def derive_full_name(self, last_name_first: bool) -> str:
         if last_name_first:
             full = f'{self.familyName} {self.givenName}'
             if self.middleName:
@@ -55,9 +54,9 @@ class SCIMMemberModel:
     value: str
     name: SCIMNameModel
     display: str
+    email: str
     ref: Optional[str] = field(metadata={'data_key': '$ref'}, default=None)
     type: Optional[str] = None
-    email: Optional[str] = None
 
 
 @dataclass
@@ -92,7 +91,7 @@ class SCIMGroupModel(SCIMCommonModel):
 SCIMGroupModelSchema = class_schema(SCIMGroupModel)
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class SCIMException(Exception):
     code: int
     msg: str
@@ -100,16 +99,16 @@ class SCIMException(Exception):
 
 
 @scim.errorhandler(SCIMException)
-def item_locked(error: SCIMException):
+def item_locked(error: SCIMException) -> Response:
     log_warning(error.msg)
     return handle_error_msg_code(error.code, error.msg, error.headers)
 
 
-def handle_error(error):
+def handle_error(error: Any) -> Response:
     return handle_error_msg_code(error.code, error.description)
 
 
-def handle_error_msg_code(code: int, msg: str, headers=None):
+def handle_error_msg_code(code: int, msg: str, headers: Optional[Dict[str, str]]=None) -> Response:
     return json_response(
         scim_error_json(code, msg),
         status_code=code,
@@ -120,7 +119,7 @@ def handle_error_msg_code(code: int, msg: str, headers=None):
 scim.errorhandler(UNPROCESSABLE_ENTITY)(handle_error)
 
 
-def scim_error_json(code, msg):
+def scim_error_json(code: int, msg: str) -> Dict:
     return {
         "detail": msg,
         "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
@@ -129,7 +128,7 @@ def scim_error_json(code, msg):
 
 
 @scim.before_request
-def check_auth():
+def check_auth() -> None:
     expected_username = current_app.config.get('SCIM_USERNAME')
     expected_password = current_app.config.get('SCIM_PASSWORD')
     if not expected_username or not expected_password:
@@ -152,27 +151,27 @@ class GetGroupsModel:
 GetGroupsModelSchema = class_schema(GetGroupsModel)
 
 
-def get_scim_id(ug: UserGroup):
+def get_scim_id(ug: UserGroup) -> str:
     return tim_group_to_scim(ug.name)
 
 
 filter_re = re.compile('externalId sw (.+)')
 
 
-def scim_group_to_tim(sisu_group: str):
+def scim_group_to_tim(sisu_group: str) -> str:
     return f'{SISU_GROUP_PREFIX}{sisu_group}'
 
 
 @scim.route('/Groups')
 @use_args(GetGroupsModelSchema())
-def get_groups(args: GetGroupsModel):
+def get_groups(args: GetGroupsModel) -> Response:
     m = filter_re.fullmatch(args.filter)
     if not m:
         raise SCIMException(422, 'Unsupported filter')
     groups = ScimUserGroup.query.filter(ScimUserGroup.external_id.startswith(scim_group_to_tim(m.group(1)))).join(
         UserGroup).with_entities(UserGroup).all()
 
-    def gen_groups():
+    def gen_groups() -> Generator[Dict, None, None]:
         for g in groups:  # type: UserGroup
             yield {
                 'id': g.scim_id,
@@ -187,7 +186,7 @@ def get_groups(args: GetGroupsModel):
     })
 
 
-def derive_scim_group_name(s: str):
+def derive_scim_group_name(s: str) -> str:
     x = parse_sisu_group_display_name(s)
     if not x:
         return remove_path_special_chars(s.lower())
@@ -200,7 +199,7 @@ def derive_scim_group_name(s: str):
 @csrf.exempt
 @scim.route('/Groups', methods=['post'])
 @use_args(SCIMGroupModelSchema(), locations=("json",))
-def post_group(args: SCIMGroupModel):
+def post_group(args: SCIMGroupModel) -> Response:
     log_info(f'/Groups externalId: {args.externalId}')
     gname = scim_group_to_tim(args.externalId)
     ug = try_get_group_by_scim(args.externalId)
@@ -236,14 +235,14 @@ def disambiguate_name(derived_name: str) -> str:
 
 
 @scim.route('/Groups/<group_id>')
-def get_group(group_id):
+def get_group(group_id: str) -> Response:
     ug = get_group_by_scim(group_id)
     return json_response(group_scim(ug))
 
 
 @csrf.exempt
 @scim.route('/Groups/<group_id>', methods=['put'])
-def put_group(group_id: str):
+def put_group(group_id: str) -> Response:
     # log_info(get_request_message(include_body=True))
     try:
         ug = get_group_by_scim(group_id)
@@ -261,7 +260,7 @@ def put_group(group_id: str):
 
 @csrf.exempt
 @scim.route('/Groups/<group_id>', methods=['delete'])
-def delete_group(group_id):
+def delete_group(group_id: str) -> Response:
     ug = get_group_by_scim(group_id)
     ug.name = f'{DELETED_GROUP_PREFIX}{ug.external_id.external_id}'
     db.session.delete(ug.external_id)
@@ -270,7 +269,7 @@ def delete_group(group_id):
 
 
 @scim.route('/Users/<user_id>')
-def get_user(user_id):
+def get_user(user_id: str) -> Response:
     u = User.get_by_name(user_id)
     if not u:
         raise SCIMException(404, 'User not found.')
@@ -279,7 +278,7 @@ def get_user(user_id):
 
 @csrf.exempt
 @scim.route('/Users/<user_id>', methods=['put'])
-def put_user(user_id):
+def put_user(user_id: str) -> Response:
     u = User.get_by_name(user_id)
     if not u:
         raise SCIMException(404, 'User not found.')
@@ -297,7 +296,7 @@ def put_user(user_id):
 email_error_re = re.compile(r"Key \(email\)=\((?P<email>[^()]+)\) already exists.")
 
 
-def update_users(ug: UserGroup, args: SCIMGroupModel):
+def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     external_id = args.externalId
     if not ug.external_id:
         if not external_id_re.fullmatch(external_id):
@@ -403,7 +402,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel):
             send_course_group_mail(p, u)
 
 
-def raise_conflict_error(args, e):
+def raise_conflict_error(args: SCIMGroupModel, e: IntegrityError) -> None:
     msg = e.orig.diag.message_detail
     m = email_error_re.fullmatch(msg)
     if m:
@@ -413,11 +412,12 @@ def raise_conflict_error(args, e):
             if x.email == em:
                 member = x
                 break
+        assert member is not None
         msg += " Conflicting username is: " + member.value
     raise SCIMException(422, msg) from e
 
 
-def is_manually_added(u: User):
+def is_manually_added(u: User) -> bool:
     """It is possible to add user manually to SCIM groups.
     For now we assume that any email user is such.
     """
@@ -428,7 +428,7 @@ def is_manually_added(u: User):
 user_adder = aliased(User)
 
 
-def get_scim_memberships(ug: UserGroup):
+def get_scim_memberships(ug: UserGroup) -> Any:
     return (ug.memberships
             .join(user_adder, UserGroupMember.adder)
             .join(User, UserGroupMember.user)
@@ -436,8 +436,8 @@ def get_scim_memberships(ug: UserGroup):
             )
 
 
-def group_scim(ug: UserGroup):
-    def members():
+def group_scim(ug: UserGroup) -> Dict:
+    def members() -> Generator[Dict, None, None]:
         db.session.expire(ug)
         for u in get_scim_memberships(ug).with_entities(User):
             yield {
@@ -452,7 +452,7 @@ def group_scim(ug: UserGroup):
     }
 
 
-def try_get_group_by_scim(group_id: str):
+def try_get_group_by_scim(group_id: str) -> Optional[UserGroup]:
     try:
         ug = ScimUserGroup.query.filter_by(external_id=scim_group_to_tim(group_id)).join(UserGroup).with_entities(
             UserGroup).first()
@@ -461,7 +461,7 @@ def try_get_group_by_scim(group_id: str):
     return ug
 
 
-def get_group_by_scim(group_id: str):
+def get_group_by_scim(group_id: str) -> UserGroup:
     ug = try_get_group_by_scim(group_id)
     if not ug:
         raise SCIMException(404, f'Group {group_id} not found')

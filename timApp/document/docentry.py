@@ -1,4 +1,6 @@
-from typing import Optional, List
+from __future__ import annotations
+
+from typing import Optional, List, TYPE_CHECKING, Any, Dict
 
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
@@ -8,8 +10,11 @@ from timApp.item.block import BlockType
 from timApp.item.block import insert_block
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
-from timApp.timtypes import UserType
+from timApp.user.usergroup import UserGroup
 from timApp.util.utils import split_location
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
 
 
 class DocEntry(db.Model, DocInfo):
@@ -37,15 +42,15 @@ class DocEntry(db.Model, DocInfo):
     __table_args__ = (db.Index('docentry_id_idx', 'id'),)
 
     @property
-    def path(self):
+    def path(self) -> str:
         return self.name
 
     @property
-    def path_without_lang(self):
+    def path_without_lang(self) -> str:
         return self.name
 
     @property
-    def lang_id(self):
+    def lang_id(self) -> Optional[str]:
         tr = Translation.query.filter_by(src_docid=self.id, doc_id=self.id).first()
         if tr:
             return tr.lang_id
@@ -53,7 +58,7 @@ class DocEntry(db.Model, DocInfo):
 
     # noinspection PyMethodOverriding
     @lang_id.setter
-    def lang_id(self, value):
+    def lang_id(self, value: str) -> None:
         tr = Translation.query.filter_by(src_docid=self.id, doc_id=self.id).first()
         if tr:
             tr.lang_id = value
@@ -81,7 +86,7 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry.query.filter_by(id=doc_id).all()
 
     @staticmethod
-    def find_by_id(doc_id: int, docentry_load_opts=None) -> Optional['DocInfo']:
+    def find_by_id(doc_id: int, docentry_load_opts: Any=None) -> Optional['DocInfo']:
         """Finds a DocInfo by id.
 
         TODO: This method doesn't really belong in DocEntry class.
@@ -95,7 +100,7 @@ class DocEntry(db.Model, DocInfo):
         return Translation.query.get(doc_id)
 
     @staticmethod
-    def find_by_path(path: str, fallback_to_id=False, try_translation=True) -> Optional['DocInfo']:
+    def find_by_path(path: str, fallback_to_id: bool=False, try_translation: bool=True) -> Optional['DocInfo']:
         """Finds a DocInfo by path, falling back to id if specified.
 
         TODO: This method doesn't really belong in DocEntry class.
@@ -120,17 +125,17 @@ class DocEntry(db.Model, DocInfo):
         return d
 
     @staticmethod
-    def get_dummy(title):
+    def get_dummy(title: str) -> 'DocEntry':
         # noinspection PyArgumentList
         return DocEntry(id=-1, name=title)
 
     @staticmethod
     def create(path: str,
-               owner_group = None,
+               owner_group: Optional[UserGroup] = None,
                title: Optional[str] = None,
-               from_file=None,
-               initial_par=None,
-               settings=None,
+               from_file: Optional[str]=None,
+               initial_par: Optional[str]=None,
+               settings: Optional[Dict]=None,
                folder_opts: FolderCreationOptions=FolderCreationOptions()) -> 'DocEntry':
         """Creates a new document with the specified properties.
 
@@ -172,12 +177,11 @@ class DocEntry(db.Model, DocInfo):
         return docentry
 
 
-def create_document_and_block(owner_group, desc: Optional[str] = None):
+def create_document_and_block(owner_group: Optional[UserGroup], desc: Optional[str] = None) -> Document:
     block = insert_block(BlockType.Document, desc, [owner_group] if owner_group else None)
     # Must flush because we need to know the document id in order to create the document in the filesystem.
     db.session.flush()
     document_id = block.id
-    from timApp.user.usergroup import UserGroup
     document = Document(document_id, modifier_group_id=owner_group.id if owner_group else UserGroup.get_admin_group().id)
     document.create()
     return document
@@ -186,9 +190,9 @@ def create_document_and_block(owner_group, desc: Optional[str] = None):
 def get_documents(include_nonpublic: bool = False,
                   filter_folder: Optional[str] = None,
                   search_recursively: bool = True,
-                  filter_user: Optional[UserType] = None,
-                  custom_filter=None,
-                  query_options=None) -> List[DocEntry]:
+                  filter_user: Optional[User] = None,
+                  custom_filter: Any=None,
+                  query_options: Any=None) -> List[DocEntry]:
     """Gets all the documents in the database matching the given criteria.
 
     :param filter_user: If specified, returns only the documents that the user has view access to.
@@ -204,13 +208,13 @@ def get_documents(include_nonpublic: bool = False,
     q = DocEntry.query
     if not include_nonpublic:
         q = q.filter_by(public=True)
-    if filter_folder:
+    if filter_folder is not None:
         filter_folder = filter_folder.strip('/') + '/'
         if filter_folder == '/':
             filter_folder = ''
         q = q.filter(DocEntry.name.like(filter_folder + '%'))
-    if not search_recursively:
-        q = q.filter(DocEntry.name.notlike(filter_folder + '%/%'))
+        if not search_recursively:
+            q = q.filter(DocEntry.name.notlike(filter_folder + '%/%'))
     if custom_filter is not None:
         q = q.filter(custom_filter)
     if query_options is not None:

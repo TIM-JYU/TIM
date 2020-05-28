@@ -17,7 +17,7 @@ cs_allowed_attrs = {
 }
 
 
-def allow_minimal(s):
+def allow_minimal(s: str) -> str:
     if not s:
         return s
     return bleach.clean(s, cs_allowed_tags, cs_allowed_attrs)
@@ -48,7 +48,7 @@ tim_allowed_css_props = set(allowed_css_properties).union({
 })
 
 
-def svg_sanitize(s):
+def svg_sanitize(s: str) -> str:
     dom = html5lib.parseFragment(s, treebuilder="dom")
     walker = html5lib.getTreeWalker("dom")
     stream = walker(dom)
@@ -61,7 +61,7 @@ def svg_sanitize(s):
     return s
 
 
-def cs_min_sanitize(s):
+def cs_min_sanitize(s: str) -> str:
     if s.find('<svg') >= 0: return svg_sanitize(s);
     s = s.replace('<', '&lt;').replace('>', '&gt;')
 
@@ -140,7 +140,7 @@ TIM_SAFE_PROTOCOLS=['http', 'https', 'smb', 'data']
 TIM_SAFE_STYLES = ['width', 'height', 'vertical-align']
 
 
-def tim_sanitize(s):
+def tim_sanitize(s: str) -> str:
     if not s:
         return s
     return bleach.clean(s, TIM_SAFE_TAGS, TIM_SAFE_ATTRS_MAP, protocols=TIM_SAFE_PROTOCOLS, styles=TIM_SAFE_STYLES)

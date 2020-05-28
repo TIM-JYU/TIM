@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from itertools import accumulate
+from typing import TYPE_CHECKING
 
 from flask import current_app
 from sqlalchemy import tuple_, func
@@ -10,6 +13,8 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import include_if_loaded
 from timApp.util.utils import split_location, date_to_relative
 
+if TYPE_CHECKING:
+    from timApp.folder.folder import Folder
 
 class ItemBase:
     """An item that can be assigned permissions."""
@@ -127,7 +132,7 @@ class Item(ItemBase):
         return crumbs
 
     @property
-    def parent(self):  # TODO rename this to parent_folder to distinguish better from "parents" attribute
+    def parent(self) -> Folder:  # TODO rename this to parent_folder to distinguish better from "parents" attribute
         folder = self.location
         from timApp.folder.folder import Folder
         return Folder.find_by_path(folder) if folder else Folder.get_root()

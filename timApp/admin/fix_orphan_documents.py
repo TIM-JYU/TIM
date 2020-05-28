@@ -13,7 +13,7 @@ from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 
 
-def fix_orphans_without_docentry():
+def fix_orphans_without_docentry() -> None:
     """Finds all documents that do not have a DocEntry and creates a DocEntry for them under 'orphans' directory."""
     with app.test_request_context():
         orphan_folder_title = 'orphans'
@@ -33,7 +33,7 @@ def fix_orphans_without_docentry():
         print(f"Fixed {len(orphans)} documents without a DocEntry. They are in '{orphan_folder_title}' folder.")
 
 
-def move_docs_without_block():
+def move_docs_without_block() -> None:
     """Moves all documents from tim_files/docs to tim_files/orphans that don't have a Block entry in database."""
     with app.test_request_context():
         files_root = get_files_path()

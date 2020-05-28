@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 
 from sqlalchemy import func
 from sqlalchemy.orm.collections import attribute_mapped_collection
@@ -9,10 +11,12 @@ from timApp.auth.auth_models import BlockAccess
 from timApp.item.blockassociation import BlockAssociation
 from timApp.item.tag import Tag
 from timApp.timdb.sqa import db
-from timApp.timtypes import FolderType
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.util.utils import get_current_time
+
+if TYPE_CHECKING:
+    from timApp.folder.folder import Folder
 
 
 class Block(db.Model):
@@ -80,7 +84,7 @@ class Block(db.Model):
         return [o.usergroup for o in self.owner_accesses]
 
     @property
-    def parent(self) -> FolderType:
+    def parent(self) -> Folder:
         if self.type_id == BlockType.Document.value:
             from timApp.document.docentry import DocEntry
             return DocEntry.find_by_id(self.id).parent
@@ -134,7 +138,7 @@ class BlockType(Enum):
     Annotation = 10
 
     @staticmethod
-    def from_str(type_name: str) -> 'BlockType':
+    def from_str(type_name: str) -> BlockType:
         return BlockType[type_name.title()]
 
 

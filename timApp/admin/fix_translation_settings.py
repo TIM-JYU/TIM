@@ -4,7 +4,7 @@ from timApp.admin.util import DryrunnableArguments, enum_pars, process_items, cr
 from timApp.document.docinfo import DocInfo
 
 
-def fix_translation(d: DocInfo, args: DryrunnableArguments):
+def fix_translation(d: DocInfo, args: DryrunnableArguments) -> int:
     fixed = 0
     if d.is_original_translation:
         return fixed

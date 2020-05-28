@@ -1,4 +1,5 @@
 import re
+from typing import Optional
 
 import attr
 import magic
@@ -61,8 +62,8 @@ def validate_item(item_path: str,
 
 def validate_item_and_create_intermediate_folders(item_path: str,
                                                   item_type: BlockType,
-                                                  owner_group: UserGroup=None,
-                                                  validation_rule: ItemValidationRule = None):
+                                                  owner_group: Optional[UserGroup]=None,
+                                                  validation_rule: Optional[ItemValidationRule] = None):
     validate_item(item_path, item_type, validation_rule)
     item_path, _ = split_location(item_path)
     Folder.create(item_path, owner_group, creation_opts=FolderCreationOptions(apply_default_rights=True))

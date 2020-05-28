@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
 
-from flask import flash, url_for, Blueprint
+from flask import flash, url_for, Blueprint, Response
 
 from timApp.auth.accesshelper import verify_admin
 from timApp.timdb.sqa import db
@@ -22,7 +22,7 @@ class ExceptionRouteModel:
 
 @admin_bp.route('/exception', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @use_model(ExceptionRouteModel)
-def throw_ex(m: ExceptionRouteModel):
+def throw_ex(m: ExceptionRouteModel) -> Response:
     verify_admin()
     if m.db_error:
         db.session.add(UserGroup(name='test'))
@@ -33,7 +33,7 @@ def throw_ex(m: ExceptionRouteModel):
 
 
 @admin_bp.route('/restart')
-def restart_server():
+def restart_server() -> Response:
     """Restarts the server by sending HUP signal to Gunicorn."""
     verify_admin()
     pid_path = '/var/run/gunicorn.pid'
@@ -46,7 +46,7 @@ def restart_server():
 
 
 @admin_bp.route('/users/search/<term>')
-def search_users(term: str):
+def search_users(term: str) -> Response:
     verify_admin()
     result = User.query.filter(
         User.name.ilike(f'%{term}%') |

@@ -3,7 +3,7 @@ TIM is restarted.
 """
 import os
 
-from flask import Blueprint
+from flask import Blueprint, Response
 from flask import current_app
 from flask import url_for
 
@@ -29,14 +29,14 @@ def inject_global_notification() -> dict:
 
 
 @global_notification.route('/set/<path:message>')
-def set_global_notification(message: str):
+def set_global_notification(message: str) -> Response:
     with open(current_app.config['GLOBAL_NOTIFICATION_FILE'], 'wt', encoding='utf8') as f:
         f.write(md_to_html(message))
     return safe_redirect(url_for('start_page'))
 
 
 @global_notification.route('/remove')
-def remove_global_notification():
+def remove_global_notification() -> Response:
     try:
         os.remove(current_app.config['GLOBAL_NOTIFICATION_FILE'])
     except FileNotFoundError:

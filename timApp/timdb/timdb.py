@@ -99,7 +99,7 @@ class TimDb:
         if self.db:
             self.db.commit()
 
-    def close(self):
+    def close(self) -> None:
         """Closes the database connection."""
         if hasattr(self, 'db') and self.db is not None:
             bes = -1

@@ -3,8 +3,8 @@ import json
 import pprint
 import time
 import warnings
-from dataclasses import is_dataclass
-from typing import Optional, Type, TypeVar, Callable
+from dataclasses import is_dataclass, dataclass
+from typing import Optional, Type, TypeVar, Callable, Any, List
 
 from flask import Request, current_app, g, Response
 from flask import request, abort
@@ -13,32 +13,33 @@ from webargs.flaskparser import use_args
 from werkzeug.exceptions import HTTPException
 from werkzeug.wrappers import BaseRequest
 
-from marshmallow_dataclass import class_schema
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
+from timApp.document.docparagraph import DocParagraph
+from timApp.modules.py.marshmallow_dataclass import class_schema
+from timApp.modules.py.utils import DurationSchema
 from timApp.timdb.exceptions import InvalidReferenceException
 from timApp.user.user import Consent
-from utils import DurationSchema
 
 
 class EmptyWarning:
-    def warn(self, a, b):
+    def warn(self, a: Any, b: Any) -> None:
         pass
 
 
 # We don't want a runtime DeprecationWarning about verify_json_params.
 # It's enough that PyCharm marks it as deprecated.
 # noinspection PyRedeclaration
-warnings = EmptyWarning()
+warnings = EmptyWarning()  # type: ignore[assignment]
 
 
-def verify_json_params(*args: str, require=True, default=None, error_msgs=None):
+def verify_json_params(*args: str, require: bool=True, default: Any=None, error_msgs: Optional[List[str]]=None) -> List[Any]:
     """Gets the specified JSON parameters from the request.
 
     :param default: The default value for the parameter if it is not found from the request.
     :param require: If True and the parameter is not found, the request is aborted.
     """
     warnings.warn('Do not use this function in new code. Define a dataclass and use "use_model" decorator in route.', DeprecationWarning)
-    result = ()
+    result = []
     json_params = request.get_json() or {}
     if error_msgs is not None:
         assert len(args) == len(error_msgs)
@@ -49,13 +50,13 @@ def verify_json_params(*args: str, require=True, default=None, error_msgs=None):
             val = default
         else:
             abort(400, err or f'Missing required parameter in request: {arg}')
-            return ()
+            return []
 
-        result += (val,)
+        result.append(val)
     return result
 
 
-def get_referenced_pars_from_req(par):
+def get_referenced_pars_from_req(par: DocParagraph) -> List[DocParagraph]:
     if par.is_reference() and not par.is_translation():
         try:
             return [ref_par for ref_par in par.get_referenced_pars(set_html=False)]
@@ -65,7 +66,7 @@ def get_referenced_pars_from_req(par):
         return [par]
 
 
-def get_option(req: Request, name: str, default, cast=None):
+def get_option(req: Request, name: str, default: Any, cast: Optional[Type]=None) -> Any:
     if name not in req.args:
         return default
     result = req.args[name]
@@ -91,25 +92,25 @@ def get_option(req: Request, name: str, default, cast=None):
     return result
 
 
-def is_xhr(req: BaseRequest):
+def is_xhr(req: BaseRequest) -> bool:
     """Same as req.is_xhr but without the deprecation warning."""
     return req.environ.get(
         'HTTP_X_REQUESTED_WITH', ''
     ).lower() == 'xmlhttprequest'
 
 
-def is_testing():
+def is_testing() -> bool:
     return current_app.config['TESTING']
 
 
-def is_localhost():
+def is_localhost() -> bool:
     return current_app.config['TIM_HOST'] in ('http://localhost', 'http://nginx')
 
 
 def get_consent_opt() -> Optional[Consent]:
     consent_opt = get_option(request, 'consent', 'any')
     if consent_opt == 'true':
-        consent = Consent.CookieAndData
+        consent: Optional[Consent] = Consent.CookieAndData
     elif consent_opt == 'false':
         consent = Consent.CookieOnly
     elif consent_opt == 'any':
@@ -119,14 +120,21 @@ def get_consent_opt() -> Optional[Consent]:
     return consent
 
 
-def get_request_time():
+def get_request_time() -> Optional[str]:
     try:
         return f'{time.monotonic() - g.request_start_time:.3g}s'
     except AttributeError:
         return None
 
 
-def get_request_message(status_code=None, include_body=False):
+@dataclass
+class UA:
+    platform: str
+    browser: str
+    version: str
+
+
+def get_request_message(status_code: Optional[int]=None, include_body: bool=False) -> str:
     # Optimization: don't try to access database if not logged in.
     if not logged_in():
         name = 'Anonymous'
@@ -136,7 +144,7 @@ def get_request_message(status_code=None, include_body=False):
         url_or_path = request.url
     else:
         url_or_path = request.full_path if request.query_string else request.path
-    ua = request.user_agent
+    ua: UA = request.user_agent  # type: ignore
     msg = f"""
 {name}
 [{request.headers.get("X-Forwarded-For") or request.remote_addr}]:
@@ -155,11 +163,13 @@ class RouteException(HTTPException):
     code = 400
 
 
-class JSONException(HTTPException):
-    code = 400
+@dataclass
+class JSONException(Exception):
+    description: str
+    code: int = 400
 
 
-def load_data_from_req(schema: Type[Schema]):
+def load_data_from_req(schema: Type[Schema]) -> Any:
     ps = schema()
     try:
         j = request.get_json()
@@ -172,7 +182,7 @@ def load_data_from_req(schema: Type[Schema]):
 
 ModelType = TypeVar('ModelType')
 
-def use_model(m: Type[ModelType]) -> Callable[[Callable[[ModelType], Response]], None]:
+def use_model(m: Type[ModelType]) -> Callable[[Callable[[ModelType], Response]], Callable[[ModelType], Response]]:
     if not is_dataclass(m):
         raise Exception('use_model requires a dataclass')
     return use_args(class_schema(m, base_schema=DurationSchema)())

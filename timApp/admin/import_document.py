@@ -9,12 +9,12 @@ from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 
 
-def main():
+def main() -> None:
     parser = ArgumentParser(description='Imports a doc')
     parser.add_argument('--file', help='JSON file to import')
     args = parser.parse_args()
     file: str = args.file
-    with app.app_context():
+    with app.app_context():  # type: ignore[no-untyped-call]
         with open(file, 'r', encoding='utf8') as f:
             data = json.load(f)
         if not isinstance(data, list):

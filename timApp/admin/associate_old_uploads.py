@@ -1,6 +1,7 @@
-from timApp.admin.search_in_documents import SearchArgumentsBasic, search, create_basic_search_argparser, \
-    SearchArgumentsCLI
-from timApp.admin.util import enum_docs, process_items
+from typing import Optional, Callable
+
+from timApp.admin.search_in_documents import SearchArgumentsBasic, search, create_basic_search_argparser
+from timApp.admin.util import enum_docs, process_items, BasicArguments
 from timApp.document.docinfo import DocInfo
 from timApp.item.block import BlockType, Block
 from timApp.item.blockassociation import BlockAssociation
@@ -15,13 +16,13 @@ upload_regexes = [
 ]
 
 
-def associate_old_uploads():
+def associate_old_uploads() -> None:
     """Associates old uploads with documents and removes access for those uploads from anonymous users.
     This means only document viewers will be able to view the uploaded files, as it is with new uploads.
     """
     anon = UserGroup.get_anonymous_group()
 
-    def del_anon(u: UploadedFile):
+    def del_anon(u: UploadedFile) -> None:
         if not u.filesystem_path.exists():
             print(f'Upload does not exist in filesystem: {u.relative_filesystem_path}')
             return
@@ -46,7 +47,7 @@ def associate_old_uploads():
     db.session.commit()
 
 
-def associate_document(d, search_opt, del_anon=None):
+def associate_document(d: DocInfo, search_opt: SearchArgumentsBasic, del_anon: Optional[Callable[[UploadedFile], None]]=None) -> int:
     found = 0
     for r in search(d, search_opt, use_exported=False):
         found = r.num_pars_found
@@ -65,7 +66,7 @@ def associate_document(d, search_opt, del_anon=None):
     return found
 
 
-def search_and_print(d: DocInfo, args: SearchArgumentsCLI):
+def search_and_print(d: DocInfo, _args: BasicArguments) -> int:
     found = 0
     for r in upload_regexes:
         found += associate_document(d, SearchArgumentsBasic(
@@ -77,7 +78,7 @@ def search_and_print(d: DocInfo, args: SearchArgumentsCLI):
     return found
 
 
-def main():
+def main() -> None:
     parser = create_basic_search_argparser(
         'Scans documents for uploaded files and associates them with the containing documents',
         is_readonly=False,

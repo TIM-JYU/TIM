@@ -2,7 +2,7 @@ import copy
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 from xml.sax.saxutils import quoteattr
-from flask import Blueprint
+from flask import Blueprint, Response
 from flask import abort
 from flask import request
 
@@ -15,7 +15,7 @@ tape_plugin = Blueprint('tape_plugin',
 
 
 @tape_plugin.route("reqs")
-def tape_reqs():
+def tape_reqs() -> Response:
     reqs = {
         "type": "embedded",
         "js": ["tape"],
@@ -28,7 +28,7 @@ def tape_reqs():
 
 @tape_plugin.route("multihtml", methods=["POST"])
 @csrf.exempt
-def tape_multihtml():
+def tape_multihtml() -> Response:
     """
     Route for getting the HTML of all tape plugins in a document.
     :return:
@@ -40,7 +40,7 @@ def tape_multihtml():
     return json_response(multi)
 
 
-def tape_get_html(jso):
+def tape_get_html(jso: Dict[str, Any]) -> str:
     """
     Returns the HTML of a single tape paragraph.
     :param jso:

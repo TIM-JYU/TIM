@@ -96,7 +96,7 @@ class Bookmarks:
             new_settings.set_bookmarks(bookmark_data)
             self.bookmark_document.set_settings(new_settings.get_dict())
 
-    def as_dict(self):
+    def as_dict(self) -> List[Dict]:
         result = []
         for group in self.get_bookmarks():
             group_name = next(group.__iter__())

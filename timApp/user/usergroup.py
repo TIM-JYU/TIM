@@ -18,7 +18,7 @@ from timApp.user.usergroupmember import UserGroupMember, membership_current
 SISU_GROUP_PREFIX = ''
 
 
-def tim_group_to_scim(tim_group: str):
+def tim_group_to_scim(tim_group: str) -> str:
     if not tim_group.startswith(SISU_GROUP_PREFIX):
         raise Exception(f"Group {tim_group} is not a Sisu group")
     return tim_group[len(SISU_GROUP_PREFIX):]

@@ -6,7 +6,7 @@ from timApp.user.groups import verify_group_edit_access
 from timApp.user.usergroup import UserGroup
 
 
-def is_course(d: DocInfo):
+def is_course(d: DocInfo) -> bool:
     return any(t.type == TagType.CourseCode for t in d.block.tags)
 
 

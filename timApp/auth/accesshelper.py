@@ -50,7 +50,7 @@ def get_folder_or_abort(folder_id: int):
     return f
 
 
-def verify_admin(require=True, user=None):
+def verify_admin(require: bool=True, user: Optional[User]=None) -> bool:
     if not check_admin_access(user=user):
         if require:
             abort(403, 'This action requires administrative rights.')
@@ -282,7 +282,7 @@ def get_rights(d: ItemBase):
             }
 
 
-def verify_logged_in():
+def verify_logged_in() -> None:
     if not logged_in():
         abort(403, "You have to be logged in to perform this action.")
 

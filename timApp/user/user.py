@@ -483,7 +483,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             return True
 
     @staticmethod
-    def get_scimuser():
+    def get_scimuser() -> 'User':
         u = User.get_by_name(SCIM_USER_NAME)
         if not u:
             u, _ = User.create_with_group(UserInfo(

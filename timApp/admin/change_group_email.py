@@ -7,7 +7,7 @@ from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 
 
-def change_email():
+def change_email() -> None:
     timdb = TimDb(get_files_path())
     # print("You're changing email of every member of given group to [USERNAME]@[GIVEN_EMAIL]")
     print("Changing emails of mallikurssinryhma1")

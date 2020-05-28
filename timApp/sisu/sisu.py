@@ -2,10 +2,10 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from json import JSONDecodeError
 from textwrap import dedent
-from typing import List, Optional, Dict, Union, Any
+from typing import List, Optional, Dict, Union, Any, Generator
 
 import requests
-from flask import Blueprint, abort, current_app, request
+from flask import Blueprint, abort, current_app, request, Response
 from marshmallow import validates, ValidationError
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import any_, true
@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
-from marshmallow_dataclass import class_schema
+from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.answer.routes import handle_jsrunner_response
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.accesstype import AccessType
@@ -36,10 +36,10 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_sisu_groups_by_filter
 from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFieldObj
 from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time, fin_timezone
-from utils import Missing
+from timApp.modules.py.utils import Missing
 
 sisu = Blueprint('sisu',
                  __name__,
@@ -47,7 +47,7 @@ sisu = Blueprint('sisu',
 
 
 @sisu.route('/getPotentialGroups')
-def get_potential_groups_route():
+def get_potential_groups_route() -> Response:
     u = get_current_user_object()
     result = get_potential_groups(u)
     return json_response([
@@ -70,7 +70,7 @@ role_suffixes = [
 ]
 
 
-def get_group_prefix(g: UserGroup):
+def get_group_prefix(g: UserGroup) -> Optional[str]:
     """Returns the prefix indicating which Sisu groups the users in this Sisu group shall have access to.
     """
     eid = g.external_id.external_id
@@ -114,7 +114,7 @@ def get_sisu_group_rights(g: UserGroup) -> List[UserGroup]:
 
 @sisu.route('/createGroupDocs', methods=['post'])
 @use_args(GroupCreateSchema(many=True), locations=("json",))
-def create_groups_route(args: List[GroupCreateModel]):
+def create_groups_route(args: List[GroupCreateModel]) -> Response:
     u = get_current_user_object()
 
     # First, make sure user is eligible for access to all the requested groups.
@@ -127,16 +127,18 @@ def create_groups_route(args: List[GroupCreateModel]):
 
     # Now, create the admin documents for groups that don't yet exist.
     # Rights to already existing documents need to be updated too.
-    name_map: Dict[str, Optional[str]] = {a.externalId: a.name for a in args}
+    name_map: Dict[str, Union[str, Missing]] = {a.externalId: a.name for a in args}
     group_map: Dict[str, UserGroup] = {g.external_id.external_id: g for g in allowed_groups}
     created = []
     updated = []
     admin_id = UserGroup.get_admin_group().id
     for r in requested_external_ids:
         g = group_map[r]
-        name = name_map[r]
-        if not name:
+        name_m = name_map[r]
+        if not name_m:
             name = g.name
+        else:
+            name = name_m
         if name.strip() == "":
             continue
         validate_groupname(name)
@@ -194,7 +196,7 @@ def create_groups_route(args: List[GroupCreateModel]):
 def create_sisu_document(
         item_path: str,
         item_title: str,
-        owner_group: UserGroup = None,
+        owner_group: Optional[UserGroup] = None,
 ) -> DocInfo:
     validate_item_and_create_intermediate_folders(
         item_path,
@@ -205,11 +207,12 @@ def create_sisu_document(
     return DocEntry.create(item_path, owner_group, item_title)
 
 
-def refresh_sisu_grouplist_doc(ug: UserGroup):
+def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
     if not ug.external_id.is_student and not ug.external_id.is_studysubgroup:
         gn = parse_sisu_group_display_name(ug.display_name)
-        p = gn.sisugroups_doc_path
-        d = DocEntry.find_by_path(p)
+        assert gn is not None
+        sp = gn.sisugroups_doc_path
+        d = DocEntry.find_by_path(sp)
         settings_to_set = {
             'global_plugin_attrs': {
                 'all': {
@@ -222,17 +225,17 @@ def refresh_sisu_grouplist_doc(ug: UserGroup):
             'preamble': 'sisugroups',
         }
         if not d:
-            d = create_sisu_document(p, f'Sisu groups for course {gn.coursecode.upper()}', owner_group=ug)
+            d = create_sisu_document(sp, f'Sisu groups for course {gn.coursecode.upper()}', owner_group=ug)
             admin_id = UserGroup.get_admin_group().id
             d.document.modifier_group_id = admin_id
             d.document.set_settings(settings_to_set)
         else:
             d.block.add_rights([ug], AccessType.owner)
-            p1 = d.block.parent
+            p1 = d.parent
             p2 = p1.parent
-            p1.block.add_rights([ug], AccessType.owner)
-            p2.block.add_rights([ug], AccessType.owner)
-            p2.parent.block.add_rights([UserGroup.get_teachers_group()], AccessType.view)
+            p1.block.add_rights([ug], AccessType.owner)  # type: ignore[union-attr]
+            p2.block.add_rights([ug], AccessType.owner)  # type: ignore[union-attr]
+            p2.parent.block.add_rights([UserGroup.get_teachers_group()], AccessType.view)  # type: ignore[union-attr]
 
             # Update rights for already existing activated groups.
             docs = d.parent.get_all_documents(
@@ -302,7 +305,7 @@ hide:
                 """)
 
 
-def send_course_group_mail(p: SisuDisplayName, u: User):
+def send_course_group_mail(p: SisuDisplayName, u: User) -> None:
     send_email(
         u.email,
         f'Kurssin {p.coursecode} Sisu-ryhmät on kopioitu TIMiin',
@@ -334,7 +337,7 @@ class PostGradesModel:
 
 @sisu.route('/sendGrades', methods=['post'])
 @use_model(PostGradesModel)
-def post_grades_route(m: PostGradesModel):
+def post_grades_route(m: PostGradesModel) -> Response:
     result = json_response(send_grades_to_sisu(
         m.destCourse,
         get_current_user_object(),
@@ -394,7 +397,7 @@ class Assessment:
     privateComment: Optional[str] = None
 
     @validates('gradeId')
-    def validate_grade(self, value):
+    def validate_grade(self, value: str) -> None:
         if value == '':
             raise ValidationError('Cannot be empty')
         if value not in ('0', '1', '2', '3', '4', '5', 'HYV', 'HYL', 'HT', 'TT'):
@@ -403,7 +406,7 @@ class Assessment:
         #     raise ValidationError('Sisu interface currently does not accept HYL grade')
 
 
-def maybe_to_str(s) -> Optional[str]:
+def maybe_to_str(s: Optional[Any]) -> Optional[str]:
     if s is None:
         return s
     return str(s)
@@ -423,7 +426,7 @@ class CandidateAssessment:
             self,
             completion_date: Optional[str] = None,
             ensure_int_credit: bool = False,
-    ):
+    ) -> Dict[str, str]:
         result = {
             'userName': self.user.name,
             'gradeId': self.gradeId,
@@ -439,11 +442,11 @@ class CandidateAssessment:
         return result
 
     @property
-    def is_fail_grade(self):
+    def is_fail_grade(self) -> bool:
         return self.gradeId in ('HYL', '0')
 
     @property
-    def is_passing_grade(self):
+    def is_passing_grade(self) -> bool:
         return self.gradeId and not self.is_fail_grade
 
 
@@ -452,7 +455,7 @@ AssessmentSchema = class_schema(Assessment)
 
 @csrf.exempt
 @sisu.route('/assessments/<sisuid>', methods=['post'])
-def mock_assessments(sisuid):
+def mock_assessments(sisuid: str) -> Response:
     ok_names = {'us-1'}
     j = request.get_json()
     assessments = j['assessments']
@@ -463,7 +466,7 @@ def mock_assessments(sisuid):
     }}, status_code=207 if partial else 400)
 
 
-def call_sisu_assessments(sisu_id: str, json: Dict[str, Any]):
+def call_sisu_assessments(sisu_id: str, json: Dict[str, Any]) -> requests.Response:
     url = f'{app.config["SISU_ASSESSMENTS_URL"]}{sisu_id}'
     return requests.post(
         url,
@@ -472,7 +475,7 @@ def call_sisu_assessments(sisu_id: str, json: Dict[str, Any]):
     )
 
 
-def get_assessment_fields_to_save(doc: DocInfo, c: CandidateAssessment):
+def get_assessment_fields_to_save(doc: DocInfo, c: CandidateAssessment) -> Dict[str, str]:
     result = {
         f'{doc.id}.completionDate': c.completionDate,
         f'{doc.id}.sentGrade': c.gradeId,
@@ -480,6 +483,12 @@ def get_assessment_fields_to_save(doc: DocInfo, c: CandidateAssessment):
     if c.sentCredit is not None:
         result[f'{doc.id}.sentCredit'] = c.sentCredit
     return result
+
+
+@dataclass
+class AssessmentError:
+    message: str
+    assessment: CandidateAssessment
 
 
 def send_grades_to_sisu(
@@ -492,7 +501,7 @@ def send_grades_to_sisu(
         filter_users: Optional[List[str]],
         groups: Optional[List[str]],
         membership_filter: MembershipFilter,
-):
+) -> Dict[str, Any]:
     assessments = get_sisu_assessments(sisu_id, teacher, doc, groups, filter_users, membership_filter)
     if not completion_date:
         completion_date = get_current_time().date()
@@ -503,12 +512,14 @@ def send_grades_to_sisu(
         # noinspection PyTypeChecker
         AssessmentSchema(many=True).load([a.to_sisu_json(completion_date=completion_date_iso) for a in assessments])
     except ValidationError as e:
+        msgs = e.messages
+        assert isinstance(msgs, dict)
         validation_errors = [
-            {
-                'assessment': assessments[i],
-                'message': ", ".join(x + ": " + ", ".join(y) for x, y in a.items()),
-            }
-            for i, a in e.messages.items()
+            AssessmentError(
+                assessment=assessments[i],
+                message=", ".join(x + ": " + ", ".join(y) for x, y in a.items()),
+            )
+            for i, a in msgs.items()
         ]
         if not partial:
             return {
@@ -516,7 +527,7 @@ def send_grades_to_sisu(
                 'default_selection': [],
                 'assessment_errors': validation_errors,
             }
-        invalid_assessments_indices = {i for i in e.messages.keys()}
+        invalid_assessments_indices = {i for i in msgs.keys()}
         assessments = [a for i, a in enumerate(assessments) if i not in invalid_assessments_indices]
     # log_info(json.dumps(assessments, indent=4))
     r = call_sisu_assessments(
@@ -541,6 +552,7 @@ def send_grades_to_sisu(
         raise SisuError(f'Failed to validate Sisu JSON: {r.text}')
     if pr.error:
         raise SisuError(pr.error.reason)
+    assert pr.body is not None
     invalid_assessments = set(n for n in pr.body.assessments.keys())
     ok_assessments = [a for i, a in enumerate(assessments) if i not in invalid_assessments]
     if not dry_run and r.status_code < 400:
@@ -565,14 +577,14 @@ def send_grades_to_sisu(
         )
         users_to_update = set()
     errs = [
-        {
-            'message': 'Sisu: ' + ', '.join(list_reasons(v)),
-            'assessment': assessments[k],
-        }
+        AssessmentError(
+            message='Sisu: ' + ', '.join(list_reasons(v)),
+            assessment=assessments[k],
+        )
         for k, v in pr.body.assessments.items()
     ]
     all_errors = errs + validation_errors
-    error_users = set(a['assessment'].user.id for a in all_errors)
+    error_users = set(a.assessment.user.id for a in all_errors)
     return {
         'sent_assessments': ok_assessments if r.status_code < 400 else [],
         'assessment_errors': all_errors,
@@ -580,7 +592,7 @@ def send_grades_to_sisu(
     }
 
 
-def list_reasons(codes: AssessmentErrors):
+def list_reasons(codes: AssessmentErrors) -> Generator[str, None, None]:
     for k, v in codes.items():
         if v.code == 40009 and v.gradeId and v.credits:
             yield f'{v.reason} ({v.gradeId}, {v.credits} op)'
@@ -646,7 +658,7 @@ def get_sisu_assessments(
     return [fields_to_assessment(r, doc) for r in users]
 
 
-def fields_to_assessment(r, doc: DocInfo) -> CandidateAssessment:
+def fields_to_assessment(r: UserFieldObj, doc: DocInfo) -> CandidateAssessment:
     fields = r['fields']
     grade = fields.get(f'{doc.id}.grade')
     u = r['user']

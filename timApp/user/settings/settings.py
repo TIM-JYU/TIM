@@ -1,7 +1,8 @@
 """Routes for settings view."""
 from dataclasses import dataclass
+from typing import Dict, Any, Optional
 
-from flask import Blueprint, render_template, session, flash
+from flask import Blueprint, render_template, session, flash, Response
 from flask import abort
 from flask import request
 from jinja2 import TemplateNotFound
@@ -30,12 +31,12 @@ settings_page = Blueprint('settings_page',
 
 
 @settings_page.before_request
-def verify_login():
+def verify_login() -> None:
     verify_logged_in()
 
 
 @settings_page.route('')
-def show():
+def show() -> str:
     available_css_files = [{'name': theme.filename, 'desc': theme.description} for theme in get_available_themes()]
 
     try:
@@ -49,12 +50,12 @@ def show():
 
 
 @settings_page.route('/get')
-def get_settings():
+def get_settings() -> Response:
     return json_response(get_current_user_object().get_prefs())
 
 
 @settings_page.route('/save', methods=['POST'])
-def save_settings():
+def save_settings() -> Response:
     try:
         j = request.get_json()
         get_current_user_object().set_prefs(Preferences.from_json(j))
@@ -72,7 +73,7 @@ class LangModel:
 
 @settings_page.route('/save/lang', methods=['put'])
 @use_model(LangModel)
-def save_language_route(m: LangModel):
+def save_language_route(m: LangModel) -> Response:
     u = get_current_user_object()
     prefs = u.get_prefs()
     prefs.language = m.lang
@@ -82,12 +83,12 @@ def save_language_route(m: LangModel):
 
 
 @settings_page.route('/get/<name>')
-def get_setting(name):
+def get_setting(name: str) -> Response:
     prefs = get_current_user_object().get_prefs()
     return json_response({name: getattr(prefs, name, None)})
 
 
-def get_user_info(u: User, include_doc_content=False):
+def get_user_info(u: User, include_doc_content: bool=False) -> Dict[str, Any]:
     """Returns all data associated with a user."""
     block_query = u.get_personal_group().accesses.filter_by(type=AccessType.owner.value).with_entities(
         BlockAccess.block_id)
@@ -121,7 +122,7 @@ def get_user_info(u: User, include_doc_content=False):
 
 @settings_page.route('/info')
 @settings_page.route('/info/<username>')
-def get_info_route(username=None):
+def get_info_route(username: Optional[str]=None) -> Response:
     if username:
         verify_admin()
         u = User.get_by_name(username)
@@ -134,7 +135,7 @@ def get_info_route(username=None):
 
 
 @settings_page.route('/updateConsent', methods=['POST'])
-def update_consent():
+def update_consent() -> Response:
     u = get_current_user_object()
     v, = verify_json_params('consent')
     try:
@@ -149,7 +150,7 @@ def update_consent():
 
 
 @settings_page.route('/account/delete', methods=['post'])
-def delete_account():
+def delete_account() -> Response:
     verify_logged_in()
     u = get_current_user_object()
     if not u.is_email_user:

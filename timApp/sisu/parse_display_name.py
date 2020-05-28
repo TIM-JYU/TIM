@@ -35,19 +35,19 @@ class SisuDisplayName:
     period: Optional[str]
 
     @property
-    def group_doc_root(self):
+    def group_doc_root(self) -> str:
         return f'groups/{self.year}/{self.coursecode.lower()}/{self.month}'
 
     @property
-    def sisugroups_doc_path(self):
+    def sisugroups_doc_path(self) -> str:
         return f'{self.group_doc_root}/sisugroups'
 
     @property
-    def coursecode_and_time(self):
+    def coursecode_and_time(self) -> str:
         return f'{self.coursecode.upper()} {self.period + " " if self.period else ""}{self.fulldaterange}'
 
     @property
-    def desc_slug(self):
+    def desc_slug(self) -> str:
         """Returns the group description all-lowercase, spaces replaced with '-' and special characters removed.
         """
         desc = remove_path_special_chars(self.desc.lower())

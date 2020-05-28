@@ -1,4 +1,5 @@
 import re
+from argparse import ArgumentParser
 from typing import NamedTuple, Generator, Match, Optional
 
 import attr
@@ -74,7 +75,7 @@ class SearchResult(NamedTuple):
         )
 
 
-def matches_attr_filter(p: DocParagraph, key: Optional[str], value: Optional[str]):
+def matches_attr_filter(p: DocParagraph, key: Optional[str], value: Optional[str]) -> bool:
     if key is None:
         return True
     a = p.get_attr(key)
@@ -123,7 +124,7 @@ def search(d: DocInfo, args: SearchArgumentsBasic, use_exported: bool) -> Genera
             break
 
 
-def search_and_print(d: DocInfo, args: SearchArgumentsCLI):
+def search_and_print(d: DocInfo, args: SearchArgumentsCLI) -> int:
     """Same as :func:`search`, but prints the matches according to the provided format."""
     found = 0
     for result in search(d, args, use_exported=args.exported):
@@ -143,7 +144,7 @@ def search_and_print(d: DocInfo, args: SearchArgumentsCLI):
     return found
 
 
-def create_basic_search_argparser(desc: str, is_readonly=True, require_term=True):
+def create_basic_search_argparser(desc: str, is_readonly: bool=True, require_term: bool=True) -> ArgumentParser:
     parser = create_argparser(desc, readonly=is_readonly)
     parser.add_argument('--term', required=require_term, help='search term')
     parser.add_argument('--only-first', help='search only first x paragraphs in each document', dest='onlyfirst',
@@ -160,7 +161,7 @@ def create_basic_search_argparser(desc: str, is_readonly=True, require_term=True
     return parser
 
 
-def main():
+def main() -> None:
     parser = create_basic_search_argparser('Searches in documents')
 
     parser.add_argument('--exported', help='use the exported form of markdown when searching', action='store_true')

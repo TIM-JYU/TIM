@@ -1,5 +1,5 @@
 from argparse import ArgumentTypeError
-from typing import Tuple
+from typing import Tuple, Generator
 
 import attr
 from yaml import YAMLError
@@ -23,7 +23,7 @@ class ReplaceArgumentsCLI(ReplaceArguments, BasicArguments):
     """Command-line arguments for a replacement operation."""
 
 
-def min_replacement_length(x: str):
+def min_replacement_length(x: str) -> str:
     if len(x) < 3:
         raise ArgumentTypeError("String to replace must be at least 3 characters.")
     return x
@@ -68,7 +68,7 @@ class ReplacementResult:
         )
 
 
-def perform_replace(d: DocInfo, args: ReplaceArguments):
+def perform_replace(d: DocInfo, args: ReplaceArguments) -> Generator[ReplacementResult, None, None]:
     """Performs a search-and-replace operation for the specified document, yielding ReplacementResults.
 
     :param args: The replacement arguments. If args.dryrun is True, no actual replacement will occur.
@@ -103,7 +103,7 @@ def perform_replace(d: DocInfo, args: ReplaceArguments):
             r.par.save()
 
 
-def replace_and_print(d: DocInfo, args: ReplaceArgumentsCLI):
+def replace_and_print(d: DocInfo, args: ReplaceArgumentsCLI) -> int:
     """Same as :func:`perform_replace`, but prints the matches according to the provided format."""
     n = 0
     for r in perform_replace(d, args):

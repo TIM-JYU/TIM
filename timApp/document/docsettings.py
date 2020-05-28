@@ -435,7 +435,7 @@ class DocSettings:
     def sisu_require_manual_enroll(self):
         return self.__dict.get(self.sisu_require_manual_enroll_key, False)
 
-    def course_allow_manual_enroll(self):
+    def course_allow_manual_enroll(self) -> bool:
         return self.__dict.get(self.course_allow_manual_enroll_key, False)
 
     def expire_next_doc_message(self):

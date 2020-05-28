@@ -2,7 +2,7 @@ import csv
 import http.client
 import json
 from io import StringIO
-from typing import Any
+from typing import Any, Optional, Dict
 from urllib.parse import urlparse, urljoin
 
 from flask import request, redirect, url_for, Response, stream_with_context, render_template
@@ -18,13 +18,13 @@ def is_safe_url(url):
         host_url.netloc == test_url.netloc
 
 
-def safe_redirect(url, **values):
+def safe_redirect(url: str, **values) -> Response:
     if is_safe_url(url):
         return redirect(url, **values)
     return redirect(url_for('indexPage'))
 
 
-def json_response(jsondata, status_code=200, headers=None):
+def json_response(jsondata: Any, status_code=200, headers: Optional[Dict[str, str]]=None) -> Response:
     response = Response(to_json_str(jsondata), mimetype='application/json', headers=headers)
     response.status_code = status_code
     return response
@@ -63,7 +63,7 @@ def add_no_cache_headers(response: Response):
     return response
 
 
-def ok_response():
+def ok_response() -> Response:
     return json_response({'status': 'ok'})
 
 

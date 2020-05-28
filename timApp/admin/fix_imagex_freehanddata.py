@@ -6,7 +6,7 @@ from timApp.answer.answer import Answer
 from timApp.document.docinfo import DocInfo
 
 
-def fix_imagex_freehanddata(doc: DocInfo, args: DryrunnableArguments):
+def fix_imagex_freehanddata(doc: DocInfo, args: DryrunnableArguments) -> int:
     """Fixes invalid imagex freeHandData.
     An invalid entry in freeHandData looks like: {'color': '#ff0', 'lines': [[None, None]], 'w': 3}
     :param doc: The document to fix.

@@ -11,7 +11,7 @@ from typing import List, Optional, Set, Tuple
 import click
 from flask import abort, current_app
 from flask.cli import AppGroup
-from sqlalchemy import func  # type: ignore
+from sqlalchemy import func
 
 from timApp.admin.import_accounts import import_accounts_impl
 from timApp.auth.accesstype import AccessType

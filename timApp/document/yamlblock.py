@@ -93,7 +93,7 @@ def strip_code_block(md: str) -> str:
     return md.split('\n', 1)[1].rstrip(f'\n{code_block_marker}')
 
 
-def get_code_block_str(md):
+def get_code_block_str(md: str) -> str:
     code_block_marker = '`' * count_chars_from_beginning(md, '`')
     return code_block_marker
 

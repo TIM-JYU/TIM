@@ -13,32 +13,35 @@ class ScimUserGroup(db.Model):
     external_id = db.Column(db.Text, unique=True, nullable=False)
 
     @property
-    def is_studysubgroup(self):
+    def is_studysubgroup(self) -> bool:
         m = external_id_re.fullmatch(self.external_id)
+        assert m is not None
         return m.group('subgroup') is not None
 
     @property
     def course_id(self) -> str:
         m = external_id_re.fullmatch(self.external_id)
+        assert m is not None
         return m.group('courseid')
 
     @property
     def without_role(self) -> str:
         m = external_id_re.fullmatch(self.external_id)
+        assert m is not None
         return m.group('norole')
 
     @property
-    def is_teacher(self):
+    def is_teacher(self) -> bool:
         return self.external_id.endswith('-teachers')
 
     @property
-    def is_responsible_teacher(self):
+    def is_responsible_teacher(self) -> bool:
         return self.external_id.endswith('-responsible-teachers')
 
     @property
-    def is_student(self):
+    def is_student(self) -> bool:
         return self.external_id.endswith('-students')
 
     @property
-    def is_administrative_person(self):
+    def is_administrative_person(self) -> bool:
         return self.external_id.endswith('-administrative-persons')

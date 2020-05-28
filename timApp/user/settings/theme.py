@@ -15,14 +15,14 @@ THEME_DIR = Path('static/stylesheets/themes')
 class Theme:
     filename: str
 
-    def exists(self):
+    def exists(self) -> bool:
         return self.get_path().exists()
 
-    def get_path(self):
+    def get_path(self) -> Path:
         return get_theme_path(self.filename)
 
     @cached_property
-    def description(self):
+    def description(self) -> str:
         with self.get_path().open('r', encoding='utf-8') as f:
             comment = f.readline()
             if comment.startswith('@charset'):
@@ -35,7 +35,7 @@ class Theme:
 
 
 def get_theme_path(filename: str) -> Path:
-    return THEME_DIR / f'{secure_filename(filename)}.scss'
+    return THEME_DIR / f'{secure_filename(filename)}.scss'  # type: ignore[no-untyped-call]
 
 
 def theme_exists(filename: str) -> bool:

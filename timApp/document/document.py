@@ -1009,7 +1009,7 @@ class Document:
         else:
             return self.par_ids
 
-    def ensure_par_ids_loaded(self):
+    def ensure_par_ids_loaded(self) -> None:
         if self.par_ids is None or self.is_incomplete_cache:
             self._load_par_ids()
 

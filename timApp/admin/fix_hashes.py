@@ -2,7 +2,7 @@ from timApp.admin.util import process_items, create_argparser, DryrunnableArgume
 from timApp.document.docinfo import DocInfo
 
 
-def fix_hashes(doc: DocInfo, args: DryrunnableArguments):
+def fix_hashes(doc: DocInfo, args: DryrunnableArguments) -> int:
     """Due to bugs, the computed hashes in a paragraph file or paragraph list may be incorrect.
     This fixes them.
     :param doc: The document to fix.
@@ -11,7 +11,8 @@ def fix_hashes(doc: DocInfo, args: DryrunnableArguments):
     d = doc.document
     d.ensure_par_ids_loaded()
     errors = 0
-    for p, list_hash in zip(d, d.par_hashes):
+    assert d.par_hashes is not None
+    for p, list_hash in zip(d.get_paragraphs(), d.par_hashes):
         old_hash = p.get_hash()
         p._compute_hash()
         new_hash = p.get_hash()

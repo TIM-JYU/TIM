@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 from itertools import accumulate
-from typing import List, Iterable, Generator, Tuple, Optional
+from typing import List, Iterable, Generator, Tuple, Optional, TYPE_CHECKING
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
 from timApp.item.item import Item
-from timApp.notification.notification import NotificationType, Notification
+from timApp.notification.notification import Notification
 from timApp.timdb.sqa import db
-from timApp.timtypes import TranslationType
 from timApp.util.utils import get_current_time
+
+if TYPE_CHECKING:
+    from timApp.document.translation.translation import Translation
 
 
 class DocInfo(Item):
@@ -70,12 +74,12 @@ class DocInfo(Item):
         return self.block.modified if self.block else None
 
     @property
-    def translations(self) -> List[TranslationType]:
+    def translations(self) -> List[Translation]:
         """Returns the translations of the document. NOTE: The list *includes* the document itself."""
         raise NotImplementedError
 
     @property
-    def lang_id(self) -> str:
+    def lang_id(self) -> Optional[str]:
         raise NotImplementedError
 
     def update_last_modified(self):

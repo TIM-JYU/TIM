@@ -5,7 +5,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.timdb.exceptions import InvalidReferenceException
 
 
-def fix_settings_references(d: DocInfo, args: DryrunnableArguments):
+def fix_settings_references(d: DocInfo, args: DryrunnableArguments) -> int:
     num_found = 0
     for _, p in enum_pars(d):
         if p.is_reference() and not p.is_translation():

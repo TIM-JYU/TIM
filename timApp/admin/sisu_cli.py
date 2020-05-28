@@ -13,7 +13,7 @@ sisu_cli = AppGroup('sisu')
 
 
 @sisu_cli.command('createdocs')
-def create_docs():
+def create_docs() -> None:
     all_sisu_groups = get_sisu_groups_by_filter(true())
     for g in all_sisu_groups:
         print(f'Refreshing {g.external_id.external_id}')
@@ -23,7 +23,7 @@ def create_docs():
 
 @sisu_cli.command('sendmail')
 @click.argument('courses', nargs=-1)
-def send_course_mail_cli(courses: List[str]):
+def send_course_mail_cli(courses: List[str]) -> None:
     for course in courses:
         ug = UserGroup.get_by_external_id(f'{course}-responsible-teachers')
         if not ug:
@@ -31,6 +31,7 @@ def send_course_mail_cli(courses: List[str]):
                   'Make sure you typed the course in format "jy-CUR-xxxx".')
             return
         p = parse_sisu_group_display_name(ug.display_name)
+        assert p is not None
         for u in ug.users:
             print(f'Sending mail to {u.real_name} {u.email}')
             send_course_group_mail(p, u)

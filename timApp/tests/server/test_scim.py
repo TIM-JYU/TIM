@@ -62,7 +62,7 @@ class ScimTest(TimRouteTest):
                 'displayName': display_name,
                 'members': add_name_parts([
                     {'value': 'sisuuser', 'display': 'Sisu User', 'email': 'x@example.com'},
-                    {'value': 'sisuuser3', 'display': 'Sisu User 3'},
+                    {'value': 'sisuuser3', 'display': 'Sisu User 3', 'email': 'x3@example.com'},
                 ]),
             }, auth=a,
             expect_status=201,
@@ -87,7 +87,7 @@ class ScimTest(TimRouteTest):
                 'displayName': display_name,
                 'members': add_name_parts([
                     {'value': 'sisuuser', 'display': 'Sisu User', 'email': 'x@example.com'},
-                    {'value': 'sisuuser3', 'display': 'Sisu User 3'},
+                    {'value': 'sisuuser3', 'display': 'Sisu User 3', 'email': 'x3@example.com'},
                 ]),
             }, auth=a,
             expect_status=409,
@@ -204,10 +204,12 @@ class ScimTest(TimRouteTest):
                     {
                         'display': 'Sisu User',
                         'value': 'sisuuser',
+                        'email': 'x@example.com',
                     },
                     {
                         'display': 'Sisu User 2',
                         'value': 'sisuuser2',
+                        'email': 'x2@example.com',
                     },
                 ]),
             }, auth=a,
@@ -283,8 +285,8 @@ class ScimTest(TimRouteTest):
                 'externalId': eid,
                 'displayName': display_name,
                 'members': add_name_parts([
-                    {'value': 'sisuuser', 'display': 'Sisu User'},
-                    {'value': 'sisuuser3', 'display': 'Sisu User 3'},
+                    {'value': 'sisuuser', 'display': 'Sisu User', 'email': 'x@example.com',},
+                    {'value': 'sisuuser3', 'display': 'Sisu User 3', 'email': 'x3@example.com',},
                 ]),
             }, auth=a,
             expect_status=201,
@@ -320,18 +322,21 @@ class ScimTest(TimRouteTest):
                         "display": "Some User",
                         "$ref": "https://timdevs02-5.it.jyu.fi/scim/Users/someuser1",
                         "type": "User",
+                        'email': 'someuser1@example.com',
                     },
                     {
                         "value": "someuser2",
                         "display": "Some User",
                         "$ref": "https://timdevs02-5.it.jyu.fi/scim/Users/someuser2",
                         "type": "User",
+                        'email': 'someuser2@example.com',
                     },
                     {
                         "value": "someuser3",
                         "display": "Some User",
                         "$ref": "https://timdevs02-5.it.jyu.fi/scim/Users/someuser3",
                         "type": "User",
+                        'email': 'someuser3@example.com',
                     }
                 ])
             }, auth=a,
@@ -361,13 +366,14 @@ class ScimTest(TimRouteTest):
                 'externalId': 'jy-CUR-1236-teachers',
                 'displayName': 'ITKP106 2019-09-09--2019-12-20: Luento 1: Opettajat',
                 'members': add_name_parts([
-                    {'value': 'someone', 'display': 'Sisu User'},
+                    {'value': 'someone', 'display': 'Sisu User', 'email': 'someone@example.com'},
                 ]),
             }, auth=a,
             expect_status=201,
         )
         r.pop('meta')
         r['members'][0]['display'] = 'Changed Name'
+        r['members'][0]['email'] = 'someone@example.com'
         add_name_parts(r['members'])
         self.json_put(
             '/scim/Groups/jy-CUR-1236-teachers',

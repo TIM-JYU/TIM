@@ -23,7 +23,7 @@ class Preferences:
     css_combined: str = attr.ib(init=False)
 
     @staticmethod
-    def from_json(j):
+    def from_json(j: Dict) -> 'Preferences':
         j.pop('css_combined', None)
         return Preferences(**j)
 

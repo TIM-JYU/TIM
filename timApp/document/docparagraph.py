@@ -773,7 +773,7 @@ class DocParagraph:
         self.__data['md'] = new_md
         self._compute_hash()
 
-    def _compute_hash(self):
+    def _compute_hash(self) -> None:
         self.__data['t'] = hashfunc(self.get_markdown(), self.get_attrs())
 
     def set_attr(self, attr_name: str, attr_val: Any):
@@ -873,11 +873,11 @@ class DocParagraph:
             par_id=p.get_id(),
         )
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clears the HTML cache of this paragraph."""
         self.__data.pop('h', None)
 
-    def save(self, add=False):
+    def save(self, add: bool=False) -> None:
         """Performs a save operation for this paragraph.
 
         This updates the document version and paragraph list appropriately.

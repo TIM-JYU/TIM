@@ -87,7 +87,7 @@ def generate_theme_scss(themes: List[Theme], gen_dir: Path) -> None:
             f.write(f'@include {t.filename};\n')
 
 
-def get_combined_css_filename(themes: List[Theme]):
+def get_combined_css_filename(themes: List[Theme]) -> str:
     """Returns the combined file name based on the given list of theme names.
 
     :param themes: The list of themes.

@@ -9,7 +9,7 @@ from timApp.admin.util import DryrunnableArguments, enum_pars, process_items, cr
 from timApp.document.docinfo import DocInfo
 
 
-def fix_multiline_endings(doc: DocInfo, args: DryrunnableArguments):
+def fix_multiline_endings(doc: DocInfo, args: DryrunnableArguments) -> int:
     found = 0
     for d, p in enum_pars(doc):
         if (p.is_setting() and not p.is_reference()) or p.is_plugin():

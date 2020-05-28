@@ -67,7 +67,7 @@ def get_current_user_group_object():
     return get_current_user_object().get_personal_group()
 
 
-def logged_in():
+def logged_in() -> bool:
     return get_current_user_id() != 0
 
 

@@ -9,7 +9,7 @@ item_cli = AppGroup('item')
 
 
 @item_cli.command('cleanup_default_rights_names')
-def cleanup_default_right_doc_names():
+def cleanup_default_right_doc_names() -> None:
     bs: List[Block] = Block.query.filter(
         Block.description.in_(
             [

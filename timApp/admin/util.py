@@ -1,6 +1,6 @@
 import sys
 from argparse import ArgumentParser
-from typing import Generator, Tuple, Optional, Callable, Union
+from typing import Generator, Tuple, Optional, Callable, Union, TypeVar, Any, Iterable, Set
 
 import attr
 import sre_constants
@@ -35,7 +35,7 @@ class DryrunnableArguments(BasicArguments, DryrunnableOnly):
 
 
 def enum_docs(folder: Optional[Folder] = None) -> Generator[DocInfo, None, None]:
-    visited_docs = set()
+    visited_docs: Set[int] = set()
     admin_id = UserGroup.get_admin_group().id
     if not folder:
         folder = Folder.get_root()
@@ -48,7 +48,7 @@ def enum_docs(folder: Optional[Folder] = None) -> Generator[DocInfo, None, None]
             yield t
 
 
-def iterate_pars_skip_exceptions(d: DocInfo):
+def iterate_pars_skip_exceptions(d: DocInfo) -> Generator[DocParagraph, None, None]:
     i = d.document.__iter__()
     while True:
         try:
@@ -61,7 +61,7 @@ def iterate_pars_skip_exceptions(d: DocInfo):
 
 def enum_pars(item: Union[Folder, DocInfo, None] = None) -> Generator[Tuple[DocInfo, DocParagraph], None, None]:
     if isinstance(item, Folder) or item is None:
-        collection = enum_docs(item)
+        collection: Iterable[DocInfo] = enum_docs(item)
     else:
         item.document.modifier_group_id = UserGroup.get_admin_group().id
         collection = [item]
@@ -70,9 +70,12 @@ def enum_pars(item: Union[Folder, DocInfo, None] = None) -> Generator[Tuple[DocI
             yield d, p
 
 
-def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: ArgumentParser):
-    opts: Union[BasicArguments, DryrunnableArguments] = parser.parse_args()
-    with app.app_context():
+T = TypeVar('T', bound=BasicArguments)
+
+
+def process_items(func: Callable[[DocInfo, T], int], parser: ArgumentParser) -> None:
+    opts: Any = parser.parse_args()
+    with app.app_context():  # type: ignore[no-untyped-call]
         doc_to_fix = DocEntry.find_by_path(opts.doc, fallback_to_id=True) if opts.doc is not None else None
         folder_to_fix = Folder.find_by_path(opts.folder, fallback_to_id=True) if opts.folder is not None else None
         if opts.doc is not None and not doc_to_fix:
@@ -84,7 +87,7 @@ def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: Argume
         total_pars = 0
         total_docs = 0
         if doc_to_fix:
-            docs = [doc_to_fix]
+            docs: Iterable[DocInfo] = [doc_to_fix]
         elif folder_to_fix:
             if opts.progress:
                 print(f'Processing paragraphs in folder {folder_to_fix.path}')
@@ -112,7 +115,7 @@ def process_items(func: Callable[[DocInfo, BasicArguments], int], parser: Argume
             db.session.commit()
 
 
-def create_argparser(description: str, readonly=False):
+def create_argparser(description: str, readonly: bool=False) -> ArgumentParser:
     parser = ArgumentParser(description=description)
     group_item = parser.add_mutually_exclusive_group(required=True)
     group_item.add_argument('--doc', help='doc id or path to process')
@@ -136,5 +139,5 @@ def get_url_for_match(args: BasicArguments, d: DocInfo, p: DocParagraph) -> str:
     return f'{host}/{args.urlpath}/{d.path}#{p.get_id()}'
 
 
-def print_match(args: DryrunnableArguments, d: DocInfo, p: DocParagraph, msg: str):
+def print_match(args: DryrunnableArguments, d: DocInfo, p: DocParagraph, msg: str) -> None:
     print(f'{"Found" if args.dryrun else "Fixed"} {get_url_for_match(args, d, p)}: {msg}')

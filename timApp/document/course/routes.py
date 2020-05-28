@@ -2,7 +2,7 @@
 Contains course related routes.
 """
 
-from flask import Blueprint, current_app
+from flask import Blueprint, current_app, Response
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.sessioninfo import get_current_user_object
@@ -17,7 +17,7 @@ course_blueprint = Blueprint('course',
 
 
 @course_blueprint.route("/settings")
-def get_course_settings():
+def get_course_settings() -> Response:
     """
     Get course settings from the designated settings document.
     :return: Settings from the course settings.
@@ -29,7 +29,7 @@ def get_course_settings():
 
 
 @course_blueprint.route("/documents/<string:foldername>")
-def get_documents_from_bookmark_folder(foldername):
+def get_documents_from_bookmark_folder(foldername: str) -> Response:
     """
     Gets documents and their tags based on a bookmark folder name.
     :param foldername:

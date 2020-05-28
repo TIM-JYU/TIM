@@ -134,7 +134,7 @@ def create_group(groupname):
     return json_response(doc)
 
 
-def add_group_infofield_template(doc):
+def add_group_infofield_template(doc: DocInfo) -> None:
     text = '''
 ## Omia kenttiä {defaultplugin="textfield" readonly="view" .hidden-print}
 {#info autosave: true #}    
