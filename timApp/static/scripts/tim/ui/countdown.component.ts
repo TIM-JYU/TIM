@@ -9,87 +9,87 @@ import {HttpClient} from "@angular/common/http";
 const DAY_LIMIT = 24 * 60 * 60;
 
 @Component({
-  selector: "tim-countdown",
-  template: `
-      {{this.formatString(template, timeLeft)}}
-  `,
+    selector: "tim-countdown",
+    template: `
+        {{formatString(template, timeLeft)}}
+    `,
 })
 export class CountdownComponent implements OnInit {
-  @Input() endTime?: string;
-  @Input() seconds?: number;
-  @Input() displayUnits: humanizeDuration.Unit[] = [];
-  @Input() noAutoStart: boolean = false;
-  @Input() template: string = "{0}";
-  @Input() lowTimeThreshold: number = -1;
-  @Output() onFinish: EventEmitter<void> = new EventEmitter<void>();
-  @Output() onLowTime: EventEmitter<void> = new EventEmitter<void>();
+    @Input() endTime?: string;
+    @Input() seconds?: number;
+    @Input() displayUnits: humanizeDuration.Unit[] = [];
+    @Input() noAutoStart: boolean = false;
+    @Input() template: string = "{0}";
+    @Input() lowTimeThreshold: number = -1;
+    @Output() onFinish: EventEmitter<void> = new EventEmitter<void>();
+    @Output() onLowTime: EventEmitter<void> = new EventEmitter<void>();
 
-  isLowTime = false;
-  currentCountdown = 0;
-  locale = Users.getCurrentLanguage();
-  currentInterval?: Timeout;
-  formatString = formatString;
+    isLowTime = false;
+    currentCountdown = 0;
+    locale = Users.getCurrentLanguage();
+    currentInterval?: Timeout;
+    formatString = formatString;
 
-  constructor(private http: HttpClient) {
-  }
-
-  get timeLeft() {
-    let prefix = "";
-    let time = Math.max(this.currentCountdown, 0);
-    if (this.currentCountdown > DAY_LIMIT && this.displayUnits.length != 0) {
-      prefix = humanizeDuration(this.currentCountdown * 1000, {units: this.displayUnits, round: true, language: this.locale}) + " + ";
-      time %= DAY_LIMIT;
+    constructor(private http: HttpClient) {
     }
-    return `${prefix}${secondsToHHMMSS(time)}`;
-  }
 
-  private async getCountdownStart() {
-    if (this.seconds) {
-      return this.seconds;
+    get timeLeft() {
+        let prefix = "";
+        let time = Math.max(this.currentCountdown, 0);
+        if (this.currentCountdown > DAY_LIMIT && this.displayUnits.length != 0) {
+            prefix = humanizeDuration(this.currentCountdown * 1000, {units: this.displayUnits, round: true, language: this.locale}) + " + ";
+            time %= DAY_LIMIT;
+        }
+        return `${prefix}${secondsToHHMMSS(time)}`;
     }
-    if (this.endTime) {
-      const serverTime = await to2(this.http.get<{time: moment.Moment}>("/time").toPromise());
-      if (!serverTime.ok) {
+
+    private async getCountdownStart() {
+        if (this.seconds) {
+            return this.seconds;
+        }
+        if (this.endTime) {
+            const serverTime = await to2(this.http.get<{time: moment.Moment}>("/time").toPromise());
+            if (!serverTime.ok) {
+                return 0;
+            }
+            return moment.utc(this.endTime).diff(serverTime.result.time.utc(), "seconds");
+        }
         return 0;
-      }
-      return moment.utc(this.endTime).diff(serverTime.result.time.utc(), "seconds");
     }
-    return 0;
-  }
 
-  ngOnInit() {
-    if (this.noAutoStart) { return; }
-    this.start();
-  }
-
-  async start() {
-    if (this.currentInterval) { return; }
-    this.currentCountdown = await this.getCountdownStart();
-    if (this.checkCountdown()) { return; }
-    this.currentInterval = setInterval(() => this.checkCountdown(), 1000);
-  }
-
-  stop() {
-    if (!this.currentInterval) { return; }
-    clearInterval(this.currentInterval);
-  }
-
-  reset() {
-    this.currentInterval = undefined;
-    this.isLowTime = false;
-  }
-
-  private checkCountdown() {
-    this.currentCountdown--;
-    const timeEnded = this.currentCountdown < 0;
-    if (!this.isLowTime && this.currentCountdown < this.lowTimeThreshold) {
-      this.onLowTime.emit();
-      this.isLowTime = true;
+    ngOnInit() {
+        if (this.noAutoStart) { return; }
+        this.start();
     }
-    if (timeEnded) {
-      this.onFinish.emit();
-      this.stop();
+
+    async start() {
+        if (this.currentInterval) { return; }
+        this.currentCountdown = await this.getCountdownStart();
+        if (this.checkCountdown()) { return; }
+        this.currentInterval = setInterval(() => this.checkCountdown(), 1000);
     }
-    return timeEnded;
-  }
+
+    stop() {
+        if (!this.currentInterval) { return; }
+        clearInterval(this.currentInterval);
+    }
+
+    reset() {
+        this.currentInterval = undefined;
+        this.isLowTime = false;
+    }
+
+    private checkCountdown() {
+        this.currentCountdown--;
+        const timeEnded = this.currentCountdown < 0;
+        if (!this.isLowTime && this.currentCountdown < this.lowTimeThreshold) {
+            this.onLowTime.emit();
+            this.isLowTime = true;
+        }
+        if (timeEnded) {
+            this.onFinish.emit();
+            this.stop();
+        }
+        return timeEnded;
+    }
 }
