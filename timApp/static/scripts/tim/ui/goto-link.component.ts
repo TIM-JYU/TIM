@@ -4,7 +4,7 @@ import {formatString, to2} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
 import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
-import {TimeLeftComponent} from "tim/ui/time-left.component";
+import {CountdownComponent} from "tim/ui/countdown.component";
 import {HttpClient} from "@angular/common/http";
 
 interface IViewAccessStatus {
@@ -46,7 +46,7 @@ const VIEW_PATH = "/view/";
                 </span>
             </ng-container>
             <ng-container *ngIf="isCountdown">
-                <tim-time-left [template]="countdownText" [countdown]="countDown" (finishCallback)="startGoto()" [displayUnits]="[]" #timeLeftComponent></tim-time-left>
+                <tim-countdown [template]="countdownText" [seconds]="countDown" (finishCallback)="startGoto()" #timeLeftComponent></tim-countdown>
                 <ng-template i18n="@@gotoOpensIn">Opens in {{"{"}}0{{"}"}}.</ng-template>
             </ng-container>
             <ng-container *ngIf="isGoing">
@@ -63,7 +63,7 @@ const VIEW_PATH = "/view/";
 export class GotoLinkComponent {
     @Input() href = "";
     @Input() waitText?: string;
-    @Input() countdownText?: string = $localize `:@@gotoOpensIn:Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
+    @Input() countdownText: string = $localize `:@@gotoOpensIn:Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
     @Input() unauthorizedText?: string;
     @Input() pastDueText?: string;
     @Input() timeLang?: string;
@@ -73,7 +73,7 @@ export class GotoLinkComponent {
     @Input() target = "_self";
     @Input() openAt?: string;
     @Input() closeAt?: string;
-    @ViewChild(TimeLeftComponent) timeLeftComponent!: TimeLeftComponent;
+    @ViewChild(CountdownComponent) timeLeftComponent!: CountdownComponent;
     countDown = 0;
     pastDue = 0;
     linkDisabled = false;
