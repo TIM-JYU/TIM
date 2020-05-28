@@ -378,7 +378,7 @@ function makeTemplate() {
                       ng-model="$ctrl.usercode"
                       ng-trim="false"
                       ng-attr-placeholder="{{$ctrl.placeholder}}" 
-                    ng-keypress="$ctrl.textChanged()">
+                    ng-change="$ctrl.textChanged()">
             </textarea>
             </div>
             <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
@@ -992,9 +992,13 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     textChanged(): void {
-        if(!this.edited){
+        const nowUnsaved = this.isUnSaved();
+        if (!this.edited && nowUnsaved) {
             this.edited = true;
             this.updateListeners(ChangeType.Modified);
+        } else if (this.edited && !nowUnsaved) {
+            this.edited = false;
+            this.updateListeners(ChangeType.Saved);
         }
     }
 
@@ -3039,7 +3043,8 @@ csApp.component("csTextRunner", {
            ng-model="$ctrl.usercode"
            ng-trim="false"
            ng-attr-placeholder="{{$ctrl.placeholder}}"
-           ng-keypress="[$ctrl.runCodeIfCR($event), $ctrl.textChanged()]"/>
+           ng-change="$ctrl.textChanged()"
+           ng-keypress="$ctrl.runCodeIfCR($event)"/>
     <button ng-if="::$ctrl.isRun"
             ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.preventSave"
             class = "timButton"
