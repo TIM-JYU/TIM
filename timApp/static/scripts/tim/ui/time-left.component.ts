@@ -8,6 +8,7 @@ import {showMessageDialog} from "tim/ui/dialog";
       Time left: <tim-countdown [displayUnits]="['d']" [endTime]="endTime" (finishCallback)="onTimeUp()"></tim-countdown>
     </span>
   `,
+  styleUrls: ["./time-left.component.scss"],
 })
 export class TimeLeftComponent implements OnInit {
   @Input() endTime?: string;

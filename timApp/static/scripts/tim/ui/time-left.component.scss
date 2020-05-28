@@ -1,0 +1,13 @@
+span.lowTime {
+  font-size: 1.5em;
+  line-height: 1.5em;
+  animation-name: low-time-anim;
+  animation-duration: 500ms;
+  animation-iteration-count: infinite;
+  animation-direction: alternate-reverse;
+}
+
+@keyframes low-time-anim {
+  from { background-color: grey; }
+  to { background-color: red; }
+}
