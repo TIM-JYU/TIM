@@ -21,7 +21,7 @@ $right-ratio: 100% * ($right-side-columns/$grid-columns);
 
 .right-fixed-side {
     @extend .fixed-side;
-    min-width: 10em;
+    padding-right: 1em;
     right: 0;
 }
 
