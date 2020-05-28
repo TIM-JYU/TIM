@@ -1,11 +1,10 @@
 import {Component, Input} from "@angular/core";
 import moment, {Moment} from "moment";
-import {$http} from "tim/util/ngimport";
-import {secondsToHHMMSS, to, formatString} from "tim/util/utils";
+import {formatString, to2} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
 import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
-
+import {HttpClient} from "@angular/common/http";
 
 interface IViewAccessStatus {
     can_access: boolean;
@@ -46,8 +45,8 @@ const VIEW_PATH = "/view/";
                 </span>
             </ng-container>
             <ng-container *ngIf="isCountdown">
-                <ng-container *ngIf="countdownText else defaultCountdownText">{{formatString(countdownText, countdownTime)}}</ng-container>
-                <ng-template #defaultCountdownText i18n>Opens in {{countdownTime}}.</ng-template>
+                <tim-countdown [template]="countdownText" [seconds]="countDown" (onFinish)="startGoto()"></tim-countdown>
+                <ng-template i18n="@@gotoOpensIn">Opens in {{"{"}}0{{"}"}}.</ng-template>
             </ng-container>
             <ng-container *ngIf="isGoing">
                 <tim-loading></tim-loading>
@@ -63,7 +62,7 @@ const VIEW_PATH = "/view/";
 export class GotoLinkComponent {
     @Input() href = "";
     @Input() waitText?: string;
-    @Input() countdownText?: string;
+    @Input() countdownText: string = $localize `:@@gotoOpensIn:Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
     @Input() unauthorizedText?: string;
     @Input() pastDueText?: string;
     @Input() timeLang?: string;
@@ -79,6 +78,9 @@ export class GotoLinkComponent {
     linkState = GotoLinkState.Ready;
 
     formatString = formatString;
+
+    constructor(private http: HttpClient) {
+    }
 
     get isCountdown() {
         return this.linkState == GotoLinkState.Countdown;
@@ -96,10 +98,6 @@ export class GotoLinkComponent {
         return this.linkState == GotoLinkState.Expired;
     }
 
-    get countdownTime() {
-        return secondsToHHMMSS(this.countDown);
-    }
-
     get pastDueTime() {
         return humanizeDuration(this.pastDue * 1000, {language: this.timeLang ?? Users.getCurrentLanguage()});
     }
@@ -111,9 +109,9 @@ export class GotoLinkComponent {
         // If href points to a valid TIM document, check permissions
         if (url.hostname == window.location.hostname && path.startsWith(VIEW_PATH)) {
             const docPath = path.substring(VIEW_PATH.length);
-            const accessInfo = await to($http.get<IViewAccessStatus>(`/doc_view_info/${docPath}`));
+            const accessInfo = await to2(this.http.get<IViewAccessStatus>(`/docViewInfo/${docPath}`).toPromise());
             if (accessInfo.ok) {
-                return {unauthorized: !accessInfo.result.data.can_access, access: accessInfo.result.data.right};
+                return {unauthorized: !accessInfo.result.can_access, access: accessInfo.result.right};
             }
         }
         return {unauthorized: false, access: undefined};
@@ -146,13 +144,13 @@ export class GotoLinkComponent {
 
         let curTime = moment();
         if (closeTime || openTime) {
-            const serverTime = await to($http.get<{time: number}>("/time"));
+            const serverTime = await to2(this.http.get<{time: Moment}>("/time").toPromise());
             // Fail silently here and hope the user clicks again so it can retry
             if (!serverTime.ok) {
                 this.linkDisabled = false;
                 return;
             }
-            curTime = moment.utc(serverTime.result.data.time);
+            curTime = serverTime.result.time.utc();
         }
 
         if (closeTime?.isValid() && closeTime.isBefore(curTime)) {
@@ -177,14 +175,6 @@ export class GotoLinkComponent {
         // Allow clicking, but do nothing reasonable...
         this.linkDisabled = false;
         this.linkState = GotoLinkState.Countdown;
-
-        const timer = setInterval(() => {
-            this.countDown--;
-            if (this.countDown <= 0) {
-                clearInterval(timer);
-                this.startGoto();
-            }
-        }, 1000);
     }
 
     startReset(resetTime: number) {

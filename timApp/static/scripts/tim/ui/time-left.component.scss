@@ -1,0 +1,28 @@
+:host {
+  padding-right: 1em;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  user-select: none;
+}
+
+span.low-time {
+  font-size: 1.1em;
+  line-height: 1.4em;
+  margin-top: 0.3em;
+  animation-name: low-time-anim;
+  animation-duration: 500ms;
+  animation-iteration-count: infinite;
+  animation-direction: alternate-reverse;
+}
+
+span.low-time-warn {
+  margin-top: 2px;
+  margin-bottom: 0;
+  padding: 3px;
+}
+
+@keyframes low-time-anim {
+  from { background-color: grey; }
+  to { background-color: red; }
+}

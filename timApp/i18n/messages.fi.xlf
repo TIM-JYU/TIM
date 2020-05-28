@@ -90,9 +90,9 @@
           <context context-type="linenumber">19</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="80eb42e163eda0e3271ce171ba1242b953940f9c" datatype="html">
-        <source>Opens in <x id="INTERPOLATION" equiv-text="{{countdownTime}}"/>.</source>
-        <target state="translated">Aikaa avautumiseen: <x id="INTERPOLATION" equiv-text="{{countdownTime}}"/>.</target>
+      <trans-unit id="gotoOpensIn" datatype="html">
+        <source>Opens in <x id="INTERPOLATION" equiv-text="{{&quot;{&quot;}}"/>0<x id="INTERPOLATION_1" equiv-text="{{&quot;}&quot;}}"/>.</source>
+        <target state="translated">Aikaa avautumiseen: <x id="INTERPOLATION" equiv-text="{{&quot;{&quot;}}"/>0<x id="INTERPOLATION_1" equiv-text="{{&quot;}&quot;}}"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">24</context>
@@ -104,6 +104,34 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">30</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="861d8d6e7bd74a6f315ef763c45efd53231a1714" datatype="html">
+        <source>
+      Time left: <x id="START_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;tim-countdown>"/><x id="CLOSE_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;/tim-countdown>"/>
+    </source>
+        <target state="translated">
+      Aikaa jäljellä: <x id="START_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;tim-countdown>"/><x id="CLOSE_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;/tim-countdown>"/>
+    </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
+          <context context-type="linenumber">2</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="ff2e81cf3f1e141fa23c5985cd726c363e67c1e7" datatype="html">
+        <source>The time is about to run out, remember to save your answers.</source>
+        <target state="translated">Aika on loppumassa, muista tallentaa vastauksesi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
+          <context context-type="linenumber">7</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="timeUpMessage" datatype="html">
+        <source>Time is up. You can still save answers for a while, but any new saves will be marked as late.</source>
+        <target state="translated">Aikasi loppui. Voit tallentaa vastauksia jonkun aikaa, mutta uudet talletukset merkataan myöhästyneiksi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
+          <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6d6968cb33ce9daad70a5f0e4832d46061332d09" datatype="html">

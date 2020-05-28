@@ -1107,10 +1107,6 @@ export class ViewCtrl implements IController {
         const key = prefix + a.annotation.id;
         this.anns.delete(key);
     }
-
-    notifyTimeup() {
-        showMessageDialog("Time is up. You can still save answers for a while, but they will be marked invalid by default.");
-    }
 }
 
 class EntityRegistry<K, V> {
