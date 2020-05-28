@@ -206,7 +206,7 @@ def par_info(doc_id, par_id):
     })
 
 
-@view_page.route("/doc_view_info/<path:doc_name>")
+@view_page.route("/docViewInfo/<path:doc_name>")
 def doc_access_info(doc_name):
     doc_info = DocEntry.find_by_path(doc_name, fallback_to_id=True)
     if not doc_info:

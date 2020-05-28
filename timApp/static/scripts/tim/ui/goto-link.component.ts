@@ -109,7 +109,7 @@ export class GotoLinkComponent {
         // If href points to a valid TIM document, check permissions
         if (url.hostname == window.location.hostname && path.startsWith(VIEW_PATH)) {
             const docPath = path.substring(VIEW_PATH.length);
-            const accessInfo = await to2(this.http.get<IViewAccessStatus>(`/doc_view_info/${docPath}`).toPromise());
+            const accessInfo = await to2(this.http.get<IViewAccessStatus>(`/docViewInfo/${docPath}`).toPromise());
             if (accessInfo.ok) {
                 return {unauthorized: !accessInfo.result.can_access, access: accessInfo.result.right};
             }
