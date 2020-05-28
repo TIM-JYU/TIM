@@ -12,6 +12,8 @@ export const UserFieldData = t.intersection([
         }),
     })]);
 
+// export type UserFields = t.type({id: t.Int, fields: t.string});
+
 export type UserFieldDataT = t.TypeOf<typeof UserFieldData>;
 
 export const AliasData = t.record(t.string, t.string);

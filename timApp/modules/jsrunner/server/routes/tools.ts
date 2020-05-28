@@ -640,6 +640,7 @@ export class GTools extends ToolsBase {
         markup: IJsRunnerMarkup,
         aliases: AliasDataT,
         tools: Tools,
+        public saveUsersFields: any[],
     ) {
         super(currDoc, markup, aliases);
         this.tools = tools;

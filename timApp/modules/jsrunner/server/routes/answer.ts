@@ -70,7 +70,7 @@ function runner(d: IRunnerData): RunnerResult {
     const currDoc = d.currDoc;
     const markup = d.markup;
     const aliases = d.aliases;
-    const saveUsersFields = [];
+    const saveUsersFields: any[] = [];
     // const statCounters: { [fieldname: string]: StatCounter } = {};
     let output = "";
     const errors = [];
@@ -81,7 +81,7 @@ function runner(d: IRunnerData): RunnerResult {
         const dummyUser = {user: {id: -1 as Branded<number, IntBrand>, name: "pre/post", real_name: "", email: ""},
                        fields: {}, styles: {}};
         const dummyTools = new Tools(dummyUser, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
-        const gtools = new GTools(currDoc, markup, aliases, dummyTools); // create global tools
+        const gtools = new GTools(currDoc, markup, aliases, dummyTools, saveUsersFields); // create global tools
         // Fake parameters hide the outer local variables so user script won't accidentally touch them.
         /* eslint-disable no-shadow,no-eval */
         function runProgram(program: string, pname: string, tools: ToolsBase, saveUsersFields?: never, output?: never, errors?: never,
