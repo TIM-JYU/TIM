@@ -65,7 +65,7 @@ export class CountdownComponent implements OnInit {
     async start() {
         if (this.currentInterval) { return; }
         this.currentCountdown = await this.getCountdownStart();
-        if (this.checkCountdown()) { return; }
+        if (this.checkCountdown(false)) { return; }
         this.currentInterval = setInterval(() => this.checkCountdown(), 1000);
     }
 
@@ -79,9 +79,11 @@ export class CountdownComponent implements OnInit {
         this.isLowTime = false;
     }
 
-    private checkCountdown() {
-        this.currentCountdown--;
-        const timeEnded = this.currentCountdown < 0;
+    private checkCountdown(count = true) {
+        if (count) {
+            this.currentCountdown--;
+        }
+        const timeEnded = this.currentCountdown <= 0;
         if (!this.isLowTime && this.currentCountdown < this.lowTimeThreshold) {
             this.onLowTime.emit();
             this.isLowTime = true;
