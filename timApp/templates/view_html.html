@@ -80,7 +80,7 @@
 
 {% block rightside %}
     {% if access.accessible_to %}
-        <tim-time-left ng-cloak end-time="{{ access.accessible_to }}"></tim-time-left>
+        <tim-time-left end-time="{{ access.accessible_to }}"></tim-time-left>
     {% endif %}
 
     {% if teacher_mode %}
