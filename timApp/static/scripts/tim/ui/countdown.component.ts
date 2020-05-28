@@ -11,9 +11,7 @@ const DAY_LIMIT = 24 * 60 * 60;
 @Component({
   selector: "tim-countdown",
   template: `
-    <ng-container>
       {{this.formatString(template, timeLeft)}}
-    </ng-container>
   `,
 })
 export class CountdownComponent implements OnInit {
@@ -60,9 +58,7 @@ export class CountdownComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (this.noAutoStart) {
-      return;
-    }
+    if (this.noAutoStart) { return; }
     this.start();
   }
 
