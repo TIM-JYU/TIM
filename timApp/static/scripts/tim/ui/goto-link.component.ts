@@ -1,10 +1,9 @@
-import {Component, Input, ViewChild} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import moment, {Moment} from "moment";
 import {formatString, to2} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
 import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
-import {CountdownComponent} from "tim/ui/countdown.component";
 import {HttpClient} from "@angular/common/http";
 
 interface IViewAccessStatus {
