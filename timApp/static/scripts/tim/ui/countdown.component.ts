@@ -23,7 +23,7 @@ export class CountdownComponent implements OnInit {
   @Input() noAutoStart: boolean = false;
   @Input() template: string = "{0}";
   @Input() lowTimeThreshold: number = -1;
-  @Output() finishCallback: EventEmitter<void> = new EventEmitter<void>();
+  @Output() onFinish: EventEmitter<void> = new EventEmitter<void>();
   @Output() onLowTime: EventEmitter<void> = new EventEmitter<void>();
 
   isLowTime = false;
@@ -37,7 +37,7 @@ export class CountdownComponent implements OnInit {
 
   get timeLeft() {
     let prefix = "";
-    let time = this.currentCountdown;
+    let time = Math.max(this.currentCountdown, 0);
     if (this.currentCountdown > DAY_LIMIT && this.displayUnits.length != 0) {
       prefix = humanizeDuration(this.currentCountdown * 1000, {units: this.displayUnits, round: true, language: this.locale}) + " + ";
       time %= DAY_LIMIT;
@@ -91,7 +91,8 @@ export class CountdownComponent implements OnInit {
       this.isLowTime = true;
     }
     if (timeEnded) {
-      this.finishCallback.emit();
+      this.onFinish.emit();
+      this.stop();
     }
     return timeEnded;
   }

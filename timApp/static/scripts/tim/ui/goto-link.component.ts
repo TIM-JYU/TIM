@@ -46,7 +46,7 @@ const VIEW_PATH = "/view/";
                 </span>
             </ng-container>
             <ng-container *ngIf="isCountdown">
-                <tim-countdown [template]="countdownText" [seconds]="countDown" (finishCallback)="startGoto()" #timeLeftComponent></tim-countdown>
+                <tim-countdown [template]="countdownText" [seconds]="countDown" (onFinish)="startGoto()" #timeLeftComponent></tim-countdown>
                 <ng-template i18n="@@gotoOpensIn">Opens in {{"{"}}0{{"}"}}.</ng-template>
             </ng-container>
             <ng-container *ngIf="isGoing">
