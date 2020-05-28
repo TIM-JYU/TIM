@@ -58,6 +58,8 @@ import {DialogContainerComponent} from "tim/ui/angulardialog/dialog-container.co
 import {AddMemberComponent} from "tim/ui/add-member.component";
 import {TimFooterComponent} from "tim/footer.component";
 import {SiteHeaderComponent} from "tim/header/site-header.component";
+import {TimeLeftComponent} from "tim/ui/time-left.component";
+import {CountdownComponent} from "tim/ui/countdown.component";
 import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 import {GotoLinkComponent} from "tim/ui/goto-link.component";
 import BackspaceDisabler from "backspace-disabler";
@@ -126,6 +128,8 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timSettings", SettingsComponent);
     doDowngrade(dg, "timAccessCountdown", AccessCountdownComponent);
     doDowngrade(dg, "timGotoLink", GotoLinkComponent);
+    doDowngrade(dg, "timTimeLeft", TimeLeftComponent);
+    doDowngrade(dg, "timCountdown", CountdownComponent);
     return dg;
 }
 

@@ -747,9 +747,6 @@ export function seconds2Time(seconds: number) {
 }
 
 export function secondsToHHMMSS(time: number) {
-    if (!time) {
-        return "";
-    }
     const {hours, minutes, seconds} = seconds2Time(time);
     const pad = (tt: number) => `${tt < 10 ? "0" : ""}${tt}`;
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;

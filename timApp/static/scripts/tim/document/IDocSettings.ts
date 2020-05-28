@@ -6,6 +6,10 @@ interface IMacros {
     stampformat?: string;
 }
 
+export interface ITimeLeftSettings {
+    lowTimeThreshold: number;
+}
+
 export interface ILoginHideSettings {
     hakaLogin?: boolean;
     emailLogin?: boolean;
@@ -25,4 +29,5 @@ export interface IDocSettings {
     form_mode?: boolean;
     hideBrowser?: boolean;
     login?: ILoginSettings;
+    timeLeft?: ITimeLeftSettings;
 }
