@@ -46,7 +46,7 @@ const VIEW_PATH = "/view/";
                 </span>
             </ng-container>
             <ng-container *ngIf="isCountdown">
-                <tim-countdown [template]="countdownText" [seconds]="countDown" (onFinish)="startGoto()" #timeLeftComponent></tim-countdown>
+                <tim-countdown [template]="countdownText" [seconds]="countDown" (onFinish)="startGoto()"></tim-countdown>
                 <ng-template i18n="@@gotoOpensIn">Opens in {{"{"}}0{{"}"}}.</ng-template>
             </ng-container>
             <ng-container *ngIf="isGoing">
@@ -73,7 +73,6 @@ export class GotoLinkComponent {
     @Input() target = "_self";
     @Input() openAt?: string;
     @Input() closeAt?: string;
-    @ViewChild(CountdownComponent) timeLeftComponent!: CountdownComponent;
     countDown = 0;
     pastDue = 0;
     linkDisabled = false;
