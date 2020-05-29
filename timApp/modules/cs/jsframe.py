@@ -45,6 +45,12 @@ class JSframe(Language):
         data = dict(self.query.jso["input"])
         if 'type' in data:
             del data['type']
+        try:
+            if self.query.jso['markup'].get('editMode', None):
+                result["nosave"] = True
+                result['markupSave'] = {'data': data.get('c')}
+        except (KeyError, ValueError):
+            pass
         result["save"] = data
         return 0, "saved", "", ""
 

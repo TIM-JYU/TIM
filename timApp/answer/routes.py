@@ -22,7 +22,7 @@ from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_common_answers, save_answer, get_all_answers, \
     valid_answers_query, valid_taskid_filter
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access, AccessDenied, \
-    verify_admin
+    verify_admin, verify_edit_access
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
     verify_view_access, get_plugin_from_request
@@ -654,6 +654,13 @@ def post_answer(plugintype: str, task_id_ext: str):
         if result['savedNew'] is not None and upload is not None:
             # Associate this answer with the upload entry
             upload.answer_id = result['savedNew']
+
+    if 'markupSave' in jsonresp:
+        verify_edit_access(d)
+        new_markup_values = jsonresp.get('markupSave', {})
+        # TODO
+        # for attr, val in new_markup_values.items():
+        #     plugin.set_value(attr,val)
 
     db.session.commit()
     try:
