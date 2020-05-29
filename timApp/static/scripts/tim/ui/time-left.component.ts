@@ -4,7 +4,7 @@ import {documentglobals} from "tim/util/globals";
 import {ITimeLeftSettings} from "tim/document/IDocSettings";
 
 const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
-    lowTimeThreshold: -1,
+    lowTimeThreshold: 60,
 };
 
 @Component({
