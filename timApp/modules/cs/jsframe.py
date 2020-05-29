@@ -200,12 +200,13 @@ class DrawIO(JSframe):
         ma["saveButton"] = ma.get("saveButton", "")
         # TODO: prevent user options if thereis
         templates = ma.get("templates", "")
-        try:
+        if isinstance(templates, str):
             templates = templates.replace('</mxlibrary>', '')
             templates = templates.replace('<mxlibrary>', '')
-            templates = json.loads(templates)
-        except (AttributeError, json.decoder.JSONDecodeError):
-            pass
+            try:
+                templates = json.loads(templates)
+            except json.decoder.JSONDecodeError:
+                pass
 
         ma["options"] = {'fullscreen': ma.get("fullscreen", True), 'templates': templates}
         super().modify_query()
