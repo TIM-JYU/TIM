@@ -12,35 +12,34 @@ from timApp.admin.associate_old_uploads import upload_regexes
 from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access, get_rights, get_doc_or_abort, \
     verify_teacher_access, verify_manage_access, verify_ownership, verify_seeanswers_access
-from timApp.document.post_process import post_process_pars
-from timApp.plugin.plugin import Plugin
-from timApp.timdb.dbaccess import get_timdb
+from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_current_user_group
+from timApp.bookmark.bookmarks import Bookmarks
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, get_duplicate_id_msg
 from timApp.document.editing.documenteditresult import DocumentEditResult
+from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
+from timApp.document.editing.proofread import proofread_pars, process_spelling_errors
 from timApp.document.exceptions import ValidationException, ValidationWarning
+from timApp.document.post_process import post_process_pars
 from timApp.document.preloadoption import PreloadOption
+from timApp.document.translation.synchronize_translations import synchronize_translations
 from timApp.document.version import Version
+from timApp.item.validation import validate_uploaded_document_content
 from timApp.markdown.markdownconverter import md_to_html
+from timApp.notification.notification import NotificationType
+from timApp.notification.notify import notify_doc_watchers
+from timApp.plugin.plugin import Plugin
+from timApp.plugin.qst.qst import question_convert_js_to_yaml
+from timApp.readmark.readings import mark_read
+from timApp.timdb.dbaccess import get_timdb
+from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile
 from timApp.util.flask.requesthelper import verify_json_params, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
-from timApp.notification.notify import notify_doc_watchers
-from timApp.plugin.qst.qst import question_convert_js_to_yaml
-from timApp.item.routes import get_module_ids
-from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_current_user_group
-from timApp.document.translation.synchronize_translations import synchronize_translations
-from timApp.bookmark.bookmarks import Bookmarks
-from timApp.document.docinfo import DocInfo
-from timApp.timdb.exceptions import TimDbException
-from timApp.document.docentry import DocEntry
-from timApp.notification.notification import NotificationType
-from timApp.readmark.readings import mark_read
-from timApp.timdb.sqa import db
 from timApp.util.utils import get_error_html
-from timApp.item.validation import validate_uploaded_document_content
-from timApp.document.editing.proofread import proofread_pars, process_spelling_errors
 
 edit_page = Blueprint('edit_page',
                       __name__,
@@ -836,24 +835,6 @@ def mark_translated_route(doc_id):
     return ok_response()
 
 
-def save_plugin(p: Plugin):
-    old_ver = p.par.doc.get_version()
-    p.save()
-    new_ver = p.par.doc.get_version()
-    if old_ver == new_ver:
-        return
-    edit_result = DocumentEditResult()
-    edit_result.changed.append(p.par)
-    docinfo = p.par.doc.get_docinfo()
-    docinfo.update_last_modified()
-    notify_doc_watchers(
-        docinfo,
-        p.to_paragraph().get_markdown(),
-        NotificationType.ParModified, par=p.par,
-        old_version=old_ver,
-    )
-
-
 @dataclass
 class drawIODataModel:
     data: str
@@ -875,6 +856,6 @@ def set_drawio_base(args: drawIODataModel):
     if plug.type != 'csPlugin' or plug.values.get('type','') != 'drawio':
         return abort(400, "Invalid target")
     plug.values['data'] = data
-    save_plugin(plug)
+    plug.save()
     db.session.commit()
     return ok_response()
