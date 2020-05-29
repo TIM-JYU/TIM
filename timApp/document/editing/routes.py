@@ -1,5 +1,6 @@
 """Routes for editing a document."""
 import re
+from dataclasses import dataclass
 from typing import List, Optional
 
 from flask import Blueprint, render_template
@@ -12,6 +13,7 @@ from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access, get_rights, get_doc_or_abort, \
     verify_teacher_access, verify_manage_access, verify_ownership, verify_seeanswers_access
 from timApp.document.post_process import post_process_pars
+from timApp.plugin.plugin import Plugin
 from timApp.timdb.dbaccess import get_timdb
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, get_duplicate_id_msg
@@ -21,7 +23,7 @@ from timApp.document.preloadoption import PreloadOption
 from timApp.document.version import Version
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.upload.uploadedfile import UploadedFile
-from timApp.util.flask.requesthelper import verify_json_params
+from timApp.util.flask.requesthelper import verify_json_params, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
 from timApp.notification.notify import notify_doc_watchers
@@ -831,4 +833,48 @@ def mark_translated_route(doc_id):
             mark_as_translated(p)
             if old_rt != p.get_attr('rt'):
                 p.save()
+    return ok_response()
+
+
+def save_plugin(p: Plugin):
+    old_ver = p.par.doc.get_version()
+    p.save()
+    new_ver = p.par.doc.get_version()
+    if old_ver == new_ver:
+        return
+    edit_result = DocumentEditResult()
+    edit_result.changed.append(p.par)
+    docinfo = p.par.doc.get_docinfo()
+    docinfo.update_last_modified()
+    notify_doc_watchers(
+        docinfo,
+        p.to_paragraph().get_markdown(),
+        NotificationType.ParModified, par=p.par,
+        old_version=old_ver,
+    )
+
+
+@dataclass
+class drawIODataModel:
+    data: str
+    par_id: str
+    doc_id: int
+
+
+@edit_page.route("/jsframe/drawIOData", methods=['PUT'])
+@use_model(drawIODataModel)
+def set_drawio_base(args: drawIODataModel):
+    data, par_id, doc_id = args.data, args.par_id, args.doc_id
+    doc = get_doc_or_abort(doc_id)
+    verify_edit_access(doc)
+    try:
+        par = doc.document_as_current_user.get_paragraph(par_id)
+    except TimDbException as e:
+        return abort(404, str(e))
+    plug = Plugin.from_paragraph(par)
+    if plug.type != 'csPlugin' or plug.values.get('type','') != 'drawio':
+        return abort(400, "Invalid target")
+    plug.values['data'] = data
+    save_plugin(plug)
+    db.session.commit()
     return ok_response()

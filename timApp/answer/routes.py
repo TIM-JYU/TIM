@@ -1282,58 +1282,10 @@ def get_plug_vals(doc: DocInfo, tid: TaskId, curr_user: User, user: User) -> Opt
     )
 
 
-def save_plugin(p: Plugin):
-    old_ver = p.par.doc.get_version()
-    p.save()
-    new_ver = p.par.doc.get_version()
-    if old_ver == new_ver:
-        return
-    edit_result = DocumentEditResult()
-    edit_result.changed.append(p.par)
-    docinfo = p.par.doc.get_docinfo()
-    docinfo.update_last_modified()
-    notify_doc_watchers(
-        docinfo,
-        p.to_paragraph().get_markdown(),
-        NotificationType.ParModified, par=p.par,
-        old_version=old_ver,
-    )
-
-
-@dataclass
-class drawIODataModel:
-    data: str
-    par_id: str
-    doc_id: int
-
-
-drawIODataSchema = class_schema(drawIODataModel)
-
-
-# TODO: Move
-@answers.route("/jsframe/drawIOData", methods=['PUT'])
-@use_args(drawIODataSchema())
-def set_drawio_base(args: drawIODataModel):
-    data, par_id, doc_id = args.data, args.par_id, args.doc_id
-    doc = get_doc_or_abort(doc_id)
-    verify_edit_access(doc)
-    try:
-        par = doc.document_as_current_user.get_paragraph(par_id)
-    except TimDbException as e:
-        return abort(404, str(e))
-    plug = Plugin.from_paragraph(par)
-    if plug.type != 'csPlugin' or plug.values.get('type','') != 'drawio':
-        return abort(400, "Invalid target")
-    plug.values['data'] = data
-    save_plugin(plug)
-    db.session.commit()
-    return ok_response()
-
-
 @answers.route("/jsframe/userChange/<task_id>/<user_id>")
 def get_jsframe_data(task_id, user_id):
     """
-        TODO: check rights
+        TODO: check proper rights
     """
     tid = TaskId.parse(task_id)
     doc = get_doc_or_abort(tid.doc_id)
