@@ -32,11 +32,13 @@ from timApp.auth.sessioninfo import get_current_user_object, get_session_users, 
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
+from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.hide_names import hide_names_in_teacher
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.modules.py.marshmallow_dataclass import class_schema
-from timApp.notification.notify import multi_send_email
+from timApp.notification.notification import NotificationType
+from timApp.notification.notify import multi_send_email, notify_doc_watchers
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, is_global, is_global_id, \
@@ -654,13 +656,6 @@ def post_answer(plugintype: str, task_id_ext: str):
         if result['savedNew'] is not None and upload is not None:
             # Associate this answer with the upload entry
             upload.answer_id = result['savedNew']
-
-    if 'markupSave' in jsonresp:
-        verify_edit_access(d)
-        new_markup_values = jsonresp.get('markupSave', {})
-        # TODO
-        # for attr, val in new_markup_values.items():
-        #     plugin.set_value(attr,val)
 
     db.session.commit()
     try:
@@ -1287,11 +1282,58 @@ def get_plug_vals(doc: DocInfo, tid: TaskId, curr_user: User, user: User) -> Opt
     )
 
 
-@answers.route("/jsframeUserChange/<task_id>/<user_id>")
+def save_plugin(p: Plugin):
+    old_ver = p.par.doc.get_version()
+    p.save()
+    new_ver = p.par.doc.get_version()
+    if old_ver == new_ver:
+        return
+    edit_result = DocumentEditResult()
+    edit_result.changed.append(p.par)
+    docinfo = p.par.doc.get_docinfo()
+    docinfo.update_last_modified()
+    notify_doc_watchers(
+        docinfo,
+        p.to_paragraph().get_markdown(),
+        NotificationType.ParModified, par=p.par,
+        old_version=old_ver,
+    )
+
+
+@dataclass
+class drawIODataModel:
+    data: str
+    par_id: str
+    doc_id: int
+
+
+drawIODataSchema = class_schema(drawIODataModel)
+
+
+# TODO: Move
+@answers.route("/jsframe/drawIOData", methods=['PUT'])
+@use_args(drawIODataSchema())
+def set_drawio_base(args: drawIODataModel):
+    data, par_id, doc_id = args.data, args.par_id, args.doc_id
+    doc = get_doc_or_abort(doc_id)
+    verify_edit_access(doc)
+    try:
+        par = doc.document_as_current_user.get_paragraph(par_id)
+    except TimDbException as e:
+        return abort(404, str(e))
+    plug = Plugin.from_paragraph(par)
+    if plug.type != 'csPlugin' or plug.values.get('type','') != 'drawio':
+        return abort(400, "Invalid target")
+    plug.values['data'] = data
+    save_plugin(plug)
+    db.session.commit()
+    return ok_response()
+
+
+@answers.route("/jsframe/userChange/<task_id>/<user_id>")
 def get_jsframe_data(task_id, user_id):
     """
-        TODO: Delete (experimental)
-        TODO: if leave, think rights carefully
+        TODO: check rights
     """
     tid = TaskId.parse(task_id)
     doc = get_doc_or_abort(tid.doc_id)
