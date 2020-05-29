@@ -59,7 +59,7 @@ class JsRunnerTest(JsRunnerTestBase):
             ('fields: []\ngroup: testuser1', "Attribute 'program' is required.", 400),
             # ('fields: [x.y]\ngroup: testuser1\nprogram: ""',
             #  'Invalid field access: y', 400),
-            ('fields: []\ngroup: testuser1\nprogram: ""\ntimeout: 2000',
+            ('fields: []\ngroup: testuser1\nprogram: ""\ntimeout: 4500',
              {'web': {'error': 'Invalid input to jsrunner answer route.'}}, 200),
             ('fields: []\ngroup: testuser1\nprogram: ""',
              {"web": {"output": "", "errors": [], "outdata": {}}},
