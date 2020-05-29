@@ -5,7 +5,7 @@ export {IncludeUsersOption} from "tim/plugin/attributes";
 // t.brand causes problems, so we use the deprecated refinement for now.
 export const Max1000 = t.refinement(
     t.number,
-    (n) => n >= 0 && n <= 1000,
+    (n) => n >= 0 && n <= 4000,
 );
 
 export const JsrunnerMarkup = t.intersection([
