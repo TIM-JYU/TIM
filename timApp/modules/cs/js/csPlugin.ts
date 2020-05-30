@@ -2971,6 +2971,34 @@ ${fhtml}
     get inputrows() {
         return this.attrs.inputrows;
     }
+
+    async setData(data: any, save: boolean = false) {
+        for (const key of Object.keys(data)) {
+            if (key in this) {
+                try {
+                    if (key === "attrs") {
+                        const atrs = data[key]; // TODO: make the most important to work
+                        for (const akey of Object.keys(atrs)) {
+                            // @ts-ignore
+                            this.attrs[akey] = atrs[akey];
+                        }
+                    } else if (key === "commands") {
+                        // TODO: implement commands
+                    } else {
+                        // @ts-ignore
+                        this[key] = data[key];
+                    }
+                }
+                catch(err) {
+                    console.log(err);
+                }
+            }
+        }
+        if (save) {
+            await this.runCode();
+        }
+        return;
+    }
 }
 
 /* Add fillCircle to canvas context */
