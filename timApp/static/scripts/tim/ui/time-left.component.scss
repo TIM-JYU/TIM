@@ -16,10 +16,16 @@ span.low-time {
   animation-direction: alternate-reverse;
 }
 
-span.low-time-warn {
+div.low-time-warn {
   margin-top: 2px;
   margin-bottom: 0;
   padding: 3px;
+
+  & .close {
+    font-size: 1.5em;
+    padding-right: 0.2em;
+    padding-left: 0.2em;
+  }
 }
 
 @keyframes low-time-anim {
