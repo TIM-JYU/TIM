@@ -10,10 +10,14 @@ span.low-time {
   font-size: 1.1em;
   line-height: 1.4em;
   margin-top: 0.3em;
-  animation-name: low-time-anim;
-  animation-duration: 500ms;
-  animation-iteration-count: infinite;
-  animation-direction: alternate-reverse;
+  background-color: red;
+
+  &.glow {
+    animation-name: low-time-anim;
+    animation-duration: 500ms;
+    animation-iteration-count: infinite;
+    animation-direction: alternate-reverse;
+  }
 }
 
 div.low-time-warn {
