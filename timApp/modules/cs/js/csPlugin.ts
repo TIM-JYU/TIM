@@ -982,6 +982,9 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     async save() {
+        if (this.preventSave) {
+            return {saved: false, message: undefined};
+        }
         await this.runCode();
         return {saved: true, message: undefined};
     }
@@ -998,6 +1001,7 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     textChanged(): void {
+        this.runError = "";
         const nowUnsaved = this.hasUnSavedInput();
         if (!this.edited && nowUnsaved) {
             this.edited = true;
@@ -1761,7 +1765,6 @@ ${fhtml}
     }
 
     runCodeIfCR(event: KeyboardEvent) {
-        this.runError = "";
         if (event.keyCode === 13) {
             this.runCode();
         }
