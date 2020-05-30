@@ -435,6 +435,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             this.saveResponse.saved = false;
+            this.c();
             return this.saveResponse;
         }
         this.jsframepeek = false;
@@ -443,6 +444,12 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         let url = "";
         let params;
         if (this.attrsall.markup.task) {
+            if (!this.getTaskId()) {
+                this.error = "Task-mode on but TaskId is missing!";
+                this.saveResponse.saved = false;
+                this.c();
+                return this.saveResponse;
+            }
             url = this.getTaskUrl();
             params = {
                 input: {
