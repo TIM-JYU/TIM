@@ -590,6 +590,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                          'tags':       tags,
                          'is_valid':   is_valid,
                          'force_answer': force_answer,
+                         'web' : web,
                          }
                 try:
                     params = JsRunnerParams(code=plugin.values["postProgram"], data=data)
@@ -598,6 +599,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     save_object = data.get("save_object", save_object)
                     is_valid = data.get("is_valid", is_valid)
                     force_answer = data.get("force_answer", force_answer)
+                    result["web"] = data.get("web", web)
                     if output:  # TODO: korjaa tähän järkevä tulostus
                         # return json_response({'web': {'error': output}})
                         result["web"]["error"] = output;
@@ -638,12 +640,14 @@ def post_answer(plugintype: str, task_id_ext: str):
                         'tags': tags,
                         'is_valid': True,
                         'force_answer': force_answer,
+                        'web': web,
                         }
                 try:
                     params = JsRunnerParams(code=plugin.values["postProgram"], data=data)
                     data, output = jsrunner_run(params)
                     points = data.get("points", points)
                     output += "\nPoints: " + str(points)
+                    result["web"] = data.get("web", web)
                     result["web"]["error"] = output
                 except JsRunnerError as e:
                     return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
