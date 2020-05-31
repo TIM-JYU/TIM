@@ -26,7 +26,7 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
-import {getParId} from "../../../static/scripts/tim/document/parhelpers";
+import {getParId} from "tim/document/parhelpers";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([

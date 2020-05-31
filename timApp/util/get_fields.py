@@ -18,8 +18,7 @@ from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_answers_query
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.document.docinfo import DocInfo
-from timApp.plugin.plugin import find_task_ids, is_global_id, \
-    CachedPluginFinder
+from timApp.plugin.plugin import find_task_ids, CachedPluginFinder
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.user.groups import verify_group_view_access
@@ -244,7 +243,7 @@ def get_fields_and_users(
     # For some reason, with 7 or more fields, executing the following query is very slow in PostgreSQL 9.5.
     # That's why we split the list of task ids in chunks of size 6 and merge the results.
     # TODO: Investigate if this is still true for PostgreSQL 11.
-    not_global_taskids = [t for t in task_ids if not is_global_id(t)]
+    not_global_taskids = [t for t in task_ids if not t.is_global]
     for task_chunk in chunks(not_global_taskids, 6):
         sub += (
             valid_answers_query(task_chunk)
@@ -272,7 +271,7 @@ def get_fields_and_users(
     user_map = {}
     for u in users:
         user_map[u.id] = u
-    global_taskids = [t for t in task_ids if is_global_id(t)]
+    global_taskids = [t for t in task_ids if t.is_global]
     global_answer_ids = valid_answers_query(global_taskids).group_by(Answer.task_id).with_entities(func.max(Answer.id)).all()
     answs = Answer.query.filter(Answer.id.in_(itertools.chain((aid for aid, _ in sub), global_answer_ids))).all()
     answers_with_users: List[Tuple[int, Optional[Answer]]] = []

@@ -11,7 +11,7 @@ from sqlalchemy.orm import selectinload, defaultload
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.pointsumrule import PointSumRule, PointType
-from timApp.plugin.plugin import is_global_id, PluginType
+from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.user.user import Consent, User
@@ -21,7 +21,7 @@ from timApp.velp.annotation_model import Annotation
 
 
 def get_latest_answers_query(task_id: TaskId, users: List[User]):
-    if is_global_id(task_id):
+    if task_id.is_global:
         q = Answer.query.filter_by(task_id=task_id.doc_task).order_by(Answer.id.desc())
     else:
         q = Answer.query.filter_by(task_id=task_id.doc_task).join(User, Answer.users).filter(
@@ -207,7 +207,7 @@ def get_all_answer_initial_query(period_from, period_to, task_ids, valid):
 
 def get_common_answers(users: List[User], task_id: TaskId) -> List[Answer]:
     q = get_latest_answers_query(task_id, users)
-    glo = is_global_id(task_id)
+    glo = task_id.is_global
     def g():
         user_set = set(users)
         for a in q:  # type: Answer

@@ -9,10 +9,8 @@ from flask import request
 from timApp.auth.accesshelper import verify_edit_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.document import Document
-from timApp.document.editing.documenteditresult import DocumentEditResult
-from timApp.notification.notification import NotificationType
-from timApp.notification.notify import notify_doc_watchers
 from timApp.plugin.plugin import Plugin
+from timApp.plugin.save_plugin import save_plugin
 from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.tim_app import csrf
 from timApp.util.flask.requesthelper import verify_json_params, get_option
@@ -347,25 +345,6 @@ def add_row(plug: Plugin, row_id: int):
         apply_datablock_from_entry_list(plug, datablock_entries)
     save_plugin(plug)
     return unique_id
-
-
-def save_plugin(p: Plugin):
-    old_ver = p.par.doc.get_version()
-    p.save()
-    new_ver = p.par.doc.get_version()
-    if old_ver == new_ver:
-        return
-    edit_result = DocumentEditResult()
-    edit_result.changed.append(p.par)
-    docinfo = p.par.doc.get_docinfo()
-    docinfo.update_last_modified()
-    notify_doc_watchers(
-        docinfo,
-        p.to_paragraph().get_markdown(), # TODO: for big tables this takes long time. So do it nside function if there is somebody to notify
-        NotificationType.ParModified, par=p.par,
-        old_version=old_ver,
-    )
-    db.session.commit()
 
 
 def pop_unique_row_id(plug: Plugin) -> int:

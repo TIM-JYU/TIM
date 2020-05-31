@@ -6,12 +6,10 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator, Match, List
 
-import attr
 import yaml
 from jinja2 import Environment, BaseLoader
 from marshmallow import missing, ValidationError
 
-import timApp
 from markupmodels import PointsRule, KnownMarkupFields
 from marshmallow_dataclass import class_schema
 from timApp.answer.answer import Answer
@@ -25,6 +23,7 @@ from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
+from timApp.plugin.plugintype import CONTENT_FIELD_NAME_MAP, PluginType
 from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
@@ -77,12 +76,6 @@ def render_template_string3(rtemplate, **context):
 # Maintains a mapping of plugin types to names of plugins' content field.
 # Required if plugin wants to refer to a non-content field (such as points)
 # because TIM does not know the structure of plugin state.
-CONTENT_FIELD_NAME_MAP = {
-    'csPlugin': 'usercode',
-    'pali': 'userword',
-    'numericfield': 'c',
-    'textfield': 'c',
-}
 
 CONTENT_FIELD_TYPE_MAP = {
     'numericfield': float,
@@ -173,18 +166,6 @@ def get_num_value(values, key, default=None):
     except:
         value = default
     return value
-
-
-@attr.s(auto_attribs=True)
-class PluginType:
-    type: str
-
-    def get_content_field_name(self):
-        return CONTENT_FIELD_NAME_MAP.get(self.type, 'content')
-
-    def can_give_task(self):
-        plugin_class = timApp.plugin.containerLink.get_plugin(self.type)
-        return plugin_class.get('canGiveTask', False)
 
 
 KnownMarkupFieldsSchema = class_schema(KnownMarkupFields)()
@@ -727,16 +708,6 @@ def finalize_inline_yaml(p_yaml: Optional[str]):
     if '\n' not in p_yaml:
         return f'{{{p_yaml}}}'
     return p_yaml
-
-
-def is_global(plugin: Plugin):
-    return is_global_id(plugin.task_id)
-
-
-def is_global_id(task_id: TaskId):
-    if task_id is None:
-        return False
-    return task_id.task_name.startswith('GLO_')
 
 
 def find_task_ids(

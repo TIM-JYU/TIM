@@ -32,6 +32,7 @@ from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.qst.qst import question_convert_js_to_yaml
+from timApp.plugin.save_plugin import save_plugin
 from timApp.readmark.readings import mark_read
 from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
@@ -836,15 +837,15 @@ def mark_translated_route(doc_id):
 
 
 @dataclass
-class drawIODataModel:
+class DrawIODataModel:
     data: str
     par_id: str
     doc_id: int
 
 
 @edit_page.route("/jsframe/drawIOData", methods=['PUT'])
-@use_model(drawIODataModel)
-def set_drawio_base(args: drawIODataModel):
+@use_model(DrawIODataModel)
+def set_drawio_base(args: DrawIODataModel):
     data, par_id, doc_id = args.data, args.par_id, args.doc_id
     doc = get_doc_or_abort(doc_id)
     verify_edit_access(doc)
@@ -853,9 +854,8 @@ def set_drawio_base(args: drawIODataModel):
     except TimDbException as e:
         return abort(404, str(e))
     plug = Plugin.from_paragraph(par)
-    if plug.type != 'csPlugin' or plug.values.get('type','') != 'drawio':
+    if plug.type != 'csPlugin' or plug.values.get('type', '') != 'drawio':
         return abort(400, "Invalid target")
     plug.values['data'] = data
-    plug.save()
-    db.session.commit()
+    save_plugin(plug)
     return ok_response()
