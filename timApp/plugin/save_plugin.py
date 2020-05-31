@@ -5,7 +5,8 @@ from timApp.plugin.plugin import Plugin
 from timApp.timdb.sqa import db
 
 
-def save_plugin(p: Plugin):
+def save_plugin(p: Plugin) -> None:
+    assert p.par is not None
     old_ver = p.par.doc.get_version()
     p.save()
     new_ver = p.par.doc.get_version()

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import os
 import shutil
@@ -27,10 +29,11 @@ from timApp.document.version import Version
 from timApp.document.yamlblock import YamlBlock
 from timApp.timdb.exceptions import TimDbException, PreambleException, InvalidReferenceException
 from timApp.timtypes import DocInfoType
-from timApp.util.utils import get_error_html, trim_markdown, temp_folder_path, cache_folder_path
+from timApp.util.utils import get_error_html, trim_markdown, cache_folder_path
 
 if TYPE_CHECKING:
     from timApp.user.user import User
+    from timApp.document.docinfo import DocInfo
 
 viewmode_routes = {
     'view',
@@ -971,7 +974,7 @@ class Document:
         from timApp.document.documentversion import DocumentVersion
         return DocumentVersion(self.doc_id, self.get_version(), self.modifier_group_id, self.preload_option)
 
-    def get_docinfo(self) -> DocInfoType:
+    def get_docinfo(self) -> DocInfo:
         if self.docinfo is None:
             from timApp.document.docentry import DocEntry
             self.docinfo = DocEntry.find_by_id(self.doc_id)

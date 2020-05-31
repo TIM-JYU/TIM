@@ -312,7 +312,7 @@ class Plugin:
         self.values[key] = value
         return self
 
-    def save(self):
+    def save(self) -> None:
         self.to_paragraph().save()
 
     def get_info(self, users: Iterable[User], old_answers: int, look_answer: bool = False, valid: bool = True):

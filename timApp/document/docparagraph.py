@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import json
 import os
 import shelve
 from collections import defaultdict
 from copy import copy
-from typing import Optional, Dict, List, Tuple, Any
+from typing import Optional, Dict, List, Tuple, Any, TYPE_CHECKING
 
 import commonmark
 import filelock
@@ -24,6 +26,10 @@ from timApp.timtypes import DocumentType
 from timApp.util.rndutils import get_rands_as_dict, get_rands_as_str, SeedType
 from timApp.util.utils import count_chars_from_beginning, get_error_html, title_to_id
 
+if TYPE_CHECKING:
+    from timApp.document.document import Document
+
+
 SKIPPED_ATTRS = {'r', 'rd', 'rp', 'ra', 'rt', 'settings'}
 
 
@@ -34,12 +40,12 @@ class DocParagraph:
     """Represents a paragraph that is associated with a :class:`Document`. See :doc:`docparagraph` for more info.
     """
 
-    def __init__(self, doc):
+    def __init__(self, doc: Document):
         """Constructs a DocParagraph.
 
         :param doc: The Document object to which this paragraph is connected.
         """
-        self.doc: DocumentType = doc
+        self.doc: Document = doc
         self.prev_deref: Optional['DocParagraph'] = None
         self.ref_doc = None
         self.original = None
