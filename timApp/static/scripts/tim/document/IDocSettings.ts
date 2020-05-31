@@ -8,6 +8,8 @@ interface IMacros {
 
 export interface ITimeLeftSettings {
     lowTimeThreshold: number;
+    lowTimeGlowPeriod: number;
+    lowTimeGlowDuration: number;
 }
 
 export interface ILoginHideSettings {

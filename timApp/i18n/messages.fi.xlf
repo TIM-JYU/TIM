@@ -106,21 +106,27 @@
           <context context-type="linenumber">30</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="861d8d6e7bd74a6f315ef763c45efd53231a1714" datatype="html">
+      <trans-unit id="125ef8240667aef886438ac404054ecfc84212fb" datatype="html">
         <source>
-      Time left: <x id="START_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;tim-countdown>"/><x id="CLOSE_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;/tim-countdown>"/>
-    </source>
+            Time left: <x id="START_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;tim-countdown>"/><x id="CLOSE_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;/tim-countdown>"/>
+        </source>
         <target state="translated">
-      Aikaa jäljellä: <x id="START_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;tim-countdown>"/><x id="CLOSE_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;/tim-countdown>"/>
-    </target>
+            Aikaa jäljellä: <x id="START_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;tim-countdown>"/><x id="CLOSE_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;/tim-countdown>"/>
+        </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
           <context context-type="linenumber">2</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="ff2e81cf3f1e141fa23c5985cd726c363e67c1e7" datatype="html">
-        <source>The time is about to run out, remember to save your answers.</source>
-        <target state="translated">Aika on loppumassa, muista tallentaa vastauksesi.</target>
+      <trans-unit id="484b84390b4ba08ad63c7a9ddcf52b75ba3985c7" datatype="html">
+        <source>
+            <x id="START_TAG_BUTTON" ctype="x-button" equiv-text="&lt;button>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>×<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="CLOSE_TAG_BUTTON" ctype="x-button" equiv-text="&lt;/button>"/>
+            The time is about to run out, remember to save your answers.
+        </source>
+        <target state="translated">
+            <x id="START_TAG_BUTTON" ctype="x-button" equiv-text="&lt;button>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>×<x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="CLOSE_TAG_BUTTON" ctype="x-button" equiv-text="&lt;/button>"/>
+            Aika on loppumassa, muista tallentaa vastauksesi.
+        </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
           <context context-type="linenumber">7</context>
@@ -131,7 +137,7 @@
         <target state="translated">Aikasi loppui. Voit tallentaa vastauksia jonkun aikaa, mutta uudet talletukset merkataan myöhästyneiksi.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
-          <context context-type="linenumber">8</context>
+          <context context-type="linenumber">11</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6d6968cb33ce9daad70a5f0e4832d46061332d09" datatype="html">
