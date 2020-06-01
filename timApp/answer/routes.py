@@ -49,8 +49,10 @@ from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
+from timApp.user.groups import do_create_group, verify_group_edit_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -772,11 +774,58 @@ def handle_points_ref(answerdata: AnswerData, curr_user: User, d: DocInfo, ptype
     return json_response({'savedNew': s, 'web': {'result': 'points saved'}})
 
 
+class JsrunnerGroups(TypedDict, total=False):
+    set: Dict[str, List[int]]
+    add: Dict[str, List[int]]
+    remove: Dict[str, List[int]]
+
+
+
+MAX_GROUPS_PER_CALL = 10
+
+
+def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups]):
+    if not groupdata:
+        return
+    curr_user = get_current_user_object()
+    groups_created = 0
+    for op, group_set in groupdata.items():
+        for name, uids in group_set.items():
+            ug = UserGroup.get_by_name(name)
+            if not ug:
+                if op == 'set':
+                    if groups_created >= MAX_GROUPS_PER_CALL:
+                        raise RouteException(
+                            f'Maximum of {MAX_GROUPS_PER_CALL} groups can be created per one jsrunner run.',
+                        )
+                    ug, _ = do_create_group(name)
+                    groups_created += 1
+                else:
+                    raise RouteException(f'Group does not exist: {name}')
+            else:
+                verify_group_edit_access(ug)
+            users: List[User] = User.query.filter(User.id.in_(uids)).all()
+            found_user_ids = set(u.id for u in users)
+            missing_ids = set(uids) - found_user_ids
+            if missing_ids:
+                raise RouteException(f'Users not found: {missing_ids}')
+            if op == 'set':
+                ug.memberships_sel = [UserGroupMember(user=u, adder=curr_user) for u in users]
+            elif op == 'add':
+                for u in users:
+                    u.add_to_group(ug, added_by=curr_user)
+            elif op == 'remove':
+                ug.memberships_sel = [ugm for ugm in ug.memberships_sel if ugm.user_id not in found_user_ids]
+            else:
+                raise RouteException(f'Unexpected group operation: {op}')
+
+
 def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_teacher: bool = False):
     save_obj = jsonresp.get('savedata')
     ignore_missing = jsonresp.get('ignoreMissing', False)
     allow_missing = jsonresp.get('allowMissing', False)
     ignore_fields = {}
+    handle_jsrunner_groups(jsonresp.get('groups'))
     if not save_obj:
         return
     tasks = set()

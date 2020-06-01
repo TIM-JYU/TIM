@@ -70,6 +70,11 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         back_populates="group",
         lazy='dynamic',
     )
+    memberships_sel = db.relationship(
+        UserGroupMember,
+        back_populates="group",
+        cascade='all, delete-orphan',
+    )
     current_memberships = db.relationship(
         UserGroupMember,
         primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,

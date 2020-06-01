@@ -956,3 +956,106 @@ tools.setString("t2", tools.getString("t2", "") + "=" + tools.getRealName());
                                    expected_count=3)
         self.verify_answer_content(f'{d.id}.t2', 'c', '=Test user 2=Test user 2=Test user 2', self.test_user_2,
                                    expected_count=3)
+
+    def test_group_create(self):
+        self.login_test1()
+        d = self.create_jsrun("""
+fields: []
+group: testuser1
+program: |!!
+tools.setGroup("tg1", []);
+!!""")
+        # Group methods are only usable in postProgram.
+        self.do_jsrun(d,
+                      expect_content={'web': {'fatalError': {'msg': 'tools.setGroup is not a function',
+                                                             'stackTrace': 'Index (1:24)\n'
+                                                                           'program:\n'
+                                                                           '01: tools.setGroup("tg1", []);\n'},
+                                              'output': ''}})
+
+        d_empty = self.create_group_jsrun([])
+        self.do_jsrun(
+            d_empty,
+            expect_content='Creating group tg1: This action requires group administrator rights.',
+            expect_status=403,
+        )
+        ug = UserGroup.get_groupadmin_group()
+        self.test_user_1.add_to_group(ug, None)
+        db.session.commit()
+        self.do_jsrun(
+            d_empty,
+            expect_content={'web': {'errors': [], 'outdata': {}, 'output': ''}},
+        )
+        self.assertIsNotNone(UserGroup.get_by_name('tg1'))
+        d = self.create_group_jsrun([self.test_user_1.id, 999])
+        self.do_jsrun(
+            d,
+            expect_content='Users not found: {999}',
+            expect_status=400,
+        )
+        d = self.create_group_jsrun([self.test_user_1.id, self.test_user_2.id])
+        self.do_jsrun(
+            d,
+            expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
+        )
+
+        def expect_tg1_members(members):
+            ug = UserGroup.get_by_name('tg1')
+            self.assertEqual(members, ug.users)
+
+        expect_tg1_members([self.test_user_1, self.test_user_2])
+        self.do_jsrun(
+            d_empty,
+            expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
+        )
+        expect_tg1_members([])
+        d1 = self.create_group_jsrun([self.test_user_1.id], method='addToGroup')
+        d2 = self.create_group_jsrun([self.test_user_2.id], method='addToGroup')
+        self.do_jsrun(
+            d1,
+            expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
+        )
+        self.do_jsrun(
+            d2,
+            expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
+        )
+        expect_tg1_members([self.test_user_1, self.test_user_2])
+
+        d1 = self.create_group_jsrun([self.test_user_1.id], method='removeFromGroup')
+        d2 = self.create_group_jsrun([self.test_user_2.id], method='removeFromGroup')
+        self.do_jsrun(
+            d1,
+            expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
+        )
+        expect_tg1_members([self.test_user_2])
+        self.do_jsrun(
+            d2,
+            expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
+        )
+        expect_tg1_members([])
+
+        d = self.create_jsrun("""
+fields: []
+group: testuser1
+program: ''
+postprogram: |!!
+for (let i = 0; i < 11; ++i) {
+    tools.setGroup("tgx" + i, []);
+}
+!!""")
+        self.do_jsrun(
+            d,
+            expect_content='Maximum of 10 groups can be created per one jsrunner run.',
+            expect_status=400,
+        )
+
+
+    def create_group_jsrun(self, grouplist, method='setGroup'):
+        d = self.create_jsrun(f"""
+fields: []
+group: testuser1
+program: ''
+postprogram: |!!
+tools.{method}("tg1", {grouplist});
+!!""")
+        return d

@@ -47,6 +47,12 @@ export const JsrunnerAll = t.intersection([
     t.type({}),
 ]);
 
+export interface IGroupData {
+    set?: Record<string, number[]>;
+    add?: Record<string, number[]>;
+    remove?: Record<string, number[]>;
+}
+
 export interface IError {
     msg: string;
     stackTrace?: string;
@@ -56,8 +62,14 @@ export type ErrorList = Array<{errors: IError[], user: string}>;
 
 interface AnswerReturnSuccess {
     web:
-        {output: string, errors: ErrorList, fatalError?: undefined, outdata?: {exportdata?: Array<{plugin: string, save?: boolean, data: unknown}>}};
+        {
+            output: string,
+            errors: ErrorList,
+            fatalError?: undefined,
+            outdata?: { exportdata?: Array<{ plugin: string, save?: boolean, data: unknown }> },
+        };
     savedata: {};
+    groups: IGroupData;
 }
 
 interface AnswerReturnError {

@@ -4,7 +4,7 @@ from typing import Tuple, List, Dict, Any, Optional
 from dataclasses import dataclass
 from flask import Blueprint, abort
 
-from timApp.auth.accesshelper import verify_admin, check_admin_access
+from timApp.auth.accesshelper import verify_admin, check_admin_access, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object
@@ -27,14 +27,17 @@ groups = Blueprint('groups',
 USER_NOT_FOUND = 'User not found'
 
 
-def verify_groupadmin(require=True, user=None):
+def verify_groupadmin(require: bool=True, user: Optional[User]=None, action: Optional[str]=None):
     curr_user = user
     if curr_user is None:
         curr_user = get_current_user_object()
     if not check_admin_access(user=user):
         if not UserGroup.get_groupadmin_group() in curr_user.groups:
             if require:
-                abort(403, 'This action requires group administrator rights.')
+                msg = 'This action requires group administrator rights.'
+                if action:
+                    msg = action + ': ' + msg
+                raise AccessDenied(msg)
             else:
                 return False
     return True
@@ -90,7 +93,7 @@ def raise_group_not_found_if_none(groupname: str, ug: Optional[UserGroup]):
 
 
 @groups.route('/create/<groupname>')
-def create_group(groupname):
+def create_group(groupname: str):
     """Route for creating a usergroup.
 
     The usergroup name has the following restrictions:
@@ -106,9 +109,16 @@ def create_group(groupname):
      2. lowercase ASCII strings (Korppi users) with length being in range [2,8].
 
     """
-    verify_groupadmin()
+    verify_groupadmin(action=f'Creating group {groupname}')
     if UserGroup.get_by_name(groupname):
         abort(400, 'User group already exists.')
+    _, doc = do_create_group(groupname)
+    db.session.commit()
+    return json_response(doc)
+
+
+def do_create_group(groupname: str) -> Tuple[UserGroup, DocInfo]:
+    verify_groupadmin(action=f'Creating group {groupname}')
     validate_groupname(groupname)
     u = UserGroup.create(groupname)
     doc = create_document(
@@ -130,8 +140,7 @@ def create_group(groupname):
                 type=AccessType.view.value,
                 accessible_from=get_current_time(),
             ))
-    db.session.commit()
-    return json_response(doc)
+    return u, doc
 
 
 def add_group_infofield_template(doc: DocInfo) -> None:
@@ -183,11 +192,11 @@ def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
 
 def verify_group_edit_access(ug: UserGroup, user: Optional[User]=None, require=True):
     if ug.name in SPECIAL_GROUPS:
-        abort(400, 'Cannot edit special groups.')
+        raise RouteException(f'Cannot edit special group: {ug.name}')
     if User.get_by_name(ug.name):
-        abort(400, 'Cannot edit personal groups.')
+        raise RouteException(f'Cannot edit personal group: {ug.name}')
     if ug.name.startswith('cumulative:') or ug.name.startswith('deleted:'):
-         abort(400, 'Cannot edit special Sisu groups.')
+         raise RouteException(f'Cannot edit special Sisu group: {ug.name}')
     return verify_group_access(ug, edit_access_set, user, require=require)
 
 

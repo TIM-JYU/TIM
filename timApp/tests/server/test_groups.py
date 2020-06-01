@@ -96,7 +96,7 @@ class GroupTest(TimRouteTest):
             self.get(f'/groups/create/test x1{is_admin}')
 
             self.json_post('/groups/addmember/Logged-in users', {'names': f'testuser1'.split(',')}, expect_status=400,
-                     expect_content={'error': 'Cannot edit special groups.'})
+                     expect_content={'error': 'Cannot edit special group: Logged-in users'})
             if not is_admin:
                 self.json_post('/groups/addmember/Group admins', {'names': f'testuser1'.split(',')},
                     expect_status=403,
@@ -113,11 +113,11 @@ class GroupTest(TimRouteTest):
             else:
                 self.json_post('/groups/addmember/Group admins', {'names': f'testuser1'.split(',')})
             self.json_post('/groups/addmember/testuser1', {'names': f'testuser2'.split(',')}, expect_status=400,
-                     expect_content={'error': 'Cannot edit personal groups.'})
+                     expect_content={'error': 'Cannot edit personal group: testuser1'})
             self.json_post('/groups/removemember/testuser1', {'names': f'testuser1'.split(',')}, expect_status=400,
-                     expect_content={'error': 'Cannot edit personal groups.'})
+                     expect_content={'error': 'Cannot edit personal group: testuser1'})
             self.json_post('/groups/removemember/Logged-in users', {'names': f'testuser1'.split(',')}, expect_status=400,
-                     expect_content={'error': 'Cannot edit special groups.'})
+                     expect_content={'error': 'Cannot edit special group: Logged-in users'})
             self.json_post(
                 f'/groups/addmember/test x1{is_admin}',
                 {'names': ['Anonymous']},

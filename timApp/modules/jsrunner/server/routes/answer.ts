@@ -6,7 +6,7 @@ import ivm from "isolated-vm";
 
 // import numberLines from "./runscript";
 import {Branded, IntBrand} from "io-ts";
-import {AnswerReturn, ErrorList, IError, IJsRunnerMarkup} from "../../shared/jsrunnertypes";
+import {AnswerReturn, ErrorList, IError, IGroupData, IJsRunnerMarkup} from "../../shared/jsrunnertypes";
 import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
 import {GTools, Tools, ToolsBase} from "./tools";
 
@@ -39,7 +39,14 @@ interface IRunnerData {
 }
 
 type RunnerResult =
-    | {output: string, res: {}, errors: ErrorList, fatalError?: never, outdata: object}
+    | {
+    output: string,
+    res: {},
+    errors: ErrorList,
+    fatalError?: never,
+    outdata: object,
+    groups: IGroupData,
+}
     | {output: string, fatalError: IError, errorprg: string};
 
 /**
@@ -141,7 +148,13 @@ function runner(d: IRunnerData): RunnerResult {
                 }],
             });
         }
-        return {res: saveUsersFields, output, errors, outdata: gtools.outdata};
+        return {
+            res: saveUsersFields,
+            output,
+            errors,
+            outdata: gtools.outdata,
+            groups: gtools.groups,
+        };
     } catch (e) {
         const err = e as Error;
         const prg = prgname + ":\n" + numberLines2(errorprg, 1);
@@ -230,6 +243,7 @@ router.put("/", async (req, res, next) => {
         } else {
             r = {
                 savedata: result.res,
+                groups: result.groups,
                 web: {
                     output: result.output,
                     errors: result.errors,

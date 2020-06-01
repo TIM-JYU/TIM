@@ -1,6 +1,6 @@
 import * as t from "io-ts";
 import {widenFields} from "tim/util/common";
-import {IError, IJsRunnerMarkup, INumbersObject} from "../../shared/jsrunnertypes";
+import {IError, IGroupData, IJsRunnerMarkup, INumbersObject} from "../../shared/jsrunnertypes";
 import {AliasDataT, UserFieldDataT} from "../servertypes";
 
 /**
@@ -46,6 +46,8 @@ const checkNumber = t.number.is;
 const checkInt = t.Int.is;
 
 const StringOrNumber = t.union([t.string, t.number]);
+
+const IntArray = t.array(t.Int);
 
 function ensureStringFieldName(s: unknown): string {
     if (!checkString(s)) {
@@ -635,6 +637,8 @@ export class GTools extends ToolsBase {
 
     public tools: Tools;
 
+    groups: IGroupData = {};
+
     constructor(
         currDoc: string,
         markup: IJsRunnerMarkup,
@@ -714,6 +718,33 @@ export class GTools extends ToolsBase {
     setTools(tools: Tools) {
         this.tools = tools;
         tools.setUseDefComplaint(this.useDefComplaint);
+    }
+
+    setGroup(name: unknown, uids: unknown) {
+        this.setGroupOperation(name, uids, "set");
+    }
+
+    addToGroup(name: unknown, uids: unknown) {
+        this.setGroupOperation(name, uids, "add");
+    }
+
+    removeFromGroup(name: unknown, uids: unknown) {
+        this.setGroupOperation(name, uids, "remove");
+    }
+
+    setGroupOperation(name: unknown, uids: unknown, key: keyof IGroupData) {
+        if (!checkString(name)) {
+            throw genericTypeError("group name", name);
+        }
+        if (!IntArray.is(uids)) {
+            throw Error("uids must be a list of TIM user ids");
+        }
+        let v = this.groups[key];
+        if (!v) {
+            v = {}
+            this.groups[key] = v;
+        }
+        v[name] = uids;
     }
 }
 
