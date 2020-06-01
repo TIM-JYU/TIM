@@ -39,12 +39,12 @@ from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.notification.notify import multi_send_email
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
-from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, is_global, is_global_id, \
-    find_task_ids, CachedPluginFinder
-from timApp.plugin.plugin import PluginType
+from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, find_task_ids, \
+    CachedPluginFinder
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginexception import PluginException
+from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
@@ -138,7 +138,7 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
 
     old_answers = get_common_answers(users, tid)
     """
-    if is_global_id(tid):
+    if tid.is_global:
         answer_map = {}
         get_globals_for_tasks([tid], answer_map)
     else:
@@ -247,7 +247,6 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
     if user is None:
         abort(400, 'Non-existent user')
     verify_logged_in()
-    currid = get_current_user_id()
     try:
         doc_map = {}
         tids = []
@@ -258,7 +257,7 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
                 dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
                 verify_seeanswers_access(dib)
                 doc_map[tid.doc_id] = dib.document
-            if is_global_id(tid):
+            if tid.is_global:
                 gtids.append(tid)
             else:
                 tids.append(tid)
@@ -488,7 +487,7 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     if not logged_in() and not plugin.known.anonymous:
         raise RouteException('You must be logged in to answer this task.')
-    if plugin.known.useCurrentUser or is_global(plugin):  # For plugins that is saved only for current user
+    if plugin.known.useCurrentUser or plugin.task_id.is_global:  # For plugins that is saved only for current user
         users = [curr_user]
 
     if isinstance(answerdata, dict):
@@ -836,7 +835,7 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
         for user in save_obj for key in user['fields'].keys()
     }
     sq = (Answer.query
-          .filter(Answer.task_id.in_([tid.doc_task for tid in parsed_task_ids.values() if not is_global_id(tid)]))
+          .filter(Answer.task_id.in_([tid.doc_task for tid in parsed_task_ids.values() if not tid.is_global]))
           .join(User, Answer.users)
           .filter(User.id.in_(user_map.keys()))
           .group_by(User.id, Answer.task_id)
@@ -935,7 +934,7 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
                 saver=curr_user,
             )
             # If this was a global task, add it to all users in the answer map so we won't save it multiple times.
-            if is_global_id(task_id):
+            if task_id.is_global:
                 for uid in user_map.keys():
                     answer_map[uid][ans.task_id] = ans
             db.session.add(ans)
@@ -943,7 +942,7 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
 
 def get_global_answers(parsed_task_ids: Dict[str, TaskId]) -> List[Answer]:
     sq2 = (Answer.query
-           .filter(Answer.task_id.in_([tid.doc_task for tid in parsed_task_ids.values() if is_global_id(tid)]))
+           .filter(Answer.task_id.in_([tid.doc_task for tid in parsed_task_ids.values() if tid.is_global]))
            .group_by(Answer.task_id)
            .with_entities(func.max(Answer.id).label('aid'))
            .subquery())
@@ -1280,11 +1279,10 @@ def get_plug_vals(doc: DocInfo, tid: TaskId, curr_user: User, user: User) -> Opt
     )
 
 
-@answers.route("/jsframeUserChange/<task_id>/<user_id>")
+@answers.route("/jsframe/userChange/<task_id>/<user_id>")
 def get_jsframe_data(task_id, user_id):
     """
-        TODO: Delete (experimental)
-        TODO: if leave, think rights carefully
+        TODO: check proper rights
     """
     tid = TaskId.parse(task_id)
     doc = get_doc_or_abort(tid.doc_id)
@@ -1427,7 +1425,7 @@ def verify_answer_access(
         abort(400, 'Non-existent answer')
     tid = TaskId.parse(answer.task_id)
 
-    if is_global_id(tid):
+    if tid.is_global:
         return answer, tid.doc_id
 
     d = get_doc_or_abort(tid.doc_id)

@@ -114,6 +114,10 @@ class TaskId:
     def is_points_ref(self):
         return self.field == 'points'
 
+    @property
+    def is_global(self):
+        return self.task_name.startswith('GLO_')
+
     def validate(self):
         pass  # already validated at __init__
 

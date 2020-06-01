@@ -1,5 +1,6 @@
 """Routes for editing a document."""
 import re
+from dataclasses import dataclass
 from typing import List, Optional
 
 from flask import Blueprint, render_template
@@ -11,34 +12,35 @@ from timApp.admin.associate_old_uploads import upload_regexes
 from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access, get_rights, get_doc_or_abort, \
     verify_teacher_access, verify_manage_access, verify_ownership, verify_seeanswers_access
-from timApp.document.post_process import post_process_pars
-from timApp.timdb.dbaccess import get_timdb
+from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_current_user_group
+from timApp.bookmark.bookmarks import Bookmarks
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, get_duplicate_id_msg
 from timApp.document.editing.documenteditresult import DocumentEditResult
-from timApp.document.exceptions import ValidationException, ValidationWarning
-from timApp.document.preloadoption import PreloadOption
-from timApp.document.version import Version
-from timApp.markdown.markdownconverter import md_to_html
-from timApp.upload.uploadedfile import UploadedFile
-from timApp.util.flask.requesthelper import verify_json_params
-from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
-from timApp.notification.notify import notify_doc_watchers
-from timApp.plugin.qst.qst import question_convert_js_to_yaml
-from timApp.item.routes import get_module_ids
-from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_current_user_group
-from timApp.document.translation.synchronize_translations import synchronize_translations
-from timApp.bookmark.bookmarks import Bookmarks
-from timApp.document.docinfo import DocInfo
-from timApp.timdb.exceptions import TimDbException
-from timApp.document.docentry import DocEntry
-from timApp.notification.notification import NotificationType
-from timApp.readmark.readings import mark_read
-from timApp.timdb.sqa import db
-from timApp.util.utils import get_error_html
-from timApp.item.validation import validate_uploaded_document_content
 from timApp.document.editing.proofread import proofread_pars, process_spelling_errors
+from timApp.document.exceptions import ValidationException, ValidationWarning
+from timApp.document.post_process import post_process_pars
+from timApp.document.preloadoption import PreloadOption
+from timApp.document.translation.synchronize_translations import synchronize_translations
+from timApp.document.version import Version
+from timApp.item.validation import validate_uploaded_document_content
+from timApp.markdown.markdownconverter import md_to_html
+from timApp.notification.notification import NotificationType
+from timApp.notification.notify import notify_doc_watchers
+from timApp.plugin.plugin import Plugin
+from timApp.plugin.qst.qst import question_convert_js_to_yaml
+from timApp.plugin.save_plugin import save_plugin
+from timApp.readmark.readings import mark_read
+from timApp.timdb.dbaccess import get_timdb
+from timApp.timdb.exceptions import TimDbException
+from timApp.timdb.sqa import db
+from timApp.upload.uploadedfile import UploadedFile
+from timApp.util.flask.requesthelper import verify_json_params, use_model
+from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.utils import get_error_html
 
 edit_page = Blueprint('edit_page',
                       __name__,
@@ -831,4 +833,29 @@ def mark_translated_route(doc_id):
             mark_as_translated(p)
             if old_rt != p.get_attr('rt'):
                 p.save()
+    return ok_response()
+
+
+@dataclass
+class DrawIODataModel:
+    data: str
+    par_id: str
+    doc_id: int
+
+
+@edit_page.route("/jsframe/drawIOData", methods=['PUT'])
+@use_model(DrawIODataModel)
+def set_drawio_base(args: DrawIODataModel):
+    data, par_id, doc_id = args.data, args.par_id, args.doc_id
+    doc = get_doc_or_abort(doc_id)
+    verify_edit_access(doc)
+    try:
+        par = doc.document_as_current_user.get_paragraph(par_id)
+    except TimDbException as e:
+        return abort(404, str(e))
+    plug = Plugin.from_paragraph(par)
+    if plug.type != 'csPlugin' or plug.values.get('type', '') != 'drawio':
+        return abort(400, "Invalid target")
+    plug.values['data'] = data
+    save_plugin(plug)
     return ok_response()

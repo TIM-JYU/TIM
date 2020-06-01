@@ -26,6 +26,7 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
+import {getParId} from "tim/document/parhelpers";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
@@ -53,6 +54,7 @@ const JsframeMarkup = t.intersection([
         borders: withDefault(t.boolean, false),
         norun: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
+        task: withDefault(t.boolean, true), // TODO: check if other jsframes are tasks or not
     }),
 ]);
 const JsframeAll = t.intersection([
@@ -345,7 +347,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         if (!tid) {
             return;
         }
-        const res = await to($http.get<unknown>(`/jsframeUserChange/${tid.docTask()}/${user.id}`));
+        const res = await to($http.get<unknown>(`/jsframe/userChange/${tid.docTask()}/${user.id}`));
         this.initData = "";
         let data: { c: unknown, fielddata?: unknown } = this.getDataFromMarkup();
         if (res.result.data) { // there os no more fielddata-attribute
@@ -433,18 +435,36 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             this.saveResponse.saved = false;
+            this.c();
             return this.saveResponse;
         }
         this.jsframepeek = false;
         this.error = "";
         this.isRunning = true;
-        const url = this.getTaskUrl();
-        const params = {
-            input: {
-                ...unwrapAllC(data), // Unwrap just in case there is a double "c".
-                type: "jsframe",
-            },
-        };
+        let url = "";
+        let params;
+        if (this.attrsall.markup.task) {
+            if (!this.getTaskId()) {
+                this.error = "Task-mode on but TaskId is missing!";
+                this.saveResponse.saved = false;
+                this.c();
+                return this.saveResponse;
+            }
+            url = this.getTaskUrl();
+            params = {
+                input: {
+                    ...unwrapAllC(data), // Unwrap just in case there is a double "c".
+                    type: "jsframe",
+                },
+            };
+        } else {
+            url = "/jsframe/drawIOData";
+            params = {
+                data: unwrapAllC(data).c,
+                par_id: getParId(this.getPar()),
+                doc_id: this.viewctrl.docId,
+            };
+        }
 
         this.console = "";
 
@@ -461,22 +481,24 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             this.c();
             return this.saveResponse;
         }
-        if (!r.result.data.web) {
-            this.error = "No web reply from csPlugin!";
-            this.saveResponse.saved = false;
-            this.c();
-            return this.saveResponse;
-        }
-        if (r.result.data.web.error) {
-            this.error = r.result.data.web.error;
-            this.saveResponse.saved = false;
-            this.c();
-            return this.saveResponse;
+        if (this.attrsall.markup.task) {
+            if (!r.result.data.web) {
+                this.error = "No web reply from csPlugin!";
+                this.saveResponse.saved = false;
+                this.c();
+                return this.saveResponse;
+            }
+            if (r.result.data.web.error) {
+                this.error = r.result.data.web.error;
+                this.saveResponse.saved = false;
+                this.c();
+                return this.saveResponse;
+            }
         }
         this.edited = false;
         this.updateListeners();
         this.prevdata = unwrapAllC(data);
-        if (r.result.data.web.console) {
+        if (this.attrsall.markup.task && r.result.data.web.console) {
             this.console = r.result.data.web.console;
             this.saveResponse.saved = true;
             this.c();

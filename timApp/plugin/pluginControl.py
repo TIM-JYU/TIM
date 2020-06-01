@@ -26,7 +26,7 @@ from timApp.markdown.htmlSanitize import sanitize_html
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
-    find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap, is_global, WANT_FIELDS, find_task_ids, \
+    find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap, WANT_FIELDS, find_task_ids, \
     get_simple_hash_from_par_and_user
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
@@ -439,7 +439,9 @@ def pluginify(doc: Document,
     taketime("glb/ucu", "GLO/currUser")
     for plugin_name, plugin_block_map in plugins.items():
         for _, plugin in plugin_block_map.items():
-            if is_global(plugin):
+            if not plugin.task_id:
+                continue
+            if plugin.task_id.is_global:
                 glb_task_ids.append(plugin.task_id)
                 glb_plugins_to_change.append(plugin)
             elif plugin.known.useCurrentUser and (user.id != current_user.id):

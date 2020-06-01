@@ -82,7 +82,7 @@ class DocInfo(Item):
     def lang_id(self) -> Optional[str]:
         raise NotImplementedError
 
-    def update_last_modified(self):
+    def update_last_modified(self) -> None:
         self.block.modified = get_current_time()
 
     def get_preamble_docs(self) -> List['DocInfo']:
