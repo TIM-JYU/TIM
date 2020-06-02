@@ -32,4 +32,5 @@ export interface IDocSettings {
     hideBrowser?: boolean;
     login?: ILoginSettings;
     timeLeft?: ITimeLeftSettings;
+    save_teacher?: boolean;
 }
