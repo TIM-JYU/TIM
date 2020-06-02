@@ -12,8 +12,6 @@ from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
 from timApp.user.user import Consent, User
-from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import grant_access
 
 link_selector = CSSSelector('a')
 
@@ -306,11 +304,6 @@ class TimTest(TimRouteTest):
         self.login_test1()
         self.assertFalse(hide in self.get(f'/view/{doc.id}'))
 
-    def test_teacher(self):
-        self.login_test1()
-        d = self.create_doc()
-        self.get(f'/teacher/{d.path}', query_string={'group': get_home_organization_group().name})
-
     def test_answers_no_crash(self):
         """Don't crash if anonymous user opens answers view."""
         self.login_test1()
@@ -320,14 +313,6 @@ class TimTest(TimRouteTest):
         db.session.commit()
         self.logout()
         self.get(f'/answers/{d.path}')
-
-    def test_teacher_nonexistent_group(self):
-        self.login_test1()
-        d = self.create_doc()
-        r = self.get(
-            f'/teacher/{d.path}',
-            query_string={'group': 'nonexistent'})
-        self.assertIn('User group nonexistent not found', r)
 
     def test_ping(self):
         self.get('/ping')

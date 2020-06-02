@@ -142,6 +142,11 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return r
 
     @property
+    def is_personal_group(self):
+        self.load_personal_user()
+        return self.personal_user is not None
+
+    @property
     def pretty_full_name(self):
         return self.name
 

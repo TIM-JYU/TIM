@@ -41,9 +41,10 @@
         var group = {{group|tojson}};
         var lectureMode = {{lecture_mode|tojson}};
         var in_lecture = {{in_lecture|tojson}};
-        var users = [];
         {% if teacher_mode %}
-            users = {{plugin_users|tojson}};
+            var users = {{plugin_users|tojson}};
+        {% else %}
+            var users = [];
         {% endif %}
         var noQuestionAutoNumbering = {{ no_question_auto_numbering|tojson}};
         var liveUpdates = {{ live_updates|tojson}};
