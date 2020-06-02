@@ -388,7 +388,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.viewctrl.users.length > 0 && this.user !== this.viewctrl.users[0].user) {
             this.dimPlugin();
         }
-        this.saveTeacher = false;
+        if (this.viewctrl.docSettings.saveTeacher && this.viewctrl.teacherMode) {
+            this.saveTeacher = true;
+        } else {
+            this.saveTeacher = false;
+        }
         this.users = undefined;
         this.answers = [];
         this.filteredAnswers = [];
