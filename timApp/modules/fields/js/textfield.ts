@@ -33,7 +33,6 @@ const TextfieldMarkup = t.intersection([
     t.type({
         autoupdate: withDefault(t.number, 500),
         autoUpdateTables: withDefault(t.boolean, true),
-        form: withDefault(t.boolean, true),
         cols: withDefault(t.number, 6),
         rows: withDefault(t.number, 1),
     }),
@@ -425,7 +424,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     isForm(): boolean {
-        return this.attrs.form;
+        return this.attrs.form ?? true;
     }
 
     updateInput() {

@@ -989,6 +989,34 @@ class CsController extends CsBase implements ITimComponent {
         return {saved: true, message: undefined};
     }
 
+    isForm(): boolean {
+        return this.attrs.form ?? false;
+    }
+
+    supportsSetAnswer(): boolean {
+        return this.isForm();
+    }
+
+    setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
+        let message;
+        let ok = true;
+        if (Object.keys(content).length == 0) {
+            this.resetField();
+        } else {
+            try {
+                this.usercode = content.usercode;
+            } catch (e) {
+                this.usercode = "";
+                ok = false;
+                message = "Couldn't find related content (\"usercode\")";
+            }
+        }
+        this.edited = false;
+        this.updateListeners(ChangeType.Saved);
+        return {ok: ok, message: message};
+
+    }
+
     isUnSaved() {
         return this.edited;
     }

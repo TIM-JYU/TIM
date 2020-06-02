@@ -36,7 +36,6 @@ const NumericfieldMarkup = t.intersection([
     t.type({
         autoupdate: withDefault(t.number, 500),
         autoUpdateTables: withDefault(t.boolean, true),
-        form: withDefault(t.boolean, true),
         cols: withDefault(t.number, 6),
     }),
 ]);
@@ -424,7 +423,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     isForm(): boolean {
-        return this.attrs.form;
+        return this.attrs.form ?? true;
     }
 
     getAttributeType() {
