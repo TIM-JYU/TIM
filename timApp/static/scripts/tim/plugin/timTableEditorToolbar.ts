@@ -226,7 +226,6 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         let ret = value.style;
         if (!ret) { ret = value.toggleStyle; }
         if (value.buttonStyle) {
-            // @ts-ignore
             ret = value.buttonStyle;
         }
         if (!ret) { return ret; }

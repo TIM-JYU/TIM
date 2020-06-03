@@ -459,7 +459,6 @@ class AnswerSheetController implements IController {
     }
 
     private isInputText() {
-        // @ts-ignore
         return this.json.answerFieldType === "inputText";
     }
 
