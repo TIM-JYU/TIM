@@ -8,7 +8,7 @@ import ivm from "isolated-vm";
 import {Branded, IntBrand} from "io-ts";
 import {AnswerReturn, ErrorList, IError, IGroupData, IJsRunnerMarkup} from "../../shared/jsrunnertypes";
 import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
-import {GTools, Tools, ToolsBase} from "./tools";
+import {GTools, IToolsResult, Tools, ToolsBase} from "./tools";
 
 console.log("answer");
 const router = express.Router();
@@ -77,7 +77,7 @@ function runner(d: IRunnerData): RunnerResult {
     const currDoc = d.currDoc;
     const markup = d.markup;
     const aliases = d.aliases;
-    const saveUsersFields: any[] = [];
+    const saveUsersFields: IToolsResult[] = [];
     // const statCounters: { [fieldname: string]: StatCounter } = {};
     let output = "";
     const errors = [];

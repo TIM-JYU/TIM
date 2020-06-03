@@ -644,7 +644,7 @@ export class GTools extends ToolsBase {
         markup: IJsRunnerMarkup,
         aliases: AliasDataT,
         tools: Tools,
-        public saveUsersFields: any[],
+        public saveUsersFields: IToolsResult[],
     ) {
         super(currDoc, markup, aliases);
         this.tools = tools;
@@ -748,8 +748,13 @@ export class GTools extends ToolsBase {
     }
 }
 
+export interface IToolsResult {
+    user: number;
+    fields: Record<string, unknown>;
+}
+
 export class Tools extends ToolsBase {
-    private result: {[index: string]: unknown} = {};
+    private result: Record<string, unknown> = {};
     constructor(
         protected data: UserFieldDataT,
         currDoc: string,
@@ -1051,7 +1056,7 @@ export class Tools extends ToolsBase {
         return this.getDouble(f, def);
     }
 
-    getResult() {
+    getResult(): IToolsResult {
         return {user: this.data.user.id, fields: this.result};
     }
 }
