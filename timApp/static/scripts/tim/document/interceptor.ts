@@ -54,7 +54,7 @@ timApp.config([() => {
     timLogTime("timApp config", "view");
     const interceptor = [
         () => {
-            const re = /\/[^/]+\/([^/]+)\/answer\/$/;
+            const re = /\/[^/]+\/([^/]+)\/answer\/(?:\?.*)?$/;
             const tfre = /\/tableForm\/(updateFields|fetchTableData)/;
             return {
                 request(config: IRequestConfig) {
