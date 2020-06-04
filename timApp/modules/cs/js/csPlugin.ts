@@ -3,7 +3,7 @@ import {Ace} from "ace-builds/src-noconflict/ace";
 import angular, {IController, IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
-import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, FormModeOption, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {IAce} from "tim/editor/ace";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
@@ -989,12 +989,15 @@ class CsController extends CsBase implements ITimComponent {
         return {saved: true, message: undefined};
     }
 
-    isForm(): boolean {
-        return this.attrs.form ?? false;
+    isForm(): FormModeOption {
+        if (this.attrs.form == undefined) {
+            return FormModeOption.Undecided;
+        }
+        return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
     }
 
     supportsSetAnswer(): boolean {
-        return this.isForm();
+        return true;
     }
 
     setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {

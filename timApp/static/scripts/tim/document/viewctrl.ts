@@ -64,8 +64,7 @@ export interface ITimComponent {
     getAreas: () => string[];
     getTaskId: () => TaskId | undefined;
     belongsToArea: (area: string) => boolean;
-     // TODO: isForm could be integrated to supportsSetAnswer (supportsSetAnswer would be true if fieldplugin and form/form_mode)
-    isForm: () => boolean;
+    isForm: () => FormModeOption;
     isUnSaved: (userChange?: boolean) => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     getPar: () => Paragraph;
@@ -123,6 +122,12 @@ export enum RegexOption {
 export enum ChangeType {
     Saved,
     Modified,
+}
+
+export enum FormModeOption {
+    Undecided,
+    IsForm,
+    NoForm,
 }
 
 export class ViewCtrl implements IController {
@@ -1015,7 +1020,8 @@ export class ViewCtrl implements IController {
     registerAnswerBrowser(ab: AnswerBrowserController) {
         const timComp = this.getTimComponentByName(ab.taskId);
         if (timComp) {
-            if ((this.docSettings.form_mode || timComp.isForm()) && timComp.supportsSetAnswer()) {
+            if ((this.docSettings.form_mode && timComp.isForm() == FormModeOption.Undecided)
+                || timComp.isForm() == FormModeOption.IsForm) {
                 // TODO: Should propably iterate like below in case of duplicates
                 this.formAbs.set(ab.taskId, ab);
                 return;

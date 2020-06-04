@@ -1,5 +1,6 @@
 import {IController, IScope} from "angular";
 import {Type} from "io-ts/lib";
+import {FormModeOption} from "tim/document/viewctrl";
 import {Binding} from "../util/utils";
 import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "./attributes";
 import {getErrors} from "./errors";
@@ -176,12 +177,13 @@ export abstract class PluginBaseCommon {
     }
 
     /**
-     * @returns {Boolean} true if plugin wants to register as formAnswerBrowser
-     * This mean invisible answerBrowser and direct answer input when changing users in viewCtrl
-     * Should only be used by simple plugins where getState is not necessary when changing answers
+     * @returns {FormModeOption} true if plugin wants to register as formAnswerBrowser
+     * This mean invisible answerBrowser and direct answer input when changing users in ViewCtrl
+     * If Undecided, let ViewCtrl decide if plugin is to be used as form.
+     * IsForm and Undecided options should only be used by simple plugins where getState is not necessary when changing answers
      */
-    public isForm(): boolean {
-        return false;
+    public isForm(): FormModeOption {
+        return FormModeOption.NoForm;
     }
 
     /**
@@ -190,7 +192,6 @@ export abstract class PluginBaseCommon {
      * @returns {ok: boolean, message: (string | undefined)}
      * ok: true if content was succesfully parsed
      * message: for replying with possible errors
-     * TODO: This could be integrated into isForm
      */
     setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
         return {ok: false, message: "Plugin doesn't support setAnswer"};

@@ -6,7 +6,7 @@ import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
 import {Subject, Observable} from "rxjs";
 import {dereferencePar, getParId} from "../document/parhelpers";
-import {ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {FormModeOption, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {getRangeBeginParam} from "../document/viewRangeInfo";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {IGenericPluginMarkup} from "../plugin/attributes";
@@ -247,13 +247,14 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
 
     isInFormMode() {
         if (this.viewctrl) {
-            // return this.viewctrl.docSettings.form_mode && (this.isFieldPlugin() || this.isGlobal());
-            if (this.viewctrl.docSettings.form_mode && this.isFieldPlugin()) {
-                return true;
-            }
             const timComp = this.viewctrl.getTimComponentByName(this.taskId);
-            if (timComp?.isForm()) {
-                return true;
+            if (timComp) {
+                const fo = timComp.isForm()
+                if (fo == FormModeOption.IsForm
+                    || this.viewctrl.docSettings.form_mode && fo == FormModeOption.Undecided) {
+                    return true;
+                }
+
             }
         }
         return false;
