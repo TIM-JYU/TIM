@@ -76,6 +76,7 @@ def revalidate(doc: str, deadline: datetime, group: str, dry_run: bool) -> None:
             .join(User, Answer.users)
             .join(UserGroup, User.groups)
             .filter(UserGroup.name == group)
+            .order_by(Answer.answered_on.desc())
             .with_entities(Answer, User.name)
             .all()
     )
