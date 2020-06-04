@@ -1,14 +1,16 @@
 import json
 from datetime import datetime
-from typing import List
+from typing import List, Tuple
 
 import click
 from flask.cli import AppGroup
 
+from timApp.admin.datetimetype import DateTimeType
 from timApp.answer.answer import Answer, AnswerSaver
 from timApp.answer.answer_models import UserAnswer
 from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
+from timApp.user.user import User
 
 answer_cli = AppGroup('answer')
 
@@ -55,3 +57,39 @@ def clear_all(doc: str, dry_run: bool) -> None:
     click.echo(f'Total {cnt}')
     if not dry_run:
         db.session.commit()
+
+
+@answer_cli.command()
+@click.argument('doc')
+@click.option('--deadline', type=DateTimeType(), required=True)
+@click.option('--dry-run/--no-dry-run', default=True)
+def revalidate(doc: str, deadline: datetime, dry_run: bool) -> None:
+    d = DocEntry.find_by_path(doc)
+    if not d:
+        click.echo(f'cannot find document "{doc}"', err=True)
+        return
+    answers: List[Tuple[Answer, str]] = (
+        Answer.query
+            .filter(Answer.task_id.startswith(f'{d.id}.'))
+            .join(User, Answer.users)
+            .with_entities(Answer, User.name)
+            .all()
+    )
+    changed_to_valid = 0
+    changed_to_invalid = 0
+    for a, name in answers:
+        if a.answered_on < deadline and not a.valid:
+            changed_to_valid += 1
+            a.valid = True
+            click.echo(f'Changing to valid: {name}, {a.task_name}, {a.answered_on}, {a.points}')
+        elif a.answered_on >= deadline and a.valid:
+            changed_to_invalid += 1
+            a.valid = False
+            click.echo(f'Changing to invalid: {name}, {a.task_name}, {a.answered_on}, {a.points}')
+    total = len(answers)
+    click.echo(f'Changing {changed_to_valid} to valid, {changed_to_invalid} to invalid.')
+    click.echo(f'Total answers in document: {total}')
+    if not dry_run:
+        db.session.commit()
+    else:
+        print('Dry run enabled, nothing changed.')
