@@ -133,10 +133,6 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.updateListeners(ChangeType.Saved);
     }
 
-    supportsSetAnswer(): boolean {
-        return true;
-    }
-
     // TODO: Use answer content as arg or entire IAnswer?
     // TODO: get rid of any (styles can arrive as object)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -127,10 +127,6 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
     }
 
-    supportsSetAnswer(): boolean {
-        return true;
-    }
-
     // TODO: Use answer content as arg or entire IAnswer?
     setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
         let message;

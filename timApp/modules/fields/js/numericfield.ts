@@ -164,11 +164,6 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.updateListeners(ChangeType.Saved);
     }
 
-    // TODO: Do not support setAnswer if an attribute says not to
-    supportsSetAnswer(): boolean {
-        return true;
-    }
-
     // TODO: Use answer content as arg or entire IAnswer?
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {

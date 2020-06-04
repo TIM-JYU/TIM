@@ -192,10 +192,6 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
     }
 
-    supportsSetAnswer(): boolean {
-        return true;
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
         let message;

@@ -996,10 +996,6 @@ class CsController extends CsBase implements ITimComponent {
         return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
     }
 
-    supportsSetAnswer(): boolean {
-        return true;
-    }
-
     setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
         let message;
         let ok = true;

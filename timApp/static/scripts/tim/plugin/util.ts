@@ -169,14 +169,6 @@ export abstract class PluginBaseCommon {
     }
 
     /**
-     * @returns {Boolean} true if plugin supports setAnswer
-     * False by default
-     */
-    public supportsSetAnswer(): boolean {
-        return false;
-    }
-
-    /**
      * @returns {FormModeOption} true if plugin wants to register as formAnswerBrowser
      * This mean invisible answerBrowser and direct answer input when changing users in ViewCtrl
      * If Undecided, let ViewCtrl decide if plugin is to be used as form.

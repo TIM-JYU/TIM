@@ -3783,11 +3783,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             (this.data.tag ? this.data.tag : undefined));
     }
 
-
-    supportsSetAnswer() {
-        return false;
-    }
-
     setAnswer(_content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
