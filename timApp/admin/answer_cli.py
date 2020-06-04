@@ -11,6 +11,7 @@ from timApp.answer.answer_models import UserAnswer
 from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 
 answer_cli = AppGroup('answer')
 
@@ -62,8 +63,9 @@ def clear_all(doc: str, dry_run: bool) -> None:
 @answer_cli.command()
 @click.argument('doc')
 @click.option('--deadline', type=DateTimeType(), required=True)
+@click.option('--group', required=True)
 @click.option('--dry-run/--no-dry-run', default=True)
-def revalidate(doc: str, deadline: datetime, dry_run: bool) -> None:
+def revalidate(doc: str, deadline: datetime, group: str, dry_run: bool) -> None:
     d = DocEntry.find_by_path(doc)
     if not d:
         click.echo(f'cannot find document "{doc}"', err=True)
@@ -72,6 +74,8 @@ def revalidate(doc: str, deadline: datetime, dry_run: bool) -> None:
         Answer.query
             .filter(Answer.task_id.startswith(f'{d.id}.'))
             .join(User, Answer.users)
+            .join(UserGroup, User.groups)
+            .filter(UserGroup.name == group)
             .with_entities(Answer, User.name)
             .all()
     )
@@ -88,7 +92,7 @@ def revalidate(doc: str, deadline: datetime, dry_run: bool) -> None:
             click.echo(f'Changing to invalid: {name}, {a.task_name}, {a.answered_on}, {a.points}')
     total = len(answers)
     click.echo(f'Changing {changed_to_valid} to valid, {changed_to_invalid} to invalid.')
-    click.echo(f'Total answers in document: {total}')
+    click.echo(f'Total answers in document for group: {total}')
     if not dry_run:
         db.session.commit()
     else:
