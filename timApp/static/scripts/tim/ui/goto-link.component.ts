@@ -31,7 +31,7 @@ const VIEW_PATH = "/view/";
            (click)="handleClick()">
             <ng-content></ng-content>
         </a>
-        <div class="load-text">
+        <div class="load-text" *ngIf="hasStatus">
             <ng-container *ngIf="isExpired">
                 <span class="error">
                     <ng-container *ngIf="pastDueText else defaultPastDueText">{{formatString(pastDueText, pastDueTime)}}</ng-container>
@@ -80,6 +80,10 @@ export class GotoLinkComponent {
     formatString = formatString;
 
     constructor(private http: HttpClient) {
+    }
+
+    get hasStatus() {
+        return this.linkState != GotoLinkState.Ready;
     }
 
     get isCountdown() {
