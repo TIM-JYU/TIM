@@ -258,18 +258,26 @@ def acs():
     auth = prepare_and_init(entity_id)
     request_id = session.get('requestID')
     if not request_id:
-        raise RouteException('requestID missing from session')
+        err = 'requestID missing from session'
+        log_warning(err)
+        raise RouteException(err)
 
     try:
         auth.process_response(request_id=request_id)
     except Exception as e:
-        raise RouteException(f'Error processing SAML response: {str(e)}')
+        err = f'Error processing SAML response: {str(e)}'
+        log_warning(err)
+        raise RouteException(err)
     errors = auth.get_errors()
     if not auth.is_authenticated():
+        err = f'Authentication failed: {auth.get_last_error_reason()}'
+        log_warning(err)
         raise RouteException(
-            f'Authentication failed: {auth.get_last_error_reason()} (Please contact {app.config["HELP_EMAIL"]} if the problem persists.)')
+            f'{err} (Please contact {app.config["HELP_EMAIL"]} if the problem persists.)')
     if errors:
-        raise RouteException(str(errors))
+        err = str(errors)
+        log_warning(err)
+        raise RouteException(err)
     session.pop('requestID', None)
     timattrs = TimRequestedAttributes(auth)
     org_group = UserGroup.get_organization_group(timattrs.org)
