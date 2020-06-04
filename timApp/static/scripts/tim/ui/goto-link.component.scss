@@ -2,37 +2,37 @@
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
+}
 
-  a {
-    &:not(:last-child) {
-      margin-right: 0.6em;
-    }
-
-    &.disabled {
-      pointer-events: none;
-      cursor: not-allowed;
-      color: #CCC;
-
-      &.timButton {
-        background: #AAA;
-      }
-    }
+a {
+  &:not(:last-child) {
+    margin-right: 0.6em;
   }
 
-  & .load-text {
+  &.disabled {
     pointer-events: none;
-    padding-top: 0.2em;
-    padding-bottom: 0.2em;
+    cursor: not-allowed;
+    color: #CCC;
 
-    & > span {
-      padding-left: 0.3em;
+    &.timButton {
+      background: #AAA;
     }
+  }
+}
 
-    & tim-loading {
-      // On some browsers spin glyphicons can wobble
-      // Setting their size to a multiple of 14px seems to help:
-      // https://github.com/FortAwesome/Font-Awesome/issues/671#issuecomment-338336059
-      font-size: 14px;
-    }
+.load-text {
+  pointer-events: none;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+
+  & > span {
+    padding-left: 0.3em;
+  }
+
+  & tim-loading {
+    // On some browsers spin glyphicons can wobble
+    // Setting their size to a multiple of 14px seems to help:
+    // https://github.com/FortAwesome/Font-Awesome/issues/671#issuecomment-338336059
+    font-size: 14px;
   }
 }
