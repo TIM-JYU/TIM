@@ -65,7 +65,8 @@ def clear_all(doc: str, dry_run: bool) -> None:
 @click.option('--deadline', type=DateTimeType(), required=True)
 @click.option('--group', required=True)
 @click.option('--dry-run/--no-dry-run', default=True)
-def revalidate(doc: str, deadline: datetime, group: str, dry_run: bool) -> None:
+@click.option('--may-invalidate/--no-may-invalidate', default=False)
+def revalidate(doc: str, deadline: datetime, group: str, dry_run: bool, may_invalidate: bool) -> None:
     d = DocEntry.find_by_path(doc)
     if not d:
         click.echo(f'cannot find document "{doc}"', err=True)
@@ -87,7 +88,7 @@ def revalidate(doc: str, deadline: datetime, group: str, dry_run: bool) -> None:
             changed_to_valid += 1
             a.valid = True
             click.echo(f'Changing to valid: {name}, {a.task_name}, {a.answered_on}, {a.points}')
-        elif a.answered_on >= deadline and a.valid:
+        elif a.answered_on >= deadline and a.valid and may_invalidate:
             changed_to_invalid += 1
             a.valid = False
             click.echo(f'Changing to invalid: {name}, {a.task_name}, {a.answered_on}, {a.points}')
