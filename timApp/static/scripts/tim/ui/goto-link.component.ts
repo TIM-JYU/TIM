@@ -5,6 +5,8 @@ import {IRight} from "tim/item/rightsEditor";
 import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
 import {HttpClient} from "@angular/common/http";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import Timeout = NodeJS.Timeout;
 
 interface IViewAccessStatus {
     can_access: boolean;
@@ -16,7 +18,8 @@ enum GotoLinkState {
     Countdown,
     Goto,
     Unauthorized,
-    Expired
+    Expired,
+    HasUnsavedChanges
 }
 
 const VIEW_PATH = "/view/";
@@ -42,6 +45,12 @@ const VIEW_PATH = "/view/";
                 <span class="error">
                     <ng-container *ngIf="unauthorizedText else defaultUnauthorizedText">{{unauthorizedText}}</ng-container>
                     <ng-template #defaultUnauthorizedText i18n>You don't have permission to view that document.</ng-template>
+                </span>
+            </ng-container>
+            <ng-container *ngIf="hasUnsavedChanges">
+                <span class="error">
+                    <ng-container *ngIf="unsavedChangesText else defaultUnsavedChangesText">{{unsavedChangesText}}</ng-container>
+                    <ng-template #defaultUnsavedChangesText i18n>You have unsaved changes. Save them or click the link again.</ng-template>
                 </span>
             </ng-container>
             <ng-container *ngIf="isCountdown">
@@ -72,10 +81,13 @@ export class GotoLinkComponent {
     @Input() target = "_self";
     @Input() openAt?: string;
     @Input() closeAt?: string;
+    @Input() checkUnsaved: boolean = false;
+    @Input() unsavedChangesText?: string;
     countDown = 0;
     pastDue = 0;
     linkDisabled = false;
     linkState = GotoLinkState.Ready;
+    resetTimeout?: Timeout;
 
     formatString = formatString;
 
@@ -100,6 +112,10 @@ export class GotoLinkComponent {
 
     get isExpired() {
         return this.linkState == GotoLinkState.Expired;
+    }
+
+    get hasUnsavedChanges() {
+        return this.linkState == GotoLinkState.HasUnsavedChanges;
     }
 
     get pastDueTime() {
@@ -133,6 +149,8 @@ export class GotoLinkComponent {
         // Allow user to click during countdown or past expiration, but do nothing reasonable.
         if (this.isCountdown) { return; }
 
+        this.stopReset();
+
         this.linkDisabled = true;
 
         const {unauthorized, access} = await this.resolveAccess();
@@ -164,6 +182,13 @@ export class GotoLinkComponent {
             return;
         }
 
+        if (!this.hasUnsavedChanges && this.checkUnsaved && vctrlInstance?.checkUnSavedTimComponents()) {
+            this.linkDisabled = false;
+            this.linkState = GotoLinkState.HasUnsavedChanges;
+            this.startReset(this.resetTime);
+            return;
+        }
+
         if (openTime?.isValid()) {
             this.countDown = openTime.diff(curTime, "seconds", true);
         }
@@ -182,10 +207,18 @@ export class GotoLinkComponent {
     }
 
     startReset(resetTime: number) {
-        setTimeout(() => {
+         this.resetTimeout = setTimeout(() => {
+           this.stopReset();
            this.linkState = GotoLinkState.Ready;
            this.linkDisabled = false;
         }, resetTime * 1000);
+    }
+
+    stopReset() {
+        if (this.resetTimeout) {
+            clearTimeout(this.resetTimeout);
+            this.resetTimeout = undefined;
+        }
     }
 
     startGoto() {

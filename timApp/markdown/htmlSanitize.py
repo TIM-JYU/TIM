@@ -136,16 +136,9 @@ TIM_SAFE_ATTRS = frozenset([
     'group',
 
     # tim-goto-link
-    'max-wait',
-    'reset-time',
-    'is-button',
-    'open-at',
-    'close-at',
-    'wait-text',
-    'countdown-text',
-    'unauthorized-text',
-    'past-due-text',
-    'time-lang',
+    'max-wait', 'reset-time', 'is-button', 'open-at', 'close-at', 'wait-text',
+    'countdown-text', 'unauthorized-text', 'past-due-text', 'time-lang',
+    'check-unsaved', 'unsaved-changes-text'
 ])
 
 c = Cleaner(
