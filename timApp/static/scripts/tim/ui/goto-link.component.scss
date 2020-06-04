@@ -2,22 +2,27 @@
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
 
-  a.disabled {
-    pointer-events: none;
-    cursor: not-allowed;
-    color: #CCC;
+  a {
+    &:not(:last-child) {
+      margin-right: 0.6em;
+    }
 
-    &.timButton {
-      background: #AAA;
+    &.disabled {
+      pointer-events: none;
+      cursor: not-allowed;
+      color: #CCC;
+
+      &.timButton {
+        background: #AAA;
+      }
     }
   }
 
   & .load-text {
-    padding-left: 0.6em;
-    padding-right: 0.6em;
     pointer-events: none;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
 
     & > span {
       padding-left: 0.3em;
