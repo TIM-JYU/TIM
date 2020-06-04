@@ -3,7 +3,7 @@
  */
 import angular from "angular"; // , {INgModelOptions}
 import * as t from "io-ts";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {FormModeOption, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
@@ -102,6 +102,13 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     resetField(): undefined {
         this.initCode();
         return undefined;
+    }
+
+    isForm(): FormModeOption {
+        if (this.attrs.form == undefined) {
+            return FormModeOption.IsForm;
+        }
+        return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
     }
 
     supportsSetAnswer(): boolean {

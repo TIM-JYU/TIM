@@ -3,7 +3,7 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
+import {FormModeOption, ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
@@ -118,6 +118,13 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     resetField(): undefined {
         this.initCode();
         return undefined;
+    }
+
+    isForm(): FormModeOption {
+        if (this.attrs.form == undefined) {
+            return FormModeOption.IsForm;
+        }
+        return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
     }
 
     supportsSetAnswer(): boolean {

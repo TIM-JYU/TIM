@@ -3,7 +3,7 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, FormModeOption, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
@@ -183,6 +183,13 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
     isUnSaved() {
         return this.changes;
+    }
+
+    isForm(): FormModeOption {
+        if (this.attrs.form == undefined) {
+            return FormModeOption.IsForm;
+        }
+        return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
     }
 
     supportsSetAnswer(): boolean {
