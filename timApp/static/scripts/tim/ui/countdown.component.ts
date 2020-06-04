@@ -44,15 +44,17 @@ export class CountdownComponent implements OnInit {
     }
 
     private async getCountdownStart() {
+        // Ceil countdown seconds so we always include possible fractions of a second and account for possible
+        // floating point precision errors
         if (this.seconds) {
-            return this.seconds;
+            return Math.ceil(this.seconds);
         }
         if (this.endTime) {
             const serverTime = await to2(this.http.get<{time: moment.Moment}>("/time").toPromise());
             if (!serverTime.ok) {
                 return 0;
             }
-            return moment.utc(this.endTime).diff(serverTime.result.time.utc(), "seconds");
+            return Math.ceil(moment(this.endTime).diff(serverTime.result.time, "seconds", true));
         }
         return 0;
     }
