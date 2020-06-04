@@ -161,7 +161,7 @@ export class GotoLinkComponent {
         }
 
         if (openTime?.isValid()) {
-            this.countDown = openTime.diff(curTime, "seconds");
+            this.countDown = openTime.diff(curTime, "seconds", true);
         }
 
         if (this.countDown <= 0) {
