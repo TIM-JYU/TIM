@@ -54,7 +54,7 @@ export class CountdownComponent implements OnInit {
             if (!serverTime.ok) {
                 return 0;
             }
-            return Math.ceil(moment.utc(this.endTime).diff(serverTime.result.time.utc(), "seconds", true));
+            return Math.ceil(moment(this.endTime).diff(serverTime.result.time, "seconds", true));
         }
         return 0;
     }

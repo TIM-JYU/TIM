@@ -125,7 +125,7 @@ export class GotoLinkComponent {
         if (!timeString) {
             return wildcardValue;
         }
-        const result = moment.utc(timeString);
+        const result = moment(timeString);
         return result.isValid() ? result : wildcardValue;
     }
 
@@ -154,7 +154,7 @@ export class GotoLinkComponent {
                 this.linkDisabled = false;
                 return;
             }
-            curTime = serverTime.result.time.utc();
+            curTime = serverTime.result.time;
         }
 
         if (closeTime?.isValid() && closeTime.isBefore(curTime)) {
