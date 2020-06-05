@@ -6,7 +6,6 @@ import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
 import {HttpClient} from "@angular/common/http";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import Timeout = NodeJS.Timeout;
 
 interface IViewAccessStatus {
     can_access: boolean;
