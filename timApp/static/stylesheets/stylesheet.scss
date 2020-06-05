@@ -842,6 +842,11 @@ input[type="file"] {
     border: none;
 }
 
+input:focus.unsaved {
+    border-right-color: gold;
+    border-right-width: thick;
+}
+
 .smalllink {
     font-size: 50%;
     margin-top: -3em;

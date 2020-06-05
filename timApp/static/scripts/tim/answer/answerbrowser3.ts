@@ -1,10 +1,9 @@
-import {IController, IScope, ITranscludeFunction} from "angular";
+import angular, {IController, IScope, ITranscludeFunction} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
-import {Subject, Observable} from "rxjs";
 import {dereferencePar, getParId} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {getRangeBeginParam} from "../document/viewRangeInfo";
@@ -467,7 +466,33 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    async savePoints() {
+    trySavePoints(updateAnswers: boolean = false) {
+        if (!this.selectedAnswer || !this.user) {
+            return true;
+        }
+
+        const formEl = angular.element("#points-form");
+        if (!formEl.length) {
+            return true;
+        }
+
+        const formElement = formEl[0] as HTMLFormElement;
+        if (!formElement.reportValidity()) {
+            return false;
+        }
+
+        if (this.points == this.selectedAnswer.points) {
+            return true;
+        }
+
+        const savePointsPromise = this.savePoints(false);
+        if (updateAnswers) {
+            savePointsPromise.then(() => this.getAnswersAndUpdate());
+        }
+        return true;
+    }
+
+    async savePoints(updatePointsState: boolean = true) {
         if (!this.selectedAnswer || !this.user) {
             return;
         }
@@ -478,7 +503,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.showError(r.result);
             return;
         }
-        if (!this.selectedAnswer) {
+        if (!updatePointsState || !this.selectedAnswer) {
             return;
         }
         this.selectedAnswer.points = this.points;
@@ -567,18 +592,15 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
     }
 
-    async nextAnswer() {
-        let newIndex = this.findSelectedAnswerIndex() - 1;
+    async changeAnswerTo(dir: (-1 | 1)) {
+        if (!this.trySavePoints(true)) {
+            return;
+        }
+
+        let newIndex = this.findSelectedAnswerIndex() + dir;
         if (newIndex < 0) {
             newIndex = this.filteredAnswers.length - 1;
-        }
-        this.selectedAnswer = this.filteredAnswers[newIndex];
-        await this.changeAnswer();
-    }
-
-    async previousAnswer() {
-        let newIndex = this.findSelectedAnswerIndex() + 1;
-        if (newIndex >= this.filteredAnswers.length) {
+        } else if (newIndex >= this.filteredAnswers.length) {
             newIndex = 0;
         }
         this.selectedAnswer = this.filteredAnswers[newIndex];
@@ -613,11 +635,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 return true;
             } else if ((e.key === "ArrowLeft" || e.which === KEY_LEFT)) {
                 e.preventDefault();
-                await this.previousAnswer();
+                await this.changeAnswerTo(-1);
                 return true;
             } else if ((e.key === "ArrowRight" || e.which === KEY_RIGHT)) {
                 e.preventDefault();
-                await this.nextAnswer();
+                await this.changeAnswerTo(1);
                 return true;
             }
         }
@@ -629,6 +651,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         if (this.users.length <= 0) {
+            return;
+        }
+        if (!this.trySavePoints()) {
             return;
         }
         const shouldRefocusPoints = this.shouldFocus;
@@ -775,6 +800,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.viewctrl.item.rights || !this.viewctrl.item.rights.browse_own_answers) {
             return;
         }
+
         const data = await this.getAnswers();
         if (!data) {
             return;

@@ -31,7 +31,7 @@
                 <div>
                     <div class="input-group input-group-xs">
                 <span class="input-group-btn">
-                    <button title="Previous answer" class="btn btn-primary prevAnswer" ng-click="$ctrl.previousAnswer()">&larr;</button>
+                    <button title="Previous answer" class="btn btn-primary prevAnswer" ng-click="$ctrl.changeAnswerTo(-1)">&larr;</button>
                 </span>
                         <select class="form-control"
                                 title="List of answers"
@@ -39,7 +39,7 @@
                                 ng-options="(($ctrl.filteredAnswers.length - idx) + '. ' + (answer.answered_on | timdate )) for (idx, answer) in $ctrl.filteredAnswers | orderBy:'answer.id' track by answer.id"
                                 ng-change="$ctrl.changeAnswer()"></select>
                 <span class="input-group-btn">
-                    <button title="Next answer" class="btn btn-primary nextAnswer" ng-click="$ctrl.nextAnswer()">&rarr;</button>
+                    <button title="Next answer" class="btn btn-primary nextAnswer" ng-click="$ctrl.changeAnswerTo(+1)">&rarr;</button>
                 </span>
                     </div>
                 </div>
@@ -62,9 +62,10 @@
             </div>
             <div class="flex" ng-show="$ctrl.selectedAnswer">
                 <div>
-                    <form ng-submit="$ctrl.savePoints()" class="point-form form-inline">
+                    <form id="points-form" ng-submit="$ctrl.savePoints()" class="point-form form-inline">
                         <label ng-show="$ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())">
                         Points:<input class="form-control input-xs"
+                                      ng-class="{ unsaved: $ctrl.points != $ctrl.selectedAnswer.points }"
                                       focus-me="$ctrl.shouldFocus #blurWhenFalse"
                                       ng-focus="$ctrl.shouldFocus = true"
                                       ng-blur="$ctrl.shouldFocus = false"
