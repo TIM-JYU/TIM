@@ -19,7 +19,7 @@ enum GotoLinkState {
     Goto,
     Unauthorized,
     Expired,
-    HasUnsavedChanges
+    HasUnsavedChanges,
 }
 
 const VIEW_PATH = "/view/";
@@ -87,7 +87,7 @@ export class GotoLinkComponent {
     pastDue = 0;
     linkDisabled = false;
     linkState = GotoLinkState.Ready;
-    resetTimeout?: Timeout;
+    resetTimeout?: number;
 
     formatString = formatString;
 
@@ -207,7 +207,7 @@ export class GotoLinkComponent {
     }
 
     startReset(resetTime: number) {
-         this.resetTimeout = setTimeout(() => {
+         this.resetTimeout = window.setTimeout(() => {
            this.stopReset();
            this.linkState = GotoLinkState.Ready;
            this.linkDisabled = false;
