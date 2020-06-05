@@ -216,7 +216,7 @@ export class GotoLinkComponent {
 
     stopReset() {
         if (this.resetTimeout) {
-            clearTimeout(this.resetTimeout);
+            window.clearTimeout(this.resetTimeout);
             this.resetTimeout = undefined;
         }
     }
@@ -228,7 +228,7 @@ export class GotoLinkComponent {
         const waitTime = Math.random() * Math.max(this.maxWait, 0);
         const realResetTime = Math.max(this.resetTime, waitTime);
 
-        setTimeout(() => {
+        window.setTimeout(() => {
             // Special case: on empty href just reload the page to mimic the behaviour of <a>
             if (this.href == "") {
                 // Note: the force-reload is deprecated: https://github.com/Microsoft/TypeScript/issues/28898
