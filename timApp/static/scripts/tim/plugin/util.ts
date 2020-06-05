@@ -1,6 +1,6 @@
 import {IController, IScope} from "angular";
 import {Type} from "io-ts/lib";
-import {FormModeOption} from "tim/document/viewctrl";
+import {FormModeOption, ISetAnswerResult} from "tim/document/viewctrl";
 import {Binding} from "../util/utils";
 import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "./attributes";
 import {getErrors} from "./errors";
@@ -181,11 +181,11 @@ export abstract class PluginBaseCommon {
     /**
      * Sets plugin's answer content via external call
      * @param content answer to be parsed
-     * @returns {ok: boolean, message: (string | undefined)}
+     * @returns ISetAnswerResult: {ok: boolean, message: (string | undefined)}
      * ok: true if content was succesfully parsed
      * message: for replying with possible errors
      */
-    setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 

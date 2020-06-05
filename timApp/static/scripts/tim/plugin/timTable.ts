@@ -65,7 +65,7 @@ import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
 import {onClick} from "../document/eventhandlers";
-import {ChangeType, FormModeOption, ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
 import {ComparatorFilter} from "../util/comparatorfilter";
 import {
@@ -3783,7 +3783,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             (this.data.tag ? this.data.tag : undefined));
     }
 
-    setAnswer(_content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(_content: { [index: string]: unknown }): ISetAnswerResult {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 

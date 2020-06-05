@@ -3,7 +3,7 @@ import {Ace} from "ace-builds/src-noconflict/ace";
 import angular, {IController, IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
-import {ChangeType, FormModeOption, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {IAce} from "tim/editor/ace";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
@@ -608,6 +608,8 @@ interface IExtraMarkup {
     document?: boolean;
 }
 
+const CspluginAnswer = t.type({usercode: t.string});
+
 /**
  * This defines the required format for the csPlugin YAML markup.
  * All fields in the markup are optional (as indicated by t.partial function).
@@ -996,24 +998,20 @@ class CsController extends CsBase implements ITimComponent {
         return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
     }
 
-    setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: unknown): ISetAnswerResult {
         let message;
         let ok = true;
-        if (Object.keys(content).length == 0) {
-            this.resetField();
+        if (CspluginAnswer.is(content)) {
+            // TODO: Add support for userArgs/userInput
+            this.usercode = content.usercode;
+            this.edited = false;
+            this.updateListeners(ChangeType.Saved);
         } else {
-            try {
-                this.usercode = content.usercode;
-            } catch (e) {
-                this.usercode = "";
-                ok = false;
-                message = "Couldn't find related content (\"usercode\")";
-            }
+            this.usercode = "";
+            ok = false;
+            message = "Couldn't find related content (\"usercode\")";
         }
-        this.edited = false;
-        this.updateListeners(ChangeType.Saved);
         return {ok: ok, message: message};
-
     }
 
     isUnSaved() {

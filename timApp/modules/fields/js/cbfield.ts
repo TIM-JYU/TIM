@@ -3,7 +3,7 @@
  */
 import angular from "angular"; // , {INgModelOptions}
 import * as t from "io-ts";
-import {FormModeOption, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
@@ -112,7 +112,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
-    setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?

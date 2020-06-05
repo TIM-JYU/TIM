@@ -72,11 +72,15 @@ export interface ITimComponent {
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
     resetChanges: () => void;
-    setAnswer: (content: {[index: string]: unknown}) => {ok: boolean, message: (string | undefined)};
+    setAnswer: (content: {[index: string]: unknown}) => ISetAnswerResult;
     setData?(data: unknown, save: boolean): void;
 }
 
-// TODO: import entire controller?
+export interface ISetAnswerResult {
+    ok: boolean,
+    message: (string | undefined)
+}
+
 export interface IJsRunner {
     runScriptWithGroups: (groups: string[]) => void;
 }
