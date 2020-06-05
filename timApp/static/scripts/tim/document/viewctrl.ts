@@ -1017,7 +1017,7 @@ export class ViewCtrl implements IController {
      * Returns true if ITimComponent wants to be a form, or is in undecided state and document is in form mode
      * @param timComp ITimComponent to inspect
      */
-    ITimComponentIsInFormMode(timComp: ITimComponent): boolean {
+    isTimComponentInFormMode(timComp: ITimComponent): boolean {
         return ((this.docSettings.form_mode && timComp.formBehavior() == FormModeOption.Undecided)
             || timComp.formBehavior() == FormModeOption.IsForm);
     }
@@ -1032,7 +1032,7 @@ export class ViewCtrl implements IController {
     registerAnswerBrowser(ab: AnswerBrowserController) {
         const timComp = this.getTimComponentByName(ab.taskId);
         if (timComp) {
-            if (this.ITimComponentIsInFormMode(timComp)) {
+            if (this.isTimComponentInFormMode(timComp)) {
                 // TODO: Should propably iterate like below in case of duplicates
                 this.formAbs.set(ab.taskId, ab);
                 return;
