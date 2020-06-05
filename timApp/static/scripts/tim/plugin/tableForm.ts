@@ -762,7 +762,6 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             let y = 1;
             for (const r of this.rowKeys) {
                 this.data.userdata.cells[userNameColumn + y] = {cell: r, backgroundColor: this.fixedColor};
-                // this.data.lockedCells.push(userNameColumn + y);
                 this.userLocations[y] = r;
                 for (const [map, col] of [
                     [this.realnamemap, realNameColumn],
@@ -774,7 +773,6 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                             cell: map[r],
                             backgroundColor: this.fixedColor,
                         };
-                        // this.data.lockedCells.push(col + y);
                     }
                 }
                 y++;
@@ -786,7 +784,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
 
                     const colheader = this.fields[x];
                     const currentCol = colnumToLetters(x + xOffset);
-                    if (this.lockedFields?.includes(colheader)) {
+                    if (this.lockedFields.includes(colheader)) {
                         this.data.lockedColumns.push(currentCol);
                     }
                     this.data.headers.push(colheader);
