@@ -6,7 +6,7 @@ import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
 import {Subject, Observable} from "rxjs";
 import {dereferencePar, getParId} from "../document/parhelpers";
-import {ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {FormModeOption, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {getRangeBeginParam} from "../document/viewRangeInfo";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {IGenericPluginMarkup} from "../plugin/attributes";
@@ -43,7 +43,6 @@ timLogTime("answerbrowser3 load", "answ");
 
 const LAZY_MARKER = "lazy";
 const LAZY_MARKER_LENGTH = LAZY_MARKER.length;
-const FIELD_PLUGINS = new Set(["textfield", "numericfield", "cbfield", "rbfield", "dropdown"]);
 
 function isElement(n: Node): n is Element {
     return n.nodeType === Node.ELEMENT_NODE;
@@ -247,24 +246,12 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
 
     isInFormMode() {
         if (this.viewctrl) {
-            // return this.viewctrl.docSettings.form_mode && (this.isFieldPlugin() || this.isGlobal());
-            if (this.viewctrl.docSettings.form_mode && this.isFieldPlugin()) {
-                return true;
-            }
             const timComp = this.viewctrl.getTimComponentByName(this.taskId);
-            if (timComp?.isForm()) {
-                return true;
+            if (timComp) {
+                return this.viewctrl.ITimComponentIsInFormMode(timComp);
             }
         }
         return false;
-    }
-
-    isFieldPlugin() {
-        const plugin = this.getPluginElement().attr("data-plugin");
-        if (!plugin) {
-            return false;
-        }
-        return FIELD_PLUGINS.has(plugin.slice(1)); // remove leading '/' so we get only the plugin type name
     }
 }
 

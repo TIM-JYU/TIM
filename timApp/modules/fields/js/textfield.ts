@@ -3,9 +3,9 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $timeout} from "tim/util/ngimport";
 import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
 
@@ -33,7 +33,6 @@ const TextfieldMarkup = t.intersection([
     t.type({
         autoupdate: withDefault(t.number, 500),
         autoUpdateTables: withDefault(t.boolean, true),
-        form: withDefault(t.boolean, true),
         cols: withDefault(t.number, 6),
         rows: withDefault(t.number, 1),
     }),
@@ -134,14 +133,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.updateListeners(ChangeType.Saved);
     }
 
-    supportsSetAnswer(): boolean {
-        return true;
-    }
-
     // TODO: Use answer content as arg or entire IAnswer?
     // TODO: get rid of any (styles can arrive as object)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: { [index: string]: any }): ISetAnswerResult {
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
@@ -424,8 +419,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         ele.css("height",  ele[0].scrollHeight + "px");
     }
 
-    isForm(): boolean {
-        return this.attrs.form;
+    formBehavior(): FormModeOption {
+        return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
     }
 
     updateInput() {

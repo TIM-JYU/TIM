@@ -64,8 +64,7 @@ export interface ITimComponent {
     getAreas: () => string[];
     getTaskId: () => TaskId | undefined;
     belongsToArea: (area: string) => boolean;
-     // TODO: isForm could be integrated to supportsSetAnswer (supportsSetAnswer would be true if fieldplugin and form/form_mode)
-    isForm: () => boolean;
+    formBehavior: () => FormModeOption;
     isUnSaved: (userChange?: boolean) => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     getPar: () => Paragraph;
@@ -73,12 +72,15 @@ export interface ITimComponent {
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
     resetChanges: () => void;
-    supportsSetAnswer: () => boolean;
-    setAnswer: (content: {[index: string]: unknown}) => {ok: boolean, message: (string | undefined)};
+    setAnswer: (content: {[index: string]: unknown}) => ISetAnswerResult;
     setData?(data: unknown, save: boolean): void;
 }
 
-// TODO: import entire controller?
+export interface ISetAnswerResult {
+    ok: boolean,
+    message: (string | undefined)
+}
+
 export interface IJsRunner {
     runScriptWithGroups: (groups: string[]) => void;
 }
@@ -123,6 +125,12 @@ export enum RegexOption {
 export enum ChangeType {
     Saved,
     Modified,
+}
+
+export enum FormModeOption {
+    Undecided,
+    IsForm,
+    NoForm,
 }
 
 export class ViewCtrl implements IController {
@@ -1006,6 +1014,15 @@ export class ViewCtrl implements IController {
     private formAbs = new EntityRegistry<string, AnswerBrowserController>();
 
     /**
+     * Returns true if ITimComponent wants to be a form, or is in undecided state and document is in form mode
+     * @param timComp ITimComponent to inspect
+     */
+    ITimComponentIsInFormMode(timComp: ITimComponent): boolean {
+        return ((this.docSettings.form_mode && timComp.formBehavior() == FormModeOption.Undecided)
+            || timComp.formBehavior() == FormModeOption.IsForm);
+    }
+
+    /**
      * Registers answerbrowser to related map
      * If ((form_mode is enabled or plugin wants to be form) and answerBrowser is from timComponent
      * that supports setting answer) then add it to formAbs
@@ -1015,7 +1032,7 @@ export class ViewCtrl implements IController {
     registerAnswerBrowser(ab: AnswerBrowserController) {
         const timComp = this.getTimComponentByName(ab.taskId);
         if (timComp) {
-            if ((this.docSettings.form_mode || timComp.isForm()) && timComp.supportsSetAnswer()) {
+            if (this.ITimComponentIsInFormMode(timComp)) {
                 // TODO: Should propably iterate like below in case of duplicates
                 this.formAbs.set(ab.taskId, ab);
                 return;

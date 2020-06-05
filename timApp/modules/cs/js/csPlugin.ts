@@ -3,11 +3,11 @@ import {Ace} from "ace-builds/src-noconflict/ace";
 import angular, {IController, IScope} from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
-import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {IAce} from "tim/editor/ace";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$compile, $http, $rootScope, $sce, $timeout, $upload} from "tim/util/ngimport";
 import {
     copyToClipboard,
@@ -608,6 +608,8 @@ interface IExtraMarkup {
     document?: boolean;
 }
 
+const CspluginAnswer = t.type({usercode: t.string});
+
 /**
  * This defines the required format for the csPlugin YAML markup.
  * All fields in the markup are optional (as indicated by t.partial function).
@@ -987,6 +989,26 @@ class CsController extends CsBase implements ITimComponent {
         }
         await this.runCode();
         return {saved: true, message: undefined};
+    }
+
+    formBehavior(): FormModeOption {
+        return getFormBehavior(this.attrs.form, FormModeOption.Undecided);
+    }
+
+    setAnswer(content: unknown): ISetAnswerResult {
+        let message;
+        let ok = true;
+        if (CspluginAnswer.is(content)) {
+            // TODO: Add support for userArgs/userInput
+            this.usercode = content.usercode;
+            this.edited = false;
+            this.updateListeners(ChangeType.Saved);
+        } else {
+            this.usercode = "";
+            ok = false;
+            message = `Couldn't find related content ("usercode")`;
+        }
+        return {ok: ok, message: message};
     }
 
     isUnSaved() {

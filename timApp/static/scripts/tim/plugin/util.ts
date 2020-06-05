@@ -1,5 +1,6 @@
 import {IController, IScope} from "angular";
 import {Type} from "io-ts/lib";
+import {FormModeOption, ISetAnswerResult} from "tim/document/viewctrl";
 import {Binding} from "../util/utils";
 import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "./attributes";
 import {getErrors} from "./errors";
@@ -168,31 +169,23 @@ export abstract class PluginBaseCommon {
     }
 
     /**
-     * @returns {Boolean} true if plugin supports setAnswer
-     * False by default
+     * @returns {FormModeOption} FormModeOption.IsForm if plugin wants to register as formAnswerBrowser
+     * This means invisible answerBrowser and direct answer input when changing users in ViewCtrl
+     * If Undecided, let ViewCtrl decide if plugin is to be used as form.
+     * IsForm and Undecided options should only be used by simple plugins where getState is not necessary when changing answers
      */
-    public supportsSetAnswer(): boolean {
-        return false;
-    }
-
-    /**
-     * @returns {Boolean} true if plugin wants to register as formAnswerBrowser
-     * This mean invisible answerBrowser and direct answer input when changing users in viewCtrl
-     * Should only be used by simple plugins where getState is not necessary when changing answers
-     */
-    public isForm(): boolean {
-        return false;
+    public formBehavior(): FormModeOption {
+        return FormModeOption.NoForm;
     }
 
     /**
      * Sets plugin's answer content via external call
      * @param content answer to be parsed
-     * @returns {ok: boolean, message: (string | undefined)}
+     * @returns ISetAnswerResult: {ok: boolean, message: (string | undefined)}
      * ok: true if content was succesfully parsed
      * message: for replying with possible errors
-     * TODO: This could be integrated into isForm
      */
-    setAnswer(content: { [index: string]: unknown }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 
@@ -315,6 +308,18 @@ export function shuffleStrings(strings: string []): string [] {
         result[j] = tmp;
     }
     return result;
+}
+
+/**
+ * Converts plugin's "form" (boolean/undefined) attribute to FormModeOption
+ * @param attr attribute to inspect
+ * @param defBehavior default option to return if form attribute was not given
+ */
+export function getFormBehavior(attr: boolean | undefined, defBehavior: FormModeOption): FormModeOption {
+    if (attr == undefined) {
+        return defBehavior;
+    }
+    return attr ? FormModeOption.IsForm : FormModeOption.NoForm;
 }
 
 export const pluginBindings = {
