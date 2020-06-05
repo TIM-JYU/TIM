@@ -4,6 +4,7 @@ import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
+import {IAnswerBrowserSettings} from "tim/document/IDocSettings";
 import {dereferencePar, getParId} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {getRangeBeginParam} from "../document/viewRangeInfo";
@@ -313,6 +314,10 @@ export type AnswerBrowserData =
     { saveAnswer: boolean; teacher: boolean; saveTeacher: false }
     | { saveAnswer: boolean; teacher: boolean; saveTeacher: boolean; answer_id: number | undefined; userId: number; points: number | undefined; giveCustomPoints: boolean };
 
+const DEFAULT_SETTINGS: IAnswerBrowserSettings = {
+    pointsStep: 0,
+};
+
 export class AnswerBrowserController extends DestroyScope implements IController {
     static $inject = ["$scope", "$element"];
     public taskId!: Binding<string, "<">;
@@ -339,6 +344,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private loader!: PluginLoaderCtrl;
     private reviewHtml?: string;
     private answerLoader?: AnswerLoadCallback;
+    private settings: IAnswerBrowserSettings = DEFAULT_SETTINGS;
+    private pointsStep: number = 0.01;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -397,6 +404,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.review = false;
         this.shouldFocus = false;
         this.alerts = [];
+        this.settings = {...DEFAULT_SETTINGS, ...this.viewctrl.docSettings.answerBrowser};
+
+        // Ensure the point step is never zero because some browsers don't like step="0" value in number inputs.
+        if (this.settings.pointsStep != 0) {
+            this.pointsStep = this.settings.pointsStep;
+        }
 
         this.scope.$watch(() => this.review, () => this.changeAnswer());
         this.scope.$watchGroup([
@@ -617,6 +630,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
         }
         return -1;
+    }
+
+    handlePointScroll(e: KeyboardEvent) {
+        if (this.loading > 0 || this.settings.pointsStep != 0) {
+            return;
+        }
+        if ((e.key === "ArrowUp" || e.which === KEY_UP) ||
+            (e.key === "ArrowDown" || e.which === KEY_DOWN)) {
+            e.preventDefault();
+        }
     }
 
     async checkKeyPress(e: KeyboardEvent) {
