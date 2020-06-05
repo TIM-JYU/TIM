@@ -50,20 +50,28 @@ export function prepareAnswerRequest(
     };
 }
 
+export function getTaskIdIfAnswerUrl(url: string): string | undefined {
+    const fullUrl = new URL(url, window.location.origin);
+    const re = /\/[^/]+\/([^/]+)\/answer\/$/;
+    const match = re.exec(fullUrl.pathname);
+    if (match) {
+        return match[1];
+    }
+    return undefined;
+}
+
 timApp.config([() => {
     timLogTime("timApp config", "view");
     const interceptor = [
         () => {
-            const re = /\/[^/]+\/([^/]+)\/answer\/$/;
             const tfre = /\/tableForm\/(updateFields|fetchTableData)/;
             return {
                 request(config: IRequestConfig) {
                     const url = config.url;
                     let newUrl = url;
-                    const match = re.exec(url);
-                    if (match) {
+                    const taskIdFull = getTaskIdIfAnswerUrl(url);
+                    if (taskIdFull) {
                         const d = config.data as { abData?: unknown, ref_from?: unknown };
-                        const taskIdFull = match[1];
                         const {url: newU, data} = prepareAnswerRequest(taskIdFull, url);
                         config.data = {
                             ...config.data,
@@ -79,24 +87,24 @@ timApp.config([() => {
                     return config;
                 },
                 response(response: IHttpResponse<unknown>) {
-                    const match = re.exec(response.config.url);
-                    if (!match) {
+                    const taskIdFull = getTaskIdIfAnswerUrl(response.config.url);
+                    if (!taskIdFull) {
                         return response;
                     }
                     const resp = response as IHttpResponse<IAnswerSaveEvent>;
-                    handleAnswerResponse(match[1], {
+                    handleAnswerResponse(taskIdFull, {
                         error: resp.data.error,
                         savedNew: resp.data.savedNew,
                     });
                     return response;
                 },
                 responseError(response: IHttpResponse<unknown>) {
-                    const match = re.exec(response.config.url);
-                    if (!match) {
+                    const taskIdFull = getTaskIdIfAnswerUrl(response.config.url);
+                    if (!taskIdFull) {
                         return $q.reject(response);
                     }
                     const resp = response as IHttpResponse<IAnswerSaveEvent>;
-                    handleAnswerResponse(match[1], {
+                    handleAnswerResponse(taskIdFull, {
                         error: resp.data.error,
                         savedNew: false,
                     });
