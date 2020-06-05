@@ -4,7 +4,7 @@ import {timApp} from "tim/app";
 import {$parse, $timeout} from "../util/ngimport";
 
 // Some browsers (especially Firefox) require to blur elements before you can focus onto others
-// This prefix tag blurs an element when the focus condition is false, thus allowing other elements to
+// This postfix tag blurs an element when the focus condition is false, thus allowing other elements to
 // be focused right away
 const BLUR_FALSE_TAG = "#blurWhenFalse";
 
