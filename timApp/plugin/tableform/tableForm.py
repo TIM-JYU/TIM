@@ -465,7 +465,6 @@ nrColumn: true    # show numbers
 filterRow: true   # show filters 
 singleLine: true  #
 emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email
-showInView: false # whether to show the table in normal view too instead of just in teacher view
 ```""", """
 ``` {#tableForm_table_report plugin="tableForm"}
 groups: 
@@ -489,7 +488,6 @@ emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send
 separator: ";"  # Define your value separator here, ";" as default
 anonNames: false # To show or hide user (and full) names in report, true or false
 reportButton: "Name your generate report button here"
-showInView: false # whether to show the table in normal view too instead of just in teacher view
 ```""", """
 ``` {#tableForm_report plugin="tableForm"}
 groups: 
@@ -501,7 +499,6 @@ report: true
 separator: ";"  # Define your value separator here, ";" as default
 anonNames: false # To show or hide user (and full) names in report, true or false
 reportButton: "Name your generate report button here"
-showInView: false # whether to show the table in normal view too instead of just in teacher view
 ```"""]
     editor_tabs = [
             {
