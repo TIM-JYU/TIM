@@ -3,9 +3,9 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
+import {getFormBehavior, PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {defaultErrorMessage, defaultTimeout, to} from "tim/util/utils";
 
@@ -185,12 +185,12 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         return this.changes;
     }
 
-    supportsSetAnswer(): boolean {
-        return true;
+    formBehavior(): FormModeOption {
+        return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: { [index: string]: any }): ISetAnswerResult {
         let message;
         let ok = true;
         if (Object.keys(content).length == 0) {

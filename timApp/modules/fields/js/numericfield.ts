@@ -3,9 +3,9 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
 
@@ -36,7 +36,6 @@ const NumericfieldMarkup = t.intersection([
     t.type({
         autoupdate: withDefault(t.number, 500),
         autoUpdateTables: withDefault(t.boolean, true),
-        form: withDefault(t.boolean, true),
         cols: withDefault(t.number, 6),
     }),
 ]);
@@ -165,14 +164,8 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.updateListeners(ChangeType.Saved);
     }
 
-    // TODO: Do not support setAnswer if an attribute says not to
-    supportsSetAnswer(): boolean {
-        return true;
-    }
-
-    // TODO: Use answer content as arg or entire IAnswer?
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setAnswer(content: { [index: string]: any }): { ok: boolean, message: (string | undefined) } {
+    setAnswer(content: { [index: string]: any }): ISetAnswerResult {
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
@@ -423,9 +416,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         return this.saveResponse;
     }
 
-    isForm(): boolean {
-        return this.attrs.form;
-    }
+    formBehavior(): FormModeOption {
+        return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
+   }
 
     getAttributeType() {
         return NumericfieldAll;
