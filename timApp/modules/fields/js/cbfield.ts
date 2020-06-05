@@ -104,7 +104,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         return undefined;
     }
 
-    isForm(): FormModeOption {
+    formBehavior(): FormModeOption {
         if (this.attrs.form == undefined) {
             return FormModeOption.IsForm;
         }

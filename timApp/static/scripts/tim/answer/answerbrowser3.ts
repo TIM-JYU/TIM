@@ -249,7 +249,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         if (this.viewctrl) {
             const timComp = this.viewctrl.getTimComponentByName(this.taskId);
             if (timComp) {
-                const fo = timComp.isForm();
+                const fo = timComp.formBehavior();
                 if (fo == FormModeOption.IsForm
                     || this.viewctrl.docSettings.form_mode && fo == FormModeOption.Undecided) {
                     return true;

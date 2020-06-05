@@ -991,7 +991,7 @@ class CsController extends CsBase implements ITimComponent {
         return {saved: true, message: undefined};
     }
 
-    isForm(): FormModeOption {
+    formBehavior(): FormModeOption {
         if (this.attrs.form == undefined) {
             return FormModeOption.Undecided;
         }

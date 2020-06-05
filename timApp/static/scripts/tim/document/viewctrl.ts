@@ -64,7 +64,7 @@ export interface ITimComponent {
     getAreas: () => string[];
     getTaskId: () => TaskId | undefined;
     belongsToArea: (area: string) => boolean;
-    isForm: () => FormModeOption;
+    formBehavior: () => FormModeOption;
     isUnSaved: (userChange?: boolean) => boolean;
     save: () => Promise<{saved: boolean, message: (string | undefined)}>;
     getPar: () => Paragraph;
@@ -1023,8 +1023,8 @@ export class ViewCtrl implements IController {
     registerAnswerBrowser(ab: AnswerBrowserController) {
         const timComp = this.getTimComponentByName(ab.taskId);
         if (timComp) {
-            if ((this.docSettings.form_mode && timComp.isForm() == FormModeOption.Undecided)
-                || timComp.isForm() == FormModeOption.IsForm) {
+            if ((this.docSettings.form_mode && timComp.formBehavior() == FormModeOption.Undecided)
+                || timComp.formBehavior() == FormModeOption.IsForm) {
                 // TODO: Should propably iterate like below in case of duplicates
                 this.formAbs.set(ab.taskId, ab);
                 return;

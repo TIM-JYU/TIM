@@ -3787,7 +3787,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 
-    isForm(): FormModeOption {
+    formBehavior(): FormModeOption {
         return FormModeOption.NoForm;
     }
 

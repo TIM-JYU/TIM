@@ -185,7 +185,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         return this.changes;
     }
 
-    isForm(): FormModeOption {
+    formBehavior(): FormModeOption {
         if (this.attrs.form == undefined) {
             return FormModeOption.IsForm;
         }

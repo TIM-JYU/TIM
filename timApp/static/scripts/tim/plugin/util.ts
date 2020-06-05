@@ -174,7 +174,7 @@ export abstract class PluginBaseCommon {
      * If Undecided, let ViewCtrl decide if plugin is to be used as form.
      * IsForm and Undecided options should only be used by simple plugins where getState is not necessary when changing answers
      */
-    public isForm(): FormModeOption {
+    public formBehavior(): FormModeOption {
         return FormModeOption.NoForm;
     }
 

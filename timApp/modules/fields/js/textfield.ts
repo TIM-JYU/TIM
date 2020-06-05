@@ -419,7 +419,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         ele.css("height",  ele[0].scrollHeight + "px");
     }
 
-    isForm(): FormModeOption {
+    formBehavior(): FormModeOption {
         if (this.attrs.form == undefined) {
             return FormModeOption.IsForm;
         }

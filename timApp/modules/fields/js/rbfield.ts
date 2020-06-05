@@ -120,7 +120,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         return undefined;
     }
 
-    isForm(): FormModeOption {
+    formBehavior(): FormModeOption {
         if (this.attrs.form == undefined) {
             return FormModeOption.IsForm;
         }
