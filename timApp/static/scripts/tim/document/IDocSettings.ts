@@ -19,6 +19,10 @@ export interface ILoginHideSettings {
     passwordRecovery?: boolean;
 }
 
+export interface IAnswerBrowserSettings {
+    pointsStep: number;
+}
+
 export interface ILoginSettings {
     hide?: ILoginHideSettings;
 }
@@ -32,5 +36,6 @@ export interface IDocSettings {
     hideBrowser?: boolean;
     login?: ILoginSettings;
     timeLeft?: ITimeLeftSettings;
+    answerBrowser?: IAnswerBrowserSettings;
     save_teacher?: boolean;
 }
