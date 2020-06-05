@@ -5,7 +5,7 @@ import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {FormModeOption, ISetAnswerResult, ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
 
@@ -121,10 +121,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     }
 
     formBehavior(): FormModeOption {
-        if (this.attrs.form == undefined) {
-            return FormModeOption.IsForm;
-        }
-        return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
+        return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
     }
 
     setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {

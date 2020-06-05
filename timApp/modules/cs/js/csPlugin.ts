@@ -7,7 +7,7 @@ import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} f
 import {IAce} from "tim/editor/ace";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$compile, $http, $rootScope, $sce, $timeout, $upload} from "tim/util/ngimport";
 import {
     copyToClipboard,
@@ -992,10 +992,7 @@ class CsController extends CsBase implements ITimComponent {
     }
 
     formBehavior(): FormModeOption {
-        if (this.attrs.form == undefined) {
-            return FormModeOption.Undecided;
-        }
-        return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
+        return getFormBehavior(this.attrs.form, FormModeOption.Undecided);
     }
 
     setAnswer(content: unknown): ISetAnswerResult {

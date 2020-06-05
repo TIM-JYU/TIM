@@ -5,7 +5,7 @@ import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $timeout} from "tim/util/ngimport";
 import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
 
@@ -420,10 +420,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     }
 
     formBehavior(): FormModeOption {
-        if (this.attrs.form == undefined) {
-            return FormModeOption.IsForm;
-        }
-        return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
+        return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
     }
 
     updateInput() {

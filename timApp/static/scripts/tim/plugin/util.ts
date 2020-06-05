@@ -310,6 +310,18 @@ export function shuffleStrings(strings: string []): string [] {
     return result;
 }
 
+/**
+ * Converts plugin's "form" (boolean/undefined) attribute to FormModeOption
+ * @param attr attribute to inspect
+ * @param defBehavior default option to return if form attribute was not given
+ */
+export function getFormBehavior(attr: boolean | undefined, defBehavior: FormModeOption): FormModeOption {
+    if (attr == undefined) {
+        return defBehavior;
+    }
+    return attr ? FormModeOption.IsForm : FormModeOption.NoForm;
+}
+
 export const pluginBindings = {
     json: "@",
     plugintype: "@?",
