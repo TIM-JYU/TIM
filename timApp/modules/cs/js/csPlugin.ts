@@ -1009,7 +1009,7 @@ class CsController extends CsBase implements ITimComponent {
         } else {
             this.usercode = "";
             ok = false;
-            message = "Couldn't find related content (\"usercode\")";
+            message = `Couldn't find related content ("usercode")`;
         }
         return {ok: ok, message: message};
     }

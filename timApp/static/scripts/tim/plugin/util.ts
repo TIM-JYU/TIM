@@ -169,8 +169,8 @@ export abstract class PluginBaseCommon {
     }
 
     /**
-     * @returns {FormModeOption} true if plugin wants to register as formAnswerBrowser
-     * This mean invisible answerBrowser and direct answer input when changing users in ViewCtrl
+     * @returns {FormModeOption} FormModeOption.IsForm if plugin wants to register as formAnswerBrowser
+     * This means invisible answerBrowser and direct answer input when changing users in ViewCtrl
      * If Undecided, let ViewCtrl decide if plugin is to be used as form.
      * IsForm and Undecided options should only be used by simple plugins where getState is not necessary when changing answers
      */

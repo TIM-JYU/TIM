@@ -423,7 +423,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (this.attrs.form == undefined) {
             return FormModeOption.IsForm;
         }
-        return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;    }
+        return this.attrs.form ? FormModeOption.IsForm : FormModeOption.NoForm;
+    }
 
     updateInput() {
         if (!this.changes) {
