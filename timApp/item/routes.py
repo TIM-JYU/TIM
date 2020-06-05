@@ -2,7 +2,7 @@
 import html
 import time
 import traceback
-from typing import Tuple, Optional, List, Union
+from typing import Tuple, Optional, List, Union, Dict
 
 import attr
 from dataclasses import dataclass
@@ -46,7 +46,7 @@ from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
 from timApp.markdown.htmlSanitize import sanitize_html
 from timApp.markdown.markdownconverter import create_environment
-from timApp.plugin.plugin import find_task_ids
+from timApp.plugin.plugin import find_task_ids, find_plugin_from_document
 from timApp.plugin.pluginControl import get_all_reqs
 from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException, PreambleException
@@ -62,6 +62,7 @@ from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
+from timApp.util.utils import split_location
 from timApp.readmark.readings import mark_all_read
 from timApp.auth.sessioninfo import get_session_usergroup_ids
 from timApp.user.settings.theme import Theme, theme_exists
@@ -540,6 +541,17 @@ def view(item_path, template_name, route="view"):
     show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']
     taketime("view to render")
 
+    summaries = []
+    current_summary_index = None
+    if logged_in():
+        folder, doc_name = split_location(doc_info.path_without_lang)
+        
+        summaries = get_summaries(folder, doc_settings.score_summary_docs())
+        
+        keys, summaries = summaries.keys(), list(summaries.values())
+        if doc_name in keys:
+            current_summary_index = list(keys).index(doc_name)
+        
     reqs = get_all_reqs()  # This is cached so only first time after restart takes time
     taketime("reqs done")
     doctemps = doc_settings.get('editor_templates')
@@ -637,6 +649,12 @@ def view(item_path, template_name, route="view"):
         live_updates=doc_settings.live_updates(),
         slide_background_url=slide_background_url,
         slide_background_color=slide_background_color,
+        score_info = {
+                'summaries': summaries,
+                'currentDoc': current_summary_index,
+                'total': sum((s['total'] for s in summaries)),
+                'maxTotal': sum((s['maxTotal'] for s in summaries))
+            },
         task_info={'total_points': total_points,
                    'tasks_done': tasks_done,
                    'total_tasks': total_tasks,
@@ -1000,3 +1018,69 @@ def get_viewrange_with_header_id(doc_id: int, header_id: str):
         return abort(404, f"Header '{header_id}' not found in the document '{doc_info.short_name}'!")
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
     return json_response(view_range)
+
+
+def get_summaries(folder: str, doc_paths: List[str]) -> Dict[str, dict]:
+
+    total_table = {}
+    u = get_current_user_object()
+        
+    docs = [(doc_path, DocEntry.find_by_path(folder + "/" + doc_path)) for doc_path in doc_paths]
+    docs = [doc for doc in docs if doc[1] is not None and u.has_view_access(doc[1])]
+    
+    # a document is skipped if it doesn't have any tasks, or if the user doesn't have view rights to it
+    for d in docs:
+
+        doc_name = d[0]
+        doc = d[1].document
+        
+        blocks = doc.get_paragraphs()
+        blocks = dereference_pars(blocks, context_doc=doc)
+        task_ids, _, _ = find_task_ids(blocks)
+        if not task_ids:
+            continue
+
+        # cycle through all paragraphs in current document, resolving user's progress on each scored assignment
+        point_dict = {}
+        for task_id in task_ids:
+            try:
+                plugin = find_plugin_from_document(doc, task_id, None)
+            except TaskNotFoundException:
+                continue
+
+            max_points = plugin.max_points()
+            # TODO: figure out something for when max_points is a string
+            if not max_points or max_points == 0 or isinstance(max_points, str):
+                continue
+
+            point_dict[task_id.task_name] = {
+                    'max': max_points,
+                    'user': max((a.points for a in u.get_answers_for_task(task_id.doc_task)), default = None)
+                }
+        
+        if not point_dict:
+            continue
+        
+        # include user's total points and documents maximum points as separate dict
+        user_total = 0.0
+        max_total = 0.0
+        for points in point_dict.values():
+            if points['user']:
+                user_total += points['user']
+            max_total += points['max']
+
+        total_table[doc_name] = {
+                'title': doc.docinfo.title,
+                'docPath': doc.docinfo.url_relative, 
+                'total': user_total, 
+                'maxTotal': max_total,
+                'tasks': [
+                        {
+                            'taskName': task_name,
+                            'points': task_info['user'],
+                            'maxPoints': task_info['max']
+                        } for task_name, task_info in point_dict.items()
+                    ]
+            }
+
+    return total_table
