@@ -43,7 +43,6 @@ timLogTime("answerbrowser3 load", "answ");
 
 const LAZY_MARKER = "lazy";
 const LAZY_MARKER_LENGTH = LAZY_MARKER.length;
-const FIELD_PLUGINS = new Set(["textfield", "numericfield", "cbfield", "rbfield", "dropdown"]);
 
 function isElement(n: Node): n is Element {
     return n.nodeType === Node.ELEMENT_NODE;
@@ -253,14 +252,6 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
         }
         return false;
-    }
-
-    isFieldPlugin() {
-        const plugin = this.getPluginElement().attr("data-plugin");
-        if (!plugin) {
-            return false;
-        }
-        return FIELD_PLUGINS.has(plugin.slice(1)); // remove leading '/' so we get only the plugin type name
     }
 }
 
