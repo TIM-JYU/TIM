@@ -632,6 +632,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         const shouldRefocusPoints = this.shouldFocus;
+        this.shouldFocus = false;
         if (newIndex >= this.users.length) {
             newIndex = 0;
         }
@@ -644,15 +645,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.user = this.users[newIndex];
         await this.getAnswersAndUpdate();
 
-        // Be careful when modifying the following code. All browsers (IE/Chrome/FF)
-        // behave slightly differently when it comes to (de-)focusing something.
-        $timeout(() => {
-            if (shouldRefocusPoints) {
-                this.shouldFocus = shouldRefocusPoints;
-            } else {
-                this.setFocus();
-            }
-        }, 200);
+        if (shouldRefocusPoints) {
+            this.shouldFocus = shouldRefocusPoints;
+        } else {
+            this.setFocus();
+        }
     }
 
     async changeStudent(dir: 1 | -1) {
