@@ -762,7 +762,7 @@ timApp.component("timSidebarMenu", {
                 <ul class="score-list">
                     <li ng-repeat="task in $ctrl.currDocScores.tasks" ng-class="task.points ? (task.points == task.maxPoints ? 'task_okay' : 'task_prog') : 'flex flex-wrap'">
                         <div class="flex-grow-1">
-                            <a href="#{{ task.taskName }}">{{ task.taskName }}</a>
+                            <a href="#{{ task.fragId }}">{{ task.taskName }}</a>
                         </div>
                         <div class="flex-grow-1">
                             <p>

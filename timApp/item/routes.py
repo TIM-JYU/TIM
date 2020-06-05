@@ -1053,9 +1053,23 @@ def get_summaries(folder: str, doc_paths: List[str]) -> Dict[str, dict]:
             if not max_points or max_points == 0 or isinstance(max_points, str):
                 continue
 
-            point_dict[task_id.task_name] = {
-                    'max': max_points,
-                    'user': max((a.points for a in u.get_answers_for_task(task_id.doc_task)), default = None)
+            task = task_id.task_name
+            user_points = max((a.points for a in u.get_answers_for_task(task_id.doc_task)), default = 0)
+            
+            # add current document to overall points list, using task_name as the key identifier
+            # if scoreGroup is provided in the task, group similar tasks in the list
+            # link takes to the first task ("frag_id")
+            group = plugin.score_group()
+            if group and group in point_dict:
+                point_dict[group]['max'] += max_points
+                point_dict[group]['user'] += user_points
+            else:
+                if not group:
+                    group = task
+                point_dict[group] = {
+                    'fragId': task,
+                    'user': user_points,
+                    'max': max_points
                 }
         
         if not point_dict:
@@ -1077,6 +1091,7 @@ def get_summaries(folder: str, doc_paths: List[str]) -> Dict[str, dict]:
                 'tasks': [
                         {
                             'taskName': task_name,
+                            'fragId': task_info['frag_id'],
                             'points': task_info['user'],
                             'maxPoints': task_info['max']
                         } for task_name, task_info in point_dict.items()
