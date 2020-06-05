@@ -55,7 +55,7 @@ export function getTaskIdIfAnswerUrl(url: string): string | undefined {
     const re = /\/[^/]+\/([^/]+)\/answer\/$/;
     const match = re.exec(fullUrl.pathname);
     if (match) {
-        return match[1];
+        return decodeURIComponent(match[1]);
     }
     return undefined;
 }
