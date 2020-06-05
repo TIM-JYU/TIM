@@ -147,7 +147,7 @@ TIM_SAFE_ATTRS = frozenset([
     'time-lang',
     'unauthorized-text',
     'unsaved-changes-text',
-    'wait-text'
+    'wait-text',
 ])
 
 c = Cleaner(
