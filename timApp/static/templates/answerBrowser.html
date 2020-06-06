@@ -62,7 +62,7 @@
             </div>
             <div class="flex" ng-show="$ctrl.selectedAnswer">
                 <div>
-                    <form id="points-form" ng-submit="$ctrl.savePoints()" class="point-form form-inline">
+                    <form ng-submit="$ctrl.savePoints()" class="point-form form-inline">
                         <label ng-show="$ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())">
                         Points:<input class="form-control input-xs"
                                       ng-class="{ unsaved: $ctrl.points != $ctrl.selectedAnswer.points,

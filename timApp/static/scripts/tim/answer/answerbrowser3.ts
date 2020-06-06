@@ -487,7 +487,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return true;
         }
 
-        const formEl = angular.element("#points-form");
+        const formEl = this.element.find(".point-form");
         if (!formEl.length) {
             return true;
         }
