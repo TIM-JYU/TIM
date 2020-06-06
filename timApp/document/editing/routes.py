@@ -857,5 +857,5 @@ def set_drawio_base(args: DrawIODataModel):
     if plug.type != 'csPlugin' or plug.values.get('type', '') != 'drawio':
         return abort(400, "Invalid target")
     plug.values['data'] = data
-    save_plugin(plug)
+    save_plugin(plug, max_attr_width=float("inf"))
     return ok_response()

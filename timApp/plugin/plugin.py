@@ -296,9 +296,9 @@ class Plugin:
             raise PluginException(f'Points must be in range [{points_min},{points_max}]')
         return points
 
-    def to_paragraph(self) -> DocParagraph:
+    def to_paragraph(self, max_attr_width=None) -> DocParagraph:
         yaml.Dumper.ignore_aliases = lambda *args: True
-        text = '```\n' + yaml.dump(self.values, allow_unicode=True, default_flow_style=False) + '\n```'
+        text = '```\n' + yaml.dump(self.values, allow_unicode=True, default_flow_style=False, width=max_attr_width) + '\n```'
         attrs = {}
         if self.par:
             attrs = self.par.attrs
@@ -312,8 +312,8 @@ class Plugin:
         self.values[key] = value
         return self
 
-    def save(self) -> None:
-        self.to_paragraph().save()
+    def save(self, max_attr_width=None) -> None:
+        self.to_paragraph(max_attr_width).save()
 
     def get_info(self, users: Iterable[User], old_answers: int, look_answer: bool = False, valid: bool = True):
         user_ids = ';'.join([u.name for u in users])
