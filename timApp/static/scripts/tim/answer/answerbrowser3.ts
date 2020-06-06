@@ -498,10 +498,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return true;
         }
 
-        const savePointsPromise = this.savePoints(false);
-        if (updateAnswers) {
-            savePointsPromise.then(() => this.getAnswersAndUpdate());
-        }
+        const doSavePoints = async () => {
+          await this.savePoints(false);
+          if (updateAnswers) {
+              await this.getAnswersAndUpdate();
+          }
+        };
+        doSavePoints();
         return true;
     }
 
