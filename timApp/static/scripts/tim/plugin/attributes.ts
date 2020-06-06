@@ -5,6 +5,14 @@ So, do NOT import anything client-side-specific (like AngularJS) in this module 
 
 import * as t from "io-ts";
 
+export const AnswerBrowserSettings = t.type({
+    pointsStep: nullable(t.number),
+});
+
+export interface IAnswerBrowserMarkupSettings extends t.TypeOf<typeof AnswerBrowserSettings> {
+    // Empty
+}
+
 export const undoType = t.partial({
     button: nullable(t.string),
     title: nullable(t.string),
@@ -28,6 +36,7 @@ export const GenericPluginMarkup = t.partial({
     undo: nullable(undoType),
     useCurrentUser: t.boolean,
     connectionErrorMessage: nullable(t.string),
+    answerBrowser: nullable(AnswerBrowserSettings),
 });
 
 export const Info = nullable(t.type({

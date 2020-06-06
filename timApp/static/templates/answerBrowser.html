@@ -66,7 +66,7 @@
                         <label ng-show="$ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())">
                         Points:<input class="form-control input-xs"
                                       ng-class="{ unsaved: $ctrl.points != $ctrl.selectedAnswer.points,
-                                                  'no-step': $ctrl.settings.pointsStep == 0 }"
+                                                  'no-step': !$ctrl.markupSettings.pointsStep }"
                                       focus-me="$ctrl.shouldFocus #blurWhenFalse"
                                       ng-focus="$ctrl.shouldFocus = true"
                                       ng-blur="$ctrl.shouldFocus = false"

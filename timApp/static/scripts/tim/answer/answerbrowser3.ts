@@ -4,12 +4,11 @@ import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
-import {IAnswerBrowserSettings} from "tim/document/IDocSettings";
 import {dereferencePar, getParId} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {getRangeBeginParam} from "../document/viewRangeInfo";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
-import {IGenericPluginMarkup} from "../plugin/attributes";
+import {IAnswerBrowserMarkupSettings, IGenericPluginMarkup} from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
@@ -314,7 +313,7 @@ export type AnswerBrowserData =
     { saveAnswer: boolean; teacher: boolean; saveTeacher: false }
     | { saveAnswer: boolean; teacher: boolean; saveTeacher: boolean; answer_id: number | undefined; userId: number; points: number | undefined; giveCustomPoints: boolean };
 
-const DEFAULT_SETTINGS: IAnswerBrowserSettings = {
+const DEFAULT_MARKUP_CONFIG: IAnswerBrowserMarkupSettings = {
     pointsStep: 0,
 };
 
@@ -344,8 +343,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private loader!: PluginLoaderCtrl;
     private reviewHtml?: string;
     private answerLoader?: AnswerLoadCallback;
-    private settings: IAnswerBrowserSettings = DEFAULT_SETTINGS;
     private pointsStep: number = 0.01;
+    private markupSettings: IAnswerBrowserMarkupSettings = DEFAULT_MARKUP_CONFIG;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -404,11 +403,15 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.review = false;
         this.shouldFocus = false;
         this.alerts = [];
-        this.settings = {...DEFAULT_SETTINGS, ...this.viewctrl.docSettings.answerBrowser};
+
+        const markup = this.loader.pluginMarkup();
+        if (markup?.answerBrowser) {
+            this.markupSettings = markup.answerBrowser;
+        }
 
         // Ensure the point step is never zero because some browsers don't like step="0" value in number inputs.
-        if (this.settings.pointsStep != 0) {
-            this.pointsStep = this.settings.pointsStep;
+        if (this.markupSettings.pointsStep) {
+            this.pointsStep = this.markupSettings?.pointsStep;
         }
 
         this.scope.$watch(() => this.review, () => this.changeAnswer());
@@ -636,7 +639,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     handlePointScroll(e: KeyboardEvent) {
-        if (this.loading > 0 || this.settings.pointsStep != 0) {
+        if (this.loading > 0 || this.markupSettings.pointsStep) {
             return;
         }
         if ((e.key === "ArrowUp" || e.which === KEY_UP) ||
