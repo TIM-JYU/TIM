@@ -447,6 +447,7 @@ def answer(args: TableFormAnswerModel):
 def reqs():
     templates = ["""
 ``` {#tableForm_table plugin="tableForm"}
+# Add attribute 'showInView: true' to show the plugin in normal view
 groups: 
  - Group Name   # Use Group Name here
 fields:
@@ -467,6 +468,7 @@ singleLine: true  #
 emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email
 ```""", """
 ``` {#tableForm_table_report plugin="tableForm"}
+# Add attribute 'showInView: true' to show the plugin in normal view
 groups: 
  - Group Name   # Use Group Name here
 fields:
@@ -490,6 +492,7 @@ anonNames: false # To show or hide user (and full) names in report, true or fals
 reportButton: "Name your generate report button here"
 ```""", """
 ``` {#tableForm_report plugin="tableForm"}
+# Add attribute 'showInView: true' to show the plugin in normal view
 groups: 
  - Group Name   # Use Group Name here
 fields:

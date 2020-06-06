@@ -634,26 +634,6 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                 return;
             }
             const fieldsToUpdate: string[] = [];
-            // TODO: Delete experiments after confirming syntax
-            // // parse from aliases?
-            // for (const [key, value] of Object.entries(this.aliases)) {
-            //     const aliasField = value.split(".")[1];
-            //     if (taskIds.includes(aliasField)) {
-            //         fieldsToUpdate.push(value);
-            //     }
-            // }
-            // // parse directly from fields or other attr?
-            // for (const task of taskIds) {
-            //     if (this.fields.includes(task)) {
-            //         fieldsToUpdate.push(task);
-            //     }
-            // }
-            // use given fields as they are?
-            // fieldsToUpdate = taskIds;
-            // if (fieldsToUpdate.length == 0) {
-            //     return;
-            // }
-            // parse fields from this.attrsall.fields - remove alias part
             if (!this.markup.fields) {
                 return;
             }
@@ -784,7 +764,8 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
 
                     const colheader = this.fields[x];
                     const currentCol = colnumToLetters(x + xOffset);
-                    if (this.lockedFields.includes(colheader)) {
+                    const expandedLockedFields = widenFields(this.lockedFields);
+                    if (expandedLockedFields.includes(colheader)) {
                         this.data.lockedColumns.push(currentCol);
                     }
                     this.data.headers.push(colheader);
