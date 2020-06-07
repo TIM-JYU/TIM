@@ -65,7 +65,7 @@ export class AddMemberComponent {
         this.result = undefined;
         this.error = undefined;
         const r = await to2(this.http.post<IAddmemberResponse>(`/groups/addmember/${this.group}`, {
-            names: this.users.split("\n").flatMap((n) => n.split(",")).map((n) => n.trim()),
+            names: this.users.split("\n").flatMap((n) => n.split(/,|;/)).map((n) => n.replace(/^ *- */, "").trim()),
         }).toPromise());
         if (r.ok) {
             this.result = r.result;
