@@ -107,6 +107,8 @@ class JSframe(Language):
 
         src = src.replace("##TIM_HOST##", os.environ['TIM_HOST'])
 
+        src = src.replace('##HOST_URL##', ma.get("hosturl", os.environ['TIM_HOST']))
+
         original_data = get_by_id(ma, "data", None)
         if original_data:
             src = src.replace("//ORIGINALDATA", self.jsobject + "originalData = " + json.dumps(original_data) + ";")
@@ -178,6 +180,8 @@ class DrawIO(JSframe):
                 state['c'] = bytes(c, 'ISO-8859-1').decode('utf-8') # TODO: miksi näin pitää tehdä???
         """
         ma = self.query.jso['markup']
+        hosturl = ma.get("hosturl", 'https://www.draw.io/')
+        ma["hosturl"] = hosturl
         readyhtml = get_by_id(ma, "readyHtml", None)
         srchtml = get_by_id(ma, "srchtml", None)
         if readyhtml is None and srchtml is None:
