@@ -45,15 +45,15 @@
 
         var close = function () {
 
-            // window.removeEventListener('message', receive);
             if (TIMJS.frm) {
                 document.body.removeChild(iframe);
             } else {
                 drw.close();
             }
-            // Do not clean up events or tim-drawio communication variables here,
-            // else we may get stuck if browser cancels exit.
-            // Instead check if they exists and clean them up on every startup
+            // Do not clean up any eventListeners or tim-drawio communication variables here,
+            // or else we may get stuck if browser cancels exit.
+            // Instead check if they exist and clean them up on every startup by adding
+            // relevant checks at the end of "edit"-function.
             
             // if (receiveEvent) {
             //     window.removeEventListener('message', receiveEvent)
