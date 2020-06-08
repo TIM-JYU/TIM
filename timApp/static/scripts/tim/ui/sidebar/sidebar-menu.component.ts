@@ -4,7 +4,6 @@ import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
 @Component({
     selector: "app-sidebar-menu",
     templateUrl: "./sidebar-menu.component.html",
-    styleUrls: ["./sidebar-menu.component.scss"],
 })
 export class SidebarMenuComponent implements OnInit, AfterViewInit {
     private showSidebar = false;

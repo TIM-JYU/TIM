@@ -41,13 +41,14 @@ $menuTab-border: 1px solid lighten($gray-base, 88%);
         .nav-link, .nav-item {
             height: 44px;
         }
-        
+
         min-width: 185px; // minimum required space for 5 tabs in one row
         .glyphicon {
             font-size: x-large;
             margin: 0px -10px;
             color: $basic-color;
         }
+
         // make sure active tab remains black
         .active a .glyphicon {
             color: inherit;
@@ -59,6 +60,14 @@ $menuTab-border: 1px solid lighten($gray-base, 88%);
         overflow-y: auto;
         max-height: calc(100vh - 51.2833px);
         padding-left: 3px;
+
+        a.same-line {
+            display: inline-block;
+        }
+
+        i.vis-hidden {
+            visibility: hidden;
+        }
 
         .tab-pane > ul {
             padding-left: 13px;
