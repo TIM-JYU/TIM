@@ -603,7 +603,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     result["web"] = data.get("web", web)
                     if output:  # TODO: korjaa tähän järkevä tulostus
                         # return json_response({'web': {'error': output}})
-                        result["web"]["error"] = output;
+                        result["web"]["error"] = output
                 except JsRunnerError as e:
                     return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
 
