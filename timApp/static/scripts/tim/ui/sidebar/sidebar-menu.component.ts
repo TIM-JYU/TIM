@@ -8,8 +8,8 @@ import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
 })
 export class SidebarMenuComponent implements OnInit, AfterViewInit {
     private showSidebar = false;
-    currentElement?: HTMLElement;
-    @ViewChild("tabs") tabs!: TabsetComponent;
+    private currentElement?: HTMLElement;
+    @ViewChild("tabs") private tabs!: TabsetComponent;
     constructor() { }
 
     ngOnInit(): void {
