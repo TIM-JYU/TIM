@@ -225,6 +225,7 @@ export interface TimTable {
     hiddenRows?: number[];
     hiddenColumns?: number[];
     lockedCells?: string[];
+    lockedColumns?: string[];
     // cellsTosave may include un-rect area (not at the moment but maybe in future
     // colValuesAreSame means in one column all values are same,
     // so that it is possible to save them to one group
@@ -2209,7 +2210,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             // Stop iterating if cell is not in hiddenRows/hiddenColumns and is not locked.
             if (!(this.currentHiddenRows.includes(nextCell.row))
                 && !(this.data.hiddenColumns && this.data.hiddenColumns.includes(nextCell.col))
-                && !(this.data.lockedCells && this.data.lockedCells.includes(colnumToLetters(nextCell.col) + (nextCell.row + 1)))) {
+                && !(this.data.lockedCells && this.data.lockedCells.includes(colnumToLetters(nextCell.col) + (nextCell.row + 1)))
+                && !(this.data.lockedColumns && this.data.lockedColumns.includes(colnumToLetters(nextCell.col)))
+            ) {
                 break;
             }
             nextCell = this.getNextCell(nextCell.col, nextCell.row, direction);
@@ -2394,9 +2397,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             }
         }
 
-        const cellCoordinate = colnumToLetters(coli) + (rowi + 1);
+        const cellCol = colnumToLetters(coli);
+        const cellCoordinate = cellCol + (rowi + 1);
         this.editorPosition = cellCoordinate;
-        if (this.data.lockedCells && this.data.lockedCells.includes(cellCoordinate)) {
+        if (this.data.lockedCells && this.data.lockedCells.includes(cellCoordinate)
+            || (this.data.lockedColumns && this.data.lockedColumns.includes(cellCol))) {
             return;
         }
 

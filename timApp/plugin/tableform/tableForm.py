@@ -63,6 +63,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     hide: Union[Dict[Any, Any], Missing, None] = missing
     hideButtonText: Union[str, Missing, None] = missing
     includeUsers: Union[MembershipFilter, Missing] = field(default=MembershipFilter.Current, metadata={'by_value': True})
+    lockedFields: Union[List[str], Missing] = missing
     maxCols: Union[str, Missing, None] = missing
     maxRows: Union[str, Missing, None] = missing
     maxWidth: Union[str, Missing] = missing
@@ -446,6 +447,7 @@ def answer(args: TableFormAnswerModel):
 def reqs():
     templates = ["""
 ``` {#tableForm_table plugin="tableForm"}
+# Add attribute 'showInView: true' to show the plugin in normal view
 groups: 
  - Group Name   # Use Group Name here
 fields:
@@ -463,9 +465,10 @@ cbColumn: true    # show checkboxes
 nrColumn: true    # show numbers
 filterRow: true   # show filters 
 singleLine: true  #
-emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email 
+emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email
 ```""", """
 ``` {#tableForm_table_report plugin="tableForm"}
+# Add attribute 'showInView: true' to show the plugin in normal view
 groups: 
  - Group Name   # Use Group Name here
 fields:
@@ -489,6 +492,7 @@ anonNames: false # To show or hide user (and full) names in report, true or fals
 reportButton: "Name your generate report button here"
 ```""", """
 ``` {#tableForm_report plugin="tableForm"}
+# Add attribute 'showInView: true' to show the plugin in normal view
 groups: 
  - Group Name   # Use Group Name here
 fields:
