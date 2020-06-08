@@ -9,6 +9,7 @@
                <button title="Previous user" class="btn btn-primary" ng-click="$ctrl.changeStudent(-1)">&uarr;</button>
              </span>
                 <select class="form-control"
+                        focus-me="!$ctrl.selectedAnswer && $ctrl.shouldFocus #blurWhenFalse"
                         ng-model="$ctrl.user"
                         ng-options="(user.real_name + ' (' + user.name + ')') for user in $ctrl.users track by user.id"
                         ng-change="$ctrl.getAnswersAndUpdate()"></select>
@@ -30,7 +31,7 @@
                 <div>
                     <div class="input-group input-group-xs">
                 <span class="input-group-btn">
-                    <button title="Previous answer" class="btn btn-primary prevAnswer" ng-click="$ctrl.previousAnswer()">&larr;</button>
+                    <button title="Previous answer" class="btn btn-primary prevAnswer" ng-click="$ctrl.changeAnswerTo(-1)">&larr;</button>
                 </span>
                         <select class="form-control"
                                 title="List of answers"
@@ -38,7 +39,7 @@
                                 ng-options="(($ctrl.filteredAnswers.length - idx) + '. ' + (answer.answered_on | timdate )) for (idx, answer) in $ctrl.filteredAnswers | orderBy:'answer.id' track by answer.id"
                                 ng-change="$ctrl.changeAnswer()"></select>
                 <span class="input-group-btn">
-                    <button title="Next answer" class="btn btn-primary nextAnswer" ng-click="$ctrl.nextAnswer()">&rarr;</button>
+                    <button title="Next answer" class="btn btn-primary nextAnswer" ng-click="$ctrl.changeAnswerTo(+1)">&rarr;</button>
                 </span>
                     </div>
                 </div>
@@ -64,13 +65,16 @@
                     <form ng-submit="$ctrl.savePoints()" class="point-form form-inline">
                         <label ng-show="$ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())">
                         Points:<input class="form-control input-xs"
-                                      focus-me="$ctrl.shouldFocus"
+                                      ng-class="{ unsaved: $ctrl.points != $ctrl.selectedAnswer.points,
+                                                  'no-step': !$ctrl.markupSettings.pointsStep }"
+                                      focus-me="$ctrl.shouldFocus #blurWhenFalse"
                                       ng-focus="$ctrl.shouldFocus = true"
                                       ng-blur="$ctrl.shouldFocus = false"
                                       ng-model="$ctrl.points"
+                                      ng-keydown="$ctrl.handlePointScroll($event)"
                                       name="points"
                                       type="number"
-                                      step="0.01"
+                                      step="{{ $ctrl.pointsStep }}"
                                       style="max-width: 5em"
                                       autocomplete="off"
                                       size="2">

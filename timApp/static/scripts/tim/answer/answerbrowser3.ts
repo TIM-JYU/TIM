@@ -1,15 +1,14 @@
-import {IController, IScope, ITranscludeFunction} from "angular";
+import angular, {IController, IScope, ITranscludeFunction} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
-import {Subject, Observable} from "rxjs";
 import {dereferencePar, getParId} from "../document/parhelpers";
 import {FormModeOption, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {getRangeBeginParam} from "../document/viewRangeInfo";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
-import {IGenericPluginMarkup} from "../plugin/attributes";
+import {IAnswerBrowserMarkupSettings, IGenericPluginMarkup} from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
@@ -301,6 +300,10 @@ export type AnswerBrowserData =
     { saveAnswer: boolean; teacher: boolean; saveTeacher: false }
     | { saveAnswer: boolean; teacher: boolean; saveTeacher: boolean; answer_id: number | undefined; userId: number; points: number | undefined; giveCustomPoints: boolean };
 
+const DEFAULT_MARKUP_CONFIG: IAnswerBrowserMarkupSettings = {
+    pointsStep: 0,
+};
+
 export class AnswerBrowserController extends DestroyScope implements IController {
     static $inject = ["$scope", "$element"];
     public taskId!: Binding<string, "<">;
@@ -327,6 +330,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private loader!: PluginLoaderCtrl;
     private reviewHtml?: string;
     private answerLoader?: AnswerLoadCallback;
+    private pointsStep: number = 0.01;
+    private markupSettings: IAnswerBrowserMarkupSettings = DEFAULT_MARKUP_CONFIG;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -385,6 +390,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.review = false;
         this.shouldFocus = false;
         this.alerts = [];
+
+        const markup = this.loader.pluginMarkup();
+        if (markup?.answerBrowser) {
+            this.markupSettings = markup.answerBrowser;
+        }
+
+        // Ensure the point step is never zero because some browsers don't like step="0" value in number inputs.
+        if (this.markupSettings.pointsStep) {
+            this.pointsStep = this.markupSettings?.pointsStep;
+        }
 
         this.scope.$watch(() => this.review, () => this.changeAnswer());
         this.scope.$watchGroup([
@@ -454,7 +469,36 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    async savePoints() {
+    trySavePoints(updateAnswers: boolean = false) {
+        if (!this.selectedAnswer || !this.user) {
+            return true;
+        }
+
+        const formEl = this.element.find(".point-form");
+        if (!formEl.length) {
+            return true;
+        }
+
+        const formElement = formEl[0] as HTMLFormElement;
+        if (!formElement.reportValidity()) {
+            return false;
+        }
+
+        if (this.points == this.selectedAnswer.points) {
+            return true;
+        }
+
+        const doSavePoints = async () => {
+          await this.savePoints(false);
+          if (updateAnswers) {
+              await this.getAnswersAndUpdate();
+          }
+        };
+        doSavePoints();
+        return true;
+    }
+
+    async savePoints(updatePointsState: boolean = true) {
         if (!this.selectedAnswer || !this.user) {
             return;
         }
@@ -465,7 +509,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.showError(r.result);
             return;
         }
-        if (!this.selectedAnswer) {
+        if (!updatePointsState || !this.selectedAnswer) {
             return;
         }
         this.selectedAnswer.points = this.points;
@@ -554,18 +598,15 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
     }
 
-    async nextAnswer() {
-        let newIndex = this.findSelectedAnswerIndex() - 1;
+    async changeAnswerTo(dir: (-1 | 1)) {
+        if (!this.trySavePoints(true)) {
+            return;
+        }
+
+        let newIndex = this.findSelectedAnswerIndex() + dir;
         if (newIndex < 0) {
             newIndex = this.filteredAnswers.length - 1;
-        }
-        this.selectedAnswer = this.filteredAnswers[newIndex];
-        await this.changeAnswer();
-    }
-
-    async previousAnswer() {
-        let newIndex = this.findSelectedAnswerIndex() + 1;
-        if (newIndex >= this.filteredAnswers.length) {
+        } else if (newIndex >= this.filteredAnswers.length) {
             newIndex = 0;
         }
         this.selectedAnswer = this.filteredAnswers[newIndex];
@@ -584,6 +625,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return -1;
     }
 
+    handlePointScroll(e: KeyboardEvent) {
+        if (this.loading > 0 || this.markupSettings.pointsStep) {
+            return;
+        }
+        if ((e.key === "ArrowUp" || e.which === KEY_UP) ||
+            (e.key === "ArrowDown" || e.which === KEY_DOWN)) {
+            e.preventDefault();
+        }
+    }
+
     async checkKeyPress(e: KeyboardEvent) {
         if (this.loading > 0) {
             return false;
@@ -600,11 +651,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 return true;
             } else if ((e.key === "ArrowLeft" || e.which === KEY_LEFT)) {
                 e.preventDefault();
-                await this.previousAnswer();
+                await this.changeAnswerTo(-1);
                 return true;
             } else if ((e.key === "ArrowRight" || e.which === KEY_RIGHT)) {
                 e.preventDefault();
-                await this.nextAnswer();
+                await this.changeAnswerTo(1);
                 return true;
             }
         }
@@ -618,7 +669,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.users.length <= 0) {
             return;
         }
+        if (!this.trySavePoints()) {
+            return;
+        }
         const shouldRefocusPoints = this.shouldFocus;
+        this.shouldFocus = false;
         if (newIndex >= this.users.length) {
             newIndex = 0;
         }
@@ -631,15 +686,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.user = this.users[newIndex];
         await this.getAnswersAndUpdate();
 
-        // Be careful when modifying the following code. All browsers (IE/Chrome/FF)
-        // behave slightly differently when it comes to (de-)focusing something.
-        $timeout(() => {
-            if (shouldRefocusPoints) {
-                this.shouldFocus = shouldRefocusPoints;
-            } else {
-                this.setFocus();
-            }
-        }, 200);
+        if (shouldRefocusPoints) {
+            this.shouldFocus = shouldRefocusPoints;
+        } else {
+            this.setFocus();
+        }
     }
 
     async changeStudent(dir: 1 | -1) {
@@ -765,6 +816,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.viewctrl.item.rights || !this.viewctrl.item.rights.browse_own_answers) {
             return;
         }
+
         const data = await this.getAnswers();
         if (!data) {
             return;
