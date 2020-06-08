@@ -842,6 +842,22 @@ input[type="file"] {
     border: none;
 }
 
+input:focus.unsaved {
+    border-right-color: gold;
+    border-right-width: thick;
+}
+
+// https://stackoverflow.com/a/4298216
+input[type="number"].no-step {
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+}
+
 .smalllink {
     font-size: 50%;
     margin-top: -3em;
