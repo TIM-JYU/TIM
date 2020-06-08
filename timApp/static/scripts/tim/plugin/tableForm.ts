@@ -52,6 +52,7 @@ const TableFormMarkup = t.intersection([
 
         hiddenColumns: t.array(t.number),
         hiddenRows: t.array(t.number),
+        lockedFields: t.array(t.string),
         maxWidth: t.string,
         minWidth: t.string,
         maxRows: t.string,
@@ -323,6 +324,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         hideSaveButton: true,
         // lockCellCount: true,
         lockedCells: [],
+        lockedColumns: [],
         table: {countRow: 0, countCol: 0, columns: []},
         // TODO: give rows (and maybe colums) in data.table
         task: true,
@@ -335,6 +337,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
     private rows!: IRowsType;
     private styles?: t.TypeOf<typeof Styles>;
     private fields!: string[];
+    private lockedFields!: string[];
     private realnamemap!: Record<string, string>;
     private emailmap!: Record<string, string>;
     private membershipmap!: Record<string, string | null>;
@@ -479,6 +482,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         this.rowKeys = Object.keys(this.rows);
         this.styles = this.attrsall.styles;
         this.fields = this.attrsall.fields ?? [];
+        this.lockedFields = this.markup.lockedFields ?? [];
         this.realnamemap = this.attrsall.realnamemap ?? {};
         this.emailmap = this.attrsall.emailmap ?? {};
         this.membershipmap = this.attrsall.membershipmap ?? {};
@@ -630,26 +634,6 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                 return;
             }
             const fieldsToUpdate: string[] = [];
-            // TODO: Delete experiments after confirming syntax
-            // // parse from aliases?
-            // for (const [key, value] of Object.entries(this.aliases)) {
-            //     const aliasField = value.split(".")[1];
-            //     if (taskIds.includes(aliasField)) {
-            //         fieldsToUpdate.push(value);
-            //     }
-            // }
-            // // parse directly from fields or other attr?
-            // for (const task of taskIds) {
-            //     if (this.fields.includes(task)) {
-            //         fieldsToUpdate.push(task);
-            //     }
-            // }
-            // use given fields as they are?
-            // fieldsToUpdate = taskIds;
-            // if (fieldsToUpdate.length == 0) {
-            //     return;
-            // }
-            // parse fields from this.attrsall.fields - remove alias part
             if (!this.markup.fields) {
                 return;
             }
@@ -722,14 +706,24 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
      */
     setDataMatrix() {
         try {
+            if (!this.data.lockedCells) {
+                this.data.lockedCells = [];
+            }
+            if (!this.data.lockedColumns) {
+                this.data.lockedColumns = [];
+            }
             if (this.realnames) {
                 this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
+                this.data.lockedColumns.push(realNameColumn);
             } else if (this.usernames) {
 
             } else {
                 this.rowKeys.sort((a, b) => this.sortByEmail(a, b));
             }
-
+            this.data.lockedColumns.push(userNameColumn);
+            if (this.emailmap) {
+                this.data.lockedColumns.push(emailColumn);
+            }
             if (this.attrsall.markup.sisugroups) {
                 // These require unique names, otherwise could just use empty strings in place of "invisibleX".
                 this.data.headers = ["Kuvaus", "Sisu-nimi", "invisible1", "invisible2"];
@@ -746,12 +740,8 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             }
             this.data.table.countRow = Object.keys(this.rows).length;
             let y = 1;
-            if (!this.data.lockedCells) {
-                this.data.lockedCells = [];
-            }
             for (const r of this.rowKeys) {
                 this.data.userdata.cells[userNameColumn + y] = {cell: r, backgroundColor: this.fixedColor};
-                this.data.lockedCells.push(userNameColumn + y);
                 this.userLocations[y] = r;
                 for (const [map, col] of [
                     [this.realnamemap, realNameColumn],
@@ -763,7 +753,6 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                             cell: map[r],
                             backgroundColor: this.fixedColor,
                         };
-                        this.data.lockedCells.push(col + y);
                     }
                 }
                 y++;
@@ -774,6 +763,11 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                 for (let x = 0; x < this.fields.length; x++) {
 
                     const colheader = this.fields[x];
+                    const currentCol = colnumToLetters(x + xOffset);
+                    const expandedLockedFields = widenFields(this.lockedFields);
+                    if (expandedLockedFields.includes(colheader)) {
+                        this.data.lockedColumns.push(currentCol);
+                    }
                     this.data.headers.push(colheader);
                     /*
                     this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] = {
@@ -800,12 +794,12 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                     for (y = 0; y < this.rowKeys.length; y++) {
                         // this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
                         if (this.styles && !angular.equals(this.styles, {})) {
-                            this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = {
+                            this.data.userdata.cells[currentCol + (y + 1)] = {
                                 cell: this.rows[this.rowKeys[y]][this.fields[x]],
                                 ...this.styles[this.rowKeys[y]][this.fields[x]],
                             };
                         } else {
-                            this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = {cell: this.rows[this.rowKeys[y]][this.fields[x]]};
+                            this.data.userdata.cells[currentCol + (y + 1)] = {cell: this.rows[this.rowKeys[y]][this.fields[x]]};
                         }
                     }
                 }
