@@ -185,8 +185,6 @@ class DrawIO(JSframe):
         height = ma.get("height", None)  # Automatic aspect ratio or height
         data = ma.get("data", {})
         if isinstance(data, str):
-            data = data.replace('xlink: ', 'xlink:')
-            ma["data"] = data
             data = {}
         dopt = data.get("options", {})
         templates = ma.get("templates", "");
