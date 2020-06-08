@@ -6,7 +6,10 @@ import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
     templateUrl: "./sidebar-menu.component.html",
 })
 export class SidebarMenuComponent implements OnInit, AfterViewInit {
-    private showSidebar = false;
+    hidden = false;
+    sidebarWidth = "12em";
+    private showSidebar = true;
+    // TODO: Ability to set default tab
     private currentElement?: HTMLElement;
     @ViewChild("tabs") private tabs!: TabsetComponent;
     constructor() { }
@@ -15,9 +18,6 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit() {
-        // By default, ngx-bootstrap tabset has first tab selected, so we
-        // unselect a tab on PC
-        // TODO: Replicate proper mobile behaviour
         this.setSidebarState(false);
     }
 
@@ -33,6 +33,9 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit {
     private setSidebarState(visible: boolean) {
         this.showSidebar = visible;
 
+        if (!this.tabs) {
+            return;
+        }
         for (const tab of this.tabs.tabs) {
             if (!this.showSidebar) {
                 tab.active = false;
@@ -44,5 +47,12 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit {
 
     toggleSidebar() {
         this.setSidebarState(!this.showSidebar);
+        if (!this.showSidebar) {
+            this.hidden = true;
+            this.sidebarWidth = "0";
+        } else {
+            this.hidden = false;
+            this.sidebarWidth = "12em";
+        }
     }
 }
