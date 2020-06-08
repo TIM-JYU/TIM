@@ -1,7 +1,7 @@
-<div class="btn btn-default btn-sm pull-left" i18n-title title="Show menu">
+<div class="btn btn-default btn-sm pull-left" (click)="toggleSidebar()" i18n-title title="Show menu">
     <i class="glyphicon glyphicon-menu-hamburger" i18n-title title="Click to open sidebar-menu"></i>
 </div>
-<tabset id="menuTabs" class="hidden-sm hidden-xs">
+<tabset id="menuTabs" class="hidden-sm hidden-xs" #tabs>
     <tab (selectTab)="onTabSelect($event)" #bookmarks>
         <ng-template tabHeading>
             <i class="glyphicon glyphicon-bookmark" i18n-title title="Bookmarks"></i>
