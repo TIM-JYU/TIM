@@ -47,11 +47,10 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit {
 
     toggleSidebar() {
         this.setSidebarState(!this.showSidebar);
+        this.hidden = !this.showSidebar;
         if (!this.showSidebar) {
-            this.hidden = true;
             this.sidebarWidth = "0";
         } else {
-            this.hidden = false;
             this.sidebarWidth = "12em";
         }
     }
