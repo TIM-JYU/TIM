@@ -24,7 +24,7 @@ import {TabEntryListService} from "tim/sidebarmenu/tab-entry-list.service";
     `,
 })
 export class SidebarMenuComponent implements OnInit, AfterViewInit {
-    hidden = false;
+    hidden = true;
     sidebarWidth = "12em";
     private showSidebar = true;
     // TODO: Ability to set default tab
