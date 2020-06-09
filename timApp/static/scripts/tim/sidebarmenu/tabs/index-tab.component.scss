@@ -1,0 +1,28 @@
+ul {
+    padding-left: 13px;
+
+    &.subexp {
+        padding-left: 0;
+        list-style-type: none;
+
+        & li.no-sub-headings {
+            margin-left: 17px;
+        }
+
+        ul {
+            padding-left: 25px;
+        }
+
+        a.exptoggle:hover {
+            text-decoration: none;
+        }
+
+        a.a3 {
+            position: relative;
+            left: 0.4em;
+            font-size: smaller;
+            display: block; // needed for line-height to work
+            line-height: 1.3;
+        }
+    }
+}
