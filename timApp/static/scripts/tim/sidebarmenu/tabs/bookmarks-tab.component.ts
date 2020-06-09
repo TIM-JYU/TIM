@@ -16,6 +16,5 @@ export class BookmarksTabComponent implements OnInit, IMenuTab {
   }
 
   ngOnInit(): void {
-    console.log(this.entry);
   }
 }

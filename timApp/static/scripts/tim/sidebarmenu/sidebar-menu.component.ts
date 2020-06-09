@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, OnInit, ViewChild} from "@angular/core";
 import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
-import {BookmarksTabComponent} from "tim/sidebarmenu/tabs/bookmarks-tab.component";
+import {TabEntryListService} from "tim/sidebarmenu/tab-entry-list.service";
 
 @Component({
     selector: "app-sidebar-menu",
@@ -28,18 +28,12 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit {
     // TODO: Ability to set default tab
     private currentElement?: HTMLElement;
     @ViewChild("tabs") private tabs!: TabsetComponent;
+    menuTabs!: TabEntry[];
 
-    menuTabs: TabEntry[] = [
-        {
-            tabType: BookmarksTabComponent,
-            icon: "bookmark",
-            title: "Bookmarks",
-        },
-    ];
-
-    constructor() { }
+    constructor(private tabEntryList: TabEntryListService) { }
 
     ngOnInit(): void {
+        this.menuTabs = this.tabEntryList.getTabEntries();
     }
 
     ngAfterViewInit() {
