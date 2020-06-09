@@ -544,7 +544,8 @@ def view(item_path, template_name, route="view"):
     summaries = []
     current_summary_index = None
     if logged_in():
-        folder, doc_name = split_location(doc_info.path_without_lang)
+        doc_name = doc_info.short_name
+        folder = doc_info.parent
         
         summaries = get_summaries(folder, doc_settings.score_summary_docs())
         
@@ -650,11 +651,11 @@ def view(item_path, template_name, route="view"):
         slide_background_url=slide_background_url,
         slide_background_color=slide_background_color,
         score_info = {
-                'summaries': summaries,
-                'currentDoc': current_summary_index,
-                'total': sum((s['total'] for s in summaries)),
-                'maxTotal': sum((s['maxTotal'] for s in summaries))
-            },
+            'summaries': summaries,
+            'currentDoc': current_summary_index,
+            'total': sum((s.total for s in summaries)),
+            'maxTotal': sum((s.maxTotal for s in summaries))
+        },
         task_info={'total_points': total_points,
                    'tasks_done': tasks_done,
                    'total_tasks': total_tasks,
@@ -1019,20 +1020,31 @@ def get_viewrange_with_header_id(doc_id: int, header_id: str):
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
     return json_response(view_range)
 
+@dataclass
+class TaskPointSummary:
+    taskName: str
+    fragId: str
+    points: float
+    maxPoints: float
 
-def get_summaries(folder: str, doc_paths: List[str]) -> Dict[str, dict]:
 
+@dataclass
+class Summary:
+    doc: DocInfo
+    total: float
+    maxTotal: float
+    tasks: List[TaskPointSummary]
+
+def get_summaries(folder: Folder, doc_paths: List[str]) -> Dict[str, Summary]:
     total_table = {}
     u = get_current_user_object()
-        
-    docs = [(doc_path, DocEntry.find_by_path(folder + "/" + doc_path)) for doc_path in doc_paths]
-    docs = [doc for doc in docs if doc[1] is not None and u.has_view_access(doc[1])]
     
-    # a document is skipped if it doesn't have any tasks, or if the user doesn't have view rights to it
+    docs = folder.get_all_documents(relative_paths=doc_paths)
+    
+    # a document is skipped if it doesn't have any tasks
     for d in docs:
 
-        doc_name = d[0]
-        doc = d[1].document
+        doc = d.document
         
         blocks = doc.get_paragraphs()
         blocks = dereference_pars(blocks, context_doc=doc)
@@ -1041,7 +1053,7 @@ def get_summaries(folder: str, doc_paths: List[str]) -> Dict[str, dict]:
             continue
 
         # cycle through all paragraphs in current document, resolving user's progress on each scored assignment
-        point_dict = {}
+        point_dict: Dict[str, TaskPointSummary] = {}
         for task_id in task_ids:
             try:
                 plugin = find_plugin_from_document(doc, task_id, None)
@@ -1061,41 +1073,21 @@ def get_summaries(folder: str, doc_paths: List[str]) -> Dict[str, dict]:
             # link takes to the first task ("frag_id")
             group = plugin.score_group()
             if group and group in point_dict:
-                point_dict[group]['max'] += max_points
-                point_dict[group]['user'] += user_points
+                point_dict[group].maxPoints += max_points
+                point_dict[group].points += user_points
             else:
                 if not group:
                     group = task
-                point_dict[group] = {
-                    'fragId': task,
-                    'user': user_points,
-                    'max': max_points
-                }
+                point_dict[group] = TaskPointSummary(group, task, user_points, max_points)
         
         if not point_dict:
             continue
         
-        # include user's total points and documents maximum points as separate dict
-        user_total = 0.0
-        max_total = 0.0
-        for points in point_dict.values():
-            if points['user']:
-                user_total += points['user']
-            max_total += points['max']
+        tasks = list(point_dict.values())
+        
+        user_total = sum((t.points for t in tasks))
+        max_total = sum((t.maxPoints for t in tasks))
 
-        total_table[doc_name] = {
-                'title': doc.docinfo.title,
-                'docPath': doc.docinfo.url_relative, 
-                'total': user_total, 
-                'maxTotal': max_total,
-                'tasks': [
-                        {
-                            'taskName': task_name,
-                            'fragId': task_info['frag_id'],
-                            'points': task_info['user'],
-                            'maxPoints': task_info['max']
-                        } for task_name, task_info in point_dict.items()
-                    ]
-            }
+        total_table[folder.relative_path(d)] = Summary(d, user_total, max_total, tasks)
 
     return total_table

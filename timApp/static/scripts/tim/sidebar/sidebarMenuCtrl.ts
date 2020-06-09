@@ -60,8 +60,7 @@ export interface ITaskPointSummary {
 }
 
 export interface IScoreSummary {
-    title: string;
-    docPath: string;
+    doc: IDocument;
     total: number;
     maxTotal: number;
     tasks: ITaskPointSummary[];
@@ -797,7 +796,7 @@ timApp.component("timSidebarMenu", {
                     <li ng-repeat="summary in $ctrl.scoreInfo.summaries">
                         <div class="flex flex-wrap">
                             <div class="flex-grow-1">
-                                <a href="{{ summary.docPath }}">{{ summary.title }}</a>
+                                <a href="{{ summary.doc.location }}">{{ summary.doc.title }}</a>
                             </div>
                             <div class="flex-grow-1">
                                 <p>{{ summary.total }}<span class="full-points"> / {{ summary.maxTotal }}</span></p>
