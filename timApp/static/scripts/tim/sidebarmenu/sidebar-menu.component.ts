@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, OnInit, ViewChild} from "@angular/core";
 import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
-import {TabEntryListService} from "tim/sidebarmenu/tab-entry-list.service";
+import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
 
 @Component({
     selector: "app-sidebar-menu",

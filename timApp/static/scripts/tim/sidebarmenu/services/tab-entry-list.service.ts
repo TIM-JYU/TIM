@@ -1,16 +1,16 @@
 import {Injectable} from "@angular/core";
-import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
-import {BookmarksTabComponent} from "tim/sidebarmenu/tabs/bookmarks-tab.component";
-import {SettingsTabComponent} from "tim/sidebarmenu/tabs/settings-tab.component";
-import {IndexTabComponent} from "tim/sidebarmenu/tabs/index-tab.component";
-import {LectureInfoTabComponent} from "tim/sidebarmenu/tabs/lecture-info-tab.component";
-import {LoadQuestionsTabComponent} from "tim/sidebarmenu/tabs/load-questions-tab.component";
-import {LoggedUsersTabComponent} from "tim/sidebarmenu/tabs/logged-users-tab.component";
-import {Users} from "tim/user/userService";
-import {getVisibilityVars} from "tim/timRoot";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {LectureController} from "tim/lecture/lectureController";
-import {HeaderIndexerService} from "tim/sidebarmenu/services/header-indexer.service";
+import {TabEntry} from "../menu-tab.directive";
+import {BookmarksTabComponent} from "../tabs/bookmarks-tab.component";
+import {SettingsTabComponent} from "../tabs/settings-tab.component";
+import {IndexTabComponent} from "../tabs/index-tab.component";
+import {LectureInfoTabComponent} from "../tabs/lecture-info-tab.component";
+import {LoadQuestionsTabComponent} from "../tabs/load-questions-tab.component";
+import {LoggedUsersTabComponent} from "../tabs/logged-users-tab.component";
+import {Users} from "../../user/userService";
+import {getVisibilityVars} from "../../timRoot";
+import {vctrlInstance} from "../../document/viewctrlinstance";
+import {LectureController} from "../../lecture/lectureController";
+import {HeaderIndexerService} from "./header-indexer.service";
 
 @Injectable({
     providedIn: "root",
