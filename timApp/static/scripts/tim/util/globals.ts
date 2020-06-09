@@ -172,6 +172,10 @@ export function lectureinfoglobals(): ILectureInfoGlobals {
     return someGlobals();
 }
 
+export function isDocumentGlobals(g: SomeGlobals): g is IDocumentGlobals {
+    return "docSettings" in g;
+}
+
 function someGlobals<T extends IGenericGlobals>(): T {
     return window as unknown as T;
 }
