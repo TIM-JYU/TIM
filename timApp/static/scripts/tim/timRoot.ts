@@ -1,4 +1,4 @@
-import {getUrlParams} from "tim/util/utils";
+import {getUrlParams, isDocumentGlobals} from "tim/util/utils";
 import {genericglobals, IDocumentGlobals, someglobals, SomeGlobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import {showMessageDialog} from "tim/ui/dialog";
@@ -32,12 +32,6 @@ export interface IVisibilityVars {
     headerNav?: boolean;
     headerDocumentActions?: boolean;
 }
-
-
-function isDocumentGlobals(g: SomeGlobals): g is IDocumentGlobals {
-    return "docSettings" in g;
-}
-
 
 function hideLinkStuff(hide: IVisibilityVars) {
     hide.links = true;
