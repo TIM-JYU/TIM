@@ -32,7 +32,7 @@ import {setConsent} from "../user/settings.component";
 import {Users, UserService} from "../user/userService";
 import {someglobals} from "../util/globals";
 import {$http, $localStorage} from "../util/ngimport";
-import {IOkResponse, Require, to} from "../util/utils";
+import {IOkResponse, Require, to, isDocumentGlobals} from "../util/utils";
 import {documentglobals} from "../util/globals";
 
 export interface IHeader {
@@ -109,7 +109,7 @@ export class SidebarMenuCtrl implements IController {
     private isFullRange: boolean = true;
     private hashlessUrl: string;
     private hide = getVisibilityVars();
-    private scoreInfo: IScoreInfo | null = documentglobals().scoreInfo;
+    private scoreInfo: IScoreInfo | null = null;
     private currDocScores?: IScoreSummary;
 
     constructor() {
@@ -135,6 +135,9 @@ export class SidebarMenuCtrl implements IController {
             pieceSize: null,
         });
 
+        if (isDocumentGlobals(g)) {
+            this.scoreInfo = g.scoreInfo;
+        }
         if (this.scoreInfo && this.scoreInfo.currentDoc != null) {
             this.currDocScores = this.scoreInfo.summaries[this.scoreInfo.currentDoc];
         }

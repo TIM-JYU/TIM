@@ -2,9 +2,9 @@ import angular, {IHttpResponse, IPromise} from "angular";
 import * as t from "io-ts";
 import moment from "moment";
 import {AbstractControl, ValidatorFn} from "@angular/forms";
+import {SomeGlobals, IDocumentGlobals} from "tim/util/globals";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
-import {SomeGlobals, IDocumentGlobals} from "tim/util/globals";
 
 const blacklist = new Set(["name", "title", "completionDate"]);
 const UnknownRecord = t.record(t.string, t.unknown);
