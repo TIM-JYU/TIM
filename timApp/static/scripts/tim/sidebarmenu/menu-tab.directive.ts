@@ -1,7 +1,11 @@
 import {Directive, Type, ViewContainerRef} from "@angular/core";
 
 export interface IMenuTab {
-  tabType: Type<unknown>;
+  entry: TabEntry;
+}
+
+export interface TabEntry {
+  tabType: Type<IMenuTab>;
   icon: string;
   title: string;
 }

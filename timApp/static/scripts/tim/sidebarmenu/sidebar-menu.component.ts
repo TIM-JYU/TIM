@@ -1,6 +1,6 @@
 import {AfterViewInit, Component, OnInit, ViewChild} from "@angular/core";
 import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
-import {IMenuTab} from "tim/sidebarmenu/menu-tab.directive";
+import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {BookmarksTabComponent} from "tim/sidebarmenu/tabs/bookmarks-tab.component";
 
 @Component({
@@ -29,7 +29,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit {
     private currentElement?: HTMLElement;
     @ViewChild("tabs") private tabs!: TabsetComponent;
 
-    menuTabs: IMenuTab[] = [
+    menuTabs: TabEntry[] = [
         {
             tabType: BookmarksTabComponent,
             icon: "bookmark",
