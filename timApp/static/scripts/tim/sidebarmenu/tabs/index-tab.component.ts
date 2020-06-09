@@ -17,7 +17,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
                        [class.glyphicon-minus]="!header.closed"></i>
                 </a>
                 <a class="a{{header.h1.level}}"
-                   href="{{hashlessUrl}}#{{header.h1.id}}"
+                   href="{{pageUrl}}#{{header.h1.id}}"
                    target="_self"
                    (click)="headerClicked($event, header.h1.id)">
                     {{header.h1.text}}
@@ -25,7 +25,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
                 <ul class="list-unstyled" *ngIf="!header.closed" (click)="$event.stopPropagation()">
                     <li *ngFor="let header2 of header.h2List">
                         <a class="a{{header2.level"
-                           href="{{hashlessUrl}}#{{header2.id}}"
+                           href="{{pageUrl}}#{{header2.id}}"
                            target="_self"
                            (click)="headerClicked($event, header2.id)">
                             {{header2.text}}
@@ -39,7 +39,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 })
 export class IndexTabComponent implements OnInit, IMenuTab {
     @Input() entry!: TabEntry;
-    hashlessUrl = `${document.location.origin}${document.location.pathname}${document.location.search}`;
+    pageUrl = `${document.location.origin}${document.location.pathname}${document.location.search}`;
     isFullRange = true;
 
     constructor(private headerIndexer: HeaderIndexerService) {
