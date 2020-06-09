@@ -11,12 +11,14 @@ import {TabEntryListService} from "tim/sidebarmenu/tab-entry-list.service";
                 <i class="glyphicon glyphicon-menu-hamburger" i18n-title title="Click to open sidebar-menu"></i>
             </div>
             <tabset id="menuTabs" [class.hidden-sm]="hidden" [class.hidden-xs]="hidden" #tabs>
-                <tab *ngFor="let menuTab of menuTabs" (selectTab)="onTabSelect($event)" #currentTab>
-                    <ng-template tabHeading>
-                        <i class="glyphicon glyphicon-{{menuTab.icon}}" i18n-title title="{{menuTab.title}}"></i>
-                    </ng-template>
-                    <tab-container [tabItem]="menuTab" [class.hidden]="!shouldRender(currentTab)"></tab-container>
-                </tab>
+                <ng-container *ngFor="let menuTab of menuTabs">
+                    <tab *ngIf="menuTab.visible" (selectTab)="onTabSelect($event)" #currentTab>
+                        <ng-template tabHeading>
+                            <i class="glyphicon glyphicon-{{menuTab.icon}}" i18n-title title="{{menuTab.title}}"></i>
+                        </ng-template>
+                        <tab-container [tabItem]="menuTab" [class.hidden]="!shouldRender(currentTab)"></tab-container>
+                    </tab>
+                </ng-container>
             </tabset>
         </div>
     `,
@@ -30,7 +32,8 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit {
     @ViewChild("tabs") private tabs!: TabsetComponent;
     menuTabs!: TabEntry[];
 
-    constructor(private tabEntryList: TabEntryListService) { }
+    constructor(private tabEntryList: TabEntryListService) {
+    }
 
     ngOnInit(): void {
         this.menuTabs = this.tabEntryList.getTabEntries();

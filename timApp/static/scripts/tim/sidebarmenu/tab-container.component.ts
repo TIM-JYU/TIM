@@ -9,9 +9,10 @@ import {TabEntry, MenuTabDirective} from "tim/sidebarmenu/menu-tab.directive";
 })
 export class TabContainerComponent implements OnInit {
     @Input() tabItem!: TabEntry;
-    @ViewChild(MenuTabDirective, { static: true }) timMenuTab!: MenuTabDirective;
+    @ViewChild(MenuTabDirective, {static: true}) timMenuTab!: MenuTabDirective;
 
-    constructor(private cfr: ComponentFactoryResolver) { }
+    constructor(private cfr: ComponentFactoryResolver) {
+    }
 
     ngOnInit(): void {
         const factory = this.cfr.resolveComponentFactory(this.tabItem.tabType);

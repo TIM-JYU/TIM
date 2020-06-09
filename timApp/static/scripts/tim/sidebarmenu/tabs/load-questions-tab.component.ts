@@ -2,13 +2,12 @@ import {Component, Input, OnInit} from "@angular/core";
 import {IMenuTab, TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 
 @Component({
-    selector: "bookmarks-tab",
+    selector: "load-questions-tab",
     template: `
-        <h5 i18n>Bookmarks</h5>
-        TODO: Bookmarks here
+        Loading question manually...
     `,
 })
-export class BookmarksTabComponent implements OnInit, IMenuTab {
+export class LoadQuestionsTabComponent implements OnInit, IMenuTab {
     @Input() entry!: TabEntry;
 
     constructor() {
@@ -16,4 +15,5 @@ export class BookmarksTabComponent implements OnInit, IMenuTab {
 
     ngOnInit(): void {
     }
+
 }

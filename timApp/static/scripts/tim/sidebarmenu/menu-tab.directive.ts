@@ -1,18 +1,20 @@
 import {Directive, Type, ViewContainerRef} from "@angular/core";
 
 export interface IMenuTab {
-  entry: TabEntry;
+    entry: TabEntry;
 }
 
 export interface TabEntry {
-  tabType: Type<IMenuTab>;
-  icon: string;
-  title: string;
+    tabType: Type<IMenuTab>;
+    icon: string;
+    title: string;
+    visible: boolean;
 }
 
 @Directive({
-  selector: "[timMenuTab]",
+    selector: "[timMenuTab]",
 })
 export class MenuTabDirective {
-  constructor(public vcr: ViewContainerRef) { }
+    constructor(public vcr: ViewContainerRef) {
+    }
 }
