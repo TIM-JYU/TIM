@@ -12,7 +12,7 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
 from timApp.user.usergroup import UserGroup
-from timApp.util.utils import split_location, join_location
+from timApp.util.utils import split_location, join_location, relative_location
 
 ROOT_FOLDER_ID = -1
 
@@ -216,6 +216,9 @@ class Folder(db.Model, Item):
 
     def get_all_folders(self) -> List['Folder']:
         return Folder.get_all_in_path(self.path)
+
+    def relative_path(self, item: Item) -> str:
+        return relative_location(item.path, self.path)
 
     @staticmethod
     def create(
