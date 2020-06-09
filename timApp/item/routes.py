@@ -1057,9 +1057,7 @@ def get_summaries(folder: Folder, current_doc: Optional[DocInfo], doc_paths: Lis
     if current_doc is not None:
         docs.append(current_doc)
     
-    # a document is skipped if it doesn't have any tasks
     for d in docs:
-
         doc = d.document
         
         blocks = doc.get_paragraphs()
@@ -1068,7 +1066,9 @@ def get_summaries(folder: Folder, current_doc: Optional[DocInfo], doc_paths: Lis
         if not task_ids:
             continue
 
-        # cycle through all paragraphs in current document, resolving user's progress on each scored assignment
+        point_sum_rule = doc.get_settings().point_sum_rule()
+        
+        # cycle through all tasks in current document, resolving user's progress on each scored assignment
         point_dict: Dict[str, TaskPointSummary] = {}
         for task_id in task_ids:
             try:
@@ -1085,16 +1085,31 @@ def get_summaries(folder: Folder, current_doc: Optional[DocInfo], doc_paths: Lis
             user_points = max((a.points for a in u.get_answers_for_task(task_id.doc_task)), default = 0)
             
             # add current document to overall points list, using task_name as the key identifier
-            # if scoreGroup is provided in the task, group similar tasks in the list
-            # link takes to the first task ("frag_id")
-            group = plugin.score_group()
-            if group and group in point_dict:
-                point_dict[group].maxPoints += max_points
-                point_dict[group].points += user_points
-            else:
-                if not group:
-                    group = task
-                point_dict[group] = TaskPointSummary(group, task, user_points, max_points)
+            # group tasks in the list by point_sum_rule groups
+            # link takes to the first task in a group ("frag_id")
+            groups = []
+            included_groups = []
+            include_groupless = True # whether to include tasks without groups
+            if point_sum_rule is not None:
+                groups = list(point_sum_rule.find_groups(task_id.doc_task))
+                included_groups = point_sum_rule.scoreboard_groups
+                if included_groups is None:
+                    included_groups = groups
+                # only include groupless if scoreboard_groups weren't specified or * is in there while not in groups
+                elif '*' not in included_groups or '*' in groups:
+                    include_groupless = False
+            
+            if groups:
+                groups = [g for g in groups if g in included_groups]
+                
+                for g in groups:
+                    if g in point_dict:
+                        point_dict[g].maxPoints += max_points
+                        point_dict[g].points += user_points
+                    else:
+                        point_dict[g] = TaskPointSummary(g, task, user_points, max_points)
+            elif include_groupless:
+                point_dict[task] = TaskPointSummary(task, task, user_points, max_points)
         
         if not point_dict:
             continue

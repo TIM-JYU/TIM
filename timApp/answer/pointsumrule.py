@@ -53,6 +53,7 @@ class PointSumRule:
             self.count_type, self.count_amount = next(data['count'].items().__iter__())
         except (StopIteration, KeyError):
             self.count_type, self.count_amount = 'best', 9999
+        self.scoreboard_groups = data.get('scoreboard_groups', None)
         self.total = data.get('total', None)
         self.hide = data.get('hide', None)
         self.sort = data.get('sort', True)

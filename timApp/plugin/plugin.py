@@ -246,9 +246,6 @@ class Plugin:
 
     def starttime(self, default=None):
         return self.known.starttime or default
-        
-    def score_group(self, default=None):
-        return self.known.scoreGroup or default
 
     def points_rule(self):
         return self.known.pointsRule or PointsRule(

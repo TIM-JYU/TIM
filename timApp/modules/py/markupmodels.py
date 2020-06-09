@@ -74,7 +74,6 @@ class KnownMarkupFields(HiddenFieldsMixin):
     minHeight: Union[str, None, Missing] = field(metadata={'data_key': 'min-height'}, default=missing)
     pointsRule: Union[PointsRule, None, Missing] = missing
     pointsText: Union[str, None, Missing] = missing
-    scoreGroup: Union[str, None, Missing] = missing
     showPoints: Union[bool, None, Missing] = missing
     starttime: Union[PluginDateTime, datetime, None, Missing] = missing
     stem: Union[str, None, Missing] = missing
