@@ -34,8 +34,7 @@ import {SettingsComponent} from "tim/user/settings.component";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {LanguageSelectorComponent} from "tim/user/language-selector.component";
 import {AccessCountdownComponent} from "tim/item/access-countdown.component";
-import {SidebarMenuComponent} from "tim/ui/sidebar/sidebar-menu.component";
-import {TabsModule} from "ngx-bootstrap/tabs";
+import {SideBarMenuModule} from "tim/sidebarmenu/side-bar-menu.module";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -64,7 +63,6 @@ import {TabsModule} from "ngx-bootstrap/tabs";
         SettingsComponent,
         LanguageSelectorComponent,
         AccessCountdownComponent,
-        SidebarMenuComponent,
     ],
     imports: [
         BrowserModule,
@@ -73,10 +71,9 @@ import {TabsModule} from "ngx-bootstrap/tabs";
         TimUtilityModule,
         DialogModule,
         NoopAnimationsModule,
+        SideBarMenuModule,
         BsDropdownModule.forRoot(),
         TypeaheadModule.forRoot(),
-        TooltipModule.forRoot(),
-        TabsModule.forRoot(),
         TooltipModule.forRoot(),
     ],
     providers: [
