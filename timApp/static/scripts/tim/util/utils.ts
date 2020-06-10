@@ -760,14 +760,3 @@ export function secondsToHHMMSS(time: number) {
 export function formatString(s: string, ...fmt: string[]) {
     return fmt.reduce((str, val, i) => str.replace(`{${i}}`, val), s);
 }
-
-interface TokenImpl {
-    running: boolean;
-}
-
-export class TimeoutToken {
-    private running: boolean = true;
-    stop() {
-        this.running = false;
-    }
-}
