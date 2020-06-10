@@ -20,6 +20,7 @@ from marshmallow import ValidationError
 
 from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
+from timApp.answer.pointsumrule import CountMethod
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
@@ -1067,6 +1068,7 @@ def get_summaries(folder: Folder, current_doc: Optional[DocInfo], doc_paths: Lis
             continue
 
         point_sum_rule = doc.get_settings().point_sum_rule()
+        count_method = point_sum_rule.scoreboard_count_method if point_sum_rule else CountMethod.latest
         
         # cycle through all tasks in current document, resolving user's progress on each scored assignment
         point_dict: Dict[str, TaskPointSummary] = {}
@@ -1082,7 +1084,11 @@ def get_summaries(folder: Folder, current_doc: Optional[DocInfo], doc_paths: Lis
                 continue
 
             task = task_id.task_name
-            user_points = max((a.points for a in u.get_answers_for_task(task_id.doc_task)), default = 0)
+            if count_method == CountMethod.max:
+                user_points = max((a.points for a in u.get_answers_for_task(task_id.doc_task)), default = 0)
+            else: # latest
+                answers_q = u.get_answers_for_task(task_id.doc_task)
+                user_points = answers_q.first().points if answers_q.count() > 0 else 0
             
             # add current document to overall points list, using task_name as the key identifier
             # group tasks in the list by point_sum_rule groups
