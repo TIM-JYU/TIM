@@ -5,6 +5,7 @@ import time
 import uuid
 from pathlib import PurePath, PureWindowsPath
 from subprocess import PIPE, Popen
+import shlex
 
 CS3_TAG = 'rust'
 
@@ -233,6 +234,24 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
         remove(cwd + '/pwd.txt')
         return -2, '', ("IO Error" + str(e)), pwddir
     return errcode, stdout, errtxt + stderr, pwddir
+
+def run2_subdir(args, dir=None, cwd=None, *kargs, **kwargs):
+    """run2 but inside subdirectory cwd with dir as root.
+    
+    :param args: command and arguments
+    :param dir: root directory to be included in run
+    :param cwd: working directory relative to dir
+    :param *kargs: other run2 arguments
+    :param **kwargs: other run2 arguments
+    """
+    if cwd and cwd[0] == "/":
+        cwd = os.path.normpath(cwd.replace(dir, "/home/agent/"))
+    if isinstance(args, str):
+        args = ["bash", "-c", "set -e; cd " + cwd + "; " + args]
+    else:
+        argstring = " ".join([shlex.quote(arg) for arg in args])
+        args = ["bash", "-c", "set -e; cd " + cwd + "; " + argstring]
+    return run2(args, cwd=dir, *kargs, **kwargs)
 
 
 def copy_file(f1, f2, remove_f1=False, is_optional=False):
