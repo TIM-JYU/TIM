@@ -760,3 +760,53 @@ export function secondsToHHMMSS(time: number) {
 export function formatString(s: string, ...fmt: string[]) {
     return fmt.reduce((str, val, i) => str.replace(`{${i}}`, val), s);
 }
+
+interface TokenImpl {
+    running: boolean;
+}
+
+export class TimeoutToken {
+    private running: boolean = true;
+    stop() {
+        this.running = false;
+    }
+}
+
+/**
+ * Runs a given callback at given time intervals.
+ * Ensures that the callback runs as precisely as possible.
+ *
+ * In addition, provides optional callbacks for cases when interval failed to run in time.
+ *
+ * @param intervalMs Interval to run the callback at, in milliseconds.
+ * @param callback Callback to execute at the given interval.
+ * @param sync If the interval deviates from normal execution time, this callback is called with the delta time
+ *              between real and ideal timer, in milliseconds.
+ * @param token Optional cancellation token that allows to stop the interval.
+ */
+export function setIntervalHighRes(intervalMs: number, callback: () => Promise<unknown> | unknown, sync?: (dt: number) => Promise<unknown> | unknown, token?: TimeoutToken) {
+    const privateToken = (token ?? new TimeoutToken()) as unknown as TokenImpl;
+    let baseline = moment().valueOf();
+    const tick = async () => {
+        // Account for possible cancellation before first tick
+        if (!privateToken.running) { return; }
+        await callback();
+        if (!privateToken.running) { return; }
+
+        baseline += intervalMs;
+        let dt = moment().diff(baseline, "ms", true);
+        // dt < 0 => Real tick happened earlier (e.g. computer time manually set to an earlier time)
+        // dt > intervalMs => Real tick happened much later than wanted interval (needs compensation)
+        // In either case, sync and reset the ideal baseline
+        if (dt < 0 || dt > intervalMs) {
+            if (sync) {
+                await sync(dt);
+            }
+            baseline = moment().valueOf();
+            dt = 0;
+        }
+
+        setTimeout(tick, intervalMs - dt);
+    };
+    setTimeout(tick, intervalMs);
+}
