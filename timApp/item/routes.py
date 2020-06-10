@@ -543,15 +543,16 @@ def view(item_path, template_name, route="view"):
 
     summaries = []
     current_summary_index = None
+    current_doc_summary = None
     if logged_in():
         doc_name = doc_info.short_name
         folder = doc_info.parent
         
-        summaries = get_summaries(folder, doc_settings.score_summary_docs())
-        
-        keys, summaries = summaries.keys(), list(summaries.values())
-        if doc_name in keys:
-            current_summary_index = list(keys).index(doc_name)
+        score_summary_docs = doc_settings.score_summary_docs()
+        if doc_settings.hide_task_summary():
+            current_doc_summary, summaries = get_summaries(folder, None, score_summary_docs)
+        else:
+            current_doc_summary, summaries = get_summaries(folder, doc_info, score_summary_docs)
         
     reqs = get_all_reqs()  # This is cached so only first time after restart takes time
     taketime("reqs done")
@@ -652,7 +653,7 @@ def view(item_path, template_name, route="view"):
         slide_background_color=slide_background_color,
         score_info = {
             'summaries': summaries,
-            'currentDoc': current_summary_index,
+            'currentDocSummary': current_doc_summary,
             'total': sum((s.total for s in summaries)),
             'maxTotal': sum((s.maxTotal for s in summaries))
         },
@@ -1035,11 +1036,26 @@ class Summary:
     maxTotal: float
     tasks: List[TaskPointSummary]
 
-def get_summaries(folder: Folder, doc_paths: List[str]) -> Dict[str, Summary]:
+def get_summaries(folder: Folder, current_doc: Optional[DocInfo], doc_paths: List[str]) -> Dict[str, Summary]:
     total_table = {}
     u = get_current_user_object()
     
-    docs = folder.get_all_documents(relative_paths=doc_paths)
+    include_current = False
+    if current_doc is None:
+        include_current = True
+    elif current_doc.short_name in doc_paths:
+        include_current = True
+        doc_paths.remove(current_doc.short_name)
+    
+    docs = []
+    if doc_paths:
+        docs = folder.get_all_documents(relative_paths=doc_paths)
+        # tests fail if inserting to current_doc due to duplicate ids for some reason, so do it here
+        for d in docs:
+            d.document.insert_preamble_pars()
+    
+    if current_doc is not None:
+        docs.append(current_doc)
     
     # a document is skipped if it doesn't have any tasks
     for d in docs:
@@ -1090,4 +1106,8 @@ def get_summaries(folder: Folder, doc_paths: List[str]) -> Dict[str, Summary]:
 
         total_table[folder.relative_path(d)] = Summary(d, user_total, max_total, tasks)
 
-    return total_table
+    current_doc_points = total_table.get(current_doc.short_name) if current_doc is not None else None
+    if not include_current:
+        total_table.pop(current_doc.short_name, None)
+
+    return current_doc_points, list(total_table.values())

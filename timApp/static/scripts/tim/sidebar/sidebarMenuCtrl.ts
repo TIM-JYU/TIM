@@ -70,7 +70,7 @@ export interface IScoreInfo {
     total: number;
     maxTotal: number;
     summaries: IScoreSummary[];
-    currentDoc: number | null; // index of current doc
+    currentDocSummary: IScoreSummary;
 }
 
 export type HeaderIndexItem = [IHeader, IHeader[]];
@@ -109,7 +109,6 @@ export class SidebarMenuCtrl implements IController {
     private hashlessUrl: string;
     private hide = getVisibilityVars();
     private scoreInfo: IScoreInfo | null = null;
-    private currDocScores?: IScoreSummary;
 
     constructor() {
         const g = someglobals();
@@ -136,9 +135,6 @@ export class SidebarMenuCtrl implements IController {
 
         if (isDocumentGlobals(g)) {
             this.scoreInfo = g.scoreInfo;
-        }
-        if (this.scoreInfo && this.scoreInfo.currentDoc != null) {
-            this.currDocScores = this.scoreInfo.summaries[this.scoreInfo.currentDoc];
         }
 
         this.updateLeftSide();
@@ -745,11 +741,11 @@ timApp.component("timSidebarMenu", {
         </ul>
     </uib-tab>
 
-    <uib-tab index="10" ng-if="$ctrl.scoreInfo && ($ctrl.currDocScores || ($ctrl.scoreInfo.summaries && $ctrl.scoreInfo.summaries.length))">
+    <uib-tab index="10" ng-if="$ctrl.scoreInfo && ((!$ctrl.hide.taskSummary && $ctrl.scoreInfo.currentDocSummary) || ($ctrl.scoreInfo.summaries && $ctrl.scoreInfo.summaries.length))">
         <uib-tab-heading>
             <i class="glyphicon glyphicon-stats"></i>
         </uib-tab-heading>
-        <div id="menu-points" ng-if="$ctrl.currDocScores">
+        <div id="menu-points" ng-if="!$ctrl.hide.taskSummary && $ctrl.scoreInfo.currentDocSummary">
             <div class="collapse-header">
                 <a data-toggle="collapse" data-target="#collapse-points">
                     <h5>Points on this page</h5>
@@ -762,7 +758,7 @@ timApp.component("timSidebarMenu", {
                     <p class="pull-right">Points</p>
                 </div>
                 <ul class="score-list">
-                    <li ng-repeat="task in $ctrl.currDocScores.tasks" ng-class="task.points ? (task.points == task.maxPoints ? 'task_okay' : 'task_prog') : 'flex flex-wrap'">
+                    <li ng-repeat="task in $ctrl.scoreInfo.currentDocSummary.tasks" ng-class="task.points ? (task.points == task.maxPoints ? 'task_okay' : 'task_prog') : 'flex flex-wrap'">
                         <div class="flex-grow-1">
                             <a href="#{{ task.fragId }}">{{ task.taskName }}</a>
                         </div>
@@ -774,8 +770,8 @@ timApp.component("timSidebarMenu", {
                         </div>
                     </li>
                     <li class="point-total">
-                        Total: {{ $ctrl.currDocScores.total }}
-                        <span class="full-points"> / {{ $ctrl.currDocScores.maxTotal }}</span>
+                        Total: {{ $ctrl.scoreInfo.currentDocSummary.total }}
+                        <span class="full-points"> / {{ $ctrl.scoreInfo.currentDocSummary.maxTotal }}</span>
                     </li>
                 </ul>
             </div>
