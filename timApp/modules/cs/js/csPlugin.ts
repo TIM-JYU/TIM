@@ -687,6 +687,7 @@ const CsMarkupOptional = t.partial({
     count: t.any,
     hide: t.any,
     savedText: t.string,
+    rootPath: t.string,
 });
 
 const CsMarkupDefaults = t.type({

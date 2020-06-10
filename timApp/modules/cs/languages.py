@@ -6,6 +6,7 @@ import requests
 from points import *
 from run import *
 from os.path import splitext
+from pathlib import Path
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
@@ -112,6 +113,13 @@ class Language:
 
         self.upath = get_param(query, "path", "")  # from user/sql do user and /sql
         self.epath = "/" + self.doc_id
+        self.rootpath = get_param(query, "rootPath", None)
+        if self.rootpath is not None:
+            self.rootpath = os.path.normpath(self.rootpath)
+            self.upath = os.path.join(self.rootpath, self.upath)
+            if not os.path.normpath(self.upath).startswith(self.rootpath):
+                raise Exception("Root path not a parent of path")
+
         if "/" in self.upath:  # if user/ do just user and ""
             self.upath, self.epath = self.upath.split("/", 1)
             if self.epath:
@@ -124,6 +132,9 @@ class Language:
             self.fullpath = "/tmp/" + self.basename  # check it is sure under userpath
             if not os.path.abspath(self.fullpath).startswith(self.mustpath):
                 self.basename = self.userpath + "/ERRORPATH"
+            if self.rootpath is not None:
+                _, self.rootpath = self.rootpath.split("/", 1)
+                self.rootpath = self.mustpath + "/" + (self.rootpath if self.rootpath else "")
             self.delete_tmp = False
             mkdirs("/tmp/user")
             # print(self.task_id, self.doc_id, self.fullpath)
@@ -274,21 +285,27 @@ class Language:
             uargs = None
         if self.just_compile:
             args = []
-        code, out, err, pwddir = run2(args,
-                                      cwd=df(cwd, self.prgpath),
-                                      shell=df(shell, False),
-                                      kill_tree=df(kill_tree, True),
-                                      timeout=df(timeout, self.timeout),
-                                      env=df(env, self.env),
-                                      stdin=df(stdin, self.stdin),
-                                      uargs=uargs,
-                                      code=df(code, "utf-8"),
-                                      extra=df(extra, ""),
-                                      ulimit=df(ulimit, self.ulimit),
-                                      no_x11=df(no_x11, self.no_x11),
-                                      savestate=df(savestate, self.savestate),
-                                      dockercontainer=df(dockercontainer, self.dockercontainer),
-                                      compile_commandline=self.compile_commandline)
+        
+        def call_run(args, **kwargs): # allows reuse of the function arguments
+            if self.rootpath:
+                return run2_subdir(args, dir=self.rootpath, **kwargs)
+            return run2(args, **kwargs)
+        
+        code, out, err, pwddir = call_run(args,
+                                    cwd=df(cwd, self.prgpath),
+                                    shell=df(shell, False),
+                                    kill_tree=df(kill_tree, True),
+                                    timeout=df(timeout, self.timeout),
+                                    env=df(env, self.env),
+                                    stdin=df(stdin, self.stdin),
+                                    uargs=uargs,
+                                    code=df(code, "utf-8"),
+                                    extra=df(extra, ""),
+                                    ulimit=df(ulimit, self.ulimit),
+                                    no_x11=df(no_x11, self.no_x11),
+                                    savestate=df(savestate, self.savestate),
+                                    dockercontainer=df(dockercontainer, self.dockercontainer),
+                                    compile_commandline=self.compile_commandline)
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
         return code, out, err, pwddir
