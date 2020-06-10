@@ -1,8 +1,7 @@
 import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
 import humanizeDuration from "humanize-duration";
-import {formatString, secondsToHHMMSS, to2} from "tim/util/utils";
+import {formatString, secondsToHHMMSS, setIntervalHighRes, TimeoutToken, to2} from "tim/util/utils";
 import {Users} from "tim/user/userService";
-import Timeout = NodeJS.Timeout;
 import moment from "moment";
 import {HttpClient} from "@angular/common/http";
 
@@ -27,7 +26,7 @@ export class CountdownComponent implements OnInit {
     isLowTime = false;
     currentCountdown = 0;
     locale = Users.getCurrentLanguage();
-    currentInterval?: Timeout;
+    currentInterval?: TimeoutToken;
     formatString = formatString;
 
     constructor(private http: HttpClient) {
@@ -68,12 +67,27 @@ export class CountdownComponent implements OnInit {
         if (this.currentInterval) { return; }
         this.currentCountdown = await this.getCountdownStart();
         if (this.checkCountdown(false)) { return; }
-        this.currentInterval = setInterval(() => this.checkCountdown(), 1000);
+        this.currentInterval = new TimeoutToken();
+        setIntervalHighRes(1000, this.checkCountdown, this.syncTime, this.currentInterval);
     }
+
+    syncTime = async (dt: number) => {
+        // If we have end date, we can sync with the server to find the real countdown
+        // Otherwise if we only have countdown:
+        // * dt < 0 (went back in time), do nothing, just keep counting (we can't to any better anyway)
+        // * dt > 1000 (time jumped forward), decrease the countdown by missed seconds
+        if (this.endTime) {
+            this.currentCountdown = await this.getCountdownStart();
+        } else if (dt > 1000) {
+            const missedSeconds = Math.floor((dt - 1000) / 1000);
+            this.currentCountdown -= missedSeconds;
+        }
+    };
 
     stop() {
         if (!this.currentInterval) { return; }
-        clearInterval(this.currentInterval);
+        this.currentInterval.stop();
+        this.currentInterval = undefined;
     }
 
     reset() {
@@ -81,7 +95,7 @@ export class CountdownComponent implements OnInit {
         this.isLowTime = false;
     }
 
-    private checkCountdown(count = true) {
+    private checkCountdown = (count = true) => {
         if (count) {
             this.currentCountdown--;
         }
@@ -95,5 +109,5 @@ export class CountdownComponent implements OnInit {
             this.stop();
         }
         return timeEnded;
-    }
+    };
 }
