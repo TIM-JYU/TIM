@@ -620,6 +620,14 @@ const Example = t.type({
     title: t.string,
 });
 
+const CopyFiles = t.union([
+    t.array(t.string),
+    t.type({
+        master: t.array(t.string),
+        task: t.array(t.string),
+    }),
+]);
+
 interface ICountLimit {
     show?: boolean;
     min?: number;
@@ -688,6 +696,8 @@ const CsMarkupOptional = t.partial({
     hide: t.any,
     savedText: t.string,
     rootPath: t.string,
+    masterPath: t.string,
+    copyFiles: CopyFiles,
 });
 
 const CsMarkupDefaults = t.type({

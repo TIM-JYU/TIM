@@ -14,12 +14,20 @@ from base64 import b64encode
 from cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
 from os.path import splitext
 from fileParams import encode_json_data
+from pathlib import Path
 # noinspection PyUnresolvedReferences
 
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)
 
 # cs.py: WWW-palvelin portista 5000 (ulospäin 56000) joka palvelee csPlugin pyyntöjä
+#
+# masterPath-kansioiden lisääminen copyFiles, jsFiles, cssFiles ja fromFile-attribuutteja varten:
+#   - Luo kansio /cs/masters/-hakemistoon.
+#   Voit käyttää tätä kansiota masterPathissä (masterPath: <kansio-nimi>)
+#   - Lisää kansioon tai sen alikansioihin haluamasi js, css ja markup-tiedostot (fromFile).
+#   - Viittaa näihin tiedostoihin attribuuteilla. Jos fromFile on tosi, eikä merkkijono, oletetaan
+#   markup tiedoston nimeksi 'csmarkup.json'
 #
 # Uuden kielen lisäämiseksi
 # 1. Mene tiedostoon languges.py ja kopioi sieltä luokka
@@ -174,6 +182,20 @@ def delete_extra_files(extra_files, prgpath):
             except:
                 print("Can not delete: ", efilename)
 
+def copy_files_regex(files, source_dir, dest_dir):
+    if files is None or source_dir is None or dest_dir is None:
+        return
+    
+    regexs = [re.compile(file) for file in files]
+    
+    for root, dirs, files in os.walk(source_dir):
+        rootp = Path(root)
+        relpath = rootp.relative_to(source_dir)
+        for file in files:
+            relfilepath = relpath / file
+            if any(regex.fullmatch(str(relfilepath)) is not None for regex in regexs):
+                mkdirs(str(dest_dir / relpath))
+                shutil.copy2(str(rootp / file), str(dest_dir / relfilepath))
 
 def get_md(ttype, query):
     tiny = False
@@ -1268,7 +1290,25 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 slines = s
 
             save_extra_files(query, extra_files, language.prgpath)
-
+            
+            master_path = get_param(query, "masterPath", None)
+            if master_path is not None:
+                master_path = (Path("/cs/masters") / master_path).resolve()
+                if Path("/cs/masters") not in master_path.parents:
+                    return write_json_error(self.wfile, "Root path points outside of allowed directories (masterPath must be a relative subpath)", result)
+                
+                cfiles = get_param(query, "copyFiles", None)
+                
+                if "master" not in cfiles and "task" not in cfiles:
+                    cfiles["task"] = cfiles
+                
+                if language.rootpath is None:
+                    task_path = master_path
+                else:
+                    task_path = master_path / Path(language.prgpath).relative_to(language.rootpath)
+                    copy_files_regex(cfiles.get("master", None), master_path, Path(language.rootpath))
+                copy_files_regex(cfiles.get("task", None), task_path, Path(language.prgpath))
+            
             if not os.path.isfile(language.sourcefilename) or os.path.getsize(language.sourcefilename) == 0:
                 if not nofilesave:
                     return write_json_error(self.wfile, "Could not get the source file", result)
