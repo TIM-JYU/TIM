@@ -110,6 +110,8 @@ class DocSettingTypes:
     themes: List[str]
     override_user_themes: bool
     hide_sidemenu: Optional[str]
+    score_summary_docs: List[str]
+    hide_task_summary: bool
 
 
 doc_setting_field_map: Dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
@@ -461,6 +463,12 @@ class DocSettings:
 
     def hide_sidemenu(self) -> Optional[str]:
         return self.get_setting_or_default('hide_sidemenu', None)
+        
+    def score_summary_docs(self) -> List[str]:
+        return self.get_setting_or_default('score_summary_docs', [])
+        
+    def hide_task_summary(self) -> bool:
+        return self.get_setting_or_default('hide_task_summary', False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

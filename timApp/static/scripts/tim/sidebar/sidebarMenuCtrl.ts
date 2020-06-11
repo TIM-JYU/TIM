@@ -32,7 +32,8 @@ import {setConsent} from "../user/settings.component";
 import {Users, UserService} from "../user/userService";
 import {someglobals} from "../util/globals";
 import {$http, $localStorage} from "../util/ngimport";
-import {IOkResponse, Require, to} from "../util/utils";
+import {IOkResponse, Require, to, isDocumentGlobals} from "../util/utils";
+import {documentglobals} from "../util/globals";
 
 export interface IHeader {
     id: string;
@@ -49,6 +50,27 @@ export interface IHeaderDisplayIndexItem {
 export interface IGroupWithSisuPath extends IGroup {
     sisugroup_path: string | null;
     admin_doc?: IDocument;
+}
+
+export interface ITaskPointSummary {
+    taskName: string;
+    fragId: string;
+    points: number;
+    maxPoints: number;
+}
+
+export interface IScoreSummary {
+    doc: IDocument;
+    total: number;
+    maxTotal: number;
+    tasks: ITaskPointSummary[];
+}
+
+export interface IScoreInfo {
+    total: number;
+    maxTotal: number;
+    summaries: IScoreSummary[];
+    currentDocSummary: IScoreSummary;
 }
 
 export type HeaderIndexItem = [IHeader, IHeader[]];
@@ -86,6 +108,7 @@ export class SidebarMenuCtrl implements IController {
     private isFullRange: boolean = true;
     private hashlessUrl: string;
     private hide = getVisibilityVars();
+    private scoreInfo: IScoreInfo | null = null;
 
     constructor() {
         const g = someglobals();
@@ -109,6 +132,10 @@ export class SidebarMenuCtrl implements IController {
             consent: undefined,
             pieceSize: null,
         });
+
+        if (isDocumentGlobals(g)) {
+            this.scoreInfo = g.scoreInfo;
+        }
 
         this.updateLeftSide();
         $(window).resize(() => this.updateLeftSide());
@@ -714,6 +741,73 @@ timApp.component("timSidebarMenu", {
         </ul>
     </uib-tab>
 
+    <uib-tab index="10" ng-if="$ctrl.scoreInfo && ((!$ctrl.hide.taskSummary && $ctrl.scoreInfo.currentDocSummary) || ($ctrl.scoreInfo.summaries && $ctrl.scoreInfo.summaries.length))">
+        <uib-tab-heading>
+            <i class="glyphicon glyphicon-stats"></i>
+        </uib-tab-heading>
+        <div id="menu-points" ng-if="!$ctrl.hide.taskSummary && $ctrl.scoreInfo.currentDocSummary">
+            <div class="collapse-header">
+                <a data-toggle="collapse" data-target="#collapse-points">
+                    <h5>Points on this page</h5>
+                    <i class="pull-right glyphicon glyphicon-menu-down"></i>
+                </a>
+            </div>
+            <div class="collapse in" id="collapse-points">
+                <div class="points-header">
+                    <p>Task</p>
+                    <p class="pull-right">Points</p>
+                </div>
+                <ul class="score-list">
+                    <li ng-repeat="task in $ctrl.scoreInfo.currentDocSummary.tasks" ng-class="task.points ? (task.points == task.maxPoints ? 'task_okay' : 'task_prog') : 'flex flex-wrap'">
+                        <div class="flex-grow-1">
+                            <a href="#{{ task.fragId }}">{{ task.taskName }}</a>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p>
+                                {{ task.points ? task.points : 0 }}
+                                <span class="full-points"> / {{ task.maxPoints }}</span>
+                            </p>
+                        </div>
+                    </li>
+                    <li class="point-total">
+                        Total: {{ $ctrl.scoreInfo.currentDocSummary.total }}
+                        <span class="full-points"> / {{ $ctrl.scoreInfo.currentDocSummary.maxTotal }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="scoreboard" id="menu-scores" ng-if="$ctrl.scoreInfo.summaries && $ctrl.scoreInfo.summaries.length">
+            <div class="collapse-header">
+                <a data-toggle="collapse" data-target="#collapse-scores">
+                    <h5>Points in this course</h5>
+                    <i class="pull-right glyphicon glyphicon-menu-down"></i>
+                </a>
+            </div>
+            <div class="collapse in" id="collapse-scores">
+                <div class="points-header">
+                    <p>Page</p>
+                    <p class="pull-right">Points</p>
+                </div>
+                <ul class="score-list">
+                    <li ng-repeat="summary in $ctrl.scoreInfo.summaries">
+                        <div class="flex flex-wrap">
+                            <div class="flex-grow-1">
+                                <a href="{{ summary.doc.location }}">{{ summary.doc.title }}</a>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p>{{ summary.total }}<span class="full-points"> / {{ summary.maxTotal }}</span></p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="point-total">
+                        Total: {{ $ctrl.scoreInfo.total }}
+                        <span class="full-points"> / {{ $ctrl.scoreInfo.maxTotal }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </uib-tab>
+    
     <uib-tab index="2" ng-if="!$ctrl.hide.lecturetab && $ctrl.lctrl.lectureSettings.lectureMode"
              select="$ctrl.toggleLectures()">
         <uib-tab-heading>
