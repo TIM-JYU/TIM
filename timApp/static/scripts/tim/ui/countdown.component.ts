@@ -35,7 +35,8 @@ export class CountdownComponent implements OnInit {
 
     get timeLeft() {
         let prefix = "";
-        let time = Math.max(this.currentCountdown, 0);
+        // We need time as a whole number so we won't render fractional parts
+        let time = Math.ceil(Math.max(this.currentCountdown, 0));
         if (this.currentCountdown > DAY_LIMIT && this.displayUnits.length != 0) {
             prefix = humanizeDuration(this.currentCountdown * 1000, {units: this.displayUnits, round: true, language: this.locale}) + " + ";
             time %= DAY_LIMIT;
@@ -83,7 +84,7 @@ export class CountdownComponent implements OnInit {
     }
 
     private checkCountdown() {
-        this.currentCountdown = this.currentEndDate?.diff(moment(), "s") ?? 0;
+        this.currentCountdown = this.currentEndDate?.diff(moment(), "s", true) ?? 0;
         const timeEnded = this.currentCountdown <= 0;
         if (!this.isLowTime && this.currentCountdown < this.lowTimeThreshold) {
             this.onLowTime.emit();
