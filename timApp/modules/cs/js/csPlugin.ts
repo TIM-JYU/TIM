@@ -1578,7 +1578,7 @@ ${fhtml}
         countError += this.checkCountLimits(this.attrs.count.words, this.wordCount, "words");
         countError += this.checkCountLimits(this.attrs.count.chars, this.charCount, "chars");
         this.countError = countError;
-        this.preventSave = this.attrs.count.preventSave && countError !== "" || !this.isChanged();
+        this.preventSave = this.attrs.count.preventSave && countError !== "";
     }
 
     isChanged(): boolean {
