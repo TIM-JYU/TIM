@@ -768,10 +768,11 @@ def qst_get_html(jso, review):
     if info and info['max_answers'] \
             and get_num_value(info, 'max_answers', 1) <= get_num_value(info, 'earlier_answers', 0):
         result = True
-    if not result:
+    show_points = markup.get('showPoints', True)
+    # TODO: should showPoints: false show explanations?
+    if not result or not show_points:
         markup.pop('points', None)
         markup.pop('expl', None)
-
     jso['show_result'] = result
 
     if review:
@@ -799,7 +800,8 @@ def qst_get_md(jso):
     user_print = jso.get('userPrint', False)
 
     print_reason = get_num_value(info, 'max_answers', 1) <= get_num_value(info, 'earlier_answers', 0)
-    if not print_reason:
+    show_points = markup.get('showPoints', True)
+    if not print_reason or not show_points:
         markup.pop('points', None)
         markup.pop('expl', None)
 
