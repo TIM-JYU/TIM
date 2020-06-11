@@ -1022,6 +1022,10 @@ class CsController extends CsBase implements ITimComponent {
             this.savedvals.input !== this.userinput) && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
     }
 
+    /**
+     * Checks whether usercode/args/input differ from previously saved values
+     * Call this any time they are updated by any means
+     */
     textChanged(): void {
         this.runError = "";
         const nowUnsaved = this.hasUnSavedInput();
@@ -2090,6 +2094,7 @@ ${fhtml}
         this.checkIndent();
         this.muokattu = false;
         $rootScope.$applyAsync();
+        this.textChanged();
     }
 
     async addText(s: string) {
@@ -2133,6 +2138,7 @@ ${fhtml}
             tbox.selectionEnd = i;
             tbox.focus();
         }
+        this.textChanged();
     }
 
     addTextHtml(s: string) {
@@ -2250,6 +2256,7 @@ ${fhtml}
         if (this.simcir) {
             this.usercode = await this.getCircuitData(this.simcir);
         }
+        this.textChanged();
     }
 
     async showSimcir() {
@@ -2513,7 +2520,7 @@ ${fhtml}
             return;
         }
         this.usercode = code;
-
+        this.textChanged();
     }
 
     checkIndent() {
@@ -2558,6 +2565,7 @@ ${fhtml}
             return;
         }
         this.usercode = st.join("\n");
+        this.textChanged();
     }
 
     getReplacedCode() {
@@ -2704,6 +2712,7 @@ ${fhtml}
             notordermatters: this.attrs.parsonsnotordermatters,
             onChange: (p) => {
                 this.usercode = p.join("\n");
+                this.textChanged();
             },
         });
         parson.init(this.byCode, this.usercode);
@@ -2731,6 +2740,7 @@ ${fhtml}
                 }
                 insertAtCaret(this.edit, "    ");
                 this.usercode = this.edit.value;
+                this.textChanged();
                 return;
             }
         });
@@ -2834,7 +2844,9 @@ ${fhtml}
             editor.getSession().on("change", () => {
                 this.scope.$evalAsync(() => {
                     this.usercode = editor.getSession().getValue();
+                    this.textChanged();
                 });
+
             });
         } else {
             await 1; // TODO:  Miksi tässä pitää olla tämä?  Muuten tuo editorDiv.empty() aiheuttaa poikkeuksen
