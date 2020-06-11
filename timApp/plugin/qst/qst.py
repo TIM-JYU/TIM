@@ -371,8 +371,8 @@ def qst_mcq_multimd():
     jsondata = request.get_json()
     multi = []
     for jso in jsondata:
-        convert_mcq_to_qst(jso)
-        multi.append(qst_get_md(jso))
+        # Do not convert to qst and call qst_get_md - prints are different
+        multi.append(mcq_get_md(jso))
     return json_response(multi)
 
 
@@ -382,8 +382,8 @@ def qst_mmcq_multimd():
     jsondata = request.get_json()
     multi = []
     for jso in jsondata:
-        convert_mcq_to_qst(jso, True)
-        multi.append(qst_get_md(jso))
+        # Do not convert to qst and call qst_get_md - prints are different
+        multi.append(mmcq_get_md(jso))
     return json_response(multi)
 
 
