@@ -371,7 +371,8 @@ def qst_mcq_multimd():
     jsondata = request.get_json()
     multi = []
     for jso in jsondata:
-        multi.append(mcq_get_md(jso))
+        convert_mcq_to_qst(jso)
+        multi.append(qst_get_md(jso))
     return json_response(multi)
 
 
@@ -381,7 +382,8 @@ def qst_mmcq_multimd():
     jsondata = request.get_json()
     multi = []
     for jso in jsondata:
-        multi.append(mmcq_get_md(jso))
+        convert_mcq_to_qst(jso, True)
+        multi.append(qst_get_md(jso))
     return json_response(multi)
 
 
@@ -704,9 +706,12 @@ def qst_pick_expls(orig_expls: Dict[str, T], order_array: List[int]) -> Dict[str
     return ret
 
 
-def qst_get_html(jso, review):
-    result = False
-    info = jso['info']
+def qst_handle_randomization(jso):
+    """
+    Check if markup calls for randomization, or previous state contains randomization data
+    Update answer options, explanations and points accordingly
+    :param jso: request json to modify
+    """
     markup = jso['markup']
     rand_arr = None
     prev_state = jso.get('state', None)
@@ -744,7 +749,18 @@ def qst_get_html(jso, review):
     if rand_arr is not None:  # specific order found in prev.ans or markup
         markup['rows'] = qst_set_array_order(rows, rand_arr)
         markup['expl'] = qst_pick_expls(markup['expl'], rand_arr)
+        points = markup.get('points')
+        if points:
+            question_type = markup.get('questionType')
+            points = qst_filter_markup_points(points, question_type, rand_arr)
+            markup['points'] = points
 
+
+def qst_get_html(jso, review):
+    result = False
+    qst_handle_randomization(jso)
+    info = jso['info']
+    markup = jso['markup']
     markup = normalize_question_json(markup,
                                      allow_top_level_keys=
                                      qst_attrs)
@@ -755,12 +771,6 @@ def qst_get_html(jso, review):
     if not result:
         markup.pop('points', None)
         markup.pop('expl', None)
-    elif rand_arr is not None:
-        points = markup.get('points')
-        if points:
-            question_type = markup.get('questionType')
-            points = qst_filter_markup_points(points, question_type, rand_arr)
-            markup['points'] = points
 
     jso['show_result'] = result
 
@@ -779,17 +789,22 @@ def qst_get_html(jso, review):
 
 def qst_get_md(jso):
     result = False
+    qst_handle_randomization(jso)
     info = jso['info']
     markup = jso['markup']
-    points_table = create_points_table(markup.get('points'))
 
-    set_explanation(markup)
     jso['show_result'] = result
 
     # attrs = json.dumps(jso)
     user_print = jso.get('userPrint', False)
 
     print_reason = get_num_value(info, 'max_answers', 1) <= get_num_value(info, 'earlier_answers', 0)
+    if not print_reason:
+        markup.pop('points', None)
+        markup.pop('expl', None)
+
+    points_table = create_points_table(markup.get('points'))
+    set_explanation(markup)
 
     header = markup.get('header', '')
     footer = markup.get('footer', '')
