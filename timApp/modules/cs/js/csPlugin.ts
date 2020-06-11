@@ -378,7 +378,6 @@ function makeTemplate() {
                       ng-model="$ctrl.usercode"
                       ng-trim="false"
                       ng-attr-placeholder="{{$ctrl.placeholder}}" 
-                      ng-change="$ctrl.textChanged()">
             </textarea>
             </div>
             <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
@@ -392,7 +391,6 @@ function makeTemplate() {
         <div class="csRunCode"><textarea class="csRunArea csInputArea"
                                          rows={{::$ctrl.inputrows}}
                                          ng-model="$ctrl.userinput"
-                                         ng-change="$ctrl.textChanged()"
                                          ng-trim="false"
                                          placeholder="{{::$ctrl.inputplaceholder}}"></textarea></div>
     </div>
@@ -400,7 +398,6 @@ function makeTemplate() {
         <span><input type="text"
                      class="csArgsArea"
                      ng-model="$ctrl.userargs"
-                     ng-change="$ctrl.textChanged()"
                      ng-trim="false"
                      placeholder="{{::$ctrl.argsplaceholder}}"></span>
     </div>
@@ -1024,7 +1021,6 @@ class CsController extends CsBase implements ITimComponent {
 
     /**
      * Checks whether usercode/args/input differ from previously saved values
-     * Call this any time they are updated by any means
      */
     textChanged(): void {
         this.runError = "";
@@ -1631,6 +1627,7 @@ ${fhtml}
         }
 
         if (anyChanged) {
+            this.textChanged();
             const currUsercode = this.usercode;
             const currUserargs = this.userargs;
             const currUserinput = this.userinput;
@@ -2094,7 +2091,6 @@ ${fhtml}
         this.checkIndent();
         this.muokattu = false;
         $rootScope.$applyAsync();
-        this.textChanged();
     }
 
     async addText(s: string) {
@@ -2138,7 +2134,6 @@ ${fhtml}
             tbox.selectionEnd = i;
             tbox.focus();
         }
-        this.textChanged();
     }
 
     addTextHtml(s: string) {
@@ -2256,7 +2251,6 @@ ${fhtml}
         if (this.simcir) {
             this.usercode = await this.getCircuitData(this.simcir);
         }
-        this.textChanged();
     }
 
     async showSimcir() {
@@ -2520,7 +2514,6 @@ ${fhtml}
             return;
         }
         this.usercode = code;
-        this.textChanged();
     }
 
     checkIndent() {
@@ -2565,7 +2558,6 @@ ${fhtml}
             return;
         }
         this.usercode = st.join("\n");
-        this.textChanged();
     }
 
     getReplacedCode() {
@@ -2712,7 +2704,6 @@ ${fhtml}
             notordermatters: this.attrs.parsonsnotordermatters,
             onChange: (p) => {
                 this.usercode = p.join("\n");
-                this.textChanged();
             },
         });
         parson.init(this.byCode, this.usercode);
@@ -2740,7 +2731,6 @@ ${fhtml}
                 }
                 insertAtCaret(this.edit, "    ");
                 this.usercode = this.edit.value;
-                this.textChanged();
                 return;
             }
         });
@@ -2778,7 +2768,6 @@ ${fhtml}
 <textarea class="csRunArea csrunEditorDiv"
           rows={{$ctrl.rows}}
           ng-model="$ctrl.usercode"
-          ng-change="$ctrl.textChanged()"
           ng-trim="false"
           placeholder="{{$ctrl.placeholder}}"></textarea>
 `;
@@ -2844,7 +2833,6 @@ ${fhtml}
             editor.getSession().on("change", () => {
                 this.scope.$evalAsync(() => {
                     this.usercode = editor.getSession().getValue();
-                    this.textChanged();
                 });
 
             });
@@ -3115,7 +3103,6 @@ csApp.component("csTextRunner", {
            ng-model="$ctrl.usercode"
            ng-trim="false"
            ng-attr-placeholder="{{$ctrl.placeholder}}"
-           ng-change="$ctrl.textChanged()"
            ng-keypress="$ctrl.runCodeIfCR($event)"/>
     <button ng-if="::$ctrl.isRun"
             ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.preventSave"
