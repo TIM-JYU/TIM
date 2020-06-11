@@ -37,8 +37,8 @@ export class CountdownComponent implements OnInit {
         let prefix = "";
         // We need time as a whole number so we won't render fractional parts
         let time = Math.ceil(Math.max(this.currentCountdown, 0));
-        if (this.currentCountdown > DAY_LIMIT && this.displayUnits.length != 0) {
-            prefix = humanizeDuration(this.currentCountdown * 1000, {units: this.displayUnits, round: true, language: this.locale}) + " + ";
+        if (time > DAY_LIMIT && this.displayUnits.length != 0) {
+            prefix = humanizeDuration(time * 1000, {units: this.displayUnits, round: true, language: this.locale}) + " + ";
             time %= DAY_LIMIT;
         }
         return `${prefix}${secondsToHHMMSS(time)}`;
