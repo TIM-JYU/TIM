@@ -377,7 +377,7 @@ function makeTemplate() {
                       rows="{{$ctrl.rows}}"
                       ng-model="$ctrl.usercode"
                       ng-trim="false"
-                      ng-attr-placeholder="{{$ctrl.placeholder}}" 
+                      ng-attr-placeholder="{{$ctrl.placeholder}}"> 
             </textarea>
             </div>
             <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
