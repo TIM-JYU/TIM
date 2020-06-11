@@ -377,8 +377,7 @@ function makeTemplate() {
                       rows="{{$ctrl.rows}}"
                       ng-model="$ctrl.usercode"
                       ng-trim="false"
-                      ng-attr-placeholder="{{$ctrl.placeholder}}" 
-                      ng-change="$ctrl.textChanged()">
+                      ng-attr-placeholder="{{$ctrl.placeholder}}"> 
             </textarea>
             </div>
             <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
@@ -392,7 +391,6 @@ function makeTemplate() {
         <div class="csRunCode"><textarea class="csRunArea csInputArea"
                                          rows={{::$ctrl.inputrows}}
                                          ng-model="$ctrl.userinput"
-                                         ng-change="$ctrl.textChanged()"
                                          ng-trim="false"
                                          placeholder="{{::$ctrl.inputplaceholder}}"></textarea></div>
     </div>
@@ -400,7 +398,6 @@ function makeTemplate() {
         <span><input type="text"
                      class="csArgsArea"
                      ng-model="$ctrl.userargs"
-                     ng-change="$ctrl.textChanged()"
                      ng-trim="false"
                      placeholder="{{::$ctrl.argsplaceholder}}"></span>
     </div>
@@ -1022,6 +1019,9 @@ class CsController extends CsBase implements ITimComponent {
             this.savedvals.input !== this.userinput) && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
     }
 
+    /**
+     * Checks whether usercode/args/input differ from previously saved values
+     */
     textChanged(): void {
         this.runError = "";
         const nowUnsaved = this.hasUnSavedInput();
@@ -1574,7 +1574,7 @@ ${fhtml}
         countError += this.checkCountLimits(this.attrs.count.words, this.wordCount, "words");
         countError += this.checkCountLimits(this.attrs.count.chars, this.charCount, "chars");
         this.countError = countError;
-        this.preventSave = this.attrs.count.preventSave && countError !== "" || !this.isChanged();
+        this.preventSave = this.attrs.count.preventSave && countError !== "";
     }
 
     isChanged(): boolean {
@@ -1627,6 +1627,7 @@ ${fhtml}
         }
 
         if (anyChanged) {
+            this.textChanged();
             const currUsercode = this.usercode;
             const currUserargs = this.userargs;
             const currUserinput = this.userinput;
@@ -2513,7 +2514,6 @@ ${fhtml}
             return;
         }
         this.usercode = code;
-
     }
 
     checkIndent() {
@@ -2768,7 +2768,6 @@ ${fhtml}
 <textarea class="csRunArea csrunEditorDiv"
           rows={{$ctrl.rows}}
           ng-model="$ctrl.usercode"
-          ng-change="$ctrl.textChanged()"
           ng-trim="false"
           placeholder="{{$ctrl.placeholder}}"></textarea>
 `;
@@ -2835,6 +2834,7 @@ ${fhtml}
                 this.scope.$evalAsync(() => {
                     this.usercode = editor.getSession().getValue();
                 });
+
             });
         } else {
             await 1; // TODO:  Miksi tässä pitää olla tämä?  Muuten tuo editorDiv.empty() aiheuttaa poikkeuksen
@@ -3103,7 +3103,6 @@ csApp.component("csTextRunner", {
            ng-model="$ctrl.usercode"
            ng-trim="false"
            ng-attr-placeholder="{{$ctrl.placeholder}}"
-           ng-change="$ctrl.textChanged()"
            ng-keypress="$ctrl.runCodeIfCR($event)"/>
     <button ng-if="::$ctrl.isRun"
             ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.preventSave"
