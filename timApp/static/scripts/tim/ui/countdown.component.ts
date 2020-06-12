@@ -112,17 +112,17 @@ export class CountdownComponent implements OnInit {
         this.startTimer();
     }
 
-    private startTimer() {
+    private async startTimer() {
         if (this.running) {
             return;
         }
         this.running = true;
-        this.checkCountdown();
-        const tick = () => {
+        await this.checkCountdown();
+        const tick = async () => {
             if (!this.running) {
                 return;
             }
-            this.checkCountdown();
+            await this.checkCountdown();
             setTimeout(tick, this.tickInterval * 1000);
         };
         setTimeout(tick, this.tickInterval * 1000);
@@ -139,17 +139,18 @@ export class CountdownComponent implements OnInit {
         this.isLowTime = false;
     }
 
-    private checkCountdown() {
+    private async checkCountdown() {
         const now = moment();
         this.currentCountdown = this.currentEndDate?.diff(now, "s", true) ?? 0;
         this.timeLeftText = formatString(this.template, this.timeLeft);
         if (this.nextSyncInterval > 0 && now.diff(this.lastSync, "s") >= this.nextSyncInterval) {
-            this.syncEndDate();
+            await this.syncEndDate();
         }
         const timeEnded = this.currentCountdown <= 0;
         if (!this.isLowTime && this.currentCountdown < this.lowTimeThreshold) {
             this.onLowTime.emit();
             this.isLowTime = true;
+            await this.syncEndDate();
         }
         if (timeEnded) {
             this.onFinish.emit();
