@@ -765,14 +765,7 @@ def qst_get_html(jso, review):
                                      allow_top_level_keys=
                                      qst_attrs)
     jso['markup'] = markup
-    if info and info['max_answers'] \
-            and get_num_value(info, 'max_answers', 1) <= get_num_value(info, 'earlier_answers', 0):
-        result = True
-    show_points = markup.get('showPoints', True)
-    # TODO: should showPoints: false show explanations?
-    if not result or not show_points:
-        markup.pop('points', None)
-        markup.pop('expl', None)
+    result = qst_try_hide_points(jso)
     jso['show_result'] = result
 
     if review:
@@ -788,6 +781,22 @@ def qst_get_html(jso, review):
     return s
 
 
+def qst_try_hide_points(jso):
+    """
+    Checks whether to remove points and explanations from markup or keep them
+    :param jso: request json with info and markup
+    :return: true if user has reached answer limit
+    """
+    info = jso['info']
+    markup = jso['markup']
+    limit_reached = get_num_value(info, 'max_answers', 1) <= get_num_value(info, 'earlier_answers', 0)
+    show_points = markup.get('showPoints', True)
+    if not limit_reached or not show_points:
+        markup.pop('points', None)
+        markup.pop('expl', None)
+    return limit_reached
+
+
 def qst_get_md(jso):
     result = False
     qst_handle_randomization(jso)
@@ -799,11 +808,7 @@ def qst_get_md(jso):
     # attrs = json.dumps(jso)
     user_print = jso.get('userPrint', False)
 
-    print_reason = get_num_value(info, 'max_answers', 1) <= get_num_value(info, 'earlier_answers', 0)
-    show_points = markup.get('showPoints', True)
-    if not print_reason or not show_points:
-        markup.pop('points', None)
-        markup.pop('expl', None)
+    print_reason = qst_try_hide_points(jso)
 
     points_table = create_points_table(markup.get('points'))
     set_explanation(markup)
