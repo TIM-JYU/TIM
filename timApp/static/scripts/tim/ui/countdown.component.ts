@@ -41,8 +41,10 @@ export class CountdownComponent implements OnInit {
 
     get timeLeft() {
         let prefix = "";
+        const clampedCountdown = Math.max(this.currentCountdown, 0);
         // We need time as a whole number so we won't render fractional parts
-        let time = Math.ceil(Math.max(this.currentCountdown, 0));
+        let time = Math.ceil(clampedCountdown);
+        const msPostfix = time < 10 ? `,${Math.trunc((clampedCountdown % 1) * 10)}` : "";
         if (time > DAY_LIMIT && this.displayUnits.length != 0) {
             prefix = humanizeDuration(time * 1000, {
                 units: this.displayUnits,
@@ -51,7 +53,7 @@ export class CountdownComponent implements OnInit {
             }) + " + ";
             time %= DAY_LIMIT;
         }
-        return `${prefix}${secondsToHHMMSS(time)}`;
+        return `${prefix}${secondsToHHMMSS(time)}${msPostfix}`;
     }
 
     private async getEndDate() {
@@ -118,12 +120,14 @@ export class CountdownComponent implements OnInit {
         }
         this.running = true;
         await this.checkCountdown();
+        let interval = this.currentCountdown < 10 ? 100 : 1000;
         const tick = async () => {
             if (!this.running) {
                 return;
             }
             await this.checkCountdown();
-            setTimeout(tick, this.tickInterval * 1000);
+            interval = this.currentCountdown < 10 ? 100 : 1000;
+            setTimeout(tick, interval - moment().valueOf() % interval);
         };
         setTimeout(tick, this.tickInterval * 1000);
     }
@@ -146,7 +150,7 @@ export class CountdownComponent implements OnInit {
         if (this.nextSyncInterval > 0 && now.diff(this.lastSync, "s") >= this.nextSyncInterval) {
             await this.syncEndDate();
         }
-        const timeEnded = this.currentCountdown <= 0;
+        const timeEnded = this.currentCountdown <= TIMEOUT_EPS;
         if (!this.isLowTime && this.currentCountdown < this.lowTimeThreshold) {
             this.onLowTime.emit();
             this.isLowTime = true;

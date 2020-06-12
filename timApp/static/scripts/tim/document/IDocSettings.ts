@@ -12,8 +12,6 @@ export interface ITimeLeftSettings {
     lowTimeGlowDuration: number;
     syncIntervalDeviation: number;
     syncInterval: number;
-    tickInterval: number;
-    lowTimeTickInterval: number;
     lowTimeSyncInterval: number;
     lowTimeSyncDeviation: number;
 }

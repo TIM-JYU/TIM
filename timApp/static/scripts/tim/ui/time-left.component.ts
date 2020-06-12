@@ -6,13 +6,11 @@ import {ITimeLeftSettings} from "tim/document/IDocSettings";
 const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
     syncInterval: 10 * 60,
     syncIntervalDeviation: 0.2,
-    tickInterval: 1,
     lowTimeThreshold: 60,
     lowTimeGlowPeriod: 45,
     lowTimeGlowDuration: 15,
     lowTimeSyncInterval: 60,
     lowTimeSyncDeviation: 0.15,
-    lowTimeTickInterval: 0.5,
 };
 
 @Component({
@@ -22,7 +20,6 @@ const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
             Time left: <tim-countdown   [displayUnits]="['d']" [endTime]="endTime"
                                         [lowTimeThreshold]="settings.lowTimeThreshold"
                                         [syncInterval]="syncInterval"
-                                        [tickInterval]="tickInterval"
                                         [syncIntervalDeviation]="syncIntervalDeviation"
                                         (onFinish)="onTimeUp()"
                                         (onLowTime)="onLowTime()"></tim-countdown>
@@ -45,12 +42,10 @@ export class TimeLeftComponent {
     isTimeUp = false;
     settings: ITimeLeftSettings = {...TIME_LEFT_DEFAULTS, ...documentglobals()?.docSettings?.timeLeft};
     syncInterval = this.settings.syncInterval;
-    tickInterval = this.settings.tickInterval;
     syncIntervalDeviation = this.settings.syncIntervalDeviation;
 
     onLowTime() {
         this.isLowTime = true;
-        this.tickInterval = this.settings.lowTimeTickInterval;
         this.syncInterval = this.settings.lowTimeSyncInterval;
         this.syncIntervalDeviation = this.settings.lowTimeSyncDeviation;
         if (this.settings.lowTimeGlowDuration >= this.settings.lowTimeGlowPeriod) {
