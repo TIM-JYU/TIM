@@ -245,6 +245,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     }
 
     setAnnotation(a: Annotation) {
+        this.annotation = a;
         this.original = a.getEditableValues();
         this.values = clone(this.original);
     }
