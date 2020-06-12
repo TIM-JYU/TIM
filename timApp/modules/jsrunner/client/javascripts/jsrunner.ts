@@ -175,7 +175,8 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     protected hasAllAttributes() {
-        return ((this.attrs.fields ?? this.attrs.groups) ?? this.attrs.program);
+        // return ((this.attrs.fields ?? this.attrs.groups) ?? this.attrs.program);
+        return true; // TODO - these are probably hidden if jsrunner is shown in viewmode
     }
 
     isVisible() {
