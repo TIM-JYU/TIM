@@ -371,6 +371,7 @@ def qst_mcq_multimd():
     jsondata = request.get_json()
     multi = []
     for jso in jsondata:
+        # Do not convert to qst and call qst_get_md - prints are different
         multi.append(mcq_get_md(jso))
     return json_response(multi)
 
@@ -381,6 +382,7 @@ def qst_mmcq_multimd():
     jsondata = request.get_json()
     multi = []
     for jso in jsondata:
+        # Do not convert to qst and call qst_get_md - prints are different
         multi.append(mmcq_get_md(jso))
     return json_response(multi)
 
@@ -704,9 +706,12 @@ def qst_pick_expls(orig_expls: Dict[str, T], order_array: List[int]) -> Dict[str
     return ret
 
 
-def qst_get_html(jso, review):
-    result = False
-    info = jso['info']
+def qst_handle_randomization(jso):
+    """
+    Check if markup calls for randomization, or previous state contains randomization data
+    Update answer options, explanations and points accordingly
+    :param jso: request json to modify
+    """
     markup = jso['markup']
     rand_arr = None
     prev_state = jso.get('state', None)
@@ -744,24 +749,23 @@ def qst_get_html(jso, review):
     if rand_arr is not None:  # specific order found in prev.ans or markup
         markup['rows'] = qst_set_array_order(rows, rand_arr)
         markup['expl'] = qst_pick_expls(markup['expl'], rand_arr)
-
-    markup = normalize_question_json(markup,
-                                     allow_top_level_keys=
-                                     qst_attrs)
-    jso['markup'] = markup
-    if info and info['max_answers'] \
-            and get_num_value(info, 'max_answers', 1) <= get_num_value(info, 'earlier_answers', 0):
-        result = True
-    if not result:
-        markup.pop('points', None)
-        markup.pop('expl', None)
-    elif rand_arr is not None:
         points = markup.get('points')
         if points:
             question_type = markup.get('questionType')
             points = qst_filter_markup_points(points, question_type, rand_arr)
             markup['points'] = points
 
+
+def qst_get_html(jso, review):
+    result = False
+    qst_handle_randomization(jso)
+    info = jso['info']
+    markup = jso['markup']
+    markup = normalize_question_json(markup,
+                                     allow_top_level_keys=
+                                     qst_attrs)
+    jso['markup'] = markup
+    result = qst_try_hide_points(jso)
     jso['show_result'] = result
 
     if review:
@@ -777,19 +781,37 @@ def qst_get_html(jso, review):
     return s
 
 
-def qst_get_md(jso):
-    result = False
+def qst_try_hide_points(jso):
+    """
+    Checks whether to remove points and explanations from markup or keep them
+    :param jso: request json with info and markup
+    :return: true if user has reached answer limit
+    """
     info = jso['info']
     markup = jso['markup']
-    points_table = create_points_table(markup.get('points'))
+    limit_reached = get_num_value(info, 'max_answers', 1) <= get_num_value(info, 'earlier_answers', 0)
+    show_points = markup.get('showPoints', True)
+    if not limit_reached or not show_points:
+        markup.pop('points', None)
+        markup.pop('expl', None)
+    return limit_reached
 
-    set_explanation(markup)
+
+def qst_get_md(jso):
+    result = False
+    qst_handle_randomization(jso)
+    info = jso['info']
+    markup = jso['markup']
+
     jso['show_result'] = result
 
     # attrs = json.dumps(jso)
     user_print = jso.get('userPrint', False)
 
-    print_reason = get_num_value(info, 'max_answers', 1) <= get_num_value(info, 'earlier_answers', 0)
+    print_reason = qst_try_hide_points(jso)
+
+    points_table = create_points_table(markup.get('points'))
+    set_explanation(markup)
 
     header = markup.get('header', '')
     footer = markup.get('footer', '')
