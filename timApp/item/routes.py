@@ -2,7 +2,7 @@
 import html
 import time
 import traceback
-from typing import Tuple, Optional, List, Union, Dict
+from typing import Tuple, Optional, List, Union
 
 import attr
 from dataclasses import dataclass
@@ -20,7 +20,6 @@ from marshmallow import ValidationError
 
 from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
-from timApp.answer.pointsumrule import CountMethod
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
@@ -43,11 +42,12 @@ from timApp.item.item import Item
 from timApp.item.partitioning import get_piece_size_from_cookie, decide_view_range, get_doc_version_hash, load_index, \
     INCLUDE_IN_PARTS_CLASS_NAME, save_index, partition_texts, get_index_with_header_id, get_document_areas, \
     RequestedViewRange, IndexedViewRange
+from timApp.item.scoreboard import get_score_infos_if_enabled
 from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
 from timApp.markdown.htmlSanitize import sanitize_html
 from timApp.markdown.markdownconverter import create_environment
-from timApp.plugin.plugin import find_task_ids, find_plugin_from_document
+from timApp.plugin.plugin import find_task_ids
 from timApp.plugin.pluginControl import get_all_reqs
 from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException, PreambleException
@@ -63,7 +63,6 @@ from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
-from timApp.util.utils import split_location
 from timApp.readmark.readings import mark_all_read
 from timApp.auth.sessioninfo import get_session_usergroup_ids
 from timApp.user.settings.theme import Theme, theme_exists
@@ -448,6 +447,8 @@ def view(item_path, template_name, route="view"):
         total_tasks = len(points_sum_rule.groups)
     else:
         total_tasks = len(task_ids)
+    if points_sum_rule and points_sum_rule.scoreboard_error:
+        flash(f'Error in point_sum_rule scoreboard: {points_sum_rule.scoreboard_error}')
     if teacher_or_see_answers:
         user_list = None
         ug = None
@@ -542,19 +543,8 @@ def view(item_path, template_name, route="view"):
     show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']
     taketime("view to render")
 
-    summaries = []
-    current_summary_index = None
-    current_doc_summary = None
-    if logged_in():
-        doc_name = doc_info.short_name
-        folder = doc_info.parent
-        
-        score_summary_docs = doc_settings.score_summary_docs()
-        if doc_settings.hide_task_summary():
-            current_doc_summary, summaries = get_summaries(folder, None, score_summary_docs)
-        else:
-            current_doc_summary, summaries = get_summaries(folder, doc_info, score_summary_docs)
-        
+    score_infos = get_score_infos_if_enabled(doc_info, doc_settings)
+
     reqs = get_all_reqs()  # This is cached so only first time after restart takes time
     taketime("reqs done")
     doctemps = doc_settings.get('editor_templates')
@@ -652,12 +642,8 @@ def view(item_path, template_name, route="view"):
         live_updates=doc_settings.live_updates(),
         slide_background_url=slide_background_url,
         slide_background_color=slide_background_color,
-        score_info = {
-            'summaries': summaries,
-            'currentDocSummary': current_doc_summary,
-            'total': sum((s.total for s in summaries)),
-            'maxTotal': sum((s.maxTotal for s in summaries))
-        },
+        score_infos=score_infos,
+        # TODO: Unify "task summary" and "scoreboard" features somehow.
         task_info={'total_points': total_points,
                    'tasks_done': tasks_done,
                    'total_tasks': total_tasks,
@@ -1021,114 +1007,3 @@ def get_viewrange_with_header_id(doc_id: int, header_id: str):
         return abort(404, f"Header '{header_id}' not found in the document '{doc_info.short_name}'!")
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
     return json_response(view_range)
-
-@dataclass
-class TaskPointSummary:
-    taskName: str
-    fragId: str
-    points: float
-    maxPoints: float
-
-
-@dataclass
-class Summary:
-    doc: DocInfo
-    total: float
-    maxTotal: float
-    tasks: List[TaskPointSummary]
-
-def get_summaries(folder: Folder, current_doc: Optional[DocInfo], doc_paths: List[str]) -> Dict[str, Summary]:
-    total_table = {}
-    u = get_current_user_object()
-    
-    include_current = False
-    if current_doc is None:
-        include_current = True
-    elif current_doc.short_name in doc_paths:
-        include_current = True
-        doc_paths.remove(current_doc.short_name)
-    
-    docs = []
-    if doc_paths:
-        docs = folder.get_all_documents(relative_paths=doc_paths)
-        # tests fail if inserting to current_doc due to duplicate ids for some reason, so do it here
-        for d in docs:
-            d.document.insert_preamble_pars()
-    
-    if current_doc is not None:
-        docs.append(current_doc)
-    
-    for d in docs:
-        doc = d.document
-        
-        blocks = doc.get_paragraphs()
-        blocks = dereference_pars(blocks, context_doc=doc)
-        task_ids, _, _ = find_task_ids(blocks)
-        if not task_ids:
-            continue
-
-        point_sum_rule = doc.get_settings().point_sum_rule()
-        count_method = point_sum_rule.scoreboard_count_method if point_sum_rule else CountMethod.latest
-        
-        # cycle through all tasks in current document, resolving user's progress on each scored assignment
-        point_dict: Dict[str, TaskPointSummary] = {}
-        for task_id in task_ids:
-            try:
-                plugin = find_plugin_from_document(doc, task_id, None)
-            except TaskNotFoundException:
-                continue
-
-            max_points = plugin.max_points()
-            # TODO: figure out something for when max_points is a string
-            if not max_points or max_points == 0 or isinstance(max_points, str):
-                continue
-
-            task = task_id.task_name
-            if count_method == CountMethod.max:
-                user_points = max((a.points for a in u.get_answers_for_task(task_id.doc_task)), default = 0)
-            else: # latest
-                answers_q = u.get_answers_for_task(task_id.doc_task)
-                user_points = answers_q.first().points if answers_q.count() > 0 else 0
-            
-            # add current document to overall points list, using task_name as the key identifier
-            # group tasks in the list by point_sum_rule groups
-            # link takes to the first task in a group ("frag_id")
-            groups = []
-            included_groups = []
-            include_groupless = True # whether to include tasks without groups
-            if point_sum_rule is not None:
-                groups = list(point_sum_rule.find_groups(task_id.doc_task))
-                included_groups = point_sum_rule.scoreboard_groups
-                if included_groups is None:
-                    included_groups = groups
-                # only include groupless if scoreboard_groups weren't specified or * is in there while not in groups
-                elif '*' not in included_groups or '*' in groups:
-                    include_groupless = False
-            
-            if groups:
-                groups = [g for g in groups if g in included_groups]
-                
-                for g in groups:
-                    if g in point_dict:
-                        point_dict[g].maxPoints += max_points
-                        point_dict[g].points += user_points
-                    else:
-                        point_dict[g] = TaskPointSummary(g, task, user_points, max_points)
-            elif include_groupless:
-                point_dict[task] = TaskPointSummary(task, task, user_points, max_points)
-        
-        if not point_dict:
-            continue
-        
-        tasks = list(point_dict.values())
-        
-        user_total = sum((t.points for t in tasks))
-        max_total = sum((t.maxPoints for t in tasks))
-
-        total_table[folder.relative_path(d)] = Summary(d, user_total, max_total, tasks)
-
-    current_doc_points = total_table.get(current_doc.short_name) if current_doc is not None else None
-    if not include_current:
-        total_table.pop(current_doc.short_name, None)
-
-    return current_doc_points, list(total_table.values())

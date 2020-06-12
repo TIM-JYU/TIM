@@ -1,15 +1,27 @@
 import enum
 import re
-from typing import Dict, Union
+from dataclasses import dataclass, field
+from typing import Dict, Union, List, Generator
+
+from marshmallow import ValidationError
+
+from marshmallow_dataclass import class_schema
 
 
 class PointType(enum.Enum):
     task = 1
     velp = 2
 
-class CountMethod(enum.Enum):
+
+class PointCountMethod(enum.Enum):
+    """Point count method for scoreboard."""
+
+    # Counts points by the latest answer per task.
     latest = 1
+
+    # Counts points by the answer with the most points per task.
     max = 2
+
 
 class Group:
 
@@ -45,6 +57,15 @@ class Group:
             return False
 
 
+@dataclass
+class ScoreboardOptions:
+    groups: List[str] = field(default_factory=list)
+    point_count_method: PointCountMethod = PointCountMethod.latest
+
+
+ScoreboardOptionsSchema = class_schema(ScoreboardOptions)
+
+
 class PointSumRule:
 
     def __init__(self, data: Dict) -> None:
@@ -56,21 +77,21 @@ class PointSumRule:
             self.count_type, self.count_amount = next(data['count'].items().__iter__())
         except (StopIteration, KeyError):
             self.count_type, self.count_amount = 'best', 9999
-        
-        scoreboard = data.get('scoreboard', {})
-        self.scoreboard_groups = scoreboard.get('groups', None)
+
+        self.scoreboard_error = None
         try:
-            self.scoreboard_count_method = CountMethod[str(scoreboard.get('count_method', 'latest')).lower()]
-        except KeyError:
-            # TODO: make user see this message somehow. Group's exception probably too
-            raise Exception('Invalid scoreboard count_method.')
-        
+            scoreboard = ScoreboardOptionsSchema().load(data.get('scoreboard', {}))
+        except ValidationError as e:
+            self.scoreboard_error = e
+            scoreboard = ScoreboardOptions()
+
+        self.scoreboard = scoreboard
         self.total = data.get('total', None)
         self.hide = data.get('hide', None)
         self.sort = data.get('sort', True)
         self.count_all = data.get('count_all', False)
 
-    def find_groups(self, task_id):
+    def find_groups(self, task_id: str) -> Generator[str, None, None]:
         for g in self.groups.values():
             if g.check_match(task_id):
                 yield g.name

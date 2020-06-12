@@ -31,7 +31,7 @@ export interface IVisibilityVars {
     noteBadgeButton?: boolean;
     headerNav?: boolean;
     headerDocumentActions?: boolean;
-    taskSummary?: boolean;
+    scoreBoard?: boolean;
 }
 
 function hideLinkStuff(hide: IVisibilityVars) {
@@ -88,7 +88,7 @@ function hideSideMenu(hide: IVisibilityVars) {
     hide.bookmarks = true;
     hide.index = true;
     hide.settings = true;
-    hide.taskSummary = true;
+    hide.scoreBoard = true;
 }
 
 export function getVisibilityVars() {
@@ -111,7 +111,6 @@ export function getVisibilityVars() {
         if (g.exam_mode) {
             hideExamModeElements(hide);
         }
-        hide.taskSummary = g.docSettings.hide_task_summary;
         if (g.hide_sidemenu) {
             hideSideMenu(hide);
         }

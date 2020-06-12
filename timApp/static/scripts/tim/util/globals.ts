@@ -4,7 +4,7 @@ import {EditMode} from "../document/popupMenu";
 import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
 import {DocumentOrFolder, IDocument, IFolder, IFullDocument, IItem, ITranslation} from "../item/IItem";
 import {ILecture} from "../lecture/lecturetypes";
-import {HeaderIndexItem, IGroupWithSisuPath, IScoreInfo} from "../sidebar/sidebarMenuCtrl";
+import {HeaderIndexItem, IGroupWithSisuPath, IScoreboard, IDocScoreInfo} from "../sidebar/sidebarMenuCtrl";
 import {IFullUser, IGroup, IUser, IUserListEntry} from "../user/IUser";
 import {ICssFile, INotification, ISettings} from "../user/settings.component";
 
@@ -101,7 +101,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     nav_ranges?: IViewRange[];
     exam_mode: boolean;
     hide_sidemenu: boolean;
-    scoreInfo: IScoreInfo | null;
+    score_infos: IDocScoreInfo[] | null;
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {
