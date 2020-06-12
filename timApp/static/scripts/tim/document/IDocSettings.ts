@@ -10,6 +10,12 @@ export interface ITimeLeftSettings {
     lowTimeThreshold: number;
     lowTimeGlowPeriod: number;
     lowTimeGlowDuration: number;
+    syncIntervalDeviation: number;
+    syncInterval: number;
+    tickInterval: number;
+    lowTimeTickInterval: number;
+    lowTimeSyncInterval: number;
+    lowTimeSyncDeviation: number;
 }
 
 export interface ILoginHideSettings {

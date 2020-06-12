@@ -4,9 +4,15 @@ import {documentglobals} from "tim/util/globals";
 import {ITimeLeftSettings} from "tim/document/IDocSettings";
 
 const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
+    syncInterval: 10 * 60,
+    syncIntervalDeviation: 0.2,
+    tickInterval: 1000,
     lowTimeThreshold: 60,
     lowTimeGlowPeriod: 45,
     lowTimeGlowDuration: 15,
+    lowTimeSyncInterval: 60,
+    lowTimeSyncDeviation: 0.15,
+    lowTimeTickInterval: 0.5,
 };
 
 @Component({
@@ -14,7 +20,11 @@ const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
     template: `
         <span class="label label-default" [class.low-time]="isLowTime" [class.glow]="isGlowing" i18n>
             Time left: <tim-countdown   [displayUnits]="['d']" [endTime]="endTime"
-                                        [lowTimeThreshold]="settings.lowTimeThreshold" (onFinish)="onTimeUp()"
+                                        [lowTimeThreshold]="settings.lowTimeThreshold"
+                                        [syncInterval]="syncInterval"
+                                        [tickInterval]="tickInterval"
+                                        [syncIntervalDeviation]="syncIntervalDeviation"
+                                        (onFinish)="onTimeUp()"
                                         (onLowTime)="onLowTime()"></tim-countdown>
         </span>
         <div class="low-time-warn alert alert-danger" *ngIf="isLowTime && showLowTimeMessage" i18n>
@@ -34,9 +44,15 @@ export class TimeLeftComponent {
     isGlowing = false;
     isTimeUp = false;
     settings: ITimeLeftSettings = {...TIME_LEFT_DEFAULTS, ...documentglobals()?.docSettings?.timeLeft};
+    syncInterval = this.settings.syncInterval;
+    tickInterval = this.settings.tickInterval;
+    syncIntervalDeviation = this.settings.syncIntervalDeviation;
 
     onLowTime() {
         this.isLowTime = true;
+        this.tickInterval = this.settings.lowTimeTickInterval;
+        this.syncInterval = this.settings.lowTimeSyncInterval;
+        this.syncIntervalDeviation = this.settings.lowTimeSyncDeviation;
         if (this.settings.lowTimeGlowDuration >= this.settings.lowTimeGlowPeriod) {
             this.isGlowing = true;
         } else {
