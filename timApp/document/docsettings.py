@@ -110,6 +110,7 @@ class DocSettingTypes:
     themes: List[str]
     override_user_themes: bool
     hide_sidemenu: Optional[str]
+    answer_submit_time_tolerance: int
     scoreboard_docs: List[str]
     show_scoreboard: bool
 
@@ -354,7 +355,7 @@ class DocSettings:
     def exam_mode(self, default=None):
         return self.__dict.get(self.exam_mode_key, default)
 
-    def point_sum_rule(self, default=None) -> Optional[PointSumRule]:
+    def point_sum_rule(self, default=None):
         psr_dict = self.__dict.get(self.point_sum_rule_key, default)
         if not psr_dict:
             return None
@@ -463,6 +464,10 @@ class DocSettings:
 
     def hide_sidemenu(self) -> Optional[str]:
         return self.get_setting_or_default('hide_sidemenu', None)
+
+    def answer_submit_time_tolerance(self) -> timedelta:
+        r = self.get_setting_or_default('answer_submit_time_tolerance', 1000)
+        return timedelta(milliseconds=r if r >= 0 else 0)
 
     def scoreboard_docs(self) -> List[str]:
         return self.get_setting_or_default('scoreboard_docs', [])

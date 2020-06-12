@@ -50,14 +50,14 @@ from timApp.tim_app import get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.groups import do_create_group, verify_group_edit_access
-from timApp.user.user import User
+from timApp.user.user import User, maxdate
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields
-from timApp.util.utils import try_load_json, seq_to_str
+from timApp.util.utils import try_load_json, seq_to_str, get_current_time
 from utils import Missing
 
 # TODO: Remove methods in util/answerutil where many "moved" here to avoid circular imports
@@ -405,6 +405,7 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     """
 
+    receive_time = get_current_time()
     tid = TaskId.parse(task_id_ext)
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
@@ -575,8 +576,12 @@ def post_answer(plugintype: str, task_id_ext: str):
         if (not is_teacher and should_save_answer) or ( 'savedata' in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(len(old_answers), tim_info)
             if vr.is_expired:
-                is_valid = False
-                explanation = 'Your view access to this document has expired, so this answer was saved but marked as invalid.'
+                fixed_time = receive_time - d.document.get_settings().answer_submit_time_tolerance()
+                if fixed_time < (vr.access.accessible_to or maxdate):
+                    is_valid = True
+                else:
+                    is_valid = False
+                    explanation = 'Your view access to this document has expired, so this answer was saved but marked as invalid.'
             points_given_by = None
             if answer_browser_data.get('giveCustomPoints'):
                 try:
