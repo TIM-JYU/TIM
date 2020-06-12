@@ -8,10 +8,12 @@ router.post("/", (req, res, next) => {
     const htmls = [];
     for (const j of req.body) {
         // TODO: Lift this up to pluginify / render_plugin
-        const siw = j['markup']['showInView'] || false;
-        if (!siw) {
-            htmls.push(``);
-            continue;
+        if (j['viewmode']) {
+            const siw = j['markup']['showInView'] || false;
+            if (!siw) {
+                htmls.push(``);
+                continue;
+            }
         }
         let s = JSON.stringify(j);
         // Escape all non-ascii characters. The base64 string will eventually get passed to "atob" function in browser,
