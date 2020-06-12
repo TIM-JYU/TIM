@@ -32,7 +32,10 @@ def get_score_infos(
 ) -> List[DocScoreInfo]:
     total_table = {}
     u = get_current_user_object()
-    docs = folder.get_all_documents(relative_paths=doc_paths)
+    docs = folder.get_all_documents(
+        relative_paths=doc_paths,
+        filter_user=u,
+    )
 
     for d in docs:
         d.document.insert_preamble_pars()

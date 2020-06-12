@@ -1,4 +1,6 @@
-from typing import List, Iterable, Union, Any
+from __future__ import annotations
+
+from typing import List, Iterable, Union, Any, TYPE_CHECKING
 from typing import Optional
 
 from sqlalchemy import true, and_
@@ -13,6 +15,9 @@ from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import split_location, join_location, relative_location
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
 
 ROOT_FOLDER_ID = -1
 
@@ -208,6 +213,7 @@ class Folder(db.Model, Item):
             include_subdirs: bool = False,
             custom_filter: Any=None,
             query_options: Any=None,
+            filter_user: Optional[User]=None,
     ) -> List[DocEntry]:
         if relative_paths is not None:
             include_subdirs = True
@@ -222,6 +228,7 @@ class Folder(db.Model, Item):
             search_recursively=include_subdirs,
             custom_filter=custom_filter,
             query_options=query_options,
+            filter_user=filter_user,
         )
 
     def get_all_folders(self) -> List['Folder']:
