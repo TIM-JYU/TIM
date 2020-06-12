@@ -1,4 +1,4 @@
-import {getUrlParams} from "tim/util/utils";
+import {getUrlParams, isDocumentGlobals} from "tim/util/utils";
 import {genericglobals, IDocumentGlobals, someglobals, SomeGlobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import {showMessageDialog} from "tim/ui/dialog";
@@ -31,13 +31,8 @@ export interface IVisibilityVars {
     noteBadgeButton?: boolean;
     headerNav?: boolean;
     headerDocumentActions?: boolean;
+    taskSummary?: boolean;
 }
-
-
-function isDocumentGlobals(g: SomeGlobals): g is IDocumentGlobals {
-    return "docSettings" in g;
-}
-
 
 function hideLinkStuff(hide: IVisibilityVars) {
     hide.links = true;
@@ -93,6 +88,7 @@ function hideSideMenu(hide: IVisibilityVars) {
     hide.bookmarks = true;
     hide.index = true;
     hide.settings = true;
+    hide.taskSummary = true;
 }
 
 export function getVisibilityVars() {
@@ -115,6 +111,7 @@ export function getVisibilityVars() {
         if (g.exam_mode) {
             hideExamModeElements(hide);
         }
+        hide.taskSummary = g.docSettings.hide_task_summary;
         if (g.hide_sidemenu) {
             hideSideMenu(hide);
         }

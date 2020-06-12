@@ -7,6 +7,9 @@ class PointType(enum.Enum):
     task = 1
     velp = 2
 
+class CountMethod(enum.Enum):
+    latest = 1
+    max = 2
 
 class Group:
 
@@ -53,6 +56,15 @@ class PointSumRule:
             self.count_type, self.count_amount = next(data['count'].items().__iter__())
         except (StopIteration, KeyError):
             self.count_type, self.count_amount = 'best', 9999
+        
+        scoreboard = data.get('scoreboard', {})
+        self.scoreboard_groups = scoreboard.get('groups', None)
+        try:
+            self.scoreboard_count_method = CountMethod[str(scoreboard.get('count_method', 'latest')).lower()]
+        except KeyError:
+            # TODO: make user see this message somehow. Group's exception probably too
+            raise Exception('Invalid scoreboard count_method.')
+        
         self.total = data.get('total', None)
         self.hide = data.get('hide', None)
         self.sort = data.get('sort', True)

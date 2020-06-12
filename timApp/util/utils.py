@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 from datetime import datetime, timezone
-from pathlib import Path, PurePath
+from pathlib import Path, PurePath, PurePosixPath
 from typing import List, Optional, Tuple, Union, Dict, Any, Sequence, Callable, Type
 
 import base64
@@ -108,6 +108,9 @@ def split_location(path: str) -> Tuple[str, str]:
 def join_location(location: str, name: str) -> str:
     return name if location == '' else location + '/' + name
 
+def relative_location(location: str, base: str) -> str:
+    """Returns the location of location relative to base."""
+    return str(PurePosixPath(location).relative_to(base))
 
 def get_sql_template(value_list: List) -> str:
     return ','.join(['%s'] * len(value_list))
