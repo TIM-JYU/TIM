@@ -726,11 +726,16 @@ class TimRouteTest(TimDbTest):
         :param expect_content: Expected content.
         :return: None; raises error if variable was not found or content didn't match.
         """
+        var = self.get_js_variable(element, variable_name)
+        self.assertEqual(expect_content, var)
+
+    def get_js_variable(self, element, variable_name):
         variables = element.cssselect('script[class="global-vars"]')[0].text
         # '\s*' are zero or more whitespaces, '(.*)' is variable content between '=' and ';'.
         matches = re.findall(f"{variable_name}\s*=\s*(.*);", variables)
         if matches:
-            self.assertEqual(expect_content, json.loads(matches[0]))
+            var = json.loads(matches[0])
+            return var
         else:
             raise AssertionError(f"'{variable_name}' not found")
 
@@ -909,6 +914,27 @@ class TimRouteTest(TimDbTest):
         else:
             self.assertEqual(content, first.content_as_json)
         return first
+
+    def add_answer(
+            self,
+            d: DocInfo,
+            task_name: str,
+            content: str = '',
+            points: Union[None, int, float] = None,
+            valid: bool = True,
+            content_key: str = 'c',
+            user: Optional[User] = None,
+    ):
+        if user is None:
+            user = self.current_user
+        a = Answer(
+            users_all=[user],
+            task_id=f'{d.id}.{task_name}',
+            content=json.dumps({content_key: content}),
+            points=points,
+            valid=valid,
+        )
+        db.session.add(a)
 
 
 class TimPluginFix(TimRouteTest):

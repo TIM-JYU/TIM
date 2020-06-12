@@ -1,7 +1,7 @@
-from typing import List, Iterable, Union
+from typing import List, Iterable, Union, Any
 from typing import Optional
 
-from sqlalchemy import true
+from sqlalchemy import true, and_
 
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.folder.createopts import FolderCreationOptions
@@ -12,7 +12,7 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.timdb.sqa import db
 from timApp.auth.auth_models import BlockAccess
 from timApp.user.usergroup import UserGroup
-from timApp.util.utils import split_location, join_location
+from timApp.util.utils import split_location, join_location, relative_location
 
 ROOT_FOLDER_ID = -1
 
@@ -204,18 +204,31 @@ class Folder(db.Model, Item):
 
     def get_all_documents(
             self,
+            relative_paths: List[str] = None,
             include_subdirs: bool = False,
-            query_options=None,
+            custom_filter: Any=None,
+            query_options: Any=None,
     ) -> List[DocEntry]:
+        if relative_paths is not None:
+            include_subdirs = True
+            paths = [join_location(self.get_full_path(), path) for path in relative_paths]
+            if custom_filter is None:
+                custom_filter=DocEntry.name.in_(paths)
+            else:
+                custom_filter=and_(custom_filter, DocEntry.name.in_(paths))
         return get_documents(
             include_nonpublic=True,
             filter_folder=self.get_full_path(),
             search_recursively=include_subdirs,
+            custom_filter=custom_filter,
             query_options=query_options,
         )
 
     def get_all_folders(self) -> List['Folder']:
         return Folder.get_all_in_path(self.path)
+
+    def relative_path(self, item: Item) -> str:
+        return relative_location(item.path, self.path)
 
     @staticmethod
     def create(

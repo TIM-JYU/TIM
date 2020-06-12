@@ -33,4 +33,5 @@ export interface IDocSettings {
     login?: ILoginSettings;
     timeLeft?: ITimeLeftSettings;
     save_teacher?: boolean;
+    show_scoreboard?: boolean;
 }

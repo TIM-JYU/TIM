@@ -32,7 +32,8 @@ import {setConsent} from "../user/settings.component";
 import {Users, UserService} from "../user/userService";
 import {someglobals} from "../util/globals";
 import {$http, $localStorage} from "../util/ngimport";
-import {IOkResponse, Require, to} from "../util/utils";
+import {IOkResponse, Require, to, isDocumentGlobals} from "../util/utils";
+import {documentglobals} from "../util/globals";
 
 export interface IHeader {
     id: string;
@@ -49,6 +50,27 @@ export interface IHeaderDisplayIndexItem {
 export interface IGroupWithSisuPath extends IGroup {
     sisugroup_path: string | null;
     admin_doc?: IDocument;
+}
+
+export interface ITaskScoreInfo {
+    taskName: string;
+    fragId: string;
+    points: number;
+    maxPoints: number;
+}
+
+export interface IDocScoreInfo {
+    doc: IDocument;
+    total: number;
+    maxTotal: number;
+    tasks: ITaskScoreInfo[];
+}
+
+export interface IScoreboard {
+    total: number;
+    maxTotal: number;
+    infos: IDocScoreInfo[];
+    currentDocScoreInfo: IDocScoreInfo | null;
 }
 
 export type HeaderIndexItem = [IHeader, IHeader[]];
@@ -86,6 +108,7 @@ export class SidebarMenuCtrl implements IController {
     private isFullRange: boolean = true;
     private hashlessUrl: string;
     private hide = getVisibilityVars();
+    private scoreBoard: IScoreboard | null = null;
 
     constructor() {
         const g = someglobals();
@@ -109,6 +132,16 @@ export class SidebarMenuCtrl implements IController {
             consent: undefined,
             pieceSize: null,
         });
+
+        if (isDocumentGlobals(g) && g.score_infos) {
+            const currDocScoreInfo = g.score_infos.find((s) => s.doc.id === g.curr_item.id) ?? null;
+            this.scoreBoard = {
+                currentDocScoreInfo: currDocScoreInfo,
+                infos: g.score_infos,
+                total: g.score_infos.reduce((a, b) => a + b.total, 0),
+                maxTotal: g.score_infos.reduce((a, b) => a + b.maxTotal, 0),
+            };
+        }
 
         this.updateLeftSide();
         $(window).resize(() => this.updateLeftSide());
@@ -540,6 +573,16 @@ export class SidebarMenuCtrl implements IController {
         }
         $event.stopPropagation();
     }
+
+    showScoreboard() {
+        if (!this.scoreBoard) {
+            return false;
+        }
+        if (this.hide.scoreBoard) {
+            return false;
+        }
+        return this.scoreBoard.currentDocScoreInfo || (this.scoreBoard.infos && this.scoreBoard.infos.length > 0);
+    }
 }
 
 timApp.component("timSidebarMenu", {
@@ -714,6 +757,73 @@ timApp.component("timSidebarMenu", {
         </ul>
     </uib-tab>
 
+    <uib-tab index="10" ng-if="$ctrl.showScoreboard()">
+        <uib-tab-heading>
+            <i class="glyphicon glyphicon-stats"></i>
+        </uib-tab-heading>
+        <div id="menu-points" ng-if="$ctrl.scoreBoard.currentDocScoreInfo">
+            <div class="collapse-header">
+                <a data-toggle="collapse" data-target="#collapse-points">
+                    <h5>Points on this page</h5>
+                    <i class="pull-right glyphicon glyphicon-menu-down"></i>
+                </a>
+            </div>
+            <div class="collapse in" id="collapse-points">
+                <div class="points-header">
+                    <p>Task</p>
+                    <p class="pull-right">Points</p>
+                </div>
+                <ul class="score-list">
+                    <li ng-repeat="task in $ctrl.scoreBoard.currentDocScoreInfo.tasks" ng-class="task.points ? (task.points == task.maxPoints ? 'task_okay' : 'task_prog') : 'flex flex-wrap'">
+                        <div class="flex-grow-1">
+                            <a href="#{{ task.fragId }}">{{ task.taskName }}</a>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p>
+                                {{ task.points ? task.points : 0 }}
+                                <span class="full-points"> / {{ task.maxPoints }}</span>
+                            </p>
+                        </div>
+                    </li>
+                    <li class="point-total">
+                        Total: {{ $ctrl.scoreBoard.currentDocScoreInfo.total }}
+                        <span class="full-points"> / {{ $ctrl.scoreBoard.currentDocScoreInfo.maxTotal }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="scoreboard" id="menu-scores" ng-if="$ctrl.scoreBoard.infos && $ctrl.scoreBoard.infos.length">
+            <div class="collapse-header">
+                <a data-toggle="collapse" data-target="#collapse-scores">
+                    <h5>Points in this course</h5>
+                    <i class="pull-right glyphicon glyphicon-menu-down"></i>
+                </a>
+            </div>
+            <div class="collapse in" id="collapse-scores">
+                <div class="points-header">
+                    <p>Page</p>
+                    <p class="pull-right">Points</p>
+                </div>
+                <ul class="score-list">
+                    <li ng-repeat="info in $ctrl.scoreBoard.infos">
+                        <div class="flex flex-wrap">
+                            <div class="flex-grow-1">
+                                <a href="/view/{{ info.doc.path }}">{{ info.doc.title }}</a>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p>{{ info.total }}<span class="full-points"> / {{ info.maxTotal }}</span></p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="point-total">
+                        Total: {{ $ctrl.scoreBoard.total }}
+                        <span class="full-points"> / {{ $ctrl.scoreBoard.maxTotal }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </uib-tab>
+    
     <uib-tab index="2" ng-if="!$ctrl.hide.lecturetab && $ctrl.lctrl.lectureSettings.lectureMode"
              select="$ctrl.toggleLectures()">
         <uib-tab-heading>

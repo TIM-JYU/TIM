@@ -42,6 +42,7 @@ from timApp.item.item import Item
 from timApp.item.partitioning import get_piece_size_from_cookie, decide_view_range, get_doc_version_hash, load_index, \
     INCLUDE_IN_PARTS_CLASS_NAME, save_index, partition_texts, get_index_with_header_id, get_document_areas, \
     RequestedViewRange, IndexedViewRange
+from timApp.item.scoreboard import get_score_infos_if_enabled
 from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
 from timApp.markdown.htmlSanitize import sanitize_html
@@ -446,6 +447,8 @@ def view(item_path, template_name, route="view"):
         total_tasks = len(points_sum_rule.groups)
     else:
         total_tasks = len(task_ids)
+    if points_sum_rule and points_sum_rule.scoreboard_error:
+        flash(f'Error in point_sum_rule scoreboard: {points_sum_rule.scoreboard_error}')
     if teacher_or_see_answers:
         user_list = None
         ug = None
@@ -539,6 +542,8 @@ def view(item_path, template_name, route="view"):
 
     show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']
     taketime("view to render")
+
+    score_infos = get_score_infos_if_enabled(doc_info, doc_settings)
 
     reqs = get_all_reqs()  # This is cached so only first time after restart takes time
     taketime("reqs done")
@@ -637,6 +642,8 @@ def view(item_path, template_name, route="view"):
         live_updates=doc_settings.live_updates(),
         slide_background_url=slide_background_url,
         slide_background_color=slide_background_color,
+        score_infos=score_infos,
+        # TODO: Unify "task summary" and "scoreboard" features somehow.
         task_info={'total_points': total_points,
                    'tasks_done': tasks_done,
                    'total_tasks': total_tasks,
