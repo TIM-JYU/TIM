@@ -45,10 +45,8 @@ export class CountdownComponent implements OnInit {
     }
 
     private async getEndDate() {
-        // Ceil countdown seconds so we always include possible fractions of a second and account for possible
-        // floating point precision errors
         if (this.seconds) {
-            return moment().add(Math.ceil(this.seconds), "s");
+            return moment().add(this.seconds, "s");
         }
         if (this.endTime) {
             const serverTime = await to2(this.http.get<{time: moment.Moment}>("/time").toPromise());
@@ -56,7 +54,7 @@ export class CountdownComponent implements OnInit {
                 return moment();
             }
             const remaining = moment(this.endTime).diff(serverTime.result.time, "s", true);
-            return moment().add(Math.ceil(remaining), "s");
+            return moment().add(remaining, "s");
         }
         return moment();
     }
