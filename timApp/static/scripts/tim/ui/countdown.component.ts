@@ -5,6 +5,10 @@ import {Users} from "tim/user/userService";
 import moment from "moment";
 import {HttpClient} from "@angular/common/http";
 
+// Most browsers don't report precise time to mitigate potential time-based attacks/tracking:
+// https://developer.mozilla.org/en-US/docs/Web/API/Performance/now#Reduced_time_precision
+// Rounding to 1ms seems common, in which case the timeout can happen without 1ms window
+const TIMEOUT_EPS = 0.001;
 const DAY_LIMIT = 24 * 60 * 60;
 
 @Component({
@@ -21,7 +25,6 @@ export class CountdownComponent implements OnInit {
     @Input() template: string = "{0}";
     @Input() lowTimeThreshold: number = -1;
     @Input() syncInterval: number = -1;
-    @Input() tickInterval: number = 1;
     @Input() syncIntervalDeviation: number = 0;
     @Output() onFinish: EventEmitter<void> = new EventEmitter<void>();
     @Output() onLowTime: EventEmitter<void> = new EventEmitter<void>();
@@ -129,7 +132,7 @@ export class CountdownComponent implements OnInit {
             interval = this.currentCountdown < 10 ? 100 : 1000;
             setTimeout(tick, interval - moment().valueOf() % interval);
         };
-        setTimeout(tick, this.tickInterval * 1000);
+        setTimeout(tick, interval - moment().valueOf() % interval);
     }
 
     stop() {
