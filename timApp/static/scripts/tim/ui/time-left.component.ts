@@ -6,7 +6,7 @@ import {ITimeLeftSettings} from "tim/document/IDocSettings";
 const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
     syncInterval: 10 * 60,
     syncIntervalDeviation: 0.2,
-    tickInterval: 1000,
+    tickInterval: 1,
     lowTimeThreshold: 60,
     lowTimeGlowPeriod: 45,
     lowTimeGlowDuration: 15,
