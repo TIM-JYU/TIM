@@ -49,12 +49,19 @@ export class CountdownComponent implements OnInit {
             return moment().add(this.seconds, "s");
         }
         if (this.endTime) {
+            const start = window.performance.now();
             const serverTime = await to2(this.http.get<{time: moment.Moment}>("/time").toPromise());
             if (!serverTime.ok) {
                 return moment();
             }
             const remaining = moment(this.endTime).diff(serverTime.result.time, "s", true);
-            return moment().add(remaining, "s");
+            const end = window.performance.now();
+
+            // Attempt to alleviate potential error due to the RTT of the request by subtracting the run time of
+            // the /time request + all processing
+            // Note that all timing in JS is inherently imprecise on purpose:
+            // https://developer.mozilla.org/en-US/docs/Web/API/Performance/now#Reduced_time_precision
+            return moment().add(remaining - (end - start), "s");
         }
         return moment();
     }
