@@ -10,7 +10,7 @@ const DAY_LIMIT = 24 * 60 * 60;
 @Component({
     selector: "tim-countdown",
     template: `
-        {{formatString(template, timeLeft)}}
+        {{timeLeftText}}
     `,
 })
 export class CountdownComponent implements OnInit {
@@ -28,7 +28,7 @@ export class CountdownComponent implements OnInit {
     currentEndDate?: moment.Moment;
     locale = Users.getCurrentLanguage();
     currentInterval?: number;
-    formatString = formatString;
+    timeLeftText?: string;
 
     constructor(private http: HttpClient) {
     }
@@ -59,7 +59,7 @@ export class CountdownComponent implements OnInit {
 
             // Attempt to alleviate potential error due to the RTT of the request by subtracting the run time of
             // the /time request + all processing
-            // Note that all timing in JS is inherently imprecise on purpose:
+            // Note that all timing in JS is inherently imprecise on purpose (but should be enough for our needs):
             // https://developer.mozilla.org/en-US/docs/Web/API/Performance/now#Reduced_time_precision
             return moment().add(remaining - (end - start), "s");
         }
@@ -90,6 +90,7 @@ export class CountdownComponent implements OnInit {
 
     private checkCountdown() {
         this.currentCountdown = this.currentEndDate?.diff(moment(), "s", true) ?? 0;
+        this.timeLeftText = formatString(this.template, this.timeLeft);
         const timeEnded = this.currentCountdown <= 0;
         if (!this.isLowTime && this.currentCountdown < this.lowTimeThreshold) {
             this.onLowTime.emit();
