@@ -9,7 +9,7 @@ const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
     lowTimeThreshold: 60,
     lowTimeGlowPeriod: 45,
     lowTimeGlowDuration: 15,
-    lowTimeSyncInterval: 60,
+    lowTimeSyncInterval: 30,
     lowTimeSyncDeviation: 0.15,
 };
 
