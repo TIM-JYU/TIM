@@ -355,7 +355,7 @@ class DocSettings:
     def exam_mode(self, default=None):
         return self.__dict.get(self.exam_mode_key, default)
 
-    def point_sum_rule(self, default=None):
+    def point_sum_rule(self, default=None) -> Optional[PointSumRule]:
         psr_dict = self.__dict.get(self.point_sum_rule_key, default)
         if not psr_dict:
             return None
