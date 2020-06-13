@@ -83,6 +83,7 @@ export class BookmarksComponent implements OnInit {
         // TODO: Remove cast
         this.groups = (clone(genericglobals().bookmarks) ?? undefined) as IBookmarkGroup[];
         if (this.vCtrl) {
+            // TODO: Register
             // this.vCtrl.registerBookmarks(this);
         }
     }
@@ -156,8 +157,8 @@ export class BookmarksComponent implements OnInit {
             old: {
                 group: group.name,
                 name: item.name,
-                link: item.link,
-            }, new: r.result,
+            },
+            new: r.result,
         }).toPromise());
         if (!response.ok) {
             return;
