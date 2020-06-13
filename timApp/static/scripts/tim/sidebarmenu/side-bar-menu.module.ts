@@ -2,6 +2,7 @@ import {NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {TabsModule} from "ngx-bootstrap/tabs";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {FormsModule} from "@angular/forms";
 import {SidebarMenuComponent} from "tim/sidebarmenu/sidebar-menu.component";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {BookmarksTabComponent} from "./tabs/bookmarks-tab.component";
@@ -29,6 +30,7 @@ import {BookmarksComponent} from "./util/bookmarks.component";
     ],
     imports: [
         CommonModule,
+        FormsModule,
         TabsModule.forRoot(),
         TooltipModule.forRoot(),
         BsDropdownModule.forRoot(),
