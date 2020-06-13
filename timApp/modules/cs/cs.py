@@ -877,6 +877,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             selected_language = get_json_param(query.jso, "state", "selectedLanguage", None)
             if selected_language:
                 query.query["selectedLanguage"] = [selected_language]
+            timeout = get_json_param(query.jso, "markup", "timeout", None)
+            if timeout:
+                query.query["timeout"] = [timeout]
             ttype = get_param(query, "type", "cs").lower()
             if is_tauno:
                 ttype = 'tauno'
@@ -918,9 +921,15 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.wfile.write(s.encode("UTF-8"))
 
     def do_all(self, query):
+        timeout = get_param(query, "timeout", 20)
+        if not isinstance(timeout, int):
+            try:
+                timeout = int(timeout)
+            except:
+                timeout = 20
         try:
             signal.signal(signal.SIGALRM, signal_handler)
-            signal.alarm(20)  # Ten seconds
+            signal.alarm(timeout)  # Ten seconds
         except Exception as e:
             # print("No signal", e)  #  TODO; why is this signal at all when it always comes here?
             pass

@@ -759,6 +759,7 @@ const CsAll = t.intersection([
         usercode: t.string,
         userinput: t.string,
         selectedLanguage: t.string,
+        timeout: t.number,
     }),
     t.type({
         // anonymous: t.boolean,
@@ -946,6 +947,7 @@ class CsController extends CsBase implements ITimComponent {
     private preventSave: boolean = false;
     private hide = {};
     private savedText: string = "";
+    private timeout: number = 0;
 
     constructor(scope: IScope, element: JQLite) {
         super(scope, element);
@@ -1406,6 +1408,7 @@ ${fhtml}
             this.docLink = "Hide document";
         }
 
+        this.timeout = valueOr(this.attrsall.timeout, 0)*1000;
         this.userinput = valueOr(this.attrsall.userinput, (this.attrs.userinput ?? "").toString());
         this.userargs = valueOr(this.attrsall.userargs, (this.attrs.userargs ?? (isText && isArgs ? this.attrs.filename ?? "" : "")).toString());
         this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
@@ -1986,7 +1989,7 @@ ${fhtml}
                 "-replyMD"?: string,
             },
             savedNew: number,
-        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
+        }>({method: "PUT", url: url, data: params, timeout: this.timeout + defaultTimeout},
         ));
         if (r.ok) {
             this.isRunning = false;
