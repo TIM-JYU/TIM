@@ -1,5 +1,5 @@
 import {Injectable} from "@angular/core";
-import {documentglobals, isDocumentGlobals, someglobals} from "tim/util/globals";
+import {isDocumentGlobals, someglobals} from "tim/util/globals";
 
 export interface IHeader {
     id: string;

@@ -3,6 +3,7 @@ import {CommonModule} from "@angular/common";
 import {TabsModule} from "ngx-bootstrap/tabs";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {SidebarMenuComponent} from "tim/sidebarmenu/sidebar-menu.component";
+import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {BookmarksTabComponent} from "./tabs/bookmarks-tab.component";
 import {MenuTabDirective} from "./menu-tab.directive";
 import {TabContainerComponent} from "./tab-container.component";
@@ -11,6 +12,7 @@ import {IndexTabComponent} from "./tabs/index-tab.component";
 import {LectureInfoTabComponent} from "./tabs/lecture-info-tab.component";
 import {LoadQuestionsTabComponent} from "./tabs/load-questions-tab.component";
 import {LoggedUsersTabComponent} from "./tabs/logged-users-tab.component";
+import {BookmarksComponent} from "./util/bookmarks.component";
 
 @NgModule({
     declarations: [
@@ -23,11 +25,13 @@ import {LoggedUsersTabComponent} from "./tabs/logged-users-tab.component";
         LectureInfoTabComponent,
         LoadQuestionsTabComponent,
         LoggedUsersTabComponent,
+        BookmarksComponent,
     ],
     imports: [
         CommonModule,
         TabsModule.forRoot(),
         TooltipModule.forRoot(),
+        BsDropdownModule.forRoot(),
     ],
     entryComponents: [
         BookmarksTabComponent,
