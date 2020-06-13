@@ -172,7 +172,7 @@ export class HeaderComponent implements OnInit {
             throw new Error("viewctrl not registered");
         }
         if (!viewctrl.bookmarksCtrl) {
-            throw new Error("Bookmarkscontroller not registered");
+            throw new Error("BookmarksComponent not registered");
         }
         const mainCourseDocPath = this.getMainCourseDocPath();
         if (!mainCourseDocPath) {

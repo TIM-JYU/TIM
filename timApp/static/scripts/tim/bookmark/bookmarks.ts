@@ -40,7 +40,7 @@ export class BookmarksController implements IController {
             void this.refresh();
         }
         if (this.viewctrl) {
-            this.viewctrl.registerBookmarks(this);
+            // this.viewctrl.registerBookmarks(this);
         }
     }
 

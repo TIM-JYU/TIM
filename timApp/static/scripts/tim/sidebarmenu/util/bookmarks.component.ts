@@ -80,11 +80,9 @@ export class BookmarksComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // TODO: Remove cast
-        this.groups = (clone(genericglobals().bookmarks) ?? undefined) as IBookmarkGroup[];
+        this.groups = clone(genericglobals().bookmarks) ?? undefined;
         if (this.vCtrl) {
-            // TODO: Register
-            // this.vCtrl.registerBookmarks(this);
+            this.vCtrl.registerBookmarks(this);
         }
     }
 

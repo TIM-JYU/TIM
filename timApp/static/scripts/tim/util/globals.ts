@@ -1,4 +1,4 @@
-import {IBookmarkGroup} from "../bookmark/bookmarks";
+import {IBookmarkGroup} from "tim/sidebarmenu/util/bookmarks.component";
 import {IDocSettings} from "../document/IDocSettings";
 import {EditMode} from "../document/popupMenu";
 import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
