@@ -62,8 +62,12 @@ $menuTab-border: 1px solid lighten($gray-base, 88%);
         max-height: calc(100vh - 51.2833px);
         padding-left: 3px;
 
-        a.same-line {
+        .same-line {
             display: inline-block;
+
+            &.spaced {
+                padding-left: 0.3em;
+            }
         }
 
         i.vis-hidden {

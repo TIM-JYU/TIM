@@ -44,7 +44,7 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
                 Edit relevance (<span i18n-tooltip tooltip="Current relevance value">{{currentRelevance}}</span>)
             </button>
         </ng-container>
-        <ng-container *ngIf="!item?.isFolder">
+        <ng-container *ngIf="item?.isFolder">
             <h5 i18n>Search</h5>
             <button class="timButton btn-block"
                     i18n-title title="Search with tags"
@@ -59,7 +59,8 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
                 <ng-container *ngIf="isFullPage; else showInFull" i18n>Show page in parts</ng-container>
                 <ng-template #showInFull i18n>Show page in full</ng-template>
             </a>
-            <a class="same-line" i18n-title title="Open document partitioning settings" (click)="openViewRangeMenu()">
+            <a class="same-line spaced" i18n-title title="Open document partitioning settings"
+               (click)="openViewRangeMenu()">
                 <span class="glyphicon glyphicon-cog"></span>
             </a>
             <button *ngIf="vctrl && isFullPage && item.rights.editable"
@@ -105,9 +106,9 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
         </ng-container>
 
         <!--        TODO: check rights for given options-->
-        <ng-container *ngIf="!item?.isFolder">
+        <ng-container *ngIf="item && !item.isFolder">
             <h5 class="same-line" i18n>Print document</h5>
-            <a class="same-line" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
+            <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
                 <span class="glyphicon glyphicon-question-sign" title="Printing help" i18n-title></span>
             </a>
             <button class="timButton btn-block"
@@ -122,7 +123,7 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
             </button>
 
             <h5 class="same-line" i18n>Document tags</h5>
-            <a class="same-line" href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
+            <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
                     <span class="glyphicon glyphicon-question-sign"
                           title="Teachers' help for course code" i18n-title></span>
             </a>
