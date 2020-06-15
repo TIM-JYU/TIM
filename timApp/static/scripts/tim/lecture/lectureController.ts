@@ -79,11 +79,11 @@ export class LectureController {
     private lectureEndingDialogState: LectureEndingDialogState;
     private futureLectures: ILecture[];
     private lectureEnded: boolean;
-    private lecturerTable: ILecturePerson[];
+    public lecturerTable: ILecturePerson[];
     private newMessagesAmount: number;
     private newMessagesAmountText: string;
     private showPoll: boolean;
-    private studentTable: ILecturePerson[];
+    public studentTable: ILecturePerson[];
     viewctrl?: ViewCtrl;
     private wallMessages: ILectureMessage[];
     private wallName: string;
