@@ -5,7 +5,7 @@ import {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {LectureController} from "tim/lecture/lectureController";
 import {showTagDialog} from "tim/item/tagCtrl";
-import {DocumentOrFolder, IDocument, isRootFolder} from "tim/item/IItem";
+import {DocumentOrFolder, IDocument, isRootFolder, redirectToItem} from "tim/item/IItem";
 import {isDocumentGlobals, someglobals} from "tim/util/globals";
 import {showRelevanceEditDialog} from "tim/item/relevanceEditDialog";
 import {showTagSearchDialog} from "tim/item/tagSearchCtrl";
@@ -21,6 +21,8 @@ import {IGroupWithSisuPath} from "tim/sidebar/sidebarMenuCtrl";
 import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "tim/user/IUser";
 import {IDocSettings} from "tim/document/IDocSettings";
 import {IRelevanceResponse} from "tim/item/relevanceEdit";
+import {showMergePdfDialog} from "tim/document/minutes/mergePdfCtrl";
+import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
 
 @Component({
     selector: "settings-tab",
@@ -50,7 +52,7 @@ import {IRelevanceResponse} from "tim/item/relevanceEdit";
                     i18n>Search with tags
             </button>
         </ng-container>
-        <ng-container *ngIf="users.isLoggedIn() && !item?.isFolder">
+        <ng-container *ngIf="users.isLoggedIn() && item && !item.isFolder">
             <h5 i18n>Document settings</h5>
             <a i18n-title title="Toggle between showing full and partitioned document"
                (click)="toggleViewRange()">
@@ -60,12 +62,12 @@ import {IRelevanceResponse} from "tim/item/relevanceEdit";
             <a class="same-line" i18n-title title="Open document partitioning settings" (click)="openViewRangeMenu()">
                 <span class="glyphicon glyphicon-cog"></span>
             </a>
-            <button *ngIf="item.rights.editable && isFullPage"
+            <button *ngIf="vctrl && isFullPage && item.rights.editable"
                     class="timButton btn-block"
                     (click)="vctrl.editingHandler.editSettingsPars()"
                     i18n>Edit settings
             </button>
-            <button *ngIf="item.rights.manage"
+            <button *ngIf="item?.rights?.manage"
                     class="timButton btn-block"
                     title="Set item relevance value" i18n-title
                     (click)="openRelevanceEditDialog()"
@@ -77,7 +79,7 @@ import {IRelevanceResponse} from "tim/item/relevanceEdit";
                     (click)="markAllAsRead()"
                     i18n>Mark all as read
             </button>
-            <button *ngIf="vctrl.isTranslation()"
+            <button *ngIf="vctrl?.isTranslation()"
                     class="timButton btn-block"
                     title="Mark document as translated" i18n-title
                     (click)="markTranslated()"
@@ -103,7 +105,7 @@ import {IRelevanceResponse} from "tim/item/relevanceEdit";
         </ng-container>
 
         <!--        TODO: check rights for given options-->
-        <ng-container *ngIf="!vctrl?.item.isFolder">
+        <ng-container *ngIf="!item?.isFolder">
             <h5 class="same-line" i18n>Print document</h5>
             <a class="same-line" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
                 <span class="glyphicon glyphicon-question-sign" title="Printing help" i18n-title></span>
@@ -124,7 +126,7 @@ import {IRelevanceResponse} from "tim/item/relevanceEdit";
                     <span class="glyphicon glyphicon-question-sign"
                           title="Teachers' help for course code" i18n-title></span>
             </a>
-            <button *ngIf="item.rights.manage"
+            <button *ngIf="item && item.rights.manage"
                     class="timButton btn-block"
                     title="Add or remove document tags" i18n-title
                     (click)="addTag()"
@@ -187,6 +189,8 @@ import {IRelevanceResponse} from "tim/item/relevanceEdit";
         <ng-template i18n="@@markAllTranslatedConfirm">
             This will mark all paragraphs in this document as translated. Continue?
         </ng-template>
+        <ng-template i18n="@@notInDocumentError">Not in a document</ng-template>
+        <ng-template i18n="@@noKnroMacroError">The document has no 'knro' macro defined</ng-template>
     `,
 })
 export class SettingsTabComponent implements OnInit, IMenuTab, DoCheck {
@@ -201,14 +205,17 @@ export class SettingsTabComponent implements OnInit, IMenuTab, DoCheck {
     linkedGroups: IDocument[] = [];
     sisugroupPath?: string;
     item?: DocumentOrFolder;
+    // TODO: Is the localstorage version needed?
     private parsPerPage = 20;
     private currentViewRange?: IViewRange;
     private docSettings?: IDocSettings;
+    private documentMemoMinutes: string | undefined;
 
     constructor(private http: HttpClient) {
         const globals = someglobals();
         this.item = globals.curr_item;
         this.docSettings = isDocumentGlobals(globals) ? globals.docSettings : undefined;
+        this.documentMemoMinutes = isDocumentGlobals(globals) ? globals.memoMinutes : undefined;
         this.lctrl = this.vctrl?.lectureCtrl ?? LectureController.createAndInit(this.vctrl);
     }
 
@@ -374,13 +381,7 @@ export class SettingsTabComponent implements OnInit, IMenuTab, DoCheck {
      * @returns {boolean} Whether the button for creating extracts should be displayed.
      */
     get enableCreateExtractsButton() {
-        return false;
-        // if (this.docSettings == null || this.docSettings.macros == null || this.vctrl == null) {
-        //     return false;
-        // }
-        //
-        // return this.docSettings.macros.knro != null && this.documentMemoMinutes == "minutes" &&
-        //     this.vctrl.item.rights.manage;
+        return this.docSettings?.macros?.knro && this.documentMemoMinutes == "minutes" && this.item?.rights?.manage;
     }
 
     createMinuteExtracts() {
@@ -392,39 +393,33 @@ export class SettingsTabComponent implements OnInit, IMenuTab, DoCheck {
      * @returns {boolean} Whether the button for creating minutes should be displayed.
      */
     get enableCreateMinutesButton() {
-        return false;
-        // if (this.docSettings == null || this.docSettings.macros == null || this.vctrl == null) {
-        //     return false;
-        // }
-        //
-        // return this.docSettings.macros.knro != null && this.documentMemoMinutes == "memo" &&
-        //     this.vctrl.item.rights.manage;
+        return this.docSettings?.macros?.knro && this.documentMemoMinutes == "memo" && this.item?.rights?.manage;
     }
 
     /**
      * Creates minutes from a IT faculty council meeting invitation
      */
     async createMinutes() {
-        // if (!this.vctrl) {
-        //     await showMessageDialog("Not in a document");
-        //     return;
-        // }
-        //
-        // if (this.docSettings == null || this.docSettings.macros == null || this.docSettings.macros.knro == null) {
-        //     await showMessageDialog("The document has no 'knro' macro defined");
-        //     return;
-        // }
-        //
-        // const r = await to($http.post<{path: string}>("/minutes/createMinutes", {
-        //     item_path: this.vctrl.item.location + "/pk/pk" + this.docSettings.macros.knro,
-        //     item_title: "pk" + this.docSettings.macros.knro,
-        //     copy: this.vctrl.item.id,
-        // }));
-        // if (r.ok) {
-        //     window.location.href = "/view/" + r.result.data.path;
-        // } else {
-        //     await showMessageDialog(r.result.data.error);
-        // }
+        if (!this.item) {
+            await showMessageDialog($localize`:@@notInDocumentError:Not in a document`);
+            return;
+        }
+
+        if (!this.docSettings?.macros?.knro) {
+            await showMessageDialog($localize`:@@noKnroMacroError:The document has no 'knro' macro defined`);
+            return;
+        }
+
+        const r = await to2(this.http.post<{ path: string }>("/minutes/createMinutes", {
+            item_path: `${this.item.location}/pk/pk${this.docSettings.macros.knro}`,
+            item_title: `pk${this.docSettings.macros.knro}`,
+            copy: this.item.id,
+        }).toPromise());
+        if (r.ok) {
+            window.location.href = `/view/${r.result.path}`;
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
     }
 
     /**
@@ -432,37 +427,34 @@ export class SettingsTabComponent implements OnInit, IMenuTab, DoCheck {
      * @returns {boolean} Whether the document is a faculty council meeting document.
      */
     get isMinutesOrInvitation() {
-        return false;
-        // if (this.docSettings == null || this.docSettings.macros == null) {
-        //     return false;
-        // }
-        // return this.docSettings.macros.knro != null &&
-        //     (this.documentMemoMinutes == "minutes" || this.documentMemoMinutes == "memo");
+        return this.docSettings?.macros?.knro
+            && this.item?.rights?.manage
+            && (this.documentMemoMinutes == "minutes" || this.documentMemoMinutes == "memo");
     }
 
-    mergePdf() {
-        // if (!this.vctrl) {
-        //     return;
-        // }
-        // showMergePdfDialog({document: this.vctrl.item});
+    async mergePdf() {
+        if (!this.item) {
+            return;
+        }
+        await showMergePdfDialog({document: this.item});
     }
 
     async createGroup() {
-        // const doc = await showInputDialog({
-        //     isInput: InputDialogKind.InputAndValidator,
-        //     defaultValue: "",
-        //     text: "Enter name of the usergroup",
-        //     title: "Create group",
-        //     validator: async (s) => {
-        //         const r = await to($http.get<IDocument>(`/groups/create/${s}`));
-        //         if (r.ok) {
-        //             return {ok: true, result: r.result.data};
-        //         } else {
-        //             return {ok: false, result: r.result.data.error};
-        //         }
-        //     },
-        // });
-        // redirectToItem(doc);
+        const doc = await showInputDialog({
+            isInput: InputDialogKind.InputAndValidator,
+            defaultValue: "",
+            text: "Enter name of the usergroup",
+            title: "Create group",
+            validator: async (s) => {
+                const r = await to2(this.http.get<IDocument>(`/groups/create/${s}`).toPromise());
+                if (r.ok) {
+                    return {ok: true, result: r.result};
+                } else {
+                    return {ok: false, result: r.result.error.error};
+                }
+            },
+        });
+        redirectToItem(doc);
     }
 
     /**
