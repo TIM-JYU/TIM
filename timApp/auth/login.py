@@ -85,8 +85,9 @@ def login_with_korppi():
 
 def create_or_update_user(
         info: UserInfo,
-        group_to_add: UserGroup=None,
-):
+        group_to_add: Optional[UserGroup]=None,
+        update_username: bool = True,
+) -> User:
     user = User.get_by_name(info.username)
 
     if user is None and info.email:
@@ -108,6 +109,8 @@ def create_or_update_user(
                 db.session.flush()
             elif ue:
                 raise Exception(f'Users were the same but still different email: {user.name}')
+        if not update_username:
+            info.username = None
         user.update_info(info)
     else:
         user, _ = User.create_with_group(info)

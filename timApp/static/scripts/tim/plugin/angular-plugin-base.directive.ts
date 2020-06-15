@@ -78,8 +78,8 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
         }
     }
 
-    protected httpGet<T>(url: string) {
-        return to2(this.http.get<T>(url).toPromise());
+    protected httpGet<T>(url: string, params?: Record<string, string | string[]>) {
+        return to2(this.http.get<T>(url, {params}).toPromise());
     }
 
     protected httpPost<T>(url: string, body: unknown) {

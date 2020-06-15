@@ -1,6 +1,7 @@
 """
 A plugin for importing data to TIM fields.
 """
+import csv
 import re
 from collections import defaultdict
 from dataclasses import dataclass, asdict, field
@@ -19,8 +20,8 @@ from utils import Missing
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
 from timApp.user.hakaorganization import HakaOrganization
-from timApp.user.personaluniquecode import PersonalUniqueCode
-from timApp.user.user import User
+from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode
+from timApp.user.user import User, UserInfo
 from timApp.util.utils import widen_fields
 
 
@@ -34,8 +35,8 @@ class ImportDataStateModel:
 
 @dataclass
 class ImportDataMarkupModel(GenericMarkupModel):
+    allowMissing: Union[bool, Missing, None] = missing
     beforeOpen: Union[str, Missing, None] = missing
-    borders: Union[bool, Missing, None] = missing
     docid: Union[int, Missing, None] = missing
     fields: Union[List[str], Missing] = missing
     loadButtonText: Union[str, Missing, None] = missing
@@ -53,12 +54,14 @@ class ImportDataMarkupModel(GenericMarkupModel):
     useurltoken: Union[bool, Missing, None] = missing
     ignoreMissing: Union[bool, Missing, None] = missing
     joinProperty: Union[str, Missing, None] = missing
+    createMissingUsers: Union[bool, Missing] = missing
 
 
 @dataclass
 class ImportDataInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     data: str
+    createMissingUsers: bool = False
     separator: Union[str, Missing] = missing
     url: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
@@ -236,6 +239,12 @@ def convert_data(data: List[str], field_names: List[str], separator: str) -> Fie
     return conv_data_csv(data, field_names, separator)
 
 
+@dataclass
+class MissingUser:
+    user: UserInfo
+    fields: Dict[str, str]
+
+
 @importData_plugin.route('/answer', methods=['put'])
 @csrf.exempt
 @use_args(ImportDataAnswerSchema(), locations=("json",))
@@ -252,22 +261,20 @@ def answer(args: ImportDataAnswerModel):
     if args.markup.prefilter:
         params = JsRunnerParams(code=args.markup.prefilter, data=data)
         try:
-            data, output = jsrunner_run(params)
+            processed_data, output = jsrunner_run(params)
         except JsRunnerError as e:
             return args.make_answer_error('Error in JavaScript: ' + e.args[0])
-        vals = FieldValues.from_tim_format(data)
+        vals = FieldValues.from_tim_format(processed_data)
     did = int(args.taskID.split(".")[0])
     if args.markup.docid:
         did = args.markup.docid
     rows = []
-    wrong_count = 0
-    wrongs = []
-    field_count = 0
     id_prop = args.markup.joinProperty or 'username'
     idents = [r for r in vals.values.keys()]
 
     m = re.fullmatch(r'studentID\((?P<org>[a-z.]+)\)', id_prop)
     users: Dict[str, User]
+    org = None
     if m:
         org = m.group('org')
         q = (User.query.join(PersonalUniqueCode)
@@ -291,33 +298,88 @@ def answer(args: ImportDataAnswerModel):
     else:
         return args.make_answer_error(f'Invalid joinProperty: {args.markup.joinProperty}')
 
+    missing_users = {}
     for uident, vs in vals.values.items():
         u = users.get(uident)
-        if not u:
-            wrong_count += len(vs)
-            wrongs.append(f'{uident}: user not found')
-            continue
         flds = {}
-        ur = {'user': u.id, 'fields': flds}
         for k, v in vs.items():
             if '.' not in k:
                 k = f'{did}.{k}'
             flds[k] = v
-        rows.append(ur)
-        field_count += len(flds)
+        if u:
+            ur = {'user': u.id, 'fields': flds}
+            rows.append(ur)
+        else:
+            missing_users[uident] = flds
 
-    if output:
-        output = output + "\n"
-    wrong_count += len(vals.error_lines)
-    wrongs += list(vals.list_errors())
+    wrong_count = len(vals.error_lines)
+    wrongs = list(vals.list_errors())
     if wrong_count:
-        wrongstr = "\nWrong lines: " + str(wrong_count) + "\n\n" + '\n'.join(wrongs)
-    else:
-        wrongstr = ''
+        if output:
+            output += "\n\n"
+        output += "Wrong lines: " + str(wrong_count) + "\n\n" + '\n'.join(wrongs)
+
+    mu = []
+    if org:
+        if args.input.url and args.input.url.startswith('https://plus.cs.aalto.fi/api/v2/courses/'):
+            reader = csv.reader(data, delimiter=',')
+            student_id_email_map = {}
+            for row in reader:
+                studentid = row[1]
+                email = row[2]
+                student_id_email_map[studentid] = email
+            mu = [
+                MissingUser(
+                    user=UserInfo(
+                        unique_codes=[SchacPersonalUniqueCode(code=sid, codetype='studentID', org=org)],
+                        email=student_id_email_map[sid],
+                    ),
+                    fields=fields,
+                )
+                for sid, fields in missing_users.items()
+            ]
+        elif missing_users:
+            mu = [
+                MissingUser(
+                    user=UserInfo(
+                        unique_codes=[SchacPersonalUniqueCode(code=sid, codetype='studentID', org=org)],
+                        username=f'imported_studentid_{sid}',
+                    ),
+                    fields=fields,
+                )
+                for sid, fields in missing_users.items()
+            ]
+    elif id_prop == 'username':
+        mu = [
+            MissingUser(
+                user=UserInfo(
+                    username=sid,
+                ),
+                fields=fields,
+            )
+            for sid, fields in missing_users.items()
+        ]
+    elif id_prop == 'email':
+        mu = [
+            MissingUser(
+                user=UserInfo(
+                    email=sid,
+                ),
+                fields=fields,
+            )
+            for sid, fields in missing_users.items()
+        ]
+    elif missing_users:
+        return args.make_answer_error('missingUsers not implemented when joinProperty is "id"')
     jsonresp = {
         'ignoreMissing': args.markup.ignoreMissing,
+        'allowMissing': args.markup.allowMissing,
         'savedata': rows,
-        'web': {'result': f"{output}Imported {field_count} values for {len(rows)} users{wrongstr}"},
+        'createMissingUsers': args.input.createMissingUsers,
+        'missingUsers': mu,
+        'web': {
+            'result': f"{output}",
+        },
     }
 
     save = {}

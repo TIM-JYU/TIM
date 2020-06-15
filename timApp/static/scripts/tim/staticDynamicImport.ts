@@ -21,7 +21,7 @@ export function staticDynamicImport(s: string) {
         case "tape":
             return import("tim/plugin/tape");
         case "importData":
-            return import("tim/plugin/importData");
+            return import("tim/plugin/import-data.component");
         case "timTable":
             return import("tim/plugin/timTable");
         case "timMenu":

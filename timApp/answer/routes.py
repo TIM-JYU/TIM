@@ -27,6 +27,7 @@ from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, 
     has_teacher_access, \
     verify_view_access, get_plugin_from_request
 from timApp.auth.accesstype import AccessType
+from timApp.auth.login import create_or_update_user
 from timApp.auth.sessioninfo import get_current_user_id, logged_in
 from timApp.auth.sessioninfo import get_current_user_object, get_session_users, get_current_user_group
 from timApp.document.docentry import DocEntry
@@ -38,6 +39,7 @@ from timApp.markdown.dumboclient import call_dumbo
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.notification.notify import multi_send_email
 from timApp.plugin.containerLink import call_plugin_answer
+from timApp.plugin.importdata.importData import MissingUser
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundException, find_task_ids, \
     CachedPluginFinder
@@ -50,14 +52,16 @@ from timApp.tim_app import get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.groups import do_create_group, verify_group_edit_access
-from timApp.user.user import User, maxdate
+from timApp.user.user import User, UserInfo
+from timApp.user.user import maxdate
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields
-from timApp.util.utils import try_load_json, seq_to_str, get_current_time
+from timApp.util.utils import get_current_time
+from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
 from utils import Missing
 
 # TODO: Remove methods in util/answerutil where many "moved" here to avoid circular imports
@@ -555,10 +559,13 @@ def post_answer(plugintype: str, task_id_ext: str):
         raise PluginException(f'Got malformed response from plugin: {jsonresp}')
     result = {'web': web}
 
-    # if plugin.type == 'jsrunner' or plugin.type == 'tableForm' or plugin.type == 'importData':
     if 'savedata' in jsonresp:
         siw = answer_call_data.get("markup", {}).get("showInView", False)
-        handle_jsrunner_response(jsonresp, d, allow_non_teacher=siw)
+        saveresult = save_fields(jsonresp, d, allow_non_teacher=siw)
+
+        # TODO: Could report the result to other plugins too.
+        if plugin.type == 'importData':
+            web['fieldresult'] = saveresult
 
     def add_reply(obj, key, run_markdown=False):
         if key not in plugin.values:
@@ -841,14 +848,94 @@ def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups]):
                 raise RouteException(f'Unexpected group operation: {op}')
 
 
-def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_teacher: bool = False):
+class UserFieldEntry(TypedDict):
+    user: int
+    fields: Dict[str, str]
+
+
+def create_missing_users(users: List[MissingUser]) -> Tuple[List[UserFieldEntry], List[User]]:
+    created_users = []
+    for mu in users:
+        ui = mu.user
+        if ui.email is not None and not is_valid_email(ui.email):
+            raise RouteException(f'Invalid email: "{ui.email}"')
+        if ui.username is None:
+            ui.username = ui.email
+        if ui.full_name is None and ui.email is not None:
+            # Approximate real name with the help of email.
+            # This won't be fully accurate, but we can't do better.
+            nameparts = ui.email.split('@')[0].split('.')
+            ui.full_name = f'{nameparts[-1].title()} {nameparts[0].title()}'
+        u = create_or_update_user(ui, update_username=False)
+        created_users.append(u)
+    db.session.flush()
+    fields = []
+    for u, missing_u in zip(created_users, users):
+        fields.append({'user': u.id, 'fields': missing_u.fields})
+    return fields, created_users
+
+
+MissingUserSchema = class_schema(MissingUser)
+
+
+@dataclass
+class FieldSaveResult:
+    users_created: List[User] = field(default_factory=list)
+    users_missing: List[UserInfo] = field(default_factory=list)
+    fields_changed: int = 0
+    fields_unchanged: int = 0
+    fields_ignored: int = 0
+
+
+class FieldSaveUserEntry(TypedDict):
+    user: int
+    fields: Dict[str, str]
+
+
+class FieldSaveRequest(TypedDict, total=False):
+    savedata: Optional[List[FieldSaveUserEntry]]
+    ignoreMissing: Optional[bool]
+    allowMissing: Optional[bool]
+    createMissingUsers: Optional[bool]
+    missingUsers: Optional[Any]
+    groups: Optional[JsrunnerGroups]
+
+
+def verify_user_create_right():
+    u = get_current_user_object()
+    if u.is_admin:
+        return
+    user_creators = UserGroup.get_user_creator_group()
+    if user_creators not in u.groups:
+        raise AccessDenied('You do not have permission to create users.')
+
+
+def save_fields(
+        jsonresp: FieldSaveRequest,
+        current_doc: Optional[DocInfo] = None,
+        allow_non_teacher: bool = False,
+) -> FieldSaveResult:
     save_obj = jsonresp.get('savedata')
     ignore_missing = jsonresp.get('ignoreMissing', False)
     allow_missing = jsonresp.get('allowMissing', False)
     ignore_fields = {}
     handle_jsrunner_groups(jsonresp.get('groups'))
+    missing_users = jsonresp.get('missingUsers')
+    saveresult = FieldSaveResult()
+    curr_user = get_current_user_object()
+    if save_obj is None:
+        save_obj = []
+    if missing_users:
+        m_users: List[MissingUser] = MissingUserSchema().load(missing_users, many=True)
+        if jsonresp.get('createMissingUsers'):
+            verify_user_create_right()
+            new_fields, users = create_missing_users(m_users)
+            save_obj += new_fields
+            saveresult.users_created = users
+        else:
+            saveresult.users_missing = [mu.user for mu in m_users]
     if not save_obj:
-        return
+        return saveresult
     tasks = set()
     doc_map: Dict[int, DocInfo] = {}
     user_map: Dict[int, User] = {u.id: u for u in User.query.filter(User.id.in_(x['user'] for x in save_obj)).all()}
@@ -865,7 +952,6 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
             if id_num.doc_id not in doc_map:
                 doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
     task_content_name_map = {}
-    curr_user = get_current_user_object()
     for task in tasks:
         t_id = TaskId.parse(task, require_doc_id=True, allow_block_hint=False, allow_custom_field=True)
         if ignore_fields.get(t_id.doc_task, False):
@@ -930,6 +1016,7 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
         for key, value in user_fields.items():
             task_id = parsed_task_ids[key]
             if ignore_fields.get(task_id.doc_task, False):
+                saveresult.fields_ignored += 1
                 continue
             field = task_id.field
             if field is None:
@@ -956,7 +1043,7 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
                         try:
                             value = float(value)
                         except ValueError:
-                            return abort(400, f'Value {value} is not valid point value for task {task_id.task_name}')
+                            raise RouteException(f'Value {value} is not valid point value for task {task_id.task_name}')
                     if points != value:
                         new_answer = True
                     points = value
@@ -965,8 +1052,8 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
                         try:
                             value = json.loads(value or "null")
                         except json.decoder.JSONDecodeError:
-                            return abort(400,
-                                         f'Value {value} is not valid style syntax for task {task_id.task_name}')
+                            raise RouteException(
+                                f'Value {value} is not valid style syntax for task {task_id.task_name}')
                     plug = cpf.find(task_id)
                     if not plug:
                         continue
@@ -991,6 +1078,7 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
                         new_answer = True
                     content[field] = value
             if not new_answer:
+                saveresult.fields_unchanged += 1
                 continue
             if not content:
                 content[task_content_name_map[f'{task_id.doc_task}.{lastfield}']] = None
@@ -1003,11 +1091,13 @@ def handle_jsrunner_response(jsonresp, current_doc: DocInfo = None, allow_non_te
                 valid=True,
                 saver=curr_user,
             )
+            saveresult.fields_changed += 1
             # If this was a global task, add it to all users in the answer map so we won't save it multiple times.
             if task_id.is_global:
                 for uid in user_map.keys():
                     answer_map[uid][ans.task_id] = ans
             db.session.add(ans)
+    return saveresult
 
 
 def get_global_answers(parsed_task_ids: Dict[str, TaskId]) -> List[Answer]:

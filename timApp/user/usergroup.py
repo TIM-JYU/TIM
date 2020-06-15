@@ -219,6 +219,15 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return UserGroup.query.filter_by(name=TEACHERS_GROUPNAME).one()
 
     @staticmethod
+    def get_user_creator_group() -> 'UserGroup':
+        user_creator_group_name = 'User creators'
+        ug = UserGroup.get_by_name(user_creator_group_name)
+        if not ug:
+            ug = UserGroup.create(user_creator_group_name)
+            db.session.add(ug)
+        return ug
+
+    @staticmethod
     def get_logged_in_group() -> 'UserGroup':
         return UserGroup.query.filter_by(name=LOGGED_IN_GROUPNAME).one()
 

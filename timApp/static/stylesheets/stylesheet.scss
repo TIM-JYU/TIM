@@ -1268,19 +1268,6 @@ tim-user-list {
     height: calc(100% - #{13px * $line-height-base});
 }
 
-importdata-runner {
-    tim-close-button {
-        float: none;
-        position: absolute;
-        right: 6px;
-    }
-}
-
-.importDataInner {
-    padding-left: 1em;
-    padding-right: 1em;
-}
-
 .tim-menu img {
     vertical-align: baseline;
     display: inline-block;
