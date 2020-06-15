@@ -14,6 +14,7 @@ import {LectureInfoTabComponent} from "./tabs/lecture-info-tab.component";
 import {LoadQuestionsTabComponent} from "./tabs/load-questions-tab.component";
 import {LoggedUsersTabComponent} from "./tabs/logged-users-tab.component";
 import {BookmarksComponent} from "./util/bookmarks.component";
+import { TimeSincePipe } from "./util/time-since.pipe";
 
 @NgModule({
     declarations: [
@@ -27,6 +28,7 @@ import {BookmarksComponent} from "./util/bookmarks.component";
         LoadQuestionsTabComponent,
         LoggedUsersTabComponent,
         BookmarksComponent,
+        TimeSincePipe,
     ],
     imports: [
         CommonModule,
