@@ -27,7 +27,7 @@ import {IDocument} from "tim/item/IItem";
                 Edit relevance (<span i18n-tooltip tooltip="Current relevance value">{{currentRelevance}}</span>)
             </button>
         </ng-container>
-        <ng-container *ngIf="!(vctrl && vctrl.item && !vctrl.item.isFolder)">
+        <ng-container *ngIf="!vctrl?.item.isFolder">
             <h5 i18n>Search</h5>
             <button class="timButton btn-block"
                     i18n-title title="Search with tags"
@@ -35,7 +35,7 @@ import {IDocument} from "tim/item/IItem";
                     i18n>Search with tags
             </button>
         </ng-container>
-        <ng-container *ngIf="users.isLoggedIn() && vctrl && !vctrl.item.isFolder">
+        <ng-container *ngIf="users.isLoggedIn() && !vctrl?.item.isFolder">
             <h5 i18n>Document settings</h5>
             <a i18n-title title="Toggle between showing full and partitioned document"
                (click)="toggleViewRange()">
@@ -45,7 +45,6 @@ import {IDocument} from "tim/item/IItem";
             <a class="same-line" i18n-title title="Open document partitioning settings" (click)="openViewRangeMenu()">
                 <span class="glyphicon glyphicon-cog"></span>
             </a>
-
             <button *ngIf="vctrl.item.rights.editable && isFullPage"
                     class="timButton btn-block"
                     (click)="vctrl.editingHandler.editSettingsPars()"
@@ -63,8 +62,9 @@ import {IDocument} from "tim/item/IItem";
                     (click)="markAllAsRead()"
                     i18n>Mark all as read
             </button>
-            <button class="timButton btn-block"
-                    title="Mark all paragraphs of the document as read" i18n-title
+            <button *ngIf="vctrl.isTranslation()"
+                    class="timButton btn-block"
+                    title="Mark document as translated" i18n-title
                     (click)="markTranslated()"
                     i18n>Mark all as translated
             </button>
@@ -75,8 +75,9 @@ import {IDocument} from "tim/item/IItem";
                 <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useWall"> Show wall</label>
             </div>
             <div *ngIf="!lctrl.isLecturer" class="checkbox">
-                <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useQuestions"> Show
-                    questions</label>
+                <label i18n>
+                    <input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useQuestions"> Show questions
+                </label>
             </div>
             <div *ngIf="lctrl.isLecturer" class="checkbox">
                 <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useAnswers"> Show answers</label>
@@ -87,7 +88,7 @@ import {IDocument} from "tim/item/IItem";
         </ng-container>
 
         <!--        TODO: check rights for given options-->
-        <ng-container *ngIf="vctrl && vctrl.item && !vctrl.item.isFolder">
+        <ng-container *ngIf="!vctrl?.item.isFolder">
             <h5 class="same-line" i18n>Print document</h5>
             <a class="same-line" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
                 <span class="glyphicon glyphicon-question-sign" title="Printing help" i18n-title></span>
@@ -110,7 +111,7 @@ import {IDocument} from "tim/item/IItem";
             </a>
             <button *ngIf="vctrl.item.rights.manage"
                     class="timButton btn-block"
-                    title="Add and remove document tags" i18n-title
+                    title="Add or remove document tags" i18n-title
                     (click)="addTag()"
                     i18n>Edit tags
             </button>
