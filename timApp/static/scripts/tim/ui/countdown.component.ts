@@ -134,9 +134,9 @@ export class CountdownComponent implements OnInit {
                 return;
             }
             await this.checkCountdown();
-            setTimeout(tick, getNextInterval());
+            window.setTimeout(tick, getNextInterval());
         };
-        setTimeout(tick, getNextInterval());
+        window.setTimeout(tick, getNextInterval());
     }
 
     stop() {
