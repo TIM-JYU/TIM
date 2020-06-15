@@ -4,28 +4,29 @@ import {documentglobals} from "tim/util/globals";
 import {ITimeLeftSettings} from "tim/document/IDocSettings";
 
 const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
-    syncInterval: 10 * 60,
-    syncIntervalDeviation: 0.2,
-    lowTimeThreshold: 60,
-    lowTimeGlowPeriod: 45,
-    lowTimeGlowDuration: 15,
-    lowTimeSyncInterval: 30,
-    lowTimeSyncDeviation: 0.15,
+    sync_interval: 10 * 60,
+    sync_interval_deviation: 0.2,
+    low_time_threshold: 60,
+    low_time_glow_period: 45,
+    low_time_glow_duration: 15,
+    low_time_sync_interval: 30,
+    low_time_sync_deviation: 0.15,
 };
 
 @Component({
     selector: "tim-time-left",
     template: `
         <span class="label label-default" [class.low-time]="isLowTime" [class.glow]="isGlowing" i18n>
-            Time left: <tim-countdown   [displayUnits]="['d']" [endTime]="endTime"
-                                        [lowTimeThreshold]="settings.lowTimeThreshold"
-                                        [syncInterval]="syncInterval"
-                                        [syncIntervalDeviation]="syncIntervalDeviation"
-                                        (onFinish)="onTimeUp()"
-                                        (onLowTime)="onLowTime()"></tim-countdown>
+            Time left: <tim-countdown [displayUnits]="['d']" [endTime]="endTime"
+                                      [lowTimeThreshold]="settings.low_time_threshold"
+                                      [syncInterval]="syncInterval"
+                                      [syncIntervalDeviation]="syncIntervalDeviation"
+                                      (onFinish)="onTimeUp()"
+                                      (onLowTime)="onLowTime()"></tim-countdown>
         </span>
         <div class="low-time-warn alert alert-danger" *ngIf="isLowTime && showLowTimeMessage" i18n>
-            <button type="button" class="close" aria-label="Close" (click)="showLowTimeMessage = false"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="close" aria-label="Close" (click)="showLowTimeMessage = false"><span
+                    aria-hidden="true">&times;</span></button>
             The time is about to run out, remember to save your answers.
         </div>
         <ng-template i18n="@@timeUpMessage">
@@ -41,14 +42,14 @@ export class TimeLeftComponent {
     isGlowing = false;
     isTimeUp = false;
     settings: ITimeLeftSettings = {...TIME_LEFT_DEFAULTS, ...documentglobals()?.docSettings?.timeLeft};
-    syncInterval = this.settings.syncInterval;
-    syncIntervalDeviation = this.settings.syncIntervalDeviation;
+    syncInterval = this.settings.sync_interval;
+    syncIntervalDeviation = this.settings.sync_interval_deviation;
 
     onLowTime() {
         this.isLowTime = true;
-        this.syncInterval = this.settings.lowTimeSyncInterval;
-        this.syncIntervalDeviation = this.settings.lowTimeSyncDeviation;
-        if (this.settings.lowTimeGlowDuration >= this.settings.lowTimeGlowPeriod) {
+        this.syncInterval = this.settings.low_time_sync_interval;
+        this.syncIntervalDeviation = this.settings.low_time_sync_deviation;
+        if (this.settings.low_time_glow_duration >= this.settings.low_time_glow_period) {
             this.isGlowing = true;
         } else {
             this.glow();
@@ -58,9 +59,9 @@ export class TimeLeftComponent {
     async glow() {
         while (true) {
             this.isGlowing = true;
-            if (await this.wait(this.settings.lowTimeGlowDuration)) { return; }
+            if (await this.wait(this.settings.low_time_glow_duration)) { return; }
             this.isGlowing = false;
-            if (await this.wait(this.settings.lowTimeGlowPeriod)) { return; }
+            if (await this.wait(this.settings.low_time_glow_period)) { return; }
         }
     }
 
