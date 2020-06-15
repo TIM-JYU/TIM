@@ -2,6 +2,7 @@ import {Directive, Type, ViewContainerRef} from "@angular/core";
 
 export interface IMenuTab {
     entry: TabEntry;
+    onSelect?: () => void;
 }
 
 export interface TabEntry {

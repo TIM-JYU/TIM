@@ -1,5 +1,5 @@
-import {Component, ComponentFactoryResolver, Input, OnInit, ViewChild} from "@angular/core";
-import {TabEntry, MenuTabDirective} from "tim/sidebarmenu/menu-tab.directive";
+import {Component, ComponentFactoryResolver, ComponentRef, Input, OnInit, ViewChild} from "@angular/core";
+import {TabEntry, MenuTabDirective, IMenuTab} from "tim/sidebarmenu/menu-tab.directive";
 
 @Component({
     selector: "tab-container",
@@ -10,14 +10,21 @@ import {TabEntry, MenuTabDirective} from "tim/sidebarmenu/menu-tab.directive";
 export class TabContainerComponent implements OnInit {
     @Input() tabItem!: TabEntry;
     @ViewChild(MenuTabDirective, {static: true}) timMenuTab!: MenuTabDirective;
+    private tabComponent?: ComponentRef<IMenuTab>;
 
     constructor(private cfr: ComponentFactoryResolver) {
     }
 
     ngOnInit(): void {
         const factory = this.cfr.resolveComponentFactory(this.tabItem.tabType);
-        const vcr = this.timMenuTab.vcr;
-        const componentRef = vcr.createComponent(factory);
-        componentRef.instance.entry = this.tabItem;
+        this.tabComponent = this.timMenuTab.vcr.createComponent(factory);
+        this.tabComponent.instance.entry = this.tabItem;
+    }
+
+    onSelect() {
+        const onSelect = this.tabComponent?.instance.onSelect;
+        if (onSelect) {
+            onSelect();
+        }
     }
 }

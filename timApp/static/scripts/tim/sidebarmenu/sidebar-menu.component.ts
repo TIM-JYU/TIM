@@ -2,6 +2,7 @@ import {AfterViewInit, Component, OnInit, ViewChild} from "@angular/core";
 import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
+import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
 
 @Component({
     selector: "app-sidebar-menu",
@@ -12,11 +13,11 @@ import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.servi
             </div>
             <tabset id="menuTabs" [class.hidden-sm]="hidden" [class.hidden-xs]="hidden" #tabs>
                 <ng-container *ngFor="let menuTab of menuTabs">
-                    <tab *ngIf="menuTab.visible" (selectTab)="onTabSelect($event)" #currentTab>
+                    <tab *ngIf="menuTab.visible" (selectTab)="onTabSelect($event, tabContainer)" #currentTab>
                         <ng-template tabHeading>
                             <i class="glyphicon glyphicon-{{menuTab.icon}}" i18n-title title="{{menuTab.title}}"></i>
                         </ng-template>
-                        <tab-container [tabItem]="menuTab" [class.hidden]="!shouldRender(currentTab)"></tab-container>
+                        <tab-container #tabContainer [tabItem]="menuTab" [class.hidden]="!shouldRender(currentTab)"></tab-container>
                     </tab>
                 </ng-container>
             </tabset>
@@ -43,9 +44,10 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit {
         this.setSidebarState(false);
     }
 
-    onTabSelect(tab: TabDirective) {
+    onTabSelect(tab: TabDirective, ew: TabContainerComponent) {
         this.showSidebar = true;
         this.currentElement = tab.elementRef.nativeElement as HTMLElement;
+        ew.onSelect();
     }
 
     shouldRender(tab: HTMLElement) {
