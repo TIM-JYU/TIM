@@ -7,9 +7,13 @@ interface IMacros {
 }
 
 export interface ITimeLeftSettings {
-    lowTimeThreshold: number;
-    lowTimeGlowPeriod: number;
-    lowTimeGlowDuration: number;
+    low_time_threshold: number;
+    low_time_glow_period: number;
+    low_time_glow_duration: number;
+    sync_interval_deviation: number;
+    sync_interval: number;
+    low_time_sync_interval: number;
+    low_time_sync_deviation: number;
 }
 
 export interface ILoginHideSettings {
