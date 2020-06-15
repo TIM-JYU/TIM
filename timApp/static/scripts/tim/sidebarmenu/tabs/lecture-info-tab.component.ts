@@ -45,10 +45,9 @@ export class LectureInfoTabComponent implements IMenuTab {
     futureLecturesList: ILecture[] = [];
     pastLecturesList: ILecture[] = [];
     vctrl?: ViewCtrl = vctrlInstance;
-    lctrl: LectureController;
+    lctrl: LectureController = LectureController.instance;
 
     constructor(private http: HttpClient) {
-        this.lctrl = this.vctrl?.lectureCtrl ?? LectureController.createAndInit(this.vctrl);
     }
 
     onSelect() {

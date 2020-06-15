@@ -201,8 +201,8 @@ export class SettingsTabComponent implements OnInit, IMenuTab, DoCheck {
     showRelevance: boolean = true;
     currentRelevance?: number;
     vctrl?: ViewCtrl = vctrlInstance;
+    lctrl: LectureController = LectureController.instance;
     isFullPage: boolean = true;
-    lctrl: LectureController;
     linkedGroups: IDocument[] = [];
     sisugroupPath?: string;
     item?: DocumentOrFolder;
@@ -217,7 +217,6 @@ export class SettingsTabComponent implements OnInit, IMenuTab, DoCheck {
         this.item = globals.curr_item;
         this.docSettings = isDocumentGlobals(globals) ? globals.docSettings : undefined;
         this.documentMemoMinutes = isDocumentGlobals(globals) ? globals.memoMinutes : undefined;
-        this.lctrl = this.vctrl?.lectureCtrl ?? LectureController.createAndInit(this.vctrl);
     }
 
     ngOnInit(): void {

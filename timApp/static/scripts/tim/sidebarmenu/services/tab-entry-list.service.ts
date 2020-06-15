@@ -21,8 +21,7 @@ export class TabEntryListService {
     }
 
     getTabEntries(): TabEntry[] {
-        const viewCtrl = vctrlInstance;
-        const lectureCtrl = viewCtrl?.lectureCtrl ?? LectureController.createAndInit(viewCtrl);
+        const lectureCtrl = LectureController.instance;
         const hide = getVisibilityVars();
         const loggedIn = Users.isLoggedIn();
         return [
