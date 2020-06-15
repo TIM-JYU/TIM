@@ -35,7 +35,7 @@ export interface IDocSettings {
     form_mode?: boolean;
     hideBrowser?: boolean;
     login?: ILoginSettings;
-    timeLeft?: ITimeLeftSettings;
+    time_left?: ITimeLeftSettings;
     save_teacher?: boolean;
     show_scoreboard?: boolean;
 }
