@@ -24,7 +24,7 @@ export class TabContainerComponent implements OnInit {
     onSelect() {
         const onSelect = this.tabComponent?.instance.onSelect;
         if (onSelect) {
-            onSelect();
+            onSelect.apply(this.tabComponent?.instance);
         }
     }
 }
