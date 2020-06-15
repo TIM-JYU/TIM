@@ -40,7 +40,7 @@ export class TimeLeftComponent {
     isLowTime = false;
     isGlowing = false;
     isTimeUp = false;
-    settings: ITimeLeftSettings = {...TIME_LEFT_DEFAULTS, ...documentglobals()?.docSettings?.time_left};
+    settings: ITimeLeftSettings = {...TIME_LEFT_DEFAULTS, ...documentglobals()?.docSettings?.timeLeft};
     syncInterval = this.settings.syncInterval;
     syncIntervalDeviation = this.settings.syncIntervalDeviation;
 

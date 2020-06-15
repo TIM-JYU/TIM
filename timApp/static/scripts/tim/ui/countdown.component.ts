@@ -10,6 +10,9 @@ import {HttpClient} from "@angular/common/http";
 // Rounding to 1ms seems common, in which case the timeout can happen without 1ms window
 const TIMEOUT_EPS = 0.001;
 const DAY_LIMIT = 24 * 60 * 60;
+const DISPLAY_TENTHS_LIMIT = 10;
+const TICK_SECOND = 1000;
+const TICK_TENTH_SECOND = 100;
 
 @Component({
     selector: "tim-countdown",
@@ -46,17 +49,17 @@ export class CountdownComponent implements OnInit {
         let prefix = "";
         const clampedCountdown = Math.max(this.currentCountdown, 0);
         // We need time as a whole number so we won't render fractional parts
-        let time = Math.ceil(clampedCountdown);
-        const msPostfix = time < 10 ? `,${Math.trunc((clampedCountdown % 1) * 10)}` : "";
-        if (time > DAY_LIMIT && this.displayUnits.length != 0) {
-            prefix = humanizeDuration(time * 1000, {
+        let timeS = Math.floor(clampedCountdown);
+        const msPostfix = timeS < DISPLAY_TENTHS_LIMIT ? `,${Math.trunc((clampedCountdown % 1) * 10)}` : "";
+        if (timeS > DAY_LIMIT && this.displayUnits.length != 0) {
+            prefix = humanizeDuration(timeS * 1000, {
                 units: this.displayUnits,
                 round: true,
                 language: this.locale,
             }) + " + ";
-            time %= DAY_LIMIT;
+            timeS %= DAY_LIMIT;
         }
-        return `${prefix}${secondsToHHMMSS(time)}${msPostfix}`;
+        return `${prefix}${secondsToHHMMSS(timeS)}${msPostfix}`;
     }
 
     private async getEndDate() {
@@ -123,16 +126,17 @@ export class CountdownComponent implements OnInit {
         }
         this.running = true;
         await this.checkCountdown();
-        let interval = this.currentCountdown < 10 ? 100 : 1000;
+        const getIdealInterval = () => this.currentCountdown < DISPLAY_TENTHS_LIMIT ? TICK_TENTH_SECOND : TICK_SECOND;
+        const padInterval = (interval: number) => interval - moment().valueOf() % interval;
+        const getNextInterval = () => padInterval(getIdealInterval());
         const tick = async () => {
             if (!this.running) {
                 return;
             }
             await this.checkCountdown();
-            interval = this.currentCountdown < 10 ? 100 : 1000;
-            setTimeout(tick, interval - moment().valueOf() % interval);
+            setTimeout(tick, getNextInterval());
         };
-        setTimeout(tick, interval - moment().valueOf() % interval);
+        setTimeout(tick, getNextInterval());
     }
 
     stop() {
@@ -150,7 +154,7 @@ export class CountdownComponent implements OnInit {
         const now = moment();
         this.currentCountdown = this.currentEndDate?.diff(now, "s", true) ?? 0;
         this.timeLeftText = formatString(this.template, this.timeLeft);
-        if (this.nextSyncInterval > 0 && now.diff(this.lastSync, "s") >= this.nextSyncInterval) {
+        if (this.nextSyncInterval > 0 && now.diff(this.lastSync, "s", true) >= this.nextSyncInterval) {
             await this.syncEndDate();
         }
         const timeEnded = this.currentCountdown <= TIMEOUT_EPS;
