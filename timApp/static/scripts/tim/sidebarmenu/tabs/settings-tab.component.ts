@@ -1,11 +1,26 @@
-import {Component, Input, OnInit} from "@angular/core";
+import {Component, DoCheck, Input, OnInit} from "@angular/core";
 import {IMenuTab, TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {Users, UserService} from "tim/user/userService";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {LectureController} from "tim/lecture/lectureController";
 import {showTagDialog} from "tim/item/tagCtrl";
-import {IDocument} from "tim/item/IItem";
+import {DocumentOrFolder, IDocument, isRootFolder} from "tim/item/IItem";
+import {isDocumentGlobals, someglobals} from "tim/util/globals";
+import {showRelevanceEditDialog} from "tim/item/relevanceEditDialog";
+import {showTagSearchDialog} from "tim/item/tagSearchCtrl";
+import {getCurrentViewRange, IViewRange, toggleViewRange} from "tim/document/viewRangeInfo";
+import {showViewRangeEditDialog} from "tim/document/viewRangeEditDialog";
+import {getStorage, IOkResponse, setStorage, to, to2} from "tim/util/utils";
+import {HttpClient} from "@angular/common/http";
+import {showMessageDialog} from "tim/ui/dialog";
+import {getActiveDocument} from "tim/document/activedocument";
+import {ITemplateParams, showPrintDialog} from "tim/printing/printCtrl";
+import {showCourseDialog} from "tim/document/course/courseDialogCtrl";
+import {IGroupWithSisuPath} from "tim/sidebar/sidebarMenuCtrl";
+import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "tim/user/IUser";
+import {IDocSettings} from "tim/document/IDocSettings";
+import {IRelevanceResponse} from "tim/item/relevanceEdit";
 
 @Component({
     selector: "settings-tab",
@@ -27,7 +42,7 @@ import {IDocument} from "tim/item/IItem";
                 Edit relevance (<span i18n-tooltip tooltip="Current relevance value">{{currentRelevance}}</span>)
             </button>
         </ng-container>
-        <ng-container *ngIf="!vctrl?.item.isFolder">
+        <ng-container *ngIf="!item?.isFolder">
             <h5 i18n>Search</h5>
             <button class="timButton btn-block"
                     i18n-title title="Search with tags"
@@ -35,7 +50,7 @@ import {IDocument} from "tim/item/IItem";
                     i18n>Search with tags
             </button>
         </ng-container>
-        <ng-container *ngIf="users.isLoggedIn() && !vctrl?.item.isFolder">
+        <ng-container *ngIf="users.isLoggedIn() && !item?.isFolder">
             <h5 i18n>Document settings</h5>
             <a i18n-title title="Toggle between showing full and partitioned document"
                (click)="toggleViewRange()">
@@ -45,12 +60,12 @@ import {IDocument} from "tim/item/IItem";
             <a class="same-line" i18n-title title="Open document partitioning settings" (click)="openViewRangeMenu()">
                 <span class="glyphicon glyphicon-cog"></span>
             </a>
-            <button *ngIf="vctrl.item.rights.editable && isFullPage"
+            <button *ngIf="item.rights.editable && isFullPage"
                     class="timButton btn-block"
                     (click)="vctrl.editingHandler.editSettingsPars()"
                     i18n>Edit settings
             </button>
-            <button *ngIf="vctrl.item.rights.manage"
+            <button *ngIf="item.rights.manage"
                     class="timButton btn-block"
                     title="Set item relevance value" i18n-title
                     (click)="openRelevanceEditDialog()"
@@ -109,7 +124,7 @@ import {IDocument} from "tim/item/IItem";
                     <span class="glyphicon glyphicon-question-sign"
                           title="Teachers' help for course code" i18n-title></span>
             </a>
-            <button *ngIf="vctrl.item.rights.manage"
+            <button *ngIf="item.rights.manage"
                     class="timButton btn-block"
                     title="Add or remove document tags" i18n-title
                     (click)="addTag()"
@@ -167,9 +182,14 @@ import {IDocument} from "tim/item/IItem";
                 <a href="/view/groups" i18n>Browse existing groups</a>
             </ng-container>
         </ng-container>
+
+        <ng-template i18n="@@markAllReadFail">Could not mark the document as read.</ng-template>
+        <ng-template i18n="@@markAllTranslatedConfirm">
+            This will mark all paragraphs in this document as translated. Continue?
+        </ng-template>
     `,
 })
-export class SettingsTabComponent implements OnInit, IMenuTab {
+export class SettingsTabComponent implements OnInit, IMenuTab, DoCheck {
     @Input() entry!: TabEntry;
     users: UserService = Users;
     showFolderSettings: boolean = false;
@@ -177,127 +197,168 @@ export class SettingsTabComponent implements OnInit, IMenuTab {
     currentRelevance?: number;
     vctrl?: ViewCtrl = vctrlInstance;
     isFullPage: boolean = true;
-    lctrl: LectureController = this.vctrl?.lectureCtrl ?? LectureController.createAndInit(this.vctrl);
+    lctrl: LectureController;
     linkedGroups: IDocument[] = [];
     sisugroupPath?: string;
+    item?: DocumentOrFolder;
+    private parsPerPage = 20;
+    private currentViewRange?: IViewRange;
+    private docSettings?: IDocSettings;
 
-    constructor() {
+    constructor(private http: HttpClient) {
+        const globals = someglobals();
+        this.item = globals.curr_item;
+        this.docSettings = isDocumentGlobals(globals) ? globals.docSettings : undefined;
+        this.lctrl = this.vctrl?.lectureCtrl ?? LectureController.createAndInit(this.vctrl);
     }
 
     ngOnInit(): void {
+        void this.getCurrentRelevance();
+        if (this.item) {
+            this.showFolderSettings = this.users.isLoggedIn() && this.item.isFolder;
+        }
+        if (this.item?.isFolder) {
+            this.loadViewRangeSettings();
+        }
+    }
+
+    ngDoCheck() {
+        void this.lctrl.refreshWall();
     }
 
     /**
      * Open relevance edit dialog.
      */
     openRelevanceEditDialog() {
-        // if (this.item) {
-        //     void showRelevanceEditDialog(this.item);
-        // }
+        if (this.item) {
+            void showRelevanceEditDialog(this.item);
+        }
     }
 
     /**
      * Opens tag search dialog.
      */
     searchWithTags() {
-        // void showTagSearchDialog();
+        void showTagSearchDialog();
     }
 
     /**
-     * Partition or unpartition document (starting from the beginning) using user defined piece size.
+     * (Un)partition document (starting from the beginning) using user defined piece size.
      */
     async toggleViewRange() {
-        // if (!(this.vctrl && this.item)) {
-        //     return;
-        // }
-        // await toggleViewRange(this.item.id, this.pieceSizeSetting);
-        // this.currentViewRange = getCurrentViewRange();
-        // this.updateIsFullRange();
+        if (!this.item) {
+            return;
+        }
+        await toggleViewRange(this.item.id, this.parsPerPage);
+        this.currentViewRange = getCurrentViewRange();
+        this.updateIsFullRange();
+    }
+
+    private updateIsFullRange() {
+        this.isFullPage = this.currentViewRange?.is_full ?? true;
     }
 
     /**
      * Open dialog for editing view range settings.
      */
     openViewRangeMenu() {
-        // if (this.item) {
-        //     void showViewRangeEditDialog(this.item);
-        //     this.currentViewRange = getCurrentViewRange();
-        //     this.updateIsFullRange();
-        // }
+        if (!this.item) {
+            return;
+        }
+        void showViewRangeEditDialog(this.item);
+        this.currentViewRange = getCurrentViewRange();
+        this.updateIsFullRange();
     }
 
     /**
      * Marks all paragraphs of the document as read.
      */
     async markAllAsRead() {
-        // if (this.vctrl) {
-        //     const r = await to($http.put("/read/" + this.vctrl.item.id, {}));
-        //     if (!r.ok) {
-        //         await showMessageDialog("Could not mark the document as read.");
-        //         return;
-        //     }
-        //     $(".readline").attr("class", "readline read");
-        //     getActiveDocument().refreshSectionReadMarks();
-        // }
+        if (!this.item) {
+            return;
+        }
+        const r = await to2(this.http.put(`/read/${this.item.id}`, {}).toPromise());
+        if (!r.ok) {
+            await showMessageDialog($localize`:@@markAllReadFail:Could not mark the document as read.`);
+            return;
+        }
+        const doc = getActiveDocument();
+        doc.hideReadMarks();
+        doc.refreshSectionReadMarks();
     }
 
     async markTranslated() {
-        // if (this.vctrl && window.confirm("This will mark all paragraphs in this document as translated. Continue?")) {
-        //     const r = await to($http.post<IOkResponse>(`/markTranslated/${this.vctrl.item.id}`, {}));
-        //     if (r.ok) {
-        //         window.location.reload();
-        //     } else {
-        //         void showMessageDialog(r.result.data.error);
-        //     }
-        // }
+        if (!this.item) {
+            return;
+        }
+        const shouldMark = window.confirm($localize`:@@markAllTranslatedConfirm:This will mark all paragraphs in this document as translated. Continue?`);
+        if (!shouldMark) {
+            return;
+        }
+        const r = await to2(this.http.post<IOkResponse>(`/markTranslated/${this.item.id}`, {}).toPromise());
+        if (r.ok) {
+            window.location.reload();
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
     }
 
     /**
      * Opens print dialog.
      */
     async printDocument() {
-        // if (!this.vctrl) {
-        //     return;
-        // }
-        // const r = await to($http.get<ITemplateParams>(`/print/templates/${this.vctrl.item.path}`));
-        // if (r.ok) {
-        //     await showPrintDialog({params: r.result.data, document: this.vctrl.item});
-        // }
+        if (!this.item) {
+            return;
+        }
+        const r = await to2(this.http.get<ITemplateParams>(`/print/templates/${this.item.path}`).toPromise());
+        if (r.ok) {
+            await showPrintDialog({document: this.item, params: r.result});
+        }
     }
 
     cssPrint() {
-        // FOR DEBUGGING
-        // AutoPageBreak();
         window.print();
-
-        // FOR DEBUGGING
-        // UndoAutoPageBreak();
     }
 
     /**
      * Opens tag editing dialog.
      */
     addTag() {
-        if (!this.vctrl) {
+        if (!this.item) {
             return;
         }
-        void showTagDialog(this.vctrl.item);
+        void showTagDialog(this.item);
     }
 
     /**
      * Opens 'Set as a course' -dialog.
      */
     async openCourseDialog() {
-        // if (!this.vctrl) {
-        //     return;
-        // }
-        // await to(showCourseDialog(this.vctrl.item));
-        // const r = await to($http.get<IGroupWithSisuPath[]>(`/items/linkedGroups/${this.vctrl.item.id}`));
-        // if (r.ok) {
-        //     this.updateLinkedGroups(r.result.data);
-        // } else {
-        //     await showMessageDialog(r.result.data.error);
-        // }
+        if (!this.item) {
+            return;
+        }
+        await showCourseDialog(this.item);
+        const r = await to2(this.http.get<IGroupWithSisuPath[]>(`/items/linkedGroups/${this.item.id}`).toPromise());
+        if (r.ok) {
+            this.updateLinkedGroups(r.result);
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
+    }
+
+    private updateLinkedGroups(groups: IGroupWithSisuPath[]) {
+        this.linkedGroups = [];
+        for (const group of groups) {
+            if (group.admin_doc) {
+                this.linkedGroups.push(group.admin_doc);
+            }
+        }
+        // TODO: Theoretically there can be multiple different courses.
+        //  Should display a list in that case.
+        const gr = groups.find((g) => g.sisugroup_path != null);
+        if (gr?.sisugroup_path) {
+            this.sisugroupPath = gr.sisugroup_path;
+        }
     }
 
     /**
@@ -305,14 +366,7 @@ export class SettingsTabComponent implements OnInit, IMenuTab {
      * @returns {boolean}
      */
     get userBelongsToTeachersOrIsAdmin() {
-        return false;
-        // if (Users.belongsToGroup(ADMIN_GROUPNAME)) {
-        //     return true;
-        // }
-        // if (Users.belongsToGroup(TEACHERS_GROUPNAME)) {
-        //     return true;
-        // }
-        // return false;
+        return this.users.belongsToGroup(ADMIN_GROUPNAME) || this.users.belongsToGroup(TEACHERS_GROUPNAME);
     }
 
     /**
@@ -409,5 +463,43 @@ export class SettingsTabComponent implements OnInit, IMenuTab {
         //     },
         // });
         // redirectToItem(doc);
+    }
+
+    /**
+     * Fetches active relevance value. If root dir (id = -1), skip and hide relevance dir.
+     */
+    private async getCurrentRelevance() {
+        if (this.item && !isRootFolder(this.item)) {
+            const r = await to2(this.http.get<IRelevanceResponse>(`/items/relevance/get/${this.item.id}`).toPromise());
+            if (r.ok) {
+                this.currentRelevance = r.result.relevance.relevance;
+            }
+        } else {
+            this.showRelevance = false; // Don't show in root folder.
+        }
+    }
+
+    /**
+     * Get piece size from local storage and current view range from document globals.
+     */
+    private loadViewRangeSettings() {
+        const pSisze = this.pieceSize;
+        if (pSisze != null) {
+            this.parsPerPage = pSisze;
+        }
+        this.currentViewRange = getCurrentViewRange();
+        this.updateIsFullRange();
+    }
+
+    private get pieceSize() {
+        const val = getStorage("settingsTab_pieceSize");
+        if (!val || typeof val != "number") {
+            return undefined;
+        }
+        return val;
+    }
+
+    private set pieceSize(val: number | undefined) {
+        setStorage("settingsTab_pieceSize", val);
     }
 }
