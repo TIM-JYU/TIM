@@ -330,8 +330,6 @@ def should_log_request():
     p = request.path
     if p.startswith('/static/'):
         return False
-    if p.startswith('/js/'):
-        return False
     if p == '/favicon.ico':
         return False
     return True
