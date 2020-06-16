@@ -137,7 +137,7 @@
         </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
-          <context context-type="linenumber">7</context>
+          <context context-type="linenumber">10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="timeUpMessage" datatype="html">
@@ -145,7 +145,7 @@
         <target state="translated">Aikasi loppui. Voit tallentaa vastauksia jonkun aikaa, mutta uudet talletukset merkataan myöhästyneiksi.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
-          <context context-type="linenumber">11</context>
+          <context context-type="linenumber">15</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6d6968cb33ce9daad70a5f0e4832d46061332d09" datatype="html">
@@ -872,6 +872,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/index-tab.component.ts</context>
           <context context-type="linenumber">3</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="scoreInfoTabTitle" datatype="html">
+        <source>Scoreboard</source>
+        <target state="translated">Pisteet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/score-info-tab.component.ts</context>
+          <context context-type="linenumber">2</context>
         </context-group>
       </trans-unit>
       <trans-unit id="lectureInfoTabTitle" datatype="html">
