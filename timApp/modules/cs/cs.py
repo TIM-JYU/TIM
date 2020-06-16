@@ -954,6 +954,62 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
     def wout(self, s):
         self.wfile.write(s.encode("UTF-8"))
 
+    def do_reqs(self, query):
+        path = self.path
+        qindex = self.path.find("?")
+        if qindex >=0:
+            path = self.path[:qindex]
+
+        is_cache = get_param(query, "cache", False)
+        is_graphviz  = path.find('/graphviz') >= 0
+        is_tauno = path.find('/tauno') >= 0
+        is_simcir = path.find('/simcir') >= 0
+        is_parsons = path.find('/parsons') >= 0
+        is_rikki = path.find('rikki') >= 0
+
+        if not is_cache:
+            content_type = "application/json"
+            do_headers(self, content_type)
+
+        templs = {}
+        jslist = ["/cs/js/build/csPlugin.js"]
+        csslist = ["/cs/css/cs.css"]
+        for language_class in languages.values():  # ask needed js and css files from language
+            language = language_class(query, "")
+
+            lang_js_list = language.js_files()
+            if lang_js_list:
+                jslist.extend(lang_js_list)
+            lang_css_list = language.css_files()
+            if lang_css_list:
+                csslist.extend(lang_css_list)
+        
+        result_json = {"js": jslist,
+                        "css": csslist, "multihtml": True, "multimd": True, "canGiveTask": True}
+
+        if not (is_tauno or is_rikki or is_parsons or is_simcir or is_graphviz ):
+            templs = get_all_templates('templates')
+        
+        if is_parsons:
+            result_json = {"js": ["/cs/js/build/csPlugin.js",
+                                    "jqueryui-touch-punch",
+                                    "/cs/js-parsons/lib/underscore-min.js",
+                                    "/cs/js-parsons/lib/lis.js",
+                                    "/cs/js-parsons/parsons.js",
+                                    "/cs/js-parsons/lib/skulpt.js",
+                                    "/cs/js-parsons/lib/skulpt-stdlib.js",
+                                    "/cs/js-parsons/lib/prettify.js"
+                                    ],
+                            "css": ["/cs/css/cs.css", "/cs/js-parsons/parsons.css",
+                                    "/cs/js-parsons/lib/prettify.css"], "multihtml": True, "multimd": True}
+        if is_simcir:
+            result_json = {"js": jslist,
+                            "css": csslist,
+                            "multihtml": True, "multimd": True}
+        result_json.update(templs)
+        result_str = json.dumps(result_json)
+        return self.wout(result_str)
+
     def do_all(self, query):
         timeout = get_param(query, "timeout", 20)
         if not isinstance(timeout, int):
@@ -981,6 +1037,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             return self.wout(str(e))
         
         convert_graphviz(query)
+        
         t1start = time.time()
         t_run_time = 0
         times_string = ""
@@ -1031,6 +1088,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if qindex >=0:
             path = self.path[:qindex]
 
+        if "/reqs" in path:
+            return self.do_reqs(query)
+        
         is_cache = get_param(query, "cache", False)
         is_template = path.find('/template') >= 0
         is_fullhtml = path.find('/fullhtml') >= 0
@@ -1038,7 +1098,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_html = (path.find('/html') >= 0 or path.find('.html') >= 0) and not is_gethtml
         is_css = path.find('.css') >= 0
         is_js = path.find('.js') >= 0 or path.find('.ts') >= 0
-        is_reqs = path.find('/reqs') >= 0
         is_graphviz  = path.find('/graphviz') >= 0
         is_iframe_param = get_param_del(query, "iframe", "")
         is_iframe = (path.find('/iframe') >= 0) or is_iframe_param
@@ -1075,7 +1134,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         content_type = 'text/plain'
         if is_fullhtml or is_gethtml or is_html or is_ptauno or is_tauno:
             content_type = 'text/html; charset=utf-8'
-        if is_reqs or is_answer:
+        if is_answer:
             content_type = "application/json"
         if not is_cache:
             do_headers(self, content_type)
@@ -1118,46 +1177,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             ttype = 'tauno'  # answer is newer tauno
         if is_simcir:
             ttype = 'simcir'
-
-        if is_reqs:
-            templs = {}
-            jslist = []
-            csslist = []
-            for language_class in languages.values():  # ask needed js and css files from language
-                language = language_class(query, "")
-
-                lang_js_list = language.js_files()
-                if lang_js_list:
-                    jslist.extend(lang_js_list)
-                lang_css_list = language.css_files()
-                if lang_css_list:
-                    csslist.extend(lang_css_list)
-
-            if not (is_tauno or is_rikki or is_parsons or is_simcir or is_graphviz ):
-                templs = get_all_templates('templates')
-            result_json = {"js": ["/cs/js/build/csPlugin.js",
-                                  ] + jslist,
-                           "css": ["/cs/css/cs.css",
-                                   ] + csslist, "multihtml": True, "multimd": True, "canGiveTask": True}
-            if is_parsons:
-                result_json = {"js": ["/cs/js/build/csPlugin.js",
-                                      "jqueryui-touch-punch",
-                                      "/cs/js-parsons/lib/underscore-min.js",
-                                      "/cs/js-parsons/lib/lis.js",
-                                      "/cs/js-parsons/parsons.js",
-                                      "/cs/js-parsons/lib/skulpt.js",
-                                      "/cs/js-parsons/lib/skulpt-stdlib.js",
-                                      "/cs/js-parsons/lib/prettify.js"
-                                      ],
-                               "css": ["/cs/css/cs.css", "/cs/js-parsons/parsons.css",
-                                       "/cs/js-parsons/lib/prettify.css"], "multihtml": True, "multimd": True}
-            if is_simcir:
-                result_json = {"js": ["/cs/js/build/csPlugin.js"],
-                               "css": ["/cs/css/cs.css", "/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"],
-                               "multihtml": True, "multimd": True}
-            result_json.update(templs)
-            result_str = json.dumps(result_json)
-            return self.wout(result_str)
 
         if is_tauno and not is_answer:
             # print("PTAUNO: " + content_type)
