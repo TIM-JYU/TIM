@@ -18,7 +18,7 @@ import {slugify} from "tim/util/slugify";
                          [id]="menuTab.id"
                          (selectTab)="onTabSelect($event, tabContainer)">
                         <ng-template tabHeading>
-                            <i class="glyphicon glyphicon-{{menuTab.icon}}" i18n-title title="{{menuTab.title}}"></i>
+                            <i class="glyphicon glyphicon-{{menuTab.icon}}" title="{{menuTab.title}}"></i>
                         </ng-template>
                         <tab-container #tabContainer [tabItem]="menuTab"
                                        [class.hidden]="!shouldRender(menuTab.id)"></tab-container>
