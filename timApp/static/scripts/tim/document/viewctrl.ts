@@ -592,6 +592,12 @@ export class ViewCtrl implements IController {
             } else {
                 this.timComponentArrays.set(name, [component]);
             }
+            if (component.attrsall?.markup.hideBrowser) {
+                const ldr = this.getPluginLoader(name);
+                if (ldr) {
+                    ldr.hideBrowser = true;
+                }
+            }
         }
     }
 

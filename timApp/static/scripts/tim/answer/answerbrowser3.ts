@@ -81,7 +81,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     public taskId!: Binding<string, "@">;
     private type!: Binding<string, "@">;
     private showBrowser: boolean = false;
-    private hideBrowser: boolean = false;
+    public hideBrowser: boolean = false;
     private forceBrowser: boolean = false;
     private pluginElement?: JQuery;
     public showPlaceholder = true;
@@ -272,9 +272,8 @@ timApp.component("timPluginLoader", {
 <div class="answerBrowserPlaceholder"
      ng-if="$ctrl.answerId && $ctrl.showPlaceholder && !$ctrl.isPreview()"
      style="width: 1px; height: 23px;"></div>
-<answerbrowser ng-class="{'has-answers': $ctrl.answerId}"
+<answerbrowser ng-class="{'has-answers': ($ctrl.answerId && !$ctrl.hideBrowser)}"
                ng-if="$ctrl.showBrowser && !$ctrl.isPreview()"
-               ng-hide="$ctrl.hideBrowser"
                task-id="$ctrl.taskId"
                answer-id="$ctrl.answerId">
 </answerbrowser>
@@ -333,6 +332,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private pointsStep: number = 0.01;
     private markupSettings: IAnswerBrowserMarkupSettings = DEFAULT_MARKUP_CONFIG;
     private isValidAnswer = false;
+    private hidden: boolean = false;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -357,6 +357,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.loader.isInFormMode() && !this.forceBrowser()) {
             this.element.hide();
         }
+        if (this.loader.hideBrowser) {
+            this.hidden = true;
+        }
+
         this.viewctrl.registerAnswerBrowser(this);
         this.scope.$watch(() => this.taskId, (newValue, oldValue) => {
             if (newValue === oldValue) {
@@ -385,7 +389,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.users = undefined;
         this.answers = [];
         this.filteredAnswers = [];
-        this.onlyValid = true;
         this.anyInvalid = false;
         this.giveCustomPoints = false;
         this.review = false;
@@ -1049,7 +1052,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async updateFilteredAndSetNewest() {
         this.updateFiltered();
-        if (this.findSelectedAnswerIndex() < 0) {
+        // updateFilteredAndSetNewest is called if "Show valid only" checkbox changes.
+        // If the rest of the answerbrowser is hidden, the user doesn't have a way to change the answer,
+        // so we do it whenever the checkbox changes.
+        if (this.findSelectedAnswerIndex() < 0 || this.hidden) {
             await this.setNewest();
         }
     }

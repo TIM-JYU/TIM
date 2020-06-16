@@ -69,6 +69,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
     fields: Union[List[str], None, Missing] = missing
     header: Union[str, None, Missing] = missing
     headerText: Union[str, None, Missing] = missing
+    hideBrowser: Union[bool, Missing, None] = missing
     lazy: Union[bool, Missing] = missing
     maxHeight: Union[str, None, Missing] = field(metadata={'data_key': 'max-height'}, default=missing)
     minHeight: Union[str, None, Missing] = field(metadata={'data_key': 'min-height'}, default=missing)
@@ -144,7 +145,6 @@ class GenericMarkupModel(KnownMarkupFields):
     footer: Union[str, Missing] = missing
     forceBrowser: Union[bool, Missing, None] = missing
     globalField: Union[bool, Missing, None] = missing
-    hideBrowser: Union[bool, Missing, None] = missing
     lang: Union[str, None, Missing] = missing
     resetText: Union[str, Missing, None] = missing
     connectionErrorMessage: Union[str, Missing] = missing

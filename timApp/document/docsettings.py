@@ -113,6 +113,7 @@ class DocSettingTypes:
     answer_submit_time_tolerance: int
     scoreboard_docs: List[str]
     show_scoreboard: bool
+    hideBrowser: bool
 
 
 doc_setting_field_map: Dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
@@ -474,6 +475,9 @@ class DocSettings:
 
     def show_scoreboard(self) -> bool:
         return self.get_setting_or_default('show_scoreboard', False)
+
+    def hide_browser(self) -> bool:
+        return self.get_setting_or_default('hideBrowser', False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
