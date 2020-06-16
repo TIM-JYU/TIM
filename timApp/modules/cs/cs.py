@@ -799,7 +799,36 @@ def doc_address(query, check = False):
              'docrnd': docrnd,
              'dochtml': dochtml}
 
-
+def update_markup_from_file(query):
+    file = get_param(query, "fromFile", False)
+    if not file:
+        return query
+    
+    if isinstance(file, bool):
+        file = ""
+    
+    if file.startswith('/'):
+        file = Path(file)
+    else:
+        master_path = get_param(query, "masterPath", None)
+        if master_path is None:
+            raise Exception("Cannot fetch markup from file as masterPath is not specified")
+        file = "/cs/masters/" / Path(master_path) / file
+    
+    if file.is_dir():
+        file = file / "csmarkup.json"
+    
+    if not file.is_file():
+        raise FileNotFoundError("Markup file does not exist")
+    
+    if query.jso is None:
+        query.jso = {}
+    if "markup" not in query.jso:
+        query.jso["markup"] = {}
+    
+    with open(str(file), "r") as f:
+        query.jso["markup"] = dict(list(json.load(f).items()) + list(query.jso["markup"].items()))
+    
 # see: http://stackoverflow.com/questions/366682/how-to-limit-execution-time-of-a-function-call-in-python
 # noinspection PyUnusedLocal
 def signal_handler(signum, frame):
@@ -852,6 +881,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         global_anonymous = False
         for query in querys:
+            try:
+                update_markup_from_file(query)
+            except:
+                pass # TODO: show error to user
+            
             ga = get_param(query, "GlobalAnonymous", None)
             if ga:
                 global_anonymous = True
@@ -941,6 +975,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(str(e))
 
     def do_all_t(self, query: QueryClass):
+        try:
+            update_markup_from_file(query)
+        except Exception as e:
+            return self.wout(str(e))
+        
         convert_graphviz(query)
         t1start = time.time()
         t_run_time = 0
