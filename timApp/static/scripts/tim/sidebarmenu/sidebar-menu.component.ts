@@ -13,7 +13,7 @@ import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
             </div>
             <tabset id="menuTabs" [class.hidden-sm]="hidden" [class.hidden-xs]="hidden" #tabs>
                 <ng-container *ngFor="let menuTab of menuTabs">
-                    <tab *ngIf="tabsVisTable[menuTab.tabType.name]" (selectTab)="onTabSelect($event, tabContainer)"
+                    <tab *ngIf="tabsVisTable[menuTab.title]" (selectTab)="onTabSelect($event, tabContainer)"
                          #currentTab>
                         <ng-template tabHeading>
                             <i class="glyphicon glyphicon-{{menuTab.icon}}" i18n-title title="{{menuTab.title}}"></i>
@@ -41,7 +41,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     ngOnInit(): void {
         this.menuTabs = this.tabEntryList.getTabEntries();
         for (const tab of this.menuTabs) {
-            this.tabsVisTable[tab.tabType.name] = tab.visible();
+            this.tabsVisTable[tab.title] = tab.visible();
         }
     }
 
@@ -50,8 +50,8 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         const visTabs: Record<string, boolean> = {};
         for (const tab of this.menuTabs) {
             const isVisible = tab.visible();
-            visTabs[tab.tabType.name] = isVisible;
-            if (isVisible != this.tabsVisTable[tab.tabType.name]) {
+            visTabs[tab.title] = isVisible;
+            if (isVisible != this.tabsVisTable[tab.title]) {
                 shouldSet = true;
             }
         }
