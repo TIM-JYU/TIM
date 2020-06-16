@@ -13,6 +13,7 @@ from typing import Optional
 
 from flask import Blueprint
 
+from timApp.answer.routes import verify_answer_access
 from timApp.auth.accesshelper import verify_logged_in, has_teacher_access, \
     get_doc_or_abort, verify_view_access, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
@@ -55,6 +56,8 @@ def add_annotation(m: AddAnnotationModel):
     annotator = get_current_user_object()
     velp_version_id = get_latest_velp_version(m.velp_id).version_id
 
+    if m.answer_id:
+        verify_answer_access(m.answer_id, get_current_user_object().id, require_teacher_if_not_own=True)
     ann = Annotation(
         velp_version_id=velp_version_id,
         visible_to=m.visible_to.value,
