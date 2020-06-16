@@ -6,7 +6,7 @@ export interface IMenuTab {
 }
 
 export interface TabEntry {
-    tabType: Type<IMenuTab>;
+    importComponent: () => Promise<Type<IMenuTab>>;
     icon: string;
     title: string;
     visible: () => boolean;
