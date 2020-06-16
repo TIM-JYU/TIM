@@ -15,6 +15,7 @@ from cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
 from os.path import splitext
 from fileParams import encode_json_data
 from pathlib import Path
+from loadable import LoadableJSONEncoder
 # noinspection PyUnresolvedReferences
 
 #  uid = pwd.getpwnam('agent')[2]
@@ -1749,7 +1750,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # self.wfile.write(out)
         # self.wfile.write(err)
-        sresult = json.dumps(result)
+        sresult = json.dumps(result, cls = LoadableJSONEncoder)
         if is_cache:
             return result
         self.wout(sresult)
