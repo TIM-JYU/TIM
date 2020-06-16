@@ -439,6 +439,7 @@ def pluginify(doc: Document,
     taketime("glb/ucu", "GLO/currUser")
     for plugin_name, plugin_block_map in plugins.items():
         for _, plugin in plugin_block_map.items():
+            plugin.values.pop('postProgram', None)
             if not plugin.task_id:
                 continue
             if plugin.task_id.is_global:

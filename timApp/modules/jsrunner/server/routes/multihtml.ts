@@ -7,6 +7,36 @@ const router = express.Router();
 router.post("/", (req, res, next) => {
     const htmls = [];
     for (const j of req.body) {
+            // TODO: Lift this up to pluginify / render_plugin
+            if (j.viewmode) {
+                const siw = j.markup.showInView || false;
+                if (!siw) {
+                    htmls.push(``);
+                    continue;
+                }
+            }
+            const m = j.markup;
+            if (m) {
+                const privateAttrs = ["autoadd",
+                    "creditField",
+                    "defaultPoints",
+                    "failGrade",
+                    "fields",
+                    "gradeField",
+                    "gradingScale",
+                    "group",
+                    "groups",
+                    "postprogram",
+                    "preprogram",
+                    "program",
+                    "overrideGrade"];
+                // Delete everything that shouldn't be shown in browser
+                // TODO check if comprehensive
+                for (const attr of privateAttrs){
+                    delete m[attr]
+                }
+            }
+
         let s = JSON.stringify(j);
         // Escape all non-ascii characters. The base64 string will eventually get passed to "atob" function in browser,
         // which does not handle UTF-8. Solution from: https://stackoverflow.com/a/4901205
