@@ -6,10 +6,11 @@ export interface IMenuTab {
 }
 
 export interface TabEntry {
-    importComponent: () => Promise<Type<IMenuTab>>;
+    id: string;
     icon: string;
     title: string;
     visible: () => boolean;
+    importComponent: () => Promise<Type<IMenuTab>>;
 }
 
 @Directive({

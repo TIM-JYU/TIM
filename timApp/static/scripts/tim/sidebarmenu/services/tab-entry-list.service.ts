@@ -1,4 +1,4 @@
-import {Injectable, Type} from "@angular/core";
+import {Injectable} from "@angular/core";
 import {Users} from "tim/user/userService";
 import {getVisibilityVars} from "tim/timRoot";
 import {LectureController} from "tim/lecture/lectureController";
@@ -18,46 +18,52 @@ export class TabEntryListService {
         const hide = getVisibilityVars();
         return [
             {
-                importComponent: async () =>
-                    (await import("../tabs/bookmarks-tab.component")).BookmarksTabComponent,
+                id: "tab-bookmark",
                 icon: "bookmark",
                 title: "Bookmarks",
                 visible: () => !hide.bookmarks && Users.isLoggedIn(),
+                importComponent: async () =>
+                    (await import("../tabs/bookmarks-tab.component")).BookmarksTabComponent,
             },
             {
-                importComponent: async () =>
-                    (await import("../tabs/settings-tab.component")).SettingsTabComponent,
+                id: "tab-settings",
                 icon: "cog",
                 title: "Document settings",
                 visible: () => !hide.settings,
+                importComponent: async () =>
+                    (await import("../tabs/settings-tab.component")).SettingsTabComponent,
             },
             {
-                importComponent: async () =>
-                    (await import("../tabs/index-tab.component")).IndexTabComponent,
+                id: "tab-index",
                 icon: "book",
                 title: "Document index",
                 visible: () => !hide.index && this.headerIndexer.headers.length > 0,
+                importComponent: async () =>
+                    (await import("../tabs/index-tab.component")).IndexTabComponent,
             },
             {
-                importComponent: async () =>
-                    (await import("../tabs/lecture-info-tab.component")).LectureInfoTabComponent,
+                id: "tab-lecture-info",
                 icon: "education",
                 title: "Lecture",
                 visible: () => !hide.lecturetab && lectureCtrl.lectureSettings.lectureMode,
+                importComponent: async () =>
+                    (await import("../tabs/lecture-info-tab.component")).LectureInfoTabComponent,
             },
             {
-                importComponent: async () =>
-                    (await import("../tabs/load-questions-tab.component")).LoadQuestionsTabComponent,
+                id: "tab-get-question",
                 icon: "question-sign",
                 title: "Get question",
                 visible: () => !hide.getquestion && lectureCtrl.lectureSettings.inLecture && !lectureCtrl.isLecturer,
+                importComponent: async () =>
+                    (await import("../tabs/load-questions-tab.component")).LoadQuestionsTabComponent,
             },
             {
-                importComponent: async () =>
-                    (await import("../tabs/logged-users-tab.component")).LoggedUsersTabComponent,
+                id: "tab-logged-users",
                 icon: "user",
                 title: "Lecture participants",
                 visible: () => !hide.lecturer && lectureCtrl.lectureSettings.inLecture && lectureCtrl.isLecturer,
+                importComponent: async () =>
+                    (await import("../tabs/logged-users-tab.component")).LoggedUsersTabComponent,
             },
         ];
     }

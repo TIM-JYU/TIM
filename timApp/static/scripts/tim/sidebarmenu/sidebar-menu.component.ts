@@ -15,13 +15,13 @@ import {slugify} from "tim/util/slugify";
             <tabset id="menuTabs" [class.hidden-sm]="hidden" [class.hidden-xs]="hidden" #tabs>
                 <ng-container *ngFor="let menuTab of menuTabs">
                     <tab *ngIf="tabsVisTable[menuTab.title]"
-                         [id]="tabIds[menuTab.title]"
+                         [id]="menuTab.id"
                          (selectTab)="onTabSelect($event, tabContainer)">
                         <ng-template tabHeading>
                             <i class="glyphicon glyphicon-{{menuTab.icon}}" i18n-title title="{{menuTab.title}}"></i>
                         </ng-template>
                         <tab-container #tabContainer [tabItem]="menuTab"
-                                       [class.hidden]="!shouldRender(tabIds[menuTab.title])"></tab-container>
+                                       [class.hidden]="!shouldRender(menuTab.id)"></tab-container>
                     </tab>
                 </ng-container>
             </tabset>
@@ -36,7 +36,6 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     @ViewChild("tabs") private tabs!: TabsetComponent;
     menuTabs!: TabEntry[];
     tabsVisTable: Record<string, boolean> = {};
-    tabIds: Record<string, string> = {};
 
     constructor(private tabEntryList: TabEntryListService) {
     }
@@ -45,7 +44,6 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         this.menuTabs = this.tabEntryList.getTabEntries();
         for (const tab of this.menuTabs) {
             this.tabsVisTable[tab.title] = tab.visible();
-            this.tabIds[tab.title] = `tab-${slugify(tab.title)}`;
         }
     }
 
@@ -71,7 +69,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
         this.showSidebar = true;
         this.currentTab = tab.id;
-        tabContainer.onSelect();
+        void tabContainer.onSelect();
     }
 
     shouldRender(tabId: string) {
