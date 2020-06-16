@@ -4,6 +4,7 @@ import {IMenuTab, TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 @Component({
     selector: "bookmarks-tab",
     template: `
+        <ng-template i18n="@@bookmarksTabTitle">Bookmarks</ng-template>
         <h5 i18n>Bookmarks</h5>
         <bookmarks-list></bookmarks-list>
     `,

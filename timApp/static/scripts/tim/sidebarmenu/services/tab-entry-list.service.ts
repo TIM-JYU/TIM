@@ -20,7 +20,7 @@ export class TabEntryListService {
             {
                 id: "tab-bookmark",
                 icon: "bookmark",
-                title: "Bookmarks",
+                title: $localize `:@@bookmarksTabTitle:Bookmarks`,
                 visible: () => !hide.bookmarks && Users.isLoggedIn(),
                 importComponent: async () =>
                     (await import("../tabs/bookmarks-tab.component")).BookmarksTabComponent,
@@ -28,7 +28,7 @@ export class TabEntryListService {
             {
                 id: "tab-settings",
                 icon: "cog",
-                title: "Document settings",
+                title: $localize `:@@settingsTabTitle:Document settings`,
                 visible: () => !hide.settings,
                 importComponent: async () =>
                     (await import("../tabs/settings-tab.component")).SettingsTabComponent,
@@ -36,7 +36,7 @@ export class TabEntryListService {
             {
                 id: "tab-index",
                 icon: "book",
-                title: "Document index",
+                title: $localize `:@@indexTabTitle:Document index`,
                 visible: () => !hide.index && this.headerIndexer.headers.length > 0,
                 importComponent: async () =>
                     (await import("../tabs/index-tab.component")).IndexTabComponent,
@@ -44,7 +44,7 @@ export class TabEntryListService {
             {
                 id: "tab-lecture-info",
                 icon: "education",
-                title: "Lecture",
+                title: $localize `:@@lectureInfoTabTitle:Lecture`,
                 visible: () => !hide.lecturetab && lectureCtrl.lectureSettings.lectureMode,
                 importComponent: async () =>
                     (await import("../tabs/lecture-info-tab.component")).LectureInfoTabComponent,
@@ -52,7 +52,7 @@ export class TabEntryListService {
             {
                 id: "tab-get-question",
                 icon: "question-sign",
-                title: "Get question",
+                title: $localize `:@@loadQuestionsTabTitle:Get question`,
                 visible: () => !hide.getquestion && lectureCtrl.lectureSettings.inLecture && !lectureCtrl.isLecturer,
                 importComponent: async () =>
                     (await import("../tabs/load-questions-tab.component")).LoadQuestionsTabComponent,
@@ -60,7 +60,7 @@ export class TabEntryListService {
             {
                 id: "tab-logged-users",
                 icon: "user",
-                title: "Lecture participants",
+                title: $localize `:@@loggedUsersTabTitle:Lecture participants`,
                 visible: () => !hide.lecturer && lectureCtrl.lectureSettings.inLecture && lectureCtrl.isLecturer,
                 importComponent: async () =>
                     (await import("../tabs/logged-users-tab.component")).LoggedUsersTabComponent,

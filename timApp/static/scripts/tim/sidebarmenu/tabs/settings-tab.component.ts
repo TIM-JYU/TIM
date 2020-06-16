@@ -27,6 +27,7 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
 @Component({
     selector: "settings-tab",
     template: `
+        <ng-template i18n="@@settingsTabTitle">Document settings</ng-template>
         <ng-container>
             <h5 i18n>Help</h5>
             <a i18n-title title="Open TIM-guide" href="/view/tim/TIM-ohjeet" i18n>User guide</a>

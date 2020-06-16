@@ -11,6 +11,7 @@ import {HttpClient} from "@angular/common/http";
 @Component({
     selector: "lecture-info-tab",
     template: `
+        <ng-template i18n="@@lectureInfoTabTitle">Lecture</ng-template>
         <h5 i18n>Current Lectures</h5>
         <ul>
             <li *ngFor="let lecture of currentLecturesList">

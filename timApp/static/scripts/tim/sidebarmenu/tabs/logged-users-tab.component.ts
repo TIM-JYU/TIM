@@ -5,6 +5,7 @@ import {LectureController} from "tim/lecture/lectureController";
 @Component({
     selector: "logged-users-tab",
     template: `
+        <ng-template i18n="@@loggedUsersTabTitle">Lecture participants</ng-template>
         <h5 i18n>People logged in: <span>{{lctrl.lecturerTable.length + lctrl.studentTable.length}}</span></h5>
         <h5 i18n>Lecturers (<span>{{lctrl.lecturerTable.length}}</span>)</h5>
         <ng-container *ngIf="lctrl.lecturerTable.length > 0; else noLecturers">
