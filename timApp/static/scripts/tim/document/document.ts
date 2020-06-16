@@ -1,7 +1,7 @@
+import $ from "jquery";
 import moment from "moment";
 import {documentglobals} from "../util/globals";
 import {getParAttributes, getParId, getRefAttrs, Paragraph} from "./parhelpers";
-import $ from "jquery";
 
 type SectionMap = Map<string, JQuery[]>;
 
