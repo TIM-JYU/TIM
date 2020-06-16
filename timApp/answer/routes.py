@@ -95,6 +95,22 @@ def save_points(answer_id, user_id):
     return ok_response()
 
 
+@dataclass
+class ValidityModel:
+    answer_id: int
+    valid: bool
+
+
+@answers.route("/answer/saveValidity", methods=['PUT'])
+@use_model(ValidityModel)
+def save_validity(m: ValidityModel):
+    a, doc_id = verify_answer_access(m.answer_id, get_current_user_object().id, require_teacher_if_not_own=True)
+    verify_teacher_access(get_doc_or_abort(doc_id))
+    a.valid = m.valid
+    db.session.commit()
+    return ok_response()
+
+
 def points_to_float(points: Union[str, float]):
     if isinstance(points, float):
         return points

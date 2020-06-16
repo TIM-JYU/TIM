@@ -332,6 +332,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private answerLoader?: AnswerLoadCallback;
     private pointsStep: number = 0.01;
     private markupSettings: IAnswerBrowserMarkupSettings = DEFAULT_MARKUP_CONFIG;
+    private isValidAnswer = false;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -469,6 +470,17 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
+    async saveValidity() {
+        if (!this.selectedAnswer) {
+            return;
+        }
+        await to($http.put("/answer/saveValidity", {
+            valid: this.isValidAnswer,
+            answer_id: this.selectedAnswer.id,
+        }));
+        this.selectedAnswer.valid = this.isValidAnswer;
+    }
+
     trySavePoints(updateAnswers: boolean = false) {
         if (!this.selectedAnswer || !this.user) {
             return true;
@@ -520,6 +532,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         this.points = this.selectedAnswer.points;
+        this.isValidAnswer = this.selectedAnswer.valid;
         if (this.points != null) {
             this.giveCustomPoints = this.selectedAnswer.last_points_modifier != null;
         } else {

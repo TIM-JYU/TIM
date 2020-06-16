@@ -95,6 +95,17 @@
                             <input type="checkbox"
                                    ng-model="$ctrl.giveCustomPoints">Set custom points</label>
                     </span>
+                    <span ng-if="$ctrl.showTeacher()">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" ng-model="$ctrl.isValidAnswer">Valid
+                        </label>
+                        <button title="Save validity"
+                                ng-click="$ctrl.saveValidity()"
+                                class="timButton btn-xs"
+                                ng-if="$ctrl.isValidAnswer != $ctrl.selectedAnswer.valid">
+                            <i class="glyphicon glyphicon-ok"></i>
+                        </button>
+                    </span>
                     <label class="checkbox-inline" ng-show="$ctrl.viewctrl.teacherMode && $ctrl.allowCustomPoints()">
                         <input type="checkbox" ng-model="$ctrl.giveCustomPoints">cp
                     </label>
