@@ -7,7 +7,7 @@ import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
 @Component({
     selector: "app-sidebar-menu",
     template: `
-        <div class="left-fixed-side" [ngStyle]="{'min-width': sidebarWidth}">
+        <div class="left-fixed-side" [class.show]="showSidebar">
             <div class="btn btn-default btn-sm pull-left" (click)="toggleSidebar()" i18n-title title="Show menu">
                 <i class="glyphicon glyphicon-menu-hamburger" i18n-title title="Click to open sidebar-menu"></i>
             </div>
@@ -28,8 +28,7 @@ import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
 })
 export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     hidden = true;
-    sidebarWidth = "12em";
-    private showSidebar = true;
+    showSidebar = true;
     // TODO: Ability to set default tab
     private currentElement?: HTMLElement;
     @ViewChild("tabs") private tabs!: TabsetComponent;
@@ -93,10 +92,5 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     toggleSidebar() {
         this.setSidebarState(!this.showSidebar);
         this.hidden = !this.showSidebar;
-        if (!this.showSidebar) {
-            this.sidebarWidth = "0";
-        } else {
-            this.sidebarWidth = "12em";
-        }
     }
 }
