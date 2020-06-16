@@ -1713,6 +1713,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         web["console"] = out
         web["error"] = err + warnmessage
         web["pwd"] = cs_min_sanitize(pwddir.strip())
+        web["language"] = language.web_data()
 
         t2 = time.time()
         ts = "%7.3f %7.3f" % ((t2 - t1start), t_run_time)

@@ -60,7 +60,7 @@ interface Vid {
 Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3
 */
 
-const csApp = angular.module("csApp", ["ngSanitize", "ngFileUpload"]);
+export const csApp = angular.module("csApp", ["ngSanitize", "ngFileUpload"]);
 
 let taunoNr = 0;
 
@@ -323,6 +323,20 @@ function commentTrim(s: string) {
     return s.substr(3);
 }
 
+export function uploadTemplate() {
+    // language=HTML
+    return `
+    <div ng-if="::$ctrl.upload" class="form-inline small">
+        <div class="form-group small"> {{::$ctrl.uploadstem}}:
+            <input type="file" ngf-select="$ctrl.onFileSelect($file)">
+            <span ng-show="$ctrl.fileProgress >= 0 && !$ctrl.fileError"
+                ng-bind="$ctrl.fileProgress < 100 ? 'Uploading... ' + $ctrl.fileProgress + '%' : 'Done!'"></span>
+        </div>
+        <div class="error" ng-show="$ctrl.fileError" ng-bind="$ctrl.fileError"></div>
+        <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
+    </div>`;
+}
+
 function makeTemplate() {
     // language=HTML
     return `<div ng-class="::{'csRunDiv': $ctrl.attrs.borders}" class="type-{{::$ctrl.rtype}}">
@@ -355,17 +369,9 @@ function makeTemplate() {
             <a ng-click="$ctrl.copyFromSimcir()">copy from SimCir</a>
             | <a ng-click="$ctrl.copyToSimcir()">copy to SimCir</a> | <a ng-click="$ctrl.hideSimcir()">hide SimCir</a>
         </p>
-    </div>
-    <div ng-if="::$ctrl.upload" class="form-inline small">
-        <div class="form-group small"> {{::$ctrl.uploadstem}}:
-            <input type="file" ngf-select="$ctrl.onFileSelect($file)">
-            <span ng-show="$ctrl.fileProgress >= 0 && !$ctrl.fileError"
-                  ng-bind="$ctrl.fileProgress < 100 ? 'Uploading... ' + $ctrl.fileProgress + '%' : 'Done!'"></span>
-        </div>
-        <div class="error" ng-show="$ctrl.fileError" ng-bind="$ctrl.fileError"></div>
-        <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
-    </div>
-    <div ng-show="::$ctrl.isAll" style="float: right;">{{::$ctrl.languageText}}
+    </div>`
+    + uploadTemplate() +
+    `<div ng-show="::$ctrl.isAll" style="float: right;">{{::$ctrl.languageText}}
         <select ng-model="$ctrl.selectedLanguage" ng-options="o for o in ::$ctrl.progLanguages" ng-required></select>
     </div>
     <pre ng-if="$ctrl.viewCode && $ctrl.codeover">{{$ctrl.code}}</pre>
@@ -873,6 +879,7 @@ interface IRunResponse {
     savedNew: number,
 }
 
+export class CsController extends CsBase implements ITimComponent {
     private vctrl!: ViewCtrl;
 
     private aceEditor?: IAceEditor;
@@ -1937,6 +1944,8 @@ ${fhtml}
             isInput = true;
         }
 
+        this.languageResponse(null);
+
         let ucode = "";
         if (this.usercode) {
             ucode = this.usercode.replace(this.cursor, "");
@@ -2054,6 +2063,9 @@ ${fhtml}
                     }
                 }
             }
+
+            this.languageResponse(data.web.language);
+
             this.processPluginMath();
 
         } else {
@@ -2066,6 +2078,8 @@ ${fhtml}
             this.connectionErrorMessage = this.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
         }
     }
+
+    languageResponse(data: unknown) {}
 
     hideTauno() {
         this.taunoFrame = undefined;

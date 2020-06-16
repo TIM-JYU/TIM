@@ -342,6 +342,9 @@ class Language:
 
     def get_default_before_open(self):
         return ''
+        
+    def web_data(self):
+        return None
 
 class CS(Language):
     def __init__(self, query, sourcecode):
