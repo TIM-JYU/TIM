@@ -203,7 +203,8 @@ class Geogebra(Language):
     def runner_name(self):
         return "geogebra-runner"
 
-    def js_files(self):
+    @staticmethod
+    def js_files():
         return ["/cs/js/build/geogebra.js"]
 
     def can_give_task(self):

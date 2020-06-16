@@ -20,7 +20,8 @@ class Stack(Language):
     def runner_name(self):
         return "stack-runner"
 
-    def js_files(self):
+    @staticmethod
+    def js_files():
         return ["/cs/js/build/stack.js"]  # , "/cs/stack/ServerSyncValues.js"]
 
     def __init__(self, query, sourcecode):

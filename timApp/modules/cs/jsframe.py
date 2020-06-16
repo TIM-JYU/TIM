@@ -20,7 +20,8 @@ class JSframe(Language):
     def runner_name(self):
         return "jsframe-runner"
 
-    def js_files(self):
+    @staticmethod
+    def js_files():
         return ["/cs/js/build/jsframe.js"]
 
     def can_give_task(self):

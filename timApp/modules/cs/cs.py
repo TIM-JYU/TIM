@@ -975,12 +975,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         jslist = ["/cs/js/build/csPlugin.js"]
         csslist = ["/cs/css/cs.css"]
         for language_class in languages.values():  # ask needed js and css files from language
-            language = language_class(query, "")
-
-            lang_js_list = language.js_files()
+            lang_js_list = language_class.js_files()
             if lang_js_list:
                 jslist.extend(lang_js_list)
-            lang_css_list = language.css_files()
+            lang_css_list = language_class.css_files()
             if lang_css_list:
                 csslist.extend(lang_css_list)
         

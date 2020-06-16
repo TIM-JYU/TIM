@@ -244,12 +244,14 @@ class Language:
         """
         return ""
 
-    def js_files(self):
+    @staticmethod
+    def js_files():
         """
         :return: list of needed js-files (maybe copiled from ts-files)
         """
 
-    def css_files(self):
+    @staticmethod
+    def css_files():
         """
         :return: list of needed css-files (maybe copiled from scss-files)
         """
@@ -1008,7 +1010,9 @@ class HTML(Language):
 
 
 class SimCir(Language):
-    pass
+    @staticmethod
+    def css_files():
+        return ["/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"]
 
 
 class Sage(Language):
@@ -1162,7 +1166,8 @@ class Jsav(Language):
     def runner_name(self):
         return "cs-jsav-runner"
 
-    def js_files(self):
+    @staticmethod
+    def js_files():
         return ["/cs/js/build/jsav.js"]
 
     def deny_attributes(self):
@@ -1272,7 +1277,8 @@ class FS(Language):
 
 
 class Mathcheck(Language):
-    def css_files(self):
+    @staticmethod
+    def css_files():
         return ["/cs/css/mathcheck.css"]
 
     def __init__(self, query, sourcecode):
