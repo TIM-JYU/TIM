@@ -9,7 +9,7 @@ export interface TabEntry {
     tabType: Type<IMenuTab>;
     icon: string;
     title: string;
-    visible: boolean;
+    visible: () => boolean;
 }
 
 @Directive({
