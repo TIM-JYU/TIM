@@ -1,13 +1,11 @@
-import { Pipe, PipeTransform } from "@angular/core";
+import {Pipe, PipeTransform} from "@angular/core";
 import moment from "moment";
 
 @Pipe({
-  name: "timeSince",
+    name: "timeSince",
 })
 export class TimeSincePipe implements PipeTransform {
-
-  transform(date: string): string {
-    return moment(date).fromNow();
-  }
-
+    transform(date: string): string {
+        return moment(date).fromNow();
+    }
 }
