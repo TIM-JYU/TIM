@@ -74,8 +74,10 @@ class KnownMarkupFields(HiddenFieldsMixin):
     minHeight: Union[str, None, Missing] = field(metadata={'data_key': 'min-height'}, default=missing)
     pointsRule: Union[PointsRule, None, Missing] = missing
     pointsText: Union[str, None, Missing] = missing
+    postProgram: Union[str, Missing] = missing
     showPoints: Union[bool, None, Missing] = missing
     starttime: Union[PluginDateTime, datetime, None, Missing] = missing
+    showInView: Union[bool, Missing] = missing
     stem: Union[str, None, Missing] = missing
     triesText: Union[str, None, Missing] = missing
     useCurrentUser: Union[bool, None, Missing] = missing
@@ -145,10 +147,8 @@ class GenericMarkupModel(KnownMarkupFields):
     hideBrowser: Union[bool, Missing, None] = missing
     lang: Union[str, None, Missing] = missing
     resetText: Union[str, Missing, None] = missing
-    showInView: Union[bool, Missing] = missing
     connectionErrorMessage: Union[str, Missing] = missing
     undo: Union[UndoInfo, Missing, None] = missing
-    postProgram:  Union[str, Missing] = missing
 
     def get_visible_data(self):
         return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys and k != 'hidden_keys'}
