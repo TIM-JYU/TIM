@@ -13,7 +13,7 @@ import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
             </div>
             <tabset id="menuTabs" [class.hidden-sm]="hidden" [class.hidden-xs]="hidden" #tabs>
                 <ng-container *ngFor="let menuTab of menuTabs">
-                    <tab *ngIf="visibleTabs[menuTab.tabType.name]" (selectTab)="onTabSelect($event, tabContainer)"
+                    <tab *ngIf="tabsVisTable[menuTab.tabType.name]" (selectTab)="onTabSelect($event, tabContainer)"
                          #currentTab>
                         <ng-template tabHeading>
                             <i class="glyphicon glyphicon-{{menuTab.icon}}" i18n-title title="{{menuTab.title}}"></i>
@@ -34,7 +34,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     private currentElement?: HTMLElement;
     @ViewChild("tabs") private tabs!: TabsetComponent;
     menuTabs!: TabEntry[];
-    visibleTabs: Record<string, boolean> = {};
+    tabsVisTable: Record<string, boolean> = {};
 
     constructor(private tabEntryList: TabEntryListService) {
     }
@@ -42,7 +42,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     ngOnInit(): void {
         this.menuTabs = this.tabEntryList.getTabEntries();
         for (const tab of this.menuTabs) {
-            this.visibleTabs[tab.tabType.name] = tab.visible();
+            this.tabsVisTable[tab.tabType.name] = tab.visible();
         }
     }
 
@@ -52,12 +52,12 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         for (const tab of this.menuTabs) {
             const isVisible = tab.visible();
             visTabs[tab.tabType.name] = isVisible;
-            if (isVisible != this.visibleTabs[tab.tabType.name]) {
+            if (isVisible != this.tabsVisTable[tab.tabType.name]) {
                 shouldSet = true;
             }
         }
         if (shouldSet) {
-            this.visibleTabs = visTabs;
+            this.tabsVisTable = visTabs;
         }
     }
 
