@@ -68,7 +68,7 @@ export interface IBookmark {
         </button>
     `,
     styleUrls: [
-        "./bookmarks.style.scss",
+        "./bookmarks.component.scss",
     ],
 })
 export class BookmarksComponent implements OnInit {
