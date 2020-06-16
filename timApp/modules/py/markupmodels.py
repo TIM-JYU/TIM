@@ -2,7 +2,7 @@ import typing
 from copy import copy
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timezone
-from typing import Union, List
+from typing import Union, List, Dict
 
 import marshmallow
 from marshmallow import missing, pre_load
@@ -19,6 +19,7 @@ class PointsRule:
     allowUserMin: Union[int, float, None, Missing] = missing
     allowUserMax: Union[int, float, None, Missing] = missing
     multiplier: Union[int, float, None, Missing] = missing
+    penalties: Union[Dict[str, float], None, Missing] = missing
 
 
 class PluginDateTimeField(marshmallow.fields.Field):

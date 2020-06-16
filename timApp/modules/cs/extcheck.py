@@ -12,6 +12,8 @@ The command should print a json string to standard output with the following str
 {
     points: number,
     max_points: number,
+    penalties: a dictionary with <penalty identifier in PointsRule> as key and <true/false/descriptor string> as value. 
+        // string means true. Each entry is optional, in which case it is assumed false, i.e. no penalty
     output_boxes: list of {
         hide: <boolean: whether to hide the element by default>,
         title: {
@@ -61,13 +63,18 @@ class OutputContainer(Loadable):
 
 class RunResult(Loadable):
     output_boxes: List[OutputContainer] = []
+    penalties: Dict[str, Union[bool, str]] = {}
     points: float = 0
     max_points: float = None
+    
+    def penalize(self, key: str) -> bool:
+        return self.penalties and self.penalties.get(key, False)
 
 class ExtCheck(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         
+        self.penalties = []
         self.result = None
         self.just_compile = False
         
@@ -116,6 +123,16 @@ class ExtCheck(Language):
         elif max_points is not None and self.result.points > max_points:
             print("ExtCheck: points greater than maxPoints.")
             raise TypeError("ExtCheck: points greater than maxPoints.")
+        
+        penalties = get_points_rule(points_rule, "penalties", {})
+        if penalties and self.result.penalties:
+            for key, value in penalties.items():
+                if self.result.penalize(key):
+                    self.result.points = self.result.points*(1.0 - value)
+                    if isinstance(self.result.penalties[key], str):
+                        self.penalties.append(f"{self.result.penalties[key]} Penalty -{value*100}%.")
+                    else:
+                        self.penalties.append(f"{key} penalty: -{value*100}%.")
         
         try:
             give_points(points_rule, "output", self.result.points)

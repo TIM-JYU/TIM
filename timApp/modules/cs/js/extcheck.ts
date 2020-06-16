@@ -17,19 +17,64 @@ interface IOutputContainer {
 
 interface IRunResult {
     output_boxes: IOutputContainer[];
+    penalties: string[];
 }
 
 class ExtcheckController extends CsController {
 
     private containers?: IOutputContainer[];
+    private penalty_container?: IOutputContainer;
 
     languageResponse(data: IRunResult) {
         if (data == null) {
             this.containers = undefined;
+            this.penalty_container = undefined;
         } else {
             this.containers = data.output_boxes;
+            if (this.containers && this.containers.length == 0) {
+                this.containers = undefined;
+            }
+            if (data.penalties && data.penalties.length != 0) {
+                this.penalty_container = {
+                    title: {
+                        classes: "",
+                        content: "Penalties",
+                    },
+                    content: {
+                        classes: "",
+                        content: data.penalties.map((e) => `<p class="penalty-text centermargin">${e}</p>`).join("\n"),
+                        isHTML: true,
+                    },
+                };
+            }
         }
     }
+}
+
+function divContentTemplate(tag: string, variable: string, extra_content: string, hide: string, classes: string, tag2: string, toggle: string) {
+    classes = `class="${classes} {{${variable}.classes}}"`;
+    const content = `${variable}.content ${extra_content ? "+'" + extra_content + "'" : ""}`;
+    const content_str = `{{${variable}.content}} ${extra_content}`;
+    let onclick_str = ``;
+    if (toggle.length) {
+        onclick_str = `ng-click="${toggle}=!${toggle}"`;
+    }
+    let non_html_string = `<${tag} ng-if="!${variable}.isAngular && !${variable}.isHTML" ng-hide="${hide}" ${onclick_str} ${classes}>${content_str}</${tag}>`;
+    if (tag2.length) {
+        non_html_string = `
+            <${tag} ng-if="!${variable}.isAngular && !${variable}.isHTML" ${onclick_str} ng-hide="${hide}">
+                <${tag2} ${classes}>${content_str}</${tag2}>
+            </${tag}>`;
+    }
+    return `
+        <${tag} ng-if="${variable}.isAngular" ng-hide="${hide}" ${onclick_str} ${classes} compile="${content}"></${tag}>
+        <${tag} ng-if="!${variable}.isAngular && ${variable}.isHTML" ng-hide="${hide}" ${onclick_str} ${classes} ng-bind-html="${content}"></${tag}>
+        ${non_html_string}`;
+}
+
+function outputContainerTemplate(variable: string) {
+    return divContentTemplate("button", `${variable}.title`, `<span class="caret"></span>`, "", `title-button {{${variable}.hide ? 'collapsed-button' : ''}}`, "", variable + ".hide") +
+        divContentTemplate("div", `${variable}.content`, "", variable + ".hide", "centermargin", "pre", "");
 }
 
 csApp.directive("compile", function($compile: ICompileService) {
@@ -166,18 +211,12 @@ csApp.component("csExtcheckRunner", {
             <tim-close-button ng-click="$ctrl.closeError()"></tim-close-button>
         </p>
     </div>
-    <ng-container ng-repeat="container in $ctrl.containers" ng-if="container.content && container.title">
-        <button ng-if="container.title.isAngular" ng-click="container.hide=!container.hide" ng-class="{'collapsed-button': container.hide}" class="title-button {{container.title.classes}}" compile="container.title.content + container.caret"></button>
-        <button ng-if="!container.title.isAngular && container.title.isHTML" ng-click="container.hide=!container.hide" ng-class="{'collapsed-button': container.hide}" class="title-button {{container.title.classes}}" ng-bind-html="container.title.content + container.caret"></button>
-        <button ng-if="!container.title.isAngular && !container.title.isHTML" ng-click="container.hide=!container.hide" ng-class="{'collapsed-button': container.hide}" class="title-button {{container.title.classes}}">{{container.title.content}}<span class='caret'></span></button>
-        <ng-container ng-if="!container.hide">
-            <div ng-if="container.content.isAngular" class="centermargin {{container.content.classes}}" compile="container.content.content"></div>
-            <div ng-if="!container.content.isAngular && container.content.isHTML" class="centermargin {{container.content.classes}}" ng-bind-html="container.content.content"></div>
-            <div ng-if="!container.content.isAngular && !container.content.isHTML">
-                <pre class="centermargin {{container.content.classes}}">{{container.content.content}}</pre>
-            </div>
-        </ng-container>
-    </ng-container>
+    <div ng-if="$ctrl.penalty_container">
+        ${outputContainerTemplate("$ctrl.penalty_container")}
+    </div>
+    <div ng-repeat="container in $ctrl.containers">
+        ${outputContainerTemplate("container")}
+    </div>
     <p class="footer" ng-bind-html="$ctrl.footer"></p>
 </div>`,
 });
