@@ -3,6 +3,7 @@ import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
 import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
+import {slugify} from "tim/util/slugify";
 
 @Component({
     selector: "app-sidebar-menu",
@@ -13,13 +14,14 @@ import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
             </div>
             <tabset id="menuTabs" [class.hidden-sm]="hidden" [class.hidden-xs]="hidden" #tabs>
                 <ng-container *ngFor="let menuTab of menuTabs">
-                    <tab *ngIf="tabsVisTable[menuTab.title]" (selectTab)="onTabSelect($event, tabContainer)"
-                         #currentTab>
+                    <tab *ngIf="tabsVisTable[menuTab.title]"
+                         [id]="tabIds[menuTab.title]"
+                         (selectTab)="onTabSelect($event, tabContainer)">
                         <ng-template tabHeading>
                             <i class="glyphicon glyphicon-{{menuTab.icon}}" i18n-title title="{{menuTab.title}}"></i>
                         </ng-template>
                         <tab-container #tabContainer [tabItem]="menuTab"
-                                       [class.hidden]="!shouldRender(currentTab)"></tab-container>
+                                       [class.hidden]="!shouldRender(tabIds[menuTab.title])"></tab-container>
                     </tab>
                 </ng-container>
             </tabset>
@@ -30,10 +32,11 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     hidden = true;
     showSidebar = true;
     // TODO: Ability to set default tab
-    private currentElement?: HTMLElement;
+    private currentTab?: string;
     @ViewChild("tabs") private tabs!: TabsetComponent;
     menuTabs!: TabEntry[];
     tabsVisTable: Record<string, boolean> = {};
+    tabIds: Record<string, string> = {};
 
     constructor(private tabEntryList: TabEntryListService) {
     }
@@ -42,6 +45,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         this.menuTabs = this.tabEntryList.getTabEntries();
         for (const tab of this.menuTabs) {
             this.tabsVisTable[tab.title] = tab.visible();
+            this.tabIds[tab.title] = `tab-${slugify(tab.title)}`;
         }
     }
 
@@ -64,14 +68,14 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         this.setSidebarState(false);
     }
 
-    onTabSelect(tab: TabDirective, ew: TabContainerComponent) {
+    onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
         this.showSidebar = true;
-        this.currentElement = tab.elementRef.nativeElement as HTMLElement;
-        ew.onSelect();
+        this.currentTab = tab.id;
+        tabContainer.onSelect();
     }
 
-    shouldRender(tab: HTMLElement) {
-        return this.currentElement == tab;
+    shouldRender(tabId: string) {
+        return this.currentTab == tabId;
     }
 
     private setSidebarState(visible: boolean) {
@@ -83,7 +87,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         for (const tab of this.tabs.tabs) {
             if (!this.showSidebar) {
                 tab.active = false;
-            } else if (tab.elementRef.nativeElement == this.currentElement) {
+            } else if (tab.id == this.currentTab) {
                 tab.active = true;
             }
         }
