@@ -851,7 +851,28 @@ interface IFrameLoad {
     channel: MessageChannel;
 }
 
-class CsController extends CsBase implements ITimComponent {
+interface IRunResponseWeb {
+    error?: string,
+    pwd?: string,
+    image?: string,
+    wav?: string,
+    testGreen?: boolean,
+    testRed?: boolean,
+    comtestError?: string,
+    docurl?: string,
+    console?: string,
+    runtime?: string,
+    language?: unknown, // determined by language
+    "-replyImage"?: string,
+    "-replyHTML"?: string,
+    "-replyMD"?: string,
+}
+
+interface IRunResponse {
+    web: IRunResponseWeb,
+    savedNew: number,
+}
+
     private vctrl!: ViewCtrl;
 
     private aceEditor?: IAceEditor;
@@ -1917,18 +1938,10 @@ ${fhtml}
         }
 
         let ucode = "";
-        let uinput = "";
-        let uargs = "";
         if (this.usercode) {
             ucode = this.usercode.replace(this.cursor, "");
         }
         ucode = ucode.replace(/\r/g, "");
-        if (this.userinput) {
-            uinput = this.userinput;
-        }
-        if (this.userargs) {
-            uargs = this.userargs;
-        }
         if (this.attrs.validityCheck) {
             const re = new RegExp(this.attrs.validityCheck);
             if (!ucode.match(re)) {
@@ -1947,49 +1960,31 @@ ${fhtml}
             }
         }
 
-        const params = {
-            input: {
-                usercode: ucode,
-                userinput: uinput,
-                isInput: isInput,
-                userargs: uargs,
-                uploadedFile: this.uploadedFile,
-                uploadedType: this.uploadedType,
-                nosave: false,
-                type: runType,
-                ...extraMarkUp,
-                ...(this.isAll ? {selectedLanguage: this.selectedLanguage} : {}),
-            },
-        };
-        if (nosave || this.nosave) {
-            params.input.nosave = true;
-        }
-        const url = this.pluginMeta.getAnswerUrl();
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             this.runError = this.error;
             this.isRunning = false;
             return;
         }
-        const t0run = performance.now();
-        const r = await to($http<{
-            web: {
-                error?: string,
-                pwd?: string,
-                image?: string,
-                wav?: string,
-                testGreen?: boolean,
-                testRed?: boolean,
-                comtestError?: string,
-                docurl?: string,
-                console?: string,
-                runtime?: string,
-                "-replyImage"?: string,
-                "-replyHTML"?: string,
-                "-replyMD"?: string,
+
+        const params = {
+            input: {
+                usercode: ucode,
+                userinput: this.userinput || "",
+                isInput: isInput,
+                userargs: this.userargs || "",
+                uploadedFile: this.uploadedFile,
+                uploadedType: this.uploadedType,
+                nosave: nosave || this.nosave,
+                type: runType,
+                ...extraMarkUp,
+                ...(this.isAll ? {selectedLanguage: this.selectedLanguage} : {}),
             },
-            savedNew: number,
-        }>({method: "PUT", url: url, data: params, timeout: this.timeout + defaultTimeout},
+        };
+        const url = this.pluginMeta.getAnswerUrl();
+        const t0run = performance.now();
+        const r = await to($http<IRunResponse>(
+            {method: "PUT", url: url, data: params, timeout: this.timeout + defaultTimeout}
         ));
         if (r.ok) {
             this.isRunning = false;
