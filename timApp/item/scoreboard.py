@@ -113,8 +113,8 @@ def get_score_infos(
 
         tasks = list(point_dict.values())
 
-        user_total = sum((t.points for t in tasks))
-        max_total = sum((t.maxPoints for t in tasks))
+        user_total = sum((t.points for t in tasks if t.points is not None))
+        max_total = sum((t.maxPoints for t in tasks if t.maxPoints is not None))
 
         total_table[folder.relative_path(d)] = DocScoreInfo(d, user_total, max_total, tasks)
 
