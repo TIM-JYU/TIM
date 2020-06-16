@@ -2,6 +2,7 @@ from languages import *
 from jsframe import *
 from stack import *
 from geogebra import *
+from extcheck import ExtCheck
 
 languages["jypeli"] = Jypeli
 languages["comtest"] = CSComtest
@@ -54,3 +55,4 @@ languages["quorum"] = Quorum
 languages["jsframe"] = JSframe
 languages["chartjs"] = ChartJS
 languages["drawio"] = DrawIO
+languages["extcheck"] = ExtCheck

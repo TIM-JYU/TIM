@@ -37,6 +37,8 @@ from loadable import LoadableJSONEncoder
 # 2. Tee tarvittava lisäys myös js/dir.js tiedoston kieliluetteloon.
 # 3. Lisää kielen kääntäjä/tulkki vastaavaan konttiin, ks. Dockerfile
 #
+# ExtCheck-kielen käyttämiseen katso ohjeet extcheck.py-tiedoston alun kommentista.
+#
 # Ensin käynistettävä
 # ./startPlugins.sh             - käynnistää dockerin cs.py varten
 # ./startAll.sh                 - ajetaan dockerin sisällä cs.py (ajetaan edellisestä)

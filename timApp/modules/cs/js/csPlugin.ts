@@ -166,7 +166,7 @@ class LanguageTypes {
     runTypes = ["pascal", "fortran", "css", "jypeli", "scala", "java", "graphics", "cc", "c++", "shell", "vpython", "py2", "py", "fs", "clisp",
         "jjs", "psql", "sql", "alloy", "text", "cs", "run", "md", "js", "glowscript", "sage", "simcir",
         "xml", "octave", "lua", "quorum", "swift", "mathcheck", "html", "processing", "rust", "r", "wescheme", "ping", "kotlin",
-        "smalltalk", "upload"];
+        "smalltalk", "upload", "extcheck"];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
     aceModes = ["pascal", "fortran", "css", "csharp", "scala", "java", "java", "c_cpp", "c_cpp", "sh", "python", "python", "python", "fsharp", "lisp",
@@ -1160,6 +1160,9 @@ export class CsController extends CsBase implements ITimComponent {
                 break;
             case "cs-wescheme-runner":
                 kind = "wescheme";
+                break;
+            case "cs-extcheck-runner":
+                kind = "extcheck";
                 break;
             default:
                 console.warn("Unrecognized csplugin tag type, falling back to 'console'");

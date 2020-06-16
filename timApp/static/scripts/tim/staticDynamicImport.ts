@@ -36,6 +36,8 @@ export function staticDynamicImport(s: string) {
             return import("modules/cs/js/jsav");
         case "/cs/js/build/jsframe.js":
             return import("modules/cs/js/jsframe");
+        case "/cs/js/build/extcheck.js":
+            return import("modules/cs/js/extcheck");
         case "/field/js/build/multisave.js":
             return import("modules/fields/js/multisave");
         case "/svn/js/video.js":
