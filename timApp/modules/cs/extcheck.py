@@ -145,11 +145,37 @@ class ExtCheck(Language):
         
         return code, "", "", pwddir
     
-    def js_files(self):
-        return ["/cs/js/build/extcheck.js"]
+    @staticmethod
+    def get_files(attr):
+        files = []
         
-    def css_files(self):
-        return []
+        path = Path("/cs/masters")
+        if not path.is_dir:
+            return files
+        
+        for dir in os.listdir("/cs/masters"):
+            file = path / dir / "csmarkup.json"
+            if not file.is_file:
+                continue
+            
+            data = {}
+            with open(str(file), 'r') as f:
+                data = json.load(f)
+            
+            tmp = data.get(attr, [])
+            tmp = [f if f.startswith('http') or f.startswith('/') else str(path / dir / f) for f in tmp]
+            
+            files.extend(tmp)
+        
+        return files
+    
+    @staticmethod
+    def js_files():
+        return ["/cs/js/build/extcheck.js"] + ExtCheck.get_files("jsFiles")
+    
+    @staticmethod
+    def css_files():
+        return ["/cs/css/extcheck.css"] + ExtCheck.get_files("cssFiles")
     
     def runner_name(self):
         return "cs-extcheck-runner"

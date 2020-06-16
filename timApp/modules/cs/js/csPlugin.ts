@@ -704,6 +704,8 @@ const CsMarkupOptional = t.partial({
     rootPath: t.string,
     masterPath: t.string,
     copyFiles: CopyFiles,
+    jsFiles: t.array(t.string),
+    cssFiles: t.array(t.string),
 });
 
 const CsMarkupDefaults = t.type({
