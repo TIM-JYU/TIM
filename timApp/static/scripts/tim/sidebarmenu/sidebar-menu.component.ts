@@ -83,7 +83,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         const visTabs: Record<string, boolean> = {};
         for (const tab of this.menuTabs) {
             const isVisible = tab.visible();
-            visTabs[tab.title] = isVisible;
+            visTabs[tab.id] = isVisible;
             if (isVisible != this.tabsVisTable[tab.id]) {
                 shouldSet = true;
             }
