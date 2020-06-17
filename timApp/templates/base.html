@@ -102,6 +102,13 @@ depends=(
 </head>
 <body class="{% if show_unpublished_bg %}bg-unpublished{% endif %}">
 {% block body %}
+{% if request.user_agent.browser == 'msie' %}
+<div style="text-align: center; border: 2px solid red; padding: 1em;">
+    <p>TIM ei toimi Internet Explorer -selaimella. Siirry käyttämään modernia selainta, kuten Firefoxia tai Chromea.</p>
+
+    <p>TIM does not work with Internet Explorer. Please switch to a modern browser such as Firefox or Chrome.</p>
+</div>
+{% endif %}
 <tim-root>
 <{% block mainctrl %}div{% endblock %} style="flex: 1">
     <div ng-init="$ctrl = $parent.$ctrl" class="container-fluid">
