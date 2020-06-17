@@ -67,9 +67,6 @@ export interface IBookmark {
             <i class="glyphicon glyphicon-plus"></i> New bookmark...
         </button>
     `,
-    styleUrls: [
-        "./bookmarks.component.scss",
-    ],
 })
 export class BookmarksComponent implements OnInit {
     groups?: IBookmarkGroup[];
