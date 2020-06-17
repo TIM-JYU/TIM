@@ -61,7 +61,7 @@ export interface IBookmark {
         </div>
         <a *ngFor="let bookmark of getTopLevelBookmarks()"
            [href]="bookmark.link"
-           class="btn btn-sm btn-default mr-1">{{bookmark.name}}
+           class="btn btn-sm btn-default space-right">{{bookmark.name}}
         </a>
         <button (click)="newBookmark($event)" class="btn btn-sm btn-default" i18n>
             <i class="glyphicon glyphicon-plus"></i> New bookmark...
