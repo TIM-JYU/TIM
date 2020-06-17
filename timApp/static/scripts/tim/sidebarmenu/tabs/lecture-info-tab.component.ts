@@ -16,7 +16,12 @@ import {HttpClient} from "@angular/common/http";
         <ul>
             <li *ngFor="let lecture of currentLecturesList">
                 <a href="/showLectureInfo/{{lecture.lecture_id}}">{{lecture.lecture_code}}</a>
-                <button class="timButton btn-xs" value="Join" i18n-value i18n>Join</button>
+                <button *ngIf="lctrl.lecture?.lecture_id != lecture.lecture_id"
+                        class="timButton btn-xs"
+                        value="Join" i18n-value
+                        (click)="lctrl.joinLecture(lecture)"
+                        i18n>Join
+                </button>
             </li>
             <li *ngIf="currentLecturesList.length == 0"><p i18n>No current lectures</p></li>
         </ul>

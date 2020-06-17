@@ -2,7 +2,7 @@ import {
     Component,
     ComponentFactoryResolver,
     ComponentRef,
-    Input,
+    Input, OnInit,
     ViewChild,
 } from "@angular/core";
 import {TabEntry, MenuTabDirective, OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
@@ -13,7 +13,7 @@ import {TabEntry, MenuTabDirective, OnTabSelect} from "tim/sidebarmenu/menu-tab.
         <ng-template timMenuTab></ng-template>
     `,
 })
-export class TabContainerComponent {
+export class TabContainerComponent implements OnInit {
     @Input() tabItem!: TabEntry;
     @ViewChild(MenuTabDirective, {static: true}) timMenuTab!: MenuTabDirective;
     private tabComponent?: ComponentRef<unknown>;
@@ -29,7 +29,7 @@ export class TabContainerComponent {
     private static hasOnSelect(inst: unknown): inst is OnTabSelect {
         return typeof inst == "object"
             && inst != null
-            && Object.prototype.hasOwnProperty.call(inst, "onSelect");
+            && typeof (inst as Record<string, unknown>).onSelect == "function";
     }
 
     async onSelect() {
@@ -38,6 +38,12 @@ export class TabContainerComponent {
         }
         if (TabContainerComponent.hasOnSelect(this.tabComponent?.instance)) {
             this.tabComponent?.instance.onSelect();
+        }
+    }
+
+    async ngOnInit() {
+        if (this.tabItem.eagerLoad) {
+            await this.initComponent();
         }
     }
 }

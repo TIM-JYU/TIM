@@ -10,6 +10,7 @@ export interface TabEntry {
     title: string;
     visible: () => boolean;
     importComponent: () => Promise<Type<unknown>>;
+    eagerLoad?: boolean;
 }
 
 @Directive({
