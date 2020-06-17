@@ -16,6 +16,7 @@ import {LoggedUsersTabComponent} from "./tabs/logged-users-tab.component";
 import {BookmarksComponent} from "./util/bookmarks.component";
 import { TimeSincePipe } from "./util/time-since.pipe";
 import { ScoreInfoTabComponent } from "./tabs/score-info-tab.component";
+import {CollapseModule} from "ngx-bootstrap/collapse";
 
 @NgModule({
     declarations: [
@@ -38,6 +39,7 @@ import { ScoreInfoTabComponent } from "./tabs/score-info-tab.component";
         TabsModule.forRoot(),
         TooltipModule.forRoot(),
         BsDropdownModule.forRoot(),
+        CollapseModule.forRoot(),
     ],
     entryComponents: [
         BookmarksTabComponent,
