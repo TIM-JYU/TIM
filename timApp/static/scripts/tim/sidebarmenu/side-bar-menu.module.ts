@@ -3,6 +3,7 @@ import {CommonModule} from "@angular/common";
 import {TabsModule} from "ngx-bootstrap/tabs";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {FormsModule} from "@angular/forms";
+import {CollapseModule} from "ngx-bootstrap/collapse";
 import {SidebarMenuComponent} from "tim/sidebarmenu/sidebar-menu.component";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {BookmarksTabComponent} from "./tabs/bookmarks-tab.component";
@@ -14,9 +15,8 @@ import {LectureInfoTabComponent} from "./tabs/lecture-info-tab.component";
 import {LoadQuestionsTabComponent} from "./tabs/load-questions-tab.component";
 import {LoggedUsersTabComponent} from "./tabs/logged-users-tab.component";
 import {BookmarksComponent} from "./util/bookmarks.component";
-import { TimeSincePipe } from "./util/time-since.pipe";
-import { ScoreInfoTabComponent } from "./tabs/score-info-tab.component";
-import {CollapseModule} from "ngx-bootstrap/collapse";
+import {TimeSincePipe} from "./util/time-since.pipe";
+import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
 
 @NgModule({
     declarations: [
