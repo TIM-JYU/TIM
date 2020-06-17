@@ -15,6 +15,10 @@ export class TabEntryListService {
                 private scoreboard: ScoreboardService) {
     }
 
+    get defaultTabOrder() {
+        return ["tab-index", "tab-bookmark"];
+    }
+
     getTabEntries(): TabEntry[] {
         const lectureCtrl = LectureController.instance;
         const hide = getVisibilityVars();

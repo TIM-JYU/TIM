@@ -4,6 +4,7 @@ import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
 import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
 import {slugify} from "tim/util/slugify";
+import {getStorage, setStorage} from "tim/util/utils";
 
 @Component({
     selector: "app-sidebar-menu",
@@ -14,7 +15,7 @@ import {slugify} from "tim/util/slugify";
             </div>
             <tabset id="menuTabs" [class.hidden-sm]="hidden" [class.hidden-xs]="hidden" #tabs>
                 <ng-container *ngFor="let menuTab of menuTabs">
-                    <tab *ngIf="tabsVisTable[menuTab.title]"
+                    <tab *ngIf="tabsVisTable[menuTab.id]"
                          [id]="menuTab.id"
                          (selectTab)="onTabSelect($event, tabContainer)">
                         <ng-template tabHeading>
@@ -31,7 +32,6 @@ import {slugify} from "tim/util/slugify";
 export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     hidden = true;
     showSidebar = true;
-    // TODO: Ability to set default tab
     private currentTab?: string;
     @ViewChild("tabs") private tabs!: TabsetComponent;
     menuTabs!: TabEntry[];
@@ -40,10 +40,37 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     constructor(private tabEntryList: TabEntryListService) {
     }
 
+    get lastUsedTab() {
+        const val = getStorage("sideBarMenu_lastUsedTab");
+        if (typeof val != "string") {
+            return "";
+        }
+        return val;
+    }
+
+    set lastUsedTab(value: string) {
+        setStorage("sideBarMenu_lastUsedTab", value);
+    }
+
     ngOnInit(): void {
+        this.currentTab = this.lastUsedTab;
         this.menuTabs = this.tabEntryList.getTabEntries();
+        const defaultTabs = this.tabEntryList.defaultTabOrder;
+        const defaultTabsSet = new Set(defaultTabs);
+        const defaultTableVis: Record<string, boolean> = {};
         for (const tab of this.menuTabs) {
-            this.tabsVisTable[tab.title] = tab.visible();
+            const visible = tab.visible();
+            this.tabsVisTable[tab.id] = visible;
+            if (defaultTabsSet.has(tab.id)) {
+                defaultTableVis[tab.id] = visible;
+            }
+        }
+        if (!this.currentTab) {
+            const firstTab = defaultTabs.find((val) => defaultTableVis[val]);
+            if (!firstTab) {
+                return;
+            }
+            this.currentTab = firstTab;
         }
     }
 
@@ -53,7 +80,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         for (const tab of this.menuTabs) {
             const isVisible = tab.visible();
             visTabs[tab.title] = isVisible;
-            if (isVisible != this.tabsVisTable[tab.title]) {
+            if (isVisible != this.tabsVisTable[tab.id]) {
                 shouldSet = true;
             }
         }
@@ -63,12 +90,17 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     ngAfterViewInit() {
-        this.setSidebarState(false);
+        this.setSidebarState(true);
+        const curTab = this.tabs.tabs.find((t) => t.id == this.currentTab);
+        if (curTab) {
+            // curTab.selectTab.emit(curTab);
+        }
     }
 
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
         this.showSidebar = true;
         this.currentTab = tab.id;
+        this.lastUsedTab = this.currentTab;
         void tabContainer.onSelect();
     }
 
@@ -82,12 +114,17 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         if (!this.tabs) {
             return;
         }
-        for (const tab of this.tabs.tabs) {
-            if (!this.showSidebar) {
-                tab.active = false;
-            } else if (tab.id == this.currentTab) {
-                tab.active = true;
-            }
+        // In ngx-bootstrap, the first tab is always active by default, which won't fire the selectTab event
+        // if it's selected by default. In turn this won't cause lazy loading to occur
+        // To fix this, mark all tabs inactive and then search for tab to activate, which will always trigger
+        // selectTab event.
+        this.tabs.tabs.forEach((t) => t.active = false);
+        if (!this.showSidebar) {
+            return;
+        }
+        const activeTab = this.tabs.tabs.find((t) => t.id == this.currentTab);
+        if (activeTab) {
+            activeTab.active = true;
         }
     }
 

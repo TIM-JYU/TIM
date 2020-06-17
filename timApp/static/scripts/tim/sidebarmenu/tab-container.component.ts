@@ -33,7 +33,7 @@ export class TabContainerComponent implements OnInit {
     }
 
     async onSelect() {
-        if (!this.tabComponent) {
+        if (!this.tabItem.eagerLoad && !this.tabComponent) {
             await this.initComponent();
         }
         if (TabContainerComponent.hasOnSelect(this.tabComponent?.instance)) {
