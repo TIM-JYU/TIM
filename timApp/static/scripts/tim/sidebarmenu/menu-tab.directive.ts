@@ -1,8 +1,7 @@
 import {Directive, Type, ViewContainerRef} from "@angular/core";
 
-export interface IMenuTab {
-    entry: TabEntry;
-    onSelect?: () => void;
+export interface OnTabSelect {
+    onSelect: () => void;
 }
 
 export interface TabEntry {
@@ -10,7 +9,7 @@ export interface TabEntry {
     icon: string;
     title: string;
     visible: () => boolean;
-    importComponent: () => Promise<Type<IMenuTab>>;
+    importComponent: () => Promise<Type<unknown>>;
 }
 
 @Directive({

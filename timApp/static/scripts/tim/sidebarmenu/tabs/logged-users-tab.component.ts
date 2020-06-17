@@ -1,5 +1,4 @@
-import {Component, Input, OnInit} from "@angular/core";
-import {IMenuTab, TabEntry} from "tim/sidebarmenu/menu-tab.directive";
+import {Component} from "@angular/core";
 import {LectureController} from "tim/lecture/lectureController";
 
 @Component({
@@ -32,8 +31,7 @@ import {LectureController} from "tim/lecture/lectureController";
     `,
     styles: [],
 })
-export class LoggedUsersTabComponent implements IMenuTab {
-    @Input() entry!: TabEntry;
+export class LoggedUsersTabComponent {
     lctrl: LectureController = LectureController.instance;
 
     constructor() {

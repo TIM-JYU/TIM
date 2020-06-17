@@ -1,5 +1,4 @@
-import {Component, Input, OnInit} from "@angular/core";
-import {IMenuTab, TabEntry} from "tim/sidebarmenu/menu-tab.directive";
+import {Component, OnInit} from "@angular/core";
 import {ScoreboardService} from "tim/sidebarmenu/services/scoreboard.service";
 
 @Component({
@@ -72,8 +71,7 @@ import {ScoreboardService} from "tim/sidebarmenu/services/scoreboard.service";
         </div>
     `,
 })
-export class ScoreInfoTabComponent implements OnInit, IMenuTab {
-    @Input() entry!: TabEntry;
+export class ScoreInfoTabComponent implements OnInit {
     scoreBoard: ScoreboardService;
     showPagePoints: boolean = true;
     showCoursePoints: boolean = true;

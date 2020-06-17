@@ -1,5 +1,11 @@
-import {Component, ComponentFactoryResolver, ComponentRef, Input, OnInit, ViewChild} from "@angular/core";
-import {TabEntry, MenuTabDirective, IMenuTab} from "tim/sidebarmenu/menu-tab.directive";
+import {
+    Component,
+    ComponentFactoryResolver,
+    ComponentRef,
+    Input,
+    ViewChild,
+} from "@angular/core";
+import {TabEntry, MenuTabDirective, OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
 
 @Component({
     selector: "tab-container",
@@ -10,7 +16,7 @@ import {TabEntry, MenuTabDirective, IMenuTab} from "tim/sidebarmenu/menu-tab.dir
 export class TabContainerComponent {
     @Input() tabItem!: TabEntry;
     @ViewChild(MenuTabDirective, {static: true}) timMenuTab!: MenuTabDirective;
-    private tabComponent?: ComponentRef<IMenuTab>;
+    private tabComponent?: ComponentRef<unknown>;
 
     constructor(private cfr: ComponentFactoryResolver) {
     }
@@ -18,16 +24,20 @@ export class TabContainerComponent {
     private async initComponent() {
         const factory = this.cfr.resolveComponentFactory(await this.tabItem.importComponent());
         this.tabComponent = this.timMenuTab.vcr.createComponent(factory);
-        this.tabComponent.instance.entry = this.tabItem;
+    }
+
+    private static hasOnSelect(inst: unknown): inst is OnTabSelect {
+        return typeof inst == "object"
+            && inst != null
+            && Object.prototype.hasOwnProperty.call(inst, "onSelect");
     }
 
     async onSelect() {
         if (!this.tabComponent) {
             await this.initComponent();
         }
-        const onSelect = this.tabComponent?.instance.onSelect;
-        if (onSelect) {
-            onSelect.apply(this.tabComponent?.instance);
+        if (TabContainerComponent.hasOnSelect(this.tabComponent?.instance)) {
+            this.tabComponent?.instance.onSelect();
         }
     }
 }

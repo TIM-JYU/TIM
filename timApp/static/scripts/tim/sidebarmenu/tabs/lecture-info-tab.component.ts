@@ -1,5 +1,5 @@
-import {Component, Input, OnInit} from "@angular/core";
-import {IMenuTab, TabEntry} from "tim/sidebarmenu/menu-tab.directive";
+import {Component} from "@angular/core";
+import {OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
 import {ILecture, ILectureListResponse2} from "tim/lecture/lecturetypes";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -40,8 +40,7 @@ import {HttpClient} from "@angular/common/http";
         <ng-template i18n="@@notInDocViewError">Not currently in document view.</ng-template>
     `,
 })
-export class LectureInfoTabComponent implements IMenuTab {
-    @Input() entry!: TabEntry;
+export class LectureInfoTabComponent implements OnTabSelect {
     currentLecturesList: ILecture[] = [];
     futureLecturesList: ILecture[] = [];
     pastLecturesList: ILecture[] = [];

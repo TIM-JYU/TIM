@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from "@angular/core";
-import {IMenuTab, TabEntry} from "tim/sidebarmenu/menu-tab.directive";
+import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {HeaderIndexerService, IHeaderDisplayIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
 import {getViewRangeWithHeaderId, partitionDocument} from "tim/document/viewRangeInfo";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -38,7 +38,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
     `,
     styleUrls: ["./index-tab.component.scss"],
 })
-export class IndexTabComponent implements OnInit, IMenuTab {
+export class IndexTabComponent implements OnInit {
     @Input() entry!: TabEntry;
     pageUrl = `${document.location.origin}${document.location.pathname}${document.location.search}`;
     isFullRange = true;

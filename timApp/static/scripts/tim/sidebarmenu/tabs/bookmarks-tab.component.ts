@@ -1,5 +1,4 @@
-import {Component, Input, OnInit} from "@angular/core";
-import {IMenuTab, TabEntry} from "tim/sidebarmenu/menu-tab.directive";
+import {Component, OnInit} from "@angular/core";
 
 @Component({
     selector: "bookmarks-tab",
@@ -9,9 +8,7 @@ import {IMenuTab, TabEntry} from "tim/sidebarmenu/menu-tab.directive";
         <bookmarks-list></bookmarks-list>
     `,
 })
-export class BookmarksTabComponent implements OnInit, IMenuTab {
-    @Input() entry!: TabEntry;
-
+export class BookmarksTabComponent implements OnInit {
     constructor() {
     }
 

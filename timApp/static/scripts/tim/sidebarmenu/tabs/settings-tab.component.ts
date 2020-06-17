@@ -1,5 +1,4 @@
-import {Component, DoCheck, Input, OnInit} from "@angular/core";
-import {IMenuTab, TabEntry} from "tim/sidebarmenu/menu-tab.directive";
+import {Component, DoCheck, OnInit} from "@angular/core";
 import {Users, UserService} from "tim/user/userService";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -195,8 +194,7 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
         <ng-template i18n="@@noKnroMacroError">The document has no 'knro' macro defined</ng-template>
     `,
 })
-export class SettingsTabComponent implements OnInit, IMenuTab, DoCheck {
-    @Input() entry!: TabEntry;
+export class SettingsTabComponent implements OnInit, DoCheck {
     users: UserService = Users;
     showFolderSettings: boolean = false;
     showRelevance: boolean = true;
