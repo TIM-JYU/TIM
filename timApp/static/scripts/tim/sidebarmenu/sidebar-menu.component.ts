@@ -57,23 +57,10 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     ngOnInit(): void {
         this.currentTab = this.lastUsedTab;
         this.menuTabs = this.tabEntryList.getTabEntries();
-        const defaultTabs = this.tabEntryList.defaultTabOrder;
-        const defaultTabsSet = new Set(defaultTabs);
-        const defaultTableVis: Record<string, boolean> = {};
         for (const tab of this.menuTabs) {
-            const visible = tab.visible();
-            this.tabsVisTable[tab.id] = visible;
-            if (defaultTabsSet.has(tab.id)) {
-                defaultTableVis[tab.id] = visible;
-            }
+            this.tabsVisTable[tab.id] = tab.visible();
         }
-        if (!this.currentTab) {
-            const firstTab = defaultTabs.find((val) => defaultTableVis[val]);
-            if (!firstTab) {
-                return;
-            }
-            this.currentTab = firstTab;
-        }
+        this.trySetCurrentTabToDefault();
     }
 
     ngDoCheck() {
@@ -92,9 +79,35 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         }
         if (shouldSet) {
             this.tabsVisTable = visTabs;
+            this.tabVisibilityChanged();
         }
         // TODO: Move to a more appropriate place
         void this.lctrl.refreshWall();
+    }
+
+    private trySetCurrentTabToDefault() {
+        if (this.currentTab && this.tabsVisTable[this.currentTab]) {
+            return false;
+        }
+        const firstDefaultTab = this.tabEntryList.defaultTabOrder.find((id) => this.tabsVisTable[id]);
+        if (!firstDefaultTab) {
+            return false;
+        }
+        this.currentTab = firstDefaultTab;
+        return true;
+    }
+
+    private tabVisibilityChanged() {
+        if (!this.trySetCurrentTabToDefault() || !this.currentTab) {
+            return;
+        }
+        this.switchToTab(this.currentTab);
+    }
+
+    private switchToTab(id: string) {
+        this.currentTab = id;
+        this.lastUsedTab = id;
+        this.setSidebarState(true);
     }
 
     ngAfterViewInit() {
