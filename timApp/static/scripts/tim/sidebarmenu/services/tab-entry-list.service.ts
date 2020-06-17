@@ -38,7 +38,6 @@ export class TabEntryListService {
                 visible: () => !hide.settings,
                 importComponent: async () =>
                     (await import("../tabs/settings-tab.component")).SettingsTabComponent,
-                eagerLoad: true,
             },
             {
                 id: "tab-index",

@@ -194,7 +194,7 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
         <ng-template i18n="@@noKnroMacroError">The document has no 'knro' macro defined</ng-template>
     `,
 })
-export class SettingsTabComponent implements OnInit, DoCheck {
+export class SettingsTabComponent implements OnInit {
     users: UserService = Users;
     showFolderSettings: boolean = false;
     showRelevance: boolean = true;
@@ -226,10 +226,6 @@ export class SettingsTabComponent implements OnInit, DoCheck {
         if (this.item?.isFolder) {
             this.loadViewRangeSettings();
         }
-    }
-
-    ngDoCheck() {
-        void this.lctrl.refreshWall();
     }
 
     /**

@@ -5,6 +5,7 @@ import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.servi
 import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
 import {slugify} from "tim/util/slugify";
 import {getStorage, setStorage} from "tim/util/utils";
+import {LectureController} from "tim/lecture/lectureController";
 
 @Component({
     selector: "app-sidebar-menu",
@@ -36,6 +37,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     @ViewChild("tabs") private tabs!: TabsetComponent;
     menuTabs!: TabEntry[];
     tabsVisTable: Record<string, boolean> = {};
+    lctrl = LectureController.instance;
 
     constructor(private tabEntryList: TabEntryListService) {
     }
@@ -91,6 +93,8 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         if (shouldSet) {
             this.tabsVisTable = visTabs;
         }
+        // TODO: Move to a more appropriate place
+        void this.lctrl.refreshWall();
     }
 
     ngAfterViewInit() {

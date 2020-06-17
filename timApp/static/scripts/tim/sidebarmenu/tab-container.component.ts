@@ -13,7 +13,7 @@ import {TabEntry, MenuTabDirective, OnTabSelect} from "tim/sidebarmenu/menu-tab.
         <ng-template timMenuTab></ng-template>
     `,
 })
-export class TabContainerComponent implements OnInit {
+export class TabContainerComponent {
     @Input() tabItem!: TabEntry;
     @ViewChild(MenuTabDirective, {static: true}) timMenuTab!: MenuTabDirective;
     private tabComponent?: ComponentRef<unknown>;
@@ -33,17 +33,11 @@ export class TabContainerComponent implements OnInit {
     }
 
     async onSelect() {
-        if (!this.tabItem.eagerLoad && !this.tabComponent) {
+        if (!this.tabComponent) {
             await this.initComponent();
         }
         if (TabContainerComponent.hasOnSelect(this.tabComponent?.instance)) {
             this.tabComponent?.instance.onSelect();
-        }
-    }
-
-    async ngOnInit() {
-        if (this.tabItem.eagerLoad) {
-            await this.initComponent();
         }
     }
 }
