@@ -1054,11 +1054,11 @@ for (let i = 0; i < 11; ++i) {
         self.login_test1()
         d = self.create_jsrun("""
 fields: []
-group: testusers
+group: testuser3isnothere
 program: |!!
 tools.print(tools.getUserName());
 !!""")
-        ug = UserGroup.create('testusers')
+        ug = UserGroup.create('testuser3isnothere')
         ug.users.append(self.test_user_1)
         ug.users.append(self.test_user_2)
         ug.admin_doc = self.create_doc().block
