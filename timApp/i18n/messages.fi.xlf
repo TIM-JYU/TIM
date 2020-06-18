@@ -536,7 +536,7 @@
       </trans-unit>
       <trans-unit id="84f6d8a5845c0a765d2854b4bb6d88a6a5cdd34a" datatype="html">
         <source>Mark all paragraphs of the document as read</source>
-        <target state="new">Merkitse kaikki dokumentin kappaleet luetuksi</target>
+        <target state="translated">Merkitse kaikki dokumentin kappaleet luetuksi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">52</context>
@@ -860,7 +860,7 @@
       </trans-unit>
       <trans-unit id="ca7220588e6a3d0ee4597f4e401013611e543199" datatype="html">
         <source>Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>Go to top<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
-        <target state="new">Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>Go to top<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
+        <target state="translated">Sisällys <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>Mene alkuun<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/index-tab.component.ts</context>
           <context context-type="linenumber">3</context>
