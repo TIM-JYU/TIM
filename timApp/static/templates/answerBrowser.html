@@ -122,6 +122,12 @@
                     <label class="checkbox-inline" ng-show="$ctrl.showVelpsCheckBox()">
                         <input type="checkbox" ng-model="$ctrl.review">Velps
                     </label>
+                    <button title="Delete answer"
+                            ng-click="$ctrl.deleteAnswer()"
+                            class="timButton btn-xs btn-danger"
+                            ng-if="$ctrl.showDelete">
+                        <i class="glyphicon glyphicon-trash"></i>
+                    </button>
                 </div>
                 <div class="flex" ng-show="$ctrl.selectedAnswer.users.length > 1">
                     <div>

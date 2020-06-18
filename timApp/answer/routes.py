@@ -60,6 +60,7 @@ from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields
+from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
 from utils import Missing
@@ -100,8 +101,12 @@ def save_points(answer_id, user_id):
 
 
 @dataclass
-class ValidityModel:
+class AnswerIdModel:
     answer_id: int
+
+
+@dataclass
+class ValidityModel(AnswerIdModel):
     valid: bool
 
 
@@ -112,6 +117,25 @@ def save_validity(m: ValidityModel):
     verify_teacher_access(get_doc_or_abort(doc_id))
     a.valid = m.valid
     db.session.commit()
+    return ok_response()
+
+
+@answers.route("/answer/delete", methods=['POST'])
+@use_model(AnswerIdModel)
+def delete_answer(m: AnswerIdModel):
+    """Deletes an answer.
+
+    This does not completely delete the answer but only removes user associations from it,
+    so it is no longer visible in TIM.
+    """
+    a, doc_id = verify_answer_access(m.answer_id, get_current_user_object().id, require_teacher_if_not_own=True)
+    verify_teacher_access(get_doc_or_abort(doc_id))
+    verify_admin()
+    unames = [u.name for u in a.users_all]
+    a.users_all = []
+    db.session.commit()
+    u = get_current_user_object()
+    log_info(f'{u.name} deleted answer {a.id} (of {seq_to_str(unames)}) in task {a.task_id}')
     return ok_response()
 
 

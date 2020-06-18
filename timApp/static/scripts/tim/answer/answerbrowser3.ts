@@ -12,7 +12,7 @@ import {IAnswerBrowserMarkupSettings, IGenericPluginMarkup} from "../plugin/attr
 import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
-import {Users} from "../user/userService";
+import {isAdmin, userBelongsToGroupOrIsAdmin, Users} from "../user/userService";
 import {documentglobals} from "../util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
 import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
@@ -333,6 +333,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private markupSettings: IAnswerBrowserMarkupSettings = DEFAULT_MARKUP_CONFIG;
     private isValidAnswer = false;
     private hidden: boolean = false;
+    private showDelete = false;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -386,6 +387,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.dimPlugin();
         }
         this.saveTeacher = (this.viewctrl.docSettings.save_teacher && this.viewctrl.teacherMode) ?? false;
+        this.showDelete = isAdmin() && getURLParameter("showAdmin") != null;
         this.users = undefined;
         this.answers = [];
         this.filteredAnswers = [];
@@ -1078,6 +1080,31 @@ export class AnswerBrowserController extends DestroyScope implements IController
         } else if (!this.selectedAnswer) {
             this.dimPlugin();
         }
+    }
+
+    async deleteAnswer() {
+        if (!this.selectedAnswer) {
+            return;
+        }
+        if (!window.confirm("Delete this answer?")) {
+            return;
+        }
+        const aid = this.selectedAnswer.id;
+        await to($http.post("/answer/delete", {
+            answer_id: aid,
+        }));
+        const index = this.answers.findIndex((a) => a.id === aid);
+        if (index < 0) {
+            return;
+        }
+        this.answers.splice(index, 1);
+        this.updateFiltered();
+        if (index < this.filteredAnswers.length) {
+            this.selectedAnswer = this.filteredAnswers[index];
+        } else if (this.filteredAnswers.length > 0) {
+            this.selectedAnswer = this.filteredAnswers[0];
+        }
+        await this.changeAnswer();
     }
 }
 
