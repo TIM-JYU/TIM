@@ -1049,6 +1049,33 @@ for (let i = 0; i < 11; ++i) {
             expect_status=400,
         )
 
+    def test_user_filtering(self):
+        # Group teacher can filter jsrunner targets but not use runner on users outside of the group
+        self.login_test1()
+        d = self.create_jsrun("""
+fields: []
+group: testusers
+program: |!!
+tools.print(tools.getUserName());
+!!""")
+        ug = UserGroup.create('testusers')
+        ug.users.append(self.test_user_1)
+        ug.users.append(self.test_user_2)
+        ug.admin_doc = self.create_doc().block
+        self.test_user_2.grant_access(ug.admin_doc, AccessType.teacher)
+        self.test_user_2.grant_access(d, AccessType.teacher)
+        db.session.commit()
+        self.login_test2()
+        self.do_jsrun(
+            d,
+            user_input={"userNames":["testuser1"]},
+            expect_content={'web': {'errors': [], 'output': 'testuser1\n', 'outdata': {}}},
+        )
+        self.do_jsrun(
+            d,
+            user_input={"userNames":["testuser3"]},
+            expect_content={'web': {'errors': [], 'output': '', 'outdata': {}}},
+        )
 
     def create_group_jsrun(self, grouplist, method='setGroup'):
         d = self.create_jsrun(f"""
