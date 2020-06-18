@@ -3,10 +3,8 @@ import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
 import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
-import {slugify} from "tim/util/slugify";
-import {getStorage, isSmallScreen, queryDeviceVisible, setStorage} from "tim/util/utils";
+import {getStorage, queryDeviceVisible, setStorage} from "tim/util/utils";
 import {LectureController} from "tim/lecture/lectureController";
-import Menu = JQueryUI.Menu;
 
 enum MenuState {
     OPEN,
@@ -15,12 +13,19 @@ enum MenuState {
     MAX
 }
 
+const MENU_BUTTON_ICONS: Record<MenuState, string> = {
+    [MenuState.OPEN]: "menu-hamburger",
+    [MenuState.ICONS]: "option-horizontal",
+    [MenuState.CLOSED]: "menu-left",
+    [MenuState.MAX]: "",
+};
+
 @Component({
     selector: "app-sidebar-menu",
     template: `
         <div class="left-fixed-side" [class.show]="showMenu">
             <div class="btn btn-default btn-sm pull-left" (click)="nextVisibilityState()" i18n-title title="Show menu">
-                <i class="glyphicon glyphicon-menu-hamburger" i18n-title title="Click to open sidebar-menu"></i>
+                <i class="glyphicon glyphicon-{{nextGlyphiconIcon}}" i18n-title title="Click to open sidebar-menu"></i>
             </div>
             <tabset id="menuTabs" [class.show]="showTabset" #tabs>
                 <ng-container *ngFor="let menuTab of menuTabs">
@@ -47,6 +52,10 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     currentMenuState: MenuState = MenuState.OPEN;
 
     constructor(private tabEntryList: TabEntryListService) {
+    }
+
+    get nextGlyphiconIcon() {
+        return MENU_BUTTON_ICONS[this.nextState];
     }
 
     get showMenu() {
@@ -144,7 +153,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     nextVisibilityState() {
-        this.setVisibleState(this.isSmallScreen ? this.nextMobileState : this.nextDesktopState);
+        this.setVisibleState(this.nextState);
     }
 
     setVisibleState(newState: MenuState, updateTabVisibility = true) {
@@ -184,11 +193,15 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         return queryDeviceVisible("xs") || queryDeviceVisible("sm");
     }
 
-    private get nextMobileState() {
+    private get nextMobileState(): MenuState {
         return this.currentMenuState == MenuState.OPEN ? MenuState.CLOSED : MenuState.OPEN;
     }
 
-    private get nextDesktopState() {
+    private get nextDesktopState(): MenuState {
         return (this.currentMenuState + 1) % MenuState.MAX;
+    }
+
+    private get nextState() {
+        return this.isSmallScreen ? this.nextMobileState : this.nextDesktopState;
     }
 }
