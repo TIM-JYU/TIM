@@ -23,7 +23,7 @@ const MENU_BUTTON_ICONS: Record<MenuState, string> = {
 };
 
 @Component({
-    selector: "app-sidebar-menu",
+    selector: "tim-sidebar-menu",
     template: `
         <div class="left-fixed-side" [class.show]="showMenu">
             <div class="btn btn-default btn-sm pull-left" (click)="nextVisibilityState()" i18n-title title="Show menu">

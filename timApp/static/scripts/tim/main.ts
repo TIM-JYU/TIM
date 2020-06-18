@@ -28,8 +28,8 @@ import * as lectureInfoController from "tim/lecture/lectureInfoController";
 import * as lectureMenu from "tim/lecture/lectureMenu";
 import * as questionAskController from "tim/lecture/questionAskController";
 import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQuestionController";
-import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrap-panel.component";
+import * as markAllAsRead from "tim/ui/markAllAsRead";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {LogoComponent} from "tim/ui/logo.component";
 import {LoginMenuComponent} from "tim/user/login-menu.component";
@@ -90,7 +90,6 @@ markAsUsed(
     reviewController,
     rightsEditor,
     showStatisticsToQuestionController,
-    sidebarMenuCtrl,
     taggedDocumentList,
     templateList,
     timRoot,
@@ -98,6 +97,7 @@ markAsUsed(
     velpSelection,
     viewctrl,
     viewRangeNavigation,
+    markAllAsRead,
 );
 
 setAngularJSGlobal(angular);
@@ -129,7 +129,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timGotoLink", GotoLinkComponent);
     doDowngrade(dg, "timTimeLeft", TimeLeftComponent);
     doDowngrade(dg, "timCountdown", CountdownComponent);
-    doDowngrade(dg, "appSidebarMenu", SidebarMenuComponent);
+    doDowngrade(dg, "timSidebarMenu", SidebarMenuComponent);
     return dg;
 }
 
