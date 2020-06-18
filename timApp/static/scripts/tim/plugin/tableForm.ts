@@ -867,12 +867,8 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             return;
         }
 
-        let groups = this.markup.groups;
         const selUsers = timTable.getCheckedRows(0, true);
         const users = TableFormComponent.makeUserArray(selUsers, userNameColIndex);
-        if (users.length > 0) {
-            groups = users;
-        }
 
         const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({
             // TODO: support for relevant attrs (realnames, usernames, emails...)
@@ -881,7 +877,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             // TODO: use taskid? (less data to transfer because of plug.values, but dependant on task existence)
             docId: taskId.docId,
             fields: this.markup.fields,
-            groups: groups,
+            groups: this.markup.groups,
             removeDocIds: this.markup.removeDocIds,
             separator: (this.markup.separator ?? ","),
             anonNames: this.markup.anonNames,
@@ -889,6 +885,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             usernames: this.markup.usernames,
             emails: this.markup.emails,
             reportFilter: this.markup.reportFilter,
+            userFilter: users,
         }), "WINDOWID");
         if (win == null) {
             this.error = "Failed to open report window.";

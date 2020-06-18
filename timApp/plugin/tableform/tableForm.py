@@ -223,6 +223,7 @@ class GenerateCSVModel:
     removeDocIds: Union[bool, Missing] = missing
     emails: Union[bool, Missing] = missing
     reportFilter: Union[str, Missing] = ""
+    userFilter: Union[List[str], Missing] = missing
 
 
 GenerateCSVSchema = class_schema(GenerateCSVModel)
@@ -238,35 +239,35 @@ def gen_csv(args: GenerateCSVModel):
     :return: CSV containing headerrow and rows for users and values
     """
     curr_user = get_current_user_object()
-    docid, groups, separator, real_names, user_names, emails, remove_doc_ids, fields = \
+    docid, groups, separator, show_real_names, show_user_names, show_emails, remove_doc_ids, fields, user_filter = \
         args.docId, args.groups, args.separator, args.realnames, \
-        args.usernames, args.emails, args.removeDocIds, args.fields
+        args.usernames, args.emails, args.removeDocIds, args.fields, args.userFilter
     if len(separator) > 1:
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now"
     doc = get_doc_or_abort(docid)
     r = tableform_get_fields(fields, groups,
-                             doc, curr_user, remove_doc_ids, allow_non_teacher=True,
+                             doc, curr_user, remove_doc_ids, allow_non_teacher=True, user_filter=user_filter
                              # TODO: group_filter_type=self.markup.includeUsers,
                              )
     rowkeys = list(r['rows'].keys())
     rowkeys.sort()
     data = [[] for i in range(len(rowkeys) + 1)]
-    if real_names:
+    if show_real_names:
         data[0].append("Real name")
-    if user_names:
+    if show_user_names:
         data[0].append("Username")
-    if emails:
+    if show_emails:
         data[0].append("email")
     data[0] = data[0] + r['fields']
     y_offset = 1
     for ycoord, rowkey in enumerate(rowkeys):
         row = r['rows'].get(rowkey)
-        if real_names:
+        if show_real_names:
             data[ycoord + y_offset].append(r['realnamemap'].get(rowkey))
-        if user_names:
+        if show_user_names:
             data[ycoord + y_offset].append(rowkey)
-        if emails:
+        if show_emails:
             data[ycoord + y_offset].append(r['emailmap'].get(rowkey))
         for _field in r['fields']:
             data[ycoord + y_offset].append(row.get(_field))
@@ -378,6 +379,7 @@ def tableform_get_fields(
         remove_doc_ids: bool,
         allow_non_teacher: bool,
         group_filter_type = MembershipFilter.Current,
+        user_filter: List[str] = None,
 ):
     queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames))
     fielddata, aliases, field_names, groups = \
@@ -390,6 +392,7 @@ def tableform_get_fields(
             add_missing_fields=True,
             allow_non_teacher=allow_non_teacher,
             member_filter_type=group_filter_type,
+            user_filter=User.name.in_(user_filter) if user_filter else None
         )
     rows = {}
     realnames = {}
