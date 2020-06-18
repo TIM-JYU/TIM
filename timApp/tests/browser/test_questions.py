@@ -175,7 +175,7 @@ class QuestionTest(BrowserTest):
             adjust_matrix = []
         d = self.create_doc(initial_par='test')
         self.goto_document(d, view='lecture')
-        self.find_element('.glyphicon-menu-hamburger').click()
+        self.find_element('.glyphicon-option-horizontal').click()
         par = self.drv.find_elements_by_css_selector('.editline')[1]
         par.click()
         find_button_by_text(par, 'Add question above').click()
