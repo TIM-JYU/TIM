@@ -1,4 +1,4 @@
-import {Component, DoCheck, OnInit} from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 import {Users, UserService} from "tim/user/userService";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";

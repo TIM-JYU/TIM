@@ -2,7 +2,7 @@ import {
     Component,
     ComponentFactoryResolver,
     ComponentRef,
-    Input, OnInit,
+    Input,
     ViewChild,
 } from "@angular/core";
 import {TabEntry, MenuTabDirective, OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
