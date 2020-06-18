@@ -862,6 +862,17 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         if (taskId == undefined) {
             return;
         }
+        const timTable = this.getTimTable();
+        if (timTable == null) {
+            return;
+        }
+
+        let groups = this.markup.groups;
+        const selUsers = timTable.getCheckedRows(0, true);
+        const users = TableFormComponent.makeUserArray(selUsers, userNameColIndex);
+        if (users.length > 0) {
+            groups = users;
+        }
 
         const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({
             // TODO: support for relevant attrs (realnames, usernames, emails...)
@@ -870,7 +881,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             // TODO: use taskid? (less data to transfer because of plug.values, but dependant on task existence)
             docId: taskId.docId,
             fields: this.markup.fields,
-            groups: this.markup.groups,
+            groups: groups,
             removeDocIds: this.markup.removeDocIds,
             separator: (this.markup.separator ?? ","),
             anonNames: this.markup.anonNames,
