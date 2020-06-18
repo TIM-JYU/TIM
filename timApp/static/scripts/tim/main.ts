@@ -9,7 +9,6 @@ import $ from "jquery";
 import * as answerbrowser from "tim/answer/answerbrowser3";
 import * as userlistController from "tim/answer/userlistController";
 import {timApp} from "tim/app";
-import * as bookmarks from "tim/bookmark/bookmarks";
 import * as templateList from "tim/document/editing/templateList";
 import * as questionController from "tim/document/question/questionController";
 import * as viewctrl from "tim/document/viewctrl";
@@ -77,7 +76,6 @@ if (environment.production) {
 markAsUsed(
     answerbrowser,
     answerToQuestionController,
-    bookmarks,
     bootstrap,
     createLectureCtrl,
     indexCtrl,

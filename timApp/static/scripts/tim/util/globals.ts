@@ -1,10 +1,10 @@
-import {IBookmarkGroup} from "tim/sidebarmenu/util/bookmarks.component";
+import {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {IDocSettings} from "../document/IDocSettings";
 import {EditMode} from "../document/popupMenu";
 import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
 import {DocumentOrFolder, IDocument, IFolder, IFullDocument, IItem, ITranslation} from "../item/IItem";
 import {ILecture} from "../lecture/lecturetypes";
-import {HeaderIndexItem, IGroupWithSisuPath, IScoreboard, IDocScoreInfo} from "../sidebar/sidebarMenuCtrl";
+import {HeaderIndexItem, IGroupWithSisuPath, IDocScoreInfo} from "../sidebar/sidebarMenuCtrl";
 import {IFullUser, IGroup, IUser, IUserListEntry} from "../user/IUser";
 import {ICssFile, INotification, ISettings} from "../user/settings.component";
 

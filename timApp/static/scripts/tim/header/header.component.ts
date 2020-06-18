@@ -1,10 +1,9 @@
 import moment from "moment";
 import {Component, OnInit} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {BookmarkService} from "tim/bookmark/bookmark.service";
+import {BookmarkService, IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {TagService} from "tim/item/tag.service";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
-import {IBookmarkGroup} from "../bookmark/bookmarks";
 import {IDocSettings} from "../document/IDocSettings";
 import {DocumentOrFolder, IFolder, isRootFolder, ITag, ITranslation, TagType} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";

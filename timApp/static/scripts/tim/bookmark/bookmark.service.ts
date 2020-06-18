@@ -1,7 +1,19 @@
 import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {IBookmarkGroup} from "tim/bookmark/bookmarks";
 import {to2} from "tim/util/utils";
+
+export interface IBookmarkGroup {
+    name: string;
+    isOpen: boolean;
+    items: IBookmark[];
+    editable: boolean;
+}
+
+export interface IBookmark {
+    group: string;
+    link: string;
+    name: string;
+}
 
 @Injectable(
     {

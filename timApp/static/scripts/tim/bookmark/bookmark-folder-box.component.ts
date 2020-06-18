@@ -5,10 +5,10 @@
 
 import {showBookmarkDialog} from "tim/bookmark/bookmark-dialog.component";
 import {Component, Input, OnInit} from "@angular/core";
+import {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {getCourseCode, ITaggedItem} from "../item/IItem";
 import {$http} from "../util/ngimport";
 import {to} from "../util/utils";
-import {IBookmark, IBookmarkGroup} from "./bookmarks";
 
 export interface ITaggedBookmarkedItem {
     doc: ITaggedItem;

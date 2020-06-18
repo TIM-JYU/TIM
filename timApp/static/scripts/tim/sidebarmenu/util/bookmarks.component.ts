@@ -6,19 +6,7 @@ import {clone, to2} from "tim/util/utils";
 import {showBookmarkDialog} from "tim/bookmark/bookmark-dialog.component";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/dialog";
-
-export interface IBookmarkGroup {
-    name: string;
-    isOpen: boolean;
-    items: IBookmark[];
-    editable: boolean;
-}
-
-export interface IBookmark {
-    group: string;
-    link: string;
-    name: string;
-}
+import {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
 
 @Component({
     selector: "bookmarks-list",
