@@ -218,12 +218,12 @@ class GenerateCSVModel:
     fields: List[str]
     groups: List[str]
     separator: str
+    userFilter: List[str] = field(default_factory=list)
     usernames: Union[bool, Missing] = True
     realnames: Union[bool, Missing] = missing
     removeDocIds: Union[bool, Missing] = missing
     emails: Union[bool, Missing] = missing
     reportFilter: Union[str, Missing] = ""
-    userFilter: Union[List[str], Missing] = missing
 
 
 GenerateCSVSchema = class_schema(GenerateCSVModel)

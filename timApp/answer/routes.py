@@ -356,7 +356,7 @@ JsRunnerMarkupSchema = class_schema(JsRunnerMarkupModel)
 @dataclass
 class JsRunnerInputModel:
     nosave: Union[bool, Missing] = missing
-    groups: Union[List[str], Missing] = missing
+    userNames: Union[List[str], Missing] = missing
     paramComps: Union[Dict[str, str], Missing] = missing
     includeUsers: MembershipFilter = field(default=MembershipFilter.Current, metadata={'by_value': True})
 
@@ -731,25 +731,6 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
         groupnames = [runnermarkup.group]
     g = UserGroup.query.filter(UserGroup.name.in_(groupnames))
     found_groups = g.all()
-    req_groups = runner_req.input.groups
-    # Check if groups given as request arg can be considered as subset of groups given in markup
-    if req_groups:
-        all_req_groups = UserGroup.query.filter(UserGroup.name.in_(req_groups)).all()
-        if not curr_user.has_edit_access(d):
-            user_set = set()
-            for g in all_req_groups:
-                members = g.users.all()
-                user_set.update(members)
-            for u in user_set:  # type: User
-                u_within_jsrunner_groups = False
-                for fg in found_groups:
-                    if fg in u.groups:
-                        u_within_jsrunner_groups = True
-                        break
-                if not u_within_jsrunner_groups:
-                    raise PluginException(f'Given groups are not associated with the original groups.')
-        groupnames = req_groups
-        found_groups = all_req_groups
     not_found_groups = sorted(list(set(groupnames) - set(g.name for g in found_groups)))
     if not_found_groups:
         raise PluginException(f'The following groups were not found: {", ".join(not_found_groups)}')
@@ -769,6 +750,7 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
         get_current_user_object(),
         allow_non_teacher=siw,
         member_filter_type=runner_req.input.includeUsers,
+        user_filter=User.name.in_(runner_req.input.userNames) if runner_req.input.userNames else None
     )
     answerdata.pop('paramComps', None)  # This isn't needed by jsrunner server, so don't send it.
     if runnermarkup.program is missing:
