@@ -63,9 +63,9 @@ RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCK
 # Python packages
 
 # http://www.scipy.org/install.html
-RUN bash -c "${APT_INSTALL} python3-numpy python3-scipy python3-matplotlib python3-pandas epstool transfig && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
 
-RUN python3.8 -m pip install statsmodels control && bash -c "${APT_CLEANUP}"
+RUN python3.8 -m pip install numpy scipy matplotlib pandas statsmodels control && bash -c "${APT_CLEANUP}"
 
 # Octave
 RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic gnuplot pstoedit liboctave-dev && ${APT_CLEANUP}"
@@ -126,7 +126,7 @@ RUN ldconfig
 RUN bash -c "${APT_INSTALL} libcurl4-openssl-dev && ${APT_CLEANUP}"
 RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArmadillo", "psych", "GPArotation", "candisc", "car", "heplots", "vegan", "lavaan", "ggplot2"))'
 
-RUN bash -c "${APT_INSTALL} python3-tk bsdmainutils iputils-ping && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} bsdmainutils iputils-ping && ${APT_CLEANUP}"
 
 RUN python3.8 -m pip install sympy pyaml html5lib opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
 
