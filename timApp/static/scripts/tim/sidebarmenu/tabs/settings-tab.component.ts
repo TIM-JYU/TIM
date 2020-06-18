@@ -223,7 +223,7 @@ export class SettingsTabComponent implements OnInit {
         if (this.item) {
             this.showFolderSettings = this.users.isLoggedIn() && this.item.isFolder;
         }
-        if (this.item?.isFolder) {
+        if (!this.item?.isFolder) {
             this.loadViewRangeSettings();
         }
     }
@@ -251,7 +251,7 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        await toggleViewRange(this.item.id, this.parsPerPage);
+        await toggleViewRange(this.item.id, 1);
         this.currentViewRange = getCurrentViewRange();
         this.updateIsFullRange();
     }
