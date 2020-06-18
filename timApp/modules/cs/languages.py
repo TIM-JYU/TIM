@@ -250,13 +250,15 @@ class Language:
         """
         :return: list of needed js-files (maybe copiled from ts-files)
         """
-
+        return ["/cs/js/build/csPlugin.js"]
+    
     @staticmethod
     def css_files():
         """
         :return: list of needed css-files (maybe copiled from scss-files)
         """
-
+        return ["/cs/css/cs.css"]
+    
     def convert(self, sourcelines):
         return 0, sourcelines, "", ""
 

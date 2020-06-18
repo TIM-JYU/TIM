@@ -974,15 +974,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             do_headers(self, content_type)
 
         templs = {}
-        jslist = ["/cs/js/build/csPlugin.js"]
-        csslist = ["/cs/css/cs.css"]
-        for language_class in languages.values():  # ask needed js and css files from language
-            lang_js_list = language_class.js_files()
-            if lang_js_list:
-                jslist.extend(lang_js_list)
-            lang_css_list = language_class.css_files()
-            if lang_css_list:
-                csslist.extend(lang_css_list)
+        jslist = all_js_files()
+        csslist = all_css_files()
         
         result_json = {"js": jslist,
                         "css": csslist, "multihtml": True, "multimd": True, "canGiveTask": True}

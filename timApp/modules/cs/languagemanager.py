@@ -1,3 +1,5 @@
+from traceback import print_exc
+
 from languages import *
 from jsframe import *
 from stack import *
@@ -21,3 +23,29 @@ def populate_languages():
         languages[cls.ttype] = cls
 
 populate_languages()
+
+def all_js_files():
+    """
+    :return: list of needed js-files (maybe copiled from ts-files)
+    """
+    files = set()
+    for language_class in languages.values():  # ask needed js and css files from language
+        try:
+            files.update(language_class.js_files())
+        except:
+            print(f"Failed to ask for {language_class.__name__} js files:")
+            print_exc()
+    return list(files)
+
+def all_css_files():
+    """
+    :return: list of needed css-files (maybe copiled from scss-files)
+    """
+    files = set()
+    for language_class in languages.values():  # ask needed js and css files from language
+        try:
+            files.update(language_class.css_files())
+        except:
+            print(f"Failed to ask for {language_class.__name__} css files:")
+            print_exc()
+    return list(files)
