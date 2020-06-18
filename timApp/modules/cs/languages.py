@@ -36,7 +36,7 @@ cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 filename_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 
 
-JAVAFX_VERSION = '11.0.1'
+JAVAFX_VERSION = '14'
 
 
 def sanitize_filename(s):
