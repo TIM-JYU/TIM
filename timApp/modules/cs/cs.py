@@ -200,9 +200,7 @@ def copy_files_regex(files, source_dir, dest_dir):
                 shutil.copy2(str(rootp / file), str(dest_dir / relfilepath))
 
 def get_md(ttype, query):
-    tiny = False
-
-    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype)
+    _, bycode, is_input, js, runner, tiny = handle_common_params(query, ttype)
 
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None, False)
@@ -413,7 +411,6 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
         return htmldata
 
     user_id = get_param(query, "user_id", "--")
-    tiny = False
     # print("UserId:", user_id)
     if user_id == "Anonymous":
         allow_anonymous = str(get_param(query, "anonymous", "false")).lower()
@@ -427,21 +424,18 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
     # print("do_lazy",do_lazy,type(do_lazy))
 
 
-    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype)
-    language_class = languages.get(ttype.lower(), Language)
-    language = language_class(query, bycode)
+    language, bycode, is_input, js, runner, tiny = handle_common_params(query, ttype)
 
     usercode = get_json_eparam(query.jso, "state", "usercode", None)
 
-    state_copy = language.state_copy()
-    for key in state_copy:
-        # value = get_json_eparam(query.jso, "state", key, "")
-        state = query.jso.get("state", {})
-        if not state:
-            break
-        value = state.get(key, None)
-        if value:
-            js['markup'][key] = value
+    state = query.jso.get("state")
+    if state:
+        state_copy = language.state_copy()
+        for key in state_copy:
+            # value = get_json_eparam(query.jso, "state", key, "")
+            value = state.get(key, None)
+            if value:
+                js['markup'][key] = value
 
     before_open = query.jso.get("markup", {}).get('beforeOpen','')
     is_rv = is_review(query)
@@ -537,13 +531,17 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
     return s
 
 
-def handle_common_params(query: QueryClass, tiny, ttype):
-    language_class = languages.get(ttype.lower(), Language)
-    language = language_class(query, "")
+def handle_common_params(query: QueryClass, ttype):
+    language, got_language = make_object(ttype, query)
+    
     if query.hide_program:
         get_param_del(query, 'program', '')
-    language.modify_query();
+    language.modify_query()
     js = query_params_to_map_check_parts(query, language.deny_attributes())
+    
+    if not got_language:
+        return language, "", "", js, language.runner_name(), False
+        
     # print(js)
 
     q_bycode = get_param(query, "byCode", None)
@@ -569,7 +567,7 @@ def handle_common_params(query: QueryClass, tiny, ttype):
         js["uploadedFile"] = uf
         js["uploadedType"] = ut
     # jso)
-    runner = 'cs-runner'
+    runner = language.runner_name()
     # print(ttype)
     is_input = ''
     if "input" in ttype or "args" in ttype:
@@ -584,18 +582,16 @@ def handle_common_params(query: QueryClass, tiny, ttype):
     if "tiny" in ttype:
         runner = 'cs-text-runner'
         tiny = True
+    else:
+        tiny = False
     if "parsons" in ttype:
         runner = 'cs-parsons-runner'
     if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype:
         runner = 'cs-jypeli-runner'
-
-    language_runner = language.runner_name()
-    if language_runner:
-        runner = language_runner
-
     if "wescheme" in ttype:
         runner = 'cs-wescheme-runner'
-    return bycode, is_input, js, runner, tiny
+    
+    return language, bycode, is_input, js, runner, tiny
 
 
 def wait_file(f1):
@@ -1289,8 +1285,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 s = replace_code(query.cut_errors, s)
                 return self.wout(s)
 
-            language_class = languages.get(ttype.lower(), Language)
-            language = language_class(query, s)
+            language, success = make_object(ttype, query, s)
+            
+            if not success:
+                raise Exception(f"Could not get language from type {ttype}")
 
             if not language.can_give_task() and query.jso.get("input",{}).get("getTask", False):
                 raise Exception("Give task not allowed for " + ttype)

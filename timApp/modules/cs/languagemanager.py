@@ -1,4 +1,5 @@
 from traceback import print_exc
+from re import split
 
 from languages import *
 from jsframe import *
@@ -49,3 +50,35 @@ def all_css_files():
             print(f"Failed to ask for {language_class.__name__} css files:")
             print_exc()
     return list(files)
+
+def make_object(name, query, usercode = ""):
+    """Returns a tuple: (language object of the given class name, bool: whether it succeeded). 
+    Returns (LanguageError object, false) on failure"""
+    language_class, got_class = get_class(name)
+    
+    language = None
+    if not got_class:
+        err_str = f"Error: Language {name} not found."
+        print_exc()
+    else:
+        try:
+            language = language_class(query, usercode)
+        except Exception as e:
+            err_str = f"Error: {str(e)}"
+            print_exc()
+    
+    if language is None:
+        return LanguageError(query, usercode, err_str), False
+    
+    return language, True
+
+def get_class(name):
+    """Returns a tuple: (language class of the given class name, bool: whether it succeeded). 
+    Returns (LanguageError, false) on failure"""
+    parts = filter(None, split(r'\s,|;\\/', name))
+    for part in parts:
+        language_class = languages.get(part)
+        if language_class is not None:
+            return language_class, True
+    
+    return LanguageError, False

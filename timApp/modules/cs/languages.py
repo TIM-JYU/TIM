@@ -243,7 +243,7 @@ class Language:
         """
         :return: runner name if it differs from cs-runner.  Then normally a new .ts file is also needed
         """
-        return ""
+        return "cs-runner"
 
     @staticmethod
     def js_files():
