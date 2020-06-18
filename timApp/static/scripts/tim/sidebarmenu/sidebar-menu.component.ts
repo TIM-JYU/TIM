@@ -4,7 +4,7 @@ import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
 import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
 import {slugify} from "tim/util/slugify";
-import {getStorage, setStorage} from "tim/util/utils";
+import {getStorage, isSmallScreen, queryDeviceVisible, setStorage} from "tim/util/utils";
 import {LectureController} from "tim/lecture/lectureController";
 import Menu = JQueryUI.Menu;
 
@@ -129,7 +129,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     ngAfterViewInit() {
-        this.setVisibleState(this.lastVisState);
+        this.setVisibleState(!this.isSmallScreen ? this.lastVisState : MenuState.CLOSED);
     }
 
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
@@ -144,7 +144,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     nextVisibilityState() {
-        this.setVisibleState((this.currentMenuState + 1) % MenuState.MAX);
+        this.setVisibleState(this.isSmallScreen ? this.nextMobileState : this.nextDesktopState);
     }
 
     setVisibleState(newState: MenuState, updateTabVisibility = true) {
@@ -178,5 +178,17 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
             return;
         }
         this.setVisibleState(MenuState.OPEN);
+    }
+
+    private get isSmallScreen() {
+        return queryDeviceVisible("xs") || queryDeviceVisible("sm");
+    }
+
+    private get nextMobileState() {
+        return this.currentMenuState == MenuState.OPEN ? MenuState.CLOSED : MenuState.OPEN;
+    }
+
+    private get nextDesktopState() {
+        return (this.currentMenuState + 1) % MenuState.MAX;
     }
 }
