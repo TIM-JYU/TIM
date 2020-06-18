@@ -466,20 +466,8 @@ export function isMobileDevice() {
     return touch && isSmallScreen();
 }
 
-/**
- * Queries a given .device class to check if it's visible. Essentially allows to check if a size media query
- * is active.
- *
- * jQuery: Elements are considered visible if they consume space in the document.
- * Visible elements have a width or height that is greater than zero.
- * @param size Size selector ("xs", "sm", ...)
- */
-export function queryDeviceVisible(size: string) {
-    const deviceElement = document.querySelector(`.device-${size}`);
-    if (!deviceElement) {
-        return false;
-    }
-    return deviceElement.clientHeight != 0 || deviceElement.clientWidth != 0;
+export function isSmScreen() {
+    return getViewPortSize().width < 991;
 }
 
 export function escapeRegExp(str: string) {

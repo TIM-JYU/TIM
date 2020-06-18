@@ -3,8 +3,10 @@ import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
 import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
-import {getStorage, queryDeviceVisible, setStorage} from "tim/util/utils";
+import {getStorage, isSmScreen, setStorage} from "tim/util/utils";
 import {LectureController} from "tim/lecture/lectureController";
+import {ISettings} from "tim/user/settings.component";
+import {genericglobals} from "tim/util/globals";
 
 enum MenuState {
     OPEN,
@@ -25,7 +27,7 @@ const MENU_BUTTON_ICONS: Record<MenuState, string> = {
     template: `
         <div class="left-fixed-side" [class.show]="showMenu">
             <div class="btn btn-default btn-sm pull-left" (click)="nextVisibilityState()" i18n-title title="Show menu">
-                <i class="glyphicon glyphicon-{{nextGlyphiconIcon}}" i18n-title title="Click to open sidebar-menu"></i>
+                <i class="glyphicon glyphicon-{{nextGlyphicon}}" i18n-title title="Click to open sidebar-menu"></i>
             </div>
             <tabset id="menuTabs" [class.show]="showTabset" #tabs>
                 <ng-container *ngFor="let menuTab of menuTabs">
@@ -50,12 +52,10 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     tabsVisTable: Record<string, boolean> = {};
     lctrl = LectureController.instance;
     currentMenuState: MenuState = MenuState.OPEN;
+    settings: ISettings = genericglobals().userPrefs;
+    nextGlyphicon: string = MENU_BUTTON_ICONS[this.nextState];
 
     constructor(private tabEntryList: TabEntryListService) {
-    }
-
-    get nextGlyphiconIcon() {
-        return MENU_BUTTON_ICONS[this.nextState];
     }
 
     get showMenu() {
@@ -67,6 +67,9 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     get lastUsedTab() {
+        if (!this.settings.remember_last_sidebar_menu_tab) {
+            return "";
+        }
         const val = getStorage("sideBarMenu_lastUsedTab");
         if (typeof val != "string") {
             return "";
@@ -79,6 +82,9 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     get lastVisState(): MenuState {
+        if (!this.settings.remember_last_sidebar_menu_state) {
+            return MenuState.OPEN;
+        }
         const val = getStorage("sideBarMenu_lastVisState");
         if (typeof val != "number" || val < 0 || val >= MenuState.MAX) {
             return MenuState.OPEN;
@@ -124,21 +130,8 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         void this.lctrl.refreshWall();
     }
 
-    private trySetCurrentTabToDefault() {
-        if (this.currentTab && this.tabsVisTable[this.currentTab]) {
-            return false;
-        }
-        const firstDefaultTab = this.tabEntryList.defaultTabOrder.find((id) => this.tabsVisTable[id]);
-        if (!firstDefaultTab) {
-            return false;
-        }
-        this.currentTab = firstDefaultTab;
-        this.lastUsedTab = this.currentTab;
-        return true;
-    }
-
     ngAfterViewInit() {
-        this.setVisibleState(!this.isSmallScreen ? this.lastVisState : MenuState.CLOSED);
+        this.setVisibleState(!isSmScreen() ? this.lastVisState : MenuState.CLOSED);
     }
 
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
@@ -159,9 +152,23 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     setVisibleState(newState: MenuState, updateTabVisibility = true) {
         this.currentMenuState = newState;
         this.lastVisState = newState;
+        this.nextGlyphicon = MENU_BUTTON_ICONS[this.nextState];
         if (updateTabVisibility) {
             this.updateTabs();
         }
+    }
+
+    private trySetCurrentTabToDefault() {
+        if (this.currentTab && this.tabsVisTable[this.currentTab]) {
+            return false;
+        }
+        const firstDefaultTab = this.tabEntryList.defaultTabOrder.find((id) => this.tabsVisTable[id]);
+        if (!firstDefaultTab) {
+            return false;
+        }
+        this.currentTab = firstDefaultTab;
+        this.lastUsedTab = this.currentTab;
+        return true;
     }
 
     private updateTabs() {
@@ -189,10 +196,6 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         this.setVisibleState(MenuState.OPEN);
     }
 
-    private get isSmallScreen() {
-        return queryDeviceVisible("xs") || queryDeviceVisible("sm");
-    }
-
     private get nextMobileState(): MenuState {
         return this.currentMenuState == MenuState.OPEN ? MenuState.CLOSED : MenuState.OPEN;
     }
@@ -202,6 +205,6 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     private get nextState() {
-        return this.isSmallScreen ? this.nextMobileState : this.nextDesktopState;
+        return isSmScreen() ? this.nextMobileState : this.nextDesktopState;
     }
 }
