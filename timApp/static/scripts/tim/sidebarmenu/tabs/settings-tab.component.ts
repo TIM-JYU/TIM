@@ -100,12 +100,8 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
             <div *ngIf="lctrl.isLecturer" class="checkbox">
                 <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useAnswers"> Show answers</label>
             </div>
-            <!--            <div class="checkbox">-->
-            <!--                <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings."> Show 'not polling' dialog</label>-->
-            <!--            </div>-->
         </ng-container>
 
-        <!--        TODO: check rights for given options-->
         <ng-container *ngIf="item && !item.isFolder">
             <h5 class="same-line" i18n>Print document</h5>
             <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
@@ -216,6 +212,9 @@ export class SettingsTabComponent implements OnInit {
         this.item = globals.curr_item;
         this.docSettings = isDocumentGlobals(globals) ? globals.docSettings : undefined;
         this.documentMemoMinutes = isDocumentGlobals(globals) ? globals.memoMinutes : undefined;
+        if (isDocumentGlobals(globals) && globals.linked_groups) {
+            this.updateLinkedGroups(globals.linked_groups);
+        }
     }
 
     ngOnInit(): void {
