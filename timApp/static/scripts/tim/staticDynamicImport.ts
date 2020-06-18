@@ -38,6 +38,8 @@ export function staticDynamicImport(s: string) {
             return import("modules/cs/js/jsframe");
         case "/cs/js/build/extcheck.js":
             return import("modules/cs/js/extcheck");
+        case "/cs/js/build/language_error.js":
+            return import("modules/cs/js/language_error");
         case "/field/js/build/multisave.js":
             return import("modules/fields/js/multisave");
         case "/svn/js/video.js":

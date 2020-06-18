@@ -768,6 +768,8 @@ const CsAll = t.intersection([
         userinput: t.string,
         selectedLanguage: t.string,
         timeout: t.number,
+        error: t.string,
+        own_error: t.string,
     }),
     t.type({
         // anonymous: t.boolean,
@@ -782,7 +784,7 @@ const CsAll = t.intersection([
         // userPrint: t.boolean,
     })]);
 
-class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
+export class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
     protected usercode: string = "";
 
     get byCode() {

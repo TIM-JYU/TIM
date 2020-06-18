@@ -351,10 +351,48 @@ class Language:
     def web_data(self):
         return None
     
+    def is_valid(self):
+        return True
+    
     @classmethod
     def all_subclasses(cls):
         subclasses = cls.__subclasses__()
         return subclasses + [i for sc in subclasses for i in sc.all_subclasses()]
+    
+class LanguageError(Language):
+    ttype="_error"
+    def __init__(self, query, sourcecode, error_str):
+        try:
+            super().__init__(query, sourcecode)
+        except Exception as e:
+            print("Error:", str(e))
+            print_exc()
+            self.valid = False
+            self.own_error = str(e)
+        else:
+            self.valid = True
+            self.own_error = None
+        
+        self.query = query
+        self.error = error_str
+        self.own_error = error_str
+    
+    def modify_query(self):
+        self.query.query["error"] = [self.error]
+        self.query.query["own_error"] = [self.own_error]
+    
+    def runner_name(self):
+        return "cs-error"
+    
+    @staticmethod
+    def js_files():
+        return ["/cs/js/build/language_error.js"]
+    
+    def is_valid(self):
+        return self.valid
+
+class All(Language):
+    ttype = "all"
 
 class CS(Language):
     ttype = "cs"
@@ -1501,5 +1539,3 @@ class Lang(Language):
 
 
 dummy_language = Language(QueryClass(), "")
-
-languages = dict()

@@ -370,3 +370,8 @@ li.correctPosition, .testcase.pass {
     display: block;
     color: red;
 }
+
+csError .error {
+    color: red;
+    background-color: lightgoldenrodyellow;
+}
