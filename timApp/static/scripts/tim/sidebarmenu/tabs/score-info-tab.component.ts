@@ -7,12 +7,12 @@ import {ScoreboardService} from "tim/sidebarmenu/services/scoreboard.service";
         <ng-template i18n="@@scoreInfoTabTitle">Scoreboard</ng-template>
         <div class="points-list" *ngIf="scoreBoard.currentDocScoreInfo">
             <div class="collapse-header">
-                <a (click)="showPagePoints = !showPagePoints">
+                <a (click)="hidePagePoints = !hidePagePoints">
                     <h5 i18n>Points on this page</h5>
                     <i class="pull-right glyphicon glyphicon-menu-down"></i>
                 </a>
             </div>
-            <div [collapse]="showPagePoints" [isAnimated]="true">
+            <div [collapse]="hidePagePoints" [isAnimated]="true">
                 <div class="points-header">
                     <p i18n>Task</p>
                     <p class="pull-right" i18n>Points</p>
@@ -38,12 +38,12 @@ import {ScoreboardService} from "tim/sidebarmenu/services/scoreboard.service";
         </div>
         <div *ngIf="scoreBoard.infos && scoreBoard.infos.length" class="scoreboard points-list no-bottom">
             <div class="collapse-header">
-                <a (click)="showCoursePoints = !showCoursePoints">
+                <a (click)="hideCoursePoints = !hideCoursePoints">
                     <h5 i18n>Points in this course</h5>
                     <i class="pull-right glyphicon glyphicon-menu-down"></i>
                 </a>
             </div>
-            <div [collapse]="showCoursePoints" [isAnimated]="true">
+            <div [collapse]="hideCoursePoints" [isAnimated]="true">
                 <div class="points-header">
                     <p i18n>Page</p>
                     <p class="pull-right" i18n>Points</p>
@@ -70,11 +70,12 @@ import {ScoreboardService} from "tim/sidebarmenu/services/scoreboard.service";
             </div>
         </div>
     `,
+    styleUrls: ["./score-info-tab.component.scss"],
 })
 export class ScoreInfoTabComponent implements OnInit {
     scoreBoard: ScoreboardService;
-    showPagePoints: boolean = true;
-    showCoursePoints: boolean = true;
+    hidePagePoints: boolean = false;
+    hideCoursePoints: boolean = false;
     pageUrl = `${document.location.origin}${document.location.pathname}${document.location.search}`;
 
     constructor(scoreBoard: ScoreboardService) {
