@@ -63,7 +63,7 @@ import {ScoreboardService} from "tim/sidebarmenu/services/scoreboard.service";
                         </div>
                     </li>
                     <li class="point-total">
-                        <ng-container i18n>Total</ng-container>: {{scoreBoard.maxTotal}}
+                        <ng-container i18n>Total</ng-container>: {{scoreBoard.total}}
                         <span class="full-points"> / {{scoreBoard.maxTotal}}</span>
                     </li>
                 </ul>
