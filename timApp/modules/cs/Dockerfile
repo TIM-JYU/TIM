@@ -14,9 +14,11 @@ ENV LANG=en_US.UTF-8 \
     LC_CTYPE=en_US.UTF-8
 RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata && bash -c "${APT_CLEANUP}"
 
-RUN bash -c "${APT_INSTALL} python3 python3-pip python3-setuptools wget dirmngr gpg-agent && ${APT_CLEANUP}"
-RUN pip3 install wheel && bash -c "${APT_CLEANUP}"
-RUN pip3 install Flask bleach && bash -c "${APT_CLEANUP}"
+RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
+
+RUN bash -c "${APT_INSTALL} python3.8 wget dirmngr gpg-agent curl python3-distutils && ${APT_CLEANUP}"
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.8 get-pip.py && rm get-pip.py
+RUN python3.8 -m pip install Flask bleach && bash -c "${APT_CLEANUP}"
 
 # Keep above same as SVN Dockerfile for better caching
 
@@ -63,7 +65,7 @@ RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCK
 # http://www.scipy.org/install.html
 RUN bash -c "${APT_INSTALL} python3-numpy python3-scipy python3-matplotlib python3-pandas epstool transfig && ${APT_CLEANUP}"
 
-RUN pip3 install statsmodels control && bash -c "${APT_CLEANUP}"
+RUN python3.8 -m pip install statsmodels control && bash -c "${APT_CLEANUP}"
 
 # Octave
 RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic gnuplot pstoedit liboctave-dev && ${APT_CLEANUP}"
@@ -126,7 +128,7 @@ RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArm
 
 RUN bash -c "${APT_INSTALL} python3-tk bsdmainutils iputils-ping && ${APT_CLEANUP}"
 
-RUN pip3 install sympy pyaml html5lib opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
+RUN python3.8 -m pip install sympy pyaml html5lib opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
 
 # Kotlin
 ENV         KOTLIN_VERSION=1.3.70 \
@@ -161,7 +163,20 @@ RUN bash -c "${APT_INSTALL} fpc && ${APT_CLEANUP}"
 RUN wget -q https://dl.google.com/go/go1.14.1.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.14.1.linux-amd64.tar.gz && rm go1.14.1.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
-RUN pip3 install requests --upgrade && bash -c "${APT_CLEANUP}"
+RUN python3.8 -m pip install \
+beautifulsoup4 \
+filelock \
+gunicorn \
+humanize \
+isodate \
+marshmallow \
+marshmallow-enum \
+marshmallow_union \
+python-dateutil \
+typing-inspect \
+webargs \
+ && bash -c "${APT_CLEANUP}"
+RUN python3.8 -m pip install requests --upgrade && bash -c "${APT_CLEANUP}"
 
 # git
 RUN bash -c "${APT_INSTALL} git && ${APT_CLEANUP}"
@@ -175,6 +190,8 @@ RUN java -version
 # RUN uuidgen > /etc/machine-id
 # RUN dbus-uuidgen > /etc/machine-id
 # run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
+
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 20
 
 RUN useradd -m agent
 ENV HOME /home/agent
