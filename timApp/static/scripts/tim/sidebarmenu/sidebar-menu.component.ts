@@ -25,7 +25,7 @@ const MENU_BUTTON_ICONS: Record<MenuState, string> = {
 @Component({
     selector: "tim-sidebar-menu",
     template: `
-        <div class="left-fixed-side" [class.show]="showMenu">
+        <div (window:resize)="onResize()" class="left-fixed-side" [class.show]="showMenu">
             <div class="btn btn-default btn-sm pull-left" (click)="nextVisibilityState()" i18n-title title="Show menu">
                 <i class="glyphicon glyphicon-{{nextGlyphicon}}" i18n-title title="Click to open sidebar-menu"></i>
             </div>
@@ -47,12 +47,14 @@ const MENU_BUTTON_ICONS: Record<MenuState, string> = {
 })
 export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     private currentTab?: string;
+    private settings: ISettings = genericglobals().userPrefs;
+    private lctrl = LectureController.instance;
+    private currentMenuState: MenuState = MenuState.OPEN;
+    private isSm = isSmScreen();
+    private lastNonSmState = this.lastVisState;
     @ViewChild("tabs") private tabs!: TabsetComponent;
     menuTabs!: TabEntry[];
     tabsVisTable: Record<string, boolean> = {};
-    lctrl = LectureController.instance;
-    currentMenuState: MenuState = MenuState.OPEN;
-    settings: ISettings = genericglobals().userPrefs;
     nextGlyphicon: string = MENU_BUTTON_ICONS[this.nextState];
 
     constructor(private tabEntryList: TabEntryListService) {
@@ -97,6 +99,17 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
             value = MenuState.OPEN;
         }
         setStorage("sideBarMenu_lastVisState", value);
+    }
+
+    onResize(): void {
+        if (!this.isSm && isSmScreen()) {
+            this.isSm = true;
+            this.lastNonSmState = this.currentMenuState;
+            this.setVisibleState(MenuState.CLOSED, true, false);
+        } else if (!isSmScreen()) {
+            this.isSm = false;
+            this.setVisibleState(this.lastNonSmState, true, false);
+        }
     }
 
     ngOnInit(): void {
@@ -149,9 +162,11 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         this.setVisibleState(this.nextState);
     }
 
-    setVisibleState(newState: MenuState, updateTabVisibility = true) {
+    setVisibleState(newState: MenuState, updateTabVisibility = true, updateLastVisState = true) {
         this.currentMenuState = newState;
-        this.lastVisState = newState;
+        if (updateLastVisState) {
+            this.lastVisState = newState;
+        }
         this.nextGlyphicon = MENU_BUTTON_ICONS[this.nextState];
         if (updateTabVisibility) {
             this.updateTabs();
