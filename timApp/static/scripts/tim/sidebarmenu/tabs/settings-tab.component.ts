@@ -44,7 +44,7 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
                 Edit relevance (<span i18n-tooltip tooltip="Current relevance value">{{currentRelevance}}</span>)
             </button>
         </ng-container>
-        <ng-container *ngIf="item?.isFolder">
+        <ng-container *ngIf="item && item.isFolder">
             <h5 i18n>Search</h5>
             <button class="timButton btn-block"
                     i18n-title title="Search with tags"
