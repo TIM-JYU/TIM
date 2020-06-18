@@ -1305,6 +1305,14 @@ class Upload(Language):
         return 0, out, "", ""
 
 
+octave_warnings_to_skip = [
+    "OpenJDK 64-Bit Server VM warning: Archived non-system classes are disabled because",
+    "octave: unable to open X11 DISPLAY",
+    "octave: disabling GUI features",
+    "octave: X11 DISPLAY environment variable not set",
+]
+
+
 class Octave(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
@@ -1339,9 +1347,7 @@ class Octave(Language):
             lout = []
             i = 0
             while i < len(lin):
-                if (re.match("octave: unable to open X11 DISPLAY", lin[i]) or
-                        re.match("octave: disabling GUI features", lin[i]) or
-                        re.match("octave: X11 DISPLAY environment variable not set", lin[i])):
+                if any(re.match(skipmsg, lin[i]) for skipmsg in octave_warnings_to_skip):
                     i += 1
                 elif re.match("warning: ft_", lin[i]):
                     i += 1
