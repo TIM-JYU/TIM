@@ -8,10 +8,7 @@ import {Component, OnInit} from "@angular/core";
         <bookmarks-list></bookmarks-list>
     `,
 })
-export class BookmarksTabComponent implements OnInit {
+export class BookmarksTabComponent {
     constructor() {
-    }
-
-    ngOnInit(): void {
     }
 }
