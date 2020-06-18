@@ -998,8 +998,7 @@ class CsController extends CsBase implements ITimComponent {
         if (CspluginAnswer.is(content)) {
             // TODO: Add support for userArgs/userInput
             this.usercode = content.usercode;
-            this.edited = false;
-            this.updateListeners(ChangeType.Saved);
+            this.initSaved();
         } else {
             this.usercode = "";
             ok = false;
