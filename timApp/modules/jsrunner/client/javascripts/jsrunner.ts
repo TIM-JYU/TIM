@@ -89,7 +89,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         this.error.msg += msg;
     }
 
-    async doCheckFields(nosave: boolean, groups?: string[]) {
+    async doCheckFields(nosave: boolean, userNames?: string[]) {
         if (this.attrsall.markup.confirmText) {
             if (!window.confirm(this.attrsall.markup.confirmText)) {
                 return;
@@ -112,7 +112,7 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
 
         const params = {
             input: {
-                groups: groups,
+                userNames: userNames,
                 includeUsers: this.userOpt,
                 nosave: nosave,
                 paramComps: paramComps,
@@ -188,8 +188,8 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         return this.visible == 1;
     }
 
-    runScriptWithGroups(groups: string[]) {
-        this.doCheckFields(false, groups);
+    runScriptWithUsers(userNames: string[]) {
+        this.doCheckFields(false, userNames);
     }
 
 }
