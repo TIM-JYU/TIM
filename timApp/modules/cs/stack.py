@@ -14,6 +14,7 @@ def do_jsxgraph_replace(q):
 
 
 class Stack(Language):
+    ttype="stack"
     def can_give_task(self):
         return True
 

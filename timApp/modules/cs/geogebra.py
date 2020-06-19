@@ -193,6 +193,7 @@ Eval:
 """
 
 class Geogebra(Language):
+    ttype="geogebra"
     global GEOGEBRA_DEFAULT_SRC_HTML
     global GEOGEBRA_PARAMETERS_INIT
     global GEOGEBRA_TOOL_HTML

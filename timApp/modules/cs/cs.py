@@ -6,8 +6,7 @@ import logging
 import signal
 import socketserver
 
-from languages import *
-from languagedict import languages
+from languagemanager import *
 import os
 import glob
 from base64 import b64encode

@@ -71,6 +71,7 @@ class RunResult(Loadable):
         return self.penalties and self.penalties.get(key, False)
 
 class ExtCheck(Language):
+    ttype="extcheck"
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         
