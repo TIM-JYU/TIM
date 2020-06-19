@@ -8,6 +8,7 @@ jsFiles: list of paths to javascript files to be included. Paths can be absolute
 cssFiles: same as jsFiles but for css files
 
 About commands:
+Any "points_rule" string will be replaced by points_rule as json.
 The command should print a json string to standard output with the following structure:
 {
     points: number,
@@ -95,6 +96,11 @@ class ExtCheck(Language):
                 raise Exception(f"Command key {command_key} not found in commands")
     
     def run(self, result, sourcelines, points_rule):
+        if isinstance(self.command, list):
+            self.command = [c.replace("points_rule", json.dumps(points_rule)) for c in self.command]
+        else:
+            self.command = self.command.replace("points_rule", json.dumps(points_rule))
+        
         code, out, err, pwddir = self.runself(self.command)
         if code != 0:
             err = "Failed to run the test:\n" + err
