@@ -4,12 +4,13 @@ export interface OnTabSelect {
     onSelect: () => void;
 }
 
+// TODO: Figure out why lazy loading breaks AngularJS dialogs in production (or port the dialogs to Angular as well)
 export interface TabEntry {
     id: string;
     icon: string;
     title: string;
     visible: () => boolean;
-    importComponent: () => Promise<Type<unknown>>;
+    component: Type<unknown>;
 }
 
 @Directive({

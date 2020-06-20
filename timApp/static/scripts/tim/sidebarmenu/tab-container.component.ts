@@ -21,8 +21,8 @@ export class TabContainerComponent {
     constructor(private cfr: ComponentFactoryResolver) {
     }
 
-    private async initComponent() {
-        const factory = this.cfr.resolveComponentFactory(await this.tabItem.importComponent());
+    private initComponent() {
+        const factory = this.cfr.resolveComponentFactory(this.tabItem.component);
         this.tabComponent = this.timMenuTab.vcr.createComponent(factory);
     }
 
@@ -32,9 +32,9 @@ export class TabContainerComponent {
             && typeof (inst as Record<string, unknown>).onSelect == "function";
     }
 
-    async onSelect() {
+    onSelect() {
         if (!this.tabComponent) {
-            await this.initComponent();
+            this.initComponent();
         }
         if (TabContainerComponent.hasOnSelect(this.tabComponent?.instance)) {
             this.tabComponent?.instance.onSelect();

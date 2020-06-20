@@ -429,6 +429,7 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
+        console.log(this.item);
         await showMergePdfDialog({document: this.item});
     }
 
