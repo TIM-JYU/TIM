@@ -3,8 +3,6 @@ import {Users} from "tim/user/userService";
 import {ScoreboardService} from "tim/sidebarmenu/services/scoreboard.service";
 import {getVisibilityVars} from "tim/timRoot";
 import {LectureController} from "tim/lecture/lectureController";
-import {TabEntry} from "../menu-tab.directive";
-import {HeaderIndexerService} from "./header-indexer.service";
 import {BookmarksTabComponent} from "tim/sidebarmenu/tabs/bookmarks-tab.component";
 import {SettingsTabComponent} from "tim/sidebarmenu/tabs/settings-tab.component";
 import {IndexTabComponent} from "tim/sidebarmenu/tabs/index-tab.component";
@@ -12,6 +10,8 @@ import {ScoreInfoTabComponent} from "tim/sidebarmenu/tabs/score-info-tab.compone
 import {LectureInfoTabComponent} from "tim/sidebarmenu/tabs/lecture-info-tab.component";
 import {LoadQuestionsTabComponent} from "tim/sidebarmenu/tabs/load-questions-tab.component";
 import {LoggedUsersTabComponent} from "tim/sidebarmenu/tabs/logged-users-tab.component";
+import {TabEntry} from "../menu-tab.directive";
+import {HeaderIndexerService} from "./header-indexer.service";
 
 @Injectable({
     providedIn: "root",
