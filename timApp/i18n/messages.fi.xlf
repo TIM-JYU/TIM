@@ -756,7 +756,7 @@
       </trans-unit>
       <trans-unit id="6e3d3b1e7c4255d0804217dc33c78a2bfdeb4def" datatype="html">
         <source>Display attachments, check their validity, and merge them into single file.</source>
-        <target state="translated">Näytä litteet, tarkista niiden validisuus ja yhdistä ne yhteen tiedostoon.</target>
+        <target state="translated">Näytä liitteet, tarkista niiden oikeellisuus ja yhdistä ne yhteen tiedostoon.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">132</context>
