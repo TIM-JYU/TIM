@@ -27,7 +27,7 @@ const MENU_BUTTON_ICONS: Record<MenuState, string> = {
     template: `
         <div (window:resize)="onResize()" class="left-fixed-side" [class.show]="showMenu">
             <div class="btn btn-default btn-sm pull-left" (click)="nextVisibilityState()" i18n-title title="Show menu">
-                <i class="glyphicon glyphicon-{{nextGlyphicon}}" i18n-title title="Click to open sidebar-menu"></i>
+                <i class="glyphicon glyphicon-{{nextGlyphicon}}" i18n-title title="Open sidebar"></i>
             </div>
             <tabset id="menuTabs" [class.show]="showTabset" #tabs>
                 <ng-container *ngFor="let menuTab of menuTabs">
