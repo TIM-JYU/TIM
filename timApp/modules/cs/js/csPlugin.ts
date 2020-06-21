@@ -172,7 +172,7 @@ class LanguageTypes {
     aceModes = ["pascal", "fortran", "css", "csharp", "scala", "java", "java", "c_cpp", "c_cpp", "sh", "python", "python", "python", "fsharp", "lisp",
         "javascript", "sql", "sql", "alloy", "text", "csharp", "run", "text", "javascript", "javascript", "python", "json",
         "xml", "matlab", "lua", "quorum", "swift", "text", "html", "javascript", "text", "r", "scheme", "text", "kotlin",
-        "text", "text"];
+        "text", "text", "c_cpp"];
 
     // What are known test types (be careful not to include partial word):
     testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest"];

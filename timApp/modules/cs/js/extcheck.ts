@@ -51,32 +51,6 @@ class ExtcheckController extends CsController {
     }
 }
 
-function divContentTemplate(tag: string, variable: string, extra_content: string, hide: string, classes: string, tag2: string, toggle: string) {
-    classes = `class="${classes} {{${variable}.classes}}"`;
-    const content = `${variable}.content ${extra_content ? "+'" + extra_content + "'" : ""}`;
-    const content_str = `{{${variable}.content}} ${extra_content}`;
-    let onclick_str = ``;
-    if (toggle.length) {
-        onclick_str = `ng-click="${toggle}=!${toggle}"`;
-    }
-    let non_html_string = `<${tag} ng-if="!${variable}.isAngular && !${variable}.isHTML" ng-hide="${hide}" ${onclick_str} ${classes}>${content_str}</${tag}>`;
-    if (tag2.length) {
-        non_html_string = `
-            <${tag} ng-if="!${variable}.isAngular && !${variable}.isHTML" ${onclick_str} ng-hide="${hide}">
-                <${tag2} ${classes}>${content_str}</${tag2}>
-            </${tag}>`;
-    }
-    return `
-        <${tag} ng-if="${variable}.isAngular" ng-hide="${hide}" ${onclick_str} ${classes} compile="${content}"></${tag}>
-        <${tag} ng-if="!${variable}.isAngular && ${variable}.isHTML" ng-hide="${hide}" ${onclick_str} ${classes} ng-bind-html="${content}"></${tag}>
-        ${non_html_string}`;
-}
-
-function outputContainerTemplate(variable: string) {
-    return divContentTemplate("button", `${variable}.title`, `<span class="caret"></span>`, "", `title-button {{${variable}.hide ? 'collapsed-button' : ''}}`, "", variable + ".hide") +
-        divContentTemplate("div", `${variable}.content`, "", variable + ".hide", "centermargin", "pre", "");
-}
-
 csApp.directive("compile", function($compile: ICompileService) {
     return function(scope: IScope, element: IAugmentedJQuery, attrs: IAttributes) {
         scope.$watch(
@@ -211,12 +185,100 @@ csApp.component("csExtcheckRunner", {
             <tim-close-button ng-click="$ctrl.closeError()"></tim-close-button>
         </p>
     </div>
-    <div ng-if="$ctrl.penalty_container">
-        ${outputContainerTemplate("$ctrl.penalty_container")}
-    </div>
-    <div ng-repeat="container in $ctrl.containers">
-        ${outputContainerTemplate("container")}
-    </div>
+    <extcheck-output-container ng-if="$ctrl.penalty_container" data="$ctrl.penalty_container"></extcheck-output-container>
+    <extcheck-output-container ng-repeat="container in $ctrl.containers" data="container"></extcheck-output-container>
     <p class="footer" ng-bind-html="$ctrl.footer"></p>
 </div>`,
 });
+
+class OutputContainerController implements IOutputContainer {
+    caret: string = "<span class='caret'></span>";
+
+    title: IDivContent = {classes: ""};
+    content: IDivContent = {classes: ""};
+    hide: boolean = false;
+
+    set data(data: IOutputContainer) {
+        this.title = data.title ?? {classes: ""};
+        this.content = data.content ?? {classes: ""};
+        this.hide = !!data.hide;
+    }
+}
+
+csApp.component("extcheckOutputContainer", {
+    controller: OutputContainerController,
+    bindings: {
+        data: "<",
+    },
+    template: `
+        <ng-container ng-if="$ctrl.title.content && $ctrl.content.content">
+            <button ng-if="$ctrl.title.isAngular" ng-click="$ctrl.hide=!$ctrl.hide" ng-class="{'collapsed-button': $ctrl.hide}" class="title-button {{$ctrl.title.classes}}" compile="$ctrl.title.content + $ctrl.caret"></button>
+            <button ng-if="!$ctrl.title.isAngular && $ctrl.title.isHTML" ng-click="$ctrl.hide=!$ctrl.hide" ng-class="{'collapsed-button': $ctrl.hide}" class="title-button {{$ctrl.title.classes}}" ng-bind-html="$ctrl.title.content + $ctrl.caret"></button>
+            <button ng-if="!$ctrl.title.isAngular && !$ctrl.title.isHTML" ng-click="$ctrl.hide=!$ctrl.hide" ng-class="{'collapsed-button': $ctrl.hide}" class="title-button {{$ctrl.title.classes}}">{{$ctrl.title.content}}<span class='caret'></span></button>
+            <ng-container ng-if="!$ctrl.hide">
+                <div ng-if="$ctrl.content.isAngular" class="centermargin {{$ctrl.content.classes}}" compile="$ctrl.content.content"></div>
+                <div ng-if="!$ctrl.content.isAngular && $ctrl.content.isHTML" class="centermargin {{$ctrl.content.classes}}" ng-bind-html="$ctrl.content.content"></div>
+                <div ng-if="!$ctrl.content.isAngular && !$ctrl.content.isHTML">
+                    <pre class="centermargin {{$ctrl.content.classes}}">{{$ctrl.content.content}}</pre>
+                </div>
+            </ng-container>
+        </ng-container>`,
+});
+
+// TODO: replace extcheckOutputContainer with this. Requires a substitute for the compile directive
+/*
+@Component({
+    selector: "extcheck-output-container",
+    template: `
+        <ng-container *ngIf="title.content && content.content">
+            <button *ngIf="title.isAngular" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}" compile="title.content + caret"></button>
+            <button *ngIf="!title.isAngular && title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}" [innerHTML]="title.content + caret"></button>
+            <button *ngIf="!title.isAngular && !title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}">{{title.content}}<span class='caret'></span></button>
+            <ng-container *ngIf="!hide">
+                <div *ngIf="content.isAngular" class="centermargin {{content.classes}}" compile="content.content"></div>
+                <div *ngIf="!content.isAngular && content.isHTML" class="centermargin {{content.classes}}" [innerHTML]="content.content"></div>
+                <div *ngIf="!content.isAngular && !content.isHTML">
+                    <pre class="centermargin {{content.classes}}">{{content.content}}</pre>
+                </div>
+            </ng-container>
+        </ng-container>`,
+})
+class OutputContainerComponent implements IOutputContainer {
+    title: IDivContent = {classes: ""};
+    content: IDivContent = {classes: ""};
+    hide: boolean = false;
+
+    caret: string = "<span class='caret'></span>";
+
+    /* tslint:disable-next-line:no-unsafe-any / <-- put * back in
+    @Input()
+    set data(data: IOutputContainer) {
+        this.title = data.title ?? {classes: ""};
+        this.content = data.content ?? {classes: ""};
+        this.hide = !!data.hide;
+    }
+}
+
+// noinspection AngularInvalidImportedOrDeclaredSymbol
+@NgModule({
+    declarations: [
+        OutputContainerComponent,
+    ],
+    imports: [
+        BrowserModule,
+    ],
+})
+export class JsframeModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {
+    }
+}
+
+const bootstrapFn = (extraProviders: StaticProvider[]) => {
+    const platformRef = platformBrowserDynamic(extraProviders);
+    return platformRef.bootstrapModule(JsframeModule);
+};
+
+const angularJsModule = createDowngradedModule(bootstrapFn);
+doDowngrade(angularJsModule, "extcheckOutputContainer", OutputContainerComponent);
+export const moduleDefs = [angularJsModule];
+*/
