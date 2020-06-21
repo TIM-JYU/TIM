@@ -862,6 +862,13 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         if (taskId == undefined) {
             return;
         }
+        const timTable = this.getTimTable();
+        if (timTable == null) {
+            return;
+        }
+
+        const selUsers = timTable.getCheckedRows(0, true);
+        const users = TableFormComponent.makeUserArray(selUsers, userNameColIndex);
 
         const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({
             // TODO: support for relevant attrs (realnames, usernames, emails...)
@@ -878,6 +885,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             usernames: this.markup.usernames,
             emails: this.markup.emails,
             reportFilter: this.markup.reportFilter,
+            userFilter: users,
         }), "WINDOWID");
         if (win == null) {
             this.error = "Failed to open report window.";

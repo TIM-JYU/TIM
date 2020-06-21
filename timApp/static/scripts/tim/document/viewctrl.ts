@@ -82,7 +82,7 @@ export interface ISetAnswerResult {
 }
 
 export interface IJsRunner {
-    runScriptWithGroups: (groups: string[]) => void;
+    runScriptWithUsers: (userNames: string[]) => void;
 }
 
 export interface IUserChanged {
@@ -896,10 +896,15 @@ export class ViewCtrl implements IController {
         }
     }
 
-    public runJsRunner(runner: string, groups: string[]) {
+    /**
+     * Run jsrunner in document for selected users
+     * @param runner taskid of the runner
+     * @param userNames list of user names to use in jsrunner
+     */
+    public runJsRunner(runner: string, userNames: string[]) {
         const jsRunner = this.getJsRunner(runner);
         if (jsRunner) {
-            jsRunner.runScriptWithGroups(groups);
+            jsRunner.runScriptWithUsers(userNames);
         }
     }
 
