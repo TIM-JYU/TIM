@@ -174,9 +174,11 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         return this.attrs.fieldhelper;
     }
 
+    /**
+     * If runner does not have any of the 'field', 'groups' or 'program'-attributes, it not considered runnable
+     */
     protected hasAllAttributes() {
-        // return ((this.attrs.fields ?? this.attrs.groups) ?? this.attrs.program);
-        return true; // TODO - these are probably hidden if jsrunner is shown in viewmode
+        return this.attrsall.runnable;
     }
 
     isVisible() {
