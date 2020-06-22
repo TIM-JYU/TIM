@@ -152,7 +152,13 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     ngAfterViewInit() {
-        this.setVisibleState(isScreenSizeOrLower("sm") ? MenuState.Closed : this.lastVisState, UPDATE_ALL);
+        let initialViewState = MenuState.Icons;
+        if (isScreenSizeOrLower("sm")) {
+            initialViewState = MenuState.Closed;
+        } else if (this.settings.remember_last_sidebar_menu_state) {
+            initialViewState = this.lastVisState;
+        }
+        this.setVisibleState(initialViewState, UPDATE_ALL);
     }
 
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
@@ -213,10 +219,11 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     private tabVisibilityChanged() {
+        let nextState = MenuState.Open;
         if (!this.trySetCurrentTabToDefault() || !this.currentTab) {
-            return;
+            nextState = MenuState.Icons;
         }
-        this.setVisibleState(MenuState.Open, UPDATE_ALL);
+        this.setVisibleState(nextState, UPDATE_ALL);
     }
 
     private get nextMobileState(): MenuState {
