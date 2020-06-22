@@ -13,6 +13,7 @@
 import ifvisible from "ifvisible.js";
 import moment from "moment";
 import {clone, getURLParameter, markAsUsed, setStorage, to, truncate} from "tim/util/utils";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {ViewCtrl} from "../document/viewctrl";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
@@ -78,11 +79,11 @@ export class LectureController {
     private lectureEndingDialogState: LectureEndingDialogState;
     private futureLectures: ILecture[];
     private lectureEnded: boolean;
-    private lecturerTable: ILecturePerson[];
+    public lecturerTable: ILecturePerson[];
     private newMessagesAmount: number;
     private newMessagesAmountText: string;
     private showPoll: boolean;
-    private studentTable: ILecturePerson[];
+    public studentTable: ILecturePerson[];
     viewctrl?: ViewCtrl;
     private wallMessages: ILectureMessage[];
     private wallName: string;
@@ -118,6 +119,10 @@ export class LectureController {
 
     lectureViewOrInLecture() {
         return this.lectureSettings.lectureMode || this.lectureSettings.inLecture;
+    }
+
+    static get instance() {
+        return vctrlInstance?.lectureCtrl ?? LectureController.createAndInit(vctrlInstance);
     }
 
     static createAndInit(vctrl: ViewCtrl | undefined) {
@@ -677,7 +682,7 @@ export class LectureController {
         }
     }
 
-    async getQuestionManually(event: Event) {
+    async getQuestionManually() {
         const response = await to($http<IAlreadyAnswered | IQuestionAsked | IQuestionHasAnswer | IQuestionResult | null>({
             url: "/getQuestionManually",
             method: "GET",

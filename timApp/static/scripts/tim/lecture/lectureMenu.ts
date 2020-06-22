@@ -2,7 +2,7 @@ import {IController} from "angular";
 import {timApp} from "../app";
 import {ViewCtrl} from "../document/viewctrl";
 import {getItem, IItem} from "../item/IItem";
-import {isSmallScreen, Require} from "../util/utils";
+import {isScreenSizeOrLower, Require} from "../util/utils";
 import {LectureController} from "./lectureController";
 
 class LectureMenuController implements IController {
@@ -16,7 +16,7 @@ class LectureMenuController implements IController {
         if (this.lctrl.lecture) {
             this.item = await getItem(this.lctrl.lecture.doc_id);
         }
-        if (!isSmallScreen() || this.lctrl.lectureSettings.inLecture) {
+        if (!isScreenSizeOrLower("md") || this.lctrl.lectureSettings.inLecture) {
             this.isOpen = true;
         }
     }

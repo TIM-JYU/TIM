@@ -143,7 +143,7 @@ export interface IQuestionAnswer {
 }
 
 export interface ILecturePerson {
-    active: boolean;
+    active: string;
     user: IUser;
 }
 

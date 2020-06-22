@@ -133,6 +133,8 @@ class SettingsTest(TimRouteTest):
                                  'language': None,
                                  'custom_css': '',
                                  'disable_menu_hover': False,
+                                 'remember_last_sidebar_menu_tab': False,
+                                 'remember_last_sidebar_menu_state': False,
                                  })
         self.json_post(
             f'/settings/save',
@@ -146,6 +148,8 @@ class SettingsTest(TimRouteTest):
                 'language': None,
                 'custom_css': 'somecss',
                 'disable_menu_hover': True,
+                'remember_last_sidebar_menu_state': True,
+                'remember_last_sidebar_menu_tab': True,
             }
         )
         self.get(f'/settings/get',
@@ -159,6 +163,8 @@ class SettingsTest(TimRouteTest):
                      'language': None,
                      'custom_css': 'somecss',
                      'disable_menu_hover': True,
+                     'remember_last_sidebar_menu_state': True,
+                     'remember_last_sidebar_menu_tab': True,
                  })
         self.json_post(
             f'/settings/save',
@@ -171,6 +177,8 @@ class SettingsTest(TimRouteTest):
                 'word_list': 'cat\ndog',
                 'custom_css': 'somecss',
                 'disable_menu_hover': True,
+                'remember_last_sidebar_menu_state': False,
+                'remember_last_sidebar_menu_tab': True,
             }
         )
         self.get(f'/settings/get',
@@ -184,6 +192,8 @@ class SettingsTest(TimRouteTest):
                      'language': None,
                      'custom_css': 'somecss',
                      'disable_menu_hover': True,
+                     'remember_last_sidebar_menu_state': False,
+                     'remember_last_sidebar_menu_tab': True,
                  })
 
     def test_settings_get_single(self):

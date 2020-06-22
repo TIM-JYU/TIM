@@ -167,7 +167,7 @@ interface IFieldSaveResult {
     `,
     styleUrls: ["./import-data.component.scss"],
 })
-class ImportDataComponent extends AngularPluginBase<t.TypeOf<typeof ImportDataMarkup>, t.TypeOf<typeof ImportDataAll>, typeof ImportDataAll> {
+export class ImportDataComponent extends AngularPluginBase<t.TypeOf<typeof ImportDataMarkup>, t.TypeOf<typeof ImportDataAll>, typeof ImportDataAll> {
     isRunning = false;
     importText: string = "";
     error?: string;

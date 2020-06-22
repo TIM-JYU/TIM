@@ -12,6 +12,8 @@ export interface ISettings {
     css_files: Record<string, boolean>;
     custom_css: string;
     disable_menu_hover: boolean;
+    remember_last_sidebar_menu_tab: boolean;
+    remember_last_sidebar_menu_state: boolean;
     email_exclude: string;
     language: string | null;
     use_document_word_list: boolean;
@@ -154,6 +156,14 @@ export class SaveButtonComponent {
                 <div class="checkbox"><label>
                     <input type="checkbox" name="disable_menu_hover" [(ngModel)]="settings.disable_menu_hover"
                            [disabled]="saving"> Disable opening menus with mouse hover
+                </label></div>
+                <div class="checkbox"><label>
+                    <input type="checkbox" name="remember_last_sidebar_menu_tab" [(ngModel)]="settings.remember_last_sidebar_menu_tab"
+                           [disabled]="saving"> Side bar menu: remember the last selected tab
+                </label></div>
+                <div class="checkbox"><label>
+                    <input type="checkbox" name="remember_last_sidebar_menu_state" [(ngModel)]="settings.remember_last_sidebar_menu_state"
+                           [disabled]="saving"> Side bar menu: remember the last open state
                 </label></div>
                 <tim-save-button [saved]="submit"></tim-save-button>
             </bootstrap-panel>

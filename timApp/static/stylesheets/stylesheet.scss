@@ -1360,3 +1360,8 @@ tim-user-list {
    -moz-user-select: none; /* Firefox */
    -ms-user-select: none; /* Internet Explorer/Edge */
 }
+
+// Simulates a "normal space"
+.space-right {
+    margin-right: 0.3em;
+}

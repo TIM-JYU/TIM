@@ -2,7 +2,6 @@ import angular, {IHttpResponse, IPromise} from "angular";
 import * as t from "io-ts";
 import moment from "moment";
 import {AbstractControl, ValidatorFn} from "@angular/forms";
-import {SomeGlobals, IDocumentGlobals} from "tim/util/globals";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
@@ -11,10 +10,6 @@ const UnknownRecord = t.record(t.string, t.unknown);
 
 export const defaultErrorMessage = "Syntax error or no reply from server?";
 export const defaultTimeout = 20000;
-
-export function isDocumentGlobals(g: SomeGlobals): g is IDocumentGlobals {
-    return "docSettings" in g;
-}
 
 // adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html
 export function convertDateStringsToMoments(input: unknown): unknown {
@@ -457,13 +452,22 @@ export function getViewPortSize() {
     return {width, height};
 }
 
-export function isSmallScreen() {
-    return getViewPortSize().width < 1200;
-}
-
 export function isMobileDevice() {
     const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
-    return touch && isSmallScreen();
+    return touch && isScreenSizeOrLower("md");
+}
+
+// TIM also defines four device-* DIVs which can be also used to determine the active media type,
+// but in some cases screen size info is needed even before the DOM has been drawn fully.
+// For this reason, we define the media sizes manually here -- it's unlikely they'll change in a while.
+const MEDIA_SIZES = {
+    xs: 768,
+    sm: 992,
+    md: 1200,
+};
+
+export function isScreenSizeOrLower(size: keyof typeof MEDIA_SIZES) {
+    return getViewPortSize().width < MEDIA_SIZES[size];
 }
 
 export function escapeRegExp(str: string) {

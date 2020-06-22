@@ -9,7 +9,6 @@ import $ from "jquery";
 import * as answerbrowser from "tim/answer/answerbrowser3";
 import * as userlistController from "tim/answer/userlistController";
 import {timApp} from "tim/app";
-import * as bookmarks from "tim/bookmark/bookmarks";
 import * as templateList from "tim/document/editing/templateList";
 import * as questionController from "tim/document/question/questionController";
 import * as viewctrl from "tim/document/viewctrl";
@@ -29,8 +28,8 @@ import * as lectureInfoController from "tim/lecture/lectureInfoController";
 import * as lectureMenu from "tim/lecture/lectureMenu";
 import * as questionAskController from "tim/lecture/questionAskController";
 import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQuestionController";
-import * as sidebarMenuCtrl from "tim/sidebar/sidebarMenuCtrl";
 import * as bootstrapPanel from "tim/ui/bootstrap-panel.component";
+import * as markAllAsRead from "tim/ui/markAllAsRead";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {LogoComponent} from "tim/ui/logo.component";
 import {LoginMenuComponent} from "tim/user/login-menu.component";
@@ -62,6 +61,7 @@ import {TimeLeftComponent} from "tim/ui/time-left.component";
 import {CountdownComponent} from "tim/ui/countdown.component";
 import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 import {GotoLinkComponent} from "tim/ui/goto-link.component";
+import {SidebarMenuComponent} from "tim/sidebarmenu/sidebar-menu.component";
 import BackspaceDisabler from "backspace-disabler";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
@@ -76,7 +76,6 @@ if (environment.production) {
 markAsUsed(
     answerbrowser,
     answerToQuestionController,
-    bookmarks,
     bootstrap,
     createLectureCtrl,
     indexCtrl,
@@ -91,7 +90,6 @@ markAsUsed(
     reviewController,
     rightsEditor,
     showStatisticsToQuestionController,
-    sidebarMenuCtrl,
     taggedDocumentList,
     templateList,
     timRoot,
@@ -99,6 +97,7 @@ markAsUsed(
     velpSelection,
     viewctrl,
     viewRangeNavigation,
+    markAllAsRead,
 );
 
 setAngularJSGlobal(angular);
@@ -130,6 +129,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timGotoLink", GotoLinkComponent);
     doDowngrade(dg, "timTimeLeft", TimeLeftComponent);
     doDowngrade(dg, "timCountdown", CountdownComponent);
+    doDowngrade(dg, "timSidebarMenu", SidebarMenuComponent);
     return dg;
 }
 

@@ -1,11 +1,12 @@
-import {IBookmarkGroup} from "../bookmark/bookmarks";
+import {IBookmarkGroup} from "tim/bookmark/bookmark.service";
+import {HeaderIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
+import {IDocScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
 import {IDocSettings} from "../document/IDocSettings";
 import {EditMode} from "../document/popupMenu";
 import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
 import {DocumentOrFolder, IDocument, IFolder, IFullDocument, IItem, ITranslation} from "../item/IItem";
 import {ILecture} from "../lecture/lecturetypes";
-import {HeaderIndexItem, IGroupWithSisuPath, IScoreboard, IDocScoreInfo} from "../sidebar/sidebarMenuCtrl";
-import {IFullUser, IGroup, IUser, IUserListEntry} from "../user/IUser";
+import {IFullUser, IGroup, IGroupWithSisuPath, IUser, IUserListEntry} from "../user/IUser";
 import {ICssFile, INotification, ISettings} from "../user/settings.component";
 
 interface ILayout {
@@ -170,6 +171,10 @@ export function settingsglobals(): ISettingsGlobals {
 
 export function lectureinfoglobals(): ILectureInfoGlobals {
     return someGlobals();
+}
+
+export function isDocumentGlobals(g: SomeGlobals): g is IDocumentGlobals {
+    return "docSettings" in g;
 }
 
 function someGlobals<T extends IGenericGlobals>(): T {

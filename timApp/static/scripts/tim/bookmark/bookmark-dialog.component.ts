@@ -1,7 +1,7 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component} from "@angular/core";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {IBookmark} from "./bookmarks";
+import {IBookmark} from "tim/bookmark/bookmark.service";
 
 @Component({
     selector: "tim-bookmark-dialog",

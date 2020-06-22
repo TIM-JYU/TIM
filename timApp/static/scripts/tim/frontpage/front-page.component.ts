@@ -1,6 +1,6 @@
 import {IController} from "angular";
-import {IBookmarkGroup} from "tim/bookmark/bookmarks";
 import {Component} from "@angular/core";
+import {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {showCourseListDialog} from "../document/course/courseListDialogCtrl";
 import {ICourseSettings} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";

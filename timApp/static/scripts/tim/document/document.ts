@@ -1,3 +1,4 @@
+import $ from "jquery";
 import moment from "moment";
 import {documentglobals} from "../util/globals";
 import {getParAttributes, getParId, getRefAttrs, Paragraph} from "./parhelpers";
@@ -28,6 +29,13 @@ export class Document {
         this.sections = new Map();
         this.buildSections([], $("#pars"));
         this.refreshSectionReadMarks();
+    }
+
+    /**
+     * Hides any visible .readline marks
+     */
+    public hideReadMarks() {
+        $(".readline").attr("class", "readline read");
     }
 
     /**

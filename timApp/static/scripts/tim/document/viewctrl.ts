@@ -19,10 +19,9 @@ import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict, to} from "
 import {TimDefer} from "tim/util/timdefer";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
-import {showMessageDialog} from "tim/ui/dialog";
+import {BookmarksComponent} from "tim/sidebarmenu/util/bookmarks.component";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
-import {BookmarksController} from "../bookmark/bookmarks";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
@@ -188,7 +187,7 @@ export class ViewCtrl implements IController {
     public popupmenu?: PopupMenuController;
     public viewRangeInfo: ViewRangeInfo;
 
-    public bookmarksCtrl: BookmarksController | undefined;
+    public bookmarksCtrl: BookmarksComponent | undefined;
 
     // For search box.
     private displaySearch = false;
@@ -1003,10 +1002,10 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Add bookmark controller.
-     * @param {BookmarksController} bookmarksCtrl
+     * Add bookmark component.
+     * @param {BookmarksComponent} bookmarksCtrl
      */
-    registerBookmarks(bookmarksCtrl: BookmarksController) {
+    registerBookmarks(bookmarksCtrl: BookmarksComponent) {
         this.bookmarksCtrl = bookmarksCtrl;
     }
 
