@@ -10,7 +10,7 @@ import {showRelevanceEditDialog} from "tim/item/relevanceEditDialog";
 import {showTagSearchDialog} from "tim/item/tagSearchCtrl";
 import {getCurrentViewRange, IViewRange, toggleViewRange} from "tim/document/viewRangeInfo";
 import {showViewRangeEditDialog} from "tim/document/viewRangeEditDialog";
-import {getStorage, IOkResponse, setStorage, to, to2} from "tim/util/utils";
+import {getStorage, IOkResponse, to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/dialog";
 import {getActiveDocument} from "tim/document/activedocument";
@@ -21,6 +21,8 @@ import {IDocSettings} from "tim/document/IDocSettings";
 import {IRelevanceResponse} from "tim/item/relevanceEdit";
 import {showMergePdfDialog} from "tim/document/minutes/mergePdfCtrl";
 import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
+
+const DEFAULT_PIECE_SIZE = 20;
 
 @Component({
     selector: "settings-tab",
@@ -140,7 +142,7 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
                     i18n>Set as course
             </button>
 
-            <h5 *ngIf="isMinutesOrInvitation" class="same-line" i18n>Memos/Minutes</h5>
+            <h5 *ngIf="isMinutesOrInvitation" class="same-line" i18n>Memo/Minutes</h5>
             <button *ngIf="enableCreateExtractsButton"
                     class="timButton btn-block"
                     title="Create extracts" i18n-title
@@ -249,7 +251,7 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        await toggleViewRange(this.item.id, 1);
+        await toggleViewRange(this.item.id, this.pieceSize);
         this.currentViewRange = getCurrentViewRange();
         this.updateIsFullRange();
     }
@@ -477,14 +479,11 @@ export class SettingsTabComponent implements OnInit {
     }
 
     private get pieceSize() {
-        const val = getStorage("settingsTab_pieceSize");
+        // TODO: change name when porting viewRangeEditDialog
+        const val = getStorage("ngStorage-pieceSize");
         if (!val || typeof val != "number") {
-            return undefined;
+            return DEFAULT_PIECE_SIZE;
         }
         return val;
-    }
-
-    private set pieceSize(val: number | undefined) {
-        setStorage("settingsTab_pieceSize", val);
     }
 }
