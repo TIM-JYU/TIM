@@ -88,6 +88,9 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     set lastUsedTab(value: string) {
+        if (!this.settings.remember_last_sidebar_menu_tab) {
+            return;
+        }
         setStorage("sideBarMenu_lastUsedTab", value);
     }
 
@@ -103,6 +106,9 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     set lastVisState(value: MenuState) {
+        if (!this.settings.remember_last_sidebar_menu_state) {
+            return;
+        }
         if (value < 0 || value >= MenuState.Max) {
             value = MenuState.Open;
         }
