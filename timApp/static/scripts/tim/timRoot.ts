@@ -1,5 +1,5 @@
-import {getUrlParams, isDocumentGlobals} from "tim/util/utils";
-import {genericglobals, IDocumentGlobals, someglobals, SomeGlobals} from "tim/util/globals";
+import {getUrlParams} from "tim/util/utils";
+import {genericglobals, IDocumentGlobals, isDocumentGlobals, someglobals, SomeGlobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import {showMessageDialog} from "tim/ui/dialog";
 import {timApp} from "./app";

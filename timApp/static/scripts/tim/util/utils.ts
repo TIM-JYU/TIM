@@ -2,7 +2,6 @@ import angular, {IHttpResponse, IPromise} from "angular";
 import * as t from "io-ts";
 import moment from "moment";
 import {AbstractControl, ValidatorFn} from "@angular/forms";
-import {SomeGlobals, IDocumentGlobals} from "tim/util/globals";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
@@ -11,10 +10,6 @@ const UnknownRecord = t.record(t.string, t.unknown);
 
 export const defaultErrorMessage = "Syntax error or no reply from server?";
 export const defaultTimeout = 20000;
-
-export function isDocumentGlobals(g: SomeGlobals): g is IDocumentGlobals {
-    return "docSettings" in g;
-}
 
 // adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html
 export function convertDateStringsToMoments(input: unknown): unknown {
