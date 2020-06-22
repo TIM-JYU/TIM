@@ -129,9 +129,9 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
 
     ngDoCheck() {
         // Previously, old sidebar menu could make do with ng-ifs to detect which one to show.
-        // Here' to reduce size we use lazy imports and data-based approach to defining tabs, in which case
-        // we need to implement custom change detection.
-        // Therefore, the visible() checks should generally be really small and fast
+        // Here, to simplify code, we use data-based approach to defining tabs.
+        // Because of that, we need to implement custom change detection.
+        // Therefore, the visible() checks should generally be really small and fast.
         let shouldSet = false;
         const visTabs: Record<string, boolean> = {};
         for (const tab of this.menuTabs) {

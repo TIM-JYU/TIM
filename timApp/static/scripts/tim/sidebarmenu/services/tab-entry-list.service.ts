@@ -27,6 +27,7 @@ export class TabEntryListService {
     }
 
     getTabEntries(): TabEntry[] {
+        // TODO: Convert to lazy imports when all sidebar menu dialogs are converted to Angular as well
         const lectureCtrl = LectureController.instance;
         const hide = getVisibilityVars();
         return [
