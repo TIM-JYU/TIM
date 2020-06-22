@@ -52,7 +52,7 @@ import {ScoreboardService} from "tim/sidebarmenu/services/scoreboard.service";
                     <li *ngFor="let info of scoreBoard.infos">
                         <div class="flex flex-wrap">
                             <div class="flex-grow-1">
-                                <a href="/view/{{info.doc.path">{{info.doc.title}}</a>
+                                <a href="/view/{{info.doc.path}}">{{info.doc.title}}</a>
                             </div>
                             <div class="flex-grow-1">
                                 <p>
