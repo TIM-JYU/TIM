@@ -152,7 +152,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     ngAfterViewInit() {
-        this.setVisibleState(!isScreenSizeOrLower("sm") ? this.lastVisState : MenuState.Closed, UPDATE_ALL);
+        this.setVisibleState(isScreenSizeOrLower("sm") ? MenuState.Closed : this.lastVisState, UPDATE_ALL);
     }
 
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {

@@ -25,7 +25,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
                 </a>
                 <ul class="list-unstyled" *ngIf="!header.closed" (click)="$event.stopPropagation()">
                     <li *ngFor="let header2 of header.h2List">
-                        <a class="a{{header2.level"
+                        <a class="a{{header2.level}}"
                            href="{{pageUrl}}#{{header2.id}}"
                            target="_self"
                            (click)="headerClicked($event, header2.id)">
