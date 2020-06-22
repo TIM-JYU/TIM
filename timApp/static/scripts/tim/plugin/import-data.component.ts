@@ -92,6 +92,7 @@ interface IFieldSaveResult {
                 <tim-close-button (click)="isOpen = false"></tim-close-button>
             </tim-plugin-header>
             <ng-container body>
+                <tim-close-button *ngIf="!header" (click)="isOpen = false"></tim-close-button>
                 <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
                 <div *ngIf="markup.useurl" class="form">
                     <div class="form-group form-group-sm">
