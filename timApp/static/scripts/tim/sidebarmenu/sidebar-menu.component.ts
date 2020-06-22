@@ -12,8 +12,14 @@ enum MenuState {
     Open,
     Icons,
     Closed,
-    Max
+    Max,
 }
+
+interface UpdateVisStateOptions {
+    tabs?: boolean;
+    lastVisState?: boolean;
+}
+const UPDATE_ALL: UpdateVisStateOptions = { lastVisState: true, tabs: true };
 
 const MENU_BUTTON_ICONS: Record<MenuState, string> = {
     [MenuState.Open]: "menu-hamburger",
@@ -105,10 +111,10 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         if (!this.isSm && isSmScreen()) {
             this.isSm = true;
             this.lastNonSmState = this.currentMenuState;
-            this.setVisibleState(MenuState.Closed, true, false);
+            this.setVisibleState(MenuState.Closed, { tabs: true });
         } else if (!isSmScreen()) {
             this.isSm = false;
-            this.setVisibleState(this.lastNonSmState, true, false);
+            this.setVisibleState(this.lastNonSmState, { tabs: true });
         }
     }
 
@@ -144,13 +150,13 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     ngAfterViewInit() {
-        this.setVisibleState(!isSmScreen() ? this.lastVisState : MenuState.Closed);
+        this.setVisibleState(!isSmScreen() ? this.lastVisState : MenuState.Closed, UPDATE_ALL);
     }
 
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
         this.currentTab = tab.id;
         this.lastUsedTab = this.currentTab;
-        this.setVisibleState(MenuState.Open, false);
+        this.setVisibleState(MenuState.Open, { lastVisState: true });
         void tabContainer.onSelect();
     }
 
@@ -159,16 +165,16 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     nextVisibilityState() {
-        this.setVisibleState(this.nextState);
+        this.setVisibleState(this.nextState, UPDATE_ALL);
     }
 
-    setVisibleState(newState: MenuState, updateTabVisibility = true, updateLastVisState = true) {
+    setVisibleState(newState: MenuState, updateOpts?: UpdateVisStateOptions) {
         this.currentMenuState = newState;
-        if (updateLastVisState) {
+        if (updateOpts?.lastVisState) {
             this.lastVisState = newState;
         }
         this.nextGlyphicon = MENU_BUTTON_ICONS[this.nextState];
-        if (updateTabVisibility) {
+        if (updateOpts?.tabs) {
             this.updateTabs();
         }
     }
@@ -208,7 +214,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         if (!this.trySetCurrentTabToDefault() || !this.currentTab) {
             return;
         }
-        this.setVisibleState(MenuState.Open);
+        this.setVisibleState(MenuState.Open, UPDATE_ALL);
     }
 
     private get nextMobileState(): MenuState {
