@@ -9,17 +9,17 @@ import {ISettings} from "tim/user/settings.component";
 import {genericglobals} from "tim/util/globals";
 
 enum MenuState {
-    OPEN,
-    ICONS,
-    CLOSED,
-    MAX
+    Open,
+    Icons,
+    Closed,
+    Max
 }
 
 const MENU_BUTTON_ICONS: Record<MenuState, string> = {
-    [MenuState.OPEN]: "menu-hamburger",
-    [MenuState.ICONS]: "option-horizontal",
-    [MenuState.CLOSED]: "menu-left",
-    [MenuState.MAX]: "",
+    [MenuState.Open]: "menu-hamburger",
+    [MenuState.Icons]: "option-horizontal",
+    [MenuState.Closed]: "menu-left",
+    [MenuState.Max]: "",
 };
 
 @Component({
@@ -49,7 +49,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     private currentTab?: string;
     private settings: ISettings = genericglobals().userPrefs;
     private lctrl = LectureController.instance;
-    private currentMenuState: MenuState = MenuState.OPEN;
+    private currentMenuState: MenuState = MenuState.Open;
     private isSm = isSmScreen();
     private lastNonSmState = this.lastVisState;
     @ViewChild("tabs") private tabs!: TabsetComponent;
@@ -61,11 +61,11 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     get showMenu() {
-        return this.currentMenuState == MenuState.OPEN;
+        return this.currentMenuState == MenuState.Open;
     }
 
     get showTabset() {
-        return this.currentMenuState != MenuState.CLOSED;
+        return this.currentMenuState != MenuState.Closed;
     }
 
     get lastUsedTab() {
@@ -85,18 +85,18 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
 
     get lastVisState(): MenuState {
         if (!this.settings.remember_last_sidebar_menu_state) {
-            return MenuState.OPEN;
+            return MenuState.Open;
         }
         const val = getStorage("sideBarMenu_lastVisState");
-        if (typeof val != "number" || val < 0 || val >= MenuState.MAX) {
-            return MenuState.OPEN;
+        if (typeof val != "number" || val < 0 || val >= MenuState.Max) {
+            return MenuState.Open;
         }
         return val;
     }
 
     set lastVisState(value: MenuState) {
-        if (value < 0 || value >= MenuState.MAX) {
-            value = MenuState.OPEN;
+        if (value < 0 || value >= MenuState.Max) {
+            value = MenuState.Open;
         }
         setStorage("sideBarMenu_lastVisState", value);
     }
@@ -105,7 +105,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         if (!this.isSm && isSmScreen()) {
             this.isSm = true;
             this.lastNonSmState = this.currentMenuState;
-            this.setVisibleState(MenuState.CLOSED, true, false);
+            this.setVisibleState(MenuState.Closed, true, false);
         } else if (!isSmScreen()) {
             this.isSm = false;
             this.setVisibleState(this.lastNonSmState, true, false);
@@ -144,13 +144,13 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     ngAfterViewInit() {
-        this.setVisibleState(!isSmScreen() ? this.lastVisState : MenuState.CLOSED);
+        this.setVisibleState(!isSmScreen() ? this.lastVisState : MenuState.Closed);
     }
 
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
         this.currentTab = tab.id;
         this.lastUsedTab = this.currentTab;
-        this.setVisibleState(MenuState.OPEN, false);
+        this.setVisibleState(MenuState.Open, false);
         void tabContainer.onSelect();
     }
 
@@ -195,7 +195,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         // To fix this, mark all tabs inactive and then search for tab to activate, which will always trigger
         // selectTab event.
         this.tabs.tabs.forEach((t) => t.active = false);
-        if (this.currentMenuState != MenuState.OPEN) {
+        if (this.currentMenuState != MenuState.Open) {
             return;
         }
         const activeTab = this.tabs.tabs.find((t) => t.id == this.currentTab);
@@ -208,15 +208,15 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         if (!this.trySetCurrentTabToDefault() || !this.currentTab) {
             return;
         }
-        this.setVisibleState(MenuState.OPEN);
+        this.setVisibleState(MenuState.Open);
     }
 
     private get nextMobileState(): MenuState {
-        return this.currentMenuState == MenuState.OPEN ? MenuState.CLOSED : MenuState.OPEN;
+        return this.currentMenuState == MenuState.Open ? MenuState.Closed : MenuState.Open;
     }
 
     private get nextDesktopState(): MenuState {
-        return (this.currentMenuState + 1) % MenuState.MAX;
+        return (this.currentMenuState + 1) % MenuState.Max;
     }
 
     private get nextState() {
