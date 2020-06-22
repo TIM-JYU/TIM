@@ -16,7 +16,7 @@ router.post("/", (req, res, next) => {
                 }
             }
             const m = j.markup;
-            // If runner does not have any of the 'field', 'groups' or 'program'-attributes, it not considered runnable
+            // If runner does not have any of the 'fields', 'groups' or 'program'-attributes, it is not considered runnable
             if ((m.fields || m.groups) || m.program){
                 j.runnable = true;
             }

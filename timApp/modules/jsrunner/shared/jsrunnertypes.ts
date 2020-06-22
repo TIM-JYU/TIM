@@ -1,5 +1,6 @@
 import * as t from "io-ts";
-import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, nullable, withDefault} from "tim/plugin/attributes";
+import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, withDefault} from "tim/plugin/attributes";
+
 export {IncludeUsersOption} from "tim/plugin/attributes";
 
 // t.brand causes problems, so we use the deprecated refinement for now.
