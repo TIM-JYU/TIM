@@ -149,7 +149,7 @@ def inject_angular_scripts() -> dict:
         # but it does not work for TIM because the HTML is dynamically generated and modifying base href would break
         # other links. So we modify the script by hand.
         # TODO: Cache the modified result.
-        return get_angularscripts(f'static/scripts/build/{locale}/index.html')
+        return get_angularscripts(f'static/scripts/build/{locale}/index.html', locale=locale)
     except FileNotFoundError:
         try:
             return get_angularscripts(f'static/scripts/build/index.html')
@@ -162,7 +162,7 @@ def inject_angular_scripts() -> dict:
             )
 
 
-def get_angularscripts(index_file):
+def get_angularscripts(index_file: str, locale: Optional[str]=None):
     with open(index_file) as f:
         html_data = f.read()
         bs = BeautifulSoup(html_data, 'lxml')
@@ -171,6 +171,8 @@ def get_angularscripts(index_file):
         style = bs.find('link')
         for s in scripts:
             n.append(s)
+            if locale:
+                s['src'] += f'?l={locale}'  # The parameter is only needed for cache busting (for Chrome).
         # Only production config has extractCss enabled, so this will be None for a non-prod build.
         if style:
             n.append(style)
