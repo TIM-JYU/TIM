@@ -701,8 +701,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="98a838c06ef7adb06eba6ea39af1962ea1d55b3a" datatype="html">
-        <source>Memos/Minutes</source>
-        <target state="translated">Muistiinpanot/pöytäkirjat</target>
+        <source>Memo/Minutes</source>
+        <target state="translated">Esityslista/pöytäkirja</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">117</context>
