@@ -126,7 +126,6 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         for (const tab of this.menuTabs) {
             this.tabsVisTable[tab.id] = tab.visible();
         }
-        this.trySetCurrentTabToDefault();
     }
 
     ngDoCheck() {
@@ -152,11 +151,11 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     ngAfterViewInit() {
-        let initialViewState = MenuState.Icons;
+        let initialViewState = this.lastVisState;
         if (isScreenSizeOrLower("sm")) {
             initialViewState = MenuState.Closed;
-        } else if (this.settings.remember_last_sidebar_menu_state) {
-            initialViewState = this.lastVisState;
+        } else if (!this.trySetCurrentTabToDefault()) {
+            initialViewState = MenuState.Icons;
         }
         this.setVisibleState(initialViewState, UPDATE_ALL);
     }
@@ -189,7 +188,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
 
     private trySetCurrentTabToDefault() {
         if (this.currentTab && this.tabsVisTable[this.currentTab]) {
-            return false;
+            return true;
         }
         const firstDefaultTab = this.tabEntryList.defaultTabOrder.find((id) => this.tabsVisTable[id]);
         if (!firstDefaultTab) {
