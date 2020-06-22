@@ -374,7 +374,7 @@ export class SettingsTabComponent implements OnInit {
      * @returns {boolean} Whether the button for creating extracts should be displayed.
      */
     get enableCreateExtractsButton() {
-        return this.docSettings?.macros?.knro && this.documentMemoMinutes == "minutes" && this.item?.rights?.manage;
+        return this.docSettings?.macros?.knro && this.documentMemoMinutes == "minutes" && this.item?.rights.manage;
     }
 
     createMinuteExtracts() {
@@ -386,7 +386,7 @@ export class SettingsTabComponent implements OnInit {
      * @returns {boolean} Whether the button for creating minutes should be displayed.
      */
     get enableCreateMinutesButton() {
-        return this.docSettings?.macros?.knro && this.documentMemoMinutes == "memo" && this.item?.rights?.manage;
+        return this.docSettings?.macros?.knro && this.documentMemoMinutes == "memo" && this.item?.rights.manage;
     }
 
     /**
@@ -421,7 +421,7 @@ export class SettingsTabComponent implements OnInit {
      */
     get isMinutesOrInvitation() {
         return this.docSettings?.macros?.knro
-            && this.item?.rights?.manage
+            && this.item?.rights.manage
             && (this.documentMemoMinutes == "minutes" || this.documentMemoMinutes == "memo");
     }
 
