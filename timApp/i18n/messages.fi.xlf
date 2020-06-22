@@ -700,7 +700,7 @@
           <context context-type="linenumber">112</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="98a838c06ef7adb06eba6ea39af1962ea1d55b3a" datatype="html">
+      <trans-unit id="ca7a39a4e6c7b4105a5d9791e4bb6902168a4335" datatype="html">
         <source>Memo/Minutes</source>
         <target state="translated">Esityslista/pöytäkirja</target>
         <context-group purpose="location">
