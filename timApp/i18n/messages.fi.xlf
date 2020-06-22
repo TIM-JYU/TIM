@@ -720,7 +720,7 @@
       </trans-unit>
       <trans-unit id="d645c2b03b92e854c450261e0ac01cd56e9c1706" datatype="html">
         <source>Create extracts</source>
-        <target state="translated">Lue otteet</target>
+        <target state="translated">Luo otteet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">120</context>
@@ -808,7 +808,7 @@
       </trans-unit>
       <trans-unit id="5c045063929f180c6d6c3de8b687f31f3594382a" datatype="html">
         <source>Browse existing groups</source>
-        <target state="translated">Selaa olemassaolevia ryhmiä</target>
+        <target state="translated">Selaa olemassa olevia ryhmiä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">154</context>
