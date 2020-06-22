@@ -67,7 +67,7 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
                     (click)="vctrl.editingHandler.editSettingsPars()"
                     i18n>Edit settings
             </button>
-            <button *ngIf="item?.rights?.manage"
+            <button *ngIf="item?.rights.manage"
                     class="timButton btn-block"
                     title="Set item relevance value" i18n-title
                     (click)="openRelevanceEditDialog()"
@@ -79,7 +79,7 @@ import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
                     (click)="markAllAsRead()"
                     i18n>Mark all as read
             </button>
-            <button *ngIf="vctrl?.isTranslation()"
+            <button *ngIf="vctrl.isTranslation()"
                     class="timButton btn-block"
                     title="Mark document as translated" i18n-title
                     (click)="markTranslated()"
