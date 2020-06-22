@@ -7,6 +7,7 @@ import {getStorage, isScreenSizeOrLower, setStorage} from "tim/util/utils";
 import {LectureController} from "tim/lecture/lectureController";
 import {ISettings} from "tim/user/settings.component";
 import {genericglobals} from "tim/util/globals";
+import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 
 enum MenuState {
     Open,
@@ -31,7 +32,7 @@ const MENU_BUTTON_ICONS: Record<MenuState, string> = {
 @Component({
     selector: "tim-sidebar-menu",
     template: `
-        <div (window:resize)="onResize()" class="left-fixed-side" [class.show]="showMenu">
+        <div *ngIf="!hide.sidebar" (window:resize)="onResize()" class="left-fixed-side" [class.show]="showMenu">
             <div class="btn btn-default btn-sm pull-left" (click)="nextVisibilityState()" i18n-title title="Show menu">
                 <i class="glyphicon glyphicon-{{nextGlyphicon}}" i18n-title title="Open sidebar"></i>
             </div>
@@ -59,6 +60,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     private isSm = isScreenSizeOrLower("sm");
     private lastNonSmState = this.lastVisState;
     @ViewChild("tabs") private tabs!: TabsetComponent;
+    hide: IVisibilityVars = getVisibilityVars();
     menuTabs!: TabEntry[];
     tabsVisTable: Record<string, boolean> = {};
     nextGlyphicon: string = MENU_BUTTON_ICONS[this.nextState];
