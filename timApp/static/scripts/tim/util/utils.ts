@@ -452,17 +452,22 @@ export function getViewPortSize() {
     return {width, height};
 }
 
-export function isSmallScreen() {
-    return getViewPortSize().width < 1200;
-}
-
 export function isMobileDevice() {
     const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
-    return touch && isSmallScreen();
+    return touch && isScreenSizeOrLower("md");
 }
 
-export function isSmScreen() {
-    return getViewPortSize().width < 991;
+// TIM also defines four device-* DIVs which can be also used to determine the active media type,
+// but in some cases screen size info is needed even before the DOM has been drawn fully.
+// For this reason, we define the media sizes manually here -- it's unlikely they'll change in a while.
+const MEDIA_SIZES = {
+    xs: 768,
+    sm: 992,
+    md: 1200,
+};
+
+export function isScreenSizeOrLower(size: keyof typeof MEDIA_SIZES) {
+    return getViewPortSize().width < MEDIA_SIZES[size];
 }
 
 export function escapeRegExp(str: string) {

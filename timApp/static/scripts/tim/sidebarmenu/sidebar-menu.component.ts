@@ -3,7 +3,7 @@ import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
 import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
-import {getStorage, isSmScreen, setStorage} from "tim/util/utils";
+import {getStorage, isScreenSizeOrLower, setStorage} from "tim/util/utils";
 import {LectureController} from "tim/lecture/lectureController";
 import {ISettings} from "tim/user/settings.component";
 import {genericglobals} from "tim/util/globals";
@@ -56,7 +56,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     private settings: ISettings = genericglobals().userPrefs;
     private lctrl = LectureController.instance;
     private currentMenuState: MenuState = MenuState.Open;
-    private isSm = isSmScreen();
+    private isSm = isScreenSizeOrLower("sm");
     private lastNonSmState = this.lastVisState;
     @ViewChild("tabs") private tabs!: TabsetComponent;
     menuTabs!: TabEntry[];
@@ -108,11 +108,11 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     onResize(): void {
-        if (!this.isSm && isSmScreen()) {
+        if (!this.isSm && isScreenSizeOrLower("sm")) {
             this.isSm = true;
             this.lastNonSmState = this.currentMenuState;
             this.setVisibleState(MenuState.Closed, { tabs: true });
-        } else if (!isSmScreen()) {
+        } else if (!isScreenSizeOrLower("sm")) {
             this.isSm = false;
             this.setVisibleState(this.lastNonSmState, { tabs: true });
         }
@@ -150,7 +150,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     ngAfterViewInit() {
-        this.setVisibleState(!isSmScreen() ? this.lastVisState : MenuState.Closed, UPDATE_ALL);
+        this.setVisibleState(!isScreenSizeOrLower("sm") ? this.lastVisState : MenuState.Closed, UPDATE_ALL);
     }
 
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
@@ -226,6 +226,6 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     private get nextState() {
-        return isSmScreen() ? this.nextMobileState : this.nextDesktopState;
+        return isScreenSizeOrLower("sm") ? this.nextMobileState : this.nextDesktopState;
     }
 }
