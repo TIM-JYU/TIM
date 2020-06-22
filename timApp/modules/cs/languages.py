@@ -1,5 +1,6 @@
 from subprocess import check_output
 from typing import Optional
+from re import split
 
 import requests
 
@@ -65,6 +66,9 @@ def df(value, default):
 def is_compile_error(out, err):
     return out.find("Compile error") >= 0 or err.find("Compile error") >= 0
 
+def split_ttype(ttype):
+    """Returns an iterator to the parts of ttype"""
+    return filter(None, split(r'[\s,|;\\/]', ttype.lower()))
 
 class Language:
     ttype = "_language"
@@ -359,6 +363,35 @@ class Language:
         subclasses = cls.__subclasses__()
         return subclasses + [i for sc in subclasses for i in sc.all_subclasses()]
     
+    @classmethod
+    def is_of_ttype(cls, ttype):
+        """Checks wheter ttype matches the class. Does NOT split ttype first"""
+        if isinstance(cls.ttype, list):
+            for t in cls.ttype:
+                if t == ttype:
+                    return True
+        return cls.ttype == ttype
+    
+    @classmethod
+    def get_client_ttype(cls):
+        """Returns the ttype of this class that should be given to client"""
+        if isinstance(cls.ttype, list):
+            return cls.ttype[0]
+        return cls.ttype
+    
+    @classmethod
+    def get_full_client_ttype(cls, ttype):
+        """Returns the full ttype that should be given to client"""
+        new_ttype = cls.get_client_ttype()
+        
+        parts = list(split_ttype(ttype))
+        for i, val in enumerate(parts):
+            if val in cls.ttype:
+                parts[i] = new_ttype
+                break
+        
+        return "/".join(parts)
+    
 class LanguageError(Language):
     ttype="_error"
     def __init__(self, query, sourcecode, error_str):
@@ -395,7 +428,7 @@ class All(Language):
     ttype = "all"
 
 class CS(Language):
-    ttype = "cs"
+    ttype = ["cs", "c#", "csharp"]
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "csc"
@@ -779,7 +812,7 @@ class CC(Language):
 
 
 class CPP(CC):
-    ttype = "c++"
+    ttype = ["c++", "cpp"]
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "g++ -std=c++14"
@@ -824,7 +857,7 @@ class Fortran(Language):
 
 
 class PY3(Language):
-    ttype = "py"
+    ttype = ["py", "py3", "python", "python3"]
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.py" % (self.basename, self.filename)
@@ -923,7 +956,7 @@ class Quorum(Language):
 
 
 class Text(Language):
-    ttype = "text"
+    ttype = ["text", "txt"]
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         if self.userargs:
@@ -1522,6 +1555,12 @@ class Pascal(Language):
     def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
 
+
+class CSConsole(Language):
+    ttype = "csconsole"
+    def runner_name(self):
+        return "cs-console"
+        
 
 # Copy this for new language class
 class Lang(Language):

@@ -211,9 +211,6 @@ def get_md(ttype, query):
 
     r = runner + is_input
 
-    if "csconsole" in ttype:  # erillinen konsoli
-        r = "cs-console"
-
     # s = '\\begin{verbatim}\n' + usercode + '\n\\end{verbatim}'
     header = str(get_param(query, "header", ""))
     stem = str(get_param(query, "stem", ""))
@@ -482,9 +479,6 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
     lazy_start = ""
     lazy_end = ""
 
-    if "csconsole" in ttype:  # erillinen konsoli
-        r = "cs-console"
-
     if do_lazy:
         # r = LAZYWORD + r;
         code = bycode
@@ -542,6 +536,10 @@ def handle_common_params(query: QueryClass, ttype):
     if not got_language:
         return language, "", "", js, language.runner_name(), False
         
+    if not "markup" in js or js["markup"] is None:
+        js["markup"] = {}
+    js["markup"]["type"] = language.get_full_client_ttype(ttype)
+    
     # print(js)
 
     q_bycode = get_param(query, "byCode", None)

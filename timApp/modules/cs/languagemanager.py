@@ -1,5 +1,4 @@
 from traceback import print_exc
-from re import split
 
 from languages import *
 from jsframe import *
@@ -11,6 +10,12 @@ languages = {}
 
 def populate_languages():
     global languages
+    
+    def add_language(cls, ttype):
+        if ttype in languages:
+            raise Exception(f"Language {cls.__name__} has a duplicate ttype ({ttype}) with {languages[ttype].__name__}")
+        languages[ttype] = cls
+    
     classes =  [Language] + Language.all_subclasses()
     languages = {}
     for cls in classes:
@@ -18,10 +23,13 @@ def populate_languages():
             raise Exception(f"Language {cls.__name__} hasn't defined ttype")
         if cls.ttype is None:
             continue
-        cls.ttype = cls.ttype.lower()
-        if cls.ttype in languages:
-            raise Exception(f"Language {cls.__name__} has a duplicate ttype ({cls.ttype}) with {languages[cls.ttype].__name__}")
-        languages[cls.ttype] = cls
+        if isinstance(cls.ttype, list):
+            if len(cls.ttype) == 0:
+                raise Exception(f"Language {cls.__name__} hasn't defined ttype")
+            for ttype in cls.ttype:
+                add_language(cls, ttype.lower())
+        else:
+            add_language(cls, cls.ttype.lower())
 
 populate_languages()
 
@@ -75,7 +83,7 @@ def make_object(name, query, usercode = ""):
 def get_class(name):
     """Returns a tuple: (language class of the given class name, bool: whether it succeeded). 
     Returns (LanguageError, false) on failure"""
-    parts = filter(None, split(r'\s,|;\\/', name))
+    parts = split_ttype(name)
     for part in parts:
         language_class = languages.get(part)
         if language_class is not None:
