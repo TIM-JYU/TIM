@@ -105,6 +105,7 @@ $menuTab-border: 1px solid lighten($gray-base, 88%);
     }
 }
 
+// TODO: Figure out a way to get theme variables into Angular easily. Potential solution is to use CSS variables.
 .points-list {
     border-bottom: $menuTab-border;
 
