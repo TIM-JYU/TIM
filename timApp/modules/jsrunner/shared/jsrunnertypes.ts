@@ -1,5 +1,6 @@
 import * as t from "io-ts";
 import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, withDefault} from "tim/plugin/attributes";
+
 export {IncludeUsersOption} from "tim/plugin/attributes";
 
 // t.brand causes problems, so we use the deprecated refinement for now.
@@ -43,6 +44,9 @@ export interface IJsRunnerMarkup extends t.TypeOf<typeof JsrunnerMarkup> {
 }
 
 export const JsrunnerAll = t.intersection([
+    t.partial({
+        runnable: t.boolean,
+    }),
     getTopLevelFields(JsrunnerMarkup),
     t.type({}),
 ]);

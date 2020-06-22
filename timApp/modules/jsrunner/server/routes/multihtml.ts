@@ -16,6 +16,10 @@ router.post("/", (req, res, next) => {
                 }
             }
             const m = j.markup;
+            // If runner does not have any of the 'fields', 'groups' or 'program'-attributes, it is not considered runnable
+            if ((m.fields || m.groups) || m.program){
+                j.runnable = true;
+            }
             if (m) {
                 const privateAttrs = ["autoadd",
                     "creditField",
