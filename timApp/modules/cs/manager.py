@@ -32,6 +32,7 @@ def populated(base_class):
     return dictionary
 
 languages = populated(Language)
+modifiers = populated(Modifier)
 
 def all_js_files():
     """
@@ -46,6 +47,7 @@ def all_js_files():
                 print(f"Failed to ask for {cls.__name__} js files:")
                 print_exc()
     add(languages)
+    add(modifiers)
     return list(files)
 
 def all_css_files():
@@ -61,6 +63,7 @@ def all_css_files():
                 print(f"Failed to ask for {cls.__name__} css files:")
                 print_exc()
     add(languages)
+    add(modifiers)
     return list(files)
 
 def make(dictionary, error_cls, desc, name, *kargs):
@@ -86,3 +89,5 @@ def make_language(name, query, usercode = ""):
     Returns (LanguageError object, false) on failure"""
     return make(languages, LanguageError, "Language", name, query, usercode)
 
+def make_modifier(name, query):
+    return make(modifiers, ModifierError, "Modifier", name, query)
