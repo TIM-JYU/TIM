@@ -6,7 +6,7 @@ import logging
 import signal
 import socketserver
 
-from languagemanager import *
+from manager import *
 import os
 import glob
 from base64 import b64encode
@@ -15,6 +15,7 @@ from os.path import splitext
 from fileParams import encode_json_data
 from pathlib import Path
 from loadable import LoadableJSONEncoder
+from ttype import TType
 # noinspection PyUnresolvedReferences
 
 #  uid = pwd.getpwnam('agent')[2]
@@ -199,8 +200,8 @@ def copy_files_regex(files, source_dir, dest_dir):
                 mkdirs(str(dest_dir / relpath))
                 shutil.copy2(str(rootp / file), str(dest_dir / relfilepath))
 
-def get_md(ttype, query):
-    _, bycode, is_input, js, runner, tiny = handle_common_params(query, ttype)
+def get_md(ttype: TType, query):
+    ttype = str(ttype) # TODO: make rest use the TType class
 
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None, False)
@@ -312,7 +313,7 @@ def convert_graphviz(query):
             check_fullprogram(query, True)
 
 
-def get_html(self: 'TIMServer', ttype, query: QueryClass):
+def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
     htmldata =  get_param(query, "cacheHtml", None) # check if constant html
     if htmldata:
         return tim_sanitize(htmldata) + get_cache_footer(query)
@@ -423,6 +424,8 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
 
     language, bycode, is_input, js, runner, tiny = handle_common_params(query, ttype)
 
+    ttype = str(ttype) # TODO: make rest use the TType class
+
     usercode = get_json_eparam(query.jso, "state", "usercode", None)
 
     state = query.jso.get("state")
@@ -525,20 +528,22 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
     return s
 
 
-def handle_common_params(query: QueryClass, ttype):
-    language, got_language = make_object(ttype, query)
+def handle_common_params(query: QueryClass, ttype: TType):
+    
+    language = ttype.get_language()
+    runner = ttype.runner_name()
     
     if query.hide_program:
         get_param_del(query, 'program', '')
-    language.modify_query()
+    ttype.modify_query()
     js = query_params_to_map_check_parts(query, language.deny_attributes())
     
-    if not got_language:
-        return language, "", "", js, language.runner_name(), False
-        
     if not "markup" in js or js["markup"] is None:
         js["markup"] = {}
-    js["markup"]["type"] = language.get_full_client_ttype(ttype)
+    js["markup"]["type"] = str(ttype)
+    
+    if not ttype.success:
+        return language, "", "", js, runner, False
     
     # print(js)
 
@@ -910,7 +915,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             timeout = get_json_param(query.jso, "markup", "timeout", None)
             if timeout:
                 query.query["timeout"] = [timeout]
-            ttype = get_param(query, "type", "cs").lower()
+            ttype = get_param(query, "type", "cs")
             if is_tauno:
                 ttype = 'tauno'
             if is_simcir:
@@ -926,7 +931,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("ERROR: " + str(ex) + " " + json.dumps(query))
                     continue
             else:
-                s = get_html(self, ttype, query)
+                s = get_html(self, TType(ttype, query), query)
             # print(s)
             htmls.append(s)
 
@@ -1283,11 +1288,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 s = replace_code(query.cut_errors, s)
                 return self.wout(s)
 
-            language, success = make_object(ttype, query, s)
-            
-            if not success:
+            ttypeobj = TType(ttype, query, s)
+            if not ttypeobj.success:
                 raise Exception(f"Could not get language from type {ttype}")
 
+            language = ttypeobj.get_language()
+            
             if not language.can_give_task() and query.jso.get("input",{}).get("getTask", False):
                 raise Exception("Give task not allowed for " + ttype)
 
