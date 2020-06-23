@@ -1010,10 +1010,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(str(e))
 
     def do_all_t(self, query: QueryClass):
-        try:
-            update_markup_from_file(query)
-        except Exception as e:
-            return self.wout(str(e))
         
         convert_graphviz(query)
         
@@ -1146,17 +1142,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             p = self.path.split("?")
             self.wout(file_to_string(p[0]))
             return
-
-            # Get the template type
-        ttype = get_param(query, "type", "cs").lower()
-        ttype = type_splitter.split(ttype)
-        ttype = ttype[0]
-
-        if is_tauno and not is_answer:
-            ttype = 'tauno'  # answer is newer tauno
-        if is_simcir:
-            ttype = 'simcir'
-
+        
         if is_tauno and not is_answer:
             # print("PTAUNO: " + content_type)
             p = self.path.split("?")
@@ -1178,6 +1164,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print("t:", time.time() - t1start)
 
         try:
+            update_markup_from_file(query)
+            # Get the template type
+            ttype = get_param(query, "type", "cs").lower()
+            ttype = type_splitter.split(ttype)
+            ttype = ttype[0]
+
+            if is_tauno and not is_answer:
+                ttype = 'tauno'  # answer is newer tauno
+            if is_simcir:
+                ttype = 'simcir'
+
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
             uploaded_file = get_json_param(query.jso, "input", "uploadedFile", None)
             uploaded_type = get_json_param(query.jso, "input", "uploadedType", None)

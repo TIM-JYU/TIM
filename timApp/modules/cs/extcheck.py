@@ -162,7 +162,7 @@ class ExtCheck(Language):
         
         for dir in os.listdir("/cs/masters"):
             file = path / dir / "csmarkup.json"
-            if not file.is_file:
+            if not file.is_file():
                 continue
             
             data = {}
