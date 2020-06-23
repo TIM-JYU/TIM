@@ -7,6 +7,8 @@ import signal
 import socketserver
 
 from manager import *
+from modifiers import Tiny, Input
+from languages import SimCir
 import os
 import glob
 from base64 import b64encode
@@ -201,6 +203,7 @@ def copy_files_regex(files, source_dir, dest_dir):
                 shutil.copy2(str(rootp / file), str(dest_dir / relfilepath))
 
 def get_md(ttype: TType, query):
+    _, bycode, js, runner = handle_common_params(query, ttype)
     ttype = str(ttype) # TODO: make rest use the TType class
 
     usercode = None
@@ -210,7 +213,7 @@ def get_md(ttype: TType, query):
     if usercode is None:
         usercode = bycode
 
-    r = runner + is_input
+    r = runner
 
     # s = '\\begin{verbatim}\n' + usercode + '\n\\end{verbatim}'
     header = str(get_param(query, "header", ""))
@@ -422,8 +425,9 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
     # print("do_lazy",do_lazy,type(do_lazy))
 
 
-    language, bycode, is_input, js, runner, tiny = handle_common_params(query, ttype)
+    language, bycode, js, runner = handle_common_params(query, ttype)
 
+    ttype_obj = ttype
     ttype = str(ttype) # TODO: make rest use the TType class
 
     usercode = get_json_eparam(query.jso, "state", "usercode", None)
@@ -474,7 +478,7 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
         result = NOLAZY + '<div class="review" ng-non-bindable>' + s + '</div>'
         return result
 
-    r = runner + is_input
+    r = runner
     s = '<' + r + ' ng-cloak>xxxJSONxxx' + jso + '</' + r + '>'
     # print(s)
     lazy_visible = ""
@@ -499,7 +503,7 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
 
         if before_open:
             ebycode = before_open
-        if tiny:
+        if ttype_obj.has_modifier(Tiny):
             lazy_visible = '<div class="lazyVisible ' + cs_class\
                            + 'csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(
                 query,
@@ -543,7 +547,7 @@ def handle_common_params(query: QueryClass, ttype: TType):
     js["markup"]["type"] = str(ttype)
     
     if not ttype.success:
-        return language, "", "", js, runner, False
+        return language, "", js, runner
     
     # print(js)
 
@@ -570,31 +574,13 @@ def handle_common_params(query: QueryClass, ttype: TType):
         js["uploadedFile"] = uf
         js["uploadedType"] = ut
     # jso)
-    runner = language.runner_name()
     # print(ttype)
-    is_input = ''
-    if "input" in ttype or "args" in ttype:
-        is_input = '-input'
-    if "comtest" in ttype or "junit" in ttype:
-        runner = 'cs-comtest-runner'
-    if "tauno" in ttype:
-        runner = 'cs-tauno-runner'
-    if "simcir" in ttype:
-        runner = 'cs-simcir-runner'
+    if ttype.has_modifier(Input):
+        runner = runner + '-input'
+    if ttype.has_language(SimCir):
         bycode = ''
-    if "tiny" in ttype:
-        runner = 'cs-text-runner'
-        tiny = True
-    else:
-        tiny = False
-    if "parsons" in ttype:
-        runner = 'cs-parsons-runner'
-    if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype:
-        runner = 'cs-jypeli-runner'
-    if "wescheme" in ttype:
-        runner = 'cs-wescheme-runner'
     
-    return language, bycode, is_input, js, runner, tiny
+    return language, bycode, js, runner
 
 
 def wait_file(f1):

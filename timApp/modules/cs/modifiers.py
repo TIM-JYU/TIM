@@ -69,3 +69,26 @@ class ModifierError(Modifier):
     def is_valid(self):
         return self.valid
 
+class Tiny(Modifier):
+    ttype = "tiny"
+    def runner_name(self):
+        return "cs-text-runner"
+    
+class Input(Modifier):
+    ttype = ["input", "args"]
+    @classmethod
+    def get_client_ttype(cls, ttype):
+        return ttype
+        
+class Doc(Modifier):
+    ttype = "doc"
+
+class CSConsole(Modifier):
+    ttype = "csconsole"
+    def runner_name(self):
+        return "cs-console"
+        
+class Parsons(Modifier):
+    ttype = "parsons"
+    def runner_name(self):
+        return "cs-parsons-runner"

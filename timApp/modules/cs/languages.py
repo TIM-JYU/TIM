@@ -7,6 +7,7 @@ from points import *
 from run import *
 from os.path import splitext
 from pathlib import Path
+from modifiers import Modifier
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
@@ -67,7 +68,7 @@ def is_compile_error(out, err):
 
 class Language:
     ttype = "_language"
-    def __init__(self, query: Optional[QueryClass], sourcecode):
+    def __init__(self, query: Optional[QueryClass], sourcecode = ""):
         """
         :param self: object reference
         :param query: query to use
@@ -427,9 +428,9 @@ class CS(Language):
         # result["tim_info"]["validMsg"] = "Et voi enää saada pisteitä kun katsoit vastauksen"
         return self.runself(["mono", "-O=all", self.pure_exename])
 
-class Jypeli(CS):
+class Jypeli(CS, Modifier):
     ttype = "jypeli"
-    def __init__(self, query, sourcecode):
+    def __init__(self, query, sourcecode = ""):
         super().__init__(query, sourcecode)
         self.imgsource = "/tmp/%s/output.bmp" % self.basename
         self.pure_bmpname = "./%s.bmp" % self.filename
@@ -489,13 +490,15 @@ class Jypeli(CS):
             remove(self.sourcefilename)
             remove(self.exename)
         return code, out, err, pwddir
+    
+    def runner_name(self):
+        return "cs-jypeli-runner"
 
-
-class CSComtest(CS):
+class CSComtest(CS, Modifier):
     ttype = "comtest"
     nunit = None
 
-    def __init__(self, query, sourcecode):
+    def __init__(self, query, sourcecode = ""):
         super().__init__(query, sourcecode)
         self.testdll = u"./{0:s}Test.dll".format(self.filename)
         self.hide_compile_out = True
@@ -555,6 +558,9 @@ class CSComtest(CS):
             give_points(points_rule, "test")
             self.run_points_given = True
         return code, out, err, pwddir
+        
+    def runner_name(self):
+        return "cs-comtest-runner"
 
 
 class Shell(Language):
@@ -713,9 +719,9 @@ class JComtest(Java):
         return code, out, err, pwddir
 
 
-class JUnit(Java):
+class JUnit(Java, Modifier):
     ttype = "junit"
-    def __init__(self, query, sourcecode):
+    def __init__(self, query, sourcecode = ""):
         super().__init__(query, sourcecode)
 
     def get_cmdline(self, sourcecode):
@@ -725,11 +731,14 @@ class JUnit(Java):
         code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.javaclassname])
         out, err = check_comtest(self, "junit", code, out, err, result, points_rule)
         return code, out, err, pwddir
+        
+    def runner_name(self):
+        return "cs-comtest-runner"
 
 
-class Graphics(Java):
+class Graphics(Java, Modifier):
     ttype = "graphics"
-    def __init__(self, query, sourcecode):
+    def __init__(self, query, sourcecode = ""):
         super().__init__(query, sourcecode)
         self.imgsource = "%s/run/capture.png" % self.prgpath
         self.imgdest = "/csgenerated/%s.png" % self.rndname
@@ -751,7 +760,9 @@ class Graphics(Java):
         out, err = self.copy_image(result, code, out, err, points_rule)
         err = re.sub('Xlib: {2}extension "RANDR" missing on display ":1"\\.\n', "", err)
         return code, out, err, pwddir
-
+    
+    def runner_name(self):
+        return "cs-jypeli-runner"
 
 class Scala(Language):
     ttype = "scala"
@@ -1055,6 +1066,9 @@ class Alloy(Language):
         code, out, err, pwddir = self.runself(runcmd)
         out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
+    
+    def runner_name(self):
+        return "cs-jypeli-runner"
 
 
 class Run(Language):
@@ -1102,7 +1116,9 @@ class SimCir(Language):
     @staticmethod
     def css_files():
         return ["/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"]
-
+    
+    def runner_name(self):
+        return "cs-simcir-runner"
 
 class Sage(Language):
     ttype = "sage"
@@ -1529,11 +1545,11 @@ class Pascal(Language):
         return self.runself([self.pure_exename])
 
 
-class CSConsole(Language):
-    ttype = "csconsole"
+class Tauno(Language, Modifier):
+    ttype = "tauno"
     def runner_name(self):
-        return "cs-console"
-        
+        return "cs-tauno-runner"
+    
 
 # Copy this for new language class
 class Lang(Language):
