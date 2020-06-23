@@ -1,3 +1,10 @@
+"""
+Adding new modifier to csPlugin:
+
+1. Create a new class inheriting from Modifier.
+2. Give the class a ttype name in the variable 'ttype'.
+3. Overload runner_name and modify_query methods if needed.
+"""
 
 class Modifier:
     ttype = "_modifier"

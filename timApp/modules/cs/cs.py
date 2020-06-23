@@ -35,7 +35,7 @@ from ttype import TType
 # Uuden kielen lisäämiseksi
 # 1. Mene tiedostoon languges.py ja kopioi sieltä luokka
 #        class Lang(Language):
-#      ja vaihda sille nimi, toteuta metodit  ja lisää myös languages-sanastoon.
+#      ja vaihda sille nimi, toteuta metodit ja täytä 'ttype' muuttuja.
 # 2. Tee tarvittava lisäys myös js/dir.js tiedoston kieliluetteloon.
 # 3. Lisää kielen kääntäjä/tulkki vastaavaan konttiin, ks. Dockerfile
 #
@@ -51,6 +51,7 @@ from ttype import TType
 # Hakemistot:
 #  tim-koneessa
 #     /opt/cs               - varsinainen csPluginin hakemisto, skirptit yms
+#     /opt/cs/masters       - masterPath-attribuutin juurikansio
 #     /opt/cs/templates     - pluginin templatet editoria varten
 #     /opt/cs/java          - javan tarvitsemat tavarat
 #     /opt/cs/images/cs     - kuvat jotka syntyvät csPlugin ajamista ohjelmista

@@ -22,9 +22,8 @@ Adding new language to csPlugin:
     - if in varibles.sh was export IS_DEVELOPMENT=true, change it back to true
         - in /opt/tim directory run ./dc build csplugin
     -  docker push cs3:rust    
-1. Add language name to languages list in languagedict at the bottom of this file
-    - remember to use lowercase letters
-2. Add the language class starting with capital letter to this or new file
+1. Add the language class starting with capital letter to this or new file
+2. Add language name to 'ttype' variable
 3. Mimic some existing language when creating the new class
     - the simplest one is CC that works when just compiler name end extensions are enough to change 
 4. Add language to csPlugin.ts languageTypes.runTypes list
