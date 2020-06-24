@@ -41,6 +41,12 @@ class BlockAccess(db.Model):
     atype = db.relationship('AccessTypeModel', back_populates='accesses')
 
     @property
+    def duration_now(self):
+        if self.duration_from and self.accessible_to:
+            return min(self.duration, self.accessible_to - get_current_time())
+        return self.duration
+
+    @property
     def group_collection_key(self):
         return self.block_id, self.type
 

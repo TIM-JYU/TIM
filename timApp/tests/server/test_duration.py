@@ -16,7 +16,7 @@ class DurationTest(TimRouteTest):
 
     def get_about_to_access_msg(self, period='a day'):
         return ['You are about to access a time-limited document.',
-                f'After you click Unlock, your access to this document will be removed in {period}.']
+                f'After you click Unlock, your access to this document will be removed in under {period}.']
 
     unlock_success = 'Item was unlocked successfully.'
 
