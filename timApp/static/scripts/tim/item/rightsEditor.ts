@@ -62,6 +62,7 @@ class RightsEditorController implements IController {
     private durOpt: {
         durationType: moment.unitOfTime.Base,
         durationAmount: number,
+        accessTo?: moment.Moment;
     };
     private timeOpt: {
         type: string,
@@ -165,6 +166,9 @@ class RightsEditorController implements IController {
             if (this.forceDurationEnd) {
                 this.timeOpt.durationTo = moment(this.forceDurationEnd);
             }
+            if (this.forceDurationAccessTo) {
+                this.durOpt.accessTo = moment(this.forceDurationAccessTo);
+            }
         }
         if (this.forceConfirm != null) {
             this.requireConfirm = this.forceConfirm;
@@ -228,8 +232,11 @@ class RightsEditorController implements IController {
             this.gridReady = true;
         }
 
-        this.scope.$watchGroup([() => this.durOpt.durationAmount, () => this.durOpt.durationType], (newValues, oldValues, scope) => {
+        this.scope.$watchGroup([() => this.durOpt.durationAmount, () => this.durOpt.durationType, () => this.durOpt.accessTo], (newValues, oldValues, scope) => {
             this.timeOpt.duration = moment.duration(this.durOpt.durationAmount, this.durOpt.durationType);
+            if (this.durOpt.accessTo) {
+                this.timeOpt.to = this.durOpt.accessTo;
+            }
         });
     }
 
@@ -691,6 +698,7 @@ class RightsEditorController implements IController {
                     break;
                 }
             }
+            this.durOpt.accessTo = this.timeOpt.to;
         } else {
             this.timeOpt.type = "range";
         }
@@ -761,6 +769,7 @@ timApp.component("timRightsEditor", {
         forceDuration: "<?",
         forceDurationEnd: "<?",
         forceDurationStart: "<?",
+        forceDurationAccessTo: "<?",
         hideEdit: "<?",
         hideExpire: "<?",
         hideRemove: "<?",
