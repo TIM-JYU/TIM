@@ -53,7 +53,7 @@ const VIEW_PATH = "/view/";
                 </span>
             </ng-container>
             <ng-container *ngIf="isCountdown">
-                <tim-countdown [template]="countdownText" [seconds]="countDown" (onFinish)="startGoto()"></tim-countdown>
+                <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="startGoto()"></tim-countdown>
                 <ng-template i18n="@@gotoOpensIn">Opens in {{"{"}}0{{"}"}}.</ng-template>
             </ng-container>
             <ng-container *ngIf="isGoing">
@@ -82,7 +82,7 @@ export class GotoLinkComponent {
     @Input() closeAt?: string;
     @Input() checkUnsaved: boolean = false;
     @Input() unsavedChangesText?: string;
-    countDown = 0;
+    openTime?: string;
     pastDue = 0;
     linkDisabled = false;
     linkState = GotoLinkState.Ready;
@@ -189,10 +189,10 @@ export class GotoLinkComponent {
         }
 
         if (openTime?.isValid()) {
-            this.countDown = openTime.diff(curTime, "seconds", true);
+            this.openTime = openTime?.toISOString();
         }
 
-        if (this.countDown <= 0) {
+        if (openTime?.isValid() && openTime.diff(curTime, "seconds", true) <= 0) {
             this.startGoto();
         } else {
             this.startCountdown();
