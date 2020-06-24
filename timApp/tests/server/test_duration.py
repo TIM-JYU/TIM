@@ -57,7 +57,7 @@ class DurationTest(TimRouteTest):
         self.get(d.url_relative, query_string={'unlock': 'true'})
         ba = BlockAccess.query.filter_by(usergroup_id=self.get_test_user_2_group_id(),
                                          block_id=d.id,
-                                         type=get_access_type_id('view')).one()
+                                         type=AccessType.view.value).one()
         real_duration = (ba.accessible_to - get_current_time()).total_seconds()
         delta_access_seconds = delta_access.total_seconds()
         self.assertAlmostEqual(real_duration,
