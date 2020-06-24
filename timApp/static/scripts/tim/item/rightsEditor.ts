@@ -62,6 +62,7 @@ class RightsEditorController implements IController {
     private durOpt: {
         durationType: moment.unitOfTime.Base,
         durationAmount: number,
+        accessTo?: moment.Moment;
     };
     private timeOpt: {
         type: string,
@@ -78,6 +79,7 @@ class RightsEditorController implements IController {
     private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsDurationFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsDurationTo: EonasdanBootstrapDatetimepicker.SetOptions;
+    private datePickerOptionsDurationAccessTo: EonasdanBootstrapDatetimepicker.SetOptions;
     private accessTypes!: IAccessType[];
     private massMode: Binding<boolean | undefined, "<">;
     private accessType: IAccessType | undefined;
@@ -104,6 +106,7 @@ class RightsEditorController implements IController {
     private forceDuration?: number;
     private forceDurationStart?: string;
     private forceDurationEnd?: string;
+    private forceDurationAccessTo?: string;
     private forceConfirm?: boolean;
     private hideEdit?: boolean;
     private hideExpire?: boolean;
@@ -138,6 +141,10 @@ class RightsEditorController implements IController {
             format: dateFormat,
             showTodayButton: true,
         };
+        this.datePickerOptionsDurationAccessTo = {
+            format: dateFormat,
+            showTodayButton: true,
+        };
     }
 
     relPath(item: IItemWithRights) {
@@ -158,6 +165,9 @@ class RightsEditorController implements IController {
             }
             if (this.forceDurationEnd) {
                 this.timeOpt.durationTo = moment(this.forceDurationEnd);
+            }
+            if (this.forceDurationAccessTo) {
+                this.durOpt.accessTo = moment(this.forceDurationAccessTo);
             }
         }
         if (this.forceConfirm != null) {
@@ -381,6 +391,10 @@ class RightsEditorController implements IController {
 
     async addOrEditPermission(groupname: string, type: IAccessType) {
         this.clearMessages();
+        const timeOpt = {...this.timeOpt};
+        if (this.durationSelected()) {
+            timeOpt.to = this.durOpt.accessTo;
+        }
         if (this.massMode) {
             if (!this.grid || !this.gridOptions) {
                 console.error("grid not initialized");
@@ -390,7 +404,7 @@ class RightsEditorController implements IController {
             this.loading = true;
             const r = await to($http.put<IPermissionEditResponse>(`/permissions/edit`, {
                 ids: ids,
-                time: this.timeOpt,
+                time: timeOpt,
                 type: type.id,
                 action: this.actionOption,
                 groups: groupname.split(/[;\n]/),
@@ -418,7 +432,7 @@ class RightsEditorController implements IController {
                 this.loading = true;
                 const r = await to($http.put<IPermissionEditResponse>(`/${this.urlRootModify}/add`,
                     {
-                        time: this.timeOpt,
+                        time: timeOpt,
                         id: this.itemId,
                         groups: groups,
                         type: type.id,
@@ -685,6 +699,7 @@ class RightsEditorController implements IController {
                     break;
                 }
             }
+            this.durOpt.accessTo = this.timeOpt.to;
         } else {
             this.timeOpt.type = "range";
         }
@@ -755,6 +770,7 @@ timApp.component("timRightsEditor", {
         forceDuration: "<?",
         forceDurationEnd: "<?",
         forceDurationStart: "<?",
+        forceDurationAccessTo: "<?",
         hideEdit: "<?",
         hideExpire: "<?",
         hideRemove: "<?",
