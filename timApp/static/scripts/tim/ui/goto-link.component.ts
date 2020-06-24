@@ -136,7 +136,7 @@ export class GotoLinkComponent {
         return {unauthorized: false, access: undefined};
     }
 
-    parseTime(timeString?: string, wildcardValue?: Moment) {
+    parseTime(timeString?: string, wildcardValue?: Moment | null) {
         if (!timeString) {
             return wildcardValue;
         }
@@ -160,8 +160,8 @@ export class GotoLinkComponent {
             return;
         }
 
-        const openTime = this.parseTime(this.openAt, access?.accessible_from);
-        const closeTime = this.parseTime(this.closeAt, access?.accessible_to);
+        const openTime = this.parseTime(this.openAt, access?.accessible_from ?? access?.duration_from);
+        const closeTime = this.parseTime(this.closeAt, access?.accessible_to ?? access?.duration_to);
 
         let curTime = moment();
         if (closeTime || openTime) {
