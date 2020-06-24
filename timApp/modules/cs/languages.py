@@ -493,7 +493,7 @@ class Jypeli(CS, Modifier):
     def runner_name(self):
         return "cs-jypeli-runner"
 
-class CSComtest(CS, Modifier):
+class CSComtest(CS, Modifier): # TODO: comtests probably shouldn't be modifiers but they are used as such
     ttype = "comtest"
     nunit = None
 
@@ -701,9 +701,9 @@ def check_comtest(self, ttype, code, out, err, result, points_rule):
     return out, err
 
 
-class JComtest(Java):
+class JComtest(Java, Modifier):
     ttype = "jcomtest"
-    def __init__(self, query, sourcecode):
+    def __init__(self, query, sourcecode = ""):
         super().__init__(query, sourcecode)
         self.testcs = self.filepath + "/" + self.classname + "Test.java"
         self.testdll = self.javaclassname + "Test"
@@ -716,6 +716,9 @@ class JComtest(Java):
         code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.testdll], no_uargs=True)
         out, err = check_comtest(self, "jcomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
+    
+    def runner_name(self):
+        return "cs-comtest-runner"
 
 
 class JUnit(Java, Modifier):

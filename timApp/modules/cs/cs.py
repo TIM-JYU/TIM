@@ -7,7 +7,7 @@ import signal
 import socketserver
 
 from manager import *
-from modifiers import Tiny, Input
+from modifiers import Tiny, Input, Args
 from languages import SimCir
 import os
 import glob
@@ -577,7 +577,7 @@ def handle_common_params(query: QueryClass, ttype: TType):
         js["uploadedType"] = ut
     # jso)
     # print(ttype)
-    if ttype.has_modifier(Input):
+    if ttype.has_modifier(Input) or ttype.has_modifier(Args): # TODO: modify so that this isn't needed
         runner = runner + '-input'
     if ttype.has_language(SimCir):
         bycode = ''

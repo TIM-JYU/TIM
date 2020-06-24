@@ -82,10 +82,10 @@ class Tiny(Modifier):
         return "cs-text-runner"
     
 class Input(Modifier):
-    ttype = ["input", "args"]
-    @classmethod
-    def get_client_ttype(cls, ttype):
-        return ttype
+    ttype = "input"
+    
+class Args(Modifier):
+    ttype = "args"
         
 class Doc(Modifier):
     ttype = "doc"
