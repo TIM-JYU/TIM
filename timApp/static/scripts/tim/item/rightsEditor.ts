@@ -391,8 +391,9 @@ class RightsEditorController implements IController {
 
     async addOrEditPermission(groupname: string, type: IAccessType) {
         this.clearMessages();
+        const timeOpt = {...this.timeOpt};
         if (this.durationSelected()) {
-            this.timeOpt.to = this.durOpt.accessTo;
+            timeOpt.to = this.durOpt.accessTo;
         }
         if (this.massMode) {
             if (!this.grid || !this.gridOptions) {
@@ -403,7 +404,7 @@ class RightsEditorController implements IController {
             this.loading = true;
             const r = await to($http.put<IPermissionEditResponse>(`/permissions/edit`, {
                 ids: ids,
-                time: this.timeOpt,
+                time: timeOpt,
                 type: type.id,
                 action: this.actionOption,
                 groups: groupname.split(/[;\n]/),
@@ -431,7 +432,7 @@ class RightsEditorController implements IController {
                 this.loading = true;
                 const r = await to($http.put<IPermissionEditResponse>(`/${this.urlRootModify}/add`,
                     {
-                        time: this.timeOpt,
+                        time: timeOpt,
                         id: this.itemId,
                         groups: groups,
                         type: type.id,
