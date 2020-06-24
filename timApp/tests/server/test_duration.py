@@ -42,6 +42,27 @@ class DurationTest(TimRouteTest):
         self.get(d.url_relative, expect_status=403,
                  expect_contains=self.get_expired_msg(ba.accessible_to))
 
+    def test_duration_value_access_to_clamp(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.login_test2()
+        delta_access = timedelta(minutes=5)
+        unlock_time = get_current_time()
+        access_to_max = unlock_time + delta_access
+        self.test_user_2.grant_access(d, AccessType.view,
+                                      duration=timedelta(minutes=10),
+                                      duration_from=unlock_time,
+                                      accessible_to=access_to_max)
+        db.session.commit()
+        self.get(d.url_relative, query_string={'unlock': 'true'})
+        ba = BlockAccess.query.filter_by(usergroup_id=self.get_test_user_2_group_id(),
+                                         block_id=d.id,
+                                         type=get_access_type_id('view')).one()
+        real_duration = (ba.accessible_to - get_current_time()).total_seconds()
+        delta_access_seconds = delta_access.total_seconds()
+        self.assertAlmostEqual(real_duration,
+                               delta_access_seconds, delta=1)
+
     def test_unlock_needs_confirm(self):
         self.login_test1()
         d = self.create_doc()
