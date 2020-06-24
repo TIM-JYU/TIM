@@ -14,13 +14,15 @@ def do_jsxgraph_replace(q):
 
 
 class Stack(Language):
+    ttype="stack"
     def can_give_task(self):
         return True
 
     def runner_name(self):
         return "stack-runner"
 
-    def js_files(self):
+    @staticmethod
+    def js_files():
         return ["/cs/js/build/stack.js"]  # , "/cs/stack/ServerSyncValues.js"]
 
     def __init__(self, query, sourcecode):

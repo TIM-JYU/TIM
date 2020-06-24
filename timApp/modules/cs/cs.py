@@ -6,14 +6,18 @@ import logging
 import signal
 import socketserver
 
-from languages import *
-from languagedict import languages
+from manager import *
+from modifiers import Tiny, Input, Args
+from languages import SimCir
 import os
 import glob
 from base64 import b64encode
 from cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
 from os.path import splitext
 from fileParams import encode_json_data
+from pathlib import Path
+from loadable import LoadableJSONEncoder
+from ttype import TType
 # noinspection PyUnresolvedReferences
 
 #  uid = pwd.getpwnam('agent')[2]
@@ -21,12 +25,21 @@ from fileParams import encode_json_data
 
 # cs.py: WWW-palvelin portista 5000 (ulospäin 56000) joka palvelee csPlugin pyyntöjä
 #
+# masterPath-kansioiden lisääminen copyFiles, jsFiles, cssFiles ja fromFile-attribuutteja varten:
+#   - Luo kansio /cs/masters/-hakemistoon.
+#   Voit käyttää tätä kansiota masterPathissä (masterPath: <kansio-nimi>)
+#   - Lisää kansioon tai sen alikansioihin haluamasi js, css ja markup-tiedostot (fromFile).
+#   - Viittaa näihin tiedostoihin attribuuteilla. Jos fromFile on tosi, eikä merkkijono, oletetaan
+#   markup tiedoston nimeksi 'csmarkup.json'
+#
 # Uuden kielen lisäämiseksi
 # 1. Mene tiedostoon languges.py ja kopioi sieltä luokka
 #        class Lang(Language):
-#      ja vaihda sille nimi, toteuta metodit  ja lisää myös languages-sanastoon.
+#      ja vaihda sille nimi, toteuta metodit ja täytä 'ttype' muuttuja.
 # 2. Tee tarvittava lisäys myös js/dir.js tiedoston kieliluetteloon.
 # 3. Lisää kielen kääntäjä/tulkki vastaavaan konttiin, ks. Dockerfile
+#
+# ExtCheck-kielen käyttämiseen katso ohjeet extcheck.py-tiedoston alun kommentista.
 #
 # Ensin käynistettävä
 # ./startPlugins.sh             - käynnistää dockerin cs.py varten
@@ -38,6 +51,7 @@ from fileParams import encode_json_data
 # Hakemistot:
 #  tim-koneessa
 #     /opt/cs               - varsinainen csPluginin hakemisto, skirptit yms
+#     /opt/cs/masters       - masterPath-attribuutin juurikansio
 #     /opt/cs/templates     - pluginin templatet editoria varten
 #     /opt/cs/java          - javan tarvitsemat tavarat
 #     /opt/cs/images/cs     - kuvat jotka syntyvät csPlugin ajamista ohjelmista
@@ -174,11 +188,24 @@ def delete_extra_files(extra_files, prgpath):
             except:
                 print("Can not delete: ", efilename)
 
+def copy_files_regex(files, source_dir, dest_dir):
+    if files is None or source_dir is None or dest_dir is None:
+        return
+    
+    regexs = [re.compile(file) for file in files]
+    
+    for root, dirs, files in os.walk(source_dir):
+        rootp = Path(root)
+        relpath = rootp.relative_to(source_dir)
+        for file in files:
+            relfilepath = relpath / file
+            if any(regex.fullmatch(str(relfilepath)) is not None for regex in regexs):
+                mkdirs(str(dest_dir / relpath))
+                shutil.copy2(str(rootp / file), str(dest_dir / relfilepath))
 
-def get_md(ttype, query):
-    tiny = False
-
-    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype)
+def get_md(ttype: TType, query):
+    _, bycode, js, runner = handle_common_params(query, ttype)
+    ttype = str(ttype) # TODO: make rest use the TType class
 
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None, False)
@@ -187,10 +214,7 @@ def get_md(ttype, query):
     if usercode is None:
         usercode = bycode
 
-    r = runner + is_input
-
-    if "csconsole" in ttype:  # erillinen konsoli
-        r = "cs-console"
+    r = runner
 
     # s = '\\begin{verbatim}\n' + usercode + '\n\\end{verbatim}'
     header = str(get_param(query, "header", ""))
@@ -293,7 +317,7 @@ def convert_graphviz(query):
             check_fullprogram(query, True)
 
 
-def get_html(self: 'TIMServer', ttype, query: QueryClass):
+def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
     htmldata =  get_param(query, "cacheHtml", None) # check if constant html
     if htmldata:
         return tim_sanitize(htmldata) + get_cache_footer(query)
@@ -389,7 +413,6 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
         return htmldata
 
     user_id = get_param(query, "user_id", "--")
-    tiny = False
     # print("UserId:", user_id)
     if user_id == "Anonymous":
         allow_anonymous = str(get_param(query, "anonymous", "false")).lower()
@@ -403,21 +426,21 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
     # print("do_lazy",do_lazy,type(do_lazy))
 
 
-    bycode, is_input, js, runner, tiny = handle_common_params(query, tiny, ttype)
-    language_class = languages.get(ttype.lower(), Language)
-    language = language_class(query, bycode)
+    language, bycode, js, runner = handle_common_params(query, ttype)
+
+    ttype_obj = ttype
+    ttype = str(ttype) # TODO: make rest use the TType class
 
     usercode = get_json_eparam(query.jso, "state", "usercode", None)
 
-    state_copy = language.state_copy()
-    for key in state_copy:
-        # value = get_json_eparam(query.jso, "state", key, "")
-        state = query.jso.get("state", {})
-        if not state:
-            break
-        value = state.get(key, None)
-        if value:
-            js['markup'][key] = value
+    state = query.jso.get("state")
+    if state:
+        state_copy = language.state_copy()
+        for key in state_copy:
+            # value = get_json_eparam(query.jso, "state", key, "")
+            value = state.get(key, None)
+            if value:
+                js['markup'][key] = value
 
     before_open = query.jso.get("markup", {}).get('beforeOpen','')
     is_rv = is_review(query)
@@ -456,16 +479,13 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
         result = NOLAZY + '<div class="review" ng-non-bindable>' + s + '</div>'
         return result
 
-    r = runner + is_input
+    r = runner
     s = '<' + r + ' ng-cloak>xxxJSONxxx' + jso + '</' + r + '>'
     # print(s)
     lazy_visible = ""
     lazy_class = ""
     lazy_start = ""
     lazy_end = ""
-
-    if "csconsole" in ttype:  # erillinen konsoli
-        r = "cs-console"
 
     if do_lazy:
         # r = LAZYWORD + r;
@@ -484,7 +504,7 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
 
         if before_open:
             ebycode = before_open
-        if tiny:
+        if ttype_obj.has_modifier(Tiny):
             lazy_visible = '<div class="lazyVisible ' + cs_class\
                            + 'csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(
                 query,
@@ -513,13 +533,24 @@ def get_html(self: 'TIMServer', ttype, query: QueryClass):
     return s
 
 
-def handle_common_params(query: QueryClass, tiny, ttype):
-    language_class = languages.get(ttype.lower(), Language)
-    language = language_class(query, "")
+def handle_common_params(query: QueryClass, ttype: TType):
+    
+    language = ttype.get_language()
+    runner = ttype.runner_name()
+    
     if query.hide_program:
         get_param_del(query, 'program', '')
-    language.modify_query();
+    ttype.modify_query()
     js = query_params_to_map_check_parts(query, language.deny_attributes())
+    
+    if str(ttype) not in ["tauno", "simcir", "parsons"]: # TODO: make tauno, simcir and parsons work without this
+        if not "markup" in js or js["markup"] is None:
+            js["markup"] = {}
+        js["markup"]["type"] = str(ttype)
+    
+    if not ttype.success:
+        return language, "", js, runner
+    
     # print(js)
 
     q_bycode = get_param(query, "byCode", None)
@@ -545,33 +576,13 @@ def handle_common_params(query: QueryClass, tiny, ttype):
         js["uploadedFile"] = uf
         js["uploadedType"] = ut
     # jso)
-    runner = 'cs-runner'
     # print(ttype)
-    is_input = ''
-    if "input" in ttype or "args" in ttype:
-        is_input = '-input'
-    if "comtest" in ttype or "junit" in ttype:
-        runner = 'cs-comtest-runner'
-    if "tauno" in ttype:
-        runner = 'cs-tauno-runner'
-    if "simcir" in ttype:
-        runner = 'cs-simcir-runner'
+    if ttype.has_modifier(Input) or ttype.has_modifier(Args): # TODO: modify so that this isn't needed
+        runner = runner + '-input'
+    if ttype.has_language(SimCir):
         bycode = ''
-    if "tiny" in ttype:
-        runner = 'cs-text-runner'
-        tiny = True
-    if "parsons" in ttype:
-        runner = 'cs-parsons-runner'
-    if "jypeli" in ttype or "graphics" in ttype or "alloy" in ttype:
-        runner = 'cs-jypeli-runner'
-
-    language_runner = language.runner_name()
-    if language_runner:
-        runner = language_runner
-
-    if "wescheme" in ttype:
-        runner = 'cs-wescheme-runner'
-    return bycode, is_input, js, runner, tiny
+    
+    return language, bycode, js, runner
 
 
 def wait_file(f1):
@@ -777,7 +788,36 @@ def doc_address(query, check = False):
              'docrnd': docrnd,
              'dochtml': dochtml}
 
-
+def update_markup_from_file(query):
+    file = get_param(query, "fromFile", False)
+    if not file:
+        return query
+    
+    if isinstance(file, bool):
+        file = ""
+    
+    if file.startswith('/'):
+        file = Path(file)
+    else:
+        master_path = get_param(query, "masterPath", None)
+        if master_path is None:
+            raise Exception("Cannot fetch markup from file as masterPath is not specified")
+        file = "/cs/masters/" / Path(master_path) / file
+    
+    if file.is_dir():
+        file = file / "csmarkup.json"
+    
+    if not file.is_file():
+        raise FileNotFoundError("Markup file does not exist")
+    
+    if query.jso is None:
+        query.jso = {}
+    if "markup" not in query.jso:
+        query.jso["markup"] = {}
+    
+    with open(str(file), "r") as f:
+        query.jso["markup"] = dict(list(json.load(f).items()) + list(query.jso["markup"].items()))
+    
 # see: http://stackoverflow.com/questions/366682/how-to-limit-execution-time-of-a-function-call-in-python
 # noinspection PyUnusedLocal
 def signal_handler(signum, frame):
@@ -830,6 +870,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         global_anonymous = False
         for query in querys:
+            try:
+                update_markup_from_file(query)
+            except:
+                pass # TODO: show error to user
+            
             ga = get_param(query, "GlobalAnonymous", None)
             if ga:
                 global_anonymous = True
@@ -855,7 +900,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             selected_language = get_json_param(query.jso, "state", "selectedLanguage", None)
             if selected_language:
                 query.query["selectedLanguage"] = [selected_language]
-            ttype = get_param(query, "type", "cs").lower()
+            timeout = get_json_param(query.jso, "markup", "timeout", None)
+            if timeout:
+                query.query["timeout"] = [timeout]
+            ttype = get_param(query, "type", "cs")
             if is_tauno:
                 ttype = 'tauno'
             if is_simcir:
@@ -871,7 +919,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     print("ERROR: " + str(ex) + " " + json.dumps(query))
                     continue
             else:
-                s = get_html(self, ttype, query)
+                s = get_html(self, TType(ttype, query), query)
             # print(s)
             htmls.append(s)
 
@@ -895,10 +943,63 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
     def wout(self, s):
         self.wfile.write(s.encode("UTF-8"))
 
+    def do_reqs(self, query):
+        path = self.path
+        qindex = self.path.find("?")
+        if qindex >=0:
+            path = self.path[:qindex]
+
+        is_cache = get_param(query, "cache", False)
+        is_graphviz  = path.find('/graphviz') >= 0
+        is_tauno = path.find('/tauno') >= 0
+        is_simcir = path.find('/simcir') >= 0
+        is_parsons = path.find('/parsons') >= 0
+        is_rikki = path.find('rikki') >= 0
+
+        if not is_cache:
+            content_type = "application/json"
+            do_headers(self, content_type)
+
+        templs = {}
+        jslist = all_js_files()
+        csslist = all_css_files()
+        
+        result_json = {"js": jslist,
+                        "css": csslist, "multihtml": True, "multimd": True, "canGiveTask": True}
+
+        if not (is_tauno or is_rikki or is_parsons or is_simcir or is_graphviz ):
+            templs = get_all_templates('templates')
+        
+        if is_parsons:
+            result_json = {"js": ["/cs/js/build/csPlugin.js",
+                                    "jqueryui-touch-punch",
+                                    "/cs/js-parsons/lib/underscore-min.js",
+                                    "/cs/js-parsons/lib/lis.js",
+                                    "/cs/js-parsons/parsons.js",
+                                    "/cs/js-parsons/lib/skulpt.js",
+                                    "/cs/js-parsons/lib/skulpt-stdlib.js",
+                                    "/cs/js-parsons/lib/prettify.js"
+                                    ],
+                            "css": ["/cs/css/cs.css", "/cs/js-parsons/parsons.css",
+                                    "/cs/js-parsons/lib/prettify.css"], "multihtml": True, "multimd": True}
+        if is_simcir:
+            result_json = {"js": jslist,
+                            "css": csslist,
+                            "multihtml": True, "multimd": True}
+        result_json.update(templs)
+        result_str = json.dumps(result_json)
+        return self.wout(result_str)
+
     def do_all(self, query):
+        timeout = get_param(query, "timeout", 20)
+        if not isinstance(timeout, int):
+            try:
+                timeout = int(timeout)
+            except:
+                timeout = 20
         try:
             signal.signal(signal.SIGALRM, signal_handler)
-            signal.alarm(20)  # Ten seconds
+            signal.alarm(timeout)  # Ten seconds
         except Exception as e:
             # print("No signal", e)  #  TODO; why is this signal at all when it always comes here?
             pass
@@ -910,7 +1011,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(str(e))
 
     def do_all_t(self, query: QueryClass):
+        
         convert_graphviz(query)
+        
         t1start = time.time()
         t_run_time = 0
         times_string = ""
@@ -961,6 +1064,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         if qindex >=0:
             path = self.path[:qindex]
 
+        if "/reqs" in path:
+            return self.do_reqs(query)
+        
         is_cache = get_param(query, "cache", False)
         is_template = path.find('/template') >= 0
         is_fullhtml = path.find('/fullhtml') >= 0
@@ -968,7 +1074,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_html = (path.find('/html') >= 0 or path.find('.html') >= 0) and not is_gethtml
         is_css = path.find('.css') >= 0
         is_js = path.find('.js') >= 0 or path.find('.ts') >= 0
-        is_reqs = path.find('/reqs') >= 0
         is_graphviz  = path.find('/graphviz') >= 0
         is_iframe_param = get_param_del(query, "iframe", "")
         is_iframe = (path.find('/iframe') >= 0) or is_iframe_param
@@ -1005,7 +1110,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         content_type = 'text/plain'
         if is_fullhtml or is_gethtml or is_html or is_ptauno or is_tauno:
             content_type = 'text/html; charset=utf-8'
-        if is_reqs or is_answer:
+        if is_answer:
             content_type = "application/json"
         if not is_cache:
             do_headers(self, content_type)
@@ -1038,57 +1143,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             p = self.path.split("?")
             self.wout(file_to_string(p[0]))
             return
-
-            # Get the template type
-        ttype = get_param(query, "type", "cs").lower()
-        ttype = type_splitter.split(ttype)
-        ttype = ttype[0]
-
-        if is_tauno and not is_answer:
-            ttype = 'tauno'  # answer is newer tauno
-        if is_simcir:
-            ttype = 'simcir'
-
-        if is_reqs:
-            templs = {}
-            jslist = []
-            csslist = []
-            for language_class in languages.values():  # ask needed js and css files from language
-                language = language_class(query, "")
-
-                lang_js_list = language.js_files()
-                if lang_js_list:
-                    jslist.extend(lang_js_list)
-                lang_css_list = language.css_files()
-                if lang_css_list:
-                    csslist.extend(lang_css_list)
-
-            if not (is_tauno or is_rikki or is_parsons or is_simcir or is_graphviz ):
-                templs = get_all_templates('templates')
-            result_json = {"js": ["/cs/js/build/csPlugin.js",
-                                  ] + jslist,
-                           "css": ["/cs/css/cs.css",
-                                   ] + csslist, "multihtml": True, "multimd": True, "canGiveTask": True}
-            if is_parsons:
-                result_json = {"js": ["/cs/js/build/csPlugin.js",
-                                      "jqueryui-touch-punch",
-                                      "/cs/js-parsons/lib/underscore-min.js",
-                                      "/cs/js-parsons/lib/lis.js",
-                                      "/cs/js-parsons/parsons.js",
-                                      "/cs/js-parsons/lib/skulpt.js",
-                                      "/cs/js-parsons/lib/skulpt-stdlib.js",
-                                      "/cs/js-parsons/lib/prettify.js"
-                                      ],
-                               "css": ["/cs/css/cs.css", "/cs/js-parsons/parsons.css",
-                                       "/cs/js-parsons/lib/prettify.css"], "multihtml": True, "multimd": True}
-            if is_simcir:
-                result_json = {"js": ["/cs/js/build/csPlugin.js"],
-                               "css": ["/cs/css/cs.css", "/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"],
-                               "multihtml": True, "multimd": True}
-            result_json.update(templs)
-            result_str = json.dumps(result_json)
-            return self.wout(result_str)
-
+        
         if is_tauno and not is_answer:
             # print("PTAUNO: " + content_type)
             p = self.path.split("?")
@@ -1110,6 +1165,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print("t:", time.time() - t1start)
 
         try:
+            update_markup_from_file(query)
+            # Get the template type
+            ttype = get_param(query, "type", "cs").lower()
+            ttype = type_splitter.split(ttype)
+            ttype = ttype[0]
+
+            if is_tauno and not is_answer:
+                ttype = 'tauno'  # answer is newer tauno
+            if is_simcir:
+                ttype = 'simcir'
+
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
             uploaded_file = get_json_param(query.jso, "input", "uploadedFile", None)
             uploaded_type = get_json_param(query.jso, "input", "uploadedType", None)
@@ -1207,9 +1273,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 s = replace_code(query.cut_errors, s)
                 return self.wout(s)
 
-            language_class = languages.get(ttype.lower(), Language)
-            language = language_class(query, s)
+            ttypeobj = TType(ttype, query, s)
+            if not ttypeobj.success:
+                raise Exception(f"Could not get language from type {ttype}")
 
+            language = ttypeobj.get_language()
+            
             if not language.can_give_task() and query.jso.get("input",{}).get("getTask", False):
                 raise Exception("Give task not allowed for " + ttype)
 
@@ -1268,7 +1337,25 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 slines = s
 
             save_extra_files(query, extra_files, language.prgpath)
-
+            
+            master_path = get_param(query, "masterPath", None)
+            if master_path is not None:
+                master_path = (Path("/cs/masters") / master_path).resolve()
+                if Path("/cs/masters") not in master_path.parents:
+                    return write_json_error(self.wfile, "Root path points outside of allowed directories (masterPath must be a relative subpath)", result)
+                
+                cfiles = get_param(query, "copyFiles", None)
+                
+                if "master" not in cfiles and "task" not in cfiles:
+                    cfiles["task"] = cfiles
+                
+                if language.rootpath is None:
+                    task_path = master_path
+                else:
+                    task_path = master_path / Path(language.prgpath).relative_to(language.rootpath)
+                    copy_files_regex(cfiles.get("master", None), master_path, Path(language.rootpath))
+                copy_files_regex(cfiles.get("task", None), task_path, Path(language.prgpath))
+            
             if not os.path.isfile(language.sourcefilename) or os.path.getsize(language.sourcefilename) == 0:
                 if not nofilesave:
                     return write_json_error(self.wfile, "Could not get the source file", result)
@@ -1625,6 +1712,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         web["console"] = out
         web["error"] = err + warnmessage
         web["pwd"] = cs_min_sanitize(pwddir.strip())
+        web["language"] = language.web_data()
 
         t2 = time.time()
         ts = "%7.3f %7.3f" % ((t2 - t1start), t_run_time)
@@ -1643,7 +1731,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # self.wfile.write(out)
         # self.wfile.write(err)
-        sresult = json.dumps(result)
+        sresult = json.dumps(result, cls = LoadableJSONEncoder)
         if is_cache:
             return result
         self.wout(sresult)

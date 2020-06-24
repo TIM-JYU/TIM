@@ -1,0 +1,26 @@
+
+cs-extcheck-runner .title-button {
+    width: 100%;
+    background-color: #dcdcdc;
+    border: none;
+    border-top: 1px solid black;
+    outline: none;
+}
+
+cs-extcheck-runner .title-button:hover {
+    background-color: #b5b5b5;
+}
+
+cs-extcheck-runner .title-button.collapsed-button {
+    background-color: #cccccc;
+}
+
+cs-extcheck-runner .penalty-text {
+    background-color: #da0000;
+    width: 95%;
+    padding: 2px 0.5em;
+}
+
+cs-extcheck-runner .centermargin {
+    margin: 0 auto !important;
+}

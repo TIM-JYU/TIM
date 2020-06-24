@@ -104,10 +104,9 @@ def get_plugin_regex_obj(plugin: str):
 
 # QST_REGEX_OBJ = get_plugin_regex_obj('qst')
 
-def call_plugin_generic(plugin: str, method: str, route: str, data=None, headers=None, params=None):
+def call_plugin_generic(plugin: str, method: str, route: str, data=None, headers=None, params=None, read_timeout=30):
     plug = get_plugin(plugin)
     host = plug['host']
-    read_timeout = 30
     if route == 'multimd' and (plugin == "mmcq" or plugin == "mcq"):  # hack to handle mcq and mmcq in tim by qst
         plug = get_plugin('qst')
         host = plug['host'] + plugin + '/'
@@ -321,11 +320,20 @@ def call_plugin_resource(plugin, filename, args=None):
 
 
 def call_plugin_answer(plugin, answer_data):
+    markup = answer_data.get('markup') or {}
+    timeout = markup.get('timeout')
+    if not isinstance(timeout, int):
+        try:
+            timeout = int(timeout)
+        except:
+            timeout = 25
+    # use timeout + 5 so that plugin will realize the timeout first
     return call_plugin_generic(plugin,
                                'put',
                                'answer',
                                json.dumps(answer_data, cls=TimJsonEncoder),
-                               headers={'Content-type': 'application/json'})
+                               headers={'Content-type': 'application/json'},
+                               read_timeout=min(timeout + 5, 120))
 
 
 # Get lists of js and css files required by plugin, as well as list of Angular modules they define.

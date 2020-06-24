@@ -60,7 +60,7 @@ interface Vid {
 Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3
 */
 
-const csApp = angular.module("csApp", ["ngSanitize", "ngFileUpload"]);
+export const csApp = angular.module("csApp", ["ngSanitize", "ngFileUpload"]);
 
 let taunoNr = 0;
 
@@ -166,13 +166,13 @@ class LanguageTypes {
     runTypes = ["pascal", "fortran", "css", "jypeli", "scala", "java", "graphics", "cc", "c++", "shell", "vpython", "py2", "py", "fs", "clisp",
         "jjs", "psql", "sql", "alloy", "text", "cs", "run", "md", "js", "glowscript", "sage", "simcir",
         "xml", "octave", "lua", "quorum", "swift", "mathcheck", "html", "processing", "rust", "r", "wescheme", "ping", "kotlin",
-        "smalltalk", "upload"];
+        "smalltalk", "upload", "extcheck"];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
     aceModes = ["pascal", "fortran", "css", "csharp", "scala", "java", "java", "c_cpp", "c_cpp", "sh", "python", "python", "python", "fsharp", "lisp",
         "javascript", "sql", "sql", "alloy", "text", "csharp", "run", "text", "javascript", "javascript", "python", "json",
         "xml", "matlab", "lua", "quorum", "swift", "text", "html", "javascript", "text", "r", "scheme", "text", "kotlin",
-        "text", "text"];
+        "text", "text", "c_cpp"];
 
     // What are known test types (be careful not to include partial word):
     testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest"];
@@ -323,6 +323,20 @@ function commentTrim(s: string) {
     return s.substr(3);
 }
 
+export function uploadTemplate() {
+    // language=HTML
+    return `
+    <div ng-if="::$ctrl.upload" class="form-inline small">
+        <div class="form-group small"> {{::$ctrl.uploadstem}}:
+            <input type="file" ngf-select="$ctrl.onFileSelect($file)">
+            <span ng-show="$ctrl.fileProgress >= 0 && !$ctrl.fileError"
+                ng-bind="$ctrl.fileProgress < 100 ? 'Uploading... ' + $ctrl.fileProgress + '%' : 'Done!'"></span>
+        </div>
+        <div class="error" ng-show="$ctrl.fileError" ng-bind="$ctrl.fileError"></div>
+        <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
+    </div>`;
+}
+
 function makeTemplate() {
     // language=HTML
     return `<div ng-class="::{'csRunDiv': $ctrl.attrs.borders}" class="type-{{::$ctrl.rtype}}">
@@ -355,17 +369,9 @@ function makeTemplate() {
             <a ng-click="$ctrl.copyFromSimcir()">copy from SimCir</a>
             | <a ng-click="$ctrl.copyToSimcir()">copy to SimCir</a> | <a ng-click="$ctrl.hideSimcir()">hide SimCir</a>
         </p>
-    </div>
-    <div ng-if="::$ctrl.upload" class="form-inline small">
-        <div class="form-group small"> {{::$ctrl.uploadstem}}:
-            <input type="file" ngf-select="$ctrl.onFileSelect($file)">
-            <span ng-show="$ctrl.fileProgress >= 0 && !$ctrl.fileError"
-                  ng-bind="$ctrl.fileProgress < 100 ? 'Uploading... ' + $ctrl.fileProgress + '%' : 'Done!'"></span>
-        </div>
-        <div class="error" ng-show="$ctrl.fileError" ng-bind="$ctrl.fileError"></div>
-        <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
-    </div>
-    <div ng-show="::$ctrl.isAll" style="float: right;">{{::$ctrl.languageText}}
+    </div>`
+    + uploadTemplate() +
+    `<div ng-show="::$ctrl.isAll" style="float: right;">{{::$ctrl.languageText}}
         <select ng-model="$ctrl.selectedLanguage" ng-options="o for o in ::$ctrl.progLanguages" ng-required></select>
     </div>
     <pre ng-if="$ctrl.viewCode && $ctrl.codeover">{{$ctrl.code}}</pre>
@@ -620,6 +626,14 @@ const Example = t.type({
     title: t.string,
 });
 
+const CopyFiles = t.union([
+    t.array(t.string),
+    t.type({
+        master: t.array(t.string),
+        task: t.array(t.string),
+    }),
+]);
+
 interface ICountLimit {
     show?: boolean;
     min?: number;
@@ -687,6 +701,11 @@ const CsMarkupOptional = t.partial({
     count: t.any,
     hide: t.any,
     savedText: t.string,
+    rootPath: t.string,
+    masterPath: t.string,
+    copyFiles: CopyFiles,
+    jsFiles: t.array(t.string),
+    cssFiles: t.array(t.string),
 });
 
 const CsMarkupDefaults = t.type({
@@ -748,6 +767,9 @@ const CsAll = t.intersection([
         usercode: t.string,
         userinput: t.string,
         selectedLanguage: t.string,
+        timeout: t.number,
+        error: t.string,
+        own_error: t.string,
     }),
     t.type({
         // anonymous: t.boolean,
@@ -762,7 +784,7 @@ const CsAll = t.intersection([
         // userPrint: t.boolean,
     })]);
 
-class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
+export class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
     protected usercode: string = "";
 
     get byCode() {
@@ -839,7 +861,29 @@ interface IFrameLoad {
     channel: MessageChannel;
 }
 
-class CsController extends CsBase implements ITimComponent {
+interface IRunResponseWeb {
+    error?: string,
+    pwd?: string,
+    image?: string,
+    wav?: string,
+    testGreen?: boolean,
+    testRed?: boolean,
+    comtestError?: string,
+    docurl?: string,
+    console?: string,
+    runtime?: string,
+    language?: unknown, // determined by language
+    "-replyImage"?: string,
+    "-replyHTML"?: string,
+    "-replyMD"?: string,
+}
+
+interface IRunResponse {
+    web: IRunResponseWeb,
+    savedNew: number,
+}
+
+export class CsController extends CsBase implements ITimComponent {
     private vctrl!: ViewCtrl;
 
     private aceEditor?: IAceEditor;
@@ -935,6 +979,7 @@ class CsController extends CsBase implements ITimComponent {
     private preventSave: boolean = false;
     private hide = {};
     private savedText: string = "";
+    private timeout: number = 0;
 
     constructor(scope: IScope, element: JQLite) {
         super(scope, element);
@@ -1119,6 +1164,9 @@ class CsController extends CsBase implements ITimComponent {
                 break;
             case "cs-wescheme-runner":
                 kind = "wescheme";
+                break;
+            case "cs-extcheck-runner":
+                kind = "extcheck";
                 break;
             default:
                 console.warn("Unrecognized csplugin tag type, falling back to 'console'");
@@ -1395,6 +1443,7 @@ ${fhtml}
             this.docLink = "Hide document";
         }
 
+        this.timeout = valueOr(this.attrsall.timeout, 0)*1000;
         this.userinput = valueOr(this.attrsall.userinput, (this.attrs.userinput ?? "").toString());
         this.userargs = valueOr(this.attrsall.userargs, (this.attrs.userargs ?? (isText && isArgs ? this.attrs.filename ?? "" : "")).toString());
         this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
@@ -1902,19 +1951,13 @@ ${fhtml}
             isInput = true;
         }
 
+        this.languageResponse(null);
+
         let ucode = "";
-        let uinput = "";
-        let uargs = "";
         if (this.usercode) {
             ucode = this.usercode.replace(this.cursor, "");
         }
         ucode = ucode.replace(/\r/g, "");
-        if (this.userinput) {
-            uinput = this.userinput;
-        }
-        if (this.userargs) {
-            uargs = this.userargs;
-        }
         if (this.attrs.validityCheck) {
             const re = new RegExp(this.attrs.validityCheck);
             if (!ucode.match(re)) {
@@ -1933,49 +1976,31 @@ ${fhtml}
             }
         }
 
-        const params = {
-            input: {
-                usercode: ucode,
-                userinput: uinput,
-                isInput: isInput,
-                userargs: uargs,
-                uploadedFile: this.uploadedFile,
-                uploadedType: this.uploadedType,
-                nosave: false,
-                type: runType,
-                ...extraMarkUp,
-                ...(this.isAll ? {selectedLanguage: this.selectedLanguage} : {}),
-            },
-        };
-        if (nosave || this.nosave) {
-            params.input.nosave = true;
-        }
-        const url = this.pluginMeta.getAnswerUrl();
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             this.runError = this.error;
             this.isRunning = false;
             return;
         }
-        const t0run = performance.now();
-        const r = await to($http<{
-            web: {
-                error?: string,
-                pwd?: string,
-                image?: string,
-                wav?: string,
-                testGreen?: boolean,
-                testRed?: boolean,
-                comtestError?: string,
-                docurl?: string,
-                console?: string,
-                runtime?: string,
-                "-replyImage"?: string,
-                "-replyHTML"?: string,
-                "-replyMD"?: string,
+
+        const params = {
+            input: {
+                usercode: ucode,
+                userinput: this.userinput || "",
+                isInput: isInput,
+                userargs: this.userargs || "",
+                uploadedFile: this.uploadedFile,
+                uploadedType: this.uploadedType,
+                nosave: nosave || this.nosave,
+                type: runType,
+                ...extraMarkUp,
+                ...(this.isAll ? {selectedLanguage: this.selectedLanguage} : {}),
             },
-            savedNew: number,
-        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
+        };
+        const url = this.pluginMeta.getAnswerUrl();
+        const t0run = performance.now();
+        const r = await to($http<IRunResponse>(
+            {method: "PUT", url: url, data: params, timeout: this.timeout + defaultTimeout}
         ));
         if (r.ok) {
             this.isRunning = false;
@@ -2045,6 +2070,9 @@ ${fhtml}
                     }
                 }
             }
+
+            this.languageResponse(data.web.language);
+
             this.processPluginMath();
 
         } else {
@@ -2057,6 +2085,8 @@ ${fhtml}
             this.connectionErrorMessage = this.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
         }
     }
+
+    languageResponse(data: unknown) {}
 
     hideTauno() {
         this.taunoFrame = undefined;

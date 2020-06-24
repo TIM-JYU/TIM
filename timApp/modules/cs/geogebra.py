@@ -193,6 +193,7 @@ Eval:
 """
 
 class Geogebra(Language):
+    ttype="geogebra"
     global GEOGEBRA_DEFAULT_SRC_HTML
     global GEOGEBRA_PARAMETERS_INIT
     global GEOGEBRA_TOOL_HTML
@@ -203,7 +204,8 @@ class Geogebra(Language):
     def runner_name(self):
         return "geogebra-runner"
 
-    def js_files(self):
+    @staticmethod
+    def js_files():
         return ["/cs/js/build/geogebra.js"]
 
     def can_give_task(self):

@@ -14,13 +14,15 @@ JSREADYOPTIONS = {}
 
 
 class JSframe(Language):
+    ttype="jsframe"
     def get_default_before_open(self):
         return '<div class="defBeforeOpen"><p>Open JS-frame</p></div>'
 
     def runner_name(self):
         return "jsframe-runner"
 
-    def js_files(self):
+    @staticmethod
+    def js_files():
         return ["/cs/js/build/jsframe.js"]
 
     def can_give_task(self):
@@ -143,6 +145,7 @@ JSREADYHTML['oneDataChartJS'] = """
 """
 
 class ChartJS(JSframe):
+    ttype="chartjs"
     def modify_query(self):
         ma = self.query.jso['markup']
         readyhtml = get_by_id(ma, "readyHtml", None)
@@ -171,6 +174,7 @@ with open('jsframehtml/simpleDrawIO.html', 'r', encoding='utf-8') as f:
 SVGTEXT_PROG = re.compile(">([^>]*)</text")
 
 class DrawIO(JSframe):
+    ttype="drawio"
     def modify_query(self):
         """
         state = self.query.jso.get('state', None)
