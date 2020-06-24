@@ -54,17 +54,18 @@ class ModifierError(Modifier):
         
         self.query = query
         self.error = error_str
-        self.own_error = error_str
     
     def modify_query(self):
-        error = None
-        own_error = None
+        error = self.error
         if "error" in self.query.query:
-            error = self.query.query["error"][0] + "\n" + self.error
-        if "own_error" in self.query.query:
-            own_error = self.query.query["own_error"][0] + "\n" + self.own_error
-        self.query.query["error"] = [error or self.error]
-        self.query.query["own_error"] = [own_error or self.error]
+            error = self.query.query["error"][0] + "\n" + error
+        self.query.query["error"] = [error]
+        
+        if self.own_error is not None:
+            own_error = self.own_error
+            if "own_error" in self.query.query:
+                own_error = self.query.query["own_error"][0] + "\n" + own_error
+            self.query.query["own_error"] = [own_error]
     
     def runner_name(self):
         return "cs-error"

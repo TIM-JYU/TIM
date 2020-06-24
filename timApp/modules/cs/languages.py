@@ -381,11 +381,11 @@ class LanguageError(Language):
         
         self.query = query
         self.error = error_str
-        self.own_error = error_str
     
     def modify_query(self):
         self.query.query["error"] = [self.error]
-        self.query.query["own_error"] = [self.own_error]
+        if self.own_error is not None:
+            self.query.query["own_error"] = [self.own_error]
     
     def runner_name(self):
         return "cs-error"
