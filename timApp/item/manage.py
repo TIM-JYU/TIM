@@ -107,6 +107,7 @@ class TimeOpt:
         if self.type == TimeType.duration:
             accessible_from = None
             dur_from = self.durationFrom
+            acc_to = self.to
             dur_to = self.durationTo
             duration = self.duration_timedelta
         return TimeOpt(

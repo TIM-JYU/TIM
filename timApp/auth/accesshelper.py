@@ -158,7 +158,10 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
             unlock = get_option(request, 'unlock', False)
             if unlock and ba.unlockable:
                 ba.accessible_from = get_current_time()
-                ba.accessible_to = ba.accessible_from + ba.duration
+                end_date = ba.accessible_from + ba.duration
+                if ba.accessible_to:
+                    end_date = min(end_date, ba.accessible_to)
+                ba.accessible_to = end_date
 
                 # if this is a group duration, it means we created a personal BlockAccess instance above, so we
                 # need to add it

@@ -78,6 +78,7 @@ class RightsEditorController implements IController {
     private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsDurationFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsDurationTo: EonasdanBootstrapDatetimepicker.SetOptions;
+    private datePickerOptionsDurationAccessTo: EonasdanBootstrapDatetimepicker.SetOptions;
     private accessTypes!: IAccessType[];
     private massMode: Binding<boolean | undefined, "<">;
     private accessType: IAccessType | undefined;
@@ -104,6 +105,7 @@ class RightsEditorController implements IController {
     private forceDuration?: number;
     private forceDurationStart?: string;
     private forceDurationEnd?: string;
+    private forceDurationAccessTo?: string;
     private forceConfirm?: boolean;
     private hideEdit?: boolean;
     private hideExpire?: boolean;
@@ -135,6 +137,10 @@ class RightsEditorController implements IController {
             showTodayButton: true,
         };
         this.datePickerOptionsDurationTo = {
+            format: dateFormat,
+            showTodayButton: true,
+        };
+        this.datePickerOptionsDurationAccessTo = {
             format: dateFormat,
             showTodayButton: true,
         };

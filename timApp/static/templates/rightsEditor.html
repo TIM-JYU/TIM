@@ -214,6 +214,17 @@
                         <span class="glyphicon glyphicon-calendar"></span>
                         </span>
                             </div>
+                            End access by:
+                            <div class="input-group date" datetimepicker ng-model="$ctrl.timeOpt.to"
+                                 data-options="$ctrl.datePickerOptionsDurationAccessTo">
+                                <input type="text"
+                                       class="form-control"
+                                       ng-disabled="$ctrl.forceDurationAccessTo"
+                                       placeholder="Leave blank for no restriction"/>
+                                <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                            </div>
                         </div>
                     </div>
 
