@@ -120,7 +120,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
             this.isSm = true;
             this.lastNonSmState = this.currentMenuState;
             this.setVisibleState(MenuState.Closed, { tabs: true });
-        } else if (!isScreenSizeOrLower("sm")) {
+        } else if (this.isSm && !isScreenSizeOrLower("sm")) {
             this.isSm = false;
             this.setVisibleState(this.lastNonSmState, { tabs: true });
         }
@@ -158,9 +158,10 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
 
     ngAfterViewInit() {
         let initialViewState = this.lastVisState;
+        const someTabSelected = this.trySetCurrentTabToDefault();
         if (isScreenSizeOrLower("sm")) {
             initialViewState = MenuState.Closed;
-        } else if (!this.trySetCurrentTabToDefault()) {
+        } else if (!someTabSelected) {
             initialViewState = MenuState.Icons;
         }
         this.setVisibleState(initialViewState, UPDATE_ALL);
