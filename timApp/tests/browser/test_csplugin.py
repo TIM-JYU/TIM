@@ -101,4 +101,10 @@ disableUnchanged: true
         self.should_not_exist('.savedText')
         self.assertTrue(margin.is_displayed())
 
-
+    def test_csplugin_require_type(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin}
+stem: ""
+        """)
+        self.assert_content(self.get(d.url, as_tree=True), ['Attribute "type" is required.'])

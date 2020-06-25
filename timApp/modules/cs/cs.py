@@ -297,8 +297,12 @@ def get_cache_footer(query):
     return '<figcaption>' + cache_footer + '</figcaption>'
 
 
+def get_graphviz_data(query):
+    return get_param(query, "gvData", None)
+
+
 def convert_graphviz(query):
-    gv_data = get_param(query, "gvData", None)
+    gv_data = get_graphviz_data(query)
     if gv_data:  # convert graphViz plugin to csPlugin
         gv_type = get_param(query, "gvType", 'dot')
         query.jso['markup']['type'] = 'run'
@@ -870,6 +874,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         global_anonymous = False
         for query in querys:
+            is_graphviz = get_graphviz_data(query) is not None
             try:
                 update_markup_from_file(query)
             except:
@@ -903,24 +908,30 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             timeout = get_json_param(query.jso, "markup", "timeout", None)
             if timeout:
                 query.query["timeout"] = [timeout]
-            ttype = get_param(query, "type", "cs")
+            ttype = get_param(query, "type", None)
             if is_tauno:
                 ttype = 'tauno'
             if is_simcir:
                 ttype = 'simcir'
             if is_parsons:
                 ttype = 'parsons'
-            check_fullprogram(query, True)
-            if multimd:
-                # noinspection PyBroadException
-                try:
-                    s = get_md(ttype, query)
-                except Exception as ex:
-                    print("ERROR: " + str(ex) + " " + json.dumps(query))
-                    continue
+            # The graphviz conversion happens later, so need to check that here before giving an error.
+            if ttype is None and not is_graphviz:
+                s = '<div class="pluginError">Attribute "type" is required.</div>'
             else:
-                s = get_html(self, TType(ttype, query), query)
-            # print(s)
+                if is_graphviz:
+                    ttype = "cs"  # workaround: some functions expect ttype to always be str
+                check_fullprogram(query, True)
+                if multimd:
+                    # noinspection PyBroadException
+                    try:
+                        s = get_md(ttype, query)
+                    except Exception as ex:
+                        print("ERROR: " + str(ex) + " " + json.dumps(query))
+                        continue
+                else:
+                    s = get_html(self, TType(ttype, query), query)
+                # print(s)
             htmls.append(s)
 
         # print(htmls)

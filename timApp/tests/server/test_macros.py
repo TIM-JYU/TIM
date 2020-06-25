@@ -114,6 +114,7 @@ I am %%username%%.
                             initial_par="""
 this is a %%x()%%
 #- {plugin=csPlugin}
+type: cs
 stem: this is a %%x()%%
                             """,
                             settings={'globalmacros': {'ADDFOREVERY': '{% macro x() %}cat{% endmacro %}'}})
@@ -135,6 +136,7 @@ stem: this is a %%x()%%
         self.login_test1()
         d = self.create_doc(initial_par="""
 #- {plugin=csPlugin}
+type: cs
 stem: Hi, %%username%%!
         """)
         tree = self.get(d.url, as_tree=True)
