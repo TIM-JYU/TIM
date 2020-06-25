@@ -22,6 +22,7 @@ import {IAnswer} from "./IAnswer";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.
+ *
  * globalField and useCurrentUser logic:
  * - Do not set showBrowser: false in loader - hidden answerBrowser is still needed to show the server responses for the
  *   user (e.g when answers are invalid after answering limits have passed). Instead use hideBrowser if needed.
@@ -999,7 +1000,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async checkUsers() {
-        // TODO: Chaging user from sidebar could change to user's answer on global field
+        // TODO: Changing user from sidebar could change to user's answer on global field
         // for now just skip the fetches (firefox throws error in their current state)
         if (this.loading > 0 || this.isGlobal()) {
             return;
