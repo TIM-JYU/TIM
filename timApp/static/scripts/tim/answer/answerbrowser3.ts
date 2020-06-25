@@ -22,18 +22,23 @@ import {IAnswer} from "./IAnswer";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.
- * globalField and useCurrentUser logic:
  *
- * - if useCrrentUser:
- *     - save to current user allways
+ * globalField and useCurrentUser logic:
+ * - Do not set showBrowser: false in loader - hidden answerBrowser is still needed to show the server responses for the
+ *   user (e.g when answers are invalid after answering limits have passed). Instead use hideBrowser if needed.
+ *
+ * - if useCurrentUser:
+ *     - save to current user always
  *     - take current user answers
- *     - do not use/show the answerBrowser unless forceBrowser
+ *     - do not show the answerBrowser unless forceBrowser // TODO: forceBrowser seems redundant, same can be achieved with form: false and hidebrowser settings
+ *     - do not change users in hidden answerBrowser
  *
  * - if globalField:
  *     - pick the answer from anybody (wins useCurrentUser)
  *     - save to current user
  *     - show and use answerBrowser
  *     - if hideBrowser, still use answerBrowser but do not show
+ *
  */
 
 markAsUsed(allanswersctrl);
@@ -108,7 +113,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
         }
         const m = this.pluginMarkup();
-        if (m?.hideBrowser || this.viewctrl?.docSettings.hideBrowser) {
+        if (m?.hideBrowser || this.viewctrl?.docSettings.hideBrowser || this.isUseCurrentUser()) {
             this.hideBrowser = true;
             this.showPlaceholder = false;
         }
@@ -184,8 +189,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             if (this.viewctrl &&
                 (!this.viewctrl.noBrowser || this.forceBrowser) &&
                 this.isValidTaskId(this.taskId) &&
-                this.type !== "lazyonly" && Users.isLoggedIn() &&
-                ((!this.isUseCurrentUser() && !this.isGlobal()) || this.forceBrowser)) {
+                this.type !== "lazyonly" && Users.isLoggedIn()) {
                 this.showBrowser = true;
             } else {
                 this.abLoad.resolve(null); // this plugin instance doesn't have answer browser
@@ -430,7 +434,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 void this.checkUsers();
             });
         }
-
         // TODO: Angular throws error if many answerbrowsers resolve around the same time
         //  (e.g awaits above don't happen if were in form mode and don't want separate info reqs)
         await $timeout(0);
@@ -997,7 +1000,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async checkUsers() {
-        if (this.loading > 0) {
+        // TODO: Changing user from sidebar could change to user's answer on global field
+        // for now just skip the fetches (firefox throws error in their current state)
+        if (this.loading > 0 || this.isGlobal()) {
             return;
         }
         await this.loadUserAnswersIfChanged();
