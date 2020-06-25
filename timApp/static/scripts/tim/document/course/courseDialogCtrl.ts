@@ -12,7 +12,7 @@ import {dateFormat, to} from "../../util/utils";
 
 const groupTagPrefix = "group:";
 
-export class CourseDialogController extends DialogController<{params: IItem}, {}> {
+export class CourseDialogController extends DialogController<{params: IItem}, void> {
     static component = "timCourseDialog";
     static $inject = ["$element", "$scope"] as const;
     private f!: IFormController; // initialized in the template

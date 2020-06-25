@@ -572,7 +572,7 @@ export function numOrStringToNumber(s: number | string) {
     return parseFloat(s);
 }
 
-export function valueOr<T extends {}, K extends T>(v: T | undefined | null, def: K): T {
+export function valueOr<T extends Record<string, unknown> | string | number | boolean, K extends T>(v: T | undefined | null, def: K): T {
     return v != null ? v : def;
 }
 

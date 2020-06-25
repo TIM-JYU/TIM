@@ -114,7 +114,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
         const aa = this.attrsall;
         const lang = this.attrs.lang || "fi";
         this.lang = lang;
-        const state = aa.state && aa.state.c || {};
+        const state = aa.state?.c ?? {};
         this.mingoal = this.attrs.mingoal ?? 0;
         this.maxgoal = this.attrs.maxgoal ?? scaleValueWords.length - 1;
         this.initgoal = this.attrs.initgoal ?? 0;

@@ -12,7 +12,7 @@ export interface IDocument extends IItem {
 
 export interface IFullDocument extends IDocument {
     fulltext: string;
-    versions: Array<{}>; // TODO proper element type
+    versions: Array<unknown>; // TODO proper element type
 }
 
 export type DocumentOrFolder = IDocument | IFolder;

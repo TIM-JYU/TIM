@@ -15,7 +15,7 @@ export interface ISearchResultDisplay {
     num_tag_results: number; // Same tag may contain the search word more than once.
 }
 
-export class SearchResultController extends DialogController<{ ctrl: SearchBoxComponent }, {}> {
+export class SearchResultController extends DialogController<{ ctrl: SearchBoxComponent }, void> {
     static component = "timSearchResults";
     static $inject = ["$element", "$scope"] as const;
     private results: IDocSearchResult[] = [];

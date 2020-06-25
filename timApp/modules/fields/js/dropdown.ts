@@ -57,7 +57,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
     $onInit() {
         super.$onInit();
-        this.selectedWord = (this.attrsall.state && this.attrsall.state.c) || undefined;
+        this.selectedWord = (this.attrsall.state?.c) ?? undefined;
         this.shuffle = this.attrs.shuffle;
         if (this.shuffle && this.attrs.words) {
             this.wordList = shuffleStrings(this.attrs.words);

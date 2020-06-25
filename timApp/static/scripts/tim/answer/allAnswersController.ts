@@ -21,7 +21,7 @@ export interface IAllAnswersParams {
     allTasks: boolean;
 }
 
-export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}, {}> {
+export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}, void> {
     static component = "timAllAnswers";
     static $inject = ["$element", "$scope"] as const;
     private showSort: boolean = false;
@@ -99,7 +99,7 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
             periodTo: this.options.periodTo.valueOf(),
         };
         window.open(this.resolve.params.url + "?" + $httpParamSerializer(toSerialize), "_blank");
-        this.close({});
+        this.close();
     }
 
     cancel() {

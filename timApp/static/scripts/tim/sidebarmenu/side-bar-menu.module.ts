@@ -36,10 +36,10 @@ import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
     imports: [
         CommonModule,
         FormsModule,
-        TabsModule.forRoot() as ModuleWithProviders<{}>,
-        TooltipModule.forRoot() as ModuleWithProviders<{}>,
-        BsDropdownModule.forRoot() as ModuleWithProviders<{}>,
-        CollapseModule.forRoot() as ModuleWithProviders<{}>,
+        TabsModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
+        TooltipModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
+        BsDropdownModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
+        CollapseModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
     ],
     entryComponents: [
         BookmarksTabComponent,

@@ -29,7 +29,7 @@ export interface INameAreaOptions {
     title?: string;
 }
 
-class NameAreaController extends DialogController<{}, {areaName: string, options: INameAreaOptions}> {
+class NameAreaController extends DialogController<void, {areaName: string, options: INameAreaOptions}> {
     static component = "timNameArea";
     static $inject = ["$element", "$scope"] as const;
     private areaName: string;

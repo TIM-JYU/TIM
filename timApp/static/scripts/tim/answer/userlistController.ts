@@ -156,7 +156,7 @@ export class UserListController implements IController {
                 gridApi.selection.on.rowSelectionChanged(this.scope, (row) => {
                     this.fireUserChange(row, this.instantUpdate);
                 });
-                if (this.gridOptions && this.gridOptions.data) {
+                if (this.gridOptions?.data) {
                     gridApi.grid.modifyRows(this.gridOptions.data as IUserListEntry[]);
                     const firstRow = this.gridOptions.data[0] as IUserListEntry;
                     gridApi.selection.selectRow(firstRow);
@@ -188,7 +188,7 @@ export class UserListController implements IController {
                         if (oldRowCol) {
                             gridApi.cellNav.scrollToFocus(oldRowCol.row.entity, oldRowCol.col.colDef);
                         } else {
-                            if (this.gridOptions && this.gridOptions.data && this.gridOptions.columnDefs) {
+                            if (this.gridOptions?.data && this.gridOptions.columnDefs) {
                                 gridApi.cellNav.scrollToFocus(this.gridOptions.data[0] as IUserListEntry, this.gridOptions.columnDefs[0]);
                             }
                         }
@@ -374,7 +374,7 @@ timApp.component("timUserList", {
 </div>`,
 });
 
-export class KorppiExportCtrl extends DialogController<{}, IExportOptions> {
+export class KorppiExportCtrl extends DialogController<void, IExportOptions> {
     static component = "timKorppiExport";
     static $inject = ["$element", "$scope"] as const;
     private options: IExportOptions = {totalPointField: "", velpPointField: "", taskPointField: "", copy: false};

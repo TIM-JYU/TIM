@@ -29,7 +29,7 @@ export interface IAttachment {
     selected: boolean;
 }
 
-export class MergePdfController extends DialogController<{ params: IMergeParams }, {}> {
+export class MergePdfController extends DialogController<{ params: IMergeParams }, void> {
     static component = "timMergePdf";
     static $inject = ["$element", "$scope"] as const;
     private attachmentList: IAttachment[] = [];

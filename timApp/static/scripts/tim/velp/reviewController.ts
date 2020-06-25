@@ -104,7 +104,7 @@ export class ReviewController {
      * Loads the document annotations into the view.
      */
     async loadDocumentAnnotations() {
-        const response = await to($http.get<object[]>(`/${this.item.id}/get_annotations`));
+        const response = await to($http.get<Record<string, unknown>[]>(`/${this.item.id}/get_annotations`));
         if (!response.ok) {
             return;
         }
@@ -686,7 +686,7 @@ export class ReviewController {
     }
 
     private async addAnnotation(newAnnotation: NewAnnotation, coord: IAnnotationInterval, velp: IVelp) {
-        const json = await to($http.post<object>("/add_annotation", {
+        const json = await to($http.post<Record<string, unknown>>("/add_annotation", {
             answer_id: newAnnotation.answer_id,
             coord: coord,
             doc_id: this.vctrl.item.id,

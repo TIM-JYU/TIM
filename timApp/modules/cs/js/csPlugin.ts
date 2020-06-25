@@ -1525,7 +1525,7 @@ ${fhtml}
 
     async $postLink() {
         await $timeout(); // wait for AngularJS
-        this.edit = this.element.find("textarea")[0] as HTMLTextAreaElement;
+        this.edit = this.element.find("textarea")[0];
         this.preview = this.element.find(".csrunPreview");
         const styleArgs = this.attrs["style-args"];
         if (styleArgs) {

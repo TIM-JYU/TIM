@@ -91,7 +91,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     noQuestionAutoNumbering: boolean;
     notifications: unknown[];
     readExpiry: string;
-    reqs: {};
+    reqs: Record<string, unknown>; // TODO proper type
     showIndex: boolean;
     teacherMode: boolean;
     translations: ITranslation[];
@@ -117,7 +117,7 @@ export interface ISlideGlobals extends IDocumentGlobals {
 
 export interface IManageGlobals extends IGenericGlobals {
     orgs: IGroup[];
-    accessTypes: Array<{}>;
+    accessTypes: Array<unknown>; // TODO proper type
     curr_item: IFullDocument | IFolder;
 }
 

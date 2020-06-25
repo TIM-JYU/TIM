@@ -155,7 +155,7 @@ export class LectureController {
 
     private closeLectureWallIfOpen() {
         if (this.wallInstance) {
-            this.wallInstance.close({});
+            this.wallInstance.close();
             this.wallInstance = undefined;
         }
     }

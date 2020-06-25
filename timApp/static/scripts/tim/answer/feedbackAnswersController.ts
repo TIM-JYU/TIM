@@ -26,7 +26,7 @@ export interface IFeedbackAnswersParams {
     allTasks: boolean;
 }
 
-export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnswersParams}, {}> {
+export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnswersParams}, void> {
     static component = "timFeedbackAnswers";
     static $inject = ["$element", "$scope"] as const;
     private options?: IFBOptions<Moment>;
@@ -109,7 +109,7 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             periodTo: this.options.periodTo.valueOf(),
         };
         window.open(this.resolve.params.url + "?" + $httpParamSerializer(toSerialize), "_blank");
-        this.close({});
+        this.close();
     }
     cancel() {
         this.dismiss();

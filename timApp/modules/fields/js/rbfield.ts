@@ -77,7 +77,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     $onInit() {
         super.$onInit();
         this.rbName = this.rbname;
-        const uw = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword ?? "0")).toString();
+        const uw = (valueOr(this.attrsall.state?.c, this.attrs.initword ?? "0")).toString();
         this.userword = uw; // this.makeBoolean(uw);
 
         if (this.attrs.tag) {

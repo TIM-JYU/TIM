@@ -1495,7 +1495,7 @@ ${backTicks}
      * Returns the current meeting date from document settings, if it exists.
      */
     private getCurrentMeetingDate(): string | undefined {
-        if (this.docSettings && this.docSettings.macros) {
+        if (this.docSettings?.macros) {
             // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
             const knro = this.docSettings.macros.knro;
             const dates = this.docSettings.macros.dates;

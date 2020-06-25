@@ -15,7 +15,7 @@ markAsUsed(focusMe);
 /*
  * Tag search dialog's controller.
  */
-export class TagSearchController extends DialogController<{}, {}> {
+export class TagSearchController extends DialogController<void, void> {
     static component = "timSearchTags";
     static $inject = ["$element", "$scope"] as const;
     private enableSearch = true;

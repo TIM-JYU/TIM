@@ -16,7 +16,7 @@ export function setDiffDialog(d: DiffController | undefined) {
     diffDialog = d;
 }
 
-export class DiffController extends DialogController<{params: IDiffParams}, {}> {
+export class DiffController extends DialogController<{params: IDiffParams}, void> {
     static component = "timDiff";
     static $inject = ["$element", "$scope"] as const;
     private options = {editCost: 4};
@@ -32,7 +32,7 @@ export class DiffController extends DialogController<{params: IDiffParams}, {}> 
     }
 
     close() {
-        super.close({});
+        super.close();
     }
 
     protected getTitle(): string {

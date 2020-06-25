@@ -99,7 +99,7 @@ export class QuestionHandler {
                         separator = questionTitle[nrt.length];
                     }
                 }
-                if (questionNumber[0] && questionNumber[0].innerHTML) {
+                if (questionNumber[0]?.innerHTML) {
                     if (this.noQuestionAutoNumbering) {
                         questionNumber[0].innerHTML = questionTitle;
                     } else {

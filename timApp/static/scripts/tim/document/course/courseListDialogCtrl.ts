@@ -25,7 +25,7 @@ export interface IGroupedCourses {
 /**
  * Tag search dialog's controller.
  */
-export class CourseListDialogController extends DialogController<{ params: ICourseListParams }, {}> {
+export class CourseListDialogController extends DialogController<{ params: ICourseListParams }, void> {
     static component = "timCourseListDialog";
     static $inject = ["$element", "$scope"] as const;
     private docList: ITaggedItem[] = [];

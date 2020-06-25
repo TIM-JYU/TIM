@@ -22,7 +22,7 @@ export interface ITimTableEditorToolbarParams {
 let instance: TimTableEditorToolbarController | undefined;
 
 export class TimTableEditorToolbarController extends DialogController<{params: ITimTableEditorToolbarParams},
-    {}> {
+    void> {
     static component = "timTableEditorToolbar";
     static $inject = ["$element", "$scope"] as const;
     private colorOpts = {
@@ -78,7 +78,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      * Hides the toolbar and removes the instance.
      */
     public hideThis() {
-        this.close("");
+        this.close();
         this.visible = false;
         // this.scope.$apply();
         instance = undefined;
@@ -86,7 +86,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     }
 
     // noinspection JSUnusedGlobalSymbols
-    public hideIfActiveTable(table: object) {
+    public hideIfActiveTable(table: TimTableComponent) {
         if (table == this.activeTable) {
             this.hideThis();
         }
@@ -196,9 +196,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
         let cls = "toolbarButton";
         if (value.buttonClass) {
             cls = " " + value.buttonClass;
-        } else if (value.style && value.style.class) {
+        } else if (value.style?.class) {
             cls += " " + value.style.class;
-        } else if (value.toggleStyle && value.toggleStyle.class) {
+        } else if (value.toggleStyle?.class) {
             cls += " " + value.toggleStyle.class;
         }
         return cls;
@@ -397,7 +397,7 @@ export function openTableEditorToolbar(p: ITimTableEditorToolbarParams) {
 }
 
 // noinspection JSUnusedLocalSymbols
-export function hideToolbar(closingTable: object) {
+export function hideToolbar(closingTable: TimTableComponent) {
     if (instance) {
         // instance.hideIfActiveTable(closingTable);
         instance.hideThis();

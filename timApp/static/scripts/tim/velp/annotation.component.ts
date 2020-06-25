@@ -45,7 +45,7 @@ export interface IAnnotationBindings {
 }
 
 export async function updateAnnotationServer(updatevalues: IAnnotationEditableValues & { id: number, coord?: IAnnotationInterval }): Promise<Result<Annotation, string>> {
-    const r2 = await to($http.post<object>("/update_annotation", updatevalues));
+    const r2 = await to($http.post<Record<string, unknown>>("/update_annotation", updatevalues));
     if (!r2.ok) {
         return {ok: false, result: r2.result.data.error};
     }
@@ -331,7 +331,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         // Add comment
         if (this.newcomment.length > 0) {
             const data = {id: id, content: this.newcomment};
-            const r = await to($http.post<object>(
+            const r = await to($http.post<Record<string, unknown>>(
                 "/add_annotation_comment",
                 {id: id, content: this.newcomment},
             ));

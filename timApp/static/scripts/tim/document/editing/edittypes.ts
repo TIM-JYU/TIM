@@ -13,7 +13,7 @@ export interface IParResponse {
 
 export interface IManageResponse {
     duplicates: Duplicate[];
-    versions: Array<{}>; // TODO
+    versions: Array<unknown>; // TODO give accurate type
     fulltext: string;
 }
 

@@ -99,8 +99,8 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         if (this.vctrl) {
             this.vctrl.addTimComponent(this);
         }
-        this.lctrl = this.vctrl && this.vctrl.lectureCtrl || LectureController.createAndInit(this.vctrl);
-        this.isLecturer = (this.lctrl && this.lctrl.isLecturer) || false;
+        this.lctrl = this.vctrl?.lectureCtrl ?? LectureController.createAndInit(this.vctrl);
+        this.isLecturer = this.lctrl?.isLecturer || false;
         this.attrsall = JSON.parse(this.json) as IQstAttributes;
         this.preview = makePreview(this.attrsall.markup, {
             answerTable: this.attrsall.state ?? [],
@@ -207,7 +207,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
     }
 
     private checkQstMode() {
-        return this.lctrl && this.lctrl.viewctrl && this.lctrl.viewctrl.item.rights.teacher;
+        return this.lctrl?.viewctrl?.item.rights.teacher;
     }
 
     private isInvalid() {

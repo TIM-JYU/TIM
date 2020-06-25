@@ -362,7 +362,7 @@ class AnswerSheetController implements IController {
     }
 
     private questionHasPoints() {
-        return this.questiondata && this.questiondata.markup.points != null;
+        return this.questiondata?.markup.points != null;
     }
 
     private answerMatrixFromTable(table: AnswerTable): MatrixElement[][] {

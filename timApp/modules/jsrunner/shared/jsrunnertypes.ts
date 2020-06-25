@@ -72,7 +72,7 @@ interface AnswerReturnSuccess {
             fatalError?: undefined,
             outdata?: { exportdata?: Array<{ plugin: string, save?: boolean, data: unknown }> },
         };
-    savedata: {};
+    savedata: Record<string, unknown>;
     groups: IGroupData;
 }
 

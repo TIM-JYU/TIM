@@ -104,7 +104,7 @@ export class PaliComponent extends AngularPluginBase<t.TypeOf<typeof PluginMarku
 
     ngOnInit() {
         super.ngOnInit();
-        this.userword = (this.attrsall.state && this.attrsall.state.userword) || this.getInitWord();
+        this.userword = this.attrsall.state?.userword ?? this.getInitWord();
         this.modelChangeSub = this.modelChanged
             .pipe(
                 debounceTime(this.autoupdate),

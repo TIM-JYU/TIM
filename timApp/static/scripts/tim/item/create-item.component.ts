@@ -96,7 +96,7 @@ export class CreateItemComponent implements OnInit {
      * Checks whether the document to copy has regular tags (special tags aren't copied) with expiration dates.
      */
     private async checkExpiredTags() {
-        if (this.params && this.params.copy) {
+        if (this.params?.copy) {
             const r = await to($http.get<ITaggedItem>(`/tags/getDoc/${this.params.copy}`));
             if (r.ok) {
                 const tags = r.result.data.tags;

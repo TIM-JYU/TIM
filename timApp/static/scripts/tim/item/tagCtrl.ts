@@ -21,7 +21,7 @@ const tagParsingSeparator = ",";
 /*
  * Tag editing dialog's controller.
  */
-export class TagController extends DialogController<{ params: IItem }, {}> {
+export class TagController extends DialogController<{ params: IItem }, void> {
     static component = "timEditTags";
     static $inject = ["$element", "$scope"] as const;
     private tagName: string = "";

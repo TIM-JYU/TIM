@@ -14,7 +14,7 @@ markAsUsed(focusMe);
 /*
  * Dialog displaying relevance editing component.
  */
-export class RelevanceEditController extends DialogController<{ params: IItem }, {}> {
+export class RelevanceEditController extends DialogController<{ params: IItem }, void> {
     static component = "relevanceEditDialog";
     static $inject = ["$element", "$scope"] as const;
     private item!: IItem;

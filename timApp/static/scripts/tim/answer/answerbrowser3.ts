@@ -325,7 +325,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     public review: boolean = false;
     public oldreview: boolean = false;
     private shouldFocus: boolean = false;
-    private alerts: Array<{}> = [];
+    private alerts: Array<unknown> = [];
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
     private loadedAnswer: { id: number | undefined } = {id: undefined};

@@ -81,7 +81,7 @@ module.exports = {
                 "allowTemplateLiterals": true
             }
         ],
-        "@typescript-eslint/restrict-plus-operands": "off",
+        "@typescript-eslint/restrict-plus-operands": "off", // TODO maybe enable
         "@typescript-eslint/semi": [
             "error",
             "always"
@@ -190,7 +190,6 @@ module.exports = {
                 "rules": {
                     "import-spacing": true,
                     "jsdoc-format": true,
-                    "no-reference-import": true,
                     "no-unsafe-any": true,
                     "one-line": [
                         true,
@@ -200,7 +199,6 @@ module.exports = {
                         "check-open-brace",
                         "check-whitespace"
                     ],
-                    "strict-string-expressions": true,
                     "whitespace": [
                         true,
                         "check-branch",

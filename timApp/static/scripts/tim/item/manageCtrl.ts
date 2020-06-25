@@ -28,7 +28,7 @@ export class PermCtrl implements IController {
     private hasMoreChangelog?: boolean;
     private translations: Array<IEditableTranslation> = [];
     private newTranslation: {language: string, title: string};
-    private accessTypes: Array<{}>;
+    private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
     private item: IFullDocument | IFolder;
     private newName?: string;
@@ -47,7 +47,7 @@ export class PermCtrl implements IController {
     private readUpdating: boolean = false;
     private file?: File;
     private newAliasForm!: IFormController; // initialized in the template
-    private notifySettings: {} = {};
+    private notifySettings: unknown = {}; // TODO proper type
     private objName: string;
     private progress?: number;
     private result?: boolean;
@@ -461,7 +461,7 @@ export class PermCtrl implements IController {
         if (!this.loggedIn()) {
             return;
         }
-        const r = await to($http.get<{}>("/notify/" + this.item.id));
+        const r = await to($http.get<unknown>("/notify/" + this.item.id));
         if (r.ok) {
             this.notifySettings = r.result.data;
         } else {

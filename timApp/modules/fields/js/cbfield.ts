@@ -73,7 +73,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
 
     $onInit() {
         super.$onInit();
-        const uw = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword ?? "")).toString();
+        const uw = (valueOr(this.attrsall.state?.c, this.attrs.initword ?? "")).toString();
         this.userword = CbfieldController.makeBoolean(uw);
 
         if (this.attrs.tag) {

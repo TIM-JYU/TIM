@@ -72,9 +72,9 @@ import {SideBarMenuModule} from "tim/sidebarmenu/side-bar-menu.module";
         DialogModule,
         NoopAnimationsModule,
         SideBarMenuModule,
-        BsDropdownModule.forRoot() as ModuleWithProviders<{}>,
-        TypeaheadModule.forRoot() as ModuleWithProviders<{}>,
-        TooltipModule.forRoot() as ModuleWithProviders<{}>,
+        BsDropdownModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
+        TypeaheadModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
+        TooltipModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
     ],
     providers: [
         {provide: HTTP_INTERCEPTORS, useClass: TimeStampToMomentConverter, multi: true},

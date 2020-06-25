@@ -100,7 +100,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
     $onInit() {
         super.$onInit();
-        const state = this.attrsall.state && this.attrsall.state.c;
+        const state = this.attrsall.state?.c;
         if (state === undefined || state === null) {
             this.initCode();
         } else {
@@ -124,7 +124,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.modelOpts = {debounce: {blur: 0}};
         this.vctrl.addTimComponent(this, this.attrs.tag);
         this.initialValue = this.numericvalue;
-        if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles) {
+        if (this.attrsall.state?.styles && !this.attrs.ignorestyles) {
             this.applyStyling(this.attrsall.state.styles);
         }
     }

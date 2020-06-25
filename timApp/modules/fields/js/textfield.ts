@@ -85,13 +85,13 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     $onInit() {
         super.$onInit();
-        this.userword = (valueOr(this.attrsall.state && this.attrsall.state.c, this.attrs.initword ?? "")).toString();
+        this.userword = (valueOr(this.attrsall.state?.c, this.attrs.initword ?? "")).toString();
         // this.modelOpts = {debounce: this.autoupdate};
         this.modelOpts = {debounce: { blur: 0}};
         this.vctrl.addTimComponent(this, this.attrs.tag);
         this.initialValue = this.userword;
         if (this.attrs.showname) { this.initCode(); }
-        if (this.attrsall.state && this.attrsall.state.styles && !this.attrs.ignorestyles) {
+        if (this.attrsall.state?.styles && !this.attrs.ignorestyles) {
             this.applyStyling(this.attrsall.state.styles);
         }
         if (this.attrs.textarea && this.attrs.autogrow) {

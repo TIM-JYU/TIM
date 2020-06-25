@@ -127,7 +127,7 @@ export class HeaderComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        if (this.docSettings && this.docSettings.course_main) {
+        if (this.docSettings?.course_main) {
             return this.docSettings.course_main;
         }
         return this.item.path;
@@ -137,7 +137,7 @@ export class HeaderComponent implements OnInit {
      * Checks if the document has been tagged as a course and the tag hasn't expired.
      */
     private async checkIfTaggedAsCourse() {
-        if (this.item && this.item.isFolder) {
+        if (this.item?.isFolder) {
             return; // Folders don't have tags for now.
         }
         this.taggedAsCourse = false;

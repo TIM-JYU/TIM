@@ -20,7 +20,7 @@ export interface IPrintParams {
     params: ITemplateParams;
 }
 
-export class PrintCtrl extends DialogController<{params: IPrintParams}, {}> {
+export class PrintCtrl extends DialogController<{params: IPrintParams}, void> {
     static component = "timPrint";
     static $inject = ["$element", "$scope"] as const;
     private storage: ngStorage.StorageService & {timPrintingTemplateId: null | number};

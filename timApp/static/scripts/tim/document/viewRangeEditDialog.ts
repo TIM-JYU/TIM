@@ -24,7 +24,7 @@ markAsUsed(focusMe);
 /*
  * Dialog displaying view range options.
  */
-export class ViewRangeEditController extends DialogController<{ params: IItem }, {}> {
+export class ViewRangeEditController extends DialogController<{ params: IItem }, void> {
     static component = "viewRangeEditDialog";
     static $inject = ["$element", "$scope"] as const;
     private item!: IItem;
@@ -102,7 +102,7 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
         } else {
             await unpartitionDocument();
         }
-        this.close({});
+        this.close();
     }
 
     /**

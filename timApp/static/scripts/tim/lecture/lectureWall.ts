@@ -7,7 +7,7 @@ import {KEY_ENTER} from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
 import {ILectureMessage} from "./lecturetypes";
 
-export class LectureWallController extends DialogController<{params: {messages: ILectureMessage[]}}, {}> {
+export class LectureWallController extends DialogController<{params: {messages: ILectureMessage[]}}, void> {
     static component = "timLectureWall";
     static $inject = ["$element", "$scope"] as const;
     private messageName = true;

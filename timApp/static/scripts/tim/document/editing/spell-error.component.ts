@@ -25,7 +25,7 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         if (this.dlg) {
-            this.dlg.close({});
+            this.dlg.close();
         }
     }
 

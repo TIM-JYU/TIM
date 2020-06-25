@@ -285,7 +285,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.message = this.markup.message ?? "";
 
         let jsobject = "window.";
-        if (this.markup.srchtml && this.markup.srchtml.includes("TIMJS")) {
+        if (this.markup.srchtml?.includes("TIMJS")) {
             jsobject = "TIMJS.";
         }
 

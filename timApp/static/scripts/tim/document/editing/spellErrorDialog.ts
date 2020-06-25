@@ -63,7 +63,7 @@ function computeSourcePosition(editorText: string, info: Readonly<ISpellWordInfo
     return index + editorText.indexOf(block);
 }
 
-export class SpellErrorDialogController extends DialogController<{ params: ISpellErrorParams }, {}> {
+export class SpellErrorDialogController extends DialogController<{ params: ISpellErrorParams }, void> {
     static component = "spellErrorDialogController";
     static $inject = ["$element", "$scope"] as const;
     private suggestions: string[] = [];
@@ -107,7 +107,7 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
     ignoreWord() {
         this.selectWord();
         this.pare.getEditor()!.surroundClicked("[", "]{.nospell}");
-        this.close({});
+        this.close();
     }
 
     selectWord() {
@@ -128,7 +128,7 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
         }
         this.selectWord();
         this.pare.getEditor()!.replaceSelectedText(s);
-        this.close({});
+        this.close();
     }
 }
 

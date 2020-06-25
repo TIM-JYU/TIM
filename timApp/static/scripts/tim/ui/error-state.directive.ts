@@ -15,7 +15,7 @@ export class ErrorStateDirective implements AfterContentInit, OnDestroy {
     }
 
     ngAfterContentInit() {
-        if (this.c && this.c.statusChanges) {
+        if (this.c?.statusChanges) {
             this.sub = this.c.statusChanges.subscribe((status) => {
                 if (status === "VALID") {
                     this.e.nativeElement.classList.remove("has-error");

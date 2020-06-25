@@ -1515,7 +1515,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 continue;
             }
             for (let sx = sx1; sx <= sx2; sx++) {
-                if ((this.data.hiddenColumns && this.data.hiddenColumns.includes(sx))) {
+                if ((this.data.hiddenColumns?.includes(sx))) {
                     continue;
                 }
                 srows[sy] = true;
@@ -2117,7 +2117,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      */
     private async handleArrowMovement(ev: KeyboardEvent): Promise<ChangeDetectionHint> {
         const parId = this.getOwnParId();
-        if (!(this.editing || this.task) || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
+        if (!(this.editing || this.task) || !this.viewctrl || !parId || this.currentCell?.editorOpen) {
             return ChangeDetectionHint.DoNotTrigger;
         }
 
@@ -2209,9 +2209,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
             // Stop iterating if cell is not in hiddenRows/hiddenColumns and is not locked.
             if (!(this.currentHiddenRows.includes(nextCell.row))
-                && !(this.data.hiddenColumns && this.data.hiddenColumns.includes(nextCell.col))
-                && !(this.data.lockedCells && this.data.lockedCells.includes(colnumToLetters(nextCell.col) + (nextCell.row + 1)))
-                && !(this.data.lockedColumns && this.data.lockedColumns.includes(colnumToLetters(nextCell.col)))
+                && !(this.data.hiddenColumns?.includes(nextCell.col))
+                && !(this.data.lockedCells?.includes(colnumToLetters(nextCell.col) + (nextCell.row + 1)))
+                && !(this.data.lockedColumns?.includes(colnumToLetters(nextCell.col)))
             ) {
                 break;
             }
@@ -2387,7 +2387,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const parId = this.getOwnParId();
 
         if (!this.isInEditMode() || !this.viewctrl || !parId ||
-            (this.currentCell && this.currentCell.editorOpen)) {
+            (this.currentCell?.editorOpen)) {
             return;
         }
 
@@ -2400,8 +2400,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const cellCol = colnumToLetters(coli);
         const cellCoordinate = cellCol + (rowi + 1);
         this.editorPosition = cellCoordinate;
-        if (this.data.lockedCells && this.data.lockedCells.includes(cellCoordinate)
-            || (this.data.lockedColumns && this.data.lockedColumns.includes(cellCol))) {
+        if (this.data.lockedCells?.includes(cellCoordinate)
+            || (this.data.lockedColumns?.includes(cellCol))) {
             return;
         }
 
@@ -3439,7 +3439,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     getTemplContent(rowId: number, colId: number) {
         const parId = this.getOwnParId();
-        if (!this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
+        if (!this.viewctrl || !parId || this.currentCell?.editorOpen) {
             return undefined;
         }
         const cellObj = this.cellDataMatrix[rowId][colId];
@@ -3477,7 +3477,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     handleToolbarAddToTemplates() {
         const parId = this.getOwnParId();
-        if (!this.activeCell || !this.viewctrl || !parId || (this.currentCell && this.currentCell.editorOpen)) {
+        if (!this.activeCell || !this.viewctrl || !parId || this.currentCell?.editorOpen) {
             return;
         }
         let templ: IToolbarTemplate | undefined = { favorite: true };

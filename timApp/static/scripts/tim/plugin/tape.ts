@@ -1,7 +1,6 @@
 import angular from "angular";
 import {IController, IScope} from "angular";
 import {Binding} from "../util/utils";
-import Timeout = NodeJS.Timeout;
 
 export enum ParameterType {
     NUMBER,
@@ -358,7 +357,7 @@ export class TapeController implements IController {
 
     private data!: Binding<TapeAttrs, "<">;
 
-    private timer?: Timeout;
+    private timer?: number;
 
     private inputString: string = "";
     private memString: string = "";
@@ -482,7 +481,7 @@ export class TapeController implements IController {
         if (this.timer) {
             this.stop();
         } else {
-            this.timer = setInterval(() => this.automaticStep(), 500);
+            this.timer = window.setInterval(() => this.automaticStep(), 500);
         }
     }
 

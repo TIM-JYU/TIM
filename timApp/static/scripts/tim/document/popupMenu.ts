@@ -27,7 +27,7 @@ export interface IPopupParams {
 /**
  * A popup menu component that is used in the document view.
  */
-export class PopupMenuController extends DialogController<{params: IPopupParams}, {}> {
+export class PopupMenuController extends DialogController<{params: IPopupParams}, void> {
     static component = "popupMenu";
     static $inject = ["$element", "$scope"] as const;
     public editState: EditMode | null;
@@ -68,7 +68,7 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
     }
 
     public close() {
-        super.close({});
+        super.close();
     }
 
     $onInit() {

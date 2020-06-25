@@ -12,7 +12,7 @@ class LectureMenuController implements IController {
     private lctrl!: LectureController;
 
     async $onInit() {
-        this.lctrl = this.vctrl && this.vctrl.lectureCtrl || LectureController.createAndInit(this.vctrl);
+        this.lctrl = this.vctrl?.lectureCtrl ?? LectureController.createAndInit(this.vctrl);
         if (this.lctrl.lecture) {
             this.item = await getItem(this.lctrl.lecture.doc_id);
         }

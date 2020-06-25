@@ -156,7 +156,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private question: IAskedJsonJson;
     private ui: IQuestionUI;
     private rows: IExtendedRow[];
-    private columns: Array<{}>;
+    private columns: Array<unknown>; // TODO give accurate type
     private columnHeaders: IHeader[];
     private titleChanged: boolean = false;
     private oldMarkupJson: string;
@@ -746,7 +746,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         const expl: IExplCollection = {};
         let n = 0;
         for (const row of this.rows) {
-            if (row.expl && row.expl.trim()) {
+            if (row.expl?.trim()) {
                 expl[row.id] = row.expl.trim();
                 n++;
             }
@@ -781,7 +781,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             timeLimit = undefined;
         }
 
-        if (this.customError != null || (this.f && this.f.$invalid)) {
+        if (this.customError != null || (this.f?.$invalid)) {
             if (this.question.questionTitle === "Untitled") {
                 this.question.questionTitle = "";
             }

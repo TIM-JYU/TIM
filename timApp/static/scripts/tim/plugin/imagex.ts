@@ -1595,9 +1595,9 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
            // event.preventDefault();
         });
 
-        this.tries = this.attrsall.info && this.attrsall.info.earlier_answers || 0;
+        this.tries = this.attrsall.info?.earlier_answers ?? 0;
         this.freeHandDrawing = new FreeHand(this,
-            this.attrsall.state && this.attrsall.state.freeHandData || [],
+            this.attrsall.state?.freeHandData ?? [],
             this.videoPlayer);
         if (this.isFreeHandInUse) {
             this.freeHand = true;
@@ -1684,7 +1684,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
             }
         }
 
-        if (this.attrsall.state && this.attrsall.state.userAnswer) {
+        if (this.attrsall.state?.userAnswer) {
             this.userHasAnswered = true;
             const userDrags = this.attrsall.state.userAnswer.drags;
             if (userDrags && userDrags.length > 0) {
@@ -1758,7 +1758,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 // This is pretty much identical to the normal save except that a query to
 // show correct answer is also sent.
     async doshowAnswer() {
-        if (this.answer && this.answer.rightanswers) {
+        if (this.answer?.rightanswers) {
             this.dt.addRightAnswers(this.answer.rightanswers);
             return;
         }
