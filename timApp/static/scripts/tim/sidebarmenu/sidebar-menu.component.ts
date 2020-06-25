@@ -120,7 +120,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
             this.isSm = true;
             this.lastNonSmState = this.currentMenuState;
             this.setVisibleState(MenuState.Closed, { tabs: true });
-        } else if (!isScreenSizeOrLower("sm")) {
+        } else if (this.isSm && !isScreenSizeOrLower("sm")) {
             this.isSm = false;
             this.setVisibleState(this.lastNonSmState, { tabs: true });
         }
