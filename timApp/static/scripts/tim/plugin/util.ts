@@ -1,6 +1,7 @@
 import {IController, IScope} from "angular";
 import {Type} from "io-ts/lib";
 import {FormModeOption, ISetAnswerResult} from "tim/document/viewctrl";
+import {isLeft} from "fp-ts/lib/Either";
 import {Binding} from "../util/utils";
 import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "./attributes";
 import {getErrors} from "./errors";
@@ -16,10 +17,10 @@ export function getDefaults<MarkupType extends IGenericPluginMarkup,
         state: null,
     };
     const d = runtimeType.decode(defaults);
-    if (d.isLeft()) {
+    if (isLeft(d)) {
         throw new Error("Could not get default markup");
     }
-    return d.value;
+    return d.right;
 }
 
 export class PluginMeta {
@@ -100,11 +101,11 @@ export function baseOnInit<MarkupType extends IGenericPluginMarkup, A extends IG
     // These can be uncommented for debugging:
     // console.log(parsed);
     // console.log(this);
-    if (validated.isLeft()) {
+    if (isLeft(validated)) {
         this.markupError = getErrors(validated);
         return undefined;
     } else {
-        this.attrsall = validated.value;
+        this.attrsall = validated.right;
         return this.attrsall;
     }
 }

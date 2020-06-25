@@ -26,8 +26,8 @@ function indexOfFirstName(context: Context) {
     return context.findIndex((c) => c.key.match(/^[a-z]/) != null);
 }
 
-export function getErrors<A>(v: Left<t.Errors, A>): MarkupError {
-    const ps: Array<[string[], string]> = v.value
+export function getErrors<A>(v: Left<t.Errors>): MarkupError {
+    const ps: Array<[string[], string]> = v.left
         .filter((e) => {
             const ind = indexOfFirstName(e.context);
             if (ind >= 0) {

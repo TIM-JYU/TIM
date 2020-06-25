@@ -136,7 +136,7 @@ export async function initSlideView(d: IDocument) {
     const bgUrl = w.background_url;
     const bgColor = w.background_color;
     const hasManage = d.rights.manage;
-    const revealCss = import("style-loader!reveal.js/css/reveal.css" as string);
+    const revealCss = import("style-loader!reveal.js/dist/reveal.css" as string);
     const jyuCss = import("style-loader!./jyu.css" as string);
     const rv = await import("reveal.js");
     if (getURLParameter("controls") == null && hasManage) {

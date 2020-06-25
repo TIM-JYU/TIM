@@ -2,6 +2,7 @@ import express from "express";
 import * as t from "io-ts";
 import ivm from "isolated-vm";
 import {Max1000} from "../../shared/jsrunnertypes";
+import {isLeft} from "fp-ts/lib/Either";
 console.log("rs");
 const router = express.Router();
 
@@ -24,12 +25,12 @@ function numberLines(s: string, delta: number): string {
 
 router.post("/", async (req, res, next) => {
     const decoded = RunScriptInput.decode(req.body);
-    if (decoded.isLeft()) {
+    if (isLeft(decoded)) {
         res.status(400);
         res.json({error: "Invalid input to jsrunner runScript route."});
         return;
     }
-    const inputs = decoded.value;
+    const inputs = decoded.right;
     const isolate = new ivm.Isolate({
         memoryLimit: 128, // in MB
         inspector: false,

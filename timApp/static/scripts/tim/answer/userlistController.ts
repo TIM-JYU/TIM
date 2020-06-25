@@ -250,7 +250,7 @@ export class UserListController implements IController {
                             const selectedUser = this.gridApi.selection.getSelectedRows()[0];
                             iusers.push(selectedUser.user);
 
-                            const visibleRows = this.gridApi.core.getVisibleRows(this.gridApi.grid);
+                            const visibleRows = this.gridApi.core.getVisibleRows();
 
                             for (const row of visibleRows) { // Create string array of visible item.
                                 if (row.entity !== selectedUser) {
@@ -291,7 +291,7 @@ export class UserListController implements IController {
         if (!this.gridApi) {
             throw new Error("gridApi was not initialized");
         }
-        const data = this.gridApi.core.getVisibleRows(this.gridApi.grid);
+        const data = this.gridApi.core.getVisibleRows();
         let dataKorppi = "";
 
         const fields = ["total_points", "task_points", "velp_points"] as const;

@@ -1,6 +1,5 @@
 import {IController, IScope, IModule} from "angular";
 import "angular-ui-bootstrap";
-import {IModalInstanceService} from "angular-ui-bootstrap";
 import {TimDefer} from "tim/util/timdefer";
 import {DialogController} from "tim/ui/dialogController";
 import {timApp} from "../app";
@@ -8,9 +7,11 @@ import {$templateCache, $uibModal} from "../util/ngimport";
 import {markAsUsed} from "../util/utils";
 import * as dg from "./draggable";
 
+type IModalInstanceService = angular.ui.bootstrap.IModalInstanceService;
+
 markAsUsed(dg);
 
-class MessageDialogController extends DialogController<{message: string}, {}> {
+class MessageDialogController extends DialogController<{message: string}, unknown> {
     static $inject = ["$element", "$scope"] as const;
     static readonly component = "timMessageDialog";
 

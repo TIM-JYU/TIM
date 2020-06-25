@@ -258,7 +258,7 @@ class SisuAssessmentExportController {
             onRegisterApi: async (grid) => {
                 this.grid = grid;
                 await $timeout();
-                for (const row of grid.core.getVisibleRows(grid.grid)) {
+                for (const row of grid.core.getVisibleRows()) {
                     if (defaults.has(row.entity.user.id)) {
                         row.setSelected(true);
                     }

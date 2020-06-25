@@ -22,13 +22,13 @@ import {TimDefer} from "tim/util/timdefer";
 import {wrapText} from "tim/document/editing/utils";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
-import IAceEditor = Ace.Editor;
+type IAceEditor = Ace.Editor;
 
 // js-parsons is unused; just declare a stub to make TS happy
 declare class ParsonsWidget {
     static _graders: any;
 
-    constructor(data: {});
+    constructor(data: unknown);
 
     options: {permutation: (n: number) => number[]};
 

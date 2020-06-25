@@ -57,7 +57,7 @@
               "style-loader!../css/hideanswerbrowser.css",
               "style-loader!../css/viewhide.css",
               "style-loader!../stylesheets/jsrunner.css",
-              "style-loader!reveal.js/css/reveal.css",
+              "style-loader!reveal.js/dist/reveal.css",
               "object-keys",
               "regexp.prototype.flags",
               "is-regex",
@@ -70,7 +70,10 @@
               "typed-function",
               "decimal.js",
               "fraction.js",
-              "complex.js"
+              "complex.js",
+              "object.assign",
+              "which-typed-array",
+              "object-is"
             ],
             "i18nMissingTranslation": "error",
             "outputPath": "static/scripts/build",

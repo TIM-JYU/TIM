@@ -3,6 +3,7 @@ import {readFileSync} from "fs";
 import {parse} from "acorn";
 import express from "express";
 import ivm from "isolated-vm";
+import {isLeft} from "fp-ts/lib/Either";
 
 // import numberLines from "./runscript";
 import {Branded, IntBrand} from "io-ts";
@@ -181,11 +182,11 @@ function runner(d: IRunnerData): RunnerResult {
 // noinspection JSUnusedLocalSymbols
 router.put("/", async (req, res, next) => {
     const decoded = JsrunnerAnswer.decode(req.body);
-    if (decoded.isLeft()) {
+    if (isLeft(decoded)) {
         res.json({web: {error: "Invalid input to jsrunner answer route."}});
         return;
     }
-    const value = decoded.value;
+    const value = decoded.right;
     const regex = /[0-9]+\./;
     const currDoc = value.taskID.match(regex);
     if (!currDoc) {

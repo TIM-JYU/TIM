@@ -1,5 +1,5 @@
 import {IController, IScope} from "angular";
-import {IModalInstanceService} from "angular-ui-bootstrap";
+// import {ui} from "angular";
 import * as t from "io-ts";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
@@ -101,6 +101,8 @@ export interface IResizeCallbackParams {
 }
 
 export type ResizeCallback = (p: IResizeCallbackParams) => void;
+
+type IModalInstanceService = angular.ui.bootstrap.IModalInstanceService;
 
 export class DraggableController implements IController {
     static $inject = ["$scope", "$element"];
