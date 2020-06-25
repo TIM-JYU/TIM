@@ -1,4 +1,4 @@
-import {NgModule} from "@angular/core";
+import {NgModule, ModuleWithProviders} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {TabsModule} from "ngx-bootstrap/tabs";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -36,10 +36,10 @@ import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
     imports: [
         CommonModule,
         FormsModule,
-        TabsModule.forRoot(),
-        TooltipModule.forRoot(),
-        BsDropdownModule.forRoot(),
-        CollapseModule.forRoot(),
+        TabsModule.forRoot() as ModuleWithProviders<{}>,
+        TooltipModule.forRoot() as ModuleWithProviders<{}>,
+        BsDropdownModule.forRoot() as ModuleWithProviders<{}>,
+        CollapseModule.forRoot() as ModuleWithProviders<{}>,
     ],
     entryComponents: [
         BookmarksTabComponent,

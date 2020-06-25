@@ -549,8 +549,6 @@ class DragTask {
         this.canvas.style.touchAction = "double-tap-zoom"; // To get IE and EDGE touch to work
         this.freeHand.redraw = () => this.draw();
 
-        this.canvas.style.msTouchAction = "none";
-
         this.canvas.addEventListener("mousemove", (event) => {
             event.preventDefault();
             this.imgx.getScope().$evalAsync(() => {

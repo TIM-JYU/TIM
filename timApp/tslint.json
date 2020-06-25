@@ -2,6 +2,15 @@
   "extends": "tslint:recommended",
   "rules": {
     "align": false,
+    "arrow-return-shorthand": true,
+    "curly": true,
+    "eofline": true,
+    "import-spacing": true,
+    "indent": {
+      "options": [
+        "spaces"
+      ]
+    },
     "member-access": false,
     "member-ordering": false,
     "object-literal-shorthand": false,
@@ -10,6 +19,20 @@
     "no-empty": false,
     "object-literal-sort-keys": false,
     "no-empty-interface": false,
+    "semicolon": {
+      "options": [
+        "always"
+      ]
+    },
+    "space-before-function-paren": {
+      "options": {
+        "anonymous": "never",
+        "asyncArrow": "always",
+        "constructor": "never",
+        "method": "never",
+        "named": "never"
+      }
+    },
     "triple-equals": false,
     "no-console": false,
     "interface-name": false,
@@ -18,6 +41,24 @@
     "no-for-in-array": true,
     "no-unbound-method": true,
     "no-boolean-literal-compare": true,
+    "typedef-whitespace": {
+      "options": [
+        {
+          "call-signature": "nospace",
+          "index-signature": "nospace",
+          "parameter": "nospace",
+          "property-declaration": "nospace",
+          "variable-declaration": "nospace"
+        },
+        {
+          "call-signature": "onespace",
+          "index-signature": "onespace",
+          "parameter": "onespace",
+          "property-declaration": "onespace",
+          "variable-declaration": "onespace"
+        }
+      ]
+    },
     "unnecessary-bind": true,
     "no-string-literal": true,
     "no-unsafe-any": true,
@@ -27,6 +68,23 @@
     "strict-boolean-expressions": false,
     "restrict-plus-operands": false,
     "strict-type-predicates": false
-  },
+  ,    "variable-name": {
+      "options": [
+        "ban-keywords",
+        "check-format",
+        "allow-pascal-case"
+      ]
+    },
+    "whitespace": {
+      "options": [
+        "check-branch",
+        "check-decl",
+        "check-operator",
+        "check-separator",
+        "check-type",
+        "check-typecast"
+      ]
+    }
+},
   "defaultSeverity": "error"
 }

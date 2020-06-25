@@ -209,7 +209,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     static $inject = ["$scope", "$element"];
 
     buttonText() {
-        return this.attrs.button || this.attrs.buttonText || null;
+        return this.attrs.button ?? this.attrs.buttonText ?? null;
     }
 
     get attrs(): Readonly<MarkupType> {
@@ -221,15 +221,15 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     }
 
     get footer() {
-        return this.attrs.footer || null;
+        return this.attrs.footer ?? null;
     }
 
     get header() {
-        return this.attrs.header || null;
+        return this.attrs.header ?? null;
     }
 
     get stem() {
-        return this.attrs.stem || null;
+        return this.attrs.stem ?? null;
     }
 
     /**
