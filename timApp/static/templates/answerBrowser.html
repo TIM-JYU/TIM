@@ -102,7 +102,7 @@
                             <input type="checkbox"
                                    ng-model="$ctrl.giveCustomPoints">Set custom points</label>
                     </span>
-                    <span ng-if="$ctrl.showTeacher()">
+                        <span ng-if="$ctrl.showTeacher()">
                         <label class="checkbox-inline">
                             <input type="checkbox" ng-model="$ctrl.isValidAnswer">Valid
                         </label>
@@ -113,43 +113,45 @@
                             <i class="glyphicon glyphicon-ok"></i>
                         </button>
                     </span>
-                    <label class="checkbox-inline" ng-show="$ctrl.viewctrl.teacherMode && $ctrl.allowCustomPoints()">
-                        <input type="checkbox" ng-model="$ctrl.giveCustomPoints">cp
-                    </label>
-                    <label class="checkbox-inline" ng-show="$ctrl.showTeacher()">
-                        <input type="checkbox" ng-model="$ctrl.saveTeacher">Save teacher's fix
-                    </label>
-                    <label class="checkbox-inline" ng-show="$ctrl.showVelpsCheckBox()">
-                        <input type="checkbox" ng-model="$ctrl.review">Velps
-                    </label>
-                    <button title="Delete answer"
-                            ng-click="$ctrl.deleteAnswer()"
-                            class="timButton btn-xs btn-danger"
-                            ng-if="$ctrl.showDelete">
-                        <i class="glyphicon glyphicon-trash"></i>
-                    </button>
-                </div>
-                <div class="flex" ng-show="$ctrl.selectedAnswer.users.length > 1">
-                    <div>
-                        Collaborators:
-                        <ul>
-                            <li ng-repeat="c in $ctrl.selectedAnswer.users"><a
-                                    ng-href="mailto:{{c.email}}">{{ c.real_name }}</a></li>
-                        </ul>
+                        <label class="checkbox-inline"
+                               ng-show="$ctrl.viewctrl.teacherMode && $ctrl.allowCustomPoints()">
+                            <input type="checkbox" ng-model="$ctrl.giveCustomPoints">cp
+                        </label>
+                        <label class="checkbox-inline" ng-show="$ctrl.showTeacher()">
+                            <input type="checkbox" ng-model="$ctrl.saveTeacher">Save teacher's fix
+                        </label>
+                        <label class="checkbox-inline" ng-show="$ctrl.showVelpsCheckBox()">
+                            <input type="checkbox" ng-model="$ctrl.review">Velps
+                        </label>
+                        <button title="Delete answer"
+                                ng-click="$ctrl.deleteAnswer()"
+                                class="timButton btn-xs btn-danger"
+                                ng-if="$ctrl.showDelete">
+                            <i class="glyphicon glyphicon-trash"></i>
+                        </button>
+                    </div>
+                    <div class="flex" ng-show="$ctrl.selectedAnswer.users.length > 1">
+                        <div>
+                            Collaborators:
+                            <ul>
+                                <li ng-repeat="c in $ctrl.selectedAnswer.users"><a
+                                        ng-href="mailto:{{c.email}}">{{ c.real_name }}</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div ng-if="$ctrl.review" class="review" ng-bind-html="$ctrl.reviewHtml">
+
                     </div>
                 </div>
-                <div ng-if="$ctrl.review" class="review" ng-bind-html="$ctrl.reviewHtml">
-
-                </div>
+                <span class="triesLeft"
+                      ng-show="$ctrl.taskInfo.answerLimit && $ctrl.taskInfo.triesText">{{ $ctrl.taskInfo.triesText }} {{ $ctrl.getTriesLeft() }}</span>
             </div>
-            <span class="triesLeft"
-                  ng-show="$ctrl.taskInfo.answerLimit && $ctrl.taskInfo.triesText">{{ $ctrl.taskInfo.triesText }} {{ $ctrl.getTriesLeft() }}</span>
             <span ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">
             (no answers)
             <input type="checkbox" ng-model="$ctrl.saveTeacher" ng-change="$ctrl.toggleInput()">Save teacher's fix
         </span>
-        </div>
-        <span ng-show="$ctrl.taskInfo.starttime || $ctrl.taskInfo.deadline">
+
+            <span ng-show="$ctrl.taskInfo.starttime || $ctrl.taskInfo.deadline">
         Answering time:
         <span ng-show="$ctrl.taskInfo.starttime && !$ctrl.taskInfo.deadline">
             Since {{ $ctrl.taskInfo.starttime | timdate }}
@@ -161,7 +163,8 @@
             {{ $ctrl.taskInfo.starttime | timdate }} - {{ $ctrl.taskInfo.deadline | timdate }}
         </span>
     </span>
-        <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.hasUserChanged() && !$ctrl.loading">(hover/click to update)</span>
+            <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.hasUserChanged() && !$ctrl.loading">(hover/click to update)</span>
+        </div>
+        <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="$ctrl.loading"> -->
     </div>
-    <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="$ctrl.loading"> -->
 </div>
