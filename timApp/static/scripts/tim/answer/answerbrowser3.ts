@@ -572,7 +572,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             };
         }
         this.updatePoints();
-        if ((this.selectedAnswer == null || !this.user)) {
+        if ((!this.user)) {
             return;
         }
         this.unDimPlugin();
@@ -587,12 +587,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
             ref_from_doc_id: this.viewctrl.docId,
             ref_from_par_id: getParId(par),
         };
-        if (this.forceBrowser() || this.selectedAnswer.id !== this.loadedAnswer.id || this.oldreview !== this.review || this.isGlobal()) {
+        if (this.forceBrowser() || this.selectedAnswer?.id !== this.loadedAnswer.id || this.oldreview !== this.review || this.isGlobal()) {
             this.loading++;
             const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
                 params: {
                     ...parParams,
-                    answer_id: this.selectedAnswer.id,
+                    answer_id: this.selectedAnswer?.id,
                     review: this.review,
                     user_id: this.user.id,
                 },
@@ -602,12 +602,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 this.showError(r.result);
                 return;
             }
-            this.loadedAnswer.id = this.selectedAnswer.id;
+            this.loadedAnswer.id = this.selectedAnswer?.id;
             this.oldreview = this.review;
 
             // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
             // have to be fully reloaded every time.
-            if (this.answerLoader) {
+            if (this.answerLoader && this.selectedAnswer) {
                 this.answerLoader(this.selectedAnswer);
             } else {
                 await loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
@@ -617,7 +617,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 await $timeout();
             }
         }
-        this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
+        if (this.selectedAnswer) {
+            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
+        }
     }
 
     async changeAnswerTo(dir: (-1 | 1)) {

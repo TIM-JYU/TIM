@@ -411,7 +411,7 @@ def pluginify(doc: Document,
             placements[idx] = pplace
             for r, p in pplace.plugins.items():
                 plugins[p.type][idx, r] = p
-                if custom_answer and p.task_id.doc_task == custom_answer.task_id:
+                if (custom_answer and p.task_id.doc_task == custom_answer.task_id) or len(pars) == 1:
                     custom_answer_plugin = p
             if not pplace.is_block_plugin:
                 dumbo_opts[idx] = block.get_dumbo_options(base_opts=settings.get_dumbo_options())
