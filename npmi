@@ -8,5 +8,5 @@ set -e
 npm install --unsafe-perm && \
 npm run lint && \
 (cd modules/cs/jsav && npm i --no-save grunt grunt-contrib-concat grunt-contrib-uglify grunt-exec load-grunt-tasks && echo NOTE: You can ignore all Local Npm module warnings. && npx grunt) && \
-(cd modules/jsrunner/server && npm install --unsafe-perm)
+(cd modules/jsrunner/server && npm install --unsafe-perm && npm run lint)
 "

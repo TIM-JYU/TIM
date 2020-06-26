@@ -1,8 +1,8 @@
+import path from "path";
 import cookieParser from "cookie-parser";
 import express, {ErrorRequestHandler} from "express";
 import createError from "http-errors";
 import logger from "morgan";
-import path from "path";
 import answerRouter from "./routes/answer";
 import multihtmlRouter from "./routes/multihtml";
 import routes from "./routes/reqs";
@@ -33,11 +33,15 @@ app.use((req, res, next) => {
 // error handler
 app.use(((err, req, res, next) => {
   // set locals, only providing error in development
+
+  /* eslint-disable @typescript-eslint/tslint/config */
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
 
   // render the error page
   res.status(err.status || 500);
+  /* eslint-enable @typescript-eslint/tslint/config */
+
   res.render("error");
 }) as ErrorRequestHandler);
 

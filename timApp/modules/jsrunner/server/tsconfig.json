@@ -8,7 +8,7 @@
     "module": "commonjs",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "target": "esnext",
+    "target": "ES2019",
     "baseUrl": ".",
     "paths": {
       "tim/plugin/*": ["../../../static/scripts/tim/plugin/*"],

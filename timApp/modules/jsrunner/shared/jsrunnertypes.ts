@@ -1,5 +1,6 @@
 import * as t from "io-ts";
 import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, withDefault} from "tim/plugin/attributes";
+import {IToolsResult} from "../server/routes/tools";
 
 export {IncludeUsersOption} from "tim/plugin/attributes";
 
@@ -72,7 +73,7 @@ interface AnswerReturnSuccess {
             fatalError?: undefined,
             outdata?: { exportdata?: Array<{ plugin: string, save?: boolean, data: unknown }> },
         };
-    savedata: Record<string, unknown>;
+    savedata: IToolsResult[];
     groups: IGroupData;
 }
 

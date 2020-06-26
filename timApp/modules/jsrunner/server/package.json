@@ -6,7 +6,9 @@
     "start": "npx ts-node -r tsconfig-paths/register ./bin/www.ts",
     "buildtools": "npx rollup -c",
     "buildserver": "npx rollup -c rollup.server.config.js",
-    "postinstall": "npm run buildtools"
+    "postinstall": "npm run buildtools",
+    "lint": "eslint -c .eslintrc_cli.js --format codeframe --ext ts .",
+    "lintfix": "eslint -c .eslintrc_cli.js --format codeframe --ext ts . --fix"
   },
   "dependencies": {
     "acorn": "^7.3.1",

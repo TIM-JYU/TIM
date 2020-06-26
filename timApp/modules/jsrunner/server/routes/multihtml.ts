@@ -37,7 +37,7 @@ router.post("/", (req, res, next) => {
                 // Delete everything that shouldn't be shown in browser
                 // TODO check if comprehensive
                 for (const attr of privateAttrs){
-                    delete m[attr]
+                    delete m[attr];
                 }
             }
 
@@ -45,8 +45,8 @@ router.post("/", (req, res, next) => {
         // Escape all non-ascii characters. The base64 string will eventually get passed to "atob" function in browser,
         // which does not handle UTF-8. Solution from: https://stackoverflow.com/a/4901205
         s = s.replace(/[\u007f-\uffff]/g,
-            function (c) {
-                return '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4);
+            function(c) {
+                return "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4);
             }
         );
         const base64 = Buffer.from(s).toString("base64");

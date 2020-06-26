@@ -1,8 +1,8 @@
 import express from "express";
 import * as t from "io-ts";
 import ivm from "isolated-vm";
-import {Max1000} from "../../shared/jsrunnertypes";
 import {isLeft} from "fp-ts/lib/Either";
+import {Max1000} from "../../shared/jsrunnertypes";
 console.log("rs");
 const router = express.Router();
 
@@ -69,7 +69,7 @@ JSON.stringify(runScript())`,
     const ctx = await isolate.createContext({inspector: false});
     await ctx.global.set("g", JSON.stringify(inputs.data));
     try {
-        const result = await script.run(ctx, {timeout: inputs.timeout || 500}) as string;
+        const result = await script.run(ctx, {timeout: inputs.timeout ?? 500}) as string;
         const jresult = JSON.parse(result) as {result: unknown, output: unknown};
         if ("result" in jresult) {
             res.json({result: jresult.result, output: jresult.output});

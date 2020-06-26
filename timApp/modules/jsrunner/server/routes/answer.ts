@@ -42,10 +42,10 @@ interface IRunnerData {
 type RunnerResult =
     | {
     output: string,
-    res: {},
+    res: IToolsResult[],
     errors: ErrorList,
     fatalError?: never,
-    outdata: object,
+    outdata: Record<string, unknown>,
     groups: IGroupData,
 }
     | {output: string, fatalError: IError, errorprg: string};
@@ -62,7 +62,7 @@ function runner(d: IRunnerData): RunnerResult {
     // TODO: This is already in runscipt, but does not allow with 2 params???
     // And for some reason it is not found if it is outside this function???
     function numberLines2(s: string, delta: number): string {
-        if ( !s ) { return ""; }
+        if (!s) { return ""; }
         const lines = s.split("\n");
         let result = "";
         for (let i = 0; i < lines.length; i++) {
@@ -111,7 +111,7 @@ function runner(d: IRunnerData): RunnerResult {
             gtools.setTools(tools);
             errorprg = "gtools.addToDatas(tools)";
             prgname = "addToDatas";
-            if ( d.markup.autoadd ) {
+            if (d.markup.autoadd) {
                 gtools.addToDatas();
             }
             runProgram(d.program, "program", tools);
@@ -138,10 +138,10 @@ function runner(d: IRunnerData): RunnerResult {
         if (guserErrs.length > 0) {
             errors.push({user: dummyUser.user.name, errors: guserErrs});
         }
-        if ( guserErrs.length > 0 ) {
+        if (guserErrs.length > 0) {
             // TODO: separate errors from pre, program and post
             const prg = "\n" + prgname + ":\n" + numberLines2(errorprg, 1);
-            errors.push( {
+            errors.push({
                 user: "program",
                 errors: [{
                     msg: "See program",
@@ -162,16 +162,16 @@ function runner(d: IRunnerData): RunnerResult {
         // const comp = ""; // d.compileProgram(errorprg);
         // prg = "\n" + comp + prg;
         let stack = e.stack;
-        if ( stack.indexOf("SyntaxError") >= 0 ) {
+        if (stack.indexOf("SyntaxError") >= 0) {
             stack = ""; // compile will show the errorplace
         } else {
             errorprg = "";
             const ano = "<anonymous>";
             let i1 = stack.indexOf(ano);
-            if ( i1 >= 0 ) {
+            if (i1 >= 0) {
                 i1 += ano.length;
                 let i2 = stack.indexOf(")", i1);
-                if ( i2 < 0 ) { i2 = stack.length - 1; }
+                if (i2 < 0) { i2 = stack.length - 1; }
                 stack = "Index (" + stack.substring(i1 + 1, i2 + 1) + "\n";
             }
         }
@@ -217,21 +217,21 @@ router.put("/", async (req, res, next) => {
         currDoc: currDoc[0],
         markup: value.markup,
         aliases: value.input.aliases,
-        program: value.markup.program || "",
+        program: value.markup.program ?? "",
         compileProgram: compileProgram,
     };
     await ctx.global.set("g", JSON.stringify(runnerData));
     let r: AnswerReturn;
     try {
         const result: ReturnType<typeof runner> = JSON.parse(
-            await script.run(ctx, {timeout: value.markup.timeout || 1000}),
+            await script.run(ctx, {timeout: value.markup.timeout ?? 1000}),
         );
 
         // console.log(JSON.stringify(result));
 
         if (result.fatalError) {
             const rese = result;
-            if ( rese.errorprg ) { // TODO: compile here, because I could not do it in runner???
+            if (rese.errorprg) { // TODO: compile here, because I could not do it in runner???
                 const err = compileProgram(rese.errorprg);
                 result.fatalError.stackTrace = err + "\n" + result.fatalError.stackTrace;
             }
