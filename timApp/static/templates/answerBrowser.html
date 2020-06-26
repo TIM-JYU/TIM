@@ -147,7 +147,30 @@
                       ng-show="$ctrl.taskInfo.answerLimit && $ctrl.taskInfo.triesText">{{ $ctrl.taskInfo.triesText }} {{ $ctrl.getTriesLeft() }}</span>
             </div>
             <span ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">
-            (no answers)
+                <p>(no answers)</p>
+                                        <form ng-submit="$ctrl.savePoints()" class="point-form form-inline">
+                            <label ng-show="$ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())">
+                                Points:<input class="form-control input-xs"
+                                              ng-class="{ unsaved: $ctrl.points != $ctrl.selectedAnswer.points,
+                                                  'no-step': !$ctrl.markupSettings.pointsStep }"
+                                              focus-me="$ctrl.shouldFocus #blurWhenFalse"
+                                              ng-focus="$ctrl.shouldFocus = true"
+                                              ng-blur="$ctrl.shouldFocus = false"
+                                              ng-model="$ctrl.points"
+                                              ng-keydown="$ctrl.handlePointScroll($event)"
+                                              name="points"
+                                              type="number"
+                                              step="{{ $ctrl.pointsStep }}"
+                                              style="max-width: 5em"
+                                              autocomplete="off"
+                                              size="2">
+                            </label>
+                            <button title="Save points"
+                                    class="timButton btn-xs"
+                                    ng-show="$ctrl.points != $ctrl.selectedAnswer.points">
+                                <i class="glyphicon glyphicon-ok"></i>
+                            </button>
+                        </form>
             <input type="checkbox" ng-model="$ctrl.saveTeacher" ng-change="$ctrl.toggleInput()">Save teacher's fix
         </span>
 

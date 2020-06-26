@@ -537,6 +537,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     updatePoints() {
         if (!this.selectedAnswer) {
+            this.points = undefined;
             return;
         }
         this.points = this.selectedAnswer.points;
@@ -570,11 +571,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 valid: true,
             };
         }
+        this.updatePoints();
         if ((this.selectedAnswer == null || !this.user)) {
             return;
         }
         this.unDimPlugin();
-        this.updatePoints();
         const par = this.element.parents(".par");
         const ids = dereferencePar(par);
         if (!ids) {
@@ -730,8 +731,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
     async setNewest() {
         if (this.filteredAnswers.length > 0) {
             this.selectedAnswer = this.filteredAnswers[0];
-            await this.changeAnswer();
         }
+        await this.changeAnswer();
     }
 
     async setAnswerById(id: number, updateImmediately: boolean) {
