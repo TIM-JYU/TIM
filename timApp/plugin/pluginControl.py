@@ -302,6 +302,7 @@ def pluginify(doc: Document,
               pars: List[DocParagraph],
               user: Optional[User],
               custom_answer: Optional[Answer] = None,
+              task_id: Optional[TaskId] = None,
               sanitize=True,
               do_lazy=False,
               edit_window=False,
@@ -320,7 +321,8 @@ def pluginify(doc: Document,
     :param pars: A list of DocParagraphs to be processed.
     :param user: The current user object.
     :param custom_answer: Optional answer that will used as the state for the plugin instead of answer database.
-    If this parameter is specified, the expression len(blocks) MUST be 1.
+    :param task_id: Optional taskid to get state for
+    If this custom_answer or task_id is specified, the expression len(blocks) MUST be 1.
     :param sanitize: Whether the blocks should be sanitized before processing.
     :param do_lazy Whether to use lazy versions of the plugins.
     :param edit_window Whether the method is called from the edit window or not.
@@ -349,7 +351,7 @@ def pluginify(doc: Document,
 
     html_pars = [par.get_final_dict(use_md=md_out) for par in pars]
 
-    if custom_answer is not None:
+    if custom_answer is not None or task_id is not None:
         if len(pars) != 1:
             raise PluginException('len(blocks) must be 1 if custom state is specified')
     plugins: DefaultDict[str, Dict[KeyType, Plugin]] = defaultdict(OrderedDict)
@@ -411,7 +413,7 @@ def pluginify(doc: Document,
             placements[idx] = pplace
             for r, p in pplace.plugins.items():
                 plugins[p.type][idx, r] = p
-                if (custom_answer and p.task_id.doc_task == custom_answer.task_id) or len(pars) == 1:
+                if (custom_answer and p.task_id.doc_task == custom_answer.task_id) or (task_id and p.task_id.doc_task == task_id):
                     custom_answer_plugin = p
             if not pplace.is_block_plugin:
                 dumbo_opts[idx] = block.get_dumbo_options(base_opts=settings.get_dumbo_options())

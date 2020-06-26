@@ -1478,6 +1478,7 @@ class GetStateModel:
     par_id: Optional[str] = None
     doc_id: Optional[int] = None
     review: bool = False
+    task_id: Optional[str] = None
 
 
 GetStateSchema = class_schema(GetStateModel)
@@ -1529,7 +1530,7 @@ def get_multi_states(args: GetMultiStatesModel):
 @answers.route("/getState")
 @use_args(GetStateSchema())
 def get_state(args: GetStateModel):
-    par_id, user_id, answer_id, review, doc_id = args.par_id, args.user_id, args.answer_id, args.review, args.doc_id
+    par_id, user_id, answer_id, review, task_id = args.par_id, args.user_id, args.answer_id, args.review, args.task_id
     answer = None
     block = None
     doc = None
@@ -1546,32 +1547,29 @@ def get_state(args: GetStateModel):
         #     abort(400, 'Bad document id')
 
         tid = TaskId.parse(answer.task_id)
-        if par_id:
-            tid.maybe_set_hint(par_id)
-        doc.insert_preamble_pars()
-        try:
-            doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
-        except PluginException as e:
-            return abort(400, str(e))
-        block = plug.par
-    elif doc_id and par_id:
-        try:
-            d = get_doc_or_abort(doc_id)
-            doc = d.document
-            verify_view_access(d)
-            doc.insert_preamble_pars()
-            block = doc.get_paragraph(par_id)
-        except PluginException as e:
-            return abort(400, str(e))
+    elif task_id:
+        tid = TaskId.parse(task_id)
+        d = get_doc_or_abort(tid.doc_id)
+        verify_view_access(d)
+        doc = d.document
     else:
-        return abort(400, "Missing answer ID or document and paragraph IDs")
+        return abort(400, "Missing answer ID or task ID")
 
+    doc.insert_preamble_pars()
+    if par_id:
+        tid.maybe_set_hint(par_id)
+    try:
+        doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
+    except PluginException as e:
+        return abort(400, str(e))
+    block = plug.par
 
     _, _, _, plug = pluginify(
         doc,
         [block],
         user,
         custom_answer=answer if answer else None,
+        task_id = task_id if task_id else None,
         pluginwrap=PluginWrap.Nothing,
         do_lazy=NEVERLAZY,
     )
@@ -1583,6 +1581,7 @@ def get_state(args: GetStateModel):
             [block],
             user,
             custom_answer=answer if answer else None,
+            task_id=task_id if task_id else None,
             review=review,
             pluginwrap=PluginWrap.Nothing,
             do_lazy=NEVERLAZY,

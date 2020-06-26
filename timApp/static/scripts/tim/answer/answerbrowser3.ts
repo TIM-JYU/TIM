@@ -592,6 +592,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 params: {
                     ...parParams,
                     answer_id: this.selectedAnswer?.id,
+                    task_id: this.taskId, // TODO: Don't send both
                     review: this.review,
                     user_id: this.user.id,
                 },
