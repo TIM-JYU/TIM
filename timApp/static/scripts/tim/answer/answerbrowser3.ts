@@ -411,10 +411,20 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.pointsStep = this.markupSettings?.pointsStep;
         }
 
-        this.scope.$watch(() => this.review, () => this.changeAnswer());
+        this.scope.$watch(() => this.review, (newValues, oldValues) => {
+            if (newValues == oldValues) {
+                return;
+            }
+            this.changeAnswer();
+        });
         this.scope.$watchGroup([
             () => this.onlyValid,
-        ], (newValues, oldValues, scope) => this.updateFilteredAndSetNewest());
+        ], (newValues, oldValues, scope) => {
+            if (newValues == oldValues) {
+                return;
+            }
+            this.updateFilteredAndSetNewest();
+        });
 
         // form_mode off or plugin ab didn't register as form (doesn't support setAnswer?)
         // else answers, taskinfo (and maybe users) are given by viewctrl
@@ -572,7 +582,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             };
         }
         this.updatePoints();
-        if ((!this.user)) {
+        if (!this.user) {
             return;
         }
         const par = this.element.parents(".par");
