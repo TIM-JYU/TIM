@@ -33,15 +33,31 @@ interface INotesPlugin {
     open(filePath?: string): void;
 }
 
+interface IFixedRevealOptions extends RevealOptions {
+    plugins: unknown[];
+}
+
 interface IFixedReveal extends RevealStatic {
     slide(indexh: number, indexv?: number, f?: number, o?: unknown): void;
     getPlugin(id: "notes"): INotesPlugin;
+    initialize: (config: IFixedRevealOptions) => Promise<void>;
 }
 
 declare module "reveal.js" {
-    const x: IFixedReveal;
-    export = x;
+    const r: IFixedReveal;
+    export default r;
 }
+
+declare module "reveal.js/plugin/zoom/zoom.esm" {
+    const p: unknown;
+    export default p;
+}
+
+declare module "reveal.js/plugin/notes/notes.esm" {
+    const p: unknown;
+    export default p;
+}
+
 declare module "ace/snippets";
 declare module "rangyinputs";
 declare module "url-search-params-polyfill";

@@ -1,5 +1,5 @@
 import $ from "jquery";
-import {getURLParameter, IOkResponse, to, windowAsAny} from "tim/util/utils";
+import {getURLParameter, IOkResponse, to} from "tim/util/utils";
 import {IDocument, IItem} from "../item/IItem";
 import {documentglobals, slideglobals} from "../util/globals";
 import {$http, $log, $timeout} from "../util/ngimport";
@@ -76,16 +76,13 @@ async function updateSlideStatus(h: number, v: number, f: number) {
     receiving = true;
 }
 
-function initReveal(rv: IFixedReveal) {
+async function initReveal(rv: IFixedReveal) {
     // Full list of configuration options available here:
     // https://github.com/hakimel/reveal.js#configuration
-    const item: IItem = documentglobals().curr_item;
-    const hasManage = item.rights.manage;
-    const pluginPath = "/static/scripts/build/reveal";
 
-    windowAsAny().Reveal = rv; // required for Reveal dependencies
-
-    rv.initialize({
+    const zoom = (await import("reveal.js/plugin/zoom/zoom.esm")).default;
+    const notes = (await import("reveal.js/plugin/notes/notes.esm")).default;
+    await rv.initialize({
         fragments: true,
         controls: true,
         progress: true,
@@ -95,15 +92,9 @@ function initReveal(rv: IFixedReveal) {
         viewDistance: 10,
         theme: getURLParameter("theme"), // available themes are in /css/theme
         transition: getURLParameter("transition") ?? "linear", // default/cube/page/concave/zoom/linear/fade/none
-        dependencies: [
-            {
-                async: true,
-                src: `${pluginPath}/zoom-js/zoom.js`,
-            },
-            {
-                async: true,
-                src: `${pluginPath}/notes/notes.js`,
-            },
+        plugins: [
+            zoom,
+            notes,
         ],
         maxScale: 1, // csplugins become too wide in fullscreen view without this
     });
@@ -138,7 +129,7 @@ export async function initSlideView(d: IDocument) {
     const hasManage = d.rights.manage;
     const revealCss = import("style-loader!reveal.js/dist/reveal.css" as string);
     const jyuCss = import("style-loader!./jyu.css" as string);
-    const rv = await import("reveal.js");
+    const rv = (await import("reveal.js")).default;
     if (getURLParameter("controls") == null && hasManage) {
         refresh(rv);
     }
@@ -148,9 +139,10 @@ export async function initSlideView(d: IDocument) {
         }
     };
 
-    initReveal(rv);
+    await initReveal(rv);
     const ctrls = document.querySelector("aside.controls");
     if (!ctrls) {
+        console.error("aside.controls not found");
         return;
     }
 
