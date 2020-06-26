@@ -154,7 +154,6 @@
                                               ng-class="{ unsaved: $ctrl.points != $ctrl.selectedAnswer.points,
                                                   'no-step': !$ctrl.markupSettings.pointsStep }"
                                               focus-me="$ctrl.shouldFocus #blurWhenFalse"
-                                              ng-focus="$ctrl.shouldFocus = true"
                                               ng-blur="$ctrl.shouldFocus = false"
                                               ng-model="$ctrl.points"
                                               ng-keydown="$ctrl.handlePointScroll($event)"
