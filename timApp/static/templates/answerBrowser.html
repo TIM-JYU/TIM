@@ -144,11 +144,12 @@
             </div>
             <span class="triesLeft"
                   ng-show="$ctrl.taskInfo.answerLimit && $ctrl.taskInfo.triesText">{{ $ctrl.taskInfo.triesText }} {{ $ctrl.getTriesLeft() }}</span>
-            <span ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">
+                    </div>
+                <span ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">
             (no answers)
             <input type="checkbox" ng-model="$ctrl.saveTeacher" ng-change="$ctrl.toggleInput()">Save teacher's fix
         </span>
-        </div>
+
         <span ng-show="$ctrl.taskInfo.starttime || $ctrl.taskInfo.deadline">
         Answering time:
         <span ng-show="$ctrl.taskInfo.starttime && !$ctrl.taskInfo.deadline">
@@ -164,4 +165,5 @@
         <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.hasUserChanged() && !$ctrl.loading">(hover/click to update)</span>
     </div>
     <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="$ctrl.loading"> -->
+</div>
 </div>
