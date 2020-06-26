@@ -619,7 +619,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.selectedAnswer) {
             this.unDimPlugin();
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
-        } else {
+        } else if (this.viewctrl.teacherMode) {
             this.dimPlugin();
         }
     }
