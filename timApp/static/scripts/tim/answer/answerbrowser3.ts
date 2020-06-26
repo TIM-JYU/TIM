@@ -575,7 +575,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if ((!this.user)) {
             return;
         }
-        this.unDimPlugin();
         const par = this.element.parents(".par");
         const ids = dereferencePar(par);
         if (!ids) {
@@ -618,7 +617,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
         }
         if (this.selectedAnswer) {
+            this.unDimPlugin();
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
+        } else {
+            this.dimPlugin();
         }
     }
 
