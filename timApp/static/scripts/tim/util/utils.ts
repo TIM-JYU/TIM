@@ -6,14 +6,15 @@ import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
 const blacklist = new Set(["name", "title", "completionDate"]);
-const UnknownRecord = t.record(t.string, t.unknown);
+export const UnknownRecord = t.record(t.string, t.unknown);
+const UnknownRecordOrArray = t.union([UnknownRecord, t.array(t.unknown)]);
 
 export const defaultErrorMessage = "Syntax error or no reply from server?";
 export const defaultTimeout = 20000;
 
 // adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html
 export function convertDateStringsToMoments(input: unknown): unknown {
-    if (!UnknownRecord.is(input)) {
+    if (!UnknownRecordOrArray.is(input)) {
         return input;
     }
 
@@ -588,8 +589,6 @@ export function valueDefu(s: string | undefined | null, def: string): string {
 
 export const StringArray = t.array(t.string);
 export const ModuleArray = t.array(t.type({name: t.string, requires: StringArray}));
-export const StringDict = t.record(t.string, t.string);
-export const StringUnknownDict = t.record(t.string, t.unknown);
 export const StringOrNumber = t.union([t.string, t.number]);
 
 export type MouseOrTouch = MouseEvent | Touch;

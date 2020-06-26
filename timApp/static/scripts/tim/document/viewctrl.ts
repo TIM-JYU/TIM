@@ -15,7 +15,7 @@ import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {setViewCtrl} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty, StringUnknownDict, to} from "tim/util/utils";
+import {isPageDirty, markAsUsed, markPageNotDirty, to, UnknownRecord} from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
@@ -800,7 +800,7 @@ export class ViewCtrl implements IController {
                 }
                 if (fab.selectedAnswer) {
                     const parsed = JSON.parse(fab.selectedAnswer.content);
-                    if (StringUnknownDict.is(parsed)) {
+                    if (UnknownRecord.is(parsed)) {
                         timComp.setAnswer(parsed);
                     } else {
                         console.warn("selectedAnswer content was not a dict with string keys:", parsed);
