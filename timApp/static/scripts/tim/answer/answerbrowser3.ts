@@ -1032,7 +1032,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     async checkUsers() {
         // TODO: Changing user from sidebar could change to user's answer on global field
         // for now just skip the fetches (firefox throws error in their current state)
-        if (this.loading > 0 || this.isGlobal()) {
+        if (this.loading > 0 || this.isGlobal() || this.isUseCurrentUser()) {
             return;
         }
         await this.loadUserAnswersIfChanged();
