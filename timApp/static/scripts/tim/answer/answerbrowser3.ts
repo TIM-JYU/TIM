@@ -36,8 +36,8 @@ import {IAnswer} from "./IAnswer";
  * - if globalField:
  *     - pick the answer from anybody (wins useCurrentUser)
  *     - save to current user
- *     - show and use answerBrowser
- *     - if hideBrowser, still use answerBrowser but do not show
+ *     - use hidden answerBrowser without changing users
+ *     - TODO: if hideBrowser: false, then show browser
  *
  */
 
@@ -113,7 +113,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
         }
         const m = this.pluginMarkup();
-        if (m?.hideBrowser || this.viewctrl?.docSettings.hideBrowser || this.isUseCurrentUser()) {
+        if (m?.hideBrowser || this.viewctrl?.docSettings.hideBrowser || this.isUseCurrentUser() || this.isGlobal()) {
             this.hideBrowser = true;
             this.showPlaceholder = false;
         }
@@ -377,7 +377,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.getAnswersAndUpdate();
         });
 
-        if (this.viewctrl.selectedUser) {
+        if (this.isUseCurrentUser() || this.isGlobal()) {
+            this.user = Users.getCurrent();
+        } else if (this.viewctrl.selectedUser) {
             this.user = this.viewctrl.selectedUser;
         } else if (this.viewctrl.users && this.viewctrl.users.length > 0) {
             this.user = this.viewctrl.users[0].user;
@@ -451,6 +453,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async changeUser(user: IUser, updateAll: boolean) {
+        if (this.isGlobal() || this.isUseCurrentUser()) {
+            return;
+        }
         this.user = user;
         if (updateAll) {
             await this.loadUserAnswersIfChanged();
@@ -462,13 +467,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async changeUserAndAnswers(user: IUser, answers: IAnswer[]) {
-        // let needsAnswerChange = false;
+        if (this.isGlobal() || this.isUseCurrentUser()) {
+            return;
+        }
         this.user = user;
         this.fetchedUser = this.user;
         this.answers = answers;
         this.updateFiltered();
         this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
-        // console.log("debug line");
         await this.loadInfo();
     }
 
@@ -700,6 +706,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async changeStudentToIndex(newIndex: number) {
+        if (this.isGlobal() || this.isUseCurrentUser()) {
+            return;
+        }
         if (!this.users) {
             return;
         }
@@ -905,6 +914,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         const a = c.attrsall;
         return a?.markup;
+    }
+
+    public isUseCurrentUser() {
+        const m = this.pluginMarkup();
+        return m?.useCurrentUser;
     }
 
     public isGlobal() {
