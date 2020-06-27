@@ -23,6 +23,7 @@ class Preferences:
     language: Optional[str] = None
     last_answer_fetch: Dict[str, str] = attr.Factory(dict)
     css_combined: str = attr.ib(init=False)
+    auto_mark_all_read: bool = False
 
     @staticmethod
     def from_json(j: Dict) -> 'Preferences':
