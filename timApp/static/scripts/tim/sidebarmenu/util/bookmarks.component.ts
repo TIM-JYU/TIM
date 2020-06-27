@@ -49,12 +49,13 @@ import {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
         </div>
         <a *ngFor="let bookmark of getTopLevelBookmarks()"
            [href]="bookmark.link"
-           class="btn btn-sm btn-default space-right">{{bookmark.name}}
+           class="btn btn-sm btn-default space-right bookmark">{{bookmark.name}}
         </a>
         <button (click)="newBookmark($event)" class="btn btn-sm btn-default" i18n>
             <i class="glyphicon glyphicon-plus"></i> New bookmark...
         </button>
     `,
+    styleUrls: ["./bookmarks.component.scss"],
 })
 export class BookmarksComponent implements OnInit {
     groups?: IBookmarkGroup[];
