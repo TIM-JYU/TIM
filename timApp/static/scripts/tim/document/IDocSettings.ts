@@ -38,4 +38,5 @@ export interface IDocSettings {
     timeLeft?: ITimeLeftSettings;
     save_teacher?: boolean;
     show_scoreboard?: boolean;
+    exam_mode?: string;
 }
