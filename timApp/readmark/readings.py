@@ -76,6 +76,14 @@ def mark_all_read(usergroup_id: int,
         mark_read(usergroup_id, doc, par)
 
 
+def remove_all_read_marks(doc: Document):
+    ids = doc.get_referenced_document_ids()
+    ids.add(doc.doc_id)
+    all_doc_read = ReadParagraph.query.filter(ReadParagraph.doc_id.in_(ids)
+                                              & (ReadParagraph.type == ReadParagraphType.click_red))
+    all_doc_read.delete(synchronize_session=False)
+
+
 def copy_readings(src_par: DocParagraph, dest_par: DocParagraph):
     if src_par.doc.doc_id == dest_par.doc.doc_id and src_par.get_id() == dest_par.get_id():
         return
