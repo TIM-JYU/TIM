@@ -40,36 +40,16 @@ from pathlib import Path
 import json
 import time
 import html
-from typing import List, Dict, Union
+from marshmallow import RAISE, ValidationError
 
 from fileParams import *
 from run import *
 from points import *
 from languages import Language
-from loadable import Loadable
+from extchecklib import *
 
 # TODO: replace Loadable with dataclass and marshmallow.
 # Requires python 3.7+ and marshmallow module.
-
-class DivContent(Loadable):
-    classes: str = ""
-    content: str = None
-    isHTML: bool = False
-    isAngular: bool = False
-
-class OutputContainer(Loadable):
-    title: DivContent = None
-    content: DivContent = None
-    hide: bool = False # whether to hide by default
-
-class RunResult(Loadable):
-    output_boxes: List[OutputContainer] = []
-    penalties: Dict[str, Union[bool, str]] = {}
-    points: float = 0
-    max_points: float = None
-    
-    def penalize(self, key: str) -> bool:
-        return self.penalties and self.penalties.get(key, False)
 
 class ExtCheck(Language):
     ttype="extcheck"
@@ -108,11 +88,16 @@ class ExtCheck(Language):
         
         self.result = RunResult()
         try:
-            self.result = RunResult(json.loads(out))
+            self.result = RunResult.loads(out, partial=True, unknown=RAISE)
         except json.JSONDecodeError as e:
             print("ExtCheck: Failed to load output json: ", e)
             if not err:
                 err = "Failed to load output json"
+            return -3, "", err, ""
+        except ValidationError as e:
+            print("ExtCheck: Failed to validate output data: ", e)
+            if not err:
+                err = "Failed to validate output data: " + str(e)
             return -3, "", err, ""
         
         max_points = get_points_rule(points_rule, "maxPoints", 0)
@@ -191,6 +176,6 @@ class ExtCheck(Language):
         if self.result is None:
             return None
         
-        out = self.result.to_dict()
+        out = RunResult.dump(self.result)
         out["penalties"] = self.penalties
         return out

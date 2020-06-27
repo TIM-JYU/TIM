@@ -81,8 +81,6 @@ interface Vid {
 Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3
 */
 
-export const csApp = angular.module("csApp", ["ngSanitize", "ngFileUpload"]);
-
 let taunoNr = 0;
 
 // ==============================================================
@@ -3527,4 +3525,4 @@ doDowngrade(angularJsModule, "csSimcirRunner", CsSimcirComponent);
 doDowngrade(angularJsModule, "csWeschemeRunner", CsWescemeComponent);
 doDowngrade(angularJsModule, "csTextRunner", CsTextComponent);
 doDowngrade(angularJsModule, "csConsoleRunner", CsConsoleComponent);
-export const moduleDefs = [csApp, angularJsModule];
+export const moduleDefs = [angularJsModule];
