@@ -56,7 +56,7 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
         return this.attrsall.access === "readonly";
     }
 
-    constructor(private el: ElementRef<HTMLElement>, private http: HttpClient, protected domSanitizer: DomSanitizer) {
+    constructor(private el: ElementRef<HTMLElement>, protected http: HttpClient, protected domSanitizer: DomSanitizer) {
         super();
         this.attrsall = getDefaults(this.getAttributeType(), this.getDefaultMarkup());
         this.pluginMeta = new PluginMeta($(el.nativeElement), this.attrsall.preview);

@@ -1,28 +1,49 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/tslint/config,no-underscore-dangle */
 import {Ace} from "ace-builds/src-noconflict/ace";
-import angular, {IController, IScope} from "angular";
+import {IController} from "angular";
+import {
+        Component,
+        DoBootstrap,
+        NgModule,
+        StaticProvider,
+        ViewChild,
+        ChangeDetectorRef,
+        ElementRef,
+        ApplicationRef,
+        Directive,
+    } from "@angular/core"
+import {HttpClient, HttpClientModule, HttpHeaders} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 import * as t from "io-ts";
 import $ from "jquery";
 import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {IAce} from "tim/editor/ace";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
-import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
-import {$compile, $http, $rootScope, $sce, $timeout, $upload} from "tim/util/ngimport";
+import {getFormBehavior} from "tim/plugin/util";
+import {$http, $sce, $timeout, $upload} from "tim/util/ngimport";
 import {
     copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
     getClipboardHelper,
+    to2,
     to,
     valueDefu,
     valueOr,
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {wrapText} from "tim/document/editing/utils";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 type IAceEditor = Ace.Editor;
+
 
 // js-parsons is unused; just declare a stub to make TS happy
 declare class ParsonsWidget {
@@ -326,218 +347,218 @@ function commentTrim(s: string) {
 export function uploadTemplate() {
     // language=HTML
     return `
-    <div ng-if="::$ctrl.upload" class="form-inline small">
-        <div class="form-group small"> {{::$ctrl.uploadstem}}:
-            <input type="file" ngf-select="$ctrl.onFileSelect($file)">
-            <span ng-show="$ctrl.fileProgress >= 0 && !$ctrl.fileError"
-                ng-bind="$ctrl.fileProgress < 100 ? 'Uploading... ' + $ctrl.fileProgress + '%' : 'Done!'"></span>
+    <div *ngIf="upload" class="form-inline small">
+        <div class="form-group small"> {{uploadstem}}:
+            <input type="file" ngf-select="onFileSelect($file)">
+            <span *ngIf="fileProgress && fileProgress >= 0 && !fileError"
+                [textContent]="fileProgress < 100 ? 'Uploading... ' + fileProgress + '%' : 'Done!'"></span>
         </div>
-        <div class="error" ng-show="$ctrl.fileError" ng-bind="$ctrl.fileError"></div>
-        <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
+        <div class="error" *ngIf="fileError" [textContent]="fileError"></div>
+        <div *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
     </div>`;
 }
 
 function makeTemplate() {
     // language=HTML
-    return `<div ng-class="::{'csRunDiv': $ctrl.attrs.borders}" class="type-{{::$ctrl.rtype}}">
-    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
-    <div ng-if="$ctrl.isTauno">
-        <p ng-if="$ctrl.taunoOn" class="pluginHide"><a ng-click="$ctrl.hideTauno()">{{$ctrl.hideText}} Tauno</a></p>
-        <iframe ng-if="$ctrl.iframesettings"
-                id="{{$ctrl.iframesettings.id}}"
+    return `
+<div [ngClass]="{'csRunDiv': markup.borders}" class="type-{{rtype}}">
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <h4 *ngIf="header" [innerHTML]="header"></h4>
+    <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
+    <div *ngIf="isTauno">
+        <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
+        <iframe *ngIf="iframesettings"
+                id="iframesettings.id"
                 class="showTauno"
-                ng-src="{{$ctrl.iframesettings.src}}"
-                ng-on-load="$ctrl.onIframeLoad($event)"
-                width="{{$ctrl.iframesettings.width}}"
-                height="{{$ctrl.iframesettings.height}}"
+                [src]="iframesettings.src"
+                (load)="onIframeLoad($event)"
+                [width]="iframesettings.width"
+                [height]="iframesettings.height"
                 sandbox="allow-scripts"></iframe>
-        <p ng-if="!$ctrl.taunoOn" class="pluginShow"><a ng-click="$ctrl.showTauno()">{{$ctrl.showText}} Tauno</a></p>
-        <p ng-if="$ctrl.taunoOn"
-           class="pluginHide">
-            <a ng-click="$ctrl.copyTauno()">{{::$ctrl.copyFromTaunoText}}</a> |
-            <a ng-click="$ctrl.hideTauno()">{{::$ctrl.hideText}} Tauno</a></p>
-        <p ng-if="$ctrl.taunoOn" class="taunoOhje">
-            {{::$ctrl.taunoOhjeText}}</a></p>
+        <p *ngIf="!taunoOn" class="pluginShow"><a (click)="showTauno()">{{showText}} Tauno</a></p>
+        <p *ngIf="taunoOn" class="pluginHide">
+            <a (click)="copyTauno()">{{copyFromTaunoText}}</a> |
+            <a (click)="hideTauno()">{{hideText}} Tauno</a></p>
+        <p *ngIf="taunoOn" class="taunoOhje">
+            {{taunoOhjeText}}</p>
     </div>
-    <div ng-if="::$ctrl.isSimcir">
-        <p ng-if="$ctrl.simcirOn" class="pluginHide"><a ng-click="$ctrl.hideSimcir()">{{$ctrl.hideText}} SimCir</a></p>
+    <div *ngIf="isSimcir">
+        <p *ngIf="simcirOn" class="pluginHide"><a (click)="hideSimcir()">{{hideText}} SimCir</a></p>
         <div class="simcirContainer"><p></p></div>
-        <p ng-if="!$ctrl.simcirOn" class="pluginShow"><a ng-click="$ctrl.showSimcir()">{{$ctrl.showText}} SimCir</a></p>
-        <p ng-if="$ctrl.simcirOn && !$ctrl.noeditor" class="pluginHide">
-            <a ng-click="$ctrl.copyFromSimcir()">copy from SimCir</a>
-            | <a ng-click="$ctrl.copyToSimcir()">copy to SimCir</a> | <a ng-click="$ctrl.hideSimcir()">hide SimCir</a>
+        <p *ngIf="!simcirOn" class="pluginShow"><a (click)="showSimcir()">{{showText}} SimCir</a></p>
+        <p *ngIf="simcirOn && !noeditor" class="pluginHide">
+            <a (click)="copyFromSimcir()">copy from SimCir</a>
+            | <a (click)="copyToSimcir()">copy to SimCir</a> | <a (click)="hideSimcir()">hide SimCir</a>
         </p>
     </div>`
     + uploadTemplate() +
-    `<div ng-show="::$ctrl.isAll" style="float: right;">{{::$ctrl.languageText}}
-        <select ng-model="$ctrl.selectedLanguage" ng-options="o for o in ::$ctrl.progLanguages" ng-required></select>
+    `<div *ngIf="isAll" style="float: right;">{{languageText}}
+        <select [(ngModel)]="selectedLanguage" required>
+            <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>
+        </select>
     </div>
-    <pre ng-if="$ctrl.viewCode && $ctrl.codeover">{{$ctrl.code}}</pre>
+    <pre *ngIf="viewCode && codeover">{{code}}</pre>
     <div class="csRunCode">
-        <pre class="csRunPre" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.precode}}</pre>
+        <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
         <div class="csEditorAreaDiv">
-            <div class="csrunEditorDiv" ng-hide="$ctrl.noeditor && !$ctrl.viewCode">
+            <div class="csrunEditorDiv" *ngIf="!noeditor || viewCode">
             <textarea class="csRunArea csEditArea no-popup-menu"
-                      rows="{{$ctrl.rows}}"
-                      ng-model="$ctrl.usercode"
-                      ng-trim="false"
-                      ng-attr-placeholder="{{$ctrl.placeholder}}"> 
+                    [rows]="rows"
+                    [(ngModel)]="usercode"
+                    [attr.placeholder]="placeholder"> 
+                      [attr.placeholder]="placeholder"> 
+                    [attr.placeholder]="placeholder"> 
             </textarea>
             </div>
-            <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
-            <div class="csRunNotSaved" ng-show="$ctrl.isUnSaved()"></div>
+            <div class="csRunChanged" *ngIf="usercode !== byCode && !hide.changed"></div>
+            <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
         </div>
-        <pre class="csRunPost" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.postcode}}</pre>
+        <pre class="csRunPost" *ngIf="viewCode && !codeunder && !codeover">{{postcode}}</pre>
     </div>
-    <div ng-if="::$ctrl.isSage" class="computeSage no-popup-menu"></div>
-    <div class="csInputDiv" ng-hide="::!$ctrl.showInput || !$ctrl.isInput"><p ng-show="::$ctrl.inputstem" class="stem">
-        {{::$ctrl.inputstem}}</p>
-        <div class="csRunCode"><textarea class="csRunArea csInputArea"
-                                         rows={{::$ctrl.inputrows}}
-                                         ng-model="$ctrl.userinput"
-                                         ng-trim="false"
-                                         placeholder="{{::$ctrl.inputplaceholder}}"></textarea></div>
+    <div *ngIf="isSage" class="computeSage no-popup-menu"></div>
+    <div class="csInputDiv" *ngIf="showInput && isInput">
+        <p *ngIf="inputstem" class="stem">{{inputstem}}</p>
+        <div class="csRunCode">
+            <textarea class="csRunArea csInputArea"
+                    [rows]="inputrows"
+                    [(ngModel)]="userinput"
+                    placeholder="inputplaceholder">
+            </textarea>
+        </div>
     </div>
-    <div class="csArgsDiv" ng-hide="::!$ctrl.showArgs || !$ctrl.isInput"><label>{{::$ctrl.argsstem}} </label>
+    <div class="csArgsDiv" *ngIf="showArgs && isInput"><label>{{argsstem}} </label>
         <span><input type="text"
-                     class="csArgsArea"
-                     ng-model="$ctrl.userargs"
-                     ng-trim="false"
-                     placeholder="{{::$ctrl.argsplaceholder}}"></span>
+                    class="csArgsArea"
+                    [(ngModel)]="userargs"
+                    placeholder="argsplaceholder"></span>
     </div>
-    <div ng-if="$ctrl.countItems" class="csPluginCountItems">
-        <span ng-if="$ctrl.countLines">Lines: <span>{{$ctrl.lineCount}}</span></span>
-        <span ng-if="$ctrl.countWords">Words: <span>{{$ctrl.wordCount}}</span></span>
-        <span ng-if="$ctrl.countChars">Chars: <span>{{$ctrl.charCount}}</span></span>
+    <div *ngIf="countItems" class="csPluginCountItems">
+        <span *ngIf="countLines">Lines: <span>{{lineCount}}</span></span>
+        <span *ngIf="countWords">Words: <span>{{wordCount}}</span></span>
+        <span *ngIf="countChars">Chars: <span>{{charCount}}</span></span>
     </div>    
-    <div ng-if="$ctrl.countError" class="csPluginCountError">
-        <p>{{$ctrl.countError}}</p>
+    <div *ngIf="countError" class="csPluginCountError">
+        <p>{{countError}}</p>
     </div>    
-    <p class="csRunSnippets" ng-if="::$ctrl.buttons">
-        <button ng-repeat="item in ::$ctrl.buttons" ng-click="$ctrl.addText(item)">{{$ctrl.addTextHtml(item)}}</button>
+    <p class="csRunSnippets" *ngIf="buttons">
+        <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
         &nbsp;&nbsp;
     </p>
-    <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
+    <div class="csRunMenuArea" *ngIf="!forcedupload">
         <p class="csRunMenu">
-            <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
-                    ng-disabled="$ctrl.isRunning || $ctrl.preventSave || ($ctrl.disableUnchanged && !$ctrl.isUnSaved() && $ctrl.isText)"
+            <button *ngIf="isRun && buttonText()"
+                    [attr.disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved() && isText)"
                     class="timButton btn-sm"
                     title="(Ctrl-S)"
-                    ng-click="$ctrl.runCode()"
-                    ng-bind-html="::$ctrl.buttonText()"></button>
-            <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
-            ng-click="$ctrl.tryResetChanges();">
-                &nbsp;{{::$ctrl.undoButton}}
-            </a>
-            &nbsp&nbsp
-            <span ng-if="$ctrl.savedText"
+                    (click)="runCode()"
+                    [innerHTML]="buttonText()"></button>
+            <a href="javascript:void(0)" *ngIf="undoButton && isUnSaved()" title="undoTitle"
+                    (click)="tryResetChanges()"> &nbsp;{{undoButton}}</a>
+            &nbsp;&nbsp;
+            <span *ngIf="savedText"
                     class="savedText"
-                    ng-bind-html="$ctrl.savedText"></span>
-            &nbsp&nbsp
-            <button ng-if="::$ctrl.isTest"
-                    ng-disabled="$ctrl.isRunning"
-                    ng-click="$ctrl.runTest()"
+                    [innerHTML]="savedText"></span>
+            &nbsp;&nbsp;
+            <button *ngIf="isTest"
+                    [attr.disabled]="isRunning"
+                    (click)="runTest()"
                     class="timButton btn-sm">Test</button>
-            &nbsp&nbsp
-            <button ng-if="::$ctrl.isUnitTest"
+            &nbsp;&nbsp;
+            <button *ngIf="isUnitTest"
                     class="timButton btn-sm"
-                    ng-disabled="$ctrl.isRunning"
-                    ng-click="$ctrl.runUnitTest()">UTest
+                    [attr.disabled]="isRunning"
+                    (click)="runUnitTest()">UTest
             </button>
-            <tim-loading ng-if="$ctrl.isRunning"></tim-loading>
-            &nbsp&nbsp<span ng-if="::$ctrl.isDocument">
-
-            <a href="" ng-disabled="$ctrl.isRunning"
-               ng-click="$ctrl.runDocument()">{{$ctrl.docLink}}</a>&nbsp&nbsp</span>
-            <a href=""
-               ng-if="::!$ctrl.nocode && ($ctrl.file || $ctrl.program)"
-               ng-click="$ctrl.showCode()">{{$ctrl.showCodeLink}}</a>&nbsp&nbsp
-            <a href=""
-               ng-if="$ctrl.muokattu"
-               ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a>
-            <a href=""
-               ng-if="$ctrl.toggleEditor"
-               ng-click="$ctrl.hideShowEditor()">{{$ctrl.toggleEditorText[$ctrl.noeditor ? 0 : 1]}}</a>
-            <a href=""
-               ng-if="!$ctrl.noeditor"
-               ng-click="$ctrl.showOtherEditor()">
-                {{$ctrl.editorText[$ctrl.editorModeIndecies[$ctrl.editorMode+1]]}}</a>&nbsp&nbsp
-            <a href=""
-               ng-if="::$ctrl.attrs.copyLink"
-               ng-click="$ctrl.copyCode()">{{$ctrl.attrs.copyLink}}</a>
-            <span ng-if="::$ctrl.showRuntime"
-                  class="inputSmall"
-                  style="float: right;"
-                  title="Run time in sec {{$ctrl.runtime}}">{{$ctrl.oneruntime}}</span>
-            <span ng-if="$ctrl.wrap.n!=-1 && !$ctrl.hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
-                <button class="timButton" title="Click to reformat text for given line length" ng-click="$ctrl.checkWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
-                </button>
-                <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto" style="position: relative;top: 0.3em;"/>
-                <input type="text" title="Choose linelength for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
+            <tim-loading *ngIf="isRunning"></tim-loading>
+            &nbsp;&nbsp;
+            <span *ngIf="isDocument">
+                <a href="javascript:void(0)" [attr.disabled]="isRunning"
+                        (click)="runDocument()">{{docLink}}</a>&nbsp;&nbsp;
             </span>
-            <div ng-if="$ctrl.connectionErrorMessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionErrorMessage"></div>
+            <a href="javascript:void(0)" *ngIf="!nocode && (file || program)"
+                    (click)="showCode()">{{showCodeLink}}</a>&nbsp;&nbsp;
+            <a href="javascript:void(0)" *ngIf="muokattu"
+                    (click)="initCode()">{{resetText}}</a>
+            <a href="javascript:void(0)" *ngIf="toggleEditor"
+                    (click)="hideShowEditor()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
+            <a href="javascript:void(0)" *ngIf="!noeditor"
+                    (click)="showOtherEditor()">
+                {{editorText[editorModeIndecies[editorMode+1]]}}
+            </a>&nbsp;&nbsp;
+            <a href="javascript:void(0)" *ngIf="markup.copyLink"
+                    (click)="copyCode()">{{markup.copyLink}}</a>
+            <span *ngIf="showRuntime"
+                    class="inputSmall"
+                    style="float: right;"
+                    title="Run time in sec {{runtime}}">{{oneruntime}}</span>
+            <span *ngIf="wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
+                <button class="timButton" title="Click to reformat text for given line length" (click)="checkWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
+                </button>
+                <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto" style="position: relative;top: 0.3em;"/>
+                <input type="text" title="Choose linelength for text.  0=no wrap" pattern="/[-0-9]*/" [(ngModel)]="wrap.n" size="2"/>
+            </span>
+            <span *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHTML]="connectionErrorMessage"></span>
 
             <!--
-            <span ng-if="$ctrl.wrap.n!=-1" class="inputSmall" style="float: right;">
+            <span *ngIf="wrap.n!=-1" class="inputSmall" style="float: right;">
               <label title="Put 0 to no wrap">wrap: <input type="text"
-                                                          ng-pattern="/[-0-9]*/"
-                                                          ng-model="$ctrl.wrap.n"
+                                                          pattern="/[-0-9]*/"
+                                                          [(ngModel)]="wrap.n"
                                                           size="1"/></label>
             </span>
             -->
-            </p>
+        </p>
 
     </div>
-    <div ng-if="::$ctrl.isSage" class="outputSage no-popup-menu"></div>
-    <pre ng-if="$ctrl.viewCode && $ctrl.codeunder">{{$ctrl.code}}</pre>
-    <p class="unitTestGreen" ng-if="$ctrl.runTestGreen">&nbsp;ok</p>
-    <pre class="unitTestRed" ng-if="$ctrl.runTestRed">{{$ctrl.comtestError}}</pre>
-    <div class="csRunErrorClass" ng-if="$ctrl.runError">
+    <div *ngIf="isSage" class="outputSage no-popup-menu"></div>
+    <pre *ngIf="viewCode && codeunder">{{code}}</pre>
+    <p class="unitTestGreen" *ngIf="runTestGreen">&nbsp;ok</p>
+    <pre class="unitTestRed" *ngIf="runTestRed">{{comtestError}}</pre>
+    <div class="csRunErrorClass" *ngIf="runError">
         <p class="pull-right">
-            <tim-close-button ng-click="$ctrl.closeError()"></tim-close-button>
+            <tim-close-button (click)="closeError()"></tim-close-button>
         </p>
-        <pre class="csRunError" >{{$ctrl.error}}</pre>
+        <pre class="csRunError" >{{error}}</pre>
         <p class="pull-right" style="margin-top: -1em">
-            <tim-close-button ng-click="$ctrl.closeError()"></tim-close-button>
+            <tim-close-button (click)="closeError()"></tim-close-button>
         </p>
     </div>
-    <pre class="console" ng-show="$ctrl.result">{{$ctrl.result}}</pre>
-    <div class="htmlresult" ng-if="$ctrl.htmlresult"><span ng-bind-html="$ctrl.svgImageSnippet()"></span></div>
+    <pre class="console" *ngIf="result">{{result}}</pre>
+    <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="svgImageSnippet()"></span></div>
     <div class="csrunPreview">
-        <div ng-if="$ctrl.iframesettings && !$ctrl.isTauno"
-         tim-draggable-fixed
-         caption="Preview"
-         detachable="true"
-         class="no-popup-menu">
-        <span class="csRunMenu">
-            <tim-close-button
-                    ng-click="$ctrl.closeFrame()"
-                    style="float: right"></tim-close-button>
-        </span>
-        <iframe id="{{$ctrl.iframesettings.id}}"
-                class="jsCanvas"
-                ng-src="{{$ctrl.iframesettings.src}}"
-                ng-on-load="$ctrl.onIframeLoad($event)"
-                width="{{$ctrl.iframesettings.width}}"
-                height="{{$ctrl.iframesettings.height}}"
-                sandbox="allow-scripts allow-forms"
-                style="border:0"></iframe>
+        <div *ngIf="iframesettings && !isTauno"
+                tim-draggable-fixed
+                caption="Preview"
+                detachable="true"
+                class="no-popup-menu">
+            <span class="csRunMenu">
+                <tim-close-button
+                        (click)="closeFrame()"
+                        style="float: right">
+                </tim-close-button>
+            </span>
+            <iframe id="iframesettings.id"
+                    class="jsCanvas"
+                    [src]="iframesettings.src"
+                    (load)="onIframeLoad($event)"
+                    [width]="iframesettings.width"
+                    [height]="iframesettings.height"
+                    sandbox="allow-scripts allow-forms"
+                    style="border:0">
+            </iframe>
         </div>
     </div>
-    <img ng-if="$ctrl.imgURL" class="grconsole" ng-src="{{$ctrl.imgURL}}" alt=""/>
-    <video ng-if="$ctrl.wavURL" ng-src="{{$ctrl.wavURL}}" type="video/mp4" controls="" autoplay="true" width="300"
-           height="40"></video>
-    <div ng-if="$ctrl.docURL" class="docurl">
+    <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
+    <video *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
+            height="40"></video>
+    <div *ngIf="docURL" class="docurl">
         <p class="pull-right">
-            <tim-close-button ng-click="$ctrl.closeDocument()"></tim-close-button>
+            <tim-close-button (click)="closeDocument()"></tim-close-button>
         </p>
-        <iframe width="800" height="600" ng-src="{{$ctrl.docURL}}" target="csdocument" allowfullscreen/>
+        <iframe width="800" height="600" [src]="docURL" target="csdocument" allowfullscreen></iframe>
     </div>
-    <p class="footer" ng-bind-html="::$ctrl.footer"></p>
-</div>
-`;
+    <p class="footer" [innerHTML]="markup.footer"></p>
+</div>`;
 }
 
 function insertAtCaret(txtarea: HTMLTextAreaElement, text: string) {
@@ -783,20 +804,20 @@ const CsAll = t.intersection([
         // taskIDExt: t.string,
         // userPrint: t.boolean,
     })]);
-
-export class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
-    protected usercode: string = "";
+    
+export class CsBase extends AngularPluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
+    usercode: string = "";
 
     get byCode() {
-        return commentTrim((this.attrsall.by ?? this.attrs.byCode) ?? "");
+        return commentTrim((this.attrsall.by ?? this.markup.byCode) ?? "");
     }
 
     get type() {
-        return this.attrs.type;
+        return this.markup.type;
     }
 
     get path() {
-        return this.attrs.path;
+        return this.markup.path;
     }
 
     getAttributeType() {
@@ -883,106 +904,108 @@ interface IRunResponse {
     savedNew: number,
 }
 
+@Directive() // needs this or compiler complains
 export class CsController extends CsBase implements ITimComponent {
-    private vctrl!: ViewCtrl;
+    vctrl!: ViewCtrl;
 
-    private aceEditor?: IAceEditor;
-    private canvasConsole: {log: (...args: string[]) => void};
-    private code?: string;
-    private codeInitialized: boolean = false;
-    private comtestError?: string;
-    private connectionErrorMessage?: string;
-    private copyingFromTauno: boolean;
-    private csparson: any;
-    private cursor: string;
-    private docLink: string;
-    private docURL?: string;
-    private edit!: HTMLTextAreaElement;
-    private edited: boolean = false;
-    private editArea?: Element;
-    private editorIndex: number;
-    private editorMode!: number;
-    private editorModeIndecies: number[];
-    private error?: string;
-    private errors: string[];
-    private fileError?: string;
-    private fileProgress?: number;
-    private htmlresult: string;
-    private iframeClientHeight: number;
-    private imgURL: string;
-    private indent!: number;
-    private initUserCode: boolean = false;
-    private isRunning: boolean = false;
-    private lastJS: string;
-    private lastMD: string;
-    private lastUserargs?: string;
-    private lastUserinput?: string;
-    private localcode?: string;
-    private maxRows!: number;
-    private muokattu: boolean;
-    private noeditor!: boolean;
-    private oneruntime?: string;
-    private out?: {write: () => void, writeln: () => void, canvas: Element};
-    private postcode?: string;
-    private precode?: string;
-    private preview!: JQuery<HTMLElement>;
-    private result?: string;
-    private runError?: string | boolean;
-    private runned: boolean = false;
-    private runSuccess: boolean;
-    private runTestGreen: boolean = false;
-    private runTestRed: boolean = false;
-    private runtime?: string;
-    private sageArea?: Element;
-    private sageButton?: HTMLElement;
-    private sagecellInfo?: CellInfo;
-    private sageInput?: HTMLInputElement;
-    private sageOutput?: Element;
-    private selectedLanguage!: string;
-    private simcir?: JQuery;
-    private tinyErrorStyle: Partial<CSSStyleDeclaration> = {};
-    private uploadedFile?: string;
-    private uploadedType?: string;
-    private uploadresult?: string;
-    private userargs: string = "";
-    private userinput: string = "";
-    private viewCode!: boolean;
-    private wavURL: string = "";
-    private wrap!:  {n: number, auto: boolean};
-    private buttons: string[] = [];
+    aceEditor?: IAceEditor;
+    canvasConsole: {log: (...args: string[]) => void};
+    code?: string;
+    codeInitialized: boolean = false;
+    comtestError?: string;
+    connectionErrorMessage?: string;
+    copyingFromTauno: boolean;
+    csparson: any;
+    cursor: string;
+    docLink: string;
+    docURL?: string;
+    edit!: HTMLTextAreaElement;
+    edited: boolean = false;
+    editArea?: Element;
+    editorIndex: number;
+    editorMode!: number;
+    editorModeIndecies: number[];
+    error?: string;
+    errors: string[];
+    fileError?: string;
+    fileProgress?: number;
+    htmlresult: string;
+    iframeClientHeight: number;
+    imgURL: string;
+    indent!: number;
+    initUserCode: boolean = false;
+    isRunning: boolean = false;
+    lastJS: string;
+    lastMD: string;
+    lastUserargs?: string;
+    lastUserinput?: string;
+    localcode?: string;
+    maxRows!: number;
+    muokattu: boolean;
+    noeditor!: boolean;
+    oneruntime?: string;
+    out?: {write: () => void, writeln: () => void, canvas: Element};
+    postcode?: string;
+    precode?: string;
+    preview!: JQuery<HTMLElement>;
+    result?: string;
+    runError?: string | boolean;
+    runned: boolean = false;
+    runSuccess: boolean;
+    runTestGreen: boolean = false;
+    runTestRed: boolean = false;
+    runtime?: string;
+    sageArea?: Element;
+    sageButton?: HTMLElement;
+    sagecellInfo?: CellInfo;
+    sageInput?: HTMLInputElement;
+    sageOutput?: Element;
+    selectedLanguage!: string;
+    simcir?: JQuery;
+    tinyErrorStyle: Partial<CSSStyleDeclaration> = {};
+    uploadedFile?: string;
+    uploadedType?: string;
+    uploadresult?: string;
+    userargs: string = "";
+    userinput: string = "";
+    viewCode!: boolean;
+    wavURL: string = "";
+    wrap!:  {n: number, auto: boolean};
+    buttons: string[] = [];
 
     // These are used only in $doCheck to keep track of the old values.
-    private dochecks: {
+    dochecks: {
         userinput?: string;
         userargs?: string;
         usercode?: string;
     } = {};
 
-    private editorText: string[] = [];
-    private rows: number = 1;
-    private iframesettings?: { src?: string; width: number; id: string; height: number };
-    private loadedIframe?: IFrameLoad;
-    private taunoFrame?: IFrameLoad;
-    private simcirElem?: HTMLElement;
-    private taunoCopy?: TimDefer<string>;
-    private iframedefer?: TimDefer<IFrameLoad>;
-    private iframemessageHandler?: (e: MessageEvent) => void;
-    private savedvals?: { args: string; input: string; code: string };
-    private countItems: boolean = false;
-    private countLines: boolean = false;
-    private countWords: boolean = false;
-    private countChars: boolean = false;
-    private lineCount: number = 0;
-    private wordCount: number = 0;
-    private charCount: number = 0;
-    private countError: string = "";
-    private preventSave: boolean = false;
-    private hide = {};
-    private savedText: string = "";
-    private timeout: number = 0;
+    rows: number = 1;
+    iframesettings?: { src?: SafeResourceUrl; width: number; id: string; height: number };
+    loadedIframe?: IFrameLoad;
+    taunoFrame?: IFrameLoad;
+    simcirElem?: HTMLElement;
+    taunoCopy?: TimDefer<string>;
+    iframedefer?: TimDefer<IFrameLoad>;
+    iframemessageHandler?: (e: MessageEvent) => void;
+    savedvals?: { args: string; input: string; code: string };
+    countItems: boolean = false;
+    countLines: boolean = false;
+    countWords: boolean = false;
+    countChars: boolean = false;
+    lineCount: number = 0;
+    wordCount: number = 0;
+    charCount: number = 0;
+    countError: string = "";
+    preventSave: boolean = false;
+    hide: {wrap?: boolean, changed?: boolean} = {};
+    savedText: string = "";
+    timeout: number = 0;
 
-    constructor(scope: IScope, element: JQLite) {
-        super(scope, element);
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer);
+        
+        //super(scope, element);
         this.errors = [];
         this.result = "";
         this.htmlresult = "";
@@ -1034,7 +1057,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     formBehavior(): FormModeOption {
-        return getFormBehavior(this.attrs.form, FormModeOption.Undecided);
+        return getFormBehavior(this.markup.form, FormModeOption.Undecided);
     }
 
     setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
@@ -1088,7 +1111,7 @@ export class CsController extends CsBase implements ITimComponent {
         if (!taskId) {
             return;
         }
-        this.vctrl.informChangeListeners(taskId, state, (this.attrs.tag ? this.attrs.tag : undefined));
+        this.vctrl.informChangeListeners(taskId, state, (this.markup.tag ? this.markup.tag : undefined));
     }
 
     resetField(): undefined {
@@ -1117,7 +1140,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get english() {
-        return this.attrs.lang === "en";
+        return this.markup.lang === "en";
     }
 
     get kind() {
@@ -1192,7 +1215,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get program() {
-        return this.attrsall.program ?? this.attrs.program;
+        return this.attrsall.program ?? this.markup.program;
     }
 
     get hideText() {
@@ -1226,11 +1249,11 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get forcedupload() {
-        return this.type === "upload" && !this.attrs.button ;
+        return this.type === "upload" && !this.markup.button ;
     }
 
     get upload() {
-        return this.type === "upload" || this.attrs.upload || this.attrs.uploadbycode;
+        return this.type === "upload" || this.markup.upload || this.markup.uploadbycode;
     }
 
     get rtype() {
@@ -1246,16 +1269,16 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get nocode() {
-        return this.type === "upload" || this.attrs.nocode;
+        return this.type === "upload" || this.markup.nocode;
     }
 
     get placeholder() {
         const tiny = this.type.includes("tiny");
-        return valueDefu(this.attrs.placeholder, (tiny ? "" : this.english ? "Write your code here" : "Kirjoita koodi tähän:"));
+        return valueDefu(this.markup.placeholder, (tiny ? "" : this.english ? "Write your code here" : "Kirjoita koodi tähän:"));
     }
 
     get inputplaceholder() {
-        return valueOr(this.attrs.inputplaceholder, (this.english ? "Write your input here" : "Kirjoita syöte tähän"));
+        return valueOr(this.markup.inputplaceholder, (this.english ? "Write your input here" : "Kirjoita syöte tähän"));
     }
 
     get isText() {
@@ -1264,15 +1287,15 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get argsplaceholder() {
-        return valueOr(this.attrs.argsplaceholder, (this.isText ? (this.english ? "Write file name here" : "Kirjoita tiedoston nimi tähän") : (this.english ? "Write your program args here" : "Kirjoita ohjelman argumentit tähän")));
+        return valueOr(this.markup.argsplaceholder, (this.isText ? (this.english ? "Write file name here" : "Kirjoita tiedoston nimi tähän") : (this.english ? "Write your program args here" : "Kirjoita ohjelman argumentit tähän")));
     }
 
     get argsstem() {
-        return valueOr(this.attrs.argsstem, (this.isText ? (this.english ? "File name:" : "Tiedoston nimi:") : (this.english ? "Args:" : "Args")));
+        return valueOr(this.markup.argsstem, (this.isText ? (this.english ? "File name:" : "Tiedoston nimi:") : (this.english ? "Args:" : "Args")));
     }
 
     get fullhtml() {
-        const r = this.attrs.fullhtml;
+        const r = this.markup.fullhtml;
         if (!r && this.type.includes("html") || this.isProcessing) {
             return "REPLACEBYCODE";
         }
@@ -1301,7 +1324,7 @@ ${fhtml}
     }
 
     get toggleEditor() {
-        return this.attrs.toggleEditor || this.isSimcir;
+        return this.markup.toggleEditor || this.isSimcir;
     }
 
     get toggleEditorText() {
@@ -1313,7 +1336,7 @@ ${fhtml}
     }
 
     get minRows() {
-        return getInt(this.attrs.rows) ?? 0;
+        return getInt(this.markup.rows) ?? 0;
     }
 
     get isAll() {
@@ -1325,9 +1348,9 @@ ${fhtml}
     }
 
     get isRun() {
-        return ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) && !this.attrs.norun)
-            || (this.type.includes("text") || this.isSimcir || this.attrs.justSave)
-            || this.attrs.button; // or this.buttonText()?
+        return ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) && !this.markup.norun)
+            || (this.type.includes("text") || this.isSimcir || this.markup.justSave)
+            || this.markup.button; // or this.buttonText()?
     }
 
     buttonText() {
@@ -1335,10 +1358,10 @@ ${fhtml}
         if (txt) {
             return txt;
         }
-        if (this.attrs.button === null || this.attrs.buttonText === null) {
+        if (this.markup.button === null || this.markup.buttonText === null) {
             return null;
         }
-        if (this.type.includes("text") || this.isSimcir || this.attrs.justSave) {
+        if (this.type.includes("text") || this.isSimcir || this.markup.justSave) {
             return this.english ? "Save" : "Tallenna";
         }
         return this.english ? "Run" : "Aja";
@@ -1365,31 +1388,31 @@ ${fhtml}
     }
 
     get uploadstem() {
-        return valueOr(this.attrs.uploadstem, (this.english ? "Upload image/file" : "Lataa kuva/tiedosto"));
+        return valueOr(this.markup.uploadstem, (this.english ? "Upload image/file" : "Lataa kuva/tiedosto"));
     }
 
     get file() {
-        return this.attrs.file;
+        return this.markup.file;
     }
 
     get showCodeOn() {
-        return valueDefu(this.attrs.showCodeOn, (this.english ? "Show all code" : "Näytä koko koodi"));
+        return valueDefu(this.markup.showCodeOn, (this.english ? "Show all code" : "Näytä koko koodi"));
     }
 
     get showCodeOff() {
-        return valueOr(this.attrs.showCodeOff, (this.english ? "Hide extra code" : "Piilota muu koodi"));
+        return valueOr(this.markup.showCodeOff, (this.english ? "Hide extra code" : "Piilota muu koodi"));
     }
 
     get resetText() {
-        return valueDefu(this.attrs.resetText, (this.english ? "Reset" : "Alusta"));
+        return valueDefu(this.markup.resetText, (this.english ? "Reset" : "Alusta"));
     }
 
     get editorModes() {
-        return this.attrs.editorModes.toString();
+        return this.markup.editorModes.toString();
     }
 
     getTemplateButtons(): string[] {
-        let b = this.attrs.buttons;
+        let b = this.markup.buttons;
         if (b) {
             const helloButtons = "public \nclass \nHello \n\\n\n{\n}\n" +
                 "static \nvoid \n Main\n(\n)\n" +
@@ -1408,7 +1431,7 @@ ${fhtml}
 
     get progLanguages() {
         if (this.isAll) {
-            const langs = this.attrs.languages;
+            const langs = this.markup.languages;
             if (langs) {
                 return langs.split(/[\n;, \/]/);
             } else {
@@ -1418,25 +1441,26 @@ ${fhtml}
     }
 
     get cssPrint() {
-        return this.attrs.cssPrint;
+        return this.markup.cssPrint;
     }
 
     get mode() {
-        return languageTypes.getAceModeType(this.type, this.attrs.mode ?? "");
+        return languageTypes.getAceModeType(this.type, this.markup.mode ?? "");
     }
 
     get nosave() {
-        return this.attrs.nosave;
+        return this.markup.nosave;
     }
 
     get cols() {
-        return this.attrs.cols;
+        return this.markup.cols;
     }
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
+        this.vctrl = vctrlInstance!;
         this.hide = this.attrsall.markup.hide || {};
-       //  if ( typeof this.attrs.borders !== 'undefined' ) this.attrs.borders = true;
+       //  if ( typeof this.markup.borders !== 'undefined' ) this.markup.borders = true;
         this.buttons = this.getTemplateButtons();
         const rt = this.rtype;
         const isText = this.isText;
@@ -1447,20 +1471,20 @@ ${fhtml}
         }
 
         this.timeout = valueOr(this.attrsall.timeout, 0)*1000;
-        this.userinput = valueOr(this.attrsall.userinput, (this.attrs.userinput ?? "").toString());
-        this.userargs = valueOr(this.attrsall.userargs, (this.attrs.userargs ?? (isText && isArgs ? this.attrs.filename ?? "" : "")).toString());
+        this.userinput = valueOr(this.attrsall.userinput, (this.markup.userinput ?? "").toString());
+        this.userargs = valueOr(this.attrsall.userargs, (this.markup.userargs ?? (isText && isArgs ? this.markup.filename ?? "" : "")).toString());
         this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
-        this.noeditor = valueOr(this.attrs.noeditor, this.isSimcir || (this.type === "upload"));
-        const wn =  this.attrs.wrap ?? (isText ? 70 : -1);
+        this.noeditor = valueOr(this.markup.noeditor, this.isSimcir || (this.type === "upload"));
+        const wn =  this.markup.wrap ?? (isText ? 70 : -1);
         this.wrap = { n:wn == -1 ? -1 : Math.abs(wn), auto: wn > 0 };
 
-        this.editorMode = this.attrs.editorMode;
-        this.viewCode = this.attrs.viewCode;
+        this.editorMode = this.markup.editorMode;
+        this.viewCode = this.markup.viewCode;
         this.editorText = [
-            valueDefu(this.attrs.normal, this.english ? "Normal" : "Tavallinen"),
-            valueDefu(this.attrs.highlight, "Highlight"),
-            this.attrs.parsons,
-            this.attrs.jsparsons,
+            valueDefu(this.markup.normal, this.english ? "Normal" : "Tavallinen"),
+            valueDefu(this.markup.highlight, "Highlight"),
+            this.markup.parsons,
+            this.markup.jsparsons,
         ];
         for (const c of this.editorModes) {
             this.editorModeIndecies.push(parseInt(c, 10));
@@ -1471,7 +1495,7 @@ ${fhtml}
         }
         this.checkEditorModeLocalStorage();
 
-        this.maxRows = getInt(this.attrs.maxrows) ?? 0;
+        this.maxRows = getInt(this.markup.maxrows) ?? 0;
         this.rows = this.minRows;
 
         if (this.attrsall.usercode == null) {
@@ -1483,7 +1507,7 @@ ${fhtml}
             this.usercode = this.attrsall.usercode;
         }
         this.usercode = commentTrim(this.usercode);
-        if (this.attrs.blind) {
+        if (this.markup.blind) {
             this.usercode = this.usercode.replace(/@author.*/, "@author XXXX");
         }
 
@@ -1514,8 +1538,8 @@ ${fhtml}
         this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
         this.initSaved();
         this.vctrl.addTimComponent(this);
-        if (this.attrs.count) {
-            const count = this.attrs.count;
+        if (this.markup.count) {
+            const count = this.markup.count;
             this.countLines = !!count.lines;
             this.countWords = !!count.words;
             this.countChars = !!count.chars;
@@ -1525,12 +1549,9 @@ ${fhtml}
         //     this.preventSave = true;
         // }
     }
-
-    async $postLink() {
-        await $timeout(); // wait for AngularJS
-        this.edit = this.element.find("textarea")[0];
+    async ngAfterViewInit() {
         this.preview = this.element.find(".csrunPreview");
-        const styleArgs = this.attrs["style-args"];
+        const styleArgs = this.markup["style-args"];
         if (styleArgs) {
             const argsEdit = this.getRootElement().getElementsByClassName("csArgsArea");
             if (argsEdit.length > 0) {
@@ -1551,7 +1572,7 @@ ${fhtml}
             }
         });
 
-        if (this.attrs.open) {
+        if (this.markup.open) {
             if (this.isTauno) {
                 await this.showTauno();
             }
@@ -1559,7 +1580,7 @@ ${fhtml}
                 await this.showSimcir();
             }
         }
-        if (this.attrs.autorun) {
+        if (this.markup.autorun) {
             this.runCodeLink(true);
         }
     }
@@ -1598,9 +1619,9 @@ ${fhtml}
 
     checkCountLimits(limits: any | undefined, count: number, countType: string): string {
         if (!limits) { return ""; }
-        if (!this.attrs.count) { return ""; }
-        const tooFew = this.attrs.count.tooFewWord || "Too few";
-        const tooMany = this.attrs.count.tooManyWord || "Too Many";
+        if (!this.markup.count) { return ""; }
+        const tooFew = this.markup.count.tooFewWord || "Too few";
+        const tooMany = this.markup.count.tooManyWord || "Too Many";
         const cType = limits.text || countType;
         if (limits.min && count < limits.min) { return " " + tooFew + " " + cType + ", min: " + limits.min + "."; }
         if (limits.max && count > limits.max) { return " " + tooMany + " " + cType + ", max: " + limits.max + "."; }
@@ -1608,7 +1629,7 @@ ${fhtml}
     }
 
     doCountItems() {
-        if (!this.attrs.count) { return; }
+        if (!this.markup.count) { return; }
         const s = this.usercode;
         this.charCount = s.length;
         let lcount = 0;
@@ -1621,18 +1642,18 @@ ${fhtml}
         this.wordCount = this.doCountWords(s);
         this.lineCount = lcount;
         let countError: string = "";
-        countError += this.checkCountLimits(this.attrs.count.lines, this.lineCount, "lines");
-        countError += this.checkCountLimits(this.attrs.count.words, this.wordCount, "words");
-        countError += this.checkCountLimits(this.attrs.count.chars, this.charCount, "chars");
+        countError += this.checkCountLimits(this.markup.count.lines, this.lineCount, "lines");
+        countError += this.checkCountLimits(this.markup.count.words, this.wordCount, "words");
+        countError += this.checkCountLimits(this.markup.count.chars, this.charCount, "chars");
         this.countError = countError;
-        this.preventSave = this.attrs.count.preventSave && countError !== "";
+        this.preventSave = this.markup.count.preventSave && countError !== "";
     }
 
     isChanged(): boolean {
         return this.isUnSaved();
     }
 
-    async $doCheck() {
+    async ngDoCheck() {
 
         // Only the properties
         //  * this.dochecks.user{code,input,args}
@@ -1682,8 +1703,8 @@ ${fhtml}
             const currUsercode = this.usercode;
             const currUserargs = this.userargs;
             const currUserinput = this.userinput;
-            if (this.runned && this.attrs.autoupdate) {
-                await $timeout(this.attrs.autoupdate);
+            if (this.runned && this.markup.autoupdate) {
+                await $timeout(this.markup.autoupdate);
                 if (currUsercode === this.usercode &&
                     currUserargs === this.userargs &&
                     currUserinput === this.userinput) {
@@ -1701,13 +1722,13 @@ ${fhtml}
         }
 
         if (file) {
-            if (this.attrs.uploadbycode) {
+            if (this.markup.uploadbycode) {
                 const reader = new FileReader();
                 reader.onload = ((e) => {
-                    this.scope.$evalAsync(() => {
+                    /*this.scope.$evalAsync(() => {
                         this.usercode = reader.result as string;
-                        if (this.attrs.uploadautosave) { this.runCode(); }
-                    });
+                        if (this.markup.uploadautosave) { this.runCode(); }
+                    });*/ // TODO
                 });
                 reader.readAsText(file);
                 return;
@@ -1729,7 +1750,7 @@ ${fhtml}
             upload.then((response) => {
                 $timeout(() => {
                     this.showUploaded(response.data.file, response.data.type);
-                    if (this.attrs.uploadautosave || !this.attrs.button) {
+                    if (this.markup.uploadautosave || !this.markup.button) {
                         this.doRunCode("upload", false);
                     }
                 });
@@ -1936,14 +1957,14 @@ ${fhtml}
         }
 
         this.checkIndent();
-        if (!this.attrs.autoupdate) {
+        if (!this.markup.autoupdate) {
             this.tinyErrorStyle = {};
         }
         this.isRunning = true;
         this.imgURL = "";
         this.wavURL = "";
         this.runSuccess = false;
-        if (!(languageTypes.isInArray(runType, csJSTypes) || this.attrs.noConsoleClear)) {
+        if (!(languageTypes.isInArray(runType, csJSTypes) || this.markup.noConsoleClear)) {
             this.result = "";
         }
         this.runTestGreen = false;
@@ -1961,18 +1982,18 @@ ${fhtml}
             ucode = this.usercode.replace(this.cursor, "");
         }
         ucode = ucode.replace(/\r/g, "");
-        if (this.attrs.validityCheck) {
-            const re = new RegExp(this.attrs.validityCheck);
+        if (this.markup.validityCheck) {
+            const re = new RegExp(this.markup.validityCheck);
             if (!ucode.match(re)) {
                 this.tinyErrorStyle = {color: "red"};
-                let msg = this.attrs.validityCheckMessage;
+                let msg = this.markup.validityCheckMessage;
                 if (!msg) {
-                    msg = "Did not match to " + this.attrs.validityCheck;
+                    msg = "Did not match to " + this.markup.validityCheck;
                 }
                 this.error = msg;
                 this.isRunning = false;
                 this.runError = true;
-                if (!this.attrs.validityCheckForceSave) {
+                if (!this.markup.validityCheckForceSave) {
                     return;
                 }
                 noErrorClear = true;
@@ -2002,13 +2023,13 @@ ${fhtml}
         };
         const url = this.pluginMeta.getAnswerUrl();
         const t0run = performance.now();
-        const r = await to($http<IRunResponse>(
-            {method: "PUT", url: url, data: params, timeout: this.timeout + defaultTimeout}
-        ));
+        const r = await to2(this.http.put<IRunResponse>(url, params,
+            {headers: new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`})}
+        ).toPromise());
         if (r.ok) {
             this.isRunning = false;
             this.initSaved();
-            const data = r.result.data;
+            const data = r.result;
             const tsruntime = ((performance.now() - t0run) / 1000).toFixed(3);
             const runtime = (data.web.runtime ?? "").trim();
             this.oneruntime = "" + tsruntime + " " + runtime.split(" ", 1)[0];
@@ -2064,7 +2085,7 @@ ${fhtml}
                 this.result = err.trim();
             } else {
                 if (this.runSuccess) {
-                    if (this.attrs.isHtml) {
+                    if (this.markup.isHtml) {
                         this.htmlresult = removeXML(err) + this.htmlresult;
                     } else if (!languageTypes.isInArray(runType, csJSTypes)) {
                         this.result = err;
@@ -2080,12 +2101,12 @@ ${fhtml}
 
         } else {
             this.isRunning = false;
-            const data = r.result.data;
+            const data = r.result.error;
             if (data?.error) {
                 this.error = data.error;
                 this.errors.push(data.error);
             }
-            this.connectionErrorMessage = this.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
+            this.connectionErrorMessage = this.error ?? this.markup.connectionErrorMessage ?? defaultErrorMessage;
         }
     }
 
@@ -2107,10 +2128,11 @@ ${fhtml}
 
     async copyTauno() {
         this.taunoCopy = new TimDefer<string>();
-        this.taunoFrame!.channel.port1.postMessage({msg: "getData"});
+        //this.taunoFrame!.channel.port1.postMessage({msg: "getData"}); For some reason this doesn't work
+        this.taunoFrame!.iframe.contentWindow.postMessage({msg: "getData"}, "*");
         let s = await this.taunoCopy.promise;
         this.copyingFromTauno = true;
-        const treplace = this.attrs.treplace ?? "";
+        const treplace = this.markup.treplace ?? "";
         if (treplace) {
             const treps = treplace.split("&");
             for (const trep of treps) {
@@ -2122,7 +2144,7 @@ ${fhtml}
         this.usercode = s;
         this.checkIndent();
         this.muokattu = false;
-        $rootScope.$applyAsync();
+        //$rootScope.$applyAsync(); // TODO: is this needed?
     }
 
     async addText(s: string) {
@@ -2206,8 +2228,8 @@ ${fhtml}
         }
         return {
             vid: vid,
-            width: this.attrs.width ? getInt(this.attrs.width) ?? dw : dw,
-            height: this.attrs.height ? getInt(this.attrs.height) ?? dh : dh,
+            width: this.markup.width ? getInt(this.markup.width) ?? dw : dw,
+            height: this.markup.height ? getInt(this.markup.height) ?? dh : dh,
         };
     }
 
@@ -2227,7 +2249,7 @@ ${fhtml}
             this.runError = true;
         }
         try {
-            const initstr = this.attrs.initSimcir;
+            const initstr = this.markup.initSimcir;
             if (initstr) {
                 const initdata = JSON.parse(initstr);
                 data = {...data, ...initdata};
@@ -2238,8 +2260,8 @@ ${fhtml}
         }
 
         // width and height are passed to svg viewBox attribute that needs numbers
-        data.width = numOrDef(this.attrs.width, 800);
-        data.height = numOrDef(this.attrs.height, 400);
+        data.width = numOrDef(this.markup.width, 800);
+        data.height = numOrDef(this.markup.height, 400);
         this.simcir.children().remove();
         const simcir = await loadSimcir();
         simcir.setupSimcir(this.simcir, data);
@@ -2300,12 +2322,12 @@ ${fhtml}
     async showTauno() {
         const v = this.getVid();
         let p = "";
-        let tt = "/cs/tauno/index.html?lang=" + this.attrs.lang + "&";
-        if (this.attrs.taunotype && this.attrs.taunotype === "ptauno") {
-            tt = "/cs/tauno/index.html?lang=" + this.attrs.lang + "&s&";
+        let tt = "/cs/tauno/index.html?lang=" + this.markup.lang + "&";
+        if (this.markup.taunotype && this.markup.taunotype === "ptauno") {
+            tt = "/cs/tauno/index.html?lang=" + this.markup.lang + "&s&";
         }
         let taunoUrl = tt; // +"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
-        const s = this.attrs.table;
+        const s = this.markup.table;
         if (s && s.length > 0) {
             if (s.startsWith("s")) {
                 p = "ts=" + s.substring(1) + "&";
@@ -2314,15 +2336,15 @@ ${fhtml}
             }                      // table by it's items
         }
 
-        p += doVariables(this.attrs.variables, "m");
-        p += doVariables(this.attrs.indices, "i");
+        p += doVariables(this.markup.variables, "m");
+        p += doVariables(this.markup.indices, "i");
 
         taunoUrl = taunoUrl + p;
         this.iframesettings = {
             id: v.vid,
             width: v.width,
             height: v.height,
-            src: taunoUrl,
+            src: this.domSanitizer.bypassSecurityTrustResourceUrl(taunoUrl),
         };
         this.taunoFrame = await this.waitIframeLoad((e) => {
             if (e.data.data && this.taunoCopy) {
@@ -2342,7 +2364,7 @@ ${fhtml}
         this.runSuccess = false;
         this.runError = false;
         this.result = "";
-        this.viewCode = this.attrs.viewCode;
+        this.viewCode = this.markup.viewCode;
         if (this.editorModeIndecies[this.editorMode] > 1) {
             this.initUserCode = true;
             this.showOtherEditor(this.editorMode);
@@ -2402,7 +2424,7 @@ ${fhtml}
             // code: cs.usercode,
             code: this.getReplacedCode(),
             getCode: () => this.getReplacedCode(),
-            autoeval: this.attrs.autorun || firstTime,
+            autoeval: this.markup.autorun || firstTime,
             callback: () => {
                 this.sageButton = this.sageArea!.getElementsByClassName("sagecell_evalButton")[0] as HTMLElement;
                 this.sageInput = this.sageArea!.getElementsByClassName("sagecell_commands")[0] as HTMLInputElement;
@@ -2603,10 +2625,10 @@ ${fhtml}
     }
 
     get replace() {
-        return this.attrs.replace ?? this.attrsall.replace;
+        return this.markup.replace ?? this.attrsall.replace;
     }
 
-    private maybeReplace(st: string[]): [string, string, string] {
+    maybeReplace(st: string[]): [string, string, string] {
         let r = "";
         const rp = ["", ""]; // alkuosa, loppuosa
         let step = 0;
@@ -2669,7 +2691,6 @@ ${fhtml}
                     print: 1,
                     replace: "",
                 },
-                data: params,
             },
         ));
         if (r.ok) {
@@ -2712,14 +2733,16 @@ ${fhtml}
             return;
         }
         this.lastMD = text;
-        const r = await to($http.post<IPluginInfoResponse>(
+        const r = await this.httpPost<IPluginInfoResponse>(
             `/preview/${taskId.docId}`, {
                 text: text,
-            }));
+            });
         if (r.ok) {
-            await ParCompiler.compileAndAppendTo(this.preview, r.result.data, this.scope);
+            const data = r.result;
+            alert("Failed to show preview");
+            //await ParCompiler.compileAndAppendTo(this.preview, r.result, this.scope); TODO
         } else {
-            const data = r.result.data;
+            const data = r.result;
             alert("Failed to show preview: " + data.error);
         }
     }
@@ -2728,12 +2751,12 @@ ${fhtml}
         const csp = await import("./cs-parsons/csparsons");
         const parson = new csp.CsParsonsWidget({
             sortable: sortable,
-            words: this.attrs.words,
+            words: this.markup.words,
             minWidth: "40px",
             shuffle: this.initUserCode,
-            styleWords: this.attrs["style-words"],
-            maxcheck: this.attrs.parsonsmaxcheck,
-            notordermatters: this.attrs.parsonsnotordermatters,
+            styleWords: this.markup["style-words"],
+            maxcheck: this.markup.parsonsmaxcheck,
+            notordermatters: this.markup.parsonsnotordermatters,
             onChange: (p) => {
                 this.usercode = p.join("\n");
             },
@@ -2798,20 +2821,19 @@ ${fhtml}
 
         const editorHtml = `
 <textarea class="csRunArea csrunEditorDiv"
-          rows={{$ctrl.rows}}
-          ng-model="$ctrl.usercode"
-          ng-trim="false"
-          placeholder="{{$ctrl.placeholder}}"></textarea>
+          rows={{rows}}
+          [(ngModel)]="usercode"
+          placeholder="placeholder"></textarea>
 `;
 
         const aceHtml = `
 <div class="no-popup-menu">
-    <div ng-show="$ctrl.mode"
+    <div *ngIf="mode"
          class="csRunArea csEditArea csAceEditor"></div>
 </div>
 `;
 
-        const cssHtml = `<pre>{{$ctrl.usercode}}</pre>`;
+        const cssHtml = `<pre>{{usercode}}</pre>`;
 
         const parsonsHtml = `<div class="no-popup-menu"></div>`;
 
@@ -2835,7 +2857,7 @@ ${fhtml}
         const otherEditDiv = this.getRootElement().getElementsByClassName("csrunEditorDiv")[0];
         const editorDiv = angular.element(otherEditDiv) as JQuery;
         // editorDiv.empty();
-        this.edit = $compile(html[eindex])(this.scope)[0] as HTMLTextAreaElement; // TODO unsafe cast
+        //this.edit = $compile(html[eindex])(this.scope)[0] as HTMLTextAreaElement; // TODO unsafe cast
         // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
         if (eindex === 1) {
             const ace = (await import("tim/editor/ace")).ace;
@@ -2863,9 +2885,9 @@ ${fhtml}
             editor.renderer.setScrollMargin(12, 12, 0, 0);
             editor.getSession().setValue(this.usercode);
             editor.getSession().on("change", () => {
-                this.scope.$evalAsync(() => {
+                /*this.scope.$evalAsync(() => {
                     this.usercode = editor.getSession().getValue();
-                });
+                });*/ //TODO
 
             });
         } else {
@@ -2916,13 +2938,13 @@ ${fhtml}
     }
 
     async showJS() {
-        if (!this.attrs.runeverytime && !this.usercode && !this.userargs && !this.userinput) {
+        if (!this.markup.runeverytime && !this.usercode && !this.userargs && !this.userinput) {
             return;
         }
         if (this.type.includes("truthtable")) {
             const truthTable = (await import("./truthTable")).truthTable;
             this.result = truthTable(this.userargs);
-            this.scope.$applyAsync();
+            //this.scope.$applyAsync(); // TODO
             return;
         }
         if (!this.iframesettings || this.fullhtml) { // create an iframe on first time
@@ -2947,18 +2969,18 @@ ${fhtml}
                 fsrc = "/cs/gethtml/processing.html";
             }
             const v = this.getVid(dw, dh);
-            html = (this.attrs.html ?? html);
+            html = (this.markup.html ?? html);
             html = encodeURI(html);
             const fh = this.getfullhtmlext(this.getCode());
             this.iframesettings = {
                 id: v.vid,
                 width: v.width,
                 height: v.height,
-                src: $sce.trustAsResourceUrl(fh ? getIFrameDataUrl(fh) : `${fsrc}?scripts=${this.attrs.scripts ?? scripts}&html=${html}`),
+                src: this.domSanitizer.bypassSecurityTrustResourceUrl(fh ? getIFrameDataUrl(fh) : `${fsrc}?scripts=${this.markup.scripts ?? scripts}&html=${html}`),
             };
         }
         const text = this.usercode.replace(this.cursor, "");
-        if (!this.attrs.runeverytime && text === this.lastJS && this.userargs === this.lastUserargs && this.userinput === this.lastUserinput) {
+        if (!this.markup.runeverytime && text === this.lastJS && this.userargs === this.lastUserargs && this.userinput === this.lastUserinput) {
             return;
         }
         this.lastJS = text;
@@ -3010,23 +3032,23 @@ ${fhtml}
     }
 
     get showRuntime() {
-        return this.attrs.showRuntime;
+        return this.markup.showRuntime;
     }
 
     get codeover() {
-        return this.attrs.codeover;
+        return this.markup.codeover;
     }
 
     get codeunder() {
-        return this.attrs.codeunder;
+        return this.markup.codeunder;
     }
 
     get inputstem() {
-        return this.attrs.inputstem;
+        return this.markup.inputstem;
     }
 
     get inputrows() {
-        return this.attrs.inputrows;
+        return this.markup.inputrows;
     }
 
     async setData(data: any, save: boolean = false) {
@@ -3037,7 +3059,7 @@ ${fhtml}
                         const atrs = data[key]; // TODO: make the most important to work
                         for (const akey of Object.keys(atrs)) {
                             // @ts-ignore
-                            this.attrs[akey] = atrs[akey];
+                            this.markup[akey] = atrs[akey];
                         }
                     } else if (key === "commands") {
                         // TODO: implement commands
@@ -3068,112 +3090,214 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
         this.stroke();
     };
 
-const commonComponentOptions = {
-    bindings: pluginBindings,
-    controller: CsController,
-        require: {
-        vctrl: "^timView",
-    },
-};
-
-csApp.component("csRunner", {
-    ...commonComponentOptions,
+@Component({
+    selector: "cs-runner",
     template: makeTemplate(),
-});
-csApp.component("csJypeliRunner", {
-    ...commonComponentOptions,
+})
+export class CsRunnerComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-jypeli-runner",
     template: makeTemplate(),
-});
-csApp.component("csComtestRunner", {
-    ...commonComponentOptions,
+})
+export class CsJypeliComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-comtest-runner",
     template: makeTemplate(),
-});
-csApp.component("csRunnerInput", {
-    ...commonComponentOptions,
+})
+export class CsComtestComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-runner-input",
     template: makeTemplate(),
-});
-csApp.component("csJypeliRunnerInput", {
-    ...commonComponentOptions,
+})
+export class CsRunnerInputComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-jypeli-runner-input",
     template: makeTemplate(),
-});
-csApp.component("csComtestRunnerInput", {
-    ...commonComponentOptions,
+})
+export class CsJypeliInputComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-comtest-runner-input",
     template: makeTemplate(),
-});
-csApp.component("csTaunoRunner", {
-    ...commonComponentOptions,
+})
+export class CsComtestInputComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-tauno-runner-input",
     template: makeTemplate(),
-});
-csApp.component("csTaunoRunnerInput", {
-    ...commonComponentOptions,
+})
+export class CsTaunoInputComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-tauno-runner",
     template: makeTemplate(),
-});
-csApp.component("csParsonsRunner", {
-    ...commonComponentOptions,
+})
+export class CsTaunoComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-parsons-runner",
     template: makeTemplate(),
-});
-csApp.component("csSageRunner", {
-    ...commonComponentOptions,
+})
+export class CsParsonsComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-sage-runner",
     template: makeTemplate(),
-});
-csApp.component("csSimcirRunner", {
-    ...commonComponentOptions,
+})
+export class CsSageComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-simcir-runner",
     template: makeTemplate(),
-});
-csApp.component("csTextRunner", {
-    ...commonComponentOptions,
+})
+export class CsSimcirComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-wescheme-runner",
+    template: makeTemplate(),
+})
+export class CsWescemeComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
+@Component({
+    selector: "cs-text-runner",
     template: `
-<div ng-class="::{'csRunDiv': $ctrl.attrs.borders}" class="csTinyDiv" style="text-align: left;">
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <span ng-if="::$ctrl.stem"
-          class="stem"
-          ng-bind-html="::$ctrl.stem"></span>
-    <input class="csTinyText no-popup-menu"
-           ng-class="{warnFrame: $ctrl.isUnSaved()}"
-           ng-hide="$ctrl.noeditor && !$ctrl.viewCode"
-           size="{{::$ctrl.cols}}"
-           ng-model="$ctrl.usercode"
-           ng-trim="false"
-           ng-attr-placeholder="{{$ctrl.placeholder}}"
-           ng-keypress="$ctrl.runCodeIfCR($event)"/>
-    <button ng-if="::$ctrl.isRun"
-            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.preventSave"
-            class = "timButton"
-            title="(Ctrl-S)"
-            ng-click="$ctrl.runCode();"
-            ng-bind-html="::$ctrl.buttonText()"></button>
-    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
-            ng-click="$ctrl.tryResetChanges();">
-            &nbsp;{{::$ctrl.undoButton}}
-            </a>
-    <span ng-if="$ctrl.savedText"
-                class="savedText"
-                ng-bind-html="$ctrl.savedText"></span>
-    <div ng-if="$ctrl.connectionErrorMessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionErrorMessage"></div>
+        <div [ngClass]="{csRunDiv: markup.borders}" class="csTinyDiv" style="text-align: left;">
+            <h4 *ngIf="header" [innerHTML]="header"></h4>
+            <span *ngIf="stem"
+                class="stem"
+                [innerHTML]="stem"></span>
+            <input class="csTinyText no-popup-menu"
+                [ngClass]="{warnFrame: isUnSaved()}"
+                *ngIf="!noeditor || viewCode"
+                size="{{cols}}"
+                [(ngModel)]="usercode"
+                [attr.placeholder]="placeholder"
+                (keypress)="runCodeIfCR($event)"/>
+            <button *ngIf="isRun"
+                    [attr.disabled]="(markup.disableUnchanged && !isUnSaved()) || isRunning || preventSave"
+                    class = "timButton"
+                    title="(Ctrl-S)"
+                    (click)="runCode();"
+                    [innerHTML]="buttonText()"></button>
+            <a href="javascript:void(0)" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}"
+                    (click)="tryResetChanges();">
+                    &nbsp;{{undoButton}}
+                    </a>
+            <span *ngIf="savedText"
+                        class="savedText"
+                        [innerHTML]="savedText"></span>
+            <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHTML]="connectionErrorMessage"></div>
 
-    &nbsp;&nbsp;<a href=""
-                   ng-if="$ctrl.muokattu"
-                   ng-click="$ctrl.initCode();">{{::$ctrl.resetText}}</a>&nbsp;&nbsp;
-    <pre class="console"
-         ng-show="$ctrl.result">{{$ctrl.result}}</pre>
-    <span class="csRunError"
-          ng-if="$ctrl.runError"
-          ng-style="$ctrl.tinyErrorStyle">{{$ctrl.error}}</span>
-    <div class="htmlresult"
-         ng-if="$ctrl.htmlresult">
-        <span ng-bind-html="$ctrl.svgImageSnippet()"></span>
-    </div>
-</div>
-`,
-});
-csApp.component("csWeschemeRunner", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
+            &nbsp;&nbsp;<a href="javascript:void(0)"
+                        *ngIf="muokattu"
+                        (click)="initCode();">{{resetText}}</a>&nbsp;&nbsp;
+            <pre class="console"
+                *ngIf="result">{{result}}</pre>
+            <span class="csRunError"
+                *ngIf="runError"
+                [style]="tinyErrorStyle">{{error}}</span>
+            <div class="htmlresult"
+                *ngIf="htmlresult">
+                <span [innerHTML]="svgImageSnippet()"></span>
+            </div>
+        </div>`,
+})
+export class CsTextComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
+}
 
-const csConsoleApp = angular.module("csConsoleApp", ["ngSanitize"]);
+function trackByIndex(index: number, o: unknown) { return index; }
 
-class CsConsoleController extends CsBase implements IController {
+//const csConsoleApp = angular.module("csConsoleApp", ["ngSanitize"]);
+
+@Component({
+    selector: "cs-console",
+    template: `
+    <div class="web-console no-popup-menu {{currentSize}} " (keydown)="handleKey($event)">
+        <code class="console-output">
+            <div class="console-output-elem" *ngFor="let item of history; trackBy: trackByIndex">
+                <span class="console-oldinput">
+                    <span class="console-in">{{item.istem}}</span>
+                    <span class="console-userInput">{{item.input}}</span>
+                </span>
+                <span class="console-oldresponse">
+                    <span *ngIf="!isShell">  <br/>  
+                        <span class="console-out">{{item.ostem}}</span>
+                    </span>  
+                    <span class="console-response" [ngClass]="{error: item.error}">
+                        <span [innerHTML]="item.response"></span>
+                    </span>
+                    <!-- Double span since [textContent] eats the innermost one -->
+                </span>
+            </div>
+            <span class="console-expander-sym" (click)="toggleSize()"></span>
+        </code>
+        <div class="console-examples-box">
+            <span class="examples-title" (click)="examplesVisible=!examplesVisible">    ▼ example expressions ▲</span>
+            <div>Click to load:</div>
+            <ul>
+                <li *ngFor="let example of examples; index as i">
+                    <a (click)="loadExample(i)" title="example.expr">{{example.title||example.expr}}</a>
+                </li>
+            </ul>
+        </div>
+        <div class="console-curIndex" *ngIf="isShell">{{pwd}}</div>
+        <span class="console-curIndex">in_{{cursor}}</span>
+        <input type="text" placeholder="type expressions here"
+                        class="console-input"
+                        [(ngModel)]="currentInput"/>
+        &nbsp;
+        <div class="console-buttons">
+            <button (click)="up()">↑</button>&nbsp;
+            <button (click)="down()">↓</button>&nbsp;
+            <button (click)="handler()">Enter</button>&nbsp;
+        </div>
+    </div>`,
+})
+class CsConsoleComponent extends CsBase implements IController {
+    trackByIndex = trackByIndex;
     // isShell: boolean; method
     cursor: number;
     currentSize: string;
@@ -3184,13 +3308,14 @@ class CsConsoleController extends CsBase implements IController {
     // byCode: string; method
     // content: AttrType;
     examples: Array<t.TypeOf<typeof Example>>;
-    history: Array<{istem: string, ostem: string, input: string, response: string}>;
+    examplesVisible: boolean = true;
+    history: Array<{istem: string, ostem: string, input: string, response: string, error?: string}>;
     // savestate: string;
     // path: string;
     // type: string;
 
-    constructor(scope: IScope, element: JQLite) {
-        super(scope, element);
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer);
         this.examples = [];
         this.history = [];
         this.currentSize = "normal";
@@ -3207,17 +3332,17 @@ class CsConsoleController extends CsBase implements IController {
     }
 
     get savestate() {
-        return this.attrs.savestate;
+        return this.markup.savestate;
     }
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
 
         // This block could be re-used
 
         // End of generally re-usable TIM stuff
-        if (this.attrs.examples) {
-            this.examples = this.attrs.examples;
+        if (this.markup.examples) {
+            this.examples = this.markup.examples;
         }
 
         this.pwd = ConsolePWD.getPWD(this);
@@ -3255,10 +3380,8 @@ class CsConsoleController extends CsBase implements IController {
         const uargs = "";
         const uinput = "";
 
-        const r = await to($http<{web: {pwd?: string, error?: string, console?: string}}>({
-            method: "PUT",
-            url: url,
-            data: {
+        const r = await this.httpPut<{web: {pwd?: string, error?: string, console?: string}}>(url, 
+            {
                 input: {
                     usercode: ucode,
                     userinput: uinput,
@@ -3267,9 +3390,9 @@ class CsConsoleController extends CsBase implements IController {
                     type: ty,
                 },
             },
-        }));
+        );
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             let s = "";
             this.oldpwd = this.pwd;
             if (data.web.pwd) {
@@ -3280,13 +3403,13 @@ class CsConsoleController extends CsBase implements IController {
                 s = "<pre>" + s + "</pre>";
             } else {
                 s = data.web.console ?? "";
-                if (!this.attrs.isHtml) {
+                if (!this.markup.isHtml) {
                     s = "<pre>" + s + "</pre>";
                 }
             }
             this.submit(s);
         } else {
-            console.log(["protocol error", r.result.data]);
+            console.log(["protocol error", r.result.error]);
             this.submit("Endless loop?");
         }
     }
@@ -3352,45 +3475,56 @@ class CsConsoleController extends CsBase implements IController {
     }
 }
 
-csConsoleApp.component("csConsole", {
-    bindings: pluginBindings,
-    controller: CsConsoleController,
-    template: `
-<div class="web-console no-popup-menu {{$ctrl.currentSize}} " ng-keydown="$ctrl.handleKey($event)"><code
-        class="console-output">
-    <div class="console-output-elem"
-         ng-repeat="item in $ctrl.history track by $index"><span class="console-oldinput">  <span
-            class="console-in">{{item.istem}}</span>  <span class="console-userInput">{{item.input}}</span> </span>
-        <span class="console-oldresponse"><span ng-if="::!$ctrl.isShell">  <br/>  <span
-                class="console-out">{{item.ostem}}</span></span>  <span class="console-response"
-                                                                        ng-class="{error:item.error}"><span
-                ng-bind-html="item.response"></span></span>
-            <!-- Double span since ng-bind eats the innermost one -->
-            </span></div>
-    <span class="console-expander-sym" ng-click="$ctrl.toggleSize()"></span></code>
-    <div class="console-examples-box">
-        <span class="examples-title"
-              ng-click="$ctrl.examplesVisible=!$ctrl.examplesVisible">    ▼ example expressions ▲</span>
-        <div>Click to load:</div>
-        <ul>
-            <li ng-repeat="example in ::$ctrl.examples track by $index">
-                <a ng-click="$ctrl.loadExample($index)"
-                   title="{{example.expr}}">{{example.title||example.expr}}</a>
-            </li>
-            <ul>
-    </div>
-    <div class="console-curIndex" ng-if="::$ctrl.isShell">{{$ctrl.pwd}}</div>
-    <span class="console-curIndex">in_{{$ctrl.cursor}}</span><input type="text" placeholder="type expressions here"
-                                                                    class="console-input"
-                                                                    ng-model="$ctrl.currentInput"/>&nbsp;<div
-            class="console-buttons">
-        <button ng-click="$ctrl.up()">↑</button>&nbsp;<button ng-click="$ctrl.down()">↓</button>&nbsp;<button
-            ng-click="$ctrl.handler()">
-        Enter
-    </button>&nbsp;
-    </div>
-</div>
-`,
-});
+//export const moduleDefs = [csApp, csConsoleApp];
 
-export const moduleDefs = [csApp, csConsoleApp];
+// noinspection AngularInvalidImportedOrDeclaredSymbol
+@NgModule({
+    declarations: [
+        CsRunnerComponent,
+        CsJypeliComponent,
+        CsComtestComponent,
+        CsRunnerInputComponent,
+        CsJypeliInputComponent,
+        CsComtestInputComponent,
+        CsTaunoInputComponent,
+        CsTaunoComponent,
+        CsParsonsComponent,
+        CsSageComponent,
+        CsSimcirComponent,
+        CsWescemeComponent,
+        CsTextComponent,
+        CsConsoleComponent,
+    ],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+    ],
+})
+export class CsPluginModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {
+    }
+}
+
+const bootstrapFn = (extraProviders: StaticProvider[]) => {
+    const platformRef = platformBrowserDynamic(extraProviders);
+    return platformRef.bootstrapModule(CsPluginModule);
+};
+
+export const angularJsModule = createDowngradedModule(bootstrapFn);
+doDowngrade(angularJsModule, "csRunner", CsRunnerComponent);
+doDowngrade(angularJsModule, "csJypeliRunner", CsJypeliComponent);
+doDowngrade(angularJsModule, "csComtestRunner", CsComtestComponent);
+doDowngrade(angularJsModule, "csRunnerInput", CsRunnerInputComponent);
+doDowngrade(angularJsModule, "csJypeliRunnerInput", CsJypeliInputComponent);
+doDowngrade(angularJsModule, "csComtestRunnerInput", CsComtestInputComponent);
+doDowngrade(angularJsModule, "csTaunoRunnerInput", CsTaunoInputComponent);
+doDowngrade(angularJsModule, "csTaunoRunner", CsTaunoComponent);
+doDowngrade(angularJsModule, "csParsonsRunner", CsParsonsComponent);
+doDowngrade(angularJsModule, "csSageunner", CsSageComponent);
+doDowngrade(angularJsModule, "csSimcirRunner", CsSimcirComponent);
+doDowngrade(angularJsModule, "csWeschemeRunner", CsWescemeComponent);
+doDowngrade(angularJsModule, "csTextRunner", CsTextComponent);
+doDowngrade(angularJsModule, "csConsoleRunner", CsConsoleComponent);
+export const moduleDefs = [csApp, angularJsModule];
