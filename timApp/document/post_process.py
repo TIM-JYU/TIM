@@ -128,8 +128,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         usergroup_ids = get_session_usergroup_ids()
 
         # If we're in exam mode and we're visiting the page for the first time, mark everything read
-        if check_rights(doc.get_settings().exam_mode(), doc.docinfo.rights) and \
-                not has_anything_read(usergroup_ids, doc):
+        if should_auto_read(doc, usergroup_ids, user):
             should_mark_all_read = True
             readings = []
         else:
@@ -315,3 +314,8 @@ def process_areas(settings, pars: List[DocParagraph], macros, delimiter, env) ->
         current_areas = new_areas
 
     return new_pars
+
+
+def should_auto_read(doc: Document, usergroup_ids: List[int], user: User) -> bool:
+    return not has_anything_read(usergroup_ids, doc) and (
+                check_rights(doc.get_settings().exam_mode(), doc.docinfo.rights) or user.get_prefs().auto_mark_all_read)
