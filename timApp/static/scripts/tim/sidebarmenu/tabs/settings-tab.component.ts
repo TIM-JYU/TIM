@@ -89,7 +89,7 @@ const DEFAULT_PIECE_SIZE = 20;
             </button>
             <button *ngIf="docSettings?.exam_mode && item.rights.manage"
                     class="timButton btn-block"
-                    title="Reset all read marks for everyone" i18n-title
+                    title="Reset all read marks for all users who visited this document" i18n-title
                     (click)="markDocumentUnread()"
                     i18n>Reset all read marks
             </button>
@@ -193,6 +193,9 @@ const DEFAULT_PIECE_SIZE = 20;
         <ng-template i18n="@@markAllTranslatedConfirm">
             This will mark all paragraphs in this document as translated. Continue?
         </ng-template>
+        <ng-template i18n="@@markAllUnreadConfirm">
+            This document is in exam mode. Marking document unread will remove read marks from all users! Continue?
+        </ng-template>
         <ng-template i18n="@@notInDocumentError">Not in a document</ng-template>
         <ng-template i18n="@@noKnroMacroError">The document has no 'knro' macro defined</ng-template>
     `,
@@ -294,7 +297,7 @@ export class SettingsTabComponent implements OnInit {
     }
 
     async markDocumentUnread() {
-        await this.confirmPost("This document is in exam mode. Marking document unread will remove read marks from all users! Continue?", `/markAllUnread/${this.item?.id}`);
+        await this.confirmPost($localize`:@@markAllUnreadConfirm:This document is in exam mode. Marking document unread will remove read marks from all users! Continue?`, `/markAllUnread/${this.item?.id}`);
     }
 
     async markTranslated() {
