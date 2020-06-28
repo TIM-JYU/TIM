@@ -1530,7 +1530,11 @@ def get_multi_states(args: GetMultiStatesModel):
 @answers.route("/getState")
 @use_args(GetStateSchema())
 def get_state(args: GetStateModel):
-    par_id, user_id, answer_id, review, task_id = args.par_id, args.user_id, args.answer_id, args.review, args.task_id
+    par_id = args.par_id
+    user_id = args.user_id
+    answer_id = args.answer_id
+    review = args.review
+    task_id = args.task_id
     answer = None
     block = None
     doc = None

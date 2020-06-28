@@ -416,16 +416,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.pointsStep = this.markupSettings?.pointsStep;
         }
 
-        this.scope.$watch(() => this.review, (newValues, oldValues) => {
-            if (newValues == oldValues) {
+        this.scope.$watch(() => this.review, (newValue, oldValue) => {
+            if (newValue == oldValue) {
                 return;
             }
             this.changeAnswer();
         });
         this.scope.$watchGroup([
             () => this.onlyValid,
-        ], (newValues, oldValues, scope) => {
-            if (newValues == oldValues) {
+        ], (newValue, oldValue, scope) => {
+            if (newValue == oldValue) {
                 return;
             }
             this.updateFilteredAndSetNewest();
