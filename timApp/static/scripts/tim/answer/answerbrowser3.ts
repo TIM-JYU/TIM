@@ -739,6 +739,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
+    shouldFocusIfSelectedAnswer() {
+        if (this.selectedAnswer) {
+            this.shouldFocus = true;
+        }
+    }
+
     async changeStudent(dir: 1 | -1) {
         const newIndex = this.findSelectedUserIndex() + dir;
         await this.changeStudentToIndex(newIndex);
