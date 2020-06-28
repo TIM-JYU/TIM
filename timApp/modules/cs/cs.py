@@ -314,6 +314,8 @@ def convert_graphviz(query):
         query.jso['markup']['cacheClass'] = 'figure graphviz '
         if query.jso.get('input', None):
             query.jso['input']['type'] = 'run'
+            if not query.jso['input'].get('markup', None):
+                query.jso['input']['markup'] = {}
             query.jso['input']['markup']['type'] = 'run'
         if get_param(query, "cache", True):
             query.jso['markup']['cache'] = True
