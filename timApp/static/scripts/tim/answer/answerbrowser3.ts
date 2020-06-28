@@ -349,6 +349,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.loadedAnswer.id = args.savedNew;
             this.review = false;
             this.oldreview = false;
+            if (this.answers.length == 0) {
+                this.getAvailableUsers();
+            }
             this.getAnswersAndUpdate();
             // HACK: for some reason the math mode is lost because of the above call, so we restore it here
             ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
