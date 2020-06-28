@@ -540,7 +540,8 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
 
 
 def handle_common_params(query: QueryClass, ttype: TType):
-    
+    if isinstance(ttype, str):
+        ttype = TType(ttype, query)
     language = ttype.get_language()
     runner = ttype.runner_name()
     
