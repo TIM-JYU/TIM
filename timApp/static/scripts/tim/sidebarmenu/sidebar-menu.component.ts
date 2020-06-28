@@ -32,7 +32,7 @@ const MENU_BUTTON_ICONS: Record<MenuState, string> = {
 @Component({
     selector: "tim-sidebar-menu",
     template: `
-        <div *ngIf="!hide.sidebar" (window:resize)="onResize()" class="left-fixed-side" [class.show]="showMenu">
+        <div *ngIf="!hide.sidebar && tabsVisible" (window:resize)="onResize()" class="left-fixed-side" [class.show]="showMenu">
             <div class="btn btn-default btn-sm pull-left" (click)="nextVisibilityState()" i18n-title title="Show menu">
                 <i class="glyphicon glyphicon-{{nextGlyphicon}}" i18n-title title="Open sidebar"></i>
             </div>
@@ -64,6 +64,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     menuTabs!: TabEntry[];
     tabsVisTable: Record<string, boolean> = {};
     nextGlyphicon: string = MENU_BUTTON_ICONS[this.nextState];
+    tabsVisible = false;
 
     constructor(private tabEntryList: TabEntryListService) {
     }
@@ -132,6 +133,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         for (const tab of this.menuTabs) {
             this.tabsVisTable[tab.id] = tab.visible();
         }
+        this.updateTabsVisible();
     }
 
     ngDoCheck() {
@@ -230,6 +232,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
             nextState = MenuState.Icons;
         }
         this.setVisibleState(nextState, UPDATE_ALL);
+        this.updateTabsVisible();
     }
 
     private get nextMobileState(): MenuState {
@@ -242,5 +245,9 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
 
     private get nextState() {
         return isScreenSizeOrLower("sm") ? this.nextMobileState : this.nextDesktopState;
+    }
+
+    private updateTabsVisible() {
+        this.tabsVisible = this.menuTabs.some((t) => this.tabsVisTable[t.id]);
     }
 }
