@@ -3,7 +3,7 @@
          data-close="$ctrl.closeAlert($index)">
         <div ng-bind-html="alert.msg"></div>
     </div>
-    <label ng-show="$ctrl.hidden && $ctrl.anyInvalid" class="checkbox-inline">
+    <label ng-show="$ctrl.hidden && $ctrl.anyInvalid && !$ctrl.formMode" class="checkbox-inline">
         <input type="checkbox" ng-model="$ctrl.onlyValid">Show valid only</label>
     <div ng-show="!$ctrl.hidden">
         <div ng-show="$ctrl.viewctrl.teacherMode && $ctrl.users.length > 0" class="flex">

@@ -338,6 +338,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private isValidAnswer = false;
     private hidden: boolean = false;
     private showDelete = false;
+    private formMode = false;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -362,10 +363,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async $onInit() {
-        if (this.loader.isInFormMode() && !this.forceBrowser()) {
-            this.element.hide();
-        }
-        if (this.loader.hideBrowser) {
+        this.formMode = (this.loader.isInFormMode() && !this.forceBrowser())
+        if (this.loader.hideBrowser || this.formMode) {
             this.hidden = true;
         }
 
