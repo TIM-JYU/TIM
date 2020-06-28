@@ -123,7 +123,7 @@
                             </label>
                             </div>
                             <label class="checkbox-inline" ng-show="$ctrl.showTeacher()">
-                                <input type="checkbox" ng-model="$ctrl.saveTeacher">Save teacher's fix
+                                <input type="checkbox" ng-change="$ctrl.toggleInput()" ng-model="$ctrl.saveTeacher">Save teacher's fix
                             </label>
                             <div ng-show="$ctrl.selectedAnswer">
 

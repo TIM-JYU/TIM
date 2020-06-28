@@ -637,10 +637,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
         }
         if (this.selectedAnswer) {
-            this.unDimPlugin();
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
-        } else if (this.viewctrl.teacherMode) {
-            this.dimPlugin();
+        }
+        if (!(this.viewctrl.teacherMode && !this.selectedAnswer && !this.saveTeacher)) {
+            this.unDimPlugin();
         }
     }
 
