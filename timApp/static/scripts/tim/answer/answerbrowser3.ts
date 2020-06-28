@@ -363,7 +363,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async $onInit() {
-        this.formMode = (this.loader.isInFormMode() && !this.forceBrowser())
+        this.formMode = (this.loader.isInFormMode() && !this.forceBrowser());
         if (this.loader.hideBrowser || this.formMode) {
             this.hidden = true;
         }
