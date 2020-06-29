@@ -321,8 +321,8 @@ def pluginify(doc: Document,
     :param pars: A list of DocParagraphs to be processed.
     :param user: The current user object.
     :param custom_answer: Optional answer that will used as the state for the plugin instead of answer database.
-    :param task_id: Optional taskid to get state for
-    If this custom_answer or task_id is specified, the expression len(blocks) MUST be 1.
+    :param task_id: Optional taskId for plugin which will load it's current state (returned as custom_answer_plugin)
+    If custom_answer or task_id is specified, the expression len(blocks) MUST be 1.
     :param sanitize: Whether the blocks should be sanitized before processing.
     :param do_lazy Whether to use lazy versions of the plugins.
     :param edit_window Whether the method is called from the edit window or not.
