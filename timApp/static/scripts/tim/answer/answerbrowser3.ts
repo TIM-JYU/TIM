@@ -579,16 +579,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async changeAnswer() {
-        if (this.forceBrowser() && this.selectedAnswer == null && this.loadedAnswer.id) {
-            // TODO: This is a hack; get rid of it.
-            this.selectedAnswer = {
-                content: "",
-                id: this.loadedAnswer.id,
-                task_id: "",
-                last_points_modifier: null,
-                valid: true,
-            };
-        }
         this.updatePoints();
         if (!this.user) {
             return;
