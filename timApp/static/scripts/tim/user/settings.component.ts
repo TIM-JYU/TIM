@@ -18,6 +18,7 @@ export interface ISettings {
     language: string | null;
     use_document_word_list: boolean;
     word_list: string;
+    auto_mark_all_read: boolean;
 }
 
 export async function setConsent(c: ConsentType) {
@@ -169,6 +170,11 @@ export class SaveButtonComponent {
             </bootstrap-panel>
 
             <bootstrap-panel title="Other settings">
+                <div class="checkbox"><label>
+                    <input type="checkbox" name="auto_mark_all_read" [(ngModel)]="settings.auto_mark_all_read"
+                           [disabled]="saving"> Automatically mark document as read when opening it for the first time
+                </label></div>
+                <span class="space-right"><tim-save-button [saved]="submit"></tim-save-button></span>
                 <button class="btn btn-default" (click)="clearLocalStorage()">Clear local settings storage</button>
                 <span *ngIf="storageClear">Local storage cleared.</span>
             </bootstrap-panel>

@@ -87,6 +87,12 @@ const DEFAULT_PIECE_SIZE = 20;
                     (click)="markTranslated()"
                     i18n>Mark all as translated
             </button>
+            <button *ngIf="docSettings?.exam_mode && item.rights.manage"
+                    class="timButton btn-block"
+                    title="Delete all read marks from all users who visited this document" i18n-title
+                    (click)="markDocumentUnread()"
+                    i18n>Delete all read marks
+            </button>
         </ng-container>
         <ng-container *ngIf="lctrl.lectureSettings.inLecture">
             <h5 i18n>Lecture settings</h5>
@@ -187,6 +193,12 @@ const DEFAULT_PIECE_SIZE = 20;
         <ng-template i18n="@@markAllTranslatedConfirm">
             This will mark all paragraphs in this document as translated. Continue?
         </ng-template>
+        <ng-template i18n="@@markAllUnreadConfirm">
+            This document is in exam mode. Marking document unread will remove read marks from all users! Continue?
+        </ng-template>
+        <ng-template i18n="@@markAllUnreadAffectedCount">
+            This will affect {{0}} users in total.
+        </ng-template>
         <ng-template i18n="@@notInDocumentError">Not in a document</ng-template>
         <ng-template i18n="@@noKnroMacroError">The document has no 'knro' macro defined</ng-template>
     `,
@@ -202,10 +214,8 @@ export class SettingsTabComponent implements OnInit {
     linkedGroups: IDocument[] = [];
     sisugroupPath?: string;
     item?: DocumentOrFolder;
-    // TODO: Is the localstorage version needed?
-    private parsPerPage = 20;
+    docSettings?: IDocSettings;
     private currentViewRange?: IViewRange;
-    private docSettings?: IDocSettings;
     private documentMemoMinutes: string | undefined;
 
     constructor(private http: HttpClient) {
@@ -289,15 +299,31 @@ export class SettingsTabComponent implements OnInit {
         doc.refreshSectionReadMarks();
     }
 
-    async markTranslated() {
+    async markDocumentUnread() {
         if (!this.item) {
             return;
         }
-        const shouldMark = window.confirm($localize`:@@markAllTranslatedConfirm:This will mark all paragraphs in this document as translated. Continue?`);
+        const r = await to2(this.http.get<number>(`/read/${this.item.id}/groupCount`).toPromise());
+        let message = $localize`:@@markAllUnreadConfirm:This document is in exam mode. Marking document unread will remove read marks from all users! Continue?`;
+        if (r.ok) {
+            message += "\n" + $localize`:@@markAllUnreadAffectedCount:This will affect ${r.result}:INTERPOLATION: users in total.`;
+        }
+        await this.confirmPost(message, `/markAllUnread/${this.item.id}`);
+    }
+
+    async markTranslated() {
+        await this.confirmPost($localize`:@@markAllTranslatedConfirm:This will mark all paragraphs in this document as translated. Continue?`, `/markTranslated/${this.item?.id}`);
+    }
+
+    private async confirmPost(message: string, url: string) {
+        if (!this.item) {
+            return;
+        }
+        const shouldMark = window.confirm(message);
         if (!shouldMark) {
             return;
         }
-        const r = await to2(this.http.post<IOkResponse>(`/markTranslated/${this.item.id}`, {}).toPromise());
+        const r = await to2(this.http.post<IOkResponse>(url, {}).toPromise());
         if (r.ok) {
             window.location.reload();
         } else {
@@ -470,10 +496,6 @@ export class SettingsTabComponent implements OnInit {
      * Get piece size from local storage and current view range from document globals.
      */
     private loadViewRangeSettings() {
-        const pSisze = this.pieceSize;
-        if (pSisze != null) {
-            this.parsPerPage = pSisze;
-        }
         this.currentViewRange = getCurrentViewRange();
         this.updateIsFullRange();
     }

@@ -135,6 +135,7 @@ class SettingsTest(TimRouteTest):
                                  'disable_menu_hover': False,
                                  'remember_last_sidebar_menu_tab': False,
                                  'remember_last_sidebar_menu_state': False,
+                                 'auto_mark_all_read': False,
                                  })
         self.json_post(
             f'/settings/save',
@@ -150,6 +151,7 @@ class SettingsTest(TimRouteTest):
                 'disable_menu_hover': True,
                 'remember_last_sidebar_menu_state': True,
                 'remember_last_sidebar_menu_tab': True,
+                'auto_mark_all_read': True,
             }
         )
         self.get(f'/settings/get',
@@ -165,6 +167,7 @@ class SettingsTest(TimRouteTest):
                      'disable_menu_hover': True,
                      'remember_last_sidebar_menu_state': True,
                      'remember_last_sidebar_menu_tab': True,
+                     'auto_mark_all_read': True,
                  })
         self.json_post(
             f'/settings/save',
@@ -179,6 +182,7 @@ class SettingsTest(TimRouteTest):
                 'disable_menu_hover': True,
                 'remember_last_sidebar_menu_state': False,
                 'remember_last_sidebar_menu_tab': True,
+                'auto_mark_all_read': False,
             }
         )
         self.get(f'/settings/get',
@@ -194,6 +198,7 @@ class SettingsTest(TimRouteTest):
                      'disable_menu_hover': True,
                      'remember_last_sidebar_menu_state': False,
                      'remember_last_sidebar_menu_tab': True,
+                     'auto_mark_all_read': False,
                  })
 
     def test_settings_get_single(self):
