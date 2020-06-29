@@ -104,14 +104,7 @@ interface IRunResult {
                             [(ngModel)]="userargs"
                             placeholder="argsplaceholder"></span>
             </div>
-            <div *ngIf="countItems" class="csPluginCountItems">
-                <span *ngIf="countLines">Lines: <span>{{lineCount}}</span></span>
-                <span *ngIf="countWords">Words: <span>{{wordCount}}</span></span>
-                <span *ngIf="countChars">Chars: <span>{{charCount}}</span></span>
-            </div>    
-            <div *ngIf="countError" class="csPluginCountError">
-                <p>{{countError}}</p>
-            </div>    
+            <cs-count-board *ngIf="markup.count" [options]="markup.count"></cs-count-board>
             <p class="csRunSnippets" *ngIf="buttons">
                 <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
                 &nbsp;&nbsp;

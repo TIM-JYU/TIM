@@ -39,10 +39,11 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {Mode, EditorComponent} from "./editor/editor";
+import {CountBoardComponent} from "./editor/countboard";
 import {EditorModule} from "./editor/module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {getInt, countChars} from "./util";
+import {getInt} from "./util";
 
 
 // js-parsons is unused; just declare a stub to make TS happy
@@ -437,14 +438,7 @@ function makeTemplate() {
                     [(ngModel)]="userargs"
                     placeholder="argsplaceholder"></span>
     </div>
-    <div *ngIf="countItems" class="csPluginCountItems">
-        <span *ngIf="countLines">Lines: <span>{{lineCount}}</span></span>
-        <span *ngIf="countWords">Words: <span>{{wordCount}}</span></span>
-        <span *ngIf="countChars">Chars: <span>{{charCount}}</span></span>
-    </div>    
-    <div *ngIf="countError" class="csPluginCountError">
-        <p>{{countError}}</p>
-    </div>    
+    <cs-count-board *ngIf="markup.count" [options]="markup.count"></cs-count-board>
     <p class="csRunSnippets" *ngIf="buttons">
         <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
         &nbsp;&nbsp;
@@ -1547,13 +1541,6 @@ ${fhtml}
         this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
         this.initSaved();
         this.vctrl.addTimComponent(this);
-        if (this.markup.count) {
-            const count = this.markup.count;
-            this.countLines = !!count.lines;
-            this.countWords = !!count.words;
-            this.countChars = !!count.chars;
-            this.countItems = this.countLines || this.countWords || this.countChars;
-        }
         // if (this.isText) {
         //     this.preventSave = true;
         // }
@@ -1593,23 +1580,6 @@ ${fhtml}
         }
     }
 
-    updateEditSize() {
-        if (!this.usercode) {
-            return;
-        }
-        let n = countChars(this.usercode, "\n") + 1;
-        if (n < this.minRows) {
-            n = this.minRows;
-        }
-        if (n > this.maxRows) {
-            n = this.maxRows;
-        }
-        if (n < 1) {
-            n = 1;
-        }
-        this.rows = n;
-    }
-
     initSaved() {
         this.savedvals = {
             code: this.usercode,
@@ -1618,43 +1588,6 @@ ${fhtml}
         };
         this.edited = false;
         this.updateListeners(ChangeType.Saved);
-    }
-
-    doCountWords(str: string) {
-        const matches = str.match(/[\w\d\’\'-åäöÅÄÖ]+/gi);
-        return matches ? matches.length : 0;
-    }
-
-    checkCountLimits(limits: any | undefined, count: number, countType: string): string {
-        if (!limits) { return ""; }
-        if (!this.markup.count) { return ""; }
-        const tooFew = this.markup.count.tooFewWord || "Too few";
-        const tooMany = this.markup.count.tooManyWord || "Too Many";
-        const cType = limits.text || countType;
-        if (limits.min && count < limits.min) { return " " + tooFew + " " + cType + ", min: " + limits.min + "."; }
-        if (limits.max && count > limits.max) { return " " + tooMany + " " + cType + ", max: " + limits.max + "."; }
-        return "";
-    }
-
-    doCountItems() {
-        if (!this.markup.count) { return; }
-        const s = this.usercode;
-        this.charCount = s.length;
-        let lcount = 0;
-        if (s.length > 0) { lcount = 1; }
-        for (const c of s) {
-            if (c=="\n") {
-                lcount++;
-            }
-        }
-        this.wordCount = this.doCountWords(s);
-        this.lineCount = lcount;
-        let countError: string = "";
-        countError += this.checkCountLimits(this.markup.count.lines, this.lineCount, "lines");
-        countError += this.checkCountLimits(this.markup.count.words, this.wordCount, "words");
-        countError += this.checkCountLimits(this.markup.count.chars, this.charCount, "chars");
-        this.countError = countError;
-        this.preventSave = this.markup.count.preventSave && countError !== "";
     }
 
     isChanged(): boolean {

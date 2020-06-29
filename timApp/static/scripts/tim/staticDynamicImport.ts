@@ -36,6 +36,8 @@ export function staticDynamicImport(s: string) {
             return import("modules/cs/js/editor/normal");
         case "/cs/js/build/editor/parsons.js":
             return import("modules/cs/js/editor/parsons");
+        case "/cs/js/build/editor/countboard.js":
+            return import("modules/cs/js/editor/countboard");
         case "/cs/js/build/stack.js":
             return import("modules/cs/js/stack");
         case "/cs/js/build/geogebra.js":
