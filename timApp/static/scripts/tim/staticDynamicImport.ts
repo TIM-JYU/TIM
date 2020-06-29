@@ -28,6 +28,14 @@ export function staticDynamicImport(s: string) {
             return import("tim/plugin/timMenuController");
         case "/cs/js/build/csPlugin.js":
             return import("modules/cs/js/csPlugin");
+        case "/cs/js/build/editor/editor.js":
+            return import("modules/cs/js/editor/editor");
+        case "/cs/js/build/editor/ace.js":
+            return import("modules/cs/js/editor/ace");
+        case "/cs/js/build/editor/normal.js":
+            return import("modules/cs/js/editor/normal");
+        case "/cs/js/build/editor/parsons.js":
+            return import("modules/cs/js/editor/parsons");
         case "/cs/js/build/stack.js":
             return import("modules/cs/js/stack");
         case "/cs/js/build/geogebra.js":
