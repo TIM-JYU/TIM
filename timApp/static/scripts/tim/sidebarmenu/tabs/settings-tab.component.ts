@@ -89,9 +89,9 @@ const DEFAULT_PIECE_SIZE = 20;
             </button>
             <button *ngIf="docSettings?.exam_mode && item.rights.manage"
                     class="timButton btn-block"
-                    title="Reset all read marks for all users who visited this document" i18n-title
+                    title="Delete all read marks from all users who visited this document" i18n-title
                     (click)="markDocumentUnread()"
-                    i18n>Reset all read marks
+                    i18n>Delete all read marks
             </button>
         </ng-container>
         <ng-container *ngIf="lctrl.lectureSettings.inLecture">

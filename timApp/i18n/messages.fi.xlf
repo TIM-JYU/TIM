@@ -560,19 +560,19 @@
           <context context-type="linenumber">58</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="ad34999e195332422b0aee4475da77d50aff0ae1" datatype="html">
-        <source>Reset all read marks
+      <trans-unit id="57d55245e3bd51bd82ec49f1cc8b874a659572c8" datatype="html">
+        <source>Delete all read marks
             </source>
-        <target state="translated">Alusta kaikki lukumerkinnät
+        <target state="translated">Poista kaikki lukumerkinnät
             </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">66</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="b37566f27c8ade24560ec2e4a8bc78d1c944d5fa" datatype="html">
-        <source>Reset all read marks for all users who visited this document</source>
-        <target state="translated">Alusta lukumerkinnät kaikille käyttäjille, jotka avasivat tämän dokumentin</target>
+      <trans-unit id="a484141a8c54e73487991d19f3c704a910aed099" datatype="html">
+        <source>Delete all read marks from all users who visited this document</source>
+        <target state="translated">Poista lukumerkinnät kaikilta käyttäjiltä, jotka avasivat tämän dokumentin</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">64</context>
@@ -856,7 +856,7 @@
         <source>
             This document is in exam mode. Marking document unread will remove read marks from all users! Continue?
         </source>
-        <target state="translated">Tämä dokumentti on tenttitilassa. Merkitsemällä dokumentti lukemattomaksi poistaa kaikki lukumerkinnät kaikilta käyttäjiltä! Jatketaanko?</target>
+        <target state="translated">Tämä dokumentti on tenttitilassa. Dokumentin merkitseminen lukemattomaksi poistaa kaikki lukumerkinnät kaikilta käyttäjiltä! Jatketaanko?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">168</context>
