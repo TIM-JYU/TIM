@@ -20,7 +20,6 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import * as t from "io-ts";
 import $ from "jquery";
 import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {IAce} from "tim/editor/ace";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {getFormBehavior} from "tim/plugin/util";
@@ -36,10 +35,11 @@ import {
     valueOr,
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
-import {wrapText} from "tim/document/editing/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
+import {Mode, EditorComponent} from "./editor/editor";
+import {EditorModule} from "./editor/module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {getInt, countChars} from "./util";
@@ -399,15 +399,22 @@ function makeTemplate() {
     <div class="csRunCode">
         <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
         <div class="csEditorAreaDiv">
-            <div class="csrunEditorDiv" *ngIf="!noeditor || viewCode">
-            <textarea class="csRunArea csEditArea no-popup-menu"
-                    [rows]="rows"
-                    [(ngModel)]="usercode"
-                    [attr.placeholder]="placeholder"> 
-                      [attr.placeholder]="placeholder"> 
-                    [attr.placeholder]="placeholder"> 
-            </textarea>
-            </div>
+            <cs-editor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
+                    [base]="byCode"
+                    [cssPrint]="cssPrint"
+                    [minRows]="markup.rows"
+                    [maxRows]="markup.maxrows"
+                    [wrap]="wrap"
+                    [modes]="editorModes"
+                    [editorIndex]="markup.editorMode"
+                    [languageMode]="mode"
+                    [parsonsShuffle]="initUserCode"
+                    [parsonsMaxcheck]="markup.parsonsmaxcheck"
+                    [parsonsNotordermatters]="markup.parsonsnotordermatters"
+                    [parsonsStyleWords]="markup['style-words']"
+                    [parsonsWords]="markup.words"
+                    (content)="onContentChange($event)">
+            </cs-editor>
             <div class="csRunChanged" *ngIf="usercode !== byCode && !hide.changed"></div>
             <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
         </div>
@@ -475,13 +482,13 @@ function makeTemplate() {
             </span>
             <a href="javascript:void(0)" *ngIf="!nocode && (file || program)"
                     (click)="showCode()">{{showCodeLink}}</a>&nbsp;&nbsp;
-            <a href="javascript:void(0)" *ngIf="muokattu"
-                    (click)="initCode()">{{resetText}}</a>
+            <a href="javascript:void(0)" *ngIf="editor && editor.modified"
+                    (click)="editor?.reset()">{{resetText}}</a>
             <a href="javascript:void(0)" *ngIf="toggleEditor"
                     (click)="hideShowEditor()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
-            <a href="javascript:void(0)" *ngIf="!noeditor"
-                    (click)="showOtherEditor()">
-                {{editorText[editorModeIndecies[editorMode+1]]}}
+            <a href="javascript:void(0)" *ngIf="!noeditor && editor && editor.nextModeText"
+                    (click)="editor?.showOtherEditor()">
+                {{editor.nextModeText}}
             </a>&nbsp;&nbsp;
             <a href="javascript:void(0)" *ngIf="markup.copyLink"
                     (click)="copyCode()">{{markup.copyLink}}</a>
@@ -489,8 +496,8 @@ function makeTemplate() {
                     class="inputSmall"
                     style="float: right;"
                     title="Run time in sec {{runtime}}">{{oneruntime}}</span>
-            <span *ngIf="wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
-                <button class="timButton" title="Click to reformat text for given line length" (click)="checkWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
+            <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
+                <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
                 </button>
                 <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto" style="position: relative;top: 0.3em;"/>
                 <input type="text" title="Choose linelength for text.  0=no wrap" pattern="/[-0-9]*/" [(ngModel)]="wrap.n" size="2"/>
@@ -786,8 +793,15 @@ const CsAll = t.intersection([
     })]);
     
 export class CsBase extends AngularPluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
-    usercode: string = "";
+    usercode_: string = "";
 
+    get usercode(): string {
+        return this.usercode_;
+    }
+    set usercode(str: string) {
+        this.usercode_ = str;
+    }
+    
     get byCode() {
         return commentTrim((this.attrsall.by ?? this.markup.byCode) ?? "");
     }
@@ -888,18 +902,15 @@ interface IRunResponse {
 export class CsController extends CsBase implements ITimComponent {
     vctrl!: ViewCtrl;
 
-    aceEditor?: IAceEditor;
     canvasConsole: {log: (...args: string[]) => void};
     code?: string;
     codeInitialized: boolean = false;
     comtestError?: string;
     connectionErrorMessage?: string;
     copyingFromTauno: boolean;
-    csparson: any;
     cursor: string;
     docLink: string;
     docURL?: string;
-    edit!: HTMLTextAreaElement;
     edited: boolean = false;
     editArea?: Element;
     editorIndex: number;
@@ -920,7 +931,6 @@ export class CsController extends CsBase implements ITimComponent {
     lastUserargs?: string;
     lastUserinput?: string;
     localcode?: string;
-    maxRows!: number;
     muokattu: boolean;
     noeditor!: boolean;
     oneruntime?: string;
@@ -957,7 +967,6 @@ export class CsController extends CsBase implements ITimComponent {
     dochecks: {
         userinput?: string;
         userargs?: string;
-        usercode?: string;
     } = {};
 
     rows: number = 1;
@@ -981,6 +990,44 @@ export class CsController extends CsBase implements ITimComponent {
     hide: {wrap?: boolean, changed?: boolean} = {};
     savedText: string = "";
     timeout: number = 0;
+    editorModes: Mode[] = [];
+    editor?: EditorComponent;
+    @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
+
+    @ViewChild(EditorComponent) set editorViewSetter(new_value: EditorComponent | undefined) {
+        if (!new_value) {
+            return;
+        }
+        this.editor = new_value;
+
+        let usercode: string = this.attrsall.usercode ?? "";
+        if (this.attrsall.usercode == null) {
+            if (this.byCode) {
+                usercode = this.byCode;
+                this.initUserCode = true;
+            }
+        }
+        usercode = commentTrim(usercode);
+        if (this.markup.blind) {
+            usercode = usercode.replace(/@author.*/, "@author XXXX");
+        }
+        this.editor.content = usercode;
+        
+        if (this.savedvals) {
+            this.savedvals.code = this.usercode;
+        }
+    }
+
+    get usercode(): string {
+        return this.editor?.content ?? super.usercode;
+    }
+
+    set usercode(str: string) {
+        super.usercode = str;
+        if (this.editor) {
+            this.editor.content = str;
+        }
+    }
 
     constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
         super(el, http, domSanitizer);
@@ -1387,10 +1434,6 @@ ${fhtml}
         return valueDefu(this.markup.resetText, (this.english ? "Reset" : "Alusta"));
     }
 
-    get editorModes() {
-        return this.markup.editorModes.toString();
-    }
-
     getTemplateButtons(): string[] {
         let b = this.markup.buttons;
         if (b) {
@@ -1455,50 +1498,24 @@ ${fhtml}
         this.userargs = valueOr(this.attrsall.userargs, (this.markup.userargs ?? (isText && isArgs ? this.markup.filename ?? "" : "")).toString());
         this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
         this.noeditor = valueOr(this.markup.noeditor, this.isSimcir || (this.type === "upload"));
+
         const wn =  this.markup.wrap ?? (isText ? 70 : -1);
         this.wrap = { n:wn == -1 ? -1 : Math.abs(wn), auto: wn > 0 };
 
-        this.editorMode = this.markup.editorMode;
         this.viewCode = this.markup.viewCode;
-        this.editorText = [
+
+        const editorText = [
             valueDefu(this.markup.normal, this.english ? "Normal" : "Tavallinen"),
             valueDefu(this.markup.highlight, "Highlight"),
             this.markup.parsons,
             this.markup.jsparsons,
         ];
-        for (const c of this.editorModes) {
-            this.editorModeIndecies.push(parseInt(c, 10));
+        for (const c of this.markup.editorModes.toString()) {
+            const mode = parseInt(c);
+            this.editorModes.push(new Mode(mode, editorText[mode]));
         }
-        this.editorModeIndecies.push(parseInt(this.editorModes[0], 10));
-        if (this.editorModes.length <= 1) {
-            this.editorText = ["", "", "", "", "", "", ""];
-        }
-        this.checkEditorModeLocalStorage();
 
-        this.maxRows = getInt(this.markup.maxrows) ?? 0;
         this.rows = this.minRows;
-
-        if (this.attrsall.usercode == null) {
-            if (this.byCode) {
-                this.usercode = this.byCode;
-                this.initUserCode = true;
-            }
-        } else {
-            this.usercode = this.attrsall.usercode;
-        }
-        this.usercode = commentTrim(this.usercode);
-        if (this.markup.blind) {
-            this.usercode = this.usercode.replace(/@author.*/, "@author XXXX");
-        }
-
-        if (this.usercode) {
-            const rowCount = countChars(this.usercode, "\n") + 1;
-            if (this.maxRows < 0 && this.maxRows < rowCount) {
-                this.maxRows = rowCount;
-            }
-        } else if (this.maxRows < 0) {
-            this.maxRows = 10;
-        }
 
         if (this.indent < 0) {
             if (this.file) {
@@ -1507,10 +1524,6 @@ ${fhtml}
                 this.indent = 0;
             }
         }
-
-        if (this.editorMode !== 0 || this.editorModes !== "01" || this.cssPrint) {
-            this.showOtherEditor(this.editorMode);
-        } // Forces code editor to change to pre
 
         this.processPluginMath();
         const tid = this.pluginMeta.getTaskId();
@@ -1538,7 +1551,6 @@ ${fhtml}
                 argsEdit[0].setAttribute("style", styleArgs);
             }
         }
-        this.initEditorKeyBindings();
         this.element.bind("keydown", (event) => {
             if (event.ctrlKey || event.metaKey) {
                 switch (String.fromCharCode(event.which).toLowerCase()) {
@@ -1633,6 +1645,24 @@ ${fhtml}
         return this.isUnSaved();
     }
 
+    onContentChange(str: string) {
+        super.usercode = str;
+        this.checkByCodeRemove();
+        if (!this.copyingFromTauno && str !== this.byCode) {
+            this.muokattu = true;
+        }
+        this.copyingFromTauno = false;
+        if (this.viewCode) {
+            this.pushShowCodeNow();
+        }
+        this.countBoard?.count(str);
+        if (this.isText) {
+            this.savedText = "";
+        }
+
+        this.anyChanged();
+    }
+
     async ngDoCheck() {
 
         // Only the properties
@@ -1641,33 +1671,6 @@ ${fhtml}
         // should affect `anyChanged`. Don't make `anyChanged` depend on `this.savedvals` or anything else.
         // Don't add more properties to `this.dochecks`.
         let anyChanged = false;
-
-        if (this.usercode !== this.dochecks.usercode) {
-            this.dochecks.usercode = this.usercode;
-            this.checkByCodeRemove();
-            if (this.aceEditor && this.aceEditor.getSession().getValue() !== this.usercode) {
-                this.aceEditor.getSession().setValue(this.usercode);
-            }
-            if (!this.copyingFromTauno && this.usercode !== this.byCode) {
-                this.muokattu = true;
-            }
-            this.copyingFromTauno = false;
-            if (this.minRows < this.maxRows) {
-                this.updateEditSize();
-            }
-            if (this.viewCode) {
-                this.pushShowCodeNow();
-            }
-            if (this.wrap.auto) {
-                this.checkWrap();
-            }
-            if (this.countItems) {
-                this.doCountItems();
-            }
-            if (this.isText) {this.savedText = "";}
-
-            anyChanged = true;
-        }
 
         if (this.userargs !== this.dochecks.userargs) {
             this.dochecks.userargs = this.userargs;
@@ -1679,17 +1682,21 @@ ${fhtml}
         }
 
         if (anyChanged) {
-            this.textChanged();
-            const currUsercode = this.usercode;
-            const currUserargs = this.userargs;
-            const currUserinput = this.userinput;
-            if (this.runned && this.markup.autoupdate) {
-                await $timeout(this.markup.autoupdate);
-                if (currUsercode === this.usercode &&
-                    currUserargs === this.userargs &&
-                    currUserinput === this.userinput) {
-                    this.runCodeAuto();
-                }
+            this.anyChanged();
+        }
+    }
+    
+    async anyChanged() {
+        this.textChanged();
+        const currUsercode = this.usercode;
+        const currUserargs = this.userargs;
+        const currUserinput = this.userinput;
+        if (this.runned && this.markup.autoupdate) {
+            await $timeout(this.markup.autoupdate);
+            if (currUsercode === this.usercode &&
+                currUserargs === this.userargs &&
+                currUserinput === this.userinput) {
+                this.runCodeAuto();
             }
         }
     }
@@ -1811,34 +1818,6 @@ ${fhtml}
         return;
     }
 
-    checkWrap() {
-        if (this.wrap.n <= 0) { return; }
-        const r = wrapText(this.usercode, this.wrap.n);
-        if (r.modified) {
-            if (this.editorIndex === 0 && this.edit) {
-                const start = this.edit.selectionStart;
-
-                this.usercode = r.s;
-                this.edit.value = r.s;
-                this.edit.selectionStart = start;
-                this.edit.selectionEnd = start;
-            }
-            if (this.editorIndex === 1 && this.aceEditor) {
-                const editor = this.aceEditor;
-                let cursor = editor.selection.getCursor();
-                const sess = editor.getSession();
-                const index = sess.getDocument().positionToIndex(cursor, 0);
-                this.usercode = r.s;
-                sess.setValue(r.s);
-                cursor = sess.getDocument().indexToPosition(index, 0);
-                editor.selection.moveCursorToPosition(cursor);
-                editor.selection.clearSelection();
-            }
-
-        }
-
-    }
-
     runCodeIfCR(event: KeyboardEvent) {
         if (event.keyCode === 13) {
             this.runCode();
@@ -1931,9 +1910,8 @@ ${fhtml}
             this.copyTauno();
         }
 
-        if (this.csparson) {
-            this.usercode = this.csparson.join("\n");
-            this.csparson.check(this.usercode);
+        if (this.editor?.parsonsEditor) {
+            this.editor.parsonsEditor.check();
         }
 
         this.checkIndent();
@@ -2132,42 +2110,8 @@ ${fhtml}
             this.userargs += s + " ";
             return;
         }
-        let tbox;
-        let editor: IAceEditor | undefined;
-        let i = 0;
-        if (this.editorIndex === 1) {
-            editor = this.aceEditor!;
-            i = editor.session.getDocument().positionToIndex(editor.selection.getCursor(), 0);
-        } else {
-            tbox = this.edit;
-            i = tbox.selectionStart || 0;
-        }
-        let uc = (this.usercode || "");
-        const ci = uc.indexOf(this.cursor);
-        if (ci >= 0) {
-            if (ci < i) {
-                i--;
-            }
-            uc = uc.replace(this.cursor, "");
-        }
         const text = s.replace(/\\n/g, "\n");
-        const cur = ""; // $scope.cursor;  // this would be needed by iPad because it does not show cursor
-        this.usercode = uc.substring(0, i) + text + cur + uc.substring(i);
-        // $scope.usercode = (uc + s.replace(/\\n/g,"\n")).replace($scope.cursor,"")+$scope.cursor;
-        // $scope.insertAtCursor(tbox, s);
-        // tbox.selectionStart += s.length;
-        // tbox.selectionEnd += s.length;
-        i += text.length;
-        await $timeout();
-        if (editor) {
-            const cursor = editor.session.getDocument().indexToPosition(i, 0);
-            editor.selection.moveCursorToPosition(cursor);
-            editor.selection.clearSelection();
-        } else if (tbox) {
-            tbox.selectionStart = i;
-            tbox.selectionEnd = i;
-            tbox.focus();
-        }
+        this.editor?.insert?.(text);
     }
 
     addTextHtml(s: string) {
@@ -2345,10 +2289,7 @@ ${fhtml}
         this.runError = false;
         this.result = "";
         this.viewCode = this.markup.viewCode;
-        if (this.editorModeIndecies[this.editorMode] > 1) {
-            this.initUserCode = true;
-            this.showOtherEditor(this.editorMode);
-        }
+        this.editor?.reset();
         if (this.isSage) {
             this.initSage(false);
         }
@@ -2554,7 +2495,6 @@ ${fhtml}
         if (!this.indent || !this.usercode) {
             return;
         }
-        let start = this.edit.selectionStart;
         let spaces = "";
         for (let j1 = 0; j1 < this.indent; j1++) {
             spaces += " ";
@@ -2581,9 +2521,6 @@ ${fhtml}
             } // do not indent empty lines
             s = spaces + s.substring(j);
             const dl = s.length - l;
-            if (len - l < start) {
-                start += dl;
-            }
             len += dl;
             st[i] = s;
             n++;
@@ -2725,170 +2662,6 @@ ${fhtml}
             const data = r.result;
             alert("Failed to show preview: " + data.error);
         }
-    }
-
-    async showCsParsons(sortable: Element) {
-        const csp = await import("./cs-parsons/csparsons");
-        const parson = new csp.CsParsonsWidget({
-            sortable: sortable,
-            words: this.markup.words,
-            minWidth: "40px",
-            shuffle: this.initUserCode,
-            styleWords: this.markup["style-words"],
-            maxcheck: this.markup.parsonsmaxcheck,
-            notordermatters: this.markup.parsonsnotordermatters,
-            onChange: (p) => {
-                this.usercode = p.join("\n");
-            },
-        });
-        parson.init(this.byCode, this.usercode);
-        parson.show();
-        this.csparson = parson;
-    }
-
-    initEditorKeyBindings() {
-        let eindex = this.editorModeIndecies[this.editorMode];
-        if (eindex !== 0) {
-            return;
-        }
-        $(this.edit).bind("keydown", (event) => {
-            eindex = this.editorModeIndecies[this.editorMode];
-            if (eindex !== 0) {
-                return;
-            }
-            if (this.editorMode !== 0) {
-                return;
-            }
-            if (event.which === 9) {
-                event.preventDefault();
-                if (event.shiftKey) {
-                    return;
-                }
-                insertAtCaret(this.edit, "    ");
-                this.usercode = this.edit.value;
-                return;
-            }
-        });
-    }
-
-    checkEditorModeLocalStorage() {
-        if (this.editorMode >= 0) {
-            return;
-        }
-        this.editorMode = 0;
-        const eindexStr = localStorage.getItem("editorIndex");
-        if (!eindexStr) {
-            return;
-        }
-        const eindex = parseInt(eindexStr, 10);
-        if (!this.editorModes.includes("0")) {
-            return;
-        }
-        if (!this.editorModes.includes("1")) {
-            return;
-        }
-        for (let em = 0; em < this.editorModeIndecies.length; em++) {
-            const ein = this.editorModeIndecies[em];
-            if (ein === eindex) {
-                this.editorMode = em;
-                break;
-            }
-        }
-    }
-
-    async showOtherEditor(editorMode?: number) {
-        this.csparson = null;
-
-        const editorHtml = `
-<textarea class="csRunArea csrunEditorDiv"
-          rows={{rows}}
-          [(ngModel)]="usercode"
-          placeholder="placeholder"></textarea>
-`;
-
-        const aceHtml = `
-<div class="no-popup-menu">
-    <div *ngIf="mode"
-         class="csRunArea csEditArea csAceEditor"></div>
-</div>
-`;
-
-        const cssHtml = `<pre>{{usercode}}</pre>`;
-
-        const parsonsHtml = `<div class="no-popup-menu"></div>`;
-
-        let html;
-        if (this.cssPrint) {
-            html = [cssHtml, cssHtml, cssHtml, cssHtml];
-        } else {
-            html = [editorHtml, aceHtml, parsonsHtml, parsonsHtml];
-        }
-
-        if (editorMode != undefined) {
-            this.editorMode = editorMode;
-        } else {
-            this.editorMode++;
-        }
-        if (this.editorMode >= this.editorModeIndecies.length - 1) {
-            this.editorMode = 0;
-        }
-        const eindex = this.editorModeIndecies[this.editorMode];
-        this.editorIndex = eindex;
-        const otherEditDiv = this.getRootElement().getElementsByClassName("csrunEditorDiv")[0];
-        const editorDiv = angular.element(otherEditDiv) as JQuery;
-        // editorDiv.empty();
-        //this.edit = $compile(html[eindex])(this.scope)[0] as HTMLTextAreaElement; // TODO unsafe cast
-        // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
-        if (eindex === 1) {
-            const ace = (await import("tim/editor/ace")).ace;
-            editorDiv.empty();
-            editorDiv.append(this.edit);
-            // const editor = ace.edit(editorDiv.find(".csAceEditor")[0]) as IAceEditor;
-            const editor = ace.edit(this.edit);
-
-            this.aceLoaded(ace, editor);
-            if (this.mode) {
-                editor.getSession().setMode("ace/mode/" + this.mode);
-            }
-            editor.setOptions({
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: false,
-                enableSnippets: true,
-                maxLines: this.maxRows,
-                // showTokenInfo: true
-            });
-            editor.setFontSize(15);
-            if (editorDiv.parents(".reveal").length > 0) {
-                editor.setFontSize(25);
-            }
-            editor.getSession().setUseWorker(false); // syntax check away
-            editor.renderer.setScrollMargin(12, 12, 0, 0);
-            editor.getSession().setValue(this.usercode);
-            editor.getSession().on("change", () => {
-                /*this.scope.$evalAsync(() => {
-                    this.usercode = editor.getSession().getValue();
-                });*/ //TODO
-
-            });
-        } else {
-            await 1; // TODO:  Miksi tässä pitää olla tämä?  Muuten tuo editorDiv.empty() aiheuttaa poikkeuksen
-            editorDiv.empty();
-            editorDiv.append(this.edit);
-            if (eindex === 2) {
-                this.showCsParsons(otherEditDiv.children[0]);
-            }
-        }
-        this.initEditorKeyBindings();
-        if (eindex <= 1) {
-            localStorage.setItem("editorIndex", eindex.toString());
-        }
-    }
-
-    // Runs when editor loads
-    aceLoaded(ace: IAce, editor: IAceEditor) {
-        this.aceEditor = editor;
-        const session = editor.getSession();
-        session.setUndoManager(new ace.UndoManager());
     }
 
     write(s: string) {
@@ -3476,6 +3249,7 @@ class CsConsoleComponent extends CsBase implements IController {
         CsConsoleComponent,
     ],
     imports: [
+        EditorModule,
         BrowserModule,
         HttpClientModule,
         FormsModule,

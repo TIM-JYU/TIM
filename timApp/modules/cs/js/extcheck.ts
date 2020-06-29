@@ -25,6 +25,7 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {EditorModule} from "./editor/module"
 
 interface IAngularComponent {
     template: string;
@@ -65,13 +66,22 @@ interface IRunResult {
             <div class="csRunCode">
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
                 <div class="csEditorAreaDiv">
-                    <div class="csrunEditorDiv" *ngIf="!noeditor || viewCode">
-                    <textarea class="csRunArea csEditArea no-popup-menu"
-                            [rows]="rows"
-                            [(ngModel)]="usercode"
-                            [attr.placeholder]="placeholder"> 
-                    </textarea>
-                    </div>
+                    <cs-editor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
+                            [base]="byCode"
+                            [cssPrint]="cssPrint"
+                            [minRows]="markup.rows"
+                            [maxRows]="markup.maxrows"
+                            [wrap]="wrap"
+                            [modes]="editorModes"
+                            [editorIndex]="markup.editorMode"
+                            [languageMode]="mode"
+                            [parsonsShuffle]="initUserCode"
+                            [parsonsMaxcheck]="markup.parsonsmaxcheck"
+                            [parsonsNotordermatters]="markup.parsonsnotordermatters"
+                            [parsonsStyleWords]="markup['style-words']"
+                            [parsonsWords]="markup.words"
+                            (content)="onContentChange($event)">
+                    </cs-editor>
                     <div class="csRunChanged" *ngIf="usercode !== byCode && !hide.changed"></div>
                     <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
                 </div>
@@ -129,13 +139,13 @@ interface IRunResult {
                     </span>
                     <a href="javascript:void(0)" *ngIf="!nocode && (file || program)"
                             (click)="showCode()">{{showCodeLink}}</a>&nbsp;&nbsp;
-                    <a href="javascript:void(0)" *ngIf="muokattu"
-                            (click)="initCode()">{{resetText}}</a>
+                    <a href="javascript:void(0)" *ngIf="editor && editor.modified"
+                            (click)="editor?.reset()">{{resetText}}</a>
                     <a href="javascript:void(0)" *ngIf="toggleEditor"
                             (click)="hideShowEditor()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
-                    <a href="javascript:void(0)" *ngIf="!noeditor"
-                            (click)="showOtherEditor()">
-                        {{editorText[editorModeIndecies[editorMode+1]]}}
+                    <a href="javascript:void(0)" *ngIf="!noeditor && editor && editor.nextModeText"
+                            (click)="editor?.showOtherEditor()">
+                        {{editor.nextModeText}}
                     </a>&nbsp;&nbsp;
                     <a href="javascript:void(0)" *ngIf="markup.copyLink"
                             (click)="copyCode()">{{markup.copyLink}}</a>
@@ -143,8 +153,8 @@ interface IRunResult {
                             class="inputSmall"
                             style="float: right;"
                             title="Run time in sec {{runtime}}">{{oneruntime}}</span>
-                    <span *ngIf="wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
-                        <button class="timButton" title="Click to reformat text for given line length" (click)="checkWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
+                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
+                        <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
                         </button>
                         <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto" style="position: relative;top: 0.3em;"/>
                         <input type="text" title="Choose linelength for text.  0=no wrap" pattern="/[-0-9]*/" [(ngModel)]="wrap.n" size="2"/>
@@ -328,6 +338,7 @@ export class OutputContainerComponent implements IOutputContainer {
         TimUtilityModule,
         FormsModule,
         HttpClientModule,
+        EditorModule,
     ],
 })
 export class ExtcheckModule implements DoBootstrap {
