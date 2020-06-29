@@ -8,6 +8,7 @@ from run import *
 from os.path import splitext
 from pathlib import Path
 from modifiers import Modifier
+from traceback import print_exc
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
@@ -966,8 +967,8 @@ class XML(Text):
         if not convert:
             return super(XML, self).run(result, sourcelines, points_rule)
 
-        language_class = languages.get(convert.lower(), Language)
-        language = language_class(self.query, sourcelines)
+        from ttype import TType
+        language = TType(convert, self.query, sourcelines).get_language()
         return language.convert(sourcelines)
 
 
