@@ -2911,12 +2911,12 @@ export class CsWescemeComponent extends CsController {
             <input class="csTinyText no-popup-menu"
                 [ngClass]="{warnFrame: isUnSaved()}"
                 *ngIf="!noeditor || viewCode"
-                size="{{cols}}"
+                [size]="cols"
                 [(ngModel)]="usercode"
                 [attr.placeholder]="placeholder"
                 (keypress)="runCodeIfCR($event)"/>
             <button *ngIf="isRun"
-                    [attr.disabled]="(markup.disableUnchanged && !isUnSaved()) || isRunning || preventSave"
+                    [attr.disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved())"
                     class = "timButton"
                     title="(Ctrl-S)"
                     (click)="runCode();"
@@ -3229,5 +3229,5 @@ doDowngrade(angularJsModule, "csSageunner", CsSageComponent);
 doDowngrade(angularJsModule, "csSimcirRunner", CsSimcirComponent);
 doDowngrade(angularJsModule, "csWeschemeRunner", CsWescemeComponent);
 doDowngrade(angularJsModule, "csTextRunner", CsTextComponent);
-doDowngrade(angularJsModule, "csConsoleRunner", CsConsoleComponent);
+doDowngrade(angularJsModule, "csConsole", CsConsoleComponent);
 export const moduleDefs = [angularJsModule];
