@@ -48,9 +48,6 @@ from points import *
 from languages import Language
 from extchecklib import *
 
-# TODO: replace Loadable with dataclass and marshmallow.
-# Requires python 3.7+ and marshmallow module.
-
 class ExtCheck(Language):
     ttype="extcheck"
     def __init__(self, query, sourcecode):

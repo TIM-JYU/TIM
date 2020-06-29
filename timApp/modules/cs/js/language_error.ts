@@ -36,7 +36,6 @@ class CSErrorComponent extends CsBase {
     }
 }
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [
         CSErrorComponent,

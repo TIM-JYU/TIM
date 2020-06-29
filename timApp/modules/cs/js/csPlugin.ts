@@ -2952,8 +2952,6 @@ export class CsTextComponent extends CsController {
 
 function trackByIndex(index: number, o: unknown) { return index; }
 
-//const csConsoleApp = angular.module("csConsoleApp", ["ngSanitize"]);
-
 @Component({
     selector: "cs-console",
     template: `
@@ -3177,9 +3175,6 @@ class CsConsoleComponent extends CsBase implements IController {
     }
 }
 
-//export const moduleDefs = [csApp, csConsoleApp];
-
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [
         CsRunnerComponent,

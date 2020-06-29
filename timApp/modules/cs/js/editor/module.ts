@@ -8,7 +8,6 @@ import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [
         EditorComponent,
