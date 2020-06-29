@@ -615,7 +615,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         } else {
             taskOrAnswer = {task_id: this.taskId};
         }
-        if (this.selectedAnswer?.id !== this.loadedAnswer.id || this.oldreview !== this.review) {
+        // get new state as long as the previous answer was not explicitly the same as the one before
+        // otherwise we might not see the unanswered plugin exactly how the user sees it
+        if (!(this.selectedAnswer && this.loadedAnswer
+            && this.selectedAnswer.id == this.loadedAnswer.id
+            && this.oldreview == this.review)) {
             this.loading++;
             const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
                 params: {
@@ -646,7 +650,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.selectedAnswer) {
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
         }
-        if (!(this.viewctrl.teacherMode && !this.selectedAnswer && !this.saveTeacher)) {
+        if (this.viewctrl.teacherMode && !this.selectedAnswer && !this.saveTeacher) {
+            this.dimPlugin();
+        } else {
             this.unDimPlugin();
         }
     }
