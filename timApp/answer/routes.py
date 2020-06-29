@@ -1554,10 +1554,6 @@ def get_state(args: GetStateModel):
     elif task_id:
         tid = TaskId.parse(task_id)
         d = get_doc_or_abort(tid.doc_id)
-        if get_current_user_id() != user_id:
-            verify_teacher_access(d)
-        else:
-            verify_view_access(d)
         doc = d.document
     else:
         return abort(400, "Missing answer ID or task ID")
