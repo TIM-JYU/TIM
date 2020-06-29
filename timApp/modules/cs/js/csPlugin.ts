@@ -42,7 +42,7 @@ import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-type IAceEditor = Ace.Editor;
+import {getInt, countChars} from "./util";
 
 
 // js-parsons is unused; just declare a stub to make TS happy
@@ -591,24 +591,6 @@ function insertAtCaret(txtarea: HTMLTextAreaElement, text: string) {
         txtarea.focus();
     }
     txtarea.scrollTop = scrollPos;
-}
-
-function getInt(s: string | number) {
-    if (typeof s === "number") {
-        return s;
-    }
-    const n = parseInt(s, 10);
-    if (isNaN(n)) {
-        return undefined;
-    }
-    return n;
-}
-
-function countChars(s: string, c: string) {
-    let n = 0;
-    for (let i = 0; i < s.length; n += +(c === s[i++])) {
-    }
-    return n;
 }
 
 function doVariables(v: string | undefined, name: string) {
