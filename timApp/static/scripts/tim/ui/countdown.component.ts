@@ -16,9 +16,7 @@ const TICK_TENTH_SECOND = 100;
 
 @Component({
     selector: "tim-countdown",
-    template: `
-        {{timeLeftText}}
-    `,
+    template: `{{timeLeftText}}`,
 })
 export class CountdownComponent implements OnInit {
     @Input() endTime?: string;
@@ -108,22 +106,19 @@ export class CountdownComponent implements OnInit {
         if (this.noAutoStart) {
             return;
         }
-        this.start();
+        void this.start();
     }
 
-    async start() {
-        if (this.currentInterval) {
+    start() {
+        void this.startTimer();
+    }
+
+    private async startTimer() {
+        if (this.currentInterval || this.running) {
             return;
         }
         this.currentEndDate = await this.getEndDate();
         this.updateSyncInterval();
-        this.startTimer();
-    }
-
-    private async startTimer() {
-        if (this.running) {
-            return;
-        }
         this.running = true;
         await this.checkCountdown();
         const getIdealInterval = () => this.currentCountdown < DISPLAY_TENTHS_LIMIT ? TICK_TENTH_SECOND : TICK_SECOND;
