@@ -38,6 +38,11 @@ def get_readings_filtered_query(usergroup_id: int, doc: Document, filter_conditi
     return q
 
 
+def get_clicked_readings_query(doc: Document) -> Query:
+    return ReadParagraph.query.filter((ReadParagraph.doc_id == doc.doc_id)
+                                      & (ReadParagraph.type == ReadParagraphType.click_red))
+
+
 def get_readings_query(usergroup_id: int, doc: Document) -> Query:
     """Gets the reading info for a document for a user.
 
@@ -81,17 +86,11 @@ def remove_all_read_marks(doc: Document):
     # usually you'd use get_referenced_document_ids to get all document IDs
     # Since we're deleting read marks here, it's better to be safe and only remove marks only
     # for paragraphs defined directly in the document
-    all_doc_read = ReadParagraph.query.filter((ReadParagraph.doc_id == doc.doc_id)
-                                              & (ReadParagraph.type == ReadParagraphType.click_red))
-    all_doc_read.delete(synchronize_session=False)
+    get_clicked_readings_query(doc).delete(synchronize_session=False)
 
 
 def get_read_usergroups_count(doc: Document):
-    doc_id = doc.doc_id
-    return ReadParagraph.query.filter((ReadParagraph.doc_id == doc_id)
-                                      & (ReadParagraph.type == ReadParagraphType.click_red)) \
-        .distinct(ReadParagraph.usergroup_id) \
-        .count()
+    return get_clicked_readings_query(doc).distinct(ReadParagraph.usergroup_id).count()
 
 
 def copy_readings(src_par: DocParagraph, dest_par: DocParagraph):
