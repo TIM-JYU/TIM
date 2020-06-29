@@ -862,12 +862,24 @@
           <context context-type="linenumber">168</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="markAllUnreadAffectedCount" datatype="html">
+        <source>
+            This will affect <x id="INTERPOLATION" equiv-text="{{0}}"/> users in total.
+        </source>
+        <target state="translated">
+            Tämä vaikuttaa yhteensä <x id="INTERPOLATION" equiv-text="{{0}}"/> ryhmään tai käyttäjään.
+        </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
+          <context context-type="linenumber">171</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="notInDocumentError" datatype="html">
         <source>Not in a document</source>
         <target state="translated">Ei dokumentissa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
-          <context context-type="linenumber">171</context>
+          <context context-type="linenumber">174</context>
         </context-group>
       </trans-unit>
       <trans-unit id="noKnroMacroError" datatype="html">
@@ -875,7 +887,7 @@
         <target state="translated">Dokumenttiin ei ole määritelty 'knro'-makroa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
-          <context context-type="linenumber">172</context>
+          <context context-type="linenumber">175</context>
         </context-group>
       </trans-unit>
       <trans-unit id="indexTabTitle" datatype="html">

@@ -196,6 +196,9 @@ const DEFAULT_PIECE_SIZE = 20;
         <ng-template i18n="@@markAllUnreadConfirm">
             This document is in exam mode. Marking document unread will remove read marks from all users! Continue?
         </ng-template>
+        <ng-template i18n="@@markAllUnreadAffectedCount">
+            This will affect {{0}} users in total.
+        </ng-template>
         <ng-template i18n="@@notInDocumentError">Not in a document</ng-template>
         <ng-template i18n="@@noKnroMacroError">The document has no 'knro' macro defined</ng-template>
     `,
@@ -303,9 +306,9 @@ export class SettingsTabComponent implements OnInit {
         const r = await to2(this.http.get<number>(`/read/${this.item.id}/groupCount`).toPromise());
         let message = $localize`:@@markAllUnreadConfirm:This document is in exam mode. Marking document unread will remove read marks from all users! Continue?`;
         if (r.ok) {
-            message += `\nThis will affect ${r.result} groups or users in total.`;
+            message += "\n" + $localize`:@@markAllUnreadAffectedCount:This will affect ${r.result}:INTERPOLATION: users in total.`;
         }
-        await this.confirmPost(message, `/markAllUnread/${this.item?.id}`);
+        await this.confirmPost(message, `/markAllUnread/${this.item.id}`);
     }
 
     async markTranslated() {
