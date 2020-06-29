@@ -350,7 +350,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.loadedAnswer.id = args.savedNew;
             this.review = false;
             this.oldreview = false;
-            if (this.answers.length == 0) {
+            if (this.answers.length == 0 && this.viewctrl.teacherMode) {
                 this.getAvailableUsers();
             }
             this.getAnswersAndUpdate();
@@ -796,8 +796,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return {
                 answer_id: this.selectedAnswer ? this.selectedAnswer.id : undefined,
                 saveTeacher: this.saveTeacher ||
-                    (this.loader.isInFormMode() && this.viewctrl.teacherMode) ||
-                     this.isGlobal() , // TODO: Check if correct
+                    (this.viewctrl.teacherMode && (this.loader.isInFormMode() || this.isGlobal())) , // TODO: Check if correct
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: userId,
