@@ -421,13 +421,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
             this.changeAnswer();
         });
-        this.scope.$watchGroup([
+        this.scope.$watch(
             () => this.onlyValid,
-        ], (newValue, oldValue, scope) => {
-            if (newValue == oldValue) {
-                return;
-            }
-            this.updateFilteredAndSetNewest();
+            (newValue, oldValue, scope) => {
+                if (newValue == oldValue) {
+                    return;
+                }
+                this.updateFilteredAndSetNewest();
         });
 
         // form_mode off or plugin ab didn't register as form (doesn't support setAnswer?)
@@ -604,15 +604,23 @@ export class AnswerBrowserController extends DestroyScope implements IController
             ref_from_doc_id: this.viewctrl.docId,
             ref_from_par_id: getParId(par),
         };
-        if (this.forceBrowser() || this.selectedAnswer?.id !== this.loadedAnswer.id || this.oldreview !== this.review || this.isGlobal()) {
+        const preParams = {
+            ...parParams,
+            review: this.review,
+            user_id: this.user.id,
+        };
+        let taskOrAnswer = {};
+        if (this.selectedAnswer) {
+            taskOrAnswer = {answer_id: this.selectedAnswer.id};
+        } else {
+            taskOrAnswer = {task_id: this.taskId};
+        }
+        if (this.selectedAnswer?.id !== this.loadedAnswer.id || this.oldreview !== this.review) {
             this.loading++;
             const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
                 params: {
-                    ...parParams,
-                    answer_id: this.selectedAnswer?.id,
-                    task_id: this.taskId, // TODO: Don't send both
-                    review: this.review,
-                    user_id: this.user.id,
+                    ...preParams,
+                    ...taskOrAnswer,
                 },
             }));
             this.loading--;

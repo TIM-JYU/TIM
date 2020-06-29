@@ -1575,8 +1575,8 @@ def get_state(args: GetStateModel):
         doc,
         [block],
         user,
-        custom_answer=answer if answer else None,
-        task_id = task_id if task_id else None,
+        custom_answer=answer,
+        task_id = task_id,
         pluginwrap=PluginWrap.Nothing,
         do_lazy=NEVERLAZY,
     )
