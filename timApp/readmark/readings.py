@@ -86,6 +86,14 @@ def remove_all_read_marks(doc: Document):
     all_doc_read.delete(synchronize_session=False)
 
 
+def get_read_usergroups_count(doc: Document):
+    doc_id = doc.doc_id
+    return ReadParagraph.query.filter((ReadParagraph.doc_id == doc_id)
+                                      & (ReadParagraph.type == ReadParagraphType.click_red)) \
+        .distinct(ReadParagraph.usergroup_id) \
+        .count()
+
+
 def copy_readings(src_par: DocParagraph, dest_par: DocParagraph):
     if src_par.doc.doc_id == dest_par.doc.doc_id and src_par.get_id() == dest_par.get_id():
         return

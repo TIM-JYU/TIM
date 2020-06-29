@@ -3,11 +3,13 @@ from flask import current_app, Response
 from sqlalchemy import func, distinct, true
 from sqlalchemy.exc import IntegrityError
 
-from timApp.auth.accesshelper import verify_read_marking_right, get_doc_or_abort, verify_teacher_access, verify_manage_access
+from timApp.auth.accesshelper import verify_read_marking_right, get_doc_or_abort, verify_teacher_access, \
+    verify_manage_access
 from timApp.auth.sessioninfo import get_session_usergroup_ids
 from timApp.document.docentry import DocEntry
 from timApp.document.hide_names import hide_names_in_teacher
-from timApp.readmark.readings import mark_read, mark_all_read, get_common_readings, remove_all_read_marks
+from timApp.readmark.readings import mark_read, mark_all_read, get_common_readings, remove_all_read_marks, \
+    get_read_usergroups_count
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.timdb.exceptions import TimDbException
@@ -33,6 +35,14 @@ def get_read_paragraphs(doc_id):
 def get_read_paragraph(doc_id, block_id):
     cond = ReadParagraph.par_id.in_([block_id]) & (ReadParagraph.type == ReadParagraphType.click_red)
     return get_readings_response(cond, doc_id)
+
+
+@readings.route("/read/<int:doc_id>/groupCount", methods=['GET'])
+def get_read_groups_count(doc_id: int):
+    d = get_doc_or_abort(doc_id)
+    verify_manage_access(d)
+    res = get_read_usergroups_count(d.document)
+    return json_response(res)
 
 
 def get_readings_response(cond, doc_id):

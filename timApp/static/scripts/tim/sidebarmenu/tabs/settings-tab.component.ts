@@ -297,7 +297,15 @@ export class SettingsTabComponent implements OnInit {
     }
 
     async markDocumentUnread() {
-        await this.confirmPost($localize`:@@markAllUnreadConfirm:This document is in exam mode. Marking document unread will remove read marks from all users! Continue?`, `/markAllUnread/${this.item?.id}`);
+        if (!this.item) {
+            return;
+        }
+        const r = await to2(this.http.get<number>(`/read/${this.item.id}/groupCount`).toPromise());
+        let message = $localize`:@@markAllUnreadConfirm:This document is in exam mode. Marking document unread will remove read marks from all users! Continue?`;
+        if (r.ok) {
+            message += `\nThis will affect ${r.result} groups or users in total.`;
+        }
+        await this.confirmPost(message, `/markAllUnread/${this.item?.id}`);
     }
 
     async markTranslated() {
