@@ -2889,7 +2889,7 @@ export class CsSimcirComponent extends CsController {
     selector: "cs-wescheme-runner",
     template: makeTemplate(),
 })
-export class CsWescemeComponent extends CsController {
+export class CsWeschemeComponent extends CsController {
     constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
         super(el, http, domSanitizer, cdr);
     }
@@ -3182,7 +3182,7 @@ class CsConsoleComponent extends CsBase implements IController {
         CsParsonsComponent,
         CsSageComponent,
         CsSimcirComponent,
-        CsWescemeComponent,
+        CsWeschemeComponent,
         CsTextComponent,
         CsConsoleComponent,
     ],
@@ -3216,7 +3216,7 @@ doDowngrade(angularJsModule, "csTaunoRunner", CsTaunoComponent);
 doDowngrade(angularJsModule, "csParsonsRunner", CsParsonsComponent);
 doDowngrade(angularJsModule, "csSageunner", CsSageComponent);
 doDowngrade(angularJsModule, "csSimcirRunner", CsSimcirComponent);
-doDowngrade(angularJsModule, "csWeschemeRunner", CsWescemeComponent);
+doDowngrade(angularJsModule, "csWeschemeRunner", CsWeschemeComponent);
 doDowngrade(angularJsModule, "csTextRunner", CsTextComponent);
 doDowngrade(angularJsModule, "csConsole", CsConsoleComponent);
 export const moduleDefs = [angularJsModule];
