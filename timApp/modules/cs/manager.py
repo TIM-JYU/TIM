@@ -10,7 +10,7 @@ from extcheck import ExtCheck
 
 def populated(base_class):
     dictionary = {}
-    classes =  [base_class] + base_class.all_subclasses()
+    classes = [base_class] + base_class.all_subclasses()
     
     def add(cls, ttype):
         if ttype in dictionary:

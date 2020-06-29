@@ -8,6 +8,7 @@ from run import *
 from os.path import splitext
 from pathlib import Path
 from modifiers import Modifier
+from traceback import print_exc
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
@@ -35,7 +36,6 @@ Adding new language to csPlugin:
 
 cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 filename_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
-
 
 JAVAFX_VERSION = '14'
 
@@ -65,9 +65,11 @@ def df(value, default):
 def is_compile_error(out, err):
     return out.find("Compile error") >= 0 or err.find("Compile error") >= 0
 
+
 class Language:
     ttype = "_language"
-    def __init__(self, query: Optional[QueryClass], sourcecode = ""):
+
+    def __init__(self, query: Optional[QueryClass], sourcecode=""):
         """
         :param self: object reference
         :param query: query to use
@@ -215,7 +217,7 @@ class Language:
     def run(self, result, sourcelines, points_rule):
         return 0, "", "", ""
 
-    def save(self, result): # when used without run, this can change result if needed
+    def save(self, result):  # when used without run, this can change result if needed
         return
 
     def modify_query(self):
@@ -250,14 +252,14 @@ class Language:
         :return: list of needed js-files (maybe copiled from ts-files)
         """
         return ["/cs/js/build/csPlugin.js"]
-    
+
     @staticmethod
     def css_files():
         """
         :return: list of needed css-files (maybe copiled from scss-files)
         """
         return ["/cs/css/cs.css"]
-    
+
     def convert(self, sourcelines):
         return 0, sourcelines, "", ""
 
@@ -289,27 +291,27 @@ class Language:
             uargs = None
         if self.just_compile:
             args = []
-        
-        def call_run(args, **kwargs): # allows reuse of the function arguments
+
+        def call_run(args, **kwargs):  # allows reuse of the function arguments
             if self.rootpath:
                 return run2_subdir(args, dir=self.rootpath, **kwargs)
             return run2(args, **kwargs)
-        
+
         code, out, err, pwddir = call_run(args,
-                                    cwd=df(cwd, self.prgpath),
-                                    shell=df(shell, False),
-                                    kill_tree=df(kill_tree, True),
-                                    timeout=df(timeout, self.timeout),
-                                    env=df(env, self.env),
-                                    stdin=df(stdin, self.stdin),
-                                    uargs=uargs,
-                                    code=df(code, "utf-8"),
-                                    extra=df(extra, ""),
-                                    ulimit=df(ulimit, self.ulimit),
-                                    no_x11=df(no_x11, self.no_x11),
-                                    savestate=df(savestate, self.savestate),
-                                    dockercontainer=df(dockercontainer, self.dockercontainer),
-                                    compile_commandline=self.compile_commandline)
+                                          cwd=df(cwd, self.prgpath),
+                                          shell=df(shell, False),
+                                          kill_tree=df(kill_tree, True),
+                                          timeout=df(timeout, self.timeout),
+                                          env=df(env, self.env),
+                                          stdin=df(stdin, self.stdin),
+                                          uargs=uargs,
+                                          code=df(code, "utf-8"),
+                                          extra=df(extra, ""),
+                                          ulimit=df(ulimit, self.ulimit),
+                                          no_x11=df(no_x11, self.no_x11),
+                                          savestate=df(savestate, self.savestate),
+                                          dockercontainer=df(dockercontainer, self.dockercontainer),
+                                          compile_commandline=self.compile_commandline)
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
         return code, out, err, pwddir
@@ -346,27 +348,29 @@ class Language:
 
     def get_default_before_open(self):
         return ''
-        
+
     def web_data(self):
         return None
-    
+
     def is_valid(self):
         return True
-    
+
     @classmethod
     def all_subclasses(cls):
         subclasses = cls.__subclasses__()
         return subclasses + [i for sc in subclasses for i in sc.all_subclasses()]
-    
+
     @classmethod
     def get_client_ttype(cls, ttype):
         """Returns the ttype of this class that should be given to client"""
         if isinstance(cls.ttype, list):
             return cls.ttype[0]
         return cls.ttype
-    
+
+
 class LanguageError(Language):
-    ttype="_error"
+    ttype = "_error"
+
     def __init__(self, query, sourcecode, error_str):
         try:
             super().__init__(query, sourcecode)
@@ -378,30 +382,33 @@ class LanguageError(Language):
         else:
             self.valid = True
             self.own_error = None
-        
+
         self.query = query
         self.error = error_str
-    
+
     def modify_query(self):
         self.query.query["error"] = [self.error]
         if self.own_error is not None:
             self.query.query["own_error"] = [self.own_error]
-    
+
     def runner_name(self):
         return "cs-error"
-    
+
     @staticmethod
     def js_files():
         return ["/cs/js/build/language_error.js"]
-    
+
     def is_valid(self):
         return self.valid
+
 
 class All(Language):
     ttype = "all"
 
+
 class CS(Language):
     ttype = ["cs", "c#", "csharp"]
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "csc"
@@ -427,9 +434,11 @@ class CS(Language):
         # result["tim_info"]["validMsg"] = "Et voi enää saada pisteitä kun katsoit vastauksen"
         return self.runself(["mono", "-O=all", self.pure_exename])
 
+
 class Jypeli(CS, Modifier):
     ttype = "jypeli"
-    def __init__(self, query, sourcecode = ""):
+
+    def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
         self.imgsource = "/tmp/%s/output.bmp" % self.basename
         self.pure_bmpname = "./%s.bmp" % self.filename
@@ -489,15 +498,16 @@ class Jypeli(CS, Modifier):
             remove(self.sourcefilename)
             remove(self.exename)
         return code, out, err, pwddir
-    
+
     def runner_name(self):
         return "cs-jypeli-runner"
 
-class CSComtest(CS, Modifier): # TODO: comtests probably shouldn't be modifiers but they are used as such
+
+class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers but they are used as such
     ttype = "comtest"
     nunit = None
 
-    def __init__(self, query, sourcecode = ""):
+    def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
         self.testdll = u"./{0:s}Test.dll".format(self.filename)
         self.hide_compile_out = True
@@ -557,13 +567,14 @@ class CSComtest(CS, Modifier): # TODO: comtests probably shouldn't be modifiers 
             give_points(points_rule, "test")
             self.run_points_given = True
         return code, out, err, pwddir
-        
+
     def runner_name(self):
         return "cs-comtest-runner"
 
 
 class Shell(Language):
     ttype = "shell"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.sh" % (self.basename, self.filename)
@@ -589,12 +600,14 @@ class Shell(Language):
 
 class Ping(Shell):
     ttype = "ping"
+
     def run(self, result, sourcelines, points_rule):
         return 0, "Ping", "", ""
 
 
 class Java(Language):
     ttype = "java"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.classpath = get_param(query, "-cp", ".") + ":$CLASSPATH"
@@ -626,6 +639,7 @@ class Java(Language):
 
 class Kotlin(Java):
     ttype = "kotlin"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.fileext = "kt"
@@ -703,7 +717,8 @@ def check_comtest(self, ttype, code, out, err, result, points_rule):
 
 class JComtest(Java, Modifier):
     ttype = "jcomtest"
-    def __init__(self, query, sourcecode = ""):
+
+    def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
         self.testcs = self.filepath + "/" + self.classname + "Test.java"
         self.testdll = self.javaclassname + "Test"
@@ -716,14 +731,15 @@ class JComtest(Java, Modifier):
         code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.testdll], no_uargs=True)
         out, err = check_comtest(self, "jcomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
-    
+
     def runner_name(self):
         return "cs-comtest-runner"
 
 
 class JUnit(Java, Modifier):
     ttype = "junit"
-    def __init__(self, query, sourcecode = ""):
+
+    def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
 
     def get_cmdline(self, sourcecode):
@@ -733,14 +749,15 @@ class JUnit(Java, Modifier):
         code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.javaclassname])
         out, err = check_comtest(self, "junit", code, out, err, result, points_rule)
         return code, out, err, pwddir
-        
+
     def runner_name(self):
         return "cs-comtest-runner"
 
 
 class Graphics(Java, Modifier):
     ttype = "graphics"
-    def __init__(self, query, sourcecode = ""):
+
+    def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
         self.imgsource = "%s/run/capture.png" % self.prgpath
         self.imgdest = "/csgenerated/%s.png" % self.rndname
@@ -762,12 +779,14 @@ class Graphics(Java, Modifier):
         out, err = self.copy_image(result, code, out, err, points_rule)
         err = re.sub('Xlib: {2}extension "RANDR" missing on display ":1"\\.\n', "", err)
         return code, out, err, pwddir
-    
+
     def runner_name(self):
         return "cs-jypeli-runner"
 
+
 class Scala(Language):
     ttype = "scala"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.scala" % (self.basename, self.filename)
@@ -783,6 +802,7 @@ class Scala(Language):
 
 class CC(Language):
     ttype = "cc"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "gcc"
@@ -799,6 +819,7 @@ class CC(Language):
 
 class CPP(CC):
     ttype = ["c++", "cpp"]
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "g++ -std=c++14"
@@ -809,6 +830,7 @@ class CPP(CC):
 
 class CComtest(Language):
     ttype = "ccomtest"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.cpp" % (self.basename, self.filename)
@@ -824,6 +846,7 @@ class CComtest(Language):
 
 class Fortran(Language):
     ttype = "fortran"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         extension = os.path.splitext(self.filename)[1]
@@ -844,6 +867,7 @@ class Fortran(Language):
 
 class PY3(Language):
     ttype = ["py", "py3", "python", "python3"]
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.py" % (self.basename, self.filename)
@@ -867,6 +891,7 @@ class PY3(Language):
 
 class PY2(PY3):
     ttype = "py2"
+
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["python2", self.pure_exename])
         out, err = self.copy_image(result, code, out, err, points_rule)
@@ -875,6 +900,7 @@ class PY2(PY3):
 
 class Swift(Language):
     ttype = "swift"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.swift" % (self.basename, self.filename)
@@ -893,6 +919,7 @@ class Swift(Language):
 
 class Lua(Language):
     ttype = "lua"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.lua" % (self.basename, self.filename)
@@ -910,6 +937,7 @@ class Lua(Language):
 
 class CLisp(Language):
     ttype = "clisp"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.lisp" % (self.basename, self.filename)
@@ -928,6 +956,7 @@ class CLisp(Language):
 
 class Quorum(Language):
     ttype = "quorum"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.q" % (self.basename, self.filename)
@@ -943,6 +972,7 @@ class Quorum(Language):
 
 class Text(Language):
     ttype = ["text", "txt"]
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         if self.userargs:
@@ -961,13 +991,15 @@ class Text(Language):
 
 class XML(Text):
     ttype = "xml"
+
     def run(self, result, sourcelines, points_rule):
         convert = self.query.jso.get('markup', {}).get('convert', None)
         if not convert:
             return super(XML, self).run(result, sourcelines, points_rule)
 
-        language_class = languages.get(convert.lower(), Language)
-        language = language_class(self.query, sourcelines)
+        # language_class = languages.get(convert.lower(), Language)
+        from ttype import TType
+        language = TType(convert, self.query, sourcelines).get_language()
         return language.convert(sourcelines)
 
 
@@ -978,6 +1010,7 @@ class Css(Text):
 
 class JJS(Language):
     ttype = "jjs"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.js" % (self.basename, self.filename)
@@ -999,6 +1032,7 @@ class JJS(Language):
 
 class JS(Language):
     ttype = "js"
+
     def run(self, result, sourcelines, points_rule):
         return 0, "", "", ""
 
@@ -1027,6 +1061,7 @@ class VPython(JS):
 
 class SQL(Language):
     ttype = "sql"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.sql" % (self.basename, self.filename)
@@ -1049,12 +1084,14 @@ class SQL(Language):
 
 class PSQL(SQL):
     ttype = "psql"
+
     def run(self, result, sourcelines, points_rule):
         return self.runself(["psql", "-h", self.dbname, "-U", "$psqluser"])
 
 
 class Alloy(Language):
     ttype = "alloy"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.als" % (self.basename, self.filename)
@@ -1068,13 +1105,14 @@ class Alloy(Language):
         code, out, err, pwddir = self.runself(runcmd)
         out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
-    
+
     def runner_name(self):
         return "cs-jypeli-runner"
 
 
 class Run(Language):
     ttype = "run"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
@@ -1115,12 +1153,14 @@ class HTML(Language):
 
 class SimCir(Language):
     ttype = "simcir"
+
     @staticmethod
     def css_files():
         return ["/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"]
-    
+
     def runner_name(self):
         return "cs-simcir-runner"
+
 
 class Sage(Language):
     ttype = "sage"
@@ -1136,7 +1176,7 @@ def get_by_id(jso, item_id, default=None):
     return val
 
 
-def html_change(s, old, jso, item_id, repfmt, default, valdef = None, delta = 0):
+def html_change(s, old, jso, item_id, repfmt, default, valdef=None, delta=0):
     """
     Korvataan s:ssä oleva sana old jsonin avaimesta item_id löytyvällä
     tekstillä kun se muokataan repfmt formaatilla.  Mikäli avainta
@@ -1233,7 +1273,6 @@ JSAV_DEFAULT_SRC_HTML = """
 </html>
 """
 
-
 """
 This is the inner default HTML code for the JSAV plugin.
 """
@@ -1248,8 +1287,10 @@ JSAV_HTML = """
 <div class="questiondialog"></div>
 """
 
+
 class Jsav(Language):
     ttype = "jsav"
+
     def can_give_task(self):
         return True
 
@@ -1280,11 +1321,11 @@ class Jsav(Language):
         return ["/cs/js/build/jsav.js"]
 
     def deny_attributes(self):
-        return {"srchtml":"",
+        return {"srchtml": "",
                 "jsavhtml": "",
                 "jsavjs": "",
                 "jsavcss": ""
-        }
+                }
 
     def modify_usercode(self, s):
         if not s.startswith("{"):
@@ -1330,7 +1371,7 @@ class Jsav(Language):
 
     def convert(self, sourcelines):
         url = "http://stack-api-server/api/xmltoyaml.php"
-        data = {'xml' : sourcelines}
+        data = {'xml': sourcelines}
         r = requests.post(url=url, data=json.dumps(data))
         r = r.json()
         return 0, r.get('yaml'), "", ""
@@ -1338,6 +1379,7 @@ class Jsav(Language):
 
 class R(Language):
     ttype = "r"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.is_optional_image = True
@@ -1369,6 +1411,7 @@ class R(Language):
 
 class FS(Language):
     ttype = "fs"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.fs" % (self.basename, self.filename)
@@ -1389,6 +1432,7 @@ class FS(Language):
 
 class Mathcheck(Language):
     ttype = "mathcheck"
+
     @staticmethod
     def css_files():
         return ["/cs/css/mathcheck.css"]
@@ -1417,6 +1461,7 @@ class Mathcheck(Language):
 
 class Upload(Language):
     ttype = "upload"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         cmds = get_param(query, "cmds", "")
@@ -1454,6 +1499,7 @@ octave_warnings_to_skip = [
 
 class Octave(Language):
     ttype = "octave"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.m" % (self.basename, self.filename)
@@ -1517,6 +1563,7 @@ class Octave(Language):
 
 class Rust(Language):
     ttype = "rust"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "rustc"
@@ -1533,6 +1580,7 @@ class Rust(Language):
 
 class Pascal(Language):
     ttype = "pascal"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "fpc"
@@ -1549,13 +1597,15 @@ class Pascal(Language):
 
 class Tauno(Language, Modifier):
     ttype = "tauno"
+
     def runner_name(self):
         return "cs-tauno-runner"
-    
+
 
 # Copy this for new language class
 class Lang(Language):
-    ttype =  None # replace: "name used in type attribute"
+    ttype = None  # replace: "name used in type attribute"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
 
