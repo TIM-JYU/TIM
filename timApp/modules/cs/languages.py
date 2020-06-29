@@ -8,6 +8,7 @@ from run import *
 from os.path import splitext
 from pathlib import Path
 from modifiers import Modifier
+from traceback import print_exc
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 

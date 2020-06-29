@@ -6,6 +6,8 @@ Adding new modifier to csPlugin:
 3. Overload runner_name and modify_query methods if needed.
 """
 
+from traceback import print_exc
+
 class Modifier:
     ttype = "_modifier"
     
