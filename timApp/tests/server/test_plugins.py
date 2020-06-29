@@ -474,7 +474,7 @@ type: upload
         self.check_save_points(TEST_USER_1_ID, answer_id2, 1, 403, err)
 
         self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 400, cannot_give_custom)
-        p = Plugin.from_task_id(task_id, user=get_current_user_object())
+        p, _ = Plugin.from_task_id(task_id, user=get_current_user_object())
         p.set_value('pointsRule', {'allowUserMin': 0, 'allowUserMax': 5}).save()
         self.check_save_points(TEST_USER_2_ID, answer_id2, 6, 400, {'error': 'Points must be in range [0,5]'})
         self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 200, self.ok_resp)

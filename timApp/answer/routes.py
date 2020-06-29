@@ -83,7 +83,7 @@ def save_points(answer_id, user_id):
     d = get_doc_or_abort(tid.doc_id)
     points, = verify_json_params('points')
     try:
-        plugin = Plugin.from_task_id(answer.task_id, user=get_current_user_object())
+        plugin, _ = Plugin.from_task_id(answer.task_id, user=get_current_user_object())
     except PluginException as e:
         return abort(400, str(e))
     a = Answer.query.get(answer_id)
@@ -1162,8 +1162,7 @@ def get_task_infos():
 @answers.route("/taskinfo/<task_id>")
 def get_task_info(task_id):
     try:
-        plugin = Plugin.from_task_id(task_id, user=get_current_user_object())
-        d = get_doc_or_abort(plugin.task_id.doc_id)
+        plugin, d = Plugin.from_task_id(task_id, user=get_current_user_object())
         verify_task_access(d, plugin.task_id, AccessType.view, TaskIdAccess.ReadOnly, allow_grace_period=True)
         tim_vars = find_tim_vars(plugin)
     except PluginException as e:

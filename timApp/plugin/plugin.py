@@ -215,11 +215,14 @@ class Plugin:
         return f'{self.par.doc.doc_id}..{self.par.get_id()}'
 
     @staticmethod
-    def from_task_id(task_id: str, user: User):
+    def from_task_id(task_id: str, user: User) -> Tuple['Plugin', DocInfo]:
         tid = TaskId.parse(task_id)
-        doc = Document(tid.doc_id)
+        d = DocEntry.find_by_id(tid.doc_id)
+        if not d:
+            raise PluginException(f'Document not found: {tid.doc_id}')
+        doc = d.document
         doc.insert_preamble_pars()
-        return find_plugin_from_document(doc, tid, user)
+        return find_plugin_from_document(doc, tid, user), d
 
     @staticmethod
     def from_paragraph(par: DocParagraph, user: Optional[User] = None):

@@ -57,13 +57,13 @@ header: %%username%% and %%realname%%
                          pars[1].text_content().strip())
         self.assertEqual("Syntax error in template: unexpected ‘end of template’",
                          pars[2].text_content().strip())
-        p = Plugin.from_task_id(f'{d.id}.test', User.query.get(TEST_USER_1_ID))
+        p, _ = Plugin.from_task_id(f'{d.id}.test', User.query.get(TEST_USER_1_ID))
         self.assertEqual('testuser1 and Test user 1', p.values['header'])
         self.login_test2()
         self.assertEqual('Username is testuser2 and real name is Test user 2 and email is test2@example.com',
                          self.get(f'/view/{d.id}', as_tree=True).cssselect('.parContent')[
                              0].text_content().strip())
-        p = Plugin.from_task_id(f'{d.id}.test', User.query.get(TEST_USER_2_ID))
+        p, _ = Plugin.from_task_id(f'{d.id}.test', User.query.get(TEST_USER_2_ID))
         self.assertEqual('testuser2 and Test user 2', p.values['header'])
 
     def test_user_nocache(self):

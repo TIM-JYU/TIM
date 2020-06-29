@@ -97,7 +97,7 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
         # Find type of the plugin.
 
         answer_task_id = answer.task_id
-        p = Plugin.from_task_id(answer_task_id, user=get_current_user_object())
+        p, _ = Plugin.from_task_id(answer_task_id, user=get_current_user_object())
         ptype = p.type
 
         # Boolean to check whether to filter out current user by name.
