@@ -1473,11 +1473,12 @@ GetMultiStatesSchema = class_schema(GetMultiStatesModel)
 
 @dataclass
 class GetStateModel:
-    answer_id: int
     user_id: int
+    answer_id: Optional[int] = None
     par_id: Optional[str] = None
     doc_id: Optional[int] = None
     review: bool = False
+    task_id: Optional[str] = None
 
 
 GetStateSchema = class_schema(GetStateModel)
@@ -1529,23 +1530,41 @@ def get_multi_states(args: GetMultiStatesModel):
 @answers.route("/getState")
 @use_args(GetStateSchema())
 def get_state(args: GetStateModel):
-    par_id, user_id, answer_id, review = args.par_id, args.user_id, args.answer_id, args.review
-
-    try:
-        answer, doc_id = verify_answer_access(answer_id, user_id, allow_grace_period=True)
-    except PluginException as e:
-        return abort(400, str(e))
-    doc = Document(doc_id)
-    # if doc_id != d_id and doc_id not in doc.get_referenced_document_ids():
-    #     abort(400, 'Bad document id')
-
-    tid = TaskId.parse(answer.task_id)
-    if par_id:
-        tid.maybe_set_hint(par_id)
+    par_id = args.par_id
+    user_id = args.user_id
+    answer_id = args.answer_id
+    review = args.review
+    task_id = args.task_id
+    answer = None
+    block = None
+    doc = None
     user = User.query.get(user_id)
     if user is None:
         abort(400, 'Non-existent user')
+    if answer_id:
+        try:
+            answer, doc_id = verify_answer_access(answer_id, user_id, allow_grace_period=True)
+        except PluginException as e:
+            return abort(400, str(e))
+        doc = Document(doc_id)
+        # if doc_id != d_id and doc_id not in doc.get_referenced_document_ids():
+        #     abort(400, 'Bad document id')
+
+        tid = TaskId.parse(answer.task_id)
+    elif task_id:
+        tid = TaskId.parse(task_id)
+        d = get_doc_or_abort(tid.doc_id)
+        if get_current_user_id() != user_id:
+            verify_seeanswers_access(d)
+        else:
+            verify_view_access(d)
+        doc = d.document
+    else:
+        return abort(400, "Missing answer ID or task ID")
+
     doc.insert_preamble_pars()
+    if par_id:
+        tid.maybe_set_hint(par_id)
     try:
         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
     except PluginException as e:
@@ -1557,6 +1576,7 @@ def get_state(args: GetStateModel):
         [block],
         user,
         custom_answer=answer,
+        task_id = task_id,
         pluginwrap=PluginWrap.Nothing,
         do_lazy=NEVERLAZY,
     )
@@ -1568,6 +1588,7 @@ def get_state(args: GetStateModel):
             [block],
             user,
             custom_answer=answer,
+            task_id=task_id,
             review=review,
             pluginwrap=PluginWrap.Nothing,
             do_lazy=NEVERLAZY,

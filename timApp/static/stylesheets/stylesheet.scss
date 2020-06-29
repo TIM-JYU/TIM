@@ -1241,6 +1241,10 @@ answerbrowser {
     }
 
     font-size: 14px;
+
+    .ab-option-row > span {
+        margin-left: 10px;
+    }
 }
 
 .color-picker-input-wrapper {

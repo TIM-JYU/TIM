@@ -36,8 +36,8 @@ import {IAnswer} from "./IAnswer";
  * - if globalField:
  *     - pick the answer from anybody (wins useCurrentUser)
  *     - save to current user
- *     - show and use answerBrowser
- *     - if hideBrowser, still use answerBrowser but do not show
+ *     - use hidden answerBrowser without changing users
+ *     - TODO: if hideBrowser: false, then show browser
  *
  */
 
@@ -113,7 +113,9 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
         }
         const m = this.pluginMarkup();
-        if (m?.hideBrowser || this.viewctrl?.docSettings.hideBrowser || this.isUseCurrentUser()) {
+        if (m?.hideBrowser || this.viewctrl?.docSettings.hideBrowser
+            || this.isUseCurrentUser() || this.isGlobal()
+            || this.isInFormMode()) {
             this.hideBrowser = true;
             this.showPlaceholder = false;
         }
@@ -338,6 +340,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private isValidAnswer = false;
     private hidden: boolean = false;
     private showDelete = false;
+    private formMode = false;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -349,6 +352,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.loadedAnswer.id = args.savedNew;
             this.review = false;
             this.oldreview = false;
+            if (this.answers.length == 0 && this.viewctrl.teacherMode) {
+                this.getAvailableUsers();
+            }
             this.getAnswersAndUpdate();
             // HACK: for some reason the math mode is lost because of the above call, so we restore it here
             ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
@@ -359,10 +365,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async $onInit() {
-        if (this.loader.isInFormMode() && !this.forceBrowser()) {
-            this.element.hide();
-        }
-        if (this.loader.hideBrowser) {
+        this.formMode = (this.loader.isInFormMode() && !this.forceBrowser());
+        if (this.loader.hideBrowser || this.formMode) {
             this.hidden = true;
         }
 
@@ -377,7 +381,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.getAnswersAndUpdate();
         });
 
-        if (this.viewctrl.selectedUser) {
+        if (this.isUseCurrentUser() || this.isGlobal()) {
+            this.user = Users.getCurrent();
+        } else if (this.viewctrl.selectedUser) {
             this.user = this.viewctrl.selectedUser;
         } else if (this.viewctrl.users && this.viewctrl.users.length > 0) {
             this.user = this.viewctrl.users[0].user;
@@ -411,14 +417,26 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.pointsStep = this.markupSettings?.pointsStep;
         }
 
-        this.scope.$watch(() => this.review, () => this.changeAnswer());
-        this.scope.$watchGroup([
+        this.scope.$watch(() => this.review, (newValue, oldValue) => {
+            if (newValue == oldValue) {
+                return;
+            }
+            this.changeAnswer();
+        });
+        this.scope.$watch(
             () => this.onlyValid,
-        ], (newValues, oldValues, scope) => this.updateFilteredAndSetNewest());
+            (newValue, oldValue, scope) => {
+                if (newValue == oldValue) {
+                    return;
+                }
+                this.updateFilteredAndSetNewest();
+            });
 
-        // form_mode off or plugin ab didn't register as form (doesn't support setAnswer?)
-        // else answers, taskinfo (and maybe users) are given by viewctrl
-        if (!this.viewctrl.docSettings.form_mode || !this.viewctrl.getFormAnswerBrowser(this.taskId)) {
+        // If task is in form_mode, only last (already loaded) answer should matter.
+        // Answer changes are handled by viewctrl, so don't bother querying them here
+        // TODO: Make a route to handle getAnswers on global task. Currently global task has its' answerBrowser
+        //  always hidden and queries as they are now do not handle global task correctly, causing useless plugin update
+        if (!this.formMode && !this.isGlobal()) {
             const answs = await this.getAnswers();
             if (answs && (answs.length > 0)) {
                 this.answers = answs;
@@ -427,12 +445,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
                     this.handleAnswerFetch(this.answers);
                 }
             }
-            await this.loadInfo();
             await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
 
             this.loader.getPluginElement().on("mouseenter touchstart", () => {
                 void this.checkUsers();
             });
+        }
+        if (!this.formMode) {
+            await this.loadInfo();
         }
         // TODO: Angular throws error if many answerbrowsers resolve around the same time
         //  (e.g awaits above don't happen if were in form mode and don't want separate info reqs)
@@ -441,6 +461,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async changeUser(user: IUser, updateAll: boolean) {
+        if (this.isGlobal() || this.isUseCurrentUser()) {
+            return;
+        }
         this.user = user;
         if (updateAll) {
             await this.loadUserAnswersIfChanged();
@@ -452,13 +475,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async changeUserAndAnswers(user: IUser, answers: IAnswer[]) {
-        // let needsAnswerChange = false;
+        if (this.isGlobal() || this.isUseCurrentUser()) {
+            return;
+        }
         this.user = user;
         this.fetchedUser = this.user;
         this.answers = answers;
         this.updateFiltered();
         this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
-        // console.log("debug line");
         await this.loadInfo();
     }
 
@@ -537,6 +561,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     updatePoints() {
         if (!this.selectedAnswer) {
+            this.points = undefined;
             return;
         }
         this.points = this.selectedAnswer.points;
@@ -560,21 +585,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async changeAnswer() {
-        if (this.forceBrowser() && this.selectedAnswer == null && this.loadedAnswer.id) {
-            // TODO: This is a hack; get rid of it.
-            this.selectedAnswer = {
-                content: "",
-                id: this.loadedAnswer.id,
-                task_id: "",
-                last_points_modifier: null,
-                valid: true,
-            };
-        }
-        if ((this.selectedAnswer == null || !this.user)) {
+        this.updatePoints();
+        if (!this.user) {
             return;
         }
-        this.unDimPlugin();
-        this.updatePoints();
         const par = this.element.parents(".par");
         const ids = dereferencePar(par);
         if (!ids) {
@@ -586,14 +600,27 @@ export class AnswerBrowserController extends DestroyScope implements IController
             ref_from_doc_id: this.viewctrl.docId,
             ref_from_par_id: getParId(par),
         };
-        if (this.forceBrowser() || this.selectedAnswer.id !== this.loadedAnswer.id || this.oldreview !== this.review || this.isGlobal()) {
+        const preParams = {
+            ...parParams,
+            review: this.review,
+            user_id: this.user.id,
+        };
+        let taskOrAnswer = {};
+        if (this.selectedAnswer) {
+            taskOrAnswer = {answer_id: this.selectedAnswer.id};
+        } else {
+            taskOrAnswer = {task_id: this.taskId};
+        }
+        // get new state as long as the previous answer was not explicitly the same as the one before
+        // otherwise we might not see the unanswered plugin exactly how the user sees it
+        if (!(this.selectedAnswer && this.loadedAnswer
+            && this.selectedAnswer.id == this.loadedAnswer.id
+            && this.oldreview == this.review)) {
             this.loading++;
             const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
                 params: {
-                    ...parParams,
-                    answer_id: this.selectedAnswer.id,
-                    review: this.review,
-                    user_id: this.user.id,
+                    ...preParams,
+                    ...taskOrAnswer,
                 },
             }));
             this.loading--;
@@ -601,12 +628,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 this.showError(r.result);
                 return;
             }
-            this.loadedAnswer.id = this.selectedAnswer.id;
+            this.loadedAnswer.id = this.selectedAnswer?.id;
             this.oldreview = this.review;
 
             // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
             // have to be fully reloaded every time.
-            if (this.answerLoader) {
+            if (this.answerLoader && this.selectedAnswer) {
                 this.answerLoader(this.selectedAnswer);
             } else {
                 await loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
@@ -616,7 +643,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 await $timeout();
             }
         }
-        this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
+        if (this.selectedAnswer) {
+            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
+        }
+        if (this.viewctrl.teacherMode && !this.selectedAnswer && !this.saveTeacher) {
+            this.dimPlugin();
+        } else {
+            this.unDimPlugin();
+        }
     }
 
     async changeAnswerTo(dir: (-1 | 1)) {
@@ -684,6 +718,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async changeStudentToIndex(newIndex: number) {
+        if (this.isGlobal() || this.isUseCurrentUser()) {
+            return;
+        }
         if (!this.users) {
             return;
         }
@@ -714,6 +751,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
+    shouldFocusIfSelectedAnswer() {
+        if (this.selectedAnswer) {
+            this.shouldFocus = true;
+        }
+    }
+
     async changeStudent(dir: 1 | -1) {
         const newIndex = this.findSelectedUserIndex() + dir;
         await this.changeStudentToIndex(newIndex);
@@ -730,8 +773,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
     async setNewest() {
         if (this.filteredAnswers.length > 0) {
             this.selectedAnswer = this.filteredAnswers[0];
-            await this.changeAnswer();
         }
+        await this.changeAnswer();
     }
 
     async setAnswerById(id: number, updateImmediately: boolean) {
@@ -759,8 +802,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return {
                 answer_id: this.selectedAnswer ? this.selectedAnswer.id : undefined,
                 saveTeacher: this.saveTeacher ||
-                    (this.loader.isInFormMode() && this.viewctrl.teacherMode) ||
-                     this.isGlobal() , // TODO: Check if correct
+                    (this.viewctrl.teacherMode && (this.loader.isInFormMode() || this.isGlobal())) , // TODO: Check if correct
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: userId,
@@ -891,6 +933,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return a?.markup;
     }
 
+    public isUseCurrentUser() {
+        const m = this.pluginMarkup();
+        return m?.useCurrentUser;
+    }
+
     public isGlobal() {
         return this.taskId.includes("GLO_");
         // return this.pluginMarkup().globalField;
@@ -1002,7 +1049,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     async checkUsers() {
         // TODO: Changing user from sidebar could change to user's answer on global field
         // for now just skip the fetches (firefox throws error in their current state)
-        if (this.loading > 0 || this.isGlobal()) {
+        if (this.loading > 0 || this.isGlobal() || this.isUseCurrentUser()) {
             return;
         }
         await this.loadUserAnswersIfChanged();
