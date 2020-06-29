@@ -642,12 +642,28 @@ const CopyFiles = t.union([
     }),
 ]);
 
+const CountLimit = t.partial({
+    show: t.boolean,
+    min: t.number,
+    max: t.number,
+    text: t.string,
+});
+
 interface ICountLimit {
     show?: boolean;
     min?: number;
     max?: number;
     text?: string;
 }
+
+const CountType = t.partial({
+    preventSave: t.boolean,
+    tooManyWord: t.string,
+    tooFewWord: t.string,
+    lines: CountLimit,
+    words: CountLimit,
+    chars: CountLimit,
+});
 
 interface ICountType {
     preventSave?: boolean;
@@ -706,7 +722,7 @@ const CsMarkupOptional = t.partial({
     wrap:  t.Integer,
     borders: withDefault(t.boolean, true),
     iframeopts: t.string,
-    count: t.any,
+    count: CountType,
     hide: t.any,
     savedText: t.string,
     rootPath: t.string,
