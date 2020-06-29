@@ -20,6 +20,7 @@ from timApp.util.flask.requesthelper import verify_json_params, get_referenced_p
     get_consent_opt
 from timApp.util.flask.responsehelper import json_response, ok_response, csv_response
 from timApp.util.utils import seq_to_str, split_by_semicolon
+from timApp.sisu.sisu import IncorrectSettings
 
 readings = Blueprint('readings',
                      __name__,
@@ -124,7 +125,7 @@ def mark_all_unread(doc_id: int):
     doc = d.document
     settings = doc.get_settings()
     if not settings.exam_mode():
-        abort(403, "The document doesn't have exam_mode setting defined!")
+        raise IncorrectSettings("The document must have 'exam_mode' setting defined to remove read marks!")
     remove_all_read_marks(doc)
     db.session.commit()
     return ok_response()
