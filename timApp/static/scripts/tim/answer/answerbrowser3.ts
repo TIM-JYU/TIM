@@ -113,7 +113,9 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
         }
         const m = this.pluginMarkup();
-        if (m?.hideBrowser || this.viewctrl?.docSettings.hideBrowser || this.isUseCurrentUser() || this.isGlobal()) {
+        if (m?.hideBrowser || this.viewctrl?.docSettings.hideBrowser
+            || this.isUseCurrentUser() || this.isGlobal()
+            || this.isInFormMode()) {
             this.hideBrowser = true;
             this.showPlaceholder = false;
         }
@@ -428,11 +430,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
                     return;
                 }
                 this.updateFilteredAndSetNewest();
-        });
+            });
 
-        // form_mode off or plugin ab didn't register as form (doesn't support setAnswer?)
-        // else answers, taskinfo (and maybe users) are given by viewctrl
-        if (!this.viewctrl.docSettings.form_mode || !this.viewctrl.getFormAnswerBrowser(this.taskId)) {
+        // If task is in form_mode, only last (already loaded) answer should matter.
+        // Answer changes are handled by viewctrl, so don't bother querying them here
+        // TODO: Make a route to handle getAnswers on global task. Currently global task has its' answerBrowser
+        //  always hidden and queries as they are now do not handle global task correctly, causing useless plugin update
+        if (!this.formMode && !this.isGlobal()) {
             const answs = await this.getAnswers();
             if (answs && (answs.length > 0)) {
                 this.answers = answs;
@@ -441,12 +445,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
                     this.handleAnswerFetch(this.answers);
                 }
             }
-            await this.loadInfo();
             await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
 
             this.loader.getPluginElement().on("mouseenter touchstart", () => {
                 void this.checkUsers();
             });
+        }
+        if (!this.formMode) {
+            await this.loadInfo();
         }
         // TODO: Angular throws error if many answerbrowsers resolve around the same time
         //  (e.g awaits above don't happen if were in form mode and don't want separate info reqs)
