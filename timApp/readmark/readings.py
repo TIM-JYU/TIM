@@ -77,9 +77,11 @@ def mark_all_read(usergroup_id: int,
 
 
 def remove_all_read_marks(doc: Document):
-    ids = doc.get_referenced_document_ids()
-    ids.add(doc.doc_id)
-    all_doc_read = ReadParagraph.query.filter(ReadParagraph.doc_id.in_(ids)
+    # Documents can reference paragraphs from other documents, which is why
+    # usually you'd use get_referenced_document_ids to get all document IDs
+    # Since we're deleting read marks here, it's better to be safe and only remove marks only
+    # for paragraphs defined directly in the document
+    all_doc_read = ReadParagraph.query.filter(ReadParagraph.doc_id == doc.doc_id
                                               & (ReadParagraph.type == ReadParagraphType.click_red))
     all_doc_read.delete(synchronize_session=False)
 
