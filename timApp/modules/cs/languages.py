@@ -22,11 +22,11 @@ Adding new language to csPlugin:
     - in /opt/tim directory run ./dc build csplugin
     - if in varibles.sh was export IS_DEVELOPMENT=true, change it back to true
         - in /opt/tim directory run ./dc build csplugin
-    -  docker push cs3:rust    
+    -  docker push cs3:rust
 1. Add the language class starting with capital letter to this or new file
 2. Add language name to 'ttype' variable
 3. Mimic some existing language when creating the new class
-    - the simplest one is CC that works when just compiler name end extensions are enough to change 
+    - the simplest one is CC that works when just compiler name end extensions are enough to change
 4. Add language to csPlugin.ts languageTypes.runTypes list
    and to exactly same place the Ace editor highlighter name to languageTypes.aceModes
      - if there is a shorter language name in the list, add a new name before the
@@ -499,9 +499,6 @@ class Jypeli(CS, Modifier):
             remove(self.exename)
         return code, out, err, pwddir
 
-    def runner_name(self):
-        return "cs-jypeli-runner"
-
 
 class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers but they are used as such
     ttype = "comtest"
@@ -567,9 +564,6 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
             give_points(points_rule, "test")
             self.run_points_given = True
         return code, out, err, pwddir
-
-    def runner_name(self):
-        return "cs-comtest-runner"
 
 
 class Shell(Language):
@@ -732,9 +726,6 @@ class JComtest(Java, Modifier):
         out, err = check_comtest(self, "jcomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
 
-    def runner_name(self):
-        return "cs-comtest-runner"
-
 
 class JUnit(Java, Modifier):
     ttype = "junit"
@@ -749,9 +740,6 @@ class JUnit(Java, Modifier):
         code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.javaclassname])
         out, err = check_comtest(self, "junit", code, out, err, result, points_rule)
         return code, out, err, pwddir
-
-    def runner_name(self):
-        return "cs-comtest-runner"
 
 
 class Graphics(Java, Modifier):
@@ -779,9 +767,6 @@ class Graphics(Java, Modifier):
         out, err = self.copy_image(result, code, out, err, points_rule)
         err = re.sub('Xlib: {2}extension "RANDR" missing on display ":1"\\.\n', "", err)
         return code, out, err, pwddir
-
-    def runner_name(self):
-        return "cs-jypeli-runner"
 
 
 class Scala(Language):
@@ -1050,9 +1035,6 @@ class Processing(JS):
 class WeScheme(JS):
     ttype = "wescheme"
 
-    def runner_name(self):
-        return "cs-wescheme-runner"
-
 
 class VPython(JS):
     ttype = "vpython"
@@ -1106,9 +1088,6 @@ class Alloy(Language):
         out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
 
-    def runner_name(self):
-        return "cs-jypeli-runner"
-
 
 class Run(Language):
     ttype = "run"
@@ -1158,15 +1137,9 @@ class SimCir(Language):
     def css_files():
         return ["/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"]
 
-    def runner_name(self):
-        return "cs-simcir-runner"
-
 
 class Sage(Language):
     ttype = "sage"
-
-    def runner_name(self):
-        return "cs-sage-runner"
 
 
 def get_by_id(jso, item_id, default=None):
@@ -1312,9 +1285,6 @@ class Jsav(Language):
         :return: list of state attribute names from the currently selected answer to be copied to .ts client code
         """
         return ["message"]
-
-    def runner_name(self):
-        return "cs-jsav-runner"
 
     @staticmethod
     def js_files():
@@ -1597,9 +1567,6 @@ class Pascal(Language):
 
 class Tauno(Language, Modifier):
     ttype = "tauno"
-
-    def runner_name(self):
-        return "cs-tauno-runner"
 
 
 # Copy this for new language class

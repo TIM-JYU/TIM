@@ -343,217 +343,6 @@ function commentTrim(s: string) {
     return s.substr(3);
 }
 
-function makeTemplate() {
-    // language=HTML
-    return `
-<div [ngClass]="{'csRunDiv': markup.borders}" class="type-{{rtype}}">
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHTML]="header"></h4>
-    <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
-    <div *ngIf="isTauno">
-        <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
-        <iframe *ngIf="iframesettings"
-                id="iframesettings.id"
-                class="showTauno"
-                [src]="iframesettings.src"
-                (load)="onIframeLoad($event)"
-                [width]="iframesettings.width"
-                [height]="iframesettings.height"
-                sandbox="allow-scripts"></iframe>
-        <p *ngIf="!taunoOn" class="pluginShow"><a (click)="showTauno()">{{showText}} Tauno</a></p>
-        <p *ngIf="taunoOn" class="pluginHide">
-            <a (click)="copyTauno()">{{copyFromTaunoText}}</a> |
-            <a (click)="hideTauno()">{{hideText}} Tauno</a></p>
-        <p *ngIf="taunoOn" class="taunoOhje">
-            {{taunoOhjeText}}</p>
-    </div>
-    <div *ngIf="isSimcir">
-        <p *ngIf="simcirOn" class="pluginHide"><a (click)="hideSimcir()">{{hideText}} SimCir</a></p>
-        <div class="simcirContainer"><p></p></div>
-        <p *ngIf="!simcirOn" class="pluginShow"><a (click)="showSimcir()">{{showText}} SimCir</a></p>
-        <p *ngIf="simcirOn && !noeditor" class="pluginHide">
-            <a (click)="copyFromSimcir()">copy from SimCir</a>
-            | <a (click)="copyToSimcir()">copy to SimCir</a> | <a (click)="hideSimcir()">hide SimCir</a>
-        </p>
-    </div>
-    <div *ngIf="upload" class="form-inline small">
-        <div class="form-group small"> {{uploadstem}}:
-            <input type="file" ngf-select="onFileSelect($file)">
-            <span *ngIf="fileProgress && fileProgress >= 0 && !fileError"
-                [textContent]="fileProgress < 100 ? 'Uploading... ' + fileProgress + '%' : 'Done!'"></span>
-        </div>
-        <div class="error" *ngIf="fileError" [textContent]="fileError"></div>
-        <div *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
-    </div>
-    <div *ngIf="isAll" style="float: right;">{{languageText}}
-        <select [(ngModel)]="selectedLanguage" required>
-            <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>
-        </select>
-    </div>
-    <pre *ngIf="viewCode && codeover">{{code}}</pre>
-    <div class="csRunCode">
-        <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
-        <div class="csEditorAreaDiv">
-            <cs-editor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
-                    [base]="byCode"
-                    [cssPrint]="cssPrint"
-                    [minRows]="markup.rows"
-                    [maxRows]="markup.maxrows"
-                    [wrap]="wrap"
-                    [modes]="editorModes"
-                    [editorIndex]="markup.editorMode"
-                    [languageMode]="mode"
-                    [parsonsShuffle]="initUserCode"
-                    [parsonsMaxcheck]="markup.parsonsmaxcheck"
-                    [parsonsNotordermatters]="markup.parsonsnotordermatters"
-                    [parsonsStyleWords]="markup['style-words']"
-                    [parsonsWords]="markup.words"
-                    (content)="onContentChange($event)">
-            </cs-editor>
-            <div class="csRunChanged" *ngIf="usercode !== byCode && !hide.changed"></div>
-            <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
-        </div>
-        <pre class="csRunPost" *ngIf="viewCode && !codeunder && !codeover">{{postcode}}</pre>
-    </div>
-    <div *ngIf="isSage" class="computeSage no-popup-menu"></div>
-    <div class="csInputDiv" *ngIf="showInput && isInput">
-        <p *ngIf="inputstem" class="stem">{{inputstem}}</p>
-        <div class="csRunCode">
-            <textarea class="csRunArea csInputArea"
-                    [rows]="inputrows"
-                    [(ngModel)]="userinput"
-                    placeholder="inputplaceholder">
-            </textarea>
-        </div>
-    </div>
-    <div class="csArgsDiv" *ngIf="showArgs && isInput"><label>{{argsstem}} </label>
-        <span><input type="text"
-                    class="csArgsArea"
-                    [(ngModel)]="userargs"
-                    placeholder="argsplaceholder"></span>
-    </div>
-    <cs-count-board *ngIf="markup.count" [options]="markup.count"></cs-count-board>
-    <p class="csRunSnippets" *ngIf="buttons">
-        <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
-        &nbsp;&nbsp;
-    </p>
-    <div class="csRunMenuArea" *ngIf="!forcedupload">
-        <p class="csRunMenu">
-            <button *ngIf="isRun && buttonText()"
-                    [attr.disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved() && isText)"
-                    class="timButton btn-sm"
-                    title="(Ctrl-S)"
-                    (click)="runCode()"
-                    [innerHTML]="buttonText()"></button>
-            <a href="javascript:void(0)" *ngIf="undoButton && isUnSaved()" title="undoTitle"
-                    (click)="tryResetChanges()"> &nbsp;{{undoButton}}</a>
-            &nbsp;&nbsp;
-            <span *ngIf="savedText"
-                    class="savedText"
-                    [innerHTML]="savedText"></span>
-            &nbsp;&nbsp;
-            <button *ngIf="isTest"
-                    [attr.disabled]="isRunning"
-                    (click)="runTest()"
-                    class="timButton btn-sm">Test</button>
-            &nbsp;&nbsp;
-            <button *ngIf="isUnitTest"
-                    class="timButton btn-sm"
-                    [attr.disabled]="isRunning"
-                    (click)="runUnitTest()">UTest
-            </button>
-            <tim-loading *ngIf="isRunning"></tim-loading>
-            &nbsp;&nbsp;
-            <span *ngIf="isDocument">
-                <a href="javascript:void(0)" [attr.disabled]="isRunning"
-                        (click)="runDocument()">{{docLink}}</a>&nbsp;&nbsp;
-            </span>
-            <a href="javascript:void(0)" *ngIf="!nocode && (file || program)"
-                    (click)="showCode()">{{showCodeLink}}</a>&nbsp;&nbsp;
-            <a href="javascript:void(0)" *ngIf="editor && editor.modified"
-                    (click)="editor?.reset()">{{resetText}}</a>
-            <a href="javascript:void(0)" *ngIf="toggleEditor"
-                    (click)="hideShowEditor()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
-            <a href="javascript:void(0)" *ngIf="!noeditor && editor && editor.nextModeText"
-                    (click)="editor?.showOtherEditor()">
-                {{editor.nextModeText}}
-            </a>&nbsp;&nbsp;
-            <a href="javascript:void(0)" *ngIf="markup.copyLink"
-                    (click)="copyCode()">{{markup.copyLink}}</a>
-            <span *ngIf="showRuntime"
-                    class="inputSmall"
-                    style="float: right;"
-                    title="Run time in sec {{runtime}}">{{oneruntime}}</span>
-            <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
-                <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
-                </button>
-                <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto" style="position: relative;top: 0.3em;"/>
-                <input type="text" title="Choose linelength for text.  0=no wrap" pattern="/[-0-9]*/" [(ngModel)]="wrap.n" size="2"/>
-            </span>
-            <span *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHTML]="connectionErrorMessage"></span>
-
-            <!--
-            <span *ngIf="wrap.n!=-1" class="inputSmall" style="float: right;">
-              <label title="Put 0 to no wrap">wrap: <input type="text"
-                                                          pattern="/[-0-9]*/"
-                                                          [(ngModel)]="wrap.n"
-                                                          size="1"/></label>
-            </span>
-            -->
-        </p>
-
-    </div>
-    <div *ngIf="isSage" class="outputSage no-popup-menu"></div>
-    <pre *ngIf="viewCode && codeunder">{{code}}</pre>
-    <p class="unitTestGreen" *ngIf="runTestGreen">&nbsp;ok</p>
-    <pre class="unitTestRed" *ngIf="runTestRed">{{comtestError}}</pre>
-    <div class="csRunErrorClass" *ngIf="runError">
-        <p class="pull-right">
-            <tim-close-button (click)="closeError()"></tim-close-button>
-        </p>
-        <pre class="csRunError" >{{error}}</pre>
-        <p class="pull-right" style="margin-top: -1em">
-            <tim-close-button (click)="closeError()"></tim-close-button>
-        </p>
-    </div>
-    <pre class="console" *ngIf="result">{{result}}</pre>
-    <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="svgImageSnippet()"></span></div>
-    <div class="csrunPreview">
-        <div *ngIf="iframesettings && !isTauno"
-                tim-draggable-fixed
-                caption="Preview"
-                detachable="true"
-                class="no-popup-menu">
-            <span class="csRunMenu">
-                <tim-close-button
-                        (click)="closeFrame()"
-                        style="float: right">
-                </tim-close-button>
-            </span>
-            <iframe id="iframesettings.id"
-                    class="jsCanvas"
-                    [src]="iframesettings.src"
-                    (load)="onIframeLoad($event)"
-                    [width]="iframesettings.width"
-                    [height]="iframesettings.height"
-                    sandbox="allow-scripts allow-forms"
-                    style="border:0">
-            </iframe>
-        </div>
-    </div>
-    <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
-    <video *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
-            height="40"></video>
-    <div *ngIf="docURL" class="docurl">
-        <p class="pull-right">
-            <tim-close-button (click)="closeDocument()"></tim-close-button>
-        </p>
-        <iframe width="800" height="600" [src]="docURL" target="csdocument" allowfullscreen></iframe>
-    </div>
-    <p class="footer" [innerHTML]="markup.footer"></p>
-</div>`;
-}
-
 function insertAtCaret(txtarea: HTMLTextAreaElement, text: string) {
     const doc = document as any;
     const scrollPos = txtarea.scrollTop;
@@ -795,7 +584,7 @@ const CsAll = t.intersection([
         // taskIDExt: t.string,
         // userPrint: t.boolean,
     })]);
-    
+
 export class CsBase extends AngularPluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
     usercode_: string = "";
 
@@ -805,7 +594,7 @@ export class CsBase extends AngularPluginBase<t.TypeOf<typeof CsMarkup>, t.TypeO
     set usercode(str: string) {
         this.usercode_ = str;
     }
-    
+
     get byCode() {
         return commentTrim((this.attrsall.by ?? this.markup.byCode) ?? "");
     }
@@ -1016,7 +805,7 @@ export class CsController extends CsBase implements ITimComponent {
             usercode = usercode.replace(/@author.*/, "@author XXXX");
         }
         this.editor.content = usercode;
-        
+
         if (this.savedvals) {
             this.savedvals.code = this.usercode;
         }
@@ -1035,7 +824,7 @@ export class CsController extends CsBase implements ITimComponent {
 
     constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
         super(el, http, domSanitizer);
-        
+
         //super(scope, element);
         this.errors = [];
         this.result = "";
@@ -1174,75 +963,16 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.lang === "en";
     }
 
-    get kind() {
-        let kind;
-        switch (this.getRootElement().tagName.toLowerCase()) {
-            case "cs-runner":
-                kind = "console";
-                break;
-            case "cs-jypeli-runner":
-                kind = "jypeli";
-                break;
-            case "cs-comtest-runner":
-                kind = "comtest";
-                break;
-            case "cs-runner-input":
-                kind = "console";
-                break;
-            case "cs-jypeli-runner-input":
-                kind = "jypeli";
-                break;
-            case "cs-comtest-runner-input":
-                kind = "comtest";
-                break;
-            case "cs-tauno-runner":
-                kind = "tauno";
-                break;
-            case "cs-tauno-runner-input":
-                kind = "tauno";
-                break;
-            case "cs-parsons-runner":
-                kind = "parsons";
-                break;
-            case "cs-sage-runner":
-                kind = "sage";
-                break;
-            case "cs-geogebra-runner":
-                kind = "geogebra";
-                break;
-            case "cs-jsav-runner":
-                kind = "jsav";
-                break;
-            case "cs-simcir-runner":
-                kind = "simcir";
-                break;
-            case "cs-text-runner":
-                kind = "text";
-                break;
-            case "cs-wescheme-runner":
-                kind = "wescheme";
-                break;
-            case "cs-extcheck-runner":
-                kind = "extcheck";
-                break;
-            default:
-                console.warn("Unrecognized csplugin tag type, falling back to 'console'");
-                kind = "console";
-                break;
-        }
-        return kind;
-    }
-
     get isInput() {
-        return this.getRootElement().tagName.toLowerCase().endsWith("-input");
+        return this.markup.type.includes("input") || this.markup.type.includes("args");
     }
 
     get isSimcir() {
-        return this.kind === "simcir";
+        return this.markup.type.includes("simcir");
     }
 
     get isTauno() {
-        return this.kind === "tauno";
+        return this.markup.type.includes("tauno");
     }
 
     get program() {
@@ -1628,7 +1358,7 @@ ${fhtml}
             this.anyChanged();
         }
     }
-    
+
     async anyChanged() {
         this.textChanged();
         const currUsercode = this.usercode;
@@ -2788,112 +2518,223 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
 
 @Component({
     selector: "cs-runner",
-    template: makeTemplate(),
+    template: `
+<div [ngClass]="{'csRunDiv': markup.borders}" class="type-{{rtype}}">
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <h4 *ngIf="header" [innerHTML]="header"></h4>
+    <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
+    <div *ngIf="isTauno">
+        <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
+        <iframe *ngIf="iframesettings"
+                id="iframesettings.id"
+                class="showTauno"
+                [src]="iframesettings.src"
+                (load)="onIframeLoad($event)"
+                [width]="iframesettings.width"
+                [height]="iframesettings.height"
+                sandbox="allow-scripts"></iframe>
+        <p *ngIf="!taunoOn" class="pluginShow"><a (click)="showTauno()">{{showText}} Tauno</a></p>
+        <p *ngIf="taunoOn" class="pluginHide">
+            <a (click)="copyTauno()">{{copyFromTaunoText}}</a> |
+            <a (click)="hideTauno()">{{hideText}} Tauno</a></p>
+        <p *ngIf="taunoOn" class="taunoOhje">
+            {{taunoOhjeText}}</p>
+    </div>
+    <div *ngIf="isSimcir">
+        <p *ngIf="simcirOn" class="pluginHide"><a (click)="hideSimcir()">{{hideText}} SimCir</a></p>
+        <div class="simcirContainer"><p></p></div>
+        <p *ngIf="!simcirOn" class="pluginShow"><a (click)="showSimcir()">{{showText}} SimCir</a></p>
+        <p *ngIf="simcirOn && !noeditor" class="pluginHide">
+            <a (click)="copyFromSimcir()">copy from SimCir</a>
+            | <a (click)="copyToSimcir()">copy to SimCir</a> | <a (click)="hideSimcir()">hide SimCir</a>
+        </p>
+    </div>
+    <div *ngIf="upload" class="form-inline small">
+        <div class="form-group small"> {{uploadstem}}:
+            <input type="file" ngf-select="onFileSelect($file)">
+            <span *ngIf="fileProgress && fileProgress >= 0 && !fileError"
+                [textContent]="fileProgress < 100 ? 'Uploading... ' + fileProgress + '%' : 'Done!'"></span>
+        </div>
+        <div class="error" *ngIf="fileError" [textContent]="fileError"></div>
+        <div *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
+    </div>
+    <div *ngIf="isAll" style="float: right;">{{languageText}}
+        <select [(ngModel)]="selectedLanguage" required>
+            <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>
+        </select>
+    </div>
+    <pre *ngIf="viewCode && codeover">{{code}}</pre>
+    <div class="csRunCode">
+        <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
+        <div class="csEditorAreaDiv">
+            <cs-editor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
+                    [base]="byCode"
+                    [cssPrint]="cssPrint"
+                    [minRows]="markup.rows"
+                    [maxRows]="markup.maxrows"
+                    [wrap]="wrap"
+                    [modes]="editorModes"
+                    [editorIndex]="markup.editorMode"
+                    [languageMode]="mode"
+                    [parsonsShuffle]="initUserCode"
+                    [parsonsMaxcheck]="markup.parsonsmaxcheck"
+                    [parsonsNotordermatters]="markup.parsonsnotordermatters"
+                    [parsonsStyleWords]="markup['style-words']"
+                    [parsonsWords]="markup.words"
+                    (content)="onContentChange($event)">
+            </cs-editor>
+            <div class="csRunChanged" *ngIf="usercode !== byCode && !hide.changed"></div>
+            <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
+        </div>
+        <pre class="csRunPost" *ngIf="viewCode && !codeunder && !codeover">{{postcode}}</pre>
+    </div>
+    <div *ngIf="isSage" class="computeSage no-popup-menu"></div>
+    <div class="csInputDiv" *ngIf="showInput && isInput">
+        <p *ngIf="inputstem" class="stem">{{inputstem}}</p>
+        <div class="csRunCode">
+            <textarea class="csRunArea csInputArea"
+                    [rows]="inputrows"
+                    [(ngModel)]="userinput"
+                    (ngModelChange)="anyChanged()"
+                    [placeholder]="inputplaceholder">
+            </textarea>
+        </div>
+    </div>
+    <div class="csArgsDiv" *ngIf="showArgs && isInput"><label>{{argsstem}} </label>
+        <span><input type="text"
+                    class="csArgsArea"
+                    [(ngModel)]="userargs"
+                    (ngModelChange)="anyChanged()"
+                    [placeholder]="argsplaceholder"></span>
+    </div>
+    <cs-count-board *ngIf="markup.count" [options]="markup.count"></cs-count-board>
+    <p class="csRunSnippets" *ngIf="buttons">
+        <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
+        &nbsp;&nbsp;
+    </p>
+    <div class="csRunMenuArea" *ngIf="!forcedupload">
+        <p class="csRunMenu">
+            <button *ngIf="isRun && buttonText()"
+                    [attr.disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved() && isText)"
+                    class="timButton btn-sm"
+                    title="(Ctrl-S)"
+                    (click)="runCode()"
+                    [innerHTML]="buttonText()"></button>
+            <a href="javascript:void(0)" *ngIf="undoButton && isUnSaved()" title="undoTitle"
+                    (click)="tryResetChanges()"> &nbsp;{{undoButton}}</a>
+            &nbsp;&nbsp;
+            <span *ngIf="savedText"
+                    class="savedText"
+                    [innerHTML]="savedText"></span>
+            &nbsp;&nbsp;
+            <button *ngIf="isTest"
+                    [attr.disabled]="isRunning"
+                    (click)="runTest()"
+                    class="timButton btn-sm">Test</button>
+            &nbsp;&nbsp;
+            <button *ngIf="isUnitTest"
+                    class="timButton btn-sm"
+                    [attr.disabled]="isRunning"
+                    (click)="runUnitTest()">UTest
+            </button>
+            <tim-loading *ngIf="isRunning"></tim-loading>
+            &nbsp;&nbsp;
+            <span *ngIf="isDocument">
+                <a href="javascript:void(0)" [attr.disabled]="isRunning"
+                        (click)="runDocument()">{{docLink}}</a>&nbsp;&nbsp;
+            </span>
+            <a href="javascript:void(0)" *ngIf="!nocode && (file || program)"
+                    (click)="showCode()">{{showCodeLink}}</a>&nbsp;&nbsp;
+            <a href="javascript:void(0)" *ngIf="editor && editor.modified"
+                    (click)="editor?.reset()">{{resetText}}</a>
+            <a href="javascript:void(0)" *ngIf="toggleEditor"
+                    (click)="hideShowEditor()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
+            <a href="javascript:void(0)" *ngIf="!noeditor && editor && editor.nextModeText"
+                    (click)="editor?.showOtherEditor()">
+                {{editor.nextModeText}}
+            </a>&nbsp;&nbsp;
+            <a href="javascript:void(0)" *ngIf="markup.copyLink"
+                    (click)="copyCode()">{{markup.copyLink}}</a>
+            <span *ngIf="showRuntime"
+                    class="inputSmall"
+                    style="float: right;"
+                    title="Run time in sec {{runtime}}">{{oneruntime}}</span>
+            <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
+                <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
+                </button>
+                <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto" style="position: relative;top: 0.3em;"/>
+                <input type="text" title="Choose linelength for text.  0=no wrap" pattern="/[-0-9]*/" [(ngModel)]="wrap.n" size="2"/>
+            </span>
+            <span *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHTML]="connectionErrorMessage"></span>
+
+            <!--
+            <span *ngIf="wrap.n!=-1" class="inputSmall" style="float: right;">
+              <label title="Put 0 to no wrap">wrap: <input type="text"
+                                                          pattern="/[-0-9]*/"
+                                                          [(ngModel)]="wrap.n"
+                                                          size="1"/></label>
+            </span>
+            -->
+        </p>
+
+    </div>
+    <div *ngIf="isSage" class="outputSage no-popup-menu"></div>
+    <pre *ngIf="viewCode && codeunder">{{code}}</pre>
+    <p class="unitTestGreen" *ngIf="runTestGreen">&nbsp;ok</p>
+    <pre class="unitTestRed" *ngIf="runTestRed">{{comtestError}}</pre>
+    <div class="csRunErrorClass" *ngIf="runError">
+        <p class="pull-right">
+            <tim-close-button (click)="closeError()"></tim-close-button>
+        </p>
+        <pre class="csRunError" >{{error}}</pre>
+        <p class="pull-right" style="margin-top: -1em">
+            <tim-close-button (click)="closeError()"></tim-close-button>
+        </p>
+    </div>
+    <pre class="console" *ngIf="result">{{result}}</pre>
+    <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="svgImageSnippet()"></span></div>
+    <div class="csrunPreview">
+        <div *ngIf="iframesettings && !isTauno"
+                tim-draggable-fixed
+                caption="Preview"
+                detachable="true"
+                class="no-popup-menu">
+            <span class="csRunMenu">
+                <tim-close-button
+                        (click)="closeFrame()"
+                        style="float: right">
+                </tim-close-button>
+            </span>
+            <iframe id="iframesettings.id"
+                    class="jsCanvas"
+                    [src]="iframesettings.src"
+                    (load)="onIframeLoad($event)"
+                    [width]="iframesettings.width"
+                    [height]="iframesettings.height"
+                    sandbox="allow-scripts allow-forms"
+                    style="border:0">
+            </iframe>
+        </div>
+    </div>
+    <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
+    <video *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
+            height="40"></video>
+    <div *ngIf="docURL" class="docurl">
+        <p class="pull-right">
+            <tim-close-button (click)="closeDocument()"></tim-close-button>
+        </p>
+        <iframe width="800" height="600" [src]="docURL" target="csdocument" allowfullscreen></iframe>
+    </div>
+    <p class="footer" [innerHTML]="markup.footer"></p>
+</div>`,
 })
 export class CsRunnerComponent extends CsController {
     constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
         super(el, http, domSanitizer, cdr);
     }
 }
-@Component({
-    selector: "cs-jypeli-runner",
-    template: makeTemplate(),
-})
-export class CsJypeliComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
-        super(el, http, domSanitizer, cdr);
-    }
-}
-@Component({
-    selector: "cs-comtest-runner",
-    template: makeTemplate(),
-})
-export class CsComtestComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
-        super(el, http, domSanitizer, cdr);
-    }
-}
-@Component({
-    selector: "cs-runner-input",
-    template: makeTemplate(),
-})
-export class CsRunnerInputComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
-        super(el, http, domSanitizer, cdr);
-    }
-}
-@Component({
-    selector: "cs-jypeli-runner-input",
-    template: makeTemplate(),
-})
-export class CsJypeliInputComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
-        super(el, http, domSanitizer, cdr);
-    }
-}
-@Component({
-    selector: "cs-comtest-runner-input",
-    template: makeTemplate(),
-})
-export class CsComtestInputComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
-        super(el, http, domSanitizer, cdr);
-    }
-}
-@Component({
-    selector: "cs-tauno-runner-input",
-    template: makeTemplate(),
-})
-export class CsTaunoInputComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
-        super(el, http, domSanitizer, cdr);
-    }
-}
-@Component({
-    selector: "cs-tauno-runner",
-    template: makeTemplate(),
-})
-export class CsTaunoComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
-        super(el, http, domSanitizer, cdr);
-    }
-}
-@Component({
-    selector: "cs-parsons-runner",
-    template: makeTemplate(),
-})
-export class CsParsonsComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
-        super(el, http, domSanitizer, cdr);
-    }
-}
-@Component({
-    selector: "cs-sage-runner",
-    template: makeTemplate(),
-})
-export class CsSageComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
-        super(el, http, domSanitizer, cdr);
-    }
-}
-@Component({
-    selector: "cs-simcir-runner",
-    template: makeTemplate(),
-})
-export class CsSimcirComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
-        super(el, http, domSanitizer, cdr);
-    }
-}
-@Component({
-    selector: "cs-wescheme-runner",
-    template: makeTemplate(),
-})
-export class CsWeschemeComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
-        super(el, http, domSanitizer, cdr);
-    }
-}
+
+
 @Component({
     selector: "cs-text-runner",
     template: `
@@ -2957,9 +2798,9 @@ function trackByIndex(index: number, o: unknown) { return index; }
                     <span class="console-userInput">{{item.input}}</span>
                 </span>
                 <span class="console-oldresponse">
-                    <span *ngIf="!isShell">  <br/>  
+                    <span *ngIf="!isShell">  <br/>
                         <span class="console-out">{{item.ostem}}</span>
-                    </span>  
+                    </span>
                     <span class="console-response" [ngClass]="{error: item.error}">
                         <span [innerHTML]="item.response"></span>
                     </span>
@@ -3074,7 +2915,7 @@ class CsConsoleComponent extends CsBase implements IController {
         const uargs = "";
         const uinput = "";
 
-        const r = await this.httpPut<{web: {pwd?: string, error?: string, console?: string}}>(url, 
+        const r = await this.httpPut<{web: {pwd?: string, error?: string, console?: string}}>(url,
             {
                 input: {
                     usercode: ucode,
@@ -3172,17 +3013,11 @@ class CsConsoleComponent extends CsBase implements IController {
 @NgModule({
     declarations: [
         CsRunnerComponent,
-        CsJypeliComponent,
-        CsComtestComponent,
-        CsRunnerInputComponent,
-        CsJypeliInputComponent,
-        CsComtestInputComponent,
-        CsTaunoInputComponent,
-        CsTaunoComponent,
-        CsParsonsComponent,
-        CsSageComponent,
-        CsSimcirComponent,
-        CsWeschemeComponent,
+        CsTextComponent,
+        CsConsoleComponent,
+    ],
+    exports: [
+        CsRunnerComponent,
         CsTextComponent,
         CsConsoleComponent,
     ],
@@ -3206,17 +3041,6 @@ const bootstrapFn = (extraProviders: StaticProvider[]) => {
 
 export const angularJsModule = createDowngradedModule(bootstrapFn);
 doDowngrade(angularJsModule, "csRunner", CsRunnerComponent);
-doDowngrade(angularJsModule, "csJypeliRunner", CsJypeliComponent);
-doDowngrade(angularJsModule, "csComtestRunner", CsComtestComponent);
-doDowngrade(angularJsModule, "csRunnerInput", CsRunnerInputComponent);
-doDowngrade(angularJsModule, "csJypeliRunnerInput", CsJypeliInputComponent);
-doDowngrade(angularJsModule, "csComtestRunnerInput", CsComtestInputComponent);
-doDowngrade(angularJsModule, "csTaunoRunnerInput", CsTaunoInputComponent);
-doDowngrade(angularJsModule, "csTaunoRunner", CsTaunoComponent);
-doDowngrade(angularJsModule, "csParsonsRunner", CsParsonsComponent);
-doDowngrade(angularJsModule, "csSageunner", CsSageComponent);
-doDowngrade(angularJsModule, "csSimcirRunner", CsSimcirComponent);
-doDowngrade(angularJsModule, "csWeschemeRunner", CsWeschemeComponent);
 doDowngrade(angularJsModule, "csTextRunner", CsTextComponent);
 doDowngrade(angularJsModule, "csConsole", CsConsoleComponent);
 export const moduleDefs = [angularJsModule];

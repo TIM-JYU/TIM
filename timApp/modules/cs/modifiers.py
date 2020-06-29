@@ -111,6 +111,3 @@ class CSConsole(Modifier):
 
 class Parsons(Modifier):
     ttype = "parsons"
-
-    def runner_name(self):
-        return "cs-parsons-runner"

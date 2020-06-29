@@ -201,9 +201,6 @@ class Geogebra(Language):
     def get_default_before_open(self):
         return '<div class="defBeforeOpen"><p>Open GeoGebra</p></div>'
 
-    def runner_name(self):
-        return "geogebra-runner"
-
     @staticmethod
     def js_files():
         return ["/cs/js/build/geogebra.js"]

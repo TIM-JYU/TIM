@@ -549,10 +549,9 @@ def handle_common_params(query: QueryClass, ttype: TType):
     ttype.modify_query()
     js = query_params_to_map_check_parts(query, language.deny_attributes())
     
-    if str(ttype) not in ["tauno", "simcir", "parsons"]: # TODO: make tauno, simcir and parsons work without this
-        if not "markup" in js or js["markup"] is None:
-            js["markup"] = {}
-        js["markup"]["type"] = str(ttype)
+    if not "markup" in js or js["markup"] is None:
+        js["markup"] = {}
+    js["markup"]["type"] = str(ttype)
     
     if not ttype.success:
         return language, "", js, runner
@@ -583,8 +582,6 @@ def handle_common_params(query: QueryClass, ttype: TType):
         js["uploadedType"] = ut
     # jso)
     # print(ttype)
-    if ttype.has_modifier(Input) or ttype.has_modifier(Args): # TODO: modify so that this isn't needed
-        runner = runner + '-input'
     if ttype.has_language(SimCir):
         bycode = ''
     

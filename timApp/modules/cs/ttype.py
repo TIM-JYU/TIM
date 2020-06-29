@@ -37,7 +37,7 @@ class TType:
             if run is not None:
                 runner = run
         return runner
-    
+
     def modify_query(self):
         self.language.modify_query()
         for mod in self.modifiers:
