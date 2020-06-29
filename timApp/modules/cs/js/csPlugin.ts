@@ -343,20 +343,6 @@ function commentTrim(s: string) {
     return s.substr(3);
 }
 
-export function uploadTemplate() {
-    // language=HTML
-    return `
-    <div *ngIf="upload" class="form-inline small">
-        <div class="form-group small"> {{uploadstem}}:
-            <input type="file" ngf-select="onFileSelect($file)">
-            <span *ngIf="fileProgress && fileProgress >= 0 && !fileError"
-                [textContent]="fileProgress < 100 ? 'Uploading... ' + fileProgress + '%' : 'Done!'"></span>
-        </div>
-        <div class="error" *ngIf="fileError" [textContent]="fileError"></div>
-        <div *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
-    </div>`;
-}
-
 function makeTemplate() {
     // language=HTML
     return `
@@ -389,9 +375,17 @@ function makeTemplate() {
             <a (click)="copyFromSimcir()">copy from SimCir</a>
             | <a (click)="copyToSimcir()">copy to SimCir</a> | <a (click)="hideSimcir()">hide SimCir</a>
         </p>
-    </div>`
-    + uploadTemplate() +
-    `<div *ngIf="isAll" style="float: right;">{{languageText}}
+    </div>
+    <div *ngIf="upload" class="form-inline small">
+        <div class="form-group small"> {{uploadstem}}:
+            <input type="file" ngf-select="onFileSelect($file)">
+            <span *ngIf="fileProgress && fileProgress >= 0 && !fileError"
+                [textContent]="fileProgress < 100 ? 'Uploading... ' + fileProgress + '%' : 'Done!'"></span>
+        </div>
+        <div class="error" *ngIf="fileError" [textContent]="fileError"></div>
+        <div *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
+    </div>
+    <div *ngIf="isAll" style="float: right;">{{languageText}}
         <select [(ngModel)]="selectedLanguage" required>
             <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>
         </select>

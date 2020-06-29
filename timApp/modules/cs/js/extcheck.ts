@@ -1,6 +1,6 @@
 import {IScope, ICompileService, IAugmentedJQuery, IAttributes} from "angular";
 import {pluginBindings} from "tim/plugin/util";
-import {CsController, uploadTemplate} from "./csPlugin";
+import {CsController} from "./csPlugin";
 import {
         Input,
         Component,
@@ -60,9 +60,17 @@ interface IRunResult {
         <div [ngClass]="{'csRunDiv': markup.borders}" class="type-{{rtype}}">
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 *ngIf="header" [innerHTML]="header"></h4>
-            <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>`
-            + uploadTemplate() +
-            `<pre *ngIf="viewCode && codeover">{{code}}</pre>
+            <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
+            <div *ngIf="upload" class="form-inline small">
+                <div class="form-group small"> {{uploadstem}}:
+                    <input type="file" ngf-select="onFileSelect($file)">
+                    <span *ngIf="fileProgress && fileProgress >= 0 && !fileError"
+                        [textContent]="fileProgress < 100 ? 'Uploading... ' + fileProgress + '%' : 'Done!'"></span>
+                </div>
+                <div class="error" *ngIf="fileError" [textContent]="fileError"></div>
+                <div *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
+            </div>
+            <pre *ngIf="viewCode && codeover">{{code}}</pre>
             <div class="csRunCode">
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
                 <div class="csEditorAreaDiv">
