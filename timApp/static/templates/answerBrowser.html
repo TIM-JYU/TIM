@@ -68,8 +68,11 @@
                     </div>
                 </div>
                 </div>
-                <p ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">(no answers from selected user)</p>
-                    <div class="flex">
+             <div ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">
+                <span ng-if="!$ctrl.hasUserChanged()">(no answers from the selected user)</span>
+                 <span ng-if="$ctrl.hasUserChanged()"> <tim-loading></tim-loading> </span>
+             </div>
+                 <div class="flex ab-option-row">
                             <form ng-submit="$ctrl.savePoints()" class="point-form form-inline">
                                 <label ng-show="$ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())">
                                     Points:<input class="form-control input-xs"
@@ -94,7 +97,7 @@
                                     <i class="glyphicon glyphicon-ok"></i>
                                 </button>
                             </form>
-                            <div ng-show="$ctrl.selectedAnswer">
+                            <span ng-show="$ctrl.selectedAnswer">
 
                             <span ng-show="$ctrl.points !== null && !($ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())) && $ctrl.taskInfo.pointsText">
                         {{ $ctrl.taskInfo.pointsText }} {{ $ctrl.points }} <span ng-if="!$ctrl.taskInfo.showPoints">(only visible to teachers)</span>
@@ -117,15 +120,19 @@
                             <i class="glyphicon glyphicon-ok"></i>
                         </button>
                     </span>
-                            <label class="checkbox-inline"
-                                   ng-show="$ctrl.viewctrl.teacherMode && $ctrl.allowCustomPoints()">
-                                <input type="checkbox" ng-model="$ctrl.giveCustomPoints">cp
-                            </label>
-                            </div>
-                            <label class="checkbox-inline" ng-show="$ctrl.showTeacher()">
-                                <input type="checkbox" ng-change="$ctrl.toggleInput()" ng-model="$ctrl.saveTeacher">Save teacher's fix
-                            </label>
-                            <div ng-show="$ctrl.selectedAnswer">
+                                <span>
+                                    <label class="checkbox-inline"
+                                           ng-show="$ctrl.viewctrl.teacherMode && $ctrl.allowCustomPoints()">
+                                        <input type="checkbox" ng-model="$ctrl.giveCustomPoints">cp
+                                    </label>
+                                </span>
+                            </span>
+                            <span>
+                                <label class="checkbox-inline" ng-show="$ctrl.showTeacher()">
+                                    <input type="checkbox" ng-change="$ctrl.toggleInput()" ng-model="$ctrl.saveTeacher">Save teacher's fix
+                                </label>
+                            </span>
+                            <span ng-show="$ctrl.selectedAnswer">
 
                             <label class="checkbox-inline" ng-show="$ctrl.showVelpsCheckBox()">
                                 <input type="checkbox" ng-model="$ctrl.review">Velps
@@ -136,8 +143,8 @@
                                     ng-if="$ctrl.showDelete">
                                 <i class="glyphicon glyphicon-trash"></i>
                             </button>
-                            </div>
-                        <div ng-show="$ctrl.selectedAnswer">
+                            </span>
+                        <span ng-show="$ctrl.selectedAnswer">
                         <div class="flex" ng-show="$ctrl.selectedAnswer.users.length > 1">
                             <div>
                                 Collaborators:
@@ -147,7 +154,7 @@
                                 </ul>
                             </div>
                         </div>
-                        </div>
+                        </span>
                     </div><!-- end flex-->
                     <div ng-if="$ctrl.review" class="review" ng-bind-html="$ctrl.reviewHtml">
 
