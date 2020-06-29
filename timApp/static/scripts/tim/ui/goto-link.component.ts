@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, OnInit} from "@angular/core";
 import moment, {Moment} from "moment";
 import {formatString, to2} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
@@ -67,7 +67,7 @@ const VIEW_PATH = "/view/";
     `,
     styleUrls: ["./goto-link.component.scss"],
 })
-export class GotoLinkComponent {
+export class GotoLinkComponent implements OnInit {
     @Input() href = "";
     @Input() waitText?: string;
     @Input() countdownText: string = $localize `:@@gotoOpensIn:Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
@@ -82,6 +82,7 @@ export class GotoLinkComponent {
     @Input() closeAt?: string;
     @Input() checkUnsaved: boolean = false;
     @Input() unsavedChangesText?: string;
+    @Input() autoOpen: boolean = false;
     openTime?: string;
     pastDue = 0;
     linkDisabled = false;
@@ -91,6 +92,12 @@ export class GotoLinkComponent {
     formatString = formatString;
 
     constructor(private http: HttpClient) {
+    }
+
+    ngOnInit() {
+        if (this.autoOpen) {
+            void this.handleClick();
+        }
     }
 
     get hasStatus() {

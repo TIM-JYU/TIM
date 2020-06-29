@@ -136,6 +136,7 @@ TIM_SAFE_ATTRS = frozenset([
     'group',
 
     # tim-goto-link
+    'auto-open',
     'check-unsaved',
     'close-at',
     'countdown-text',
