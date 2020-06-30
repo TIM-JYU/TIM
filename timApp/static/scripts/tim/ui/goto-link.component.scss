@@ -4,6 +4,12 @@
   align-items: center;
 }
 
+.info {
+    border: 1px solid #0535d4;
+    background-color: #b8bfe8;
+    text-align: left;
+}
+
 a {
   &:not(:last-child) {
     margin-right: 0.6em;

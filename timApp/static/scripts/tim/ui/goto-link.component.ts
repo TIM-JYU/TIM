@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, OnInit} from "@angular/core";
 import moment, {Moment} from "moment";
 import {formatString, to2} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
@@ -12,16 +12,21 @@ interface IViewAccessStatus {
     right?: IRight;
 }
 
+interface GotoError {
+    userMessage?: string;
+    defaultMessage: string;
+    displayClass?: string;
+}
+
 enum GotoLinkState {
     Ready,
     Countdown,
     Goto,
-    Unauthorized,
-    Expired,
-    HasUnsavedChanges,
+    Error,
 }
 
 const VIEW_PATH = "/view/";
+const MOUSE_BUTTON_AUX = 1;
 
 @Component({
     selector: "tim-goto-link",
@@ -30,31 +35,15 @@ const VIEW_PATH = "/view/";
            [attr.aria-disabled]="linkDisabled"
            [class.timButton]="isButton"
            [attr.role]="isButton ? 'button': null"
-           (click)="handleClick()">
+           (click)="start()">
             <ng-content></ng-content>
         </a>
         <div class="load-text" *ngIf="hasStatus">
-            <ng-container *ngIf="isExpired">
-                <span class="error">
-                    <ng-container *ngIf="pastDueText else defaultPastDueText">{{formatString(pastDueText, pastDueTime)}}</ng-container>
-                    <ng-template #defaultPastDueText i18n>Your access expired {{pastDueTime}} ago.</ng-template>
-                </span>
-            </ng-container>
-            <ng-container *ngIf="isUnauthorized">
-                <span class="error">
-                    <ng-container *ngIf="unauthorizedText else defaultUnauthorizedText">{{unauthorizedText}}</ng-container>
-                    <ng-template #defaultUnauthorizedText i18n>You don't have permission to view that document.</ng-template>
-                </span>
-            </ng-container>
-            <ng-container *ngIf="hasUnsavedChanges">
-                <span class="error">
-                    <ng-container *ngIf="unsavedChangesText else defaultUnsavedChangesText">{{unsavedChangesText}}</ng-container>
-                    <ng-template #defaultUnsavedChangesText i18n>You have unsaved changes. Save them or click the link again.</ng-template>
-                </span>
-            </ng-container>
+            <span *ngIf="this.error" [className]="this.error.displayClass ? this.error.displayClass : 'error'">
+                {{this.error.userMessage ? this.error.userMessage : this.error.defaultMessage}}
+            </span>
             <ng-container *ngIf="isCountdown">
-                <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="startGoto()"></tim-countdown>
-                <ng-template i18n="@@gotoOpensIn">Opens in {{"{"}}0{{"}"}}.</ng-template>
+                <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="countdownDone()"></tim-countdown>
             </ng-container>
             <ng-container *ngIf="isGoing">
                 <tim-loading></tim-loading>
@@ -64,10 +53,16 @@ const VIEW_PATH = "/view/";
                 </span>
             </ng-container>
         </div>
+
+        <ng-template i18n="@@gotoErrorExpired">Your access expired {{0}} ago.</ng-template>
+        <ng-template i18n="@@gotoErrorUnauthorized">You don't have permission to view that document.</ng-template>
+        <ng-template i18n="@@gotoErrorUnsaved">You have unsaved changes. Save them or click the link again.</ng-template>
+        <ng-template i18n="@@gotoCanAccess">You can access the link now.</ng-template>
+        <ng-template i18n="@@gotoOpensIn">Opens in {{"{"}}0{{"}"}}.</ng-template>
     `,
     styleUrls: ["./goto-link.component.scss"],
 })
-export class GotoLinkComponent {
+export class GotoLinkComponent implements OnInit {
     @Input() href = "";
     @Input() waitText?: string;
     @Input() countdownText: string = $localize `:@@gotoOpensIn:Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
@@ -82,15 +77,22 @@ export class GotoLinkComponent {
     @Input() closeAt?: string;
     @Input() checkUnsaved: boolean = false;
     @Input() unsavedChangesText?: string;
+    @Input() autoOpen: boolean = false;
+    @Input() stopAfterCountdown: boolean = false;
     openTime?: string;
-    pastDue = 0;
     linkDisabled = false;
     linkState = GotoLinkState.Ready;
     resetTimeout?: number;
-
-    formatString = formatString;
+    error?: GotoError;
+    unsavedChangesChecked = false;
 
     constructor(private http: HttpClient) {
+    }
+
+    ngOnInit() {
+        if (this.autoOpen) {
+            void this.start();
+        }
     }
 
     get hasStatus() {
@@ -105,20 +107,14 @@ export class GotoLinkComponent {
         return this.linkState == GotoLinkState.Goto;
     }
 
-    get isUnauthorized() {
-        return this.linkState == GotoLinkState.Unauthorized;
+    private getPastDueTime(pastDue: number) {
+        return humanizeDuration(pastDue * 1000, {language: this.timeLang ?? Users.getCurrentLanguage()});
     }
 
-    get isExpired() {
-        return this.linkState == GotoLinkState.Expired;
-    }
-
-    get hasUnsavedChanges() {
-        return this.linkState == GotoLinkState.HasUnsavedChanges;
-    }
-
-    get pastDueTime() {
-        return humanizeDuration(this.pastDue * 1000, {language: this.timeLang ?? Users.getCurrentLanguage()});
+    private showError(error: GotoError) {
+        this.error = error;
+        this.linkState = GotoLinkState.Error;
+        this.startReset(this.resetTime);
     }
 
     async resolveAccess() {
@@ -144,19 +140,20 @@ export class GotoLinkComponent {
         return result.isValid() ? result : wildcardValue;
     }
 
-    async handleClick() {
+    async start() {
         // Allow user to click during countdown or past expiration, but do nothing reasonable.
         if (this.isCountdown) { return; }
 
         this.stopReset();
-
+        this.error = undefined;
         this.linkDisabled = true;
 
         const {unauthorized, access} = await this.resolveAccess();
-
         if (unauthorized && !access) {
-            this.linkState = GotoLinkState.Unauthorized;
-            this.startReset(this.resetTime);
+            this.showError({
+                userMessage: this.unauthorizedText,
+                defaultMessage: $localize`:@@gotoErrorUnauthorized:You don't have permission to view that document.`,
+            });
             return;
         }
 
@@ -175,16 +172,21 @@ export class GotoLinkComponent {
         }
 
         if (closeTime?.isValid() && closeTime.isBefore(curTime)) {
-            this.pastDue = closeTime.diff(curTime, "seconds");
-            this.linkState = GotoLinkState.Expired;
-            this.startReset(this.resetTime);
+            const pastDue = this.getPastDueTime(closeTime.diff(curTime, "seconds"));
+            this.showError({
+                userMessage: this.pastDueText ? formatString(this.pastDueText, pastDue) : undefined,
+                defaultMessage: $localize`:@@gotoErrorExpired:Your access expired ${pastDue}:INTERPOLATION: ago.`,
+            });
             return;
         }
 
-        if (!this.hasUnsavedChanges && this.checkUnsaved && vctrlInstance?.checkUnSavedTimComponents()) {
+        if (!this.unsavedChangesChecked && this.checkUnsaved && vctrlInstance?.checkUnSavedTimComponents()) {
+            this.showError({
+                userMessage: this.unsavedChangesText,
+                defaultMessage: $localize`:@@gotoErrorUnsaved:You have unsaved changes. Save them or click the link again.`,
+            });
+            this.unsavedChangesChecked = true;
             this.linkDisabled = false;
-            this.linkState = GotoLinkState.HasUnsavedChanges;
-            this.startReset(this.resetTime);
             return;
         }
 
@@ -193,7 +195,7 @@ export class GotoLinkComponent {
         }
 
         if (openTime?.isValid() && openTime.diff(curTime, "seconds", true) <= 0) {
-            this.startGoto();
+            this.startOpenLink();
         } else {
             this.startCountdown();
         }
@@ -205,12 +207,28 @@ export class GotoLinkComponent {
         this.linkState = GotoLinkState.Countdown;
     }
 
+    countdownDone() {
+        if (this.stopAfterCountdown) {
+            this.showError({
+                defaultMessage: $localize`:@@gotoCanAccess:You can access the link now.`,
+                displayClass: "info",
+            });
+            this.linkDisabled = false;
+            return;
+        } else {
+            this.startOpenLink();
+        }
+    }
+
     startReset(resetTime: number) {
-         this.resetTimeout = window.setTimeout(() => {
-           this.stopReset();
-           this.linkState = GotoLinkState.Ready;
-           this.linkDisabled = false;
-        }, resetTime * 1000);
+         this.resetTimeout = window.setTimeout(() => this.reset(), resetTime * 1000);
+    }
+
+    private reset() {
+        this.stopReset();
+        this.linkState = GotoLinkState.Ready;
+        this.linkDisabled = false;
+        this.unsavedChangesChecked = false;
     }
 
     stopReset() {
@@ -220,7 +238,7 @@ export class GotoLinkComponent {
         }
     }
 
-    startGoto() {
+    startOpenLink() {
         if (this.isGoing) { return; }
         this.linkDisabled = true;
         this.linkState = GotoLinkState.Goto;
@@ -236,6 +254,9 @@ export class GotoLinkComponent {
                 window.location.reload(true);
             } else {
                 window.open(this.href, this.target);
+            }
+            if (this.target != "_self") {
+                this.reset();
             }
         }, waitTime * 1000);
 

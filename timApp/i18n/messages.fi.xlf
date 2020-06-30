@@ -74,30 +74,6 @@
           <context context-type="linenumber">14</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="16e04b1bd3f8e72f0d445e261ef85c6ca814f905" datatype="html">
-        <source>Your access expired <x id="INTERPOLATION" equiv-text="{{pastDueTime}}"/> ago.</source>
-        <target state="translated">Lukuoikeutesi dokumenttiin loppui <x id="INTERPOLATION" equiv-text="{{pastDueTime}}"/> sitten.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
-          <context context-type="linenumber">13</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="037213e16fa59766a1d7077686e8221552881240" datatype="html">
-        <source>You don't have permission to view that document.</source>
-        <target state="translated">Sinulla ei ole lukuoikeutta tähän dokumenttiin.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
-          <context context-type="linenumber">19</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="e2be64fbdace07f85a3a669f8b977b937f5bf6af" datatype="html">
-        <source>You have unsaved changes. Save them or click the link again.</source>
-        <target state="translated">Sinulla on tallentamattomia muutoksia. Tallenna ne tai paina linkkiä uudelleen.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
-          <context context-type="linenumber">25</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="gotoOpensIn" datatype="html">
         <source>Opens in <x id="INTERPOLATION" equiv-text="{{&quot;{&quot;}}"/>0<x id="INTERPOLATION_1" equiv-text="{{&quot;}&quot;}}"/>.</source>
         <target state="translated">Aikaa avautumiseen: <x id="INTERPOLATION" equiv-text="{{&quot;{&quot;}}"/>0<x id="INTERPOLATION_1" equiv-text="{{&quot;}&quot;}}"/>.</target>
@@ -111,7 +87,39 @@
         <target state="translated">Ladataan, odota.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
-          <context context-type="linenumber">36</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gotoErrorExpired" datatype="html">
+        <source>Your access expired <x id="INTERPOLATION" equiv-text="{{0}}"/> ago.</source>
+        <target state="translated">Lukuoikeutesi dokumenttiin loppui <x id="INTERPOLATION" equiv-text="{{pastDueTime}}"/> sitten.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gotoErrorUnauthorized" datatype="html">
+        <source>You don't have permission to view that document.</source>
+        <target state="translated">Sinulla ei ole lukuoikeutta tähän dokumenttiin.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
+          <context context-type="linenumber">27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gotoErrorUnsaved" datatype="html">
+        <source>You have unsaved changes. Save them or click the link again.</source>
+        <target state="translated">Sinulla on tallentamattomia muutoksia. Tallenna ne tai paina linkkiä uudelleen.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
+          <context context-type="linenumber">28</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gotoCanAccess" datatype="html">
+        <source>You can access the link now.</source>
+        <target state="new">Pääset nyt avaamaan linkin.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
+          <context context-type="linenumber">29</context>
         </context-group>
       </trans-unit>
       <trans-unit id="125ef8240667aef886438ac404054ecfc84212fb" datatype="html">
@@ -296,12 +304,14 @@
           <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="92839e44d163420e3fd27f8bd9ac616bc3b3ff62" datatype="html">
+      <trans-unit id="a75ca887f809e6410834a31724e69d230ccbba1d" datatype="html">
         <source>
-            You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> in <x id="INTERPOLATION" equiv-text="{{ humanizedCountdown }}"/>.
+            You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/>
+            in <x id="START_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;tim-countdown>"/><x id="CLOSE_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;/tim-countdown>"/>.
         </source>
         <target state="new">
-            Tämä <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> aukeaa ajassa: <x id="INTERPOLATION" equiv-text="{{ humanizedCountdown }}"/>.
+            Tämä <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/>
+            aukeaa ajassa: <x id="START_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;tim-countdown>"/><x id="CLOSE_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;/tim-countdown>"/>.
         </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
@@ -316,16 +326,18 @@
           <context context-type="linenumber">3</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="ae348c4e665a3e26cd8f588f42f1d3375b88aea5" datatype="html">
+      <trans-unit id="6e7748a1a76eb880ada3826dbf92e7a4d034a143" datatype="html">
         <source>
-            You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> now. <x id="START_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;tim-goto-link>"/>Refresh the page<x id="CLOSE_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;/tim-goto-link>"/>.
+            You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> now.
+            <x id="START_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;tim-goto-link>"/>Refresh the page<x id="CLOSE_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;/tim-goto-link>"/>
         </source>
         <target state="new">
-            Pääset <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> nyt. <x id="START_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;tim-goto-link>"/>Virkistä sivu<x id="CLOSE_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;/tim-goto-link>"/>.
+            Pääset <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/> nyt.
+            <x id="START_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;tim-goto-link>"/>Virkistä sivu<x id="CLOSE_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;/tim-goto-link>"/>
         </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
-          <context context-type="linenumber">5</context>
+          <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
       <trans-unit id="ae8b8f7779baad9fc33b6b2782c4876f4a06bdb8" datatype="html">
@@ -333,7 +345,7 @@
         <target state="translated">{VAR_SELECT, select, true {kansioon } false {dokumenttiin } }</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
-          <context context-type="linenumber">6</context>
+          <context context-type="linenumber">9</context>
         </context-group>
       </trans-unit>
       <trans-unit id="bookmarksTabTitle" datatype="html">
