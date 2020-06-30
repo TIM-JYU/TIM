@@ -35,8 +35,7 @@ const MOUSE_BUTTON_AUX = 1;
            [attr.aria-disabled]="linkDisabled"
            [class.timButton]="isButton"
            [attr.role]="isButton ? 'button': null"
-           (click)="handleClick($event)"
-           (auxclick)="handleAuxClick($event)">
+           (click)="start()">
             <ng-content></ng-content>
         </a>
         <div class="load-text" *ngIf="hasStatus">
@@ -84,7 +83,6 @@ export class GotoLinkComponent implements OnInit {
     linkDisabled = false;
     linkState = GotoLinkState.Ready;
     resetTimeout?: number;
-    gotoTarget?: string;
     error?: GotoError;
     unsavedChangesChecked = false;
 
@@ -142,20 +140,7 @@ export class GotoLinkComponent implements OnInit {
         return result.isValid() ? result : wildcardValue;
     }
 
-    handleAuxClick(event: MouseEvent) {
-        const target = event.button == MOUSE_BUTTON_AUX ? "_blank" : undefined;
-        void this.start(target);
-    }
-
-    handleClick(event: MouseEvent) {
-        const target = event.ctrlKey ? "_blank" : undefined;
-        void this.start(target);
-    }
-
-    private async start(target?: string) {
-        // Allow to change href target even if the link was otherwise not clickable
-        this.gotoTarget = target ?? this.target;
-
+    async start() {
         // Allow user to click during countdown or past expiration, but do nothing reasonable.
         if (this.isCountdown) { return; }
 
@@ -268,10 +253,9 @@ export class GotoLinkComponent implements OnInit {
                 //  anymore.
                 window.location.reload(true);
             } else {
-                window.open(this.href, this.gotoTarget);
+                window.open(this.href, this.target);
             }
-            // Note that gotoTarget = undefined is the same as gotoTarget = _self
-            if (this.gotoTarget && this.gotoTarget != "_self") {
+            if (this.target != "_self") {
                 this.reset();
             }
         }, waitTime * 1000);
