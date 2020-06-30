@@ -73,9 +73,8 @@
                  <span ng-if="$ctrl.hasUserChanged()"> <tim-loading></tim-loading> </span>
              </div>
                  <div class="flex ab-option-row">
-                     <span>
                             <form ng-submit="$ctrl.savePoints()" class="point-form form-inline">
-                                <label ng-show="$ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())">
+                                <label class="inline" ng-show="$ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())">
                                     Points:<input class="form-control input-xs"
                                                   ng-class="{ unsaved: $ctrl.points != $ctrl.selectedAnswer.points,
                                                   'no-step': !$ctrl.markupSettings.pointsStep }"
@@ -98,10 +97,10 @@
                                     <i class="glyphicon glyphicon-ok"></i>
                                 </button>
                             </form>
-                         </span>
-                            <span ng-show="$ctrl.selectedAnswer">
+<!--in ab-option-row span elements have right margin, use div if selecting multiple elements for ng-show -->
+                            <div ng-show="$ctrl.selectedAnswer">
 
-                            <span ng-show="$ctrl.points !== null && !($ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())) && $ctrl.taskInfo.pointsText">
+                            <span class="inline" ng-show="$ctrl.points !== null && !($ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())) && $ctrl.taskInfo.pointsText">
                         {{ $ctrl.taskInfo.pointsText }} {{ $ctrl.points }} <span ng-if="!$ctrl.taskInfo.showPoints">(only visible to teachers)</span>
                     </span>
                             <span ng-show="$ctrl.taskInfo.maxPoints && $ctrl.points !== null">/ {{ $ctrl.taskInfo.maxPoints }}</span>
@@ -122,30 +121,31 @@
                             <i class="glyphicon glyphicon-ok"></i>
                         </button>
                     </span>
-                                <span>
-                                    <label class="checkbox-inline"
-                                           ng-show="$ctrl.viewctrl.teacherMode && $ctrl.allowCustomPoints()">
+                                <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.allowCustomPoints()">
+                                    <label class="checkbox-inline">
                                         <input type="checkbox" ng-model="$ctrl.giveCustomPoints">cp
                                     </label>
                                 </span>
-                            </span>
+                            </div>
                             <span ng-show="$ctrl.showTeacher()">
                                 <label class="checkbox-inline">
                                     <input type="checkbox" ng-change="$ctrl.toggleInput()" ng-model="$ctrl.saveTeacher">Save teacher's fix
                                 </label>
                             </span>
-                            <span ng-show="$ctrl.selectedAnswer">
-
-                            <label class="checkbox-inline" ng-show="$ctrl.showVelpsCheckBox()">
+                            <div ng-show="$ctrl.selectedAnswer">
+                            <span ng-show="$ctrl.showVelpsCheckBox()">
+                            <label class="checkbox-inline" >
                                 <input type="checkbox" ng-model="$ctrl.review">Velps
                             </label>
+                            </span>
+                                <span ng-if="$ctrl.showDelete">
                             <button title="Delete answer"
                                     ng-click="$ctrl.deleteAnswer()"
-                                    class="timButton btn-xs btn-danger"
-                                    ng-if="$ctrl.showDelete">
+                                    class="timButton btn-xs btn-danger">
                                 <i class="glyphicon glyphicon-trash"></i>
                             </button>
-                            </span>
+                                    </span>
+                            </div>
                         <span ng-show="$ctrl.selectedAnswer">
                         <div class="flex" ng-show="$ctrl.selectedAnswer.users.length > 1">
                             <div>

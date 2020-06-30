@@ -1242,9 +1242,20 @@ answerbrowser {
 
     font-size: 14px;
 
-    .ab-option-row > span + span {
-        margin-left: 10px;
+    .ab-option-row > form > label, .ab-option-row span {
+        margin-right: 10px;
     }
+
+    .ab-option-row > form > button {
+        margin-right: 10px;
+        margin-left: -10px
+    }
+
+    .inline {
+        display: inline;
+        vertical-align: middle;
+    }
+
 }
 
 .color-picker-input-wrapper {
