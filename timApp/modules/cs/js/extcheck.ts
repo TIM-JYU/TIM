@@ -1,16 +1,11 @@
-import {IScope, ICompileService, IAugmentedJQuery, IAttributes} from "angular";
-import {pluginBindings} from "tim/plugin/util";
 import {CsController} from "./csPlugin";
 import {
         Input,
         Component,
-        DoBootstrap,
         NgModule,
-        StaticProvider,
         ViewChild,
         ChangeDetectorRef,
         ElementRef,
-        ApplicationRef,
         Directive,
         Type,
         ViewContainerRef,
@@ -19,13 +14,8 @@ import {
         ComponentRef,
     } from "@angular/core"
 import {CommonModule} from "@angular/common"
-import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {FormsModule} from "@angular/forms";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {EditorModule} from "./editor/module"
+import {HttpClient} from "@angular/common/http";
+import {DomSanitizer} from "@angular/platform-browser";
 
 interface IAngularComponent {
     template: string;
@@ -61,15 +51,19 @@ interface IRunResult {
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 *ngIf="header" [innerHTML]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
-            <div *ngIf="upload" class="form-inline small">
-                <div class="form-group small"> {{uploadstem}}:
-                    <input type="file" ngf-select="onFileSelect($file)">
-                    <span *ngIf="fileProgress && fileProgress >= 0 && !fileError"
-                        [textContent]="fileProgress < 100 ? 'Uploading... ' + fileProgress + '%' : 'Done!'"></span>
-                </div>
-                <div class="error" *ngIf="fileError" [textContent]="fileError"></div>
-                <div *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
-            </div>
+            <ng-container *ngIf="upload">
+                <file-select class="small"
+                        [dragAndDrop]="markup.dragAndDrop"
+                        [fileName]="markup.filename"
+                        [maxSize]="markup.maxSize"
+                        [maxTotalSize]="markup.maxTotalSize"
+                        [url]="uploadUrl"
+                        [uploadStem]="uploadstem"
+                        (file)="onFileLoad($event)"
+                        (upload)="onUploadResponse($event)">
+                </file-select>
+                <div class="form-inline small" *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
+            </ng-container>
             <pre *ngIf="viewCode && codeover">{{code}}</pre>
             <div class="csRunCode">
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
@@ -323,35 +317,3 @@ export class OutputContainerComponent implements IOutputContainer {
         this.textContent = {classes: "", content: str};
     }
 }
-
-// noinspection AngularInvalidImportedOrDeclaredSymbol
-@NgModule({
-    declarations: [
-        ExtcheckComponent,
-        OutputContainerComponent,
-        CustomOutputDirective,
-    ],
-    exports: [
-        ExtcheckComponent,
-    ],
-    imports: [
-        BrowserModule,
-        TimUtilityModule,
-        FormsModule,
-        HttpClientModule,
-        EditorModule,
-    ],
-})
-export class ExtcheckModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
-}
-
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(ExtcheckModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "csExtcheckRunner", ExtcheckComponent);
-export const moduleDefs = [angularJsModule];

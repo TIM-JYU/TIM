@@ -12,6 +12,7 @@ import {EditorModule} from "./editor/module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {CsRunnerComponent, CsTextComponent, CsConsoleComponent} from "./csPlugin";
+import {ExtcheckComponent, OutputContainerComponent, CustomOutputDirective} from "./extcheck";
 import {FileSelectComponent} from "./util/file-select";
 
 @NgModule({
@@ -20,11 +21,15 @@ import {FileSelectComponent} from "./util/file-select";
         CsTextComponent,
         CsConsoleComponent,
         FileSelectComponent,
+        ExtcheckComponent,
+        OutputContainerComponent,
+        CustomOutputDirective,
     ],
     exports: [
         CsRunnerComponent,
         CsTextComponent,
         CsConsoleComponent,
+        ExtcheckComponent,
     ],
     imports: [
         EditorModule,
@@ -48,4 +53,5 @@ export const angularJsModule = createDowngradedModule(bootstrapFn);
 doDowngrade(angularJsModule, "csRunner", CsRunnerComponent);
 doDowngrade(angularJsModule, "csTextRunner", CsTextComponent);
 doDowngrade(angularJsModule, "csConsole", CsConsoleComponent);
+doDowngrade(angularJsModule, "csExtcheckRunner", ExtcheckComponent);
 export const moduleDefs = [angularJsModule];

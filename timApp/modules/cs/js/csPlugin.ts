@@ -16,7 +16,7 @@ import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} f
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {getFormBehavior} from "tim/plugin/util";
-import {$http, $sce, $timeout, $upload} from "tim/util/ngimport";
+import {$http, $sce, $timeout} from "tim/util/ngimport";
 import {
     copyToClipboard,
     defaultErrorMessage,
@@ -34,7 +34,7 @@ import {getIFrameDataUrl} from "./iframeutils";
 import {Mode, EditorComponent} from "./editor/editor";
 import {CountBoardComponent} from "./editor/countboard";
 import {getInt} from "./util";
-
+import {IFile} from "./util/file-select";
 
 // js-parsons is unused; just declare a stub to make TS happy
 declare class ParsonsWidget {
@@ -388,6 +388,12 @@ interface IExtraMarkup {
 
 const CspluginAnswer = t.type({usercode: t.string});
 
+interface IUploadResponse {
+    file: string;
+    type: string;
+    block: number;
+}
+
 /**
  * This defines the required format for the csPlugin YAML markup.
  * All fields in the markup are optional (as indicated by t.partial function).
@@ -511,6 +517,7 @@ const CsMarkupDefaults = t.type({
     cols: withDefault(t.Integer, 10),
     copyLink: withDefault(t.string, "Copy"),
     cssPrint: withDefault(t.boolean, false),
+    dragAndDrop: withDefault(t.boolean, true),
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
     iframe: withDefault(t.boolean, false), // TODO this maybe gets deleted on server
@@ -525,6 +532,8 @@ const CsMarkupDefaults = t.type({
     justSave: withDefault(t.boolean, false),
     lang: withDefault(t.string, "fi"),
     maxrows: withDefault(t.Integer, 100),
+    maxSize: withDefault(t.number, 50),
+    maxTotalSize: withDefault(t.number, 50),
     noConsoleClear: withDefault(t.boolean, false),
     nocode: withDefault(t.boolean, false),
     norun: withDefault(t.boolean, false),
@@ -739,6 +748,7 @@ export class CsController extends CsBase implements ITimComponent {
     uploadedFile?: string;
     uploadedType?: string;
     uploadresult?: string;
+    uploadUrl?: string;
     userargs: string = "";
     userinput: string = "";
     viewCode!: boolean;
@@ -1217,6 +1227,11 @@ ${fhtml}
             this.docLink = "Hide document";
         }
 
+        const taskId = this.pluginMeta.getTaskId();
+        if(this.upload && !this.markup.uploadbycode && taskId) {
+            this.uploadUrl = `/pluginUpload/${taskId.docId}/${taskId.name}/`;
+        }
+
         this.timeout = valueOr(this.attrsall.timeout, 0)*1000;
         this.userinput = valueOr(this.attrsall.userinput, (this.markup.userinput ?? "").toString());
         this.userargs = valueOr(this.attrsall.userargs, (this.markup.userargs ?? (isText && isArgs ? this.markup.filename ?? "" : "")).toString());
@@ -1364,57 +1379,23 @@ ${fhtml}
         }
     }
 
-    onFileSelect(file: File) {
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            console.log("taskId missing");
-            return;
+    onFileLoad(file: IFile) {
+        if (this.markup.uploadbycode) {
+            this.usercode = file.content;
+            if (this.markup.uploadautosave) { this.runCode(); }
         }
+    }
 
-        if (file) {
-            if (this.markup.uploadbycode) {
-                const reader = new FileReader();
-                reader.onload = ((e) => {
-                    /*this.scope.$evalAsync(() => {
-                        this.usercode = reader.result as string;
-                        if (this.markup.uploadautosave) { this.runCode(); }
-                    });*/ // TODO
-                });
-                reader.readAsText(file);
-                return;
-            }
+    onUploadResponse(resp: unknown) {
+        if (!resp) {return;}
 
-            this.fileProgress = 0;
-            this.fileError = undefined;
-            this.uploadedFile = undefined;
-            this.uploadresult = undefined;
-            this.docURL = undefined;
-            const upload = $upload.upload<{file: string, type: string}>({
-                url: `/pluginUpload/${taskId.docId}/${taskId.name}/`,
-                data: {
-                    file: file,
-                },
-                method: "POST",
-            });
+        const response = resp as IUploadResponse;
+        this.uploadedFiles.push({path: response.file, type: response.type});
+    }
 
-            upload.then((response) => {
-                $timeout(() => {
-                    this.showUploaded(response.data.file, response.data.type);
-                    if (this.markup.uploadautosave || !this.markup.button) {
-                        this.doRunCode("upload", false);
-                    }
-                });
-            }, (response) => {
-                if (response.status > 0) {
-                    this.fileError = response.data.error;
-                }
-            }, (evt) => {
-                this.fileProgress = Math.min(100, Math.floor(100.0 *
-                    evt.loaded / evt.total));
-            });
-
-            upload.finally(() => {
-            });
+    onUploadDone(success: boolean) {
+        if (success && (this.markup.uploadautosave || !this.markup.button)) {
+            this.doRunCode("upload", false);
         }
     }
 
@@ -2539,15 +2520,20 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
             | <a (click)="copyToSimcir()">copy to SimCir</a> | <a (click)="hideSimcir()">hide SimCir</a>
         </p>
     </div>
-    <div *ngIf="upload" class="form-inline small">
-        <div class="form-group small"> {{uploadstem}}:
-            <input type="file" ngf-select="onFileSelect($file)">
-            <span *ngIf="fileProgress && fileProgress >= 0 && !fileError"
-                [textContent]="fileProgress < 100 ? 'Uploading... ' + fileProgress + '%' : 'Done!'"></span>
-        </div>
-        <div class="error" *ngIf="fileError" [textContent]="fileError"></div>
-        <div *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
-    </div>
+    <ng-container *ngIf="upload">
+        <file-select class="small"
+                [dragAndDrop]="markup.dragAndDrop"
+                [fileName]="markup.filename"
+                [maxSize]="markup.maxSize"
+                [maxTotalSize]="markup.maxTotalSize"
+                [url]="uploadUrl"
+                [uploadStem]="uploadstem"
+                (file)="onFileLoad($event)"
+                (upload)="onUploadResponse($event)"
+                (uploadDone)="onUploadDone($event)">
+        </file-select>
+        <div class="form-inline small" *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
+    </ng-container>
     <div *ngIf="isAll" style="float: right;">{{languageText}}
         <select [(ngModel)]="selectedLanguage" required>
             <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>

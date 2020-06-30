@@ -167,6 +167,18 @@ p.stem {
       width: 100% !important;
     }
   }
+  
+  file-select {
+      margin-bottom: 0.5em;
+      margin-left: 0.3em; 
+      
+      .drag-and-drop {
+        height: 2.5em;
+        margin-left: 3%;
+        margin-right: 3%;
+        width: 94%;
+      }
+  }
 }
 
 .stem {
