@@ -22,6 +22,7 @@ enum GotoLinkState {
 }
 
 const VIEW_PATH = "/view/";
+const MOUSE_BUTTON_AUX = 1;
 
 @Component({
     selector: "tim-goto-link",
@@ -30,7 +31,8 @@ const VIEW_PATH = "/view/";
            [attr.aria-disabled]="linkDisabled"
            [class.timButton]="isButton"
            [attr.role]="isButton ? 'button': null"
-           (click)="handleClick()">
+           (click)="handleClick($event)"
+           (auxclick)="handleAuxClick($event)">
             <ng-content></ng-content>
         </a>
         <div class="load-text" *ngIf="hasStatus">
@@ -53,7 +55,7 @@ const VIEW_PATH = "/view/";
                 </span>
             </ng-container>
             <ng-container *ngIf="isCountdown">
-                <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="startGoto()"></tim-countdown>
+                <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="startOpenLink()"></tim-countdown>
                 <ng-template i18n="@@gotoOpensIn">Opens in {{"{"}}0{{"}"}}.</ng-template>
             </ng-container>
             <ng-container *ngIf="isGoing">
@@ -88,6 +90,7 @@ export class GotoLinkComponent implements OnInit {
     linkDisabled = false;
     linkState = GotoLinkState.Ready;
     resetTimeout?: number;
+    gotoTarget?: string;
 
     formatString = formatString;
 
@@ -96,7 +99,7 @@ export class GotoLinkComponent implements OnInit {
 
     ngOnInit() {
         if (this.autoOpen) {
-            void this.handleClick();
+            void this.start();
         }
     }
 
@@ -151,16 +154,27 @@ export class GotoLinkComponent implements OnInit {
         return result.isValid() ? result : wildcardValue;
     }
 
-    async handleClick() {
+    handleAuxClick(event: MouseEvent) {
+        const target = event.button == MOUSE_BUTTON_AUX ? "_blank" : undefined;
+        void this.start(target);
+    }
+
+    handleClick(event: MouseEvent) {
+        const target = event.ctrlKey ? "_blank" : undefined;
+        void this.start(target);
+    }
+
+    private async start(target?: string) {
+        // Allow to change href target even if the link was otherwise not clickable
+        this.gotoTarget = target ?? this.target;
+
         // Allow user to click during countdown or past expiration, but do nothing reasonable.
         if (this.isCountdown) { return; }
 
         this.stopReset();
-
         this.linkDisabled = true;
 
         const {unauthorized, access} = await this.resolveAccess();
-
         if (unauthorized && !access) {
             this.linkState = GotoLinkState.Unauthorized;
             this.startReset(this.resetTime);
@@ -200,7 +214,7 @@ export class GotoLinkComponent implements OnInit {
         }
 
         if (openTime?.isValid() && openTime.diff(curTime, "seconds", true) <= 0) {
-            this.startGoto();
+            this.startOpenLink();
         } else {
             this.startCountdown();
         }
@@ -213,11 +227,13 @@ export class GotoLinkComponent implements OnInit {
     }
 
     startReset(resetTime: number) {
-         this.resetTimeout = window.setTimeout(() => {
-           this.stopReset();
-           this.linkState = GotoLinkState.Ready;
-           this.linkDisabled = false;
-        }, resetTime * 1000);
+         this.resetTimeout = window.setTimeout(() => this.reset(), resetTime * 1000);
+    }
+
+    private reset() {
+        this.stopReset();
+        this.linkState = GotoLinkState.Ready;
+        this.linkDisabled = false;
     }
 
     stopReset() {
@@ -227,7 +243,7 @@ export class GotoLinkComponent implements OnInit {
         }
     }
 
-    startGoto() {
+    startOpenLink() {
         if (this.isGoing) { return; }
         this.linkDisabled = true;
         this.linkState = GotoLinkState.Goto;
@@ -242,7 +258,11 @@ export class GotoLinkComponent implements OnInit {
                 //  anymore.
                 window.location.reload(true);
             } else {
-                window.open(this.href, this.target);
+                window.open(this.href, this.gotoTarget);
+            }
+            // Note that gotoTarget = undefined is the same as gotoTarget = _self
+            if (this.gotoTarget && this.gotoTarget != "_self") {
+                this.reset();
             }
         }, waitTime * 1000);
 
