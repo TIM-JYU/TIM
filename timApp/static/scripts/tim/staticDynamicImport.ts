@@ -26,6 +26,8 @@ export function staticDynamicImport(s: string) {
             return import("tim/plugin/timTable");
         case "timMenu":
             return import("tim/plugin/timMenuController");
+        case "/cs/js/build/module.js":
+            return import("modules/cs/js/module");
         case "/cs/js/build/csPlugin.js":
             return import("modules/cs/js/csPlugin");
         case "/cs/js/build/editor/editor.js":

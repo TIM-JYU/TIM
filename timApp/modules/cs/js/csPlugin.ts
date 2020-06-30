@@ -1,21 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/tslint/config,no-underscore-dangle */
-import {Ace} from "ace-builds/src-noconflict/ace";
 import {IController} from "angular";
 import {
         Component,
-        DoBootstrap,
-        NgModule,
-        StaticProvider,
         ViewChild,
         ChangeDetectorRef,
         ElementRef,
-        ApplicationRef,
         Directive,
     } from "@angular/core"
-import {HttpClient, HttpClientModule, HttpHeaders} from "@angular/common/http";
-import {FormsModule} from "@angular/forms";
-import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import * as t from "io-ts";
 import $ from "jquery";
@@ -40,9 +33,6 @@ import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {Mode, EditorComponent} from "./editor/editor";
 import {CountBoardComponent} from "./editor/countboard";
-import {EditorModule} from "./editor/module";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {getInt} from "./util";
 
 
@@ -2831,7 +2821,7 @@ function trackByIndex(index: number, o: unknown) { return index; }
         </div>
     </div>`,
 })
-class CsConsoleComponent extends CsBase implements IController {
+export class CsConsoleComponent extends CsBase implements IController {
     trackByIndex = trackByIndex;
     // isShell: boolean; method
     cursor: number;
@@ -3009,38 +2999,3 @@ class CsConsoleComponent extends CsBase implements IController {
         }
     }
 }
-
-@NgModule({
-    declarations: [
-        CsRunnerComponent,
-        CsTextComponent,
-        CsConsoleComponent,
-    ],
-    exports: [
-        CsRunnerComponent,
-        CsTextComponent,
-        CsConsoleComponent,
-    ],
-    imports: [
-        EditorModule,
-        BrowserModule,
-        HttpClientModule,
-        FormsModule,
-        TimUtilityModule,
-    ],
-})
-export class CsPluginModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
-}
-
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(CsPluginModule);
-};
-
-export const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "csRunner", CsRunnerComponent);
-doDowngrade(angularJsModule, "csTextRunner", CsTextComponent);
-doDowngrade(angularJsModule, "csConsole", CsConsoleComponent);
-export const moduleDefs = [angularJsModule];
