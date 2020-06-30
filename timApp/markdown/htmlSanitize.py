@@ -145,6 +145,7 @@ TIM_SAFE_ATTRS = frozenset([
     'open-at',
     'past-due-text',
     'reset-time',
+    'stop-after-countdown',
     'time-lang',
     'unauthorized-text',
     'unsaved-changes-text',

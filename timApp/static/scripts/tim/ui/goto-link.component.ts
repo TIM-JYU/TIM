@@ -15,6 +15,7 @@ interface IViewAccessStatus {
 interface GotoError {
     userMessage?: string;
     defaultMessage: string;
+    displayClass?: string;
 }
 
 enum GotoLinkState {
@@ -39,11 +40,11 @@ const MOUSE_BUTTON_AUX = 1;
             <ng-content></ng-content>
         </a>
         <div class="load-text" *ngIf="hasStatus">
-            <span *ngIf="this.error" class="error">
+            <span *ngIf="this.error" [className]="this.error.displayClass ? this.error.displayClass : 'error'">
                 {{this.error.userMessage ? this.error.userMessage : this.error.defaultMessage}}
             </span>
             <ng-container *ngIf="isCountdown">
-                <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="startOpenLink()"></tim-countdown>
+                <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="countdownDone()"></tim-countdown>
             </ng-container>
             <ng-container *ngIf="isGoing">
                 <tim-loading></tim-loading>
@@ -57,6 +58,7 @@ const MOUSE_BUTTON_AUX = 1;
         <ng-template i18n="@@gotoErrorExpired">Your access expired {{0}} ago.</ng-template>
         <ng-template i18n="@@gotoErrorUnauthorized">You don't have permission to view that document.</ng-template>
         <ng-template i18n="@@gotoErrorUnsaved">You have unsaved changes. Save them or click the link again.</ng-template>
+        <ng-template i18n="@@gotoCanAccess">You can access the link now.</ng-template>
         <ng-template i18n="@@gotoOpensIn">Opens in {{"{"}}0{{"}"}}.</ng-template>
     `,
     styleUrls: ["./goto-link.component.scss"],
@@ -77,6 +79,7 @@ export class GotoLinkComponent implements OnInit {
     @Input() checkUnsaved: boolean = false;
     @Input() unsavedChangesText?: string;
     @Input() autoOpen: boolean = false;
+    @Input() stopAfterCountdown: boolean = false;
     openTime?: string;
     linkDisabled = false;
     linkState = GotoLinkState.Ready;
@@ -217,6 +220,19 @@ export class GotoLinkComponent implements OnInit {
         // Allow clicking, but do nothing reasonable...
         this.linkDisabled = false;
         this.linkState = GotoLinkState.Countdown;
+    }
+
+    countdownDone() {
+        if (this.stopAfterCountdown) {
+            this.showError({
+                defaultMessage: $localize`:@@gotoCanAccess:You can access the link now.`,
+                displayClass: "info",
+            });
+            this.linkDisabled = false;
+            return;
+        } else {
+            this.startOpenLink();
+        }
     }
 
     startReset(resetTime: number) {
