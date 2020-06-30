@@ -58,3 +58,19 @@ a: b
 a: c
         """, s_p.get_id(), as_tree=True, json_key='texts')
         self.assert_content(r, ['a: c'])
+
+    def test_settings_merge(self):
+        self.login_test1()
+        d = self.create_doc(settings={
+            "themes": ["hide_focus"],
+        })
+
+        self.create_preamble_for(d, settings={
+            "themes": ["bluetheme"],
+        })
+
+        settings = d.document.get_settings()
+        themes = settings.themes()
+        themes.sort()
+
+        self.assertListEqual(themes, ["bluetheme", "hide_focus"])
