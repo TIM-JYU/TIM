@@ -340,7 +340,7 @@ def pluginify(doc: Document,
     if not edit_window and has_edit_access(doc.get_docinfo()):
         for p in pars:
             if p.is_translation_out_of_date():
-                p.add_class('tr-outofdate')
+                p.add_class('troutofdate')
     if sanitize:
         for par in pars:
             par.sanitize_html()

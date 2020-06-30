@@ -270,7 +270,7 @@ b
 
     def check_outofdate_count(self, t, count):
         e = self.get(t.url, as_tree=True)
-        outofdates = e.cssselect('.tr-outofdate')
+        outofdates = e.cssselect('.troutofdate')
         self.assertEqual(count, len(outofdates))
 
     def test_mark_all_translated(self):

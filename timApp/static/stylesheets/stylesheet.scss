@@ -197,7 +197,7 @@ a .glyphicon {
         display: inline-block;
     }
 
-    .tr-outofdate::before {
+    .troutofdate::before {
         content: "Translation is out of date";
         color: red;
         position: absolute;
