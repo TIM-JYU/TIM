@@ -393,7 +393,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.loadedAnswer.id = this.getPluginHtmlAnswerId();
 
         // TODO: This condition is inaccurate because we don't really know who the initially loaded user is.
-        if (this.viewctrl.users.length > 0 && this.user !== this.viewctrl.users[0].user) {
+        if (this.viewctrl.users.length > 0 && this.user !== this.viewctrl.users[0].user
+            && this.isUseCurrentUser() && this.isGlobal()) {
             this.dimPlugin();
         }
         this.saveTeacher = (this.viewctrl.docSettings.save_teacher && this.viewctrl.teacherMode) ?? false;
