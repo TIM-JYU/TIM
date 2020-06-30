@@ -21,7 +21,6 @@ from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import load_data_from_req, JSONException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_warning, log_info
-from timApp.util.utils import remove_path_special_chars
 
 scim = Blueprint('scim',
                  __name__,
@@ -186,10 +185,8 @@ def get_groups(args: GetGroupsModel) -> Response:
     })
 
 
-def derive_scim_group_name(s: str) -> str:
-    x = parse_sisu_group_display_name(s)
-    if not x:
-        return remove_path_special_chars(s.lower())
+def derive_scim_group_name(s: SCIMGroupModel) -> str:
+    x = parse_sisu_group_display_name_or_error(s)
     if x.period:
         return f'{x.coursecode.lower()}-{x.year[2:]}{x.period.lower()}-{x.desc_slug}'
     else:
@@ -209,7 +206,7 @@ def post_group(args: SCIMGroupModel) -> Response:
         log_warning(str(args))
         raise SCIMException(409, msg)
     deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{args.externalId}')
-    derived_name = derive_scim_group_name(args.displayName)
+    derived_name = derive_scim_group_name(args)
     if deleted_group:
         log_info(f'Restoring deleted group: {derived_name}')
         ug = deleted_group
@@ -309,9 +306,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     removed_user_names = set(u.name for u in ug.users) - current_usernames
     for ms in get_scim_memberships(ug).filter(User.name.in_(removed_user_names)).with_entities(UserGroupMember):
         ms.set_expired()
-    p = parse_sisu_group_display_name(args.displayName)
-    if not p:
-        raise SCIMException(422, f'Unexpected displayName format: "{args.displayName}" (externalId: "{external_id}")')
+    p = parse_sisu_group_display_name_or_error(args)
     ug.display_name = args.displayName
     emails = [m.email for m in args.members if m.email is not None]
     unique_emails = set(emails)
@@ -400,6 +395,15 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
             if tg not in u.groups:
                 u.groups.append(tg)
             send_course_group_mail(p, u)
+
+
+def parse_sisu_group_display_name_or_error(args: SCIMGroupModel):
+    p = parse_sisu_group_display_name(args.displayName)
+    if not p:
+        raise SCIMException(
+            422,
+            f'Unexpected displayName format: "{args.displayName}" (externalId: "{args.externalId}")')
+    return p
 
 
 def raise_conflict_error(args: SCIMGroupModel, e: IntegrityError) -> None:
