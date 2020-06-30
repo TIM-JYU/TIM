@@ -30,6 +30,8 @@ export function staticDynamicImport(s: string) {
             return import("modules/cs/js/module");
         case "/cs/js/build/csPlugin.js":
             return import("modules/cs/js/csPlugin");
+        case "/cs/js/build/file-select.js":
+            return import("modules/cs/js/file-select");
         case "/cs/js/build/editor/editor.js":
             return import("modules/cs/js/editor/editor");
         case "/cs/js/build/editor/ace.js":

@@ -427,3 +427,51 @@ cs-editor {
 .stack_errors {
     text-align: left;
 }
+
+file-select {
+    width: 100%;
+    display: inline-block;
+    
+    [hidden] {
+        display: none !important;
+    }
+    
+    .drag-and-drop {
+        border: 2px dashed $csrunmenu-link-color;
+        width: 100%;
+        height: 100%;
+        min-height: 2em;
+        display: table;
+        border-radius: 0.2em;
+        color: $csrunmenu-link-color;
+        
+        * {
+            pointer-events: none;
+        }
+        
+        &:hover {
+            cursor: pointer;
+            filter: brightness(80%);
+        }
+        
+        div {
+            display: table-cell;
+            vertical-align: middle;
+            div {
+                display: block;
+                text-align: center;
+                p {
+                    margin: auto;
+                    width: fit-content;
+                }
+            }
+        }
+    
+        .error { 
+            color: rgb(235, 30, 30);
+            text-align: center;
+            border: none;
+            background-color: transparent;
+        }
+    }
+}

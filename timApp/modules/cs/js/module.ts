@@ -12,12 +12,14 @@ import {EditorModule} from "./editor/module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {CsRunnerComponent, CsTextComponent, CsConsoleComponent} from "./csPlugin";
+import {FileSelectComponent} from "./util/file-select";
 
 @NgModule({
     declarations: [
         CsRunnerComponent,
         CsTextComponent,
         CsConsoleComponent,
+        FileSelectComponent,
     ],
     exports: [
         CsRunnerComponent,
