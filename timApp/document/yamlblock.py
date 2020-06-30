@@ -365,7 +365,7 @@ def merge(a: dict, b: dict, merge_info: Optional[YamlMergeInfo] = None):
     return __merge_helper(a, b, 0, merge_info=merge_info)
 
 
-default_append_keys = {'css'}
+default_append_keys = {'css', 'themes'}
 
 
 def __merge_helper(a: dict, b: dict, depth: int = 0, merge_info: Optional[YamlMergeInfo] = None):
