@@ -73,6 +73,7 @@
                  <span ng-if="$ctrl.hasUserChanged()"> <tim-loading></tim-loading> </span>
              </div>
                  <div class="flex ab-option-row">
+                     <span>
                             <form ng-submit="$ctrl.savePoints()" class="point-form form-inline">
                                 <label ng-show="$ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())">
                                     Points:<input class="form-control input-xs"
@@ -97,6 +98,7 @@
                                     <i class="glyphicon glyphicon-ok"></i>
                                 </button>
                             </form>
+                         </span>
                             <span ng-show="$ctrl.selectedAnswer">
 
                             <span ng-show="$ctrl.points !== null && !($ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())) && $ctrl.taskInfo.pointsText">
@@ -127,8 +129,8 @@
                                     </label>
                                 </span>
                             </span>
-                            <span>
-                                <label class="checkbox-inline" ng-show="$ctrl.showTeacher()">
+                            <span ng-show="$ctrl.showTeacher()">
+                                <label class="checkbox-inline">
                                     <input type="checkbox" ng-change="$ctrl.toggleInput()" ng-model="$ctrl.saveTeacher">Save teacher's fix
                                 </label>
                             </span>

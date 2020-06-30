@@ -1242,7 +1242,7 @@ answerbrowser {
 
     font-size: 14px;
 
-    .ab-option-row > span {
+    .ab-option-row > span + span {
         margin-left: 10px;
     }
 }
