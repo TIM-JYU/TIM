@@ -459,15 +459,20 @@ def pluginify(doc: Document,
             p.answer = a[0]
             p.answer_count = a[1]
     if curruser_task_ids:
+        for tid in curruser_task_ids:
+            answer_map.pop(tid.doc_task, None)
         get_answers(current_user, curruser_task_ids, answer_map)
         for p in curruser_plugins_to_change:
+            p.options = p.options._replace(user=current_user)
             a = answer_map.get(p.task_id.doc_task, None)
             if not a:
+                p.answer = None
+                p.answer_count = None
                 continue
             p.answer = a[0]
             p.answer_count = a[1]
             # p.options.__setattr__("user", current_user)
-            p.options = p.options._replace(user=current_user)
+
     taketime("glb/ucu", "done")
 
     for plugin_name, plugin_block_map in plugins.items():
