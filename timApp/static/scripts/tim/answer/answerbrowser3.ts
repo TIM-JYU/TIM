@@ -422,7 +422,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
             if (newValue == oldValue) {
                 return;
             }
-            this.changeAnswer();
+            // TODO: Separate function and route for just review
+            this.changeAnswer(true);
         });
         this.scope.$watch(
             () => this.onlyValid,
@@ -585,8 +586,17 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.answerLoader = ac;
     }
 
-    async changeAnswer() {
-        this.updatePoints();
+    /**
+     * Handles loading up selected answer:
+     * Loads plugin html with selected answer (or user default state if no answer)
+     * also sets up points, fetches review data if needed and dims the plugin if teacher-mode and no answers
+     * @param changeReviewOnly only fetch and set the plugin review html, without touching anything else
+     * // TODO: Separate function for just fetching the review html
+     */
+    async changeAnswer(changeReviewOnly = false) {
+        if (!changeReviewOnly) {
+            this.updatePoints();
+        }
         if (!this.user) {
             return;
         }
@@ -629,15 +639,18 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 this.showError(r.result);
                 return;
             }
-            this.loadedAnswer.id = this.selectedAnswer?.id;
+
             this.oldreview = this.review;
 
-            // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
-            // have to be fully reloaded every time.
-            if (this.answerLoader && this.selectedAnswer) {
-                this.answerLoader(this.selectedAnswer);
-            } else {
-                await loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
+            if (!changeReviewOnly) {
+                this.loadedAnswer.id = this.selectedAnswer?.id;
+                // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
+                // have to be fully reloaded every time.
+                if (this.answerLoader && this.selectedAnswer) {
+                    this.answerLoader(this.selectedAnswer);
+                } else {
+                    await loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
+                }
             }
             if (this.review) {
                 this.reviewHtml = r.result.data.reviewHtml;
@@ -647,10 +660,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.selectedAnswer) {
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
         }
-        if (this.viewctrl.teacherMode && !this.selectedAnswer && !this.saveTeacher) {
-            this.dimPlugin();
-        } else {
-            this.unDimPlugin();
+        if (!changeReviewOnly) {
+            if (this.viewctrl.teacherMode && !this.selectedAnswer && !this.saveTeacher) {
+                this.dimPlugin();
+            } else {
+                this.unDimPlugin();
+            }
         }
     }
 
