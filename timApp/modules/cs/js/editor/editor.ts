@@ -151,8 +151,6 @@ export class EditorComponent implements IMultiEditor {
     private files_: EditorFile[] = [new EditorFile()];
     private fileIndex_: number = 0;
     
-    constructor(private cdr: ChangeDetectorRef) {}
-    
     ngOnInit() {
         if (this.minRows_ < 1) {
             this.minRows_ = 1;
