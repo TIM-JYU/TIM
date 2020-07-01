@@ -1,10 +1,16 @@
 :host {
-  display: inline-flex;
-  flex-direction: column;
+  /* display: inline-flex;
+  flex-direction: column; */
 }
 
 .annHeader {
   font-size: 1.5rem;
+}
+
+.inlineAnnotation {
+  position: relative;
+  top: 1.3em;
+  left: -2em;
 }
 
 .annotation-info {

@@ -61,7 +61,7 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
               [ngStyle]="{backgroundColor: getCustomColor()}">
             <ng-content></ng-content>
         </span>
-        <div style="position: relative">
+        <span class="inlineAnnotation">
             <div *ngIf="show"
                  (click)="updateZIndex()"
                  class="no-popup-menu annotation-info emphasise default"
@@ -165,7 +165,7 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
                 </div>
 
             </div>
-        </div>
+        </span>
     `,
     styleUrls: ["./annotation.component.scss"],
 })
