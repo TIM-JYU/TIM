@@ -7,6 +7,7 @@ import {
     Input,
     Output,
     EventEmitter,
+    ChangeDetectorRef,
 } from "@angular/core";
 
 import {NormalEditorComponent} from "./normal";
@@ -44,8 +45,38 @@ export interface IEditor {
     content: string;
     
     setSelection?(): void;
-    wrap?(wrap: number): void;
+    doWrap?(wrap: number): void;
     insert?(str: string): void;
+}
+
+export interface IEditorFile {
+    path: string;
+    content: string;
+}
+
+export interface IMultiEditor extends IEditor {
+    activeFile: string;
+    allFiles: IEditorFile[];
+    
+    setFiles(files: EditorFile[]): void;
+    addFile(file: EditorFile): void;
+    addFile(path: string, base?: string, languageMode?: string, content?: string): void;
+    removeFile(filename: string): void;
+    renameFile(path: string, oldPath?: string): void;
+}
+
+class EditorFile {
+    path: string = "";
+    base: string = ""; // starting content
+    content?: string;
+    oldContent: string = "";
+    languageMode: string = "text";
+    
+    constructor(path?: string) { this.path = path ?? ""; }
+    
+    getContent(): string {
+        return this.content ?? this.base;
+    }
 }
 
 // TODO: ?
@@ -57,20 +88,23 @@ export class JSParsonsEditorComponent implements IEditor {
     content: string = "";
 }
 
-//`/* && !$ctrl.hide.changed*/+`
 @Component({
     selector: "cs-editor",
     template: `
         <ng-container *ngIf="!cssPrint">
+            <mat-tab-group *ngIf="files.length > 1" [(selectedIndex)]="fileIndex" animationDuration="0ms">
+                <mat-tab *ngFor="let file of files; trackBy: trackByPath">
+                    <ng-template mat-tab-label>
+                        <div (click)="$event.preventDefault()">
+                            {{file.path}}
+                        </div>
+                    </ng-template>
+                </mat-tab>
+            </mat-tab-group>
             <cs-normal-editor *ngIf="mode == Mode.Normal"
                     [minRows]="minRows_"
                     [maxRows]="maxRows_">
             </cs-normal-editor>
-            <cs-ace-editor *ngIf="mode == Mode.ACE" 
-                    [languageMode]="languageMode" 
-                    [minRows]="minRows_" 
-                    [maxRows]="maxRows_">
-            </cs-ace-editor>
             <cs-parsons-editor *ngIf="mode == Mode.Parsons" 
                     [shuffle]="parsonsShuffle_"
                     [maxcheck]="parsonsMaxcheck"
@@ -80,25 +114,28 @@ export class JSParsonsEditorComponent implements IEditor {
                     [notordermatters]="parsonsNotordermatters">
             </cs-parsons-editor>
             <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
+            <cs-ace-editor *ngIf="mode == Mode.ACE" 
+                    [languageMode]="languageMode" 
+                    [minRows]="minRows_" 
+                    [maxRows]="maxRows_">
+            </cs-ace-editor>
         </ng-container>
         <pre *ngIf="cssPrint"></pre>`,
 })
-export class EditorComponent {
+export class EditorComponent implements IMultiEditor {
     static readonly defaultMode = Mode.ACE; 
     Mode = Mode;
+    console=console;
     
     private normalEditor?: NormalEditorComponent;
     private aceEditor?: AceEditorComponent;
     parsonsEditor?: ParsonsEditorComponent;
     
     @Output("content") private contentChange: EventEmitter<string> = new EventEmitter<string>();
-    @Input() base: string = ""; // starting content
-    private oldContent: string = "";
     @Input() cssPrint: boolean = false; // TODO: what is this actually supposed to do
     minRows_: number = 1;
     maxRows_: number = 100;
     private wrap_?: {n: number, auto: boolean};
-    @Input() languageMode: string = "text";
     
     parsonsShuffle_: boolean = false;
     @Input() parsonsMaxcheck?: number;
@@ -106,12 +143,15 @@ export class EditorComponent {
     @Input() parsonsStyleWords: string = "";
     @Input() parsonsWords: boolean = false;
     
-    //private editorMode!: number;
     private modeIndex_: number = -1;
     private mode_?: number;
     private modes_: Mode[] = [];
-    // for storing content if editor isn't available. Set to undefined after comsuming.
-    private content_?: string;
+    
+    // file.content is used for storing content if editor isn't available. Set to undefined after consuming.
+    private files_: EditorFile[] = [new EditorFile()];
+    private fileIndex_: number = 0;
+    
+    constructor(private cdr: ChangeDetectorRef) {}
     
     ngOnInit() {
         if (this.minRows_ < 1) {
@@ -141,28 +181,28 @@ export class EditorComponent {
         }
     }
     
-    private initEditor<T extends IEditor>(oldContent: string | undefined) {
+    private initEditor<T extends IEditor>(oldContent: string) {
         if (!this.editor) {
             this.content_ = oldContent;
         } else {
-            this.content = oldContent ?? this.base;
+            this.content = oldContent;
             this.content_ = undefined;
         }
     }
     
     // For after ngIf sets the value
     @ViewChild(NormalEditorComponent) private set normalEditorViewSetter(component: NormalEditorComponent | undefined) {
-        const oldContent = this.editor?.content ?? this.content_;
+        const oldContent = this.content;
         this.normalEditor = component;
         this.initEditor(oldContent);
     }
     @ViewChild(AceEditorComponent) private set aceEditorViewSetter(component: AceEditorComponent | undefined) {
-        const oldContent = this.editor?.content ?? this.content_;
+        const oldContent = this.content;
         this.aceEditor = component;
         this.initEditor(oldContent);
     }
     @ViewChild(ParsonsEditorComponent) private set parsonsEditorViewSetter(component: ParsonsEditorComponent | undefined) {
-        const oldContent = this.editor?.content ?? this.content_;
+        const oldContent = this.content;
         this.parsonsEditor = component;
         this.initEditor(oldContent);
     }
@@ -204,6 +244,63 @@ export class EditorComponent {
         }
     }
     
+    
+    get fileIndex(): number {
+        return this.fileIndex_;
+    }
+    set fileIndex(index: number) {
+        this.setFileIndex(index);
+    }
+    private setFileIndex(index: number) {
+        this.file.content = this.content;
+        if (index < 0) {
+            this.fileIndex_ = 0;
+        } if (index >= this.files.length) {
+            this.fileIndex = this.files.length-1;
+        } else {
+            this.fileIndex_ = index;
+        }
+        if (this.editor) {
+            this.editor.content = this.file.content ?? this.file.base;
+        }
+    }
+    
+    get files(): EditorFile[] {
+        return this.files_;
+    }
+    set files(files: EditorFile[]) {
+        if(files.length == 0) {
+            this.files_ = [new EditorFile];
+            this.fileIndex = 0;
+        } else {
+            this.files_ = files;
+             // refresh index in case it is outside the new range
+            this.setFileIndex(this.fileIndex);
+        }
+    }
+    
+    get allFiles(): IEditorFile[] {
+        const out = this.files.map((f) => <IEditorFile>{path: f.path, content: f.content ?? f.base});
+        out[this.fileIndex].content = this.content;
+        return out;
+    }
+    
+    get file(): EditorFile {
+        return this.files[this.fileIndex];
+    }
+    
+    get activeFile(): string {
+        return this.file.path;
+    }
+    set activeFile(path: string) {
+        const index = this.findFile(path);
+        if (index != -1) {
+            // TODO: what to do...
+        } else {
+            this.fileIndex = index;
+        }
+    }
+    
     get modified(): boolean {
         return this.content != this.base;
     }
@@ -223,14 +320,45 @@ export class EditorComponent {
     }
     
     get content() {
-        return this.editor?.content ?? "";
+        return this.editor?.content ?? this.content_ ?? this.base;
     }
     set content(str: string) {
         if (this.editor) {
             this.editor.content = str;
+            this.cdr.detectChanges();
         } else {
-            this.content_ = str;
+            this.file.content = str;
         }
+    }
+    
+    get content_(): string | undefined {
+        return this.file.content;
+    }
+    set content_(str: string | undefined) {
+        this.file.content = str;
+    }
+    
+    get oldContent(): string {
+        return this.file.oldContent;
+    }
+    set oldContent(str: string) {
+        this.file.oldContent = str;
+    }
+    
+    get base() {
+        return this.file.base;
+    }
+    @Input()
+    set base(str: string) {
+        this.file.base = str;
+    }
+    
+    get languageMode(): string {
+        return this.file.languageMode;
+    }
+    @Input()
+    set languageMode(str: string) {
+        this.file.languageMode = str;
     }
     
     get nextModeText(): string | undefined {
@@ -307,7 +435,59 @@ export class EditorComponent {
     
     doWrap() {
         if (this.wrap_) {
-            this.editor?.wrap?.(this.wrap_.n);
+            this.editor?.doWrap?.(this.wrap_.n);
         }
+    }
+    
+    setFiles(files: EditorFile[]) {
+        this.files = files;
+    }
+    
+    addFile(file: EditorFile): void;
+    addFile(path: string, base?: string, languageMode?: string, content?: string): void;
+    addFile(fileorpath: string | EditorFile, base?: string, languageMode?: string, content?: string) {
+        let file: EditorFile;
+        if (fileorpath as any instanceof EditorFile) {
+            file = fileorpath as EditorFile;
+        } else {
+            file = new EditorFile(fileorpath as string);
+            if(base) { file.base = base; }
+            if(languageMode) { file.languageMode = languageMode; }
+            if(content) { file.content = content; }
+        }
+        
+        const index = this.findFile(file.path);
+        if (index == -1) {
+            this.files.push(file);
+        } else {
+            this.files[index] = file;
+        }
+    }
+    
+    findFile(path: string): number {
+        return this.files.findIndex((f) => f.path == path);
+    }
+    
+    removeFile(path: string) {
+        const index = this.findFile(path);
+        if (index != -1) {
+            this.files.splice(index, 1);
+        }
+    }
+    
+    renameFile(path: string, oldPath?: string) {
+        if (!oldPath) {
+            this.file.path = path;
+            return;
+        }
+        
+        const index =  this.findFile(oldPath);
+        if (index != -1) {
+            this.files[index].path = path;
+        }
+    }
+    
+    trackByPath(index: number, item: EditorFile) {
+        return item.path;
     }
 }

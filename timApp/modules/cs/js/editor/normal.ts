@@ -81,7 +81,7 @@ export class NormalEditorComponent implements IEditor {
         txtarea.scrollTop = scrollPos;
     }
 
-    wrap(wrap: number) {
+    doWrap(wrap: number) {
         const r = wrapText(this.content, wrap);
         if (!r.modified) { return; }
         

@@ -100,7 +100,7 @@ export class AceEditorComponent implements IEditor {
         sess.insert(cursor, str); // TODO: might have to move cursor
     }
     
-    wrap(wrap: number) {
+    doWrap(wrap: number) {
         const r = wrapText(this.content, wrap);
         if (!r.modified) { return; }
         

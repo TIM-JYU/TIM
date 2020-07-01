@@ -440,6 +440,33 @@ cs-editor {
     text-align: left;
 }
 
+cs-editor {
+    .mat-ripple-element {
+        display: none;
+    }
+    
+    .mat-tab-list {
+        border-radius: 0.5em 0.5em 0 0;
+        overflow: hidden;
+    }
+    
+    .mat-tab-labels {
+        width: fit-content;
+        background-color: #0000001f;
+        font-size: 0.96em;
+    }
+    
+    .mat-tab-label {
+        height: 2em;
+        padding: 0 1em;
+        min-width: 7em;
+        
+        &.mat-tab-label-active, &:hover {
+            background-color: #0000001f;
+        }
+    }
+}
+
 file-select {
     width: 100%;
     display: inline-block;
