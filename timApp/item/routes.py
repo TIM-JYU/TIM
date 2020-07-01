@@ -491,7 +491,11 @@ def view(item_path, template_name, route="view"):
 
     is_in_lecture = current_user_in_lecture()
 
-    current_list_user: Optional[User] = user_list[0]['user'] if user_list else None
+    if user_list:
+        user_list.sort(key=lambda u: u.get('user', {}).get('real_name',''))
+        current_list_user = user_list[0]['user']
+    else:
+        current_list_user = None
 
     raw_css = doc_settings.css()
     if raw_css:
