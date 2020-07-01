@@ -419,7 +419,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
 
         this.scope.$watch(() => this.review, (newValue, oldValue) => {
-            if (newValue == oldValue || !newValue) {
+            if (newValue == oldValue) {
                 return;
             }
             // TODO: Separate function and route for just review
@@ -593,7 +593,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
      * @param changeReviewOnly only fetch and set the plugin review html, without touching anything else
      * // TODO: Separate function for just fetching the review html
      */
-    async changeAnswer(changeReviewOnly?: boolean) {
+    async changeAnswer(changeReviewOnly = false) {
         if (!changeReviewOnly) {
             this.updatePoints();
         }
@@ -639,14 +639,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 this.showError(r.result);
                 return;
             }
-            if (!changeReviewOnly) {
-                this.loadedAnswer.id = this.selectedAnswer?.id;
-            }
+
             this.oldreview = this.review;
 
-            // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
-            // have to be fully reloaded every time.
             if (!changeReviewOnly) {
+                this.loadedAnswer.id = this.selectedAnswer?.id;
+                // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
+                // have to be fully reloaded every time.
                 if (this.answerLoader && this.selectedAnswer) {
                     this.answerLoader(this.selectedAnswer);
                 } else {
