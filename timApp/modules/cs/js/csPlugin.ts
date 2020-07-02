@@ -694,6 +694,7 @@ interface IRunResponse {
 export class CsController extends CsBase implements ITimComponent {
     vctrl!: ViewCtrl;
 
+    autoupdateHandle?: number;
     canvasConsole: {log: (...args: string[]) => void};
     code?: string;
     codeInitialized: boolean = false;
@@ -1341,41 +1342,18 @@ ${fhtml}
         this.anyChanged();
     }
 
-    async ngDoCheck() {
-
-        // Only the properties
-        //  * this.dochecks.user{code,input,args}
-        //  * this.user{code,input,args}
-        // should affect `anyChanged`. Don't make `anyChanged` depend on `this.savedvals` or anything else.
-        // Don't add more properties to `this.dochecks`.
-        let anyChanged = false;
-
-        if (this.userargs !== this.dochecks.userargs) {
-            this.dochecks.userargs = this.userargs;
-            anyChanged = true;
-        }
-        if (this.userinput !== this.dochecks.userinput) {
-            this.dochecks.userinput = this.userinput;
-            anyChanged = true;
-        }
-
-        if (anyChanged) {
-            this.anyChanged();
-        }
-    }
-
-    async anyChanged() {
+    anyChanged() {
         this.textChanged();
-        const currUsercode = this.usercode;
-        const currUserargs = this.userargs;
-        const currUserinput = this.userinput;
         if (this.runned && this.markup.autoupdate) {
-            await $timeout(this.markup.autoupdate);
-            if (currUsercode === this.usercode &&
-                currUserargs === this.userargs &&
-                currUserinput === this.userinput) {
-                this.runCodeAuto();
+            if (this.autoupdateHandle) {
+                window.clearTimeout(this.autoupdateHandle);
             }
+            this.autoupdateHandle = window.setTimeout(
+                () => {
+                    this.autoupdateHandle = undefined;
+                    this.runCodeAuto();
+                }, this.markup.autoupdate
+            );
         }
     }
 
