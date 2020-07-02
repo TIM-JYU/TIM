@@ -823,12 +823,23 @@ class CC(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "gcc"
+        self.source_extensions = [".c", ".cc"]
+
+    def extensions(self):
+        return [".h", ".c", ".cc"], ".c", ".exe"
 
     def get_cmdline(self):
-        return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
+        return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sources(), self.exename)
 
     def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
+
+    def sources(self):
+        return " ".join(file.path for file in self.sourcefiles if any(file.path.endswith(ext) for ext in self.source_extensions))
+
+    @staticmethod
+    def supports_multifiles():
+        return True
 
 
 class CPP(CC):
@@ -837,7 +848,7 @@ class CPP(CC):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "g++ -std=c++14"
-        self.header_extensions = [".h", ".hh", ".hpp"]
+        self.source_extensions = [".cpp", ".cc"]
 
     def extensions(self):
         return [".h", ".hpp", ".hh", ".cpp", ".cc"], ".cpp", ".exe"
