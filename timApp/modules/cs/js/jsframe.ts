@@ -295,6 +295,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         }
         const data = this.getDataFromMarkup();
         this.prevdata = data;
+        this.currentData = data;
         if (data) {
             this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n";
         }
@@ -432,7 +433,6 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     async runSend(data: unknown) {
-        console.log("SAVING,", data);
         this.connectionErrorMessage = undefined;
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
