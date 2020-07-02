@@ -202,7 +202,6 @@ def copy_files_regex(files, source_dir, dest_dir):
 
 def get_md(ttype: TType, query):
     _, bycode, js, runner = handle_common_params(query, ttype)
-    ttype = str(ttype) # TODO: make rest use the TType class
 
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None, False)
@@ -431,9 +430,6 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
 
     language, bycode, js, runner = handle_common_params(query, ttype)
 
-    ttype_obj = ttype
-    ttype = str(ttype) # TODO: make rest use the TType class
-
     usercode = get_json_eparam(query.jso, "state", "usercode", None)
 
     state = query.jso.get("state")
@@ -468,9 +464,9 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
         userargs = get_json_eparam(query.jso, "state", "userargs", '')
         uploaded_file = get_json_eparam(query.jso, "state", "uploadedFile", None)
         s = ""
-        if ttype.find('input') >= 0 :
+        if "input" in ttype:
             s = s + '<p>Input:</p><pre>' + userinput + '</pre>'
-        if ttype.find('args') >= 0:
+        if "args" in ttype:
             s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
         if uploaded_file is not None:
             s = s + '<p>File:</p><pre>' + os.path.basename(uploaded_file) + '</pre>'
@@ -531,7 +527,7 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
         lazy_start = LAZYSTART
         lazy_end = LAZYEND
 
-    if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
+    if "c1" in ttype or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
         s = f'{lazy_start}<{r}{lazy_class} ng-cloak json="{encode_json_data(jso)}"></{r}>{lazy_end}{lazy_visible}'
     return s
 
@@ -912,12 +908,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 ttype = 'simcir'
             if is_parsons:
                 ttype = 'parsons'
+            if is_graphviz:
+                ttype = "cs"
             # The graphviz conversion happens later, so need to check that here before giving an error.
-            if ttype is None and not is_graphviz:
+            if ttype is None:
                 s = '<div class="pluginError">Attribute "type" is required.</div>'
             else:
-                if is_graphviz:
-                    ttype = "cs"  # workaround: some functions expect ttype to always be str
+                ttype = TType(ttype, query)
                 check_fullprogram(query, True)
                 if multimd:
                     # noinspection PyBroadException
@@ -927,7 +924,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         print("ERROR: " + str(ex) + " " + json.dumps(query))
                         continue
                 else:
-                    s = get_html(self, TType(ttype, query), query)
+                    s = get_html(self, ttype, query)
                 # print(s)
             htmls.append(s)
 
@@ -1239,6 +1236,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # print("Muutos ========")
             # pprint(query.__dict__, indent=2)
 
+            ttype = TType(ttype, query)
+            
             if is_html and not is_iframe:
                 # print("HTML:==============")
                 s = get_html(self, ttype, query)
@@ -1251,7 +1250,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 self.wout(file_to_string('end.html'))
                 return
 
-            if is_iframe and not print_file and ttype not in ["js", "glowscript", "vpython", "processing"]:
+            if is_iframe and not print_file and not ttype.has_any_of(["js", "glowscript", "vpython", "processing"]):
                 s = string_to_string_replace_url(
                     '<iframe frameborder="0"  src="https://tim.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" ' +
                     'style="overflow:hidden;" height="##HEIGHT##" width="100%"  seamless></iframe>',
@@ -1281,14 +1280,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 s = replace_code(query.cut_errors, s)
                 return self.wout(s)
 
-            ttypeobj = TType(ttype, query, s)
-            if not ttypeobj.success:
+            ttype = TType(str(ttype), query, s)
+            if not ttype.success:
                 raise Exception(f"Could not get language from type {ttype}")
 
-            language = ttypeobj.get_language()
+            language = ttype.get_language()
             
             if not language.can_give_task() and query.jso.get("input",{}).get("getTask", False):
-                raise Exception("Give task not allowed for " + ttype)
+                raise Exception(f"Give task not allowed for {ttype}")
 
             mkdirs(language.prgpath)
             # os.chdir(language.prgpath)
@@ -1505,7 +1504,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             language.prgpath = sanitize_cmdline(language.prgpath)
 
-            if nocode and ttype != "jcomtest":
+            if nocode and "jcomtest" not in ttype:
                 print("Poistetaan ", ttype, language.sourcefilename)
                 # remove(language.sourcefilename)
                 # print(compiler_output)
@@ -1560,11 +1559,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             #    code, out, err, pwddir = (0, "", ("Compiled " + language.filename), "")
 
             else:  # run cmd wins all other run types
-                if get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
+                if get_param(query, "justCompile", False) and "comtest" not in ttype:
                     language.just_compile = True
                 language.set_stdin(userinput)
                 runcommand = get_param(query, "cmd", "")
-                if ttype != "run" and (runcommand or get_param(query, "cmds", "")) and not is_test:
+                if "run" not in ttype and (runcommand or get_param(query, "cmds", "")) and not is_test:
                     # print("runcommand: ", runcommand)
                     # code, out, err, pwddir = run2([runcommand], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                     #                               uargs=get_param(query, "runargs", "") + " " + userargs)
