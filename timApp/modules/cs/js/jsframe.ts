@@ -537,6 +537,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             return;
         }
         this.setData(this.prevdata, false, true);
+        this.currentData = this.prevdata;
         this.send({msg: "close"});
         this.edited = false;
         this.updateListeners();
