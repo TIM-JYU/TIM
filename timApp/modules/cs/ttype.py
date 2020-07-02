@@ -24,6 +24,12 @@ class TType:
         
         self.modifiers.reverse()
     
+    def __contains__(self, item):
+        if isinstance(item, str):
+            return item.lower() in self.parts
+        else:
+            return self.has(item)
+    
     def get_language(self):
         return self.language
     
@@ -49,8 +55,14 @@ class TType:
     def has_language(self, cls):
         return isinstance(self.language, cls)
     
-    def has_modifier_or_language(self, cls):
+    def has(self, cls):
         return self.has_language(cls) or self.has_modifier(cls)
+        
+    def has_any_of(self, cls_list):
+        return any(self.has_language(cls) or self.has_modifier(cls) for cls in cls_list)
+    
+    def has_all_of(self, cls_list):
+        return all(self.has_language(cls) or self.has_modifier(cls) for cls in cls_list)
     
     def __str__(self):
         return "/".join(self.parts)

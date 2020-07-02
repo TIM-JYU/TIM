@@ -7,8 +7,6 @@ import signal
 import socketserver
 
 from manager import *
-from modifiers import Tiny, Input, Args
-from languages import SimCir
 import os
 import glob
 from base64 import b64encode
@@ -509,7 +507,7 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
 
         if before_open:
             ebycode = before_open
-        if ttype_obj.has_modifier(Tiny):
+        if "tiny" in ttype:
             lazy_visible = '<div class="lazyVisible ' + cs_class\
                            + 'csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(
                 query,
@@ -582,7 +580,7 @@ def handle_common_params(query: QueryClass, ttype: TType):
         js["uploadedType"] = ut
     # jso)
     # print(ttype)
-    if ttype.has_language(SimCir):
+    if "simcir" in ttype:
         bycode = ''
     
     return language, bycode, js, runner
