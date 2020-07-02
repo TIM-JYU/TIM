@@ -9,6 +9,7 @@ from os.path import splitext
 from pathlib import Path
 from modifiers import Modifier
 from traceback import print_exc
+from dataclasses import dataclass, field
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
@@ -66,14 +67,21 @@ def is_compile_error(out, err):
     return out.find("Compile error") >= 0 or err.find("Compile error") >= 0
 
 
+@dataclass
+class SourceFile:
+    path: str
+    content: str
+    fileext: str = field(default="")
+    filedext: str = field(default="")
+
+
 class Language:
     ttype = "_language"
-
-    def __init__(self, query: Optional[QueryClass], sourcecode=""):
+    def __init__(self, query: Optional[QueryClass], sourcecodes = ""):
         """
         :param self: object reference
         :param query: query to use
-        :param sourcecode: source code as a string
+        :param sourcecodes: source code as a string or list of files ({path: str, content: str})
         """
         self.query = query
         self.stdin = None
@@ -95,7 +103,6 @@ class Language:
         self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", f"timimages/cs3:{CS3_TAG}")
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
-        self.soucecode = sourcecode
         self.opt = get_param(query, "opt", "")
         self.is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
         self.hide_compile_out = False
@@ -160,15 +167,22 @@ class Language:
                 fname = asciified
         except AttributeError:
             pass
-        self.filename = get_param(query, "filename", fname)
+
+        filename = get_param(query, "filename", fname)
+        if isinstance(sourcecodes, str):
+            sourcecodes = [{"path": filename, "content": sourcecodes}]
+        if sourcecodes[0]["path"] is None:
+            sourcecodes[0]["path"] = filename
+
+        extensions, fileext, filedext = self.extensions()
+        self.filenames = [file["path"] for file in sourcecodes]
+        self.sourcefiles = [SourceFile(None, file["content"], fileext, fileext) for file in sourcecodes]
+        self.check_extensions(extensions)
+
+        for i in range(len(self.filenames)):
+            self.sourcefiles[i].path = "/tmp/%s/%s%s" % (self.basename, self.filenames[i], self.sourcefiles[i].filedext)
+
         self.ifilename = get_param(query, "inputfilename", "/input.txt")
-
-        self.fileext = ""
-        self.filedext = ""
-
-        self.extension()
-
-        self.sourcefilename = "/tmp/%s/%s%s" % (self.basename, self.filename, self.filedext)
         self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
         # self.sourcefilename = "./%s%s" % (self.filename, self.filedext)
         # self.exename = "./%s.exe" % self.filename
@@ -181,20 +195,37 @@ class Language:
 
         self.before_code = get_param(query, "beforeCode", "")
 
-    def extension(self):
-        return
+    # single file submission compatibility
+    @property
+    def filename(self):
+        return self.filenames[0]
 
-    def check_extension(self, extensions, ext, _exe):
-        self.fileext = ext
-        self.filedext = ext
-        for ex in extensions:
-            if self.filename.endswith(ex):
-                self.fileext = ex.replace(".", "")
-                self.filedext = ex
-                self.filename = self.filename[:-len(ex)]
-                break
+    @filename.setter
+    def filename(self, val):
+        self.filenames[0] = val
 
-    def get_cmdline(self, sourcecode):
+    @property
+    def sourcefilename(self):
+        return self.sourcefiles[0].path
+
+    @sourcefilename.setter
+    def sourcefilename(self, val):
+        self.sourcefiles[0].path = val
+
+    def extensions(self):
+        return None, "", "" # list of the extensions or None for all, default fileext, default filedext
+
+    def check_extensions(self, extensions):
+        if extensions is not None:
+            for i in range(len(self.filenames)):
+                for ex in extensions:
+                    if self.filenames[i].endswith(ex):
+                        self.sourcefiles[i].fileext = ex.replace(".", "")
+                        self.sourcefiles[i].filedext = ex
+                        self.filenames[i] = self.filenames[i][:-len(ex)]
+                        break
+
+    def get_cmdline(self):
         return ""
 
     def set_stdin(self, userinput):
@@ -363,11 +394,15 @@ class Language:
             return cls.ttype[0]
         return cls.ttype
 
+    @staticmethod
+    def supports_multifiles():
+        """Whether the class supports multiple files as sourcecode"""
+        return False # technically True but we want to default to False for now
+
 
 class LanguageError(Language):
-    ttype = "_error"
-
-    def __init__(self, query, sourcecode, error_str):
+    ttype="_error"
+    def __init__(self, query, error_str, sourcecode = ""):
         try:
             super().__init__(query, sourcecode)
         except Exception as e:
@@ -420,7 +455,7 @@ class CS(Language):
             s = s.replace('Console.ReadLine', 'TIMconsole.ReadLine')
         return s
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         cmdline = "%s /r:System.Numerics.dll /out:%s %s /cs/jypeli/TIMconsole.cs" % (
             self.compiler, self.exename, self.sourcefilename)
         return cmdline
@@ -442,8 +477,9 @@ class Jypeli(CS, Modifier):
         self.pure_exename = u"{0:s}.exe".format(self.filename)
         self.pure_mgdest = u"{0:s}.png".format(self.rndname)
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         mainfile = "/cs/jypeli/Ohjelma.cs"
+        sourcecode = self.sourcefiles[0].content
         if sourcecode.find(" Main(") >= 0:
             mainfile = ""
         else:
@@ -505,7 +541,7 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
         self.testdll = u"./{0:s}Test.dll".format(self.filename)
         self.hide_compile_out = True
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         testcs = "/tmp/%s/%sTest.cs" % (self.basename, self.filename)
         if not CSComtest.nunit:
             frms = os.listdir("/usr/lib/mono/gac/nunit.framework/")
@@ -616,7 +652,7 @@ class Java(Language):
         self.javaname = self.filepath + "/" + self.classname + ".java"
         self.sourcefilename = self.javaname
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath} {self.javaname}"
 
     def run(self, result, sourcelines, points_rule):
@@ -638,7 +674,7 @@ class Kotlin(Java):
         self.sourcefilename = self.javaname
         self.jarname = self.classname + ".jar"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return "kotlinc  %s -include-runtime -d %s" % (self.filename, self.jarname)
 
     def run(self, result, sourcelines, points_rule):
@@ -714,7 +750,7 @@ class JComtest(Java, Modifier):
         self.testdll = self.javaclassname + "Test"
         self.hide_compile_out = True
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return "java comtest.ComTest %s && javac %s %s" % (self.sourcefilename, self.sourcefilename, self.testcs)
 
     def run(self, result, sourcelines, points_rule):
@@ -729,7 +765,7 @@ class JUnit(Java, Modifier):
     def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return "javac %s" % self.javaname
 
     def run(self, result, sourcelines, points_rule):
@@ -774,7 +810,7 @@ class Scala(Language):
         self.classname = self.filename
         self.fileext = "scala"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return "scalac %s" % self.sourcefilename
 
     def run(self, result, sourcelines, points_rule):
@@ -788,7 +824,7 @@ class CC(Language):
         super().__init__(query, sourcecode)
         self.compiler = "gcc"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
 
     def run(self, result, sourcelines, points_rule):
@@ -803,8 +839,8 @@ class CPP(CC):
         self.compiler = "g++ -std=c++14"
         self.header_extensions = [".h", ".hh", ".hpp"]
 
-    def extension(self):
-        self.check_extension([".h", ".hpp", ".hh", ".cpp", ".cc"], ".cpp", ".exe")
+    def extensions(self):
+        return [".h", ".hpp", ".hh", ".cpp", ".cc"], ".cpp", ".exe"
 
 
 class CComtest(Language):
@@ -837,7 +873,7 @@ class Fortran(Language):
             self.sourcefilename = "/tmp/%s/%s.f" % (self.basename, self.filename)
         self.compiler = "gfortran"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
 
     def run(self, result, sourcelines, points_rule):
@@ -1381,7 +1417,7 @@ class FS(Language):
         self.sourcefilename = "/tmp/%s/%s.fs" % (self.basename, self.filename)
         self.fileext = "fs"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return "fsharpc --out:%s %s" % (self.exename, self.sourcefilename)
 
     def run(self, result, sourcelines, points_rule):
@@ -1532,10 +1568,10 @@ class Rust(Language):
         super().__init__(query, sourcecode)
         self.compiler = "rustc"
 
-    def extension(self):
-        self.check_extension([".rs"], ".rs", ".exe")
+    def extensions(self):
+        return [".rs"], ".rs", ".exe"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return f"{self.compiler} -C debuginfo=0 -o {self.exename} {self.opt} {self.sourcefilename}"
 
     def run(self, result, sourcelines, points_rule):
@@ -1549,10 +1585,10 @@ class Pascal(Language):
         super().__init__(query, sourcecode)
         self.compiler = "fpc"
 
-    def extension(self):
-        self.check_extension([".pp", ".pas"], ".pas", ".exe")
+    def extensions(self):
+        return [".pp", ".pas"], ".pas", ".exe"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return self.compiler + " %s %s -o%s" % (self.opt, self.sourcefilename, self.exename)
 
     def run(self, result, sourcelines, points_rule):
@@ -1570,7 +1606,7 @@ class Lang(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         cmdline = ""
         return cmdline
 

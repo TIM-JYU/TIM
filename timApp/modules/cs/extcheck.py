@@ -176,3 +176,8 @@ class ExtCheck(Language):
         out = RunResult.dump(self.result)
         out["penalties"] = self.penalties
         return out
+        
+    @staticmethod
+    def supports_multifiles():
+        """Whether the class supports multiple files as sourcecode"""
+        return True

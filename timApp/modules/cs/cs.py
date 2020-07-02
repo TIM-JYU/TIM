@@ -883,6 +883,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             usercode = get_json_param(query.jso, "state", "usercode", None)
             if isinstance(usercode, str):
                 query.query["usercode"] = [usercode]
+
+            submitted_files = get_json_param(query.jso, "state", "submittedFiles", None)
+            if submitted_files is not None:
+                query.query["submittedFiles"] = [submitted_files]
+
             userinput = get_json_param(query.jso, "state", "userinput", None)
             if userinput is None:
                 userinput = get_json_param(query.jso, "markup", "userinput", None)
@@ -1188,6 +1193,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             usercode = get_json_param(query.jso, "state", "usercode", None)
             if isinstance(usercode, str):
                 query.query["usercode"] = [usercode]
+            
+            submitted_files = get_json_param(query.jso, "input", "submittedFiles", None)
+            if submitted_files is not None:
+                query.query["submittedFiles"] = [submitted_files]
 
             userinput = get_json_param(query.jso, "input", "userinput", None)
             if userinput is None:
@@ -1255,6 +1264,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     "##QUERYPARAMS##", query)
                 return self.wout(s)
 
+            nosave = get_param(query, "nosave", None)
+            nosave = get_json_param(query.jso, "input", "nosave", nosave)
+
+            if nosave:
+                result["save"] = {}
+
             check_fullprogram(query, print_file)
 
             # Check query parameters
@@ -1278,7 +1293,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 s = replace_code(query.cut_errors, s)
                 return self.wout(s)
 
-            ttype = TType(str(ttype), query, s)
+            # /answer-path comes here
+
+            if submitted_files is not None:
+                save["submittedFiles"] = submitted_files
+            else:
+                submitted_files = [{"path": None, "content": s}]
+                
+                usercode = get_json_param(query.jso, "input", "usercode", None)
+                if isinstance(usercode, str):
+                    save["usercode"] = usercode
+
+            ttype = TType(str(ttype), query, submitted_files)
             if not ttype.success:
                 raise Exception(f"Could not get language from type {ttype}")
 
@@ -1288,59 +1314,48 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 raise Exception(f"Give task not allowed for {ttype}")
 
             mkdirs(language.prgpath)
-            # os.chdir(language.prgpath)
-
-            # /answer-path comes here
-            usercode = get_json_param(query.jso, "input", "usercode", None)
-            if isinstance(usercode, str):
-                save["usercode"] = usercode
-
+            
+            nofilesave = get_param(query, 'nofilesave', False)
             filesaveattribute = get_param(query, "filesaveattribute", None)
-            if filesaveattribute:
-                attrnames = filesaveattribute.split(',')
-                usercode = ""
-                for aname in attrnames:
-                    usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
-                s = usercode
+            errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
+            warncondition = get_json_param(query.jso, "markup", "warncondition", False)
+            for file in language.sourcefiles:
+                if filesaveattribute:
+                    attrnames = filesaveattribute.split(',')
+                    usercode = ""
+                    for aname in attrnames:
+                        usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
+                    file.content = usercode
 
-            nosave = get_param(query, "nosave", None)
-            nosave = get_json_param(query.jso, "input", "nosave", nosave)
-
-            if nosave:
-                result["save"] = {}
-
-            if is_doc:
-                s = replace_code(query.cut_errors, s)
-
-            if not s.startswith("File not found"):
-                errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
-                if errorcondition:
-                    m = re.search(errorcondition, s, flags=re.S)
-                    if m:
+                if is_doc:
+                    file.content = replace_code(query.cut_errors, file.content)
+                    
+                if not file.content.startswith("File not found"):
+                    if errorcondition and re.search(errorcondition, file.content, flags=re.S):
                         errormessage = get_json_param(query.jso, "markup", "errormessage",
-                                                      "Not allowed to use: " + errorcondition)
+                                                    "Not allowed to use: " + errorcondition)
                         return write_json_error(self.wfile, errormessage, result)
 
-                warncondition = get_json_param(query.jso, "markup", "warncondition", False)
-                if warncondition:
-                    m = re.search(warncondition, s, flags=re.S)
-                    if m:
+                    if warncondition and re.search(warncondition, file.content, flags=re.S):
                         warnmessage = "\n" + get_json_param(query.jso, "markup", "warnmessage",
                                                             "Not recomended to use: " + warncondition)
 
-                # print(os.path.dirname(language.sourcefilename))
-                mkdirs(os.path.dirname(language.sourcefilename))
-                # print("Write file: " + language.sourcefilename)
-                if s == "":
-                    s = "\n"
+                    # print(os.path.dirname(language.sourcefilename))
+                    # print("Write file: " + language.sourcefilename)
+                    if file.content == "":
+                        file.content = "\n"
 
-                # Write the program to the file =======================================================
-                s = language.before_save(language.before_code + s)
-                nofilesave = get_param(query, 'nofilesave', False)
-                if not nofilesave:
-                    codecs.open(language.sourcefilename, "w", "utf-8").write(s)
-                slines = s
-
+                    # Write the program to the file =======================================================
+                    file.content = language.before_save(language.before_code + file.content)
+                    if not nofilesave:
+                        path = Path(file.path)
+                        mkdirs(path.parent)
+                        path.write_text(file.content, encoding="utf-8")
+                        shutil.chown(path, user="agent", group="agent")
+                    slines = file.content
+            
+            usercode = language.sourcefiles[0].content # for single file compatibility # TODO: make unnecessary
+            
             save_extra_files(query, extra_files, language.prgpath)
             
             master_path = get_param(query, "masterPath", None)
@@ -1361,9 +1376,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     copy_files_regex(cfiles.get("master", None), master_path, Path(language.rootpath))
                 copy_files_regex(cfiles.get("task", None), task_path, Path(language.prgpath))
             
-            if not os.path.isfile(language.sourcefilename) or os.path.getsize(language.sourcefilename) == 0:
-                if not nofilesave:
-                    return write_json_error(self.wfile, "Could not get the source file", result)
+            if not nofilesave:
+                for f in language.sourcefiles:
+                    file = Path(f.path)
+                    if not file.is_file():
+                        return write_json_error(self.wfile, "Could not get the source file", result)
+                    if file.stat().st_size == 0:
+                        return write_json_error(self.wfile, "Could not get the source file (file is empty)", result)
                 # self.wfile.write("Could not get the source file\n")
                 # print "=== Could not get the source file"
 
@@ -1425,7 +1444,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # uid = pwd.getpwnam("agent").pw_uid
             # gid = grp.getgrnam("agent").gr_gid
             # os.chown(prgpath, uid, gid)
-            shutil.chown(language.prgpath, user="agent", group="agent")
             # print("t:", time.time() - t1start)
 
             # print(ttype)
@@ -1473,7 +1491,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 give_points(points_rule, "doc")
 
             else:
-                cmdline = language.get_cmdline(s)
+                cmdline = language.get_cmdline()
 
             if get_param(query, "justSave", False) or get_param(query, "justCmd", False):
                 cmdline = ""
@@ -1506,6 +1524,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 print("Poistetaan ", ttype, language.sourcefilename)
                 # remove(language.sourcefilename)
                 # print(compiler_output)
+                # TODO(?): doesn't support multi file submissions
                 language.compile_commandline += " && rm " + \
                                                 language.sourcefilename.replace(language.prgpath, "/home/agent")
 
@@ -1546,9 +1565,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if is_doc:
                 pass  # jos doc ei ajeta
             elif get_param(query, "justSave", False):
-                showname = language.sourcefilename.replace(language.basename, "").replace("/tmp//", "")
-                if showname == "prg":
-                    showname = ""
+                showname = ", ".join(name if name != "prg" else "" for name in language.filenames)
                 saved_text = get_param(query, "savedText", "Saved {0}")
                 code, out, err, pwddir = (0, "", saved_text.format(showname), "")
             #elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:

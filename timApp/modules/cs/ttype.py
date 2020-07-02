@@ -6,7 +6,7 @@ from manager import make_language, make_modifier
 class TType:
     type_splitter = compile("[^+a-z0-9]")
 
-    def __init__(self, ttype_str, query, usercode = ""):
+    def __init__(self, ttype_str, query, sourcefiles = [{"path": None, "content": ""}]):
         self.success = True
         self.modifiers = []
         self.parts = TType.split(ttype_str)
@@ -14,7 +14,7 @@ class TType:
             self.language = LanguageError(query, "", f"Invalid ttype (probably empty): {ttype_str}")
             return
         
-        self.language, lang_class, success = make_language(self.parts[0], query, usercode)
+        self.language, lang_class, success = make_language(self.parts[0], query, sourcefiles)
         self.success = self.success and success
         self.parts[0] = lang_class.get_client_ttype(self.parts[0])
         

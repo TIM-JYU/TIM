@@ -11,12 +11,12 @@ from extcheck import ExtCheck
 def populated(base_class):
     dictionary = {}
     classes = [base_class] + base_class.all_subclasses()
-    
+
     def add(cls, ttype):
         if ttype in dictionary:
             raise Exception(f"{base_class.__name__} {cls.__name__} has a duplicate ttype ({ttype}) with {dictionary[ttype].__name__}")
         dictionary[ttype] = cls
-    
+
     for cls in classes:
         if not hasattr(cls, "ttype"):
             raise Exception(f"{base_class.__name__} {cls.__name__} hasn't defined ttype")
@@ -66,26 +66,38 @@ def all_css_files():
     add(modifiers)
     return list(files)
 
-def make(dictionary, error_cls, desc, name, *kargs):
+def make(dictionary, error_cls, desc, name, query, sourcefiles = None):
+    kargs = []
     obj = None
     cls = dictionary.get(name)
     if cls is None:
         err_str = f"Error: {desc} {name} not found."
         print_exc()
     else:
+        if sourcefiles is not None:
+            if cls.supports_multifiles():
+                kargs = [sourcefiles]
+            elif len(sourcefiles) == 1:
+                kargs = [sourcefiles[0]["content"]]
+            else:
+                # TODO: make all languages support multiple files OR
+                # iterate and save all the files before running, as if there were
+                # multiple submission boxes
+                raise ValueError(f"Language {name} does not support multiple files")
+
         try:
-            obj = cls(*kargs)
+            obj = cls(query, *kargs)
         except Exception as e:
             err_str = f"Error: {str(e)}"
             print_exc()
-    
+
     if obj is None:
-        return error_cls(*kargs, err_str), error_cls, False
-    
+        return error_cls(query, err_str, *kargs), error_cls, False
+
     return obj, cls, True
 
 def make_language(name, query, usercode = ""):
-    """Returns a tuple: (language object of the given class name, bool: whether it succeeded). 
+    """Returns a tuple: (language object of the given class name, bool: whether it succeeded).
     Returns (LanguageError object, false) on failure"""
     return make(languages, LanguageError, "Language", name, query, usercode)
 
