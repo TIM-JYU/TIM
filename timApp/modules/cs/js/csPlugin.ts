@@ -701,14 +701,11 @@ export class CsController extends CsBase implements ITimComponent {
     comtestError?: string;
     connectionErrorMessage?: string;
     copyingFromTauno: boolean;
-    cursor: string;
     docLink: string;
     docURL?: string;
     edited: boolean = false;
     editArea?: Element;
     editorIndex: number;
-    editorMode!: number;
-    editorModeIndecies: number[];
     error?: string;
     errors: string[];
     fileError?: string;
@@ -757,13 +754,6 @@ export class CsController extends CsBase implements ITimComponent {
     wrap!:  {n: number, auto: boolean};
     buttons: string[] = [];
 
-    // These are used only in $doCheck to keep track of the old values.
-    dochecks: {
-        userinput?: string;
-        userargs?: string;
-    } = {};
-
-    rows: number = 1;
     iframesettings?: { src?: SafeResourceUrl; width: number; id: string; height: number };
     loadedIframe?: IFrameLoad;
     taunoFrame?: IFrameLoad;
@@ -771,15 +761,7 @@ export class CsController extends CsBase implements ITimComponent {
     taunoCopy?: TimDefer<string>;
     iframedefer?: TimDefer<IFrameLoad>;
     iframemessageHandler?: (e: MessageEvent) => void;
-    savedvals?: { args: string; input: string; code: string };
-    countItems: boolean = false;
-    countLines: boolean = false;
-    countWords: boolean = false;
-    countChars: boolean = false;
-    lineCount: number = 0;
-    wordCount: number = 0;
-    charCount: number = 0;
-    countError: string = "";
+    savedvals?: { args: string; input: string; code: string[] };
     preventSave: boolean = false;
     hide: {wrap?: boolean, changed?: boolean} = {};
     savedText: string = "";
@@ -848,11 +830,9 @@ export class CsController extends CsBase implements ITimComponent {
 
         this.lastJS = "";
         this.iframeClientHeight = -1;
-        this.cursor = "⁞"; // \u0383"; //"\u0347"; // "\u02FD";
         this.docLink = "Document";
         this.muokattu = false;
         this.editorIndex = 0;
-        this.editorModeIndecies = [];
     }
 
     onIframeLoad(e: Event) {
@@ -933,12 +913,6 @@ export class CsController extends CsBase implements ITimComponent {
             return;
         }
         this.vctrl.informChangeListeners(taskId, state, (this.markup.tag ? this.markup.tag : undefined));
-    }
-
-    resetField(): undefined {
-        this.initCode();
-        this.error = undefined;
-        return undefined;
     }
 
     tryResetChanges(): void {
@@ -1255,8 +1229,6 @@ ${fhtml}
             this.editorModes.push(new Mode(mode, editorText[mode]));
         }
 
-        this.rows = this.minRows;
-
         if (this.indent < 0) {
             if (this.file) {
                 this.indent = 8;
@@ -1266,7 +1238,6 @@ ${fhtml}
         }
 
         this.processPluginMath();
-        const tid = this.pluginMeta.getTaskId();
 
         this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
         this.initSaved();
@@ -1559,7 +1530,7 @@ ${fhtml}
 
         let ucode = "";
         if (this.usercode) {
-            ucode = this.usercode.replace(this.cursor, "");
+            ucode = this.usercode;
         }
         ucode = ucode.replace(/\r/g, "");
         if (this.markup.validityCheck) {
@@ -2267,7 +2238,7 @@ ${fhtml}
         if (this.precode == undefined) {
             await this.getAllCode();
         }
-        const text = this.precode + "\n" + this.usercode.replace(this.cursor, "") + "\n" + this.postcode;
+        const text = this.precode + "\n" + this.usercode + "\n" + this.postcode;
         if (text === this.lastMD) {
             return;
         }
@@ -2300,7 +2271,7 @@ ${fhtml}
             this.getCodeFromLocalCode();
         }
         this.codeInitialized = true;
-        let text = this.usercode.replace(this.cursor, "");
+        let text = this.usercode;
         if (this.precode || this.postcode) {
             text = this.precode + "\n" + text + "\n" + this.postcode;
         }
@@ -2354,7 +2325,7 @@ ${fhtml}
                 src: this.domSanitizer.bypassSecurityTrustResourceUrl(fh ? getIFrameDataUrl(fh) : `${fsrc}?scripts=${this.markup.scripts ?? scripts}&html=${html}`),
             };
         }
-        const text = this.usercode.replace(this.cursor, "");
+        const text = this.usercode;
         if (!this.markup.runeverytime && text === this.lastJS && this.userargs === this.lastUserargs && this.userinput === this.lastUserinput) {
             return;
         }
