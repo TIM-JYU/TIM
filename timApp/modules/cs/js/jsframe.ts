@@ -249,6 +249,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     edited: boolean = false;
     connectionErrorMessage?: string;
     private prevdata?: JSFrameData;
+    private currentData?: JSFrameData;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -431,6 +432,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     async runSend(data: unknown) {
+        console.log("SAVING,", data);
         this.connectionErrorMessage = undefined;
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
@@ -593,8 +595,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     async save() {
-        const data = this.getData("getDataSave");
-        return this.runSend(data);
+        return this.runSend(this.currentData);
     }
 
     isUnSaved() {
@@ -621,6 +622,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             if (msg === "update") {
                 this.console = "";
                 this.edited = true;
+                this.currentData = unwrapAllC(this.getDataReady(d.data));
                 this.updateListeners();
                 this.c();
             }
