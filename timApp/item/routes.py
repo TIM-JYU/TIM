@@ -490,10 +490,9 @@ def view(item_path, template_name, route="view"):
         no_question_auto_numbering = doc_settings.auto_number_questions()
 
     is_in_lecture = current_user_in_lecture()
-
+    current_list_user: Optional[User]
     if user_list:
-        user_list.sort(key=lambda u: u.get('user', {}).get('real_name',''))
-        current_list_user = user_list[0]['user']
+        current_list_user = min(user_list, key=lambda u: u["user"].real_name)["user"]
     else:
         current_list_user = None
 
