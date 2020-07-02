@@ -788,9 +788,6 @@ class CC(Language):
         super().__init__(query, sourcecode)
         self.compiler = "gcc"
 
-    def extension(self):
-        self.check_extension([".h", ".c", ".cc"], ".c", ".exe")
-
     def get_cmdline(self, sourcecode):
         return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
 
@@ -804,6 +801,7 @@ class CPP(CC):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "g++ -std=c++14"
+        self.header_extensions = [".h", ".hh", ".hpp"]
 
     def extension(self):
         self.check_extension([".h", ".hpp", ".hh", ".cpp", ".cc"], ".cpp", ".exe")

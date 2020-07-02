@@ -1,9 +1,11 @@
-from re import split
+from re import compile
 
 from languages import LanguageError
 from manager import make_language, make_modifier
 
 class TType:
+    type_splitter = compile("[^+a-z0-9]")
+
     def __init__(self, ttype_str, query, usercode = ""):
         self.success = True
         self.modifiers = []
@@ -70,4 +72,4 @@ class TType:
     @staticmethod
     def split(ttype):
         """Returns a list of the parts of ttype"""
-        return list(filter(None, split(r'[\s,|;\\/]', ttype.lower())))
+        return list(filter(None, TType.type_splitter.split(ttype.lower())))

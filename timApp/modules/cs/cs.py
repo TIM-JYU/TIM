@@ -1172,9 +1172,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         try:
             update_markup_from_file(query)
             # Get the template type
-            ttype = get_param(query, "type", "cs").lower()
-            ttype = type_splitter.split(ttype)
-            ttype = ttype[0]
+            ttype = TType.split(get_param(query, "type", "cs"))[0]
 
             if is_tauno and not is_answer:
                 ttype = 'tauno'  # answer is newer tauno
