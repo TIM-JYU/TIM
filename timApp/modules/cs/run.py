@@ -244,6 +244,9 @@ def run2_subdir(args, dir=None, cwd=None, *kargs, **kwargs):
     :param *kargs: other run2 arguments
     :param **kwargs: other run2 arguments
     """
+    if dir is None:
+        return run2(args, cwd=cwd, *kargs, **kwargs)
+    
     if cwd and cwd[0] == "/":
         cwd = os.path.normpath(cwd.replace(dir, "/home/agent/"))
     if isinstance(args, str):

@@ -1578,7 +1578,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         uargs = ""
                     # print("run: ", cmd, extra, language.pure_exename, language.sourcefilename)
                     try:
-                        code, out, err, pwddir = run2(cmd, cwd=language.prgpath, timeout=language.timeout, env=env,
+                        code, out, err, pwddir = run2_subdir(cmd, dir=language.rootpath, cwd=language.prgpath, timeout=language.timeout, env=env,
                                                       stdin=language.stdin,
                                                       uargs=get_param(query, "runargs", "") + " " + uargs,
                                                       extra=extra, no_x11=language.no_x11,

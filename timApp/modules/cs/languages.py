@@ -292,26 +292,22 @@ class Language:
         if self.just_compile:
             args = []
 
-        def call_run(args, **kwargs):  # allows reuse of the function arguments
-            if self.rootpath:
-                return run2_subdir(args, dir=self.rootpath, **kwargs)
-            return run2(args, **kwargs)
-
-        code, out, err, pwddir = call_run(args,
-                                          cwd=df(cwd, self.prgpath),
-                                          shell=df(shell, False),
-                                          kill_tree=df(kill_tree, True),
-                                          timeout=df(timeout, self.timeout),
-                                          env=df(env, self.env),
-                                          stdin=df(stdin, self.stdin),
-                                          uargs=uargs,
-                                          code=df(code, "utf-8"),
-                                          extra=df(extra, ""),
-                                          ulimit=df(ulimit, self.ulimit),
-                                          no_x11=df(no_x11, self.no_x11),
-                                          savestate=df(savestate, self.savestate),
-                                          dockercontainer=df(dockercontainer, self.dockercontainer),
-                                          compile_commandline=self.compile_commandline)
+        code, out, err, pwddir = run2_subdir(args,
+                                    dir=self.rootpath,
+                                    cwd=df(cwd, self.prgpath),
+                                    shell=df(shell, False),
+                                    kill_tree=df(kill_tree, True),
+                                    timeout=df(timeout, self.timeout),
+                                    env=df(env, self.env),
+                                    stdin=df(stdin, self.stdin),
+                                    uargs=uargs,
+                                    code=df(code, "utf-8"),
+                                    extra=df(extra, ""),
+                                    ulimit=df(ulimit, self.ulimit),
+                                    no_x11=df(no_x11, self.no_x11),
+                                    savestate=df(savestate, self.savestate),
+                                    dockercontainer=df(dockercontainer, self.dockercontainer),
+                                    compile_commandline=self.compile_commandline)
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
         return code, out, err, pwddir
