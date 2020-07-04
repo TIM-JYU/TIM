@@ -492,7 +492,8 @@ def view(item_path, template_name, route="view"):
     is_in_lecture = current_user_in_lecture()
     current_list_user: Optional[User]
     if user_list:
-        current_list_user = min(user_list, key=lambda u: u["user"].real_name)["user"]
+        user_list = sorted(user_list, key=lambda u: u["user"].real_name)
+        current_list_user = user_list[0]["user"]
     else:
         current_list_user = None
 
