@@ -1,22 +1,18 @@
-import angular, {IScope} from "angular";
-import * as colorpicker from "angular-bootstrap-colorpicker";
-import ngSanitize from "angular-sanitize";
+import {IScope} from "angular";
 import deepmerge from "deepmerge";
 import * as t from "io-ts";
-import {ViewCtrl} from "../document/viewctrl";
-import {editorChangeValue} from "../editor/editorScope";
+import {ApplicationRef, Component, ElementRef, DoBootstrap, NgModule, OnInit, StaticProvider} from "@angular/core";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {$http, $sce, $timeout} from "../util/ngimport";
-import {
-    defaultTimeout,
-    markAsUsed,
-    MouseOrTouch,
-    numOrStringToNumber,
-    posToRelative,
-    Require,
-    to,
-    valueOr,
-} from "../util/utils";
 import {TimDefer} from "../util/timdefer";
+import {defaultTimeout, MouseOrTouch, numOrStringToNumber, posToRelative, Require, to, valueOr} from "../util/utils";
+import {editorChangeValue} from "../editor/editorScope";
+import {ViewCtrl} from "../document/viewctrl";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -49,12 +45,7 @@ import {
     ValidCoord,
     VideoPlayer,
 } from "./imagextypes";
-import {PluginBase, pluginBindings} from "./util";
-
-markAsUsed(ngSanitize, colorpicker);
-
-const imagexApp = angular.module("imagexApp", ["ngSanitize", "colorpicker.module"]);
-export const moduleDefs = [imagexApp];
+import {AngularPluginBase} from "./angular-plugin-base.directive";
 
 let globalPreviewColor = "#fff";
 
@@ -75,13 +66,13 @@ class FreeHand {
     public redraw?: () => void;
     private videoPlayer: VideoPlayer;
     private emotion: boolean;
-    private imgx: ImageXController;
+    private imgx: ImageXComponent;
     private prevPos?: TuplePoint;
     private lastDrawnSeg?: number;
     private lastVT?: number;
     private ctx: CanvasRenderingContext2D;
 
-    constructor(imgx: ImageXController, drawData: ILineSegment[], player: HTMLVideoElement | undefined) {
+    constructor(imgx: ImageXComponent, drawData: ILineSegment[], player: HTMLVideoElement | undefined) {
         this.freeDrawing = drawData;
         this.ctx = imgx.getCanvasCtx();
         this.emotion = imgx.emotion;
@@ -89,7 +80,7 @@ class FreeHand {
         this.videoPlayer = player ?? {currentTime: 1e60, fakeVideo: true};
         if (this.emotion && this.imgx.teacherMode) {
             if (!isFakePlayer(this.videoPlayer)) {
-                if (this.imgx.attrs.analyzeDot) {
+                if (this.imgx.markup.analyzeDot) {
                     this.videoPlayer.ontimeupdate = () => this.drawCirclesVideoDot(this.ctx, this.freeDrawing, this.videoPlayer);
                 } else {
                     this.videoPlayer.ontimeupdate = () => this.drawCirclesVideo(this.ctx, this.freeDrawing, this.videoPlayer);
@@ -273,11 +264,11 @@ class FreeHand {
 
             // console.log("" + seg1 + "-" + seg2 + ": " + seg.lines[seg2][3]);
             let drawDone = false;
-            if (this.imgx.attrs.dotVisibleTime && this.lastVT && (vt - this.lastVT) > this.imgx.attrs.dotVisibleTime) { // remove old dot if needed
+            if (this.imgx.markup.dotVisibleTime && this.lastVT && (vt - this.lastVT) > this.imgx.markup.dotVisibleTime) { // remove old dot if needed
                 this.imgx.draw();
                 drawDone = true;
             }
-            if (this.imgx.attrs.showVideoTime) {
+            if (this.imgx.markup.showVideoTime) {
                 showTime(ctx, vt, 0, 0, "13px Arial");
             }
             if (this.lastDrawnSeg == seg2) {
@@ -287,7 +278,7 @@ class FreeHand {
             if (!drawDone) {
                 this.imgx.draw();
             }
-            if (this.imgx.attrs.showVideoTime) {
+            if (this.imgx.markup.showVideoTime) {
                 showTime(ctx, vt, 0, 0, "13px Arial");
             }
             if (seg1 < 0 || vt == 0 || seg.lines[seg2][3] == 0) {
@@ -300,12 +291,12 @@ class FreeHand {
             this.lastVT = vt;
             applyStyleAndWidth(ctx, seg);
             ctx.moveTo(seg.lines[seg1][0], seg.lines[seg1][1]);
-            if (this.imgx.attrs.drawLast) {
+            if (this.imgx.markup.drawLast) {
                 ctx.lineTo(seg.lines[seg2][0], seg.lines[seg2][1]);
             }
             ctx.stroke();
             drawFillCircle(ctx, 30, seg.lines[seg2][0], seg.lines[seg2][1], "black", 0.5);
-            if (this.imgx.attrs.showTimes) {
+            if (this.imgx.markup.showTimes) {
                 s = dateToString(seg.lines[seg2][3] as number, false);
                 drawText(ctx, s, seg.lines[seg2][0], seg.lines[seg2][1], "13px Arial");
             }
@@ -406,84 +397,82 @@ function showTime(ctx: CanvasRenderingContext2D, vt: number, x: number, y: numbe
 
 const directiveTemplate = `
 <div class="csRunDiv no-popup-menu">
-    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-    <div class="pluginError" ng-if="::$ctrl.imageLoadError" ng-bind="::$ctrl.imageLoadError"></div>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <div class="pluginError" *ngIf="imageLoadError" [textContent]="imageLoadError"></div>
+    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
     <div>
-        <canvas class="canvas"
+        <canvas class="canvas no-popup-menu"
                 tabindex="1"
-                width={{::$ctrl.canvaswidth}}
-                height={{::$ctrl.canvasheight}}
-                no-popup-menu></canvas>
+                width={{canvaswidth}}
+                height={{canvasheight}}></canvas>
         <div class="content"></div>
     </div>
-    <p class="csRunMenu">&nbsp;<button ng-if="::$ctrl.button"
+    <p class="csRunMenu">&nbsp;<button *ngIf="button"
                                        class="timButton"
-                                       ng-disabled="$ctrl.isRunning"
-                                       ng-click="$ctrl.save()">{{::$ctrl.button}}
+                                       [disabled]="isRunning"
+                                       (click)="save()">{{button}}
     </button>
         &nbsp;&nbsp;
-        <button ng-if="::$ctrl.buttonPlay"
-                ng-disabled="$ctrl.isRunning"
-                ng-click="$ctrl.videoPlay()">{{::$ctrl.buttonPlay}}
+        <button *ngIf="buttonPlay"
+                [disabled]="isRunning"
+                (click)="videoPlay()">{{buttonPlay}}
         </button>
         &nbsp;&nbsp;
-        <button ng-if="::$ctrl.buttonRevert"
-                ng-disabled="$ctrl.isRunning"
-                ng-click="$ctrl.videoBeginning()">{{::$ctrl.buttonRevert}}
+        <button *ngIf="buttonRevert"
+                [disabled]="isRunning"
+                (click)="videoBeginning()">{{buttonRevert}}
         </button>
         &nbsp;&nbsp;
-        <button ng-show="$ctrl.finalanswer && $ctrl.userHasAnswered"
-                ng-disabled="$ctrl.isRunning"
-                ng-click="$ctrl.showAnswer()">
+        <button [hidden]="!(finalanswer && userHasAnswered)"
+                [disabled]="isRunning"
+                (click)="showAnswer()">
             Show correct answer
         </button>
-        &nbsp;&nbsp;<a ng-if="::$ctrl.button"
-        ng-disabled="$ctrl.isRunning"
-        ng-click="$ctrl.resetExercise()">{{::$ctrl.resetText}}</a>&nbsp;&nbsp;<a
-                href="" ng-if="$ctrl.muokattu" ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a><label
-                ng-show="$ctrl.freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true"
-                                                                ng-model="$ctrl.freeHand"></label> <span><span
-                ng-show="$ctrl.freeHand"><label ng-show="::$ctrl.freeHandLineVisible">Line
+        &nbsp;&nbsp;<a *ngIf="button"
+        (click)="resetExercise()">{{resetText}}</a>&nbsp;&nbsp;<a
+                href="" *ngIf="muokattu" (click)="initCode()">{{resetText}}</a><label
+                [hidden]="!freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true"
+                                                                [(ngModel)]="freeHand"></label> <span><span
+                [hidden]="!freeHand"><label [hidden]="!freeHandLineVisible">Line
             <input type="checkbox"
                    name="freeHandLine"
                    value="true"
-                   ng-model="$ctrl.lineMode"></label> <span
-                ng-show="::$ctrl.freeHandToolbar"><input ng-show="true"
+                   [(ngModel)]="lineMode"></label> <span
+                [hidden]="!freeHandToolbar"><input [hidden]="!true"
                                                        id="freeWidth"
                                                        size="1"
                                                        style="width: 2em"
                                                        type="number"
-                                                       ng-model="$ctrl.w"/>
+                                                       [(ngModel)]="w"/>
             <input colorpicker="hex"
                    type="text"
-                   ng-style="{'background-color': $ctrl.color}"
-                   ng-model="$ctrl.color" size="4"/>&nbsp; <span
+                   [ngStyle]="{'background-color': color}"
+                   [(ngModel)]="color" size="4"/>&nbsp; <span
                     style="background-color: red; display: table-cell; text-align: center; width: 30px;"
-                    ng-click="$ctrl.setFColor('#f00')">R</span><span
+                    (click)="setFColor('#f00')">R</span><span
                     style="background-color: blue; display: table-cell; text-align: center; width: 30px;"
-                    ng-click="$ctrl.setFColor('#00f')">B</span><span
+                    (click)="setFColor('#00f')">B</span><span
                     style="background-color: yellow; display: table-cell; text-align: center; width: 30px;"
-                    ng-click="$ctrl.setFColor('#ff0')">Y</span><span
+                    (click)="setFColor('#ff0')">Y</span><span
                     style="background-color: #0f0; display: table-cell; text-align: center; width: 30px;"
-                    ng-click="$ctrl.setFColor('#0f0')">G</span>&nbsp;<a href="" ng-click="$ctrl.undo()">Undo</a>
+                    (click)="setFColor('#0f0')">G</span>&nbsp;<a href="" (click)="undo($event)">Undo</a>
         </span></span></span>
     </p>
-    <div ng-show="::$ctrl.preview"><span><span ng-style="{'background-color': $ctrl.previewColor}"
+    <div [hidden]="!preview"><span><span [ngStyle]="{'background-color': previewColor}"
                                              style="display: table-cell; text-align: center; width: 30px;"
-                                             ng-click="$ctrl.getPColor()">&lt;-</span>
-        <input ng-model="$ctrl.previewColor"
+                                             (click)="getPColor()">&lt;-</span>
+        <input [(ngModel)]="previewColor"
                colorpicker="hex"
                type="text"
-               ng-click="$ctrl.getPColor()"
+               (click)="getPColor()"
                size="10"/> <label> Coord:
-            <input ng-model="$ctrl.coords" ng-click="$ctrl.getPColor()" size="10"/></label></span></div>
-    <pre class="" ng-if="$ctrl.error && $ctrl.preview">{{$ctrl.error}}</pre>
-    <pre class="" ng-show="$ctrl.result">{{$ctrl.result}}</pre>
-    <div class="replyHTML" ng-if="$ctrl.replyHTML"><span ng-bind-html="$ctrl.svgImageSnippet()"></span></div>
-    <img ng-if="$ctrl.replyImage" class="grconsole" ng-src="{{$ctrl.replyImage}}" alt=""/>
-    <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
+            <input [(ngModel)]="coords" (click)="getPColor()" size="10"/></label></span></div>
+    <pre class="" *ngIf="error && preview">{{error}}</pre>
+    <pre class="" [hidden]="!result">{{result}}</pre>
+    <div class="replyHTML" *ngIf="replyHTML"><span [innerHtml]="svgImageSnippet()"></span></div>
+    <img *ngIf="replyImage" class="grconsole" [src]="replyImage" alt=""/>
+    <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
 </div>
 `;
 
@@ -536,11 +525,11 @@ class DragTask {
     private mousePosition: IPoint;
     private freeHand: FreeHand;
     private mouseDown = false;
-    private activeDragObject?: {obj: DragObject, xoffset: number, yoffset: number};
+    private activeDragObject?: { obj: DragObject, xoffset: number, yoffset: number };
     public drawObjects: DrawObject[];
     public lines?: Line[];
 
-    constructor(private canvas: HTMLCanvasElement, private imgx: ImageXController) {
+    constructor(private canvas: HTMLCanvasElement, private imgx: ImageXComponent) {
         this.ctx = canvas.getContext("2d")!;
         this.drawObjects = [];
         this.mousePosition = {x: 0, y: 0};
@@ -551,89 +540,77 @@ class DragTask {
 
         this.canvas.addEventListener("mousemove", (event) => {
             event.preventDefault();
-            this.imgx.getScope().$evalAsync(() => {
-                this.moveEvent(event, event);
-            });
+            this.moveEvent(event, event);
         });
         this.canvas.addEventListener("touchmove", (event) => {
             event.preventDefault();
-            this.imgx.getScope().$evalAsync(() => {
-                this.moveEvent(event, this.te(event));
-            });
+            this.moveEvent(event, this.te(event));
         });
         this.canvas.addEventListener("mousedown", (event) => {
             event.preventDefault();
-            this.imgx.getScope().$evalAsync(() => {
-                this.downEvent(event, event);
-            });
+            this.downEvent(event, event);
         });
         this.canvas.addEventListener("touchstart", (event) => {
             event.preventDefault();
-            this.imgx.getScope().$evalAsync(() => {
-
-                this.downEvent(event, this.te(event));
-            });
+            // this.imgx.getScope().$evalAsync(() => {
+            //     this.downEvent(event, this.te(event));
+            // });
+            this.downEvent(event, this.te(event));
         });
         this.canvas.addEventListener("mouseup", (event) => {
             event.preventDefault();
-            this.imgx.getScope().$evalAsync(() => {
-                this.upEvent(event, event);
-            });
+            this.upEvent(event, event);
         });
         this.canvas.addEventListener("touchend", (event) => {
             event.preventDefault();
-            this.imgx.getScope().$evalAsync(() => {
-                this.upEvent(event, this.te(event));
-            });
+            this.upEvent(event, this.te(event));
         });
 
-        if (imgx.attrs.freeHandShortCuts) {
+        if (imgx.markup.freeHandShortCuts) {
             this.canvas.addEventListener("keypress", (event) => {
-                this.imgx.getScope().$evalAsync(() => {
-                    const c = String.fromCharCode(event.keyCode);
-                    if (event.keyCode === 26) {
-                        this.freeHand.popSegment(0);
-                    }
-                    if (c === "c") {
-                        this.freeHand.clear();
-                    }
-                    if (c === "r") {
-                        this.freeHand.setColor("#f00");
-                    }
-                    if (c === "b") {
-                        this.freeHand.setColor("#00f");
-                    }
-                    if (c === "y") {
-                        this.freeHand.setColor("#ff0");
-                    }
-                    if (c === "g") {
-                        this.freeHand.setColor("#0f0");
-                    }
-                    if (c === "+") {
-                        this.freeHand.incWidth(+1);
-                    }
-                    if (c === "-") {
-                        this.freeHand.incWidth(-1);
-                    }
-                    if (c === "1") {
-                        this.freeHand.setWidth(1);
-                    }
-                    if (c === "2") {
-                        this.freeHand.setWidth(2);
-                    }
-                    if (c === "3") {
-                        this.freeHand.setWidth(3);
-                    }
-                    if (c === "4") {
-                        this.freeHand.setWidth(4);
-                    }
-                    if (c === "l") {
-                        this.freeHand.flipLineMode();
-                    }
-                    if (c === "f" && imgx.freeHandShortCut) {
-                        imgx.freeHand = !imgx.freeHand;
-                    }
-                });
+                const c = String.fromCharCode(event.keyCode);
+                if (event.keyCode === 26) {
+                    this.freeHand.popSegment(0);
+                }
+                if (c === "c") {
+                    this.freeHand.clear();
+                }
+                if (c === "r") {
+                    this.freeHand.setColor("#f00");
+                }
+                if (c === "b") {
+                    this.freeHand.setColor("#00f");
+                }
+                if (c === "y") {
+                    this.freeHand.setColor("#ff0");
+                }
+                if (c === "g") {
+                    this.freeHand.setColor("#0f0");
+                }
+                if (c === "+") {
+                    this.freeHand.incWidth(+1);
+                }
+                if (c === "-") {
+                    this.freeHand.incWidth(-1);
+                }
+                if (c === "1") {
+                    this.freeHand.setWidth(1);
+                }
+                if (c === "2") {
+                    this.freeHand.setWidth(2);
+                }
+                if (c === "3") {
+                    this.freeHand.setWidth(3);
+                }
+                if (c === "4") {
+                    this.freeHand.setWidth(4);
+                }
+                if (c === "l") {
+                    this.freeHand.flipLineMode();
+                }
+                if (c === "f" && imgx.freeHandShortCut) {
+                    imgx.freeHand = !imgx.freeHand;
+                }
             }, false);
         }
 
@@ -734,7 +711,7 @@ class DragTask {
             drawFillCircle(this.ctx, 30, this.mousePosition.x, this.mousePosition.y, "black", 0.5);
             this.freeHand.startSegmentDraw(this.mousePosition);
             this.freeHand.addPointDraw(this.ctx, this.mousePosition);
-            if (this.imgx.attrs.autosave) {
+            if (this.imgx.markup.autosave) {
                 this.imgx.save();
             }
         }
@@ -1068,7 +1045,7 @@ function setIdentityTransform(ctx: CanvasRenderingContext2D) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
-function textboxFromProps(values: {textboxproperties?: TextboxPropsT | null, color?: string | null},
+function textboxFromProps(values: { textboxproperties?: TextboxPropsT | null, color?: string | null },
                           s: ISizedPartial | undefined,
                           overrideColorFn: () => string | undefined,
                           defaultText: string) {
@@ -1484,21 +1461,26 @@ interface IAnswerResponse {
     rightanswers?: RightAnswerT[];
 }
 
-class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
+@Component({
+    selector: "imagex-runner",
+    // changeDetection: ChangeDetectionStrategy.OnPush,
+    template: directiveTemplate,
+})
+class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
     t.TypeOf<typeof ImageXAll>,
-    typeof ImageXAll> {
-    private imageLoadError?: string | null;
+    typeof ImageXAll> implements OnInit {
+    public imageLoadError?: string | null;
 
     get emotion() {
-        return this.attrs.emotion;
+        return this.markup.emotion;
     }
 
     get max_tries() {
-        return this.attrs.answerLimit;
+        return this.markup.answerLimit;
     }
 
     get freeHandVisible() {
-        const r = this.attrs.freeHandVisible;
+        const r = this.markup.freeHandVisible;
         if (r != null) {
             return r;
         }
@@ -1506,7 +1488,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get freeHandShortCut() {
-        const r = this.attrs.freeHandShortCut;
+        const r = this.markup.freeHandShortCut;
         if (r != null) {
             return r;
         }
@@ -1514,21 +1496,21 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get isFreeHandInUse() {
-        return this.attrs.freeHand === "use" || this.attrs.freeHand === true;
+        return this.markup.freeHand === "use" || this.markup.freeHand === true;
     }
 
     get videoPlayer(): HTMLVideoElement | undefined {
-        if (this.attrs.followid) {
-            return this.vctrl.getVideo(this.attrs.followid);
+        if (this.markup.followid) {
+            return this.vctrl.getVideo(this.markup.followid);
         }
     }
 
     get buttonPlay() {
-        return this.attrs.buttonPlay ?? (this.videoPlayer ? "Aloita/pysäytä" : null);
+        return this.markup.buttonPlay ?? (this.videoPlayer ? "Aloita/pysäytä" : null);
     }
 
     get buttonRevert() {
-        return this.attrs.buttonRevert ?? (this.videoPlayer ? "Video alkuun" : null);
+        return this.markup.buttonRevert ?? (this.videoPlayer ? "Video alkuun" : null);
     }
 
     get teacherMode() {
@@ -1536,11 +1518,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get grabOffset() {
-        return isTouchDevice() ? this.attrs.extraGrabAreaHeight : 0;
-    }
-
-    getScope() {
-        return this.scope;
+        return isTouchDevice() ? this.markup.extraGrabAreaHeight : 0;
     }
 
     public w = 0;
@@ -1552,16 +1530,16 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     public drags: DragObject[] = [];
     public userHasAnswered = false;
 
-    private muokattu: boolean;
-    private result: string;
-    private error?: string;
+    public muokattu: boolean;
+    public result: string;
+    public error?: string;
     private cursor: string;
     private tries = 0;
-    private previewColor = "";
-    private isRunning: boolean = false;
+    public previewColor = "";
+    public isRunning: boolean = false;
     private vctrl!: Require<ViewCtrl>;
-    private replyImage?: string;
-    private replyHTML?: string;
+    public replyImage?: string;
+    public replyHTML?: string;
     private canvas!: HTMLCanvasElement;
     private dt!: DragTask;
     private answer?: IAnswerResponse;
@@ -1570,8 +1548,8 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         this.dt.draw();
     }
 
-    constructor(scope: IScope, element: JQLite) {
-        super(scope, element);
+    constructor(el: ElementRef, http: HttpClient, domSanitizer: DomSanitizer) {
+        super(el, http, domSanitizer);
         this.muokattu = false;
         this.result = "";
         this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
@@ -1581,18 +1559,18 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         return this.canvas.getContext("2d")!;
     }
 
-    async $onInit() {
-        super.$onInit();
+    async ngOnInit() {
+        super.ngOnInit();
 
         // timeout required; otherwise the canvas element will be overwritten with another by Angular
         await $timeout();
         this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
         this.element[0].addEventListener("touchstart", (event) => {
-           // event.preventDefault();
+            // event.preventDefault();
         });
 
         this.element[0].addEventListener("touchmove", (event) => {
-           // event.preventDefault();
+            // event.preventDefault();
         });
 
         this.tries = this.attrsall.info?.earlier_answers ?? 0;
@@ -1603,29 +1581,29 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
             this.freeHand = true;
         }
 
-        this.w = this.attrs.freeHandWidth;
-        this.color = this.attrs.freeHandColor;
-        this.lineMode = this.attrs.freeHandLine;
+        this.w = this.markup.freeHandWidth;
+        this.color = this.markup.freeHandColor;
+        this.lineMode = this.markup.freeHandLine;
 
         const dt = new DragTask(this.canvas, this);
         this.dt = dt;
 
-        const userObjects = this.attrs.objects;
+        const userObjects = this.markup.objects;
 
-        const userTargets = this.attrs.targets;
-        const userFixedObjects = this.attrs.fixedobjects;
+        const userTargets = this.markup.targets;
+        const userFixedObjects = this.markup.fixedobjects;
         const fixedobjects = [];
         const targets = [];
         const objects = [];
         const ctx = this.getCanvasCtx();
 
-        if (this.attrs.background) {
+        if (this.markup.background) {
             const background = new FixedObject(
                 ctx, {
-                    a: this.attrs.background.a ?? 0,
-                    imgproperties: {src: this.attrs.background.src, textbox: false},
+                    a: this.markup.background.a ?? 0,
+                    imgproperties: {src: this.markup.background.src, textbox: false},
                     position: [0, 0],
-                    size: this.attrs.background.size,
+                    size: this.markup.background.size,
                     type: "img",
                 },
                 "background");
@@ -1639,7 +1617,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 
         let fixedDef = deepmerge<RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>>(
             baseDefs("rectangle", "blue"),
-            this.attrs.defaults ?? {},
+            this.markup.defaults ?? {},
             opts,
         );
 
@@ -1652,7 +1630,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 
         let targetDef = deepmerge<RequireExcept<TargetPropsT, OptionalTargetPropNames>>(
             baseDefs("rectangle", "blue"),
-            this.attrs.defaults ?? {},
+            this.markup.defaults ?? {},
             opts,
         );
         if (userTargets) {
@@ -1672,7 +1650,7 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
 
         let dragDef = deepmerge<RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>>(
             baseDefs("textbox", "black"),
-            this.attrs.defaults ?? {},
+            this.markup.defaults ?? {},
             opts,
         );
         if (userObjects) {
@@ -1723,7 +1701,10 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
         this.result = "";
     }
 
-    undo() {
+    undo(e?: Event) {
+        if (e) {
+            e.preventDefault();
+        }
         this.freeHandDrawing.popSegment(0);
     }
 
@@ -1891,11 +1872,11 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get canvaswidth(): number {
-        return this.attrs.canvaswidth;
+        return this.markup.canvaswidth;
     }
 
     get canvasheight(): number {
-        return this.attrs.canvasheight;
+        return this.markup.canvasheight;
     }
 
     get preview() {
@@ -1903,19 +1884,19 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get button() {
-        return this.attrs.button ?? "Save";
+        return this.markup.button ?? "Save";
     }
 
     get resetText() {
-        return this.attrs.resetText ?? "Reset";
+        return this.markup.resetText ?? "Reset";
     }
 
     get freeHandLineVisible() {
-        return this.attrs.freeHandLineVisible;
+        return this.markup.freeHandLineVisible;
     }
 
     get freeHandToolbar() {
-        return this.attrs.freeHandToolbar;
+        return this.markup.freeHandToolbar;
     }
 
     get finalanswer() {
@@ -1923,11 +1904,36 @@ class ImageXController extends PluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 }
 
-imagexApp.component("imagexRunner", {
-    bindings: pluginBindings,
-    controller: ImageXController,
-    require: {
-        vctrl: "^timView",
-    },
-    template: directiveTemplate,
-});
+// imagexApp.component("imagexRunner", {
+//     bindings: pluginBindings,
+//     controller: ImageXController,
+//     require: {
+//         vctrl: "^timView",
+//     },
+//     template: directiveTemplate,
+// });
+// noinspection AngularInvalidImportedOrDeclaredSymbol
+@NgModule({
+    declarations: [
+        ImageXComponent,
+    ],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+    ],
+})
+export class ImagexModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {
+    }
+}
+
+const bootstrapFn = (extraProviders: StaticProvider[]) => {
+    const platformRef = platformBrowserDynamic(extraProviders);
+    return platformRef.bootstrapModule(ImagexModule);
+};
+
+const angularJsModule = createDowngradedModule(bootstrapFn);
+doDowngrade(angularJsModule, "imagexRunner", ImageXComponent);
+export const moduleDefs = [angularJsModule];
