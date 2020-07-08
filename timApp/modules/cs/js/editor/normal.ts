@@ -9,7 +9,7 @@ import {
     SimpleChanges,
 } from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
-import {countChars} from "../util";
+import {countChars} from "../util/util";
 import {IEditor} from "./editor";
 
 //ng-attr-placeholder="{{placeholder}}"

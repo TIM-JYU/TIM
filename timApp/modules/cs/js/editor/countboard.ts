@@ -4,7 +4,7 @@ import {
     Input,
 } from "@angular/core";
 
-import {countLines, countWords} from "../util";
+import {countLines, countWords} from "../util/util";
 
 interface ICountLimit {
     show?: boolean;

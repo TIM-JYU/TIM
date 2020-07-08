@@ -34,7 +34,7 @@ import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {Mode, EditorComponent} from "./editor/editor";
 import {CountBoardComponent} from "./editor/countboard";
-import {getInt} from "./util";
+import {getInt} from "./util/util";
 import {IFile} from "./util/file-select";
 
 // js-parsons is unused; just declare a stub to make TS happy

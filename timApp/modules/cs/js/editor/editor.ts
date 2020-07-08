@@ -11,10 +11,10 @@ import {
     ChangeDetectorRef,
 } from "@angular/core";
 
+import {getInt} from "../util/util";
 import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
 import {ParsonsEditorComponent} from "./parsons";
-import {countChars, getInt} from "../util";
 
 type ModeID = number;
 
