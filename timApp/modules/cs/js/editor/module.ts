@@ -5,6 +5,7 @@ import {MatTabsModule} from "@angular/material/tabs";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
+import {CsUtilityModule} from "../util/module";
 import {CountBoardComponent} from "./countboard";
 import {EditorComponent, JSParsonsEditorComponent} from "./editor";
 import {NormalEditorComponent} from "./normal";
@@ -25,6 +26,8 @@ import {ParsonsEditorComponent} from "./parsons";
         FormsModule,
         MatTabsModule,
         BrowserAnimationsModule,
+        TimUtilityModule,
+        CsUtilityModule,
     ],
     exports: [
         CountBoardComponent,

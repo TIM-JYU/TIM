@@ -12,7 +12,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {CsRunnerComponent, CsTextComponent, CsConsoleComponent} from "./csPlugin";
 import {ExtcheckComponent, OutputContainerComponent, CustomOutputDirective} from "./extcheck";
-import {FileSelectComponent} from "./util/file-select";
+import {CsUtilityModule} from "./util/module";
 import {EditorModule} from "./editor/module";
 
 @NgModule({
@@ -20,7 +20,6 @@ import {EditorModule} from "./editor/module";
         CsRunnerComponent,
         CsTextComponent,
         CsConsoleComponent,
-        FileSelectComponent,
         ExtcheckComponent,
         OutputContainerComponent,
         CustomOutputDirective,
@@ -37,6 +36,7 @@ import {EditorModule} from "./editor/module";
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
+        CsUtilityModule,
     ],
 })
 export class CsPluginModule implements DoBootstrap {
