@@ -431,8 +431,6 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
 
     language, bycode, js, runner = handle_common_params(query, ttype)
 
-    usercode = get_json_eparam(query.jso, "state", "usercode", None)
-
     state = query.jso.get("state")
     if state:
         state_copy = language.state_copy()
@@ -449,6 +447,8 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
     if do_lazy and not before_open:
         before_open = language.get_default_before_open()
 
+    usercode = get_json_eparam(query.jso, "state", "usercode", None)
+
     if before_open or is_rv:
         susercode = language.modify_usercode(usercode or "")
         before_open = before_open.replace('{USERCODE}', susercode)
@@ -464,16 +464,33 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
         userinput = get_json_eparam(query.jso, "state", "userinput", '')
         userargs = get_json_eparam(query.jso, "state", "userargs", '')
         uploaded_file = get_json_eparam(query.jso, "state", "uploadedFile", None)
+        uploaded_files = get_json_param(query.jso, "state", "uploadedFiles", None)
+        submitted_files = get_json_param(query.jso, "state", "submittedFiles", None)
         s = ""
         if "input" in ttype:
             s = s + '<p>Input:</p><pre>' + userinput + '</pre>'
         if "args" in ttype:
             s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
-        if uploaded_file is not None:
+        if uploaded_files is not None:
+            for f in uploaded_files:
+                s = s + f'<p>File:</p><pre>{os.path.basename(f["path"])}</pre>'
+        elif uploaded_file is not None:
             s = s + '<p>File:</p><pre>' + os.path.basename(uploaded_file) + '</pre>'
-        ucode =  language.get_review(usercode)
-        if isinstance(ucode, str):
-            s = '<pre>' + ucode + '</ pre>' + s
+
+        if submitted_files is not None:
+            for f in submitted_files:
+                s = s + f'<pre>{f["path"]}</pre>'
+                if "content" not in f:
+                    continue
+                ucode = language.get_review(f["content"])
+                if isinstance(ucode, str):
+                    s = s + f'<pre>---------------------FILE START---------------------\n'
+                    s = s + ucode
+                    s = s + '\n----------------------FILE END----------------------</pre>'
+        else:
+            ucode = language.get_review(usercode)
+            if isinstance(ucode, str):
+                s = '<pre>' + ucode + '</ pre>' + s
         if not s:
             s = "<pre>No answer</pre>"
         result = NOLAZY + '<div class="review" ng-non-bindable>' + s + '</div>'
