@@ -60,7 +60,11 @@ interface IRunResult {
                         (file)="onFileLoad($event)"
                         (upload)="onUploadResponse($event)">
                 </file-select-manager>
-                <div class="form-inline small" *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
+                <div class="form-inline small">
+                    <span *ngFor="let item in uploadedFiles">
+                        <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
+                    </span>
+                </div>
             </ng-container>
             <pre *ngIf="viewCode && codeover">{{code}}</pre>
             <div class="csRunCode">

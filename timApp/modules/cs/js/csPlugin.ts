@@ -36,6 +36,7 @@ import {Mode, EditorComponent} from "./editor/editor";
 import {CountBoardComponent} from "./editor/countboard";
 import {getInt} from "./util/util";
 import {IFile} from "./util/file-select";
+import {Set, OrderedSet} from "./util/set";
 
 // js-parsons is unused; just declare a stub to make TS happy
 declare class ParsonsWidget {
@@ -137,32 +138,6 @@ class CWPD {
 const ConsolePWD = new CWPD();
 
 const csJSTypes = ["js", "glowscript", "vpython", "html", "processing", "wescheme"];
-
-// =================================================================================================================
-// Known upload files
-
-const uploadFileTypes = ["pdf", "xml"];
-
-function is(types: string[], file: string) {
-    if (!file) {
-        return false;
-    }
-    file = file.toLowerCase();
-    for (const ty of types) {
-        if (file.endsWith(ty)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function uploadFileTypesName(file: string) {
-    const s = file.split("\\").pop();
-    if (!s) {
-        return undefined;
-    }
-    return s.split("/").pop();
-}
 
 async function loadSimcir() {
     const load = await import("../simcir/simcir-all");
@@ -435,6 +410,12 @@ const CountType = t.partial({
 });
 interface ICountType extends t.TypeOf<typeof CountType> {}
 
+const UploadedFile = t.type({
+    path: t.string,
+    type: t.string,
+});
+interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
+
 const CsMarkupOptional = t.partial({
     // TODO: this gets deleted in server but only conditionally,
     //  decide if this should be here.
@@ -545,6 +526,7 @@ const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPlug
 const CsAnswer = t.partial({
     uploadedFile: t.string,
     uploadedType: t.string,
+    uploadedFiles: t.array(UploadedFile),
     userargs: t.string,
     usercode: t.string,
     userinput: t.string,
@@ -648,14 +630,6 @@ function createIframe(
     return f;
 }
 
-function createLink(file: string, type: string, name?: string) {
-    const link = document.createElement("a");
-    link.href = file;
-    link.title = type;
-    link.innerText = name ?? "Link";
-    return link;
-}
-
 interface IFrameLoad {
     iframe: HTMLIFrameElement & { contentWindow: WindowProxy };
     channel: MessageChannel;
@@ -691,6 +665,7 @@ interface IRunRequestInput extends Partial<IExtraMarkup> {
     userargs: string;
     uploadedFile?: string;
     uploadedType?: string;
+    uploadedFiles?: {path: string, type: string}[];
     nosave: boolean;
     type: string,
     selectedLanguage?: string;
@@ -753,9 +728,7 @@ export class CsController extends CsBase implements ITimComponent {
     selectedLanguage!: string;
     simcir?: JQuery;
     tinyErrorStyle: Partial<CSSStyleDeclaration> = {};
-    uploadedFile?: string;
-    uploadedType?: string;
-    uploadresult?: string;
+    uploadedFiles = new Set((o: IUploadedFile) => o.path);
     uploadUrl?: string;
     userargs: string = "";
     userinput: string = "";
@@ -1248,8 +1221,11 @@ ${fhtml}
         }
 
         this.processPluginMath();
-
-        this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
+        if (this.attrsall.uploadedFiles) {
+            this.uploadedFiles.push(...this.attrsall.uploadedFiles);
+        } else if (this.attrsall.uploadedFile || this.attrsall.uploadedType) {
+            this.uploadedFiles.push({path: this.attrsall.uploadedFile ?? "", type: this.attrsall.uploadedType ?? ""});
+        }
         this.initSaved();
         this.vctrl.addTimComponent(this);
         // if (this.isText) {
@@ -1365,60 +1341,6 @@ ${fhtml}
 
         await $timeout();
         await ParCompiler.processMathJaxAsciiMath(this.element[0]);
-    }
-
-    showUploaded(file: string | undefined, type: string | undefined) {
-        if (!file || !type) {
-            return;
-        }
-        this.uploadedFile = file;
-        this.uploadedType = type;
-        const name = uploadFileTypesName(file);
-        let html = `<p class="smalllink">${createLink(file, type, name).outerHTML}</p>`;
-        if (type.startsWith("image")) {
-            const img = document.createElement("img");
-            img.src = this.uploadedFile;
-            html += img.outerHTML;
-            this.uploadresult = $sce.trustAsHtml(html);
-            return;
-        }
-        if (type.startsWith("video")) {
-            const vid = document.createElement("video");
-            vid.src = this.uploadedFile;
-            vid.controls = true;
-            html += vid.outerHTML;
-            this.uploadresult = $sce.trustAsHtml(html);
-            return;
-        }
-        if (type.startsWith("audio")) {
-            const audio = document.createElement("audio");
-            audio.src = this.uploadedFile;
-            audio.controls = true;
-            html += audio.outerHTML;
-            this.uploadresult = $sce.trustAsHtml(html);
-            return;
-        }
-        if (type.startsWith("text")) {
-            html = '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;">';
-            html += createIframe({src: file, sandbox: "", width: 800}).outerHTML;
-            html += "</div>";
-            this.uploadresult = $sce.trustAsHtml(html);
-            return;
-
-        }
-
-        if (is(uploadFileTypes, file)) {
-            html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:1200px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;">';
-            // In Chrome, PDF does not work with sandbox.
-            html += createIframe({src: file, sandbox: undefined, width: 800, height: 900}).outerHTML;
-            html += "</div>";
-            this.uploadresult = $sce.trustAsHtml(html);
-            return;
-        }
-
-        html = `<p></p><p>Ladattu: ${createLink(file, type, name).outerHTML}</p>`;
-        this.uploadresult = $sce.trustAsHtml(html);
-        return;
     }
 
     runCodeIfCR(event: KeyboardEvent) {
@@ -1574,8 +1496,7 @@ ${fhtml}
                 userinput: this.userinput || "",
                 isInput: isInput,
                 userargs: this.userargs || "",
-                uploadedFile: this.uploadedFile,
-                uploadedType: this.uploadedType,
+                uploadedFiles: this.uploadedFiles.toArray(),
                 nosave: nosave || this.nosave,
                 type: runType,
                 ...extraMarkUp,
@@ -2505,7 +2426,11 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
                 (upload)="onUploadResponse($event)"
                 (uploadDone)="onUploadDone($event)">
         </file-select-manager>
-        <div class="form-inline small" *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
+        <div class="form-inline small">
+            <span *ngFor="let item of uploadedFiles">
+                <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
+            </span>
+        </div>
     </ng-container>
     <div *ngIf="isAll" style="float: right;">{{languageText}}
         <select [(ngModel)]="selectedLanguage" required>
