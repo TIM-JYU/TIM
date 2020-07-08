@@ -29,6 +29,7 @@ import {
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {handleAnswerResponse} from "tim/document/interceptor";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {Mode, EditorComponent} from "./editor/editor";
@@ -1573,6 +1574,8 @@ ${fhtml}
                 ...(this.isAll ? {selectedLanguage: this.selectedLanguage} : {}),
             },
         };
+
+        const dt = this.getTaskId()?.docTask();
         const url = this.pluginMeta.getAnswerUrl();
         const t0run = performance.now();
         const r = await to2(this.http.put<IRunResponse>(url, params,
@@ -1651,6 +1654,11 @@ ${fhtml}
 
             this.processPluginMath();
 
+            if (dt) {
+                handleAnswerResponse(dt, {
+                    savedNew: r.result.savedNew,
+                });
+            }
         } else {
             this.isRunning = false;
             const data = r.result.error;
@@ -1659,6 +1667,13 @@ ${fhtml}
                 this.errors.push(data.error);
             }
             this.connectionErrorMessage = this.error ?? this.markup.connectionErrorMessage ?? defaultErrorMessage;
+
+            if (dt) {
+                handleAnswerResponse(dt, {
+                    savedNew: false,
+                    error: r.result.error.error,
+                });
+            }
         }
     }
 
