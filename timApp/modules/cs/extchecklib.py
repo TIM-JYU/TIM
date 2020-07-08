@@ -1,34 +1,8 @@
 from typing import List, Dict, Union, Optional
 from dataclasses import field
 from marshmallow_dataclass import dataclass
-from marshmallow import missing
 
-class Loadable:
-    Schema = None
-    @classmethod
-    def load(cls, *kargs, **kwargs):
-        """Load from dict"""
-        if cls.Schema is None:
-            raise ValueError("Schema is None")
-        return cls.Schema().load(*kargs, **kwargs)
-    @classmethod
-    def loads(cls, *kargs, **kwargs):
-        """Load from json string"""
-        if cls.Schema is None:
-            raise ValueError("Schema is None")
-        return cls.Schema().loads(*kargs, **kwargs)
-    @classmethod
-    def dump(cls, obj):
-        """Create a dict from object"""
-        if cls.Schema is None:
-            raise ValueError("Schema is None")
-        return cls.Schema().dump(obj)
-    @classmethod
-    def dumps(cls, obj):
-        """Create a json string from object"""
-        if cls.Schema is None:
-            raise ValueError("Schema is None")
-        return cls.Schema().dumps(obj)
+from loadable import Loadable
 
 @dataclass
 class AngularComponent(Loadable):
@@ -57,6 +31,6 @@ class RunResult(Loadable):
     penalties: Dict[str, Union[bool, str]] = field(default_factory=dict)
     points: float = field(default=0.0)
     max_points: Optional[float] = field(default=None)
-    
+
     def penalize(self, key: str) -> bool:
         return self.penalties and self.penalties.get(key, False)
