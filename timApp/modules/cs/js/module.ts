@@ -3,17 +3,17 @@ import {
         NgModule,
         StaticProvider,
         ApplicationRef,
-    } from "@angular/core"
+    } from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {EditorModule} from "./editor/module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {CsRunnerComponent, CsTextComponent, CsConsoleComponent} from "./csPlugin";
 import {ExtcheckComponent, OutputContainerComponent, CustomOutputDirective} from "./extcheck";
 import {FileSelectComponent} from "./util/file-select";
+import {EditorModule} from "./editor/module";
 
 @NgModule({
     declarations: [

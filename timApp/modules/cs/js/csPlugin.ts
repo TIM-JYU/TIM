@@ -6,7 +6,7 @@ import {
         ChangeDetectorRef,
         ElementRef,
         Directive,
-    } from "@angular/core"
+    } from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";

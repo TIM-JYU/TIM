@@ -1,3 +1,4 @@
+/* eslint no-underscore-dangle: ["error", { "allow": ["content_"] }] */
 import $ from "jquery";
 import {Ace} from "ace-builds/src-noconflict/ace";
 import {
@@ -8,8 +9,8 @@ import {
     SimpleChanges,
 } from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
-import {IEditor} from "./editor";
 import {countChars} from "../util";
+import {IEditor} from "./editor";
 
 //ng-attr-placeholder="{{placeholder}}"
 @Component({
@@ -21,32 +22,31 @@ import {countChars} from "../util";
         </textarea>`,
 })
 export class NormalEditorComponent implements IEditor {
-    
+
     private content_: string = "";
     rows: number = 1;
     @Input() minRows: number = 1;
     @Input() maxRows: number = 100;
     @ViewChild("area") private area!: ElementRef;
-    
+
     get content(): string {
         return this.content_;
     }
-    
+
     set content(str: string) {
         this.content_ = str;
         this.rows = countChars(this.content, "\n") + 1;
         this.checkRowBounds();
     }
-    
+
     ngOnChanges(changes: SimpleChanges) {
         this.checkRowBounds();
     }
-    
+
     checkRowBounds() {
         if (this.rows < this.minRows) {
             this.rows = this.minRows;
-        }
-        else if (this.maxRows != -1 && this.rows > this.maxRows) {
+        } else if (this.maxRows != -1 && this.rows > this.maxRows) {
             this.rows = this.maxRows;
         }
     }
@@ -63,16 +63,16 @@ export class NormalEditorComponent implements IEditor {
             }
         });
     }
-    
+
     insert(str: string, strPos?: number): void {
-        const txtarea = this.area.nativeElement;
+        const txtarea = this.area.nativeElement as HTMLTextAreaElement;
         const scrollPos = txtarea.scrollTop;
         strPos = strPos ?? txtarea.selectionStart ?? 0;
-        
+
         const cont = this.content;
         this.content = cont.slice(0, strPos) + str + cont.slice(strPos);
-        
-        strPos = strPos! + str.length;
+
+        strPos = strPos + str.length;
         if (txtarea.selectionStart) {
             txtarea.selectionStart = strPos;
             txtarea.selectionEnd = strPos;
@@ -84,8 +84,8 @@ export class NormalEditorComponent implements IEditor {
     doWrap(wrap: number) {
         const r = wrapText(this.content, wrap);
         if (!r.modified) { return; }
-        
-        const element = this.area.nativeElement;
+
+        const element = this.area.nativeElement as HTMLTextAreaElement;
         const start = element.selectionStart;
 
         this.content = r.s;

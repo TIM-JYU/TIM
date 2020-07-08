@@ -1,23 +1,17 @@
-import {NgModule} from "@angular/core";
-import { FormsModule } from '@angular/forms';
-import {BrowserModule} from "@angular/platform-browser";
+/* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "languageMode_"] }] */
+/* eslint-disable @typescript-eslint/tslint/config -- decorators cause issues on setters */
 import $ from "jquery";
 import {Ace} from "ace-builds/src-noconflict/ace";
-import angular, {IScope} from "angular";
 import {
     ElementRef,
     ViewChild,
     Component,
     Input,
 } from "@angular/core";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {IAce} from "tim/editor/ace";
 import {wrapText} from "tim/document/editing/utils";
-import {downgradeComponent, downgradeModule} from "@angular/upgrade/static";
 import {IEditor} from "./editor";
 
-import IAceEditor = Ace.Editor;
+type IAceEditor = Ace.Editor;
 
 @Component({
     selector: "cs-ace-editor",
@@ -32,13 +26,14 @@ export class AceEditorComponent implements IEditor {
     private maxRows_: number = 100;
     private content_?: string;
     @ViewChild("area") area!: ElementRef;
-    
+    @Input() placeholder: string = ""; // TODO: make this work
+
     @Input()
     set languageMode(lang: string) {
         this.languageMode_ = lang;
         this.aceEditor?.getSession().setMode("ace/mode/" + lang);
     }
-    
+
     @Input()
     set minRows(rows: number) {
         this.minRows_ = rows;
@@ -49,17 +44,17 @@ export class AceEditorComponent implements IEditor {
         this.maxRows_ = rows;
         this.aceEditor?.setOption("maxLines", rows);
     }
-    
+
     async ngAfterViewInit() {
         const ace = (await import("tim/editor/ace")).ace;
-        
+
         const editor = ace.edit(this.area.nativeElement);
         this.aceEditor = editor;
-        
+
         const session = editor.getSession();
         session.setUndoManager(new ace.UndoManager());
         session.setMode("ace/mode/" + this.languageMode_);
-        
+
         editor.setOptions({
             enableBasicAutocompletion: true,
             enableLiveAutocompletion: false,
@@ -77,7 +72,7 @@ export class AceEditorComponent implements IEditor {
         this.content = this.content_ ?? "";
         this.content_ = undefined;
     }
-    
+
     get content(): string {
         return this.aceEditor?.getValue() ?? this.content_;
     }
@@ -88,7 +83,7 @@ export class AceEditorComponent implements IEditor {
             this.content_ = str;
         }
     }
-    
+
     insert(str: string, strPos?: number): void {
         const sess = this.aceEditor.getSession();
         let cursor;
@@ -99,11 +94,11 @@ export class AceEditorComponent implements IEditor {
         }
         sess.insert(cursor, str); // TODO: might have to move cursor
     }
-    
+
     doWrap(wrap: number) {
         const r = wrapText(this.content, wrap);
         if (!r.modified) { return; }
-        
+
         const editor = this.aceEditor;
         const sess = editor.getSession();
         let cursor = editor.getCursorPosition();

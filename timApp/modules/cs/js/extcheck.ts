@@ -1,4 +1,4 @@
-import {CsController} from "./csPlugin";
+/* eslint no-underscore-dangle: ["error", { "allow": ["hide_"] }] */
 import {
         Input,
         Component,
@@ -12,10 +12,11 @@ import {
         Injector,
         Compiler,
         ComponentRef,
-    } from "@angular/core"
-import {CommonModule} from "@angular/common"
+    } from "@angular/core";
+import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
+import {CsController} from "./csPlugin";
 
 interface IAngularComponent {
     template: string;
@@ -175,11 +176,11 @@ interface IRunResult {
 export class ExtcheckComponent extends CsController {
     containers?: IOutputContainer[];
     penalty_container?: IOutputContainer;
-    
+
     constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
         super(el, http, domSanitizer, cdr);
     }
-    
+
     languageResponse(data: IRunResult) {
         if (data == null) {
             this.containers = undefined;
@@ -207,7 +208,7 @@ export class ExtcheckComponent extends CsController {
 }
 
 @Directive({
-    selector: '[custom-data]',
+    selector: "[custom-data]",
 })
 export class CustomOutputDirective {
     constructor(public viewContainerRef: ViewContainerRef) { }
@@ -238,7 +239,7 @@ export class OutputContainerComponent implements IOutputContainer {
         }
         return this.components[name];
     }
-    
+
     title: IDivContent = {classes: "", content: ""};
     textContent?: IDivContent;
     angularContent?: IAngularModule;
@@ -248,7 +249,7 @@ export class OutputContainerComponent implements IOutputContainer {
 
     caret: string = "<span class='caret'></span>";
 
-    constructor(private _injector: Injector, private _compiler: Compiler) { }
+    constructor(private injector: Injector, private compiler: Compiler) { }
 
     async ngAfterViewInit() {
         if (!this.angularContent) { return; }
@@ -256,29 +257,30 @@ export class OutputContainerComponent implements IOutputContainer {
             this.error("Angular entry or components not specified");
             return;
         }
-        
-        let components = [];
+
+        const components = [];
         const module = this.angularContent;
         for (const key in module.components) {
+            if (!module.components.hasOwnProperty(key)) { continue; }
             const tmpCmp = Component({selector: key, template: module.components[key].template})(class {});
             components.push(tmpCmp);
         }
         const tmpModule = NgModule({declarations: components, imports: [CommonModule]})(class {});
-        
-        const factories = await this._compiler.compileModuleAndAllComponentsAsync(tmpModule);
-        const m = factories.ngModuleFactory.create(this._injector);
+
+        const factories = await this.compiler.compileModuleAndAllComponentsAsync(tmpModule);
+        const m = factories.ngModuleFactory.create(this.injector);
         const factory = factories.componentFactories.find((e) => e.selector == module.entry);
         if (!factory) {
             this.error("");
             return;
         }
-        this.componentRef = factory.create(this._injector, [], null, m);
+        this.componentRef = factory.create(this.injector, [], null, m);
         this.customOutput.viewContainerRef.insert(this.componentRef.hostView);
         this.hide = this.hide; // refresh style.display
     }
-    
+
     ngOnDestroy() {
-        if(this.componentRef) {
+        if (this.componentRef) {
             this.componentRef.destroy();
         }
     }
@@ -290,10 +292,11 @@ export class OutputContainerComponent implements IOutputContainer {
         this.hide_ = b;
         if (this.componentRef) {
             // ngIf destroys the component: use display
-            this.componentRef.location.nativeElement.style.display = b ? "none" : null;
+            (this.componentRef.location.nativeElement as HTMLElement).style.display = b ? "none" : "";
         }
     }
-    
+
+    /* eslint-disable-next-line @typescript-eslint/tslint/config -- decorators cause issues on setters */
     @Input()
     set data(data: IOutputContainer) {
         if (data.title) {
@@ -311,7 +314,7 @@ export class OutputContainerComponent implements IOutputContainer {
         }
         this.hide = !!data.hide;
     }
-    
+
     error(str: string) {
         this.angularContent = undefined;
         this.textContent = {classes: "", content: str};

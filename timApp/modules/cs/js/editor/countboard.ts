@@ -1,3 +1,4 @@
+/* eslint no-underscore-dangle: ["error", { "allow": ["options_"] }] */
 import {
     Component,
     Input,
@@ -28,7 +29,7 @@ interface ICountOptions {
             <span *ngIf="lines">Lines: <span>{{lines}}</span></span>
             <span *ngIf="words">Words: <span>{{words}}</span></span>
             <span *ngIf="chars">Chars: <span>{{chars}}</span></span>
-        </div>    
+        </div>
         <div *ngIf="countError" class="csPluginCountError">
             <p>{{countError}}</p>
         </div>`,
@@ -41,7 +42,7 @@ export class CountBoardComponent {
     chars: number = 0;
     countError: string = "";
     preventSave: boolean = false;
-    
+
     count(str: string) {
         if (!this.options_) { return; }
         this.chars = str.length;
@@ -63,7 +64,8 @@ export class CountBoardComponent {
         if (limits.max && count > limits.max) { return " " + tooMany + " " + cType + ", max: " + limits.max + "."; }
         return "";
     }
-    
+
+    /* eslint-disable-next-line @typescript-eslint/tslint/config -- decorators cause issues on setters */
     @Input()
     set options(options: ICountOptions | undefined) {
         this.options_ = options;

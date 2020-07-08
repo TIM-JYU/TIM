@@ -1,3 +1,4 @@
+/* eslint no-underscore-dangle: ["error", { "allow": ["content_"] }] */
 import {
     ElementRef,
     ViewChild,
@@ -6,14 +7,13 @@ import {
     SimpleChanges,
 } from "@angular/core";
 import {IEditor} from "./editor";
-import { parseHostBindings } from '@angular/compiler';
 
 @Component({
     selector: "cs-parsons-editor",
     template: `<div #area class="no-popup-menu"></div>`,
 })
 export class ParsonsEditorComponent implements IEditor {
-    private parson?: {join:(str: string)=>string, clear:()=>void, check:(str:string)=>string};
+    private parson?: {join: (str: string) => string, clear: () => void, check: (str: string) => string};
     private content_?: string;
     @Input() private shuffle: boolean = false;
     @Input() private maxcheck?: number;
@@ -22,33 +22,33 @@ export class ParsonsEditorComponent implements IEditor {
     @Input() private styleWords: string = "";
     @Input() private words: boolean = false;
     @ViewChild("area") area!: ElementRef;
-    
+
     ngOnChanges(changes: SimpleChanges) {
         if (this.parson) {
             // TODO: something smarter than recreating the whole thing on changes
             this.content = this.content; // creates a new parson
         }
     }
-    
-    async ngAfterViewInit() { // TODO: check if this gets called multiple times (import)
+
+    ngAfterViewInit() {
         this.createParsons(this.content);
     }
-    
+
     get content(): string {
         return this.content_ ?? this.base;
     }
     set content(str: string) {
         this.parson?.clear();
-        
+
         this.createParsons(str);
     }
-    
+
     async createParsons(content: string) {
         this.content_ = content;
-        
+
         const csp = await import("../cs-parsons/csparsons");
         const parson = new csp.CsParsonsWidget({
-            sortable: this.area.nativeElement,
+            sortable: this.area.nativeElement as Element,
             words: this.words,
             minWidth: "40px",
             shuffle: this.shuffle,
@@ -63,7 +63,7 @@ export class ParsonsEditorComponent implements IEditor {
         parson.show();
         this.parson = parson;
     }
-    
+
     check(): string {
         return this.parson?.check(this.content) ?? "";
     }

@@ -1,8 +1,9 @@
 import {NgModule} from "@angular/core";
-import { FormsModule } from '@angular/forms';
+import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
-import {MatTabsModule} from '@angular/material/tabs';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {MatTabsModule} from "@angular/material/tabs";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 import {CountBoardComponent} from "./countboard";
 import {EditorComponent, JSParsonsEditorComponent} from "./editor";
@@ -28,6 +29,6 @@ import {ParsonsEditorComponent} from "./parsons";
     exports: [
         CountBoardComponent,
         EditorComponent,
-    ]
+    ],
 })
 export class EditorModule {}

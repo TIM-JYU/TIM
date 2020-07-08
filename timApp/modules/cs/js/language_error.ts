@@ -4,18 +4,18 @@ import {
         NgModule,
         StaticProvider,
         ApplicationRef,
-    } from "@angular/core"
+    } from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {FormsModule} from "@angular/forms";
-import {CsBase} from "./csPlugin";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {CsBase} from "./csPlugin";
 
 @Component({
     selector: "cs-error",
-    template:`
+    template: `
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
     <div *ngIf="!markupError" class="error">
         <p>Error(s) initializing csPlugin:</p>
