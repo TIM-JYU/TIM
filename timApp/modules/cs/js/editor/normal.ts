@@ -12,13 +12,13 @@ import {wrapText} from "tim/document/editing/utils";
 import {countChars} from "../util/util";
 import {IEditor} from "./editor";
 
-//ng-attr-placeholder="{{placeholder}}"
 @Component({
     selector: "cs-normal-editor",
     template: `
         <textarea #area class="csRunArea csEditArea no-popup-menu"
                 [rows]="rows"
-                [(ngModel)]="content">
+                [(ngModel)]="content"
+                [placeholder]="placeholder">
         </textarea>`,
 })
 export class NormalEditorComponent implements IEditor {
@@ -27,6 +27,7 @@ export class NormalEditorComponent implements IEditor {
     rows: number = 1;
     @Input() minRows: number = 1;
     @Input() maxRows: number = 100;
+    @Input() placeholder: string = "";
     @ViewChild("area") private area!: ElementRef;
 
     get content(): string {

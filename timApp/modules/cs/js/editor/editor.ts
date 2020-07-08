@@ -11,6 +11,7 @@ import {
     ChangeDetectorRef,
 } from "@angular/core";
 
+import {IFile} from "../util/file-select";
 import {getInt} from "../util/util";
 import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";
@@ -56,7 +57,7 @@ export interface IEditorFile {
 }
 
 export interface IMultiEditor extends IEditor {
-    activeFile: string;
+    activeFile: string | undefined;
     allFiles: IEditorFile[];
 
     setFiles(files: EditorFile[]): void;
@@ -64,17 +65,32 @@ export interface IMultiEditor extends IEditor {
     addFile(path: string, base?: string, languageMode?: string, content?: string): void;
     removeFile(filename: string): void;
     renameFile(path: string, oldPath?: string): void;
+    setFileContent(path: string, content: string): void;
 }
 
-class EditorFile {
+export class EditorFile {
     path: string = "";
-    base: string = ""; // starting content
-    content?: string;
+    base: string; // starting content
+    content_?: string;
     oldContent: string = "";
+    languageMode?: string;
+    canClose: boolean;
+    canRename: boolean; // TODO: implement renaming
+    placeholder?: string;
 
+    constructor(path?: string, base?: string, languageMode?: string, canClose?: boolean, canRename?: boolean) {
+        this.path = path ?? "";
+        this.base = base ?? "";
+        this.languageMode = languageMode;
+        this.canClose = !!canClose;
+        this.canRename = !!canRename;
+    }
 
-    getContent(): string {
-        return this.content ?? this.base;
+    get content() {
+        return this.content_ ?? this.base;
+    }
+    set content(str: string) {
+        this.content_ = str;
     }
 }
 
@@ -90,18 +106,26 @@ export class JSParsonsEditorComponent implements IEditor {
     selector: "cs-editor",
     template: `
         <ng-container *ngIf="!cssPrint">
-            <mat-tab-group *ngIf="files.length > 1" [(selectedIndex)]="fileIndex" animationDuration="0ms">
-                <mat-tab *ngFor="let file of files; trackBy: trackByPath">
+            <mat-tab-group *ngIf="showTabs" [(selectedIndex)]="tabIndex" animationDuration="0ms">
+                <mat-tab *ngFor="let file of files; index as i; trackBy: trackByPath">
                     <ng-template mat-tab-label>
-                        <div (click)="$event.preventDefault()">
+                        <div class="file-tab">
                             {{file.path}}
+                            <tim-close-button *ngIf="file.canClose" (click)="closeFile(i)"></tim-close-button>
                         </div>
                     </ng-template>
                 </mat-tab>
+                <mat-tab *ngIf="canAddFile">
+                    <ng-template mat-tab-label>
+                        <span class="file-add-tab glyphicon glyphicon-plus"></span>
+                    </ng-template>
+                </mat-tab>
             </mat-tab-group>
+            <ng-container *ngIf="!addTabActive">
             <cs-normal-editor *ngIf="mode == Mode.Normal"
                     [minRows]="minRows_"
-                    [maxRows]="maxRows_">
+                    [maxRows]="maxRows_"
+                    [placeholder]="file && file.placeholder ? file.placeholder : ''">
             </cs-normal-editor>
             <cs-parsons-editor *ngIf="mode == Mode.Parsons"
                     [shuffle]="parsonsShuffle"
@@ -115,39 +139,62 @@ export class JSParsonsEditorComponent implements IEditor {
             <cs-ace-editor *ngIf="mode == Mode.ACE"
                     [languageMode]="languageMode"
                     [minRows]="minRows_"
-                    [maxRows]="maxRows_">
+                    [maxRows]="maxRows_"
+                    [placeholder]="file && file.placeholder ? file.placeholder : ''">
             </cs-ace-editor>
+            </ng-container>
+            <div *ngIf="addTabActive" class="add-view">
+                <file-select class="small" style="height: 4em;"
+                        [multiple]="false"
+                        [stem]="'Load a file (optional)'"
+                        [dragAndDrop]="true"
+                        (file)="onFileLoad($event)">
+                </file-select>
+                Filename:<input type="text" placeholder="Give a name here" [(ngModel)]="filenameInput">
+                <br>
+                <button class="timButton btn-sm"
+                        (click)="clickAddFile()"
+                        [attr.title]="addButtonTitle"
+                        [disabled]="disableAddButton">Add</button>
+            </div>
         </ng-container>
         <pre *ngIf="cssPrint"></pre>`,
 })
 export class EditorComponent implements IMultiEditor {
     static readonly defaultMode = Mode.ACE;
     Mode = Mode;
-    console=console;
 
     private normalEditor?: NormalEditorComponent;
     private aceEditor?: AceEditorComponent;
     parsonsEditor?: ParsonsEditorComponent;
 
-    @Output("content") private contentChange: EventEmitter<string> = new EventEmitter<string>();
+    allowedPaths?: string[]; // undefined for all allowed
+    maxFiles: number = 1;
+    mayAddFiles_: boolean = false;
+
+    @Output("content") private contentChange: EventEmitter<string> = new EventEmitter(true);
+    @Output("close") private fileCloseEmitter: EventEmitter<{file: EditorFile, index: number}> = new EventEmitter(true);
     @Input() cssPrint: boolean = false; // TODO: what is this actually supposed to do
     minRows_: number = 1;
     maxRows_: number = 100;
     private wrap_?: {n: number, auto: boolean};
 
-    parsonsShuffle_: boolean = false;
+    @Input() parsonsShuffle: boolean = false;
     @Input() parsonsMaxcheck?: number;
     @Input() parsonsNotordermatters: boolean = false;
     @Input() parsonsStyleWords: string = "";
     @Input() parsonsWords: boolean = false;
 
     private modeIndex_: number = -1;
-    private mode_?: number;
     private modes_: Mode[] = [];
 
     // file.content is used for storing content if editor isn't available. Set to undefined after consuming.
     private files_: EditorFile[] = [new EditorFile()];
     private fileIndex_: number = 0;
+
+    addTabActive: boolean = false;
+    private loadedFile?: IFile;
+    filenameInput: string = "";
 
     ngOnInit() {
         if (this.minRows_ < 1) {
@@ -212,10 +259,6 @@ export class EditorComponent implements IMultiEditor {
         this.maxRows_ = getInt(rows) ?? 100;
     }
     @Input()
-    set parsonsShuffle(shuffle: boolean) {
-        this.parsonsShuffle_ = shuffle;
-    }
-    @Input()
     set editorIndex(index: number) {
         this.mode = index;
     }
@@ -240,6 +283,16 @@ export class EditorComponent implements IMultiEditor {
         }
     }
 
+    get tabIndex(): number {
+        return this.addTabActive ? this.files.length : this.fileIndex;
+    }
+    set tabIndex(index: number) {
+        this.addTabActive = index == this.files.length;
+        if (!this.addTabActive) {
+            this.setFileIndex(index);
+        }
+    }
+
     get fileIndex(): number {
         return this.fileIndex_;
     }
@@ -247,51 +300,68 @@ export class EditorComponent implements IMultiEditor {
         this.setFileIndex(index);
     }
     private setFileIndex(index: number) {
-        this.file.content = this.content;
+        if (this.file) {
+            this.file.content = this.content;
+        }
+        this.fileIndex_ = this.clampIndex(index);
+        this.content = this.file?.content ?? "";
+    }
+    private clampIndex(index: number) {
         if (index < 0) {
-            this.fileIndex_ = 0;
+            return 0;
         } if (index >= this.files.length) {
-            this.fileIndex = this.files.length-1;
+            return this.files.length-1;
         } else {
-            this.fileIndex_ = index;
+            return index;
         }
-        if (this.editor) {
-            this.editor.content = this.file.content ?? this.file.base;
-        }
+    }
 
     get files(): EditorFile[] {
         return this.files_;
     }
     set files(files: EditorFile[]) {
         if(files.length == 0) {
-            this.files_ = [new EditorFile];
+            this.files_ = [new EditorFile()];
             this.fileIndex = 0;
         } else {
             this.files_ = files;
-             // refresh index in case it is outside the new range
+            this.content = files[this.clampIndex(this.fileIndex)].content ?? files[this.clampIndex(this.fileIndex)].base;
+            // refresh index in case it is outside the new range
             this.setFileIndex(this.fileIndex);
         }
+        this.maxFiles = this.mayAddFiles ? -1 : this.files.length;
+    }
+
+    get mayAddFiles() {
+        return this.mayAddFiles_;
+    }
+    set mayAddFiles(b: boolean) {
+        if (b != this.mayAddFiles_) {
+            this.maxFiles = b ? -1 : this.files.length;
+        }
+        this.mayAddFiles_ = b;
     }
 
     get allFiles(): IEditorFile[] {
-        const out = this.files.map((f) => <IEditorFile>{path: f.path, content: f.content ?? f.base});
+        const out = this.files.map((f) => ({path: f.path, content: f.content ?? f.base}) as IEditorFile);
         out[this.fileIndex].content = this.content;
         return out;
     }
 
-    get file(): EditorFile {
+    get file(): EditorFile | undefined {
         return this.files[this.fileIndex];
     }
 
-    get activeFile(): string {
-        return this.file.path;
+    get activeFile(): string | undefined {
+        return this.file?.path;
     }
-    set activeFile(path: string) {
-        const index = this.findFile(path);
-        if (index != -1) {
-            // TODO: what to do...
-        } else {
-            this.fileIndex = index;
+    set activeFile(path: string | undefined) {
+        if (path) {
+            const index = this.findFile(path);
+            if (index != -1) {
+                this.fileIndex = index;
+                return;
+            }
         }
     }
 
@@ -319,40 +389,47 @@ export class EditorComponent implements IMultiEditor {
     set content(str: string) {
         if (this.editor) {
             this.editor.content = str;
-            this.cdr.detectChanges();
-        } else {
+        } else if(this.file) {
             this.file.content = str;
         }
+        this.oldContent = str;
     }
 
     get content_(): string | undefined {
-        return this.file.content;
+        return this.file?.content_;
     }
     set content_(str: string | undefined) {
-        this.file.content = str;
+        if(this.file) {
+            this.file.content_ = str;
+        }
     }
 
     get oldContent(): string {
-        return this.file.oldContent;
+        return this.file?.oldContent ?? "";
     }
     set oldContent(str: string) {
-        this.file.oldContent = str;
+        if(this.file) {
+            this.file.oldContent = str;
+        }
     }
 
     get base() {
-        return this.file.base;
+        return this.file?.base ?? "";
     }
     @Input()
     set base(str: string) {
-        this.file.base = str;
+        if(this.file) {
+            this.file.base = str;
+        }
     }
 
     get languageMode(): string {
-        return this.file.languageMode;
+        return this.file?.languageMode ?? "text";
     }
-    @Input()
     set languageMode(str: string) {
-        this.file.languageMode = str;
+        if(this.file) {
+            this.file.languageMode = str;
+        }
     }
 
     get nextModeText(): string | undefined {
@@ -411,8 +488,35 @@ export class EditorComponent implements IMultiEditor {
         localStorage.setItem("editorIndex", mode.toString());
     }
 
+    set placeholder(str: string | undefined) {
+        if (this.file) {
+            this.file.placeholder = str;
+        }
+    }
+
+    get showTabs() {
+        return this.files.length > 1 || this.canAddFile; // TODO: show when upload is also available. TODO: show always?
+    }
+
+    get canAddFile() {
+        return this.maxFiles == -1 || this.files.length < this.maxFiles;
+    }
+
+    get disableAddButton(): boolean {
+        return !this.filenameInput || (!!this.allowedPaths && !this.allowedPaths.includes(this.filenameInput));
+    }
+
+    get addButtonTitle(): string | null {
+        if (!this.filenameInput) {
+            return "Filename cannot be empty!";
+        } else if (this.allowedPaths && !this.allowedPaths.includes(this.filenameInput)) {
+            return `Filename ${this.filenameInput} is not allowed!`;
+        }
+        return null;
+    }
+
     reset() {
-        this.parsonsShuffle_ = true;
+        this.parsonsShuffle = true;
         this.content = this.base;
     }
 
@@ -440,10 +544,10 @@ export class EditorComponent implements IMultiEditor {
 
     addFile(file: EditorFile): void;
     addFile(path: string, base?: string, languageMode?: string, content?: string): void;
-    addFile(fileorpath: string | EditorFile, base?: string, languageMode?: string, content?: string) {
+    addFile(fileorpath: unknown, base?: string, languageMode?: string, content?: string) {
         let file: EditorFile;
-        if (fileorpath as any instanceof EditorFile) {
-            file = fileorpath as EditorFile;
+        if (fileorpath instanceof EditorFile) {
+            file = fileorpath;
         } else {
             file = new EditorFile(fileorpath as string);
             if(base) { file.base = base; }
@@ -463,16 +567,47 @@ export class EditorComponent implements IMultiEditor {
         return this.files.findIndex((f) => f.path == path);
     }
 
+    removeFileByIndex(index: number) {
+        if (this.clampIndex(index) != index) {
+            return;
+        }
+        let nindex = this.fileIndex;
+        if(nindex > index) {
+            nindex--;
+        }
+        if (this.fileIndex == index) {
+            if (this.files.length - 1 == this.fileIndex) {
+                nindex = this.clampIndex(nindex - 1);
+                this.setFileIndex(nindex);
+            } else {
+                this.setFileIndex(nindex + 1);
+            }
+        }
+        this.files.splice(index, 1);
+        this.fileIndex_ = nindex;
+        if (this.files.length == 0) {
+            this.addTabActive = true;
+        }
+    }
+
     removeFile(path: string) {
         const index = this.findFile(path);
         if (index != -1) {
-            this.files.splice(index, 1);
+            this.removeFileByIndex(index);
         }
+    }
+
+    closeFile(index: number) {
+        const file = this.files[index];
+        this.removeFileByIndex(index);
+        this.fileCloseEmitter.emit({file: file, index: index});
     }
 
     renameFile(path: string, oldPath?: string) {
         if (!oldPath) {
-            this.file.path = path;
+            if(this.file) {
+                this.file.path = path;
+            }
             return;
         }
 
@@ -480,6 +615,35 @@ export class EditorComponent implements IMultiEditor {
         if (index != -1) {
             this.files[index].path = path;
         }
+    }
+
+    setFileContent(path: string, content: string) {
+        const index = this.findFile(path);
+        if (index == this.fileIndex) {
+            this.content = content;
+        } else if (index != -1) {
+            this.files[index].content = content;
+        }
+    }
+
+    onFileLoad(file: IFile) {
+        this.loadedFile = file;
+        if(!this.filenameInput) {
+            this.filenameInput = file.realName;
+        }
+    }
+
+    clickAddFile() {
+        const filename = this.filenameInput;
+        if (this.allowedPaths && !this.allowedPaths.includes(filename)) {
+            return;
+        }
+        const content = this.loadedFile?.content ?? "";
+        const file = new EditorFile(filename, content, undefined, true);
+        file.content = content;
+        this.addFile(file);
+        this.tabIndex = this.files.length - 1;
+        this.filenameInput = "";
     }
 
     trackByPath(index: number, item: EditorFile) {

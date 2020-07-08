@@ -15,6 +15,7 @@ from os.path import splitext
 from fileParams import encode_json_data
 from pathlib import Path
 from ttype import TType
+from file_handler import FileHandler
 # noinspection PyUnresolvedReferences
 
 #  uid = pwd.getpwnam('agent')[2]
@@ -188,9 +189,9 @@ def delete_extra_files(extra_files, prgpath):
 def copy_files_regex(files, source_dir, dest_dir):
     if files is None or source_dir is None or dest_dir is None:
         return
-    
+
     regexs = [re.compile(file) for file in files]
-    
+
     for root, dirs, files in os.walk(source_dir):
         rootp = Path(root)
         relpath = rootp.relative_to(source_dir)
@@ -533,23 +534,21 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
 
 
 def handle_common_params(query: QueryClass, ttype: TType):
-    if isinstance(ttype, str):
-        ttype = TType(ttype, query)
     language = ttype.get_language()
     runner = ttype.runner_name()
-    
+
     if query.hide_program:
         get_param_del(query, 'program', '')
     ttype.modify_query()
     js = query_params_to_map_check_parts(query, language.deny_attributes())
-    
+
     if not "markup" in js or js["markup"] is None:
         js["markup"] = {}
     js["markup"]["type"] = str(ttype)
-    
+
     if not ttype.success:
         return language, "", js, runner
-    
+
     # print(js)
 
     q_bycode = get_param(query, "byCode", None)
@@ -578,7 +577,7 @@ def handle_common_params(query: QueryClass, ttype: TType):
     # print(ttype)
     if "simcir" in ttype:
         bycode = ''
-    
+
     return language, bycode, js, runner
 
 
@@ -789,10 +788,10 @@ def update_markup_from_file(query):
     file = get_param(query, "fromFile", False)
     if not file:
         return query
-    
+
     if isinstance(file, bool):
         file = ""
-    
+
     if file.startswith('/'):
         file = Path(file)
     else:
@@ -800,21 +799,21 @@ def update_markup_from_file(query):
         if master_path is None:
             raise Exception("Cannot fetch markup from file as masterPath is not specified")
         file = "/cs/masters/" / Path(master_path) / file
-    
+
     if file.is_dir():
         file = file / "csmarkup.json"
-    
+
     if not file.is_file():
         raise FileNotFoundError("Markup file does not exist")
-    
+
     if query.jso is None:
         query.jso = {}
     if "markup" not in query.jso:
         query.jso["markup"] = {}
-    
+
     with open(str(file), "r") as f:
         query.jso["markup"] = dict(list(json.load(f).items()) + list(query.jso["markup"].items()))
-    
+
 # see: http://stackoverflow.com/questions/366682/how-to-limit-execution-time-of-a-function-call-in-python
 # noinspection PyUnusedLocal
 def signal_handler(signum, frame):
@@ -872,7 +871,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 update_markup_from_file(query)
             except:
                 pass # TODO: show error to user
-            
+
             ga = get_param(query, "GlobalAnonymous", None)
             if ga:
                 global_anonymous = True
@@ -973,13 +972,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         templs = {}
         jslist = all_js_files()
         csslist = all_css_files()
-        
+
         result_json = {"js": jslist,
                         "css": csslist, "multihtml": True, "multimd": True, "canGiveTask": True}
 
         if not (is_tauno or is_rikki or is_parsons or is_simcir or is_graphviz ):
             templs = get_all_templates('templates')
-        
+
         if is_parsons:
             result_json = {"js": ["/cs/js/build/csPlugin.js",
                                     "jqueryui-touch-punch",
@@ -1021,9 +1020,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(str(e))
 
     def do_all_t(self, query: QueryClass):
-        
+
         convert_graphviz(query)
-        
+
         t1start = time.time()
         t_run_time = 0
         times_string = ""
@@ -1076,7 +1075,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if "/reqs" in path:
             return self.do_reqs(query)
-        
+
         is_cache = get_param(query, "cache", False)
         is_template = path.find('/template') >= 0
         is_fullhtml = path.find('/fullhtml') >= 0
@@ -1153,7 +1152,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             p = self.path.split("?")
             self.wout(file_to_string(p[0]))
             return
-        
+
         if is_tauno and not is_answer:
             # print("PTAUNO: " + content_type)
             p = self.path.split("?")
@@ -1193,7 +1192,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             usercode = get_json_param(query.jso, "state", "usercode", None)
             if isinstance(usercode, str):
                 query.query["usercode"] = [usercode]
-            
+
             submitted_files = get_json_param(query.jso, "input", "submittedFiles", None)
             if submitted_files is not None:
                 query.query["submittedFiles"] = [submitted_files]
@@ -1244,7 +1243,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # pprint(query.__dict__, indent=2)
 
             ttype = TType(ttype, query)
-            
+
             if is_html and not is_iframe:
                 # print("HTML:==============")
                 s = get_html(self, ttype, query)
@@ -1295,26 +1294,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # /answer-path comes here
 
-            if submitted_files is not None:
-                save["submittedFiles"] = submitted_files
-            else:
-                submitted_files = [{"path": None, "content": s}]
-                
-                usercode = get_json_param(query.jso, "input", "usercode", None)
-                if isinstance(usercode, str):
-                    save["usercode"] = usercode
+            fhandler = FileHandler(query, save)
+            submitted_files = fhandler.get_files(s)
 
             ttype = TType(str(ttype), query, submitted_files)
             if not ttype.success:
                 raise Exception(f"Could not get language from type {ttype}")
 
             language = ttype.get_language()
-            
+
             if not language.can_give_task() and query.jso.get("input",{}).get("getTask", False):
                 raise Exception(f"Give task not allowed for {ttype}")
 
             mkdirs(language.prgpath)
-            
+
             nofilesave = get_param(query, 'nofilesave', False)
             filesaveattribute = get_param(query, "filesaveattribute", None)
             errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
@@ -1329,7 +1322,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
                 if is_doc:
                     file.content = replace_code(query.cut_errors, file.content)
-                    
+
                 if not file.content.startswith("File not found"):
                     if errorcondition and re.search(errorcondition, file.content, flags=re.S):
                         errormessage = get_json_param(query.jso, "markup", "errormessage",
@@ -1353,29 +1346,29 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         path.write_text(file.content, encoding="utf-8")
                         shutil.chown(path, user="agent", group="agent")
                     slines = file.content
-            
+
             usercode = language.sourcefiles[0].content # for single file compatibility # TODO: make unnecessary
-            
+
             save_extra_files(query, extra_files, language.prgpath)
-            
+
             master_path = get_param(query, "masterPath", None)
             if master_path is not None:
                 master_path = (Path("/cs/masters") / master_path).resolve()
                 if Path("/cs/masters") not in master_path.parents:
                     return write_json_error(self.wfile, "Root path points outside of allowed directories (masterPath must be a relative subpath)", result)
-                
+
                 cfiles = get_param(query, "copyFiles", None)
-                
+
                 if "master" not in cfiles and "task" not in cfiles:
                     cfiles["task"] = cfiles
-                
+
                 if language.rootpath is None:
                     task_path = master_path
                 else:
                     task_path = master_path / Path(language.prgpath).relative_to(language.rootpath)
                     copy_files_regex(cfiles.get("master", None), master_path, Path(language.rootpath))
                 copy_files_regex(cfiles.get("task", None), task_path, Path(language.prgpath))
-            
+
             if not nofilesave:
                 for f in language.sourcefiles:
                     file = Path(f.path)

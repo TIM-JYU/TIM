@@ -32,10 +32,10 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {handleAnswerResponse} from "tim/document/interceptor";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
-import {Mode, EditorComponent} from "./editor/editor";
+import {Mode, EditorComponent, EditorFile} from "./editor/editor";
 import {CountBoardComponent} from "./editor/countboard";
 import {getInt} from "./util/util";
-import {IFile} from "./util/file-select";
+import {IFile, FileSelectManagerComponent, IFileSpecification} from "./util/file-select";
 import {Set, OrderedSet} from "./util/set";
 
 // js-parsons is unused; just declare a stub to make TS happy
@@ -198,10 +198,10 @@ class LanguageTypes {
         return def;
     }
 
-    whatIsInAce(types: string[], type: string, def: string) {
+    whatIsInAce(types: string[], type: string) {
 
         if (!type) {
-            return def;
+            return undefined;
         }
         type = type.toLowerCase();
         for (let i = 0; i < types.length; i++) {
@@ -215,7 +215,7 @@ class LanguageTypes {
                 return this.testAceModes[i];
             }
         }
-        return def;
+        return undefined;
     }
 
     isAllType(type: string) {
@@ -239,11 +239,13 @@ class LanguageTypes {
         return this.whatIsIn(this.runTypes, type, def);
     }
 
-    getAceModeType(type: string, def: string) {
+    getAceModeType(type: string): string | undefined;
+    getAceModeType(type: string, def: string): string;
+    getAceModeType(type: string, def?: string) {
         if (def) {
             return def;
         }
-        return this.whatIsInAce(this.runTypes, type, def);
+        return this.whatIsInAce(this.runTypes, type) ?? def as string;
     }
 
     getTestType(type: string, language: string, def: string) {
@@ -410,6 +412,116 @@ const CountType = t.partial({
 });
 interface ICountType extends t.TypeOf<typeof CountType> {}
 
+const oneOrArray = <T extends t.Mixed>(type: T) => t.union([type, t.array(type)]);
+const listify = <T>(e: T | T[]) => Array.isArray(e) ? e : [e];
+
+const CommonMarkup = t.intersection([
+    t.union([
+        t.type({program: t.string}), // TODO
+        t.type({fullprogram: t.string}), // TODO
+        t.type({file: t.string}), // TODO
+        t.type({fullfile: t.string}), // TODO
+        t.type({}),
+    ]),
+    t.union([
+        t.type({byCode: t.string}),
+        t.type({byFile: t.string}), // TODO
+        t.type({}),
+    ]),
+    t.partial({maxSize: t.number}),
+]);
+type ICommonMarkup = t.TypeOf<typeof CommonMarkup>;
+
+const EditorMarkupFields = t.intersection([ // no source attribute
+    t.type({
+        path: t.string,
+        canClose: withDefault(t.boolean, false),
+        canRename: withDefault(t.boolean, false),
+    }),
+    t.partial({
+        mode: t.string,
+        placeholder: t.string,
+    }),
+    CommonMarkup,
+]);
+
+const EditorMarkup = // with source attribute
+    t.intersection([
+        t.type({
+            source: t.literal("editor"),
+        }),
+        EditorMarkupFields,
+    ]);
+type IEditorMarkup = t.TypeOf<typeof EditorMarkup>;
+
+const UploadMarkupFields = t.intersection([// no source or paths attribute
+    t.partial({
+        maxSize: t.number,
+        extensions: oneOrArray(t.string),
+    }),
+    CommonMarkup,
+]);
+
+const UploadMarkup = // with source and paths attribute
+    t.intersection([
+        t.type({
+            paths: oneOrArray(t.string),
+            source: t.literal("upload"),
+        }),
+        UploadMarkupFields,
+    ]);
+type IUploadMarkup = t.TypeOf<typeof UploadMarkup>;
+
+const UploadByCodeMarkup =
+    t.intersection([
+        t.type({
+            source: t.literal("uploadByCode"),
+            show: withDefault(
+                t.union([
+                    t.boolean,
+                    t.literal("loaded"), // show after load
+                ]), false
+            ),
+        }),
+        EditorMarkupFields,
+        UploadMarkupFields,
+    ]);
+type IUploadByCodeMarkup = t.TypeOf<typeof UploadByCodeMarkup>;
+
+const ExternalSourceMarkup =
+    t.intersection([
+        t.type({
+            path: t.string,
+            source: t.string,
+        }),
+        t.partial({
+            maxSize: t.number,
+        }),
+    ]);
+interface IExternalSourceMarkup extends t.TypeOf<typeof ExternalSourceMarkup> {}
+
+const FileMarkup =
+    t.union([
+        t.type({source: withDefault(t.string, "editor")}),
+        EditorMarkup,
+        UploadMarkup,
+        UploadByCodeMarkup,
+        ExternalSourceMarkup,
+    ]);
+type IFileMarkup = IEditorMarkup | IUploadMarkup | IUploadByCodeMarkup | IExternalSourceMarkup;
+
+const FileSubmission = t.intersection([
+    t.type({
+        source: t.string,
+        path: t.string,
+    }),
+    t.partial({
+        content: t.string,
+        type: t.string,
+    }),
+]);
+interface IFileSubmission extends t.TypeOf<typeof FileSubmission> {}
+
 const UploadedFile = t.type({
     path: t.string,
     type: t.string,
@@ -422,6 +534,9 @@ const CsMarkupOptional = t.partial({
     //  Seems yes; GlowScript uses it at least.
     program: t.string,
 
+    // "*"" for everything
+    // TODO: add wildcard support to path options
+    allowedPaths: t.union([t.literal("*"), t.array(t.string)]),
     argsplaceholder: t.string,
     argsstem: t.string,
     autoupdate: t.number,
@@ -469,6 +584,7 @@ const CsMarkupOptional = t.partial({
     savedText: t.string,
     rootPath: t.string,
     masterPath: t.string,
+    files: oneOrArray(FileMarkup),
     copyFiles: CopyFiles,
     jsFiles: t.array(t.string),
     cssFiles: t.array(t.string),
@@ -518,6 +634,9 @@ const CsMarkupDefaults = t.type({
     validityCheckForceSave: withDefault(t.boolean, false),
     viewCode: withDefault(t.boolean, false),
     words: withDefault(t.boolean, false),
+    allowMultipleFiles: withDefault(t.boolean, true),
+    multipleUploadElements: withDefault(t.boolean, true),
+    mayAddFiles: withDefault(t.boolean, false),
     /* eslint-enable quote-props */
 });
 
@@ -530,6 +649,7 @@ const CsAnswer = t.partial({
     userargs: t.string,
     usercode: t.string,
     userinput: t.string,
+    submittedFiles: t.array(FileSubmission),
     selectedLanguage: t.string,
 });
 
@@ -660,6 +780,7 @@ interface IRunResponse {
 
 interface IRunRequestInput extends Partial<IExtraMarkup> {
     usercode?: string;
+    submittedFiles?: IFileSubmission[];
     userinput: string;
     isInput: boolean;
     userargs: string;
@@ -752,30 +873,150 @@ export class CsController extends CsBase implements ITimComponent {
     timeout: number = 0;
     editorModes: Mode[] = [];
     editor?: EditorComponent;
+    fileSelect?: FileSelectManagerComponent;
+    upload?: boolean;
+    uploadByCodeFiles: {path: string, show: boolean | "loaded"}[] = [];
     @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
 
-    @ViewChild(EditorComponent) set editorViewSetter(new_value: EditorComponent | undefined) {
-        if (!new_value) {
+    @ViewChild(EditorComponent)
+    set editorViewSetter(new_value: EditorComponent | undefined) {
+        this.editor = new_value;
+        if (!this.editor) {
             return;
         }
-        this.editor = new_value;
 
-        let usercode: string = this.attrsall.usercode ?? "";
-        if (this.attrsall.usercode == null) {
-            if (this.byCode) {
-                usercode = this.byCode;
-                this.initUserCode = true;
+        if (this.attrsall.submittedFiles || this.markup.files) {
+            const files = new OrderedSet<EditorFile>((f) => f.path);
+            const defaultMode = this.markup.mode ?? languageTypes.getAceModeType(this.type);
+            if (this.markup.files) {
+                const markupFiles = (listify(this.markup.files))
+                        .filter((f) => f.source == "editor" || (f.source == "uploadByCode" && (f as IUploadByCodeMarkup).show === true)) as
+                        (IEditorMarkup | IUploadByCodeMarkup)[];
+                for (const f of markupFiles) {
+                    let base: string | undefined;
+                    if ("byCode" in f) {
+                        this.initUserCode = true;
+                        base = f.byCode;
+                    }
+                    const file = new EditorFile(f.path, base, f.mode ?? defaultMode, f.canClose, f.canRename);
+                    files.push(file);
+                    file.placeholder = f.placeholder ?? this.placeholder;
+                }
+            }
+
+            if (this.attrsall.submittedFiles) {
+                for (const file of this.attrsall.submittedFiles) {
+                    let include = false;
+                    if (file.source == "editor") {
+                        include = true;
+                    } else if (file.source == "uploadByCode") {
+                        if (this.markup.files) {
+                            if (((listify(this.markup.files)).find((f) => f.source == "uploadByCode" && (f as IUploadByCodeMarkup).path == file.path) as IUploadByCodeMarkup)?.show) {
+                                include = true;
+                            }
+                        } else if(this.markup.uploadbycode && file.path == "") {
+                            include = true;
+                        }
+                    }
+                    if (include) {
+                        const f = files.getByKey(file.path) ?? new EditorFile(file.path, "", defaultMode);
+                        f.content = file.content ?? "";
+                        files.push(f);
+                    }
+                }
+            }
+
+            for (const file of files) {
+                let code = file.content;
+                code = commentTrim(code);
+                if (this.markup.blind) {
+                    code = code.replace(/@author.*/, "@author XXXX");
+                }
+                file.content = code;
+            }
+
+            this.editor.setFiles(files.toArray());
+
+            if (this.savedvals) {
+                this.savedvals.code = files.toArray().map((f) => f.content);
+            }
+        } else {
+            let usercode: string = this.attrsall.usercode ?? "";
+            if (this.attrsall.usercode == null) {
+                if (this.byCode) {
+                    usercode = this.byCode;
+                    this.initUserCode = true;
+                }
+            }
+            usercode = commentTrim(usercode);
+            if (this.markup.blind) {
+                usercode = usercode.replace(/@author.*/, "@author XXXX");
+            }
+            this.editor.content = usercode;
+            this.editor.languageMode = this.mode;
+
+            if (this.savedvals) {
+                this.savedvals.code = [this.usercode];
             }
         }
-        usercode = commentTrim(usercode);
-        if (this.markup.blind) {
-            usercode = usercode.replace(/@author.*/, "@author XXXX");
+        this.editor.placeholder = this.placeholder;
+        this.editor.mayAddFiles = this.markup.mayAddFiles;
+        if (this.markup?.allowedPaths != "*") {
+            this.editor.allowedPaths = this.editor.files.map((f) => f.path).concat(this.markup?.allowedPaths ?? []);
         }
-        this.editor.content = usercode;
+    }
 
-        if (this.savedvals) {
-            this.savedvals.code = this.usercode;
+    @ViewChild(FileSelectManagerComponent)
+    set fileSelectSetter(component: FileSelectManagerComponent | undefined) {
+        this.fileSelect = component;
+        if(!component || !this.upload) {
+            return;
         }
+
+        const files: IFileSpecification[] = [];
+        if (this.markup.files) {
+            const markupFiles = (listify(this.markup.files))
+                    .filter((f) => f.source == "upload" || f.source == "uploadByCode") as
+                    (IUploadMarkup | IUploadByCodeMarkup)[];
+            for (const fs of markupFiles) {
+                const paths = listify("path" in fs ? fs.path : fs.paths);
+                let extensions: string[] | undefined;
+                if (fs.extensions) {
+                    extensions = listify(fs.extensions);
+                } else {
+                    const exts = paths.map((p) => "." + (p.split(".").slice(1)[0] ?? "")).filter((ext) => ext != ".");
+                    if (exts.length != 0) {
+                        extensions = exts;
+                    }
+                }
+                files.push({
+                    paths: paths, // TODO: handle no filename
+                    extensions: extensions,
+                    maxSize: fs.maxSize ?? this.markup.maxSize,
+                    upload: fs.source == "upload",
+                });
+                if ("show" in fs) {
+                    this.uploadByCodeFiles.push(
+                        ...paths.map((p) => ({path: p, show: fs.show}))
+                    );
+                }
+            }
+        } else if (this.markup.upload || this.markup.uploadbycode) {
+            const isByCode = !!this.markup.uploadbycode;
+            const path = this.markup.filename ?? "";
+            files.push({
+                paths: [path],
+                maxSize: this.markup.maxSize,
+                upload: !isByCode,
+            });
+            if (isByCode) {
+                this.uploadByCodeFiles.push({path: path, show: !this.noeditor});
+            }
+        }
+
+        component.allowMultiple = this.markup.allowMultipleFiles;
+        component.multipleElements = this.markup.multipleUploadElements;
+        component.files = files;
     }
 
     get usercode(): string {
@@ -849,6 +1090,8 @@ export class CsController extends CsBase implements ITimComponent {
         let message;
         let ok = true;
         if (CspluginAnswer.is(content)) {
+            // TODO: is setAnswer even used? I couldn't get it to trigger
+            // TODO: add support for multiple files
             // TODO: Add support for userArgs/userInput
             this.usercode = content.usercode;
             this.initSaved();
@@ -866,10 +1109,22 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     hasUnSavedInput(): boolean {
-        return this.savedvals != null && (
-            this.savedvals.code !== this.usercode ||
-            this.savedvals.args !== this.userargs ||
-            this.savedvals.input !== this.userinput) && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
+        if (this.savedvals == null) {
+            return false;
+        }
+        if (this.editor) {
+            const allFiles = this.editor.allFiles;
+            if (allFiles.length != this.savedvals.code.length) {
+                return true;
+            }
+            for (let i = 0; i < allFiles.length; ++i) {
+                if (allFiles[i].content != this.savedvals.code[i]) {
+                    return true;
+                }
+            }
+        }
+        return (this.savedvals.args !== this.userargs || this.savedvals.input !== this.userinput)
+                && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
     }
 
     /**
@@ -906,7 +1161,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     resetChanges(): void {
-        this.usercode = (this.savedvals ? this.savedvals.code : "");
+        this.usercode = this.savedvals?.code[this.editor?.editorIndex ?? 0] ?? "";
         this.userargs = (this.savedvals ? this.savedvals.args : "");
         this.userinput = (this.savedvals ? this.savedvals.input : "");
         this.edited = false;
@@ -969,10 +1224,6 @@ export class CsController extends CsBase implements ITimComponent {
 
     get forcedupload() {
         return this.type === "upload" && !this.markup.button ;
-    }
-
-    get upload() {
-        return this.type === "upload" || this.markup.upload || this.markup.uploadbycode;
     }
 
     get rtype() {
@@ -1173,6 +1424,12 @@ ${fhtml}
 
     ngOnInit() {
         super.ngOnInit();
+
+        this.upload = this.type === "upload" || this.markup.upload || this.markup.uploadbycode;
+        if (!this.upload) {
+            this.upload = listify(this.markup.files).some((f) => f?.source == "upload" || f?.source == "uploadByCode");
+        }
+
         this.vctrl = vctrlInstance!;
         this.hide = this.attrsall.markup.hide || {};
        //  if ( typeof this.markup.borders !== 'undefined' ) this.markup.borders = true;
@@ -1269,7 +1526,7 @@ ${fhtml}
 
     initSaved() {
         this.savedvals = {
-            code: this.usercode,
+            code: this.editor?.files.map((f) => f.content ?? f.base) ?? [""],
             args: this.userargs,
             input: this.userinput,
         };
@@ -1315,7 +1572,11 @@ ${fhtml}
     }
 
     onFileLoad(file: IFile) {
-        if (this.markup.uploadbycode) {
+        if (this.uploadByCodeFiles.length != 0) {
+            if (this.uploadByCodeFiles.find((f) => f.path == file.path)?.show) {
+                this.editor?.setFileContent(file.path, file.content);
+            }
+        } else if (this.markup.uploadbycode) {
             this.usercode = file.content;
             if (this.markup.uploadautosave) { this.runCode(); }
         }
@@ -1458,26 +1719,66 @@ ${fhtml}
             isInput = true;
         }
 
+        const validityCheck = (ucode2: string) => {
+            let msg2 = "";
+            if (this.markup.validityCheck) {
+                const re = new RegExp(this.markup.validityCheck);
+                if (!ucode2.match(re)) {
+                    this.tinyErrorStyle = {color: "red"};
+                    msg2 = this.markup.validityCheckMessage;
+                    if (!msg2) {
+                        msg2 = "Did not match to " + this.markup.validityCheck;
+                    }
+                    this.error = msg2;
+                    this.isRunning = false;
+                    this.runError = true;
+                    if (!this.markup.validityCheckForceSave) {
+                        return msg2;
+                    }
+                    noErrorClear = true;
+                }
+            }
+            return msg2;
+        };
+
+        const editorFiles: IFileSubmission[] = this.editor?.allFiles.map((f) => ({source: "editor", ...f})) ?? [];
+        const fileSelectFiles: IFileSubmission[] = this.fileSelect?.loadedFiles.toArray()
+                .filter((f) =>
+                    this.uploadByCodeFiles.find(
+                        (f2) => f2.path == f.path
+                    )?.show
+                ).map((f) => ({source: "uploadByCode", ...f})) ?? [];
+        const uploadedFiles: IFileSubmission[] = this.uploadedFiles.toArray().map((f) => ({source: "upload:" + f.path, ...f}));
+
+        let allFiles: IFileSubmission[] = editorFiles.concat(fileSelectFiles);
+        if (allFiles.length == 0) {
+            allFiles = [{source: "editor", path: "", content: this.usercode}];
+        }
+
+        let msg = "";
+        for (const file of allFiles) {
+            const m = validityCheck(file.content!.replace(/\r/g, ""));
+            if (m) {
+                msg += m + "\n";
+            }
+        }
+        if (msg) {
+            this.error = msg;
+            if (!this.markup.validityCheckForceSave) {
+                return;
+            }
+        }
+        allFiles.push(...uploadedFiles);
+
         let ucode = "";
         if (this.usercode) {
-            ucode = this.usercode;
-        }
-        ucode = ucode.replace(/\r/g, "");
-        if (this.markup.validityCheck) {
-            const re = new RegExp(this.markup.validityCheck);
-            if (!ucode.match(re)) {
-                this.tinyErrorStyle = {color: "red"};
-                let msg = this.markup.validityCheckMessage;
-                if (!msg) {
-                    msg = "Did not match to " + this.markup.validityCheck;
-                }
+            ucode = this.usercode.replace(/\r/g, "");
+            msg = validityCheck(ucode);
+            if (msg) {
                 this.error = msg;
-                this.isRunning = false;
-                this.runError = true;
                 if (!this.markup.validityCheckForceSave) {
                     return;
                 }
-                noErrorClear = true;
             }
         }
 
@@ -1503,6 +1804,14 @@ ${fhtml}
                 ...(this.isAll ? {selectedLanguage: this.selectedLanguage} : {}),
             },
         };
+
+        if (this.markup.files) {
+            // TODO: add byCode replacing support to multifile submissions so that this if isn't needed.
+            // For now, only include allFiles when no byCode replacing is needed
+            if (!this.file && !this.program) {
+                params.input.submittedFiles = allFiles;
+            }
+        }
 
         const dt = this.getTaskId()?.docTask();
         const url = this.pluginMeta.getAnswerUrl();
@@ -2146,6 +2455,7 @@ ${fhtml}
                     print: 1,
                     replace: "",
                 },
+                data: params,
             },
         ));
         if (r.ok) {
@@ -2449,7 +2759,6 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
                     [wrap]="wrap"
                     [modes]="editorModes"
                     [editorIndex]="markup.editorMode"
-                    [languageMode]="mode"
                     [parsonsShuffle]="initUserCode"
                     [parsonsMaxcheck]="markup.parsonsmaxcheck"
                     [parsonsNotordermatters]="markup.parsonsnotordermatters"

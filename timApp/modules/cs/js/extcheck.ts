@@ -78,7 +78,6 @@ interface IRunResult {
                             [wrap]="wrap"
                             [modes]="editorModes"
                             [editorIndex]="markup.editorMode"
-                            [languageMode]="mode"
                             [parsonsShuffle]="initUserCode"
                             [parsonsMaxcheck]="markup.parsonsmaxcheck"
                             [parsonsNotordermatters]="markup.parsonsnotordermatters"

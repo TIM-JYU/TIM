@@ -34,6 +34,10 @@ export function staticDynamicImport(s: string) {
             return import("modules/cs/js/util/file-select");
         case "/cs/js/build/util/module.js":
             return import("modules/cs/js/util/module");
+        case "/cs/js/build/util/notification.js":
+            return import("modules/cs/js/util/notification");
+        case "/cs/js/build/util/upload-result.js":
+            return import("modules/cs/js/util/upload-result");
         case "/cs/js/build/editor/editor.js":
             return import("modules/cs/js/editor/editor");
         case "/cs/js/build/editor/ace.js":

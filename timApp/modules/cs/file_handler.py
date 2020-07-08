@@ -1,5 +1,5 @@
 import re
-from typing import Optional
+from typing import Optional, List
 from pathlib import Path
 from fileParams import get_json_param, get_param
 from dataclasses import field
@@ -10,10 +10,13 @@ from loadable import Loadable
 
 @dataclass
 class File(Loadable):
-    path: str
+    path: Optional[str]
     source: str = field(default="editor")
+    paths: Optional[List[str]] = field(default=None)
     content: Optional[str] = field(default=None)
     bcontent: Optional[bytes] = field(default=None)
+    canClose: Optional[bool] = field(default=False)
+    canRename: Optional[bool] = field(default=False)
 
 class FileHandler:
     def __init__(self, query, save):
@@ -40,15 +43,15 @@ class FileHandler:
 
         self.editor_files = [file for file in files if file.source == "editor"]
         self.editor_paths = None
-        self.editor_must_paths = [file.path for file in self.editor_files if not file.get("canClose", False) and not file.get("canRename", False)]
+        self.editor_must_paths = [file.path for file in self.editor_files if not file.canClose and not file.canRename]
 
         self.upload_files = [file.path for file in files if file.source == "upload"]
-        self.upload_paths = [file["paths"] if isinstance(file["paths"], list) else [file.path] for file in self.upload_files]
+        self.upload_paths = [file.paths if isinstance(file["paths"], list) else [file.path] for file in self.upload_files]
         self.upload_paths = [path for paths in self.upload_paths for path in paths] # flatten
 
         self.uploadbycode_files = [file for file in files if file.source == "uploadByCode"]
         self.uploadbycode_paths = None
-        self.uploadbycode_must_paths = [file.path for file in self.uploadbycode_files if not file.get("canClose", False) and not file.get("canRename", False)]
+        self.uploadbycode_must_paths = [file.path for file in self.uploadbycode_files if not file.canClose and not file.canRename]
 
         allowed_paths = get_json_param(self.query.jso, "markup", "allowedPaths", None)
         if allowed_paths != "*":
@@ -136,14 +139,16 @@ class FileHandler:
         if submitted_files is not None:
             self.save["submittedFiles"] = submitted_files
             for file in submitted_files:
-                if file.path == "":
-                    file.path = self.default_filename()
+                if file["path"] == "":
+                    file["path"] = self.default_filename()
         else:
             submitted_files = [{"path": self.default_filename(), "content": s}]
 
             usercode = get_json_param(self.query.jso, "input", "usercode", None)
             if isinstance(usercode, str):
                 self.save["usercode"] = usercode
+
+        submitted_files = File.load(submitted_files, many=True, unknown=EXCLUDE)
 
         editor_paths = [file.path for file in submitted_files if file.source == "editor"]
         if self.max_editor_files is not None and len(editor_paths) > self.max_editor_files:
@@ -159,4 +164,4 @@ class FileHandler:
 
         submitted_files = [self.load_file(file) for file in submitted_files]
 
-        return submitted_files
+        return File.dump(submitted_files, many=True)

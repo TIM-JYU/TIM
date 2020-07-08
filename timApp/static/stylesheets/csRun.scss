@@ -441,28 +441,79 @@ cs-editor {
 }
 
 cs-editor {
+    $button-padding: 1.5em;
+
+    .add-view {
+        text-align: center;
+        border-left: 3px solid #00000026;
+        padding: 0.7em 0;
+
+        file-select {
+            width: 95%;
+            display: inline-block;
+        }
+
+        input {
+            margin-top: 0.4em;
+        }
+
+        button {
+            margin-top: 0.6em;
+        }
+    }
+
     .mat-ripple-element {
         display: none;
     }
-    
+
     .mat-tab-list {
         border-radius: 0.5em 0.5em 0 0;
         overflow: hidden;
     }
-    
+
     .mat-tab-labels {
         width: fit-content;
         background-color: #0000001f;
         font-size: 0.96em;
     }
-    
+
     .mat-tab-label {
         height: 2em;
-        padding: 0 1em;
-        min-width: 7em;
-        
+        padding: 0;
+        min-width: 0;
+
         &.mat-tab-label-active, &:hover {
             background-color: #0000001f;
+
+            tim-close-button {
+                display: block;
+
+                &:hover {
+                    background-color: #00000075;
+                }
+            }
+        }
+
+        .file-tab {
+            padding: 0 $button-padding;
+            min-width: 7em;
+        }
+
+        .file-add-tab {
+            transform: translate3d(0.02em, -0.02em, 0);
+            font-size: 0.75em;
+            width: 2em * 0.96em / 0.75em; // same as height
+        }
+
+        tim-close-button {
+            display: none;
+            border: 1px solid transparent;
+            border-radius: 50%;
+            position: absolute;
+            right: $button-padding / 2 * 0.96em / 0.75em;
+            top: calc(50% + 0.095em); // + 0.095em to align with text
+            transform: translate3d(50%, -50%, 0);
+            font-size: 0.75em;
         }
     }
 }

@@ -533,6 +533,7 @@ def post_answer(plugintype: str, task_id_ext: str):
         raise PluginException(f'Plugin type mismatch: {plugin.type} != {plugintype}')
 
     upload = None
+    uploads = None
 
     if not logged_in() and not plugin.known.anonymous:
         raise RouteException('You must be logged in to answer this task.')
@@ -555,6 +556,18 @@ def post_answer(plugintype: str, task_id_ext: str):
             upload = AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first()
             # if upload.answer_id is not None:
             #    raise PluginException(f'File was already uploaded: {file}')
+
+        files: List[int] = answerdata.get('uploadedFiles', None)
+        if files is not None:
+            uploads = []
+            for file in files:
+                trimmed_file = file["path"].replace('/uploads/', '')
+                block = Block.query.filter((Block.description == trimmed_file) &
+                                        (Block.type_id == BlockType.Upload.value)).first()
+                if block is None:
+                    raise PluginException(f'Non-existent upload: {trimmed_file}')
+                verify_view_access(block, message="You don't have permission to touch this file.")
+                uploads.append(AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first())
 
     # Load old answers
 
@@ -706,9 +719,14 @@ def post_answer(plugintype: str, task_id_ext: str):
                     result["web"]["error"] = output
                 except JsRunnerError as e:
                     return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
-        if result['savedNew'] is not None and upload is not None:
-            # Associate this answer with the upload entry
-            upload.answer_id = result['savedNew']
+        if result['savedNew'] is not None:
+            if upload is not None:
+                # Associate this answer with the upload entry
+                upload.answer_id = result['savedNew']
+            if uploads is not None:
+                # Associate this answer with the upload entries
+                for upload in uploads:
+                    upload.answer_id = result['savedNew']
 
     db.session.commit()
     try:
