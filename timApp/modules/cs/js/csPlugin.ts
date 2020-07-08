@@ -753,6 +753,7 @@ export class CsController extends CsBase implements ITimComponent {
     wavURL: string = "";
     wrap!:  {n: number, auto: boolean};
     buttons: string[] = [];
+    mdHtml?: string;
 
     iframesettings?: { src?: SafeResourceUrl; width: number; id: string; height: number };
     loadedIframe?: IFrameLoad;
@@ -2228,6 +2229,9 @@ ${fhtml}
 
     async showMD() {
         if (!this.usercode) {
+            if (this.mdHtml) {
+                this.mdHtml = "";
+            }
             return;
         }
         const taskId = this.pluginMeta.getTaskId();
@@ -2249,8 +2253,8 @@ ${fhtml}
             });
         if (r.ok) {
             const data = r.result;
-            alert("Failed to show preview");
-            //await ParCompiler.compileAndAppendTo(this.preview, r.result, this.scope); TODO
+            // await ParCompiler.compileAndAppendTo(this.preview, r.result, this.scope);
+            this.mdHtml = data.texts; // TODO: is html binding enough or is angular compiling needed?
         } else {
             const data = r.result;
             alert("Failed to show preview: " + data.error);
@@ -2639,6 +2643,8 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
                     sandbox="allow-scripts allow-forms"
                     style="border:0">
             </iframe>
+        </div>
+        <div *ngIf="mdHtml" [innerHTML]="mdHtml">
         </div>
     </div>
     <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
