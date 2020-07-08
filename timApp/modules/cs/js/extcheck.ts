@@ -53,16 +53,13 @@ interface IRunResult {
             <h4 *ngIf="header" [innerHTML]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
             <ng-container *ngIf="upload">
-                <file-select class="small"
+                <file-select-manager class="small"
                         [dragAndDrop]="markup.dragAndDrop"
-                        [fileName]="markup.filename"
-                        [maxSize]="markup.maxSize"
-                        [maxTotalSize]="markup.maxTotalSize"
-                        [url]="uploadUrl"
-                        [uploadStem]="uploadstem"
+                        [uploadUrl]="uploadUrl"
+                        [stem]="uploadstem"
                         (file)="onFileLoad($event)"
                         (upload)="onUploadResponse($event)">
-                </file-select>
+                </file-select-manager>
                 <div class="form-inline small" *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
             </ng-container>
             <pre *ngIf="viewCode && codeover">{{code}}</pre>

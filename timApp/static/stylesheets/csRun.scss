@@ -167,11 +167,11 @@ p.stem {
       width: 100% !important;
     }
   }
-  
-  file-select {
+
+  file-select-manager {
       margin-bottom: 0.5em;
-      margin-left: 0.3em; 
-      
+      margin-left: 0.3em;
+
       .drag-and-drop {
         height: 2.5em;
         margin-left: 3%;
@@ -467,14 +467,19 @@ cs-editor {
     }
 }
 
-file-select {
+file-select-manager {
     width: 100%;
     display: inline-block;
-    
+}
+
+file-select {
+    width: 100%;
+    display: block;
+
     [hidden] {
         display: none !important;
     }
-    
+
     .drag-and-drop {
         border: 2px dashed $csrunmenu-link-color;
         width: 100%;
@@ -483,16 +488,16 @@ file-select {
         display: table;
         border-radius: 0.2em;
         color: $csrunmenu-link-color;
-        
+
         * {
             pointer-events: none;
         }
-        
+
         &:hover {
             cursor: pointer;
             filter: brightness(80%);
         }
-        
+
         div {
             display: table-cell;
             vertical-align: middle;
@@ -505,8 +510,8 @@ file-select {
                 }
             }
         }
-    
-        .error { 
+
+        .error {
             color: rgb(235, 30, 30);
             text-align: center;
             border: none;

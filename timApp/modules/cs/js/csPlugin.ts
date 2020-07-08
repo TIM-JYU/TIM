@@ -521,7 +521,6 @@ const CsMarkupDefaults = t.type({
     lang: withDefault(t.string, "fi"),
     maxrows: withDefault(t.Integer, 100),
     maxSize: withDefault(t.number, 50),
-    maxTotalSize: withDefault(t.number, 50),
     noConsoleClear: withDefault(t.boolean, false),
     nocode: withDefault(t.boolean, false),
     norun: withDefault(t.boolean, false),
@@ -2498,17 +2497,14 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
         </p>
     </div>
     <ng-container *ngIf="upload">
-        <file-select class="small"
+        <file-select-manager class="small"
                 [dragAndDrop]="markup.dragAndDrop"
-                [fileName]="markup.filename"
-                [maxSize]="markup.maxSize"
-                [maxTotalSize]="markup.maxTotalSize"
-                [url]="uploadUrl"
-                [uploadStem]="uploadstem"
+                [uploadUrl]="uploadUrl"
+                [stem]="uploadstem"
                 (file)="onFileLoad($event)"
                 (upload)="onUploadResponse($event)"
                 (uploadDone)="onUploadDone($event)">
-        </file-select>
+        </file-select-manager>
         <div class="form-inline small" *ngIf="uploadresult"><span [innerHTML]="uploadresult"></span></div>
     </ng-container>
     <div *ngIf="isAll" style="float: right;">{{languageText}}
