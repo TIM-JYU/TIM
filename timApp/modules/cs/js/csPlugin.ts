@@ -415,6 +415,7 @@ const CopyFiles = t.union([
         task: t.array(t.string),
     }),
 ]);
+type ICopyFiles = t.TypeOf<typeof CopyFiles>;
 
 const CountLimit = t.partial({
     show: t.boolean,
@@ -422,13 +423,7 @@ const CountLimit = t.partial({
     max: t.number,
     text: t.string,
 });
-
-interface ICountLimit {
-    show?: boolean;
-    min?: number;
-    max?: number;
-    text?: string;
-}
+interface ICountLimit extends t.TypeOf<typeof CountLimit> {}
 
 const CountType = t.partial({
     preventSave: t.boolean,
@@ -438,15 +433,7 @@ const CountType = t.partial({
     words: CountLimit,
     chars: CountLimit,
 });
-
-interface ICountType {
-    preventSave?: boolean;
-    tooManyWord?: string;
-    tooFewWord?: string;
-    lines?: ICountLimit;
-    words?: ICountLimit;
-    chars?: ICountLimit;
-}
+interface ICountType extends t.TypeOf<typeof CountType> {}
 
 const CsMarkupOptional = t.partial({
     // TODO: this gets deleted in server but only conditionally,
@@ -556,18 +543,24 @@ const CsMarkupDefaults = t.type({
 
 const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPluginMarkup]);
 
+const CsAnswer = t.partial({
+    uploadedFile: t.string,
+    uploadedType: t.string,
+    userargs: t.string,
+    usercode: t.string,
+    userinput: t.string,
+    selectedLanguage: t.string,
+});
+
+interface ICsAnswer extends t.TypeOf<typeof CsAnswer> {};
+
 const CsAll = t.intersection([
+    CsAnswer,
     t.partial({
         by: t.string,
         docurl: t.string,
         program: t.string,
         replace: t.string,
-        uploadedFile: t.string,
-        uploadedType: t.string,
-        userargs: t.string,
-        usercode: t.string,
-        userinput: t.string,
-        selectedLanguage: t.string,
         timeout: t.number,
         error: t.string,
         own_error: t.string,
@@ -691,6 +684,23 @@ interface IRunResponse {
     savedNew: number,
 }
 
+
+interface IRunRequestInput extends Partial<IExtraMarkup> {
+    usercode?: string;
+    userinput: string;
+    isInput: boolean;
+    userargs: string;
+    uploadedFile?: string;
+    uploadedType?: string;
+    nosave: boolean;
+    type: string,
+    selectedLanguage?: string;
+}
+
+interface IRunRequest {
+    input: IRunRequestInput;
+}
+
 @Directive() // needs this or compiler complains
 export class CsController extends CsBase implements ITimComponent {
     vctrl!: ViewCtrl;
@@ -810,7 +820,6 @@ export class CsController extends CsBase implements ITimComponent {
     constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
         super(el, http, domSanitizer);
 
-        //super(scope, element);
         this.errors = [];
         this.result = "";
         this.htmlresult = "";
@@ -1227,7 +1236,7 @@ ${fhtml}
             this.markup.jsparsons,
         ];
         for (const c of this.markup.editorModes.toString()) {
-            const mode = parseInt(c);
+            const mode = parseInt(c, 10);
             this.editorModes.push(new Mode(mode, editorText[mode]));
         }
 
@@ -1528,8 +1537,6 @@ ${fhtml}
             isInput = true;
         }
 
-        this.languageResponse(null);
-
         let ucode = "";
         if (this.usercode) {
             ucode = this.usercode;
@@ -1560,7 +1567,9 @@ ${fhtml}
             return;
         }
 
-        const params = {
+        this.languageResponse(null);
+
+        const params: IRunRequest = {
             input: {
                 usercode: ucode,
                 userinput: this.userinput || "",
@@ -1695,7 +1704,7 @@ ${fhtml}
 
     async copyTauno() {
         this.taunoCopy = new TimDefer<string>();
-        //this.taunoFrame!.channel.port1.postMessage({msg: "getData"}); For some reason this doesn't work
+        // this.taunoFrame!.channel.port1.postMessage({msg: "getData"}); For some reason this doesn't work
         this.taunoFrame!.iframe.contentWindow.postMessage({msg: "getData"}, "*");
         let s = await this.taunoCopy.promise;
         this.copyingFromTauno = true;
@@ -1711,10 +1720,10 @@ ${fhtml}
         this.usercode = s;
         this.checkIndent();
         this.muokattu = false;
-        //$rootScope.$applyAsync(); // TODO: is this needed?
+        // $rootScope.$applyAsync(); // TODO: is this needed?
     }
 
-    async addText(s: string) {
+    addText(s: string) {
         if (this.noeditor) {
             this.userargs += s + " ";
             return;
@@ -2309,7 +2318,7 @@ ${fhtml}
         if (this.type.includes("truthtable")) {
             const truthTable = (await import("./truthTable")).truthTable;
             this.result = truthTable(this.userargs);
-            //this.scope.$applyAsync(); // TODO
+            // this.scope.$applyAsync(); // TODO: is this needed?
             return;
         }
         if (!this.iframesettings || this.fullhtml) { // create an iframe on first time
