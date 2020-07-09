@@ -105,21 +105,17 @@ export class JSParsonsEditorComponent implements IEditor {
 @Component({
     selector: "cs-editor",
     template: `
-        <mat-tab-group *ngIf="showTabs" [(selectedIndex)]="tabIndex" animationDuration="0ms">
-            <mat-tab *ngFor="let file of files; index as i; trackBy: trackByPath">
-                <ng-template mat-tab-label>
-                    <div class="file-tab">
-                        {{file.path}}
-                        <tim-close-button *ngIf="file.canClose" (click)="closeFile(i)"></tim-close-button>
-                    </div>
-                </ng-template>
-            </mat-tab>
-            <mat-tab *ngIf="canAddFile">
-                <ng-template mat-tab-label>
-                    <span class="file-add-tab glyphicon glyphicon-plus"></span>
-                </ng-template>
-            </mat-tab>
-        </mat-tab-group>
+        <div *ngIf="showTabs" class="tab-list">
+            <div *ngFor="let file of files; index as i; trackBy: trackByPath" class="tab-label file-tab" [ngClass]="{'tab-label-active': tabIndex == i}" (click)="tabIndex = i">
+                {{file.path}}
+                <div class="close-wrapper">
+                    <tim-close-button *ngIf="file.canClose" (click)="closeFile(i)"></tim-close-button>
+                </div>
+            </div>
+            <div *ngIf="canAddFile" class="tab-label" [ngClass]="{'tab-label-active': tabIndex == files.length}" (click)="tabIndex = files.length">
+                <span class="file-add-tab glyphicon glyphicon-plus"></span>
+            </div>
+        </div>
         <ng-container *ngIf="!addTabActive">
         <cs-normal-editor *ngIf="mode == Mode.Normal"
                 [minRows]="minRows_"

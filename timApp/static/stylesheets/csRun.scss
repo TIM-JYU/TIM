@@ -462,28 +462,33 @@ cs-editor {
         }
     }
 
-    .mat-ripple-element {
-        display: none;
-    }
-
-    .mat-tab-list {
+    .tab-list {
+        display: flex;
         border-radius: 0.5em 0.5em 0 0;
         overflow: hidden;
-    }
-
-    .mat-tab-labels {
-        width: fit-content;
-        background-color: #0000001f;
+        flex-wrap: wrap-reverse;
+        width: 100%;
         font-size: 0.96em;
+
+        &:after {
+          flex-grow: 1000000;
+          content: '';
+        }
     }
 
-    .mat-tab-label {
+    .tab-label {
         height: 2em;
         padding: 0;
         min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #0000001f;
+        flex-grow: 1;
+        cursor: pointer;
 
-        &.mat-tab-label-active, &:hover {
-            background-color: #0000001f;
+        &.tab-label-active, &:hover {
+            background-color: #0000003e;
 
             tim-close-button {
                 display: block;
@@ -494,25 +499,35 @@ cs-editor {
             }
         }
 
-        .file-tab {
-            padding: 0 $button-padding;
-            min-width: 7em;
+        &.file-tab {
+            min-width: 7em - 2 * $button-padding;
+
+            &:before {
+                content: '';
+                width: $button-padding;
+            }
+
+            .close-wrapper {
+                display: flex;
+                width: $button-padding;
+                align-content: center;
+            }
         }
 
         .file-add-tab {
             transform: translate3d(0.02em, -0.02em, 0);
             font-size: 0.75em;
             width: 2em * 0.96em / 0.75em; // same as height
+            text-align: center;
         }
 
         tim-close-button {
             display: none;
             border: 1px solid transparent;
             border-radius: 50%;
-            position: absolute;
-            right: $button-padding / 2 * 0.96em / 0.75em;
-            top: calc(50% + 0.095em); // + 0.095em to align with text
-            transform: translate3d(50%, -50%, 0);
+            margin: 0 auto;
+            width: fit-content;
+            margin-top: 0.095em; // to align with text
             font-size: 0.75em;
         }
     }

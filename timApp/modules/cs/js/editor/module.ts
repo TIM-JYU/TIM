@@ -1,8 +1,6 @@
 import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
-import {MatTabsModule} from "@angular/material/tabs";
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 import {CsUtilityModule} from "../util/module";
@@ -24,8 +22,6 @@ import {ParsonsEditorComponent} from "./parsons";
     imports: [
         BrowserModule,
         FormsModule,
-        MatTabsModule,
-        BrowserAnimationsModule,
         TimUtilityModule,
         CsUtilityModule,
     ],
