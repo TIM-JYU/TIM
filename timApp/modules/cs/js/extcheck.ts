@@ -72,7 +72,6 @@ interface IRunResult {
                 <div class="csEditorAreaDiv">
                     <cs-editor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
                             [base]="byCode"
-                            [cssPrint]="cssPrint"
                             [minRows]="markup.rows"
                             [maxRows]="markup.maxrows"
                             [wrap]="wrap"

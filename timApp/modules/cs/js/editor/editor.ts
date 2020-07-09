@@ -105,60 +105,57 @@ export class JSParsonsEditorComponent implements IEditor {
 @Component({
     selector: "cs-editor",
     template: `
-        <ng-container *ngIf="!cssPrint">
-            <mat-tab-group *ngIf="showTabs" [(selectedIndex)]="tabIndex" animationDuration="0ms">
-                <mat-tab *ngFor="let file of files; index as i; trackBy: trackByPath">
-                    <ng-template mat-tab-label>
-                        <div class="file-tab">
-                            {{file.path}}
-                            <tim-close-button *ngIf="file.canClose" (click)="closeFile(i)"></tim-close-button>
-                        </div>
-                    </ng-template>
-                </mat-tab>
-                <mat-tab *ngIf="canAddFile">
-                    <ng-template mat-tab-label>
-                        <span class="file-add-tab glyphicon glyphicon-plus"></span>
-                    </ng-template>
-                </mat-tab>
-            </mat-tab-group>
-            <ng-container *ngIf="!addTabActive">
-            <cs-normal-editor *ngIf="mode == Mode.Normal"
-                    [minRows]="minRows_"
-                    [maxRows]="maxRows_"
-                    [placeholder]="file && file.placeholder ? file.placeholder : ''">
-            </cs-normal-editor>
-            <cs-parsons-editor *ngIf="mode == Mode.Parsons"
-                    [shuffle]="parsonsShuffle"
-                    [maxcheck]="parsonsMaxcheck"
-                    [base]="base"
-                    [words]="parsonsWords"
-                    [styleWords]="parsonsStyleWords"
-                    [notordermatters]="parsonsNotordermatters">
-            </cs-parsons-editor>
-            <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
-            <cs-ace-editor *ngIf="mode == Mode.ACE"
-                    [languageMode]="languageMode"
-                    [minRows]="minRows_"
-                    [maxRows]="maxRows_"
-                    [placeholder]="file && file.placeholder ? file.placeholder : ''">
-            </cs-ace-editor>
-            </ng-container>
-            <div *ngIf="addTabActive" class="add-view">
-                <file-select class="small" style="height: 4em;"
-                        [multiple]="false"
-                        [stem]="'Load a file (optional)'"
-                        [dragAndDrop]="true"
-                        (file)="onFileLoad($event)">
-                </file-select>
-                Filename:<input type="text" placeholder="Give a name here" [(ngModel)]="filenameInput">
-                <br>
-                <button class="timButton btn-sm"
-                        (click)="clickAddFile()"
-                        [attr.title]="addButtonTitle"
-                        [disabled]="disableAddButton">Add</button>
-            </div>
+        <mat-tab-group *ngIf="showTabs" [(selectedIndex)]="tabIndex" animationDuration="0ms">
+            <mat-tab *ngFor="let file of files; index as i; trackBy: trackByPath">
+                <ng-template mat-tab-label>
+                    <div class="file-tab">
+                        {{file.path}}
+                        <tim-close-button *ngIf="file.canClose" (click)="closeFile(i)"></tim-close-button>
+                    </div>
+                </ng-template>
+            </mat-tab>
+            <mat-tab *ngIf="canAddFile">
+                <ng-template mat-tab-label>
+                    <span class="file-add-tab glyphicon glyphicon-plus"></span>
+                </ng-template>
+            </mat-tab>
+        </mat-tab-group>
+        <ng-container *ngIf="!addTabActive">
+        <cs-normal-editor *ngIf="mode == Mode.Normal"
+                [minRows]="minRows_"
+                [maxRows]="maxRows_"
+                [placeholder]="file && file.placeholder ? file.placeholder : ''">
+        </cs-normal-editor>
+        <cs-parsons-editor *ngIf="mode == Mode.Parsons"
+                [shuffle]="parsonsShuffle"
+                [maxcheck]="parsonsMaxcheck"
+                [base]="base"
+                [words]="parsonsWords"
+                [styleWords]="parsonsStyleWords"
+                [notordermatters]="parsonsNotordermatters">
+        </cs-parsons-editor>
+        <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
+        <cs-ace-editor *ngIf="mode == Mode.ACE"
+                [languageMode]="languageMode"
+                [minRows]="minRows_"
+                [maxRows]="maxRows_"
+                [placeholder]="file && file.placeholder ? file.placeholder : ''">
+        </cs-ace-editor>
         </ng-container>
-        <pre *ngIf="cssPrint"></pre>`,
+        <div *ngIf="addTabActive" class="add-view">
+            <file-select class="small" style="height: 4em;"
+                    [multiple]="false"
+                    [stem]="'Load a file (optional)'"
+                    [dragAndDrop]="true"
+                    (file)="onFileLoad($event)">
+            </file-select>
+            Filename:<input type="text" placeholder="Give a name here" [(ngModel)]="filenameInput">
+            <br>
+            <button class="timButton btn-sm"
+                    (click)="clickAddFile()"
+                    [attr.title]="addButtonTitle"
+                    [disabled]="disableAddButton">Add</button>
+        </div>`,
 })
 export class EditorComponent implements IMultiEditor {
     static readonly defaultMode = Mode.ACE;
@@ -174,7 +171,6 @@ export class EditorComponent implements IMultiEditor {
 
     @Output("content") private contentChange: EventEmitter<string> = new EventEmitter(true);
     @Output("close") private fileCloseEmitter: EventEmitter<{file: EditorFile, index: number}> = new EventEmitter(true);
-    @Input() cssPrint: boolean = false; // TODO: what is this actually supposed to do
     minRows_: number = 1;
     maxRows_: number = 100;
     private wrap_?: {n: number, auto: boolean};

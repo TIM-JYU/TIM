@@ -601,7 +601,6 @@ const CsMarkupDefaults = t.type({
     codeunder: withDefault(t.boolean, false),
     cols: withDefault(t.Integer, 10),
     copyLink: withDefault(t.string, "Copy"),
-    cssPrint: withDefault(t.boolean, false),
     dragAndDrop: withDefault(t.boolean, true),
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
@@ -1404,10 +1403,6 @@ ${fhtml}
                 return languageTypes.runTypes.sort();
             }
         }
-    }
-
-    get cssPrint() {
-        return this.markup.cssPrint;
     }
 
     get mode() {
@@ -2753,7 +2748,6 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
         <div class="csEditorAreaDiv">
             <cs-editor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
                     [base]="byCode"
-                    [cssPrint]="cssPrint"
                     [minRows]="markup.rows"
                     [maxRows]="markup.maxrows"
                     [wrap]="wrap"
