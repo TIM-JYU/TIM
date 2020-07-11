@@ -385,15 +385,6 @@ const Example = t.type({
     title: t.string,
 });
 
-const CopyFiles = t.union([
-    t.array(t.string),
-    t.type({
-        master: t.array(t.string),
-        task: t.array(t.string),
-    }),
-]);
-type ICopyFiles = t.TypeOf<typeof CopyFiles>;
-
 const CountLimit = t.partial({
     show: t.boolean,
     min: t.number,
@@ -585,7 +576,7 @@ const CsMarkupOptional = t.partial({
     rootPath: t.string,
     masterPath: t.string,
     files: oneOrArray(FileMarkup),
-    copyFiles: CopyFiles,
+    externalFiles: oneOrArray(ExternalSourceMarkup),
     jsFiles: t.array(t.string),
     cssFiles: t.array(t.string),
 });
