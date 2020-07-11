@@ -6,7 +6,7 @@ from fileParams import get_json_param, get_param, mkdirs
 from dataclasses import field
 from marshmallow_dataclass import dataclass
 from marshmallow import EXCLUDE
-from shutil import rmtree, copy2, chown
+from shutil import rmtree, copy2, chown, copytree
 
 from loadable import Loadable
 
@@ -77,6 +77,63 @@ def copy_files_regex(f: str, source: str, dest: str):
                     dest.unlink()
                 mkdirs(str(dest))
                 copy2(str(rootp / file), str(dest / file))
+
+
+def copy_files(source: str, dest: str):
+    if source is None or dest is None:
+        return
+
+    only_subfiles = False
+    if source.endswith("/*"):
+        only_subfiles = True
+        source = source[:-1]
+
+    path = Path(source)
+    if not path.exists():
+        raise FileNotFoundError(f"{path} does not exist")
+    elif only_subfiles and not path.is_dir():
+        raise NotADirectoryError(f"{path} is not directory")
+    elif not path.is_dir() and not path.is_file():
+        raise FileExistsError(f"{path} is of unknown type (not a file or directory)")
+
+
+    if dest.endswith("/") or only_subfiles:
+        dest_dir = True
+        dest = dest[:-1]
+        basepath = Path(dest)
+    else:
+        dest_dir = False
+        basepath = Path(dest).parent
+
+    if basepath.exists() and not basepath.is_dir():
+        rm(basepath)
+
+    mkdirs(basepath)
+
+    destpath = Path(dest)
+    if path.is_file():
+        if dest_dir:
+            destpath = destpath / os.path.basename(source)
+        if destpath.exists():
+            rm(destpath)
+
+        copy2(source, dest)
+    else:
+        if destpath.exists() and not destpath.is_dir():
+            rm(destpath)
+
+        if only_subfiles:
+            _, _, files = os.walk(source)
+            for file in files:
+                destp = destpath / file
+                if destp.exists():
+                    rm(destpath)
+                copy2(os.path.join(source, file), str(destp))
+        else:
+            if dest.endswith("/"):
+                copytree(source, os.path.join(dest, os.path.basename(source)), dirs_exist_ok=True)
+            else:
+                copytree(source, dest, dirs_exist_ok=True)
 
 
 class FileHandler:
@@ -216,7 +273,11 @@ class FileHandler:
             raise ValueError(f"Source {source} not recognized")
 
     def copy_master(self, path: str, source_path: str, destination_path: str):
-        copy_files_regex(path, source_path, destination_path)
+        if path.startswith("r:"):
+            path = path[2:]
+            copy_files_regex(path, source_path, destination_path)
+        else:
+            copy_files(os.path.join(source_path, path), destination_path)
 
     def copy_file(self, file: File, prgpath: str, rootpath: str):
         """Copies/writes files instead of reading them to a string. Must only be
