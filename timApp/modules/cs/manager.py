@@ -78,7 +78,7 @@ def make(dictionary, error_cls, desc, name, query, sourcefiles = None):
             if cls.supports_multifiles():
                 kargs = [sourcefiles]
             elif len(sourcefiles) == 1:
-                kargs = [sourcefiles[0]["content"]]
+                kargs = [sourcefiles[0].content]
             else:
                 # TODO: make all languages support multiple files OR
                 # iterate and save all the files before running, as if there were

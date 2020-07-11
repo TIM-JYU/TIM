@@ -186,21 +186,6 @@ def delete_extra_files(extra_files, prgpath):
             except:
                 print("Can not delete: ", efilename)
 
-def copy_files_regex(files, source_dir, dest_dir):
-    if files is None or source_dir is None or dest_dir is None:
-        return
-
-    regexs = [re.compile(file) for file in files]
-
-    for root, dirs, files in os.walk(source_dir):
-        rootp = Path(root)
-        relpath = rootp.relative_to(source_dir)
-        for file in files:
-            relfilepath = relpath / file
-            if any(regex.fullmatch(str(relfilepath)) is not None for regex in regexs):
-                mkdirs(str(dest_dir / relpath))
-                shutil.copy2(str(rootp / file), str(dest_dir / relfilepath))
-
 def get_md(ttype: TType, query):
     _, bycode, js, runner = handle_common_params(query, ttype)
 
@@ -1337,6 +1322,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
                     file.content = usercode
 
+                if file.content is None:
+                    continue
+
                 if is_doc:
                     file.content = replace_code(query.cut_errors, file.content)
 
@@ -1355,43 +1343,23 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     if file.content == "":
                         file.content = "\n"
 
-                    # Write the program to the file =======================================================
                     file.content = language.before_save(language.before_code + file.content)
-                    if not nofilesave:
-                        path = Path(file.path)
-                        mkdirs(path.parent)
-                        path.write_text(file.content, encoding="utf-8")
-                        shutil.chown(path, user="agent", group="agent")
                     slines = file.content
 
             usercode = language.sourcefiles[0].content # for single file compatibility # TODO: make unnecessary
 
+            # Write the program to the file =======================================================
+            if not nofilesave:
+                fhandler.save_files(language.sourcefiles, language.prgpath, language.rootpath)
+
             save_extra_files(query, extra_files, language.prgpath)
 
-            master_path = get_param(query, "masterPath", None)
-            if master_path is not None:
-                master_path = (Path("/cs/masters") / master_path).resolve()
-                if Path("/cs/masters") not in master_path.parents:
-                    return write_json_error(self.wfile, "Root path points outside of allowed directories (masterPath must be a relative subpath)", result)
-
-                cfiles = get_param(query, "copyFiles", None)
-
-                if "master" not in cfiles and "task" not in cfiles:
-                    cfiles["task"] = cfiles
-
-                if language.rootpath is None:
-                    task_path = master_path
-                else:
-                    task_path = master_path / Path(language.prgpath).relative_to(language.rootpath)
-                    copy_files_regex(cfiles.get("master", None), master_path, Path(language.rootpath))
-                copy_files_regex(cfiles.get("task", None), task_path, Path(language.prgpath))
-
             if not nofilesave:
-                for f in language.sourcefiles:
-                    file = Path(f.path)
-                    if not file.is_file():
+                for file in language.sourcefiles:
+                    path = Path(file.path)
+                    if not path.is_file():
                         return write_json_error(self.wfile, "Could not get the source file", result)
-                    if file.stat().st_size == 0:
+                    if path.stat().st_size == 0:
                         return write_json_error(self.wfile, "Could not get the source file (file is empty)", result)
                 # self.wfile.write("Could not get the source file\n")
                 # print "=== Could not get the source file"

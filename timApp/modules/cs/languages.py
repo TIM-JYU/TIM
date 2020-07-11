@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 from fileParams import *  # noqa
+from file_handler import File
 
 """
 Adding new language to csPlugin:
@@ -67,17 +68,9 @@ def is_compile_error(out, err):
     return out.find("Compile error") >= 0 or err.find("Compile error") >= 0
 
 
-@dataclass
-class SourceFile:
-    path: str
-    content: str
-    fileext: str = field(default="")
-    filedext: str = field(default="")
-
-
 class Language:
     ttype = "_language"
-    def __init__(self, query: Optional[QueryClass], sourcecodes = ""):
+    def __init__(self, query: Optional[QueryClass], sourcefiles = ""):
         """
         :param self: object reference
         :param query: query to use
@@ -153,30 +146,18 @@ class Language:
             mkdirs("/tmp/tmp")
 
         self.fullpath = "/tmp/" + self.basename  # check it is sure under userpath
-        fname = "prg"
-        # noinspection PyBroadException
-        try:  # Let's do filename that depends on the taskID. Needed when many autorun plugins in the same page.
-            tid = query.jso.get("taskID", "prg")
-            i = tid.find(".")
-            if i >= 0:
-                tid = tid[i + 1:]
-            asciified = re.sub(r"[^A-Za-z0-9_]", "", tid)
-            # taskID variable may end with a dot (when the plugin doesn't have a task id),
-            # so need to ensure asciified is not empty. Can also happen if task id has only non-ascii chars.
-            if asciified:
-                fname = asciified
-        except AttributeError:
-            pass
 
-        filename = get_param(query, "filename", fname)
-        if isinstance(sourcecodes, str):
-            sourcecodes = [{"path": filename, "content": sourcecodes}]
-        if sourcecodes[0]["path"] is None:
-            sourcecodes[0]["path"] = filename
+        if isinstance(sourcefiles, str):
+            sourcefiles = [File.default(query, sourcefiles)]
+        if sourcefiles[0].path is None:
+            sourcefiles[0].path = filename
 
         extensions, fileext, filedext = self.extensions()
-        self.filenames = [file["path"] for file in sourcecodes]
-        self.sourcefiles = [SourceFile(None, file["content"], fileext, fileext) for file in sourcecodes]
+        self.filenames = [file.path for file in sourcefiles]
+        self.sourcefiles = sourcefiles
+        for file in self.sourcefiles:
+            file.fileext = fileext
+            file.filedext = fileext
         self.check_extensions(extensions)
 
         for i in range(len(self.filenames)):
