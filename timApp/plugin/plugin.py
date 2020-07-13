@@ -611,7 +611,7 @@ def maybe_get_plugin_from_par(p: DocParagraph, task_id: TaskId, u: User) -> Opti
             p_tid = TaskId.parse(t_attr, allow_block_hint=False, require_doc_id=False)
         except PluginException:
             return None
-        if (p_tid.task_name == task_id.task_name or
+        if ((p_tid.task_name == task_id.task_name and p.doc.doc_id == task_id.doc_id) or
                 (task_id.doc_id and p_tid.doc_id and p_tid.doc_task == task_id.doc_task)):
             return Plugin.from_paragraph(p, user=u)
     def_plug = p.get_attr('defaultplugin')
