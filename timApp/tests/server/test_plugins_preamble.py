@@ -1,4 +1,3 @@
-"""Testing interaction of plugins with preambles."""
 from lxml import html
 
 from timApp.answer.answer import Answer
@@ -83,7 +82,7 @@ choices:
         # The plugin is a reference, so it exists only in the original document.
         self.post_answer(plug.type, f'{d.id}.t', [True],
                          expect_status=400,
-                         expect_content='Plugin not found',
+                         expect_content=f'Task not found in the document: {plug.task_id.task_name}',
                          )
 
         resp = self.post_answer(plug.type, plug.task_id.extended, [True],
