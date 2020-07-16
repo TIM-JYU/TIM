@@ -153,3 +153,9 @@ def is_parent_of(parent: str, child: str):
     parent = os.path.normpath(parent)
     child = os.path.normpath(child)
     return child.startswith(parent) or os.path.abspath(child).startswith(os.path.abspath(parent))
+
+
+def is_relative_subpath(path: str):
+    """Returns whether a path is a relative subpath"""
+    path = os.path.normpath(path)
+    return not path.startswith("/") and not path.startswith("..")

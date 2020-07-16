@@ -202,6 +202,9 @@ class MasterSource(FileSource):
             self.is_regex = False
             source_path = source_path[2:]
 
+        if not is_relative_subpath(source_path):
+            raise PermissionError(f"{source_path} directs outside the master directory")
+
         super().__init__(file, source_path, language)
 
     @classinstancemethod
