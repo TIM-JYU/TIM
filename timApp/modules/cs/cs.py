@@ -1350,7 +1350,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # Write the program to the file =======================================================
             if not nofilesave:
-                fhandler.save_files(language.sourcefiles, language.prgpath, language.rootpath)
+                fhandler.save_files(language.sourcefiles, language)
 
             save_extra_files(query, extra_files, language.prgpath)
 

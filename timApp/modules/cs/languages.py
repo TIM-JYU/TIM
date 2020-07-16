@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 from fileParams import *  # noqa
-from file_handler import File
+from file_util import File
 
 """
 Adding new language to csPlugin:
