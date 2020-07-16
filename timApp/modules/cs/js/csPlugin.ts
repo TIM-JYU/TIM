@@ -839,7 +839,7 @@ export class CsController extends CsBase implements ITimComponent {
     selectedLanguage!: string;
     simcir?: JQuery;
     tinyErrorStyle: Partial<CSSStyleDeclaration> = {};
-    uploadedFiles = new Set((o: IUploadedFile) => o.path);
+    uploadedFiles = new Set((o: IUploadedFile) => this.uploadedFileName(o.path));
     uploadUrl?: string;
     userargs: string = "";
     userinput: string = "";
@@ -1510,6 +1510,10 @@ ${fhtml}
         }
     }
 
+    uploadedFileName(url: string) {
+        return url.split("/").slice(6).join("/");
+    }
+
     initSaved() {
         this.savedvals = {
             code: this.editor?.files.map((f) => f.content ?? f.base) ?? [""],
@@ -1576,7 +1580,7 @@ ${fhtml}
     }
 
     onUploadDone(success: boolean) {
-        if (success && (this.markup.uploadautosave || !this.markup.button)) {
+        if (success && (this.markup.uploadautosave || !(this.isRun && this.buttonText()))) {
             this.doRunCode("upload", false);
         }
     }
@@ -1734,10 +1738,10 @@ ${fhtml}
                         (f2) => f2.path == f.path
                     )?.show
                 ).map((f) => ({source: "uploadByCode", ...f})) ?? [];
-        const uploadedFiles: IFileSubmission[] = this.uploadedFiles.toArray().map((f) => ({source: "upload:" + f.path, ...f}));
+        const uploadedFiles: IFileSubmission[] = this.uploadedFiles.toArray().map((f) => ({source: "upload:" + f.path, path: this.uploadedFileName(f.path), type: f.type}));
 
         let allFiles: IFileSubmission[] = editorFiles.concat(fileSelectFiles);
-        if (allFiles.length == 0) {
+        if (allFiles.length == 0 && !this.noeditor) {
             allFiles = [{source: "editor", path: "", content: this.usercode}];
         }
 
