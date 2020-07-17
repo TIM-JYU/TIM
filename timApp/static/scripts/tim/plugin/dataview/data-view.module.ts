@@ -9,6 +9,9 @@ import {DataViewComponent} from "./data-view.component";
     imports: [
         CommonModule,
     ],
+    exports: [
+        DataViewComponent
+    ]
 })
 export class DataViewModule {
 }

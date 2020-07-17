@@ -1,0 +1,33 @@
+/* To learn more about this file see: https://angular.io/config/tsconfig. */
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./static/scripts/build/tsc/app",
+    "strict": true,
+    "allowUnreachableCode": true,
+    "allowSyntheticDefaultImports": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noEmit": false,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "module": "ESNext",
+    "lib": [
+      "es2018",
+      "dom"
+    ],
+    "types": [
+      "sanitize-html"
+    ]
+  },
+  "include": [
+    "static/scripts/tim/**/*.worker.ts"
+  ]
+}

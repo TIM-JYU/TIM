@@ -1,0 +1,57 @@
+:host {
+    display: grid;
+    width: 50vw;
+    grid-template:
+        ". header" auto
+        "ids content" auto
+        / max-content auto;
+}
+
+::ng-deep .header {
+    overflow-x: hidden;
+    grid-area: header;
+
+    table {
+        tbody, thead {
+            display: block;
+            width: max-content;
+        }
+    }
+}
+
+.ids {
+    grid-area: ids;
+    overflow-y: hidden;
+}
+
+.data {
+    grid-area: content;
+}
+
+table {
+    display: block;
+
+    &.scroll {
+        overflow: scroll;
+    }
+}
+
+table.virtual {
+    word-break: break-all;
+
+    tbody, thead {
+        width: max-content;
+        display: block;
+    }
+}
+
+.fixed-width td, .fixed-width th {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+::ng-deep .header input {
+    width: 90%;
+    margin-right: 5%;
+    margin-left: 5%;
+}

@@ -11,5 +11,8 @@
   "include": [
     "static/scripts/tim/**/*.d.ts",
     "modules/cs/**/*.d.ts"
+  ],
+  "exclude": [
+    "static/scripts/tim/**/*.worker.ts"
   ]
 }
