@@ -101,6 +101,7 @@ import {
     openTableEditorToolbar,
 } from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
+import {DataViewModule} from "tim/plugin/dataview/data-view.module";
 
 
 function replaceAll(s: string, s1: string, s2: string): string {
@@ -3867,6 +3868,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         FormsModule,
         TimUtilityModule,
         PurifyModule,
+        DataViewModule,
     ],
     exports: [TimTableComponent],
 })
