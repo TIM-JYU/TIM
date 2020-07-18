@@ -517,7 +517,8 @@ def send_grades_to_sisu(
         validation_errors = [
             AssessmentError(
                 assessment=assessments[i],
-                message=", ".join(str(x) + ": " + ", ".join(y) for x, y in a.items()),
+                # message=", ".join(str(x) + ": " + ", ".join(y) for x, y in a.items()),
+                message=str(a.items()),
             )
             for i, a in msgs.items()
         ]
