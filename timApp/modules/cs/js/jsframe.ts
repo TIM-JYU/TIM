@@ -249,6 +249,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     edited: boolean = false;
     connectionErrorMessage?: string;
     private prevdata?: JSFrameData;
+    private currentData?: JSFrameData;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -294,6 +295,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         }
         const data = this.getDataFromMarkup();
         this.prevdata = data;
+        this.currentData = data;
         if (data) {
             this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n";
         }
@@ -535,6 +537,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             return;
         }
         this.setData(this.prevdata, false, true);
+        this.currentData = this.prevdata;
         this.send({msg: "close"});
         this.edited = false;
         this.updateListeners();
@@ -593,8 +596,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     async save() {
-        const data = this.getData("getDataSave");
-        return this.runSend(data);
+        return this.runSend(this.currentData);
     }
 
     isUnSaved() {
@@ -621,6 +623,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             if (msg === "update") {
                 this.console = "";
                 this.edited = true;
+                this.currentData = unwrapAllC(this.getDataReady(d.data));
                 this.updateListeners();
                 this.c();
             }
