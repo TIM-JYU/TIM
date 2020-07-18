@@ -662,13 +662,19 @@ def get_sisu_assessments(
 def fields_to_assessment(r: UserFieldObj, doc: DocInfo) -> CandidateAssessment:
     fields = r['fields']
     grade = fields.get(f'{doc.id}.grade')
+    if isinstance(grade, float):
+        grade = int(grade)
+    grade = str(grade) if grade is not None else None
+    credit = fields.get(f'{doc.id}.credit')
+    if isinstance(credit, float):
+        credit = int(credit)
     u = r['user']
     # TODO: Sisu accepts also 'privateComment' field.
     result = CandidateAssessment(
-        gradeId=str(grade) if grade is not None else None,
+        gradeId=grade,
         user=u,
         completionDate=fields.get(f'{doc.id}.completionDate'),
-        completionCredits=fields.get(f'{doc.id}.credit'),
+        completionCredits=credit,
         sentGrade=fields.get(f'{doc.id}.sentGrade'),
         sentCredit=fields.get(f'{doc.id}.sentCredit'),
     )
