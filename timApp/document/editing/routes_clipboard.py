@@ -133,8 +133,9 @@ def paste_from_clipboard(doc_id):
                 if src_doc is None or str(src_doc.doc_id) != str(src_docid):
                     src_doc = Document(src_docid)
                 src_par = DocParagraph.get_latest(src_doc, src_parid)
-                copy_readings(src_par, dest_par)
+                # TODO: Figure out a way to copy readings safely without exposing them
                 if was_cut:
+                    copy_readings(src_par, dest_par)
                     move_notes(src_par, dest_par)
 
         except ValueError:
