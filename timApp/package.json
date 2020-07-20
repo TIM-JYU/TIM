@@ -40,7 +40,6 @@
     "angular": "^1.8.0",
     "angular-bootstrap-colorpicker": "^3.0.32",
     "angular-diff-match-patch": "^0.7.77",
-    "angular-drag-and-drop-lists": "^2.1.0",
     "angular-eonasdan-datetimepicker": "^0.3.9",
     "angular-messages": "^1.8.0",
     "angular-sanitize": "^1.8.0",
