@@ -295,6 +295,7 @@ interface WordObject {
                     [itemTemplate]="itemTemplate"
                     wrapperClass="dropword"
                     itemClass="dragword"
+                    itemActiveClass="activeword"
                     placeholderItem="Drag here">
                 </bs-sortable>
 <!--                <ul *ngIf="!trash" class="dropword">-->

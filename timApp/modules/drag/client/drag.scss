@@ -26,6 +26,10 @@
     }
 }
 
+::ng-deep .activeword {
+    opacity: 0.5;
+}
+
 .dropword {
     align-content: flex-start;
     display: inline-flex;
