@@ -4,23 +4,23 @@
 import drag from "angular-drag-and-drop-lists";
 import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClientModule} from "@angular/common/http";
+import {SortableModule} from "ngx-bootstrap/sortable";
+import {ApplicationRef, Component, DoBootstrap, NgModule, OnInit, StaticProvider} from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ITimComponent, ViewCtrl} from "../../../static/scripts/tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "../../../static/scripts/tim/plugin/attributes";
 import {PluginBase, shuffleStrings} from "../../../static/scripts/tim/plugin/util";
 import {$http} from "../../../static/scripts/tim/util/ngimport";
 import {markAsUsed, to} from "../../../static/scripts/tim/util/utils";
-import {ApplicationRef, Component, DoBootstrap, NgModule, OnInit, StaticProvider} from "@angular/core";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-// import angular from 'angular';
-import {BrowserModule} from "@angular/platform-browser";
-import {HttpClientModule} from "@angular/common/http";
-import {SortableModule} from "ngx-bootstrap/sortable";
 import {createDowngradedModule, doDowngrade} from "../../../static/scripts/tim/downgrade";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
+import {FormsModule} from "@angular/forms";
 
 markAsUsed(drag);
 
@@ -290,10 +290,16 @@ interface WordObject {
                 <ul *ngIf="trash" class="dropword">
                     <li>TRASHCAN</li>
                 </ul>
-                <ul *ngIf="!trash" class="dropword">
-                    <li *ngFor="let item of wordObjs" [innerHTML]="item.word | purify" class="dragword">
-                    </li>
-                </ul>
+                <bs-sortable
+                    [(ngModel)]="wordObjs"
+                    [itemTemplate]="itemTemplate"
+                    wrapperClass="dropword"
+                    itemClass="dragword">
+                </bs-sortable>
+<!--                <ul *ngIf="!trash" class="dropword">-->
+<!--                    <li *ngFor="let item of wordObjs" [innerHTML]="item.word | purify" class="dragword">-->
+<!--                    </li>-->
+<!--                </ul>-->
             </div>
             <button class="timButton"
                     *ngIf="saveButton"
@@ -303,6 +309,7 @@ interface WordObject {
         </div>
         <div *ngIf="error" [innerHTML]="error | purify"></div>
         <div *ngIf="footer" class="plgfooter" [textContent]="footer"></div>
+        <ng-template #itemTemplate let-item="item"><span [innerHTML]="item.value.word | purify"></span></ng-template>
     `,
     styleUrls: [
         "./drag.scss",
@@ -481,6 +488,7 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
         SortableModule.forRoot(),
         TimUtilityModule,
         PurifyModule,
+        FormsModule,
     ],
 })
 export class DragModule implements DoBootstrap {
