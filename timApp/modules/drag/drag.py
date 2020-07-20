@@ -123,7 +123,6 @@ def reqs():
     return jsonify({
         "js": ["js/build/drag.js"],
         "multihtml": True,
-        "css": ["css/drag.css"],
         'editor_tabs': [
             {
                 'text': 'Fields',

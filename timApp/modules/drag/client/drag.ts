@@ -13,8 +13,6 @@ import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll
 import {ITimComponent} from "../../../static/scripts/tim/document/viewctrl";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "../../../static/scripts/tim/plugin/attributes";
 import {shuffleStrings} from "../../../static/scripts/tim/plugin/util";
-import {$http} from "../../../static/scripts/tim/util/ngimport";
-import {to} from "../../../static/scripts/tim/util/utils";
 import {createDowngradedModule, doDowngrade} from "../../../static/scripts/tim/downgrade";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
@@ -231,13 +229,13 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
     }
 
     async save() {
-        return await this.doSave(false);
+        return await this.doSave();
     }
 
-    async doSave(nosave: false) {
+    async doSave(nosave: boolean = false) {
         const params = {
             input: {
-                nosave: false,
+                nosave: nosave,
                 words: this.getContentArray(),
             },
             options: {
@@ -245,18 +243,14 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
             },
         };
 
-        if (nosave) {
-            params.input.nosave = true;
-        }
-
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
+        const r = await this.httpPut<{ web: { result: string, error?: string } }>(url, params);
 
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             this.error = data.web.error;
         } else {
-            this.error = r.result.data.error;
+            this.error = r.result.error.error;
         }
         return {saved: r.ok, message: this.error};
     }
