@@ -47,16 +47,14 @@ MANDATORY_FIELDS = {'answerFieldType', 'headers', 'questionTitle', 'questionText
 CONDITIONALLY_MANDATORY_FIELDS = {'matrix': 'matrixType'}
 
 
-def normalize_question_json(q: Dict[str, Any], allow_top_level_keys: Set[str] = None):
+def normalize_question_json(q: Dict[str, Any]):
     """Normalizes the JSON data of a question.
 
     The question data format has changed a few times over the years. This function normalizes all possible formats
     to a single format that is easier to handle in other code.
-    :param allow_top_level_keys: The set of keys to leave intact in top level. Used for qst plugin.
     :param q: The data to normalize.
     :return: The normalized data.
     """
-    allow_top_level_keys = allow_top_level_keys or set()
     normalized = {}
     json_data = find_json(q)
     if not json_data:
@@ -65,11 +63,11 @@ def normalize_question_json(q: Dict[str, Any], allow_top_level_keys: Set[str] = 
         json_data,
         normalized,
         skip_keys={'data', 'DATA'},
-        allow_keys=allow_top_level_keys if q is json_data else None
     )
     if q is not json_data:
         # process top-level keys
-        process_json(q, normalized, allow_keys=allow_top_level_keys)
+        process_json(q, normalized)
+    normalized.pop('json', None)
     data_field = json_data.get('data') or json_data.get('DATA')
     if data_field:
         process_json(data_field, normalized)
@@ -105,10 +103,8 @@ def make_error_question(desc: str):
 
 def process_json(json_data: Dict[str, Any],
                  normalized: Dict[str, Union[str, Dict, List]],
-                 skip_keys: Set[str] = None,
-                 allow_keys: Set[str] = None):
+                 skip_keys: Set[str] = None):
     skip_keys = skip_keys or set()
-    allow_keys = allow_keys or set()
     for k, v in json_data.items():
         if k in skip_keys:
             continue
@@ -116,7 +112,7 @@ def process_json(json_data: Dict[str, Any],
         mapped = FIELD_NAME_MAP.get(kl)
         if mapped:
             normalized[mapped] = deepcopy(v)
-        elif k in allow_keys:
+        else:
             normalized[k] = deepcopy(v)
 
 

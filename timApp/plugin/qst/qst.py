@@ -761,9 +761,7 @@ def qst_get_html(jso, review):
     qst_handle_randomization(jso)
     info = jso['info']
     markup = jso['markup']
-    markup = normalize_question_json(markup,
-                                     allow_top_level_keys=
-                                     qst_attrs)
+    markup = normalize_question_json(markup)
     jso['markup'] = markup
     result = qst_try_hide_points(jso)
     jso['show_result'] = result
@@ -926,7 +924,7 @@ def qst_get_md(jso):
 
 def question_convert_js_to_yaml(markup: Dict, is_task: bool, task_id: Optional[str]):
     # save question. How to pick up question see lecture.py, get_question_data_from_document
-    markup = normalize_question_json(markup, allow_top_level_keys=qst_attrs)
+    markup = normalize_question_json(markup)
     question_title = markup["questionTitle"]
     question_title = question_title.replace('"', '').replace("'", '')
     # taskid = questionTitle.replace(" ", "")  # TODO: make better conversion to ID
@@ -979,7 +977,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
         convert_md([plugindata], options=par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
     markup = plugindata.get('markup')
     return QuestionInDocument(
-        markup=normalize_question_json(markup, allow_top_level_keys=qst_attrs),
+        markup=normalize_question_json(markup),
         qst=not par.is_question(),
         taskId=par.get_attr('taskId'),
         docId=d.id,
@@ -1020,6 +1018,6 @@ def calculate_points_from_json_answer(single_answers: List[List[str]],
     return points
 
 
-def calculate_points(answer, points_table):
+def calculate_points(answer, points_table, default_points: float = 0):
     single_answers = json.loads(answer)
-    return calculate_points_from_json_answer(single_answers, points_table)
+    return calculate_points_from_json_answer(single_answers, points_table, default_points)
