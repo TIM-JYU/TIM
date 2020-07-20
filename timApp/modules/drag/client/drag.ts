@@ -294,7 +294,8 @@ interface WordObject {
                     [(ngModel)]="wordObjs"
                     [itemTemplate]="itemTemplate"
                     wrapperClass="dropword"
-                    itemClass="dragword">
+                    itemClass="dragword"
+                    placeholderItem="Drag here">
                 </bs-sortable>
 <!--                <ul *ngIf="!trash" class="dropword">-->
 <!--                    <li *ngFor="let item of wordObjs" [innerHTML]="item.word | purify" class="dragword">-->
@@ -309,7 +310,7 @@ interface WordObject {
         </div>
         <div *ngIf="error" [innerHTML]="error | purify"></div>
         <div *ngIf="footer" class="plgfooter" [textContent]="footer"></div>
-        <ng-template #itemTemplate let-item="item"><span [innerHTML]="item.value.word | purify"></span></ng-template>
+        <ng-template #itemTemplate let-item="item"><div [innerHTML]="item.value.word | purify"></div></ng-template>
     `,
     styleUrls: [
         "./drag.scss",
