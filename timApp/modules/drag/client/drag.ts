@@ -99,9 +99,6 @@ interface WordObject {
         </div>
         <div *ngIf="error" [innerHTML]="error | purify"></div>
         <div *ngIf="footer" class="plgfooter" [textContent]="footer"></div>
-        <ng-template #itemTemplate let-item="item">
-            <div [innerHTML]="item.value.word | purify"></div>
-        </ng-template>
     `,
     styleUrls: [
         "./drag.scss",
