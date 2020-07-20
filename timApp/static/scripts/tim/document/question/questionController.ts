@@ -298,8 +298,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             this.question.defaultPoints = json.defaultPoints;
             this.defaultPoints = json.defaultPoints;
         }
-        console.log(json.defaultPoints);
-        console.log(this.question.defaultPoints);
         if (json.questionTitle) {
             this.question.questionTitle = this.putBackQuotations(json.questionTitle);
         }
@@ -948,14 +946,12 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             return;
         }
 
-        if (this.defaultPoints != undefined) {
             // TODO: Check why UI defaultpoints field can't be bound directly to question.defaultpoints
             this.question.defaultPoints = this.defaultPoints;
-        }
         if (!this.randomization) {
             this.question.randomizedRows = undefined;
         } else {
-            this.question.randomizedRows = this.randomizedRows;
+            this.question.randomizedRows = this.randomizedRows ?? this.rows.length; // TODO: better alternative for "all"
             this.question.doNotMove = this.checkLockedRows();
         }
 

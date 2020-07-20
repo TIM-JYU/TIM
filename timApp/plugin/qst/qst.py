@@ -120,10 +120,10 @@ class QstMarkupModel(GenericMarkupModel):
     questionTitle: Union[str, None, Missing] = missing
     questionType: Union[str, None, Missing] = missing
     rows: Union[Any, Missing] = missing
-    randomizedRows: Union[int, Missing] = missing
+    randomizedRows: Union[int, None, Missing] = missing
     randomSeed: Union[int, Missing] = missing
-    doNotMove: Union[List[int], int, Missing] = missing
-    defaultPoints: Union[int, float, Missing] = missing
+    doNotMove: Union[List[int], int, None, Missing] = missing
+    defaultPoints: Union[int, float, None, Missing] = missing
     savedText: Union[str, None, Missing] = missing
     size: Union[str, None, Missing] = missing
 
