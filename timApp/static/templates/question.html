@@ -35,7 +35,9 @@
             </div>
             <!-- DEFAULTPOINTS?-->
             <label for="defaultPoints{{$id}}">Default points for answers</label>
-            <input ng-model="qctrl.pluginMarkup.defaultPoints"
+<!--            for some reason we can't directly bind to qctrl.question.defaultpoints, possibly because defaultPoints
+                can be undefined. Instead we bind to separate variable in qctrl and check that variable when saving -->
+            <input ng-model="qctrl.defaultPoints"
                    id="defaultPoints{{$id}}"
                    class="form-control"
                    placeholder="Default point value for fields"
@@ -44,7 +46,7 @@
             <label> Randomize rows <input type="checkbox" ng-model="qctrl.randomization"/></label>
             <div class="form-group" ng-if="qctrl.randomization">
                 Number of rows to select (in addition to locked rows)
-                            <input ng-model="qctrl.pluginMarkup.randomizedRows"
+                            <input ng-model="qctrl.randomizedRows"
                    id="randomizedRows{{$id}}"
                    class="form-control"
                    type="number"

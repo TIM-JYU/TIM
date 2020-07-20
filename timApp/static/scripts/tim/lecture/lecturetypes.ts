@@ -22,12 +22,15 @@ export interface IQuestionParagraph extends IUniqueParId {
 
 export interface IAskedJsonBase {
     answerFieldType: AnswerFieldType;
+    defaultPoints?: number;
     expl?: IExplCollection;
+    doNotMove?: number[] | number;
     matrixType?: MatrixType; // is useless
     points?: string;
     questionText: string;
     questionTitle: string;
     questionType: QuestionType;
+    randomizedRows?: number
     timeLimit?: number;
 }
 
