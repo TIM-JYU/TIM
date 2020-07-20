@@ -148,9 +148,10 @@ class LectureTest(TimRouteTest):
                                        'asked_time': resp['asked_time'],
                                        'doc_id': doc.id,
                                        'json': {
-                                           'hash': 'MHgzN2M5NGNhYQ==',
+                                           'hash': 'LTB4MzJjNWJkYTM=',
                                            'json': {
                                                'answerFieldType': 'radio',
+                                               'defaultPoints': 0.5,
                                                'headers': [],
                                                'points': '2:1',
                                                'questionText': 'What day is it today?',
@@ -186,7 +187,7 @@ class LectureTest(TimRouteTest):
         resp = self.get_updates(doc.id, msg_id, True, aid)
         original_end_time = dateutil.parser.parse(resp['question_end_time'])
 
-        self.json_put('/answerToQuestion', query_string={'input': json.dumps({'answers': [['1']]}), 'asked_id': aid},
+        self.json_put('/answerToQuestion', query_string={'input': json.dumps({'answers': [['2']]}), 'asked_id': aid},
                       expect_content=self.ok_resp)
 
         resp = self.get_updates(doc.id, msg_id, True, aid)
@@ -239,7 +240,16 @@ class LectureTest(TimRouteTest):
 
         self.login_test1()
 
-        self.post('/updatePoints/', query_string=dict(asked_id=aid, points='2:1'))
+        totals = self.get(f'/getLectureAnswerTotals/{lecture_id}')
+        self.assertEqual("""
+testuser1;sum;1.5
+testuser2;sum;1.0
+
+testuser1;count;2
+testuser2;count;1
+                """.strip() + '\n', totals)
+        # updatePoints should take defaultPoints 0.5 into account
+        self.post('/updatePoints/', query_string=dict(asked_id=aid, points='0:1'))
 
         resp = self.json_post('/askQuestion',
                               query_string=dict(doc_id=doc.id, par_id=par_id))
@@ -275,8 +285,8 @@ class LectureTest(TimRouteTest):
 
         totals = self.get(f'/getLectureAnswerTotals/{lecture_id}')
         self.assertEqual("""
-testuser1;sum;1.0
-testuser2;sum;0.0
+testuser1;sum;2.0
+testuser2;sum;0.5
 
 testuser1;count;2
 testuser2;count;1

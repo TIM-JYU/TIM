@@ -76,6 +76,10 @@ class AskedQuestion(db.Model):
         aj = self.asked_json.to_json()
         return aj['json'].get('points')
 
+    def get_default_points(self):
+        aj = self.asked_json.to_json()
+        return aj['json'].get('defaultPoints', 0)
+
     @property
     def is_running(self):
         rq = self.running_question

@@ -858,8 +858,9 @@ def update_question_points():
     asked_question.expl = expl
     points_table = create_points_table(points)
     question_answers: List[LectureAnswer] = asked_question.answers.all()
+    default_points = asked_question.get_default_points()
     for answer in question_answers:
-        answer.points = calculate_points(answer.answer, points_table)
+        answer.points = calculate_points(answer.answer, points_table, default_points)
     db.session.commit()
     return ok_response()
 
@@ -974,7 +975,8 @@ def answer_to_question():
         time_now = get_current_time()
         question_points = asked_question.get_effective_points()
         points_table = create_points_table(question_points)
-        points = calculate_points_from_json_answer(answer, points_table)
+        default_points = asked_question.get_default_points()
+        points = calculate_points_from_json_answer(answer, points_table, default_points)
         answer = json.dumps(whole_answer)
         if lecture_answer and u.id != 0:
             lecture_answer.answered_on = time_now

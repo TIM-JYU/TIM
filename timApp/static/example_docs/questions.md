@@ -11,6 +11,7 @@ json:
   - Friday
   timeLimit: 90
 points: '2:1'
+defaultPoints: 0.5
 ```
 
 ``` {plugin="qst" #test2}
