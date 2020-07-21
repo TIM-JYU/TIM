@@ -30,6 +30,7 @@ const DragMarkup = t.intersection([
         savebutton: t.boolean,
         shuffle: t.boolean,
         followid: t.string,
+        autoSave: withDefault(t.boolean, false),
     }),
     GenericPluginMarkup,
     t.type({
@@ -243,8 +244,7 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
             },
         };
 
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await this.httpPut<{ web: { result: string, error?: string } }>(url, params);
+        const r = await this.postAnswer<{ web: { result: string, error?: string } }>(params);
 
         if (r.ok) {
             const data = r.result;

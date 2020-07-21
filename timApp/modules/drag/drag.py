@@ -33,6 +33,7 @@ class DragMarkupModel(GenericMarkupModel):
     trash: Union[bool, Missing] = missing
     type: Union[str, Missing] = missing
     words: Union[List[str], Missing] = missing
+    autoSave: Union[bool, Missing] = missing
 
 
 @dataclass
