@@ -1,14 +1,20 @@
-.touchdrag .dragword{
-    padding: 1em;
+:host {
+    display: block;
 }
 
-.touchdrag .dropword{
-    padding: 1em;
-    min-height: calc(4em + 8px);
-}
+::ng-deep .touchdrag {
+    .dragword {
+        padding: 1em;
+    }
 
-.touchdrag .dndPlaceholder {
-    min-height: calc(2.25em);
+    .dropword {
+        padding: 1em;
+        min-height: calc(4em + 8px);
+    }
+
+    .dndPlaceholder {
+        min-height: calc(2.25em);
+    }
 }
 
 .dragword {
@@ -18,14 +24,21 @@
     cursor: grab;
     min-height: calc(1.5em + 2px);
     touch-action: manipulation;
-
     box-shadow: 4px 4px 1px grey;
 }
 
-.dropword{
+::ng-deep .activeword {
+    opacity: 0.5;
+}
+
+.dropplaceholder {
+    width: 2em;
+}
+
+.dropword {
     align-content: flex-start;
     display: inline-flex;
-    touch-action: manipulation; /* prevents scrolling while dragging on touchscreen */
+    touch-action: manipulation; // prevents scrolling while dragging on touchscreen
     padding: 0.25em;
     background-color: #d5d5d5;
     border: 2px dashed #aaaaaa;
@@ -33,17 +46,11 @@
     min-height: calc(2.5em + 6px);
 }
 
-.plugindrag ul{
+ul {
     list-style-type: none;
     margin: 0;
     vertical-align: middle;
-
 }
-
-.dndDraggingSource {
-  opacity: 0.6; 
-}
-
 
 .dndPlaceholder {
     min-width: 3em;

@@ -51,7 +51,7 @@ export function staticDynamicImport(s: string) {
         case "/field/js/build/dropdown.js":
             return import("modules/fields/js/dropdown");
         case "/drag/js/build/drag.js":
-            return import("modules/drag/js/drag");
+            return import("modules/drag/client/drag");
         case "/feedback/js/build/feedback.js":
             return import("modules/feedback/js/feedback");
         case "/field/js/build/goaltable.js":
