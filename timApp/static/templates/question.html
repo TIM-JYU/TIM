@@ -42,6 +42,15 @@
                    placeholder="Default point value for fields"
                    type="number"
                    step="0.1"/>
+            <label> Randomize rows <input type="checkbox" ng-model="qctrl.randomization"/></label>
+            <div class="form-group" ng-if="qctrl.randomization">
+                Number of rows to select (in addition to locked rows)
+                <input ng-model="qctrl.randomizedRows"
+                       id="randomizedRows{{$id}}"
+                       class="form-control"
+                       type="number"
+                       step="1"/>
+            </div>
             <div class="form-group"
                  ng-if="qctrl.question.questionType == 'matrix' || qctrl.question.questionType == 'likert'">
                 <label for="answerType{{$id}}">Answer type</label>
@@ -69,17 +78,6 @@
             </div>
 <!--            TODO: Open these to lecture question later-->
 <!--            current lectureanswer has no way to check the order-->
-            <div ng-if="qctrl.qst">
-                <label> Randomize rows <input type="checkbox" ng-model="qctrl.randomization"/></label>
-                <div class="form-group" ng-if="qctrl.randomization">
-                    Number of rows to select (in addition to locked rows)
-                    <input ng-model="qctrl.randomizedRows"
-                           id="randomizedRows{{$id}}"
-                           class="form-control"
-                           type="number"
-                           step="1"/>
-                </div>
-            </div>
             <div class="form-horz-flex" ng-if="!qctrl.qst">
                 <label>
                     Duration

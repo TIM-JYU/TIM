@@ -32,7 +32,7 @@ from timApp.lecture.runningquestion import Runningquestion
 from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
 from timApp.plugin.qst.qst import get_question_data_from_document, create_points_table, \
-    calculate_points_from_json_answer, calculate_points
+    calculate_points_from_json_answer, calculate_points, qst_handle_randomization, qst_rand_array
 from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model, RouteException
@@ -332,7 +332,19 @@ def get_new_question(lecture: Lecture, current_question_id=None, current_points_
                 q = get_asked_question(asked_id)
                 answer = q.answers.filter_by(user_id=current_user).first()
                 question.add_activity(QuestionActivityKind.Usershown, u)
-                return {'type': 'answer', 'data': answer} if answer else {'type': 'question', 'data': q}
+                if answer:
+                    return {'type': 'answer', 'data': answer}
+                else:
+                    q_copy = q.to_json()
+                    if q and lecture.lecturer != current_user:
+                        try:
+                            q_json = {'markup': json.loads(q.asked_json.json),
+                                      'user_id': current_user}
+                            qst_handle_randomization(q_json)
+                            q_copy['json']['json'] = q_json['markup']
+                        except KeyError:
+                            pass
+                    return {'type': 'question', 'data': q_copy}
         else:
             question_to_show_points = get_shown_points(lecture)
             if question_to_show_points:
@@ -954,7 +966,6 @@ def answer_to_question():
     if answer is None:
         # The data SHOULD have (empty) answers array even if the user does not touch the answer sheet.
         raise RouteException('Missing answers in input')
-    whole_answer = answer
     lecture = get_current_lecture_or_abort()
     lecture_id = lecture.lecture_id
     u = get_current_user_object()
@@ -972,7 +983,26 @@ def answer_to_question():
         asked_question.add_activity(QuestionActivityKind.Useranswered, u)
 
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer.answer):
+        # rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, seed_string, random_seed, locks)
+        q_data = json.loads(asked_question.asked_json.json)
+        random_rows = q_data.get('randomizedRows', 0)
+        if random_rows:
+            # input [[1, 2], [4], []]
+            # rand_arr [4, 1, 2]
+            # => [[4], [], [], [1, 2]]
+            row_count = len(q_data.get('rows', []))
+            rand_arr = qst_rand_array(row_count, random_rows,
+                                  str(u.id), locks=q_data.get('doNotMove'))
+            unshuffled_ans = [[] for x in range(row_count)]
+            for i, pos in enumerate(rand_arr):
+                unshuffled_ans[pos - 1] = answer[i]
+            answer = unshuffled_ans
+        whole_answer = answer
         time_now = get_current_time()
+        # q_json = {'markup': json.loads(asked_question.asked_json.json),
+        #           'user_id': u.id}
+        # qst_handle_randomization(q_json)
+        # question_points = q_json['markup'].get('points')
         question_points = asked_question.get_effective_points()
         points_table = create_points_table(question_points)
         default_points = asked_question.get_default_points()

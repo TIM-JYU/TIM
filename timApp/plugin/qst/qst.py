@@ -744,7 +744,7 @@ def qst_handle_randomization(jso):
                     break
             if random_seed is None:
                 random_seed = 0
-            seed_string = jso.get('user_id', "") + jso.get('taskID', "")
+            seed_string = str(jso.get('user_id', "")) + str(jso.get('taskID', ""))
             rand_arr = qst_rand_array(len(rows), rcount, seed_string, random_seed, locks)
     if rand_arr is not None:  # specific order found in prev.ans or markup
         markup['rows'] = qst_set_array_order(rows, rand_arr)
