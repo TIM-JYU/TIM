@@ -7,7 +7,7 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {DndModule, EffectAllowed} from "ngx-drag-drop";
+import {DndDropEvent, DndModule, EffectAllowed} from "ngx-drag-drop";
 import {ApplicationRef, Component, DoBootstrap, NgModule, OnInit, StaticProvider} from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ITimComponent} from "../../../static/scripts/tim/document/viewctrl";
@@ -54,6 +54,7 @@ interface WordObject {
     word: string;
     type?: string;
     effectAllowed: EffectAllowed;
+    taskId?: string;
 }
 
 @Component({
@@ -76,7 +77,7 @@ interface WordObject {
                     [dndDraggable]="wordObjs"
                     [dndDisableDragIf]="wordObjs.length >= max"
                     [dndEffectAllowed]="effectAllowed"
-                    (dndDrop)="wordObjs.splice($event.index || 0, 0, $event.data)"
+                    (dndDrop)="handleDrop($event)"
                 >
                     <li class="dndPlaceholder" dndPlaceholderRef></li>
                     <li *ngFor="let item of wordObjs; let i = index"
@@ -84,7 +85,7 @@ interface WordObject {
                         class="dragword"
                         [dndDraggable]="item"
                         [dndType]="item.type"
-                        (dndMoved)="wordObjs.splice(i, 1)"
+                        (dndMoved)="handleMove(i)"
                         (dndCanceled)="(copy !== 'target') || wordObjs.splice(i, 1)"
                         [dndEffectAllowed]="item.effectAllowed"
                     ></li>
@@ -166,11 +167,13 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
         if (this.copy == "source" || this.copy == "target") {
             this.effectAllowed = "copy";
         }
+        const taskId = this.pluginMeta.getTaskId()?.docTask();
         this.wordObjs = words.map((x, i) => ({
             effectAllowed: this.effectAllowed,
             id: i,
             type: this.type,
             word: x,
+            taskId: taskId,
         }));
         if (this.copy == "source") {
             this.max = this.wordObjs.length;
@@ -227,6 +230,23 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
     resetField(): undefined {
         this.setPluginWords(this.markup.words ?? []);
         return undefined;
+    }
+
+    handleMove(index: number) {
+        this.wordObjs.splice(index, 1);
+        if (this.markup.autoSave && !this.trash) {
+            void this.save();
+        }
+    }
+
+    handleDrop(event: DndDropEvent) {
+        const taskId = this.pluginMeta.getTaskId()?.docTask();
+        const word = event.data as WordObject;
+        this.wordObjs.splice(event.index ?? 0, 0, word);
+        if (this.markup.autoSave && !this.trash && (!word.taskId || word.taskId != taskId)) {
+            void this.save();
+        }
+        word.taskId = taskId;
     }
 
     async save() {
