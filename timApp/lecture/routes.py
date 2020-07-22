@@ -987,16 +987,23 @@ def answer_to_question():
         q_data = json.loads(asked_question.asked_json.json)
         random_rows = q_data.get('randomizedRows', 0)
         if random_rows:
-            # input [[1, 2], [4], []]
-            # rand_arr [4, 1, 2]
-            # => [[4], [], [], [1, 2]]
-            row_count = len(q_data.get('rows', []))
-            rand_arr = qst_rand_array(row_count, random_rows,
-                                  str(u.id), locks=q_data.get('doNotMove'))
-            unshuffled_ans = [[] for x in range(row_count)]
-            for i, pos in enumerate(rand_arr):
-                unshuffled_ans[pos - 1] = answer[i]
-            answer = unshuffled_ans
+            try:
+                q_type = q_data.get('questionType')
+                row_count = len(q_data.get('rows', []))
+                rand_arr = qst_rand_array(row_count, random_rows,
+                                      str(u.id), locks=q_data.get('doNotMove'))
+                if q_type == 'matrix':
+                    unshuffled_ans = [[] for x in range(row_count)]
+                    for i, pos in enumerate(rand_arr):
+                        unshuffled_ans[pos - 1] = answer[i]
+                else:
+                    unshuffled_ans = [[]]
+                    for choice in answer[0]:
+                        # TODO: check if str conversion is unnecessary
+                        unshuffled_ans[0].append(str(rand_arr[int(choice) - 1]))
+                answer = unshuffled_ans
+            except IndexError:
+                return abort(400, "Invalid answer input.")
         whole_answer = answer
         time_now = get_current_time()
         # q_json = {'markup': json.loads(asked_question.asked_json.json),
