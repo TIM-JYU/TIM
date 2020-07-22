@@ -32,7 +32,7 @@ from timApp.lecture.runningquestion import Runningquestion
 from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
 from timApp.plugin.qst.qst import get_question_data_from_document, create_points_table, \
-    calculate_points_from_json_answer, calculate_points, qst_handle_randomization, qst_rand_array
+    calculate_points_from_json_answer, calculate_points, qst_handle_randomization, qst_rand_array, qst_unshuffle_answer
 from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model, RouteException
@@ -992,15 +992,7 @@ def answer_to_question():
                 row_count = len(q_data.get('rows', []))
                 rand_arr = qst_rand_array(row_count, random_rows,
                                       str(u.id), locks=q_data.get('doNotMove'))
-                if q_type == 'matrix':
-                    unshuffled_ans = [[] for x in range(row_count)]
-                    for i, pos in enumerate(rand_arr):
-                        unshuffled_ans[pos - 1] = answer[i]
-                else:
-                    unshuffled_ans = [[]]
-                    for choice in answer[0]:
-                        # TODO: check if str conversion is unnecessary
-                        unshuffled_ans[0].append(str(rand_arr[int(choice) - 1]))
+                unshuffled_ans = qst_unshuffle_answer(answer, q_type, row_count, rand_arr)
                 answer = unshuffled_ans
             except IndexError:
                 return abort(400, "Invalid answer input.")

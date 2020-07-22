@@ -159,6 +159,20 @@ def qst_answer(m):
     return qst_answer_jso(m)
 
 
+def qst_unshuffle_answer(answer: QstBasicState, question_type: str,
+                         row_count: int, rand_arr: List[int]) -> QstBasicState:
+    if question_type == 'matrix' or question_type == 'true-false':
+        unshuffled_ans = [[] for x in range(row_count)]
+        for i, pos in enumerate(rand_arr):
+            unshuffled_ans[pos - 1] = answer[i]
+    else:
+        unshuffled_ans = [[]]
+        for choice in answer[0]:
+            # TODO: check if str conversion is unnecessary
+            unshuffled_ans[0].append(str(rand_arr[int(choice) - 1]))
+    return unshuffled_ans
+
+
 def qst_filter_markup_points(points: str, question_type: str, rand_arr: List[int]) -> str:
     """
     filter markup's points field based on pre-generated array
