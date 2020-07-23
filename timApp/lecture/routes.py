@@ -988,7 +988,7 @@ def answer_to_question():
         question_points = asked_question.get_effective_points()
         q_data = json.loads(asked_question.asked_json.json)
         random_rows = q_data.get('randomizedRows', 0)
-        if random_rows:
+        if random_rows and not is_lecturer_of(lecture):
             row_count = len(q_data.get('rows', []))
             q_type = q_data.get('questionType')
             rand_arr = qst_rand_array(row_count, random_rows, str(u.id), locks=q_data.get('doNotMove'))
