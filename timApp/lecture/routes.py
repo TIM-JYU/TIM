@@ -32,7 +32,7 @@ from timApp.lecture.runningquestion import Runningquestion
 from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
 from timApp.plugin.qst.qst import get_question_data_from_document, create_points_table, \
-    calculate_points_from_json_answer, calculate_points, qst_handle_randomization, qst_rand_array, \
+    calculate_points_from_json_answer, qst_handle_randomization, qst_rand_array, \
     qst_filter_markup_points
 from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
