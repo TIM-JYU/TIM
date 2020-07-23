@@ -257,6 +257,7 @@ class AnswerSheetController implements IController {
         if (this.isVertical()) {
             [rowIndex, colIndex] = [colIndex, rowIndex];
         }
+        // Return a non-null value as long as a point value was explicitly given in point array or defaultPoints
         if (this.pointsTable.length <= rowIndex) {
             return this.defaultPoints != null ? this.defaultPoints.toString() : null;
         }
