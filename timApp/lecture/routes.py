@@ -873,7 +873,7 @@ def update_question_points():
     question_answers: List[LectureAnswer] = asked_question.answers.all()
     default_points = asked_question.get_default_points()
     for answer in question_answers:
-        answer.points = calculate_points(answer.get_parsed_answer(), points_table, default_points)
+        answer.points = calculate_points_from_json_answer(answer.get_parsed_answer(), points_table, default_points)
     db.session.commit()
     return ok_response()
 

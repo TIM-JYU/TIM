@@ -1016,8 +1016,3 @@ def calculate_points_from_json_answer(single_answers: List[List[str]],
             else:
                 points += default_points
     return points
-
-
-def calculate_points(answer, points_table, default_points: float = 0):
-    single_answers = json.loads(answer)
-    return calculate_points_from_json_answer(single_answers, points_table, default_points)
