@@ -1032,6 +1032,10 @@ def calculate_points_from_json_answer(single_answers: List[List[str]],
     return points
 
 
-def calculate_points(answer, points_table, default_points: float = 0):
+def calculate_points(answer, points_table, default_points: float = 0, q_type: str = ''):
     single_answers = json.loads(answer)
+    if isinstance(single_answers, dict):
+        single_answers = single_answers.get('c')
+        order = single_answers.get('order')
+        new_table = qst_filter_markup_points(json.dumps(points_table), q_type, order)
     return calculate_points_from_json_answer(single_answers, points_table, default_points)

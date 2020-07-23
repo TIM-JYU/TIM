@@ -32,7 +32,8 @@ from timApp.lecture.runningquestion import Runningquestion
 from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
 from timApp.plugin.qst.qst import get_question_data_from_document, create_points_table, \
-    calculate_points_from_json_answer, calculate_points, qst_handle_randomization, qst_rand_array, qst_unshuffle_answer
+    calculate_points_from_json_answer, calculate_points, qst_handle_randomization, qst_rand_array, qst_unshuffle_answer, \
+    qst_filter_markup_points, QstRandomState
 from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model, RouteException
@@ -73,17 +74,33 @@ def get_lecture_info():
             .all()
     )
 
-    if is_lecturer or u.is_admin:
-        answers: List[LectureAnswer] = [a for q in lecture_questions for a in q.answers_all]
-        answerers = list({a.user for a in answers})
-    else:
-        answers = [a for q in lecture_questions for a in q.answers_all if a.user_id == u.id]
-        answerers = [get_current_user_object()]
+    # if is_lecturer or u.is_admin:
+    # answers: List[LectureAnswer] = [a for q in lecture_questions for a in q.answers_all]
+    # answerers = list({a.user for a in answers})
+    anslist = []
+    answerer_set = set()
+    for q in lecture_questions:
+        q_data = json.loads(q.asked_json.json)
+        random_rows = q_data.get('randomizedRows', 0)
+        answers = q.answers.all
+        answers = [a for a in q.answers_all if a.user_id == u.id or (is_lecturer or u.is_admin)]
+        answerer_set = answerer_set | {a.user for a in answers}
+        answers_json = [a.to_json(include_question=False, include_user=False) for a in answers]
+        if random_rows:
+            q_type = q_data.get('questionType')
+            row_count = len(q_data.get('rows', []))
+            try_normalize_answers(row_count, q_type, answers_json)
+        anslist += answers_json
+    # else:
+    #     answers = [a for q in lecture_questions for a in q.answers_all if a.user_id == u.id]
+    #     answerers = [get_current_user_object()]
 
     return json_response(
         {
-            "answerers": answerers,
-            "answers": [a.to_json(include_question=False, include_user=False) for a in answers],
+            # "answerers": answerers,
+            "answerers": list(answerer_set),
+            # "answers": [a.to_json(include_question=False, include_user=False) for a in answers],
+            "answers": anslist,
             "isLecturer": is_lecturer,
             "messages": messages,
             "questions": lecture_questions,
@@ -871,8 +888,9 @@ def update_question_points():
     points_table = create_points_table(points)
     question_answers: List[LectureAnswer] = asked_question.answers.all()
     default_points = asked_question.get_default_points()
+    q_type = json.loads(asked_question.asked_json.json).get('questionType')
     for answer in question_answers:
-        answer.points = calculate_points(answer.answer, points_table, default_points)
+        answer.points = calculate_points(answer.answer, points_table, default_points, q_type)
     db.session.commit()
     return ok_response()
 
@@ -936,6 +954,16 @@ def stop_question():
     return ok_response()
 
 
+def try_normalize_answers(row_count, question_type: str, lecture_json_answers: List[dict]):
+    for index, ans in enumerate(lecture_json_answers):
+        ans_content = ans.get('answer')
+        if isinstance(ans_content, dict):
+            rand_arr = ans_content.get("order")
+            c = ans_content.get("c")
+            if c is not None and rand_arr is not None:
+                lecture_json_answers[index]['answer'] = qst_unshuffle_answer(c, question_type, row_count, rand_arr)
+
+
 @lecture_routes.route("/getLectureAnswers", methods=['GET'])
 def get_lecture_answers():
     """Changing this to long poll requires removing threads."""
@@ -951,8 +979,14 @@ def get_lecture_answers():
     after = get_option(request, 'after', default=question.asked_time, cast=dateutil.parser.parse)
 
     lecture_answers = question.answers.filter(LectureAnswer.answered_on > after).order_by(LectureAnswer.answered_on.asc()).all()
-
-    return json_response(lecture_answers)
+    q_data = json.loads(question.asked_json.json)
+    random_rows = q_data.get('randomizedRows', 0)
+    answers_json = [a.to_json(include_question=False, include_user=False) for a in lecture_answers]
+    if random_rows:
+        q_type = q_data.get('questionType')
+        row_count = len(q_data.get('rows', []))
+        try_normalize_answers(row_count, q_type, answers_json)
+    return json_response(answers_json)
 
 
 @lecture_routes.route("/answerToQuestion", methods=['PUT'])
@@ -983,26 +1017,18 @@ def answer_to_question():
         asked_question.add_activity(QuestionActivityKind.Useranswered, u)
 
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer.answer):
-        # rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, seed_string, random_seed, locks)
+        whole_answer = answer
+        time_now = get_current_time()
+        question_points = asked_question.get_effective_points()
         q_data = json.loads(asked_question.asked_json.json)
         random_rows = q_data.get('randomizedRows', 0)
         if random_rows:
-            try:
-                q_type = q_data.get('questionType')
-                row_count = len(q_data.get('rows', []))
-                rand_arr = qst_rand_array(row_count, random_rows,
-                                      str(u.id), locks=q_data.get('doNotMove'))
-                unshuffled_ans = qst_unshuffle_answer(answer, q_type, row_count, rand_arr)
-                answer = unshuffled_ans
-            except IndexError:
-                return abort(400, "Invalid answer input.")
-        whole_answer = answer
-        time_now = get_current_time()
-        # q_json = {'markup': json.loads(asked_question.asked_json.json),
-        #           'user_id': u.id}
-        # qst_handle_randomization(q_json)
-        # question_points = q_json['markup'].get('points')
-        question_points = asked_question.get_effective_points()
+            row_count = len(q_data.get('rows', []))
+            rand_arr = qst_rand_array(row_count, random_rows, str(u.id), locks=q_data.get('doNotMove'))
+            question_points = qst_filter_markup_points(question_points, q_data.get('questionType'), rand_arr)
+            # TODO: Add a separate column to store the original order so answer can be saved directly in
+            #  unshuffled form without loss of data and tedious order checks when loading
+            whole_answer = {'c': whole_answer, 'order': rand_arr}
         points_table = create_points_table(question_points)
         default_points = asked_question.get_default_points()
         points = calculate_points_from_json_answer(answer, points_table, default_points)
