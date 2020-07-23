@@ -1,13 +1,14 @@
 import json
 from contextlib import contextmanager
 from datetime import timedelta, datetime
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import func
 from sqlalchemy.exc import InvalidRequestError
 
 from timApp.lecture.askedjson import AskedJson
 from timApp.lecture.lecture import Lecture
+from timApp.lecture.lectureanswer import LectureAnswer
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
 from timApp.timdb.sqa import db
 from timApp.timtypes import UserType
