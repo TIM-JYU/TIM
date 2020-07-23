@@ -208,6 +208,7 @@ class AnswerSheetController implements IController {
     private answerMatrix: MatrixElement[][] = [];
     private expl?: IExplCollection;
     private pointsTable: Array<{[p: string]: string}> = [];
+    private defaultPoints?: number;
     private userpoints?: number;
     private disabled?: boolean;
     private onAnswerChange!: Binding<() => ((at: AnswerTable) => void) | undefined, "&">;
@@ -257,18 +258,17 @@ class AnswerSheetController implements IController {
             [rowIndex, colIndex] = [colIndex, rowIndex];
         }
         if (this.pointsTable.length <= rowIndex) {
-            return null;
+            return this.defaultPoints != null ? this.defaultPoints.toString() : null;
         }
         const rowPoints = this.pointsTable[rowIndex];
         if (!rowPoints) {
-            return null;
+            return this.defaultPoints != null ? this.defaultPoints.toString() : null;
         }
         const idxStr = "" + (colIndex + 1);
         if (idxStr in rowPoints) {
-            const pointVal = rowPoints[idxStr];
-            if (pointVal != "0") {
-                return pointVal;
-            }
+            return rowPoints[idxStr];
+        } else if (this.defaultPoints != null) {
+            return this.defaultPoints.toString();
         }
         return null;
     }
@@ -357,6 +357,7 @@ class AnswerSheetController implements IController {
         this.processed = fixQuestionJson(this.json);
         this.answerMatrix = this.answerMatrixFromTable(params.answerTable);
         this.pointsTable = getPointsTable(params.markup.points);
+        this.defaultPoints = params.markup.defaultPoints;
         this.expl = params.markup.expl;
         this.userpoints = params.userpoints;
     }
