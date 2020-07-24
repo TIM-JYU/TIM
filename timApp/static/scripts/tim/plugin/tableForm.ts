@@ -575,6 +575,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         let prom;
         const tid = this.getTaskId();
         if (!tid) {
+            this.error = "TaskId is missing.";
             return;
         }
         this.loading = true;
@@ -590,26 +591,30 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                 taskid: tid.docTask(),
             }));
         }
-        const tableResponse = await prom;
-
-        // TODO: Generic reset function
-        this.aliases = tableResponse.data.aliases || {};
-        this.membershipmap = tableResponse.data.membershipmap;
-        this.rows = tableResponse.data.rows || {};
-        this.rowKeys = Object.keys(tableResponse.data.rows);
-        this.fields = tableResponse.data.fields || [];
-        this.realnamemap = tableResponse.data.realnamemap || {};
-        this.emailmap = tableResponse.data.emailmap || {};
-        this.styles = tableResponse.data.styles || {};
-        this.userLocations = {};
-        this.taskLocations = {};
-        this.data.table.countCol = 0;
-        this.data.table.countRow = 0;
-        this.data.table.columns = [];
-        this.data.userdata.cells = {};
-        this.setDataMatrix();
-        this.reinitializeTimTable();
+        const r = await to(prom);
         this.loading = false;
+        if (!r.ok) {
+            this.error = r.result.data.error;
+        } else {
+            const tableResponse = r.result;
+            // TODO: Generic reset function
+            this.aliases = tableResponse.data.aliases || {};
+            this.membershipmap = tableResponse.data.membershipmap;
+            this.rows = tableResponse.data.rows || {};
+            this.rowKeys = Object.keys(tableResponse.data.rows);
+            this.fields = tableResponse.data.fields || [];
+            this.realnamemap = tableResponse.data.realnamemap || {};
+            this.emailmap = tableResponse.data.emailmap || {};
+            this.styles = tableResponse.data.styles || {};
+            this.userLocations = {};
+            this.taskLocations = {};
+            this.data.table.countCol = 0;
+            this.data.table.countRow = 0;
+            this.data.table.columns = [];
+            this.data.userdata.cells = {};
+            this.setDataMatrix();
+            this.reinitializeTimTable();
+        }
     }
 
     private reinitializeTimTable() {
