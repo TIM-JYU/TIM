@@ -1,21 +1,20 @@
 """
 TIM example plugin: a tableFormndrome checker.
 """
+import datetime
 import json
-
 from dataclasses import dataclass, asdict, field
-from typing import Union, List, Optional, Dict, Any
+from typing import Union, List, Optional, Dict, Any, TypedDict
 
 from flask import jsonify, render_template_string, request, abort
 from marshmallow.utils import missing
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
+from markupmodels import GenericMarkupModel
 from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericHtmlModel, \
     GenericAnswerModel, create_blueprint
-from markupmodels import GenericMarkupModel
-from utils import Missing
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
@@ -24,6 +23,7 @@ from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
+from timApp.plugin.tableform.comparatorFilter import RegexOrComparator
 from timApp.plugin.taskid import TaskId
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.sisu import get_potential_groups
@@ -32,8 +32,9 @@ from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import csv_string, json_response, text_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields
 from timApp.util.utils import get_boolean, fin_timezone
+from utils import Missing
 
 
 @dataclass
@@ -224,6 +225,9 @@ class GenerateCSVModel:
     removeDocIds: Union[bool, Missing] = missing
     emails: Union[bool, Missing] = missing
     reportFilter: Union[str, Missing] = ""
+    filterFields: List[str] = field(default_factory=list)
+    filterValues: List[str] = field(default_factory=list)
+    # filters: List[str] = field(default_factory=list)
 
 
 GenerateCSVSchema = class_schema(GenerateCSVModel)
@@ -235,13 +239,13 @@ def gen_csv(args: GenerateCSVModel):
     """
     Generates a report defined by tableForm attributes
     # TODO: generic, move
-    # TODO: add schemas
     :return: CSV containing headerrow and rows for users and values
     """
     curr_user = get_current_user_object()
-    docid, groups, separator, show_real_names, show_user_names, show_emails, remove_doc_ids, fields, user_filter = \
-        args.docId, args.groups, args.separator, args.realnames, \
-        args.usernames, args.emails, args.removeDocIds, args.fields, args.userFilter
+    docid, groups, separator, show_real_names, show_user_names, show_emails, remove_doc_ids, fields, user_filter, \
+        filter_fields, filter_values = args.docId, args.groups, args.separator, args.realnames, \
+        args.usernames, args.emails, args.removeDocIds, args.fields, args.userFilter, \
+                  args.filterFields, args.filterValues
     if len(separator) > 1:
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now"
@@ -252,7 +256,7 @@ def gen_csv(args: GenerateCSVModel):
                              )
     rowkeys = list(r['rows'].keys())
     rowkeys.sort()
-    data = [[] for i in range(len(rowkeys) + 1)]
+    data = [[]]
     if show_real_names:
         data[0].append("Real name")
     if show_user_names:
@@ -260,17 +264,52 @@ def gen_csv(args: GenerateCSVModel):
     if show_emails:
         data[0].append("email")
     data[0] = data[0] + r['fields']
-    y_offset = 1
-    for ycoord, rowkey in enumerate(rowkeys):
+    if len(filter_fields) != len(filter_values):
+        abort(400, "Filter targets and filter values do not match")
+    # TODO: Check if filters could be easily integrated to original query in get_fields_and_users
+    regs = {}
+    # TODO: Create ComparatorFilters
+    try:
+        for i, f in enumerate(filter_fields):
+            reg = RegexOrComparator(filter_values[i])
+            if reg:
+                regs[f] = reg
+    except IndexError:
+        abort(400, "Too many filters")
+
+    def check_field_filtering(filter: RegexOrComparator, target: Union[str, float, None]) -> bool:
+        if filter is None:
+            return True
+        return filter.is_match(target)
+
+    for rowkey in rowkeys:
+        row_data = []
         row = r['rows'].get(rowkey)
         if show_real_names:
-            data[ycoord + y_offset].append(r['realnamemap'].get(rowkey))
+            val = r['realnamemap'].get(rowkey)
+            row_data.append(val)
+            if not check_field_filtering(regs.get("realname"), val):
+                continue
         if show_user_names:
-            data[ycoord + y_offset].append(rowkey)
+            val = rowkey
+            row_data.append(val)
+            if not check_field_filtering(regs.get("username"), val):
+                continue
         if show_emails:
-            data[ycoord + y_offset].append(r['emailmap'].get(rowkey))
-        for _field in r['fields']:
-            data[ycoord + y_offset].append(row.get(_field))
+            val = r['emailmap'].get(rowkey)
+            row_data.append(val)
+            if not check_field_filtering(regs.get("email"), val):
+                continue
+        filter_this_row = False
+        for i, _field in enumerate(r['fields']):
+            val = row.get(_field)
+            row_data.append(val)
+            if not check_field_filtering(regs.get(_field), val):
+                filter_this_row = True
+                break
+        if filter_this_row:
+            continue
+        data.append(row_data)
 
     csv = csv_string(data, 'excel', separator)
     output = ''
@@ -371,6 +410,20 @@ def update_fields():
     return json_response(r, headers={"No-Date-Conversion": "true"})
 
 
+class TableFormRow(TypedDict):
+    pass
+
+
+class TableFormObj(TypedDict):
+    rows: Dict[str, UserFields]
+    realnamemap: Dict[str, str]
+    emailmap: Dict[str, str]
+    membershipmap: Dict[str, Union[datetime.datetime, None]]
+    fields: List[str]
+    aliases: Dict[str, str]
+    styles: Dict[str, Dict[str, Union[str, None]]]
+
+
 def tableform_get_fields(
         flds: List[str],
         groupnames: List[str],
@@ -395,7 +448,7 @@ def tableform_get_fields(
             user_filter=User.name.in_(user_filter) if user_filter else None
         )
     rows = {}
-    realnames = {}
+    realnames: Dict[str, str] = {}
     emails = {}
     styles = {}
     group_ids = set(g.id for g in groups)
@@ -417,14 +470,15 @@ def tableform_get_fields(
             if membership_end:
                 membership_end = membership_end.astimezone(fin_timezone).strftime('%Y-%m-%d %H:%M')
             membershipmap[username] = membership_end
-    r = dict()
-    r['rows'] = rows
-    r['realnamemap'] = realnames
-    r['emailmap'] = emails
-    r['membershipmap'] = membershipmap
-    r['fields'] = field_names
-    r['aliases'] = aliases
-    r['styles'] = styles
+    r = TableFormObj(
+        rows=rows,
+        realnamemap=realnames,
+        emailmap=emails,
+        membershipmap=membershipmap,
+        fields=field_names,
+        aliases=aliases,
+        styles=styles,
+    )
     return r
 
 

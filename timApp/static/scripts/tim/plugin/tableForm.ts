@@ -867,10 +867,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             return;
         }
 
-        const selUsers = timTable.getCheckedRows(0, true);
-        const users = TableFormComponent.makeUserArray(selUsers, userNameColIndex);
-
-        const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({
+        const reportParams = {
             // TODO: support for relevant attrs (realnames, usernames, emails...)
             // TODO: get relevant user input from timTable (sort, filters, checkboxes...)
             // taskid: this.getTaskId()
@@ -885,7 +882,47 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             usernames: this.markup.usernames,
             emails: this.markup.emails,
             reportFilter: this.markup.reportFilter,
-            userFilter: users,
+        };
+        let filterParams = {};
+        const selUsers = timTable.getCheckedRows(0, false);
+        const users = TableFormComponent.makeUserArray(selUsers, userNameColIndex);
+
+        if (selUsers.length > 0) {
+            filterParams = {userFilter: users};
+        } else {
+            const filterFields: string[] = [];
+            const filterValues: string[] = [];
+
+            const xOffset = memberShipColIndex + 1;
+
+            timTable.filters.forEach((value, index) => {
+                if (!value) {
+                    return;
+                }
+                switch (index) {
+                    case realNameColIndex:
+                        filterFields.push("realname");
+                        break;
+                    case userNameColIndex:
+                        filterFields.push("username");
+                        break;
+                    case emailColIndex:
+                        filterFields.push("email");
+                        break;
+                    case memberShipColIndex:
+                        filterFields.push("membership");
+                        break;
+                    default:
+                        filterFields.push(this.fields[index - xOffset]);
+                }
+                filterValues.push(value);
+            });
+            filterParams = {filterFields, filterValues};
+        }
+
+        const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({
+            ...reportParams,
+            ...filterParams,
         }), "WINDOWID");
         if (win == null) {
             this.error = "Failed to open report window.";
