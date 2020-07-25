@@ -132,6 +132,29 @@ export class QuestionPreviewController extends DialogController<{params: Questio
         }
         return this.questiondata.markup.timeLimit;
     }
+
+    private printRandomizationInfo(): string {
+        if (!this.questiondata || !this.questiondata.markup.randomizedRows) {
+            return "";
+        }
+        let locks: number;
+        if (this.questiondata.markup.doNotMove) {
+            if (typeof this.questiondata.markup.doNotMove == "number") {
+                locks = 1;
+            } else {
+                locks = this.questiondata.markup.doNotMove.length;
+            }
+            locks = Math.min(locks, this.questiondata.markup.rows.length);
+        } else {
+            locks = 0;
+        }
+        const randomRows = Math.min(this.questiondata.markup.randomizedRows, this.questiondata.markup.rows.length - locks);
+        let ret = `Answerers will see ${randomRows} randomly picked rows`;
+        if (locks) {
+            ret += ` and ${locks} guaranteed rows`;
+        }
+        return ret + ".";
+    }
 }
 
 registerDialogComponent(QuestionPreviewController, {
@@ -147,6 +170,9 @@ registerDialogComponent(QuestionPreviewController, {
         <span ng-if="!$ctrl.questiondata.markup.timeLimit">
             No time limit.
             </span>
+        <p ng-if="$ctrl.questiondata.markup.randomizedRows">
+            {{::$ctrl.printRandomizationInfo()}}
+        </p>
         <dynamic-answer-sheet questiondata="$ctrl.questiondata"></dynamic-answer-sheet>
     </dialog-body>
     <dialog-footer>

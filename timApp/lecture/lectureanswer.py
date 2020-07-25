@@ -42,6 +42,9 @@ class LectureAnswer(db.Model):
         return LectureAnswer.query.get(ans_id)
 
     def get_parsed_answer(self):
+        # If lecture question's rows are randomized, it will be saved as a dict
+        # containing additional information about how the answerer saw the question.
+        # e.g {"c": [["2"]], "order": [4, 3, 5], "rows": 5, "question_type": "radio-vertical"}
         try:
             ans = json.loads(self.answer)
             if isinstance(ans, dict):

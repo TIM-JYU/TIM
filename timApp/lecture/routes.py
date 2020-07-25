@@ -993,8 +993,9 @@ def answer_to_question():
             q_type = q_data.get('questionType')
             rand_arr = qst_rand_array(row_count, random_rows, str(u.id), locks=q_data.get('doNotMove'))
             question_points = qst_filter_markup_points(question_points, q_type, rand_arr)
-            # TODO: Add a separate column to store the original order so answer can be saved directly in
-            #  unshuffled form without loss of data and tedious order checks when loading
+            # If lecture question's rows are randomized, it will be saved as a dict
+            # containing additional information about how the answerer saw the question.
+            # e.g {"c": [["2"]], "order": [4, 3, 5], "rows": 5, "question_type": "radio-vertical"}
             whole_answer = {'c': whole_answer, 'order': rand_arr, 'rows': row_count, 'question_type': q_type}
         points_table = create_points_table(question_points)
         default_points = asked_question.get_default_points()
