@@ -10,8 +10,8 @@ import {DataViewComponent} from "./data-view.component";
         CommonModule,
     ],
     exports: [
-        DataViewComponent
-    ]
+        DataViewComponent,
+    ],
 })
 export class DataViewModule {
 }
