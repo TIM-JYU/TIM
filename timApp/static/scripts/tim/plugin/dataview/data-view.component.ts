@@ -206,7 +206,9 @@ class TableCache {
     }
 }
 
-// TODO: Support for hiding rows
+// TODO: Set table height as attribute
+// TODO: Set table class/style as attribute
+// TODO: Pull column width from parent component (might need to recompute it)
 // TODO: Support for row/column span
 
 const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
@@ -229,7 +231,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                 <tbody #idBody></tbody>
             </table>
         </div>
-        <div class="data" style="height: 50vh; overflow: scroll;" #mainDataContainer>
+        <div class="data" style="height: 30em; overflow: scroll;" #mainDataContainer>
             <table [class.virtual]="virtualScrolling.enabled" #mainDataTable>
                 <tbody class="content" #mainDataBody></tbody>
             </table>
@@ -266,7 +268,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     ngOnInit(): void {
-        if (this.virtualScrolling.enabled) {
+        if (this.vscroll.enabled) {
             this.startCellPurifying();
         }
         const {rows, columns} = this.modelProvider.getDimension();
@@ -277,29 +279,33 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     ngAfterViewInit(): void {
         this.initTableCaches();
         this.buildTable();
-        if (this.virtualScrolling.enabled) {
-            // Scrolling can cause change detection on some cases, which slows down the table
-            // Since scrolling is
-            // * Only used in vscrolling mode
-            // * Doesn't change the template
-            // it's better to run scroll events outside zones
-            this.zone.runOutsideAngular(() => {
-                this.r2.listen(this.mainDataContainer.nativeElement, "scroll", () => this.handleScroll());
-            });
-            this.zone.runOutsideAngular(() => {
-                window.addEventListener("resize", () => this.handleWindowResize());
-            });
-        }
+        // Scrolling can cause change detection on some cases, which slows down the table
+        // Since scrolling is
+        // * Only used in vscrolling mode
+        // * Doesn't change the template
+        // it's better to run scroll events outside zones
+        this.zone.runOutsideAngular(() => {
+            this.r2.listen(this.mainDataContainer.nativeElement, "scroll", () => this.handleScroll());
+        });
+        this.zone.runOutsideAngular(() => {
+            window.addEventListener("resize", () => this.handleWindowResize());
+        });
     }
 
     handleWindowResize(): void {
         this.updateHeaderIdsSizes();
+        if (!this.vscroll.enabled) {
+            return;
+        }
         this.viewport = this.getViewport();
         runMultiFrame(this.updateViewport());
     }
 
     handleScroll(): void {
         this.syncHeaderScroll();
+        if (!this.vscroll.enabled) {
+            return;
+        }
         if (this.scheduledUpdate) {
             return;
         }
@@ -323,7 +329,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.updateScroll();
         this.dataTableCache.resize(vertical.count, horizontal.count);
         const getItem = (axis: GridAxis, index: number) =>
-            this.virtualScrolling.enabled ? this.rowAxis.visibleItems[index] : this.rowAxis.itemOrder[index];
+            this.vscroll.enabled ? this.rowAxis.visibleItems[index] : this.rowAxis.itemOrder[index];
 
         for (let rowNumber = 0; rowNumber < vertical.count; rowNumber++) {
             const rowIndex = getItem(this.rowAxis, vertical.startIndex + rowNumber);
@@ -335,7 +341,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
         }
         // Optimization in normal mode: sanitize whole tbody in place
-        if (!this.virtualScrolling.enabled) {
+        if (!this.vscroll.enabled) {
             DOMPurify.sanitize(tbody, {IN_PLACE: true});
         }
         this.buildIdTable();
@@ -479,7 +485,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private getViewport(): Viewport {
         const data = this.mainDataContainer.nativeElement;
         const {rows, columns} = this.modelProvider.getDimension();
-        if (this.virtualScrolling.enabled) {
+        if (this.vscroll.enabled) {
             const viewportWidth = data.clientWidth * (1 + 2 * this.vscroll.viewOverflow.horizontal);
             const viewportHeight = data.clientHeight * (1 + 2 * this.vscroll.viewOverflow.vertical);
             return {
@@ -502,7 +508,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private prepareTable(): void {
-        if (!this.virtualScrolling.enabled || !this.idTable || !this.headerTable) {
+        if (!this.vscroll.enabled || !this.idTable || !this.headerTable) {
             return;
         }
         const table = this.mainDataTable.nativeElement;
@@ -510,11 +516,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const headerTable = this.headerTable.nativeElement;
         table.style.height = `${this.rowAxis.totalSize}px`;
         table.style.width = `${this.colAxis.totalSize}px`;
-        table.style.borderSpacing = `${this.virtualScrolling.borderSpacing}px`;
+        table.style.borderSpacing = `${this.vscroll.borderSpacing}px`;
         idTable.style.height = `${this.rowAxis.totalSize}px`;
-        idTable.style.borderSpacing = `${this.virtualScrolling.borderSpacing}px`;
+        idTable.style.borderSpacing = `${this.vscroll.borderSpacing}px`;
         headerTable.style.width = `${this.colAxis.totalSize}px`;
-        headerTable.style.borderSpacing = `${this.virtualScrolling.borderSpacing}px`;
+        headerTable.style.borderSpacing = `${this.vscroll.borderSpacing}px`;
     }
 
     private buildHeaderTable(): void {
@@ -555,7 +561,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private updateRow(row: HTMLTableRowElement, rowIndex: number): HTMLTableRowElement {
         row.style.cssText = joinCss(this.modelProvider.stylingForRow(rowIndex));
-        row.hidden = !this.virtualScrolling.enabled && this.rowAxis.hiddenItems.has(rowIndex);
+        row.hidden = !this.vscroll.enabled && this.rowAxis.hiddenItems.has(rowIndex);
         const rowHeight = this.modelProvider.getRowHeight(rowIndex);
         if (rowHeight) {
             row.style.height = `${rowHeight}px`;
@@ -565,7 +571,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateCell(cell: HTMLTableCellElement, rowIndex: number, columnIndex: number, contents?: string): HTMLTableCellElement {
-        cell.hidden = !this.virtualScrolling.enabled && this.colAxis.hiddenItems.has(columnIndex);
+        cell.hidden = !this.vscroll.enabled && this.colAxis.hiddenItems.has(columnIndex);
         cell.className = this.modelProvider.classForCell(rowIndex, columnIndex);
         cell.style.cssText = joinCss(this.modelProvider.stylingForCell(rowIndex, columnIndex));
         cell.onclick = () => this.modelProvider.handleClickCell(rowIndex, columnIndex);
@@ -581,7 +587,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private getCellValue(rowIndex: number, columnIndex: number): string {
-        if (!this.virtualScrolling.enabled) {
+        if (!this.vscroll.enabled) {
             return this.modelProvider.getCellContents(rowIndex, columnIndex);
         }
         const row = this.cellValueCache[rowIndex];

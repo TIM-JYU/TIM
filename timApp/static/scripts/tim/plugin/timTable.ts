@@ -486,8 +486,6 @@ export enum ClearSort {
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders}" class="timTableRunDiv no-popup-menu"
-             [style.max-height]="maxRows"
-             [style.width]="maxCols"
         >
             <h4 *ngIf="data.header" [innerHtml]="data.header"></h4>
             <p *ngIf="data.stem" class="stem" [innerHtml]="data.stem"></p>
@@ -712,7 +710,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getRowHeight(rowIndex: number): number | undefined {
-        return undefined;
+        return 40;
     }
 
     getColumnWidth(columnIndex: number): number | undefined {

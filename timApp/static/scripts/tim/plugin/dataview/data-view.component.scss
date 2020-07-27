@@ -1,6 +1,6 @@
 :host {
     display: grid;
-    width: 50vw;
+    //width: 50vw;
     grid-template:
         ". header" auto
         "ids content" auto
@@ -12,6 +12,7 @@
     grid-area: header;
 
     table {
+        margin-bottom: 0;
         tbody, thead {
             display: block;
             width: max-content;
