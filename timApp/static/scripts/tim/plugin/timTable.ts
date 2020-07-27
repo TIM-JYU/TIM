@@ -64,6 +64,8 @@ import {Subscription} from "rxjs";
 import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
+import {DataViewModule} from "tim/plugin/dataview/data-view.module";
+import {TableModelProvider} from "tim/plugin/dataview/data-view.component";
 import {onClick} from "../document/eventhandlers";
 import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
@@ -101,7 +103,6 @@ import {
     openTableEditorToolbar,
 } from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
-import {DataViewModule} from "tim/plugin/dataview/data-view.module";
 
 
 function replaceAll(s: string, s1: string, s2: string): string {
@@ -621,7 +622,7 @@ export enum ClearSort {
     `,
     styleUrls: ["./timTable.scss"],
 })
-export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCheck, AfterViewChecked, AfterViewInit {
+export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCheck, AfterViewChecked, AfterViewInit, TableModelProvider {
     error: string = "";
     public viewctrl?: ViewCtrl;
     public cellDataMatrix: ICell[][] = [];  // this has all table data as original indecies (sort does not affect)
@@ -703,6 +704,22 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     constructor(private el: ElementRef, public cdr: ChangeDetectorRef, private zone: NgZone) {
         this.pluginMeta = new PluginMeta($(el.nativeElement));
         // if ( !this.data.hide ) this.data.hide = {};
+    }
+
+    getDimension(): { rows: number; columns: number; } {
+        throw new Error("Method not implemented.");
+    }
+    getRowHeight(rowIndex: number): number | undefined {
+        throw new Error("Method not implemented.");
+    }
+    getColumnWidth(columnIndex: number): number | undefined {
+        throw new Error("Method not implemented.");
+    }
+    getCellContents(rowIndex: number, columnIndex: number): string {
+        throw new Error("Method not implemented.");
+    }
+    getRowContents(rowIndex: number): string[] {
+        throw new Error("Method not implemented.");
     }
 
     get element(): JQuery<HTMLElement> {
@@ -2656,6 +2673,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             styles["white-space"] = "nowrap";
         }
         cell.styleCache = styles;
+        console.log(styles);
         return styles;
     }
 
@@ -2867,6 +2885,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const row = this.data.table.rows[rowi];
         this.applyStyle(styles, row, rowStyles);
         this.rowStyleCache.set(rowi, styles);
+        console.log(styles);
         return styles;
     }
 

@@ -8,9 +8,9 @@ export interface TableModelProvider {
 
     getColumnWidth(columnIndex: number): number | undefined;
 
-    stylingForRow(rowIndex: number): string;
+    stylingForRow(rowIndex: number): Record<string, string>;
 
-    stylingForCell(rowIndex: number, columnIndex: number): string;
+    stylingForCell(rowIndex: number, columnIndex: number): Record<string, string>;
 
     classForCell(rowIndex: number, columnIndex: number): string;
 
@@ -541,7 +541,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateRow(row: HTMLTableRowElement, rowIndex: number): HTMLTableRowElement {
-        row.style.cssText = this.modelProvider.stylingForRow(rowIndex);
+        row.style.cssText = joinCss(this.modelProvider.stylingForRow(rowIndex));
         row.hidden = !this.virtualScrolling.enabled && this.rowAxis.hiddenItems.has(rowIndex);
         const rowHeight = this.modelProvider.getRowHeight(rowIndex);
         if (rowHeight) {
@@ -554,7 +554,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private updateCell(cell: HTMLTableCellElement, rowIndex: number, columnIndex: number, contents?: string): HTMLTableCellElement {
         cell.hidden = !this.virtualScrolling.enabled && this.colAxis.hiddenItems.has(columnIndex);
         cell.className = this.modelProvider.classForCell(rowIndex, columnIndex);
-        cell.style.cssText = this.modelProvider.stylingForCell(rowIndex, columnIndex);
+        cell.style.cssText = joinCss(this.modelProvider.stylingForCell(rowIndex, columnIndex));
         cell.onclick = () => this.modelProvider.handleClickCell(rowIndex, columnIndex);
         const colWidth = this.modelProvider.getColumnWidth(columnIndex);
         if (colWidth) {
@@ -633,6 +633,15 @@ function runMultiFrame(iter: Generator): void {
         }
     };
     requestAnimationFrame(cb);
+}
+
+function joinCss(obj: Record<string, string>) {
+    let result = "";
+    // eslint-disable-next-line guard-for-in
+    for (const k in obj) {
+        result = `${result}; ${k}:${obj[k]}`;
+    }
+    return result;
 }
 
 interface PurifyData {
