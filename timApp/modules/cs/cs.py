@@ -461,7 +461,6 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
                 s = s + f'<p>File:</p><pre>{os.path.basename(f["path"])}</pre>'
         elif uploaded_file is not None:
             s = s + '<p>File:</p><pre>' + os.path.basename(uploaded_file) + '</pre>'
-
         if submitted_files is not None:
             for f in submitted_files:
                 s = s + f'<pre>{f["path"]}</pre>'
@@ -474,11 +473,16 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
                     s = s + '\n----------------------FILE END----------------------</pre>'
         else:
             ucode = language.get_review(usercode)
-            if isinstance(ucode, str):
+            if isinstance(ucode, str) and ttype != 'drawio':
                 s = '<pre>' + ucode + '</ pre>' + s
+            elif ttype == 'drawio':
+                s = ucode
         if not s:
             s = "<pre>No answer</pre>"
-        result = NOLAZY + '<div class="review" ng-non-bindable>' + s + '</div>'
+        if ttype == 'drawio':
+            result = s
+        else:
+            result = NOLAZY + '<div class="review" ng-non-bindable>' + s + '</div>'
         return result
 
     r = runner

@@ -2,6 +2,7 @@ import json
 import os
 
 import re
+from base64 import b64encode
 
 from collections import Iterable
 
@@ -228,25 +229,33 @@ class DrawIO(JSframe):
         c = self.query.jso.get('state', {}).get('c', None)
         if not c:
             return None
-        matches: Iterable[Match] = SVGTEXT_PROG.finditer(c)
-        texts = ""
-        line = ""
-        for m in matches:
-            text = m.group(1)
-            try:
-                d = chr(195)
-                if text.find(d) >= 0:
-                    text = bytes(text, 'ISO-8859-1').decode('utf-8') # TODO: miksi näin pitää tehdä???
-            except:
-                # let text be as it was
-                text = text
-            if text != "Viewer does not support full SVG 1.1":
-                if len(line) + len(text) > 75:
-                    texts += line + "\n"
-                    line = ""
-                line += text + ", "
-        if line:
-            texts += line
-        if not texts:
-            texts = "Labels: 0"
-        return texts
+        if isinstance(c, str):
+            # Find svg data from the saved graph
+            firstdel = c.find('content="')
+            lastdel = c.find('/mxfile>"')
+            c = c[0:firstdel] + c[lastdel+9:len(c)]
+            # TODO: Add a way to inform the browser that review data is in image format
+            c = 'data:image/svg+xml;base64,' + str(b64encode(c.encode("utf-8")), "utf-8")
+        return c
+        # matches: Iterable[Match] = SVGTEXT_PROG.finditer(c)
+        # texts = ""
+        # line = ""
+        # for m in matches:
+        #     text = m.group(1)
+        #     try:
+        #         d = chr(195)
+        #         if text.find(d) >= 0:
+        #             text = bytes(text, 'ISO-8859-1').decode('utf-8') # TODO: miksi näin pitää tehdä???
+        #     except:
+        #         # let text be as it was
+        #         text = text
+        #     if text != "Viewer does not support full SVG 1.1":
+        #         if len(line) + len(text) > 75:
+        #             texts += line + "\n"
+        #             line = ""
+        #         line += text + ", "
+        # if line:
+        #     texts += line
+        # if not texts:
+        #     texts = "Labels: 0"
+        # return texts
