@@ -2673,7 +2673,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             styles["white-space"] = "nowrap";
         }
         cell.styleCache = styles;
-        console.log(styles);
         return styles;
     }
 
@@ -2885,7 +2884,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const row = this.data.table.rows[rowi];
         this.applyStyle(styles, row, rowStyles);
         this.rowStyleCache.set(rowi, styles);
-        console.log(styles);
         return styles;
     }
 
