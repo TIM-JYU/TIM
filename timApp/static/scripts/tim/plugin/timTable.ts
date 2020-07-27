@@ -707,19 +707,23 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getDimension(): { rows: number; columns: number; } {
-        throw new Error("Method not implemented.");
+        return { rows: this.data.table.countRow ?? 0, columns: this.data.table.countCol ?? 0 };
     }
+
     getRowHeight(rowIndex: number): number | undefined {
-        throw new Error("Method not implemented.");
+        return undefined;
     }
+
     getColumnWidth(columnIndex: number): number | undefined {
-        throw new Error("Method not implemented.");
+        return undefined;
     }
+
     getCellContents(rowIndex: number, columnIndex: number): string {
-        throw new Error("Method not implemented.");
+        return `${this.cellDataMatrix[rowIndex][columnIndex].cell}`;
     }
+
     getRowContents(rowIndex: number): string[] {
-        throw new Error("Method not implemented.");
+        return this.cellDataMatrix[rowIndex].map((c) => `${c.cell}`);
     }
 
     get element(): JQuery<HTMLElement> {
