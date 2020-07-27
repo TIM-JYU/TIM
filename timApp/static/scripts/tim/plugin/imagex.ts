@@ -1,13 +1,13 @@
-import {IScope} from "angular";
 import deepmerge from "deepmerge";
 import * as t from "io-ts";
-import {ApplicationRef, Component, ElementRef, DoBootstrap, NgModule, OnInit, StaticProvider} from "@angular/core";
+import {ApplicationRef, Component, DoBootstrap, ElementRef, NgModule, OnInit, StaticProvider} from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {DrawType, IDrawVisibleOptions} from "tim/plugin/drawToolbar";
 import {$http, $sce, $timeout} from "../util/ngimport";
 import {TimDefer} from "../util/timdefer";
 import {defaultTimeout, MouseOrTouch, numOrStringToNumber, posToRelative, Require, to, valueOr} from "../util/utils";
@@ -53,7 +53,7 @@ function isFakePlayer(p: VideoPlayer): p is IFakeVideo {
     return "fakeVideo" in p && p.fakeVideo;
 }
 
-function tupleToCoords(p: TuplePoint) {
+export function tupleToCoords(p: TuplePoint) {
     return {x: p[0], y: p[1]};
 }
 
@@ -61,7 +61,7 @@ function tupleToSizedOrDef(p: SizeT | undefined | null, def: ISizedPartial | und
     return p ? {width: p[0], height: p[1]} : def;
 }
 
-class FreeHand {
+export class FreeHand {
     public freeDrawing: ILineSegment[];
     public redraw?: () => void;
     private videoPlayer: VideoPlayer;
@@ -158,7 +158,7 @@ class FreeHand {
             //    ns.lines = [p];
             ns.lines.push(p);
         }
-        if (!this.imgx.lineMode || this.emotion) {
+        if (!this.imgx.lineMode() || this.emotion) {
             this.prevPos = p;
         }
     }
@@ -186,7 +186,7 @@ class FreeHand {
     }
 
     addPointDraw(ctx: CanvasRenderingContext2D, pxy: IPoint) {
-        if (this.imgx.lineMode) {
+        if (this.imgx.lineMode()) {
             this.popPoint(1);
             if (this.redraw) {
                 this.redraw();
@@ -226,13 +226,13 @@ class FreeHand {
         this.setWidth(this.imgx.w + dw);
     }
 
-    setLineMode(newMode: boolean) {
-        this.imgx.lineMode = newMode;
-    }
-
-    flipLineMode() {
-        this.setLineMode(!this.imgx.lineMode);
-    }
+    // setLineMode(newMode: boolean) {
+    //     this.imgx.lineMode = newMode;
+    // }
+    //
+    // flipLineMode() {
+    //     this.setLineMode(!this.imgx.lineMode);
+    // }
 
     line(ctx: CanvasRenderingContext2D, p1: TuplePoint | undefined, p2: IPoint) {
         if (!p1 || !p2) {
@@ -345,9 +345,11 @@ class FreeHand {
 function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
     ctx.strokeStyle = seg.color ?? ctx.strokeStyle;
     ctx.lineWidth = numOrStringToNumber(seg.w ?? ctx.lineWidth);
+    ctx.globalAlpha = seg.opacity ?? 1;
 }
 
-function drawFreeHand(ctx: CanvasRenderingContext2D, dr: ILineSegment[]) {
+export function drawFreeHand(ctx: CanvasRenderingContext2D, dr: ILineSegment[]): void {
+    // console.log(dr);
     for (const seg of dr) {
         if (seg.lines.length < 2) {
             continue;
@@ -431,33 +433,9 @@ const directiveTemplate = `
         </button>
         &nbsp;&nbsp;<a *ngIf="button"
         (click)="resetExercise()">{{resetText}}</a>&nbsp;&nbsp;<a
-                href="" *ngIf="muokattu" (click)="initCode()">{{resetText}}</a><label
-                [hidden]="!freeHandVisible">FreeHand <input type="checkbox" name="freeHand" value="true"
-                                                                [(ngModel)]="freeHand"></label> <span><span
-                [hidden]="!freeHand"><label [hidden]="!freeHandLineVisible">Line
-            <input type="checkbox"
-                   name="freeHandLine"
-                   value="true"
-                   [(ngModel)]="lineMode"></label> <span
-                [hidden]="!freeHandToolbar"><input [hidden]="!true"
-                                                       id="freeWidth"
-                                                       size="1"
-                                                       style="width: 2em"
-                                                       type="number"
-                                                       [(ngModel)]="w"/>
-            <input colorpicker="hex"
-                   type="text"
-                   [ngStyle]="{'background-color': color}"
-                   [(ngModel)]="color" size="4"/>&nbsp; <span
-                    style="background-color: red; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setFColor('#f00')">R</span><span
-                    style="background-color: blue; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setFColor('#00f')">B</span><span
-                    style="background-color: yellow; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setFColor('#ff0')">Y</span><span
-                    style="background-color: #0f0; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setFColor('#0f0')">G</span>&nbsp;<a href="" (click)="undo($event)">Undo</a>
-        </span></span></span>
+                href="" *ngIf="muokattu" (click)="initCode()">{{resetText}}</a>
+                <draw-toolbar [(enabled)]="freeHand" [(drawType)]="drawType" [undo]="passUndo"
+                    [setFColor]="passSetFColor" [drawVisibleOptions]="drawVisibleOptions" [(color)]="color" [(w)]="w"></draw-toolbar>
     </p>
     <div [hidden]="!preview"><span><span [ngStyle]="{'background-color': previewColor}"
                                              style="display: table-cell; text-align: center; width: 30px;"
@@ -605,9 +583,9 @@ class DragTask {
                 if (c === "4") {
                     this.freeHand.setWidth(4);
                 }
-                if (c === "l") {
-                    this.freeHand.flipLineMode();
-                }
+                // if (c === "l") {
+                //     this.freeHand.flipLineMode();
+                // }
                 if (c === "f" && imgx.freeHandShortCut) {
                     imgx.freeHand = !imgx.freeHand;
                 }
@@ -1467,6 +1445,7 @@ interface IAnswerResponse {
     template: directiveTemplate,
 })
 class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
+
     t.TypeOf<typeof ImageXAll>,
     typeof ImageXAll> implements OnInit {
     public imageLoadError?: string | null;
@@ -1522,8 +1501,15 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     public w = 0;
-    public freeHand = false;
-    public lineMode = false;
+    public freeHand = false; // Drawing enabled
+    public drawType: DrawType = DrawType.Freehand;
+    public drawVisibleOptions: IDrawVisibleOptions = {
+        enabled: true,
+        freeHand: true,
+        lineMode: true,
+        color: true,
+        w: true,
+    };
     public color = "";
     public freeHandDrawing!: FreeHand;
     public coords = "";
@@ -1543,6 +1529,7 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
     private canvas!: HTMLCanvasElement;
     private dt!: DragTask;
     private answer?: IAnswerResponse;
+    private embed: boolean = false;
 
     draw() {
         this.dt.draw();
@@ -1561,7 +1548,6 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
 
     async ngOnInit() {
         super.ngOnInit();
-
         // timeout required; otherwise the canvas element will be overwritten with another by Angular
         await $timeout();
         this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
@@ -1583,7 +1569,10 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
 
         this.w = this.markup.freeHandWidth;
         this.color = this.markup.freeHandColor;
-        this.lineMode = this.markup.freeHandLine;
+        // this.lineMode = this.markup.freeHandLine;
+        if (this.markup.freeHandLine) {
+            this.drawType = DrawType.Line;
+        }
 
         const dt = new DragTask(this.canvas, this);
         this.dt = dt;
@@ -1701,12 +1690,28 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
         this.result = "";
     }
 
+    passUndo = (e?: Event) => {
+        if (e) {
+            e.preventDefault();
+        }
+        this.undo(e);
+    };
+
     undo(e?: Event) {
         if (e) {
             e.preventDefault();
         }
         this.freeHandDrawing.popSegment(0);
     }
+
+    lineMode(): boolean {
+        return this.drawType == DrawType.Line;
+    }
+
+    passSetFColor = (color: string) => {
+        console.log("Setting color", color);
+        this.setFColor(color);
+    };
 
     setFColor(color: string) {
         this.freeHandDrawing.setColor(color);

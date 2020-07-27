@@ -12,11 +12,32 @@ const LineSegment = t.intersection([
     t.partial({
         color: t.string,
         w: t.union([t.number, t.string]), // TODO should convert w to number only in database
+        opacity: t.number,
     }),
 ]);
+
+const RectangleOrCicle = t.intersection([
+    t.type({x: t.number, y: t.number, w: t.number, h: t.number}),
+    t.partial({
+        color: t.string,
+        fill: t.boolean,
+        width: t.number,
+        opacity: t.number,
+    }),
+]);
+
 export type TuplePoint = t.TypeOf<typeof TuplePointR>;
 
+export interface IDrawData {
+    freeHand?: ILineSegment[],
+    rectangles?: IRectangleOrCicle[],
+    circles?: IRectangleOrCicle[],
+}
+
 export interface ILineSegment extends t.TypeOf<typeof LineSegment> {
+}
+
+export interface IRectangleOrCicle extends t.TypeOf<typeof RectangleOrCicle> {
 }
 
 export interface IFakeVideo {

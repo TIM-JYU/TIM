@@ -63,6 +63,7 @@ import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 import {GotoLinkComponent} from "tim/ui/goto-link.component";
 import {SidebarMenuComponent} from "tim/sidebarmenu/sidebar-menu.component";
 import BackspaceDisabler from "backspace-disabler";
+import {DrawToolbarComponent} from "tim/plugin/drawToolbar";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -130,6 +131,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timTimeLeft", TimeLeftComponent);
     doDowngrade(dg, "timCountdown", CountdownComponent);
     doDowngrade(dg, "timSidebarMenu", SidebarMenuComponent);
+    doDowngrade(dg, "drawToolbar", DrawToolbarComponent);
     return dg;
 }
 
