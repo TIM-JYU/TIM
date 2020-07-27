@@ -209,96 +209,96 @@ class TableCache {
 // TODO: Support for hiding rows
 // TODO: Support for row/column span
 
+const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
+    enabled: false,
+    viewOverflow: {horizontal: 1, vertical: 1},
+    borderSpacing: 2,
+};
+
 @Component({
     selector: "app-data-view",
     template: `
         <div class="header" #headerContainer>
             <table #headerTable>
-                <thead #headerIdTable></thead>
-                <tbody #filterTable></tbody>
+                <thead #headerIdBody></thead>
+                <tbody #filterBody></tbody>
             </table>
         </div>
-        <div class="ids" #idsContainer>
+        <div class="ids" #idContainer>
             <table #idTable>
-                <tbody #idTableBody></tbody>
+                <tbody #idBody></tbody>
             </table>
         </div>
-        <div class="data" style="height: 50vh; overflow: scroll;" #dataContainer>
-            <table [class.virtual]="virtualScrolling.enabled" #tableContainer>
-                <tbody class="content" #container></tbody>
+        <div class="data" style="height: 50vh; overflow: scroll;" #mainDataContainer>
+            <table [class.virtual]="virtualScrolling.enabled" #mainDataTable>
+                <tbody class="content" #mainDataBody></tbody>
             </table>
         </div>
     `,
     styleUrls: ["./data-view.component.scss"],
 })
 export class DataViewComponent implements AfterViewInit, OnInit {
-    @ViewChild("container") container!: ElementRef;
-    @ViewChild("tableContainer") tableContainer!: ElementRef;
-    @ViewChild("headerContainer") headerEl?: ElementRef;
-    @ViewChild("dataContainer") dataEl?: ElementRef;
-    @ViewChild("idTableBody") idTableBody?: ElementRef;
-    @ViewChild("idTable") idTable?: ElementRef;
-    @ViewChild("filterTable") filterTable?: ElementRef;
-    @ViewChild("headerIdTable") headerIdTable?: ElementRef;
-    @ViewChild("headerTable") headerTable?: ElementRef;
-    @ViewChild("idsContainer") idsContainer?: ElementRef;
     @Input() modelProvider!: TableModelProvider; // TODO: Make optional and error out if missing
-    @Input() virtualScrolling: VirtualScrollingOptions = {
-        enabled: false,
-        viewOverflow: {horizontal: 1, vertical: 1},
-        borderSpacing: 2,
-    };
-    viewPortdY = 0;
+    @Input() virtualScrolling: Partial<VirtualScrollingOptions> = DEFAULT_VSCROLL_SETTINGS;
+    @ViewChild("headerContainer") private headerEl?: ElementRef<HTMLDivElement>;
+    @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
+    @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("filterBody") private filterBody?: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("idContainer") private idContainer?: ElementRef<HTMLDivElement>;
+    @ViewChild("idTable") private idTable?: ElementRef<HTMLTableElement>;
+    @ViewChild("idBody") private idBody?: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("mainDataBody") private mainDataBody!: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("mainDataTable") private mainDataTable!: ElementRef<HTMLTableElement>;
+    @ViewChild("mainDataContainer") private mainDataContainer!: ElementRef<HTMLDivElement>;
+    private viewPortdY = 0;
     private cellValueCache: Record<number, string[]> = {};
-    private dataTableCache: TableCache;
-    private idTableCache: TableCache;
-    private headerIdTableCache: TableCache;
-    private filterTableCache: TableCache;
+    private dataTableCache!: TableCache;
+    private idTableCache?: TableCache;
+    private headerIdTableCache?: TableCache;
+    private filterTableCache?: TableCache;
     private scheduledUpdate = false;
     private viewport!: Viewport;
     private rowAxis!: GridAxis;
     private colAxis!: GridAxis;
+    private vscroll: VirtualScrollingOptions = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
 
     constructor(private r2: Renderer2, private zone: NgZone) {
-        this.dataTableCache = new TableCache(this.tbody);
-        this.idTableCache = new TableCache(
-            this.idTableBody?.nativeElement as HTMLTableSectionElement,
-            "td",
-            (cell, rowIndex, columnIndex) => {
-                if (columnIndex !== 1) { return; }
-                const input = cell.appendChild(el("input"));
-                input.type = "checkbox";
-            }
-        );
-        this.headerIdTableCache = new TableCache(this.headerIdTable?.nativeElement as HTMLTableSectionElement, "th");
-        this.filterTableCache = new TableCache(
-            this.filterTable?.nativeElement as HTMLTableSectionElement,
-            "td",
-            (cell) => {
-                const input = cell.appendChild(el("input"));
-                input.type = "text";
-            });
-    }
-
-    private get tbody(): HTMLTableSectionElement {
-        return this.container.nativeElement as HTMLTableSectionElement;
-    }
-
-    private get tableContainerEl(): HTMLElement {
-        return this.tableContainer.nativeElement as HTMLElement;
-    }
-
-    private get dataContainer(): HTMLElement {
-        return this.dataEl?.nativeElement as HTMLElement;
     }
 
     ngOnInit(): void {
+        this.dataTableCache = new TableCache(this.mainDataBody.nativeElement);
+        if (this.idBody) {
+            this.idTableCache = new TableCache(
+                this.idBody.nativeElement,
+                "td",
+                (cell, rowIndex, columnIndex) => {
+                    if (columnIndex !== 1) {
+                        return;
+                    }
+                    const input = cell.appendChild(el("input"));
+                    input.type = "checkbox";
+                }
+            );
+        }
+        if (this.headerIdBody) {
+            this.headerIdTableCache = new TableCache(this.headerIdBody.nativeElement, "th");
+        }
+        if (this.filterBody) {
+            this.filterTableCache = new TableCache(
+                this.filterBody.nativeElement,
+                "td",
+                (cell) => {
+                    const input = cell.appendChild(el("input"));
+                    input.type = "text";
+                });
+        }
+
         if (this.virtualScrolling.enabled) {
             this.startCellPurifying();
         }
         const {rows, columns} = this.modelProvider.getDimension();
-        this.rowAxis = new GridAxis(rows, this.virtualScrolling.borderSpacing, (i) => this.modelProvider.getRowHeight(i) ?? 0);
-        this.colAxis = new GridAxis(columns, this.virtualScrolling.borderSpacing, (i) => this.modelProvider.getColumnWidth(i) ?? 0);
+        this.rowAxis = new GridAxis(rows, this.vscroll.borderSpacing, (i) => this.modelProvider.getRowHeight(i) ?? 0);
+        this.colAxis = new GridAxis(columns, this.vscroll.borderSpacing, (i) => this.modelProvider.getColumnWidth(i) ?? 0);
     }
 
     ngAfterViewInit(): void {
@@ -310,7 +310,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             // * Doesn't change the template
             // it's better to run scroll events outside zones
             this.zone.runOutsideAngular(() => {
-                this.r2.listen(this.dataEl?.nativeElement, "scroll", () => this.handleScroll());
+                this.r2.listen(this.mainDataContainer.nativeElement, "scroll", () => this.handleScroll());
             });
             this.zone.runOutsideAngular(() => {
                 window.addEventListener("resize", () => this.handleWindowResize());
@@ -342,7 +342,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     buildTable(): void {
-        const tbody = this.tbody;
+        const tbody = this.mainDataBody.nativeElement;
         this.viewport = this.getViewport();
         const {vertical, horizontal} = this.viewport;
         this.prepareTable();
@@ -370,28 +370,31 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateHeaderIdsSizes(): void {
-        const data = this.dataEl?.nativeElement as HTMLElement;
-        const header = this.headerEl?.nativeElement as HTMLElement;
-        const ids = this.idsContainer?.nativeElement as HTMLElement;
+        if (!this.headerEl || !this.idContainer) {
+            return;
+        }
+        const data = this.mainDataContainer.nativeElement;
+        const header = this.headerEl.nativeElement;
+        const ids = this.idContainer.nativeElement;
         header.style.width = `${data.clientWidth}px`;
         ids.style.height = `${data.clientHeight}px`;
     }
 
     private isOutsideSafeViewZone(): boolean {
-        const data = this.dataContainer;
-        const h = data.clientHeight * this.virtualScrolling.viewOverflow.vertical;
-        const w = data.clientWidth * this.virtualScrolling.viewOverflow.horizontal;
-        const overVertical = Math.abs(this.viewport.vertical.startPosition - this.dataContainer.scrollTop + h) > h;
-        const overHorizontal = Math.abs(this.viewport.horizontal.startPosition - this.dataContainer.scrollLeft + w) > w;
+        const data = this.mainDataContainer.nativeElement;
+        const h = data.clientHeight * this.vscroll.viewOverflow.vertical;
+        const w = data.clientWidth * this.vscroll.viewOverflow.horizontal;
+        const overVertical = Math.abs(this.viewport.vertical.startPosition - data.scrollTop + h) > h;
+        const overHorizontal = Math.abs(this.viewport.horizontal.startPosition - data.scrollLeft + w) > w;
         return overHorizontal || overVertical;
     }
 
     private* updateViewport(): Generator {
         const {vertical, horizontal} = this.viewport;
         this.dataTableCache.resize(this.viewport.vertical.count, this.viewport.horizontal.count);
-        this.idTableCache.resize(this.viewport.vertical.count, 2);
-        this.headerIdTableCache.resize(1, this.viewport.horizontal.count);
-        this.filterTableCache.resize(1, this.viewport.horizontal.count);
+        this.idTableCache?.resize(this.viewport.vertical.count, 2);
+        this.headerIdTableCache?.resize(1, this.viewport.horizontal.count);
+        this.filterTableCache?.resize(1, this.viewport.horizontal.count);
         const render = (startRow: number, endRow: number) => {
             for (let rowNumber = startRow; rowNumber < endRow; rowNumber++) {
                 const tr = this.dataTableCache.getRow(rowNumber);
@@ -405,18 +408,22 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                     this.updateCell(td, rowIndex, columnIndex, this.getCellValue(rowIndex, columnIndex));
                 }
 
-                const idRow = this.idTableCache.getRow(rowNumber);
-                idRow.style.height = `${this.modelProvider.getRowHeight(rowIndex)}px`;
-                const idCell = this.idTableCache.getCell(rowNumber, 0);
-                idCell.textContent = `${rowIndex}`;
+                if (this.idTableCache) {
+                    const idRow = this.idTableCache.getRow(rowNumber);
+                    idRow.style.height = `${this.modelProvider.getRowHeight(rowIndex)}px`;
+                    const idCell = this.idTableCache.getCell(rowNumber, 0);
+                    idCell.textContent = `${rowIndex}`;
+                }
 
-                for (let columnNumber = 0; columnNumber < horizontal.count; columnNumber++) {
-                    const headerIdCell = this.headerIdTableCache.getCell(0, columnNumber);
-                    const filterCell = this.filterTableCache.getCell(0, columnNumber);
-                    const columnIndex = this.colAxis.visibleItems[horizontal.startIndex + columnNumber];
-                    const width = this.modelProvider.getColumnWidth(columnIndex);
-                    headerIdCell.style.width = filterCell.style.width = `${width}px`;
-                    headerIdCell.textContent = `${columnIndex}`;
+                if (this.headerIdTableCache && this.filterTableCache) {
+                    for (let columnNumber = 0; columnNumber < horizontal.count; columnNumber++) {
+                        const headerIdCell = this.headerIdTableCache.getCell(0, columnNumber);
+                        const filterCell = this.filterTableCache.getCell(0, columnNumber);
+                        const columnIndex = this.colAxis.visibleItems[horizontal.startIndex + columnNumber];
+                        const width = this.modelProvider.getColumnWidth(columnIndex);
+                        headerIdCell.style.width = filterCell.style.width = `${width}px`;
+                        headerIdCell.textContent = `${columnIndex}`;
+                    }
                 }
             }
         };
@@ -441,12 +448,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // yield;
         // render(vertical.viewStartIndex + vertical.viewCount, vertical.count);
         // yield;
-        this.tbody.style.visibility = "visible";
+        this.mainDataBody.nativeElement.style.visibility = "visible";
         // If we veered off the new safe view zone, we need to update it again!
         if (this.isOutsideSafeViewZone()) {
             // This could have been likely caused by fast scrolling, in which case hide the element to prevent
             // flickering
-            this.tbody.style.visibility = "hidden";
+            this.mainDataBody.nativeElement.style.visibility = "hidden";
             this.viewport = this.getViewport();
             this.updateScroll();
             runMultiFrame(this.updateViewport());
@@ -456,30 +463,30 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private syncHeaderScroll(): void {
-        if (!this.headerEl || !this.dataEl) {
+        if (!this.headerEl || !this.idContainer) {
             return;
         }
-        const header = this.headerEl.nativeElement as HTMLElement;
-        const data = this.dataEl.nativeElement as HTMLElement;
-        const ids = this.idsContainer?.nativeElement as HTMLElement;
+        const header = this.headerEl.nativeElement;
+        const data = this.mainDataContainer.nativeElement;
+        const ids = this.idContainer.nativeElement;
         header.scrollLeft = data.scrollLeft;
         ids.scrollTop = data.scrollTop;
     }
 
     private getViewport(): Viewport {
-        const data = this.dataContainer;
+        const data = this.mainDataContainer.nativeElement;
         const {rows, columns} = this.modelProvider.getDimension();
         if (this.virtualScrolling.enabled) {
-            const viewportWidth = data.clientWidth * (1 + 2 * this.virtualScrolling.viewOverflow.horizontal);
-            const viewportHeight = data.clientHeight * (1 + 2 * this.virtualScrolling.viewOverflow.vertical);
+            const viewportWidth = data.clientWidth * (1 + 2 * this.vscroll.viewOverflow.horizontal);
+            const viewportHeight = data.clientHeight * (1 + 2 * this.vscroll.viewOverflow.vertical);
             return {
                 horizontal: this.colAxis.getVisibleItems(
-                    data.scrollLeft - data.clientWidth * this.virtualScrolling.viewOverflow.horizontal,
+                    data.scrollLeft - data.clientWidth * this.vscroll.viewOverflow.horizontal,
                     viewportWidth,
                     data.scrollLeft,
                     data.clientWidth),
                 vertical: this.rowAxis.getVisibleItems(
-                    data.scrollTop - data.clientHeight * this.virtualScrolling.viewOverflow.vertical,
+                    data.scrollTop - data.clientHeight * this.vscroll.viewOverflow.vertical,
                     viewportHeight,
                     data.scrollTop,
                     data.clientHeight),
@@ -492,12 +499,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private prepareTable(): void {
-        if (!this.virtualScrolling.enabled) {
+        if (!this.virtualScrolling.enabled || !this.idTable || !this.headerTable) {
             return;
         }
-        const table = this.tableContainerEl;
-        const idTable = this.idTable?.nativeElement as HTMLElement;
-        const headerTable = this.headerTable?.nativeElement as HTMLElement;
+        const table = this.mainDataTable.nativeElement;
+        const idTable = this.idTable.nativeElement;
+        const headerTable = this.headerTable.nativeElement;
         table.style.height = `${this.rowAxis.totalSize}px`;
         table.style.width = `${this.colAxis.totalSize}px`;
         table.style.borderSpacing = `${this.virtualScrolling.borderSpacing}px`;
@@ -508,6 +515,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private buildHeaderTable(): void {
+        if (!this.headerIdTableCache || !this.filterTableCache) {
+            return;
+        }
         this.headerIdTableCache.resize(1, this.viewport.horizontal.count);
         this.filterTableCache.resize(1, this.viewport.horizontal.count);
         const {horizontal} = this.viewport;
@@ -583,10 +593,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateScroll(): void {
-        const idTable = this.idTableBody?.nativeElement as HTMLElement;
-        const headerIdTable = this.headerIdTable?.nativeElement as HTMLElement;
-        const filterTable = this.filterTable?.nativeElement as HTMLElement;
-        this.tbody.style.transform = `translateX(${this.viewport.horizontal.startPosition}px) translateY(${this.viewport.vertical.startPosition}px)`;
+        if (!this.idBody || !this.headerTable || !this.filterBody) {
+            return;
+        }
+        const idTable = this.idBody.nativeElement;
+        const headerIdTable = this.headerTable.nativeElement;
+        const filterTable = this.filterBody.nativeElement;
+        this.mainDataBody.nativeElement.style.transform = `translateX(${this.viewport.horizontal.startPosition}px) translateY(${this.viewport.vertical.startPosition}px)`;
         idTable.style.transform = `translateY(${this.viewport.vertical.startPosition}px)`;
         headerIdTable.style.transform = filterTable.style.transform = `translateX(${this.viewport.horizontal.startPosition}px)`;
     }
