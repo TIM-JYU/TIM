@@ -266,33 +266,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     ngOnInit(): void {
-        this.dataTableCache = new TableCache(this.mainDataBody.nativeElement);
-        if (this.idBody) {
-            this.idTableCache = new TableCache(
-                this.idBody.nativeElement,
-                "td",
-                (cell, rowIndex, columnIndex) => {
-                    if (columnIndex !== 1) {
-                        return;
-                    }
-                    const input = cell.appendChild(el("input"));
-                    input.type = "checkbox";
-                }
-            );
-        }
-        if (this.headerIdBody) {
-            this.headerIdTableCache = new TableCache(this.headerIdBody.nativeElement, "th");
-        }
-        if (this.filterBody) {
-            this.filterTableCache = new TableCache(
-                this.filterBody.nativeElement,
-                "td",
-                (cell) => {
-                    const input = cell.appendChild(el("input"));
-                    input.type = "text";
-                });
-        }
-
         if (this.virtualScrolling.enabled) {
             this.startCellPurifying();
         }
@@ -302,6 +275,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     ngAfterViewInit(): void {
+        this.initTableCaches();
         this.buildTable();
         if (this.virtualScrolling.enabled) {
             // Scrolling can cause change detection on some cases, which slows down the table
@@ -367,6 +341,35 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.buildIdTable();
         this.buildHeaderTable();
         this.updateHeaderIdsSizes();
+    }
+
+    private initTableCaches() {
+        this.dataTableCache = new TableCache(this.mainDataBody.nativeElement);
+        if (this.idBody) {
+            this.idTableCache = new TableCache(
+                this.idBody.nativeElement,
+                "td",
+                (cell, rowIndex, columnIndex) => {
+                    if (columnIndex !== 1) {
+                        return;
+                    }
+                    const input = cell.appendChild(el("input"));
+                    input.type = "checkbox";
+                }
+            );
+        }
+        if (this.headerIdBody) {
+            this.headerIdTableCache = new TableCache(this.headerIdBody.nativeElement, "th");
+        }
+        if (this.filterBody) {
+            this.filterTableCache = new TableCache(
+                this.filterBody.nativeElement,
+                "td",
+                (cell) => {
+                    const input = cell.appendChild(el("input"));
+                    input.type = "text";
+                });
+        }
     }
 
     private updateHeaderIdsSizes(): void {
