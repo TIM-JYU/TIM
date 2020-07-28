@@ -849,7 +849,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getRowHeight(rowIndex: number): number | undefined {
-        return 33;
+        return undefined;
     }
 
     getColumnWidth(columnIndex: number): number | undefined {

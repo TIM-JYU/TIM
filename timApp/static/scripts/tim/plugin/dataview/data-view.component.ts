@@ -231,7 +231,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                 <tbody #idBody></tbody>
             </table>
         </div>
-        <div class="data" style="height: 30em; overflow: scroll;" #mainDataContainer>
+        <div class="data" style="height: 30em; overflow: auto;" #mainDataContainer>
             <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled" #mainDataTable>
                 <tbody class="content" #mainDataBody></tbody>
             </table>
@@ -362,6 +362,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                     if (columnIndex !== 1) {
                         return;
                     }
+                    cell.className = "cbColumn";
                     const input = cell.appendChild(el("input"));
                     input.type = "checkbox";
                 }
@@ -456,10 +457,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             r();
             yield;
         }
-        // render(0, vertical.viewStartIndex);
-        // yield;
-        // render(vertical.viewStartIndex + vertical.viewCount, vertical.count);
-        // yield;
         this.mainDataBody.nativeElement.style.visibility = "visible";
         // If we veered off the new safe view zone, we need to update it again!
         if (this.isOutsideSafeViewZone()) {
@@ -536,11 +533,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         for (let column = 0; column < horizontal.count; column++) {
             const columnIndex = this.colAxis.visibleItems[column + horizontal.startIndex];
             const headerCell = this.headerIdTableCache.getCell(0, column);
+            const width = this.getColumnWidthOrFallback(columnIndex);
             headerCell.textContent = `${columnIndex}`;
-            headerCell.style.width = `${this.modelProvider.getColumnWidth(columnIndex)}px`;
+            headerCell.style.width = `${width}px`;
 
             const filterCell = this.filterTableCache.getCell(0, column);
-            filterCell.style.width = `${this.modelProvider.getColumnWidth(columnIndex)}px`;
+            filterCell.style.width = `${width}px`;
         }
     }
 
@@ -554,11 +552,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const rowIndex = this.rowAxis.visibleItems[row + vertical.startIndex];
 
             const tr = this.idTableCache.getRow(row);
-            tr.style.height = `${this.modelProvider.getRowHeight(rowIndex)}px`;
+            tr.style.height = `${this.getRowHeightOrFallback(rowIndex)}px`;
 
             const idCell = this.idTableCache.getCell(row, 0);
             idCell.textContent = `${rowIndex + this.columnIdStart}`;
-            // idCell.style.width = "2em";
         }
     }
 
@@ -639,6 +636,22 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 } as PurifyData);
             }
         }
+    }
+
+    private getColumnWidthOrFallback(columnIndex: number): number {
+        const res = this.modelProvider.getColumnWidth(columnIndex);
+        if (res !== undefined) {
+            return res;
+        }
+        return this.dataTableCache.getCell(0, columnIndex).offsetWidth;
+    }
+
+    private getRowHeightOrFallback(rowIndex: number): number {
+        const res = this.modelProvider.getRowHeight(rowIndex);
+        if (res !== undefined) {
+            return res;
+        }
+        return this.dataTableCache.getRow(rowIndex).offsetHeight;
     }
 }
 
