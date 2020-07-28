@@ -246,7 +246,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() tableClass: { [klass: string]: unknown } = {};
     @Input() tableStyle: { [klass: string]: unknown } = {};
     @Input() columnIdStart: number = 1;
-    @ViewChild("headerContainer") private headerEl?: ElementRef<HTMLDivElement>;
+    @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
     @ViewChild("filterBody") private filterBody?: ElementRef<HTMLTableSectionElement>;
@@ -384,18 +384,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateHeaderSizes(): void {
-        if (!this.headerEl || !this.idContainer) {
+        if (!this.headerContainer || !this.idContainer) {
             return;
         }
-        const dataContainer = this.mainDataContainer.nativeElement;
-        const dataTable = this.mainDataTable.nativeElement;
-        const width = Math.min(dataContainer.clientWidth, dataTable.clientWidth);
-        const height = Math.min(dataContainer.clientHeight, dataTable.clientHeight);
-        const header = this.headerEl.nativeElement;
-        const ids = this.idContainer.nativeElement;
-        header.style.width = `${width}px`;
-        ids.style.height = `${height}px`;
-
+        this.headerContainer.nativeElement.style.width = `${this.tableWidth}px`;
+        this.idContainer.nativeElement.style.height = `${this.tableHeight}px`;
         this.updateColumnHeaderCellSizes();
         this.updateRowHeaderCellSizes();
     }
@@ -518,10 +511,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private syncHeaderScroll(): void {
-        if (!this.headerEl || !this.idContainer) {
+        if (!this.headerContainer || !this.idContainer) {
             return;
         }
-        const header = this.headerEl.nativeElement;
+        const header = this.headerContainer.nativeElement;
         const data = this.mainDataContainer.nativeElement;
         const ids = this.idContainer.nativeElement;
         header.scrollLeft = data.scrollLeft;
@@ -689,6 +682,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return res;
         }
         return this.dataTableCache.getRow(rowIndex).offsetHeight;
+    }
+
+    private get tableWidth(): number {
+        return Math.min(this.mainDataContainer.nativeElement.clientWidth, this.mainDataTable.nativeElement.clientWidth);
+    }
+
+    private get tableHeight(): number {
+        return Math.min(this.mainDataContainer.nativeElement.clientHeight, this.mainDataTable.nativeElement.clientHeight);
     }
 }
 
