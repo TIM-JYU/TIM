@@ -232,7 +232,8 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
             </table>
         </div>
         <div class="data" style="height: 30em; overflow: auto;" #mainDataContainer>
-            <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled" #mainDataTable>
+            <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
+                   #mainDataTable>
                 <tbody class="content" #mainDataBody></tbody>
             </table>
         </div>
@@ -242,8 +243,8 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
 export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() modelProvider!: TableModelProvider; // TODO: Make optional and error out if missing
     @Input() virtualScrolling: Partial<VirtualScrollingOptions> = DEFAULT_VSCROLL_SETTINGS;
-    @Input() tableClass: {[klass: string]: unknown} = {};
-    @Input() tableStyle: {[klass: string]: unknown} = {};
+    @Input() tableClass: { [klass: string]: unknown } = {};
+    @Input() tableStyle: { [klass: string]: unknown } = {};
     @Input() columnIdStart: number = 1;
     @ViewChild("headerContainer") private headerEl?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
@@ -296,7 +297,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     handleWindowResize(): void {
-        this.updateHeaderIdsSizes();
+        this.updateHeaderSizes();
         if (!this.vscroll.enabled) {
             return;
         }
@@ -349,7 +350,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         this.buildIdTable();
         this.buildHeaderTable();
-        this.updateHeaderIdsSizes();
+        this.updateHeaderSizes();
     }
 
     private initTableCaches() {
@@ -382,15 +383,60 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
-    private updateHeaderIdsSizes(): void {
+    private updateHeaderSizes(): void {
         if (!this.headerEl || !this.idContainer) {
             return;
         }
-        const data = this.mainDataContainer.nativeElement;
+        const dataContainer = this.mainDataContainer.nativeElement;
+        const dataTable = this.mainDataTable.nativeElement;
+        const width = Math.min(dataContainer.clientWidth, dataTable.clientWidth);
+        const height = Math.min(dataContainer.clientHeight, dataTable.clientHeight);
         const header = this.headerEl.nativeElement;
         const ids = this.idContainer.nativeElement;
-        header.style.width = `${data.clientWidth}px`;
-        ids.style.height = `${data.clientHeight}px`;
+        header.style.width = `${width}px`;
+        ids.style.height = `${height}px`;
+
+        this.updateColumnHeaderCellSizes();
+        this.updateRowHeaderCellSizes();
+    }
+
+    private updateRowHeaderCellSizes() {
+        if (!this.idTableCache) {
+            return;
+        }
+        const {horizontal, vertical} = this.viewport;
+
+        this.idTableCache.resize(this.viewport.vertical.count, 2);
+        // Get sizes in batch for speed
+        const sizes = Array.from(new Array(horizontal.count)).map((value, index) => {
+            const rowIndex = this.rowAxis.visibleItems[index + vertical.startIndex];
+            return this.getRowHeightOrFallback(rowIndex);
+        });
+        for (let row = 0; row < vertical.count; row++) {
+            const tr = this.idTableCache.getRow(row);
+            tr.style.height = `${sizes[row]}px`;
+        }
+    }
+
+    private updateColumnHeaderCellSizes() {
+        if (!this.headerIdTableCache || !this.filterTableCache) {
+            return;
+        }
+        const {horizontal} = this.viewport;
+
+        this.headerIdTableCache.resize(1, this.viewport.horizontal.count);
+        this.filterTableCache.resize(1, this.viewport.horizontal.count);
+        const sizes = Array.from(new Array(horizontal.count)).map((value, index) => {
+            const columnIndex = this.colAxis.visibleItems[index + horizontal.startIndex];
+            return this.getColumnWidthOrFallback(columnIndex);
+        });
+        for (let column = 0; column < horizontal.count; column++) {
+            const width = sizes[column];
+            const headerCell = this.headerIdTableCache.getCell(0, column);
+            const filterCell = this.filterTableCache.getCell(0, column);
+            headerCell.style.width = `${width}px`;
+            filterCell.style.width = `${width}px`;
+        }
     }
 
     private isOutsideSafeViewZone(): boolean {
@@ -533,12 +579,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         for (let column = 0; column < horizontal.count; column++) {
             const columnIndex = this.colAxis.visibleItems[column + horizontal.startIndex];
             const headerCell = this.headerIdTableCache.getCell(0, column);
-            const width = this.getColumnWidthOrFallback(columnIndex);
             headerCell.textContent = `${columnIndex}`;
-            headerCell.style.width = `${width}px`;
-
-            const filterCell = this.filterTableCache.getCell(0, column);
-            filterCell.style.width = `${width}px`;
         }
     }
 
@@ -550,10 +591,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const {vertical} = this.viewport;
         for (let row = 0; row < vertical.count; row++) {
             const rowIndex = this.rowAxis.visibleItems[row + vertical.startIndex];
-
-            const tr = this.idTableCache.getRow(row);
-            tr.style.height = `${this.getRowHeightOrFallback(rowIndex)}px`;
-
             const idCell = this.idTableCache.getCell(row, 0);
             idCell.textContent = `${rowIndex + this.columnIdStart}`;
         }
@@ -677,6 +714,7 @@ function joinCss(obj: Record<string, string>) {
     let result = "";
     // eslint-disable-next-line guard-for-in
     for (const k in obj) {
+        // noinspection JSUnfilteredForInLoop
         result = `${result}; ${k}:${obj[k]}`;
     }
     return result;
