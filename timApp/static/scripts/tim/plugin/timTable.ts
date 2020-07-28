@@ -844,7 +844,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getDimension(): { rows: number; columns: number; } {
-        return {rows: this.data.table.countRow ?? 0, columns: this.data.table.countCol ?? 0};
+        return {rows: this.cellDataMatrix.length, columns: this.cellDataMatrix[0].length};
     }
 
     getRowHeight(rowIndex: number): number | undefined {
