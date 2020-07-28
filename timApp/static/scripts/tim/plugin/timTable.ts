@@ -504,7 +504,8 @@ export enum ClearSort {
                                                 forcedEditable: isInForcedEditMode(),
                                                 timTableTable: true}"
                                 [tableStyle]="stylingForTable(data.table)"
-                                [id]="data.table.id"></app-data-view>
+                                [id]="data.table.id"
+                                [columnIdStart]="nrColStart"></app-data-view>
                 <!--                <table #tableElem-->
                 <!--                       [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(),-->
                 <!--                                  forcedEditable: isInForcedEditMode()}"-->

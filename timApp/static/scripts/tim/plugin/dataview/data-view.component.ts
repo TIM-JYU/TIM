@@ -244,6 +244,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() virtualScrolling: Partial<VirtualScrollingOptions> = DEFAULT_VSCROLL_SETTINGS;
     @Input() tableClass: {[klass: string]: unknown} = {};
     @Input() tableStyle: {[klass: string]: unknown} = {};
+    @Input() columnIdStart: number = 1;
     @ViewChild("headerContainer") private headerEl?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
@@ -423,7 +424,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                     const idRow = this.idTableCache.getRow(rowNumber);
                     idRow.style.height = `${this.modelProvider.getRowHeight(rowIndex)}px`;
                     const idCell = this.idTableCache.getCell(rowNumber, 0);
-                    idCell.textContent = `${rowIndex}`;
+                    idCell.textContent = `${rowIndex + this.columnIdStart}`;
                 }
 
                 if (this.headerIdTableCache && this.filterTableCache) {
@@ -556,8 +557,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             tr.style.height = `${this.modelProvider.getRowHeight(rowIndex)}px`;
 
             const idCell = this.idTableCache.getCell(row, 0);
-            idCell.textContent = `${rowIndex}`;
-            idCell.style.width = "2em";
+            idCell.textContent = `${rowIndex + this.columnIdStart}`;
+            // idCell.style.width = "2em";
         }
     }
 

@@ -7,12 +7,15 @@
         / max-content auto;
 }
 
+table {
+    margin-bottom: 0;
+}
+
 ::ng-deep .header {
     overflow-x: hidden;
     grid-area: header;
 
     table {
-        margin-bottom: 0;
         tbody, thead {
             display: block;
             width: max-content;
