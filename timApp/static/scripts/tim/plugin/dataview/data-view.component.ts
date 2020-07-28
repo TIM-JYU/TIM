@@ -89,24 +89,21 @@ class GridAxis {
         };
     }
 
-    private search(position: number, start?: number, end?: number): number {
-        if (start === undefined) {
-            start = 0;
+    private search(position: number): number {
+        let start = 0;
+        let end = this.positionStart.length - 1;
+        while (start < end) {
+            const mid = Math.floor((start + end) / 2);
+            const posStart = this.positionStart[mid];
+            if (position < posStart) {
+                end = mid - 1;
+            } else if (position > posStart) {
+                start = mid + 1;
+            } else {
+                return mid;
+            }
         }
-        if (end === undefined) {
-            end = this.positionStart.length - 1;
-        }
-        if (start >= end) {
-            return end;
-        }
-        const mid = Math.floor((start + end) / 2);
-        const posStart = this.positionStart[mid];
-        if (position < posStart) {
-            return this.search(position, start, mid - 1);
-        } else if (position > posStart) {
-            return this.search(position, mid + 1, end);
-        }
-        return mid;
+        return end;
     }
 }
 
