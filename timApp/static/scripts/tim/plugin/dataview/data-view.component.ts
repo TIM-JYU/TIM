@@ -203,9 +203,9 @@ class TableCache {
     }
 }
 
-// TODO: Set table height as attribute
-// TODO: Set table class/style as attribute
-// TODO: Pull column width from parent component (might need to recompute it)
+// TODO: Header row + colID row
+// TODO: Do we need to allow header rows without fixing? If so, heck
+// TODO: Add totals + select all table to the left upper corner
 // TODO: Support for row/column span
 
 const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
@@ -228,7 +228,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                 <tbody #idBody></tbody>
             </table>
         </div>
-        <div class="data" style="height: 30em; overflow: auto;" #mainDataContainer>
+        <div class="data" [ngStyle]="{'maxHeight': tableMaxHeight}" #mainDataContainer>
             <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
                    #mainDataTable>
                 <tbody class="content" #mainDataBody></tbody>
@@ -243,6 +243,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() tableClass: { [klass: string]: unknown } = {};
     @Input() tableStyle: { [klass: string]: unknown } = {};
     @Input() columnIdStart: number = 1;
+    @Input() tableMaxHeight: string = "2000em";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
