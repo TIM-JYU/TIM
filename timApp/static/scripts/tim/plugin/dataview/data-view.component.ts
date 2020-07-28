@@ -1,5 +1,16 @@
-import {AfterViewInit, Component, ElementRef, Input, NgZone, OnInit, Renderer2, ViewChild} from "@angular/core";
+import {
+    AfterViewInit,
+    Component,
+    ElementRef,
+    HostBinding,
+    Input,
+    NgZone,
+    OnInit,
+    Renderer2,
+    ViewChild,
+} from "@angular/core";
 import * as DOMPurify from "dompurify";
+import {maxContentOrFitContent} from "tim/util/utils";
 
 export interface TableModelProvider {
     getDimension(): { rows: number, columns: number };
@@ -244,6 +255,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() tableStyle: { [klass: string]: unknown } = {};
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
+    @Input() tableMaxWidth: string = maxContentOrFitContent();
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
@@ -254,6 +266,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @ViewChild("mainDataBody") private mainDataBody!: ElementRef<HTMLTableSectionElement>;
     @ViewChild("mainDataTable") private mainDataTable!: ElementRef<HTMLTableElement>;
     @ViewChild("mainDataContainer") private mainDataContainer!: ElementRef<HTMLDivElement>;
+    @HostBinding("style") componentStyle: string = "";
     private viewPortdY = 0;
     private cellValueCache: Record<number, string[]> = {};
     private dataTableCache!: TableCache;
@@ -270,6 +283,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     ngOnInit(): void {
+        this.componentStyle = `width: ${this.tableMaxWidth};`;
         if (this.vscroll.enabled) {
             this.startCellPurifying();
         }

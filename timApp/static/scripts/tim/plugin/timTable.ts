@@ -506,7 +506,8 @@ export enum ClearSort {
                                 [tableStyle]="stylingForTable(data.table)"
                                 [id]="data.table.id"
                                 [columnIdStart]="nrColStart"
-                                [tableMaxHeight]="maxRows"></app-data-view>
+                                [tableMaxHeight]="maxRows"
+                                [tableMaxWidth]="maxCols"></app-data-view>
                 <!--                <table #tableElem-->
                 <!--                       [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(),-->
                 <!--                                  forcedEditable: isInForcedEditMode()}"-->
