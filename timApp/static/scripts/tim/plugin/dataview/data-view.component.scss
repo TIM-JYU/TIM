@@ -56,3 +56,8 @@ table.virtual {
     margin-right: 5%;
     margin-left: 5%;
 }
+
+// Fix border appearing behind background color for some reason
+::ng-deep td {
+    background-clip: padding-box;
+}

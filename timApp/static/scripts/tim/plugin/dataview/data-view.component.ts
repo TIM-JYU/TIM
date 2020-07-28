@@ -221,18 +221,18 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
     selector: "app-data-view",
     template: `
         <div class="header" #headerContainer>
-            <table #headerTable>
+            <table [ngStyle]="tableStyle" #headerTable>
                 <thead #headerIdBody></thead>
                 <tbody #filterBody></tbody>
             </table>
         </div>
         <div class="ids" #idContainer>
-            <table #idTable>
+            <table [ngStyle]="tableStyle" #idTable>
                 <tbody #idBody></tbody>
             </table>
         </div>
         <div class="data" style="height: 30em; overflow: scroll;" #mainDataContainer>
-            <table [class.virtual]="virtualScrolling.enabled" #mainDataTable>
+            <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled" #mainDataTable>
                 <tbody class="content" #mainDataBody></tbody>
             </table>
         </div>
@@ -242,6 +242,8 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
 export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() modelProvider!: TableModelProvider; // TODO: Make optional and error out if missing
     @Input() virtualScrolling: Partial<VirtualScrollingOptions> = DEFAULT_VSCROLL_SETTINGS;
+    @Input() tableClass: {[klass: string]: unknown} = {};
+    @Input() tableStyle: {[klass: string]: unknown} = {};
     @ViewChild("headerContainer") private headerEl?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
