@@ -90,6 +90,10 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     async doCheckFields(nosave: boolean, userNames?: string[]) {
+        if (this.getTaskId() == undefined) {
+            this.error = {msg: "TaskId is missing."};
+            return;
+        }
         if (this.attrsall.markup.confirmText) {
             if (!window.confirm(this.attrsall.markup.confirmText)) {
                 return;
