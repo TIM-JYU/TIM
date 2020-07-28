@@ -78,6 +78,9 @@ export class ReviewController {
     public velpMode: boolean;
     public velps?: IVelpUI[];
 
+    // Draw-related attributes
+    private drawStarted = false;
+
     constructor(public vctrl: ViewCtrl) {
         this.scope = vctrl.scope;
         this.velpMode = documentglobals().velpMode;
@@ -1052,6 +1055,49 @@ export class ReviewController {
         actrl2.showAnnotation();
         if (scrollToAnnotation) {
             actrl2.scrollToIfNotInViewport();
+        }
+    }
+
+    setCanvas(par: Element, answerId: number): void {
+        console.log("Setting canvas");
+        const canvas = par.querySelector(".drawbase") as HTMLCanvasElement;
+        const element = par.querySelector(".reviewcontainer") as HTMLElement;
+        if (canvas && element) {
+            console.log("Canvas found3");
+            console.log("W", element.clientWidth);
+            console.log("H", element.clientHeight);
+            // Stretch canvas over review area
+            canvas.width = element.clientWidth;
+            canvas.height = element.clientHeight;
+
+            // Add listeners
+            canvas.addEventListener("mousedown", (event) => {
+                this.canvasStartDraw(event, answerId, par, canvas);
+            });
+            canvas.addEventListener("mousemove", (event) => {
+                this.canvasDoDraw(event, answerId, canvas);
+            });
+            canvas.addEventListener("mouseup", (event) => {
+                this.canvasFinishDraw(event, element, canvas);
+            });
+        }
+    }
+
+    canvasStartDraw(e: MouseEvent, answerId: number, par: Element, canvas: HTMLCanvasElement): void {
+        console.log("Started click on canvas at", e.offsetX, e.offsetY);
+        this.drawStarted = true;
+    }
+
+    canvasDoDraw(e: MouseEvent, answerId: number, c: HTMLCanvasElement): void {
+        if (this.drawStarted) {
+            console.log("Moved mouse on canvas", e.offsetX, e.offsetY);
+        }
+    }
+
+    canvasFinishDraw(e: MouseEvent, par: Element, c: HTMLCanvasElement): void {
+        if (this.drawStarted) {
+            console.log("Ended click on canvas");
+            this.drawStarted = false;
         }
     }
 }

@@ -368,6 +368,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private anyInvalid: boolean = false;
     private giveCustomPoints: boolean = false;
     public review: boolean = false;
+    private imageReview: boolean = false;
     public oldreview: boolean = false;
     private shouldFocus: boolean = false;
     // noinspection JSMismatchedCollectionQueryUpdate
@@ -705,6 +706,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 }
             }
             if (this.review) {
+                if (r.result.data.reviewHtml.startsWith("data:image")) {
+                    this.imageReview = true;
+                }
                 if (this.selectedAnswer) {
                     this.reviewHtml = r.result.data.reviewHtml;
                 } else {
@@ -720,6 +724,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
             } else {
                 this.unDimPlugin();
             }
+        }
+    }
+
+    setImageReview() {
+        if (this.selectedAnswer && this.reviewHtml && this.imageReview) {
+            const par = this.element.parents(".par");
+            this.viewctrl.reviewCtrl.setCanvas(par[0], this.selectedAnswer.id);
+            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
         }
     }
 
