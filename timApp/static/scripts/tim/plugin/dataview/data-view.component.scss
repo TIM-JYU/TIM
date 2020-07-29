@@ -19,7 +19,7 @@ table {
     }
 }
 
-::ng-deep .header {
+.header {
     overflow-x: hidden;
     grid-area: header;
 
@@ -27,6 +27,10 @@ table {
         tbody, thead {
             display: block;
             width: max-content;
+
+            ::ng-deep tr:last-child td {
+                border-bottom: none;
+            }
         }
     }
 }
@@ -34,6 +38,10 @@ table {
 .ids {
     grid-area: ids;
     overflow-y: hidden;
+
+    ::ng-deep table td:last-child {
+        border-right: none;
+    }
 }
 
 .data {
@@ -43,6 +51,7 @@ table {
 
 table {
     display: block;
+    border: none;
 
     &.scroll {
         overflow: scroll;
