@@ -253,6 +253,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() virtualScrolling: Partial<VirtualScrollingOptions> = DEFAULT_VSCROLL_SETTINGS;
     @Input() tableClass: { [klass: string]: unknown } = {};
     @Input() tableStyle: { [klass: string]: unknown } = {};
+    @Input() headerStyle: Record<string, string> | null = {};
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
     @Input() tableMaxWidth: string = maxContentOrFitContent();
@@ -362,7 +363,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         this.buildIdTable();
         this.buildHeaderTable();
-        this.updateHeaderSizes();
+        // Force the main table to layout first so that we can compute the header sizes
+        requestAnimationFrame(() => this.updateHeaderSizes());
     }
 
     private initTableCaches() {
@@ -382,7 +384,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             );
         }
         if (this.headerIdBody) {
-            this.headerIdTableCache = new TableCache(this.headerIdBody.nativeElement, "th");
+            this.headerIdTableCache = new TableCache(this.headerIdBody.nativeElement, "th", (cell) => {
+                applyBasicStyle(cell, this.headerStyle);
+            });
         }
         if (this.filterBody) {
             this.filterTableCache = new TableCache(
@@ -731,6 +735,12 @@ function joinCss(obj: Record<string, string>) {
         result = `${result}; ${k}:${obj[k]}`;
     }
     return result;
+}
+
+function applyBasicStyle(element: HTMLElement, style: Record<string, string> | null) {
+    if (style != null) {
+        Object.assign(element.style, style);
+    }
 }
 
 interface PurifyData {
