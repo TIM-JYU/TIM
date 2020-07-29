@@ -7,6 +7,9 @@
                 <span ng-if="$ctrl.rctrl.selectedArea">
                     '{{ $ctrl.rctrl.selectedArea }}' of
                 </span>
+                <span ng-if="$ctrl.rctrl.selectionIsDrawing">
+                    new drawing in review image of
+                </span>
                 <span ng-if="!$ctrl.rctrl.getSelectedAnswerTaskName()">paragraph '{{$ctrl.rctrl.getSelectedBeginning()}}'</span>
                 <span ng-if="$ctrl.rctrl.getSelectedAnswerTaskName()">
                     answer in task '{{$ctrl.rctrl.getSelectedAnswerTaskName()}}'

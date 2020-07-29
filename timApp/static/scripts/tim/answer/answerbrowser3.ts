@@ -19,6 +19,7 @@ import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
 import {Binding, getURLParameter, getUrlParams, markAsUsed, Require, to, isInViewport, scrollToElement} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
+import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.
@@ -727,13 +728,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    setImageReview() {
-        if (this.selectedAnswer && this.reviewHtml && this.imageReview) {
+    public setImageReview = (canvas: DrawCanvasComponent) => {
+        if (this.selectedAnswer && this.reviewHtml) {
             const par = this.element.parents(".par");
-            this.viewctrl.reviewCtrl.setCanvas(par[0], this.selectedAnswer.id);
-            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
+            this.viewctrl.reviewCtrl.setCanvas(par[0], this.selectedAnswer.id, canvas);
+            // this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
         }
-    }
+    };
 
     async changeAnswerTo(dir: (-1 | 1)) {
         if (!this.trySavePoints(true)) {

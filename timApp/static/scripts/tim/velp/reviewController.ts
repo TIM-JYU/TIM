@@ -10,6 +10,7 @@ import {
 } from "tim/velp/annotation.component";
 import {deserialize} from "typescript-json-serializer";
 import {TaskId} from "tim/plugin/taskid";
+import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -68,6 +69,7 @@ function tryCreateRange(
 export class ReviewController {
     private selectedArea?: Range;
     public selectedElement?: Element;
+    private selectionIsDrawing = false;
     public item: IItem;
     private annotations: Annotation[];
     public zIndex: number;
@@ -77,9 +79,6 @@ export class ReviewController {
     private velpSelection?: VelpSelectionController; // initialized through onInit
     public velpMode: boolean;
     public velps?: IVelpUI[];
-
-    // Draw-related attributes
-    private drawStarted = false;
 
     constructor(public vctrl: ViewCtrl) {
         this.scope = vctrl.scope;
@@ -93,6 +92,7 @@ export class ReviewController {
         this.velpSelection = velpSelection;
 
         document.addEventListener("selectionchange", () => {
+            this.selectionIsDrawing = false;
             const range = getSelection()?.getRangeAt(0);
 
             // Length check is important - we don't want to lose the previous selection in touch devices.
@@ -1058,46 +1058,21 @@ export class ReviewController {
         }
     }
 
-    setCanvas(par: Element, answerId: number): void {
-        console.log("Setting canvas");
-        const canvas = par.querySelector(".drawbase") as HTMLCanvasElement;
-        const element = par.querySelector(".reviewcontainer") as HTMLElement;
-        if (canvas && element) {
-            console.log("Canvas found3");
-            console.log("W", element.clientWidth);
-            console.log("H", element.clientHeight);
-            // Stretch canvas over review area
-            canvas.width = element.clientWidth;
-            canvas.height = element.clientHeight;
+    setCanvas(par: Element, answerId: number, canvas: DrawCanvasComponent): void {
+        canvas.setClickCallback(this.clickFromCanvas);
+        // console.log("reviewControlled received", canvas);
+    }
 
-            // Add listeners
-            canvas.addEventListener("mousedown", (event) => {
-                this.canvasStartDraw(event, answerId, par, canvas);
-            });
-            canvas.addEventListener("mousemove", (event) => {
-                this.canvasDoDraw(event, answerId, canvas);
-            });
-            canvas.addEventListener("mouseup", (event) => {
-                this.canvasFinishDraw(event, element, canvas);
-            });
+    clickFromCanvas = (canvas: DrawCanvasComponent) => {
+        if (!canvas.drawingAnything || !this.velpSelection) {
+            return;
         }
-    }
+        this.selectedArea = undefined;
+        this.selectionIsDrawing = true;
+        const par = $(canvas.canvas.nativeElement).parents(".par")[0] as Element;
+        this.selectedElement = par;
+        console.log(par);
+        console.log("Reacted to click @ rc", this);
+    };
 
-    canvasStartDraw(e: MouseEvent, answerId: number, par: Element, canvas: HTMLCanvasElement): void {
-        console.log("Started click on canvas at", e.offsetX, e.offsetY);
-        this.drawStarted = true;
-    }
-
-    canvasDoDraw(e: MouseEvent, answerId: number, c: HTMLCanvasElement): void {
-        if (this.drawStarted) {
-            console.log("Moved mouse on canvas", e.offsetX, e.offsetY);
-        }
-    }
-
-    canvasFinishDraw(e: MouseEvent, par: Element, c: HTMLCanvasElement): void {
-        if (this.drawStarted) {
-            console.log("Ended click on canvas");
-            this.drawStarted = false;
-        }
-    }
 }

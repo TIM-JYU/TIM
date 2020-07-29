@@ -105,15 +105,17 @@ export enum DrawType {
 })
 export class DrawToolbarComponent implements OnInit {
     @Input() drawVisibleOptions: IDrawVisibleOptions = {
-        lineMode: false,
-        rectangleMode: false,
-        circleMode: false,
-        w: false,
-        color: false,
-        fill: false,
-        opacity: false,
+        enabled: true,
+        lineMode: true,
+        rectangleMode: true,
+        circleMode: true,
+        w: true,
+        color: true,
+        fill: true,
+        opacity: true,
     };
 
+    // TODO: add these to single object
     @Input() public enabled = false;
     @Output() enabledChange: EventEmitter<boolean> = new EventEmitter();
 

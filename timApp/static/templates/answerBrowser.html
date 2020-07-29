@@ -167,11 +167,12 @@
                          style="width: 0px; height: 0px; overflow: visible; position: relative">
 
                     </div>
-                    <div class="canvascontainer" style="width: 0px; height: 0px; overflow: visible">
-                        <canvas class="drawbase" style="border:1px solid #000000; position: relative;">
-                        </canvas>
-                    </div>
-                    <img ng-src="{{$ctrl.reviewHtml}}" ng-on-load="$ctrl.setImageReview()">
+<!--                    <div class="canvascontainer" style="width: 0px; height: 0px; overflow: visible">-->
+<!--                        <canvas class="drawbase" style="border:1px solid #000000; position: relative;">-->
+<!--                        </canvas>-->
+<!--                    </div>-->
+<!--                    <img ng-src="{{$ctrl.reviewHtml}}" ng-on-load="$ctrl.setImageReview()">-->
+                    <draw-canvas bg-source="{{$ctrl.reviewHtml}}" [img-load-callback]="$ctrl.setImageReview"></draw-canvas>
                 </div>
                 <div ng-if="!$ctrl.imageReview" class="review" ng-bind-html="$ctrl.reviewHtml">
 
