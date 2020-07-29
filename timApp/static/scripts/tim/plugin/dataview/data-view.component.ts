@@ -15,6 +15,8 @@ import {maxContentOrFitContent} from "tim/util/utils";
 export interface TableModelProvider {
     getDimension(): { rows: number, columns: number };
 
+    getColumnHeaderContents(columnIndex: number): string;
+
     getRowHeight(rowIndex: number): number | undefined;
 
     getColumnWidth(columnIndex: number): number | undefined;
@@ -588,7 +590,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         for (let column = 0; column < horizontal.count; column++) {
             const columnIndex = this.colAxis.visibleItems[column + horizontal.startIndex];
             const headerCell = this.headerIdTableCache.getCell(0, column);
-            headerCell.textContent = `${columnIndex}`;
+            headerCell.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
         }
     }
 

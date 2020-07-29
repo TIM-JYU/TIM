@@ -503,12 +503,12 @@ export enum ClearSort {
                                [tableClass]="{editable: isInEditMode() && !isInForcedEditMode(),
                                                 forcedEditable: isInForcedEditMode(),
                                                 timTableTable: true}"
-                                [tableStyle]="stylingForTable(data.table)"
-                                [id]="data.table.id"
-                                [columnIdStart]="nrColStart"
-                                [tableMaxHeight]="maxRows"
-                                [tableMaxWidth]="maxCols"
-                                [headerStyle]="headersStyle"></app-data-view>
+                               [tableStyle]="stylingForTable(data.table)"
+                               [id]="data.table.id"
+                               [columnIdStart]="nrColStart"
+                               [tableMaxHeight]="maxRows"
+                               [tableMaxWidth]="maxCols"
+                               [headerStyle]="headersStyle"></app-data-view>
                 <!--                <table #tableElem-->
                 <!--                       [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(),-->
                 <!--                                  forcedEditable: isInForcedEditMode()}"-->
@@ -2742,6 +2742,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         } else {
             console.error("timTable.setData: unexpected data format: " + JSON.stringify(data));
         }
+    }
+
+    getColumnHeaderContents(columnIndex: number): string {
+        return `Header: ${columnIndex}`;
     }
 
     private getEditInputElement() {
