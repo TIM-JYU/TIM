@@ -4,9 +4,12 @@ import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
+import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {dereferencePar, getParId, Paragraph} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
-// import {getRangeBeginParam} from "../document/viewRangeInfo";
+import {dereferencePar, getParId} from "../document/parhelpers";
+import {FormModeOption, ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {getRangeBeginParam} from "../document/viewRangeInfo";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {IAnswerBrowserMarkupSettings, IGenericPluginMarkup} from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
@@ -19,7 +22,6 @@ import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
 import {Binding, getURLParameter, getUrlParams, markAsUsed, Require, to, isInViewport, scrollToElement} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
-import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.

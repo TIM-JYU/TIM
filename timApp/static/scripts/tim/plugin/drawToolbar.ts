@@ -1,4 +1,19 @@
-import {Component, EventEmitter, Input, Output, OnInit} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    EventEmitter,
+    Input,
+    NgModule,
+    OnInit,
+    Output,
+    StaticProvider,
+} from "@angular/core";
+import {FormsModule} from "@angular/forms";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {CommonModule} from "@angular/common";
+
 
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar
@@ -106,6 +121,7 @@ export enum DrawType {
 export class DrawToolbarComponent implements OnInit {
     @Input() drawVisibleOptions: IDrawVisibleOptions = {
         enabled: true,
+        freeHand: true,
         lineMode: true,
         rectangleMode: true,
         circleMode: true,
@@ -151,3 +167,26 @@ export class DrawToolbarComponent implements OnInit {
     }
 }
 
+// noinspection AngularInvalidImportedOrDeclaredSymbol
+@NgModule({
+    declarations: [
+        DrawToolbarComponent,
+    ], imports: [
+        CommonModule,
+        FormsModule,
+    ],
+    exports: [DrawToolbarComponent],
+})
+export class DrawToolbarModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {
+    }
+}
+
+const bootstrapFn = (extraProviders: StaticProvider[]) => {
+    const platformRef = platformBrowserDynamic(extraProviders);
+    return platformRef.bootstrapModule(DrawToolbarModule);
+};
+
+const angularJsModule = createDowngradedModule(bootstrapFn);
+doDowngrade(angularJsModule, "drawToolbar", DrawToolbarComponent);
+export const moduleDefs = [angularJsModule];

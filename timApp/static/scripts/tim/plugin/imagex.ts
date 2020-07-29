@@ -7,7 +7,7 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {DrawType, IDrawVisibleOptions} from "tim/plugin/drawToolbar";
+import {DrawToolbarModule, DrawType, IDrawVisibleOptions} from "tim/plugin/drawToolbar";
 import {$http, $sce, $timeout} from "../util/ngimport";
 import {TimDefer} from "../util/timdefer";
 import {defaultTimeout, MouseOrTouch, numOrStringToNumber, posToRelative, Require, to, valueOr} from "../util/utils";
@@ -1924,6 +1924,7 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
     ],
     imports: [
         BrowserModule,
+        DrawToolbarModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

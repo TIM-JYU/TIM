@@ -16,7 +16,7 @@ const LineSegment = t.intersection([
     }),
 ]);
 
-const RectangleOrCicle = t.intersection([
+const RectangleOrCircle = t.intersection([
     t.type({x: t.number, y: t.number, w: t.number, h: t.number}),
     t.partial({
         color: t.string,
@@ -30,14 +30,14 @@ export type TuplePoint = t.TypeOf<typeof TuplePointR>;
 
 export interface IDrawData {
     freeHand?: ILineSegment[],
-    rectangles?: IRectangleOrCicle[],
-    circles?: IRectangleOrCicle[],
+    rectangles?: IRectangleOrCircle[],
+    circles?: IRectangleOrCircle[],
 }
 
 export interface ILineSegment extends t.TypeOf<typeof LineSegment> {
 }
 
-export interface IRectangleOrCicle extends t.TypeOf<typeof RectangleOrCicle> {
+export interface IRectangleOrCircle extends t.TypeOf<typeof RectangleOrCircle> {
 }
 
 export interface IFakeVideo {

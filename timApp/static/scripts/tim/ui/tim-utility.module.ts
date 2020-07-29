@@ -12,8 +12,6 @@ import {SaveButtonComponent} from "tim/user/settings.component";
 import {TimeLeftComponent} from "tim/ui/time-left.component";
 import {GotoLinkComponent} from "tim/ui/goto-link.component";
 import {CountdownComponent} from "tim/ui/countdown.component";
-import {DrawToolbarComponent} from "tim/plugin/drawToolbar";
-import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {PluginFrameComponent} from "./plugin-frame.component";
 import {LoadingComponent} from "./loadingIndicator";
 import {MarkupErrorComponent} from "./markup-error.component";
@@ -38,8 +36,6 @@ import {CloseButtonComponent} from "./close-button.component";
         GotoLinkComponent,
         CountdownComponent,
         TimeLeftComponent,
-        DrawToolbarComponent,
-        DrawCanvasComponent,
     ],
     exports: [
         MarkupErrorComponent,
@@ -57,8 +53,6 @@ import {CloseButtonComponent} from "./close-button.component";
         GotoLinkComponent,
         CountdownComponent,
         TimeLeftComponent,
-        DrawToolbarComponent,
-        DrawCanvasComponent,
     ],
     imports: [
         CommonModule,

@@ -1060,7 +1060,6 @@ export class ReviewController {
 
     setCanvas(par: Element, answerId: number, canvas: DrawCanvasComponent): void {
         canvas.setClickCallback(this.clickFromCanvas);
-        // console.log("reviewControlled received", canvas);
     }
 
     clickFromCanvas = (canvas: DrawCanvasComponent) => {
@@ -1071,8 +1070,6 @@ export class ReviewController {
         this.selectionIsDrawing = true;
         const par = $(canvas.canvas.nativeElement).parents(".par")[0] as Element;
         this.selectedElement = par;
-        console.log(par);
-        console.log("Reacted to click @ rc", this);
     };
 
 }

@@ -1,7 +1,22 @@
-import {Component, ElementRef, Input, OnInit, ViewChild} from "@angular/core";
-import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
-import {DrawType} from "tim/plugin/drawToolbar";
-
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    Input,
+    NgModule,
+    OnInit,
+    StaticProvider,
+    ViewChild,
+} from "@angular/core";
+import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
+import {DrawToolbarModule, DrawType} from "tim/plugin/drawToolbar";
+import {ILineSegment, IPoint, TuplePoint} from "tim/plugin/imagextypes";
+import {posToRelative} from "tim/util/utils";
+import {FormsModule} from "@angular/forms";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {drawFreeHand} from "tim/plugin/imagex";
 
 @Component({
     selector: "draw-canvas",
@@ -29,20 +44,26 @@ export class DrawCanvasComponent implements OnInit {
     drawType = DrawType.Freehand;
     color = "red";
     w = 3;
+    opacity = 1;
+    ctx!: CanvasRenderingContext2D;
+
+    clickCallback?: (arg0: this) => void;
 
     drawStarted = false;
-    clickCallback?: (arg0: this) => void;
+    drawData: Array<ILineSegment> = [];
+    freeDrawing?: ILineSegment;
+    private prevPos?: TuplePoint;
 
     constructor(el: ElementRef<HTMLElement>, private domSanitizer: DomSanitizer) {
     }
 
 
     ngOnInit() {
-        // console.log(this.backGroundImage);
         this.bypassedImage = this.domSanitizer.bypassSecurityTrustResourceUrl(this.bgSource);
     }
 
     ngAfterViewInit() {
+        this.ctx = this.canvas.nativeElement.getContext("2d")!;
         this.canvas.nativeElement.addEventListener("mousedown", (event) => {
             this.clickStart(event);
         });
@@ -68,25 +89,139 @@ export class DrawCanvasComponent implements OnInit {
     }
 
     clickStart(e: MouseEvent): void {
-        console.log("Started click on canvas at", e.offsetX, e.offsetY);
-        this.drawStarted = true;
+        if (this.drawingAnything) {
+            this.drawStarted = true;
+            this.startSegmentDraw(posToRelative(this.canvas.nativeElement, e));
+        }
         if (this.clickCallback) {
             this.clickCallback(this);
         }
     }
 
     clickMove(e: MouseEvent): void {
-        if (this.drawStarted) {
-            // console.log("Moved mouse on canvas", e.offsetX, e.offsetY);
+        if (!this.drawStarted) {
+            return;
         }
+
+        if (this.drawType == DrawType.Circle) {
+
+        } else if (this.drawType == DrawType.Rectangle) {
+
+        } else {
+            if (this.drawType == DrawType.Line) {
+                this.popPoint(1);
+            }
+            const pxy = posToRelative(this.canvas.nativeElement, e); // HANDLE MOUSEORTOUCH HERE
+            this.line(this.prevPos, pxy);
+            this.addPoint(pxy);
+        }
+        this.redrawAll();
     }
 
     clickFinish(e: MouseEvent): void {
-        if (this.drawStarted) {
-            console.log("Ended click on canvas");
-            this.drawStarted = false;
+        if (!this.drawStarted) {
+            return;
         }
+        this.drawStarted = false;
+        if (this.drawType == DrawType.Circle) {
+
+        } else if (this.drawType == DrawType.Rectangle) {
+
+        } else if (this.freeDrawing) {
+            this.drawData.push(this.freeDrawing);
+        }
+    }
+
+    startSegmentDraw(pxy: IPoint) {
+        if (!pxy) {
+            return;
+        }
+        const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
+        const ns: ILineSegment = {lines: [p]};
+        ns.color = this.color;
+        ns.w = this.w;
+        if (this.opacity < 1) {
+            ns.opacity = this.opacity;
+        }
+        this.freeDrawing = ns;
+        this.prevPos = p;
+    }
+
+    redrawAll(): void {
+        this.ctx.clearRect(0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
+        // for (const part of this.drawData) {
+        //     drawFreeHand(this.ctx, [part]);
+        // }
+        drawFreeHand(this.ctx, this.drawData);
+        if (this.freeDrawing) {
+            drawFreeHand(this.ctx, [this.freeDrawing]);
+        }
+    }
+
+    popPoint(minlen: number) {
+        if (!this.freeDrawing) {
+            return;
+        }
+        if (this.freeDrawing.lines.length > minlen) {
+            this.freeDrawing.lines.pop();
+        }
+    }
+
+    line(p1: TuplePoint | undefined, p2: IPoint) {
+        if (!p1 || !p2) {
+            return;
+        }
+        this.ctx.beginPath();
+        this.ctx.strokeStyle = this.color;
+        this.ctx.lineWidth = this.w;
+        this.ctx.globalAlpha = this.opacity;
+        this.ctx.moveTo(p1[0], p1[1]);
+        this.ctx.lineTo(p2.x, p2.y);
+        this.ctx.stroke();
+    }
+
+
+    addPoint(pxy: IPoint) {
+        if (!pxy || !this.freeDrawing) {
+            return;
+        }
+
+        const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
+        this.freeDrawing.lines.push(p);
+        if (this.drawType != DrawType.Line) {
+            this.prevPos = p;
+        }
+    }
+
+    startSegment(pxy: IPoint) {
+        const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
+        this.freeDrawing = {lines: [p]};
+        this.prevPos = p;
     }
 
 }
 
+// noinspection AngularInvalidImportedOrDeclaredSymbol
+@NgModule({
+    declarations: [
+        DrawCanvasComponent,
+    ], imports: [
+        BrowserModule,
+        DrawToolbarModule,
+        FormsModule,
+    ],
+    exports: [DrawCanvasComponent],
+})
+export class DrawCanvasModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {
+    }
+}
+
+const bootstrapFn = (extraProviders: StaticProvider[]) => {
+    const platformRef = platformBrowserDynamic(extraProviders);
+    return platformRef.bootstrapModule(DrawCanvasModule);
+};
+
+const angularJsModule = createDowngradedModule(bootstrapFn);
+doDowngrade(angularJsModule, "drawCanvas", DrawCanvasComponent);
+export const moduleDefs = [angularJsModule];
