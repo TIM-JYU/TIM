@@ -45,6 +45,7 @@ export class DrawCanvasComponent implements OnInit {
     color = "red";
     w = 3;
     opacity = 1;
+    drawFill = false;
     ctx!: CanvasRenderingContext2D;
 
     clickCallback?: (arg0: this) => void;
@@ -53,6 +54,12 @@ export class DrawCanvasComponent implements OnInit {
     drawData: Array<ILineSegment> = [];
     freeDrawing?: ILineSegment;
     private prevPos?: TuplePoint;
+    private startX: number = 0;
+    private startY: number = 0;
+    private objX: number = 0;
+    private objY: number = 0;
+    private objW: number = 0;
+    private objH: number = 0;
 
     constructor(el: ElementRef<HTMLElement>, private domSanitizer: DomSanitizer) {
     }
@@ -91,6 +98,12 @@ export class DrawCanvasComponent implements OnInit {
     clickStart(e: MouseEvent): void {
         if (this.drawingAnything) {
             this.drawStarted = true;
+            this.startX = e.offsetX;
+            this.startY = e.offsetY;
+            this.ctx.globalAlpha = this.opacity;
+            this.ctx.strokeStyle = this.color;
+            this.ctx.lineWidth = this.w;
+            this.ctx.fillStyle = this.color;
             this.startSegmentDraw(posToRelative(this.canvas.nativeElement, e));
         }
         if (this.clickCallback) {
@@ -102,11 +115,17 @@ export class DrawCanvasComponent implements OnInit {
         if (!this.drawStarted) {
             return;
         }
-
-        if (this.drawType == DrawType.Circle) {
-
-        } else if (this.drawType == DrawType.Rectangle) {
-
+        this.clear();
+        if (this.drawType == DrawType.Circle || this.drawType == DrawType.Rectangle) {
+            this.objX = Math.min(e.offsetX, this.startX);
+            this.objY = Math.min(e.offsetY, this.startY);
+            this.objW = Math.abs(e.offsetX - this.startX);
+            this.objH = Math.abs(e.offsetY - this.startY);
+            if (this.drawType == DrawType.Circle) {
+                // this.drawPreviewCircle();
+            } else {
+                this.drawPreviewRectangle();
+            }
         } else {
             if (this.drawType == DrawType.Line) {
                 this.popPoint(1);
@@ -132,6 +151,12 @@ export class DrawCanvasComponent implements OnInit {
         }
     }
 
+    drawPreviewRectangle() {
+        this.drawFill ?
+            this.ctx.fillRect(this.objX, this.objY, this.objW, this.objH) :
+            this.ctx.strokeRect(this.objX, this.objY, this.objW, this.objH);
+    }
+
     startSegmentDraw(pxy: IPoint) {
         if (!pxy) {
             return;
@@ -147,8 +172,11 @@ export class DrawCanvasComponent implements OnInit {
         this.prevPos = p;
     }
 
-    redrawAll(): void {
+    clear(): void {
         this.ctx.clearRect(0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
+    }
+
+    redrawAll(): void {
         // for (const part of this.drawData) {
         //     drawFreeHand(this.ctx, [part]);
         // }
