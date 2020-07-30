@@ -663,7 +663,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     cbFilter = false;
     filterRow = false;
     maxRows = "2000em";
-    maxCols = maxContentOrFitContent();
+    maxCols = "max-content";
     permTable: number[] = [];
     edited = false;
     headersStyle: Record<string, string> | null = null;

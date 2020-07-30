@@ -2,13 +2,13 @@
     display: inline-grid;
     //width: 50vw;
     grid-template:
-        ". header" auto
+        "summary header" auto
         "ids content" auto
-        / max-content auto;
+        / auto max-content;
 }
 
 table {
-    width: fit-content;
+    width: max-content;
     margin: 0;
 
     ::ng-deep .cbColumn {
