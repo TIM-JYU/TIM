@@ -259,6 +259,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
     @Input() tableMaxWidth: string = maxContentOrFitContent();
+    @HostBinding("style") componentStyle: string = "";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
@@ -269,7 +270,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @ViewChild("mainDataBody") private mainDataBody!: ElementRef<HTMLTableSectionElement>;
     @ViewChild("mainDataTable") private mainDataTable!: ElementRef<HTMLTableElement>;
     @ViewChild("mainDataContainer") private mainDataContainer!: ElementRef<HTMLDivElement>;
-    @HostBinding("style") componentStyle: string = "";
     private viewPortdY = 0;
     private cellValueCache: Record<number, string[]> = {};
     private dataTableCache!: TableCache;
@@ -284,6 +284,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     constructor(private r2: Renderer2, private zone: NgZone) {
     }
+
+    // region Initialization
 
     ngOnInit(): void {
         this.componentStyle = `width: ${this.tableMaxWidth};`;
@@ -309,64 +311,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.zone.runOutsideAngular(() => {
             window.addEventListener("resize", () => this.handleWindowResize());
         });
-    }
-
-    handleWindowResize(): void {
-        this.updateHeaderSizes();
-        if (!this.vscroll.enabled) {
-            return;
-        }
-        this.viewport = this.getViewport();
-        runMultiFrame(this.updateViewport());
-    }
-
-    handleScroll(): void {
-        this.syncHeaderScroll();
-        if (!this.vscroll.enabled) {
-            return;
-        }
-        if (this.scheduledUpdate) {
-            return;
-        }
-        if (!this.isOutsideSafeViewZone()) {
-            return;
-        }
-        this.scheduledUpdate = true;
-        // Set viewport already here to account for subsequent handlers
-        const newViewport = this.getViewport();
-        this.viewPortdY = newViewport.vertical.startIndex - this.viewport.vertical.startIndex;
-        this.viewport = newViewport;
-        this.updateScroll();
-        runMultiFrame(this.updateViewport());
-    }
-
-    buildTable(): void {
-        const tbody = this.mainDataBody.nativeElement;
-        this.viewport = this.getViewport();
-        const {vertical, horizontal} = this.viewport;
-        this.prepareTable();
-        this.updateScroll();
-        this.dataTableCache.resize(vertical.count, horizontal.count);
-        const getItem = (axis: GridAxis, index: number) =>
-            this.vscroll.enabled ? this.rowAxis.visibleItems[index] : this.rowAxis.itemOrder[index];
-
-        for (let rowNumber = 0; rowNumber < vertical.count; rowNumber++) {
-            const rowIndex = getItem(this.rowAxis, vertical.startIndex + rowNumber);
-            this.updateRow(this.dataTableCache.getRow(rowNumber), rowIndex);
-            for (let columnNumber = 0; columnNumber < horizontal.count; columnNumber++) {
-                const columnIndex = getItem(this.colAxis, horizontal.startIndex + columnNumber);
-                const cell = this.dataTableCache.getCell(rowNumber, columnNumber);
-                this.updateCell(cell, rowIndex, columnIndex, this.getCellValue(rowIndex, columnIndex));
-            }
-        }
-        // Optimization in normal mode: sanitize whole tbody in place
-        if (!this.vscroll.enabled) {
-            DOMPurify.sanitize(tbody, {IN_PLACE: true});
-        }
-        this.buildIdTable();
-        this.buildHeaderTable();
-        // Force the main table to layout first so that we can compute the header sizes
-        requestAnimationFrame(() => this.updateHeaderSizes());
     }
 
     private initTableCaches() {
@@ -399,6 +343,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                     input.type = "text";
                 });
         }
+    }
+
+    // endregion
+
+    // region Resizing
+
+    private handleWindowResize(): void {
+        this.updateHeaderSizes();
+        if (!this.vscroll.enabled) {
+            return;
+        }
+        this.viewport = this.getViewport();
+        runMultiFrame(this.updateViewport());
     }
 
     private updateHeaderSizes(): void {
@@ -450,6 +407,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
+    // endregion
+
+    // region Virtual scrolling
+
     private isOutsideSafeViewZone(): boolean {
         const data = this.mainDataContainer.nativeElement;
         const h = data.clientHeight * this.vscroll.viewOverflow.vertical;
@@ -457,6 +418,26 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const overVertical = Math.abs(this.viewport.vertical.startPosition - data.scrollTop + h) > h;
         const overHorizontal = Math.abs(this.viewport.horizontal.startPosition - data.scrollLeft + w) > w;
         return overHorizontal || overVertical;
+    }
+
+    private handleScroll(): void {
+        this.syncHeaderScroll();
+        if (!this.vscroll.enabled) {
+            return;
+        }
+        if (this.scheduledUpdate) {
+            return;
+        }
+        if (!this.isOutsideSafeViewZone()) {
+            return;
+        }
+        this.scheduledUpdate = true;
+        // Set viewport already here to account for subsequent handlers
+        const newViewport = this.getViewport();
+        this.viewPortdY = newViewport.vertical.startIndex - this.viewport.vertical.startIndex;
+        this.viewport = newViewport;
+        this.updateTableTransform();
+        runMultiFrame(this.updateViewport());
     }
 
     private* updateViewport(): Generator {
@@ -521,7 +502,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             // flickering
             this.mainDataBody.nativeElement.style.visibility = "hidden";
             this.viewport = this.getViewport();
-            this.updateScroll();
+            this.updateTableTransform();
             runMultiFrame(this.updateViewport());
         } else {
             this.scheduledUpdate = false;
@@ -537,6 +518,18 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const ids = this.idContainer.nativeElement;
         header.scrollLeft = data.scrollLeft;
         ids.scrollTop = data.scrollTop;
+    }
+
+    private updateTableTransform(): void {
+        if (!this.idBody || !this.headerTable || !this.filterBody) {
+            return;
+        }
+        const idTable = this.idBody.nativeElement;
+        const headerIdTable = this.headerTable.nativeElement;
+        const filterTable = this.filterBody.nativeElement;
+        this.mainDataBody.nativeElement.style.transform = `translateX(${this.viewport.horizontal.startPosition}px) translateY(${this.viewport.vertical.startPosition}px)`;
+        idTable.style.transform = `translateY(${this.viewport.vertical.startPosition}px)`;
+        headerIdTable.style.transform = filterTable.style.transform = `translateX(${this.viewport.horizontal.startPosition}px)`;
     }
 
     private getViewport(): Viewport {
@@ -562,6 +555,39 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             horizontal: {startPosition: 0, count: columns, startIndex: 0, viewCount: 0, viewStartIndex: 0},
             vertical: {startPosition: 0, count: rows, startIndex: 0, viewCount: 0, viewStartIndex: 0},
         };
+    }
+
+    // endregion
+
+    // region Table building
+
+    private buildTable(): void {
+        const tbody = this.mainDataBody.nativeElement;
+        this.viewport = this.getViewport();
+        const {vertical, horizontal} = this.viewport;
+        this.prepareTable();
+        this.updateTableTransform();
+        this.dataTableCache.resize(vertical.count, horizontal.count);
+        const getItem = (axis: GridAxis, index: number) =>
+            this.vscroll.enabled ? this.rowAxis.visibleItems[index] : this.rowAxis.itemOrder[index];
+
+        for (let rowNumber = 0; rowNumber < vertical.count; rowNumber++) {
+            const rowIndex = getItem(this.rowAxis, vertical.startIndex + rowNumber);
+            this.updateRow(this.dataTableCache.getRow(rowNumber), rowIndex);
+            for (let columnNumber = 0; columnNumber < horizontal.count; columnNumber++) {
+                const columnIndex = getItem(this.colAxis, horizontal.startIndex + columnNumber);
+                const cell = this.dataTableCache.getCell(rowNumber, columnNumber);
+                this.updateCell(cell, rowIndex, columnIndex, this.getCellValue(rowIndex, columnIndex));
+            }
+        }
+        // Optimization in normal mode: sanitize whole tbody in place
+        if (!this.vscroll.enabled) {
+            DOMPurify.sanitize(tbody, {IN_PLACE: true});
+        }
+        this.buildIdTable();
+        this.buildHeaderTable();
+        // Force the main table to layout first so that we can compute the header sizes
+        requestAnimationFrame(() => this.updateHeaderSizes());
     }
 
     private prepareTable(): void {
@@ -634,6 +660,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         return cell;
     }
 
+    // endregion
+
+    // region Utils
+
     private getCellValue(rowIndex: number, columnIndex: number): string {
         if (!this.vscroll.enabled) {
             return this.modelProvider.getCellContents(rowIndex, columnIndex);
@@ -647,18 +677,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         // If the web worker hasn't sanitized the contents yet, do it ourselves
         return this.cellValueCache[rowIndex][columnIndex] = DOMPurify.sanitize(this.modelProvider.getCellContents(rowIndex, columnIndex));
-    }
-
-    private updateScroll(): void {
-        if (!this.idBody || !this.headerTable || !this.filterBody) {
-            return;
-        }
-        const idTable = this.idBody.nativeElement;
-        const headerIdTable = this.headerTable.nativeElement;
-        const filterTable = this.filterBody.nativeElement;
-        this.mainDataBody.nativeElement.style.transform = `translateX(${this.viewport.horizontal.startPosition}px) translateY(${this.viewport.vertical.startPosition}px)`;
-        idTable.style.transform = `translateY(${this.viewport.vertical.startPosition}px)`;
-        headerIdTable.style.transform = filterTable.style.transform = `translateX(${this.viewport.horizontal.startPosition}px)`;
     }
 
     private startCellPurifying(): void {
@@ -709,6 +727,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private get tableHeight(): number {
         return Math.min(this.mainDataContainer.nativeElement.clientHeight, this.mainDataTable.nativeElement.clientHeight);
     }
+
+    // endregion
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K): HTMLElementTagNameMap[K] {
