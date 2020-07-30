@@ -110,6 +110,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
 
     // TODO: Use answer content as arg or entire IAnswer?
     setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
+        this.errormessage = "";
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
@@ -121,7 +122,8 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             } catch (e) {
                 this.userword = false;
                 ok = false;
-                message = "Couldn't find related content (\"c\")";
+                message = `Couldn't find related content (\"c\") from ${content.toString()}`;
+                this.errormessage = message;
             }
         }
         this.initialValue = this.userword;
