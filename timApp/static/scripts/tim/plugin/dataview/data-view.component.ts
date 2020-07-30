@@ -259,7 +259,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
     @Input() tableMaxWidth: string = maxContentOrFitContent();
-    @HostBinding("style") componentStyle: string = "";
+    @HostBinding("style") private componentStyle: string = "";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
@@ -270,7 +270,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @ViewChild("mainDataBody") private mainDataBody!: ElementRef<HTMLTableSectionElement>;
     @ViewChild("mainDataTable") private mainDataTable!: ElementRef<HTMLTableElement>;
     @ViewChild("mainDataContainer") private mainDataContainer!: ElementRef<HTMLDivElement>;
-    private viewPortdY = 0;
+    private scrollDY = 0;
     private cellValueCache: Record<number, string[]> = {};
     private dataTableCache!: TableCache;
     private idTableCache?: TableCache;
@@ -280,7 +280,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private viewport!: Viewport;
     private rowAxis!: GridAxis;
     private colAxis!: GridAxis;
-    private vscroll: VirtualScrollingOptions = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
+    private vScroll: VirtualScrollingOptions = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
 
     constructor(private r2: Renderer2, private zone: NgZone) {
     }
@@ -289,12 +289,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     ngOnInit(): void {
         this.componentStyle = `width: ${this.tableMaxWidth};`;
-        if (this.vscroll.enabled) {
+        if (this.vScroll.enabled) {
             this.startCellPurifying();
         }
         const {rows, columns} = this.modelProvider.getDimension();
-        this.rowAxis = new GridAxis(rows, this.vscroll.borderSpacing, (i) => this.modelProvider.getRowHeight(i) ?? 0);
-        this.colAxis = new GridAxis(columns, this.vscroll.borderSpacing, (i) => this.modelProvider.getColumnWidth(i) ?? 0);
+        this.rowAxis = new GridAxis(rows, this.vScroll.borderSpacing, (i) => this.modelProvider.getRowHeight(i) ?? 0);
+        this.colAxis = new GridAxis(columns, this.vScroll.borderSpacing, (i) => this.modelProvider.getColumnWidth(i) ?? 0);
     }
 
     ngAfterViewInit(): void {
@@ -351,7 +351,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private handleWindowResize(): void {
         this.updateHeaderSizes();
-        if (!this.vscroll.enabled) {
+        if (!this.vScroll.enabled) {
             return;
         }
         this.viewport = this.getViewport();
@@ -413,8 +413,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private isOutsideSafeViewZone(): boolean {
         const data = this.mainDataContainer.nativeElement;
-        const h = data.clientHeight * this.vscroll.viewOverflow.vertical;
-        const w = data.clientWidth * this.vscroll.viewOverflow.horizontal;
+        const h = data.clientHeight * this.vScroll.viewOverflow.vertical;
+        const w = data.clientWidth * this.vScroll.viewOverflow.horizontal;
         const overVertical = Math.abs(this.viewport.vertical.startPosition - data.scrollTop + h) > h;
         const overHorizontal = Math.abs(this.viewport.horizontal.startPosition - data.scrollLeft + w) > w;
         return overHorizontal || overVertical;
@@ -422,7 +422,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private handleScroll(): void {
         this.syncHeaderScroll();
-        if (!this.vscroll.enabled) {
+        if (!this.vScroll.enabled) {
             return;
         }
         if (this.scheduledUpdate) {
@@ -434,7 +434,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.scheduledUpdate = true;
         // Set viewport already here to account for subsequent handlers
         const newViewport = this.getViewport();
-        this.viewPortdY = newViewport.vertical.startIndex - this.viewport.vertical.startIndex;
+        this.scrollDY = newViewport.vertical.startIndex - this.viewport.vertical.startIndex;
         this.viewport = newViewport;
         this.updateTableTransform();
         runMultiFrame(this.updateViewport());
@@ -486,7 +486,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             () => render(0, vertical.viewStartIndex),
             () => render(vertical.viewStartIndex + vertical.viewCount, vertical.count),
         ];
-        if (this.viewPortdY > 0) {
+        if (this.scrollDY > 0) {
             renderOrder = renderOrder.reverse();
         }
         render(vertical.viewStartIndex, vertical.viewStartIndex + vertical.viewCount);
@@ -535,17 +535,17 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private getViewport(): Viewport {
         const data = this.mainDataContainer.nativeElement;
         const {rows, columns} = this.modelProvider.getDimension();
-        if (this.vscroll.enabled) {
-            const viewportWidth = data.clientWidth * (1 + 2 * this.vscroll.viewOverflow.horizontal);
-            const viewportHeight = data.clientHeight * (1 + 2 * this.vscroll.viewOverflow.vertical);
+        if (this.vScroll.enabled) {
+            const viewportWidth = data.clientWidth * (1 + 2 * this.vScroll.viewOverflow.horizontal);
+            const viewportHeight = data.clientHeight * (1 + 2 * this.vScroll.viewOverflow.vertical);
             return {
                 horizontal: this.colAxis.getVisibleItems(
-                    data.scrollLeft - data.clientWidth * this.vscroll.viewOverflow.horizontal,
+                    data.scrollLeft - data.clientWidth * this.vScroll.viewOverflow.horizontal,
                     viewportWidth,
                     data.scrollLeft,
                     data.clientWidth),
                 vertical: this.rowAxis.getVisibleItems(
-                    data.scrollTop - data.clientHeight * this.vscroll.viewOverflow.vertical,
+                    data.scrollTop - data.clientHeight * this.vScroll.viewOverflow.vertical,
                     viewportHeight,
                     data.scrollTop,
                     data.clientHeight),
@@ -569,7 +569,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.updateTableTransform();
         this.dataTableCache.resize(vertical.count, horizontal.count);
         const getItem = (axis: GridAxis, index: number) =>
-            this.vscroll.enabled ? this.rowAxis.visibleItems[index] : this.rowAxis.itemOrder[index];
+            this.vScroll.enabled ? this.rowAxis.visibleItems[index] : this.rowAxis.itemOrder[index];
 
         for (let rowNumber = 0; rowNumber < vertical.count; rowNumber++) {
             const rowIndex = getItem(this.rowAxis, vertical.startIndex + rowNumber);
@@ -581,7 +581,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
         }
         // Optimization in normal mode: sanitize whole tbody in place
-        if (!this.vscroll.enabled) {
+        if (!this.vScroll.enabled) {
             DOMPurify.sanitize(tbody, {IN_PLACE: true});
         }
         this.buildIdTable();
@@ -591,7 +591,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private prepareTable(): void {
-        if (!this.vscroll.enabled || !this.idTable || !this.headerTable) {
+        if (!this.vScroll.enabled || !this.idTable || !this.headerTable) {
             return;
         }
         const table = this.mainDataTable.nativeElement;
@@ -599,11 +599,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const headerTable = this.headerTable.nativeElement;
         table.style.height = `${this.rowAxis.totalSize}px`;
         table.style.width = `${this.colAxis.totalSize}px`;
-        table.style.borderSpacing = `${this.vscroll.borderSpacing}px`;
+        table.style.borderSpacing = `${this.vScroll.borderSpacing}px`;
         idTable.style.height = `${this.rowAxis.totalSize}px`;
-        idTable.style.borderSpacing = `${this.vscroll.borderSpacing}px`;
+        idTable.style.borderSpacing = `${this.vScroll.borderSpacing}px`;
         headerTable.style.width = `${this.colAxis.totalSize}px`;
-        headerTable.style.borderSpacing = `${this.vscroll.borderSpacing}px`;
+        headerTable.style.borderSpacing = `${this.vScroll.borderSpacing}px`;
     }
 
     private buildHeaderTable(): void {
@@ -635,7 +635,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private updateRow(row: HTMLTableRowElement, rowIndex: number): HTMLTableRowElement {
         row.style.cssText = joinCss(this.modelProvider.stylingForRow(rowIndex));
-        row.hidden = !this.vscroll.enabled && this.rowAxis.hiddenItems.has(rowIndex);
+        row.hidden = !this.vScroll.enabled && this.rowAxis.hiddenItems.has(rowIndex);
         const rowHeight = this.modelProvider.getRowHeight(rowIndex);
         if (rowHeight) {
             row.style.height = `${rowHeight}px`;
@@ -645,7 +645,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateCell(cell: HTMLTableCellElement, rowIndex: number, columnIndex: number, contents?: string): HTMLTableCellElement {
-        cell.hidden = !this.vscroll.enabled && this.colAxis.hiddenItems.has(columnIndex);
+        cell.hidden = !this.vScroll.enabled && this.colAxis.hiddenItems.has(columnIndex);
         cell.className = this.modelProvider.classForCell(rowIndex, columnIndex);
         cell.style.cssText = joinCss(this.modelProvider.stylingForCell(rowIndex, columnIndex));
         cell.onclick = () => this.modelProvider.handleClickCell(rowIndex, columnIndex);
@@ -665,7 +665,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Utils
 
     private getCellValue(rowIndex: number, columnIndex: number): string {
-        if (!this.vscroll.enabled) {
+        if (!this.vScroll.enabled) {
             return this.modelProvider.getCellContents(rowIndex, columnIndex);
         }
         const row = this.cellValueCache[rowIndex];
