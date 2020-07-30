@@ -154,8 +154,6 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
             this.tabsVisTable = visTabs;
             this.tabVisibilityChanged();
         }
-        // TODO: Move to a more appropriate place
-        void this.lctrl.refreshWall();
     }
 
     ngAfterViewInit() {
