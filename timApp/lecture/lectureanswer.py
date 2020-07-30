@@ -48,7 +48,7 @@ class LectureAnswer(db.Model):
         try:
             ans = json.loads(self.answer)
             if isinstance(ans, dict):
-                ans = unshuffle_lectureanswer(ans.get('c'), ans.get('questionType'), ans.get('rows'), ans.get('order'))
+                ans = unshuffle_lectureanswer(ans.get('c'), ans.get('question_type'), ans.get('rows'), ans.get('order'))
         except (JSONDecodeError, IndexError):
             ans = []
         return ans
