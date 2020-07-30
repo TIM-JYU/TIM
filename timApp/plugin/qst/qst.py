@@ -207,8 +207,6 @@ def qst_answer_jso(m: QstAnswerModel):
             m.markup.points = spoints
         points_table = create_points_table(spoints)
         default_points = m.markup.defaultPoints
-        if default_points is None or default_points is missing:
-            default_points = 0
         points = calculate_points_from_json_answer(answers, points_table, default_points)
         minpoints = markup.minpoints if markup.minpoints is not missing else -1e20
         maxpoints = markup.maxpoints if markup.maxpoints is not missing else 1e20
@@ -1009,6 +1007,8 @@ def calculate_points_from_json_answer(single_answers: List[List[str]],
                                       points_table,
                                       default_points: float = 0):
     points = 0.0
+    if default_points is None or default_points is missing:
+        default_points = 0
     for (oneAnswer, point_row) in zip(single_answers, points_table):
         for oneLine in oneAnswer:
             if oneLine in point_row:
