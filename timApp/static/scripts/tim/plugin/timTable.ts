@@ -486,6 +486,10 @@ export enum ClearSort {
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders}" class="timTableRunDiv no-popup-menu"
+             [ngStyle]="asDataView ? {} : {
+                'max-height': maxRows,
+                'maxCols': maxCols
+             }"
         >
             <h4 *ngIf="data.header" [innerHtml]="data.header"></h4>
             <p *ngIf="data.stem" class="stem" [innerHtml]="data.stem"></p>

@@ -262,7 +262,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
     @Input() tableMaxWidth: string = "fit-content";
-    @HostBinding("style") private componentStyle: string = "";
+    @HostBinding("style.width") private componentWidth: string = "";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
@@ -286,7 +286,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private vScroll: VirtualScrollingOptions = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
     private colHeaderWidths: number[] = [];
 
-    constructor(private r2: Renderer2, private zone: NgZone) {
+    constructor(private r2: Renderer2, private zone: NgZone, private componentRef: ElementRef<HTMLElement>) {
     }
 
     private get tableWidth(): number {
@@ -300,7 +300,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Initialization
 
     ngOnInit(): void {
-        this.componentStyle = `width: ${this.tableMaxWidth};`;
+        this.componentWidth = this.tableMaxWidth;
         if (this.vScroll.enabled) {
             this.startCellPurifying();
         }
@@ -311,7 +311,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     ngAfterViewInit(): void {
         this.initTableCaches();
-        this.buildTable();
+        // Run table building in multiple frames to ensure layout happens so that size of elements is known
+        runMultiFrame(this.buildTable());
+
         // Scrolling can cause change detection on some cases, which slows down the table
         // Since scrolling is
         // * Only used in vscrolling mode
@@ -590,7 +592,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         };
     }
 
-    private buildTable(): void {
+    private *buildTable(): Generator {
+        this.componentRef.nativeElement.style.visibility = "hidden";
         this.viewport = this.getViewport();
         this.setTableSizes();
         this.updateTableTransform();
@@ -600,7 +603,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.buildDataTable();
 
         // Force the main table to layout first so that we can compute the header sizes
-        requestAnimationFrame(() => this.updateHeaderSizes());
+        yield;
+        this.updateHeaderSizes();
+        this.componentRef.nativeElement.style.visibility = "visible";
     }
 
     private buildDataTable(): void {
