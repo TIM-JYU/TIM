@@ -225,6 +225,13 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
     borderSpacing: 2,
 };
 
+// TODO: Update hooks
+// TODO: Filtering
+// TODO: Item selection
+// TODO: Checkbox interactivity
+// TODO: Veriy that general horizontal scrolling works
+// TODO: Verify that vscrolling works
+
 @Component({
     selector: "app-data-view",
     template: `
