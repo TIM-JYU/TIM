@@ -675,8 +675,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         cell.onclick = () => this.modelProvider.handleClickCell(rowIndex, columnIndex);
         const colWidth = this.getDataColumnWidth(columnIndex);
         if (colWidth) {
-            cell.style.width = `${colWidth}px`;
-            cell.style.overflow = "hidden";
+            if (this.vScroll.enabled) {
+                cell.style.width = `${colWidth}px`;
+                cell.style.overflow = "hidden";
+            } else {
+                cell.style.minWidth = `${colWidth}px`;
+            }
         }
         if (contents) {
             cell.innerHTML = contents;

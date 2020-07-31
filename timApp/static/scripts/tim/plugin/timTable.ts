@@ -2745,7 +2745,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getColumnHeaderContents(columnIndex: number): string {
-        return `Header: ${columnIndex}`;
+        if (!this.data.headers) {
+            return "";
+        }
+        return this.data.headers[columnIndex];
     }
 
     private getEditInputElement() {
