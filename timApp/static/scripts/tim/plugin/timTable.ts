@@ -89,7 +89,6 @@ import {
     copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
-    maxContentOrFitContent,
     scrollToViewInsideParent,
     StringOrNumber,
     to,
@@ -264,6 +263,7 @@ export interface TimTable {
         title?: string;
         confirmation?: string;
     };
+    asDataView?: boolean;
 }
 
 interface Rng {
@@ -498,93 +498,99 @@ export enum ClearSort {
                     <button class="timButton" title="Add column" *ngIf="addColEnabled()"
                             (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
                 </div>
-                <app-data-view [virtualScrolling]="{'enabled': false}"
-                               [modelProvider]="this"
-                               [tableClass]="{editable: isInEditMode() && !isInForcedEditMode(),
+                <ng-container *ngIf="asDataView; else tableView">
+                    <app-data-view [virtualScrolling]="{'enabled': false}"
+                                   [modelProvider]="this"
+                                   [tableClass]="{editable: isInEditMode() && !isInForcedEditMode(),
                                                 forcedEditable: isInForcedEditMode(),
                                                 timTableTable: true}"
-                               [tableStyle]="stylingForTable(data.table)"
-                               [id]="data.table.id"
-                               [columnIdStart]="nrColStart"
-                               [tableMaxHeight]="maxRows"
-                               [tableMaxWidth]="maxCols"
-                               [headerStyle]="headersStyle"></app-data-view>
-                <!--                <table #tableElem-->
-                <!--                       [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(),-->
-                <!--                                  forcedEditable: isInForcedEditMode()}"-->
-                <!--                       class="timTableTable"-->
-                <!--                       [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">-->
-                <!--                    <col class="nrcolumn" *ngIf="data.nrColumn" />-->
-                <!--                    <col *ngIf="data.cbColumn" />-->
-                <!--                    <col *ngFor="let c of columns; let i = index" [span]="c.span" [id]="c.id"-->
-                <!--                         [ngStyle]="stylingForColumn(c, i)"/>-->
-                <!--                    <thead>-->
-                <!--                    <tr *ngIf="data.charRow"> &lt;!&ndash;Char coordinate row &ndash;&gt;-->
-                <!--                        <td class="nrcolumn charRow" *ngIf="data.nrColumn"></td>-->
-                <!--                        <td class="cbColumn charRow" *ngIf="data.cbColumn"></td>-->
-                <!--                        <td class="charRow" [hidden]="!showColumn(coli)"-->
-                <!--                            *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">-->
-                <!--                            <span [innerText]="coliToLetters(coli)"></span>-->
-                <!--                        </td>-->
-                <!--                    </tr>-->
-                <!--                    <tr *ngIf="data.headers"> &lt;!&ndash; Header row &ndash;&gt;-->
-                <!--                        <td class="nrcolumn totalnr" *ngIf="data.nrColumn"-->
-                <!--                            (click)="handleClickClearFilters()"-->
-                <!--                            title="Click to show all"-->
-                <!--                        >{{totalRows()}}</td>-->
-                <!--                        <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbAllFilter"-->
-                <!--                                                         (ngModelChange)="handleChangeCheckbox(-1)"-->
-                <!--                                                         title="Check for all visible rows">-->
-                <!--                        </td>-->
-                <!--                        <td class="headers"-->
-                <!--                            *ngFor="let c of data.headers; let coli = index"-->
-                <!--                            [hidden]="!showColumn(coli)"-->
-                <!--                            (click)="handleClickHeader(coli)"-->
-                <!--                            title="Click to sort"-->
-                <!--                            [ngStyle]="headersStyle">{{c}}<span-->
-                <!--                                [ngStyle]="sortSymbolStyle[coli]">{{sortSymbol[coli]}}</span>-->
-                <!--                        </td>-->
-                <!--                    </tr>-->
-                <!--                    </thead>-->
-                <!--                    <tbody>-->
-                <!--                    <tr *ngIf="filterRow"> &lt;!&ndash; Filter row &ndash;&gt;-->
-                <!--                        <td class="nrcolumn totalnr" *ngIf="data.nrColumn"><span-->
-                <!--                                *ngIf="hiddenRowCount()">{{visibleRowCount()}}</span></td>-->
-                <!--                        <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbFilter"-->
-                <!--                                                         (ngModelChange)="handleChangeFilter()"-->
-                <!--                                                         title="Check to show only checked rows"></td>-->
+                                   [tableStyle]="stylingForTable(data.table)"
+                                   [id]="data.table.id"
+                                   [columnIdStart]="nrColStart"
+                                   [tableMaxHeight]="maxRows"
+                                   [tableMaxWidth]="maxCols"
+                                   [headerStyle]="headersStyle"></app-data-view>
+                </ng-container>
+                <ng-template #tableView>
+                    <table #tableElem
+                           [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(),
+                                                  forcedEditable: isInForcedEditMode()}"
+                           class="timTableTable"
+                           [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">
+                        <col class="nrcolumn" *ngIf="data.nrColumn"/>
+                        <col *ngIf="data.cbColumn"/>
+                        <col *ngFor="let c of columns; let i = index" [span]="c.span" [id]="c.id"
+                             [ngStyle]="stylingForColumn(c, i)"/>
+                        <thead>
+                        <tr *ngIf="data.charRow"> <!--Char coordinate row -->
+                            <td class="nrcolumn charRow" *ngIf="data.nrColumn"></td>
+                            <td class="cbColumn charRow" *ngIf="data.cbColumn"></td>
+                            <td class="charRow" [hidden]="!showColumn(coli)"
+                                *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
+                                <span [innerText]="coliToLetters(coli)"></span>
+                            </td>
+                        </tr>
+                        <tr *ngIf="data.headers"> <!-- Header row -->
+                            <td class="nrcolumn totalnr" *ngIf="data.nrColumn"
+                                (click)="handleClickClearFilters()"
+                                title="Click to show all"
+                            >{{totalRows()}}</td>
+                            <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbAllFilter"
+                                                             (ngModelChange)="handleChangeCheckbox(-1)"
+                                                             title="Check for all visible rows">
+                            </td>
+                            <td class="headers"
+                                *ngFor="let c of data.headers; let coli = index"
+                                [hidden]="!showColumn(coli)"
+                                (click)="handleClickHeader(coli)"
+                                title="Click to sort"
+                                [ngStyle]="headersStyle">{{c}}<span
+                                    [ngStyle]="sortSymbolStyle[coli]">{{sortSymbol[coli]}}</span>
+                            </td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr *ngIf="filterRow"> <!-- Filter row -->
+                            <td class="nrcolumn totalnr" *ngIf="data.nrColumn"><span
+                                    *ngIf="hiddenRowCount()">{{visibleRowCount()}}</span></td>
+                            <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbFilter"
+                                                             (ngModelChange)="handleChangeFilter()"
+                                                             title="Check to show only checked rows"></td>
 
-                <!--                        <td [hidden]="!showColumn(coli)"-->
-                <!--                            *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">-->
-                <!--                            <div class="filterdiv">-->
-                <!--                                <input type="text" (ngModelChange)="handleChangeFilter()" [(ngModel)]="filters[coli]"-->
-                <!--                                       title="Write filter condition">-->
-                <!--                            </div>-->
-                <!--                        </td>-->
-                <!--                    </tr> &lt;!&ndash; Now the matrix &ndash;&gt;-->
-                <!--                    <tr *ngFor="let rowi of permTable; let i = index"-->
-                <!--                        [style]="stylingForRow(rowi)"-->
-                <!--                        [hidden]="!showRow(rowi)"-->
-                <!--                    >-->
-                <!--                        <td class="nrcolumn" *ngIf="data.nrColumn">{{i + nrColStart}}</td>-->
-                <!--                        <td class="cbColumn" *ngIf="data.cbColumn">-->
-                <!--                            <input type="checkbox" [(ngModel)]="cbs[rowi]" (ngModelChange)="handleChangeCheckbox(rowi)">-->
-                <!--                        </td>-->
-                <!--                        <ng-container *ngFor="let td of cellDataMatrix[rowi]; let coli = index">-->
-                <!--                            <td *ngIf="!td.underSpanOf"-->
-                <!--                                [hidden]="!showColumn(coli)"-->
-                <!--                                [class]="classForCell(rowi, coli)"-->
-                <!--                                [attr.colspan]="td.colspan"-->
-                <!--                                [attr.rowspan]="td.rowspan"-->
-                <!--                                [style]="stylingForCell(rowi, coli)"-->
-                <!--                                (click)="handleClickCell(rowi, coli, $event)"-->
-                <!--                                [innerHtml]="td.cell | purify">-->
-                <!--                                &lt;!&ndash;                                <div [innerHtml]="td.cell"></div>&ndash;&gt;-->
-                <!--                            </td>-->
-                <!--                        </ng-container> &lt;!&ndash; one cell &ndash;&gt;-->
-                <!--                    </tr> &lt;!&ndash; the matrix &ndash;&gt;-->
-                <!--                    </tbody>-->
-                <!--                </table>-->
+                            <td [hidden]="!showColumn(coli)"
+                                *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
+                                <div class="filterdiv">
+                                    <input type="text" (ngModelChange)="handleChangeFilter()"
+                                           [(ngModel)]="filters[coli]"
+                                           title="Write filter condition">
+                                </div>
+                            </td>
+                        </tr> <!-- Now the matrix -->
+                        <tr *ngFor="let rowi of permTable; let i = index"
+                            [style]="stylingForRow(rowi)"
+                            [hidden]="!showRow(rowi)"
+                        >
+                            <td class="nrcolumn" *ngIf="data.nrColumn">{{i + nrColStart}}</td>
+                            <td class="cbColumn" *ngIf="data.cbColumn">
+                                <input type="checkbox" [(ngModel)]="cbs[rowi]"
+                                       (ngModelChange)="handleChangeCheckbox(rowi)">
+                            </td>
+                            <ng-container *ngFor="let td of cellDataMatrix[rowi]; let coli = index">
+                                <td *ngIf="!td.underSpanOf"
+                                    [hidden]="!showColumn(coli)"
+                                    [class]="classForCell(rowi, coli)"
+                                    [attr.colspan]="td.colspan"
+                                    [attr.rowspan]="td.rowspan"
+                                    [style]="stylingForCell(rowi, coli)"
+                                    (click)="handleClickCell(rowi, coli, $event)"
+                                    [innerHtml]="td.cell | purify">
+                                    <!--                                <div [innerHtml]="td.cell"></div>-->
+                                </td>
+                            </ng-container> <!-- one cell -->
+                        </tr> <!-- the matrix -->
+                        </tbody>
+                    </table>
+                </ng-template>
                 <div class="buttonsRow">
                     <button class="timButton" title="Remove row" *ngIf="delRowEnabled()"
                             (click)="handleClickRemoveRow()"><span
@@ -674,6 +680,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     connectionErrorMessage?: string;
     addRowButtonText: string = "";
     editorPosition: string = "";
+    asDataView: boolean = false;
     private prevCellDataMatrix: ICell[][] = [];
     private prevData!: TimTable;
     private editRight = false;
@@ -881,6 +888,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (this.data.hide) {
             this.hide = {...this.hide, ...this.data.hide};
         }
+
+        this.asDataView = !!this.data.asDataView;
 
         if (typeof this.data.nrColumn === "number") { // for backward compatibility
             this.nrColStart = this.data.nrColumn;

@@ -90,6 +90,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     toolbarTemplates: Union[List[Dict[Any, Any]], Missing] = missing
     userListButtonText: Union[str, Missing, None] = missing
     usernames: Union[bool, Missing] = missing
+    asDataView: Union[bool, Missing] = missing
 
 
 @dataclass
