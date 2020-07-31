@@ -219,11 +219,6 @@ class TableCache {
     }
 }
 
-// TODO: Header row + colID row
-// TODO: Do we need to allow header rows without fixing? If so, heck
-// TODO: Add totals + select all table to the left upper corner
-// TODO: Support for row/column span
-
 const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
     enabled: false,
     viewOverflow: {horizontal: 1, vertical: 1},
@@ -237,6 +232,22 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
             <table [ngStyle]="tableStyle" #headerTable>
                 <thead #headerIdBody></thead>
                 <tbody #filterBody></tbody>
+            </table>
+        </div>
+        <div class="summary">
+            <table [ngStyle]="tableStyle" #summaryTable>
+                <thead>
+                <tr>
+                    <td [style.width]="idHeaderCellWidth" class="nrcolumn totalnr">{{totalRows}}</td>
+                    <td class="cbColumn"><input type="checkbox"></td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td [style.width]="idHeaderCellWidth" class="nrcolumn totalnr"></td>
+                    <td class="cbColumn"><input type="checkbox"></td>
+                </tr>
+                </tbody>
             </table>
         </div>
         <div class="ids" #idContainer>
@@ -262,6 +273,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
     @Input() tableMaxWidth: string = "fit-content";
+    idHeaderCellWidth: string = "";
     @HostBinding("style.width") private componentWidth: string = "";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
@@ -273,6 +285,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @ViewChild("mainDataBody") private mainDataBody!: ElementRef<HTMLTableSectionElement>;
     @ViewChild("mainDataTable") private mainDataTable!: ElementRef<HTMLTableElement>;
     @ViewChild("mainDataContainer") private mainDataContainer!: ElementRef<HTMLDivElement>;
+    @ViewChild("summaryTable") private summaryTable!: ElementRef<HTMLTableElement>;
     private scrollDY = 0;
     private cellValueCache: Record<number, string[]> = {};
     private dataTableCache!: TableCache;
@@ -287,6 +300,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private colHeaderWidths: number[] = [];
 
     constructor(private r2: Renderer2, private zone: NgZone, private componentRef: ElementRef<HTMLElement>) {
+    }
+
+    get totalRows() {
+        return this.modelProvider.getDimension().rows;
     }
 
     private get tableWidth(): number {
@@ -344,7 +361,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             );
         }
         if (this.headerIdBody) {
-            this.headerIdTableCache = new TableCache(this.headerIdBody.nativeElement, "th", (cell) => {
+            this.headerIdTableCache = new TableCache(this.headerIdBody.nativeElement, "td", (cell) => {
                 applyBasicStyle(cell, this.headerStyle);
             });
         }
@@ -380,9 +397,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.idContainer.nativeElement.style.height = `${this.tableHeight}px`;
         this.updateColumnHeaderCellSizes();
         this.updateRowHeaderCellSizes();
+        this.updateSummaryCellSizes();
     }
 
-    private updateRowHeaderCellSizes() {
+    private updateRowHeaderCellSizes(): void {
         if (!this.idTableCache) {
             return;
         }
@@ -400,11 +418,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
-    // endregion
-
-    // region Virtual scrolling
-
-    private updateColumnHeaderCellSizes() {
+    private updateColumnHeaderCellSizes(): void {
         if (!this.headerIdTableCache || !this.filterTableCache) {
             return;
         }
@@ -424,6 +438,22 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             filterCell.style.width = `${width}px`;
         }
     }
+
+    private updateSummaryCellSizes(): void {
+        const width = this.idTableCache?.getCell(0, 0)?.offsetWidth;
+        if (!width) {
+            return;
+        }
+        this.summaryTable.nativeElement.querySelectorAll(".nrcolumn").forEach((e) => {
+            if (e instanceof HTMLElement) {
+                e.style.width = `${width}px`;
+            }
+        });
+    }
+
+    // endregion
+
+    // region Virtual scrolling
 
     private isOutsideSafeViewZone(): boolean {
         const data = this.mainDataContainer.nativeElement;
@@ -592,7 +622,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         };
     }
 
-    private *buildTable(): Generator {
+    private* buildTable(): Generator {
         this.componentRef.nativeElement.style.visibility = "hidden";
         this.viewport = this.getViewport();
         this.setTableSizes();

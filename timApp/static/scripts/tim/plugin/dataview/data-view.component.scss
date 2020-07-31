@@ -27,6 +27,12 @@ table {
         tbody, thead {
             display: block;
             width: max-content;
+        }
+
+        tbody  {
+            ::ng-deep tr:first-child td {
+                border-top: none;
+            }
 
             ::ng-deep tr:last-child td {
                 border-bottom: none;
@@ -52,6 +58,24 @@ table {
 .data, .ids {
     table {
         border: none;
+    }
+}
+
+.summary {
+    grid-area: summary;
+
+    table {
+        display: table;
+        width: 100%;
+        height: 100%;
+
+        td:last-child {
+            border-right: none;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
     }
 }
 
