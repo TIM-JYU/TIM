@@ -98,20 +98,19 @@ export enum DrawType {
                            step="0.1" min="0" max="1"
                            [(ngModel)]="opacity" (ngModelChange)="opacityChange.emit($event)"/>
                 </span>
-            <span *ngIf="setFColor">
+            <span *ngIf="drawVisibleOptions.color">
             <input colorpicker="hex"
-                   *ngIf="drawVisibleOptions.color"
                    type="text"
                    [ngStyle]="{'background-color': color}"
-                   [(ngModel)]="color" (ngModelChange)="colorChange.emit($event)" size="4"/> <span
+                   [(ngModel)]="color" (ngModelChange)="setColor($event)" size="4"/> <span
                     style="background-color: red; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setFColor('#f00')">R</span><span
+                    (click)="setColor('#f00')">R</span><span
                     style="background-color: blue; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setFColor('#00f')">B</span><span
+                    (click)="setColor('#00f')">B</span><span
                     style="background-color: yellow; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setFColor('#ff0')">Y</span><span
+                    (click)="setColor('#ff0')">Y</span><span
                     style="background-color: #0f0; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setFColor('#0f0')">G</span>
+                    (click)="setColor('#0f0')">G</span>
                 </span>
             <a href="" *ngIf="undo" (click)="toolbarUndo($event)">Undo</a>
         </span></span></span>
@@ -150,7 +149,6 @@ export class DrawToolbarComponent implements OnInit {
     @Input() public drawType?: DrawType;
     @Output() drawTypeChange: EventEmitter<DrawType> = new EventEmitter();
 
-    @Input() public setFColor?: (color: string) => void;
     @Input() public undo?: () => void;
 
     @Input() public rectangleMode?: boolean;
@@ -164,6 +162,11 @@ export class DrawToolbarComponent implements OnInit {
         if (this.undo) {
             this.undo();
         }
+    }
+
+    setColor(color: string) {
+        this.color = color;
+        this.colorChange.emit(color);
     }
 }
 

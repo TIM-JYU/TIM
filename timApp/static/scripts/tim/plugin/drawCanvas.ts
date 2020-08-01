@@ -10,7 +10,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
-import {DrawToolbarModule, DrawType} from "tim/plugin/drawToolbar";
+import {DrawToolbarModule, DrawType, IDrawVisibleOptions} from "tim/plugin/drawToolbar";
 import {ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
 import {posToRelative} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
@@ -53,7 +53,7 @@ export class Rectangle {
             <img #backGround *ngIf="bypassedImage" [src]="bypassedImage" (load)="onImgLoad()">
         </div>
         <draw-toolbar [(enabled)]="drawingAnything" [(drawType)]="drawType"
-                      [(color)]="color" [undo]="undo"
+                      [(color)]="color" [(fill)]="drawFill" [undo]="undo"
                       [(w)]="w"></draw-toolbar>
     `,
 })
@@ -124,10 +124,6 @@ export class DrawCanvasComponent implements OnInit {
             this.drawStarted = true;
             this.startX = e.offsetX;
             this.startY = e.offsetY;
-            this.ctx.globalAlpha = this.opacity;
-            this.ctx.strokeStyle = this.color;
-            this.ctx.lineWidth = this.w;
-            this.ctx.fillStyle = this.color;
             this.startSegmentDraw(posToRelative(this.canvas.nativeElement, e));
         }
         if (this.clickCallback) {
@@ -140,11 +136,13 @@ export class DrawCanvasComponent implements OnInit {
             return;
         }
         this.clear();
+        this.redrawAll();
         if (this.drawType == DrawType.Circle || this.drawType == DrawType.Rectangle) {
             this.objX = Math.min(e.offsetX, this.startX);
             this.objY = Math.min(e.offsetY, this.startY);
             this.objW = Math.abs(e.offsetX - this.startX);
             this.objH = Math.abs(e.offsetY - this.startY);
+            this.setContextSettingsFromOptions();
             if (this.drawType == DrawType.Circle) {
                 this.drawPreviewCircle();
             } else {
@@ -158,7 +156,7 @@ export class DrawCanvasComponent implements OnInit {
             this.line(this.prevPos, pxy);
             this.addPoint(pxy);
         }
-        this.redrawAll();
+
     }
 
     clickFinish(e: MouseEvent): void {
@@ -213,7 +211,7 @@ export class DrawCanvasComponent implements OnInit {
     }
 
     makeObj(): IRectangleOrCircle {
-        return {x: this.objX, y: this.objY, w: this.objW, h: this.objH, fillColor: this.drawFill ? this. color : undefined};
+        return {x: this.objX, y: this.objY, w: this.objW, h: this.objH, fillColor: this.drawFill ? this.color : undefined};
     }
 
     startSegmentDraw(pxy: IPoint) {
@@ -236,12 +234,12 @@ export class DrawCanvasComponent implements OnInit {
     }
 
     redrawAll(): void {
-        for (const object of this.drawData){
+        for (const object of this.drawData) {
             if (object instanceof Circle) {
-                this.setContextSettingsForObject(object.drawData);
+                this.setContextSettingsFromObject(object.drawData);
                 this.drawCircle(object.drawData);
             } else if (object instanceof Rectangle) {
-                this.setContextSettingsForObject(object.drawData);
+                this.setContextSettingsFromObject(object.drawData);
                 this.drawRectangle(object.drawData);
             } else {
                 drawFreeHand(this.ctx, [object.drawData]);
@@ -252,11 +250,18 @@ export class DrawCanvasComponent implements OnInit {
         }
     }
 
-    setContextSettingsForObject(obj: IRectangleOrCircle) {
+    setContextSettingsFromObject(obj: IRectangleOrCircle) {
         this.ctx.strokeStyle = obj.color ?? this.color;
         this.ctx.lineWidth = obj.lineWidth ?? this.w;
         this.ctx.fillStyle = obj.fillColor ?? "transparent";
         this.ctx.globalAlpha = obj.opacity ?? this.opacity;
+    }
+
+    setContextSettingsFromOptions() {
+        this.ctx.globalAlpha = this.opacity;
+        this.ctx.strokeStyle = this.color;
+        this.ctx.lineWidth = this.w;
+        this.ctx.fillStyle = this.color;
     }
 
     drawCircle(circle: IRectangleOrCircle) {

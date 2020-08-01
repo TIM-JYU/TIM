@@ -435,7 +435,7 @@ const directiveTemplate = `
         (click)="resetExercise()">{{resetText}}</a>&nbsp;&nbsp;<a
                 href="" *ngIf="muokattu" (click)="initCode()">{{resetText}}</a>
                 <draw-toolbar [(enabled)]="freeHand" [(drawType)]="drawType" [undo]="passUndo"
-                    [setFColor]="passSetFColor" [drawVisibleOptions]="drawVisibleOptions" [(color)]="color" [(w)]="w"></draw-toolbar>
+                    [drawVisibleOptions]="drawVisibleOptions" [(color)]="color" [(w)]="w"></draw-toolbar>
     </p>
     <div [hidden]="!preview"><span><span [ngStyle]="{'background-color': previewColor}"
                                              style="display: table-cell; text-align: center; width: 30px;"
@@ -1706,15 +1706,6 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
 
     lineMode(): boolean {
         return this.drawType == DrawType.Line;
-    }
-
-    passSetFColor = (color: string) => {
-        console.log("Setting color", color);
-        this.setFColor(color);
-    };
-
-    setFColor(color: string) {
-        this.freeHandDrawing.setColor(color);
     }
 
     getPColor() {
