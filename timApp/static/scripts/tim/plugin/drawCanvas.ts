@@ -11,12 +11,36 @@ import {
 } from "@angular/core";
 import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {DrawToolbarModule, DrawType} from "tim/plugin/drawToolbar";
-import {ILineSegment, IPoint, TuplePoint} from "tim/plugin/imagextypes";
+import {ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
 import {posToRelative} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {drawFreeHand} from "tim/plugin/imagex";
+
+export class FreeDrawing {
+    public drawData: ILineSegment;
+
+    constructor(freeDrawing: ILineSegment) {
+        this.drawData = freeDrawing;
+    }
+}
+
+export class Circle {
+    public drawData: IRectangleOrCircle;
+
+    constructor(circle: IRectangleOrCircle) {
+        this.drawData = circle;
+    }
+}
+
+export class Rectangle {
+    public drawData: IRectangleOrCircle;
+
+    constructor(rectangle: IRectangleOrCircle) {
+        this.drawData = rectangle;
+    }
+}
 
 @Component({
     selector: "draw-canvas",
@@ -29,7 +53,7 @@ import {drawFreeHand} from "tim/plugin/imagex";
             <img #backGround *ngIf="bypassedImage" [src]="bypassedImage" (load)="onImgLoad()">
         </div>
         <draw-toolbar [(enabled)]="drawingAnything" [(drawType)]="drawType"
-                      [(color)]="color"
+                      [(color)]="color" [undo]="undo"
                       [(w)]="w"></draw-toolbar>
     `,
 })
@@ -51,7 +75,7 @@ export class DrawCanvasComponent implements OnInit {
     clickCallback?: (arg0: this) => void;
 
     drawStarted = false;
-    drawData: Array<ILineSegment> = [];
+    drawData: Array<FreeDrawing | Circle | Rectangle> = [];
     freeDrawing?: ILineSegment;
     private prevPos?: TuplePoint;
     private startX: number = 0;
@@ -145,11 +169,30 @@ export class DrawCanvasComponent implements OnInit {
         if (this.drawType == DrawType.Circle) {
 
         } else if (this.drawType == DrawType.Rectangle) {
-
+            const rect = new Rectangle({
+                x: this.objX,
+                y: this.objY,
+                w: this.objW,
+                h: this.objH,
+                opacity: this.opacity,
+                color: this.color,
+                fillColor: this.drawFill ? this.color : undefined,
+                lineWidth: this.w,
+            });
+            this.drawData.push(rect);
         } else if (this.freeDrawing) {
-            this.drawData.push(this.freeDrawing);
+            this.drawData.push(new FreeDrawing(this.freeDrawing));
         }
     }
+
+    undo = (e?: Event) => {
+        if (e) {
+            e.preventDefault();
+        }
+        this.drawData.pop();
+        this.clear();
+        this.redrawAll();
+    };
 
     drawPreviewRectangle() {
         this.drawFill ?
@@ -177,13 +220,30 @@ export class DrawCanvasComponent implements OnInit {
     }
 
     redrawAll(): void {
-        // for (const part of this.drawData) {
-        //     drawFreeHand(this.ctx, [part]);
-        // }
-        drawFreeHand(this.ctx, this.drawData);
+        for (const object of this.drawData){
+            if (object instanceof Circle){
+                // this.drawCircle(object.drawData);
+            } else if (object instanceof Rectangle) {
+                this.drawRectangle(object.drawData);
+            }
+            else {
+                drawFreeHand(this.ctx, [object.drawData]);
+            }
+        }
         if (this.freeDrawing) {
             drawFreeHand(this.ctx, [this.freeDrawing]);
         }
+    }
+
+    drawRectangle(rectangle: IRectangleOrCircle) {
+            this.ctx.strokeStyle = rectangle.color ?? this.color;
+            this.ctx.lineWidth = rectangle.lineWidth ?? this.w;
+            this.ctx.fillStyle = rectangle.fillColor ?? "transparent";
+            this.ctx.globalAlpha = rectangle.opacity ?? this.opacity;
+            // TODO: Draw border with own settings but custom fill color
+            rectangle.fillColor ?
+                this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h) :
+                this.ctx.strokeRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
     }
 
     popPoint(minlen: number) {

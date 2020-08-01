@@ -20,8 +20,8 @@ const RectangleOrCircle = t.intersection([
     t.type({x: t.number, y: t.number, w: t.number, h: t.number}),
     t.partial({
         color: t.string,
-        fill: t.boolean,
-        width: t.number,
+        fillColor: t.string,
+        lineWidth: t.number,
         opacity: t.number,
     }),
 ]);
