@@ -70,6 +70,7 @@ export class ReviewController {
     private selectedArea?: Range;
     public selectedElement?: Element;
     private selectionIsDrawing = false;
+    private selectedCanvas?: DrawCanvasComponent;
     public item: IItem;
     private annotations: Annotation[];
     public zIndex: number;
@@ -92,11 +93,11 @@ export class ReviewController {
         this.velpSelection = velpSelection;
 
         document.addEventListener("selectionchange", () => {
-            this.selectionIsDrawing = false;
             const range = getSelection()?.getRangeAt(0);
 
             // Length check is important - we don't want to lose the previous selection in touch devices.
             if (range && range.toString().length > 0) {
+                this.selectionIsDrawing = false;
                 this.selectText($(range.startContainer).parents(".par")[0] as Element);
                 $rootScope.$applyAsync();
             }
@@ -328,6 +329,16 @@ export class ReviewController {
         $compile(element)(scope);
         return true;
     }
+
+
+    compilePopOver(container: Element, target: Element, annotation: Annotation, show: AnnotationAddReason): Element {
+        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.InPicture);
+        element.appendChild(target);
+        container.appendChild(element);
+        $compile(element)(scope);
+        return element;
+    }
+
 
     /**
      * Adds an annotation to the given element. The annotation will be placed in the margin.
@@ -614,7 +625,59 @@ export class ReviewController {
             null,
         );
         let coord: IAnnotationInterval;
-        if (this.selectedArea != null) {
+        if (this.selectionIsDrawing) {
+            if (!this.selectedCanvas) {
+                return;
+            }
+            const velpDrawing = this.selectedCanvas.getDrawing();
+            if (Object.keys(velpDrawing).length == 0) {
+                return;
+            }
+            const ind = document.createElement("div");
+            let corners = {x: 0, y: 0, h: 0, w: 0};
+            corners = this.selectedCanvas.getDrawingDimensions();
+
+            // TODO: draw on canvas instead of setting div to look like a rectangle
+            ind.style.width = corners.w + "px";
+            ind.style.height = corners.h + "px";
+            ind.style.border = "1px solid #000000";
+            const targ = this.selectedElement.querySelector(".drawnAnnotationContainer");
+            if (!targ) {
+                return;
+            }
+            let parelement: Element | null = this.selectedElement;
+            console.log(parelement);
+            while (parelement && !parelement.hasAttribute("t")) {
+                parelement = getElementParent(parelement);
+                            console.log(parelement);
+            }
+            if (!parelement) {
+                showMessageDialog("Could not add annotation (parelement missing)");
+                return;
+            }
+            const answerInfo = this.getAnswerInfo(parelement);
+            if (answerInfo != null) {
+                newAnnotation.answer_id = answerInfo.id;
+            } else {
+                showMessageDialog("Could not add annotation (answerinfo missing)");
+                return;
+            }
+            targ.appendChild(ind);
+            const ann = await this.addAnnotation(
+                newAnnotation,
+                {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
+                velp,
+            );
+
+            const ele = this.compilePopOver(targ, ind, ann, AnnotationAddReason.AddingNew) as HTMLElement;
+            const span = ele.querySelector("span");
+            ele.style.position = "absolute";
+            ele.style.left = corners.x + "px";
+            ele.style.top = corners.y + "px";
+            // #### TODO handle velp update
+            this.selectedCanvas.storeDrawing();
+
+        } else if (this.selectedArea != null) {
 
             let parelement = getElementParent(this.selectedArea.startContainer);
             const startElement = getElementParent(this.selectedArea.startContainer);
@@ -1070,6 +1133,7 @@ export class ReviewController {
         this.selectionIsDrawing = true;
         const par = $(canvas.canvas.nativeElement).parents(".par")[0] as Element;
         this.selectedElement = par;
+        this.selectedCanvas = canvas;
     };
 
 }

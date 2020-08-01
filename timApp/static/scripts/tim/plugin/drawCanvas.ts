@@ -11,7 +11,7 @@ import {
 } from "@angular/core";
 import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {DrawToolbarModule, DrawType, IDrawVisibleOptions} from "tim/plugin/drawToolbar";
-import {ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
+import {IDrawData, ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
 import {posToRelative} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -75,7 +75,10 @@ export class DrawCanvasComponent implements OnInit {
     clickCallback?: (arg0: this) => void;
 
     drawStarted = false;
+    // drawings that can altered with undo (TODO: Redo, erase...)
     drawData: Array<FreeDrawing | Circle | Rectangle> = [];
+    // drawings that cannot be altered via undo
+    peristentDrawData: Array<FreeDrawing | Circle | Rectangle> = [];
     freeDrawing?: ILineSegment;
     private prevPos?: TuplePoint;
     private startX: number = 0;
@@ -234,7 +237,15 @@ export class DrawCanvasComponent implements OnInit {
     }
 
     redrawAll(): void {
-        for (const object of this.drawData) {
+        this.drawFromArray(this.peristentDrawData);
+        this.drawFromArray(this.drawData);
+        if (this.freeDrawing) {
+            drawFreeHand(this.ctx, [this.freeDrawing]);
+        }
+    }
+
+    drawFromArray(data: Array<FreeDrawing | Circle | Rectangle>) {
+        for (const object of data) {
             if (object instanceof Circle) {
                 this.setContextSettingsFromObject(object.drawData);
                 this.drawCircle(object.drawData);
@@ -244,9 +255,6 @@ export class DrawCanvasComponent implements OnInit {
             } else {
                 drawFreeHand(this.ctx, [object.drawData]);
             }
-        }
-        if (this.freeDrawing) {
-            drawFreeHand(this.ctx, [this.freeDrawing]);
         }
     }
 
@@ -321,6 +329,79 @@ export class DrawCanvasComponent implements OnInit {
         const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
         this.freeDrawing = {lines: [p]};
         this.prevPos = p;
+    }
+
+    getDrawing(): IDrawData {
+        const circles: IRectangleOrCircle[] = [];
+        const rectangles: IRectangleOrCircle[] = [];
+        const freeHand: ILineSegment[] = [];
+        for (const obj of this.drawData) {
+            if (obj instanceof Circle) {
+                circles.push(obj.drawData);
+            } else if (obj instanceof Rectangle) {
+                rectangles.push(obj.drawData);
+            } else {
+                freeHand.push(obj.drawData);
+            }
+        }
+        const ret: IDrawData = {};
+        if (circles.length > 0) {
+            ret.circles = circles;
+        }
+        if (rectangles.length > 0) {
+            ret.rectangles = rectangles;
+        }
+        if (freeHand.length > 0) {
+            ret.freeHand = freeHand;
+        }
+        return ret;
+    }
+
+    getDrawingDimensions(): { x: number, y: number, w: number, h: number } {
+        let x = this.canvas.nativeElement.width;
+        let y = this.canvas.nativeElement.height;
+        let w = 0;
+        let h = 0;
+        for (const obj of this.drawData) {
+            if (obj instanceof FreeDrawing) {
+                for (const line of obj.drawData.lines) {
+                    if (x == null || x > line[0]) {
+                        x = line[0];
+                    }
+                    if (y == null || y > line[1]) {
+                        y = line[1];
+                    }
+                    if (w < line[0]) {
+                        w = line[0];
+                    }
+                    if (h < line[1]) {
+                        h = line[1];
+                    }
+                }
+            } else {
+                const shape = obj.drawData;
+                if (x > shape.x) {
+                    x = shape.x;
+                }
+                if (y > shape.y) {
+                    y = shape.y;
+                }
+                if (w < shape.x + shape.w) {
+                    w = shape.x + shape.w;
+                }
+                if (h < shape.y + shape.h) {
+                    h = shape.y + shape.h;
+                }
+            }
+        }
+        return {x: x, y: y, w: w - x, h: h - y};
+    }
+
+    storeDrawing() {
+        this.peristentDrawData.concat(this.drawData);
+        this.drawData = [];
+        // this.clear();
+        // this.redrawAll();
     }
 
 }

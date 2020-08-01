@@ -35,6 +35,7 @@ export enum AnnotationPlacement {
     InMargin,
     InMarginOnly,
     InMarginAndUnknownIfItWillBeInText,
+    InPicture,
 }
 
 export interface IAnnotationBindings {
