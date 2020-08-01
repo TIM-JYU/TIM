@@ -146,7 +146,7 @@ export class DrawCanvasComponent implements OnInit {
             this.objW = Math.abs(e.offsetX - this.startX);
             this.objH = Math.abs(e.offsetY - this.startY);
             if (this.drawType == DrawType.Circle) {
-                // this.drawPreviewCircle();
+                this.drawPreviewCircle();
             } else {
                 this.drawPreviewRectangle();
             }
@@ -167,7 +167,17 @@ export class DrawCanvasComponent implements OnInit {
         }
         this.drawStarted = false;
         if (this.drawType == DrawType.Circle) {
-
+            const circle = new Circle({
+                x: this.objX,
+                y: this.objY,
+                w: this.objW,
+                h: this.objH,
+                opacity: this.opacity,
+                color: this.color,
+                fillColor: this.drawFill ? this.color : undefined,
+                lineWidth: this.w,
+            });
+            this.drawData.push(circle);
         } else if (this.drawType == DrawType.Rectangle) {
             const rect = new Rectangle({
                 x: this.objX,
@@ -195,9 +205,15 @@ export class DrawCanvasComponent implements OnInit {
     };
 
     drawPreviewRectangle() {
-        this.drawFill ?
-            this.ctx.fillRect(this.objX, this.objY, this.objW, this.objH) :
-            this.ctx.strokeRect(this.objX, this.objY, this.objW, this.objH);
+        this.drawRectangle(this.makeObj());
+    }
+
+    drawPreviewCircle() {
+        this.drawCircle(this.makeObj());
+    }
+
+    makeObj(): IRectangleOrCircle {
+        return {x: this.objX, y: this.objY, w: this.objW, h: this.objH, fillColor: this.drawFill ? this. color : undefined};
     }
 
     startSegmentDraw(pxy: IPoint) {
@@ -221,12 +237,13 @@ export class DrawCanvasComponent implements OnInit {
 
     redrawAll(): void {
         for (const object of this.drawData){
-            if (object instanceof Circle){
-                // this.drawCircle(object.drawData);
+            if (object instanceof Circle) {
+                this.setContextSettingsForObject(object.drawData);
+                this.drawCircle(object.drawData);
             } else if (object instanceof Rectangle) {
+                this.setContextSettingsForObject(object.drawData);
                 this.drawRectangle(object.drawData);
-            }
-            else {
+            } else {
                 drawFreeHand(this.ctx, [object.drawData]);
             }
         }
@@ -235,11 +252,25 @@ export class DrawCanvasComponent implements OnInit {
         }
     }
 
+    setContextSettingsForObject(obj: IRectangleOrCircle) {
+        this.ctx.strokeStyle = obj.color ?? this.color;
+        this.ctx.lineWidth = obj.lineWidth ?? this.w;
+        this.ctx.fillStyle = obj.fillColor ?? "transparent";
+        this.ctx.globalAlpha = obj.opacity ?? this.opacity;
+    }
+
+    drawCircle(circle: IRectangleOrCircle) {
+            const ratio = circle.w / circle.h;
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.scale(ratio, 1);
+            const r = Math.min(circle.w / ratio, circle.h) / 2;
+            this.ctx.arc((circle.x + circle.w / 2) / ratio, circle.y + circle.h / 2, r, 0, 2 * Math.PI);
+            this.ctx.restore();
+            circle.fillColor ? this.ctx.fill() : this.ctx.stroke();
+    }
+
     drawRectangle(rectangle: IRectangleOrCircle) {
-            this.ctx.strokeStyle = rectangle.color ?? this.color;
-            this.ctx.lineWidth = rectangle.lineWidth ?? this.w;
-            this.ctx.fillStyle = rectangle.fillColor ?? "transparent";
-            this.ctx.globalAlpha = rectangle.opacity ?? this.opacity;
             // TODO: Draw border with own settings but custom fill color
             rectangle.fillColor ?
                 this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h) :
