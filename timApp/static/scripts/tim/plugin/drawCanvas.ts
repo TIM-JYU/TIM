@@ -54,7 +54,7 @@ export class Rectangle {
         </div>
         <draw-toolbar [(enabled)]="drawingAnything" [(drawType)]="drawType"
                       [(color)]="color" [(fill)]="drawFill" [undo]="undo"
-                      [(w)]="w"></draw-toolbar>
+                      [(w)]="w" [(opacity)]="opacity"></draw-toolbar>
     `,
 })
 export class DrawCanvasComponent implements OnInit {
