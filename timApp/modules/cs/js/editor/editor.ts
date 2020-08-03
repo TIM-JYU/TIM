@@ -227,17 +227,17 @@ export class EditorComponent implements IMultiEditor {
 
     // For after ngIf sets the value
     @ViewChild(NormalEditorComponent) private set normalEditorViewSetter(component: NormalEditorComponent | undefined) {
-        const oldContent = this.content;
+        const oldContent = this.normalEditor?.content ?? this.content;
         this.normalEditor = component;
         this.initEditor(oldContent);
     }
     @ViewChild(AceEditorComponent) private set aceEditorViewSetter(component: AceEditorComponent | undefined) {
-        const oldContent = this.content;
+        const oldContent = this.aceEditor?.content ?? this.content;
         this.aceEditor = component;
         this.initEditor(oldContent);
     }
     @ViewChild(ParsonsEditorComponent) private set parsonsEditorViewSetter(component: ParsonsEditorComponent | undefined) {
-        const oldContent = this.content;
+        const oldContent = this.parsonsEditor?.content ?? this.content;
         this.parsonsEditor = component;
         this.initEditor(oldContent);
     }
@@ -260,8 +260,13 @@ export class EditorComponent implements IMultiEditor {
     @Input()
     set modes(modes: Mode[]) {
         const mode = this.mode;
+        const index = modes.findIndex((m) => m.id == mode);
         this.modes_ = modes;
-        this.mode = mode;
+        if (index != -1) {
+            this.modeIndex_ = index;
+        } else {
+            this.modeIndex_ = 0;
+        }
     }
 
     @Input()

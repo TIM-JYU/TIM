@@ -7,6 +7,7 @@ import {
     Component,
     Input,
     SimpleChanges,
+    ChangeDetectorRef,
 } from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
 import {countChars} from "../util/util";
@@ -30,6 +31,8 @@ export class NormalEditorComponent implements IEditor {
     @Input() placeholder: string = "";
     @ViewChild("area") private area!: ElementRef;
 
+    constructor(private cdr: ChangeDetectorRef) { }
+
     get content(): string {
         return this.content_;
     }
@@ -38,6 +41,7 @@ export class NormalEditorComponent implements IEditor {
         this.content_ = str;
         this.rows = countChars(this.content, "\n") + 1;
         this.checkRowBounds();
+        this.cdr.detectChanges();
     }
 
     ngOnChanges(changes: SimpleChanges) {
