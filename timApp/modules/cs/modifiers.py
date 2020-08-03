@@ -75,10 +75,6 @@ class ModifierError(Modifier):
     def runner_name(self):
         return "cs-error"
 
-    @staticmethod
-    def js_files():
-        return ["/cs/js/build/language_error.js"]
-
     def is_valid(self):
         return self.valid
 

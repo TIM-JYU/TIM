@@ -28,26 +28,6 @@ export function staticDynamicImport(s: string) {
             return import("tim/plugin/timMenuController");
         case "/cs/js/build/module.js":
             return import("modules/cs/js/module");
-        case "/cs/js/build/csPlugin.js":
-            return import("modules/cs/js/csPlugin");
-        case "/cs/js/build/util/file-select.js":
-            return import("modules/cs/js/util/file-select");
-        case "/cs/js/build/util/module.js":
-            return import("modules/cs/js/util/module");
-        case "/cs/js/build/util/notification.js":
-            return import("modules/cs/js/util/notification");
-        case "/cs/js/build/util/upload-result.js":
-            return import("modules/cs/js/util/upload-result");
-        case "/cs/js/build/editor/editor.js":
-            return import("modules/cs/js/editor/editor");
-        case "/cs/js/build/editor/ace.js":
-            return import("modules/cs/js/editor/ace");
-        case "/cs/js/build/editor/normal.js":
-            return import("modules/cs/js/editor/normal");
-        case "/cs/js/build/editor/parsons.js":
-            return import("modules/cs/js/editor/parsons");
-        case "/cs/js/build/editor/countboard.js":
-            return import("modules/cs/js/editor/countboard");
         case "/cs/js/build/stack.js":
             return import("modules/cs/js/stack");
         case "/cs/js/build/geogebra.js":
@@ -56,10 +36,6 @@ export function staticDynamicImport(s: string) {
             return import("modules/cs/js/jsav");
         case "/cs/js/build/jsframe.js":
             return import("modules/cs/js/jsframe");
-        case "/cs/js/build/extcheck.js":
-            return import("modules/cs/js/extcheck");
-        case "/cs/js/build/language_error.js":
-            return import("modules/cs/js/language_error");
         case "/field/js/build/multisave.js":
             return import("modules/fields/js/multisave");
         case "/svn/js/video.js":

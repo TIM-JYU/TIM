@@ -263,7 +263,7 @@ class Language:
         """
         :return: list of needed js-files (maybe copiled from ts-files)
         """
-        return ["/cs/js/build/module.js", "/cs/js/build/util/module.js"]
+        return ["/cs/js/build/module.js"]
 
     @staticmethod
     def css_files():
@@ -405,10 +405,6 @@ class LanguageError(Language):
 
     def runner_name(self):
         return "cs-error"
-
-    @staticmethod
-    def js_files():
-        return ["/cs/js/build/language_error.js"]
 
     def is_valid(self):
         return self.valid

@@ -4,6 +4,7 @@ import {
         StaticProvider,
         ApplicationRef,
     } from "@angular/core";
+import {CommonModule} from "@angular/common";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
@@ -13,6 +14,7 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {CsRunnerComponent, CsTextComponent, CsConsoleComponent} from "./csPlugin";
 import {ExtcheckComponent, OutputContainerComponent, CustomOutputDirective} from "./extcheck";
 import {GitRegComponent} from "./gitreg";
+import {CsErrorComponent} from "./language_error";
 import {CsUtilityModule} from "./util/module";
 import {EditorModule} from "./editor/module";
 
@@ -25,6 +27,7 @@ import {EditorModule} from "./editor/module";
         OutputContainerComponent,
         CustomOutputDirective,
         GitRegComponent,
+        CsErrorComponent,
     ],
     exports: [
         CsRunnerComponent,
@@ -32,6 +35,7 @@ import {EditorModule} from "./editor/module";
         CsConsoleComponent,
         ExtcheckComponent,
         GitRegComponent,
+        CsErrorComponent,
     ],
     imports: [
         EditorModule,
@@ -40,6 +44,7 @@ import {EditorModule} from "./editor/module";
         FormsModule,
         TimUtilityModule,
         CsUtilityModule,
+        CommonModule,
     ],
 })
 export class CsPluginModule implements DoBootstrap {
@@ -54,6 +59,7 @@ const bootstrapFn = (extraProviders: StaticProvider[]) => {
 
 export const angularJsModule = createDowngradedModule(bootstrapFn);
 doDowngrade(angularJsModule, "csRunner", CsRunnerComponent);
+doDowngrade(angularJsModule, "csError", CsErrorComponent);
 doDowngrade(angularJsModule, "csTextRunner", CsTextComponent);
 doDowngrade(angularJsModule, "csConsole", CsConsoleComponent);
 doDowngrade(angularJsModule, "csExtcheckRunner", ExtcheckComponent);
