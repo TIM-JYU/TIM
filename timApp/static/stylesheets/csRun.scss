@@ -440,6 +440,16 @@ cs-editor {
     text-align: left;
 }
 
+cs-git-reg-runner table {
+    border: none;
+    margin-bottom: 0;
+
+    td {
+        padding-top: 0.5em;
+        padding-right: 0.3em;
+    }
+}
+
 cs-editor {
     $button-padding: 1.5em;
 

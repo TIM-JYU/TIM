@@ -6,6 +6,7 @@ from jsframe import *
 from stack import *
 from geogebra import *
 from extcheck import ExtCheck
+from gitlang import GitReg, GitCheck
 
 
 def populated(base_class):

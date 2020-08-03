@@ -12,6 +12,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {CsRunnerComponent, CsTextComponent, CsConsoleComponent} from "./csPlugin";
 import {ExtcheckComponent, OutputContainerComponent, CustomOutputDirective} from "./extcheck";
+import {GitRegComponent} from "./gitreg";
 import {CsUtilityModule} from "./util/module";
 import {EditorModule} from "./editor/module";
 
@@ -23,12 +24,14 @@ import {EditorModule} from "./editor/module";
         ExtcheckComponent,
         OutputContainerComponent,
         CustomOutputDirective,
+        GitRegComponent,
     ],
     exports: [
         CsRunnerComponent,
         CsTextComponent,
         CsConsoleComponent,
         ExtcheckComponent,
+        GitRegComponent,
     ],
     imports: [
         EditorModule,
@@ -54,4 +57,5 @@ doDowngrade(angularJsModule, "csRunner", CsRunnerComponent);
 doDowngrade(angularJsModule, "csTextRunner", CsTextComponent);
 doDowngrade(angularJsModule, "csConsole", CsConsoleComponent);
 doDowngrade(angularJsModule, "csExtcheckRunner", ExtcheckComponent);
+doDowngrade(angularJsModule, "csGitRegRunner", GitRegComponent);
 export const moduleDefs = [angularJsModule];

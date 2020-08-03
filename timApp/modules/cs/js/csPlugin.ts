@@ -152,13 +152,13 @@ class LanguageTypes {
     runTypes = ["pascal", "fortran", "css", "jypeli", "scala", "java", "graphics", "cc", "c++", "shell", "vpython", "py2", "py", "fs", "clisp",
         "jjs", "psql", "sql", "alloy", "text", "cs", "run", "md", "js", "glowscript", "sage", "simcir",
         "xml", "octave", "lua", "quorum", "swift", "mathcheck", "html", "processing", "rust", "r", "wescheme", "ping", "kotlin",
-        "smalltalk", "upload", "extcheck"];
+        "smalltalk", "upload", "extcheck", "gitreg"];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
     aceModes = ["pascal", "fortran", "css", "csharp", "scala", "java", "java", "c_cpp", "c_cpp", "sh", "python", "python", "python", "fsharp", "lisp",
         "javascript", "sql", "sql", "alloy", "text", "csharp", "run", "text", "javascript", "javascript", "python", "json",
         "xml", "matlab", "lua", "quorum", "swift", "text", "html", "javascript", "text", "r", "scheme", "text", "kotlin",
-        "text", "text", "c_cpp"];
+        "text", "text", "c_cpp", "text"];
 
     // What are known test types (be careful not to include partial word):
     testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest"];
@@ -508,11 +508,11 @@ const FileSubmission = t.intersection([
         path: t.string,
     }),
     t.partial({
-        content: t.string,
+        content: nullable(t.string),
         type: t.string,
     }),
 ]);
-interface IFileSubmission extends t.TypeOf<typeof FileSubmission> {}
+export interface IFileSubmission extends t.TypeOf<typeof FileSubmission> {}
 
 const UploadedFile = t.type({
     path: t.string,
@@ -529,6 +529,32 @@ const GitDefaultsMarkup = t.partial({
     cache: t.number,
     apiProtocol: t.string,
     librarySpecific: t.any,
+});
+
+const GitMarkup = t.partial({
+    onError: t.union([t.literal("raise"), t.literal("remove"), t.literal("removeall"), t.literal("create")]),
+    repo: t.intersection([
+        t.type({name: t.string}),
+        t.partial({
+            owner: t.string,
+            fork: t.boolean,
+            oldName: t.string,
+            oldOwner: t.string,
+            librarySpecific: t.unknown,
+        }),
+    ]),
+    library: t.string,
+    fields: t.dictionary(t.string,
+        t.intersection([
+            t.type({
+                value: t.unknown,
+            }),
+            t.partial({
+                onError: t.union([t.literal("raise"), t.literal("ask"), t.literal("none")]),
+            }),
+        ])
+    ),
+    askFields: t.array(t.string),
 });
 
 const CsMarkupOptional = t.partial({
@@ -550,6 +576,7 @@ const CsMarkupOptional = t.partial({
     file: t.string,
     filename: t.string,
     fullhtml: t.string,
+    git: GitMarkup,
     gitDefaults: GitDefaultsMarkup,
     height: t.union([t.number, t.string]),
     highlight: nullable(t.string),
@@ -669,6 +696,7 @@ const CsAll = t.intersection([
         timeout: t.number,
         error: t.string,
         own_error: t.string,
+        gitRegistered: t.boolean,
     }),
     t.type({
         // anonymous: t.boolean,
@@ -776,7 +804,7 @@ interface IRunResponseWeb {
     "-replyMD"?: string,
 }
 
-interface IRunResponse {
+export interface IRunResponse {
     web: IRunResponseWeb,
     savedNew: number,
 }
@@ -801,7 +829,7 @@ interface IRunRequestInput extends Partial<IExtraMarkup> {
     selectedLanguage?: string;
 }
 
-interface IRunRequest {
+export interface IRunRequest {
     input: IRunRequestInput;
 }
 
