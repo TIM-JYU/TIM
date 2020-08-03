@@ -101,6 +101,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
 
     resetField(): undefined {
         this.initCode();
+        this.errormessage = undefined;
         return undefined;
     }
 

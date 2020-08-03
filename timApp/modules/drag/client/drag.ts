@@ -229,6 +229,7 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
 
     resetField(): undefined {
         this.setPluginWords(this.markup.words ?? []);
+        this.error = undefined;
         return undefined;
     }
 

@@ -117,6 +117,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
 
     resetField(): undefined {
         this.initCode();
+        this.errormessage = undefined;
         return undefined;
     }
 

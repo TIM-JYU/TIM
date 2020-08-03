@@ -218,6 +218,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         this.selectedWord = "";
         this.initialWord = this.selectedWord;
         this.changes = false;
+        this.error = undefined;
         this.updateListeners(ChangeType.Saved);
         return undefined;
     }

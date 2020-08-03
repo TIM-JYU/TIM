@@ -1093,6 +1093,7 @@ export class CsController extends CsBase implements ITimComponent {
 
     resetField(): undefined {
         this.initCode();
+        this.error = undefined;
         return undefined;
     }
 

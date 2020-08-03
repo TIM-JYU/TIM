@@ -117,6 +117,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     resetField(): undefined {
         this.initCode();
         this.applyStyling({});
+        this.errormessage = undefined;
         return undefined;
     }
 

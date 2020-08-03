@@ -166,6 +166,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     resetField(): undefined {
         this.initCode();
         this.applyStyling({});
+        this.errormessage = undefined;
         return undefined;
     }
 
