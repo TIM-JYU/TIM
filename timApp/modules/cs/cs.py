@@ -1178,12 +1178,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         try:
             update_markup_from_file(query)
             # Get the template type
-            ttype = TType.split(get_param(query, "type", "cs"))[0]
+            ttype = TType.split(get_json_param(query.jso, "markup", "type", "cs"))
 
             if is_tauno and not is_answer:
-                ttype = 'tauno'  # answer is newer tauno
+                ttype[0] = 'tauno'  # answer is newer tauno
             if is_simcir:
-                ttype = 'simcir'
+                ttype[0] = 'simcir'
 
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
             uploaded_file = get_json_param(query.jso, "input", "uploadedFile", None)
@@ -1244,7 +1244,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # print("Muutos ========")
             # pprint(query.__dict__, indent=2)
 
-            ttype = TType(ttype, query)
+            ttype = TType("/".join(ttype), query)
+            ttype.modify_query()
 
             if is_html and not is_iframe:
                 # print("HTML:==============")

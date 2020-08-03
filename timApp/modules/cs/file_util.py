@@ -47,7 +47,7 @@ ListifiedStr = NewType("Listify", List[str], field=Listify, cls_or_instance=fiel
 
 @dataclass
 class FileSpecification(Loadable):
-    path: Optional[str]
+    path: Optional[str] = field(default=None)
     source: str = field(default="editor")
     paths: Optional[ListifiedStr] = field(default=None)
     canClose: Optional[bool] = field(default=False)
@@ -133,7 +133,7 @@ def copy_files_glob(glob: str, source: str, dest: str):
 
     if dest_dir:
         for m in matches:
-            destination = m
+            destination = dest / m.relative_to(source)
             if m.is_dir():
                 if destination.exists() and not destination.is_dir():
                     rm(destination)
