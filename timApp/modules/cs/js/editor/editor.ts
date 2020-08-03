@@ -120,7 +120,8 @@ export class JSParsonsEditorComponent implements IEditor {
         <cs-normal-editor *ngIf="mode == Mode.Normal"
                 [minRows]="minRows_"
                 [maxRows]="maxRows_"
-                [placeholder]="file && file.placeholder ? file.placeholder : ''">
+                [placeholder]="file && file.placeholder ? file.placeholder : ''"
+                [disabled]="disabled">
         </cs-normal-editor>
         <cs-parsons-editor *ngIf="mode == Mode.Parsons"
                 [shuffle]="parsonsShuffle"
@@ -160,6 +161,8 @@ export class EditorComponent implements IMultiEditor {
     private normalEditor?: NormalEditorComponent;
     private aceEditor?: AceEditorComponent;
     parsonsEditor?: ParsonsEditorComponent;
+
+    @Input() disabled: boolean = false;
 
     allowedPaths?: string[]; // undefined for all allowed
     maxFiles: number = 1;

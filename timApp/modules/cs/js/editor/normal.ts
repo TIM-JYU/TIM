@@ -19,7 +19,8 @@ import {IEditor} from "./editor";
         <textarea #area class="csRunArea csEditArea no-popup-menu"
                 [rows]="rows"
                 [(ngModel)]="content"
-                [placeholder]="placeholder">
+                [placeholder]="placeholder"
+                [disabled]="disabled">
         </textarea>`,
 })
 export class NormalEditorComponent implements IEditor {
@@ -29,6 +30,7 @@ export class NormalEditorComponent implements IEditor {
     @Input() minRows: number = 1;
     @Input() maxRows: number = 100;
     @Input() placeholder: string = "";
+    @Input() disabled: boolean = false;
     @ViewChild("area") private area!: ElementRef;
 
     constructor(private cdr: ChangeDetectorRef) { }
