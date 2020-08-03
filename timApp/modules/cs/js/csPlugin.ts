@@ -576,7 +576,7 @@ const CsMarkupOptional = t.partial({
     rootPath: t.string,
     masterPath: t.string,
     files: oneOrArray(FileMarkup),
-    externalFiles: oneOrArray(ExternalSourceMarkup),
+    extraFiles: oneOrArray(ExternalSourceMarkup),
     jsFiles: t.array(t.string),
     cssFiles: t.array(t.string),
 });

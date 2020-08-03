@@ -412,7 +412,8 @@ class FileHandler:
         for file in submitted_files:
             self.save_file(file, language)
 
-        external_files = get_json_param(self.query.jso, "markup", "externalFiles", [])
-        external_files = File.load(external_files, many=True, unknown=EXCLUDE)
-        for file in external_files:
+        extra_files = get_json_param(self.query.jso, "markup", "extraFiles", [])
+        extra_files = FileSpecification.load(extra_files, many=True, unknown=EXCLUDE)
+
+        for file in extra_files:
             self.copy_file(file, language)
