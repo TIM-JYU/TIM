@@ -484,7 +484,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.answers = answers;
         this.updateFiltered();
         this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
-        await this.loadInfo();
     }
 
     private unDimPlugin() {
