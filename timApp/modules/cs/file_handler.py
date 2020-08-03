@@ -21,16 +21,23 @@ class FileSource:
     """Base class for file sources"""
     id = "_source"
 
-    def __init__(self, file, source_path: str, language: Language):
-        self.file = file
+    def __init__(self, specification: FileSpecification, source_path: str, language: Language):
+        self.specification = specification
         self.language = language
         self.source_path = source_path
 
-    def load(self) -> List[File]:
+    def matches(self, file: File) -> bool:
+        raise NotImplementedError("Matches not implemented")
+
+    def load(self, file: File) -> List[File]:
         raise NotImplementedError("Load not implemented")
 
     def copy(self, destination_path: str) -> None:
         raise NotImplementedError("Copy not implemented")
+
+    @property
+    def is_external(self) -> bool:
+        return False
 
     @classmethod
     def init(cls, query, files) -> None:
@@ -42,20 +49,40 @@ class FileSource:
         nclass.init(query, files)
         return nclass
 
+    @staticmethod
+    def source_classes(query, files):
+        bases = [base for base in FileSource.__subclasses__() if base not in [ExternalFileSource]] + ExternalFileSource.__subclasses__()
+        return {cls.id: cls.create(query, files) for cls in bases}
+
     @classmethod
     def verify(cls, files):
         pass
 
 
+class ExternalFileSource(FileSource):
+    """Base class for file sources"""
+    id = "_esource"
+
+    def load_external(self) -> List[File]:
+        raise NotImplementedError("Load_external not implemented")
+
+    def load(self, file: File) -> List[File]:
+        return [file]
+
+    @property
+    def is_external(self) -> bool:
+        return True
+
+
 class EditorSource(FileSource):
     id = "editor"
 
-    @classinstancemethod
-    def load(cls, self) -> List[File]:
-        if self.paths is not None and self.file.path not in self.paths:
-            raise PermissionError(f"File {self.file.path} not recognized as a submittable file")
+    def matches(self, file: File) -> bool:
+        return file.source == "editor" and file.path == self.specification.path
 
-        return [self.file]
+    @classinstancemethod
+    def load(cls, self, file: File) -> List[File]:
+        return [file]
 
     @classinstancemethod
     def copy(cls, self, destination_path: str) -> None:
@@ -63,7 +90,6 @@ class EditorSource(FileSource):
 
     @classmethod
     def init(cls, query, files) -> None:
-
         cls.files = [file for file in files if file.source == "editor"]
         cls.paths = None
         cls.must_paths = [file.path for file in cls.files if not file.canClose and not file.canRename]
@@ -95,11 +121,13 @@ class EditorSource(FileSource):
 class UploadByCodeSource(FileSource):
     id = "uploadByCode"
 
-    @classinstancemethod
-    def load(cls, self) -> List[File]:
-        if self.paths is not None and self.file.path not in self.paths:
-            raise PermissionError(f"File {self.file.path} not recognized as a submittable file")
+    def matches(self, file: File) -> bool:
+        if file.source != "uploadByCode":
+            return False
+        return file.path == self.specification.path or (self.specification.paths is not None and file.path in self.specification.paths)
 
+    @classinstancemethod
+    def load(cls, self, file: File) -> List[File]:
         return [self.file]
 
     @classinstancemethod
@@ -129,35 +157,33 @@ class UploadByCodeSource(FileSource):
 class UploadSource(FileSource):
     id = "upload"
 
-    def __init__(self, file, source_path: str, language: Language):
-        super().__init__(file, source_path, language)
-        self.path = Path(source_path) if source_path is not None else None
+    def __init__(self, specification, source_path: str, language: Language):
+        super().__init__(specification, source_path, language)
 
-        if not self.path.is_file():
-            raise ValueError("Upload source file not found")
+    def matches(self, file: File) -> bool:
+        return file.source.startswith("upload") and (file.path == self.specification.path or file.path in self.specification.paths)
 
     @classinstancemethod
-    def load(cls, self) -> List[File]:
-        if self.file.path not in cls.paths:
-            raise PermissionError(f"File {self.file.path} not recognized as a uploadable file")
+    def load(cls, self, file: File) -> List[File]:
+        path = Path(file.source[len("upload:"):])
 
-        if cls.verified is None:
-            raise ValueError("uploadedFiles not specified but upload source used")
+        if not path.is_file():
+            raise ValueError("Upload source file not found")
 
-        if self.source_path not in cls.verified:
-            raise ValueError("Upload source file not in uploadedFiles")
-
-        try:
-            self.file.bcontent = self.path.read_bytes()
-        except Exception as e:
-            raise Exception(f"Failed to read uploaded file {self.file.path}: {e}")
+        if cls.verified is None or str(path) not in cls.verified:
+            raise PermissionError(f"File {file.path} didn't go through access verification")
 
         try:
-            self.file.content = file.bcontent.decode(encoding="utf-8")
+            file.bcontent = path.read_bytes()
         except Exception as e:
-            self.file.content = None
+            raise Exception(f"Failed to read uploaded file {file.path}: {e}")
 
-        return [self.file]
+        try:
+            file.content = file.bcontent.decode(encoding="utf-8")
+        except Exception as e:
+            file.content = None
+
+        return [file]
 
     def copy(self, destination_path: str) -> None:
         # we'll allow this so teachers can upload a file and include it in the task. Though, it is not easy
@@ -177,15 +203,11 @@ class UploadSource(FileSource):
         else:
             cls.verified = None
 
-        cls.files = [file for file in files if file.source == "upload"]
-        cls.paths = [file.paths if file.paths is not None else [file.path] for file in cls.files]
-        cls.paths = [path for paths in cls.paths for path in paths] # flatten
-
 
 class MasterSource(FileSource):
     id = "master"
 
-    def __init__(self, file, source_path: str, language: Language):
+    def __init__(self, specification: FileSpecification, source_path: str, language: Language):
         self.is_root = False
         if source_path.startswith("root:"):
             self.is_root = True
@@ -205,15 +227,17 @@ class MasterSource(FileSource):
         if not is_relative_subpath(source_path):
             raise PermissionError(f"{source_path} directs outside the master directory")
 
-        super().__init__(file, source_path, language)
+        super().__init__(specification, source_path, language)
+
+    def matches(self, file: File) -> bool:
+        return file.source == self.specification.source
 
     @classinstancemethod
-    def load(cls, self) -> List[File]:
+    def load(cls, self, file: File) -> List[File]:
         raise PermissionError(f"Files from master path cannot be submitted")
 
     @classinstancemethod
     def copy(cls, self, destination_path: str) -> None:
-
         if self.is_root and self.language.rootpath is None:
             raise ValueError("Cannot copy from master task: cannot determine task path (root path not specified)")
 
@@ -253,11 +277,21 @@ class FileHandler:
         files = get_json_param(query.jso, "markup", "files", None)
         if files is None:
             files = [{"path": default_filename(query)}]
-        files = FileSpecification.load(listify(files), many=True, unknown=EXCLUDE)
+        self.files = FileSpecification.load(listify(files), many=True, unknown=EXCLUDE)
 
-        self.sources = {cls.id: cls.create(query, files) for cls in FileSource.__subclasses__()}
+        self.source_classes = FileSource.source_classes(query, self.files)
+        self.sources = []
+        for file in self.files:
+            source, source_path = self.parse_source(file.source)
 
-        self.external_files = [file for file in files if file.source not in ["upload", "editor", "uploadByCode"]]
+            try:
+                source = self.source_classes[source]
+            except KeyError:
+                raise ValueError(f"Source {source} (from {file.source}) not recognized")
+
+            self.sources.append(source(file, source_path, None))
+
+        self.external_sources = [s for s in self.sources if s.is_external]
 
     def parse_source(self, source: str) -> (str, str, bool):
         parts = source.split(":", maxsplit=1)
@@ -281,13 +315,20 @@ class FileHandler:
 
         return os.path.join(rootpath if is_root else prgpath, path)
 
-    def load_files(self, file: File):
-        source, source_path = self.parse_source(file.source)
+    def load_files(self, files: List[File]):
+        """Loads files from markup sources and orders them in the same order as in markup"""
+        mapping = []
+        for source in self.sources:
+            for file in files:
+                if source.matches(file):
+                    mapping.append((file, source))
 
-        try:
-            return self.sources[source](file, source_path, None).load()
-        except KeyError:
-            raise ValueError(f"Source {source} (from {file.source}) not recognized")
+        tmp = [file for file, _ in mapping]
+        for file in files:
+            if file not in tmp:
+                raise PermissionError(f"File {file.path} was not recognized as a submittable file")
+
+        return [f for file, source in mapping for f in source.load(file)]
 
 
     def get_files(self, s: str):
@@ -307,19 +348,26 @@ class FileHandler:
             if isinstance(usercode, str):
                 self.save["usercode"] = usercode
 
-        submitted_files = [file for f in submitted_files for file in self.load_files(f)]
+        submitted_files = self.load_files(submitted_files)
 
-        external_files = [file for f in self.external_files for file in self.load_files(f)]
-        external_files = [file for file in external_files if file.path not in used_paths]
-        if len(external_files) != 0:
-            self.save["externalFiles"] = external_files
+        file_mappings = {} # mapping of paths to matching files
+        for file in submitted_files:
+            tmp = file_mappings.setdefault(file.path, [])
+            tmp.append(file)
 
-        submitted_files = submitted_files + external_files
+        # if multiple files have the same path, take the first valid (non-empty) one
+        files = []
+        for file in submitted_files:
+            if file_mappings[file.path][0] == file:
+                if len(file_mappings[file.path]) > 1 and len(file.content) == 0:
+                    file_mappings[file.path].pop(0)
+                else:
+                    files.append(file)
 
-        for source in self.sources.values():
-            source.verify(submitted_files)
+        for source in self.source_classes.values():
+            source.verify(files)
 
-        return submitted_files
+        return files
 
     def copy_file(self, file: File, language: Language):
         """Copies/writes files instead of reading them to a string. Must only be
@@ -332,7 +380,7 @@ class FileHandler:
             raise PermissionError(f"{destination_path} directs outside the working directory")
 
         try:
-            self.sources[source](file, source_path, language).copy(destination_path)
+            self.source_classes[source](file, source_path, language).copy(destination_path)
         except KeyError:
             raise ValueError(f"Source {source} (from {file.source}) not recognized")
 
