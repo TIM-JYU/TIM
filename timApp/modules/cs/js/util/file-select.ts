@@ -67,6 +67,8 @@ class Path {
     }
 }
 
+
+let nextId = 0;
 // TODO: reset input value so same file can be uploaded again
 // done on drag-and-drop but default html file input makes it seem
 // like the file wasn't loaded at all if input value is reset.
@@ -76,10 +78,10 @@ class Path {
     selector: "file-select",
     template: `
         <div *ngIf="!dragAndDrop && stem">{{stem}}:</div>
-        <input #input [disabled]="!!progress" type="file" [hidden]="dragAndDrop" id="fileinput" (change)="onFileChange($event)" (attr.multiple)="multiple"/>
+        <input #input [disabled]="!!progress" type="file" [hidden]="dragAndDrop" [id]="inputId" (change)="onFileChange($event)" (attr.multiple)="multiple"/>
         <notification *ngIf="!dragAndDrop" class="error" #error></notification>
         <ng-container *ngIf="dragAndDrop">
-            <label title="Drag-and-drop or Click to browse" for="fileinput" *ngIf="dragAndDrop"
+            <label title="Drag-and-drop or Click to browse" [for]="inputId" *ngIf="dragAndDrop"
                     class="drag-and-drop"
                     (drop)="onDrop($event)"
                     (dragover)="onDragOver($event)"
@@ -99,6 +101,7 @@ class Path {
         </ng-container>`,
 })
 export class FileSelectComponent { // TODO: translations
+    @Input() inputId: string = `file-select-${nextId++}`;
     @Input() id: string = "";
     @Input() path?: string;
     @Input() multiple: boolean = false;
