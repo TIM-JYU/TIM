@@ -409,6 +409,16 @@ class FileHandler:
         chown(path, user="agent", group="agent")
 
     def save_files(self, submitted_files, language):
+        basepath = language.rootpath if language.rootpath is not None else language.prgpath
+
+        delete_files = get_json_param(self.query.jso, "markup", "deleteFiles", [])
+        for path in delete_files:
+            ppath = Path(self.parse_destination(path, language.prgpath, language.rootpath))
+            if not is_parent_of(basepath, ppath):
+                raise PermissionError(f"{path} (from deleteFiles) directs outside the working directory")
+            if ppath.exists():
+                rm(ppath)
+
         for file in submitted_files:
             self.save_file(file, language)
 

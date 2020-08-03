@@ -579,6 +579,7 @@ const CsMarkupOptional = t.partial({
     extraFiles: oneOrArray(ExternalSourceMarkup),
     jsFiles: t.array(t.string),
     cssFiles: t.array(t.string),
+    deleteFiles: t.array(t.string),
 });
 
 const CsMarkupDefaults = t.type({
