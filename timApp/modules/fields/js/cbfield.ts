@@ -123,7 +123,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             } catch (e) {
                 this.userword = false;
                 ok = false;
-                message = `Couldn't find related content ("c") from ${content.toString()}`;
+                message = `Couldn't find related content ("c") from ${JSON.stringify(content)}`;
                 this.errormessage = message;
             }
         }

@@ -203,7 +203,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             } catch (e) {
                 this.selectedWord = "";
                 ok = false;
-                message = `Couldn't find related content ("c") from ${content.toString()}`;
+                message = `Couldn't find related content ("c") from ${JSON.stringify(content)}`;
                 this.error = message;
             }
         }
