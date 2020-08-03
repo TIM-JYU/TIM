@@ -75,12 +75,26 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private saveCalledExternally = false;
 
     getDouble(s: string): number {
-        if (typeof(s) === "number") { return s; }
+        if (typeof (s) === "number") {
+            return s;
+        }
         s = s.replace(REDOUBLE, "");
         s = s.replace(",", ".");
-        if (s.startsWith("e")) { s = "1" + s; }
+        if (s.startsWith("e")) {
+            s = "1" + s;
+        }
         const d = parseFloat(s);
         return d;
+    }
+
+    /**
+     * Check if numericfield content is an accepted type of non-number value
+     * typing empty input will result in ""-value
+     * null is used in jsrunner scripts to specify missing value
+     * @param c input to inspect
+     */
+    isAllowedNull(c?: string): boolean {
+        return c == null || c == "";
     }
 
     getDefaultMarkup() {
@@ -107,13 +121,17 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             if (typeof state === "number") {
                 this.numericvalue = state.toString();
             } else if (state !== null) {
-                // TODO: parseFloat accepts too much like "6hello", should have a more accurate float check.
-                const numericvalue = this.getDouble(state);
-                this.numericvalue = numericvalue.toString();
-                if (isNaN(numericvalue)) {
+                if (this.isAllowedNull(state)) {
                     this.numericvalue = undefined;
-                    if (state !== "") {
-                        this.errormessage = `Content is not a number (${state}); showing empty value.`;
+                } else {
+                    // TODO: parseFloat accepts too much like "6hello", should have a more accurate float check.
+                    const numericvalue = this.getDouble(state);
+                    this.numericvalue = numericvalue.toString();
+                    if (isNaN(numericvalue)) {
+                        this.numericvalue = undefined;
+                        if (state !== "") {
+                            this.errormessage = `Content is not a number (${state}); showing empty value.`;
+                        }
                     }
                 }
             }
@@ -175,19 +193,24 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         } else {
             try {
                 // eslint-disable-next-line @typescript-eslint/tslint/config
-                const parsed = this.getDouble(content.c);
-                if (isNaN(parsed)) {
+                if (this.isAllowedNull(content.c)) {
                     this.numericvalue = undefined;
-                    ok = false;
-                    message = "Value at \"c\" was not a valid number";
-                    this.errormessage = `Content is not a number (${content.c}); showing empty value.`;
                 } else {
-                    this.numericvalue = parsed.toString();
+                    // eslint-disable-next-line @typescript-eslint/tslint/config
+                    const parsed = this.getDouble(content.c);
+                    if (isNaN(parsed)) {
+                        this.numericvalue = undefined;
+                        ok = false;
+                        message = "Value at \"c\" was not a valid number";
+                        this.errormessage = `Content is not a number (${content.c}); showing empty value.`;
+                    } else {
+                        this.numericvalue = parsed.toString();
+                    }
                 }
             } catch (e) {
                 this.numericvalue = undefined;
                 ok = false;
-                message = `Couldn't find related content ("c") from ${content.toString()}`;
+                message = `Couldn't find related content ("c") from ${JSON.stringify(content)}`;
                 this.errormessage = message;
             }
             if (!this.attrs.ignorestyles) {
