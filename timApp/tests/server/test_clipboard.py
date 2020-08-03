@@ -93,11 +93,45 @@ class ClipboardTest(TimRouteTest):
         d.document.clear_mem_cache()
         pars_new = d.document.get_paragraphs()
         new_readings = get_readings(self.current_group().id, d.document)
-        self.assertEqual(3, len(new_readings))
-        self.assertEqual(1, len(list(filter(lambda r: r.type == ReadParagraphType.click_red, new_readings))))
-        self.assertEqual(2, len(list(filter(lambda r: r.type == ReadParagraphType.hover_par, new_readings))))
+        self.assertEqual(6, len(new_readings))
+        self.assertEqual(2, len(list(filter(lambda r: r.type == ReadParagraphType.click_red, new_readings))))
+        self.assertEqual(4, len(list(filter(lambda r: r.type == ReadParagraphType.hover_par, new_readings))))
         self.assertListEqual(['test1', 'test2', 'test3', 'test1', 'test2', 'test3', 'test4'],
                              [p.get_markdown() for p in pars_new])
+
+    def test_copy_readings_nonteacher(self):
+        self.login_test1()
+        d1 = self.create_doc(initial_par='test')
+        pars = d1.document.get_paragraphs()
+        mark_read(usergroup_id=self.current_group().id,
+                  doc=d1.document,
+                  par=pars[0],
+                  read_type=ReadParagraphType.click_red)
+        mark_read(usergroup_id=self.current_group().id,
+                  doc=d1.document,
+                  par=pars[0],
+                  read_type=ReadParagraphType.hover_par)
+        db.session.commit()
+
+        self.json_put(
+            f'/permissions/add',
+            {
+                'time': {
+                    'type': 'always',
+                },
+                'id': d1.id,
+                'type': AccessType.copy.value,
+                'groups': ['testuser2'],
+                'confirm': False,
+            })
+
+        self.login_test2()
+        d2 = self.create_doc()
+        self.copy(d1, pars[0], pars[0])
+        self.paste(d2, par_after=DocParagraph.help_par())
+        new_readings = get_readings(self.current_group().id, d2.document)
+        self.assertEqual(1, len(d2.document.get_paragraphs()))
+        self.assertEqual(0, len(new_readings))
 
     def test_copy_to_empty(self):
         self.login_test1()
