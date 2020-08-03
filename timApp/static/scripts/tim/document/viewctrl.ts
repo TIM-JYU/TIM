@@ -738,12 +738,15 @@ export class ViewCtrl implements IController {
         }
 
         if (this.formAbs.getSize() > 0) {
-            const taskList = [];
+            const fieldsToChange = new EntityRegistry<string, AnswerBrowserController>();
             for (const fab of this.formAbs.entities.values()) {
-                taskList.push(fab.taskId);
+                if (!fab.isUseCurrentUser()) {
+                    fieldsToChange.set(fab.taskId, fab);
+                }
             }
+            console.log(Array.from(fieldsToChange.entities.keys()));
             const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
-                tasks: taskList,
+                tasks: Array.from(fieldsToChange.entities.keys()),
                 user: user.id,
             }));
             if (!r.ok) {
@@ -760,7 +763,7 @@ export class ViewCtrl implements IController {
                 //     tasks: taskList,
                 // }));
                 this.formTaskInfosLoaded = true;
-                for (const fab of this.formAbs.entities.values()) {
+                for (const fab of fieldsToChange.entities.values()) {
                     // fab.setInfo(taskInfoResponse.data[fab.taskId]);
                     fab.setInfo({
                         userMin: 0,
@@ -771,7 +774,7 @@ export class ViewCtrl implements IController {
                 }
             }
             if (answerResponse.data.userId == this.selectedUser.id) {
-                for (const fab of this.formAbs.entities.values()) {
+                for (const fab of fieldsToChange.entities.values()) {
                     const ans = answerResponse.data.answers[fab.taskId];
                     this.handleAnswerSet(ans, fab, user, true);
                 }
@@ -820,6 +823,7 @@ export class ViewCtrl implements IController {
         const formAbMap = new Map<string, AnswerBrowserController>();
         const fabIds: string[] = [];
         const regularAbMap = new Map<string, AnswerBrowserController>();
+        const currentUserFormAbs = new Map<string, AnswerBrowserController>();
         for (const t of taskids) {
             const loader = this.getPluginLoader(t);
             if (!loader) {
@@ -831,8 +835,12 @@ export class ViewCtrl implements IController {
             await loader.abLoad.promise;
             const fab = this.getFormAnswerBrowser(t);
             if (fab) {
-                formAbMap.set(fab.taskId, fab);
-                fabIds.push(fab.taskId);
+                if (!fab.isUseCurrentUser()) {
+                    formAbMap.set(fab.taskId, fab);
+                    fabIds.push(fab.taskId);
+                } else {
+                    currentUserFormAbs.set(fab.taskId, fab);
+                }
             } else {
                 const ab = this.getAnswerBrowser(t);
                 if (ab) {
@@ -840,7 +848,7 @@ export class ViewCtrl implements IController {
                 }
             }
         }
-        if (this.formAbs.getSize() > 0) {
+        if (fabIds.length > 0) {
             const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
                 tasks: fabIds,
                 user: this.selectedUser.id,
@@ -852,6 +860,20 @@ export class ViewCtrl implements IController {
             for (const fab of formAbMap.values()) {
                 const ans = answerResponse.data.answers[fab.taskId];
                 this.handleAnswerSet(ans, fab, this.selectedUser, false);
+            }
+        }
+        if (currentUserFormAbs.size > 0) {
+            const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
+                tasks: Array.from(currentUserFormAbs.keys()),
+                user: Users.getCurrent().id,
+            }));
+            if (!r.ok) {
+                return;
+            }
+            const answerResponse = r.result;
+            for (const [key, value] of currentUserFormAbs) {
+                const ans = answerResponse.data.answers[key];
+                this.handleAnswerSet(ans, value, Users.getCurrent(), false);
             }
         }
         for (const ab of regularAbMap.values()) {
