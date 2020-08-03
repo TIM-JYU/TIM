@@ -137,6 +137,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     // TODO: get rid of any (styles can arrive as object)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: { [index: string]: any }): ISetAnswerResult {
+        this.errormessage = undefined;
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
@@ -149,7 +150,8 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             } catch (e) {
                 this.userword = "";
                 ok = false;
-                message = "Couldn't find related content (\"c\")";
+                message = `Couldn't find related content ("c") from ${content.toString()}`;
+                this.errormessage = message;
             }
             if (!this.attrs.ignorestyles) {
                 // eslint-disable-next-line @typescript-eslint/tslint/config

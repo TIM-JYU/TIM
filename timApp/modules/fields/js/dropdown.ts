@@ -191,6 +191,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: { [index: string]: any }): ISetAnswerResult {
+        this.error = undefined;
         let message;
         let ok = true;
         if (Object.keys(content).length == 0) {
@@ -202,7 +203,8 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             } catch (e) {
                 this.selectedWord = "";
                 ok = false;
-                message = "Couldn't find related content (\"c\")";
+                message = `Couldn't find related content ("c") from ${content.toString()}`;
+                this.error = message;
             }
         }
         this.changes = false;

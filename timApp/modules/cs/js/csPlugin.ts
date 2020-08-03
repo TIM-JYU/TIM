@@ -1037,7 +1037,8 @@ export class CsController extends CsBase implements ITimComponent {
         return getFormBehavior(this.attrs.form, FormModeOption.Undecided);
     }
 
-    setAnswer(content: unknown): ISetAnswerResult {
+    setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
+        this.error = undefined;
         let message;
         let ok = true;
         if (CspluginAnswer.is(content)) {
@@ -1047,7 +1048,8 @@ export class CsController extends CsBase implements ITimComponent {
         } else {
             this.usercode = "";
             ok = false;
-            message = `Couldn't find related content ("usercode")`;
+            message = `Couldn't find related content ("usercode") from ${content.toString()}`;
+            this.error = message;
         }
         return {ok: ok, message: message};
     }

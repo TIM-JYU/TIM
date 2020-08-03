@@ -113,7 +113,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 if (isNaN(numericvalue)) {
                     this.numericvalue = undefined;
                     if (state !== "") {
-                        this.errormessage = `State is NaN (${state}); showing empty value.`;
+                        this.errormessage = `Content is not a number (${state}); showing empty value.`;
                     }
                 }
             }
@@ -166,6 +166,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: { [index: string]: any }): ISetAnswerResult {
+        this.errormessage = undefined;
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
@@ -179,13 +180,15 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                     this.numericvalue = undefined;
                     ok = false;
                     message = "Value at \"c\" was not a valid number";
+                    this.errormessage = `Content is not a number (${content.c}); showing empty value.`;
                 } else {
                     this.numericvalue = parsed.toString();
                 }
             } catch (e) {
                 this.numericvalue = undefined;
                 ok = false;
-                message = "Couldn't find related content (\"c\")";
+                message = `Couldn't find related content ("c") from ${content.toString()}`;
+                this.errormessage = message;
             }
             if (!this.attrs.ignorestyles) {
                 // eslint-disable-next-line @typescript-eslint/tslint/config
