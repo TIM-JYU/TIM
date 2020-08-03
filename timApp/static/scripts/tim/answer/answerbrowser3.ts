@@ -476,7 +476,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    async changeUserAndAnswers(user: IUser, answers: IAnswer[]) {
+    changeUserAndAnswers(user: IUser, answers: IAnswer[]) {
         if (!this.isGlobal() && !this.isUseCurrentUser()) {
             this.user = user;
             this.fetchedUser = this.user;
