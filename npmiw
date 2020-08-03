@@ -2,10 +2,10 @@
 
 set -e
 
-cd timApp &&
+(cd timApp &&
   npm install &&
   npm run lint &&
-  (cd modules/cs/jsav && npm i --no-save grunt grunt-contrib-concat grunt-contrib-uglify grunt-exec load-grunt-tasks && echo NOTE: You can ignore all Local Npm module warnings. && npx grunt)
+  (cd modules/cs/jsav && npm i --no-save grunt grunt-contrib-concat grunt-contrib-uglify grunt-exec load-grunt-tasks && echo NOTE: You can ignore all Local Npm module warnings. && npx grunt))
 # jsrunner cannot be installed in Windows because it needs to build native libraries.
 # && (cd modules/jsrunner/server && npm install)
 
