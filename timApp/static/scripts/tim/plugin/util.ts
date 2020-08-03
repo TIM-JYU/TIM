@@ -65,7 +65,7 @@ export class PluginMeta {
         return this.plugintype ?? this.getParentAttr("data-plugin");
     }
 
-    public getAnswerUrl() {
+    public getCallUrl() {
         const plugin = this.getPlugin();
         if (!plugin) {
             const message = "Could not find plugin type from HTML";
@@ -77,8 +77,12 @@ export class PluginMeta {
         if (i > 0) {
             url = url.substring(i);
         }
-        url += `/${this.getTaskId()!.docTask()}/answer/`;
+        url += `/${this.getTaskId()!.docTask()}`;
         return url; // + window.location.search;
+    }
+
+    public getAnswerUrl() {
+        return `${this.getCallUrl()}/answer/`; // + window.location.search;
     }
 
     public isPreview() {
