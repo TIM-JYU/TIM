@@ -121,11 +121,11 @@ class ClipboardTest(TimRouteTest):
                 },
                 'id': d1.id,
                 'type': AccessType.copy.value,
-                'groups': ['testuser2'],
+                'groups': ['testuser3'],
                 'confirm': False,
             })
 
-        self.login_test2()
+        self.login_test3()
         d2 = self.create_doc()
         self.copy(d1, pars[0], pars[0])
         self.paste(d2, par_after=DocParagraph.help_par())
