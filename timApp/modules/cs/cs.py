@@ -845,6 +845,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         # print("do_POST =================================================")
+        if self.path == "/cs/fetchExternal":
+            do_headers(self, "application/json")
+            response = {}
+            try:
+                response["files"] = FileHandler(post_params(self)).get_external_files()
+            except Exception as e:
+                response['error'] = str(e)
+                print_exc()
+            self.wout(json.dumps(response))
+            return
+
         multimd = self.path.find('/multimd') >= 0
 
         if self.path.find('/multihtml') < 0 and not multimd:

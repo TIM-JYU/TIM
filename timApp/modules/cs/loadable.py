@@ -19,11 +19,11 @@ class Loadable:
         return cls.Schema().loads(*kargs, **kwargs)
 
     @classmethod
-    def dump(cls, obj, *kargs, **kwargs):
+    def dump(cls, obj, *kargs, exclude=[], **kwargs):
         """Create a dict from object"""
         if cls.Schema is None:
             raise ValueError("Schema is None")
-        return cls.Schema().dump(obj, *kargs, **kwargs)
+        return cls.Schema(exclude=exclude).dump(obj, *kargs, **kwargs)
 
     @classmethod
     def dumps(cls, obj, *kargs, **kwargs):

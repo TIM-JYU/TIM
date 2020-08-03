@@ -70,7 +70,7 @@ interface IRunResult {
             <div class="csRunCode">
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
                 <div class="csEditorAreaDiv">
-                    <cs-editor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
+                    <cs-editor #mainEditor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
                             [base]="byCode"
                             [minRows]="markup.rows"
                             [maxRows]="markup.maxrows"
@@ -111,6 +111,10 @@ interface IRunResult {
                 <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
                 &nbsp;&nbsp;
             </p>
+            <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
+                    [maxRows]="markup.maxrows"
+                    [disabled]="true">
+            </cs-editor>
             <div class="csRunMenuArea" *ngIf="!forcedupload">
                 <p class="csRunMenu">
                     <button *ngIf="isRun && buttonText()"
@@ -119,6 +123,12 @@ interface IRunResult {
                             title="(Ctrl-S)"
                             (click)="runCode()"
                             [innerHTML]="buttonText()"></button>
+                    &nbsp;
+                    <button *ngIf="isExternalFetch"
+                            [disabled]="isRunning"
+                            class="timButton btn-sm"
+                            (click)="fetchExternalFiles()"
+                            [innerHTML]="externalFetchText()"></button>
                     <a href="javascript:void(0)" *ngIf="undoButton && isUnSaved()" title="undoTitle"
                             (click)="tryResetChanges()"> &nbsp;{{undoButton}}</a>
                     &nbsp;&nbsp;
@@ -165,6 +175,15 @@ interface IRunResult {
                 <pre class="csRunError" >{{error}}</pre>
                 <p class="pull-right" style="margin-top: -1em">
                     <tim-close-button (click)="closeError()"></tim-close-button>
+                </p>
+            </div>
+            <div class="csRunErrorClass" *ngIf="fetchError">
+                <p class="pull-right">
+                    <tim-close-button (click)="fetchError=undefined"></tim-close-button>
+                </p>
+                <pre class="csRunError" >{{fetchError}}</pre>
+                <p class="pull-right" style="margin-top: -1em">
+                    <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
             </div>
             <extcheck-output-container *ngIf="penalty_container" [data]="penalty_container"></extcheck-output-container>

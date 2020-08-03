@@ -259,7 +259,7 @@ class MasterSource(FileSource):
 
 
 class FileHandler:
-    def __init__(self, query, save):
+    def __init__(self, query, save = {}):
         self.query = query
         self.save = save
         self.uploaded_non_text = []
@@ -330,6 +330,9 @@ class FileHandler:
 
         return [f for file, source in mapping for f in source.load(file)]
 
+    def get_external_files(self):
+        external_files = [file for source in self.external_sources for file in source.load_external()]
+        return File.dump(external_files, many=True, exclude=["bcontent"])
 
     def get_files(self, s: str):
         submitted_files = get_json_param(self.query.jso, "input", "submittedFiles", [])

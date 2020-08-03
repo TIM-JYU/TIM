@@ -487,6 +487,7 @@ const ExternalSourceMarkup =
         }),
         t.partial({
             maxSize: t.number,
+            maxTotalSize: t.number,
         }),
     ]);
 interface IExternalSourceMarkup extends t.TypeOf<typeof ExternalSourceMarkup> {}
@@ -768,6 +769,11 @@ interface IRunResponse {
     savedNew: number,
 }
 
+interface IFetchResponse {
+    error?: string,
+    files: IFileSubmission[],
+}
+
 
 interface IRunRequestInput extends Partial<IExtraMarkup> {
     usercode?: string;
@@ -805,6 +811,8 @@ export class CsController extends CsBase implements ITimComponent {
     editorIndex: number;
     error?: string;
     errors: string[];
+    externalFiles?: IFileSubmission[];
+    fetchError?: string;
     fileError?: string;
     fileProgress?: number;
     htmlresult: string;
@@ -864,12 +872,38 @@ export class CsController extends CsBase implements ITimComponent {
     timeout: number = 0;
     editorModes: Mode[] = [];
     editor?: EditorComponent;
+    externalEditor?: EditorComponent;
+    hasExternalSources: boolean = false;
     fileSelect?: FileSelectManagerComponent;
     upload?: boolean;
     uploadByCodeFiles: {path: string, show: boolean | "loaded"}[] = [];
     @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
 
-    @ViewChild(EditorComponent)
+    @ViewChild("externalEditor")
+    set externalEditorViewSetter(new_value: EditorComponent | undefined) {
+        this.externalEditor = new_value;
+        this.updateExternalEditor();
+    }
+
+    updateExternalEditor() {
+        const files: EditorFile[] = [];
+        if (!this.externalEditor) {
+            return;
+        }
+
+        if (this.externalFiles) {
+            for (const f of this.externalFiles) {
+                const file = new EditorFile(f.path);
+                file.content = f.content ?? "";
+                files.push(file);
+            }
+        }
+
+        this.externalEditor.modes = [new Mode(Mode.Normal)];
+        this.externalEditor.setFiles(files);
+    }
+
+    @ViewChild("mainEditor")
     set editorViewSetter(new_value: EditorComponent | undefined) {
         this.editor = new_value;
         if (!this.editor) {
@@ -1328,6 +1362,43 @@ ${fhtml}
         return this.english ? "Run" : "Aja";
     }
 
+    get isExternalFetch(): boolean {
+        return !!this.isRun && !!this.hasExternalSources;
+    }
+
+    externalFetchText() {
+        return this.english ? "Fetch" : "Nouda";
+    }
+
+    async fetchExternalFiles() {
+        if (this.isRunning) {
+            return;
+        }
+        this.isRunning = true;
+        this.fetchError = undefined;
+
+        const r = await to2(this.http.post<IFetchResponse>(`${this.pluginMeta.getCallUrl()}/fetchExternal`, {},
+            {headers: new HttpHeaders({timeout: `${defaultTimeout}`})}
+        ).toPromise());
+        if (r.ok) {
+            if (r.result.error) {
+                this.fetchError = "Failed to fetch files: " + r.result.error;
+                this.externalFiles = undefined;
+            } else if(r.result.files.length == 0) {
+                this.fetchError = "No files were available";
+                this.externalFiles = undefined;
+            } else {
+                this.externalFiles = r.result.files;
+                this.updateExternalEditor();
+            }
+        } else {
+            this.fetchError = "Failed to fetch files: " + r.result.error;
+            this.externalFiles = undefined;
+        }
+        this.isRunning = false;
+        this.cdr.detectChanges();
+    }
+
     get isTest() {
         return languageTypes.getTestType(this.type, this.selectedLanguage, "") !== "";
     }
@@ -1417,6 +1488,10 @@ ${fhtml}
             this.upload = listify(this.markup.files).some((f) => f?.source == "upload" || f?.source == "uploadByCode");
         }
 
+        if (this.markup.files) {
+            this.hasExternalSources = listify(this.markup.files).some((f) => !["upload", "uploadByCode", "editor"].includes(f.source));
+        }
+
         this.vctrl = vctrlInstance!;
         this.hide = this.attrsall.markup.hide || {};
        //  if ( typeof this.markup.borders !== 'undefined' ) this.markup.borders = true;
@@ -1470,6 +1545,7 @@ ${fhtml}
         } else if (this.attrsall.uploadedFile || this.attrsall.uploadedType) {
             this.uploadedFiles.push({path: this.attrsall.uploadedFile ?? "", type: this.attrsall.uploadedType ?? ""});
         }
+
         this.initSaved();
         this.vctrl.addTimComponent(this);
         // if (this.isText) {
@@ -1740,8 +1816,9 @@ ${fhtml}
                     )?.show
                 ).map((f) => ({source: "uploadByCode", ...f})) ?? [];
         const uploadedFiles: IFileSubmission[] = this.uploadedFiles.toArray().map((f) => ({source: "upload:" + f.path, path: this.uploadedFileName(f.path), type: f.type}));
+        const externalFiles = this.externalFiles ?? [];
 
-        let allFiles: IFileSubmission[] = editorFiles.concat(fileSelectFiles);
+        let allFiles: IFileSubmission[] = editorFiles.concat(fileSelectFiles).concat(externalFiles);
         if (allFiles.length == 0 && !this.noeditor) {
             allFiles = [{source: "editor", path: "", content: this.usercode}];
         }
@@ -2742,7 +2819,7 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
     <div class="csRunCode">
         <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
         <div class="csEditorAreaDiv">
-            <cs-editor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
+            <cs-editor #mainEditor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
                     [base]="byCode"
                     [minRows]="markup.rows"
                     [maxRows]="markup.maxrows"
@@ -2785,6 +2862,10 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
         <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
         &nbsp;&nbsp;
     </p>
+    <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
+            [maxRows]="markup.maxrows"
+            [disabled]="true">
+    </cs-editor>
     <div class="csRunMenuArea" *ngIf="!forcedupload">
         <p class="csRunMenu">
             <button *ngIf="isRun && buttonText()"
@@ -2793,6 +2874,12 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
                     title="(Ctrl-S)"
                     (click)="runCode()"
                     [innerHTML]="buttonText()"></button>
+            &nbsp;
+            <button *ngIf="isExternalFetch"
+                    [disabled]="isRunning"
+                    class="timButton btn-sm"
+                    (click)="fetchExternalFiles()"
+                    [innerHTML]="externalFetchText()"></button>
             <a href="javascript:void(0)" *ngIf="undoButton && isUnSaved()" title="undoTitle"
                     (click)="tryResetChanges()"> &nbsp;{{undoButton}}</a>
             &nbsp;&nbsp;
@@ -2862,6 +2949,15 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
         <pre class="csRunError" >{{error}}</pre>
         <p class="pull-right" style="margin-top: -1em">
             <tim-close-button (click)="closeError()"></tim-close-button>
+        </p>
+    </div>
+    <div class="csRunErrorClass" *ngIf="fetchError">
+        <p class="pull-right">
+            <tim-close-button (click)="fetchError=undefined"></tim-close-button>
+        </p>
+        <pre class="csRunError" >{{fetchError}}</pre>
+        <p class="pull-right" style="margin-top: -1em">
+            <tim-close-button (click)="fetchError=undefined"></tim-close-button>
         </p>
     </div>
     <pre class="console" *ngIf="result">{{result}}</pre>

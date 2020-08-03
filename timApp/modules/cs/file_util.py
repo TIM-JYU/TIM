@@ -52,6 +52,8 @@ class FileSpecification(Loadable):
     paths: Optional[ListifiedStr] = field(default=None)
     canClose: Optional[bool] = field(default=False)
     canRename: Optional[bool] = field(default=False)
+    maxSize: Optional[int] = field(default=None)
+    maxTotalSize: Optional[int] = field(default=None)
 
 
 @dataclass
@@ -62,6 +64,9 @@ class File(Loadable):
     bcontent: Optional[bytes] = field(default=None)
     fileext: str = field(default="")
     filedext: str = field(default="")
+
+    def size(self):
+        return len(self.content or self.bcontent or [])
 
     @staticmethod
     def default(query, content: str = ""):
