@@ -384,21 +384,8 @@ class FileHandler:
         except KeyError:
             raise ValueError(f"Source {source} (from {file.source}) not recognized")
 
-    def save_file(self, file: File, language: Language):
-        basepath = language.rootpath if language.rootpath is not None else language.prgpath
-        if not is_parent_of(basepath, file.path):
-            raise PermissionError(f"{file.path} directs outside the working directory")
-
+    def save_file(self, file: File):
         path = Path(file.path)
-
-        mkdirs(path.parent)
-
-        if path.exists():
-            if path.is_dir():
-                rmtree(path)
-            else:
-                path.unlink()
-
         if file.content is not None:
             path.write_text(file.content, encoding="utf-8")
         elif file.bcontent is not None:
@@ -420,7 +407,16 @@ class FileHandler:
                 rm(ppath)
 
         for file in submitted_files:
-            self.save_file(file, language)
+            if not is_parent_of(basepath, file.path):
+                raise PermissionError(f"{file.path} directs outside the working directory")
+
+            path = Path(file.path)
+            mkdirs(path.parent)
+            if path.exists():
+                rm(path)
+
+        for file in submitted_files:
+            self.save_file(file)
 
         extra_files = get_json_param(self.query.jso, "markup", "extraFiles", [])
         extra_files = FileSpecification.load(extra_files, many=True, unknown=EXCLUDE)
