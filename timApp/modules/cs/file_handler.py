@@ -4,6 +4,9 @@ from pathlib import Path
 from fileParams import get_json_param, get_param, mkdirs
 from marshmallow import EXCLUDE
 
+from git.gitlib import get_lib
+from git.util import Settings as GitSettings, RemoteInfo
+
 from languages import Language
 from file_util import *
 
@@ -257,6 +260,71 @@ class MasterSource(FileSource):
         if cls.master_path is not None:
             cls.master_path = (Path("/cs/masters") / cls.master_path).resolve()
 
+
+class GitSource(ExternalFileSource):
+    id = "git"
+
+    @classinstancemethod
+    def __init__(cls, self, specification, source_path: str, language: Language):
+        """source_path: <url>[;<sub_path>[;<branch>[;<remote>]]]"""
+        self.specification = specification
+        self.language = language
+
+        parts = source_path.split(";")
+        info = RemoteInfo.parse_url(parts[0], cls.git_settings)
+        self.sub_path = ""
+        self.glob = ""
+        if len(parts) > 1:
+            self.sub_path = parts[1]
+        if len(parts) > 2:
+            self.glob = parts[2]
+        if len(parts) > 3:
+            info.branch = parts[3]
+        if len(parts) > 4:
+            info.name = parts[4]
+
+        if not is_relative_subpath(self.sub_path):
+            raise PermissionError(f"{self.sub_path} directs outside the git directory")
+
+        self.lib = get_lib(info, cls.git_settings)
+
+    def matches(self, file: File) -> bool:
+        return file.source == self.specification.source
+
+    @classinstancemethod
+    def load_external(cls, self) -> List[File]:
+        max_size = self.specification.maxSize
+        max_total_size = self.specification.maxTotalSize
+
+        files = self.lib.get_files(self.sub_path, self.glob)
+
+        for f in files:
+            f.source = self.specification.source
+
+        if len(files) == 1 and files[0].path == "":
+            files[0].path = self.specification.path
+        else:
+            for f in files:
+                f.path = os.path.normpath(os.path.join(self.specification.path, f.path))
+
+        if max_size is not None or max_total_size is not None:
+            total = 0
+            for f in files:
+                if max_size is not None and f.size() > max_size:
+                    raise ValueError(f"File {f.path} is too large (max {max_size})")
+                total += f.size()
+            if max_total_size is not None and total > max_total_size:
+                raise ValueError(f"Files in {self.specification.path} are too large (max total {max_total_size})")
+
+        return files
+
+    @classinstancemethod
+    def copy(cls, self, destination_path: str) -> None:
+        return self.lib.copy_files(self.sub_path, destination_path, self.glob)
+
+    @classmethod
+    def init(cls, query, files) -> None:
+        cls.git_settings = GitSettings.load(get_json_param(query.jso, "markup", "gitDefaults", {}))
 
 class FileHandler:
     def __init__(self, query, save = {}):

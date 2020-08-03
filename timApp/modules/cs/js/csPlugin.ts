@@ -520,6 +520,17 @@ const UploadedFile = t.type({
 });
 interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 
+const GitDefaultsMarkup = t.partial({
+    url: t.string,
+    user: t.string,
+    branch: t.string,
+    library: t.string,
+    glob: t.string,
+    cache: t.number,
+    apiProtocol: t.string,
+    librarySpecific: t.any,
+});
+
 const CsMarkupOptional = t.partial({
     // TODO: this gets deleted in server but only conditionally,
     //  decide if this should be here.
@@ -539,6 +550,7 @@ const CsMarkupOptional = t.partial({
     file: t.string,
     filename: t.string,
     fullhtml: t.string,
+    gitDefaults: GitDefaultsMarkup,
     height: t.union([t.number, t.string]),
     highlight: nullable(t.string),
     html: t.string,
