@@ -6,7 +6,7 @@ from flask import current_app
 from flask import g
 
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort
-from timApp.auth.accesshelper import verify_view_access, verify_edit_access
+from timApp.auth.accesshelper import verify_view_access, verify_edit_access, has_teacher_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
@@ -133,9 +133,9 @@ def paste_from_clipboard(doc_id):
                 if src_doc is None or str(src_doc.doc_id) != str(src_docid):
                     src_doc = Document(src_docid)
                 src_par = DocParagraph.get_latest(src_doc, src_parid)
-                # TODO: Figure out a way to copy readings safely without exposing them
-                if was_cut:
+                if has_teacher_access(src_doc.get_docinfo()):
                     copy_readings(src_par, dest_par)
+                if was_cut:
                     move_notes(src_par, dest_par)
 
         except ValueError:
