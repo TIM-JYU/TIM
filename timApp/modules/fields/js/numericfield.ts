@@ -187,7 +187,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             } catch (e) {
                 this.numericvalue = undefined;
                 ok = false;
-                message = `Couldn't find related content (\"c\") from ${content.toString()}`;
+                message = `Couldn't find related content ("c") from ${content.toString()}`;
                 this.errormessage = message;
             }
             if (!this.attrs.ignorestyles) {

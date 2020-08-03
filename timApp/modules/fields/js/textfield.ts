@@ -150,7 +150,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             } catch (e) {
                 this.userword = "";
                 ok = false;
-                message = `Couldn't find related content (\"c\") from ${content.toString()}`;
+                message = `Couldn't find related content ("c") from ${content.toString()}`;
                 this.errormessage = message;
             }
             if (!this.attrs.ignorestyles) {

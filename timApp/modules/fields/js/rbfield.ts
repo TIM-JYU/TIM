@@ -48,7 +48,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
     private vctrl!: ViewCtrl;
     private initialValue: string = "0";
-    private errormessage = "";
+    private errormessage?: string;
     private hideSavedText = true;
     private redAlert = false;
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
@@ -125,7 +125,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     }
 
     setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
-        this.errormessage = "";
+        this.errormessage = undefined;
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
@@ -137,7 +137,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
             } catch (e) {
                 this.userword = "";
                 ok = false;
-                message = `Couldn't find related content (\"c\") from ${content.toString()}`;
+                message = `Couldn't find related content ("c") from ${content.toString()}`;
                 this.errormessage = message;
             }
         }
@@ -262,7 +262,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
      * @param nosave true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
-        this.errormessage = "";
+        this.errormessage = undefined;
         this.isRunning = true;
         const c = this.userword;
         this.result = undefined;
@@ -283,7 +283,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
             const data = r.result.data;
             // TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
             // (Use premade bootstrap method / add listener for enter?)
-            this.errormessage = data.web.error ?? "";
+            this.errormessage = data.web.error;
             this.result = data.web.result;
             this.initialValue = this.userword;
             this.hideSavedText = false;
