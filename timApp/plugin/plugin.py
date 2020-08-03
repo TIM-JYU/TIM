@@ -604,14 +604,18 @@ def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
     return find_inline_plugins_from_str(md)
 
 
-def maybe_get_plugin_from_par(p: DocParagraph, task_id: TaskId, u: User) -> Optional[Plugin]:
+def maybe_get_plugin_from_par(p: DocParagraph,
+                              task_id: TaskId,
+                              u: User,
+                              match_exact_document: bool = False) -> Optional[Plugin]:
     t_attr = p.get_attr('taskId')
     if t_attr and p.get_attr('plugin'):
         try:
             p_tid = TaskId.parse(t_attr, allow_block_hint=False, require_doc_id=False)
         except PluginException:
             return None
-        if (p_tid.task_name == task_id.task_name or
+        doc_id_match = not match_exact_document or match_exact_document and p.doc.doc_id == task_id.doc_id
+        if ((p_tid.task_name == task_id.task_name and doc_id_match) or
                 (task_id.doc_id and p_tid.doc_id and p_tid.doc_task == task_id.doc_task)):
             return Plugin.from_paragraph(p, user=u)
     def_plug = p.get_attr('defaultplugin')
@@ -673,7 +677,7 @@ def find_plugin_from_document(d: Document, task_id: TaskId, u: User) -> Plugin:
                     continue
                 else:
                     for rp in ref_pars:
-                        plug = maybe_get_plugin_from_par(rp, task_id, u)
+                        plug = maybe_get_plugin_from_par(rp, task_id, u, True)
                         if plug:
                             return plug
             plug = maybe_get_plugin_from_par(p, task_id, u)

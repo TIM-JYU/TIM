@@ -16,6 +16,7 @@ from timApp.answer.pointsumrule import PointSumRule, PointType
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import random_id
 from timApp.plugin.plugin import Plugin, find_plugin_from_document
 from timApp.plugin.taskid import TaskId
@@ -1478,3 +1479,24 @@ a: b
         self.assertEqual(0.1, p.points_rule().allowUserMin)
         self.assertEqual(0.5, p.points_rule().allowUserMax)
         self.assertEqual(0.3, p.points_rule().multiplier)
+
+    def test_plugin_refcopy_contentcopy(self):
+        """
+            Tests a rare case outlined in #1902 where a plugin is copied first by reference and then by content.
+        """
+
+        self.login_test1()
+        original = self.create_doc(initial_par="""
+#- {plugin=pali #t}
+""")
+        original_pars = original.document.get_paragraphs()
+        target = self.create_doc()
+
+        # Copy order matters as it affects plugin resolving
+        self.copy(original, original_pars[0], original_pars[0])
+        self.paste(target, par_after=DocParagraph.help_par(), as_ref=True)
+        self.paste(target, par_after=DocParagraph.help_par(), as_ref=False)
+
+        p = Plugin.from_paragraph(target.document.get_paragraphs()[1])
+
+        self.get(f'/taskinfo/{p.task_id.doc_task}', expect_status=200)
