@@ -108,7 +108,7 @@ class UserFieldObj(TypedDict):
 
 def get_fields_and_users(
         u_fields: List[str],
-        requested_groups: List[UserGroup],
+        requested_groups: Optional[List[UserGroup]],
         d: DocInfo,
         current_user: User,
         autoalias: bool = False,
@@ -116,8 +116,7 @@ def get_fields_and_users(
         allow_non_teacher: bool = False,
         member_filter_type: MembershipFilter = MembershipFilter.Current,
         user_filter=None,
-        user_groups: Optional[List[UserGroup]] = None,
-) -> Tuple[List[UserFieldObj], Dict[str, str], List[str], List[UserGroup]]:
+) -> Tuple[List[UserFieldObj], Dict[str, str], List[str], Optional[List[UserGroup]]]:
     """
     Return fielddata, aliases, field_names
     :param user_filter: Additional filter to use.
@@ -134,19 +133,20 @@ def get_fields_and_users(
     """
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
-    if user_groups:
-        ugroups += user_groups
-    for group in requested_groups:
-        if needs_group_access_check and group.name != current_user.name:
-            if not verify_group_view_access(group, current_user, require=False):
-                # return abort(403, f'Missing view access for group {group.name}')
-                continue  # TODO: study how to give just warning from missing access, extra return string?
-        ugroups.append(group)
+    if requested_groups:
+        for group in requested_groups:
+            if needs_group_access_check and group.name != current_user.name:
+                if not verify_group_view_access(group, current_user, require=False):
+                    # return abort(403, f'Missing view access for group {group.name}')
+                    continue  # TODO: study how to give just warning from missing access, extra return string?
+            ugroups.append(group)
 
-    if not ugroups:  # if no access, give at least own group
-        ugroups.append(current_user.get_personal_group())
-
-    groups = ugroups
+        if not ugroups:  # if no access, give at least own group
+            ugroups.append(current_user.get_personal_group())
+        groups = ugroups
+    else:
+        groups = None
+        allow_non_teacher = False
 
     task_ids = []
     task_id_map = defaultdict(list)
@@ -236,38 +236,44 @@ def get_fields_and_users(
             except KeyError:
                 pass
 
-    group_id_set = set(ug.id for ug in groups)
-    group_filter = UserGroup.id.in_([ug.id for ug in groups])
-    if user_filter is not None:
+    group_id_set = set(ug.id for ug in groups) if groups else None
+    group_filter = UserGroup.id.in_([ug.id for ug in groups]) if groups else None
+    if user_filter is not None and group_filter is not None:
         group_filter = group_filter & user_filter
     join_relation = member_filter_relation_map[member_filter_type]
-    tally_field_values = get_tally_field_values(d, doc_map, group_filter, join_relation, tally_fields)
+    tally_field_values = get_tally_field_values(d,
+                                                doc_map,
+                                                group_filter,
+                                                join_relation,
+                                                tally_fields)
     sub = []
     # For some reason, with 7 or more fields, executing the following query is very slow in PostgreSQL 9.5.
     # That's why we split the list of task ids in chunks of size 6 and merge the results.
     # TODO: Investigate if this is still true for PostgreSQL 11.
     not_global_taskids = [t for t in task_ids if not t.is_global]
     for task_chunk in chunks(not_global_taskids, 6):
+        q = valid_answers_query(task_chunk).join(User, Answer.users)
+        if group_filter is not None:
+            q = q.join(UserGroup, join_relation).filter(group_filter)
         sub += (
-            valid_answers_query(task_chunk)
-                .join(User, Answer.users)
-                .join(UserGroup, join_relation)
-                .filter(group_filter)
+                q
                 .group_by(Answer.task_id, User.id)
                 .with_entities(func.max(Answer.id), User.id)
                 .all()
         )
     aid_uid_map = defaultdict(list)
+    user_ids = set()
     for aid, uid in sub:
         aid_uid_map[aid].append(uid)
-    q = (
-        User.query
-            .join(UserGroup, join_relation)
-            .filter(group_filter)
-            .with_entities(User)
-            .order_by(User.id)
-            .options(lazyload(User.groups))
-    )
+        user_ids.add(uid)
+    id_filter = User.id.in_(user_ids)
+    # Ensure that user filter gets applied even if group filter was None
+    if user_filter is not None:
+        id_filter = id_filter & user_filter
+    q = User.query.filter(id_filter)\
+        .with_entities(User)\
+        .order_by(User.id)\
+        .options(lazyload(User.groups))
     if member_filter_type != MembershipFilter.Current:
         q = q.options(joinedload(User.memberships))
     users: List[User] = q.all()
@@ -389,8 +395,10 @@ def get_tally_field_values(
         pts = get_points_by_rule(
             points_rule=psr,
             task_ids=tids,
-            user_ids=User.query.join(UserGroup, join_relation).filter(
-                group_filter).with_entities(User.id).subquery(),
+            user_ids=User.query.join(UserGroup, join_relation)
+                .filter(group_filter)
+                .with_entities(User.id)
+                .subquery() if group_filter else None,
             flatten=True,
             answer_filter=ans_filter,
         )

@@ -425,18 +425,6 @@ class TableFormObj(TypedDict):
     styles: Dict[str, Dict[str, Union[str, None]]]
 
 
-def get_answered_user_group_names(
-        doc: DocInfo,
-        curr_user: User,
-) -> List[str]:
-    if not curr_user.has_teacher_access(doc):
-        return []
-    pars = doc.document.get_dereferenced_paragraphs()
-    task_ids, _, _ = find_task_ids(pars)
-    users: List[User] = [user_data['user'] for user_data in get_users_for_tasks(task_ids)]
-    return [u.get_personal_group().name for u in users]
-
-
 def tableform_get_fields(
         flds: List[str],
         groupnames: List[str],
@@ -447,11 +435,7 @@ def tableform_get_fields(
         group_filter_type = MembershipFilter.Current,
         user_filter: List[str] = None,
 ):
-    # Special group: all answered collects usergroups of all answered users
-    all_answered = UserGroup.query.filter(get_answered_user_group_names(doc, curr_user)) if '$all_answered' in \
-                                                                                            groupnames else None
-
-    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames))
+    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames)) if '*' not in groupnames else None
     fielddata, aliases, field_names, groups = \
         get_fields_and_users(
             flds,
@@ -463,13 +447,12 @@ def tableform_get_fields(
             allow_non_teacher=allow_non_teacher,
             member_filter_type=group_filter_type,
             user_filter=User.name.in_(user_filter) if user_filter else None,
-            user_groups=all_answered,
         )
     rows = {}
     realnames: Dict[str, str] = {}
     emails = {}
     styles = {}
-    group_ids = set(g.id for g in groups)
+    group_ids = set(g.id for g in groups) if groups else None
     membershipmap = {}
     for f in fielddata:
         u: User = f['user']
@@ -483,7 +466,7 @@ def tableform_get_fields(
         if email is not None:
             emails[username] = email
         styles[username] = dict(f['styles'])
-        if group_filter_type != MembershipFilter.Current:
+        if group_ids and group_filter_type != MembershipFilter.Current:
             membership_end = get_membership_end(u, group_ids)
             if membership_end:
                 membership_end = membership_end.astimezone(fin_timezone).strftime('%Y-%m-%d %H:%M')
