@@ -1,6 +1,5 @@
 :host {
     display: inline-grid;
-    //width: 50vw;
     grid-template:
         "summary header" auto
         "ids content" auto
@@ -105,7 +104,8 @@ table.virtual {
 }
 
 ::ng-deep .header input {
-    width: 90%;
+    // Set as important to prevent existing markup from setting the size
+    width: 90% !important;
     margin-right: 5%;
     margin-left: 5%;
 }

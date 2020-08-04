@@ -53,6 +53,11 @@ td input[type="text"] {
   padding-right: 2em;
   padding-left: 2em;
   margin: auto;
+
+  &.no-overflow {
+    overflow: initial;
+    padding: 0;
+  }
 }
 
 td.nrcolumn {
