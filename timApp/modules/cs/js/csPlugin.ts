@@ -531,7 +531,12 @@ const GitDefaultsMarkup = t.partial({
 });
 
 const GitMarkup = t.partial({
-    onError: t.union([t.literal("raise"), t.literal("remove"), t.literal("removeall"), t.literal("create")]),
+    onError: t.keyof({
+        raise: null,
+        remove: null,
+        removeall: null,
+        create: null,
+    }),
     repo: t.intersection([
         t.type({name: t.string}),
         t.partial({
@@ -549,7 +554,11 @@ const GitMarkup = t.partial({
                 value: t.unknown,
             }),
             t.partial({
-                onError: t.union([t.literal("raise"), t.literal("ask"), t.literal("none")]),
+                onError: t.keyof({
+                    raise: null,
+                    ask: null,
+                    none: null,
+                }),
             }),
         ])
     ),
