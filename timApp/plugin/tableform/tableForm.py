@@ -15,6 +15,7 @@ from markupmodels import GenericMarkupModel
 from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericHtmlModel, \
     GenericAnswerModel, create_blueprint
+from timApp.answer.answers import get_users_for_tasks
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
@@ -22,7 +23,7 @@ from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
-from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
+from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException, find_task_ids
 from timApp.plugin.tableform.comparatorFilter import RegexOrComparator
 from timApp.plugin.taskid import TaskId
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
@@ -424,6 +425,18 @@ class TableFormObj(TypedDict):
     styles: Dict[str, Dict[str, Union[str, None]]]
 
 
+def get_answered_user_group_names(
+        doc: DocInfo,
+        curr_user: User,
+) -> List[str]:
+    if not curr_user.has_teacher_access(doc):
+        return []
+    pars = doc.document.get_dereferenced_paragraphs()
+    task_ids, _, _ = find_task_ids(pars)
+    users: List[User] = [user_data['user'] for user_data in get_users_for_tasks(task_ids)]
+    return [u.get_personal_group().name for u in users]
+
+
 def tableform_get_fields(
         flds: List[str],
         groupnames: List[str],
@@ -434,7 +447,14 @@ def tableform_get_fields(
         group_filter_type = MembershipFilter.Current,
         user_filter: List[str] = None,
 ):
-    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames))
+    group_filter = UserGroup.name.in_(groupnames)
+
+    # Special group: all answered collects usergroups of all answered users
+    if '$all_answered' in groupnames:
+        answered_usergroups = get_answered_user_group_names(doc, curr_user)
+        group_filter = group_filter | UserGroup.name.in_(answered_usergroups)
+
+    queried_groups = UserGroup.query.filter(group_filter)
     fielddata, aliases, field_names, groups = \
         get_fields_and_users(
             flds,

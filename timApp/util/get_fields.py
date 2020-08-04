@@ -16,7 +16,7 @@ from werkzeug.exceptions import abort
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_answers_query
-from timApp.auth.accesshelper import get_doc_or_abort
+from timApp.auth.accesshelper import get_doc_or_abort, has_seeanswers_access
 from timApp.document.docinfo import DocInfo
 from timApp.plugin.plugin import find_task_ids, CachedPluginFinder
 from timApp.plugin.pluginexception import PluginException
@@ -97,7 +97,6 @@ member_filter_relation_map = {
     MembershipFilter.Deleted: User.groups_inactive,
 }
 
-
 UserFields = Dict[str, Union[str, float, None]]
 
 
@@ -131,7 +130,8 @@ def get_fields_and_users(
     :param allow_non_teacher: can be used also for non techers if othre rights matches
     :return: fielddata, aliases, field_names
     """
-    needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
+    needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups \
+        and not current_user.has_teacher_access(d)
     ugroups = []
     for group in requested_groups:
         if needs_group_access_check and group.name != current_user.name:
@@ -272,7 +272,8 @@ def get_fields_and_users(
     for u in users:
         user_map[u.id] = u
     global_taskids = [t for t in task_ids if t.is_global]
-    global_answer_ids = valid_answers_query(global_taskids).group_by(Answer.task_id).with_entities(func.max(Answer.id)).all()
+    global_answer_ids = valid_answers_query(global_taskids).group_by(Answer.task_id).with_entities(
+        func.max(Answer.id)).all()
     answs = Answer.query.filter(Answer.id.in_(itertools.chain((aid for aid, _ in sub), global_answer_ids))).all()
     answers_with_users: List[Tuple[int, Optional[Answer]]] = []
     for a in answs:
