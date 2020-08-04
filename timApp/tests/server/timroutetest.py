@@ -891,11 +891,11 @@ class TimRouteTest(TimDbTest):
 
     def get_plugin_json(self, e: HtmlElement):
         b64str = e.attrib['json']
-        return base64.b64decode(b64str)
+        return json.loads(base64.b64decode(b64str))
 
     def assert_plugin_json(self, e: HtmlElement, content: Dict[str, Any]):
         json_str = self.get_plugin_json(e)
-        self.assertEqual(content, json.loads(json_str))
+        self.assertEqual(content, json_str)
 
     def get_state(self, aid: int, **kwargs):
         self.get('/getState',
