@@ -1205,8 +1205,8 @@ class StrCreditTest(SendGradeTestBase):
     def test_str_credit(self):
         self.login_test1()
         d = self.create_doc()
-        self.test_user_2.answers.append(Answer(task_id=f'{d.id}.grade', content=json.dumps({'c': 5}), valid=True))
-        self.test_user_2.answers.append(Answer(task_id=f'{d.id}.credit', content=json.dumps({'c': '5'}), valid=True))
+        self.add_answer(d, 'grade', content=5, user=self.test_user_2)
+        self.add_answer(d, 'credit', content='5', user=self.test_user_2)
         grade_params = {
             'destCourse': 'jy-CUR-1234',
             'docId': d.id,
@@ -1248,6 +1248,28 @@ class StrCreditTest(SendGradeTestBase):
             json={'assessments': [
                 {'userName': 'testuser2', 'gradeId': '5', 'completionDate': current_date, 'completionCredits': 5}],
                 'partial': False, 'dry_run': False},
+        )
+
+        # If credits is float, make sure no exception is thrown and an error is reported.
+        self.add_answer(d, 'credit', content='5.0', user=self.test_user_2)
+        db.session.commit()
+        self.check_send_grade_result(
+            grade_params,
+            {'assessment_errors':
+                 [{'assessment': {'completionCredits': '5.0',
+                                  'completionDate': '2020-08-04',
+                                  'gradeId': '5',
+                                  'privateComment': None,
+                                  'sentCredit': '5',
+                                  'sentGrade': '5',
+                                  'user': {'email': 'test2@example.com',
+                                           'id': 3,
+                                           'name': 'testuser2',
+                                           'real_name': 'Test user 2'}},
+                   'message': 'completionCredits: Invalid value.'}],
+             'default_selection': [],
+             'sent_assessments': []},
+            mock_sisu_response=None,
         )
 
 

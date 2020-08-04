@@ -922,7 +922,7 @@ class TimRouteTest(TimDbTest):
             self,
             d: DocInfo,
             task_name: str,
-            content: str = '',
+            content: Any = '',
             points: Union[None, int, float] = None,
             valid: bool = True,
             content_key: str = 'c',

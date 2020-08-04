@@ -514,13 +514,19 @@ def send_grades_to_sisu(
     except ValidationError as e:
         msgs = e.messages
         assert isinstance(msgs, dict)
+
+        # If completionCredits has a validation error, msgs will be like:
+        # {0: {'completionCredits': [['Invalid value.']]}}
+        # so we have to flatten the error list.
+        def flatten_error_list(err_list):
+            if isinstance(err_list, list) and len(err_list) > 0 and isinstance(err_list[0], list):
+                return err_list[0]
+            return err_list
+
         validation_errors = [
             AssessmentError(
                 assessment=assessments[i],
-                message=", ".join(str(x) + ": " + ", ".join(y) for x, y in a.items()),
-                # TODO: Temp fix to avoid error:
-                # File "/service/timApp/sisu/sisu.py", line 520, in <genexpr>  message=", ".join(str(x) + ": " + ", ".join(y) for x, y in a.items()), TypeError: sequence item 0: expected str instance, list found
-                # message=str(a.items()),
+                message=", ".join(x + ": " + ", ".join(flatten_error_list(y)) for x, y in a.items()),
             )
             for i, a in msgs.items()
         ]
@@ -664,19 +670,13 @@ def get_sisu_assessments(
 def fields_to_assessment(r: UserFieldObj, doc: DocInfo) -> CandidateAssessment:
     fields = r['fields']
     grade = fields.get(f'{doc.id}.grade')
-    if isinstance(grade, float):
-        grade = int(grade)
-    grade = str(grade) if grade is not None else None
-    credit = fields.get(f'{doc.id}.credit')
-    if isinstance(credit, float):
-        credit = int(credit)
     u = r['user']
     # TODO: Sisu accepts also 'privateComment' field.
     result = CandidateAssessment(
-        gradeId=grade,
+        gradeId=str(grade) if grade is not None else None,
         user=u,
         completionDate=fields.get(f'{doc.id}.completionDate'),
-        completionCredits=credit,
+        completionCredits=fields.get(f'{doc.id}.credit'),
         sentGrade=fields.get(f'{doc.id}.sentGrade'),
         sentCredit=fields.get(f'{doc.id}.sentCredit'),
     )
