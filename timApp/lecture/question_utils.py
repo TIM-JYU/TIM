@@ -120,7 +120,7 @@ def calculate_points_from_json_answer(single_answers: List[List[str]],
                                       points_table: List[Dict[str, float]],
                                       default_points: Union[float, None, Missing] = 0) -> float:
     points = 0.0
-    if default_points is None or default_points is missing:
+    if not isinstance(default_points, float) and not isinstance(default_points, int):
         default_points = 0
     for (oneAnswer, point_row) in zip(single_answers, points_table):
         for oneLine in oneAnswer:
