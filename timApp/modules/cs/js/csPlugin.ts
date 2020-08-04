@@ -681,22 +681,16 @@ const CsMarkupDefaults = t.type({
 
 const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPluginMarkup]);
 
-const CsAnswer = t.partial({
-    uploadedFile: t.string,
-    uploadedType: t.string,
-    uploadedFiles: t.array(UploadedFile),
-    userargs: t.string,
-    usercode: t.string,
-    userinput: t.string,
-    submittedFiles: t.array(FileSubmission),
-    selectedLanguage: t.string,
-});
-
-interface ICsAnswer extends t.TypeOf<typeof CsAnswer> {};
-
 const CsAll = t.intersection([
-    CsAnswer,
     t.partial({
+        uploadedFile: t.string,
+        uploadedType: t.string,
+        uploadedFiles: t.array(UploadedFile),
+        userargs: t.string,
+        usercode: t.string,
+        userinput: t.string,
+        submittedFiles: t.array(FileSubmission),
+        selectedLanguage: t.string,
         by: t.string,
         docurl: t.string,
         program: t.string,
