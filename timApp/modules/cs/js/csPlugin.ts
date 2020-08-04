@@ -1416,7 +1416,7 @@ ${fhtml}
         this.isRunning = true;
         this.fetchError = undefined;
 
-        const r = await to2(this.http.post<IFetchResponse>(`${this.pluginMeta.getCallUrl()}/fetchExternal`, {},
+        const r = await to2(this.http.post<IFetchResponse>(`/plugin${this.pluginMeta.getTaskIdUrl()}/fetchExternal`, {},
             {headers: new HttpHeaders({timeout: `${defaultTimeout}`})}
         ).toPromise());
         if (r.ok) {

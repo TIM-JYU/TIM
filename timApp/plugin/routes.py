@@ -53,16 +53,14 @@ def view_template(plugin, template, index):
         abort(404)
 
 
-@plugin_bp.route("/<plugintype>/<task_id_ext>/<path:requestpath>", methods=['PUT', 'POST'])
-def plugin_tid_call(plugintype: str, task_id_ext: str, requestpath: str):
+@plugin_bp.route("/plugin/<plugintype>/<task_id_ext>/fetchExternal", methods=['PUT', 'POST'])
+def plugin_tid_call(plugintype: str, task_id_ext: str):
     """plugin_call but with task id and markup"""
     tid = TaskId.parse(task_id_ext)
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
 
     curr_user = get_current_user_object()
-
-    ptype = PluginType(plugintype)
 
     try:
         vr = verify_task_access(
@@ -91,7 +89,7 @@ def plugin_tid_call(plugintype: str, task_id_ext: str, requestpath: str):
 
     plugin_response = call_plugin_generic(plugintype,
                     request.method,
-                    requestpath,
+                    "fetchExternal",
                     json.dumps(call_data, cls=TimJsonEncoder),
                     headers={'Content-type': 'application/json'},
                     read_timeout=30)
