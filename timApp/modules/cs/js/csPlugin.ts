@@ -1157,7 +1157,6 @@ export class CsController extends CsBase implements ITimComponent {
         let message;
         let ok = true;
         if (CspluginAnswer.is(content)) {
-            // TODO: is setAnswer even used? I couldn't get it to trigger
             // TODO: add support for multiple files
             // TODO: Add support for userArgs/userInput
             this.usercode = content.usercode;
@@ -2059,7 +2058,6 @@ ${fhtml}
         this.usercode = s;
         this.checkIndent();
         this.muokattu = false;
-        // $rootScope.$applyAsync(); // TODO: is this needed?
     }
 
     addText(s: string) {
@@ -2668,7 +2666,6 @@ ${fhtml}
         if (this.type.includes("truthtable")) {
             const truthTable = (await import("./truthTable")).truthTable;
             this.result = truthTable(this.userargs);
-            // this.scope.$applyAsync(); // TODO: is this needed?
             return;
         }
         if (!this.iframesettings || this.fullhtml) { // create an iframe on first time
