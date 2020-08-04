@@ -1507,13 +1507,8 @@ a: b
         """ Save and show answers according to global field and useCurrentUser logic"""
 
         def get_plugin_answer(e: HtmlElement):
-            b64str = e.attrib['json']
-            json_str = base64.b64decode(b64str)
-            return json.loads(json_str)['state']
+            return self.get_plugin_json(e)['state']
 
-        ug = UserGroup.create('testusers')
-        ug.users.append(self.test_user_1)
-        ug.users.append(self.test_user_2)
         self.login_test2()
         d = self.create_doc(initial_par="""
 #- {#a plugin=textfield}
