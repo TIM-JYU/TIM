@@ -447,14 +447,11 @@ def tableform_get_fields(
         group_filter_type = MembershipFilter.Current,
         user_filter: List[str] = None,
 ):
-    group_filter = UserGroup.name.in_(groupnames)
-
     # Special group: all answered collects usergroups of all answered users
-    if '$all_answered' in groupnames:
-        answered_usergroups = get_answered_user_group_names(doc, curr_user)
-        group_filter = group_filter | UserGroup.name.in_(answered_usergroups)
+    all_answered = UserGroup.query.filter(get_answered_user_group_names(doc, curr_user)) if '$all_answered' in \
+                                                                                            groupnames else None
 
-    queried_groups = UserGroup.query.filter(group_filter)
+    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames))
     fielddata, aliases, field_names, groups = \
         get_fields_and_users(
             flds,
@@ -465,7 +462,8 @@ def tableform_get_fields(
             add_missing_fields=True,
             allow_non_teacher=allow_non_teacher,
             member_filter_type=group_filter_type,
-            user_filter=User.name.in_(user_filter) if user_filter else None
+            user_filter=User.name.in_(user_filter) if user_filter else None,
+            user_groups=all_answered,
         )
     rows = {}
     realnames: Dict[str, str] = {}

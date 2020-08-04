@@ -116,6 +116,7 @@ def get_fields_and_users(
         allow_non_teacher: bool = False,
         member_filter_type: MembershipFilter = MembershipFilter.Current,
         user_filter=None,
+        user_groups: Optional[List[UserGroup]] = None,
 ) -> Tuple[List[UserFieldObj], Dict[str, str], List[str], List[UserGroup]]:
     """
     Return fielddata, aliases, field_names
@@ -128,11 +129,13 @@ def get_fields_and_users(
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
     :param add_missing_fields: return estimated field even if it wasn't given previously
     :param allow_non_teacher: can be used also for non techers if othre rights matches
+    :param user_groups: user groups to always include in the result. NOTE: this bypasses view access checks!
     :return: fielddata, aliases, field_names
     """
-    needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups \
-        and not current_user.has_teacher_access(d)
+    needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
+    if user_groups:
+        ugroups += user_groups
     for group in requested_groups:
         if needs_group_access_check and group.name != current_user.name:
             if not verify_group_view_access(group, current_user, require=False):
