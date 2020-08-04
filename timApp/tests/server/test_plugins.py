@@ -1,3 +1,4 @@
+import base64
 import io
 import json
 import re
@@ -1500,3 +1501,59 @@ a: b
         p = Plugin.from_paragraph(target.document.get_paragraphs()[1])
 
         self.get(f'/taskinfo/{p.task_id.doc_task}', expect_status=200)
+
+
+    def test_plugin_user_modifiers(self):
+        """ Save and show answers according to global field and useCurrentUser logic"""
+
+        def get_plugin_answer(e: HtmlElement):
+            return self.get_plugin_json(e)['state']
+
+        self.login_test2()
+        d = self.create_doc(initial_par="""
+#- {#a plugin=textfield}
+useCurrentUser: true
+
+#- {#b plugin=textfield}
+useCurrentUser: true
+
+#- {#GLO_c plugin=textfield}
+
+#- {#GLO_d plugin=textfield}
+
+#- {#e plugin=textfield}
+        """)
+        self.post_answer('textfield', f'{d.id}.a', user_input={'c': 'testuser2@a'})
+        self.post_answer('textfield', f'{d.id}.b', user_input={'c': 'testuser2@b'}, save_teacher=True, teacher=True, user_id=self.test_user_1.id)
+        self.post_answer('textfield', f'{d.id}.GLO_c', user_input={'c': 'testuser2@GLO_c'})
+        self.post_answer('textfield', f'{d.id}.GLO_d', user_input={'c': 'testuser2@GLO_d'}, save_teacher=True, teacher=True, user_id=self.test_user_1.id)
+        self.post_answer('textfield', f'{d.id}.e', user_input={'c': 'testuser2@e'})
+        self.test_user_1.grant_access(d, AccessType.teacher)
+        db.session.commit()
+
+        # useCurrentUser and GLO_ plugins should save for current user
+        self.assertEqual(1, len(self.get_task_answers(f'{d.id}.b')))
+        self.assertEqual(1, len(self.get_task_answers(f'{d.id}.GLO_d')))
+
+        self.login_test1()
+
+        url = d.get_url_for_view('view')
+        plugs = self.get(url, as_tree=True).cssselect('textfield-runner')
+        self.assertEqual(None, get_plugin_answer(plugs[0]))
+        self.assertEqual(None, get_plugin_answer(plugs[1]))
+        self.assertEqual({'c': 'testuser2@GLO_c'}, get_plugin_answer(plugs[2]))
+        self.assertEqual({'c': 'testuser2@GLO_d'}, get_plugin_answer(plugs[3]))
+        self.assertEqual(None, get_plugin_answer(plugs[4]))
+
+        url = d.get_url_for_view('teacher')
+        plugs = self.get(url, as_tree=True).cssselect('textfield-runner')
+        # Ensure testuser2's answer is shown in all other fields than first two
+        self.assertEqual(None, get_plugin_answer(plugs[0]))
+        self.assertEqual(None, get_plugin_answer(plugs[1]))
+        self.assertEqual({'c': 'testuser2@GLO_c'}, get_plugin_answer(plugs[2]))
+        self.assertEqual({'c': 'testuser2@GLO_d'}, get_plugin_answer(plugs[3]))
+        self.assertEqual({'c': 'testuser2@e'}, get_plugin_answer(plugs[4]))
+
+        self.assertEqual(0, len(self.get_task_answers(f'{d.id}.b')))
+        self.assertEqual(0, len(self.get_task_answers(f'{d.id}.GLO_d')))
+
