@@ -2615,7 +2615,7 @@ ${fhtml}
             });
         if (r.ok) {
             const data = r.result;
-            let elements = $.parseHTML(data.texts);
+            const elements = $.parseHTML(data.texts);
             let element: JQuery<HTMLElement>;
             if (elements.length == 0) {
                 alert("Failed to parse preview HTML");
