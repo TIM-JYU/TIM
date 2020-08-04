@@ -398,7 +398,7 @@ def get_tally_field_values(
             user_ids=User.query.join(UserGroup, join_relation)
                 .filter(group_filter)
                 .with_entities(User.id)
-                .subquery() if group_filter else None,
+                .subquery() if group_filter is not None else None,
             flatten=True,
             answer_filter=ans_filter,
         )
