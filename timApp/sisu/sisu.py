@@ -518,7 +518,7 @@ def send_grades_to_sisu(
         # If completionCredits has a validation error, msgs will be like:
         # {0: {'completionCredits': [['Invalid value.']]}}
         # so we have to flatten the error list.
-        def flatten_error_list(err_list):
+        def flatten_error_list(err_list: Any) -> Any:
             if isinstance(err_list, list) and len(err_list) > 0 and isinstance(err_list[0], list):
                 return err_list[0]
             return err_list
