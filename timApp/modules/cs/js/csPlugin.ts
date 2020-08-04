@@ -1048,7 +1048,7 @@ export class CsController extends CsBase implements ITimComponent {
         } else {
             this.usercode = "";
             ok = false;
-            message = `Couldn't find related content ("usercode") from ${content.toString()}`;
+            message = `Couldn't find related content ("usercode") from ${JSON.stringify(content)}`;
             this.error = message;
         }
         return {ok: ok, message: message};
@@ -1093,6 +1093,7 @@ export class CsController extends CsBase implements ITimComponent {
 
     resetField(): undefined {
         this.initCode();
+        this.error = undefined;
         return undefined;
     }
 
