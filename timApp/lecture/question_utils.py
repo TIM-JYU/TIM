@@ -33,7 +33,7 @@ def qst_rand_array(max_count: int,
     total = randoms + len(locks)
     if total > max_count:
         total = max_count
-    ret = []
+    ret: List[int] = []
     seed_array = []
     orig = list(range(1, max_count + 1))
     for i, val in enumerate(locks):
@@ -91,15 +91,13 @@ def qst_pick_expls(orig_expls: Dict[str, T], order_array: List[int]) -> Dict[str
     ret = {}
     for i, val in enumerate(order_array):
         pos = str(val)
-        picked = orig_expls.get(pos, None)
+        picked = orig_expls.get(pos)
         if picked is not None:
             ret[str(i + 1)] = picked
     return ret
 
 
-
-
-def create_points_table(points):
+def create_points_table(points: str) -> List[Dict[str, float]]:
     points_table = []
     if points and points != '':
         points = str(points)
@@ -111,7 +109,7 @@ def create_points_table(points):
                 if col != '':
                     col_points = col.split(':', 2)
                     if len(col_points) == 1:
-                        row_points_dict[col_points[0]] = 1
+                        row_points_dict[col_points[0]] = 1.0
                     else:
                         row_points_dict[col_points[0]] = float(col_points[1])
             points_table.append(row_points_dict)
@@ -119,8 +117,8 @@ def create_points_table(points):
 
 
 def calculate_points_from_json_answer(single_answers: List[List[str]],
-                                      points_table,
-                                      default_points: Union[float, None, Missing] = 0):
+                                      points_table: List[Dict[str, float]],
+                                      default_points: Union[float, None, Missing] = 0) -> float:
     points = 0.0
     if default_points is None or default_points is missing:
         default_points = 0
@@ -133,7 +131,6 @@ def calculate_points_from_json_answer(single_answers: List[List[str]],
     return points
 
 
-
 def qst_filter_markup_points(points: str, question_type: str, rand_arr: List[int]) -> str:
     """
     filter markup's points field based on pre-generated array
@@ -141,18 +138,18 @@ def qst_filter_markup_points(points: str, question_type: str, rand_arr: List[int
     # TODO: Use constants
     if question_type == 'true-false' or question_type == 'matrix':
         # point format 1:1;2:-0.5|1:-0.5;2:1 where | splits rows input, ; column input
-        ret = points.split('|')
-        ret = qst_set_array_order(ret, rand_arr)
-        ret = '|'.join(ret)
+        arr = points.split('|')
+        arr = qst_set_array_order(arr, rand_arr)
+        ret = '|'.join(arr)
     else:
         # point format 1:1;2:-0.5;3:-0.5 where ; splits row input
-        ret = create_points_table(points)[0]
-        ret = qst_pick_expls(ret, rand_arr)
-        ret = ';'.join(str(key) + ':' + str(val) for [key, val] in ret.items())
+        tab = create_points_table(points)[0]
+        tab = qst_pick_expls(tab, rand_arr)
+        ret = ';'.join(str(key) + ':' + str(val) for [key, val] in tab.items())
     return ret
 
 
-def qst_handle_randomization(jso):
+def qst_handle_randomization(jso: Dict) -> None:
     """
     Check if markup calls for randomization, or previous state contains randomization data
     Update answer options, explanations and points accordingly
