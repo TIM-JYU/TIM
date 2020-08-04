@@ -2617,8 +2617,18 @@ ${fhtml}
             });
         if (r.ok) {
             const data = r.result;
-            // await ParCompiler.compileAndAppendTo(this.preview, r.result, this.scope);
-            this.mdHtml = data.texts; // TODO: is html binding enough or is angular compiling needed?
+            let elements = $.parseHTML(data.texts);
+            let element: JQuery<HTMLElement>;
+            if (elements.length == 0) {
+                alert("Failed to parse preview HTML");
+                return;
+            } else if (elements.length == 1) {
+                element = $(elements[0]) as JQuery<HTMLElement>;
+            } else {
+                element = $("<div></div>").append(...elements);
+            }
+            await ParCompiler.processAllMath(element);
+            this.mdHtml = element.html();
         } else {
             const data = r.result;
             alert("Failed to show preview: " + data.error);
