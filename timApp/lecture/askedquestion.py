@@ -1,14 +1,14 @@
 import json
 from contextlib import contextmanager
 from datetime import timedelta, datetime
-from typing import Optional, List
+from typing import Optional
 
 from sqlalchemy import func
 from sqlalchemy.exc import InvalidRequestError
 
 from timApp.lecture.askedjson import AskedJson
 from timApp.lecture.lecture import Lecture
-from timApp.lecture.lectureanswer import LectureAnswer
+from timApp.lecture.question_utils import qst_rand_array, qst_filter_markup_points
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
 from timApp.timdb.sqa import db
 from timApp.timtypes import UserType
@@ -80,6 +80,26 @@ class AskedQuestion(db.Model):
     def get_default_points(self):
         aj = self.asked_json.to_json()
         return aj['json'].get('defaultPoints', 0)
+
+    def build_answer_and_points(self, answer, u: UserType):
+        """
+        Checks whether question was randomized
+        If so, set question point input accordingly and expand answer to contain randomization data
+        """
+        q_data = json.loads(self.asked_json.json)
+        random_rows = q_data.get('randomizedRows', 0)
+        if random_rows:
+            row_count = len(q_data.get('rows', []))
+            q_type = q_data.get('questionType')
+            rand_arr = qst_rand_array(row_count, random_rows, str(u.id), locks=q_data.get('doNotMove'))
+            question_points = self.get_effective_points()
+            if question_points:
+                question_points = qst_filter_markup_points(question_points, q_type, rand_arr)
+            # If lecture question's rows are randomized, it will be saved as a dict
+            # containing additional information about how the answerer saw the question.
+            # e.g {"c": [["2"]], "order": [4, 3, 5], "rows": 5, "question_type": "radio-vertical"}
+            return {'c': answer, 'order': rand_arr, 'rows': row_count, 'question_type': q_type}, question_points
+        return answer, self.get_effective_points()
 
     @property
     def is_running(self):

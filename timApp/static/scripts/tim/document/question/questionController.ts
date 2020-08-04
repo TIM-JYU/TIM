@@ -716,6 +716,13 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     }
 
     /**
+     * Formats a string of form {id}:{point value} based on column point value or defaultPoints attribute
+     */
+    private createPointVal(id: number, colVal: string): string {
+        return id.toString() + ":" + (parseFloat(colVal) ?? this.question.defaultPoints ?? 0);
+    }
+
+    /**
      * Creates a string of points. Rows are separated by | and answers in the same row separated by ;
      * @returns {string}
      */
@@ -733,8 +740,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                         if (currentColumn.points !== "") {
                             points += separator2;
                             const id = currentColumn.id + 1;
-                            points += id.toString() + ":" + parseFloat(currentColumn.points)
-                                ?? this.question.defaultPoints ?? 0;
+                            points += this.createPointVal(id, currentColumn.points);
                             separator2 = ";";
                             n++;
                         }
@@ -749,8 +755,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                 if (currentColumn.points !== "") {
                     points += separator2;
                     const id = r.id;
-                    points += id.toString() + ":" + parseFloat(currentColumn.points)
-                        ?? this.question.defaultPoints ?? 0;
+                    points += this.createPointVal(id, currentColumn.points);
                     separator2 = ";";
                     n++;
                 }
@@ -918,14 +923,13 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         });
     }
 
-    private checkLockedRows(): number[] {
-        const ret = [];
-        for (const row of this.rows) {
+    private getLockedRowIds(): number[] {
+        return this.rows.reduce((arr: number[], row) => {
             if (row.locked) {
-                ret.push(row.id);
+                arr.push(row.id);
             }
-        }
-        return ret;
+            return arr;
+        }, []);
     }
 
     /**
@@ -946,13 +950,12 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             return;
         }
 
-            // TODO: Check why UI defaultpoints field can't be bound directly to question.defaultpoints
-            this.question.defaultPoints = this.defaultPoints;
+        this.question.defaultPoints = this.defaultPoints;
         if (!this.randomization) {
             this.question.randomizedRows = undefined;
         } else {
             this.question.randomizedRows = this.randomizedRows ?? this.rows.length; // TODO: better alternative for "all"
-            this.question.doNotMove = this.checkLockedRows();
+            this.question.doNotMove = this.getLockedRowIds();
         }
 
         let route = "/postParagraphQ/";

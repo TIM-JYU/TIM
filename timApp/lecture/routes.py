@@ -27,13 +27,13 @@ from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer, get_totals
 from timApp.lecture.message import Message
 from timApp.lecture.question import Question
+from timApp.lecture.question_utils import calculate_points_from_json_answer, create_points_table, \
+    qst_handle_randomization
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
 from timApp.lecture.runningquestion import Runningquestion
 from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
-from timApp.plugin.qst.qst import get_question_data_from_document, create_points_table, \
-    calculate_points_from_json_answer, qst_handle_randomization, qst_rand_array, \
-    qst_filter_markup_points
+from timApp.plugin.qst.qst import get_question_data_from_document
 from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model, RouteException
@@ -305,6 +305,15 @@ def get_question_manually():
     return json_response(new_question)
 
 
+def try_shuffle_question(question: AskedQuestion, user_id: int):
+    q_copy = question.to_json()
+    q_json = {'markup': json.loads(question.asked_json.json),
+              'user_id': user_id}
+    qst_handle_randomization(q_json)
+    q_copy['json']['json'] = q_json['markup']
+    return q_copy
+
+
 def get_new_question(lecture: Lecture, current_question_id=None, current_points_id=None, force=False):
     """
     :param current_points_id: TODO: what is this?
@@ -336,16 +345,10 @@ def get_new_question(lecture: Lecture, current_question_id=None, current_points_
                 if answer:
                     return {'type': 'answer', 'data': answer}
                 else:
-                    q_copy = q.to_json()
-                    if q and lecture.lecturer != current_user:
-                        try:
-                            q_json = {'markup': json.loads(q.asked_json.json),
-                                      'user_id': current_user}
-                            qst_handle_randomization(q_json)
-                            q_copy['json']['json'] = q_json['markup']
-                        except KeyError:
-                            pass
-                    return {'type': 'question', 'data': q_copy}
+                    return {
+                        'type': 'question',
+                        'data': q if lecture.lecturer == current_user else try_shuffle_question(q, current_user)
+                    }
         else:
             question_to_show_points = get_shown_points(lecture)
             if question_to_show_points:
@@ -985,18 +988,10 @@ def answer_to_question():
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer.answer):
         whole_answer = answer
         time_now = get_current_time()
-        question_points = asked_question.get_effective_points()
-        q_data = json.loads(asked_question.asked_json.json)
-        random_rows = q_data.get('randomizedRows', 0)
-        if random_rows and not is_lecturer_of(lecture):
-            row_count = len(q_data.get('rows', []))
-            q_type = q_data.get('questionType')
-            rand_arr = qst_rand_array(row_count, random_rows, str(u.id), locks=q_data.get('doNotMove'))
-            question_points = qst_filter_markup_points(question_points, q_type, rand_arr)
-            # If lecture question's rows are randomized, it will be saved as a dict
-            # containing additional information about how the answerer saw the question.
-            # e.g {"c": [["2"]], "order": [4, 3, 5], "rows": 5, "question_type": "radio-vertical"}
-            whole_answer = {'c': whole_answer, 'order': rand_arr, 'rows': row_count, 'question_type': q_type}
+        if not is_lecturer_of(lecture):
+            whole_answer, question_points = asked_question.build_answer_and_points(whole_answer, u)
+        else:
+            question_points = asked_question.get_effective_points()
         points_table = create_points_table(question_points)
         default_points = asked_question.get_default_points()
         points = calculate_points_from_json_answer(answer, points_table, default_points)

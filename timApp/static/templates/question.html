@@ -34,8 +34,6 @@
                 </select>
             </div>
             <label for="defaultPoints{{$id}}">Default points for answers</label>
-            <!--            for some reason we can't directly bind to qctrl.question.defaultpoints, possibly because defaultPoints
-                            can be undefined. Instead we bind to separate variable in qctrl and check that variable when saving -->
             <input ng-model="qctrl.defaultPoints"
                    id="defaultPoints{{$id}}"
                    class="form-control"
