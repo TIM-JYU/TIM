@@ -97,6 +97,7 @@ disableUnchanged: true
         textarea.send_keys("more input, let me save")
         self.assertTrue(runbutton.is_enabled())
         self.should_not_exist('.savedText')
+        margin = self.find_element('.csRunNotSaved')
         self.assertTrue(margin.is_displayed())
 
     def test_csplugin_require_type(self):
