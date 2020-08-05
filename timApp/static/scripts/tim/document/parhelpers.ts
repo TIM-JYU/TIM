@@ -248,7 +248,7 @@ export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
  */
 export function saveCurrentScreenPar() {
     // noinspection CssInvalidPseudoSelector
-    const parId = getParId($(".par:not('.preamble')").filter((i, e) => isInViewport(e)).first());
+    const parId = getParId($(".par:not('.preamble'):not('.collapsed .par')").filter((i, e) => isInViewport(e)).first());
     if (parId) {
         // Don't replace if the hash is going to stay the same.
         let hash = getParHash(parId);
