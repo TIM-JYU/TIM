@@ -434,7 +434,7 @@ def tableform_get_fields(
         group_filter_type = MembershipFilter.Current,
         user_filter: List[str] = None,
 ):
-    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames))
+    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames)) if '*' not in groupnames else None
     fielddata, aliases, field_names, groups = \
         get_fields_and_users(
             flds,
@@ -445,13 +445,13 @@ def tableform_get_fields(
             add_missing_fields=True,
             allow_non_teacher=allow_non_teacher,
             member_filter_type=group_filter_type,
-            user_filter=User.name.in_(user_filter) if user_filter else None
+            user_filter=User.name.in_(user_filter) if user_filter else None,
         )
     rows = {}
     realnames: Dict[str, str] = {}
     emails = {}
     styles = {}
-    group_ids = set(g.id for g in groups)
+    group_ids = set(g.id for g in groups) if groups else None
     membershipmap = {}
     for f in fielddata:
         u: User = f['user']
@@ -465,7 +465,7 @@ def tableform_get_fields(
         if email is not None:
             emails[username] = email
         styles[username] = dict(f['styles'])
-        if group_filter_type != MembershipFilter.Current:
+        if group_ids and group_filter_type != MembershipFilter.Current:
             membership_end = get_membership_end(u, group_ids)
             if membership_end:
                 membership_end = membership_end.astimezone(fin_timezone).strftime('%Y-%m-%d %H:%M')

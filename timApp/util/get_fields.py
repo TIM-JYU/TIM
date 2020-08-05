@@ -97,7 +97,6 @@ member_filter_relation_map = {
     MembershipFilter.Deleted: User.groups_inactive,
 }
 
-
 UserFields = Dict[str, Union[str, float, None]]
 
 
@@ -109,7 +108,7 @@ class UserFieldObj(TypedDict):
 
 def get_fields_and_users(
         u_fields: List[str],
-        requested_groups: List[UserGroup],
+        requested_groups: Optional[List[UserGroup]],
         d: DocInfo,
         current_user: User,
         autoalias: bool = False,
@@ -117,33 +116,38 @@ def get_fields_and_users(
         allow_non_teacher: bool = False,
         member_filter_type: MembershipFilter = MembershipFilter.Current,
         user_filter=None,
-) -> Tuple[List[UserFieldObj], Dict[str, str], List[str], List[UserGroup]]:
+) -> Tuple[List[UserFieldObj], Dict[str, str], List[str], Optional[List[UserGroup]]]:
     """
     Return fielddata, aliases, field_names
     :param user_filter: Additional filter to use.
     :param member_filter_type: Whether to use all, current or deleted users in groups.
     :param u_fields: list of fields to be used
-    :param requested_groups: requested user groups to be used
+    :param requested_groups: requested user groups to be used; if None, requests for all users who posted a valid answer in the default document
     :param d: default document
     :param current_user: current users, check his rights to fields
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
     :param add_missing_fields: return estimated field even if it wasn't given previously
     :param allow_non_teacher: can be used also for non techers if othre rights matches
+    :param user_groups: user groups to always include in the result. NOTE: this bypasses view access checks!
     :return: fielddata, aliases, field_names
     """
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
-    for group in requested_groups:
-        if needs_group_access_check and group.name != current_user.name:
-            if not verify_group_view_access(group, current_user, require=False):
-                # return abort(403, f'Missing view access for group {group.name}')
-                continue  # TODO: study how to give just warning from missing access, extra return string?
-        ugroups.append(group)
+    # Explicitly check for None because [] is valid input (i.e. "no groups")
+    if requested_groups is not None:
+        for group in requested_groups:
+            if needs_group_access_check and group.name != current_user.name:
+                if not verify_group_view_access(group, current_user, require=False):
+                    # return abort(403, f'Missing view access for group {group.name}')
+                    continue  # TODO: study how to give just warning from missing access, extra return string?
+            ugroups.append(group)
 
-    if not ugroups:  # if no access, give at least own group
-        ugroups.append(current_user.get_personal_group())
-
-    groups = ugroups
+        if not ugroups:  # if no access, give at least own group
+            ugroups.append(current_user.get_personal_group())
+        groups = ugroups
+    else:
+        groups = None
+        allow_non_teacher = False
 
     task_ids = []
     task_id_map = defaultdict(list)
@@ -233,38 +237,49 @@ def get_fields_and_users(
             except KeyError:
                 pass
 
-    group_id_set = set(ug.id for ug in groups)
-    group_filter = UserGroup.id.in_([ug.id for ug in groups])
-    if user_filter is not None:
+    group_id_set = set(ug.id for ug in groups) if groups else None
+    group_filter = UserGroup.id.in_([ug.id for ug in groups]) if groups else None
+    if user_filter is not None and group_filter is not None:
         group_filter = group_filter & user_filter
     join_relation = member_filter_relation_map[member_filter_type]
-    tally_field_values = get_tally_field_values(d, doc_map, group_filter, join_relation, tally_fields)
+    tally_field_values = get_tally_field_values(d,
+                                                doc_map,
+                                                group_filter,
+                                                join_relation,
+                                                tally_fields)
     sub = []
     # For some reason, with 7 or more fields, executing the following query is very slow in PostgreSQL 9.5.
     # That's why we split the list of task ids in chunks of size 6 and merge the results.
     # TODO: Investigate if this is still true for PostgreSQL 11.
     not_global_taskids = [t for t in task_ids if not t.is_global]
     for task_chunk in chunks(not_global_taskids, 6):
+        q = valid_answers_query(task_chunk).join(User, Answer.users)
+        if group_filter is not None:
+            q = q.join(UserGroup, join_relation).filter(group_filter)
         sub += (
-            valid_answers_query(task_chunk)
-                .join(User, Answer.users)
-                .join(UserGroup, join_relation)
-                .filter(group_filter)
+                q
                 .group_by(Answer.task_id, User.id)
                 .with_entities(func.max(Answer.id), User.id)
                 .all()
         )
     aid_uid_map = defaultdict(list)
+    user_ids = set()
     for aid, uid in sub:
         aid_uid_map[aid].append(uid)
-    q = (
-        User.query
-            .join(UserGroup, join_relation)
-            .filter(group_filter)
-            .with_entities(User)
-            .order_by(User.id)
-            .options(lazyload(User.groups))
-    )
+        user_ids.add(uid)
+
+    q = User.query
+    if group_filter is not None:
+        q = q.join(UserGroup, join_relation).filter(group_filter)
+    else:
+        # if no group filter is given, attempt to get users that have valid answers only using the user
+        # ids from previous query
+        id_filter = User.id.in_(user_ids)
+        # Ensure that user filter gets applied even if group filter was None
+        if user_filter is not None:
+            id_filter = id_filter & user_filter
+        q = q.filter(id_filter)
+    q = q.with_entities(User).order_by(User.id).options(lazyload(User.groups))
     if member_filter_type != MembershipFilter.Current:
         q = q.options(joinedload(User.memberships))
     users: List[User] = q.all()
@@ -272,7 +287,8 @@ def get_fields_and_users(
     for u in users:
         user_map[u.id] = u
     global_taskids = [t for t in task_ids if t.is_global]
-    global_answer_ids = valid_answers_query(global_taskids).group_by(Answer.task_id).with_entities(func.max(Answer.id)).all()
+    global_answer_ids = valid_answers_query(global_taskids).group_by(Answer.task_id).with_entities(
+        func.max(Answer.id)).all()
     answs = Answer.query.filter(Answer.id.in_(itertools.chain((aid for aid, _ in sub), global_answer_ids))).all()
     answers_with_users: List[Tuple[int, Optional[Answer]]] = []
     for a in answs:
@@ -385,8 +401,10 @@ def get_tally_field_values(
         pts = get_points_by_rule(
             points_rule=psr,
             task_ids=tids,
-            user_ids=User.query.join(UserGroup, join_relation).filter(
-                group_filter).with_entities(User.id).subquery(),
+            user_ids=User.query.join(UserGroup, join_relation)
+                .filter(group_filter)
+                .with_entities(User.id)
+                .subquery() if group_filter is not None else None,
             flatten=True,
             answer_filter=ans_filter,
         )
