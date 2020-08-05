@@ -155,7 +155,7 @@ export class JSParsonsEditorComponent implements IEditor {
         </div>`,
 })
 export class EditorComponent implements IMultiEditor {
-    static readonly defaultMode = Mode.ACE;
+    static readonly defaultMode = Mode.Normal;
     Mode = Mode;
 
     private normalEditor?: NormalEditorComponent;
