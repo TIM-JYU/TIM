@@ -43,6 +43,10 @@ json:
   timeLimit: 90
 points: '2:1'
 ```
+#-
+
+Normal paragraph.
+
 
 ``` {question="true" plugin="qst" #test_shuffle_radio-vertical}
 json:
@@ -130,6 +134,3 @@ json:
     - '3 points'
     timeLimit: 30
 ```
-#-
-
-Normal paragraph.

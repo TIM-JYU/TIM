@@ -400,7 +400,7 @@ testuser2;count;1
             return resp, aid
 
         # test_shuffle_radio-vertical
-        resp, aid = ask_and_get_answers(3, [['1', '2', '3', '4']], [['1', '2', '3', '4']])
+        resp, aid = ask_and_get_answers(4, [['1', '2', '3', '4']], [['1', '2', '3', '4']])
         # lecturer input should not be shuffled, student input should be shuffled
         self.assertEqual([['1', '2', '3', '4']], resp[0]['answer'])
         self.assertEqual(10, resp[0]['points'])
@@ -414,7 +414,7 @@ testuser2;count;1
         self.assertEqual(92, resp[1]['points'])
 
         # test_shuffle_true-false
-        resp, _ = ask_and_get_answers(4, [['1'], ['2'], ['1']], [['1'], ['2']])
+        resp, _ = ask_and_get_answers(5, [['1'], ['2'], ['1']], [['1'], ['2']])
         self.assertEqual(3, resp[0]['points'])
         self.assertEqual([['1'], ['2'], ['1']], resp[0]['answer'])
         self.assertEqual(3, resp[0]['points'])
@@ -422,14 +422,14 @@ testuser2;count;1
         self.assertEqual(-2, resp[1]['points'])
 
         # test_shuffle_matrix
-        resp, _ = ask_and_get_answers(5, [['1'], ['2'], ['3']], [['1'], ['3']])
+        resp, _ = ask_and_get_answers(6, [['1'], ['2'], ['3']], [['1'], ['3']])
         self.assertEqual(6, resp[0]['points'])
         self.assertEqual([['1'], ['2'], ['3']], resp[0]['answer'])
         self.assertEqual(2, resp[1]['points'])
         self.assertEqual([[], ['1'], ['3']], resp[1]['answer'])
 
         # test_checkbox-vertical
-        resp, _ = ask_and_get_answers(6, [['1', '3']], [['1', '2']])
+        resp, _ = ask_and_get_answers(7, [['1', '3']], [['1', '2']])
         self.assertEqual(4, resp[0]['points'])
         self.assertEqual([['1', '3']], resp[0]['answer'])
         self.assertEqual(5, resp[1]['points'])
