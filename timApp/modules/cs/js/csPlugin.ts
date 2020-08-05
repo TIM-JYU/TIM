@@ -699,6 +699,7 @@ const CsAll = t.intersection([
         error: t.string,
         own_error: t.string,
         gitRegistered: t.boolean,
+        isTauno: t.boolean,
     }),
     t.type({
         // anonymous: t.boolean,
@@ -1251,7 +1252,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get isTauno() {
-        return this.markup.type.includes("tauno");
+        return !!this.attrsall.isTauno;
     }
 
     get program() {

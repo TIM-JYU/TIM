@@ -1586,6 +1586,9 @@ class Pascal(Language):
 class Tauno(Language, Modifier):
     ttype = "tauno"
 
+    def modify_query(self):
+        self.query.set_param(True, "isTauno")
+
 
 # Copy this for new language class
 class Lang(Language):
