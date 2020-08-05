@@ -122,7 +122,7 @@ def get_fields_and_users(
     :param user_filter: Additional filter to use.
     :param member_filter_type: Whether to use all, current or deleted users in groups.
     :param u_fields: list of fields to be used
-    :param requested_groups: requested user groups to be used
+    :param requested_groups: requested user groups to be used; if None, requests for all users who posted a valid answer in the default document
     :param d: default document
     :param current_user: current users, check his rights to fields
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
@@ -133,7 +133,8 @@ def get_fields_and_users(
     """
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
-    if requested_groups:
+    # Explicitly check for None because [] is valid input (i.e. "no groups")
+    if requested_groups is not None:
         for group in requested_groups:
             if needs_group_access_check and group.name != current_user.name:
                 if not verify_group_view_access(group, current_user, require=False):
