@@ -232,6 +232,27 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
 // TODO: Veriy that general horizontal scrolling works
 // TODO: Verify that vscrolling works
 
+/*
+    Implementation design:
+    ## Change detection
+    - Expose public function for view update => updateVisible, updateValue, refresh, updateSort, updateStyle
+        - updateVisible only checks for visible
+        - updateValue will update value for a cell
+        - updateSort updates sort info
+        - updateStyle updates style info for a cell
+        - refresh does total update on visible data
+    ## Passing data
+    - Keep important methods public and do @ViewChild on the element
+    ## Checkboxes
+    - On click invoke cbClicked() on model provider
+    - Add isCellChecked() in model provider
+    ## Filters
+    - On text change invoke filterChanged() on model provider
+    - Add getFilterString() to model provider to read
+    ## Value editing
+    - Handle cell click event + add ability to call updateValue/updateStyle
+ */
+
 @Component({
     selector: "app-data-view",
     template: `
@@ -272,6 +293,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
     styleUrls: ["./data-view.component.scss"],
 })
 export class DataViewComponent implements AfterViewInit, OnInit {
+    // region Fields
     @Input() modelProvider!: TableModelProvider; // TODO: Make optional and error out if missing
     @Input() virtualScrolling: Partial<VirtualScrollingOptions> = DEFAULT_VSCROLL_SETTINGS;
     @Input() tableClass: { [klass: string]: unknown } = {};
@@ -305,6 +327,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private colAxis!: GridAxis;
     private vScroll: VirtualScrollingOptions = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
     private colHeaderWidths: number[] = [];
+
+    // endregion
 
     constructor(private r2: Renderer2, private zone: NgZone, private componentRef: ElementRef<HTMLElement>) {
     }
