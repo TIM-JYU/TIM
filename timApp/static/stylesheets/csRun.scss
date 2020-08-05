@@ -440,6 +440,11 @@ cs-editor {
     text-align: left;
 }
 
+.link-disable {
+    pointer-events: none !important;
+    color: grey !important;
+}
+
 cs-git-reg-runner table {
     border: none;
     margin-bottom: 0;

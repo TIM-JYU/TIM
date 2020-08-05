@@ -2901,7 +2901,7 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
     <div class="csRunMenuArea" *ngIf="!forcedupload">
         <p class="csRunMenu">
             <button *ngIf="isRun && buttonText()"
-                    [attr.disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved() && isText)"
+                    [disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved() && isText)"
                     class="timButton btn-sm"
                     title="(Ctrl-S)"
                     (click)="runCode()"
@@ -2920,19 +2920,19 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
                     [innerHTML]="savedText"></span>
             &nbsp;&nbsp;
             <button *ngIf="isTest"
-                    [attr.disabled]="isRunning"
+                    [disabled]="isRunning"
                     (click)="runTest()"
                     class="timButton btn-sm">Test</button>
             &nbsp;&nbsp;
             <button *ngIf="isUnitTest"
                     class="timButton btn-sm"
-                    [attr.disabled]="isRunning"
+                    [disabled]="isRunning"
                     (click)="runUnitTest()">UTest
             </button>
             <tim-loading *ngIf="isRunning"></tim-loading>
             &nbsp;&nbsp;
             <span *ngIf="isDocument">
-                <a href="#" [attr.disabled]="isRunning"
+                <a href="#" [ngClass]="{'link-disable': isRunning}"
                         (click)="runDocument(); $event.preventDefault()">{{docLink}}</a>&nbsp;&nbsp;
             </span>
             <a href="#" *ngIf="!nocode && (file || program)"
