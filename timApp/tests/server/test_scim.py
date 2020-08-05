@@ -1257,7 +1257,7 @@ class StrCreditTest(SendGradeTestBase):
             grade_params,
             {'assessment_errors':
                  [{'assessment': {'completionCredits': '5.0',
-                                  'completionDate': '2020-08-04',
+                                  'completionDate': current_date,
                                   'gradeId': '5',
                                   'privateComment': None,
                                   'sentCredit': '5',
