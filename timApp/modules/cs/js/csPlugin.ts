@@ -1922,12 +1922,8 @@ ${fhtml}
             }
         }
 
-        const dt = this.getTaskId()?.docTask();
-        const url = this.pluginMeta.getAnswerUrl();
         const t0run = performance.now();
-        const r = await to2(this.http.put<IRunResponse>(url, params,
-            {headers: new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`})}
-        ).toPromise());
+        const r = await this.postAnswer<IRunResponse>(params, new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`}));
         if (r.ok) {
             this.isRunning = false;
             this.initSaved();
@@ -2000,12 +1996,6 @@ ${fhtml}
             this.languageResponse(data.web.language);
 
             this.processPluginMath();
-
-            if (dt) {
-                handleAnswerResponse(dt, {
-                    savedNew: r.result.savedNew,
-                });
-            }
         } else {
             this.isRunning = false;
             const data = r.result.error;
@@ -2014,13 +2004,6 @@ ${fhtml}
                 this.errors.push(data.error);
             }
             this.connectionErrorMessage = this.error ?? this.markup.connectionErrorMessage ?? defaultErrorMessage;
-
-            if (dt) {
-                handleAnswerResponse(dt, {
-                    savedNew: false,
-                    error: r.result.error.error,
-                });
-            }
         }
     }
 
