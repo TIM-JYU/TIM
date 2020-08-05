@@ -2954,15 +2954,17 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
             <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
                 <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
                 </button>
+                &nbsp;
                 <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto" style="position: relative;top: 0.3em;"/>
-                <input type="text" title="Choose linelength for text.  0=no wrap" pattern="/[-0-9]*/" [(ngModel)]="wrap.n" size="2"/>
+                &nbsp;
+                <input type="text" title="Choose linelength for text.  0=no wrap" pattern="[0-9]*" [(ngModel)]="wrap.n" size="2"/>
             </span>
             <span *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHTML]="connectionErrorMessage"></span>
 
             <!--
             <span *ngIf="wrap.n!=-1" class="inputSmall" style="float: right;">
               <label title="Put 0 to no wrap">wrap: <input type="text"
-                                                          pattern="/[-0-9]*/"
+                                                          pattern="[0-9]*"
                                                           [(ngModel)]="wrap.n"
                                                           size="1"/></label>
             </span>
