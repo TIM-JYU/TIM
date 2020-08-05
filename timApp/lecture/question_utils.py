@@ -10,7 +10,7 @@ def qst_rand_array(max_count: int,
                    randoms: int,
                    seed_word: str,
                    random_seed: int = 0,
-                   locks: Optional[List[int]] = None) -> List[int]:
+                   locks: Optional[Union[int, List[int]]] = None) -> List[int]:
     """
     get array of count integers between 1 and max_count (incl.) using word and extra number as seed
     :param max_count: highest possible number (incl.) and max return list length
@@ -23,6 +23,8 @@ def qst_rand_array(max_count: int,
     """
     if locks is None:
         locks = []
+    if isinstance(locks, int):
+        locks = [locks]
     for i, val in enumerate(locks):
         if val > max_count:
             locks[i] = max_count

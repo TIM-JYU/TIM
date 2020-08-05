@@ -1,20 +1,20 @@
 """Routes for qst (question) plugin."""
 import json
 import re
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, asdict
 from typing import Dict, Optional, List, Union, Any
 from xml.sax.saxutils import quoteattr
 
 import yaml
-from flask import Blueprint
+from flask import Blueprint, render_template_string
 from flask import Response
 from flask import abort
 from flask import request
-from marshmallow import missing, EXCLUDE
+from marshmallow import missing, EXCLUDE, ValidationError
 
 from markupmodels import GenericMarkupModel
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericAnswerModel
+from pluginserver_flask import GenericAnswerModel, GenericHtmlModel, render_validationerror
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.lecture.askedjson import normalize_question_json
@@ -227,13 +227,30 @@ def is_review(jso):
     return result
 
 
+@dataclass
+class QstHtmlModel(GenericHtmlModel[QstInputModel, QstMarkupModel, QstStateModel]):
+    def get_component_html_name(self) -> str:
+        return 'qst-runner'
+
+    def get_static_html(self) -> str:
+        return render_static_qst(self)
+
+
+QstHtmlSchema = class_schema(QstHtmlModel)
+
 @qst_plugin.route("/qst/multihtml", methods=["POST"])
 @csrf.exempt
 def qst_multihtml():
     jsondata = request.get_json()
+    schema = QstHtmlSchema()
     multi = []
     for jso in jsondata:
-        multi.append(qst_get_html(jso, is_review(jso)))
+        try:
+            p = schema.load(jso)
+        except ValidationError as e:
+            multi.append(render_validationerror(e))
+        else:
+            multi.append(qst_get_html(jso, is_review(jso)))
     return json_response(multi)
 
 
@@ -829,4 +846,14 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
         docId=d.id,
         parId=par_id,
         isPreamble=bool(par.from_preamble()),
+    )
+
+
+def render_static_qst(m: QstHtmlModel):
+    return render_template_string(
+        f"""
+<div class="qst">qst static placeholder</div>
+<br>
+        """,
+        **asdict(m.markup),
     )
