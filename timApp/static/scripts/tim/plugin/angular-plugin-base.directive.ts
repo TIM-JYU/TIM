@@ -1,7 +1,7 @@
 import {Directive, ElementRef, Input, OnInit} from "@angular/core";
 import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "tim/plugin/attributes";
 import {Type} from "io-ts";
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {to2} from "tim/util/utils";
 import {baseOnInit, getDefaults, PluginBaseCommon, PluginMarkupErrors, PluginMeta} from "tim/plugin/util";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -86,11 +86,11 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
         return to2(this.http.post<T>(url, body).toPromise());
     }
 
-    protected httpPut<T>(url: string, body: unknown) {
-        return to2(this.http.put<T>(url, body).toPromise());
+    protected httpPut<T>(url: string, body: unknown, headers: HttpHeaders = new HttpHeaders()) {
+        return to2(this.http.put<T>(url, body, {headers: headers}).toPromise());
     }
 
-    protected async postAnswer<T>(answerdata: { input: unknown }) {
+    protected async postAnswer<T>(answerdata: { input: unknown }, headers: HttpHeaders = new HttpHeaders()) {
         const tid = this.pluginMeta.getTaskId();
         if (!tid) {
             throw Error("Task id missing.");
@@ -101,7 +101,7 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
             ...answerdata,
             ...data,
         };
-        const result = await this.httpPut<T & IAnswerSaveEvent>(url, finaldata);
+        const result = await this.httpPut<T & IAnswerSaveEvent>(url, finaldata, headers);
         if (result.ok) {
             handleAnswerResponse(dt, {
                 savedNew: result.result.savedNew,
