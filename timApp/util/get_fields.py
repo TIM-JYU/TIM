@@ -16,7 +16,7 @@ from werkzeug.exceptions import abort
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_answers_query
-from timApp.auth.accesshelper import get_doc_or_abort, has_seeanswers_access
+from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.document.docinfo import DocInfo
 from timApp.plugin.plugin import find_task_ids, CachedPluginFinder
 from timApp.plugin.pluginexception import PluginException

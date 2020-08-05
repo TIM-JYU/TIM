@@ -15,7 +15,6 @@ from markupmodels import GenericMarkupModel
 from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericHtmlModel, \
     GenericAnswerModel, create_blueprint
-from timApp.answer.answers import get_users_for_tasks
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
@@ -23,7 +22,7 @@ from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
-from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException, find_task_ids
+from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException
 from timApp.plugin.tableform.comparatorFilter import RegexOrComparator
 from timApp.plugin.taskid import TaskId
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
