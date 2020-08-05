@@ -266,14 +266,19 @@ def get_fields_and_users(
     for aid, uid in sub:
         aid_uid_map[aid].append(uid)
         user_ids.add(uid)
-    id_filter = User.id.in_(user_ids)
-    # Ensure that user filter gets applied even if group filter was None
-    if user_filter is not None:
-        id_filter = id_filter & user_filter
-    q = User.query.filter(id_filter)\
-        .with_entities(User)\
-        .order_by(User.id)\
-        .options(lazyload(User.groups))
+
+    q = User.query
+    if group_filter is not None:
+        q = q.join(UserGroup, join_relation).filter(group_filter)
+    else:
+        # if no group filter is given, attempt to get users that have valid answers only using the user
+        # ids from previous query
+        id_filter = User.id.in_(user_ids)
+        # Ensure that user filter gets applied even if group filter was None
+        if user_filter is not None:
+            id_filter = id_filter & user_filter
+        q = q.filter(id_filter)
+    q = q.with_entities(User).order_by(User.id).options(lazyload(User.groups))
     if member_filter_type != MembershipFilter.Current:
         q = q.options(joinedload(User.memberships))
     users: List[User] = q.all()
