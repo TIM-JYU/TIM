@@ -26,8 +26,8 @@ interface ICountOptions {
     selector: "cs-count-board", // TODO: styling
     template: `
         <div *ngIf="options_" class="csPluginCountItems">
-            <span *ngIf="lines">Lines: <span>{{lines}}</span></span>
-            <span *ngIf="words">Words: <span>{{words}}</span></span>
+            <span *ngIf="lines">Lines: <span>{{lines}}</span></span><br>
+            <span *ngIf="words">Words: <span>{{words}}</span></span><br>
             <span *ngIf="chars">Chars: <span>{{chars}}</span></span>
         </div>
         <div *ngIf="countError" class="csPluginCountError">
