@@ -484,7 +484,7 @@ export class EditorComponent implements IMultiEditor {
         return emode;
     }
     set savedEditorMode(mode: ModeID | null) {
-        if (!mode) { return; }
+        if (mode === null) { return; }
         localStorage.setItem("editorIndex", mode.toString());
     }
 
