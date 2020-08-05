@@ -85,12 +85,12 @@ class GitLib:
     def cache_path(self) -> str:
         return f"/tmp/git_files/{self.remote.host.lower()}/{self.remote.path}/{self.remote.branch}"
 
-    def check_cache(self):
+    def check_cache(self, force_update = False):
         """Updates cache if needed"""
         path = self.cache_path
         cached: CacheItem = GitLib._cache.setdefault(path, CacheItem())
         with cached.lock:
-            if not (Path(path) / ".git").exists():
+            if force_update or not (Path(path) / ".git").exists():
                 self.clone(path)
             elif datetime.now() - cached.time > timedelta(seconds=self.settings.cache):
                 self.checkout()
@@ -98,8 +98,8 @@ class GitLib:
                 return
             GitLib._cache[path].time = datetime.now()
 
-    def get_files(self, sub_path: str, glob: str = ""):
-        self.check_cache()
+    def get_files(self, sub_path: str, glob: str = "", force_update = False):
+        self.check_cache(force_update)
 
         cpath = self.cache_path
 
@@ -178,12 +178,14 @@ class GitLib:
     def library_specific(self, credentials, options):
         pass
 
+
 def get_lib_class(host: str, library: Optional[str] = None) -> type(GitLib):
     if library is not None:
         cls = git_libs.get(library, None)
     else:
         cls = git_lib_urls.get(host.lower(), None)
     return cls
+
 
 def get_lib(info: RemoteInfo, settings: Settings) -> GitLib:
     cls = get_lib_class(info.host, settings.library)

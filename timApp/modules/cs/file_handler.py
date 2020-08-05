@@ -296,7 +296,7 @@ class GitSource(ExternalFileSource):
         max_size = self.specification.maxSize
         max_total_size = self.specification.maxTotalSize
 
-        files = self.lib.get_files(self.sub_path, self.glob)
+        files = self.lib.get_files(self.sub_path, self.glob, True)
 
         for f in files:
             f.source = self.specification.source
