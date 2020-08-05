@@ -544,9 +544,10 @@ def handle_common_params(query: QueryClass, ttype: TType):
     ttype.modify_query()
     js = query_params_to_map_check_parts(query, language.deny_attributes())
 
-    if not "markup" in js or js["markup"] is None:
-        js["markup"] = {}
-    js["markup"]["type"] = str(ttype)
+    if str(ttype) not in ["tauno", "simcir", "parsons"]: # TODO: make tauno, simcir and parsons work without this
+        if not "markup" in js or js["markup"] is None:
+            js["markup"] = {}
+        js["markup"]["type"] = str(ttype)
 
     if not ttype.success:
         return language, "", js, runner
