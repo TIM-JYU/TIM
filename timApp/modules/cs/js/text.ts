@@ -28,8 +28,8 @@ import {CsController} from "./csPlugin";
                     title="(Ctrl-S)"
                     (click)="runCode();"
                     [innerHTML]="buttonText()"></button>
-            <a href="javascript:void(0)" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}"
-                    (click)="tryResetChanges();">
+            <a href="#" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}"
+                    (click)="tryResetChanges(); $event.preventDefault()">
                     &nbsp;{{undoButton}}
                     </a>
             <span *ngIf="savedText"
@@ -37,9 +37,9 @@ import {CsController} from "./csPlugin";
                         [innerHTML]="savedText"></span>
             <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHTML]="connectionErrorMessage"></div>
 
-            &nbsp;&nbsp;<a href="javascript:void(0)"
+            &nbsp;&nbsp;<a href="#"
                         *ngIf="muokattu"
-                        (click)="initCode();">{{resetText}}</a>&nbsp;&nbsp;
+                        (click)="initCode(); $event.preventDefault()">{{resetText}}</a>&nbsp;&nbsp;
             <pre class="console"
                 *ngIf="result">{{result}}</pre>
             <span class="csRunError"

@@ -2912,8 +2912,8 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
                     class="timButton btn-sm"
                     (click)="fetchExternalFiles()"
                     [innerHTML]="externalFetchText()"></button>
-            <a href="javascript:void(0)" *ngIf="undoButton && isUnSaved()" title="undoTitle"
-                    (click)="tryResetChanges()"> &nbsp;{{undoButton}}</a>
+            <a href="#" *ngIf="undoButton && isUnSaved()" title="undoTitle"
+                    (click)="tryResetChanges(); $event.preventDefault()"> &nbsp;{{undoButton}}</a>
             &nbsp;&nbsp;
             <span *ngIf="savedText"
                     class="savedText"
@@ -2932,21 +2932,21 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
             <tim-loading *ngIf="isRunning"></tim-loading>
             &nbsp;&nbsp;
             <span *ngIf="isDocument">
-                <a href="javascript:void(0)" [attr.disabled]="isRunning"
-                        (click)="runDocument()">{{docLink}}</a>&nbsp;&nbsp;
+                <a href="#" [attr.disabled]="isRunning"
+                        (click)="runDocument(); $event.preventDefault()">{{docLink}}</a>&nbsp;&nbsp;
             </span>
-            <a href="javascript:void(0)" *ngIf="!nocode && (file || program)"
-                    (click)="showCode()">{{showCodeLink}}</a>&nbsp;&nbsp;
-            <a href="javascript:void(0)" *ngIf="editor && editor.modified"
-                    (click)="editor?.reset()">{{resetText}}</a>
-            <a href="javascript:void(0)" *ngIf="toggleEditor"
-                    (click)="hideShowEditor()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
-            <a href="javascript:void(0)" *ngIf="!noeditor && editor && editor.nextModeText"
-                    (click)="editor?.showOtherEditor()">
+            <a href="#" *ngIf="!nocode && (file || program)"
+                    (click)="showCode(); $event.preventDefault()">{{showCodeLink}}</a>&nbsp;&nbsp;
+            <a href="#" *ngIf="editor && editor.modified"
+                    (click)="editor?.reset(); $event.preventDefault()">{{resetText}}</a>
+            <a href="#" *ngIf="toggleEditor"
+                    (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
+            <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"
+                    (click)="editor?.showOtherEditor(); $event.preventDefault()">
                 {{editor.nextModeText}}
             </a>&nbsp;&nbsp;
-            <a href="javascript:void(0)" *ngIf="markup.copyLink"
-                    (click)="copyCode()">{{markup.copyLink}}</a>
+            <a href="#" *ngIf="markup.copyLink"
+                    (click)="copyCode(); $event.preventDefault()">{{markup.copyLink}}</a>
             <span *ngIf="showRuntime"
                     class="inputSmall"
                     style="float: right;"
