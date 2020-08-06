@@ -90,9 +90,9 @@ class GitLib:
         path = self.cache_path
         cached: CacheItem = GitLib._cache.setdefault(path, CacheItem())
         with cached.lock:
-            if force_update or not (Path(path) / ".git").exists():
+            if not (Path(path) / ".git").exists():
                 self.clone(path)
-            elif datetime.now() - cached.time > timedelta(seconds=self.settings.cache):
+            elif force_update or datetime.now() - cached.time > timedelta(seconds=self.settings.cache):
                 self.checkout()
             else:
                 return
