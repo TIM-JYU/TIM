@@ -1312,7 +1312,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             fhandler = FileHandler(query, save)
             submitted_files = fhandler.get_files(s)
 
-            ttype = TType(str(ttype), query, submitted_files)
+            # TODO: get_param is potentially unsafe as the client can change its value
+            # get_json_param from markup would be better, but all language and test
+            # languages change the type on client side
+            # get_param type also doesn't contain the modifiers
+            ttype = TType(get_param(query, "type", "cs"), query, submitted_files)
             if not ttype.success:
                 raise Exception(f"Could not get language from type {ttype}")
 
