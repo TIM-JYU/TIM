@@ -50,9 +50,7 @@ function trackByIndex(index: number, o: unknown) { return index; }
                         [(ngModel)]="currentInput"/>
         &nbsp;
         <div class="console-buttons">
-            <button (click)="up()">↑</button>&nbsp;
-            <button (click)="down()">↓</button>&nbsp;
-            <button (click)="handler()">Enter</button>&nbsp;
+            <button (click)="up()">↑</button>&nbsp;<button (click)="down()">↓</button>&nbsp;<button (click)="handler()">Enter</button>&nbsp;
         </div>
     </div>`,
 })
