@@ -38,7 +38,13 @@ export interface TableModelProvider {
 
     showRow(rowIndex: number): boolean;
 
-    handleFilterFieldUpdate(value: string, columnIndex: number): void;
+    setRowFilter(columnIndex: number, value: string): void;
+
+    handleChangeFilter(): void;
+
+    setRowChecked(rowIndex: number, checked: boolean): void;
+
+    handleChangeCheckbox(rowIndex: number): void;
 }
 
 export interface VirtualScrollingOptions {
@@ -788,8 +794,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
             const filterCell = this.filterTableCache.getCell(0, column);
             const input = filterCell.getElementsByTagName("input")[0];
+            // TODO: Make own helper method because column index changes in vscroll mode
             input.oninput = () => {
-                this.modelProvider.handleFilterFieldUpdate(input.value, columnIndex);
+                this.modelProvider.setRowFilter(columnIndex, input.value);
+                this.modelProvider.handleChangeFilter();
             };
         }
         for (const [cell, columnIndex] of colIndices) {
@@ -807,6 +815,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const rowIndex = this.rowAxis.visibleItems[row + vertical.startIndex];
             const idCell = this.idTableCache.getCell(row, 0);
             idCell.textContent = `${rowIndex + this.columnIdStart}`;
+
+            const cbCell = this.idTableCache.getCell(row, 1);
+            const cb = cbCell.getElementsByTagName("input")[0];
+            cb.oninput = () => {
+                this.modelProvider.setRowChecked(rowIndex, cb.checked);
+                this.modelProvider.handleChangeCheckbox(rowIndex);
+            };
         }
     }
 

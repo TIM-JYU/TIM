@@ -1081,6 +1081,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
         if (this.cbFilter) {
             await this.updateFilter();
+            this.dataViewComponent?.updateVisible();
         } else {
             this.countCBs(rowi);
         }
@@ -3990,9 +3991,12 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.closeSmallEditor();
     }
 
-    handleFilterFieldUpdate(value: string, columnIndex: number): void {
+    setRowFilter(columnIndex: number, value: string): void {
         this.filters[columnIndex] = value;
-        void this.handleChangeFilter();
+    }
+
+    setRowChecked(rowIndex: number, checked: boolean): void {
+        this.cbs[rowIndex] = checked;
     }
 }
 
