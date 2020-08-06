@@ -1,5 +1,7 @@
 import {
     AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     ElementRef,
     HostBinding,
@@ -233,7 +235,6 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
 };
 
 // TODO: Update hooks
-// TODO: Filtering
 // TODO: Item selection
 // TODO: Checkbox interactivity
 // TODO: Veriy that general horizontal scrolling works
@@ -262,6 +263,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
 
 @Component({
     selector: "app-data-view",
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="header" #headerContainer>
             <table [ngStyle]="tableStyle" #headerTable>
@@ -279,7 +281,9 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                 </thead>
                 <tbody>
                 <tr>
-                    <td [style.width]="idHeaderCellWidth" class="nrcolumn totalnr"></td>
+                    <td [style.width]="idHeaderCellWidth" class="nrcolumn totalnr">
+                        <ng-container *ngIf="totalRows != visibleRows">{{visibleRows}}</ng-container>
+                    </td>
                     <td class="cbColumn"><input type="checkbox"></td>
                 </tr>
                 </tbody>
@@ -309,6 +313,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
     @Input() tableMaxWidth: string = "fit-content";
+    totalRows: number = 0;
+    visibleRows: number = 0;
     idHeaderCellWidth: string = "";
     @HostBinding("style.width") private componentWidth: string = "";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
@@ -337,11 +343,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     // endregion
 
-    constructor(private r2: Renderer2, private zone: NgZone, private componentRef: ElementRef<HTMLElement>) {
-    }
-
-    get totalRows() {
-        return this.modelProvider.getDimension().rows;
+    constructor(private r2: Renderer2, private zone: NgZone, private componentRef: ElementRef<HTMLElement>, private cdr: ChangeDetectorRef) {
     }
 
     private get tableWidth(): number {
@@ -352,13 +354,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         return Math.min(this.mainDataContainer.nativeElement.offsetHeight, this.mainDataTable.nativeElement.offsetHeight);
     }
 
+    // region Public update functions
+
     /**
      * Updates all visible elements in the table
      */
     updateVisible() {
         this.rowAxis.refresh();
         this.colAxis.refresh();
-
         if (this.vScroll.enabled) {
             this.updateVTable();
             return;
@@ -375,11 +378,25 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
         }
         this.updateHeaderSizes();
+        this.updateTableSummary();
     }
+
+    /**
+     * Updates table summary info (row count and visible row count)
+     */
+    updateTableSummary() {
+        this.visibleRows = this.rowAxis.visibleItems.length;
+        this.totalRows = this.modelProvider.getDimension().rows;
+        this.cdr.detectChanges();
+    }
+
+    // endregion
 
     // region Initialization
 
     ngOnInit(): void {
+        // Detach change detection because most of this component is based on pure DOM manipulation
+        this.cdr.detach();
         this.componentWidth = this.tableMaxWidth;
         if (this.vScroll.enabled) {
             this.startCellPurifying();
@@ -395,6 +412,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.vScroll.borderSpacing,
             (i) => this.modelProvider.getColumnWidth(i) ?? 0,
             (i) => this.modelProvider.showColumn(i));
+        this.updateTableSummary();
     }
 
     ngAfterViewInit(): void {
@@ -701,6 +719,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private* buildTable(): Generator {
+        // Visually hide the table to prevent any flickering owing to size syncing
         this.componentRef.nativeElement.style.visibility = "hidden";
         this.viewport = this.getViewport();
         this.setTableSizes();
@@ -879,7 +898,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.rowAxis.visibleItems.length == 0) {
             return 0;
         }
-        return this.dataTableCache.getRow(rowIndex).offsetHeight;
+        return this.dataTableCache.getRow(this.rowAxis.visibleItems[0]).offsetHeight;
     }
 
     // endregion
