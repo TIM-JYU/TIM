@@ -375,6 +375,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             // Apparently always setting hidden will cause layout even if the value hasn't changed (?)
             if (shouldHide != hidden) {
                 row.rowElement.hidden = shouldHide;
+                if (this.idTableCache) {
+                    this.idTableCache.getRow(rowIndex).hidden = shouldHide;
+                }
             }
         }
         this.updateHeaderSizes();
