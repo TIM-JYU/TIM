@@ -500,7 +500,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!this.idTableCache) {
             return;
         }
-        const {horizontal, vertical} = this.viewport;
+        const {vertical} = this.viewport;
 
         this.idTableCache.resize(this.viewport.vertical.count, 2);
         // Get sizes in batch for speed
@@ -544,14 +544,18 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
         const width = this.idTableCache?.getCell(this.rowAxis.visibleItems[0], 0)?.offsetWidth;
-        if (!width) {
-            return;
+        const height = this.headerIdBody?.nativeElement.offsetHeight;
+        if (width) {
+            this.summaryTable.nativeElement.querySelectorAll(".nrcolumn").forEach((e) => {
+                if (e instanceof HTMLElement) {
+                    e.style.width = `${width}px`;
+                }
+            });
         }
-        this.summaryTable.nativeElement.querySelectorAll(".nrcolumn").forEach((e) => {
-            if (e instanceof HTMLElement) {
-                e.style.width = `${width}px`;
-            }
-        });
+        if (height) {
+            const summaryHeader = this.summaryTable.nativeElement.getElementsByTagName("tr")[0];
+            summaryHeader.style.height = `${height}px`;
+        }
     }
 
     // endregion
