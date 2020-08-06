@@ -485,7 +485,8 @@ export enum ClearSort {
     selector: "tim-table",
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders, 'no-overflow': asDataView}" class="timTableRunDiv no-popup-menu"
+        <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders, 'no-overflow': asDataView}"
+             class="timTableRunDiv no-popup-menu"
              [ngStyle]="asDataView ? {} : {
                 'max-height': maxRows,
                 'maxCols': maxCols
@@ -503,7 +504,7 @@ export enum ClearSort {
                             (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
                 </div>
                 <ng-container *ngIf="asDataView; else tableView">
-                    <app-data-view [virtualScrolling]="{'enabled': false}"
+                    <tim-data-view [virtualScrolling]="{'enabled': false}"
                                    [modelProvider]="this"
                                    [tableClass]="{editable: isInEditMode() && !isInForcedEditMode(),
                                                 forcedEditable: isInForcedEditMode(),
@@ -513,7 +514,7 @@ export enum ClearSort {
                                    [columnIdStart]="nrColStart"
                                    [tableMaxHeight]="maxRows"
                                    [tableMaxWidth]="maxCols"
-                                   [headerStyle]="headersStyle" #dataViewComponent></app-data-view>
+                                   [headerStyle]="headersStyle" #dataViewComponent></tim-data-view>
                 </ng-container>
                 <ng-template #tableView>
                     <table #tableElem

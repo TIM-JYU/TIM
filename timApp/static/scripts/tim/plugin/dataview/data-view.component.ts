@@ -262,7 +262,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
  */
 
 @Component({
-    selector: "app-data-view",
+    selector: "tim-data-view",
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="header" #headerContainer>
