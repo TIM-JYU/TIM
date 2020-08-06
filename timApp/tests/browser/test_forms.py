@@ -1,26 +1,12 @@
-import warnings
-
-from lxml.html import HtmlElement
-
 from timApp.auth.accesstype import AccessType
 from timApp.tests.browser.browsertest import BrowserTest
-from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.timdb.sqa import db
-from lxml.html import HtmlElement
-
-from timApp.auth.accesstype import AccessType
 from timApp.timdb.sqa import db
 
 
 class FormTest(BrowserTest):
 
     def test_plugin_user_modifiers(self):
-        warnings.filterwarnings(action="ignore", message="unclosed",
-                                category=ResourceWarning)
         """ Save and show answers in browser according to global field and useCurrentUser logic"""
-
-        def get_plugin_answer(e: HtmlElement):
-            return self.get_plugin_json(e)['state']
 
         def wait_fields_loaded():
             self.wait_until_present('#a .textfieldNoSaveDiv input')
