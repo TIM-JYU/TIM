@@ -1101,6 +1101,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     async handleChangeFilter() {
         await this.updateFilter();
+        this.dataViewComponent?.updateVisible();
         this.c();
     }
 
@@ -3986,6 +3987,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return;
         }
         this.closeSmallEditor();
+    }
+
+    handleFilterFieldUpdate(value: string, columnIndex: number): void {
+        this.filters[columnIndex] = value;
+        void this.handleChangeFilter();
     }
 }
 

@@ -35,6 +35,8 @@ export interface TableModelProvider {
     showColumn(colIndex: number): boolean;
 
     showRow(rowIndex: number): boolean;
+
+    handleFilterFieldUpdate(value: string, columnIndex: number): void;
 }
 
 export interface VirtualScrollingOptions {
@@ -351,12 +353,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     /**
-     * Marks table to update visibility of all items
+     * Updates all visible elements in the table
      */
     updateVisible() {
+        this.rowAxis.refresh();
+        this.colAxis.refresh();
+
         if (this.vScroll.enabled) {
-            this.rowAxis.refresh();
-            this.colAxis.refresh();
             this.updateVTable();
             return;
         }
@@ -364,13 +367,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // For normal mode: simply hide rows that are no more visible/show hidden rows
         for (const [rowNumber, row] of this.dataTableCache.rows.entries()) {
             const rowIndex = this.rowAxis.itemOrder[rowNumber];
-            row.rowElement.hidden = this.modelProvider.showRow(rowIndex);
+            const shouldHide = !this.modelProvider.showRow(rowIndex);
+            const hidden = row.rowElement.hidden;
+            if (shouldHide != hidden) {
+                row.rowElement.hidden = shouldHide;
+            }
+
             // if (!row.rowElement.hidden) {
             //     for (const [cellNumber, cell] of row.cells.entries()) {
             //         const cellIndex = this.colAxis.
             //     }
             // }
         }
+        requestAnimationFrame(() => this.updateHeaderSizes());
     }
 
     // region Initialization
@@ -744,6 +753,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const headerCell = this.headerIdTableCache.getCell(0, column);
             colIndices.push([headerCell, columnIndex]);
             headerCell.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
+
+            const filterCell = this.filterTableCache.getCell(0, column);
+            const input = filterCell.getElementsByTagName("input")[0];
+            input.oninput = () => {
+                this.modelProvider.handleFilterFieldUpdate(input.value, columnIndex);
+            };
         }
         for (const [cell, columnIndex] of colIndices) {
             this.colHeaderWidths[columnIndex] = cell.offsetWidth;
@@ -852,13 +867,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (res !== undefined) {
             return res;
         }
-        return this.dataTableCache.getCell(0, columnIndex).offsetWidth;
+        if (this.rowAxis.visibleItems.length == 0) {
+            return 0;
+        }
+        return this.dataTableCache.getCell(this.rowAxis.visibleItems[0], columnIndex).offsetWidth;
     }
 
     private getRowHeaderHeight(rowIndex: number): number {
         const res = this.modelProvider.getRowHeight(rowIndex);
         if (res !== undefined) {
             return res;
+        }
+        if (this.rowAxis.visibleItems.length == 0) {
+            return 0;
         }
         return this.dataTableCache.getRow(rowIndex).offsetHeight;
     }
