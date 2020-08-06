@@ -70,7 +70,7 @@ useCurrentUser: true
 
         check_field_content('a', '[tu1view]')
         check_field_content('GLO_b', '[tu1view][tu2view]')
-        check_field_content('c', '[tu2view]')
+        self.wait_until_val_present('#c .textfieldNoSaveDiv input', '[tu2view]')
 
         send_inputs('[tu1teacher_to_tu2]')
 

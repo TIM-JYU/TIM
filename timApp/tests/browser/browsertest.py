@@ -288,6 +288,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def wait_until_text_present(self, selector: str, text: str):
         self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, selector), text))
 
+    def wait_until_val_present(self, selector: str, text: str):
+        self.wait.until(ec.text_to_be_present_in_element_value((By.CSS_SELECTOR, selector), text))
+
     def select_text(self, selector: str, start_offset: int, end_offset: int):
         self.drv.execute_script(f"""
         var range = document.createRange();
