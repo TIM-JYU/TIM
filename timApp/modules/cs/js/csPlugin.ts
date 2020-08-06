@@ -2225,13 +2225,16 @@ ${fhtml}
 
     initCode() {
         this.muokattu = false;
-        this.usercode = this.byCode;
         this.imgURL = "";
         this.runSuccess = false;
         this.runError = false;
         this.result = "";
         this.viewCode = this.markup.viewCode;
-        this.editor?.reset();
+        if (this.editor) {
+            this.editor?.reset();
+        } else {
+            this.usercode = this.byCode;
+        }
         if (this.isSage) {
             this.initSage(false);
         }
@@ -2943,7 +2946,7 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
             <a href="#" *ngIf="!nocode && (file || program)"
                     (click)="showCode(); $event.preventDefault()">{{showCodeLink}}</a>&nbsp;&nbsp;
             <a href="#" *ngIf="editor && editor.modified"
-                    (click)="editor?.reset(); $event.preventDefault()">{{resetText}}</a>
+                    (click)="initCode(); $event.preventDefault()">{{resetText}}</a>
             <a href="#" *ngIf="toggleEditor"
                     (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
             <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"

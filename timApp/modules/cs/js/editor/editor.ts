@@ -392,7 +392,6 @@ export class EditorComponent implements IMultiEditor {
         } else if(this.file) {
             this.file.content = str;
         }
-        this.oldContent = str;
     }
 
     get content_(): string | undefined {
