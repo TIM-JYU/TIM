@@ -848,7 +848,7 @@ export class CsController extends CsBase implements ITimComponent {
     connectionErrorMessage?: string;
     copyingFromTauno: boolean;
     docLink: string;
-    docURL?: string;
+    docURL?: SafeResourceUrl;
     edited: boolean = false;
     editArea?: Element;
     editorIndex: number;
@@ -1542,7 +1542,7 @@ ${fhtml}
         const isText = this.isText;
         const isArgs = this.type.includes("args");
         if (this.attrsall.markup.docurl) {
-            this.docURL = this.attrsall.markup.docurl;
+            this.docURL = this.domSanitizer.bypassSecurityTrustResourceUrl(this.attrsall.markup.docurl);
             this.docLink = "Hide document";
         }
 
@@ -1771,7 +1771,7 @@ ${fhtml}
     }
 
     closeDocument() {
-        this.docURL = "";
+        this.docURL = undefined;
         this.docLink = "Document";
     }
 
@@ -1968,7 +1968,7 @@ ${fhtml}
 
             const err = data.web.console ?? "";
             if (docURL) {
-                this.docURL = docURL;
+                this.docURL = this.domSanitizer.bypassSecurityTrustResourceUrl(docURL);
                 this.docLink = "Hide document";
                 this.error = err.trim();
             }
