@@ -72,7 +72,7 @@ export class EditorFile {
     path: string = "";
     base: string; // starting content
     content_?: string;
-    oldContent: string = "";
+    oldContent?: string;
     languageMode?: string;
     canClose: boolean;
     canRename: boolean; // TODO: implement renaming
@@ -87,7 +87,7 @@ export class EditorFile {
     }
 
     get content() {
-        return this.content_ ?? this.base;
+        return this.content_ ?? this.oldContent ?? this.base;
     }
     set content(str: string) {
         this.content_ = str;
@@ -380,11 +380,11 @@ export class EditorComponent implements IMultiEditor {
             case Mode.JSParsons:
                 break;
         }
-        return this.normalEditor;
+        return undefined;
     }
 
     get content() {
-        return this.editor?.content ?? this.content_ ?? this.base;
+        return this.editor?.content ?? this.file?.content ?? this.base;
     }
     set content(str: string) {
         if (this.editor) {
