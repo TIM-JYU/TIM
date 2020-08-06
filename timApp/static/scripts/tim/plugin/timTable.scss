@@ -60,7 +60,7 @@ td input[type="text"] {
   }
 }
 
-td.nrcolumn {
+::ng-deep td.nrcolumn {
     font-size: smaller;
     text-align: right;
 }

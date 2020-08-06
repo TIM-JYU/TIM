@@ -443,7 +443,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 this.idBody.nativeElement,
                 "td",
                 (cell, rowIndex, columnIndex) => {
-                    if (columnIndex !== 1) {
+                    if (columnIndex == 0) {
+                        cell.className = "nrcolumn";
                         return;
                     }
                     cell.className = "cbColumn";
@@ -503,10 +504,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
         this.idTableCache.resize(this.viewport.vertical.count, 2);
         // Get sizes in batch for speed
-        const sizes = Array.from(new Array(horizontal.count)).map((value, index) => {
+        const sizes = Array.from(new Array(vertical.count)).map((value, index) => {
             const rowIndex = this.rowAxis.visibleItems[index + vertical.startIndex];
             return this.getRowHeaderHeight(rowIndex);
         });
+        // Ensure the ID column is at least the size of the summary number column (needed for filtering)
         const minWidth = (this.summaryTable.nativeElement.querySelector(".nrcolumn") as HTMLElement).offsetWidth;
         for (let row = 0; row < vertical.count; row++) {
             const tr = this.idTableCache.getRow(row);
