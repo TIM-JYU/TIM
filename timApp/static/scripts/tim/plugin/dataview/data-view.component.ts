@@ -369,17 +369,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const rowIndex = this.rowAxis.itemOrder[rowNumber];
             const shouldHide = !this.modelProvider.showRow(rowIndex);
             const hidden = row.rowElement.hidden;
+            // Apparently always setting hidden will cause layout even if the value hasn't changed (?)
             if (shouldHide != hidden) {
                 row.rowElement.hidden = shouldHide;
             }
-
-            // if (!row.rowElement.hidden) {
-            //     for (const [cellNumber, cell] of row.cells.entries()) {
-            //         const cellIndex = this.colAxis.
-            //     }
-            // }
         }
-        requestAnimationFrame(() => this.updateHeaderSizes());
+        this.updateHeaderSizes();
     }
 
     // region Initialization
@@ -469,7 +464,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!this.headerContainer || !this.idContainer) {
             return;
         }
-        this.headerContainer.nativeElement.style.width = `${this.tableWidth + getWindowScrollbarWidth()}px`;
+        // Special case: if there are no visible items, don't set width
+        if (this.rowAxis.visibleItems.length != 0) {
+            this.headerContainer.nativeElement.style.width = `${this.tableWidth + getWindowScrollbarWidth()}px`;
+        }
         this.idContainer.nativeElement.style.height = `${this.tableHeight}px`;
         this.updateColumnHeaderCellSizes();
         this.updateRowHeaderCellSizes();
