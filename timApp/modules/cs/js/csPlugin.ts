@@ -1128,11 +1128,15 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     onIframeLoad(e: Event) {
+        const fr = e.target as HTMLIFrameElement & {contentWindow: WindowProxy};
+        // onIframeLoad gets called twice on chrome, on the first time src is empty
+        if (fr.src == "") { return; }
+
         const channel = new MessageChannel();
         if (this.iframemessageHandler) {
             channel.port1.onmessage = this.iframemessageHandler;
         }
-        const fr = e.target as HTMLIFrameElement & {contentWindow: WindowProxy};
+
         fr.contentWindow.postMessage({msg: "init"}, "*", [channel.port2]);
         this.iframedefer?.resolve({iframe: fr, channel});
     }
@@ -2026,8 +2030,7 @@ ${fhtml}
 
     async copyTauno() {
         this.taunoCopy = new TimDefer<string>();
-        // this.taunoFrame!.channel.port1.postMessage({msg: "getData"}); For some reason this doesn't work
-        this.taunoFrame!.iframe.contentWindow.postMessage({msg: "getData"}, "*");
+        this.taunoFrame!.channel.port1.postMessage({msg: "getData"});
         let s = await this.taunoCopy.promise;
         this.copyingFromTauno = true;
         const treplace = this.markup.treplace ?? "";
@@ -2640,6 +2643,7 @@ ${fhtml}
 
     closeFrame() {
         this.iframesettings = undefined;
+        this.loadedIframe = undefined;
         this.lastJS = "";
     }
 
