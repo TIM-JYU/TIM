@@ -110,10 +110,12 @@ const DEFAULT_PIECE_SIZE = 20;
         </ng-container>
 
         <ng-container *ngIf="item && !item.isFolder">
-            <h5 class="same-line" i18n>Print document</h5>
-            <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
-                <span class="glyphicon glyphicon-question-sign" title="Printing help" i18n-title></span>
-            </a>
+            <div>
+                <h5 class="same-line" i18n>Print document</h5>
+                <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
+                    <span class="glyphicon glyphicon-question-sign" title="Printing help" i18n-title></span>
+                </a>
+            </div>
             <button class="timButton btn-block"
                     title="Print using LaTeX (best quality)" i18n-title
                     (click)="printDocument()"
@@ -125,11 +127,13 @@ const DEFAULT_PIECE_SIZE = 20;
                     i18n>Browser print
             </button>
 
-            <h5 class="same-line" i18n>Document tags</h5>
-            <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
+            <div>
+                <h5 class="same-line" i18n>Document tags</h5>
+                <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
                     <span class="glyphicon glyphicon-question-sign"
                           title="Teachers' help for course code" i18n-title></span>
-            </a>
+                </a>
+            </div>
             <button *ngIf="item && item.rights.manage"
                     class="timButton btn-block"
                     title="Add or remove document tags" i18n-title
@@ -148,7 +152,7 @@ const DEFAULT_PIECE_SIZE = 20;
                     i18n>Set as course
             </button>
 
-            <h5 *ngIf="isMinutesOrInvitation" class="same-line" i18n>Memo/Minutes</h5>
+            <h5 *ngIf="isMinutesOrInvitation" i18n>Memo/Minutes</h5>
             <button *ngIf="enableCreateExtractsButton"
                     class="timButton btn-block"
                     title="Create extracts" i18n-title
