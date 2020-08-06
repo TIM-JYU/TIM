@@ -21,7 +21,7 @@ fi
 
 if [ ! -d static/glowscript ]; then
     echo "GET GlowScript"
-    git clone https://github.com/BruceSherwood/glowscript static/glowscript
+    git clone https://github.com/vpython/glowscript static/glowscript
 fi
 
 mkdir -p /tmp/cache
@@ -37,7 +37,7 @@ chown agent:agent /cs/log.txt
 #  it's not possible to change socket permissions (it has no effect).
 chmod 766 /var/run/docker.sock
 
-# Copy Jypeli dll's  
+# Copy Jypeli dll's
 cd /cs/jypeli
 curl https://kurssit.it.jyu.fi/npo/MonoJypeli/TIM/Jypeli.headless.tar.gz | tar -xz --overwrite --warning=none
 
