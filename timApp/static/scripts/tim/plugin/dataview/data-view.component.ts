@@ -507,9 +507,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const rowIndex = this.rowAxis.visibleItems[index + vertical.startIndex];
             return this.getRowHeaderHeight(rowIndex);
         });
+        const minWidth = (this.summaryTable.nativeElement.querySelector(".nrcolumn") as HTMLElement).offsetWidth;
         for (let row = 0; row < vertical.count; row++) {
             const tr = this.idTableCache.getRow(row);
             tr.style.height = `${sizes[row]}px`;
+            const idCell = this.idTableCache.getCell(row, 0);
+            idCell.style.minWidth = `${minWidth}px`;
         }
     }
 
@@ -535,7 +538,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateSummaryCellSizes(): void {
-        const width = this.idTableCache?.getCell(0, 0)?.offsetWidth;
+        if (this.rowAxis.visibleItems.length == 0) {
+            return;
+        }
+        const width = this.idTableCache?.getCell(this.rowAxis.visibleItems[0], 0)?.offsetWidth;
         if (!width) {
             return;
         }
