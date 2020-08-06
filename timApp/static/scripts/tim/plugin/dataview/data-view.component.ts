@@ -31,6 +31,10 @@ export interface TableModelProvider {
     getCellContents(rowIndex: number, columnIndex: number): string;
 
     getRowContents(rowIndex: number): string[];
+
+    showColumn(colIndex: number): boolean;
+
+    showRow(rowIndex: number): boolean;
 }
 
 export interface VirtualScrollingOptions {
@@ -66,7 +70,8 @@ class GridAxis {
     constructor(size: number,
                 private virtual: boolean,
                 private border: number,
-                private getSize: (i: number) => number) {
+                private getSize: (i: number) => number,
+                private showItem: (i: number) => boolean) {
         this.itemOrder = Array.from(new Array(size)).map((e, i) => i);
         this.refresh();
     }
@@ -76,7 +81,7 @@ class GridAxis {
     }
 
     refresh(): void {
-        this.visibleItems = this.itemOrder.filter((i) => !this.hiddenItems.has(i));
+        this.visibleItems = this.itemOrder.filter((i) => this.showItem(i));
         if (!this.virtual) {
             return;
         }
@@ -87,15 +92,15 @@ class GridAxis {
         }
     }
 
-    getVisibleItems(startPosition: number, size: number, viewStart: number, viewSize: number): VisibleItems {
-        startPosition = clamp(startPosition, 0, this.totalSize);
-        viewStart = clamp(viewStart, 0, this.totalSize);
-        size = Math.min(size, this.totalSize - startPosition);
-        viewSize = Math.min(viewSize, this.totalSize - viewStart);
-        const startIndex = this.search(startPosition);
-        const viewStartIndex = this.search(viewStart);
-        const endIndex = this.search(startPosition + size);
-        const viewEndIndex = this.search(viewStart + viewSize);
+    getVisibleItemsInViewport(vpStartPosition: number, vpSize: number, visibleStartPosition: number, visibleSize: number): VisibleItems {
+        vpStartPosition = clamp(vpStartPosition, 0, this.totalSize);
+        visibleStartPosition = clamp(visibleStartPosition, 0, this.totalSize);
+        vpSize = Math.min(vpSize, this.totalSize - vpStartPosition);
+        visibleSize = Math.min(visibleSize, this.totalSize - visibleStartPosition);
+        const startIndex = this.search(vpStartPosition);
+        const viewStartIndex = this.search(visibleStartPosition);
+        const endIndex = this.search(vpStartPosition + vpSize);
+        const viewEndIndex = this.search(visibleStartPosition + visibleSize);
         return {
             startIndex: this.visibleItems[startIndex],
             count: Math.min(endIndex - startIndex + 1, this.visibleItems.length - startIndex),
@@ -124,7 +129,7 @@ class GridAxis {
 }
 
 interface RowStore {
-    row: HTMLTableRowElement;
+    rowElement: HTMLTableRowElement;
     cells: HTMLTableCellElement[];
 }
 
@@ -141,7 +146,7 @@ class TableCache {
         if (rowIndex > this.activeArea.vertical) {
             throw new Error(`No row ${rowIndex} found! This should be unreachable!`);
         } else {
-            return this.rows[rowIndex].row;
+            return this.rows[rowIndex].rowElement;
         }
     }
 
@@ -161,11 +166,11 @@ class TableCache {
             for (let rowNumber = 0; rowNumber < rows; rowNumber++) {
                 let row = this.rows[rowNumber];
                 if (row) {
-                    row.row.hidden = false;
+                    row.rowElement.hidden = false;
                     continue;
                 }
                 row = this.rows[rowNumber] = {
-                    row: el("tr"),
+                    rowElement: el("tr"),
                     cells: [],
                 };
                 // Don't update col count to correct one yet, handle just rows first
@@ -174,14 +179,14 @@ class TableCache {
                     if (this.createCellContent) {
                         this.createCellContent(cell, rowNumber, columnNumber);
                     }
-                    row.row.appendChild(cell);
+                    row.rowElement.appendChild(cell);
                 }
-                this.tbody.appendChild(row.row);
+                this.tbody.appendChild(row.rowElement);
             }
         } else if (rowDelta < 0) {
             // Too many rows => hide unused ones
             for (let rowNumber = rows; rowNumber < this.rows.length; rowNumber++) {
-                this.rows[rowNumber].row.hidden = true;
+                this.rows[rowNumber].rowElement.hidden = true;
             }
         }
 
@@ -198,7 +203,7 @@ class TableCache {
                         if (this.createCellContent) {
                             this.createCellContent(cell, rowNumber, columnNumber);
                         }
-                        row.row.appendChild(cell);
+                        row.rowElement.appendChild(cell);
                     }
                 }
             }
@@ -345,6 +350,29 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         return Math.min(this.mainDataContainer.nativeElement.offsetHeight, this.mainDataTable.nativeElement.offsetHeight);
     }
 
+    /**
+     * Marks table to update visibility of all items
+     */
+    updateVisible() {
+        if (this.vScroll.enabled) {
+            this.rowAxis.refresh();
+            this.colAxis.refresh();
+            this.updateVTable();
+            return;
+        }
+
+        // For normal mode: simply hide rows that are no more visible/show hidden rows
+        for (const [rowNumber, row] of this.dataTableCache.rows.entries()) {
+            const rowIndex = this.rowAxis.itemOrder[rowNumber];
+            row.rowElement.hidden = this.modelProvider.showRow(rowIndex);
+            // if (!row.rowElement.hidden) {
+            //     for (const [cellNumber, cell] of row.cells.entries()) {
+            //         const cellIndex = this.colAxis.
+            //     }
+            // }
+        }
+    }
+
     // region Initialization
 
     ngOnInit(): void {
@@ -353,8 +381,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.startCellPurifying();
         }
         const {rows, columns} = this.modelProvider.getDimension();
-        this.rowAxis = new GridAxis(rows, this.vScroll.enabled, this.vScroll.borderSpacing, (i) => this.modelProvider.getRowHeight(i) ?? 0);
-        this.colAxis = new GridAxis(columns, this.vScroll.enabled, this.vScroll.borderSpacing, (i) => this.modelProvider.getColumnWidth(i) ?? 0);
+        this.rowAxis = new GridAxis(rows,
+            this.vScroll.enabled,
+            this.vScroll.borderSpacing,
+            (i) => this.modelProvider.getRowHeight(i) ?? 0,
+            (i) => this.modelProvider.showRow(i));
+        this.colAxis = new GridAxis(columns,
+            this.vScroll.enabled,
+            this.vScroll.borderSpacing,
+            (i) => this.modelProvider.getColumnWidth(i) ?? 0,
+            (i) => this.modelProvider.showColumn(i));
     }
 
     ngAfterViewInit(): void {
@@ -486,6 +522,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     // region Virtual scrolling
 
+    private updateVTable() {
+        // Set viewport already here to account for subsequent handlers
+        const newViewport = this.getViewport();
+        this.scrollDY = newViewport.vertical.startIndex - this.viewport.vertical.startIndex;
+        this.viewport = newViewport;
+        this.updateTableTransform();
+        runMultiFrame(this.updateViewport());
+    }
+
     private isOutsideSafeViewZone(): boolean {
         const data = this.mainDataContainer.nativeElement;
         const h = data.clientHeight * this.vScroll.viewOverflow.vertical;
@@ -507,12 +552,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
         this.scheduledUpdate = true;
-        // Set viewport already here to account for subsequent handlers
-        const newViewport = this.getViewport();
-        this.scrollDY = newViewport.vertical.startIndex - this.viewport.vertical.startIndex;
-        this.viewport = newViewport;
-        this.updateTableTransform();
-        runMultiFrame(this.updateViewport());
+        this.updateVTable();
     }
 
     private* updateViewport(): Generator {
@@ -635,12 +675,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const viewportWidth = data.clientWidth * (1 + 2 * this.vScroll.viewOverflow.horizontal);
             const viewportHeight = data.clientHeight * (1 + 2 * this.vScroll.viewOverflow.vertical);
             return {
-                horizontal: this.colAxis.getVisibleItems(
+                horizontal: this.colAxis.getVisibleItemsInViewport(
                     data.scrollLeft - data.clientWidth * this.vScroll.viewOverflow.horizontal,
                     viewportWidth,
                     data.scrollLeft,
                     data.clientWidth),
-                vertical: this.rowAxis.getVisibleItems(
+                vertical: this.rowAxis.getVisibleItemsInViewport(
                     data.scrollTop - data.clientHeight * this.vScroll.viewOverflow.vertical,
                     viewportHeight,
                     data.scrollTop,

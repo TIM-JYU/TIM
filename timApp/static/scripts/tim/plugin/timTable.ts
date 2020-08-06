@@ -65,7 +65,7 @@ import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
-import {TableModelProvider} from "tim/plugin/dataview/data-view.component";
+import {DataViewComponent, TableModelProvider} from "tim/plugin/dataview/data-view.component";
 import {onClick} from "../document/eventhandlers";
 import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
@@ -513,7 +513,7 @@ export enum ClearSort {
                                    [columnIdStart]="nrColStart"
                                    [tableMaxHeight]="maxRows"
                                    [tableMaxWidth]="maxCols"
-                                   [headerStyle]="headersStyle"></app-data-view>
+                                   [headerStyle]="headersStyle" #dataViewComponent></app-data-view>
                 </ng-container>
                 <ng-template #tableView>
                     <table #tableElem
@@ -708,6 +708,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     @ViewChild("tableElem") private tableElem!: ElementRef<HTMLTableElement>;
     @ViewChild("timTableRunDiv") private timTableRunDiv!: ElementRef<HTMLDivElement>;
     @ViewChild("buttonOpenBigEditor") private buttonOpenBigEditor!: ElementRef<HTMLButtonElement>;
+    @ViewChild("dataViewComponent") private dataViewComponent?: DataViewComponent;
     @ViewChildren("editInput") private editInputs!: QueryList<ElementRef<HTMLInputElement>>;
     private editInputStyles: string = "";
     private editInputClass: string = "";
