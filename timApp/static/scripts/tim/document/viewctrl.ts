@@ -738,44 +738,13 @@ export class ViewCtrl implements IController {
         }
 
         if (this.formAbs.getSize() > 0) {
-            const taskList = [];
+            const fieldsToChange = new Map<string, AnswerBrowserController>();
             for (const fab of this.formAbs.entities.values()) {
-                taskList.push(fab.taskId);
-            }
-            const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
-                tasks: taskList,
-                user: user.id,
-            }));
-            if (!r.ok) {
-                console.error("userAnswersForTasks failed");
-                return;
-            }
-            const answerResponse = r.result;
-            if (!this.formTaskInfosLoaded) {
-                // TODO: answerLimit does not currently work with fields and point browser is not visible in forms
-                //  - takes long time to load on pages with lots of form plugins
-                // const taskInfoResponse = await to($http.post<{ [index: string]: ITaskInfo }>(
-                //     "/infosForTasks",  // + window.location.search,  // done in interceptor
-                //     {
-                //     tasks: taskList,
-                // }));
-                this.formTaskInfosLoaded = true;
-                for (const fab of this.formAbs.entities.values()) {
-                    // fab.setInfo(taskInfoResponse.data[fab.taskId]);
-                    fab.setInfo({
-                        userMin: 0,
-                        userMax: 0,
-                        answerLimit: 0,
-                        showPoints: true,
-                    });
+                if (!fab.isUseCurrentUser()) {
+                    fieldsToChange.set(fab.taskId, fab);
                 }
             }
-            if (answerResponse.data.userId == this.selectedUser.id) {
-                for (const fab of this.formAbs.entities.values()) {
-                    const ans = answerResponse.data.answers[fab.taskId];
-                    this.handleAnswerSet(ans, fab, user, true);
-                }
-            }
+            this.getFormAnswersAndUpdate(fieldsToChange, this.selectedUser);
         }
 
         // TODO: do not call changeUser separately if updateAll enabled
@@ -818,8 +787,8 @@ export class ViewCtrl implements IController {
         // TODO: Refactor (repeated lines from changeUser)
         taskids = widenFields(taskids);
         const formAbMap = new Map<string, AnswerBrowserController>();
-        const fabIds: string[] = [];
         const regularAbMap = new Map<string, AnswerBrowserController>();
+        const currentUserFormAbs = new Map<string, AnswerBrowserController>();
         for (const t of taskids) {
             const loader = this.getPluginLoader(t);
             if (!loader) {
@@ -831,8 +800,11 @@ export class ViewCtrl implements IController {
             await loader.abLoad.promise;
             const fab = this.getFormAnswerBrowser(t);
             if (fab) {
-                formAbMap.set(fab.taskId, fab);
-                fabIds.push(fab.taskId);
+                if (!fab.isUseCurrentUser()) {
+                    formAbMap.set(fab.taskId, fab);
+                } else {
+                    currentUserFormAbs.set(fab.taskId, fab);
+                }
             } else {
                 const ab = this.getAnswerBrowser(t);
                 if (ab) {
@@ -840,23 +812,33 @@ export class ViewCtrl implements IController {
                 }
             }
         }
-        if (this.formAbs.getSize() > 0) {
-            const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
-                tasks: fabIds,
-                user: this.selectedUser.id,
-            }));
-            if (!r.ok) {
-                return;
-            }
-            const answerResponse = r.result;
-            for (const fab of formAbMap.values()) {
-                const ans = answerResponse.data.answers[fab.taskId];
-                this.handleAnswerSet(ans, fab, this.selectedUser, false);
-            }
+        if (formAbMap.size > 0) {
+            this.getFormAnswersAndUpdate(formAbMap, this.selectedUser);
+        }
+        if (currentUserFormAbs.size > 0) {
+            this.getFormAnswersAndUpdate(currentUserFormAbs, Users.getCurrent());
         }
         for (const ab of regularAbMap.values()) {
             ab.getAnswersAndUpdate();
             ab.loadInfo();
+        }
+    }
+
+    async getFormAnswersAndUpdate(formAnswerBrowsers: Map<string, AnswerBrowserController>, user: IUser) {
+        const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
+            tasks: Array.from(formAnswerBrowsers.keys()),
+            user: user.id,
+        }));
+        if (!r.ok) {
+            console.error("userAnswersForTasks failed");
+            return;
+        }
+        const answerResponse = r.result;
+        if (answerResponse.data.userId == user.id) {
+            for (const fab of formAnswerBrowsers.values()) {
+                const ans = answerResponse.data.answers[fab.taskId];
+                this.handleAnswerSet(ans, fab, user, true);
+            }
         }
     }
 

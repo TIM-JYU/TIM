@@ -503,7 +503,9 @@ def post_answer(plugintype: str, task_id_ext: str):
             users = list(answer.users_all)
             if not users:
                 raise PluginException('No users found for the specified answer')
-            if user_id not in (u.id for u in users):
+            # For now global fields use current user in browser
+            # We set answerer user to be current user later so we ignore user mismatch in global case
+            if user_id not in (u.id for u in users) and not tid.is_global:
                 raise PluginException('userId is not associated with answer_id')
         elif user_id and user_id != curr_user.id and False: # TODO: Vesa's hack to no need for belong teachers group
             teacher_group = UserGroup.get_teachers_group()

@@ -164,7 +164,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
 
     public isUseCurrentUser() {
         const m = this.pluginMarkup();
-        return m?.useCurrentUser;
+        return m?.useCurrentUser ?? false;
     }
 
     public isGlobal(): boolean {
@@ -476,16 +476,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
-    async changeUserAndAnswers(user: IUser, answers: IAnswer[]) {
-        if (this.isGlobal() || this.isUseCurrentUser()) {
-            return;
+    changeUserAndAnswers(user: IUser, answers: IAnswer[]) {
+        if (!this.isGlobal() && !this.isUseCurrentUser()) {
+            this.user = user;
+            this.fetchedUser = this.user;
         }
-        this.user = user;
-        this.fetchedUser = this.user;
         this.answers = answers;
         this.updateFiltered();
         this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
-        await this.loadInfo();
     }
 
     private unDimPlugin() {
@@ -949,9 +947,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return a?.markup;
     }
 
-    public isUseCurrentUser() {
+    public isUseCurrentUser(): boolean {
         const m = this.pluginMarkup();
-        return m?.useCurrentUser;
+        return m?.useCurrentUser ?? false;
     }
 
     public isGlobal() {
