@@ -4,18 +4,15 @@ variables:
   DOCKER_DRIVER: overlay2
   GIT_SUBMODULE_STRATEGY: normal
 
-services:
-- docker:dind
-
-before_script:
-- docker info
-- docker-compose --version
-- apk add --update bash
-- apk add --update git
-
 test:
+  services:
+  - docker:dind
   stage: test
   script:
+  - docker info
+  - docker-compose --version
+  - apk add --update bash
+  - apk add --update git
   - cp docker-compose.prod.yml.template docker-compose.prod.yml
   - cp variables.sh.template variables.sh
   - chmod +x variables.sh
@@ -32,3 +29,15 @@ test:
     when: always
     paths:
     - screenshots
+
+code_navigation:
+  stage: test  # not really a test, but we want to execute this in parallel
+  image: node:lts
+  script:
+  - cd timApp
+  - npm install
+  - npm install -g @sourcegraph/lsif-tsc
+  - lsif-tsc -p .
+  artifacts:
+    reports:
+      lsif: timApp/dump.lsif
