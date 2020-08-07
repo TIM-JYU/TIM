@@ -1384,7 +1384,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             nocode = get_param(query, "nocode", False)
 
             is_test = ""
-            if "test" in ttype:
+            if "test" in str(ttype): # str(ttype) to include all test types
                 is_test = "test"
             points_rule = get_param(query, "pointsRule", None)
             # if points_rule is None and language.readpoints_default:
@@ -1569,7 +1569,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             #    code, out, err, pwddir = (0, "", ("Compiled " + language.filename), "")
 
             else:  # run cmd wins all other run types
-                if get_param(query, "justCompile", False) and "comtest" not in ttype:
+                if get_param(query, "justCompile", False) and "comtest" not in str(ttype): # str(ttype) to include _comtest types
                     language.just_compile = True
                 language.set_stdin(userinput)
                 runcommand = get_param(query, "cmd", "")
