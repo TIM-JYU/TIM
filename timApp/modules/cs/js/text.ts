@@ -45,9 +45,8 @@ import {CsController} from "./csPlugin";
             <span class="csRunError"
                 *ngIf="runError"
                 [style]="tinyErrorStyle">{{error}}</span>
-            <div class="htmlresult"
-                *ngIf="htmlresult">
-                <span [innerHTML]="svgImageSnippet()"></span>
+            <div class="htmlresult" *ngIf="htmlresult">
+                <span [innerHTML]="htmlresult | purify"></span>
             </div>
         </div>`,
 })

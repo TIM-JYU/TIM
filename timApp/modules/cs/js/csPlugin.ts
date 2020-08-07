@@ -1239,10 +1239,6 @@ export class CsController extends CsBase implements ITimComponent {
         this.updateListeners(ChangeType.Saved);
     }
 
-    svgImageSnippet() {
-        return $sce.trustAsHtml(this.htmlresult);
-    }
-
     get english() {
         return this.markup.lang === "en";
     }
@@ -1713,7 +1709,7 @@ ${fhtml}
             return;
         }
 
-        await $timeout();
+        await new Promise((resolve) => { setTimeout(resolve); });
         await ParCompiler.processMathJaxAsciiMath(this.element[0]);
     }
 
@@ -2605,16 +2601,7 @@ ${fhtml}
             });
         if (r.ok) {
             const data = r.result;
-            const elements = $.parseHTML(data.texts);
-            let element: JQuery<HTMLElement>;
-            if (elements.length == 0) {
-                alert("Failed to parse preview HTML");
-                return;
-            } else if (elements.length == 1) {
-                element = $(elements[0]) as JQuery<HTMLElement>;
-            } else {
-                element = $("<div></div>").append(...elements);
-            }
+            const element: JQuery = $($.parseHTML(data.texts) as HTMLElement[]);
             await ParCompiler.processAllMath(element);
             this.mdHtml = element.html();
         } else {
@@ -3003,7 +2990,7 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
         </p>
     </div>
     <pre class="console" *ngIf="result">{{result}}</pre>
-    <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="svgImageSnippet()"></span></div>
+    <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
     <div class="csrunPreview">
         <div *ngIf="iframesettings && !isTauno"
                 tim-draggable-fixed
