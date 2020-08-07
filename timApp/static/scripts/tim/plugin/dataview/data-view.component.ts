@@ -78,9 +78,19 @@ interface Viewport {
 }
 
 class GridAxis {
-    hiddenItems: Set<number> = new Set<number>();
+    /**
+     * An offset list that represents start positions of each visible item, taking into account possible border size
+     */
     positionStart: number[] = [];
-    visibleItems: number[] = []; // Ordered + hidden ones removed
+
+    /**
+     * List of all visible items in their correct final order. Use this to map visible row index to actual row index.
+     */
+    visibleItems: number[] = [];
+
+    /**
+     * List of all items in their display order.
+     */
     itemOrder: number[] = [];
 
     constructor(size: number,
@@ -871,7 +881,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private updateRow(row: HTMLTableRowElement, rowIndex: number): HTMLTableRowElement {
         row.style.cssText = joinCss(this.modelProvider.stylingForRow(rowIndex));
-        row.hidden = !this.vScroll.enabled && this.rowAxis.hiddenItems.has(rowIndex);
+        row.hidden = !this.vScroll.enabled && !this.modelProvider.showRow(rowIndex);
         const rowHeight = this.modelProvider.getRowHeight(rowIndex);
         if (rowHeight) {
             row.style.height = `${rowHeight}px`;
@@ -881,7 +891,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateCell(cell: HTMLTableCellElement, rowIndex: number, columnIndex: number, contents?: string): HTMLTableCellElement {
-        cell.hidden = !this.vScroll.enabled && this.colAxis.hiddenItems.has(columnIndex);
+        cell.hidden = !this.vScroll.enabled && !this.modelProvider.showColumn(columnIndex);
         cell.className = this.modelProvider.classForCell(rowIndex, columnIndex);
         cell.style.cssText = joinCss(this.modelProvider.stylingForCell(rowIndex, columnIndex));
         cell.onclick = () => this.modelProvider.handleClickCell(rowIndex, columnIndex);
