@@ -1,24 +1,25 @@
 """Routes for qst (question) plugin."""
 import json
-import random
 import re
-from dataclasses import dataclass, fields
-from typing import Dict, Optional, List, Union, Any, TypeVar
+from dataclasses import dataclass, fields, asdict
+from typing import Dict, Optional, List, Union, Any
 from xml.sax.saxutils import quoteattr
 
 import yaml
-from flask import Blueprint
+from flask import Blueprint, render_template_string
 from flask import Response
 from flask import abort
 from flask import request
-from marshmallow import missing, EXCLUDE
+from marshmallow import missing, EXCLUDE, ValidationError
 
 from markupmodels import GenericMarkupModel
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericAnswerModel
+from pluginserver_flask import GenericAnswerModel, GenericHtmlModel, render_validationerror
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.lecture.askedjson import normalize_question_json
+from timApp.lecture.question_utils import qst_set_array_order, qst_pick_expls, qst_rand_array, qst_handle_randomization, \
+    calculate_points_from_json_answer, create_points_table, qst_filter_markup_points
 from timApp.markdown.dumboclient import DumboOptions
 from timApp.plugin.containerLink import convert_md
 from timApp.plugin.containerLink import prepare_for_dumbo_attr_list_recursive, get_plugin_regex_obj
@@ -120,10 +121,10 @@ class QstMarkupModel(GenericMarkupModel):
     questionTitle: Union[str, None, Missing] = missing
     questionType: Union[str, None, Missing] = missing
     rows: Union[Any, Missing] = missing
-    randomizedRows: Union[int, Missing] = missing
+    randomizedRows: Union[int, None, Missing] = missing
     randomSeed: Union[int, Missing] = missing
-    doNotMove: Union[List[int], int, Missing] = missing
-    defaultPoints: Union[int, float, Missing] = missing
+    doNotMove: Union[List[int], int, None, Missing] = missing
+    defaultPoints: Union[int, float, None, Missing] = missing
     savedText: Union[str, None, Missing] = missing
     size: Union[str, None, Missing] = missing
 
@@ -159,24 +160,6 @@ def qst_answer(m):
     return qst_answer_jso(m)
 
 
-def qst_filter_markup_points(points: str, question_type: str, rand_arr: List[int]) -> str:
-    """
-    filter markup's points field based on pre-generated array
-    """
-    # TODO: Use constants
-    if question_type == 'true-false' or question_type == 'matrix':
-        # point format 1:1;2:-0.5|1:-0.5;2:1 where | splits rows input, ; column input
-        ret = points.split('|')
-        ret = qst_set_array_order(ret, rand_arr)
-        ret = '|'.join(ret)
-    else:
-        # point format 1:1;2:-0.5;3:-0.5 where ; splits row input
-        ret = create_points_table(points)[0]
-        ret = qst_pick_expls(ret, rand_arr)
-        ret = ';'.join(str(key) + ':' + str(val) for [key, val] in ret.items())
-    return ret
-
-
 def qst_answer_jso(m: QstAnswerModel):
     tim_info = {}
     answers = m.input.answers
@@ -207,8 +190,6 @@ def qst_answer_jso(m: QstAnswerModel):
             m.markup.points = spoints
         points_table = create_points_table(spoints)
         default_points = m.markup.defaultPoints
-        if default_points is None or default_points is missing:
-            default_points = 0
         points = calculate_points_from_json_answer(answers, points_table, default_points)
         minpoints = markup.minpoints if markup.minpoints is not missing else -1e20
         maxpoints = markup.maxpoints if markup.maxpoints is not missing else 1e20
@@ -246,13 +227,30 @@ def is_review(jso):
     return result
 
 
+@dataclass
+class QstHtmlModel(GenericHtmlModel[QstInputModel, QstMarkupModel, QstStateModel]):
+    def get_component_html_name(self) -> str:
+        return 'qst-runner'
+
+    def get_static_html(self) -> str:
+        return render_static_qst(self)
+
+
+QstHtmlSchema = class_schema(QstHtmlModel)
+
 @qst_plugin.route("/qst/multihtml", methods=["POST"])
 @csrf.exempt
 def qst_multihtml():
     jsondata = request.get_json()
+    schema = QstHtmlSchema()
     multi = []
     for jso in jsondata:
-        multi.append(qst_get_html(jso, is_review(jso)))
+        try:
+            p = schema.load(jso)
+        except ValidationError as e:
+            multi.append(render_validationerror(e))
+        else:
+            multi.append(qst_get_html(jso, is_review(jso)))
     return json_response(multi)
 
 
@@ -615,145 +613,10 @@ if common:
 
 qst_attrs = qst_own_attributes.union(generic_attribute_names)
 
-def qst_rand_array(max_count: int,
-                   randoms: int,
-                   seed_word: str,
-                   random_seed: int = 0,
-                   locks: Optional[List[int]] = None) -> List[int]:
-    """
-    get array of count integers between 1 and max_count (incl.) using word and extra number as seed
-    :param max_count: highest possible number (incl.) and max return list length
-    :param randoms: how many random numbers to fill the array with
-    :param seed_word: input word to generate random seed
-    :param random_seed: extra number to edit the seed
-    :param locks: positions that can't be shuffled, indexing starting from 1. Any position over max_count will be
-    interpreted as max_count
-    :return: shuffled array of integers of up to max_count values
-    """
-    if locks is None:
-        locks = []
-    for i, val in enumerate(locks):
-        if val > max_count:
-            locks[i] = max_count
-        elif val < 1:
-            locks[i] = 1
-    locks = list(set(locks))
-    locks.sort()
-    total = randoms + len(locks)
-    if total > max_count:
-        total = max_count
-    ret = []
-    seed_array = []
-    orig = list(range(1, max_count + 1))
-    for i, val in enumerate(locks):
-        if len(orig) == 0:
-            break
-        if val > max_count:
-            orig.pop(len(orig) - 1)
-        try:
-            orig.pop(val - 1 - i)
-        except IndexError:
-            pass
-    # Temp seed generator
-    for char in seed_word:
-        try:
-            seed_array.append(int(char, 36))
-        except ValueError:
-            pass
-    seed = int(''.join(map(str, seed_array)))
-    random.seed(seed + random_seed)
-    random.shuffle(orig)
-    for i in range(1, total + 1):
-        if len(locks) >= total - len(ret):
-            ret.append(locks[0])
-            locks.pop(0)
-        elif len(locks) > 0 and locks[0] == i:
-            ret.append(i)
-            locks.pop(0)
-        else:
-            ret.append(orig.pop(0))
-    return ret
 
 
-T = TypeVar('T')
 
 
-def qst_set_array_order(arr: List[T], order_array: List[int]) -> List[T]:
-    """
-    pick items from arr in order given by order_array
-    indices start from 1
-    """
-    ret = []
-    for val in order_array:
-        try:
-            ret.append(arr[val - 1])
-        except IndexError:
-            pass
-    return ret
-
-
-def qst_pick_expls(orig_expls: Dict[str, T], order_array: List[int]) -> Dict[str, T]:
-    """
-    pick items from dict where keys are str converted integers in order given by order_array
-    indices start from 1
-    """
-    ret = {}
-    for i, val in enumerate(order_array):
-        pos = str(val)
-        picked = orig_expls.get(pos, None)
-        if picked is not None:
-            ret[str(i + 1)] = picked
-    return ret
-
-
-def qst_handle_randomization(jso):
-    """
-    Check if markup calls for randomization, or previous state contains randomization data
-    Update answer options, explanations and points accordingly
-    :param jso: request json to modify
-    """
-    markup = jso['markup']
-    rand_arr = None
-    prev_state = jso.get('state', None)
-    if prev_state and isinstance(prev_state, dict):
-        rand_arr = prev_state.get('order')
-        jso['state'] = prev_state.get('c')
-    rows = markup.get('rows', [])
-    if not prev_state and rand_arr is None:  # no previous answer, check markup for new order
-        rcount = markup.get('randomizedRows', 0)
-        # TODO: try to convert string
-        if not isinstance(rcount, int):
-            rcount = 0
-        if rcount is None:
-            rcount = 0
-        if rcount > 0:
-            # markup['rows'] = qst_randomize_rows(rows,rcount,jso['user_id'])
-            random_seed = markup.get('randomSeed', 0)
-            # TODO: use random seed generation within qst_rand_array if seed was string
-            if not isinstance(random_seed, int):
-                random_seed = 0
-            locks = markup.get('doNotMove', [])
-            # TODO: MarkupModel should handle these checks?
-            if locks is None:
-                locks = []
-            if isinstance(locks, int):
-                locks = [locks]
-            for val in locks:
-                if not isinstance(val, int):
-                    locks = []
-                    break
-            if random_seed is None:
-                random_seed = 0
-            seed_string = jso.get('user_id', "") + jso.get('taskID', "")
-            rand_arr = qst_rand_array(len(rows), rcount, seed_string, random_seed, locks)
-    if rand_arr is not None:  # specific order found in prev.ans or markup
-        markup['rows'] = qst_set_array_order(rows, rand_arr)
-        markup['expl'] = qst_pick_expls(markup['expl'], rand_arr)
-        points = markup.get('points')
-        if points:
-            question_type = markup.get('questionType')
-            points = qst_filter_markup_points(points, question_type, rand_arr)
-            markup['points'] = points
 
 
 def qst_get_html(jso, review):
@@ -761,9 +624,7 @@ def qst_get_html(jso, review):
     qst_handle_randomization(jso)
     info = jso['info']
     markup = jso['markup']
-    markup = normalize_question_json(markup,
-                                     allow_top_level_keys=
-                                     qst_attrs)
+    markup = normalize_question_json(markup)
     jso['markup'] = markup
     result = qst_try_hide_points(jso)
     jso['show_result'] = result
@@ -926,7 +787,7 @@ def qst_get_md(jso):
 
 def question_convert_js_to_yaml(markup: Dict, is_task: bool, task_id: Optional[str]):
     # save question. How to pick up question see lecture.py, get_question_data_from_document
-    markup = normalize_question_json(markup, allow_top_level_keys=qst_attrs)
+    markup = normalize_question_json(markup)
     question_title = markup["questionTitle"]
     question_title = question_title.replace('"', '').replace("'", '')
     # taskid = questionTitle.replace(" ", "")  # TODO: make better conversion to ID
@@ -979,7 +840,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
         convert_md([plugindata], options=par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
     markup = plugindata.get('markup')
     return QuestionInDocument(
-        markup=normalize_question_json(markup, allow_top_level_keys=qst_attrs),
+        markup=normalize_question_json(markup),
         qst=not par.is_question(),
         taskId=par.get_attr('taskId'),
         docId=d.id,
@@ -988,38 +849,11 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
     )
 
 
-def create_points_table(points):
-    points_table = []
-    if points and points != '':
-        points = str(points)
-        points_split = points.split('|')
-        for row in points_split:
-            row_points = row.split(';')
-            row_points_dict = {}
-            for col in row_points:
-                if col != '':
-                    col_points = col.split(':', 2)
-                    if len(col_points) == 1:
-                        row_points_dict[col_points[0]] = 1
-                    else:
-                        row_points_dict[col_points[0]] = float(col_points[1])
-            points_table.append(row_points_dict)
-    return points_table
-
-
-def calculate_points_from_json_answer(single_answers: List[List[str]],
-                                      points_table,
-                                      default_points: float = 0):
-    points = 0.0
-    for (oneAnswer, point_row) in zip(single_answers, points_table):
-        for oneLine in oneAnswer:
-            if oneLine in point_row:
-                points += point_row[oneLine]
-            else:
-                points += default_points
-    return points
-
-
-def calculate_points(answer, points_table):
-    single_answers = json.loads(answer)
-    return calculate_points_from_json_answer(single_answers, points_table)
+def render_static_qst(m: QstHtmlModel):
+    return render_template_string(
+        f"""
+<div class="qst">qst static placeholder</div>
+<br>
+        """,
+        **asdict(m.markup),
+    )

@@ -4,7 +4,7 @@ import {markAsUsed, to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
 import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
-import {IAskedQuestion, IQuestionAnswer} from "./lecturetypes";
+import {IAskedQuestion, IQuestionAnswerPlain} from "./lecturetypes";
 
 markAsUsed(chart);
 
@@ -20,7 +20,7 @@ function getQuestionEndTime(q: IAskedQuestion) {
 export class StatisticsToQuestionController extends DialogController<{params: IStatisticsParams}, IStatisticsResult> {
     static component = "timQuestionStatistics";
     static $inject = ["$element", "$scope"] as const;
-    private answers: IQuestionAnswer[] = [];
+    private answers: IQuestionAnswerPlain[] = [];
     private ended = false;
     private lastFetch = moment({year: 1900});
 
@@ -39,7 +39,7 @@ export class StatisticsToQuestionController extends DialogController<{params: IS
     private async getLectureAnswers() {
         while (!this.closed) {
             const now = moment();
-            const r = await to($http.get<IQuestionAnswer[]>("/getLectureAnswers", {
+            const r = await to($http.get<IQuestionAnswerPlain[]>("/getLectureAnswers", {
                 params: {
                     after: this.lastFetch.toISOString(),
                     asked_id: this.resolve.params.asked_id,

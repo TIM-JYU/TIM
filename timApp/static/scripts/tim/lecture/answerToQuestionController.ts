@@ -70,6 +70,7 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
     private preview!: IPreviewParams; // $onInit
     private questionEnded: boolean = false;
     private answer?: AnswerTable;
+    private defaultUpdateInterval = 500;
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -229,8 +230,15 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
         } else {
             this.endTime = undefined;
         }
-
+        const maxProgressBeforeUpdate = this.progressMax;
         this.updateMaxProgress();
+        if (maxProgressBeforeUpdate == null && this.progressMax != null) {
+            this.start(this.defaultUpdateInterval);
+        }
+        // TODO: controller has no option to call /extendQuestion
+        // else if (maxProgressBeforeUpdate != null && this.progressMax == null) {
+        //     // reset bar here
+        // }
     }
 
     private start(updateInterval: number) {
@@ -242,10 +250,7 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
      */
     private async updateBar(updateInterval: number) {
         // TODO: Problem with inactive tab.
-        if (!this.endTime || !this.progressMax) {
-            return;
-        }
-        while (!this.closed && !this.questionEnded) {
+        while (!this.closed && !this.questionEnded && !(!this.endTime || !this.progressMax)) {
             const now = moment();
             const timeLeft = this.endTime.diff(now);
             this.barFilled = (this.endTime.diff(this.askedTime)) - timeLeft;
@@ -310,7 +315,7 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
             if (this.endTime) {
                 this.progressText = "";
                 this.updateMaxProgress();
-                this.start(500);
+                this.start(this.defaultUpdateInterval);
             }
         }
     }

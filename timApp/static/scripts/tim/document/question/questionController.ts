@@ -70,6 +70,7 @@ interface IExtendedRow extends IRow {
     type: string;
     value: string;
     columns: IExtendedColumn[];
+    locked?: boolean; // if locked, do not let randomization hide or move the row
 }
 
 export type IQuestionDialogParams = INewQuestionParams | IEditQuestionParams;
@@ -166,6 +167,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private f?: IFormController;
     private qst = false;
     private pluginMarkup: IGenericPluginMarkup = {};
+    private defaultPoints?: number;
+    private randomization = false;
+    private randomizedRows?: number;
 
     constructor(element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -177,6 +181,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
         this.question = {
             answerFieldType: "text",
+            defaultPoints: 0,
             headers: [],
             questionText: "",
             questionTitle: "",
@@ -278,12 +283,21 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     private editQuestion(data: IEditQuestionParams) {
         const json = isAskedQuestion(data) ? data.json.json : data.markup;
-
+        const asked = isAskedQuestion(data);
         if (!isAskedQuestion(data)) {
             this.qst = data.qst;
             this.pluginMarkup = data.markup;
         }
 
+        if (json.randomizedRows) {
+            this.randomization = true;
+            this.randomizedRows = json.randomizedRows;
+        }
+
+        if (json.defaultPoints) {
+            this.question.defaultPoints = json.defaultPoints;
+            this.defaultPoints = json.defaultPoints;
+        }
         if (json.questionTitle) {
             this.question.questionTitle = this.putBackQuotations(json.questionTitle);
         }
@@ -322,11 +336,18 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         const pointsTable = getPointsTable(isAskedQuestion(data) ? data.json.json.points : data.markup.points);
         const expl: IExplCollection | undefined = isAskedQuestion(data) ? data.json.json.expl : data.markup.expl;
 
-        const rows: IExtendedRow[] = [];
+        let locks: number[] = [];
+        if (!isAskedQuestion(data) && data.markup.doNotMove) {
+            if (typeof data.markup.doNotMove === "number") {
+                locks.push(data.markup.doNotMove);
+            } else {
+                locks = data.markup.doNotMove;
+            }
+        }
 
+        const rows: IExtendedRow[] = [];
         for (let i = 0; i < jsonRows.length; i++) {
             const row = jsonRows[i];
-
             rows[i] = {
                 id: row.id,
                 text: this.putBackQuotations(row.text),
@@ -334,6 +355,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                 columns: [],
                 expl: "",
                 value: "",
+                locked: locks.includes(row.id),
             };
 
             const idString = "" + (i + 1); // rows[i].id.toString();
@@ -694,6 +716,13 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     }
 
     /**
+     * Formats a string of form {id}:{point value} based on column point value or defaultPoints attribute
+     */
+    private createPointVal(id: number, colVal: string): string {
+        return id.toString() + ":" + (parseFloat(colVal) ?? this.question.defaultPoints ?? 0);
+    }
+
+    /**
      * Creates a string of points. Rows are separated by | and answers in the same row separated by ;
      * @returns {string}
      */
@@ -711,7 +740,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                         if (currentColumn.points !== "") {
                             points += separator2;
                             const id = currentColumn.id + 1;
-                            points += id.toString() + ":" + parseFloat(currentColumn.points) || 0;
+                            points += this.createPointVal(id, currentColumn.points);
                             separator2 = ";";
                             n++;
                         }
@@ -726,7 +755,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                 if (currentColumn.points !== "") {
                     points += separator2;
                     const id = r.id;
-                    points += id.toString() + ":" + parseFloat(currentColumn.points) || 0;
+                    points += this.createPointVal(id, currentColumn.points);
                     separator2 = ";";
                     n++;
                 }
@@ -894,6 +923,15 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         });
     }
 
+    private getLockedRowIds(): number[] {
+        return this.rows.reduce((arr: number[], row) => {
+            if (row.locked) {
+                arr.push(row.id);
+            }
+            return arr;
+        }, []);
+    }
+
     /**
      * Validates and saves the question into the database.
      */
@@ -910,6 +948,14 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             await this.updatePoints(p);
             this.close({type: "points"});
             return;
+        }
+
+        this.question.defaultPoints = this.defaultPoints;
+        if (!this.randomization) {
+            this.question.randomizedRows = undefined;
+        } else {
+            this.question.randomizedRows = this.randomizedRows ?? this.rows.length; // TODO: better alternative for "all"
+            this.question.doNotMove = this.getLockedRowIds();
         }
 
         let route = "/postParagraphQ/";

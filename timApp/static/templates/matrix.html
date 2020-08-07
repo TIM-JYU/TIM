@@ -21,6 +21,7 @@
                     class="glyphicon glyphicon-plus"></span></button>
         </th>
 
+
     </tr>
     </thead>
     <tbody>
@@ -95,6 +96,9 @@
                               ng-focus="$ctrl.qctrl.explFocus($event)" ng-blur="$ctrl.qctrl.explBlur($event)"
                               ng-model="row.expl"
                               rows="1"></textarea>
+        </td>
+        <td ng-if="!$ctrl.qctrl.isAskedQuestion() && $ctrl.qctrl.randomization">
+            <label><input type="checkbox" ng-model="row.locked"/> Lock position</label>
         </td>
     </tr>
     <tr ng-if="!$ctrl.qctrl.isAskedQuestion()">

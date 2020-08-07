@@ -27,12 +27,13 @@ from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer, get_totals
 from timApp.lecture.message import Message
 from timApp.lecture.question import Question
+from timApp.lecture.question_utils import calculate_points_from_json_answer, create_points_table, \
+    qst_handle_randomization
 from timApp.lecture.questionactivity import QuestionActivityKind, QuestionActivity
 from timApp.lecture.runningquestion import Runningquestion
 from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
-from timApp.plugin.qst.qst import get_question_data_from_document, create_points_table, \
-    calculate_points_from_json_answer, calculate_points
+from timApp.plugin.qst.qst import get_question_data_from_document
 from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model, RouteException
@@ -304,6 +305,15 @@ def get_question_manually():
     return json_response(new_question)
 
 
+def try_shuffle_question(question: AskedQuestion, user_id: int):
+    q_copy = question.to_json()
+    q_json = {'markup': json.loads(question.asked_json.json),
+              'user_id': user_id}
+    qst_handle_randomization(q_json)
+    q_copy['json']['json'] = q_json['markup']
+    return q_copy
+
+
 def get_new_question(lecture: Lecture, current_question_id=None, current_points_id=None, force=False):
     """
     :param current_points_id: TODO: what is this?
@@ -332,7 +342,13 @@ def get_new_question(lecture: Lecture, current_question_id=None, current_points_
                 q = get_asked_question(asked_id)
                 answer = q.answers.filter_by(user_id=current_user).first()
                 question.add_activity(QuestionActivityKind.Usershown, u)
-                return {'type': 'answer', 'data': answer} if answer else {'type': 'question', 'data': q}
+                if answer:
+                    return {'type': 'answer', 'data': answer}
+                else:
+                    return {
+                        'type': 'question',
+                        'data': q if lecture.lecturer == current_user else try_shuffle_question(q, current_user)
+                    }
         else:
             question_to_show_points = get_shown_points(lecture)
             if question_to_show_points:
@@ -858,8 +874,9 @@ def update_question_points():
     asked_question.expl = expl
     points_table = create_points_table(points)
     question_answers: List[LectureAnswer] = asked_question.answers.all()
+    default_points = asked_question.get_default_points()
     for answer in question_answers:
-        answer.points = calculate_points(answer.answer, points_table)
+        answer.points = calculate_points_from_json_answer(answer.get_parsed_answer(), points_table, default_points)
     db.session.commit()
     return ok_response()
 
@@ -938,8 +955,7 @@ def get_lecture_answers():
     after = get_option(request, 'after', default=question.asked_time, cast=dateutil.parser.parse)
 
     lecture_answers = question.answers.filter(LectureAnswer.answered_on > after).order_by(LectureAnswer.answered_on.asc()).all()
-
-    return json_response(lecture_answers)
+    return json_response([a.to_json(include_question=False, include_user=False) for a in lecture_answers])
 
 
 @lecture_routes.route("/answerToQuestion", methods=['PUT'])
@@ -953,7 +969,6 @@ def answer_to_question():
     if answer is None:
         # The data SHOULD have (empty) answers array even if the user does not touch the answer sheet.
         raise RouteException('Missing answers in input')
-    whole_answer = answer
     lecture = get_current_lecture_or_abort()
     lecture_id = lecture.lecture_id
     u = get_current_user_object()
@@ -971,10 +986,15 @@ def answer_to_question():
         asked_question.add_activity(QuestionActivityKind.Useranswered, u)
 
     if (not lecture_answer) or (lecture_answer and answer != lecture_answer.answer):
+        whole_answer = answer
         time_now = get_current_time()
-        question_points = asked_question.get_effective_points()
+        if not is_lecturer_of(lecture):
+            whole_answer, question_points = asked_question.build_answer_and_points(whole_answer, u)
+        else:
+            question_points = asked_question.get_effective_points()
         points_table = create_points_table(question_points)
-        points = calculate_points_from_json_answer(answer, points_table)
+        default_points = asked_question.get_default_points()
+        points = calculate_points_from_json_answer(answer, points_table, default_points)
         answer = json.dumps(whole_answer)
         if lecture_answer and u.id != 0:
             lecture_answer.answered_on = time_now

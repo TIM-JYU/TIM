@@ -10,6 +10,19 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 
 
+def unshuffle_lectureanswer(answer: List[List[str]], question_type: str,
+                         row_count: int, rand_arr: List[int]) -> List[List[str]]:
+    if question_type == 'matrix' or question_type == 'true-false':
+        unshuffled_ans = [[] for x in range(row_count)]
+        for i, pos in enumerate(rand_arr):
+            unshuffled_ans[pos - 1] = answer[i]
+    else:
+        unshuffled_ans = [[]]
+        for choice in answer[0]:
+            unshuffled_ans[0].append(str(rand_arr[int(choice) - 1]))
+    return unshuffled_ans
+
+
 class LectureAnswer(db.Model):
     __tablename__ = 'lectureanswer'
     answer_id = db.Column(db.Integer, primary_key=True)
@@ -28,11 +41,20 @@ class LectureAnswer(db.Model):
     def get_by_id(ans_id: int) -> Optional['LectureAnswer']:
         return LectureAnswer.query.get(ans_id)
 
-    def to_json(self, include_question=True, include_user=True):
+    def get_parsed_answer(self):
+        # If lecture question's rows are randomized, it will be saved as a dict
+        # containing additional information about how the answerer saw the question.
+        # e.g {"c": [["2"]], "order": [4, 3, 5], "rows": 5, "question_type": "radio-vertical"}
         try:
             ans = json.loads(self.answer)
-        except JSONDecodeError:
+            if isinstance(ans, dict):
+                ans = unshuffle_lectureanswer(ans.get('c'), ans.get('question_type'), ans.get('rows'), ans.get('order'))
+        except (JSONDecodeError, IndexError):
             ans = []
+        return ans
+
+    def to_json(self, include_question=True, include_user=True):
+        ans = self.get_parsed_answer()
         result = {
             'answer': ans,
             'answer_id': self.answer_id,

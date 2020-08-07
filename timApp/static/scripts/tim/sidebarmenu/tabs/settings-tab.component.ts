@@ -97,7 +97,7 @@ const DEFAULT_PIECE_SIZE = 20;
         <ng-container *ngIf="lctrl.lectureSettings.inLecture">
             <h5 i18n>Lecture settings</h5>
             <div class="checkbox">
-                <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useWall"> Show wall</label>
+                <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useWall" (ngModelChange)="lctrl.refreshWall()"> Show wall</label>
             </div>
             <div *ngIf="!lctrl.isLecturer" class="checkbox">
                 <label i18n>

@@ -10,6 +10,7 @@ from timApp.lecture.askedjson import AskedJson, make_error_question
 from timApp.lecture.askedquestion import AskedQuestion, get_asked_question
 from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer
+from timApp.lecture.question_utils import qst_rand_array
 from timApp.lecture.showpoints import Showpoints
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_3_ID
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -148,9 +149,10 @@ class LectureTest(TimRouteTest):
                                        'asked_time': resp['asked_time'],
                                        'doc_id': doc.id,
                                        'json': {
-                                           'hash': 'MHgzN2M5NGNhYQ==',
+                                           'hash': 'LTB4MzJjNWJkYTM=',
                                            'json': {
                                                'answerFieldType': 'radio',
+                                               'defaultPoints': 0.5,
                                                'headers': [],
                                                'points': '2:1',
                                                'questionText': 'What day is it today?',
@@ -186,7 +188,7 @@ class LectureTest(TimRouteTest):
         resp = self.get_updates(doc.id, msg_id, True, aid)
         original_end_time = dateutil.parser.parse(resp['question_end_time'])
 
-        self.json_put('/answerToQuestion', query_string={'input': json.dumps({'answers': [['1']]}), 'asked_id': aid},
+        self.json_put('/answerToQuestion', query_string={'input': json.dumps({'answers': [['2']]}), 'asked_id': aid},
                       expect_content=self.ok_resp)
 
         resp = self.get_updates(doc.id, msg_id, True, aid)
@@ -239,7 +241,16 @@ class LectureTest(TimRouteTest):
 
         self.login_test1()
 
-        self.post('/updatePoints/', query_string=dict(asked_id=aid, points='2:1'))
+        totals = self.get(f'/getLectureAnswerTotals/{lecture_id}')
+        self.assertEqual("""
+testuser1;sum;1.5
+testuser2;sum;1.0
+
+testuser1;count;2
+testuser2;count;1
+                """.strip() + '\n', totals)
+        # updatePoints should take defaultPoints 0.5 into account
+        self.post('/updatePoints/', query_string=dict(asked_id=aid, points='0:1'))
 
         resp = self.json_post('/askQuestion',
                               query_string=dict(doc_id=doc.id, par_id=par_id))
@@ -275,8 +286,8 @@ class LectureTest(TimRouteTest):
 
         totals = self.get(f'/getLectureAnswerTotals/{lecture_id}')
         self.assertEqual("""
-testuser1;sum;1.0
-testuser2;sum;0.0
+testuser1;sum;2.0
+testuser2;sum;0.5
 
 testuser1;count;2
 testuser2;count;1
@@ -354,3 +365,72 @@ testuser2;count;1
                                       password='1234',
                                       start_time=curr))
         self.get_updates(d.id, -1)
+
+    def test_shuffled_questions(self):
+        self.login_test1()
+        current_time = get_current_time()
+        start_time = (current_time - datetime.timedelta(minutes=15))
+        end_time = (current_time + datetime.timedelta(hours=2))
+        lecture_code = 'test lecture'
+        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/question_randomization.md')
+        j = self.json_post('/createLecture', json_data=dict(doc_id=doc.id,
+                                                            end_time=end_time,
+                                                            lecture_code=lecture_code,
+                                                            max_students=50,
+                                                            start_time=start_time))
+        lecture_id = j['lecture_id']
+        self.login_test2()
+        self.json_post('/joinLecture', query_string={'lecture_id': lecture_id})
+        self.login_test1()
+
+        def ask_and_get_answers(parnumber, lecturer_answer, student_answer):
+            par_id = doc.document.get_paragraphs()[parnumber].get_id()
+            resp = self.json_post('/askQuestion',
+                                  query_string=dict(doc_id=doc.id, par_id=par_id))
+            aid = resp['asked_id']
+            self.json_put('/answerToQuestion',
+                          query_string={'input': json.dumps({'answers': lecturer_answer}), 'asked_id': aid},
+                          expect_content=self.ok_resp)
+            self.login_test2()
+            self.json_put('/answerToQuestion',
+                          query_string={'input': json.dumps({'answers': student_answer}), 'asked_id': aid},
+                          expect_content=self.ok_resp)
+            self.login_test1()
+            resp = self.get('/getLectureAnswers', query_string=dict(asked_id=aid))
+            return resp, aid
+
+        # test_shuffle_radio-vertical
+        resp, aid = ask_and_get_answers(0, [['1', '2', '3', '4']], [['1', '2', '3', '4']])
+        # lecturer input should not be shuffled, student input should be shuffled
+        self.assertEqual([['1', '2', '3', '4']], resp[0]['answer'])
+        self.assertEqual(10, resp[0]['points'])
+        self.assertEqual([['4', '1', '3', '5']], resp[1]['answer'])
+        self.assertEqual(13, resp[1]['points'])
+
+        # re-calculate answer to shuffled question correctly on updatePoints call
+        self.post('/updatePoints/', query_string=dict(asked_id=aid, points='1:-1;2:-2;3:-3;4:-4;5:100'))
+        resp = self.get('/getLectureAnswers', query_string=dict(asked_id=aid))
+        self.assertEqual(-10, resp[0]['points'])
+        self.assertEqual(92, resp[1]['points'])
+
+        # test_shuffle_true-false
+        resp, _ = ask_and_get_answers(1, [['1'], ['2'], ['1']], [['1'], ['2']])
+        self.assertEqual(3, resp[0]['points'])
+        self.assertEqual([['1'], ['2'], ['1']], resp[0]['answer'])
+        self.assertEqual(3, resp[0]['points'])
+        self.assertEqual([[], ['1'], ['2']], resp[1]['answer'])
+        self.assertEqual(-2, resp[1]['points'])
+
+        # test_shuffle_matrix
+        resp, _ = ask_and_get_answers(2, [['1'], ['2'], ['3']], [['1'], ['3']])
+        self.assertEqual(6, resp[0]['points'])
+        self.assertEqual([['1'], ['2'], ['3']], resp[0]['answer'])
+        self.assertEqual(2, resp[1]['points'])
+        self.assertEqual([[], ['1'], ['3']], resp[1]['answer'])
+
+        # test_checkbox-vertical
+        resp, _ = ask_and_get_answers(3, [['1', '3']], [['1', '2']])
+        self.assertEqual(4, resp[0]['points'])
+        self.assertEqual([['1', '3']], resp[0]['answer'])
+        self.assertEqual(5, resp[1]['points'])
+        self.assertEqual([['2', '3']], resp[1]['answer'])

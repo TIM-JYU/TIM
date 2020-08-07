@@ -138,6 +138,7 @@ export class LectureController {
     async init() {
         await this.checkIfInLecture();
         void this.startLongPolling();
+        void this.refreshWall();
     }
 
     async refreshWall() {
@@ -303,7 +304,9 @@ export class LectureController {
             this.showLectureView(answer);
             this.lectureSettings.useWall = true;
             this.lectureSettings.useQuestions = true;
+            void this.refreshWall();
             return true;
+
         }
     }
 
@@ -492,6 +495,8 @@ export class LectureController {
                 await $timeout(5000);
                 continue;
             }
+
+            void this.refreshWall();
 
             // By checking "hidden" we avoid the idle timeout (default 60 seconds).
             if (!ifvisible.now("hidden")) {
