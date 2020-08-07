@@ -24,6 +24,13 @@ export class FreeDrawing {
     constructor(freeDrawing: ILineSegment) {
         this.drawData = freeDrawing;
     }
+
+    public makeDrawObject(): DrawObject {
+        return {
+            type: "freehand",
+            drawData: this.drawData,
+        };
+    }
 }
 
 export class Circle {
@@ -31,6 +38,12 @@ export class Circle {
 
     constructor(circle: IRectangleOrCircle) {
         this.drawData = circle;
+    }
+    public makeDrawObject(): DrawObject {
+        return {
+            type: "circle",
+            drawData: this.drawData,
+        };
     }
 }
 
@@ -40,7 +53,30 @@ export class Rectangle {
     constructor(rectangle: IRectangleOrCircle) {
         this.drawData = rectangle;
     }
+
+    public makeDrawObject(): DrawObject {
+        return {
+            type: "rectangle",
+            drawData: this.drawData,
+        };
+    }
 }
+interface IRectangle {
+    type: "rectangle";
+    drawData: IRectangleOrCircle;
+}
+
+interface ICircle {
+    type: "circle";
+    drawData: IRectangleOrCircle;
+}
+
+interface IFreeHand {
+    type: "freehand";
+    drawData: ILineSegment
+}
+
+export type DrawObject = IRectangle | ICircle | IFreeHand;
 
 @Component({
     selector: "draw-canvas",
@@ -72,7 +108,7 @@ export class DrawCanvasComponent implements OnInit {
     drawFill = false;
     ctx!: CanvasRenderingContext2D;
 
-    clickCallback?: (arg0: this) => void;
+    clickCallback?: (arg0: this, arg1: number, arg2: number) => void;
 
     drawStarted = false;
     // drawings that can altered with undo (TODO: Redo, erase...)
@@ -87,6 +123,8 @@ export class DrawCanvasComponent implements OnInit {
     private objY: number = 0;
     private objW: number = 0;
     private objH: number = 0;
+
+    public id: number = 0;
 
     constructor(el: ElementRef<HTMLElement>, private domSanitizer: DomSanitizer) {
     }
@@ -118,7 +156,7 @@ export class DrawCanvasComponent implements OnInit {
         }
     }
 
-    public setClickCallback(cb: (arg0: DrawCanvasComponent) => void) {
+    public setClickCallback(cb: (arg0: DrawCanvasComponent, arg1: number, arg2: number) => void) {
         this.clickCallback = cb;
     }
 
@@ -130,7 +168,7 @@ export class DrawCanvasComponent implements OnInit {
             this.startSegmentDraw(posToRelative(this.canvas.nativeElement, e));
         }
         if (this.clickCallback) {
-            this.clickCallback(this);
+            this.clickCallback(this, e.offsetX, e.offsetY);
         }
     }
 
@@ -331,39 +369,23 @@ export class DrawCanvasComponent implements OnInit {
         this.prevPos = p;
     }
 
-    getDrawing(): IDrawData {
-        const circles: IRectangleOrCircle[] = [];
-        const rectangles: IRectangleOrCircle[] = [];
-        const freeHand: ILineSegment[] = [];
-        for (const obj of this.drawData) {
-            if (obj instanceof Circle) {
-                circles.push(obj.drawData);
-            } else if (obj instanceof Rectangle) {
-                rectangles.push(obj.drawData);
-            } else {
-                freeHand.push(obj.drawData);
-            }
-        }
-        const ret: IDrawData = {};
-        if (circles.length > 0) {
-            ret.circles = circles;
-        }
-        if (rectangles.length > 0) {
-            ret.rectangles = rectangles;
-        }
-        if (freeHand.length > 0) {
-            ret.freeHand = freeHand;
-        }
-        return ret;
+    getDrawing(): DrawObject[] {
+        return this.drawData.map((drawObject) => {
+            return drawObject.makeDrawObject();
+        });
     }
 
-    getDrawingDimensions(): { x: number, y: number, w: number, h: number } {
+    getCurrentDrawingDimensions(): { x: number, y: number, w: number, h: number } {
+        return this.getDrawingDimensions(this.getDrawing());
+    }
+
+    getDrawingDimensions(drawing: DrawObject[]): { x: number, y: number, w: number, h: number } {
         let x = this.canvas.nativeElement.width;
         let y = this.canvas.nativeElement.height;
         let w = 0;
         let h = 0;
-        for (const obj of this.drawData) {
-            if (obj instanceof FreeDrawing) {
+        for (const obj of drawing) {
+            if (obj.type == "freehand") {
                 for (const line of obj.drawData.lines) {
                     if (x == null || x > line[0]) {
                         x = line[0];
@@ -402,6 +424,12 @@ export class DrawCanvasComponent implements OnInit {
         this.drawData = [];
         // this.clear();
         // this.redrawAll();
+    }
+
+    isCoordWithinDrawing(drawing: DrawObject[], x: number, y: number): boolean {
+        const dimensions = this.getDrawingDimensions(drawing);
+        console.log("xy", x, y);
+        return (x > dimensions.x && x < dimensions.w && y > dimensions.y && y < dimensions.h);
     }
 
 }

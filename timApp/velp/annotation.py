@@ -6,10 +6,10 @@ as well as adding comments to the annotations. The module also retrieves the ann
 :version: 1.0.0
 
 """
-
+import json
 import re
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, List
 
 from flask import Blueprint
 
@@ -89,6 +89,7 @@ class UpdateAnnotationModel(AnnotationIdModel):
     points: Optional[float] = None
     color: Optional[str] = None
     coord: Optional[AnnotationPosition] = None
+    drawData: Optional[List[dict]] = None
 
 
 @annotations.route("/update_annotation", methods=['post'])
@@ -102,6 +103,7 @@ def update_annotation(m: UpdateAnnotationModel):
     visible_to = m.visible_to
     points = m.points
     color = m.color
+    drawing = m.drawData
 
     ann = get_annotation_or_abort(m.id)
     d = get_doc_or_abort(ann.document_id)
@@ -123,6 +125,9 @@ def update_annotation(m: UpdateAnnotationModel):
             ann.points = None
     if m.coord:
         ann.set_position_info(m.coord)
+    if drawing:
+        ann.hash_start = json.dumps(drawing.__dict__)
+
     db.session.commit()
     return json_response(ann)
 

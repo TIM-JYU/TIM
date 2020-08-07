@@ -17,8 +17,9 @@ import {ViewCtrl} from "../document/viewctrl";
 import {showMessageDialog} from "../ui/dialog";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
-import {clone, isInViewport, log, Result, scrollToElement, to} from "../util/utils";
+import {clone, isInViewport, Result, scrollToElement, to} from "../util/utils";
 import {Annotation, IAnnotationEditableValues, IAnnotationInterval} from "./velptypes";
+import {DrawObject} from "tim/plugin/drawCanvas";
 
 /**
  * Lists the possible reasons why an annotation is added to the document.
@@ -45,7 +46,7 @@ export interface IAnnotationBindings {
     defaultcomment: string;
 }
 
-export async function updateAnnotationServer(updatevalues: IAnnotationEditableValues & { id: number, coord?: IAnnotationInterval }): Promise<Result<Annotation, string>> {
+export async function updateAnnotationServer(updatevalues: IAnnotationEditableValues & { id: number, coord?: IAnnotationInterval, drawData?: DrawObject[] }): Promise<Result<Annotation, string>> {
     const r2 = await to($http.post<Record<string, unknown>>("/update_annotation", updatevalues));
     if (!r2.ok) {
         return {ok: false, result: r2.result.data.error};

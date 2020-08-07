@@ -635,7 +635,7 @@ export class ReviewController {
             }
             const ind = document.createElement("div");
             let corners = {x: 0, y: 0, h: 0, w: 0};
-            corners = this.selectedCanvas.getDrawingDimensions();
+            corners = this.selectedCanvas.getCurrentDrawingDimensions();
 
             // TODO: draw on canvas instead of setting div to look like a rectangle
             ind.style.width = corners.w + "px";
@@ -649,7 +649,7 @@ export class ReviewController {
             console.log(parelement);
             while (parelement && !parelement.hasAttribute("t")) {
                 parelement = getElementParent(parelement);
-                            console.log(parelement);
+                console.log(parelement);
             }
             if (!parelement) {
                 showMessageDialog("Could not add annotation (parelement missing)");
@@ -668,14 +668,46 @@ export class ReviewController {
                 {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
                 velp,
             );
+            ann.drawData = velpDrawing;
 
             const ele = this.compilePopOver(targ, ind, ann, AnnotationAddReason.AddingNew) as HTMLElement;
             const span = ele.querySelector("span");
             ele.style.position = "absolute";
             ele.style.left = corners.x + "px";
             ele.style.top = corners.y + "px";
-            // #### TODO handle velp update
-            this.selectedCanvas.storeDrawing();
+
+            // TODO: db column for drawdata. Until then assume coord depth 0 means image velp
+            coord = {
+                start: {
+                    par_id: parelement.id,
+                    t: parelement.getAttribute("t") ?? undefined,
+                    offset: Math.round(corners.x),
+                    node: Math.round(corners.w),
+                    depth: 0,
+                },
+                end: {
+                    par_id: parelement.id,
+                    t: parelement.getAttribute("t") ?? undefined,
+                    offset: Math.round(corners.y),
+                    node: Math.round(corners.h),
+                    depth: 0,
+                },
+            };
+            this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.LoadingExisting, AnnotationPlacement.InMargin);
+            await angularWait();
+
+            const saved = await updateAnnotationServer({
+                id: ann.id,
+                ...ann.getEditableValues(),
+                coord,
+                drawData: velpDrawing,
+            });
+            if (saved.ok) {
+                this.updateAnnotation(saved.result);
+                this.selectedCanvas.storeDrawing();
+            }
+            // TODO clear indicators and margins if !saved.ok
+            this.selectedElement = undefined;
 
         } else if (this.selectedArea != null) {
 
@@ -1123,17 +1155,30 @@ export class ReviewController {
 
     setCanvas(par: Element, answerId: number, canvas: DrawCanvasComponent): void {
         canvas.setClickCallback(this.clickFromCanvas);
+        canvas.id = answerId;
     }
 
-    clickFromCanvas = (canvas: DrawCanvasComponent) => {
-        if (!canvas.drawingAnything || !this.velpSelection) {
+    clickFromCanvas = (canvas: DrawCanvasComponent, x: number, y: number) => {
+        if (canvas.drawingAnything) {
+            this.selectedArea = undefined;
+            this.selectionIsDrawing = true;
+            const par = $(canvas.canvas.nativeElement).parents(".par")[0] as Element;
+            this.selectedElement = par;
+            this.selectedCanvas = canvas;
             return;
+        } else {
+            console.log("checking xy", x, y);
+            const anns = this.getAnnotationsByAnswerId(canvas.id);
+            for (const a of anns) {
+                if (a.coord.start.depth != 0 || a.coord.end.depth != 0 || !a.drawData) {
+                    continue;
+                }
+                if (canvas.isCoordWithinDrawing(a.drawData, x, y)) {
+                    console.log("found annotation");
+                    // TODO: toggle annotation
+                    // if overlap then iterate
+                }
+            }
         }
-        this.selectedArea = undefined;
-        this.selectionIsDrawing = true;
-        const par = $(canvas.canvas.nativeElement).parents(".par")[0] as Element;
-        this.selectedElement = par;
-        this.selectedCanvas = canvas;
     };
-
 }
