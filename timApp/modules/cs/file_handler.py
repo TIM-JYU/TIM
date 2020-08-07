@@ -339,7 +339,7 @@ class FileHandler:
                 raise ValueError("Root path points outside of allowed directories (masterPath must be a relative subpath)")
 
         uploaded_files = get_json_param(query.jso, "input", "uploadedFiles", None)
-        if uploaded_files is not None:
+        if uploaded_files:
             save["uploadedFiles"] = uploaded_files
 
         files = get_json_param(query.jso, "markup", "files", None)
