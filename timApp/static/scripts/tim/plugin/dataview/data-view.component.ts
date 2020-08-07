@@ -44,7 +44,11 @@ export interface TableModelProvider {
 
     setRowChecked(rowIndex: number, checked: boolean): void;
 
+    isRowChecked(rowIndex: number): boolean;
+
     handleChangeCheckbox(rowIndex: number): void;
+
+    setSelectAll(state: boolean): void;
 }
 
 export interface VirtualScrollingOptions {
@@ -282,7 +286,10 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                 <thead>
                 <tr>
                     <td [style.width]="idHeaderCellWidth" class="nrcolumn totalnr">{{totalRows}}</td>
-                    <td class="cbColumn"><input type="checkbox"></td>
+                    <td class="cbColumn"><input [(ngModel)]="cbAllVisibleRows"
+                                                (ngModelChange)="setAllVisible()"
+                                                type="checkbox"
+                                                title="Check for all visible rows"></td>
                 </tr>
                 </thead>
                 <tbody>
@@ -322,6 +329,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     totalRows: number = 0;
     visibleRows: number = 0;
     idHeaderCellWidth: string = "";
+    cbAllVisibleRows = false;
     @HostBinding("style.width") private componentWidth: string = "";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
@@ -358,6 +366,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private get tableHeight(): number {
         return Math.min(this.mainDataContainer.nativeElement.offsetHeight, this.mainDataTable.nativeElement.offsetHeight);
+    }
+
+    setAllVisible() {
+        this.modelProvider.setSelectAll(this.cbAllVisibleRows);
+        this.modelProvider.handleChangeCheckbox(-1);
     }
 
     // region Public update functions
@@ -397,6 +410,23 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.visibleRows = this.rowAxis.visibleItems.length;
         this.totalRows = this.modelProvider.getDimension().rows;
         this.cdr.detectChanges();
+    }
+
+    /**
+     * Updates selected row info of the visible items
+     */
+    updateAllSelected() {
+        if (!this.idTableCache) {
+            return;
+        }
+        if (this.vScroll.enabled) {
+            runMultiFrame(this.updateViewport());
+            return;
+        }
+        for (const rowIndex of this.rowAxis.visibleItems) {
+            const input = this.idTableCache.getCell(rowIndex, 1).getElementsByTagName("input")[0];
+            input.checked = this.modelProvider.isRowChecked(rowIndex);
+        }
     }
 
     // endregion

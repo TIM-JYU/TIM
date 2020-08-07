@@ -1078,6 +1078,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 }
                 this.cbs[i] = b;
             }
+            this.dataViewComponent?.updateAllSelected();
         }
         if (this.cbFilter) {
             await this.updateFilter();
@@ -3997,6 +3998,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     setRowChecked(rowIndex: number, checked: boolean): void {
         this.cbs[rowIndex] = checked;
+    }
+
+    setSelectAll(state: boolean): void {
+        this.cbAllFilter = state;
+    }
+
+    isRowChecked(rowIndex: number): boolean {
+        return this.cbs[rowIndex];
     }
 }
 
