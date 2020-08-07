@@ -51,6 +51,8 @@ export interface TableModelProvider {
     setSelectAll(state: boolean): void;
 
     setSelectedFilter(state: boolean): void;
+
+    handleClickClearFilters(): void;
 }
 
 export interface VirtualScrollingOptions {
@@ -294,7 +296,10 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
             <table [ngStyle]="tableStyle" #summaryTable>
                 <thead>
                 <tr>
-                    <td [style.width]="idHeaderCellWidth" class="nrcolumn totalnr">{{totalRows}}</td>
+                    <td [style.width]="idHeaderCellWidth"
+                        class="nrcolumn totalnr"
+                        title="Click to show all"
+                        (click)="clearFilters()">{{totalRows}}</td>
                     <td class="cbColumn"><input [(ngModel)]="cbAllVisibleRows"
                                                 (ngModelChange)="setAllVisible()"
                                                 type="checkbox"
@@ -393,6 +398,18 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     setFilterSelected() {
         this.modelProvider.setSelectedFilter(this.cbFilter);
         this.modelProvider.handleChangeFilter();
+    }
+
+    clearFilters() {
+        this.modelProvider.handleClickClearFilters();
+        this.cbFilter = false;
+        if (this.filterTableCache) {
+            for (const cell of this.filterTableCache.rows[0].cells) {
+                const input = cell.getElementsByTagName("input")[0];
+                input.value = "";
+            }
+        }
+        // TODO: Clear sorting
     }
 
     // endregion

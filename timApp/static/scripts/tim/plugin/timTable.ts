@@ -1104,7 +1104,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     async handleChangeFilter() {
         await this.updateFilter();
-        this.dataViewComponent?.updateVisible();
         this.c();
     }
 
@@ -1136,6 +1135,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             }
         }
         if (!this.cbFilter && !isFilter) {
+            this.dataViewComponent?.updateVisible();
             return;
         }
 
@@ -1150,6 +1150,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.currentHiddenRows.push(i);
         }
         this.countCBs(-1);
+        this.dataViewComponent?.updateVisible();
     }
 
     sortByColumn(ai: number, bi: number, col: number, dir: number): number {
