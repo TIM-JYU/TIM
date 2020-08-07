@@ -10,7 +10,7 @@ import {
 } from "tim/velp/annotation.component";
 import {deserialize} from "typescript-json-serializer";
 import {TaskId} from "tim/plugin/taskid";
-import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
+import {DrawCanvasComponent, DrawObject} from "tim/plugin/drawCanvas";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -112,7 +112,17 @@ export class ReviewController {
         if (!response.ok) {
             return;
         }
-        this.annotations = response.result.data.map((o) => deserialize(o, Annotation));
+        this.annotations = response.result.data.map((o) => {
+            const ann = deserialize(o, Annotation);
+            try {
+                if (ann.coord.start.depth == 0 && ann.coord.end.depth == 0 && ann.coord.start.t) {
+                    ann.drawData = JSON.parse(ann.coord.start.t) as DrawObject[];
+                }
+            } catch (e) {
+                // console.log("placeholder failure:", ann.coord.start.t);
+            }
+            return ann;
+        });
         const annotationsToRemove = [];
 
         for (const a of this.annotations) {
@@ -703,7 +713,12 @@ export class ReviewController {
                 drawData: velpDrawing,
             });
             if (saved.ok) {
-                this.updateAnnotation(saved.result);
+                const annCopy = saved.result;
+                if (saved.result.coord.start.t) {
+                    annCopy.drawData = JSON.parse(saved.result.coord.start.t) as DrawObject[]; // placeholder until db update
+                }
+                this.updateAnnotation(annCopy);
+
                 this.selectedCanvas.storeDrawing();
             }
             // TODO clear indicators and margins if !saved.ok
@@ -1156,6 +1171,16 @@ export class ReviewController {
     setCanvas(par: Element, answerId: number, canvas: DrawCanvasComponent): void {
         canvas.setClickCallback(this.clickFromCanvas);
         canvas.id = answerId;
+        const annotationDrawings = this.getAnnotationsByAnswerId(answerId).reduce((arr: DrawObject[], ann) => {
+            console.log(ann.drawData);
+            if (ann.drawData) {
+                arr = arr.concat(ann.drawData);
+            }
+            console.log(arr);
+            return arr;
+        }, []);
+        console.log(annotationDrawings);
+        canvas.setPersistentDrawData(annotationDrawings);
     }
 
     clickFromCanvas = (canvas: DrawCanvasComponent, x: number, y: number) => {
@@ -1167,7 +1192,6 @@ export class ReviewController {
             this.selectedCanvas = canvas;
             return;
         } else {
-            console.log("checking xy", x, y);
             const anns = this.getAnnotationsByAnswerId(canvas.id);
             for (const a of anns) {
                 if (a.coord.start.depth != 0 || a.coord.end.depth != 0 || !a.drawData) {

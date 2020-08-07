@@ -18,6 +18,8 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {drawFreeHand} from "tim/plugin/imagex";
 
+
+// TODO: These classes are probably redundant - DrawObject may be enough
 export class FreeDrawing {
     public drawData: ILineSegment;
 
@@ -76,6 +78,7 @@ interface IFreeHand {
     drawData: ILineSegment
 }
 
+// TODO: Name overlap with imagex DrawObject
 export type DrawObject = IRectangle | ICircle | IFreeHand;
 
 @Component({
@@ -114,7 +117,7 @@ export class DrawCanvasComponent implements OnInit {
     // drawings that can altered with undo (TODO: Redo, erase...)
     drawData: Array<FreeDrawing | Circle | Rectangle> = [];
     // drawings that cannot be altered via undo
-    peristentDrawData: Array<FreeDrawing | Circle | Rectangle> = [];
+    persistentDrawData: Array<FreeDrawing | Circle | Rectangle> = [];
     freeDrawing?: ILineSegment;
     private prevPos?: TuplePoint;
     private startX: number = 0;
@@ -275,7 +278,7 @@ export class DrawCanvasComponent implements OnInit {
     }
 
     redrawAll(): void {
-        this.drawFromArray(this.peristentDrawData);
+        this.drawFromArray(this.persistentDrawData);
         this.drawFromArray(this.drawData);
         if (this.freeDrawing) {
             drawFreeHand(this.ctx, [this.freeDrawing]);
@@ -420,7 +423,7 @@ export class DrawCanvasComponent implements OnInit {
     }
 
     storeDrawing() {
-        this.peristentDrawData.concat(this.drawData);
+        this.persistentDrawData.concat(this.drawData);
         this.drawData = [];
         // this.clear();
         // this.redrawAll();
@@ -428,8 +431,22 @@ export class DrawCanvasComponent implements OnInit {
 
     isCoordWithinDrawing(drawing: DrawObject[], x: number, y: number): boolean {
         const dimensions = this.getDrawingDimensions(drawing);
-        console.log("xy", x, y);
-        return (x > dimensions.x && x < dimensions.w && y > dimensions.y && y < dimensions.h);
+        return (x > dimensions.x && x < dimensions.x + dimensions.w && y > dimensions.y && y < dimensions.y + dimensions.h);
+    }
+
+    setPersistentDrawData(data: DrawObject[]): void {
+        this.persistentDrawData = data.map((obj) => {
+            let shape: Circle | Rectangle | FreeDrawing;
+            if (obj.type == "freehand") {
+                shape = new FreeDrawing(obj.drawData);
+            } else if (obj.type == "circle") {
+                shape = new Circle(obj.drawData);
+            } else {
+                shape = new Rectangle(obj.drawData);
+            }
+            return shape;
+        });
+        this.redrawAll();
     }
 
 }

@@ -126,7 +126,7 @@ def update_annotation(m: UpdateAnnotationModel):
     if m.coord:
         ann.set_position_info(m.coord)
     if drawing:
-        ann.hash_start = json.dumps(drawing.__dict__)
+        ann.hash_start = json.dumps(drawing)
 
     db.session.commit()
     return json_response(ann)
