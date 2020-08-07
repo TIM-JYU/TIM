@@ -4007,6 +4007,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     isRowChecked(rowIndex: number): boolean {
         return this.cbs[rowIndex];
     }
+
+    setSelectedFilter(state: boolean): void {
+        this.cbFilter = state;
+    }
 }
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol

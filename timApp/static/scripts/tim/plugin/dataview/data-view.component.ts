@@ -49,6 +49,8 @@ export interface TableModelProvider {
     handleChangeCheckbox(rowIndex: number): void;
 
     setSelectAll(state: boolean): void;
+
+    setSelectedFilter(state: boolean): void;
 }
 
 export interface VirtualScrollingOptions {
@@ -244,10 +246,9 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
     borderSpacing: 2,
 };
 
-// TODO: Update hooks
+// TODO: Sorting
 // TODO: Item selection
-// TODO: Checkbox interactivity
-// TODO: Veriy that general horizontal scrolling works
+// TODO: Verify that general horizontal scrolling works
 // TODO: Verify that vscrolling works
 
 /*
@@ -259,16 +260,14 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
         - updateSort updates sort info
         - updateStyle updates style info for a cell
         - refresh does total update on visible data
-    ## Passing data
-    - Keep important methods public and do @ViewChild on the element
-    ## Checkboxes
-    - On click invoke cbClicked() on model provider
-    - Add isCellChecked() in model provider
-    ## Filters
-    - On text change invoke filterChanged() on model provider
-    - Add getFilterString() to model provider to read
+    ## Sorting
+      - Handle click events on headers
+      - When clicked, call sorting in model provider, send ordered items list, refresh row axis and
+          - For vscroll, just update viewport
+          - For DOM, reappend all rows
+          - NOTE: Make sure in all row cache accesses rowAxis.visibleItems/rowAxis.orderedItems is used to get correct order
     ## Value editing
-    - Handle cell click event + add ability to call updateValue/updateStyle
+      - Handle cell click event + add ability to call updateValue/updateStyle
  */
 
 @Component({
@@ -297,7 +296,12 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                     <td [style.width]="idHeaderCellWidth" class="nrcolumn totalnr">
                         <ng-container *ngIf="totalRows != visibleRows">{{visibleRows}}</ng-container>
                     </td>
-                    <td class="cbColumn"><input type="checkbox"></td>
+                    <td class="cbColumn">
+                        <input type="checkbox"
+                               title="Check to show only checked rows"
+                               [(ngModel)]="cbFilter"
+                                (ngModelChange)="setFilterSelected()">
+                    </td>
                 </tr>
                 </tbody>
             </table>
@@ -330,6 +334,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     visibleRows: number = 0;
     idHeaderCellWidth: string = "";
     cbAllVisibleRows = false;
+    cbFilter = false;
     @HostBinding("style.width") private componentWidth: string = "";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
@@ -368,10 +373,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         return Math.min(this.mainDataContainer.nativeElement.offsetHeight, this.mainDataTable.nativeElement.offsetHeight);
     }
 
+    // region Event handlers for summary table
+
     setAllVisible() {
         this.modelProvider.setSelectAll(this.cbAllVisibleRows);
         this.modelProvider.handleChangeCheckbox(-1);
     }
+
+    setFilterSelected() {
+        this.modelProvider.setSelectedFilter(this.cbFilter);
+        this.modelProvider.handleChangeFilter();
+    }
+
+    // endregion
 
     // region Public update functions
 
