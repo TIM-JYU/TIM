@@ -10,6 +10,7 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {CsRunnerComponent} from "./csPlugin";
 import {CsTextComponent} from "./text";
@@ -47,6 +48,7 @@ import {EditorModule} from "./editor/module";
         TimUtilityModule,
         CsUtilityModule,
         CommonModule,
+        PurifyModule,
     ],
 })
 export class CsPluginModule implements DoBootstrap {

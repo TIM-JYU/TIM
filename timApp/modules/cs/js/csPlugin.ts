@@ -3026,7 +3026,7 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
                     style="border:0">
             </iframe>
         </div>
-        <div *ngIf="mdHtml" [innerHTML]="mdHtml">
+        <div *ngIf="mdHtml" [innerHTML]="mdHtml | purify">
         </div>
     </div>
     <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
