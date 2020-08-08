@@ -1011,7 +1011,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.rowAxis.visibleItems.length == 0) {
             return 0;
         }
-        return this.dataTableCache.getCell(this.rowAxis.visibleItems[0], columnIndex).offsetWidth;
+        return this.dataTableCache.getCell(this.rowAxis.visibleItems[0], columnIndex).getBoundingClientRect().width;
     }
 
     private getRowHeaderHeight(rowIndex: number): number {
@@ -1022,7 +1022,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.rowAxis.visibleItems.length == 0) {
             return 0;
         }
-        return this.dataTableCache.getRow(this.rowAxis.visibleItems[0]).offsetHeight;
+        return this.dataTableCache.getRow(this.rowAxis.visibleItems[0]).getBoundingClientRect().height;
     }
 
     // endregion
