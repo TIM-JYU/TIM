@@ -3,7 +3,7 @@
     grid-template:
         "summary header" auto
         "ids content" auto
-        / auto max-content;
+        / auto auto;
 }
 
 table {
@@ -103,14 +103,22 @@ table.virtual {
     text-overflow: ellipsis;
 }
 
-::ng-deep .header input {
-    // Set as important to prevent existing markup from setting the size
-    width: 90% !important;
-    margin-right: 5%;
-    margin-left: 5%;
+::ng-deep {
+    .header input {
+        // Set as important to prevent existing markup from setting the size
+        width: 90% !important;
+        margin-right: 5%;
+        margin-left: 5%;
+    }
+
+    // Fix border appearing behind background color for some reason
+    td {
+        background-clip: padding-box;
+    }
+
+    span.sort-marker {
+        min-width: 100px;
+        display: inline-block;
+    }
 }
 
-// Fix border appearing behind background color for some reason
-::ng-deep td {
-    background-clip: padding-box;
-}

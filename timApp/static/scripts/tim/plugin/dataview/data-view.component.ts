@@ -533,6 +533,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.headerIdBody) {
             this.headerIdTableCache = new TableCache(this.headerIdBody.nativeElement, "td", (cell) => {
                 applyBasicStyle(cell, this.headerStyle);
+                cell.appendChild(el("span")); // Header text
+                const sortMarker = el("span");
+                sortMarker.className = "sort-marker";
+                cell.appendChild(sortMarker); // Sort marker
             });
         }
         if (this.filterBody) {
@@ -861,7 +865,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const columnIndex = this.colAxis.visibleItems[column + horizontal.startIndex];
             const headerCell = this.headerIdTableCache.getCell(0, column);
             colIndices.push([headerCell, columnIndex]);
-            headerCell.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
+            const headerTitle = headerCell.getElementsByTagName("span")[0];
+            headerTitle.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
 
             const filterCell = this.filterTableCache.getCell(0, column);
             const input = filterCell.getElementsByTagName("input")[0];
