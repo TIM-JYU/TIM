@@ -513,7 +513,6 @@ export enum ClearSort {
                                    [id]="data.table.id"
                                    [columnIdStart]="nrColStart"
                                    [tableMaxHeight]="maxRows"
-                                   [tableMaxWidth]="maxCols"
                                    [headerStyle]="headersStyle" #dataViewComponent></tim-data-view>
                 </ng-container>
                 <ng-template #tableView>

@@ -12,6 +12,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import * as DOMPurify from "dompurify";
+import {isFirefox} from "tim/util/utils";
 
 export interface TableModelProvider {
     getDimension(): { rows: number, columns: number };
@@ -287,6 +288,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: {
         class: "data-view",
+        style: "max-width: 100%",
     },
     template: `
         <div class="header" #headerContainer>
@@ -354,6 +356,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     idHeaderCellWidth: string = "";
     cbAllVisibleRows = false;
     cbFilter = false;
+    dataTableWidth: string = isFirefox() ? "" : "fit-content";
     @HostBinding("style.width") private componentWidth: string = "";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
@@ -394,7 +397,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private get tableWidth(): number {
-        return this.mainDataBody.nativeElement.offsetWidth + this.tableBaseBorderWidthPx;
+        const t1 = this.mainDataContainer.nativeElement.offsetWidth;
+        const t2 = this.mainDataBody.nativeElement.offsetWidth;
+        const t3 = this.componentRef.nativeElement.offsetWidth - this.summaryTable.nativeElement.offsetWidth;
+        return Math.min(t1, t2, t3) + this.tableBaseBorderWidthPx;
     }
 
     private get tableHeight(): number {
@@ -490,7 +496,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     ngOnInit(): void {
         // Detach change detection because most of this component is based on pure DOM manipulation
         this.cdr.detach();
-        this.componentWidth = this.tableMaxWidth;
+        // this.componentWidth = this.tableMaxWidth;
         if (this.vScroll.enabled) {
             this.startCellPurifying();
         }
@@ -577,15 +583,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateHeaderSizes(): void {
-        if (!this.headerTable || !this.idContainer) {
+        if (!this.headerContainer || !this.idContainer) {
             return;
         }
         // Special case: if there are no visible items, don't set width
         if (this.rowAxis.visibleItems.length != 0) {
-            this.headerTable.nativeElement.style.width = `${this.tableWidth}px`;
-            this.headerTable.nativeElement.style.marginRight = `${getWindowScrollbarWidth()}px`;
+            this.headerContainer.nativeElement.style.width = `${this.tableWidth}px`;
+            this.headerContainer.nativeElement.style.marginRight = `${getWindowScrollbarWidth()}px`;
         } else {
-            this.headerTable.nativeElement.style.width = `auto`;
+            this.headerContainer.nativeElement.style.width = `auto`;
         }
         this.idContainer.nativeElement.style.height = `${this.tableHeight}px`;
         this.updateColumnHeaderCellSizes();
