@@ -583,7 +583,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // Special case: if there are no visible items, don't set width
         if (this.rowAxis.visibleItems.length != 0) {
             this.headerTable.nativeElement.style.width = `${this.tableWidth}px`;
-            this.headerTable.nativeElement.style.marginRight = `${getWindowScrollbarWidth() - this.tableBaseBorderWidthPx}px`;
+            this.headerTable.nativeElement.style.marginRight = `${getWindowScrollbarWidth()}px`;
+        } else {
+            this.headerTable.nativeElement.style.width = `auto`;
         }
         this.idContainer.nativeElement.style.height = `${this.tableHeight}px`;
         this.updateColumnHeaderCellSizes();
@@ -830,7 +832,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private* buildTable(): Generator {
         // Visually hide the table to prevent any flickering owing to size syncing
-        // this.componentRef.nativeElement.style.visibility = "hidden";
+        this.componentRef.nativeElement.style.visibility = "hidden";
         this.viewport = this.getViewport();
         this.setTableSizes();
         this.updateTableTransform();
@@ -841,9 +843,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
         // Force the main table to layout first so that we can compute the header sizes
         yield;
-        yield;
         this.updateHeaderSizes();
-        // this.componentRef.nativeElement.style.visibility = "visible";
+        this.componentRef.nativeElement.style.visibility = "visible";
     }
 
     private buildDataTable(): void {

@@ -85,13 +85,6 @@ table.virtual {
 // All ng-deep styles apply to all DOM table elements
 // Keep all ng-deep stuff under .data-view class to prevent leaking into other components
 ::ng-deep .data-view {
-  .header input {
-    // Set as important to prevent existing markup from setting the size
-    width: 90% !important;
-    margin-right: 5%;
-    margin-left: 5%;
-  }
-
   // Fix border appearing behind background color for some reason
   td {
     background-clip: padding-box;
@@ -113,13 +106,16 @@ table.virtual {
     border-right: none;
   }
 
-  tbody {
-    tr:first-child td {
-      border-top: none;
+  .header {
+    input {
+      // Set as important to prevent existing markup from setting the size
+      width: 90% !important;
+      margin-right: 5%;
+      margin-left: 5%;
     }
 
-    tr:last-child td {
-      border-bottom: none;
+    tbody tr:last-child td {
+      border-bottom-width: 0;
     }
   }
 }
