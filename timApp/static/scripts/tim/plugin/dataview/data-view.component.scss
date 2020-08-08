@@ -16,6 +16,7 @@ table {
   grid-area: header;
 
   table {
+    display: inline-table;
     tbody, thead {
       display: block;
       width: max-content;
@@ -96,7 +97,7 @@ table.virtual {
   }
 
   span.sort-marker {
-    min-width: 0px;
+    min-width: 20px;
     display: inline-block;
   }
 

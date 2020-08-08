@@ -12,7 +12,6 @@ import {
     ViewChild,
 } from "@angular/core";
 import * as DOMPurify from "dompurify";
-import {isFirefox} from "tim/util/utils";
 
 export interface TableModelProvider {
     getDimension(): { rows: number, columns: number };
@@ -356,7 +355,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     idHeaderCellWidth: string = "";
     cbAllVisibleRows = false;
     cbFilter = false;
-    dataTableWidth: string = isFirefox() ? "" : "fit-content";
     @HostBinding("style.width") private componentWidth: string = "";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
@@ -382,13 +380,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private colAxis!: GridAxis;
     private vScroll: VirtualScrollingOptions = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
     private colHeaderWidths: number[] = [];
+    private tableBaseBorderWidth: number = -1;
 
     // endregion
 
     constructor(private r2: Renderer2, private zone: NgZone, private componentRef: ElementRef<HTMLElement>, private cdr: ChangeDetectorRef) {
     }
 
-    private tableBaseBorderWidth: number = -1;
     private get tableBaseBorderWidthPx(): number {
         if (this.tableBaseBorderWidth < 0) {
             this.tableBaseBorderWidth = Number.parseFloat(getComputedStyle(this.allVisibleCell.nativeElement).borderLeftWidth);
@@ -397,10 +395,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private get tableWidth(): number {
-        const t1 = this.mainDataContainer.nativeElement.offsetWidth;
-        const t2 = this.mainDataBody.nativeElement.offsetWidth;
-        const t3 = this.componentRef.nativeElement.offsetWidth - this.summaryTable.nativeElement.offsetWidth;
-        return Math.min(t1, t2, t3) + this.tableBaseBorderWidthPx;
+        const width1 = this.mainDataContainer.nativeElement.offsetWidth;
+        const width2 = this.mainDataBody.nativeElement.offsetWidth;
+        const width3 = this.componentRef.nativeElement.offsetWidth - this.summaryTable.nativeElement.offsetWidth;
+        return Math.min(width1, width2, width3) + this.tableBaseBorderWidthPx;
     }
 
     private get tableHeight(): number {
@@ -583,7 +581,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateHeaderSizes(): void {
-        if (!this.headerContainer || !this.idContainer) {
+        if (!this.headerContainer || !this.idContainer || !this.headerTable) {
             return;
         }
         // Special case: if there are no visible items, don't set width
