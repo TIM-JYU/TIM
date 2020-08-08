@@ -53,6 +53,10 @@ export interface TableModelProvider {
     setSelectedFilter(state: boolean): void;
 
     handleClickClearFilters(): void;
+
+    getSortSymbolInfo(columnIndex: number): {symbol: string, style: Record<string, string>};
+
+    handleClickHeader(columnIndex: number): void;
 }
 
 export interface VirtualScrollingOptions {
@@ -258,9 +262,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
     borderSpacing: 2,
 };
 
-// TODO: Sorting
 // TODO: Item selection
-// TODO: Verify that general horizontal scrolling works
 // TODO: Verify that vscrolling works
 
 /*
@@ -272,12 +274,6 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
         - updateSort updates sort info
         - updateStyle updates style info for a cell
         - refresh does total update on visible data
-    ## Sorting
-      - Handle click events on headers
-      - When clicked, call sorting in model provider, send ordered items list, refresh row axis and
-          - For vscroll, just update viewport
-          - For DOM, reappend all rows
-          - NOTE: Make sure in all row cache accesses rowAxis.visibleItems/rowAxis.orderedItems is used to get correct order
     ## Value editing
       - Handle cell click event + add ability to call updateValue/updateStyle
  */
@@ -484,6 +480,42 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         for (const rowIndex of this.rowAxis.visibleItems) {
             const input = this.idTableCache.getCell(rowIndex, 1).getElementsByTagName("input")[0];
             input.checked = this.modelProvider.isRowChecked(rowIndex);
+        }
+    }
+
+    /**
+     * Updates sort order of rows and updates visible sort markers
+     * @param order New sort order to use. This is an array of row indices in the order they should be shown to the user.
+     */
+    updateRowSortOrder(order: number[]): void {
+        this.rowAxis.itemOrder = order;
+        this.rowAxis.refresh();
+
+        if (this.vScroll.enabled) {
+            this.updateVTable();
+            return;
+        }
+
+        for (const rowIndex of order) {
+            const tableRow = this.dataTableCache.getRow(rowIndex);
+            this.mainDataBody.nativeElement.appendChild(tableRow);
+
+            if (this.idTableCache && this.idBody) {
+                const rowHeader = this.idTableCache.getRow(rowIndex);
+                this.idBody.nativeElement.appendChild(rowHeader);
+            }
+        }
+
+        if (!this.headerIdTableCache) {
+            return;
+        }
+
+        for (const columnIndex of this.colAxis.visibleItems) {
+            const cell = this.headerIdTableCache.getCell(0, columnIndex);
+            const sortSymbolEl = cell.getElementsByTagName("span")[1];
+            const {symbol, style} =  this.modelProvider.getSortSymbolInfo(columnIndex);
+            applyBasicStyle(sortSymbolEl, style);
+            sortSymbolEl.textContent = symbol;
         }
     }
 
@@ -890,6 +922,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const headerTitle = headerCell.getElementsByTagName("span")[0];
             headerTitle.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
 
+            // TODO: Make own helper method because column index changes in vscroll mode
+            headerCell.onclick = () => {
+                this.modelProvider.handleClickHeader(columnIndex);
+            };
+
             const filterCell = this.filterTableCache.getCell(0, column);
             const input = filterCell.getElementsByTagName("input")[0];
             // TODO: Make own helper method because column index changes in vscroll mode
@@ -1026,6 +1063,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.rowAxis.visibleItems.length == 0) {
             return 0;
         }
+        // We make use of getBoundingClientRect because it returns proper fractional size
+        // (which is needed for at least on Firefox for table size sync to work)
         return this.dataTableCache.getRow(this.rowAxis.visibleItems[0]).getBoundingClientRect().height;
     }
 

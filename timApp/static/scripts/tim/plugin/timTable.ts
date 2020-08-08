@@ -1186,6 +1186,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.sortSymbol = [];
         this.sortSymbolStyle = [];
         this.sortRing = this.emptyRing.slice();
+        this.dataViewComponent?.updateRowSortOrder(this.permTable);
     }
 
     async handleClickHeader(col: number) {
@@ -1229,6 +1230,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.permTableToScreen[this.permTable[i]] = i;
         }
         this.disableStartCell();
+        this.dataViewComponent?.updateRowSortOrder(this.permTable);
         this.c();
     }
 
@@ -4010,6 +4012,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     setSelectedFilter(state: boolean): void {
         this.cbFilter = state;
+    }
+
+    getSortSymbolInfo(columnIndex: number): { symbol: string; style: Record<string, string> } {
+        return {style: this.sortSymbolStyle[columnIndex], symbol: this.sortSymbol[columnIndex]};
     }
 }
 
