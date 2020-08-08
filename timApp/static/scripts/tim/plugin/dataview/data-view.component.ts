@@ -302,7 +302,8 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                     <td [style.width]="idHeaderCellWidth"
                         class="nrcolumn totalnr"
                         title="Click to show all"
-                        (click)="clearFilters()">{{totalRows}}</td>
+                        (click)="clearFilters()"
+                        #allVisibleCell>{{totalRows}}</td>
                     <td class="cbColumn"><input [(ngModel)]="cbAllVisibleRows"
                                                 (ngModelChange)="setAllVisible()"
                                                 type="checkbox"
@@ -365,6 +366,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @ViewChild("mainDataTable") private mainDataTable!: ElementRef<HTMLTableElement>;
     @ViewChild("mainDataContainer") private mainDataContainer!: ElementRef<HTMLDivElement>;
     @ViewChild("summaryTable") private summaryTable!: ElementRef<HTMLTableElement>;
+    @ViewChild("allVisibleCell") private allVisibleCell!: ElementRef<HTMLTableDataCellElement>;
     private scrollDY = 0;
     private cellValueCache: Record<number, string[]> = {};
     private dataTableCache!: TableCache;
@@ -383,8 +385,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     constructor(private r2: Renderer2, private zone: NgZone, private componentRef: ElementRef<HTMLElement>, private cdr: ChangeDetectorRef) {
     }
 
+    private tableBaseBorderWidth: number = -1;
+    private get tableBaseBorderWidthPx(): number {
+        if (this.tableBaseBorderWidth < 0) {
+            this.tableBaseBorderWidth = Number.parseFloat(getComputedStyle(this.allVisibleCell.nativeElement).borderLeftWidth);
+        }
+        return this.tableBaseBorderWidth;
+    }
+
     private get tableWidth(): number {
-        return Math.min(this.mainDataContainer.nativeElement.offsetWidth, this.mainDataTable.nativeElement.offsetWidth);
+        return this.mainDataBody.nativeElement.offsetWidth + this.tableBaseBorderWidthPx;
     }
 
     private get tableHeight(): number {
@@ -567,12 +577,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateHeaderSizes(): void {
-        if (!this.headerContainer || !this.idContainer) {
+        if (!this.headerTable || !this.idContainer) {
             return;
         }
         // Special case: if there are no visible items, don't set width
         if (this.rowAxis.visibleItems.length != 0) {
-            this.headerContainer.nativeElement.style.width = `${this.tableWidth + getWindowScrollbarWidth()}px`;
+            this.headerTable.nativeElement.style.width = `${this.tableWidth}px`;
+            this.headerTable.nativeElement.style.marginRight = `${getWindowScrollbarWidth() - this.tableBaseBorderWidthPx}px`;
         }
         this.idContainer.nativeElement.style.height = `${this.tableHeight}px`;
         this.updateColumnHeaderCellSizes();
@@ -819,7 +830,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private* buildTable(): Generator {
         // Visually hide the table to prevent any flickering owing to size syncing
-        this.componentRef.nativeElement.style.visibility = "hidden";
+        // this.componentRef.nativeElement.style.visibility = "hidden";
         this.viewport = this.getViewport();
         this.setTableSizes();
         this.updateTableTransform();
@@ -830,8 +841,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
         // Force the main table to layout first so that we can compute the header sizes
         yield;
+        yield;
         this.updateHeaderSizes();
-        this.componentRef.nativeElement.style.visibility = "visible";
+        // this.componentRef.nativeElement.style.visibility = "visible";
     }
 
     private buildDataTable(): void {
