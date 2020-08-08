@@ -47,12 +47,17 @@ table {
     width: 100%;
     height: 100%;
 
+    thead, tbody {
+      display: block;
+    }
+
     td:last-child {
       border-right: none;
     }
 
-    tbody tr:last-child td {
+    tbody tr td {
       border-bottom: none;
+      border-top: none;
     }
   }
 }
@@ -114,8 +119,9 @@ table.virtual {
       margin-left: 5%;
     }
 
-    tbody tr:last-child td {
+    tbody td {
       border-bottom-width: 0;
+      border-top-width: 0;
     }
   }
 }

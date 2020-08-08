@@ -641,7 +641,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
         const width = this.idTableCache?.getCell(this.rowAxis.visibleItems[0], 0)?.offsetWidth;
-        const height = this.headerIdBody?.nativeElement.offsetHeight;
+        const summaryTotalHeaderHeight = this.headerIdTableCache?.getRow(0).offsetHeight;
+        const filterHeaderHeight = this.filterTableCache?.getRow(0).offsetHeight;
         if (width) {
             this.summaryTable.nativeElement.querySelectorAll(".nrcolumn").forEach((e) => {
                 if (e instanceof HTMLElement) {
@@ -649,9 +650,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 }
             });
         }
-        if (height) {
-            const summaryHeader = this.summaryTable.nativeElement.getElementsByTagName("tr")[0];
-            summaryHeader.style.height = `${height}px`;
+        if (summaryTotalHeaderHeight && filterHeaderHeight) {
+            const [summaryHeader, filterHeader] = this.summaryTable.nativeElement.getElementsByTagName("tr");
+            summaryHeader.style.height = `${summaryTotalHeaderHeight}px`;
+            filterHeader.style.height = `${filterHeaderHeight}px`;
         }
     }
 
