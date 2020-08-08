@@ -285,6 +285,9 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
 @Component({
     selector: "tim-data-view",
     changeDetection: ChangeDetectionStrategy.OnPush,
+    host: {
+        class: "data-view",
+    },
     template: `
         <div class="header" #headerContainer>
             <table [ngStyle]="tableStyle" #headerTable>
@@ -315,7 +318,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                         <input type="checkbox"
                                title="Check to show only checked rows"
                                [(ngModel)]="cbFilter"
-                                (ngModelChange)="setFilterSelected()">
+                               (ngModelChange)="setFilterSelected()">
                     </td>
                 </tr>
                 </tbody>
