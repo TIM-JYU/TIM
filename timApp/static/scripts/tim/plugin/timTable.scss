@@ -5,6 +5,7 @@
 .buttonsCol, .buttonsRow {
   position: absolute;
   display: flex;
+
   button {
     font-size: xx-small;
     padding: 5px;
@@ -26,11 +27,6 @@
   box-shadow: 0 0 4px 2px blue;
 }
 
-.activeCell {
-  // Don't use border style here - it takes up size in layout and so it makes the table move a little.
-  outline: 2.5px dotted #33cccc;
-  outline-offset: -1.25px;
-}
 
 .timTableContentDiv {
   position: relative;
@@ -60,40 +56,87 @@ td input[type="text"] {
   }
 }
 
-td.nrcolumn {
-    font-size: smaller;
-    text-align: right;
-}
+
 td.charRow {
-    font-size: smaller;
-    text-align: center;
-    border-bottom: none !important;  /* prevent no border top from cell below */
+  font-size: smaller;
+  text-align: center;
+  border-bottom: none !important; /* prevent no border top from cell below */
 }
 
 
 td.header {
-    border-bottom: none !important;  /* prevent no border top from cell below */
+  border-bottom: none !important; /* prevent no border top from cell below */
 }
 
 td.nrcolumn.charRow {
-    visibility: hidden;
+  visibility: hidden;
 }
 
 td.cbColumn.charRow {
-    visibility: hidden;
+  visibility: hidden;
 }
 
 .paragraphs table > thead > tr > td {
-    border-bottom-width: 1px;
+  border-bottom-width: 1px;
 }
-.timTableTable .xo, .timTableToolbarRow .xo { text-decoration: line-through  !important; }
-.timTableTable .xu, .timTableToolbarRow .xu { text-decoration: underline  !important; }
-.timTableTable .xg, .timTableToolbarRow .xg { color: #AAA; }
-.timTableTable .bt  {border-top: 2px solid black; }
-.timTableToolbarRow .btb { border-top: 3px solid  black  !important; width: 25px; }
-.timTableTable .bl {border-left: 2px solid  black;}
-.timTableToolbarRow .blb { border-left: 3px solid  black  !important; width: 25px; }
-.timTableTable .br {border-right: 2px solid  black;}
-.timTableToolbarRow .brb { border-right: 3px solid  black  !important; width: 25px; }
-.timTableTable .bb {border-bottom: 2px solid black;}
-.timTableToolbarRow .bbb { border-bottom: 3px solid  black  !important; width: 25px; }
+
+.timTableTable .xo, .timTableToolbarRow .xo {
+  text-decoration: line-through !important;
+}
+
+.timTableTable .xu, .timTableToolbarRow .xu {
+  text-decoration: underline !important;
+}
+
+.timTableTable .xg, .timTableToolbarRow .xg {
+  color: #AAA;
+}
+
+.timTableTable .bt {
+  border-top: 2px solid black;
+}
+
+.timTableToolbarRow .btb {
+  border-top: 3px solid black !important;
+  width: 25px;
+}
+
+.timTableTable .bl {
+  border-left: 2px solid black;
+}
+
+.timTableToolbarRow .blb {
+  border-left: 3px solid black !important;
+  width: 25px;
+}
+
+.timTableTable .br {
+  border-right: 2px solid black;
+}
+
+.timTableToolbarRow .brb {
+  border-right: 3px solid black !important;
+  width: 25px;
+}
+
+.timTableTable .bb {
+  border-bottom: 2px solid black;
+}
+
+.timTableToolbarRow .bbb {
+  border-bottom: 3px solid black !important;
+  width: 25px;
+}
+
+::ng-deep .timTableRunDiv {
+  td.nrcolumn {
+    font-size: smaller;
+    text-align: right;
+  }
+
+  .activeCell {
+    // Don't use border style here - it takes up size in layout and so it makes the table move a little.
+    outline: 2.5px dotted #33cccc;
+    outline-offset: -1.25px;
+  }
+}

@@ -54,7 +54,7 @@ export interface TableModelProvider {
 
     handleClickClearFilters(): void;
 
-    getSortSymbolInfo(columnIndex: number): {symbol: string, style: Record<string, string>};
+    getSortSymbolInfo(columnIndex: number): { symbol: string, style: Record<string, string> };
 
     handleClickHeader(columnIndex: number): void;
 }
@@ -519,9 +519,26 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         for (const columnIndex of this.colAxis.visibleItems) {
             const cell = this.headerIdTableCache.getCell(0, columnIndex);
             const sortSymbolEl = cell.getElementsByTagName("span")[1];
-            const {symbol, style} =  this.modelProvider.getSortSymbolInfo(columnIndex);
+            const {symbol, style} = this.modelProvider.getSortSymbolInfo(columnIndex);
             applyBasicStyle(sortSymbolEl, style);
             sortSymbolEl.textContent = symbol;
+        }
+    }
+
+    /**
+     * Updates style information for all cells
+     */
+    updateStyles(): void {
+        if (this.vScroll.enabled) {
+            this.updateVTable();
+            return;
+        }
+
+        for (const row of this.rowAxis.visibleItems) {
+            for (const column of this.colAxis.visibleItems) {
+                const cell = this.dataTableCache.getCell(row, column);
+                this.updateCellStyle(cell, row, column);
+            }
         }
     }
 
@@ -981,9 +998,17 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private updateCell(cell: HTMLTableCellElement, rowIndex: number, columnIndex: number, contents?: string): HTMLTableCellElement {
         cell.hidden = !this.vScroll.enabled && !this.modelProvider.showColumn(columnIndex);
+        cell.onclick = () => this.modelProvider.handleClickCell(rowIndex, columnIndex);
+        this.updateCellStyle(cell, rowIndex, columnIndex);
+        if (contents) {
+            cell.innerHTML = contents;
+        }
+        return cell;
+    }
+
+    private updateCellStyle(cell: HTMLTableCellElement, rowIndex: number, columnIndex: number): void {
         cell.className = this.modelProvider.classForCell(rowIndex, columnIndex);
         cell.style.cssText = joinCss(this.modelProvider.stylingForCell(rowIndex, columnIndex));
-        cell.onclick = () => this.modelProvider.handleClickCell(rowIndex, columnIndex);
         const colWidth = this.getDataColumnWidth(columnIndex);
         if (colWidth) {
             if (this.vScroll.enabled) {
@@ -993,10 +1018,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 cell.style.minWidth = `${colWidth}px`;
             }
         }
-        if (contents) {
-            cell.innerHTML = contents;
-        }
-        return cell;
     }
 
     // endregion

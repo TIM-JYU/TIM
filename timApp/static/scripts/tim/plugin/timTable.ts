@@ -3559,21 +3559,23 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.selectedCells = this.getSelectedCells(rowi, coli);
         this.openToolbar();
 
-        const sr = this.permTableToScreen[rowi];
-        const table = $(this.tableElem.nativeElement);
         if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
             return; // we should never be able to get here
         }
-        // const ry = this.permTable[cell.renderIndexY];
-        const tablecell = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
 
-        const parent = $(this.timTableRunDiv.nativeElement);
-        // tablecell[0].scrollIntoView(false);
-        const h = tablecell.height();
-        const w = tablecell.width();
-        if (h != null && w != null) {
-            scrollToViewInsideParent(tablecell[0], parent[0], w, 3 * h, w, h);
-        }
+        // const sr = this.permTableToScreen[rowi];
+        // const table = $(this.tableElem.nativeElement);
+        // const ry = this.permTable[cell.renderIndexY];
+        // const tablecell = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
+        //
+        // const parent = $(this.timTableRunDiv.nativeElement);
+        // // tablecell[0].scrollIntoView(false);
+        // const h = tablecell.height();
+        // const w = tablecell.width();
+        // if (h != null && w != null) {
+        //     scrollToViewInsideParent(tablecell[0], parent[0], w, 3 * h, w, h);
+        // }
+        this.dataViewComponent?.updateStyles();
         this.updateSmallEditorPosition(); // TODO: vesa added here, because somtiems it did not update the pos
     }
 
