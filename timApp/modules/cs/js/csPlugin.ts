@@ -1069,7 +1069,7 @@ export class CsController extends CsBase implements ITimComponent {
                     );
                 }
             }
-        } else if (this.markup.upload || this.markup.uploadbycode) {
+        } else if (this.markup.type.includes("upload") || this.markup.upload || this.markup.uploadbycode) {
             const isByCode = !!this.markup.uploadbycode;
             const path = this.markup.filename ?? "";
             files.push({

@@ -402,7 +402,7 @@ export class FileSelectManagerComponent { // TODO: translations
 
             if (filesArray.length == 1 && self.multipleElements) {
                 return [{
-                    path: self.idToFile[child.id][1] ?? filesArray[0].name,
+                    path: !!self.idToFile[child.id][1] ? self.idToFile[child.id][1] as string : filesArray[0].name,
                     upload: self.files[self.idToFile[child.id][0]].upload,
                 }];
             }
