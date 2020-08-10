@@ -80,8 +80,11 @@ export class VelpSummaryComponent implements OnChanges {
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (changes.annotations) {
+        if (changes.annotations) { // TODO check if these are redundant
             this.updateFilters(changes.annotations.currentValue as Annotation[]);
+        }
+        if (changes.selectedUser) {
+            this.updateFilters(this.annotations);
         }
     }
 }
