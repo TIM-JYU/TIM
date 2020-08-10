@@ -2479,6 +2479,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (this.task) {
             for (const c of cellsToSave) {
                 this.setUserAttribute(c);
+                this.dataViewComponent?.updateStyleForCell(c.row, c.col);
             }
 
             if (this.data.saveStyleCallBack) {

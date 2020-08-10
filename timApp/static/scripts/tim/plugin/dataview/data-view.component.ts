@@ -542,6 +542,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
+    updateStyleForCell(row: number, column: number): void {
+        const cell = this.dataTableCache.getCell(row, column);
+        this.updateCellStyle(cell, row, column);
+    }
+
     // endregion
 
     // region Initialization
