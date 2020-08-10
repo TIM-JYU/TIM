@@ -576,6 +576,10 @@ def handle_common_params(query: QueryClass, ttype: TType):
     if uf and ut:
         js["uploadedFile"] = uf
         js["uploadedType"] = ut
+    ufs = get_param(query, "uploadedFiles", None)
+    ufs = get_json_param(query.jso, "state", "uploadedFiles", ufs)
+    if ufs:
+        js["uploadedFiles"] = ufs
     # jso)
     # print(ttype)
     if "simcir" in ttype:
