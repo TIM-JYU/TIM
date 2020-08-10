@@ -9,6 +9,7 @@ import {
         Output,
         EventEmitter,
         QueryList,
+        ChangeDetectorRef,
     } from "@angular/core";
 import {HttpClient, HttpEventType, HttpErrorResponse} from "@angular/common/http";
 import {NotificationComponent} from "./notification";
@@ -333,6 +334,8 @@ export class FileSelectManagerComponent { // TODO: translations
         id: string,
     }[] = [];
 
+    constructor(public cdr: ChangeDetectorRef) {}
+
     get multipleElements() {
         return this.multipleElements_;
     }
@@ -377,6 +380,7 @@ export class FileSelectManagerComponent { // TODO: translations
         }
         this.idToFile = nidToFile;
         this.fileInfo = nfileInfo;
+        this.cdr.detectChanges();
     }
 
     @ViewChildren(FileSelectComponent)
