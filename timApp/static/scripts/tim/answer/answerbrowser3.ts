@@ -791,15 +791,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
         await this.changeAnswer();
     }
 
-    async setAnswerById(id: number, updateImmediately: boolean) {
-        for (const f of this.filteredAnswers) {
-            if (f.id === id) {
-                this.selectedAnswer = f;
-                if (updateImmediately) {
-                    await this.changeAnswer();
-                }
-                break;
-            }
+    async setAnswerById(answerId: number) {
+        // TODO: Global / useCurrentUser probably fails here
+        await this.loadUserAnswersIfChanged();
+        const ans = this.filteredAnswers.find((f) => f.id === answerId);
+        if (ans) {
+            this.selectedAnswer = ans;
+            await this.changeAnswer();
         }
     }
 

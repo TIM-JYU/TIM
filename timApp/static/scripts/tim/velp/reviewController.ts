@@ -1009,18 +1009,15 @@ export class ReviewController {
         if (this.vctrl.selectedUser.id !== uid) {
             for (const u of this.vctrl.users) {
                 if (u.user.id === uid) {
-                    this.vctrl.changeUser(u.user, false);
+                    await this.vctrl.changeUser(u.user, false);
                     break;
                 }
             }
         }
 
         if (!(ab.review && ab.selectedAnswer && ab.selectedAnswer.id === annotation.answer.id)) {
-            // If review is false, setting review to true will eventually update the answer,
-            // and we don't want to do it twice. Therefore setAnswerById shall only update the answer if review
-            // is already true.
-            await ab.setAnswerById(annotation.answer.id, ab.review);
             ab.review = true;
+            await ab.setAnswerById(annotation.answer.id);
         }
         let r = await to(this.vctrl.getAnnotationAsync(prefix + annotation.id));
         if (!r.ok) {
