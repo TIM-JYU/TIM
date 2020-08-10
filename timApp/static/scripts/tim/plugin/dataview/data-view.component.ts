@@ -394,11 +394,17 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const width1 = this.mainDataContainer.nativeElement.offsetWidth;
         const width2 = this.mainDataBody.nativeElement.offsetWidth;
         const width3 = this.componentRef.nativeElement.offsetWidth - this.summaryTable.nativeElement.offsetWidth;
+        // Add table border width to prevent possible border cutoff when filtering in DOM mode
         return Math.min(width1, width2, width3) + this.tableBaseBorderWidthPx;
     }
 
     private get tableHeight(): number {
-        return Math.min(this.mainDataContainer.nativeElement.offsetHeight, this.mainDataTable.nativeElement.offsetHeight);
+        return Math.min(this.mainDataContainer.nativeElement.clientHeight, this.mainDataTable.nativeElement.clientHeight);
+    }
+
+    private get verticalScrollbar(): number {
+        const e = this.mainDataContainer.nativeElement;
+        return e.offsetWidth - e.clientWidth;
     }
 
     // region Event handlers for summary table
@@ -616,13 +622,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!this.headerContainer || !this.idContainer || !this.headerTable) {
             return;
         }
-        // Special case: if there are no visible items, don't set width
+        // Apparently to correctly handle column header table, we have to set its size to match that of data
+        // and then add margin to pad the scrollbar width
         if (this.rowAxis.visibleItems.length != 0) {
             this.headerContainer.nativeElement.style.width = `${this.tableWidth}px`;
-            this.headerContainer.nativeElement.style.marginRight = `${getWindowScrollbarWidth()}px`;
+            this.headerContainer.nativeElement.style.marginRight = `${this.verticalScrollbar}px`;
         } else {
             this.headerContainer.nativeElement.style.width = `auto`;
         }
+        // For height it looks like it's enough to just set the height correctly
         this.idContainer.nativeElement.style.height = `${this.tableHeight}px`;
         this.updateColumnHeaderCellSizes();
         this.updateRowHeaderCellSizes();
@@ -870,7 +878,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private* buildTable(): Generator {
         // Visually hide the table to prevent any flickering owing to size syncing
-        this.componentRef.nativeElement.style.visibility = "hidden";
+        // this.componentRef.nativeElement.style.visibility = "hidden";
         this.viewport = this.getViewport();
         this.setTableSizes();
         this.updateTableTransform();
@@ -882,7 +890,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // Force the main table to layout first so that we can compute the header sizes
         yield;
         this.updateHeaderSizes();
-        this.componentRef.nativeElement.style.visibility = "visible";
+        // this.componentRef.nativeElement.style.visibility = "visible";
     }
 
     private buildDataTable(): void {
@@ -1108,9 +1116,4 @@ function applyBasicStyle(element: HTMLElement, style: Record<string, string> | n
 interface PurifyData {
     row: number;
     data: string[];
-}
-
-// TODO: This only works if there is a scrollbar on the window
-function getWindowScrollbarWidth() {
-    return (window.innerWidth - document.getElementsByTagName("html")[0].clientWidth);
 }
