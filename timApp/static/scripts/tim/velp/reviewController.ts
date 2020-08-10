@@ -936,17 +936,30 @@ export class ReviewController {
     }
 
     /**
+     * Shows AnnotationComponent paired with given Annotation. Prefer in-text annotations
+     * @param ann Annotation for which to find AnnotationComponents
+     * @param scrollToAnnotation Whether to scroll to annotation if it is not in viewport.
+     */
+    async toggleAnnotationViaController(ann: Annotation, scrollToAnnotation: boolean) {
+        const id = ann.id;
+        let ac: AnnotationComponent | undefined;
+        ac = this.vctrl.getAnnotation("t" + ann.id);
+        if (!ac) {
+            ac = this.vctrl.getAnnotation("m" + ann.id);
+        }
+        if (ac) {
+            await this.toggleAnnotation(ac, scrollToAnnotation);
+        }
+    }
+
+    /**
      * Shows the annotation (despite the name).
      * @param ac - AnnotationComponent to be shown.
      * @param scrollToAnnotation Whether to scroll to annotation if it is not in viewport.
      */
-    async toggleAnnotation(ac: AnnotationComponent | Annotation, scrollToAnnotation: boolean) {
-        let annotation: Annotation;
-        if (ac instanceof AnnotationComponent) {
-            annotation = ac.annotation;
-        } else {
-            annotation = ac;
-        }
+    async toggleAnnotation(ac: AnnotationComponent, scrollToAnnotation: boolean) {
+        const annotation = ac.annotation;
+
         const parent = document.getElementById(annotation.coord.start.par_id);
         if (parent == null) {
             log(`par ${annotation.coord.start.par_id} not found`);
@@ -956,9 +969,8 @@ export class ReviewController {
 
         // We might click a margin annotation, but we still want to open the corresponding inline annotation,
         // if it exists.
-        const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end) &&
-        ((ac instanceof AnnotationComponent && ac.placement !== AnnotationPlacement.InMarginOnly)
-            || ac instanceof Annotation) ? "t" : "m";
+        const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end)
+        && ac.placement !== AnnotationPlacement.InMarginOnly ? "t" : "m";
         let actrl = this.vctrl.getAnnotation(prefix + annotation.id);
         if (!annotation.answer && !actrl) {
             actrl = this.vctrl.getAnnotation("m" + annotation.id);
