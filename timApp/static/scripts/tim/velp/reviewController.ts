@@ -238,6 +238,11 @@ export class ReviewController {
         return false;
     }
 
+    clearAnnotationsFromPar(par: Element): void {
+        const oldAnnotations = par.querySelectorAll(".notes [aid]");
+        angular.element(oldAnnotations).remove();
+    }
+
     /**
      * Loads the annotations to the given answer.
      * @param answerId - Answer ID
@@ -246,8 +251,7 @@ export class ReviewController {
     loadAnnotationsToAnswer(answerId: number, par: Element): void {
         const annotations = this.getAnnotationsByAnswerId(answerId);
 
-        const oldAnnotations = par.querySelectorAll(".notes [aid]");
-        angular.element(oldAnnotations).remove();
+        this.clearAnnotationsFromPar(par);
         for (const a of annotations) {
             const placeInfo = a.coord;
 

@@ -650,13 +650,17 @@ export class AnswerBrowserController extends DestroyScope implements IController
                     await loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
                 }
             }
-            if (this.review) {
+            if (this.review && this.selectedAnswer) {
                 this.reviewHtml = r.result.data.reviewHtml;
                 await $timeout();
+            } else {
+                this.reviewHtml = undefined;
             }
         }
         if (this.selectedAnswer) {
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
+        } else {
+            this.viewctrl.reviewCtrl.clearAnnotationsFromPar(par[0]);
         }
         if (!changeReviewOnly) {
             if (this.viewctrl.teacherMode && !this.selectedAnswer && !this.saveTeacher) {
