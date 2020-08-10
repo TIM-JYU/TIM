@@ -557,9 +557,23 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!editorDiv) {
             return;
         }
-        editorDiv.nativeElement.style.position = "absolute";
-        editorDiv.nativeElement.style.top = "0";
+        editorDiv.nativeElement.style.position = "relative";
+        editorDiv.nativeElement.style.height = "0px";
+        editorDiv.nativeElement.style.top = "-100px";
         editorDiv.nativeElement.style.left = "0";
+        editorDiv.nativeElement.style.display = "block";
+
+        if (editorButtons) {
+            editorButtons.nativeElement.style.position = "absolute";
+            editorButtons.nativeElement.style.height = "1px";
+            editorButtons.nativeElement.style.top = "-150px";
+        }
+
+        if (editInput) {
+            editInput.nativeElement.style.position = "relative";
+            editInput.nativeElement.style.top = "-100px";
+        }
+
         this.mainDataContainer.nativeElement.appendChild(editorDiv.nativeElement);
     }
 
