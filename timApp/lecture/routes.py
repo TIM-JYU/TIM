@@ -307,11 +307,8 @@ def get_question_manually():
 
 def hide_points_and_try_shuffle_question(question: AskedQuestion, user_id: int):
     # Hides points from question json and shuffles rows if required
-    q_copy = question.to_json()
-    q_modified = json.loads(question.asked_json.json)
-    q_modified.pop('points', None)
-    q_modified.pop('defaultPoints', None)
-    q_json = {'markup': q_modified,
+    q_copy = question.to_json(hide_points=True)
+    q_json = {'markup': q_copy['json']['json'],
               'user_id': user_id}
     qst_handle_randomization(q_json)
     q_copy['json']['json'] = q_json['markup']
