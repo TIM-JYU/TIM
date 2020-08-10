@@ -3690,6 +3690,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * Updates position of the small cell editor (if it is open).
      */
     private updateSmallEditorPosition() {
+        if (this.dataViewComponent) {
+            this.dataViewComponent.setEditorPosition(this.editorDiv, this.editorButtons, this.editInput);
+            return;
+        }
         const editInputElement = this.getEditInputElement();
         if (!this.currentCell || !editInputElement) {
             return;

@@ -542,9 +542,25 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
+    /**
+     * Updates styling for a single cell
+     * @param row Row index of the cell
+     * @param column Column index of the cell
+     */
     updateStyleForCell(row: number, column: number): void {
+        // TODO: Check vscrolling viewport
         const cell = this.dataTableCache.getCell(row, column);
         this.updateCellStyle(cell, row, column);
+    }
+
+    setEditorPosition(editorDiv?: ElementRef<HTMLDivElement>, editorButtons?: ElementRef<HTMLDivElement>, editInput?: ElementRef<HTMLInputElement>): void {
+        if (!editorDiv) {
+            return;
+        }
+        editorDiv.nativeElement.style.position = "absolute";
+        editorDiv.nativeElement.style.top = "0";
+        editorDiv.nativeElement.style.left = "0";
+        this.mainDataContainer.nativeElement.appendChild(editorDiv.nativeElement);
     }
 
     // endregion
