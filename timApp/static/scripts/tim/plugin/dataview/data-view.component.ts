@@ -3,6 +3,7 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
+    Directive,
     ElementRef,
     HostBinding,
     Input,
@@ -63,6 +64,12 @@ export interface VirtualScrollingOptions {
     enabled: boolean;
     viewOverflow: Position;
     borderSpacing: number;
+}
+
+export interface EditorElement {
+    editorDiv?: ElementRef<HTMLDivElement>;
+    editorButtons?: ElementRef<HTMLDivElement>;
+    editInput?: ElementRef<HTMLInputElement>;
 }
 
 interface Position {
@@ -278,6 +285,11 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
       - Handle cell click event + add ability to call updateValue/updateStyle
  */
 
+@Directive({selector: "[class]"})
+export class Class {
+    @HostBinding("class") @Input("class") className: string = "";
+}
+
 @Component({
     selector: "tim-data-view",
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -332,6 +344,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                    #mainDataTable>
                 <tbody class="content" #mainDataBody></tbody>
             </table>
+            <ng-content></ng-content>
         </div>
     `,
     styleUrls: ["./data-view.component.scss"],
@@ -553,28 +566,47 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.updateCellStyle(cell, row, column);
     }
 
-    setEditorPosition(editorDiv?: ElementRef<HTMLDivElement>, editorButtons?: ElementRef<HTMLDivElement>, editInput?: ElementRef<HTMLInputElement>): void {
-        if (!editorDiv) {
+    setEditorPosition(row: number, col: number): void {
+        const editor = this.mainDataContainer.nativeElement.querySelector(".timTableEditor");
+        const editInput = this.mainDataContainer.nativeElement.querySelector(".timTableEditor>input");
+        const inlineEditorButtons = this.mainDataContainer.nativeElement.querySelector(".timTableEditor>span");
+        if (!editor) {
             return;
         }
-        editorDiv.nativeElement.style.position = "relative";
-        editorDiv.nativeElement.style.height = "0px";
-        editorDiv.nativeElement.style.top = "-100px";
-        editorDiv.nativeElement.style.left = "0";
-        editorDiv.nativeElement.style.display = "block";
-
-        if (editorButtons) {
-            editorButtons.nativeElement.style.position = "absolute";
-            editorButtons.nativeElement.style.height = "1px";
-            editorButtons.nativeElement.style.top = "-150px";
-        }
-
+        applyBasicStyle(editor as HTMLElement, {
+            position: "relative",
+            height: "0px",
+            display: "block",
+        });
+        const cell = this.dataTableCache.getCell(row, col);
         if (editInput) {
-            editInput.nativeElement.style.position = "relative";
-            editInput.nativeElement.style.top = "-100px";
+            applyBasicStyle(editInput as HTMLElement, {
+                position: "absolute",
+                top: `${cell.offsetTop - this.mainDataBody.nativeElement.offsetHeight}px`,
+                left: `${cell.offsetLeft}px`,
+                width: `${cell.offsetWidth}px`,
+            });
         }
-
-        this.mainDataContainer.nativeElement.appendChild(editorDiv.nativeElement);
+        if (inlineEditorButtons) {
+            const e = inlineEditorButtons as HTMLElement;
+            const dir = row == 0 ? 1 : -1;
+            applyBasicStyle(e, {
+                position: "absolute",
+                top: `${cell.offsetTop - this.mainDataBody.nativeElement.offsetHeight + dir * e.offsetHeight}px`,
+                left: `${cell.offsetLeft}px`,
+            });
+        }
+        // console.log(cell);
+        // if (editor.editorButtons) {
+        //     editorButtons.nativeElement.style.position = "absolute";
+        //     editorButtons.nativeElement.style.top = "0";
+        //     editorButtons.nativeElement.style.left = "0";
+        // }
+        // if (editInput) {
+        //     editInput.nativeElement.style.position = "relative";
+        //     editInput.nativeElement.style.top = "0";
+        //     editInput.nativeElement.style.left = "0";
+        // }
     }
 
     // endregion

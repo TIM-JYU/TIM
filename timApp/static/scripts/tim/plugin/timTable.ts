@@ -513,7 +513,9 @@ export enum ClearSort {
                                    [id]="data.table.id"
                                    [columnIdStart]="nrColStart"
                                    [tableMaxHeight]="maxRows"
-                                   [headerStyle]="headersStyle" #dataViewComponent></tim-data-view>
+                                   [headerStyle]="headersStyle" #dataViewComponent>
+                        <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
+                    </tim-data-view>
                 </ng-container>
                 <ng-template #tableView>
                     <table #tableElem
@@ -603,6 +605,10 @@ export enum ClearSort {
                             (click)="handleClickAddRow()"><span
                             class="glyphicon glyphicon-plus" [innerText]="addRowButtonText"></span></button>
                 </div>
+                <ng-container *ngIf="!asDataView">
+                    <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
+                </ng-container>
+                <ng-template #inlineEditorTemplate>
                 <div #inlineEditor class="timTableEditor inlineEditorDiv no-highlight" *ngIf="currentCell">
                     <input class="editInput" #editInput autocomplete="off"
                            (blur)="smallEditorLostFocus($event)"
@@ -626,6 +632,7 @@ export enum ClearSort {
                     </button>
                     </span>
                 </div>
+                    </ng-template>
             </div>
             <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton">
                 <p class="csRunMenu">
@@ -3690,12 +3697,12 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * Updates position of the small cell editor (if it is open).
      */
     private updateSmallEditorPosition() {
-        if (this.dataViewComponent) {
-            this.dataViewComponent.setEditorPosition(this.editorDiv, this.editorButtons, this.editInput);
-            return;
-        }
         const editInputElement = this.getEditInputElement();
         if (!this.currentCell || !editInputElement) {
+            return;
+        }
+        if (this.dataViewComponent) {
+            this.dataViewComponent.setEditorPosition(this.currentCell.row, this.currentCell.col);
             return;
         }
         let rowi = this.currentCell.row;
