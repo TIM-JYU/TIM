@@ -940,18 +940,25 @@ export class ReviewController {
      * @param ac - AnnotationComponent to be shown.
      * @param scrollToAnnotation Whether to scroll to annotation if it is not in viewport.
      */
-    async toggleAnnotation(ac: AnnotationComponent, scrollToAnnotation: boolean) {
-        const annotation = ac.annotation;
+    async toggleAnnotation(ac: AnnotationComponent | Annotation, scrollToAnnotation: boolean) {
+        let annotation: Annotation;
+        if (ac instanceof AnnotationComponent) {
+            annotation = ac.annotation;
+        } else {
+            annotation = ac;
+        }
         const parent = document.getElementById(annotation.coord.start.par_id);
         if (parent == null) {
             log(`par ${annotation.coord.start.par_id} not found`);
             return;
         }
 
+
         // We might click a margin annotation, but we still want to open the corresponding inline annotation,
         // if it exists.
         const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end) &&
-        ac.placement !== AnnotationPlacement.InMarginOnly ? "t" : "m";
+        ((ac instanceof AnnotationComponent && ac.placement !== AnnotationPlacement.InMarginOnly)
+            || ac instanceof Annotation) ? "t" : "m";
         let actrl = this.vctrl.getAnnotation(prefix + annotation.id);
         if (!annotation.answer && !actrl) {
             actrl = this.vctrl.getAnnotation("m" + annotation.id);
