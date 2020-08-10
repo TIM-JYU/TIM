@@ -793,11 +793,18 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async setAnswerById(answerId: number) {
         // TODO: Global / useCurrentUser probably fails here
-        await this.loadUserAnswersIfChanged();
-        const ans = this.filteredAnswers.find((f) => f.id === answerId);
-        if (ans) {
-            this.selectedAnswer = ans;
-            await this.changeAnswer();
+        if (this.hasUserChanged()) {
+            const answers = await this.getAnswers();
+            if (!answers) {
+                return;
+            }
+            await this.handleAnswerFetch(answers, answerId);
+        } else {
+            const ans = this.filteredAnswers.find((f) => f.id === answerId);
+            if (ans) {
+                this.selectedAnswer = ans;
+                await this.changeAnswer();
+            }
         }
     }
 
@@ -900,11 +907,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return data;
     }
 
-    private async handleAnswerFetch(data: IAnswer[]) {
-        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length) || this.forceBrowser()) {
+    private async handleAnswerFetch(data: IAnswer[], targetId?: number) {
+        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length)
+            || this.forceBrowser() || targetId) {
             this.answers = data;
             this.updateFiltered();
-            this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
+            if (targetId) {
+                this.selectedAnswer = this.filteredAnswers.find((ans) => ans.id == targetId);
+            } else {
+                this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
+            }
             if (!this.selectedAnswer && !this.forceBrowser()) {
                 this.dimPlugin();
             } else {
