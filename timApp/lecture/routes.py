@@ -305,9 +305,10 @@ def get_question_manually():
     return json_response(new_question)
 
 
-def try_shuffle_question(question: AskedQuestion, user_id: int):
-    q_copy = question.to_json()
-    q_json = {'markup': json.loads(question.asked_json.json),
+def hide_points_and_try_shuffle_question(question: AskedQuestion, user_id: int):
+    # Hides points from question json and shuffles rows if required
+    q_copy = question.to_json(hide_points=True)
+    q_json = {'markup': q_copy['json']['json'],
               'user_id': user_id}
     qst_handle_randomization(q_json)
     q_copy['json']['json'] = q_json['markup']
@@ -347,7 +348,7 @@ def get_new_question(lecture: Lecture, current_question_id=None, current_points_
                 else:
                     return {
                         'type': 'question',
-                        'data': q if lecture.lecturer == current_user else try_shuffle_question(q, current_user)
+                        'data': q if lecture.lecturer == current_user else hide_points_and_try_shuffle_question(q, current_user)
                     }
         else:
             question_to_show_points = get_shown_points(lecture)

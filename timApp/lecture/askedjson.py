@@ -13,8 +13,11 @@ class AskedJson(db.Model):
 
     asked_questions = db.relationship('AskedQuestion', back_populates='asked_json', lazy='joined')
 
-    def to_json(self):
+    def to_json(self, hide_points=False):
         q = normalize_question_json(json.loads(self.json))
+        if hide_points:
+            q.pop('points', None)
+            q.pop('defaultPoints', None)
         return {
             'hash': self.hash,
             'json': q,
