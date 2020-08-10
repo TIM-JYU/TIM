@@ -269,21 +269,8 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
     borderSpacing: 2,
 };
 
-// TODO: Item selection
-// TODO: Verify that vscrolling works
-
-/*
-    Implementation design:
-    ## Change detection
-    - Expose public function for view update => updateVisible, updateValue, refresh, updateSort, updateStyle
-        - updateVisible only checks for visible
-        - updateValue will update value for a cell
-        - updateSort updates sort info
-        - updateStyle updates style info for a cell
-        - refresh does total update on visible data
-    ## Value editing
-      - Handle cell click event + add ability to call updateValue/updateStyle
- */
+// TODO: Test that vscrolling works
+// TODO: Test that value editing works
 
 @Directive({selector: "[class]"})
 export class Class {
@@ -566,7 +553,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.updateCellStyle(cell, row, column);
     }
 
-    setEditorPosition(row: number, col: number): void {
+    /**
+     * Updates position of the editor to specified cell
+     * @param row Currently selected row
+     * @param col Currently selected cell
+     */
+    updateEditorPosition(row: number, col: number): void {
+        // Because of Angular, we need to pass the editor as ng-content (otherwise Angular seems to loose reference to
+        // the element and stop updating it properly)
+        // TODO: Figure out a better way to integrate the editor
         const editor = this.mainDataContainer.nativeElement.querySelector(".timTableEditor");
         const editInput = this.mainDataContainer.nativeElement.querySelector(".timTableEditor>input");
         const inlineEditorButtons = this.mainDataContainer.nativeElement.querySelector(".timTableEditor>span");

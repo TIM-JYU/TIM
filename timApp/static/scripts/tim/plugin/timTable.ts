@@ -3702,7 +3702,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return;
         }
         if (this.dataViewComponent) {
-            this.dataViewComponent.setEditorPosition(this.currentCell.row, this.currentCell.col);
+            this.dataViewComponent.updateEditorPosition(this.currentCell.row, this.currentCell.col);
             return;
         }
         let rowi = this.currentCell.row;
