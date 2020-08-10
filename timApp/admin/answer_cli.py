@@ -12,6 +12,8 @@ from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.velp.annotation_model import Annotation
+from timApp.velp.velp_models import AnnotationComment
 
 answer_cli = AppGroup('answer')
 
@@ -54,6 +56,9 @@ def clear_all(doc: str, dry_run: bool) -> None:
     cnt = ids.count()
     UserAnswer.query.filter(UserAnswer.answer_id.in_(ids)).delete(synchronize_session=False)
     AnswerSaver.query.filter(AnswerSaver.answer_id.in_(ids)).delete(synchronize_session=False)
+    anns = Annotation.query.filter(Annotation.answer_id.in_(ids))
+    AnnotationComment.query.filter(AnnotationComment.annotation_id.in_(anns.with_entities(Annotation.id))).delete(synchronize_session=False)
+    anns.delete(synchronize_session=False)
     Answer.query.filter(Answer.id.in_(ids)).delete(synchronize_session=False)
     click.echo(f'Total {cnt}')
     if not dry_run:
