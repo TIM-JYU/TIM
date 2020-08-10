@@ -1703,7 +1703,7 @@ ${fhtml}
     }
 
     onUploadDone(success: boolean) {
-        if (success && (this.markup.uploadautosave || !(this.isRun && this.buttonText()))) {
+        if (success && (this.markup.uploadautosave || (this.markup.type.includes("upload") && !this.markup.button) || !(this.isRun && this.buttonText()))) {
             this.doRunCode("upload", false);
         }
     }
