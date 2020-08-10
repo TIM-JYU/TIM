@@ -1699,6 +1699,9 @@ ${fhtml}
         if (!resp) {return;}
 
         const response = resp as IUploadResponse;
+        if (!this.markup.files) {
+            this.uploadedFiles.clear();
+        }
         this.uploadedFiles.push({path: response.file, type: response.type});
     }
 
