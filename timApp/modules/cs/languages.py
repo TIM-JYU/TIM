@@ -1308,6 +1308,9 @@ class Jsav(Language):
     def js_files():
         return ["/cs/js/build/jsav.js"]
 
+    def runner_name(self):
+        return "cs-jsav-runner"
+
     def deny_attributes(self):
         return {"srchtml": "",
                 "jsavhtml": "",

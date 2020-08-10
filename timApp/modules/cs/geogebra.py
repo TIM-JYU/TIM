@@ -33,8 +33,8 @@ preventFocus: true,
 };
 
 
-P.getData = function(){ 
-   return {"data": ggbApplet.getBase64()}; 
+P.getData = function(){
+   return {"data": ggbApplet.getBase64()};
 }
 
 P.setDataInit = function (api, geostate) {
@@ -68,7 +68,7 @@ var applet = new GGBApplet(P, '5.0', 'geogebra_container');
 }
 
 
-function getData(){ 
+function getData(){
     if ( P.getData )
         return P.getData();
 }
@@ -204,6 +204,9 @@ class Geogebra(Language):
     @staticmethod
     def js_files():
         return ["/cs/js/build/geogebra.js"]
+
+    def runner_name(self):
+        return "geogebra-runner"
 
     def can_give_task(self):
         return True
