@@ -178,7 +178,7 @@
         <uib-tab index="2" heading="Summary">
             <velp-summary
                     [annotations]="$ctrl.rctrl.annotations"
-                    (annotationselected)="$ctrl.rctrl.toggleAnnotationViaController($event, true)"
+                    (annotationselected)="$ctrl.rctrl.toggleAnnotation($event, true)"
                     [selected-user]="$ctrl.vctrl.selectedUser"
             >
             </velp-summary>
