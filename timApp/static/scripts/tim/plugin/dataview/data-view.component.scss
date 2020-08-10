@@ -17,6 +17,7 @@ table {
 
   table {
     display: inline-table;
+
     tbody, thead {
       display: block;
       width: max-content;
@@ -94,6 +95,10 @@ table.virtual {
   // Fix border appearing behind background color for some reason
   td {
     background-clip: padding-box;
+    & .nrcolumn {
+      font-size: smaller;
+      text-align: right;
+    }
   }
 
   span.sort-marker {

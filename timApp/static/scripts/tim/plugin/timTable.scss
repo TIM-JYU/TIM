@@ -50,7 +50,7 @@ td input[type="text"] {
 .timTableRunDiv {
   overflow: auto;
   /* border: none; */
-  padding-right: 2em;
+  padding-right: 4em;
   padding-left: 2em;
   margin: auto;
 
@@ -60,7 +60,7 @@ td input[type="text"] {
   }
 }
 
-::ng-deep td.nrcolumn {
+td.nrcolumn {
     font-size: smaller;
     text-align: right;
 }

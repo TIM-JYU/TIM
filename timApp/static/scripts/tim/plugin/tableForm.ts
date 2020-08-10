@@ -99,7 +99,7 @@ const TableFormMarkup = t.intersection([
         usernames: withDefault(t.boolean, true),
         realnames: withDefault(t.boolean, true),
         emails: withDefault(t.boolean, false),
-        maxCols: withDefault(t.string, "max-content"),
+        maxCols: withDefault(t.string, maxContentOrFitContent()),
         openButtonText: withDefault(t.string, "Avaa Taulukko/Raporttinäkymä"),
         open: withDefault(t.boolean, true),
         reportFilter: withDefault(t.string, ""),
