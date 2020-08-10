@@ -266,7 +266,7 @@ class GitSource(ExternalFileSource):
 
     @classinstancemethod
     def __init__(cls, self, specification, source_path: str, language: Language):
-        """source_path: <url>[;<sub_path>[;<branch>[;<remote>]]]"""
+        """source_path: <url>[;<sub_path>[<glob>;[;<branch>[;<remote>]]]]"""
         self.specification = specification
         self.language = language
 
