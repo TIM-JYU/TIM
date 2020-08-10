@@ -1595,6 +1595,10 @@ ${fhtml}
         // }
     }
     async ngAfterViewInit() {
+        if (!this.usercode) {
+            this.usercode = this.attrsall.usercode ?? this.byCode ?? "";
+        }
+
         this.preview = this.element.find(".csrunPreview");
         const styleArgs = this.markup["style-args"];
         if (styleArgs) {
@@ -1621,7 +1625,6 @@ ${fhtml}
                 await this.showTauno();
             }
             if (this.isSimcir) {
-                this.usercode = this.attrsall.usercode ?? this.byCode ?? "";
                 await this.showSimcir();
             }
         }
