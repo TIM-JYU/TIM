@@ -1621,6 +1621,7 @@ ${fhtml}
                 await this.showTauno();
             }
             if (this.isSimcir) {
+                this.usercode = this.attrsall.usercode ?? this.byCode ?? "";
                 await this.showSimcir();
             }
         }
