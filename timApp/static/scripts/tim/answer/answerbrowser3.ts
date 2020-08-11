@@ -471,6 +471,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
             await this.loadUserAnswersIfChanged();
         } else if (this.hasUserChanged()) {
             this.dimPlugin();
+            const par = this.element.parents(".par");
+            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(undefined, par[0]);
         } else {
             this.unDimPlugin();
         }
