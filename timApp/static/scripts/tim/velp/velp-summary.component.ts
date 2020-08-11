@@ -30,7 +30,7 @@ import {Annotation} from "./velptypes";
                         <td class="summThiColumn"><span>{{ a.points }}</span></td>
                     </tr>
                     <tr>
-                        <th class="summSecColumn">Points total</th>
+                        <th class="summSecColumn">Points total in all answers</th>
                         <th class="summThiColumn"><span>{{ getTotalPoints(taskAnns) }}</span></th>
                     </tr>
                 </table>
@@ -65,7 +65,7 @@ export class VelpSummaryComponent implements OnChanges {
     getTotalPoints(annotations: Annotation[]) {
         let p = 0;
         for (let i = 0; i < annotations.length; i++) {
-            p += this.annotations[i].points ?? 0;
+            p += annotations[i].points ?? 0;
         }
         // Cast back to a number, the string has trailing zeros.
         return Number(p.toPrecision(4));
