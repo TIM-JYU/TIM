@@ -3,7 +3,6 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    Directive,
     ElementRef,
     HostBinding,
     Input,
@@ -961,8 +960,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private* buildTable(): Generator {
         // Visually hide the table to prevent any flickering owing to size syncing
         this.componentRef.nativeElement.style.visibility = "hidden";
-        this.viewport = this.getViewport();
         this.setTableSizes();
+        this.viewport = this.getViewport();
         this.updateTableTransform();
 
         this.buildColumnHeaderTable();
@@ -1055,6 +1054,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         row.hidden = !this.vScroll.enabled && !this.modelProvider.showRow(rowIndex);
         const rowHeight = this.modelProvider.getRowHeight(rowIndex);
         if (rowHeight) {
+            if (this.vScroll.enabled) {
+                row.style.minHeight = `${rowHeight}px`;
+                row.style.maxHeight = `${rowHeight}px`;
+            }
             row.style.height = `${rowHeight}px`;
             row.style.overflow = "hidden";
         }
@@ -1076,12 +1079,22 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         cell.style.cssText = joinCss(this.modelProvider.stylingForCell(rowIndex, columnIndex));
         const colWidth = this.getDataColumnWidth(columnIndex);
         if (colWidth) {
+            cell.style.minWidth = `${colWidth}px`;
             if (this.vScroll.enabled) {
                 cell.style.width = `${colWidth}px`;
+                cell.style.maxWidth = `${colWidth}px`;
                 cell.style.overflow = "hidden";
-            } else {
-                cell.style.minWidth = `${colWidth}px`;
             }
+        }
+        const rowHeight = this.modelProvider.getRowHeight(rowIndex);
+        if (rowHeight) {
+            if (this.vScroll.enabled) {
+                cell.style.minHeight = `${rowHeight}px`;
+                cell.style.maxHeight = `${rowHeight}px`;
+                cell.style.lineHeight = `${rowHeight / 2}px`;
+            }
+            cell.style.height = `${rowHeight}px`;
+            cell.style.overflow = "hidden";
         }
     }
 
@@ -1131,11 +1144,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private getDataColumnWidth(columnIndex: number): number {
         const res = this.modelProvider.getColumnWidth(columnIndex);
-        const headerRes = this.colHeaderWidths[columnIndex];
-        if (res === undefined || headerRes === undefined) {
-            return res ?? headerRes;
+        if (res !== undefined) {
+            return res;
         }
-        return Math.max(res, headerRes);
+        return this.colHeaderWidths[columnIndex];
     }
 
     private getColumnHeaderWidth(columnIndex: number): number {
