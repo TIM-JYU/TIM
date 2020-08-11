@@ -177,8 +177,8 @@
             {{ $ctrl.taskInfo.starttime | timdate }} - {{ $ctrl.taskInfo.deadline | timdate }}
         </span>
     </span>
-            <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.hasUserChanged() && !$ctrl.loading">(hover/click to update)</span>
         </div>
+        <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.hasUserChanged() && !$ctrl.loading">(hover/click to update)</span>
         <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="$ctrl.loading"> -->
     </div>
 </div>
