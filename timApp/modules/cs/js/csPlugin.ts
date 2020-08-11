@@ -1573,6 +1573,10 @@ ${fhtml}
             this.editorModes.push(new Mode(mode, editorText[mode]));
         }
 
+        if (this.markup.editorMode != -1 && this.editorModes.findIndex((m) => m.id == this.markup.editorMode) == -1) {
+            this.editorModes.push(new Mode(this.markup.editorMode, editorText[this.markup.editorMode]));
+        }
+
         if (this.indent < 0) {
             if (this.file) {
                 this.indent = 8;

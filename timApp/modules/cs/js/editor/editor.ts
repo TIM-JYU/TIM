@@ -191,6 +191,10 @@ export class EditorComponent implements IMultiEditor {
     private loadedFile?: IFile;
     filenameInput: string = "";
 
+    constructor() {
+        this.showOtherEditor(this.savedEditorMode ?? EditorComponent.defaultMode);
+    }
+
     ngOnInit() {
         if (this.minRows_ < 1) {
             this.minRows_ = 1;
@@ -198,11 +202,6 @@ export class EditorComponent implements IMultiEditor {
         if (this.maxRows_ != -1 && this.maxRows_ < this.minRows_) {
             this.maxRows_ = this.minRows_;
         }
-    }
-
-    ngAfterViewInit() {
-        this.mode = this.savedEditorMode ?? EditorComponent.defaultMode;
-        this.showOtherEditor(this.mode);
     }
 
     ngDoCheck() {
@@ -255,7 +254,7 @@ export class EditorComponent implements IMultiEditor {
     }
     @Input()
     set editorIndex(index: number) {
-        this.mode = index;
+        this.showOtherEditor(index);
     }
     get modes() {
         return this.modes_;
@@ -457,10 +456,7 @@ export class EditorComponent implements IMultiEditor {
             this.mode = this.savedEditorMode ?? EditorComponent.defaultMode; // TODO: make sure default is in modes
         } else {
             const index = this.modes.findIndex((e) => e.id == mode);
-            if (index == -1) {
-                this.modeIndex_ = this.modes.length;
-                this.modes.push(new Mode(mode));
-            } else {
+            if (index != -1) {
                 this.modeIndex_ = index;
             }
         }
@@ -524,7 +520,13 @@ export class EditorComponent implements IMultiEditor {
     }
 
     showOtherEditor(editorMode?: number) {
-        if (editorMode != undefined) {
+        if (editorMode == -1) {
+            this.mode = this.savedEditorMode ?? EditorComponent.defaultMode;
+        } else if (editorMode != undefined) {
+            const index = this.modes.findIndex((e) => e.id == editorMode);
+            if (index == -1) {
+                this.modes.push(new Mode(editorMode));
+            }
             this.mode = editorMode;
         } else {
             this.mode = this.modes[(this.modeIndex+1) % this.modes.length].id;
