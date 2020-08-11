@@ -42,6 +42,9 @@ class TableFormStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     # TODO: Save user given table layouts like in timTable
 
+@dataclass
+class DataViewSettingsMode(GenericMarkupModel):
+    virtual: Optional[bool] = False
 
 @dataclass
 class TableFormMarkupModel(GenericMarkupModel):
@@ -90,7 +93,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     toolbarTemplates: Union[List[Dict[Any, Any]], Missing] = missing
     userListButtonText: Union[str, Missing, None] = missing
     usernames: Union[bool, Missing] = missing
-    asDataView: Union[bool, Missing] = missing
+    dataView: Union[DataViewSettingsMode, Missing, None] = missing
 
 
 @dataclass

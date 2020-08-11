@@ -66,6 +66,7 @@ import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
 import {DataViewComponent, TableModelProvider} from "tim/plugin/dataview/data-view.component";
+import {withDefault} from "tim/plugin/attributes";
 import {onClick} from "../document/eventhandlers";
 import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
@@ -263,7 +264,14 @@ export interface TimTable {
         title?: string;
         confirmation?: string;
     };
-    asDataView?: boolean;
+    dataView?: DataViewSettings | null;
+}
+
+export const DataViewSettingsType = t.type({
+   virtual: withDefault(t.boolean, false),
+});
+
+export interface DataViewSettings extends t.TypeOf<typeof DataViewSettingsType> {
 }
 
 interface Rng {
@@ -485,9 +493,9 @@ export enum ClearSort {
     selector: "tim-table",
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders, 'no-overflow': asDataView}"
+        <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders, 'no-overflow': dataView}"
              class="timTableRunDiv no-popup-menu"
-             [ngStyle]="asDataView ? {} : {
+             [ngStyle]="dataView ? {} : {
                 'max-height': maxRows,
                 'maxCols': maxCols
              }"
@@ -503,8 +511,10 @@ export enum ClearSort {
                     <button class="timButton" title="Add column" *ngIf="addColEnabled()"
                             (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
                 </div>
-                <ng-container *ngIf="asDataView; else tableView">
-                    <tim-data-view [virtualScrolling]="{'enabled': false}"
+                <ng-container *ngIf="dataView; else tableView">
+                    <tim-data-view [virtualScrolling]="{
+                                        'enabled': dataView.virtual
+                                    }"
                                    [modelProvider]="this"
                                    [tableClass]="{editable: isInEditMode() && !isInForcedEditMode(),
                                                 forcedEditable: isInForcedEditMode(),
@@ -605,7 +615,7 @@ export enum ClearSort {
                             (click)="handleClickAddRow()"><span
                             class="glyphicon glyphicon-plus" [innerText]="addRowButtonText"></span></button>
                 </div>
-                <ng-container *ngIf="!asDataView">
+                <ng-container *ngIf="!dataView">
                     <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
                 </ng-container>
                 <ng-template #inlineEditorTemplate>
@@ -691,7 +701,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     connectionErrorMessage?: string;
     addRowButtonText: string = "";
     editorPosition: string = "";
-    asDataView: boolean = false;
+    dataView?: DataViewSettings | null;
     private prevCellDataMatrix: ICell[][] = [];
     private prevData!: TimTable;
     private editRight = false;
@@ -901,7 +911,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.hide = {...this.hide, ...this.data.hide};
         }
 
-        this.asDataView = !!this.data.asDataView;
+        this.dataView = this.data.dataView;
 
         if (typeof this.data.nrColumn === "number") { // for backward compatibility
             this.nrColStart = this.data.nrColumn;

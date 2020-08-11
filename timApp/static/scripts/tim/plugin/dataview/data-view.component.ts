@@ -369,7 +369,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private viewport!: Viewport;
     private rowAxis!: GridAxis;
     private colAxis!: GridAxis;
-    private vScroll: VirtualScrollingOptions = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
+    private vScroll: VirtualScrollingOptions = DEFAULT_VSCROLL_SETTINGS;
     private colHeaderWidths: number[] = [];
     private tableBaseBorderWidth: number = -1;
 
@@ -611,6 +611,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Initialization
 
     ngOnInit(): void {
+        this.vScroll = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
         // Detach change detection because most of this component is based on pure DOM manipulation
         this.cdr.detach();
         // this.componentWidth = this.tableMaxWidth;

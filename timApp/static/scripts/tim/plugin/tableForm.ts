@@ -37,7 +37,7 @@ import {
     CellToSave,
     ClearSort,
     colnumToLetters,
-    DataEntity,
+    DataEntity, DataViewSettings, DataViewSettingsType,
     isPrimitiveCell,
     TimTable,
     TimTableComponent,
@@ -79,8 +79,7 @@ const TableFormMarkup = t.intersection([
         }),
         sisugroups: t.string,
         runScripts: t.array(t.string),
-
-        asDataView: nullable(t.boolean),
+        dataView: nullable(DataViewSettingsType),
     }),
     GenericPluginMarkup,
     t.type({
@@ -519,7 +518,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         this.data.maxRows = this.markup.maxRows;
         this.data.maxCols = this.markup.maxCols;
         this.data.toolbarTemplates = this.markup.toolbarTemplates;
-        this.data.asDataView = this.markup.asDataView ?? false;
+        this.data.dataView = this.markup.dataView;
         // this.cdr.detectChanges();
     }
 
