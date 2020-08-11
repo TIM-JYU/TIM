@@ -272,11 +272,6 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
 // TODO: Test that vscrolling works
 // TODO: Test that value editing works
 
-@Directive({selector: "[class]"})
-export class Class {
-    @HostBinding("class") @Input("class") className: string = "";
-}
-
 @Component({
     selector: "tim-data-view",
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -551,6 +546,22 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // TODO: Check vscrolling viewport
         const cell = this.dataTableCache.getCell(row, column);
         this.updateCellStyle(cell, row, column);
+    }
+
+    /**
+     * Updates contents of cells
+     * @param cells Cells to update
+     */
+    updateCellsContents(cells: { row: number, col: number }[]): void {
+        if (this.vScroll.enabled) {
+            this.updateVTable();
+            return;
+        }
+        for (const {row, col} of cells) {
+            const cell = this.dataTableCache.getCell(row, col);
+            this.updateCell(cell, row, col, this.modelProvider.getCellContents(row, col));
+            DOMPurify.sanitize(cell, { IN_PLACE: true });
+        }
     }
 
     /**

@@ -1484,6 +1484,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             if (this.data.autosave) {
                 await this.sendDataBlockAsync();
             }
+            this.dataViewComponent?.updateCellsContents(selectedCells.cells.map((c) => ({ row: c.y, col: c.x })));
             return;
         }
 
@@ -1502,6 +1503,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         for (const c of cellHtmls) {
             this.cellDataMatrix[c.row][c.col].cell = c.cellHtml;
         }
+        this.dataViewComponent?.updateCellsContents(cellHtmls.map((c) => ({ row: c.row, col: c.col })));
     }
 
     /**
