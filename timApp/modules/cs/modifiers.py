@@ -107,3 +107,7 @@ class CSConsole(Modifier):
 
 class Parsons(Modifier):
     ttype = "parsons"
+
+
+class TruthTable(Modifier):
+    ttype = "truthtable"
