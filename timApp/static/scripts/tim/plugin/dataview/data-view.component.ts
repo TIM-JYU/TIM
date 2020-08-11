@@ -562,6 +562,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.updateCell(cell, row, col, this.modelProvider.getCellContents(row, col));
             DOMPurify.sanitize(cell, { IN_PLACE: true });
         }
+        this.updateHeaderSizes();
+        this.syncHeaderScroll();
     }
 
     /**
@@ -602,17 +604,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 left: `${cell.offsetLeft}px`,
             });
         }
-        // console.log(cell);
-        // if (editor.editorButtons) {
-        //     editorButtons.nativeElement.style.position = "absolute";
-        //     editorButtons.nativeElement.style.top = "0";
-        //     editorButtons.nativeElement.style.left = "0";
-        // }
-        // if (editInput) {
-        //     editInput.nativeElement.style.position = "relative";
-        //     editInput.nativeElement.style.top = "0";
-        //     editInput.nativeElement.style.left = "0";
-        // }
     }
 
     // endregion
@@ -1073,7 +1064,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         cell.hidden = !this.vScroll.enabled && !this.modelProvider.showColumn(columnIndex);
         cell.onclick = () => this.modelProvider.handleClickCell(rowIndex, columnIndex);
         this.updateCellStyle(cell, rowIndex, columnIndex);
-        if (contents) {
+        if (contents !== undefined) {
             cell.innerHTML = contents;
         }
         return cell;
