@@ -10,7 +10,7 @@
     "bd": "ng build --deployUrl /js/",
     "bdlw": "ng build --localize --deleteOutputPath --watch --deployUrl /js/",
     "bdw": "ng build --watch --deleteOutputPath --deployUrl /js/",
-    "stats": "ng build --prod --statsJson --deployUrl /js/ && npx webpack-bundle-analyzer static/scripts/build/stats-es2015.json",
+    "stats": "ng build --prod --statsJson --deployUrl /js/ && npx webpack-bundle-analyzer static/scripts/build/stats.json",
     "postinstall": "patch-package",
     "lint": "eslint --format codeframe --ext ts static/scripts/tim modules",
     "lintfix": "eslint --ext ts static/scripts/tim modules --fix",
