@@ -238,20 +238,38 @@ export class ReviewController {
         return false;
     }
 
-    clearAnnotationsFromPar(par: Element): void {
+    /**
+     * Removes answer annotations from the paragraph margin
+     * @param par Paragraph to inspect
+     */
+    clearAnswerAnnotationsFromParMargin(par: Element): void {
         const oldAnnotations = par.querySelectorAll(".notes [aid]");
-        angular.element(oldAnnotations).remove();
+        for (const ele of oldAnnotations) {
+            const aid = ele.getAttribute("aid");
+            if (aid == null) {
+                return;
+            }
+            const numAid = parseFloat(aid);
+            if (!isNaN(numAid)) {
+                const ann = this.vctrl.getAnnotation("m" + numAid);
+                if (ann?.annotation.answer) {
+                    angular.element(ele).remove();
+                }
+            }
+        }
     }
 
     /**
-     * Loads the annotations to the given answer.
-     * @param answerId - Answer ID
+     * Loads the annotations to the answer if given and removes answer annotations not associated with the answer.
+     * @param answerId - Optional answer ID
      * @param par - Paragraph element
      */
-    loadAnnotationsToAnswer(answerId: number, par: Element): void {
+    loadAnnotationsToAnswer(answerId: number | undefined, par: Element): void {
+        this.clearAnswerAnnotationsFromParMargin(par);
+        if (answerId == undefined) {
+            return;
+        }
         const annotations = this.getAnnotationsByAnswerId(answerId);
-
-        this.clearAnnotationsFromPar(par);
         for (const a of annotations) {
             const placeInfo = a.coord;
 
