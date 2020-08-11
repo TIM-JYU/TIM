@@ -489,7 +489,7 @@ class FileHandler:
         for file in submitted_files:
             self.save_file(file)
 
-        extra_files = get_json_param(self.query.jso, "markup", "extraFiles", [])
+        extra_files = get_json_param(self.query.jso, "markup", "moreFiles", [])
         extra_files = FileSpecification.load(extra_files, many=True, unknown=EXCLUDE)
 
         for file in extra_files:
