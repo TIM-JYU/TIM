@@ -135,7 +135,7 @@
                             <div ng-show="$ctrl.selectedAnswer">
                             <span ng-show="$ctrl.showVelpsCheckBox()">
                             <label class="checkbox-inline" >
-                                <input type="checkbox" ng-model="$ctrl.review">Velps
+                                <input type="checkbox" ng-model="$ctrl.review" ng-change="$ctrl.reviewToggled()">Velps
                             </label>
                             </span>
                                 <span ng-if="$ctrl.showDelete">

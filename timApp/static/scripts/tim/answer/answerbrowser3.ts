@@ -418,13 +418,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.pointsStep = this.markupSettings?.pointsStep;
         }
 
-        this.scope.$watch(() => this.review, (newValue, oldValue) => {
-            if (newValue == oldValue) {
-                return;
-            }
-            // TODO: Separate function and route for just review
-            this.changeAnswer(true);
-        });
         this.scope.$watch(
             () => this.onlyValid,
             (newValue, oldValue, scope) => {
@@ -460,6 +453,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         //  (e.g awaits above don't happen if were in form mode and don't want separate info reqs)
         await $timeout(0);
         this.loader.abLoad.resolve(this);
+    }
+
+    reviewToggled(): void {
+        // TODO: Separate function and route for just review
+        this.changeAnswer(true);
     }
 
     async changeUser(user: IUser, updateAll: boolean) {
