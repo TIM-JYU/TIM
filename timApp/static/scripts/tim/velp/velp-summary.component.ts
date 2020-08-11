@@ -64,8 +64,8 @@ export class VelpSummaryComponent implements OnChanges {
      */
     getTotalPoints(annotations: Annotation[]) {
         let p = 0;
-        for (let i = 0; i < annotations.length; i++) {
-            p += annotations[i].points ?? 0;
+        for (const ann of annotations) {
+            p += ann.points ?? 0;
         }
         // Cast back to a number, the string has trailing zeros.
         return Number(p.toPrecision(4));
