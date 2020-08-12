@@ -47,6 +47,7 @@ interface IRunResult {
 
 @Component({
     selector: "cs-extcheck-runner",
+    styleUrls: ["./extcheck.scss"],
     template: `
         <div [ngClass]="{'csRunDiv': markup.borders}" class="type-{{rtype}}">
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>

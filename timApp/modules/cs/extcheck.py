@@ -164,7 +164,7 @@ class ExtCheck(Language):
 
     @staticmethod
     def css_files():
-        return ["/cs/css/extcheck.css"] + ExtCheck.get_files("cssFiles")
+        return ExtCheck.get_files("cssFiles")
 
     def runner_name(self):
         return "cs-extcheck-runner"
