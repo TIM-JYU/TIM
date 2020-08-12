@@ -1,18 +1,18 @@
-import angular, {IController, IScope, ITranscludeFunction} from "angular";
+import {IController, IScope, ITranscludeFunction} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
-import {dereferencePar, getParId} from "../document/parhelpers";
-import {FormModeOption, ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {dereferencePar, getParId, Paragraph} from "../document/parhelpers";
+import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {getRangeBeginParam} from "../document/viewRangeInfo";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {IAnswerBrowserMarkupSettings, IGenericPluginMarkup} from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
-import {isAdmin, userBelongsToGroupOrIsAdmin, Users} from "../user/userService";
+import {isAdmin, Users} from "../user/userService";
 import {documentglobals} from "../util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
 import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
@@ -469,8 +469,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
             await this.loadUserAnswersIfChanged();
         } else if (this.hasUserChanged()) {
             this.dimPlugin();
-            const par = this.element.parents(".par");
-            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(undefined, par[0]);
+            const par = this.getPar();
+            this.viewctrl.reviewCtrl.clearAnswerAnnotationsFromParMargin(par[0]);
         } else {
             this.unDimPlugin();
         }
@@ -598,7 +598,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.user) {
             return;
         }
-        const par = this.element.parents(".par");
+        const par = this.getPar();
         const ids = dereferencePar(par);
         if (!ids) {
             return;
@@ -858,7 +858,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         let newroute = "answers";
         if (single && location.href.includes("/view/")) { newroute = "view"; }  // TODO: think other routes also?
-        const par = this.element.parents(".par");
+        const par = this.getPar();
         const parId = getParId(par);
         const currBegin = getRangeBeginParam() ?? 0;
         const params = getUrlParams();
@@ -909,13 +909,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return data;
     }
 
-    private async handleAnswerFetch(data: IAnswer[], targetId?: number) {
+    private async handleAnswerFetch(data: IAnswer[], newSelectedId?: number) {
         if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length)
-            || this.forceBrowser() || targetId) {
+            || this.forceBrowser() || newSelectedId) {
             this.answers = data;
             this.updateFiltered();
-            if (targetId) {
-                this.selectedAnswer = this.filteredAnswers.find((ans) => ans.id == targetId);
+            if (newSelectedId) {
+                this.selectedAnswer = this.filteredAnswers.find((ans) => ans.id == newSelectedId);
             } else {
                 this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
             }
@@ -1044,7 +1044,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     showVelpsCheckBox() {
         // return this.$parent.teacherMode || $window.velpMode; // && this.$parent.item.rights.teacher;
-        return documentglobals().velpMode || this.element.parents(".par").hasClass("has-annotation");
+        return documentglobals().velpMode || this.getPar().hasClass("has-annotation");
     }
 
     getTriesLeft() {
@@ -1184,6 +1184,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         await this.changeAnswer();
     }
+
+    getPar(): Paragraph {
+        return this.element.parents(".par");
+    }
+
 }
 
 timApp.component("answerbrowser", {

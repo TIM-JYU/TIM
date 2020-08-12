@@ -245,11 +245,9 @@ export class ReviewController {
     clearAnswerAnnotationsFromParMargin(par: Element): void {
         const oldAnnotations = par.querySelectorAll(".notes [aid]");
         for (const ele of oldAnnotations) {
-            const aid = ele.getAttribute("aid");
-            if (aid == null) {
-                return;
-            }
-            const numAid = parseFloat(aid);
+            // aid cannot be null here because the above selector has [aid]
+            const aid = ele.getAttribute("aid")!;
+            const numAid = parseInt(aid, 10);
             if (!isNaN(numAid)) {
                 const ann = this.vctrl.getAnnotation("m" + numAid);
                 if (ann?.annotation.answer) {
