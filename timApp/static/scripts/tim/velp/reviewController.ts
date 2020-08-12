@@ -114,12 +114,6 @@ export class ReviewController {
         }
         this.annotations = response.result.data.map((o) => {
             const ann = deserialize(o, Annotation);
-            try {
-                if (this.isDrawnAnnotation(ann) && ann.coord.start.t) {
-                    ann.drawData = JSON.parse(ann.coord.start.t) as DrawObject[];
-                }
-            } catch (e) {
-            }
             return ann;
         });
         const annotationsToRemove = [];
@@ -285,7 +279,7 @@ export class ReviewController {
             const placeInfo = a.coord;
             let added = false;
 
-            if (a.coord.start.depth == 0 && a.coord.end.depth == 0) { // placeholder for drawn annotations
+            if (a.draw_data) {
                 if (!a.coord.start.t) {
                     continue;
                 }
@@ -713,7 +707,7 @@ export class ReviewController {
                 {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
                 velp,
             );
-            ann.drawData = velpDrawing;
+            ann.draw_data = velpDrawing;
 
             const ele = this.compilePopOver(targ, ind, ann, AnnotationAddReason.AddingNew) as HTMLElement;
             const span = ele.querySelector("span");
@@ -749,9 +743,9 @@ export class ReviewController {
             });
             if (saved.ok) {
                 const annCopy = saved.result;
-                if (saved.result.coord.start.t) {
-                    annCopy.drawData = JSON.parse(saved.result.coord.start.t) as DrawObject[]; // placeholder until db update
-                }
+                // if (saved.result.coord.start.t) {
+                //     annCopy.draw_data = JSON.parse(saved.result.coord.start.t) as DrawObject[]; // placeholder until db update
+                // }
                 this.updateAnnotation(annCopy);
 
                 this.selectedCanvas.storeDrawing();
@@ -1104,7 +1098,7 @@ export class ReviewController {
     }
 
     isDrawnAnnotation(ann: Annotation): boolean { // placeholder
-        return (ann.coord.start.depth == 0 && ann.coord.end.depth == 0 && ann.coord.start.t != undefined)
+        return (ann.coord.start.depth == 0 && ann.coord.end.depth == 0);
     }
 
     /**
@@ -1128,9 +1122,10 @@ export class ReviewController {
 
         // We might click a margin annotation, but we still want to open the corresponding inline annotation,
         // if it exists.
-        const prefix = ((isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end))|| this.isDrawnAnnotation(annotation)) ||  &&
+        const prefix = ((isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end)) || annotation.draw_data)  &&
         ((ac instanceof AnnotationComponent && ac.placement !== AnnotationPlacement.InMarginOnly)
             || ac instanceof Annotation) ? "t" : "m";
+
         let actrl = this.vctrl.getAnnotation(prefix + annotation.id);
         if (!annotation.answer && !actrl) {
             actrl = this.vctrl.getAnnotation("m" + annotation.id);
@@ -1211,8 +1206,8 @@ export class ReviewController {
         canvas.setClickCallback(this.clickFromCanvas);
         canvas.id = answerId;
         const annotationDrawings = this.getAnnotationsByAnswerId(answerId).reduce((arr: DrawObject[], ann: Annotation) => {
-            if (ann.drawData) {
-                arr = arr.concat(ann.drawData);
+            if (ann.draw_data) {
+                arr = arr.concat(ann.draw_data);
             }
             return arr;
         }, []);
@@ -1230,10 +1225,10 @@ export class ReviewController {
         } else {
             const anns = this.getAnnotationsByAnswerId(canvas.id);
             for (const a of anns) {
-                if (a.coord.start.depth != 0 || a.coord.end.depth != 0 || !a.drawData) {
+                if (!a.draw_data) {
                     continue;
                 }
-                if (canvas.isCoordWithinDrawing(a.drawData, x, y)) {
+                if (canvas.isCoordWithinDrawing(a.draw_data, x, y)) {
                     const tanncomp = this.vctrl.getAnnotation(`t${a.id}`);
                     if (!tanncomp) {
                         console.log("couldn't find annotation via vctrl");

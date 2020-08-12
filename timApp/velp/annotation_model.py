@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, List
@@ -177,7 +178,7 @@ class Annotation(db.Model):
             't': self.hash_end,
             'el_path': end_path,
         }
-        return {
+        ret = {
             'id': self.id,
             'annotator': self.annotator,
             'answer': self.answer,
@@ -191,3 +192,10 @@ class Annotation(db.Model):
             'velp': self.velp_version.velp_id,
             'visible_to': self.visible_to,
         }
+        if start.get('depth', 0) == 0 and end.get('depth', 0) == 0:  # placeholder
+            try:
+                ret['draw_data'] = json.loads(self.hash_start)
+            except json.decoder.JSONDecodeError:
+                pass
+
+        return ret

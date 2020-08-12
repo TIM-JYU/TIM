@@ -52,7 +52,7 @@ export class Annotation implements IAnnotation {
     @JsonProperty() public points!: number | null;
     @JsonProperty() public velp!: number;
     @JsonProperty() public visible_to!: number;
-    @JsonProperty() public drawData?: DrawObject[];
+    @JsonProperty() public draw_data?: DrawObject[];
 
     constructor() {
     }
@@ -74,7 +74,7 @@ export class Annotation implements IAnnotation {
     }
 
     getDrawing(): DrawObject[] | undefined {
-        return this.drawData;
+        return this.draw_data;
     }
 
     getEditableValues(): Readonly<IAnnotationEditableValues> {
