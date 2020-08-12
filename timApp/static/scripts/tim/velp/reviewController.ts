@@ -239,15 +239,35 @@ export class ReviewController {
     }
 
     /**
-     * Loads the annotations to the given answer.
-     * @param answerId - Answer ID
+     * Removes answer annotations from the paragraph margin
+     * @param par Paragraph to inspect
+     */
+    clearAnswerAnnotationsFromParMargin(par: Element): void {
+        const oldAnnotations = par.querySelectorAll(".notes [aid]");
+        for (const ele of oldAnnotations) {
+            // aid cannot be null here because the above selector has [aid]
+            const aid = ele.getAttribute("aid")!;
+            const numAid = parseInt(aid, 10);
+            if (!isNaN(numAid)) {
+                const ann = this.vctrl.getAnnotation("m" + numAid);
+                if (ann?.annotation.answer) {
+                    angular.element(ele).remove();
+                }
+            }
+        }
+    }
+
+    /**
+     * Loads the annotations to the answer if given and removes answer annotations not associated with the answer.
+     * @param answerId - Optional answer ID
      * @param par - Paragraph element
      */
-    loadAnnotationsToAnswer(answerId: number, par: Element): void {
+    loadAnnotationsToAnswer(answerId: number | undefined, par: Element): void {
+        this.clearAnswerAnnotationsFromParMargin(par);
+        if (answerId == undefined) {
+            return;
+        }
         const annotations = this.getAnnotationsByAnswerId(answerId);
-
-        const oldAnnotations = par.querySelectorAll(".notes [aid]");
-        angular.element(oldAnnotations).remove();
         for (const a of annotations) {
             const placeInfo = a.coord;
 
@@ -937,21 +957,28 @@ export class ReviewController {
 
     /**
      * Shows the annotation (despite the name).
-     * @param ac - AnnotationComponent to be shown.
+     * @param ac - Annotation to be shown.
      * @param scrollToAnnotation Whether to scroll to annotation if it is not in viewport.
      */
-    async toggleAnnotation(ac: AnnotationComponent, scrollToAnnotation: boolean) {
-        const annotation = ac.annotation;
+    async toggleAnnotation(ac: AnnotationComponent | Annotation, scrollToAnnotation: boolean) {
+        let annotation: Annotation;
+        if (ac instanceof AnnotationComponent) {
+            annotation = ac.annotation;
+        } else {
+            annotation = ac;
+        }
         const parent = document.getElementById(annotation.coord.start.par_id);
         if (parent == null) {
             log(`par ${annotation.coord.start.par_id} not found`);
             return;
         }
 
+
         // We might click a margin annotation, but we still want to open the corresponding inline annotation,
         // if it exists.
         const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end) &&
-        ac.placement !== AnnotationPlacement.InMarginOnly ? "t" : "m";
+        ((ac instanceof AnnotationComponent && ac.placement !== AnnotationPlacement.InMarginOnly)
+            || ac instanceof Annotation) ? "t" : "m";
         let actrl = this.vctrl.getAnnotation(prefix + annotation.id);
         if (!annotation.answer && !actrl) {
             actrl = this.vctrl.getAnnotation("m" + annotation.id);
@@ -1002,18 +1029,15 @@ export class ReviewController {
         if (this.vctrl.selectedUser.id !== uid) {
             for (const u of this.vctrl.users) {
                 if (u.user.id === uid) {
-                    this.vctrl.changeUser(u.user, false);
+                    await this.vctrl.changeUser(u.user, false);
                     break;
                 }
             }
         }
 
         if (!(ab.review && ab.selectedAnswer && ab.selectedAnswer.id === annotation.answer.id)) {
-            // If review is false, setting review to true will eventually update the answer,
-            // and we don't want to do it twice. Therefore setAnswerById shall only update the answer if review
-            // is already true.
-            await ab.setAnswerById(annotation.answer.id, ab.review);
             ab.review = true;
+            await ab.setAnswerById(annotation.answer.id);
         }
         let r = await to(this.vctrl.getAnnotationAsync(prefix + annotation.id));
         if (!r.ok) {

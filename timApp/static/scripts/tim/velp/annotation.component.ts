@@ -78,7 +78,7 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
             </p>
         </span>
             <tim-close-button class="clickable-icon"
-                  (click)="toggleAnnotation();setShowFull(false)"></tim-close-button>
+                  (click)="toggleAnnotationShow();setShowFull(false)"></tim-close-button>
     </span>
 
                 <div>
