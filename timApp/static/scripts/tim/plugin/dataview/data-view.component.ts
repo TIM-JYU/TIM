@@ -857,16 +857,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                     idCell.textContent = `${rowIndex + this.columnIdStart}`;
                 }
 
-                if (this.headerIdTableCache && this.filterTableCache) {
-                    for (let columnNumber = 0; columnNumber < horizontal.count; columnNumber++) {
-                        const headerIdCell = this.headerIdTableCache.getCell(0, columnNumber);
-                        const filterCell = this.filterTableCache.getCell(0, columnNumber);
-                        const columnIndex = this.colAxis.visibleItems[horizontal.startIndex + columnNumber];
-                        // TODO: Cache for speedup
-                        const width = this.getColumnHeaderWidth(columnIndex);
-                        headerIdCell.style.width = filterCell.style.width = `${width}px`;
-                        headerIdCell.textContent = `${columnIndex}`;
-                    }
+                // If static size is set, there is possibility for vscrolling
+                if (this.colAxis.hasStaticSize) {
+                    this.updateColumnHeaders();
                 }
             }
         };
@@ -983,6 +976,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.viewport = this.getViewport();
         this.updateTableTransform();
 
+        const p1 = performance.now();
+        for (const row of this.rowAxis.visibleItems) {
+            for (const col of this.colAxis.visibleItems) {
+                measureWidth(this.modelProvider.getCellContents(row, col), "small");
+            }
+        }
+        console.log(performance.now() - p1);
+
         this.buildColumnHeaderTable();
         this.buildRowHeaderTable();
         this.buildDataTable();
@@ -1021,28 +1022,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         this.headerIdTableCache.resize(1, this.viewport.horizontal.count);
         this.filterTableCache.resize(1, this.viewport.horizontal.count);
-        const {horizontal} = this.viewport;
-        const colIndices: [HTMLTableCellElement, number][] = [];
-        for (let column = 0; column < horizontal.count; column++) {
-            const columnIndex = this.colAxis.visibleItems[column + horizontal.startIndex];
-            const headerCell = this.headerIdTableCache.getCell(0, column);
-            colIndices.push([headerCell, columnIndex]);
-            const headerTitle = headerCell.getElementsByTagName("span")[0];
-            headerTitle.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
-
-            // TODO: Make own helper method because column index changes in vscroll mode
-            headerCell.onclick = () => {
-                this.modelProvider.handleClickHeader(columnIndex);
-            };
-
-            const filterCell = this.filterTableCache.getCell(0, column);
-            const input = filterCell.getElementsByTagName("input")[0];
-            // TODO: Make own helper method because column index changes in vscroll mode
-            input.oninput = () => {
-                this.modelProvider.setRowFilter(columnIndex, input.value);
-                this.modelProvider.handleChangeFilter();
-            };
-        }
+        const colIndices = this.updateColumnHeaders();
         for (const [cell, columnIndex] of colIndices) {
             this.colHeaderWidths[columnIndex] = cell.offsetWidth;
         }
@@ -1066,6 +1046,35 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 this.modelProvider.handleChangeCheckbox(rowIndex);
             };
         }
+    }
+
+    private updateColumnHeaders(): [HTMLTableCellElement, number][] {
+        if (!this.headerIdTableCache || !this.filterTableCache) {
+            return [];
+        }
+        const {horizontal} = this.viewport;
+        const colIndices: [HTMLTableCellElement, number][] = [];
+        for (let column = 0; column < horizontal.count; column++) {
+            const columnIndex = this.colAxis.visibleItems[column + horizontal.startIndex];
+            const headerCell = this.headerIdTableCache.getCell(0, column);
+            colIndices.push([headerCell, columnIndex]);
+            const headerTitle = headerCell.getElementsByTagName("span")[0];
+            headerTitle.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
+
+            // TODO: Make own helper method because column index changes in vscroll mode
+            headerCell.onclick = () => {
+                this.modelProvider.handleClickHeader(columnIndex);
+            };
+
+            const filterCell = this.filterTableCache.getCell(0, column);
+            const input = filterCell.getElementsByTagName("input")[0];
+            // TODO: Make own helper method because column index changes in vscroll mode
+            input.oninput = () => {
+                this.modelProvider.setRowFilter(columnIndex, input.value);
+                this.modelProvider.handleChangeFilter();
+            };
+        }
+        return colIndices;
     }
 
     private updateRow(row: HTMLTableRowElement, rowIndex: number): HTMLTableRowElement {
@@ -1105,16 +1114,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 cell.style.overflow = "hidden";
             }
         }
-        // const rowHeight = this.modelProvider.getRowHeight(rowIndex);
-        // if (rowHeight) {
-        //     if (this.vScroll.enabled) {
-        //         cell.style.minHeight = `${rowHeight}px`;
-        //         cell.style.maxHeight = `${rowHeight}px`;
-        //         cell.style.lineHeight = `${rowHeight / 2}px`;
-        //     }
-        //     cell.style.height = `${rowHeight}px`;
-        //     cell.style.overflow = "hidden";
-        // }
     }
 
     // endregion
@@ -1228,6 +1227,17 @@ function applyBasicStyle(element: HTMLElement, style: Record<string, string> | n
     if (style != null) {
         Object.assign(element.style, style);
     }
+}
+
+const canvas = document.createElement("canvas");
+function measureWidth(text: string, font: string) {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+        return;
+    }
+    ctx.font = font;
+    const metrics = ctx.measureText(text);
+    return metrics.width;
 }
 
 interface PurifyData {
