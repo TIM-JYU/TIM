@@ -10,13 +10,12 @@ import {
     ViewChild,
 } from "@angular/core";
 import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
-import {DrawToolbarModule, DrawType, IDrawVisibleOptions} from "tim/plugin/drawToolbar";
-import {IDrawData, ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
-import {posToRelative} from "tim/util/utils";
+import {DrawToolbarModule, DrawType} from "tim/plugin/drawToolbar";
+import {ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
+import {numOrStringToNumber, posToRelative} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {drawFreeHand} from "tim/plugin/imagex";
 
 
 // TODO: These classes are probably redundant - DrawObject may be enough
@@ -81,6 +80,69 @@ interface IFreeHand {
 // TODO: Name overlap with imagex DrawObject
 export type DrawObject = IRectangle | ICircle | IFreeHand;
 
+export function getDrawingDimensions(drawing: DrawObject[]): { x: number, y: number, w: number, h: number } {
+    let x = Number.MAX_SAFE_INTEGER;
+    let y = Number.MAX_SAFE_INTEGER;
+    let w = 0;
+    let h = 0;
+    for (const obj of drawing) {
+        if (obj.type == "freehand") {
+            for (const line of obj.drawData.lines) {
+                if (x == null || x > line[0]) {
+                    x = line[0];
+                }
+                if (y == null || y > line[1]) {
+                    y = line[1];
+                }
+                if (w < line[0]) {
+                    w = line[0];
+                }
+                if (h < line[1]) {
+                    h = line[1];
+                }
+            }
+        } else {
+            const shape = obj.drawData;
+            if (x > shape.x) {
+                x = shape.x;
+            }
+            if (y > shape.y) {
+                y = shape.y;
+            }
+            if (w < shape.x + shape.w) {
+                w = shape.x + shape.w;
+            }
+            if (h < shape.y + shape.h) {
+                h = shape.y + shape.h;
+            }
+        }
+    }
+    return {x: x, y: y, w: w - x, h: h - y};
+}
+
+// TODO: Repeated from imagex, move
+export function drawFreeHand(ctx: CanvasRenderingContext2D, dr: ILineSegment[]): void {
+    // console.log(dr);
+    for (const seg of dr) {
+        if (seg.lines.length < 2) {
+            continue;
+        }
+        ctx.beginPath();
+        applyStyleAndWidth(ctx, seg);
+        ctx.moveTo(seg.lines[0][0], seg.lines[0][1]);
+        for (let lni = 1; lni < seg.lines.length; lni++) {
+            ctx.lineTo(seg.lines[lni][0], seg.lines[lni][1]);
+        }
+        ctx.stroke();
+    }
+}
+
+function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
+    ctx.strokeStyle = seg.color ?? ctx.strokeStyle;
+    ctx.lineWidth = numOrStringToNumber(seg.w ?? ctx.lineWidth);
+    ctx.globalAlpha = seg.opacity ?? 1;
+}
+
 @Component({
     selector: "draw-canvas",
     template: `
@@ -103,7 +165,7 @@ export class DrawCanvasComponent implements OnInit {
     @ViewChild("wrapper") wrapper!: ElementRef<HTMLElement>;
     @Input() imgLoadCallback?: (arg0: this) => void;
 
-    drawingAnything = true;
+    @Input() drawingAnything = true;
     drawType = DrawType.Freehand;
     color = "red";
     w = 3;
@@ -379,47 +441,7 @@ export class DrawCanvasComponent implements OnInit {
     }
 
     getCurrentDrawingDimensions(): { x: number, y: number, w: number, h: number } {
-        return this.getDrawingDimensions(this.getDrawing());
-    }
-
-    getDrawingDimensions(drawing: DrawObject[]): { x: number, y: number, w: number, h: number } {
-        let x = this.canvas.nativeElement.width;
-        let y = this.canvas.nativeElement.height;
-        let w = 0;
-        let h = 0;
-        for (const obj of drawing) {
-            if (obj.type == "freehand") {
-                for (const line of obj.drawData.lines) {
-                    if (x == null || x > line[0]) {
-                        x = line[0];
-                    }
-                    if (y == null || y > line[1]) {
-                        y = line[1];
-                    }
-                    if (w < line[0]) {
-                        w = line[0];
-                    }
-                    if (h < line[1]) {
-                        h = line[1];
-                    }
-                }
-            } else {
-                const shape = obj.drawData;
-                if (x > shape.x) {
-                    x = shape.x;
-                }
-                if (y > shape.y) {
-                    y = shape.y;
-                }
-                if (w < shape.x + shape.w) {
-                    w = shape.x + shape.w;
-                }
-                if (h < shape.y + shape.h) {
-                    h = shape.y + shape.h;
-                }
-            }
-        }
-        return {x: x, y: y, w: w - x, h: h - y};
+        return getDrawingDimensions(this.getDrawing());
     }
 
     storeDrawing() {
@@ -430,7 +452,7 @@ export class DrawCanvasComponent implements OnInit {
     }
 
     isCoordWithinDrawing(drawing: DrawObject[], x: number, y: number): boolean {
-        const dimensions = this.getDrawingDimensions(drawing);
+        const dimensions = getDrawingDimensions(drawing);
         return (x > dimensions.x && x < dimensions.x + dimensions.w && y > dimensions.y && y < dimensions.y + dimensions.h);
     }
 

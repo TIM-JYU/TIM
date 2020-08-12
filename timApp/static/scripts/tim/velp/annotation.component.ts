@@ -13,13 +13,13 @@ import deepEqual from "deep-equal";
 import {AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {deserialize} from "typescript-json-serializer";
+import {DrawObject} from "tim/plugin/drawCanvas";
 import {ViewCtrl} from "../document/viewctrl";
 import {showMessageDialog} from "../ui/dialog";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
 import {clone, isInViewport, Result, scrollToElement, to} from "../util/utils";
 import {Annotation, IAnnotationEditableValues, IAnnotationInterval} from "./velptypes";
-import {DrawObject} from "tim/plugin/drawCanvas";
 
 /**
  * Lists the possible reasons why an annotation is added to the document.
@@ -253,7 +253,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     }
 
     private isInMargin() {
-        return this.placement !== AnnotationPlacement.InText;
+        return (this.placement !== AnnotationPlacement.InText && this.placement !== AnnotationPlacement.InPicture);
     }
 
     ngAfterViewInit() {

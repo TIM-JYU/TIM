@@ -719,6 +719,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 }
                 await $timeout();
             }
+            // TODO: Avoid this if canvas loaded
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer?.id, par[0]);
         }
         if (!changeReviewOnly) {
@@ -734,7 +735,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.selectedAnswer && this.reviewHtml) {
             const par = this.element.parents(".par");
             this.viewctrl.reviewCtrl.setCanvas(par[0], this.selectedAnswer.id, canvas);
-            // this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
+            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
         }
     };
 

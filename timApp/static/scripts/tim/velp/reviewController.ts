@@ -10,7 +10,7 @@ import {
 } from "tim/velp/annotation.component";
 import {deserialize} from "typescript-json-serializer";
 import {TaskId} from "tim/plugin/taskid";
-import {DrawCanvasComponent, DrawObject} from "tim/plugin/drawCanvas";
+import {DrawCanvasComponent, DrawObject, getDrawingDimensions} from "tim/plugin/drawCanvas";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -115,11 +115,10 @@ export class ReviewController {
         this.annotations = response.result.data.map((o) => {
             const ann = deserialize(o, Annotation);
             try {
-                if (ann.coord.start.depth == 0 && ann.coord.end.depth == 0 && ann.coord.start.t) {
+                if (this.isDrawnAnnotation(ann) && ann.coord.start.t) {
                     ann.drawData = JSON.parse(ann.coord.start.t) as DrawObject[];
                 }
             } catch (e) {
-                // console.log("placeholder failure:", ann.coord.start.t);
             }
             return ann;
         });
@@ -284,27 +283,65 @@ export class ReviewController {
         const annotations = this.getAnnotationsByAnswerId(answerId);
         for (const a of annotations) {
             const placeInfo = a.coord;
-
-            const element = par.querySelector(".review pre")?.firstChild;
-
-            if (!isFullCoord(placeInfo.start) || !isFullCoord(placeInfo.end) || !element) {
-                this.addAnnotationToMargin(
-                    par,
-                    a,
-                    AnnotationAddReason.LoadingExisting,
-                    // If the coordinates exist but the review element does not, we don't know yet if the annotation can be
-                    // successfully placed in text.
-                    !isFullCoord(placeInfo.start) ||
-                    !isFullCoord(placeInfo.end) ? AnnotationPlacement.InMarginOnly : AnnotationPlacement.InMarginAndUnknownIfItWillBeInText,
-                );
-                continue;
-            }
-            const range = tryCreateRange(placeInfo.start, placeInfo.end, element, undefined);
             let added = false;
-            if (range) {
-                added = this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
+
+            if (a.coord.start.depth == 0 && a.coord.end.depth == 0) { // placeholder for drawn annotations
+                if (!a.coord.start.t) {
+                    continue;
+                }
+                const targ = par.querySelector(".drawnAnnotationContainer");
+                if (targ) {
+
+                    // const drawdata = JSON.parse(a.coord.start.t) as ILineSegment[];
+                    const drawdata = JSON.parse(a.coord.start.t) as DrawObject[];
+
+                    const rect = getDrawingDimensions(drawdata);
+
+                    const ind = document.createElement("div");
+                    ind.style.width = rect.w + "px";
+                    ind.style.height = rect.h + "px";
+                    ind.style.border = "1px solid #000000";
+
+
+                    targ.appendChild(ind);
+                    // -----
+                    // this.addAnnotationToMargin(par, a, AnnotationAddReason.LoadingExisting, AnnotationPlacement.InMargin);
+                    const ele = this.compilePopOver(targ, ind, a, AnnotationAddReason.LoadingExisting) as HTMLElement;
+                    ele.style.position = "absolute";
+                    ele.style.left = rect.x + "px";
+                    ele.style.top = rect.y + "px";
+                    const span = ele.querySelector("span");
+                    // a.color = "transparent";
+                    const textAnnotation = this.vctrl.getAnnotation(`t${a.id}`);
+                    if (textAnnotation) {
+                        console.log("color?");
+                        textAnnotation.values.color = "transparent";
+                    }
+                    console.log("Added ann", a);
+                    added = true;
+                }
             } else {
-                log("annotation range invalid, adding to margin only");
+
+                const element = par.querySelector(".review pre")?.firstChild;
+
+                if (!isFullCoord(placeInfo.start) || !isFullCoord(placeInfo.end) || !element) {
+                    this.addAnnotationToMargin(
+                        par,
+                        a,
+                        AnnotationAddReason.LoadingExisting,
+                        // If the coordinates exist but the review element does not, we don't know yet if the annotation can be
+                        // successfully placed in text.
+                        !isFullCoord(placeInfo.start) ||
+                        !isFullCoord(placeInfo.end) ? AnnotationPlacement.InMarginOnly : AnnotationPlacement.InMarginAndUnknownIfItWillBeInText,
+                    );
+                    continue;
+                }
+                const range = tryCreateRange(placeInfo.start, placeInfo.end, element, undefined);
+                if (range) {
+                    added = this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
+                } else {
+                    log("annotation range invalid, adding to margin only");
+                }
             }
             this.addAnnotationToMargin(par, a, AnnotationAddReason.LoadingExisting, added ? AnnotationPlacement.InMargin : AnnotationPlacement.InMarginOnly);
         }
@@ -656,10 +693,8 @@ export class ReviewController {
                 return;
             }
             let parelement: Element | null = this.selectedElement;
-            console.log(parelement);
             while (parelement && !parelement.hasAttribute("t")) {
                 parelement = getElementParent(parelement);
-                console.log(parelement);
             }
             if (!parelement) {
                 showMessageDialog("Could not add annotation (parelement missing)");
@@ -1068,6 +1103,10 @@ export class ReviewController {
         return {element, scope};
     }
 
+    isDrawnAnnotation(ann: Annotation): boolean { // placeholder
+        return (ann.coord.start.depth == 0 && ann.coord.end.depth == 0 && ann.coord.start.t != undefined)
+    }
+
     /**
      * Shows the annotation (despite the name).
      * @param ac - Annotation to be shown.
@@ -1089,7 +1128,7 @@ export class ReviewController {
 
         // We might click a margin annotation, but we still want to open the corresponding inline annotation,
         // if it exists.
-        const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end) &&
+        const prefix = ((isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end))|| this.isDrawnAnnotation(annotation)) ||  &&
         ((ac instanceof AnnotationComponent && ac.placement !== AnnotationPlacement.InMarginOnly)
             || ac instanceof Annotation) ? "t" : "m";
         let actrl = this.vctrl.getAnnotation(prefix + annotation.id);
@@ -1171,15 +1210,12 @@ export class ReviewController {
     setCanvas(par: Element, answerId: number, canvas: DrawCanvasComponent): void {
         canvas.setClickCallback(this.clickFromCanvas);
         canvas.id = answerId;
-        const annotationDrawings = this.getAnnotationsByAnswerId(answerId).reduce((arr: DrawObject[], ann) => {
-            console.log(ann.drawData);
+        const annotationDrawings = this.getAnnotationsByAnswerId(answerId).reduce((arr: DrawObject[], ann: Annotation) => {
             if (ann.drawData) {
                 arr = arr.concat(ann.drawData);
             }
-            console.log(arr);
             return arr;
         }, []);
-        console.log(annotationDrawings);
         canvas.setPersistentDrawData(annotationDrawings);
     }
 
@@ -1198,8 +1234,13 @@ export class ReviewController {
                     continue;
                 }
                 if (canvas.isCoordWithinDrawing(a.drawData, x, y)) {
-                    console.log("found annotation");
-                    // TODO: toggle annotation
+                    const tanncomp = this.vctrl.getAnnotation(`t${a.id}`);
+                    if (!tanncomp) {
+                        console.log("couldn't find annotation via vctrl");
+                        return;
+                    }
+                    console.log("found annotation via vctrl");
+                    tanncomp.toggleAnnotationShow();
                     // if overlap then iterate
                 }
             }
