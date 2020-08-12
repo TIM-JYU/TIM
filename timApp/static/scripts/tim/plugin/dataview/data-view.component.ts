@@ -715,7 +715,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateHeaderSizes(): void {
-        if (!this.headerContainer || !this.idContainer || !this.headerTable) {
+        if (!this.headerContainer || !this.idContainer || !this.headerTable || !this.viewport) {
             return;
         }
         // Apparently to correctly handle column header table, we have to set its size to match that of data
