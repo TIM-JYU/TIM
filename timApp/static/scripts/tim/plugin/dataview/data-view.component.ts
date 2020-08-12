@@ -383,6 +383,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private vScroll: VirtualScrollingOptions = DEFAULT_VSCROLL_SETTINGS;
     private colHeaderWidths: number[] = [];
     private tableBaseBorderWidth: number = -1;
+    private sizeContainer?: HTMLDivElement;
+    private sizeContentContainer?: HTMLDivElement;
+    private idealColWidths: number[] = [];
 
     // endregion
 
@@ -971,18 +974,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private* buildTable(): Generator {
         // Visually hide the table to prevent any flickering owing to size syncing
-        // this.componentRef.nativeElement.style.visibility = "hidden";
+        this.componentRef.nativeElement.style.visibility = "hidden";
         this.setTableSizes();
         this.viewport = this.getViewport();
         this.updateTableTransform();
-
-        const p1 = performance.now();
-        for (const row of this.rowAxis.visibleItems) {
-            for (const col of this.colAxis.visibleItems) {
-                measureWidth(this.modelProvider.getCellContents(row, col), "small");
-            }
-        }
-        console.log(performance.now() - p1);
 
         this.buildColumnHeaderTable();
         this.buildRowHeaderTable();
@@ -991,7 +986,51 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // Force the main table to layout first so that we can compute the header sizes
         yield;
         this.updateHeaderSizes();
-        // this.componentRef.nativeElement.style.visibility = "visible";
+        if (this.vScroll.enabled && !this.colAxis.hasStaticSize) {
+            this.computeIdealColumnWidth();
+            this.updateVTable();
+            yield;
+            this.updateHeaderSizes();
+        }
+        this.componentRef.nativeElement.style.visibility = "visible";
+    }
+
+    private computeIdealColumnWidth(): void {
+        if (!this.vScroll.enabled || this.colAxis.hasStaticSize) {
+            return;
+        }
+        this.idealColWidths = [];
+        for (const col of this.colAxis.visibleItems) {
+            let cWidth = 0;
+            for (const row of this.rowAxis.visibleItems) {
+                const c = this.measureText(row, col);
+                cWidth = Math.max(c.width, cWidth);
+            }
+            this.idealColWidths[col] = cWidth;
+        }
+        if (this.sizeContentContainer) {
+            this.sizeContentContainer.textContent = "";
+        }
+    }
+
+    private measureText(row: number, column: number) {
+        if (!this.sizeContainer || !this.sizeContentContainer) {
+            this.sizeContainer = document.createElement("div");
+            this.sizeContentContainer = document.createElement("div");
+            this.sizeContainer.appendChild(this.sizeContentContainer);
+            applyBasicStyle(this.sizeContainer, {
+                position: "absolute",
+                float: "left",
+                whiteSpace: "nowrap",
+                visibility: "hidden",
+            });
+            this.componentRef.nativeElement.appendChild(this.sizeContainer);
+        }
+        const colWidth = this.getDataColumnWidth(column);
+        this.sizeContentContainer.style.minWidth = `${colWidth}px`;
+        this.sizeContentContainer.innerHTML = this.modelProvider.getCellContents(row, column);
+        const size = this.sizeContentContainer.getBoundingClientRect();
+        return {width: size.width, height: size.height};
     }
 
     private buildDataTable(): void {
@@ -1106,12 +1145,17 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         cell.className = this.modelProvider.classForCell(rowIndex, columnIndex);
         cell.style.cssText = joinCss(this.modelProvider.stylingForCell(rowIndex, columnIndex));
         const colWidth = this.getDataColumnWidth(columnIndex);
+        const idealWidth = this.idealColWidths[columnIndex];
         if (colWidth) {
             cell.style.minWidth = `${colWidth}px`;
             if (this.colAxis.hasStaticSize) {
                 cell.style.width = `${colWidth}px`;
                 cell.style.maxWidth = `${colWidth}px`;
                 cell.style.overflow = "hidden";
+            } else if (idealWidth) {
+                cell.style.minWidth = `${idealWidth}px`;
+                cell.style.maxWidth = `${idealWidth}px`;
+                cell.style.width = `${idealWidth}px`;
             }
         }
     }
@@ -1227,17 +1271,6 @@ function applyBasicStyle(element: HTMLElement, style: Record<string, string> | n
     if (style != null) {
         Object.assign(element.style, style);
     }
-}
-
-const canvas = document.createElement("canvas");
-function measureWidth(text: string, font: string) {
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-        return;
-    }
-    ctx.font = font;
-    const metrics = ctx.measureText(text);
-    return metrics.width;
 }
 
 interface PurifyData {
