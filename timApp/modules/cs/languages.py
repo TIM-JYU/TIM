@@ -263,7 +263,7 @@ class Language:
         """
         :return: list of needed js-files (maybe copiled from ts-files)
         """
-        return ["/cs/js/build/module.js"]
+        return ["/cs/js/build/csModule.js"]
 
     @staticmethod
     def css_files():
