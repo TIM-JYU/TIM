@@ -331,7 +331,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         task: true,
         userdata: {type: "Relative", cells: {}},
         nonUserSpecific: true,
-
+        isPreview: false,
         // saveCallBack: this.singleCellSave
     };
     // TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
@@ -519,6 +519,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         this.data.maxCols = this.markup.maxCols;
         this.data.toolbarTemplates = this.markup.toolbarTemplates;
         this.data.dataView = this.markup.dataView;
+        this.data.isPreview = this.isPreview();
         // this.cdr.detectChanges();
     }
 

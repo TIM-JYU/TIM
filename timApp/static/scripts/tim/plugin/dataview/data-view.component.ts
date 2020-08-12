@@ -58,6 +58,8 @@ export interface TableModelProvider {
     getSortSymbolInfo(columnIndex: number): { symbol: string, style: Record<string, string> };
 
     handleClickHeader(columnIndex: number): void;
+
+    isPreview(): boolean;
 }
 
 export interface VirtualScrollingOptions {
@@ -720,7 +722,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         // Apparently to correctly handle column header table, we have to set its size to match that of data
         // and then add margin to pad the scrollbar width
-        if (this.rowAxis.visibleItems.length != 0) {
+        if (!this.modelProvider.isPreview() && this.rowAxis.visibleItems.length != 0) {
             this.headerContainer.nativeElement.style.width = `${this.tableWidth}px`;
             this.headerContainer.nativeElement.style.marginRight = `${this.verticalScrollbar}px`;
         } else {
@@ -729,7 +731,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // For height it looks like it's enough to just set the height correctly
         this.idContainer.nativeElement.style.height = `${this.tableHeight}px`;
         this.updateColumnHeaderCellSizes();
-        this.updateRowHeaderCellSizes();
+        if (!this.modelProvider.isPreview()) {
+            this.updateRowHeaderCellSizes();
+        }
         this.updateSummaryCellSizes();
     }
 
@@ -780,7 +784,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.rowAxis.visibleItems.length == 0) {
             return;
         }
-        const width = this.idTableCache?.getCell(this.rowAxis.visibleItems[0], 0)?.offsetWidth;
+        const width = !this.modelProvider.isPreview() ? this.idTableCache?.getCell(this.rowAxis.visibleItems[0], 0)?.offsetWidth : undefined;
         const summaryTotalHeaderHeight = this.headerIdTableCache?.getRow(0).offsetHeight;
         const filterHeaderHeight = this.filterTableCache?.getRow(0).offsetHeight;
         if (width) {
@@ -975,6 +979,21 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private* buildTable(): Generator {
         // Visually hide the table to prevent any flickering owing to size syncing
         this.componentRef.nativeElement.style.visibility = "hidden";
+        const build = this.modelProvider.isPreview() ? this.buildPreviewTable() : this.buildMainTable();
+        for (const _ of build) {
+            yield;
+        }
+        this.componentRef.nativeElement.style.visibility = "visible";
+    }
+
+    private* buildPreviewTable() {
+        this.viewport = this.getViewport();
+        this.buildColumnHeaderTable();
+        yield;
+        this.updateHeaderSizes();
+    }
+
+    private* buildMainTable() {
         this.setTableSizes();
         this.viewport = this.getViewport();
         this.updateTableTransform();
@@ -985,6 +1004,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
         // Force the main table to layout first so that we can compute the header sizes
         yield;
+
         this.updateHeaderSizes();
         if (this.vScroll.enabled && !this.colAxis.hasStaticSize) {
             this.computeIdealColumnWidth();
@@ -992,7 +1012,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             yield;
             this.updateHeaderSizes();
         }
-        this.componentRef.nativeElement.style.visibility = "visible";
     }
 
     private computeIdealColumnWidth(): void {
@@ -1217,7 +1236,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (res !== undefined) {
             return res;
         }
-        if (this.rowAxis.visibleItems.length == 0) {
+        if (this.rowAxis.visibleItems.length == 0 || this.dataTableCache.rows.length == 0) {
             return 0;
         }
         return this.dataTableCache.getCell(this.rowAxis.visibleItems[0], columnIndex).getBoundingClientRect().width;

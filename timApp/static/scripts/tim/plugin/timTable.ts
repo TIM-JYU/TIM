@@ -265,6 +265,7 @@ export interface TimTable {
         confirmation?: string;
     };
     dataView?: DataViewSettings | null;
+    isPreview: boolean;
 }
 
 export const DataViewSettingsType = t.type({
@@ -4042,6 +4043,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     getSortSymbolInfo(columnIndex: number): { symbol: string; style: Record<string, string> } {
         return {style: this.sortSymbolStyle[columnIndex], symbol: this.sortSymbol[columnIndex]};
+    }
+
+    isPreview(): boolean {
+        return this.data.isPreview;
     }
 }
 
