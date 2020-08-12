@@ -1,8 +1,12 @@
+from dataclasses import dataclass
+from typing import List, Tuple, Optional
+
 from flask import Blueprint, abort, request
 from flask import current_app, Response
 from sqlalchemy import func, distinct, true
 from sqlalchemy.exc import IntegrityError
 
+from marshmallow_dataclass import class_schema
 from timApp.auth.accesshelper import verify_read_marking_right, get_doc_or_abort, verify_teacher_access, \
     verify_manage_access
 from timApp.auth.sessioninfo import get_session_usergroup_ids
@@ -63,6 +67,14 @@ def unread_paragraph(doc_id, par_id):
     return set_read_paragraph(doc_id, par_id, unread=True)
 
 
+@dataclass
+class ReadModel:
+    pars: Optional[List[Tuple[int, str]]] = None
+
+
+ReadModelSchema = class_schema(ReadModel)
+
+
 @readings.route("/read/<int:doc_id>/<par_id>/<int:read_type>", methods=['PUT'])
 def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
     paragraph_type = ReadParagraphType(read_type) if read_type is not None else ReadParagraphType.click_red
@@ -72,25 +84,33 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
     d = get_doc_or_abort(doc_id)
     verify_read_marking_right(d)
     doc = d.document
-    par_ids, = verify_json_params('pars', require=False)
-    if not par_ids:
-        par_ids = [par_id]
+    pardata: ReadModel = ReadModelSchema().load(request.get_json())
+    pars = pardata.pars or [[doc_id, par_id]]
+    doc_map = {}
+    for doc_id, par_id in pars:
+        if doc_id not in doc_map:
+            d = get_doc_or_abort(doc_id)
+            verify_read_marking_right(d)
+            doc_map[doc_id] = d
+
     try:
-        pars = [doc.get_paragraph(par_id) for par_id in par_ids]
+        pars = [doc_map[doc_id].document.get_paragraph(par_id) for doc_id, par_id in pars]
     except TimDbException:
         return abort(404, 'Non-existent paragraph')
 
     for group_id in get_session_usergroup_ids():
-        for par in pars:
-            for p in get_referenced_pars_from_req(par):
-                if unread:
-                    rp = ReadParagraph.query.filter_by(usergroup_id=group_id,
-                                                       doc_id=p.get_doc_id(),
-                                                       par_id=p.get_id(),
-                                                       type=paragraph_type).order_by(ReadParagraph.timestamp.desc()).first()
-                    db.session.delete(rp)
-                else:
-                    mark_read(group_id, p.doc, p, paragraph_type)
+        for p in pars:
+            if unread:
+                rp = (
+                    ReadParagraph.query.filter_by(
+                        usergroup_id=group_id,
+                        doc_id=p.get_doc_id(),
+                        par_id=p.get_id(),
+                        type=paragraph_type,
+                    ).order_by(ReadParagraph.timestamp.desc()).first())
+                db.session.delete(rp)
+            else:
+                mark_read(group_id, p.doc, p, paragraph_type)
     try:
         db.session.commit()
     except IntegrityError:

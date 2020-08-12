@@ -148,14 +148,6 @@ testuser2,3,0,0,0,0
                 for c in e.split(' '):
                     self.assertIn(c, classes)
 
-    def test_invalid_reference(self):
-        self.login_test1()
-        d = self.create_doc(initial_par='test')
-        d.document.add_text(f'#- {{rd={d.id} ra={"nonexistent"}}}')
-        d.document.add_text(f'#- {{rd={d.id} rp={"nonexistent"}}}')
-        self.mark_as_read(d, d.document.get_paragraphs()[1].get_id(), expect_status=404)
-        self.mark_as_read(d, d.document.get_paragraphs()[2].get_id(), expect_status=404)
-
     def test_mark_all_read(self):
         self.login_test1()
         d = self.create_doc(initial_par=['1', '2'])

@@ -844,10 +844,10 @@ class TimRouteTest(TimDbTest):
         return self.post('/upload/', data={'doc_id': str(d.id), 'file': (io.BytesIO(content), filename), **extra_data})
 
     def mark_as_unread(self, doc: DocInfo, par_id):
-        self.json_put(f'/unread/{doc.id}/{par_id}')
+        self.json_put(f'/unread/{doc.id}/{par_id}', json_data={})
 
     def mark_as_read(self, doc: DocInfo, par_id, read_type=ReadParagraphType.click_red, **kwargs):
-        self.json_put(f'/read/{doc.id}/{par_id}/{read_type.value}', **kwargs)
+        self.json_put(f'/read/{doc.id}/{par_id}/{read_type.value}', **kwargs, json_data={})
 
     def print_html(self, e: HtmlElement):
         print(html.tostring(e, pretty_print=True).decode())

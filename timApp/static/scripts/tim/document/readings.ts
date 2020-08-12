@@ -11,7 +11,7 @@ import {IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../ut
 import {diffDialog, setDiffDialog, showDiffDialog} from "./diffDialog";
 import {EditPosition, EditType, IExtraData} from "./editing/edittypes";
 import {onClick, onMouseOver, onMouseOverOut} from "./eventhandlers";
-import {canSeeSource, dereferencePar, getArea, getParId, getRefAttrs, isReference} from "./parhelpers";
+import {canSeeSource, dereferencePar, getArea, getParId} from "./parhelpers";
 
 export const readClasses = {
     1: "screen",
@@ -51,20 +51,21 @@ export async function markParRead(par: JQuery, readingType: ReadingType) {
     if (par.parents(".previewcontent").length > 0 || par.parents(".csrunPreview").length > 0) {
         return;
     }
-    const parId = getParId(par);
+
+    const d = dereferencePar(par);
+    if (!d) {
+        return;
+    }
+    const [docId, parId] = d;
     if (parId === "NEW_PAR" || !parId || parId === "HELP_PAR") {
         return;
     }
     readline.addClass(readClassName);
     readline.attr(`time-${readClassName}`, moment().toISOString());
-    let data = {};
-    if (isReference(par)) {
-        data = getRefAttrs(par);
-    }
-    if (!Users.isLoggedIn()) {
+    if (!Users.isLoggedIn() || !docId) {
         return;
     }
-    const r = await to($http.put(`/read/${getActiveDocument().getId()}/${parId}/${readingType}`, data));
+    const r = await to($http.put(`/read/${docId}/${parId}/${readingType}`, {}));
     if (!r.ok) {
         readline.removeClass(readClassName);
         return;
@@ -77,9 +78,14 @@ export async function markParRead(par: JQuery, readingType: ReadingType) {
 }
 
 async function markParsRead($pars: JQuery) {
-    const parIds = $pars.map((i, e) => {
-        return getParId($(e));
-    }).get();
+    const parIds = $pars
+        .toArray()
+        .map((e) => $(e))
+        .filter((e) => !isAlreadyRead(e.find(".readline"), ReadingType.ClickRed))
+        .map((e) => {
+            const d = dereferencePar(e)!;
+            return [d[0], d[1]];
+        });
     $pars.find(".readline").addClass(readClasses[ReadingType.ClickRed]);
     const doc = getActiveDocument();
     const r = await to($http.put("/read/" + doc.getId() + "/" + "null" + "/" + ReadingType.ClickRed, {pars: parIds}));
