@@ -15,7 +15,7 @@ import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} f
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
 import {getFormBehavior} from "tim/plugin/util";
-import {$http, $sce, $timeout} from "tim/util/ngimport";
+import {$http} from "tim/util/ngimport";
 import {
     copyToClipboard,
     defaultErrorMessage,
@@ -28,7 +28,6 @@ import {
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {handleAnswerResponse} from "tim/document/interceptor";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {Mode, EditorComponent, EditorFile} from "./editor/editor";

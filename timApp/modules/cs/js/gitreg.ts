@@ -10,7 +10,7 @@ import {
     defaultTimeout,
     to2,
 } from "tim/util/utils";
-import {CsController, IRunRequest, IRunResponse, IFileSubmission} from "./csPlugin";
+import {CsController, IRunRequest, IRunResponse} from "./csPlugin";
 
 @Component({
     selector: "cs-git-reg-runner",

@@ -1,6 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_"] }] */
 import $ from "jquery";
-import {Ace} from "ace-builds/src-noconflict/ace";
 import {
     ElementRef,
     ViewChild,

@@ -1,14 +1,11 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "wrap_", "modes_", "fileIndex_", "files_", "modeIndex_", "mayAddFiles_"] }] */
 /* eslint-disable @typescript-eslint/tslint/config -- decorators cause issues on setters */
-import $ from "jquery";
-import {Ace} from "ace-builds/src-noconflict/ace";
 import {
     ViewChild,
     Component,
     Input,
     Output,
     EventEmitter,
-    ChangeDetectorRef,
 } from "@angular/core";
 
 import {IFile} from "../util/file-select";
