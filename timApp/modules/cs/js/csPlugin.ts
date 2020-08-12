@@ -893,8 +893,8 @@ export class CsController extends CsBase implements ITimComponent {
     tinyErrorStyle: Partial<CSSStyleDeclaration> = {};
     uploadedFiles = new Set((o: IUploadedFile) => this.uploadedFileName(o.path));
     uploadUrl?: string;
-    userargs: string = "";
-    userinput: string = "";
+    userargs_: string = "";
+    userinput_: string = "";
     viewCode!: boolean;
     wavURL: string = "";
     wrap!:  {n: number, auto: boolean};
@@ -1095,6 +1095,28 @@ export class CsController extends CsBase implements ITimComponent {
         super.usercode = str;
         if (this.editor) {
             this.editor.content = str;
+        }
+    }
+
+    get userinput() {
+        return this.userinput_;
+    }
+    set userinput(str: string) {
+        const tmp = this.userinput_;
+        this.userinput_ = str;
+        if (tmp != str) {
+            this.anyChanged();
+        }
+    }
+
+    get userargs() {
+        return this.userargs_;
+    }
+    set userargs(str: string) {
+        const tmp = this.userargs_;
+        this.userargs_ = str;
+        if (tmp != str) {
+            this.anyChanged();
         }
     }
 
@@ -2883,7 +2905,6 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
             <textarea class="csRunArea csInputArea"
                     [rows]="inputrows"
                     [(ngModel)]="userinput"
-                    (ngModelChange)="anyChanged()"
                     [placeholder]="inputplaceholder">
             </textarea>
         </div>
@@ -2892,7 +2913,6 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
         <span><input type="text"
                     class="csArgsArea"
                     [(ngModel)]="userargs"
-                    (ngModelChange)="anyChanged()"
                     [placeholder]="argsplaceholder"></span>
     </div>
     <cs-count-board *ngIf="markup.count" [options]="markup.count"></cs-count-board>
