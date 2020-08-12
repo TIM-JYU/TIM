@@ -881,11 +881,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getRowHeight(rowIndex: number): number | undefined {
-        return 20;
+        return 30;
     }
 
     getColumnWidth(columnIndex: number): number | undefined {
-        return 100;
+        return undefined;
     }
 
     getCellContents(rowIndex: number, columnIndex: number): string {
