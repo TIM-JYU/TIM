@@ -47,6 +47,7 @@ import {PopupMenuController} from "./popupMenu";
 import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
 import {IMenuFunctionEntry} from "./viewutils";
+import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar, ParRefController);
 
@@ -156,6 +157,7 @@ export class ViewCtrl implements IController {
     private timTables = new Map<string, TimTableComponent>();
     private tableForms = new Map<string, TableFormComponent>();
     private jsRunners = new Map<string, IJsRunner>();
+    private velpCanvases = new Map<number, DrawCanvasComponent>();
 
     // TODO: Possibly redundant since same thing can be achieved by just using the array version
     private timComponents: Map<string, ITimComponent> = new Map();
@@ -557,6 +559,14 @@ export class ViewCtrl implements IController {
 
     public addUserChangeListener(name: string, listener: IUserChanged) {
         this.userChangeListeners.set(name, listener);
+    }
+
+    public addVelpCanvas(id: number, canvas: DrawCanvasComponent) {
+        this.velpCanvases.set(id, canvas);
+    }
+
+    public getVelpCanvas(id: number) {
+        return this.velpCanvases.get(id);
     }
 
     /**

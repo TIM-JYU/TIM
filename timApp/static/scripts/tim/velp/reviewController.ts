@@ -453,8 +453,16 @@ export class ReviewController {
     async deleteAnnotation(id: number) {
         const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
         const annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
-
-        if (annotationParents.length > 1) {
+        const annotation = this.annotations.find((a) => a.id == id);
+        this.annotations = this.annotations.filter((a) => a.id !== id);
+        if (annotation?.draw_data && annotation?.answer?.id && annotationParents.length > 1) {
+            // const canvas = this.getElementParentUntilAttribute(annotationParents[0], "lol");
+            const canvas = this.vctrl.getVelpCanvas(annotation.answer.id);
+            if (canvas) {
+                this.drawAnswersOnCanvas(canvas, annotation.answer.id);
+            }
+            $(annotationParents).remove();
+        } else if (annotationParents.length > 1) {
             let savedHTML = "";
             for (const a of annotationHighlights) {
                 let addHTML = a.innerHTML.replace('<span class="ng-scope">', "");
@@ -467,7 +475,6 @@ export class ReviewController {
             $(annotationParents[0]).remove();
         }
         await to($http.post("/invalidate_annotation", {id: id}));
-        this.annotations = this.annotations.filter((a) => a.id !== id);
     }
 
     /**
@@ -1111,6 +1118,7 @@ export class ReviewController {
 
         // We might click a margin annotation, but we still want to open the corresponding inline annotation,
         // if it exists.
+        // TODO: If we click on margin annotation of a drawn annotation when the canvas is not open, then this fails
         const prefix = ((isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end)) || annotation.draw_data)  &&
         ((ac instanceof AnnotationComponent && ac.placement !== AnnotationPlacement.InMarginOnly)
             || ac instanceof Annotation) ? "t" : "m";
@@ -1194,6 +1202,11 @@ export class ReviewController {
     setCanvas(par: Element, answerId: number, canvas: DrawCanvasComponent): void {
         canvas.setClickCallback(this.clickFromCanvas);
         canvas.id = answerId;
+        this.vctrl.addVelpCanvas(answerId, canvas);
+        this.drawAnswersOnCanvas(canvas, answerId);
+    }
+
+    drawAnswersOnCanvas(canvas: DrawCanvasComponent, answerId: number) {
         const annotationDrawings = this.getAnnotationsByAnswerId(answerId).reduce((arr: DrawObject[], ann: Annotation) => {
             if (ann.draw_data) {
                 arr = arr.concat(ann.draw_data);
@@ -1225,7 +1238,8 @@ export class ReviewController {
                     }
                     console.log("found annotation via vctrl");
                     tanncomp.toggleAnnotationShow();
-                    // if overlap then iterate
+                    return;
+                    // if overlap then iterate which one was opened last
                 }
             }
         }

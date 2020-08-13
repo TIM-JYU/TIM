@@ -225,7 +225,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         }
     }
 
-
     onImgLoad(): void {
         this.canvas.nativeElement.width = this.wrapper.nativeElement.clientWidth;
         this.canvas.nativeElement.height = this.wrapper.nativeElement.clientHeight;
@@ -254,7 +253,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         if (!this.drawStarted) {
             return;
         }
-        this.clear();
         this.redrawAll();
         if (this.drawType == DrawType.Circle || this.drawType == DrawType.Rectangle) {
             this.objX = Math.min(e.offsetX, this.startX);
@@ -481,6 +479,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             }
             return shape;
         });
+        this.clear();
         this.redrawAll();
     }
 
