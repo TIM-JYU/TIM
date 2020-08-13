@@ -1,7 +1,8 @@
 /// <reference lib="webworker" />
 
 /**
- * Custom WebWorker that sanitizes given rows of a DataView
+ * Custom WebWorker that sanitizes given rows of a DataView. This is one of the primary methods to speed up TimTable
+ * loading, as sanitizing initial data takes up to 50% of the loading time.
  *
  * Because web workers are isolated from the main thread, no DOM API is available, in which case
  * using DOMPurify is impossible. As such, this web worker uses sanitize-html instead which is initially
