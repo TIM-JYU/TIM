@@ -279,7 +279,7 @@ class TableCache {
 const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
     enabled: false,
     viewOverflow: {horizontal: 1, vertical: 1},
-    borderSpacing: 2,
+    borderSpacing: 0,
 };
 
 // TODO: Test that vscrolling works
@@ -334,7 +334,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                 <tbody #idBody></tbody>
             </table>
         </div>
-        <div class="data" [ngStyle]="{'maxHeight': tableMaxHeight}" #mainDataContainer>
+        <div class="data" [ngStyle]="dataTableStyle" #mainDataContainer>
             <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
                    #mainDataTable>
                 <tbody class="content" #mainDataBody></tbody>
@@ -359,6 +359,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     idHeaderCellWidth: string = "";
     cbAllVisibleRows = false;
     cbFilter = false;
+    dataTableStyle: Record<string, string> = {};
+    @HostBinding("style.maxHeight") private dataViewMaxHeight: string = "";
+    @HostBinding("style.height") private dataViewHeight: string = "";
     @HostBinding("style.width") private componentWidth: string = "";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
@@ -628,6 +631,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     ngOnInit(): void {
         this.vScroll = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
+        if (this.vScroll.enabled) {
+            this.dataTableStyle = { height: this.tableMaxHeight };
+        } else {
+            this.dataTableStyle = { maxHeight: this.tableMaxHeight };
+        }
         // Detach change detection because most of this component is based on pure DOM manipulation
         this.cdr.detach();
         // this.componentWidth = this.tableMaxWidth;
