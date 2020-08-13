@@ -153,7 +153,7 @@ class GridAxis {
         const endIndex = this.search(vpStartPosition + vpSize);
         const viewEndIndex = this.search(visibleStartPosition + visibleSize);
         return {
-            startIndex: this.visibleItems[startIndex],
+            startIndex: startIndex,
             count: Math.min(endIndex - startIndex + 1, this.visibleItems.length - startIndex),
             startPosition: this.positionStart[startIndex],
             viewStartIndex: viewStartIndex - startIndex,
@@ -435,7 +435,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     clearFilters() {
-        if (this.modelProvider.isPreview()) { return; }
+        if (this.modelProvider.isPreview()) {
+            return;
+        }
         this.modelProvider.handleClickClearFilters();
         this.cbFilter = false;
         if (this.filterTableCache) {
@@ -515,16 +517,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
         if (this.vScroll.enabled) {
             this.updateVTable();
-            return;
-        }
+        } else {
+            for (const rowIndex of order) {
+                const tableRow = this.dataTableCache.getRow(rowIndex);
+                this.mainDataBody.nativeElement.appendChild(tableRow);
 
-        for (const rowIndex of order) {
-            const tableRow = this.dataTableCache.getRow(rowIndex);
-            this.mainDataBody.nativeElement.appendChild(tableRow);
-
-            if (this.idTableCache && this.idBody) {
-                const rowHeader = this.idTableCache.getRow(rowIndex);
-                this.idBody.nativeElement.appendChild(rowHeader);
+                if (this.idTableCache && this.idBody) {
+                    const rowHeader = this.idTableCache.getRow(rowIndex);
+                    this.idBody.nativeElement.appendChild(rowHeader);
+                }
             }
         }
 
@@ -1148,7 +1149,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
             // TODO: Make own helper method because column index changes in vscroll mode
             headerCell.onclick = () => {
-                if (this.modelProvider.isPreview()) { return; }
+                if (this.modelProvider.isPreview()) {
+                    return;
+                }
                 this.modelProvider.handleClickHeader(columnIndex);
             };
 
@@ -1156,7 +1159,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const input = filterCell.getElementsByTagName("input")[0];
             // TODO: Make own helper method because column index changes in vscroll mode
             input.oninput = () => {
-                if (this.modelProvider.isPreview()) { return; }
+                if (this.modelProvider.isPreview()) {
+                    return;
+                }
                 this.modelProvider.setRowFilter(columnIndex, input.value);
                 this.modelProvider.handleChangeFilter();
             };
@@ -1215,7 +1220,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private getCellPosition(row: number, col: number) {
         const cell = this.getDataCell(row, col);
         if (!cell) {
-            return { x: 0, y: 0, w: 0 };
+            return {x: 0, y: 0, w: 0};
         }
         return {
             x: this.colAxis.hasStaticSize ? this.colAxis.positionStart[col] : cell.offsetLeft,
@@ -1247,6 +1252,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!row) {
             this.cellValueCache[rowIndex] = [];
         }
+        console.log(`${rowIndex}, ${columnIndex}`);
         const contents = this.modelProvider.getCellContents(rowIndex, columnIndex);
         if (contents) {
             // If the web worker hasn't sanitized the contents yet, do it ourselves
