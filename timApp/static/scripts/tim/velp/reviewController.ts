@@ -288,30 +288,22 @@ export class ReviewController {
 
                     // const drawdata = JSON.parse(a.coord.start.t) as ILineSegment[];
                     const drawdata = JSON.parse(a.coord.start.t) as DrawObject[];
-
                     const rect = getDrawingDimensions(drawdata);
-
-                    const ind = document.createElement("div");
-                    ind.style.width = rect.w + "px";
-                    ind.style.height = rect.h + "px";
-                    ind.style.border = "1px solid #000000";
-
-
-                    targ.appendChild(ind);
+                    const borderElement = this.createPictureBorder(rect.w, rect.h);
+                    targ.appendChild(borderElement);
                     // -----
                     // this.addAnnotationToMargin(par, a, AnnotationAddReason.LoadingExisting, AnnotationPlacement.InMargin);
-                    const ele = this.compilePopOver(targ, ind, a, AnnotationAddReason.LoadingExisting) as HTMLElement;
+                    const ele = this.compilePopOver(targ, borderElement, a, AnnotationAddReason.LoadingExisting) as HTMLElement;
                     ele.style.position = "absolute";
                     ele.style.left = rect.x + "px";
+                    // ele.style.top = rect.y + rect.h + "px";
                     ele.style.top = rect.y + "px";
                     const span = ele.querySelector("span");
                     // a.color = "transparent";
                     const textAnnotation = this.vctrl.getAnnotation(`t${a.id}`);
                     if (textAnnotation) {
-                        console.log("color?");
                         textAnnotation.values.color = "transparent";
                     }
-                    console.log("Added ann", a);
                     added = true;
                 }
             } else {
@@ -648,6 +640,15 @@ export class ReviewController {
         return truncate(this.selectedElement.querySelector(".parContent")?.textContent?.trim() ?? "", 20);
     }
 
+    createPictureBorder(width: number, height: number): HTMLElement {
+        const ind = document.createElement("div");
+        ind.style.width = width + "px";
+        ind.style.height = height + "px";
+        ind.style.border = "1px solid #000000";
+        ind.className = "annotation-picture-element";
+        return ind;
+    }
+
     /**
      * Adds an annotation with the selected velp's data to
      * the selected text area or element.
@@ -667,25 +668,17 @@ export class ReviewController {
         );
         let coord: IAnnotationInterval;
         if (this.selectionIsDrawing) {
-            if (!this.selectedCanvas) {
+            const targ = this.selectedElement.querySelector(".drawnAnnotationContainer");
+            if (!this.selectedCanvas || !targ) {
                 return;
             }
             const velpDrawing = this.selectedCanvas.getDrawing();
             if (Object.keys(velpDrawing).length == 0) {
                 return;
             }
-            const ind = document.createElement("div");
             let corners = {x: 0, y: 0, h: 0, w: 0};
             corners = this.selectedCanvas.getCurrentDrawingDimensions();
-
-            // TODO: draw on canvas instead of setting div to look like a rectangle
-            ind.style.width = corners.w + "px";
-            ind.style.height = corners.h + "px";
-            ind.style.border = "1px solid #000000";
-            const targ = this.selectedElement.querySelector(".drawnAnnotationContainer");
-            if (!targ) {
-                return;
-            }
+            const borderElement = this.createPictureBorder(corners.w, corners.h);
             let parelement: Element | null = this.selectedElement;
             while (parelement && !parelement.hasAttribute("t")) {
                 parelement = getElementParent(parelement);
@@ -701,7 +694,7 @@ export class ReviewController {
                 showMessageDialog("Could not add annotation (answerinfo missing)");
                 return;
             }
-            targ.appendChild(ind);
+            targ.appendChild(borderElement);
             const ann = await this.addAnnotation(
                 newAnnotation,
                 {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
@@ -709,8 +702,7 @@ export class ReviewController {
             );
             ann.draw_data = velpDrawing;
 
-            const ele = this.compilePopOver(targ, ind, ann, AnnotationAddReason.AddingNew) as HTMLElement;
-            const span = ele.querySelector("span");
+            const ele = this.compilePopOver(targ, borderElement, ann, AnnotationAddReason.AddingNew) as HTMLElement;
             ele.style.position = "absolute";
             ele.style.left = corners.x + "px";
             ele.style.top = corners.y + "px";
@@ -743,9 +735,6 @@ export class ReviewController {
             });
             if (saved.ok) {
                 const annCopy = saved.result;
-                // if (saved.result.coord.start.t) {
-                //     annCopy.draw_data = JSON.parse(saved.result.coord.start.t) as DrawObject[]; // placeholder until db update
-                // }
                 this.updateAnnotation(annCopy);
 
                 this.selectedCanvas.storeDrawing();

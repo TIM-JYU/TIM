@@ -220,7 +220,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (changes.bgSource) { // TODO check if these are redundant
+        if (changes.bgSource) {
             this.setBg();
         }
     }

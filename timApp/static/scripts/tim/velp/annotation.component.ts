@@ -208,6 +208,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
             this.show = true;
             this.updateZIndex();
         }
+        this.toggleElementBorder();
     }
 
     ngOnDestroy() {
@@ -275,7 +276,17 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
 
     toggleAnnotationShow() {
         this.show = !this.show;
+        this.toggleElementBorder();
         this.updateZIndex();
+    }
+
+    toggleElementBorder() {
+        if (this.placement == AnnotationPlacement.InPicture) {
+            const innerRectangle = this.element.find(".annotation-picture-element");
+            if (innerRectangle[0]) {
+                innerRectangle[0].style.border = this.show ? "1px solid #000000" : "none";
+            }
+        }
     }
 
     clearColor() {
@@ -303,7 +314,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     showAnnotation() {
         this.setShowFull(false);
         this.show = true;
-
+        this.toggleElementBorder();
         this.updateZIndex();
     }
 
