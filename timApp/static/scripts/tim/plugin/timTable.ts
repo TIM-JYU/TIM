@@ -756,8 +756,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     get dataViewVScrolling() {
         const opts: Partial<VirtualScrollingOptions> = {};
-        opts.enabled = !!this.dataView?.virtual;
         if (this.dataView?.virtual) {
+            opts.enabled = this.dataView.virtual.enabled;
             opts.viewOverflow = {
                 vertical: this.dataView.virtual.verticalOverflow,
                 horizontal: this.dataView.virtual.horizontalOverflow,
