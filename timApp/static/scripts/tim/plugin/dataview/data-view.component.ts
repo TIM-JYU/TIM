@@ -347,7 +347,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() modelProvider!: TableModelProvider; // TODO: Make optional and error out if missing
     @Input() virtualScrolling: Partial<VirtualScrollingOptions> = DEFAULT_VSCROLL_SETTINGS;
     @Input() tableClass: { [klass: string]: unknown } = {};
-    @Input() tableStyle: { [klass: string]: unknown } = {};
+    @Input() tableStyle: { [klass: string]: string } = {};
     @Input() headerStyle: Record<string, string> | null = {};
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
@@ -1049,6 +1049,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.sizeContainer = document.createElement("div");
             this.sizeContentContainer = document.createElement("div");
             this.sizeContainer.appendChild(this.sizeContentContainer);
+            this.sizeContainer.style.cssText = joinCss(this.tableStyle);
             applyBasicStyle(this.sizeContainer, {
                 position: "absolute",
                 float: "left",
