@@ -12,7 +12,6 @@ import {
     ViewChild,
 } from "@angular/core";
 import * as DOMPurify from "dompurify";
-import {em} from "mathjax-full/js/util/lengths";
 
 export interface TableModelProvider {
     getDimension(): { rows: number, columns: number };
@@ -578,7 +577,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         for (const {row, col} of cells) {
             const cell = this.dataTableCache.getCell(row, col);
             this.updateCell(cell, row, col, this.modelProvider.getCellContents(row, col));
-            DOMPurify.sanitize(cell, { IN_PLACE: true });
+            DOMPurify.sanitize(cell, {IN_PLACE: true});
         }
         this.updateHeaderSizes();
         this.syncHeaderScroll();
@@ -631,9 +630,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     ngOnInit(): void {
         this.vScroll = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
         if (this.vScroll.enabled) {
-            this.dataTableStyle = { height: this.tableMaxHeight };
+            this.dataTableStyle = {height: this.tableMaxHeight};
         } else {
-            this.dataTableStyle = { maxHeight: this.tableMaxHeight };
+            this.dataTableStyle = {maxHeight: this.tableMaxHeight};
         }
         // Detach change detection because most of this component is based on pure DOM manipulation
         this.cdr.detach();
@@ -960,7 +959,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private getViewport(): Viewport {
         const data = this.mainDataContainer.nativeElement;
         const {rows, columns} = this.modelProvider.getDimension();
-        const empty = (size: number) => ({startPosition: 0, count: size, startIndex: 0, viewCount: 0, viewStartIndex: 0});
+        const empty = (size: number) => ({
+            startPosition: 0,
+            count: size,
+            startIndex: 0,
+            viewCount: 0,
+            viewStartIndex: 0,
+        });
         if (this.vScroll.enabled) {
             const viewportWidth = data.clientWidth * (1 + 2 * this.vScroll.viewOverflow.horizontal);
             const viewportHeight = data.clientHeight * (1 + 2 * this.vScroll.viewOverflow.vertical);
