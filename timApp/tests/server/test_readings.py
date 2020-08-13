@@ -146,7 +146,7 @@ testuser2,3,0,0,0,0
             self.assertIn('readline', classes)
             if e:
                 for c in e.split(' '):
-                    self.assertIn(c, classes)
+                    self.assertIn(c, classes, f'read status "{c}" not found in paragraph "{r.getparent().attrib["id"]}"')
 
     def test_mark_all_read(self):
         self.login_test1()
@@ -230,3 +230,17 @@ testuser2,3,0,0,0,0
         self.mark_as_read(d, d_parid)
         self.check_readlines(self.get_readings(d), (READ,))
         self.check_readlines(self.get_readings(tr), (MODIFIED,))
+
+    def test_same_par_id_diff_doc_reference(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="test")
+        d2 = self.create_doc(copy_from=d.id)
+        d3 = self.create_doc()
+        p1 = d.document.get_paragraphs()[0].create_reference(d3.document)
+        p2 = d2.document.get_paragraphs()[0].create_reference(d3.document)
+        d3.document.add_paragraph_obj(p1)
+        d3.document.add_paragraph_obj(p2)
+        self.assertEqual(p1.get_attr('rp'), p2.get_attr('rp'))
+        self.mark_as_read(d, p1.get_attr('rp'))
+        self.mark_as_read(d2, p2.get_attr('rp'))
+        self.check_readlines(self.get_readings(d3), (READ, READ))

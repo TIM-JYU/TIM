@@ -120,7 +120,7 @@ def get_common_readings(usergroup_ids: List[int], doc: Document, filter_conditio
         reading_map = defaultdict(lambda: defaultdict(lambda: ReadParagraph(par_hash=None)))
         rs = get_readings(u, doc, filter_condition)
         for r in rs:
-            reading_map[r.par_id][r.type] = r
+            reading_map[r.doc_id, r.par_id][r.type] = r
         users.append(reading_map)
     common_par_ids = users[0].keys()
     for r in users[1:]:
@@ -128,8 +128,8 @@ def get_common_readings(usergroup_ids: List[int], doc: Document, filter_conditio
     # If the hashes are not the same for every user, it means someone has not read the latest one. We remove
     # such paragraphs.
     # TODO: How to handle different types of readings for a group?
-    final_pars = [par_id for par_id in common_par_ids if all(
-        (read_pars[par_id][ReadParagraphType.click_red].par_hash == users[0][par_id][
+    final_pars = [k for k in common_par_ids if all(
+        (read_pars[k][ReadParagraphType.click_red].par_hash == users[0][k][
             ReadParagraphType.click_red].par_hash) for read_pars in users)]
     for key in final_pars:
         for k, v in users[0][key].items():
