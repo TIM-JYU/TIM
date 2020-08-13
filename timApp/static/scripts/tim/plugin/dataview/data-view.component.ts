@@ -306,10 +306,12 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                         title="Click to show all"
                         (click)="clearFilters()"
                         #allVisibleCell>{{totalRows}}</td>
-                    <td class="cbColumn"><input [(ngModel)]="cbAllVisibleRows"
-                                                (ngModelChange)="setAllVisible()"
-                                                type="checkbox"
-                                                title="Check for all visible rows"></td>
+                    <td class="cbColumn" *ngIf="!this.modelProvider.isPreview()">
+                        <input [(ngModel)]="cbAllVisibleRows"
+                               (ngModelChange)="setAllVisible()"
+                               type="checkbox"
+                               title="Check for all visible rows">
+                    </td>
                 </tr>
                 </thead>
                 <tbody>
@@ -317,7 +319,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                     <td [style.width]="idHeaderCellWidth" class="nrcolumn totalnr">
                         <ng-container *ngIf="totalRows != visibleRows">{{visibleRows}}</ng-container>
                     </td>
-                    <td class="cbColumn">
+                    <td class="cbColumn" *ngIf="!this.modelProvider.isPreview()">
                         <input type="checkbox"
                                title="Check to show only checked rows"
                                [(ngModel)]="cbFilter"
@@ -433,6 +435,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     clearFilters() {
+        if (this.modelProvider.isPreview()) { return; }
         this.modelProvider.handleClickClearFilters();
         this.cbFilter = false;
         if (this.filterTableCache) {
@@ -1136,6 +1139,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
             // TODO: Make own helper method because column index changes in vscroll mode
             headerCell.onclick = () => {
+                if (this.modelProvider.isPreview()) { return; }
                 this.modelProvider.handleClickHeader(columnIndex);
             };
 
@@ -1143,6 +1147,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const input = filterCell.getElementsByTagName("input")[0];
             // TODO: Make own helper method because column index changes in vscroll mode
             input.oninput = () => {
+                if (this.modelProvider.isPreview()) { return; }
                 this.modelProvider.setRowFilter(columnIndex, input.value);
                 this.modelProvider.handleChangeFilter();
             };
