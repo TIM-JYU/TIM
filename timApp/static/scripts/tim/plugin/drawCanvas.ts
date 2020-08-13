@@ -315,7 +315,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             e.preventDefault();
         }
         this.drawData.pop();
-        this.clear();
         this.redrawAll();
     };
 
@@ -351,6 +350,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     }
 
     redrawAll(): void {
+        this.clear();
         this.drawFromArray(this.persistentDrawData);
         this.drawFromArray(this.drawData);
         if (this.freeDrawing) {
@@ -456,7 +456,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     }
 
     storeDrawing() {
-        this.persistentDrawData.concat(this.drawData);
+        this.persistentDrawData = this.persistentDrawData.concat(this.drawData);
         this.drawData = [];
         // this.clear();
         // this.redrawAll();
@@ -479,7 +479,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             }
             return shape;
         });
-        this.clear();
         this.redrawAll();
     }
 
