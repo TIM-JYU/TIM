@@ -121,7 +121,7 @@ class GridAxis {
     }
 
     get hasStaticSize(): boolean {
-        return this.totalSize != 0;
+        return !!this.totalSize;
     }
 
     refresh(): void {
