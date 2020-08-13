@@ -244,3 +244,12 @@ testuser2,3,0,0,0,0
         self.mark_as_read(d, p1.get_attr('rp'))
         self.mark_as_read(d2, p2.get_attr('rp'))
         self.check_readlines(self.get_readings(d3), (READ, READ))
+
+    def test_preamble_read(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="test")
+        p = self.create_preamble_for(d)
+        p.document.add_text("p")
+        d.document.clear_mem_cache()
+        d.document.insert_preamble_pars()
+        self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())

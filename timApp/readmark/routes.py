@@ -21,7 +21,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import verify_json_params, get_referenced_pars_from_req, get_option, \
-    get_consent_opt
+    get_consent_opt, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, csv_response
 from timApp.util.utils import seq_to_str, split_by_semicolon
 from timApp.sisu.sisu import IncorrectSettings
@@ -85,18 +85,26 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
     verify_read_marking_right(d)
     doc = d.document
     pardata: ReadModel = ReadModelSchema().load(request.get_json())
-    pars = pardata.pars or [[doc_id, par_id]]
+    parlist = pardata.pars or [[doc_id, par_id]]
     doc_map = {}
-    for doc_id, par_id in pars:
+    for doc_id, par_id in parlist:
         if doc_id not in doc_map:
             d = get_doc_or_abort(doc_id)
             verify_read_marking_right(d)
             doc_map[doc_id] = d
 
-    try:
-        pars = [doc_map[doc_id].document.get_paragraph(par_id) for doc_id, par_id in pars]
-    except TimDbException:
-        return abort(404, 'Non-existent paragraph')
+    pars = []
+    for doc_id, par_id in parlist:
+        d = doc_map[doc_id].document
+        try:
+            pars.append(d.get_paragraph(par_id))
+        except TimDbException:
+            # For performance, try to load preamble only in case the paragraph is not found otherwise.
+            d.insert_preamble_pars()
+            try:
+                pars.append(d.get_paragraph(par_id))
+            except TimDbException:
+                raise RouteException('Non-existent paragraph')
 
     for group_id in get_session_usergroup_ids():
         for p in pars:
