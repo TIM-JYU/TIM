@@ -283,7 +283,6 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
 };
 
 // TODO: Test that vscrolling works
-// TODO: Test that value editing works
 
 @Component({
     selector: "tim-data-view",

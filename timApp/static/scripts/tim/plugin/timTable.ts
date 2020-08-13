@@ -65,8 +65,8 @@ import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
-import {DataViewComponent, TableModelProvider} from "tim/plugin/dataview/data-view.component";
-import {withDefault} from "tim/plugin/attributes";
+import {DataViewComponent, TableModelProvider, VirtualScrollingOptions} from "tim/plugin/dataview/data-view.component";
+import {nullable, withDefault} from "tim/plugin/attributes";
 import {onClick} from "../document/eventhandlers";
 import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
@@ -268,8 +268,14 @@ export interface TimTable {
     isPreview: boolean;
 }
 
+export const DataViewVirtualScrollingSettingsType = t.type({
+    enabled: withDefault(t.boolean, true),
+    verticalOverflow: withDefault(t.number, 1),
+    horizontalOverflow: withDefault(t.number, 1),
+});
+
 export const DataViewSettingsType = t.type({
-   virtual: withDefault(t.boolean, false),
+    virtual: nullable(DataViewVirtualScrollingSettingsType),
 });
 
 export interface DataViewSettings extends t.TypeOf<typeof DataViewSettingsType> {
@@ -513,9 +519,7 @@ export enum ClearSort {
                             (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
                 </div>
                 <ng-container *ngIf="dataView; else tableView">
-                    <tim-data-view [virtualScrolling]="{
-                                        'enabled': dataView.virtual
-                                    }"
+                    <tim-data-view [virtualScrolling]="dataViewVScrolling"
                                    [modelProvider]="this"
                                    [tableClass]="{editable: isInEditMode() && !isInForcedEditMode(),
                                                 forcedEditable: isInForcedEditMode(),
@@ -748,6 +752,18 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     constructor(private el: ElementRef, public cdr: ChangeDetectorRef, private zone: NgZone) {
         this.pluginMeta = new PluginMeta($(el.nativeElement));
         // if ( !this.data.hide ) this.data.hide = {};
+    }
+
+    get dataViewVScrolling() {
+        const opts: Partial<VirtualScrollingOptions> = {};
+        opts.enabled = !!this.dataView?.virtual;
+        if (this.dataView?.virtual) {
+            opts.viewOverflow = {
+                vertical: this.dataView.virtual.verticalOverflow,
+                horizontal: this.dataView.virtual.horizontalOverflow,
+            };
+        }
+        return opts;
     }
 
     get element(): JQuery<HTMLElement> {
