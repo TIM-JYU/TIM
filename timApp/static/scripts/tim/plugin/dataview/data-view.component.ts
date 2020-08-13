@@ -497,7 +497,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
         if (this.vScroll.enabled) {
-            runMultiFrame(this.updateViewport());
+            this.updateVTable();
             return;
         }
         for (const rowIndex of this.rowAxis.visibleItems) {
@@ -882,6 +882,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                     idRow.style.height = `${this.modelProvider.getRowHeight(rowIndex)}px`;
                     const idCell = this.idTableCache.getCell(rowNumber, 0);
                     idCell.textContent = `${rowIndex + this.columnIdStart}`;
+                    const input = this.idTableCache.getCell(rowNumber, 1).getElementsByTagName("input")[0];
+                    input.checked = this.modelProvider.isRowChecked(rowIndex);
+                    input.oninput = this.onRowCheckedHandler(input, rowIndex);
                 }
 
                 // If static size is set, there is possibility for vscrolling
@@ -1126,10 +1129,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
             const cbCell = this.idTableCache.getCell(row, 1);
             const cb = cbCell.getElementsByTagName("input")[0];
-            cb.oninput = () => {
-                this.modelProvider.setRowChecked(rowIndex, cb.checked);
-                this.modelProvider.handleChangeCheckbox(rowIndex);
-            };
+            cb.oninput = this.onRowCheckedHandler(cb, rowIndex);
         }
     }
 
@@ -1214,6 +1214,17 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     // endregion
 
+    // region DOM handlers for common elements
+
+    private onRowCheckedHandler(checkBox: HTMLInputElement, rowIndex: number) {
+        return () => {
+                this.modelProvider.setRowChecked(rowIndex, checkBox.checked);
+                this.modelProvider.handleChangeCheckbox(rowIndex);
+        };
+    }
+
+    // endregion
+
     // region Utils
 
     private getCellPosition(row: number, col: number) {
@@ -1251,7 +1262,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!row) {
             this.cellValueCache[rowIndex] = [];
         }
-        console.log(`${rowIndex}, ${columnIndex}`);
         const contents = this.modelProvider.getCellContents(rowIndex, columnIndex);
         if (contents) {
             // If the web worker hasn't sanitized the contents yet, do it ourselves
