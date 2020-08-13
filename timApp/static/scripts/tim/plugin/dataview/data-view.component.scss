@@ -75,14 +75,15 @@ table {
   }
 }
 
-table.virtual {
-  word-break: break-all;
 
-  tbody, thead {
-    width: max-content;
-    display: block;
-  }
-}
+//table.virtual {
+//  word-break: break-all;
+//
+//  tbody, thead {
+//    width: max-content;
+//    display: block;
+//  }
+//}
 
 .fixed-width td, .fixed-width th {
   overflow: hidden;
@@ -92,9 +93,27 @@ table.virtual {
 // All ng-deep styles apply to all DOM table elements
 // Keep all ng-deep stuff under .data-view class to prevent leaking into other components
 ::ng-deep .data-view {
+
+  &.virtual {
+    // When in virtual scrolling mode, you cannot combine `border-collapse: separate` and `transform: translate`
+    // More info: https://stackoverflow.com/a/33778236
+    // So for vscroll mode, handle borders manually
+    .ids, .data {
+      table {
+        border-collapse: separate;
+
+        td {
+          border-right-width: 0;
+          border-bottom-width: 0;
+        }
+      }
+    }
+  }
+
   // Fix border appearing behind background color for some reason
   td {
     background-clip: padding-box;
+
     & .nrcolumn {
       font-size: smaller;
       text-align: right;

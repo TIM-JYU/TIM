@@ -361,6 +361,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @HostBinding("style.maxHeight") private dataViewMaxHeight: string = "";
     @HostBinding("style.height") private dataViewHeight: string = "";
     @HostBinding("style.width") private componentWidth: string = "";
+    @HostBinding("class.virtual") private isVirtual: boolean = false;
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
@@ -629,6 +630,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     ngOnInit(): void {
         this.vScroll = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
+        this.isVirtual = !!this.virtualScrolling?.enabled;
         if (this.vScroll.enabled) {
             this.dataTableStyle = {height: this.tableMaxHeight};
         } else {
