@@ -3,6 +3,7 @@ from typing import Optional, List
 from pathlib import Path
 from fileParams import get_json_param, get_param, mkdirs
 from marshmallow import EXCLUDE
+from shutil import chown, copy2
 
 from git.gitlib import get_lib
 from git.util import Settings as GitSettings, RemoteInfo
@@ -327,9 +328,12 @@ class GitSource(ExternalFileSource):
         cls.git_settings = GitSettings.load(get_json_param(query.jso, "markup", "gitDefaults", {}))
 
 class FileHandler:
-    def __init__(self, query, save = {}):
+    def __init__(self, query, save = None):
         self.query = query
-        self.save = save
+        if save is not None:
+            self.save = save
+        else:
+            self.save = {}
         self.uploaded_non_text = []
 
         self.master_path = get_param(query, "masterPath", None)

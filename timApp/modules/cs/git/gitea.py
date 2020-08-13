@@ -31,21 +31,32 @@ class GiteaLib(GitLib):
             'Content-Type': 'application/json',
         }
 
-    def create_user(self, username, email, fullname="", password=None, send_notify=False, must_change_password=True):
-        if password is None:
-            password = generate_password()
+    def create_user(self, options):
+        defaults = {
+            "password": generate_password(),
+            "must_change_password": False,
+            "send_notify": False,
+            "source_id": 0,
+        }
+        defaults.update(options)
 
         data = {
-            "email": email,
-            "full_name": fullname,
-            "must_change_password": must_change_password,
-            "password": password,
-            "send_notify": send_notify,
+            "username": defaults["username"],
+            "password": defaults["password"],
+            "email": defaults["email"],
+            "full_name": defaults["fullname"],
+            "must_change_password": defaults["must_change_password"],
+            "send_notify": defaults["send_notify"],
             "source_id": 0,
-            "username": username,
         }
         response = self.post('admin/users', data)
-        return LibResponse(response.status == 200, response.data)
+        user = response.data
+
+        if response.status == 201:
+            return LibResponse(True)
+        else:
+            print(f'Git account creation failed:\nCode: {response.status}\nReason: {response.reason}\nData: {user}')
+            return LibResponse(False, "Unknown error")
 
     def get_user(self, credentials):
         response = self.get(f'users/{sanitize_name(credentials["username"])}')
@@ -105,7 +116,7 @@ class GiteaLib(GitLib):
 
     def add_to_teams(self, username, teams):
         for team in teams:
-            resp = self.add_to_team(username, team["team"], team["organization"])
+            self.add_to_team(username, team["team"], team["organization"])
 
     def get_token_user(self):
         response = self.get('user')
@@ -113,15 +124,19 @@ class GiteaLib(GitLib):
             raise Exception(f"Failed to fetch current user: {response.status}")
         return response.data['login']
 
-    def add_collaborators(self, repo, owner=None, teams=[], users=[], default_permission='read'):
+    def add_collaborators(self, repo, owner=None, teams=None, users=None, default_permission='read'):
         if owner is None:
             owner = self.get_token_user()
 
         repo = self.sanitize_repo_path(repo)
 
-        if not isinstance(users, list):
+        if users is None:
+            users = []
+        elif not isinstance(users, list):
             users = [users]
-        if not isinstance(teams, list):
+        if teams is None:
+            teams = []
+        elif not isinstance(teams, list):
             teams = [teams]
         users = [u if isinstance(u, dict) else {"name":u, "permission":default_permission} for u in users]
         teams = [t if isinstance(t, dict) else {"name":t, "permission":default_permission} for t in teams]
@@ -179,7 +194,7 @@ class GiteaLib(GitLib):
 
         uteams = repo_settings.librarySpecific.get("userTeams", None)
         if uteams is not None:
-            response = self.add_to_teams(credentials["username"], uteams)
+            self.add_to_teams(credentials["username"], uteams)
 
         rusers = repo_settings.librarySpecific.get("repoUsers", None)
         rteams = repo_settings.librarySpecific.get("repoTeams", None)

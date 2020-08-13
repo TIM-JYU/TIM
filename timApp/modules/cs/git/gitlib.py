@@ -11,7 +11,7 @@ import subprocess
 from datetime import datetime, timedelta
 from threading import Lock
 from shutil import copy2
-from file_util import File, copy_files_glob
+from file_util import File, copy_files_glob, rm
 import json
 
 git_libs = {}
@@ -49,6 +49,9 @@ class GitLib:
         self.api_path = settings.apiProtocol + "://" + self.domain + "/"
         self.remote = info
         self.remote.path = self.sanitize_repo_path(info.path) if info.path is not None else ""
+
+    def get_headers(self):
+        raise NotImplementedError("get_headers not implemented")
 
     def call_api(self, path, data = None, method = None):
         request = Request(self.api_path + path, json.dumps(data).encode('utf-8'), self.get_headers(), method=method)
@@ -138,7 +141,7 @@ class GitLib:
         dpath = Path(destination)
         if basepath.is_file() and dpath.exists():
             rm(basepath)
-        elif spath.is_dir() and dpath.exists() and not dpath.is_dir():
+        elif basepath.is_dir() and dpath.exists() and not dpath.is_dir():
             rm(dpath)
 
         copy_files_glob(glob, str(basepath), destination)
@@ -223,7 +226,7 @@ def is_in_git_repo(path: Path, must_exist=False):
 
 
 def get_remote_and_branch(path: str) -> (str, str):
-    if not is_in_git_repo(path):
+    if not is_in_git_repo(Path(path)):
         raise NotInAGitRepo(path)
 
     response = subprocess.run(["git", "-C", path, "status", "-sb"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
@@ -279,8 +282,8 @@ def checkout(path: str, sub_path = ".", do_fetch=True, remote="origin", branch="
         options.append("-f")
     if do_fetch:
         response = subprocess.run(["git", "-C", path, "fetch"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
-    if response.returncode != 0:
-        raise Exception(f"Git fetch: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
+        if response.returncode != 0:
+            raise Exception(f"Git fetch: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
     response = subprocess.run(["git", "-C", path, "checkout", *options, checkout_branch, "--", sub_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
     if response.returncode != 0:
         raise Exception(f"Git checkout: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
@@ -288,14 +291,14 @@ def checkout(path: str, sub_path = ".", do_fetch=True, remote="origin", branch="
 
 def pull_or_clone(path: str, rinfo: RemoteInfo):
     try:
-        lpath = GitLib.get_repo_root(Path(path))
+        lpath = get_repo_root(Path(path))
     except:
         lpath = None
 
     if lpath is None or os.path.abspath(path) != lpath:
-        clone(path, rinfo)
+        clone(path, rinfo.host, rinfo.path, rinfo.protocol, rinfo.user, rinfo.name, rinfo.branch)
     else:
-        checkout(path, remote=rinfo.remote, branch=rinfo.branch)
+        checkout(path, remote=rinfo.name, branch=rinfo.branch)
 
 
 def populate():
@@ -327,7 +330,7 @@ def populate():
             url = cls.url
             if isinstance(url, list):
                 for u in url:
-                    add_url(cls, url.lower())
+                    add_url(cls, u.lower())
             else:
                 add_url(cls, url.lower())
 

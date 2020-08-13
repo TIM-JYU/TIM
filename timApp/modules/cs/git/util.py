@@ -86,7 +86,7 @@ class RemoteInfo:
             if protocol == "ssh" and "@" in host:
                 user, host = host.split("@", 1)
 
-            return protocol, host, repo, user
+            return [protocol, host, repo, user]
 
         main_vars = inner(url)
 

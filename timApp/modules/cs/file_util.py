@@ -84,9 +84,11 @@ def copy_files_regex(f: str, source: str, dest: str):
     if f is None or source is None or dest is None:
         return
 
+    dest = Path(dest)
+
     regex = re.compile(f)
 
-    for root, dirs, files in os.walk(source):
+    for root, _, files in os.walk(source):
         rootp = Path(root)
         relpath = rootp.relative_to(source)
         for file in files:

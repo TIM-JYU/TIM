@@ -36,7 +36,7 @@ class GiteaAaltoLib(GiteaLib):
         if response.status == 201:
             return LibResponse(True)
         else:
-            print(f'Git account creation failed:\nCode: {reason.status}\nReason: {response.reason}\nData: {user}')
+            print(f'Git account creation failed:\nCode: {response.status}\nReason: {response.reason}\nData: {user}')
             return LibResponse(False, "Unknown error")
 
     def missing_field(self, fields, dict):

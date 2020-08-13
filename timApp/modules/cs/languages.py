@@ -2,6 +2,7 @@ from subprocess import check_output
 from typing import Optional
 
 import requests
+import re
 
 from points import *
 from run import *
@@ -14,7 +15,7 @@ from dataclasses import dataclass, field
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 from fileParams import *  # noqa
-from file_util import File
+from file_util import File, default_filename
 
 """
 Adding new language to csPlugin:
@@ -150,7 +151,7 @@ class Language:
         if isinstance(sourcefiles, str):
             sourcefiles = [File.default(query, sourcefiles)]
         if sourcefiles[0].path is None:
-            sourcefiles[0].path = filename
+            sourcefiles[0].path = default_filename(query, sourcefiles)
 
         extensions, fileext, filedext = self.extensions()
         self.filenames = [file.path for file in sourcefiles]
