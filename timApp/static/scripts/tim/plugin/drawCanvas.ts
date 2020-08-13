@@ -5,7 +5,9 @@ import {
     ElementRef,
     Input,
     NgModule,
+    OnChanges,
     OnInit,
+    SimpleChanges,
     StaticProvider,
     ViewChild,
 } from "@angular/core";
@@ -16,6 +18,7 @@ import {numOrStringToNumber, posToRelative} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {Annotation} from "tim/velp/velptypes";
 
 
 // TODO: These classes are probably redundant - DrawObject may be enough
@@ -158,7 +161,7 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
                       [(w)]="w" [(opacity)]="opacity"></draw-toolbar>
     `,
 })
-export class DrawCanvasComponent implements OnInit {
+export class DrawCanvasComponent implements OnInit, OnChanges {
     @Input() public bgSource = "";
     bypassedImage: SafeResourceUrl = "";
     @ViewChild("drawbase") canvas!: ElementRef<HTMLCanvasElement>;
@@ -196,6 +199,10 @@ export class DrawCanvasComponent implements OnInit {
 
 
     ngOnInit() {
+        this.setBg();
+    }
+
+    setBg() {
         this.bypassedImage = this.domSanitizer.bypassSecurityTrustResourceUrl(this.bgSource);
     }
 
@@ -210,6 +217,12 @@ export class DrawCanvasComponent implements OnInit {
         this.canvas.nativeElement.addEventListener("mouseup", (event) => {
             this.clickFinish(event);
         });
+    }
+
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes.bgSource) { // TODO check if these are redundant
+            this.setBg();
+        }
     }
 
 

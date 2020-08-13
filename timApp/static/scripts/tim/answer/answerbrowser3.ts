@@ -7,8 +7,6 @@ import {TaskId} from "tim/plugin/taskid";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {dereferencePar, getParId, Paragraph} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
-import {dereferencePar, getParId} from "../document/parhelpers";
-import {FormModeOption, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {getRangeBeginParam} from "../document/viewRangeInfo";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {IAnswerBrowserMarkupSettings, IGenericPluginMarkup} from "../plugin/attributes";
@@ -719,7 +717,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 }
                 await $timeout();
             }
-            // TODO: Avoid this if canvas loaded
+        }
+        // if reviewhtml is image-based, then the image load callback should handle annotation loading
+        if (!(this.imageReview && this.review)) {
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer?.id, par[0]);
         }
         if (!changeReviewOnly) {
