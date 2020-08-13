@@ -1079,7 +1079,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.sizeContentContainer.style.minWidth = `${colWidth}px`;
         this.sizeContentContainer.innerHTML = this.modelProvider.getCellContents(row, column);
         const size = this.sizeContentContainer.getBoundingClientRect();
-        return {width: size.width, height: size.height};
+        return {width: Math.ceil(size.width * 1.1), height: Math.ceil(size.height * 1.1)};
     }
 
     private buildDataTable(): void {
@@ -1200,10 +1200,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const idealWidth = this.idealColWidths[columnIndex];
         if (colWidth) {
             cell.style.minWidth = `${colWidth}px`;
+            cell.style.overflow = "hidden";
             if (this.colAxis.hasStaticSize) {
                 cell.style.width = `${colWidth}px`;
                 cell.style.maxWidth = `${colWidth}px`;
-                cell.style.overflow = "hidden";
             } else if (idealWidth) {
                 cell.style.minWidth = `${idealWidth}px`;
                 cell.style.maxWidth = `${idealWidth}px`;
@@ -1313,6 +1313,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private getColumnHeaderWidth(columnIndex: number): number {
+        if (this.idealColWidths[columnIndex]) {
+            return this.idealColWidths[columnIndex];
+        }
         const res = this.modelProvider.getColumnWidth(columnIndex);
         if (res !== undefined) {
             return res;
