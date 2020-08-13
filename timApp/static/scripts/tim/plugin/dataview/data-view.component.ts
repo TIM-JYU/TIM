@@ -461,11 +461,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.colAxis.refresh();
         if (this.vScroll.enabled) {
             this.updateVTable();
-            return;
-        }
-
-        // For normal mode: simply hide rows that are no more visible/show hidden rows
-        for (const [rowNumber, row] of this.dataTableCache.rows.entries()) {
+        } else {
+            // For normal mode: simply hide rows that are no more visible/show hidden rows
+            for (const [rowNumber, row] of this.dataTableCache.rows.entries()) {
             const rowIndex = this.rowAxis.itemOrder[rowNumber];
             const shouldHide = !this.modelProvider.showRow(rowIndex);
             const hidden = row.rowElement.hidden;
@@ -477,7 +475,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 }
             }
         }
-        this.updateHeaderSizes();
+            this.updateHeaderSizes();
+        }
         this.updateTableSummary();
     }
 
