@@ -564,9 +564,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
      * @param column Column index of the cell
      */
     updateStyleForCell(row: number, column: number): void {
-        // TODO: Check vscrolling viewport
-        const cell = this.dataTableCache.getCell(row, column);
-        this.updateCellStyle(cell, row, column);
+        const cell = this.getDataCell(row, column);
+        if (cell) {
+            this.updateCellStyle(cell, row, column);
+        }
     }
 
     /**
@@ -575,16 +576,24 @@ export class DataViewComponent implements AfterViewInit, OnInit {
      */
     updateCellsContents(cells: { row: number, col: number }[]): void {
         if (this.vScroll.enabled) {
+            for (const {row, col} of cells) {
+                this.invalidateCacheAt(row, col);
+                if (!this.colAxis.hasStaticSize) {
+                    this.idealColWidths[col] = Math.max(this.measureText(row, col).width, this.idealColWidths[col]);
+                }
+            }
             this.updateVTable();
-            return;
+        } else {
+            for (const {row, col} of cells) {
+                const cell = this.dataTableCache.getCell(row, col);
+                this.updateCell(cell, row, col, this.modelProvider.getCellContents(row, col));
+                DOMPurify.sanitize(cell, {IN_PLACE: true});
+            }
         }
-        for (const {row, col} of cells) {
-            const cell = this.dataTableCache.getCell(row, col);
-            this.updateCell(cell, row, col, this.modelProvider.getCellContents(row, col));
-            DOMPurify.sanitize(cell, {IN_PLACE: true});
-        }
-        this.updateHeaderSizes();
-        this.syncHeaderScroll();
+        requestAnimationFrame(() => {
+            this.updateHeaderSizes();
+            this.syncHeaderScroll();
+        });
     }
 
     /**
@@ -607,13 +616,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             height: "0px",
             display: "block",
         });
-        const cell = this.dataTableCache.getCell(row, col);
+        const {x, y, w} = this.getCellPosition(row, col);
         if (editInput) {
             applyBasicStyle(editInput as HTMLElement, {
                 position: "absolute",
-                top: `${cell.offsetTop - this.mainDataBody.nativeElement.offsetHeight}px`,
-                left: `${cell.offsetLeft}px`,
-                width: `${cell.offsetWidth}px`,
+                top: `${y - this.mainDataTable.nativeElement.offsetHeight}px`,
+                left: `${x}px`,
+                width: `${w}px`,
             });
         }
         if (inlineEditorButtons) {
@@ -621,8 +630,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const dir = row == 0 ? 1 : -1;
             applyBasicStyle(e, {
                 position: "absolute",
-                top: `${cell.offsetTop - this.mainDataBody.nativeElement.offsetHeight + dir * e.offsetHeight}px`,
-                left: `${cell.offsetLeft}px`,
+                top: `${y - this.mainDataTable.nativeElement.offsetHeight + dir * e.offsetHeight}px`,
+                left: `${x}px`,
             });
         }
     }
@@ -1203,6 +1212,30 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     // region Utils
 
+    private getCellPosition(row: number, col: number) {
+        const cell = this.getDataCell(row, col);
+        if (!cell) {
+            return { x: 0, y: 0, w: 0 };
+        }
+        return {
+            x: this.colAxis.hasStaticSize ? this.colAxis.positionStart[col] : cell.offsetLeft,
+            y: this.rowAxis.hasStaticSize ? this.rowAxis.positionStart[row] : cell.offsetTop,
+            w: cell.offsetWidth,
+        };
+    }
+
+    private getDataCell(row: number, col: number) {
+        const visibleRow = row - this.viewport.vertical.startIndex;
+        const visibleCol = col - this.viewport.horizontal.startIndex;
+        if (visibleRow < 0 || visibleRow >= this.viewport.vertical.count) {
+            return undefined;
+        }
+        if (visibleCol < 0 || visibleCol >= this.viewport.horizontal.count) {
+            return undefined;
+        }
+        return this.dataTableCache.getCell(visibleRow, visibleCol);
+    }
+
     private getCellValue(rowIndex: number, columnIndex: number): string {
         if (!this.vScroll.enabled) {
             return this.modelProvider.getCellContents(rowIndex, columnIndex);
@@ -1214,8 +1247,21 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!row) {
             this.cellValueCache[rowIndex] = [];
         }
-        // If the web worker hasn't sanitized the contents yet, do it ourselves
-        return this.cellValueCache[rowIndex][columnIndex] = DOMPurify.sanitize(this.modelProvider.getCellContents(rowIndex, columnIndex));
+        const contents = this.modelProvider.getCellContents(rowIndex, columnIndex);
+        if (contents) {
+            // If the web worker hasn't sanitized the contents yet, do it ourselves
+            this.cellValueCache[rowIndex][columnIndex] = DOMPurify.sanitize(contents);
+            return contents;
+        }
+        return contents;
+    }
+
+    private invalidateCacheAt(rowIndex: number, columnIndex: number) {
+        // In vscroll mode,
+        if (!this.vScroll.enabled) {
+            return;
+        }
+        this.cellValueCache[rowIndex][columnIndex] = "";
     }
 
     private startCellPurifying(): void {
