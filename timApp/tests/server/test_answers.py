@@ -105,3 +105,15 @@ class AnswerTest(TimRouteTest):
         result: List[Answer] = self.test_user_1.answers.filter_by(task_id=f'{d.id}.t').order_by(Answer.id).all()
         for a, b in zip(result, result[1:]):
             self.assertLess(a.answered_on, b.answered_on)
+
+    def test_too_large_answer(self):
+        self.login_test1()
+        d = self.create_doc(initial_par='#- {#t plugin=textfield}')
+        content_field_size = 200 * 1024
+        json_size = content_field_size + 9
+        self.post_answer(
+            'textfield', f'{d.id}.t',
+            user_input={'c': 'x' * content_field_size},
+            expect_status=400,
+            expect_content=f'Answer is too large (size is {json_size} but maximum is 204800).',
+        )

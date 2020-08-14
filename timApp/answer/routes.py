@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict
 
-from flask import Blueprint, session
+from flask import Blueprint, session, current_app
 from flask import Response
 from flask import abort
 from flask import request
@@ -662,15 +662,18 @@ def post_answer(plugintype: str, task_id_ext: str):
                     return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
 
             if points or save_object is not None or tags:
-                result['savedNew'] = save_answer(users,
-                                                 tid,
-                                                 save_object,
-                                                 points,
-                                                 tags,
-                                                 is_valid,
-                                                 points_given_by,
-                                                 force_answer,
-                                                 plugintype=ptype)
+                result['savedNew'] = save_answer(
+                    users,
+                    tid,
+                    save_object,
+                    points,
+                    tags,
+                    is_valid,
+                    points_given_by,
+                    force_answer,
+                    plugintype=ptype,
+                    max_content_len=current_app.config['MAX_ANSWER_CONTENT_SIZE'],
+                )
             else:
                 result['savedNew'] = None
             if not is_valid:
@@ -678,15 +681,18 @@ def post_answer(plugintype: str, task_id_ext: str):
         elif save_teacher:
             points = answer_browser_data.get('points', points)
             points = points_to_float(points)
-            result['savedNew'] = save_answer(users,
-                                             tid,
-                                             save_object,
-                                             points,
-                                             tags,
-                                             valid=True,
-                                             points_given_by=get_current_user_group(),
-                                             saver=curr_user,
-                                             plugintype=ptype)
+            result['savedNew'] = save_answer(
+                users,
+                tid,
+                save_object,
+                points,
+                tags,
+                valid=True,
+                points_given_by=get_current_user_group(),
+                saver=curr_user,
+                plugintype=ptype,
+                max_content_len=current_app.config['MAX_ANSWER_CONTENT_SIZE'],
+            )
         else:
             result['savedNew'] = None
             if plugin.values.get("postProgram", None):

@@ -4,6 +4,7 @@ from flask import request, abort, render_template, session, flash, Flask, redire
 from markupsafe import Markup
 from marshmallow import ValidationError
 
+from timApp.answer.answers import TooLargeAnswerException
 from timApp.auth.accesshelper import AccessDenied, ItemLockedException
 from timApp.auth.login import logout
 from timApp.auth.sessioninfo import get_current_user_object
@@ -91,6 +92,10 @@ def register_errorhandlers(app: Flask):
     def handle_user_deleted(error):
         session.clear()
         return redirect('/')
+
+    @app.errorhandler(TooLargeAnswerException)
+    def handle_too_large_answer(error: TooLargeAnswerException):
+        return error_generic(str(error), 400)
 
     ##############
     # HTTP codes #

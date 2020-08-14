@@ -5,6 +5,7 @@ from datetime import datetime
 from operator import itemgetter
 from typing import List, Optional, Dict, Tuple, Iterable, Any
 
+from flask import current_app
 from sqlalchemy import func, Numeric, Float, true
 from sqlalchemy.orm import selectinload, defaultload
 
@@ -38,18 +39,26 @@ def is_redundant_answer(content: str, existing_answers: List[Answer], ptype: Opt
     return False
 
 
-def save_answer(users: List[User],
-                task_id: TaskId,
-                content: Any,
-                points: Optional[float],
-                tags: Optional[List[str]] = None,
-                valid: bool = True,
-                points_given_by=None,
-                force_save=False,
-                saver: User = None,
-                plugintype: Optional[PluginType]=None):
+class TooLargeAnswerException(Exception):
+    pass
+
+
+def save_answer(
+        users: List[User],
+        task_id: TaskId,
+        content: Any,
+        points: Optional[float],
+        tags: Optional[List[str]] = None,
+        valid: bool = True,
+        points_given_by=None,
+        force_save=False,
+        saver: User = None,
+        plugintype: Optional[PluginType] = None,
+        max_content_len: Optional[int] = None,
+):
     """Saves an answer to the database.
 
+    :param max_content_len: Maximum length for answer content.
     :param plugintype: The plugin type.
     :param saver: Who saved the answer.
     :param points_given_by: The usergroup id who gave the points, or None if they were given by a plugin.
@@ -63,6 +72,9 @@ def save_answer(users: List[User],
 
     """
     content_str = json.dumps(content)
+    content_len = len(content_str)
+    if max_content_len and content_len > max_content_len:
+        raise TooLargeAnswerException(f'Answer is too large (size is {content_len} but maximum is {max_content_len}).')
     if tags is None:
         tags = []
     existing_answers = get_common_answers(users, task_id)
