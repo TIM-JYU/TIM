@@ -335,7 +335,7 @@ const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
                 <tbody #idBody></tbody>
             </table>
         </div>
-        <div class="data" [ngStyle]="dataTableStyle" #mainDataContainer>
+        <div class="data" [style.maxHeight]="tableMaxHeight" #mainDataContainer>
             <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
                    #mainDataTable>
                 <tbody class="content" #mainDataBody></tbody>
@@ -360,10 +360,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     idHeaderCellWidth: string = "";
     cbAllVisibleRows = false;
     cbFilter = false;
-    dataTableStyle: Record<string, string> = {};
-    @HostBinding("style.maxHeight") private dataViewMaxHeight: string = "";
-    @HostBinding("style.height") private dataViewHeight: string = "";
-    @HostBinding("style.width") private componentWidth: string = "";
     @HostBinding("class.virtual") private isVirtual: boolean = false;
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
@@ -463,6 +459,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.vScroll.enabled) {
             this.setTableSizes();
             this.updateVTable();
+            requestAnimationFrame(() => this.updateHeaderTableSizes());
         } else {
             // For normal mode: simply hide rows that are no more visible/show hidden rows
             for (const [rowNumber, row] of this.dataTableCache.rows.entries()) {
@@ -477,7 +474,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 }
             }
         }
-            this.updateHeaderSizes();
+            this.updateHeaderCellSizes();
         }
         this.updateTableSummary();
     }
@@ -593,7 +590,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
         }
         requestAnimationFrame(() => {
-            this.updateHeaderSizes();
+            this.updateHeaderCellSizes();
             this.syncHeaderScroll();
         });
     }
@@ -645,14 +642,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     ngOnInit(): void {
         this.vScroll = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
         this.isVirtual = !!this.virtualScrolling?.enabled;
-        if (this.vScroll.enabled) {
-            this.dataTableStyle = {height: this.tableMaxHeight};
-        } else {
-            this.dataTableStyle = {maxHeight: this.tableMaxHeight};
-        }
         // Detach change detection because most of this component is based on pure DOM manipulation
         this.cdr.detach();
-        // this.componentWidth = this.tableMaxWidth;
         if (this.vScroll.enabled) {
             this.startCellPurifying();
         }
@@ -730,7 +721,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Resizing
 
     private handleWindowResize(): void {
-        this.updateHeaderSizes();
+        this.updateHeaderCellSizes();
         if (!this.vScroll.enabled) {
             return;
         }
@@ -738,7 +729,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         runMultiFrame(this.updateViewport());
     }
 
-    private updateHeaderSizes(): void {
+    private updateHeaderTableSizes(): void {
         if (!this.headerContainer || !this.idContainer || !this.headerTable || !this.viewport) {
             return;
         }
@@ -751,7 +742,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.headerContainer.nativeElement.style.width = `auto`;
         }
         // For height it looks like it's enough to just set the height correctly
-        this.idContainer.nativeElement.style.height = `${this.tableHeight}px`;
+        this.idContainer.nativeElement.style.maxHeight = `${this.tableHeight}px`;
+    }
+
+    private updateHeaderCellSizes(): void {
+        this.updateHeaderTableSizes();
         this.updateColumnHeaderCellSizes();
         if (!this.modelProvider.isPreview()) {
             this.updateRowHeaderCellSizes();
@@ -1022,7 +1017,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.viewport = this.getViewport();
         this.buildColumnHeaderTable();
         yield;
-        this.updateHeaderSizes();
+        this.updateHeaderCellSizes();
     }
 
     private* buildMainTable() {
@@ -1037,12 +1032,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // Force the main table to layout first so that we can compute the header sizes
         yield;
 
-        this.updateHeaderSizes();
+        this.updateHeaderCellSizes();
         if (this.vScroll.enabled && !this.colAxis.isVirtual) {
             this.computeIdealColumnWidth();
             this.updateVTable();
             yield;
-            this.updateHeaderSizes();
+            this.updateHeaderCellSizes();
         }
     }
 
