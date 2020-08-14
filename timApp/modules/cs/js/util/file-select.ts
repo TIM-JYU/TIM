@@ -363,8 +363,9 @@ export class FileSelectManagerComponent { // TODO: translations
                 for (let i = 0; i < this.files.length; i++) {
                     for (const path of this.files[i].paths) {
                         const id: string = `${i}.${path}`;
+                        const stem = (this.files.length == 1 && this.files[0].paths.length == 1 ? this.stem : undefined) ?? `Upload ${path} here`;
                         nfileInfo.push({
-                            stem: `Upload ${path} here`,
+                            stem: stem,
                             id: id,
                         });
                         nidToFile[id] = [i, path];
