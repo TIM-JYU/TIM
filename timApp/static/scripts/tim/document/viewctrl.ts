@@ -19,6 +19,7 @@ import {isPageDirty, markAsUsed, markPageNotDirty, to, UnknownRecord} from "tim/
 import {TimDefer} from "tim/util/timdefer";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
+import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
@@ -47,7 +48,6 @@ import {PopupMenuController} from "./popupMenu";
 import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
 import {IMenuFunctionEntry} from "./viewutils";
-import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar, ParRefController);
 

@@ -731,10 +731,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
+    /**
+     * Function to be passed for canvas on image-based reviews which is called when the canvas is ready and loaded.
+     * @param canvas DrawCanvasComponent who made the callback
+     */
     public setImageReview = (canvas: DrawCanvasComponent) => {
         if (this.selectedAnswer && this.reviewHtml) {
             const par = this.element.parents(".par");
-            this.viewctrl.reviewCtrl.setCanvas(par[0], this.selectedAnswer.id, canvas);
+            this.viewctrl.reviewCtrl.setCanvas(this.selectedAnswer.id, canvas);
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
         }
     };
