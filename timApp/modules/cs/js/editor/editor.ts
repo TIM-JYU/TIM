@@ -102,54 +102,56 @@ export class JSParsonsEditorComponent implements IEditor {
 @Component({
     selector: "cs-editor",
     template: `
-        <div *ngIf="showTabs" class="tab-list">
-            <div *ngFor="let file of files; index as i; trackBy: trackByPath" class="tab-label file-tab" [ngClass]="{'tab-label-active': tabIndex == i}" (click)="tabIndex = i">
-                {{file.path}}
-                <div class="close-wrapper">
-                    <tim-close-button *ngIf="file.canClose" (click)="closeFile(i)"></tim-close-button>
+        <ng-container *ngIf="files.length">
+            <div *ngIf="showTabs" class="tab-list">
+                <div *ngFor="let file of files; index as i; trackBy: trackByPath" class="tab-label file-tab" [ngClass]="{'tab-label-active': tabIndex == i}" (click)="tabIndex = i">
+                    {{file.path}}
+                    <div class="close-wrapper">
+                        <tim-close-button *ngIf="file.canClose" (click)="closeFile(i)"></tim-close-button>
+                    </div>
+                </div>
+                <div *ngIf="canAddFile" class="tab-label" [ngClass]="{'tab-label-active': tabIndex == files.length}" (click)="tabIndex = files.length">
+                    <span class="file-add-tab glyphicon glyphicon-plus"></span>
                 </div>
             </div>
-            <div *ngIf="canAddFile" class="tab-label" [ngClass]="{'tab-label-active': tabIndex == files.length}" (click)="tabIndex = files.length">
-                <span class="file-add-tab glyphicon glyphicon-plus"></span>
+            <ng-container *ngIf="!addTabActive">
+            <cs-normal-editor *ngIf="mode == Mode.Normal"
+                    [minRows]="minRows_"
+                    [maxRows]="maxRows_"
+                    [placeholder]="file && file.placeholder ? file.placeholder : ''"
+                    [disabled]="disabled">
+            </cs-normal-editor>
+            <cs-parsons-editor *ngIf="mode == Mode.Parsons"
+                    [shuffle]="parsonsShuffle"
+                    [maxcheck]="parsonsMaxcheck"
+                    [base]="base"
+                    [words]="parsonsWords"
+                    [styleWords]="parsonsStyleWords"
+                    [notordermatters]="parsonsNotordermatters">
+            </cs-parsons-editor>
+            <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
+            <cs-ace-editor *ngIf="mode == Mode.ACE"
+                    [languageMode]="languageMode"
+                    [minRows]="minRows_"
+                    [maxRows]="maxRows_"
+                    [placeholder]="file && file.placeholder ? file.placeholder : ''">
+            </cs-ace-editor>
+            </ng-container>
+            <div *ngIf="addTabActive" class="add-view">
+                <file-select class="small" style="height: 4em;"
+                        [multiple]="false"
+                        [stem]="'Load a file (optional)'"
+                        [dragAndDrop]="true"
+                        (file)="onFileLoad($event)">
+                </file-select>
+                Filename:<input type="text" placeholder="Give a name here" [(ngModel)]="filenameInput">
+                <br>
+                <button class="timButton btn-sm"
+                        (click)="clickAddFile()"
+                        [attr.title]="addButtonTitle"
+                        [disabled]="disableAddButton">Add</button>
             </div>
-        </div>
-        <ng-container *ngIf="!addTabActive">
-        <cs-normal-editor *ngIf="mode == Mode.Normal"
-                [minRows]="minRows_"
-                [maxRows]="maxRows_"
-                [placeholder]="file && file.placeholder ? file.placeholder : ''"
-                [disabled]="disabled">
-        </cs-normal-editor>
-        <cs-parsons-editor *ngIf="mode == Mode.Parsons"
-                [shuffle]="parsonsShuffle"
-                [maxcheck]="parsonsMaxcheck"
-                [base]="base"
-                [words]="parsonsWords"
-                [styleWords]="parsonsStyleWords"
-                [notordermatters]="parsonsNotordermatters">
-        </cs-parsons-editor>
-        <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
-        <cs-ace-editor *ngIf="mode == Mode.ACE"
-                [languageMode]="languageMode"
-                [minRows]="minRows_"
-                [maxRows]="maxRows_"
-                [placeholder]="file && file.placeholder ? file.placeholder : ''">
-        </cs-ace-editor>
-        </ng-container>
-        <div *ngIf="addTabActive" class="add-view">
-            <file-select class="small" style="height: 4em;"
-                    [multiple]="false"
-                    [stem]="'Load a file (optional)'"
-                    [dragAndDrop]="true"
-                    (file)="onFileLoad($event)">
-            </file-select>
-            Filename:<input type="text" placeholder="Give a name here" [(ngModel)]="filenameInput">
-            <br>
-            <button class="timButton btn-sm"
-                    (click)="clickAddFile()"
-                    [attr.title]="addButtonTitle"
-                    [disabled]="disableAddButton">Add</button>
-        </div>`,
+        </ng-container>`,
 })
 export class EditorComponent implements IMultiEditor {
     static readonly defaultMode = Mode.Normal;
@@ -317,14 +319,12 @@ export class EditorComponent implements IMultiEditor {
     }
     set files(files: EditorFile[]) {
         if(files.length == 0) {
-            this.files_ = [new EditorFile()];
             this.fileIndex = 0;
         } else {
-            this.files_ = files;
             this.content = files[this.clampIndex(this.fileIndex)].content ?? files[this.clampIndex(this.fileIndex)].base;
-            // refresh index in case it is outside the new range
-            this.setFileIndex(this.fileIndex);
         }
+        // refresh index in case it is outside the new range
+        this.setFileIndex(this.fileIndex);
         this.maxFiles = this.mayAddFiles ? -1 : this.files.length;
     }
 
@@ -340,7 +340,9 @@ export class EditorComponent implements IMultiEditor {
 
     get allFiles(): IEditorFile[] {
         const out = this.files.map((f) => ({path: f.path, content: f.content ?? f.base}) as IEditorFile);
-        out[this.fileIndex].content = this.content;
+        if (out) {
+            out[this.fileIndex].content = this.content;
+        }
         return out;
     }
 
