@@ -164,12 +164,16 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
 @Component({
     selector: "draw-canvas",
     template: `
-        <div #wrapper>
-            <div class="canvascontainer" style="width: 0px; height: 0px; overflow: visible">
-                <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: relative;">
-                </canvas>
+        <div #wrapper style="overflow: auto; position: relative;" [style.height.px]="getWrapperHeight()">
+            <div class="canvasObjectContainer"
+                 style="width: 0px; height: 0px; overflow: visible; position: relative">
+
             </div>
-            <img #backGround *ngIf="bypassedImage" [src]="bypassedImage" (load)="onImgLoad()">
+<!--            <div class="canvascontainer" style="position: relative;">-->
+                <img style="max-width: none; position: absolute" #backGround *ngIf="bypassedImage" [src]="bypassedImage" (load)="onImgLoad()">
+                <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
+                </canvas>
+<!--            </div>-->
         </div>
         <draw-toolbar [(enabled)]="drawingEnabled" [(drawType)]="drawType"
                       [(color)]="color" [(fill)]="drawFill" [undo]="undo"
@@ -180,8 +184,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     @Input() public bgSource = "";
     bypassedImage: SafeResourceUrl = "";
     @ViewChild("drawbase") canvas!: ElementRef<HTMLCanvasElement>;
-    @ViewChild("wrapper") wrapper!: ElementRef<HTMLElement>;
+    @ViewChild("wrapper") wrapper!: ElementRef<HTMLDivElement>;
+    @ViewChild("backGround") bgImage!: ElementRef<HTMLImageElement>;
     ctx!: CanvasRenderingContext2D;
+    imgHeight = 0;
 
     // optional function to call when image is loaded to let external users know the canvas is ready for use
     @Input() imgLoadCallback?: (arg0: this) => void;
@@ -258,11 +264,20 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * Resizes canvas and calls the image load callback function after image is loaded
      */
     onImgLoad(): void {
-        this.canvas.nativeElement.width = this.wrapper.nativeElement.clientWidth;
-        this.canvas.nativeElement.height = this.wrapper.nativeElement.clientHeight;
+        // this.wrapper.nativeElement.style = "height: 300px";
+        this.canvas.nativeElement.width = this.bgImage.nativeElement.clientWidth;
+        this.canvas.nativeElement.height = this.bgImage.nativeElement.clientHeight;
+        this.imgHeight = this.bgImage.nativeElement.clientHeight;
         if (this.imgLoadCallback) {
             this.imgLoadCallback(this);
         }
+    }
+
+    getWrapperHeight(): number {
+        const min = 300;
+        const max = 1024;
+
+        return Math.min(Math.max(min, this.imgHeight) + 100, max);
     }
 
     /**

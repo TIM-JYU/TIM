@@ -283,7 +283,7 @@ export class ReviewController {
                 if (!a.coord.start.t) {
                     continue;
                 }
-                const targ = par.querySelector(".drawnAnnotationContainer");
+                const targ = par.querySelector(".canvasObjectContainer");
                 if (targ) {
                     const drawdata = JSON.parse(a.coord.start.t) as DrawObject[];
                     const rect = getDrawingDimensions(drawdata);
@@ -681,7 +681,7 @@ export class ReviewController {
         );
         let coord: IAnnotationInterval;
         if (this.selectionIsDrawing) {
-            const targ = this.selectedElement.querySelector(".drawnAnnotationContainer");
+            const targ = this.selectedElement.querySelector(".canvasObjectContainer");
             if (!this.selectedCanvas || !targ) {
                 return;
             }
