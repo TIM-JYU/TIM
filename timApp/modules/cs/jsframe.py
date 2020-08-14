@@ -232,9 +232,8 @@ class DrawIO(JSframe):
         if isinstance(c, str):
             # Find svg data from the saved graph
             firstdel = c.find('content="')
-            lastdel = c.find('/mxfile>"')
-            c = c[0:firstdel] + c[lastdel+9:len(c)]
-            c = c.replace('<br>', '<br/>')
+            lastdel = c.find('/mxfile&gt;"')
+            c = c[0:firstdel] + c[lastdel+12:len(c)]
             # TODO: Add a way to inform the browser that review data is in image format
             c = 'data:image/svg+xml;base64,' + str(b64encode(c.encode("utf-8")), "utf-8")
         return c

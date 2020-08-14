@@ -157,7 +157,7 @@
                         }
                     } else if (msg.event == 'export') {
                         // Extracts SVG DOM from data URI to enable links
-                        var svg = atob(msg.data.substring(msg.data.indexOf(',') + 1));
+                        var svg = b64DecodeUnicode(msg.data.substring(msg.data.indexOf(',') + 1));
                         // elt.innerHTML = svg;
                         setData({'c': svg});
                         // localStorage.setItem(name, JSON.stringify({lastModified: new Date(), data: svg}));
@@ -165,10 +165,10 @@
                         draft = null;
                         if (this.wantSave) {
                             this.wantSave = false;
-                            if (window.port2) window.port2.postMessage({msg: "datasave", data: getData()});
+                            if (window.port2) window.port2.postMessage({msg: "datasave", data: svg});
                             close();
                         } else {
-                            if (window.port2) window.port2.postMessage({msg: "update", data: getData()});
+                            if (window.port2) window.port2.postMessage({msg: "update", data: svg});
                         }
                     } else if (msg.event == 'autosave') {
                         // Used to tell plugin about updates via exports
@@ -258,6 +258,15 @@
             }
             document.getElementById('diagram').innerHTML = c;
         }
+
+        // https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings
+        function b64DecodeUnicode(str) {
+            // Going backwards: from bytestream, to percent-encoding, to original string.
+            return decodeURIComponent(atob(str).split('').map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        }
+
     </script>
 
     <!--<script src="##TIM_HOST##/csstatic/drawio/drawio.js"></script>-->
