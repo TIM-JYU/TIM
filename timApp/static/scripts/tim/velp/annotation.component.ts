@@ -282,6 +282,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
 
     toggleElementBorder() {
         if (this.placement == AnnotationPlacement.InPicture) {
+            console.log(this.annotation.draw_data);
             const innerRectangle = this.element.find(".annotation-picture-element");
             if (innerRectangle[0]) {
                 innerRectangle[0].style.border = this.show ? "1px solid #000000" : "none";
