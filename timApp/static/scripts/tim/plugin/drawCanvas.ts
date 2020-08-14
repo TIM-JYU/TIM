@@ -296,8 +296,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         if (!this.drawStarted) {
             return;
         }
-        this.redrawAll();
         if (this.drawType == DrawType.Circle || this.drawType == DrawType.Rectangle) {
+            this.redrawAll();
             this.objX = Math.min(e.offsetX, this.startX);
             this.objY = Math.min(e.offsetY, this.startY);
             this.objW = Math.abs(e.offsetX - this.startX);
@@ -312,9 +312,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             if (this.drawType == DrawType.Line) {
                 this.popPoint(1);
             }
-            const pxy = posToRelative(this.canvas.nativeElement, e); // HANDLE MOUSEORTOUCH HERE
+            const pxy = posToRelative(this.canvas.nativeElement, e);
             this.line(this.prevPos, pxy);
             this.addPoint(pxy);
+            this.redrawAll();
         }
 
     }
