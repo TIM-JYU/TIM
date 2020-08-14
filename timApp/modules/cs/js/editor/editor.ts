@@ -6,6 +6,7 @@ import {
     Input,
     Output,
     EventEmitter,
+    ChangeDetectorRef,
 } from "@angular/core";
 
 import {IFile} from "../util/file-select";
@@ -190,7 +191,7 @@ export class EditorComponent implements IMultiEditor {
     private loadedFile?: IFile;
     filenameInput: string = "";
 
-    constructor() {
+    constructor(private cdr: ChangeDetectorRef) {
         this.showOtherEditor(this.savedEditorMode ?? EditorComponent.defaultMode);
     }
 
@@ -318,6 +319,8 @@ export class EditorComponent implements IMultiEditor {
         return this.files_;
     }
     set files(files: EditorFile[]) {
+        this.files_ = files;
+        this.cdr.detectChanges();
         if(files.length == 0) {
             this.fileIndex = 0;
         } else {
@@ -558,6 +561,7 @@ export class EditorComponent implements IMultiEditor {
         const index = this.findFile(file.path);
         if (index == -1) {
             this.files.push(file);
+            this.cdr.detectChanges();
         } else {
             this.files[index] = file;
         }
@@ -623,6 +627,9 @@ export class EditorComponent implements IMultiEditor {
             this.content = content;
         } else if (index != -1) {
             this.files[index].content = content;
+        } else {
+            this.addFile(path);
+            this.setFileContent(path, content);
         }
     }
 
