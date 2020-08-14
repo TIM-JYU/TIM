@@ -165,14 +165,14 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
     selector: "draw-canvas",
     template: `
         <div #wrapper style="overflow: auto; position: relative;" [style.height.px]="getWrapperHeight()">
+            <img style="max-width: none; position: absolute; display: unset;" #backGround *ngIf="bypassedImage"
+                 [src]="bypassedImage" (load)="onImgLoad()">
             <div class="canvasObjectContainer"
                  style="width: 0px; height: 0px; overflow: visible; position: relative">
 
             </div>
-<!--            <div class="canvascontainer" style="position: relative;">-->
-                <img style="max-width: none; position: absolute; display: unset;" #backGround *ngIf="bypassedImage" [src]="bypassedImage" (load)="onImgLoad()">
-                <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
-                </canvas>
+            <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
+            </canvas>
 <!--            </div>-->
         </div>
         <draw-toolbar [(enabled)]="drawingEnabled" [(drawType)]="drawType"
