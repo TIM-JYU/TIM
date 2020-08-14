@@ -170,7 +170,7 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
 
             </div>
 <!--            <div class="canvascontainer" style="position: relative;">-->
-                <img style="max-width: none; position: absolute" #backGround *ngIf="bypassedImage" [src]="bypassedImage" (load)="onImgLoad()">
+                <img style="max-width: none; position: absolute; display: unset;" #backGround *ngIf="bypassedImage" [src]="bypassedImage" (load)="onImgLoad()">
                 <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
                 </canvas>
 <!--            </div>-->
@@ -265,9 +265,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      */
     onImgLoad(): void {
         // this.wrapper.nativeElement.style = "height: 300px";
-        this.canvas.nativeElement.width = this.bgImage.nativeElement.clientWidth;
-        this.canvas.nativeElement.height = this.bgImage.nativeElement.clientHeight;
         this.imgHeight = this.bgImage.nativeElement.clientHeight;
+        this.canvas.nativeElement.width = Math.max(this.bgImage.nativeElement.clientWidth, this.wrapper.nativeElement.clientWidth - 50);
+        this.canvas.nativeElement.height = Math.max(this.bgImage.nativeElement.clientHeight, this.getWrapperHeight() - 20);
         if (this.imgLoadCallback) {
             this.imgLoadCallback(this);
         }
