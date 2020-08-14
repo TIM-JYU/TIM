@@ -1062,9 +1062,9 @@ export class CsController extends CsBase implements ITimComponent {
                     maxSize: fs.maxSize ?? this.markup.maxSize,
                     upload: fs.source == "upload",
                 });
-                if ("show" in fs) {
+                if (fs.source == "uploadByCode") {
                     this.uploadByCodeFiles.push(
-                        ...paths.map((p) => ({path: p, show: fs.show}))
+                        ...paths.map((p) => ({path: p, show: fs.show ?? false}))
                     );
                 }
             }
@@ -1710,14 +1710,19 @@ ${fhtml}
     }
 
     onFileLoad(file: IFile) {
-        if (this.uploadByCodeFiles.length != 0) {
-            if (this.uploadByCodeFiles.find((f) => f.path == file.path)?.show) {
-                this.editor?.setFileContent(file.path, file.content);
+        let bycodefile = this.uploadByCodeFiles.find((f) => f.path == file.path);
+        if (bycodefile) {
+            if (bycodefile.show && this.editor) {
+                this.editor.setFileContent(file.path, file.content);
+                this.editor.activeFile = file.path;
             }
-        } else if (this.markup.uploadbycode) {
-            this.usercode = file.content;
-            if (this.markup.uploadautosave) { this.runCode(); }
+        } else if (this.uploadByCodeFiles.length == 1 || this.markup.uploadbycode) {
+            bycodefile = this.uploadByCodeFiles[0];
+            if (bycodefile.show) {
+                this.editor?.setFileContent(bycodefile.path, file.content);
+            }
         }
+        if (this.markup.uploadautosave) { this.runCode(); }
     }
 
     onUploadResponse(resp: unknown) {
