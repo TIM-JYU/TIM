@@ -108,7 +108,7 @@ class GridAxis {
     itemOrder: number[] = [];
 
     constructor(size: number,
-                private virtual: boolean,
+                private isDataViewVirtual: boolean,
                 private border: number,
                 private getSize: (i: number) => number,
                 private showItem: (i: number) => boolean) {
@@ -120,13 +120,14 @@ class GridAxis {
         return this.positionStart[this.positionStart.length - 1];
     }
 
-    get hasStaticSize(): boolean {
+    get isVirtual(): boolean {
+        // If the total size of the axis is precomputed, we know the axis needs virtual scrolling
         return !!this.totalSize;
     }
 
     refresh(): void {
         this.visibleItems = this.itemOrder.filter((i) => this.showItem(i));
-        if (!this.virtual) {
+        if (!this.isDataViewVirtual) {
             return;
         }
         this.positionStart = [0];
@@ -141,7 +142,7 @@ class GridAxis {
     }
 
     getVisibleItemsInViewport(vpStartPosition: number, vpSize: number, visibleStartPosition: number, visibleSize: number): VisibleItems {
-        if (!this.hasStaticSize) {
+        if (!this.isVirtual) {
             return {startPosition: 0, count: this.visibleItems.length, startIndex: 0, viewCount: 0, viewStartIndex: 0};
         }
         vpStartPosition = clamp(vpStartPosition, 0, this.totalSize);
@@ -578,7 +579,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.vScroll.enabled) {
             for (const {row, col} of cells) {
                 this.invalidateCacheAt(row, col);
-                if (!this.colAxis.hasStaticSize) {
+                if (!this.colAxis.isVirtual) {
                     this.idealColWidths[col] = Math.max(this.measureText(row, col).width, this.idealColWidths[col]);
                 }
             }
@@ -838,8 +839,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const data = this.mainDataContainer.nativeElement;
         const h = data.clientHeight * this.vScroll.viewOverflow.vertical;
         const w = data.clientWidth * this.vScroll.viewOverflow.horizontal;
-        const overVertical = Math.abs(this.viewport.vertical.startPosition - data.scrollTop + h) > h;
-        const overHorizontal = Math.abs(this.viewport.horizontal.startPosition - data.scrollLeft + w) > w;
+        // Don't consider outside bounds if the axis is not virtual
+        const overVertical = this.rowAxis.isVirtual && Math.abs(this.viewport.vertical.startPosition - data.scrollTop + h) > h;
+        const overHorizontal = this.colAxis.isVirtual && Math.abs(this.viewport.horizontal.startPosition - data.scrollLeft + w) > w;
         return overHorizontal || overVertical;
     }
 
@@ -888,7 +890,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 }
 
                 // If static size is set, there is possibility for vscrolling
-                if (this.colAxis.hasStaticSize) {
+                if (this.colAxis.isVirtual) {
                     this.updateColumnHeaders();
                 }
             }
@@ -1035,7 +1037,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         yield;
 
         this.updateHeaderSizes();
-        if (this.vScroll.enabled && !this.colAxis.hasStaticSize) {
+        if (this.vScroll.enabled && !this.colAxis.isVirtual) {
             this.computeIdealColumnWidth();
             this.updateVTable();
             yield;
@@ -1044,7 +1046,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private computeIdealColumnWidth(): void {
-        if (!this.vScroll.enabled || this.colAxis.hasStaticSize) {
+        if (!this.vScroll.enabled || this.colAxis.isVirtual) {
             return;
         }
         this.idealColWidths = [];
@@ -1201,7 +1203,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (colWidth) {
             cell.style.minWidth = `${colWidth}px`;
             cell.style.overflow = "hidden";
-            if (this.colAxis.hasStaticSize) {
+            if (this.colAxis.isVirtual) {
                 cell.style.width = `${colWidth}px`;
                 cell.style.maxWidth = `${colWidth}px`;
             } else if (idealWidth) {
@@ -1233,8 +1235,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return {x: 0, y: 0, w: 0};
         }
         return {
-            x: this.colAxis.hasStaticSize ? this.colAxis.positionStart[col] : cell.offsetLeft,
-            y: this.rowAxis.hasStaticSize ? this.rowAxis.positionStart[row] : cell.offsetTop,
+            x: this.colAxis.isVirtual ? this.colAxis.positionStart[col] : cell.offsetLeft,
+            y: this.rowAxis.isVirtual ? this.rowAxis.positionStart[row] : cell.offsetTop,
             w: cell.offsetWidth,
         };
     }
