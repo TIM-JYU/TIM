@@ -461,6 +461,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.rowAxis.refresh();
         this.colAxis.refresh();
         if (this.vScroll.enabled) {
+            this.setTableSizes();
             this.updateVTable();
         } else {
             // For normal mode: simply hide rows that are no more visible/show hidden rows
