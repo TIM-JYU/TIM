@@ -822,9 +822,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     // region Virtual scrolling
 
-    private updateVTable() {
+    private updateVTable(skipIfSame: boolean = false) {
         // Set viewport already here to account for subsequent handlers
         const newViewport = this.getViewport();
+        if (skipIfSame && viewportsEqual(this.viewport, newViewport)) {
+            this.scheduledUpdate = false;
+            return;
+        }
         this.scrollDY = newViewport.vertical.startIndex - this.viewport.vertical.startIndex;
         this.viewport = newViewport;
         this.updateTableTransform();
@@ -853,7 +857,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
         this.scheduledUpdate = true;
-        this.updateVTable();
+        this.updateVTable(true);
     }
 
     private* updateViewport(): Generator {
@@ -1372,6 +1376,11 @@ function applyBasicStyle(element: HTMLElement, style: Record<string, string> | n
     if (style != null) {
         Object.assign(element.style, style);
     }
+}
+
+function viewportsEqual(vp1: Viewport, vp2: Viewport) {
+    const visItemsEqual = (v1: VisibleItems, v2: VisibleItems) => v1.startIndex == v1.startIndex && v1.count == v2.count;
+    return visItemsEqual(vp1.vertical, vp2.vertical) && visItemsEqual(vp1.horizontal, vp2.horizontal);
 }
 
 interface PurifyData {
