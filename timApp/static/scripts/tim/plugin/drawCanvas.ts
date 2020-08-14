@@ -353,6 +353,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             this.drawData.push(rect);
         } else if (this.freeDrawing) {
             this.drawData.push(new FreeDrawing(this.freeDrawing));
+            this.freeDrawing = undefined;
         }
     }
 
