@@ -367,7 +367,7 @@ const VIRTUAL_SCROLL_TABLE_BORDER_SPACING = 0;
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: {
         class: "data-view",
-        style: "width: fit-content;",
+        style: "max-width: 100%;",
     },
     template: `
         <div class="header" #headerContainer>
@@ -538,8 +538,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.colAxis.refresh();
         if (this.vScroll.enabled) {
             this.setTableSizes();
-            this.updateVTable();
-            requestAnimationFrame(() => this.updateHeaderTableSizes());
+            this.updateVTable({
+                updateHeader: true,
+            });
         } else {
             // For normal mode: simply hide rows that are no more visible/show hidden rows
             for (const [rowNumber, row] of this.dataTableCache.rows.entries()) {
@@ -904,17 +905,25 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     // region Virtual scrolling
 
-    private updateVTable(skipIfSame: boolean = false) {
+    private updateVTable(opts?: {
+        skipIfSame?: boolean,
+        updateHeader?: boolean
+    }) {
+        const options = {
+            skipIfSame: false,
+            updateHeader: false,
+            ...opts,
+        };
         // Set viewport already here to account for subsequent handlers
         const newViewport = this.getViewport();
-        if (skipIfSame && viewportsEqual(this.viewport, newViewport)) {
+        if (options.skipIfSame && viewportsEqual(this.viewport, newViewport)) {
             this.scheduledUpdate = false;
             return;
         }
         this.scrollDY = newViewport.vertical.startIndex - this.viewport.vertical.startIndex;
         this.viewport = newViewport;
         this.updateTableTransform();
-        runMultiFrame(this.renderViewport());
+        runMultiFrame(this.renderViewport(options.updateHeader));
     }
 
     private isOutsideSafeViewZone(): boolean {
@@ -939,10 +948,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
         this.scheduledUpdate = true;
-        this.updateVTable(true);
+        this.updateVTable({
+            skipIfSame: true,
+        });
     }
 
-    private* renderViewport(): Generator {
+    private* renderViewport(updateHeader: boolean = false): Generator {
         const {vertical, horizontal} = this.viewport;
         this.dataTableCache.setSize(this.viewport.vertical.count, this.viewport.horizontal.count);
         this.idTableCache?.setSize(this.viewport.vertical.count, 2);
@@ -1004,6 +1015,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.updateTableTransform();
             runMultiFrame(this.renderViewport());
         } else {
+            if (updateHeader) {
+                this.updateHeaderTableSizes();
+            }
             this.scheduledUpdate = false;
         }
     }
