@@ -1469,7 +1469,7 @@ function applyBasicStyle(element: HTMLElement, style: Record<string, string> | n
 }
 
 function viewportsEqual(vp1: Viewport, vp2: Viewport) {
-    const visItemsEqual = (v1: VisibleItems, v2: VisibleItems) => v1.startIndex == v1.startIndex && v1.count == v2.count;
+    const visItemsEqual = (v1: VisibleItems, v2: VisibleItems) => v1.startIndex == v2.startIndex && v1.count == v2.count;
     return visItemsEqual(vp1.vertical, vp2.vertical) && visItemsEqual(vp1.horizontal, vp2.horizontal);
 }
 
