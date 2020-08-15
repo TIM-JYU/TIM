@@ -857,14 +857,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!this.headerIdTableCache || !this.filterTableCache) {
             return;
         }
-        const hCount = this.colAxis.visibleCount;
+        const {horizontal} = this.viewport;
 
-        this.headerIdTableCache.setSize(1, hCount);
-        this.filterTableCache.setSize(1, hCount);
-        const sizes = Array.from(this.colAxis.visibleItems.map((columnIndex) => {
+        this.headerIdTableCache.setSize(1, this.viewport.horizontal.count);
+        this.filterTableCache.setSize(1, this.viewport.horizontal.count);
+        const sizes = Array.from(new Array(horizontal.count)).map((value, index) => {
+            const columnIndex = this.colAxis.visibleItems[index + horizontal.startIndex];
             return Math.max(this.getColumnHeaderWidth(columnIndex), this.colHeaderWidths[columnIndex]);
-        }));
-        for (let column = 0; column < hCount; column++) {
+        });
+        for (let column = 0; column < horizontal.count; column++) {
             const width = sizes[column];
             const headerCell = this.headerIdTableCache.getCell(0, column);
             const filterCell = this.filterTableCache.getCell(0, column);
@@ -1163,14 +1164,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const tbody = this.mainDataBody.nativeElement;
         const {vertical, horizontal} = this.viewport;
         this.dataTableCache.setSize(vertical.count, horizontal.count);
-        const getItem = (axis: GridAxisManager, index: number) =>
-            this.vScroll.enabled ? this.rowAxis.visibleItems[index] : this.rowAxis.itemOrder[index];
-
         for (let rowNumber = 0; rowNumber < vertical.count; rowNumber++) {
-            const rowIndex = getItem(this.rowAxis, vertical.startIndex + rowNumber);
+            const rowIndex = this.rowAxis.visibleItems[vertical.startIndex + rowNumber];
             this.updateRow(this.dataTableCache.getRow(rowNumber), rowIndex);
             for (let columnNumber = 0; columnNumber < horizontal.count; columnNumber++) {
-                const columnIndex = getItem(this.colAxis, horizontal.startIndex + columnNumber);
+                const columnIndex =  this.colAxis.visibleItems[horizontal.startIndex + columnNumber];
                 const cell = this.dataTableCache.getCell(rowNumber, columnNumber);
                 this.updateCell(cell, rowIndex, columnIndex, this.getCellValue(rowIndex, columnIndex));
             }
@@ -1185,9 +1183,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!this.headerIdTableCache || !this.filterTableCache) {
             return;
         }
-        const hCount = this.colAxis.visibleCount;
-        this.headerIdTableCache.setSize(1, hCount);
-        this.filterTableCache.setSize(1, hCount);
+        this.headerIdTableCache.setSize(1, this.viewport.horizontal.count);
+        this.filterTableCache.setSize(1, this.viewport.horizontal.count);
         const colIndices = this.updateColumnHeaders();
         for (const [cell, columnIndex] of colIndices) {
             this.colHeaderWidths[columnIndex] = cell.offsetWidth;
@@ -1215,10 +1212,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!this.headerIdTableCache || !this.filterTableCache) {
             return [];
         }
+        const {horizontal} = this.viewport;
         const colIndices: [HTMLTableCellElement, number][] = [];
-        for (const columnIndex of this.colAxis.visibleItems) {
-            const columnNumber = this.colAxis.indexToOrdinal[columnIndex];
-            const headerCell = this.headerIdTableCache.getCell(0, columnNumber);
+        for (let column = 0; column < horizontal.count; column++) {
+            const columnIndex = this.colAxis.visibleItems[column + horizontal.startIndex];
+            const headerCell = this.headerIdTableCache.getCell(0, column);
             colIndices.push([headerCell, columnIndex]);
             const headerTitle = headerCell.getElementsByTagName("span")[0];
             headerTitle.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
@@ -1231,7 +1229,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 this.modelProvider.handleClickHeader(columnIndex);
             };
 
-            const filterCell = this.filterTableCache.getCell(0, columnNumber);
+            const filterCell = this.filterTableCache.getCell(0, column);
             const input = filterCell.getElementsByTagName("input")[0];
             // TODO: Make own helper method because column index changes in vscroll mode
             input.oninput = () => {
