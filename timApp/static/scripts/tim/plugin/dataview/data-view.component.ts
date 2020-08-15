@@ -367,7 +367,6 @@ const VIRTUAL_SCROLL_TABLE_BORDER_SPACING = 0;
     changeDetection: ChangeDetectionStrategy.OnPush,
     host: {
         class: "data-view",
-        style: "max-width: 100%;",
     },
     template: `
         <div class="header" #headerContainer>
@@ -432,13 +431,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() headerStyle: Record<string, string> | null = {};
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
-    @Input() tableMaxWidth: string = "fit-content";
+    @Input() tableMaxWidth: string = "100%";
     totalRows: number = 0;
     visibleRows: number = 0;
     idHeaderCellWidth: string = "";
     cbAllVisibleRows = false;
     cbFilter = false;
     @HostBinding("class.virtual") private isVirtual: boolean = false;
+    @HostBinding("style.width") private tableWidth: string = "100%";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
@@ -721,6 +721,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Initialization
 
     ngOnInit(): void {
+        this.tableWidth = this.tableMaxWidth;
         this.vScroll = {...DEFAULT_VIRTUAL_SCROLL_SETTINGS, ...this.virtualScrolling};
         this.isVirtual = !!this.virtualScrolling?.enabled;
         // Detach change detection because most of this component is based on pure DOM manipulation
