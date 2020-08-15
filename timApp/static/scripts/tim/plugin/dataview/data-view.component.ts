@@ -156,7 +156,10 @@ class GridAxisManager {
      */
     refresh(): void {
         this.visibleItems = this.itemOrder.filter((i) => this.showItem(i));
-        this.indexToOrdinal = this.visibleItems.reduce((record, itemIndex, itemOrdinal) => ({...record, [itemIndex]: itemOrdinal}), {});
+        this.indexToOrdinal = {};
+        for (const [ord, index] of this.visibleItems.entries()) {
+            this.indexToOrdinal[index] = ord;
+        }
         if (!this.isDataViewVirtual) {
             return;
         }
@@ -478,11 +481,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private get dataTableWidth(): number {
-        const width1 = this.mainDataContainer.nativeElement.offsetWidth;
-        const width2 = this.mainDataBody.nativeElement.offsetWidth;
-        const width3 = this.componentRef.nativeElement.offsetWidth - this.summaryTable.nativeElement.offsetWidth;
+        const widths = [
+            this.mainDataContainer.nativeElement.offsetWidth,
+            this.mainDataBody.nativeElement.offsetWidth,
+            this.componentRef.nativeElement.offsetWidth - this.summaryTable.nativeElement.offsetWidth,
+        ].filter((w) => w != 0);
         // Add table border width to prevent possible border cutoff when filtering in DOM mode
-        return Math.min(width1, width2, width3) + this.tableBaseBorderWidthPx;
+        return Math.min(...widths) + this.tableBaseBorderWidthPx;
     }
 
     private get dataTableHeight(): number {
@@ -1396,7 +1401,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.rowAxis.visibleItems.length == 0 || this.dataTableCache.rows.length == 0) {
             return 0;
         }
-        return this.dataTableCache.getCell(this.rowAxis.visibleItems[0], this.colAxis.indexToOrdinal[columnIndex]).getBoundingClientRect().width;
+        return this.dataTableCache.getCell(this.rowAxis.visibleItems[this.viewport.vertical.startIndex], this.colAxis.indexToOrdinal[columnIndex]).getBoundingClientRect().width;
     }
 
     private getRowHeaderHeight(rowIndex: number): number {
@@ -1409,7 +1414,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         // We make use of getBoundingClientRect because it returns proper fractional size
         // (which is needed for at least on Firefox for table size sync to work)
-        return this.dataTableCache.getRow(this.rowAxis.visibleItems[0]).getBoundingClientRect().height;
+        return this.dataTableCache.getRow(this.rowAxis.visibleItems[this.viewport.vertical.startIndex]).getBoundingClientRect().height;
     }
 
     // endregion
