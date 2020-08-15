@@ -121,7 +121,7 @@ class GridAxisManager {
 
     constructor(size: number,
                 private isDataViewVirtual: boolean,
-                private border: number,
+                private borderSpacing: number,
                 private getSize: (i: number) => number,
                 private showItem: (i: number) => boolean) {
         this.itemOrder = Array.from(new Array(size)).map((e, i) => i);
@@ -158,7 +158,7 @@ class GridAxisManager {
             const index = this.visibleItems[i];
             let size = this.getSize(index);
             if (size) {
-                size += this.border;
+                size += this.borderSpacing;
             }
             this.positionStart[i + 1] = this.positionStart[i] + size;
         }
@@ -340,13 +340,13 @@ class TableDOMCache {
     }
 }
 
-const DEFAULT_VSCROLL_SETTINGS: VirtualScrollingOptions = {
+const DEFAULT_VIRTUAL_SCROLL_SETTINGS: VirtualScrollingOptions = {
     enabled: false,
     viewOverflow: {horizontal: 1, vertical: 1},
 };
 
-// TODO: Right now, default TimTable style uses collapsed borders, in which case there is no need for borders. Does this need a setting?
-const VIRTUAL_SCROLL_TABLE_BORDER_WIDTH = 0;
+// TODO: Right now, default TimTable style uses collapsed borders, in which case there is no need for spacing. Does this need a setting?
+const VIRTUAL_SCROLL_TABLE_BORDER_SPACING = 0;
 
 /**
  * A DOM-based data view component that supports virtual scrolling.
@@ -416,7 +416,7 @@ const VIRTUAL_SCROLL_TABLE_BORDER_WIDTH = 0;
 export class DataViewComponent implements AfterViewInit, OnInit {
     // region Fields
     @Input() modelProvider!: DataModelProvider; // TODO: Make optional and error out if missing
-    @Input() virtualScrolling: Partial<VirtualScrollingOptions> = DEFAULT_VSCROLL_SETTINGS;
+    @Input() virtualScrolling: Partial<VirtualScrollingOptions> = DEFAULT_VIRTUAL_SCROLL_SETTINGS;
     @Input() tableClass: { [klass: string]: unknown } = {};
     @Input() tableStyle: { [klass: string]: string } = {};
     @Input() headerStyle: Record<string, string> | null = {};
@@ -451,7 +451,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private viewport!: Viewport;
     private rowAxis!: GridAxisManager;
     private colAxis!: GridAxisManager;
-    private vScroll: VirtualScrollingOptions = DEFAULT_VSCROLL_SETTINGS;
+    private vScroll: VirtualScrollingOptions = DEFAULT_VIRTUAL_SCROLL_SETTINGS;
     private colHeaderWidths: number[] = [];
     private tableBaseBorderWidth: number = -1;
     private sizeContainer?: HTMLDivElement;
@@ -708,7 +708,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Initialization
 
     ngOnInit(): void {
-        this.vScroll = {...DEFAULT_VSCROLL_SETTINGS, ...this.virtualScrolling};
+        this.vScroll = {...DEFAULT_VIRTUAL_SCROLL_SETTINGS, ...this.virtualScrolling};
         this.isVirtual = !!this.virtualScrolling?.enabled;
         // Detach change detection because most of this component is based on pure DOM manipulation
         this.cdr.detach();
@@ -718,12 +718,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const {rows, columns} = this.modelProvider.getDimension();
         this.rowAxis = new GridAxisManager(rows,
             this.vScroll.enabled,
-            VIRTUAL_SCROLL_TABLE_BORDER_WIDTH,
+            VIRTUAL_SCROLL_TABLE_BORDER_SPACING,
             (i) => this.modelProvider.getRowHeight(i) ?? 0,
             (i) => this.modelProvider.showRow(i));
         this.colAxis = new GridAxisManager(columns,
             this.vScroll.enabled,
-            VIRTUAL_SCROLL_TABLE_BORDER_WIDTH,
+            VIRTUAL_SCROLL_TABLE_BORDER_SPACING,
             (i) => this.modelProvider.getColumnWidth(i) ?? 0,
             (i) => this.modelProvider.showColumn(i));
         this.updateTableSummary();
@@ -1040,9 +1040,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             table.style.height = `${totalHeight}px`;
             idTable.style.height = `${totalHeight}px`;
         }
-        table.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_WIDTH}px`;
-        idTable.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_WIDTH}px`;
-        headerTable.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_WIDTH}px`;
+        table.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_SPACING}px`;
+        idTable.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_SPACING}px`;
+        headerTable.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_SPACING}px`;
     }
 
     private getViewport(): Viewport {
