@@ -207,6 +207,7 @@ export interface TimTable {
     table: ITable;
     id?: string;
     headers?: string[];
+    saveAttrs?: string[]; // what attributes to save when jsrunner sends data
     headersStyle?: Record<string, string>;
     addRowButtonText?: string;
     forcedEditMode?: boolean;
@@ -1364,6 +1365,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             params = params2;
         }
         this.error = "";
+        if (this.data.saveAttrs) {
+            for (const key of this.data.saveAttrs) {
+                // @ts-ignore
+                const value = this.data[key];
+                // @ts-ignore
+                params.input.answers[key] = value;
+            }
+        }
 
         const r = await to($http.put<{
             web: {
@@ -3800,6 +3809,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (!this.userdata) {
             return;
         }
+        if (!this.data.saveAttrs) { this.data.saveAttrs = []; }
         const dataType = t.intersection([
             t.type({
                 matrix: t.array(t.array(t.union([CellTypeR, t.type({cell: CellTypeR})]))),
@@ -3822,6 +3832,16 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             }
             if (data.headers) {
                 this.data.headers = data.headers;
+                // this.data.saveAttrs.push("headers");
+            }
+            // eslint-disable-next-line guard-for-in
+            for (const key in data) {
+                if (key in ["matrix", "headers"]) { continue; }
+                // @ts-ignore
+                const value = data[key];
+                // @ts-ignore
+                this.data[key] = value;
+                this.data.saveAttrs.push(key);
             }
             // this.reInitialize();
             this.processDataBlock(this.userdata.cells);

@@ -155,6 +155,10 @@ def tim_table_get_html(jso, review):
         values[USERDATA] = userdata
         if headers and values.get("saveUserDataHeader", False):
             values['headers'] = headers
+        for key in state:
+            if key in ['matrix', 'userdata', 'headers']:  # do not reuse hard coded values
+                continue
+            values[key] = state[key]
     if jso.get("review", False):
         udata = ""
         if not userdata:
