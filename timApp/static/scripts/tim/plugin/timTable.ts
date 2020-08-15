@@ -65,7 +65,7 @@ import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
-import {DataViewComponent, TableModelProvider, VirtualScrollingOptions} from "tim/plugin/dataview/data-view.component";
+import {DataViewComponent, DataModelProvider, VirtualScrollingOptions} from "tim/plugin/dataview/data-view.component";
 import {nullable, withDefault} from "tim/plugin/attributes";
 import {onClick} from "../document/eventhandlers";
 import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "../document/viewctrl";
@@ -669,7 +669,7 @@ export enum ClearSort {
     `,
     styleUrls: ["./timTable.scss"],
 })
-export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCheck, AfterViewChecked, AfterViewInit, TableModelProvider {
+export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCheck, AfterViewChecked, AfterViewInit, DataModelProvider {
     error: string = "";
     public viewctrl?: ViewCtrl;
     public cellDataMatrix: ICell[][] = [];  // this has all table data as original indecies (sort does not affect)
