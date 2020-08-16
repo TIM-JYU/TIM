@@ -628,7 +628,7 @@ export class ToolsBase {
     }
 
     public getTimeZoneDiff(): number {
-        if (!this.markup.timeZoneDiff) return 0;
+        if (!this.markup.timeZoneDiff) { return 0; }
         return this.markup.timeZoneDiff;
     }
 
