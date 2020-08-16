@@ -2018,7 +2018,7 @@ ${fhtml}
                 // this.savedText = data.web.error ?? "saved";
                 this.savedText = this.attrsall.markup.savedText ?? "saved";
                 // this.preventSave = true;
-                data.web.error = "";
+                // data.web.error = ""; // TODO: why was this?  it prevenst jsrunner result
             }
             if (data.web.pwd) {
                 ConsolePWD.setPWD(data.web.pwd, this);
