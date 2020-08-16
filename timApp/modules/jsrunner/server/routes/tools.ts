@@ -633,8 +633,8 @@ export class ToolsBase {
     }
 
     public getLocalTime(): Date {
-        let now = new Date();
-        let ms = now.getTime() + this.getTimeZoneDiff()*3600.0*1000.0;
+        const now = new Date();
+        const ms = now.getTime() + this.getTimeZoneDiff() * 3600.0 * 1000.0;
         return new Date(ms);
     }
 
@@ -647,27 +647,27 @@ export class ToolsBase {
     }
 
     public replace2(s: string, c: string, n: number): string {
-        return s.replace(c + c, this.fillLeft(""+n, 2, '0')).replace(c, ""+n);
+        return s.replace(c + c, this.fillLeft("" + n, 2, "0")).replace(c, "" + n);
     }
 
     public formatTime(date: Date, format: string = "d.M.yyyy H:mm"): string {
         let str = format;
 
-        let y = date.getFullYear();
+        const y = date.getFullYear();
         str = str.replace("yyyy", this.fillLeft("" + y, 4, "0"));
         str = str.replace("yy", this.fillLeft("" + (y % 100), 2, "0"));
-        str = str.replace("y", ""+y);
+        str = str.replace("y", "" + y);
 
-        str = this.replace2(str, "M", date.getMonth()+1);
+        str = this.replace2(str, "M", date.getMonth() + 1);
         str = this.replace2(str, "d", date.getDate());
         str = this.replace2(str, "H", date.getHours());
         str = this.replace2(str, "m", date.getMinutes());
         str = this.replace2(str, "s", date.getSeconds());
 
-        let ms = date.getMilliseconds();
-        str = str.replace("fff", this.fillLeft("" + (ms), 3, "0"));
-        str = str.replace("ff", this.fillLeft("" + Math.trunc(ms/10), 1, "0"));
-        str = str.replace("f", this.fillLeft("" + Math.trunc(ms/100), 1, "0"));
+        const ms = date.getMilliseconds();
+        str = str.replace("fff", this.fillLeft("" + ms, 3, "0"));
+        str = str.replace("ff", this.fillLeft("" + Math.trunc(ms / 10), 1, "0"));
+        str = str.replace("f", this.fillLeft("" + Math.trunc(ms / 100), 1, "0"));
         return str;
     }
 }
