@@ -626,6 +626,50 @@ export class ToolsBase {
     public reportError(msg: string) {
         this.errors.push({msg, stackTrace: new Error().stack});
     }
+
+    public getTimeZoneDiff(): number {
+        if (!this.markup.timeZoneDiff) return 0;
+        return this.markup.timeZoneDiff;
+    }
+
+    public getLocalTime(): Date {
+        let now = new Date();
+        let ms = now.getTime() + this.getTimeZoneDiff()*3600.0*1000.0;
+        return new Date(ms);
+    }
+
+    public fillLeft(s: string, n: number, f: string = " "): string {
+        let res = s;
+        while (res.length < n) {
+            res = f + res;
+        }
+        return res;
+    }
+
+    public replace2(s: string, c: string, n: number): string {
+        return s.replace(c + c, this.fillLeft(""+n, 2, '0')).replace(c, ""+n);
+    }
+
+    public formatTime(date: Date, format: string = "d.M.yyyy H:mm"): string {
+        let str = format;
+
+        let y = date.getFullYear();
+        str = str.replace("yyyy", this.fillLeft("" + y, 4, '0'));
+        str = str.replace("yy", this.fillLeft("" + (y % 100), 2, '0'));
+        str = str.replace("y", ""+y);
+
+        str = this.replace2(str, "M", date.getMonth()+1);
+        str = this.replace2(str, "d", date.getDate());
+        str = this.replace2(str, "H", date.getHours());
+        str = this.replace2(str, "m", date.getMinutes());
+        str = this.replace2(str, "s", date.getSeconds());
+
+        let ms = date.getMilliseconds();
+        str = str.replace("fff", this.fillLeft("" + (ms), 3, '0'));
+        str = str.replace("ff", this.fillLeft("" + Math.trunc(ms/10), 1, '0'));
+        str = str.replace("f", this.fillLeft("" + Math.trunc(ms/100), 1, '0'));
+        return str;
+    }
 }
 
 export class GTools extends ToolsBase {
@@ -806,7 +850,7 @@ export class Tools extends ToolsBase {
     getDouble(fieldName: unknown, defa: unknown = 0): number {
         const f = ensureStringFieldName(fieldName);
         const def = ensureNumberDefault(defa);
-        let s;
+        let s = null;
         try {
             s = this.normalizeAndGet(f);
             if (s === null || s === undefined) {
@@ -1046,7 +1090,8 @@ export class Tools extends ToolsBase {
         }
         // TODO: fix timezone to work locally
         const localDateTime = new Date(s);
-        const offset = localDateTime.getTimezoneOffset() * 60;
+        // const offset = localDateTime.getTimezoneOffset() * 60;
+        const offset = -this.getTimeZoneDiff() * 60 * 60;
         return (localDateTime.getTime() / 1000) + offset;
     }
 

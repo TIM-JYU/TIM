@@ -1,6 +1,8 @@
 """Answer-related routes."""
 import json
 import re
+import dateutil.tz
+
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -341,6 +343,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     confirmText: Union[str, Missing] = missing
     timeout: Union[int, Missing] = missing
     updateFields: Union[List[str], Missing] = missing
+    timeZoneDiff: Union[int, Missing] = missing
 
     @validates_schema(skip_on_field_errors=True)
     def validate_schema(self, data, **_):
@@ -622,6 +625,18 @@ def post_answer(plugintype: str, task_id_ext: str):
             tags = save_object['tags']
         except (TypeError, KeyError):
             pass
+
+        postprogram_name = "postprogram"
+        postprogram = plugin.values.get("postprogram", None)
+        if not postprogram:
+            postprogram = plugin.values.get("-postprogram", None)
+            postprogram_name = "-postprogram"
+        if not postprogram:
+            postprogram = plugin.values.get("postProgram", None) # old name
+            postprogram_name = "postProgram"
+        if not postprogram:
+            postprogram_name = ""
+
         if (not is_teacher and should_save_answer) or ( 'savedata' in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(len(old_answers), tim_info)
             if vr.is_expired:
@@ -639,7 +654,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     result['error'] = str(e)
                 else:
                     points_given_by = get_current_user_group()
-            if plugin.values.get("postProgram", None):
+            if postprogram:
                 data = { 'points': points,
                          'save_object': save_object,
                          'tags':       tags,
@@ -648,7 +663,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                          'web' : web,
                          }
                 try:
-                    params = JsRunnerParams(code=plugin.values["postProgram"], data=data)
+                    params = JsRunnerParams(code=postprogram, data=data)
                     data, output = jsrunner_run(params)
                     points = data.get("points", points)
                     save_object = data.get("save_object", save_object)
@@ -695,7 +710,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             )
         else:
             result['savedNew'] = None
-            if plugin.values.get("postProgram", None):
+            if postprogram:
                 data = {'points': points,
                         'save_object': save_object,
                         'tags': tags,
@@ -704,7 +719,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                         'web': web,
                         }
                 try:
-                    params = JsRunnerParams(code=plugin.values["postProgram"], data=data)
+                    params = JsRunnerParams(code=postprogram, data=data)
                     data, output = jsrunner_run(params)
                     points = data.get("points", points)
                     output += "\nPoints: " + str(points)
@@ -718,7 +733,8 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     db.session.commit()
     try:
-        result['web']['markup'].pop('postProgram')  # TODO: stdy why someone puts markup here
+        if postprogram_name:
+            result['web']['markup'].pop(postprogram_name)  # TODO: stdy why someone puts markup here
     except:
         pass
 
@@ -761,6 +777,14 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
         user_filter=User.name.in_(runner_req.input.userNames) if runner_req.input.userNames else None
     )
     answerdata.pop('paramComps', None)  # This isn't needed by jsrunner server, so don't send it.
+    # plugin.values['timeZoneDiff'] = 3
+    tzd = plugin.values.get('timeZoneDiff', None)
+    if tzd == None:
+        # localtz = dateutil.tz.tzlocal()
+        localtz = dateutil.tz.gettz("Europe/Helsinki") # TODO: find the real zimezone somewhere?
+        localoffset = localtz.utcoffset(datetime.now(localtz))
+        tzd = localoffset.total_seconds() / 3600
+        plugin.values['timeZoneDiff'] = tzd
     if runnermarkup.program is missing:
         raise PluginException("Attribute 'program' is required.")
 
