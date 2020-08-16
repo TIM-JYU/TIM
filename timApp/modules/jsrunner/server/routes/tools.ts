@@ -654,8 +654,8 @@ export class ToolsBase {
         let str = format;
 
         let y = date.getFullYear();
-        str = str.replace("yyyy", this.fillLeft("" + y, 4, '0'));
-        str = str.replace("yy", this.fillLeft("" + (y % 100), 2, '0'));
+        str = str.replace("yyyy", this.fillLeft("" + y, 4, "0"));
+        str = str.replace("yy", this.fillLeft("" + (y % 100), 2, "0"));
         str = str.replace("y", ""+y);
 
         str = this.replace2(str, "M", date.getMonth()+1);
@@ -665,9 +665,9 @@ export class ToolsBase {
         str = this.replace2(str, "s", date.getSeconds());
 
         let ms = date.getMilliseconds();
-        str = str.replace("fff", this.fillLeft("" + (ms), 3, '0'));
-        str = str.replace("ff", this.fillLeft("" + Math.trunc(ms/10), 1, '0'));
-        str = str.replace("f", this.fillLeft("" + Math.trunc(ms/100), 1, '0'));
+        str = str.replace("fff", this.fillLeft("" + (ms), 3, "0"));
+        str = str.replace("ff", this.fillLeft("" + Math.trunc(ms/10), 1, "0"));
+        str = str.replace("f", this.fillLeft("" + Math.trunc(ms/100), 1, "0"));
         return str;
     }
 }
