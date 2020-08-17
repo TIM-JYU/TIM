@@ -245,7 +245,7 @@ def get_useranswers_for_task(user: User, task_ids: List[TaskId], answer_map):
            .add_columns(col)
            .with_entities(col)
            .group_by(Answer.task_id).subquery())
-    answs: List[Answer] = Answer.query.join(sub, Answer.id == sub.c.col) .all()
+    answs: List[Answer] = Answer.query.join(sub, Answer.id == sub.c.col).all()
     for answer in answs:
         if len(answer.users_all) > 1:
             answer_map[answer.task_id] = answer
@@ -270,8 +270,8 @@ def get_globals_for_tasks(task_ids: List[TaskId], answer_map):
             .all()
     )
     for answer in answers:
-            asd = answer.Answer.to_json()
-            answer_map[answer.Answer.task_id] = asd
+        asd = answer.Answer.to_json()
+        answer_map[answer.Answer.task_id] = asd
     return cnt, answers
 
 
@@ -322,7 +322,8 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
 
 @dataclass
 class JsRunnerMarkupModel(GenericMarkupModel):
-    fields: Union[List[str], Missing] = missing  # This is actually required, but we cannot use non-default arguments here...
+    fields: Union[
+        List[str], Missing] = missing  # This is actually required, but we cannot use non-default arguments here...
     autoadd: Union[bool, Missing] = missing
     autoUpdateTables: Union[bool, Missing] = True
     creditField: Union[str, Missing] = missing
@@ -333,7 +334,8 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     gradingScale: Union[Dict[Any, Any], Missing] = missing
     group: Union[str, Missing] = missing
     groups: Union[List[str], Missing] = missing
-    includeUsers: Union[MembershipFilter, Missing] = field(default=MembershipFilter.Current, metadata={'by_value': True})
+    includeUsers: Union[MembershipFilter, Missing] = field(default=MembershipFilter.Current,
+                                                           metadata={'by_value': True})
     selectIncludeUsers: bool = False
     paramFields: Union[List[str], Missing] = missing
     postprogram: Union[str, Missing] = missing
@@ -511,7 +513,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             # We set answerer user to be current user later so we ignore user mismatch in global case
             if user_id not in (u.id for u in users) and not tid.is_global:
                 raise PluginException('userId is not associated with answer_id')
-        elif user_id and user_id != curr_user.id and False: # TODO: Vesa's hack to no need for belong teachers group
+        elif user_id and user_id != curr_user.id and False:  # TODO: Vesa's hack to no need for belong teachers group
             teacher_group = UserGroup.get_teachers_group()
             if curr_user not in teacher_group.users:
                 raise PluginException('Permission denied: you are not in teachers group.')
@@ -565,7 +567,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             for file in files:
                 trimmed_file = file["path"].replace('/uploads/', '')
                 block = Block.query.filter((Block.description == trimmed_file) &
-                                        (Block.type_id == BlockType.Upload.value)).first()
+                                           (Block.type_id == BlockType.Upload.value)).first()
                 if block is None:
                     raise PluginException(f'Non-existent upload: {trimmed_file}')
                 verify_view_access(block, message="You don't have permission to touch this file.")
@@ -644,12 +646,10 @@ def post_answer(plugintype: str, task_id_ext: str):
             postprogram = plugin.values.get("-postprogram", None)
             postprogram_name = "-postprogram"
         if not postprogram:
-            postprogram = plugin.values.get("postProgram", None) # old name
+            postprogram = plugin.values.get("postProgram", None)  # old name
             postprogram_name = "postProgram"
         if not postprogram:
             postprogram_name = ""
-        if not result.get('error', None):
-            result['error'] = ''
         postoutput = plugin.values.get("postoutput", 'feedback')
 
         def set_postoutput(result, output, postoutput):
@@ -664,7 +664,13 @@ def post_answer(plugintype: str, task_id_ext: str):
                 r = r[p]
             r[lastkey] = r.get(lastkey, '') + str(output)
 
-        if (not is_teacher and should_save_answer) or ( 'savedata' in jsonresp):
+        def add_value(result, key, data):
+            value = data.get(key, None)
+            if value is None:
+                return
+            result[key] = result.get(key, "") + value
+
+        if (not is_teacher and should_save_answer) or ('savedata' in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(len(old_answers), tim_info)
             if vr.is_expired:
                 fixed_time = receive_time - d.document.get_settings().answer_submit_time_tolerance()
@@ -683,14 +689,14 @@ def post_answer(plugintype: str, task_id_ext: str):
                     points_given_by = get_current_user_group()
 
             if postprogram:
-                data = { 'points': points,
-                         'save_object': save_object,
-                         'tags':       tags,
-                         'is_valid':   is_valid,
-                         'force_answer': force_answer,
-                         'error' : '',
-                         'web' : web,
-                         }
+                data = {'points': points,
+                        'save_object': save_object,
+                        'tags': tags,
+                        'is_valid': is_valid,
+                        'force_answer': force_answer,
+                        'error': '',
+                        'web': web,
+                        }
                 try:
                     params = JsRunnerParams(code=postprogram, data=data)
                     data, output = jsrunner_run(params)
@@ -699,11 +705,8 @@ def post_answer(plugintype: str, task_id_ext: str):
                     is_valid = data.get("is_valid", is_valid)
                     force_answer = data.get("force_answer", force_answer)
                     result["web"] = data.get("web", web)
-                    result["error"] += data.get("error", "")
+                    add_value(result, "error", data)
                     set_postoutput(result, output, postoutput)
-                    #if output:  # TODO: korjaa tähän järkevä tulostus
-                    #    # return json_response({'web': {'error': output}})
-                    #    result["web"]["error"] = output
                 except JsRunnerError as e:
                     return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
 
@@ -757,7 +760,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     output += "\nPoints: " + str(points)
                     result["web"] = data.get("web", web)
                     result["web"]["error"] = output
-                    result["error"] += data.get("error", "")
+                    add_value(result, "error", data)
                     set_postoutput(result, output, postoutput)
                 except JsRunnerError as e:
                     return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
@@ -878,7 +881,6 @@ class JsrunnerGroups(TypedDict, total=False):
     set: Dict[str, List[int]]
     add: Dict[str, List[int]]
     remove: Dict[str, List[int]]
-
 
 
 MAX_GROUPS_PER_CALL = 10
@@ -1030,7 +1032,9 @@ def save_fields(
             continue
         dib = doc_map[t_id.doc_id]
         # TODO: Return case-specific abort messages
-        if not (curr_user.has_teacher_access(dib) or (allow_non_teacher and t_id.doc_id == current_doc.id) or (curr_user.has_view_access(dib) and dib.document.get_own_settings().get("allow_external_jsrunner", False))):
+        if not (curr_user.has_teacher_access(dib) or (allow_non_teacher and t_id.doc_id == current_doc.id) or (
+                curr_user.has_view_access(dib) and dib.document.get_own_settings().get("allow_external_jsrunner",
+                                                                                       False))):
             return abort(403, f'Missing teacher access for document {dib.id}')
         try:
             vr = verify_task_access(dib, t_id, AccessType.view, TaskIdAccess.ReadWrite)  # , context_user=ctx_user)
@@ -1144,7 +1148,7 @@ def save_fields(
                 elif field == "JSSTRING":  # TODO check if this should be ALL!  No this is for settings using string
                     if not an or json.dumps(content) != value:
                         new_answer = True
-                    content = json.loads(value) # TODO: shoud this be inside if
+                    content = json.loads(value)  # TODO: shoud this be inside if
                 else:
                     if not an or content.get(field, "") != value:
                         new_answer = True
@@ -1256,7 +1260,7 @@ def hide_points(a: Answer):
     j['points'] = None
 
     c = j.get('content', None)
-    if c and c.find('"points": {') >= 0: # TODO: Hack for csPlugin
+    if c and c.find('"points": {') >= 0:  # TODO: Hack for csPlugin
         c = json.loads(c)
         c.pop('points')
         c = json.dumps(c)
@@ -1642,7 +1646,7 @@ def get_state(args: GetStateModel):
         [block],
         user,
         custom_answer=answer,
-        task_id = task_id,
+        task_id=task_id,
         pluginwrap=PluginWrap.Nothing,
         do_lazy=NEVERLAZY,
     )
@@ -1683,7 +1687,8 @@ def verify_answer_access(
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
 
-    if verify_teacher_access(d, require=False):  # TODO: tarkista onko oikein tämä!!! Muuten tuli virhe toisten vastauksia hakiessa.
+    if verify_teacher_access(d,
+                             require=False):  # TODO: tarkista onko oikein tämä!!! Muuten tuli virhe toisten vastauksia hakiessa.
         return answer, tid.doc_id
 
     if user_id != get_current_user_id() or not logged_in():
