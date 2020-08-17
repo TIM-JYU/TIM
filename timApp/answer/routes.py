@@ -780,10 +780,9 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
     answerdata.pop('paramComps', None)  # This isn't needed by jsrunner server, so don't send it.
     # plugin.values['timeZoneDiff'] = 3
     tzd = plugin.values.get('timeZoneDiff', None)
-    if tzd == None:
-        # localtz = dateutil.tz.tzlocal()
-        localtz = local_timezone;
-        localoffset = localtz.utcoffset(datetime.now(localtz))
+    if tzd is None:
+        localtz = local_timezone
+        localoffset = localtz.utcoffset(datetime.now())
         tzd = localoffset.total_seconds() / 3600
         plugin.values['timeZoneDiff'] = tzd
     if runnermarkup.program is missing:
