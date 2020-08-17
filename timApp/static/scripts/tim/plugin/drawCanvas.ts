@@ -203,25 +203,21 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         //     this.downEvent(event);
         // });
         this.canvas.nativeElement.addEventListener("mousedown", (event) => {
-            event.preventDefault();
             this.downEvent(event, event);
         });
         this.canvas.nativeElement.addEventListener("touchstart", (event) => {
-            event.preventDefault();
             this.downEvent(event, touchEventToTouch(event));
         });
         this.canvas.nativeElement.addEventListener("mousemove", (event) => {
             this.moveEvent(event, event);
         });
         this.canvas.nativeElement.addEventListener("touchmove", (event) => {
-            event.preventDefault();
             this.moveEvent(event, touchEventToTouch(event));
         });
         this.canvas.nativeElement.addEventListener("mouseup", (event) => {
             this.upEvent(event, event);
         });
         this.canvas.nativeElement.addEventListener("touchend", (event) => {
-            event.preventDefault();
             this.upEvent(event, touchEventToTouch(event));
         });
     }
