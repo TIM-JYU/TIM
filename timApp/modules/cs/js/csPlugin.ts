@@ -1360,6 +1360,54 @@ export class CsController extends CsBase implements ITimComponent {
         return r;
     }
 
+    get borders() {
+        return this.markup.borders;
+    }
+
+    get dragAndDrop() {
+        return this.markup.dragAndDrop;
+    }
+
+    get rows() {
+        return this.markup.rows;
+    }
+
+    get maxrows() {
+        return this.markup.maxrows;
+    }
+
+    get editorMode() {
+        return this.markup.editorMode;
+    }
+
+    get parsonsmaxcheck() {
+        return this.markup.parsonsmaxcheck;
+    }
+
+    get parsonsnotordermatters() {
+        return this.markup.parsonsnotordermatters;
+    }
+
+    get words() {
+        return this.markup.words;
+    }
+
+    get count() {
+        return this.markup.count;
+    }
+
+    get copyLink() {
+        return this.markup.copyLink;
+    }
+
+    get disableUnchanged() {
+        return this.markup.disableUnchanged;
+    }
+
+    get footer() {
+        return this.markup.footer;
+    }
+
     getfullhtmlext(text: string) {
         const fh = this.fullhtml;
         if (!fh) {
@@ -2829,7 +2877,7 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
 @Component({
     selector: "cs-runner",
     template: `
-<div [ngClass]="{'csRunDiv': markup.borders}" class="type-{{rtype}}">
+<div [ngClass]="{'csRunDiv': borders}" class="type-{{rtype}}">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
     <h4 *ngIf="header" [innerHTML]="header"></h4>
     <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
@@ -2861,7 +2909,7 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
     </div>
     <ng-container *ngIf="upload">
         <file-select-manager class="small"
-                [dragAndDrop]="markup.dragAndDrop"
+                [dragAndDrop]="dragAndDrop"
                 [uploadUrl]="uploadUrl"
                 [stem]="uploadstem"
                 (file)="onFileLoad($event)"
@@ -2885,16 +2933,16 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
         <div class="csEditorAreaDiv">
             <cs-editor #mainEditor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
                     [base]="byCode"
-                    [minRows]="markup.rows"
-                    [maxRows]="markup.maxrows"
+                    [minRows]="rows"
+                    [maxRows]="maxrows"
                     [wrap]="wrap"
                     [modes]="editorModes"
-                    [editorIndex]="markup.editorMode"
+                    [editorIndex]="editorMode"
                     [parsonsShuffle]="initUserCode"
-                    [parsonsMaxcheck]="markup.parsonsmaxcheck"
-                    [parsonsNotordermatters]="markup.parsonsnotordermatters"
+                    [parsonsMaxcheck]="parsonsmaxcheck"
+                    [parsonsNotordermatters]="parsonsnotordermatters"
                     [parsonsStyleWords]="markup['style-words']"
-                    [parsonsWords]="markup.words"
+                    [parsonsWords]="words"
                     (content)="onContentChange($event)">
             </cs-editor>
             <div class="csRunChanged" *ngIf="usercode !== byCode && !hide.changed"></div>
@@ -2919,19 +2967,19 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
                     [(ngModel)]="userargs"
                     [placeholder]="argsplaceholder"></span>
     </div>
-    <cs-count-board *ngIf="markup.count" [options]="markup.count"></cs-count-board>
+    <cs-count-board *ngIf="count" [options]="count"></cs-count-board>
     <p class="csRunSnippets" *ngIf="buttons">
         <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
         &nbsp;&nbsp;
     </p>
     <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
-            [maxRows]="markup.maxrows"
+            [maxRows]="maxrows"
             [disabled]="true">
     </cs-editor>
     <div class="csRunMenuArea" *ngIf="!forcedupload">
         <p class="csRunMenu">
             <button *ngIf="isRun && buttonText()"
-                    [disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved() && isText)"
+                    [disabled]="isRunning || preventSave || (disableUnchanged && !isUnSaved() && isText)"
                     class="timButton btn-sm"
                     title="(Ctrl-S)"
                     (click)="runCode()"
@@ -2975,8 +3023,8 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
                     (click)="editor?.showOtherEditor(); $event.preventDefault()">
                 {{editor.nextModeText}}
             </a>&nbsp;&nbsp;
-            <a href="#" *ngIf="markup.copyLink"
-                    (click)="copyCode(); $event.preventDefault()">{{markup.copyLink}}</a>
+            <a href="#" *ngIf="copyLink"
+                    (click)="copyCode(); $event.preventDefault()">{{copyLink}}</a>
             <span *ngIf="showRuntime"
                     class="inputSmall"
                     style="float: right;"
@@ -3060,7 +3108,7 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
         </p>
         <iframe width="800" height="600" [src]="docURL" target="csdocument" allowfullscreen></iframe>
     </div>
-    <p class="footer" [innerHTML]="markup.footer"></p>
+    <p class="footer" [innerHTML]="footer"></p>
 </div>`,
 })
 export class CsRunnerComponent extends CsController {
