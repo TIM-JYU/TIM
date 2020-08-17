@@ -1242,7 +1242,7 @@ export class ReviewController {
      * @param y - Target coordinate
      */
     clickFromCanvas = (canvas: DrawCanvasComponent, x: number, y: number) => {
-        if (canvas.drawingEnabled) {
+        if (canvas.drawingEnabled && canvas.getDrawing().length > 0) {
             this.selectedArea = undefined;
             this.selectionIsDrawing = true;
             const par = $(canvas.canvas.nativeElement).parents(".par")[0] as Element;

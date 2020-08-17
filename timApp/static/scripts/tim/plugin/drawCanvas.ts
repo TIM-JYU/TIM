@@ -162,6 +162,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
     // keep track of mousedown while drawing enabled
     drawStarted = false;
+    drawMoved = false;
     // drawings that can altered with undo (TODO: Redo, erase...?)
     drawData: DrawObject[] = [];
     // drawings that cannot be altered via undo, e.g background or permanent drawings
@@ -273,12 +274,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         const {x, y} = posToRelative(this.canvas.nativeElement, e);
         if (this.drawingEnabled && e instanceof MouseEvent && !(e.button == 1 || e.button == 2)) {
             this.drawStarted = true;
+            this.drawMoved = false;
             this.startX = x;
             this.startY = y;
             this.startSegmentDraw(posToRelative(this.canvas.nativeElement, e));
-        }
-        if (this.clickCallback) {
-            this.clickCallback(this, x, y);
         }
     }
 
@@ -291,6 +290,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         if (!this.drawStarted) {
             return;
         }
+        this.drawMoved = true;
         const pxy = posToRelative(this.canvas.nativeElement, e);
         const {x, y} = pxy;
 
@@ -320,31 +320,38 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     /**
      * Finishes the draw event
      */
-    upEvent(event: Event, p: MouseOrTouch): void {
-        if (!this.drawStarted) {
-            return;
+    upEvent(event: Event, e: MouseOrTouch): void {
+        const pxy = posToRelative(this.canvas.nativeElement, e);
+        const {x, y} = pxy;
+        if (this.drawStarted) {
+            this.drawStarted = false;
         }
-        this.drawStarted = false;
-        if (this.drawType == DrawType.Circle) {
-            const circle: ICircle = {
+        if (this.drawMoved) {
+            if (this.drawType == DrawType.Circle) {
+                const circle: ICircle = {
                     type: "circle",
                     drawData: this.makeFullRectangleOrCircle(),
-            };
-            this.drawData.push(circle);
-        } else if (this.drawType == DrawType.Rectangle) {
-            const rect: IRectangle = {
-                type: "rectangle",
-                drawData: this.makeFullRectangleOrCircle(),
+                };
+                this.drawData.push(circle);
+            } else if (this.drawType == DrawType.Rectangle) {
+                const rect: IRectangle = {
+                    type: "rectangle",
+                    drawData: this.makeFullRectangleOrCircle(),
 
-            };
-            this.drawData.push(rect);
-        } else if (this.freeDrawing) {
-            const freeDrawing: IFreeHand = {
-                type: "freehand",
-                drawData: this.freeDrawing,
-            };
-            this.drawData.push(freeDrawing);
-            this.freeDrawing = undefined;
+                };
+                this.drawData.push(rect);
+            } else if (this.freeDrawing) {
+                const freeDrawing: IFreeHand = {
+                    type: "freehand",
+                    drawData: this.freeDrawing,
+                };
+                this.drawData.push(freeDrawing);
+                this.freeDrawing = undefined;
+            }
+        }
+
+        if (this.clickCallback) {
+            this.clickCallback(this, x, y);
         }
     }
 
