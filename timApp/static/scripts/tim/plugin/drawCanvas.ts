@@ -271,7 +271,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * Starts the drawing and calls the callback function for clicks
      */
     downEvent(event: Event, e: MouseOrTouch): void {
-        if (!(e instanceof MouseEvent && e.button == 2)) {  // allow inspect element
+        if (!(e instanceof MouseEvent && (e.button == 1 || e.button == 2))) {  // allow inspect element and scrolling
             event.preventDefault();
         }
         const {x, y} = posToRelative(this.canvas.nativeElement, e);
