@@ -434,7 +434,9 @@ def tableform_get_fields(
         group_filter_type = MembershipFilter.Current,
         user_filter: List[str] = None,
 ):
-    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames)) if '*' not in groupnames else None
+    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames)).all()
+    if '*' in groupnames:
+        queried_groups.append(None)
     fielddata, aliases, field_names, groups = \
         get_fields_and_users(
             flds,
