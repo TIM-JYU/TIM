@@ -65,6 +65,7 @@ from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserF
 from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
+from timApp.util.utils import local_timezone
 from utils import Missing
 
 # TODO: Remove methods in util/answerutil where many "moved" here to avoid circular imports
@@ -781,7 +782,7 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
     tzd = plugin.values.get('timeZoneDiff', None)
     if tzd == None:
         # localtz = dateutil.tz.tzlocal()
-        localtz = dateutil.tz.gettz("Europe/Helsinki") # TODO: find the real zimezone somewhere?
+        localtz = local_timezone;
         localoffset = localtz.utcoffset(datetime.now(localtz))
         tzd = localoffset.total_seconds() / 3600
         plugin.values['timeZoneDiff'] = tzd

@@ -312,6 +312,7 @@ def get_alias(name: str) -> str:
 
 
 fin_timezone = pytz.timezone('Europe/Helsinki')
+local_timezone = fin_timezone  #  TODO: find real local timezone somewhere
 temp_folder_path = Path('/tmp')
 cache_folder_path = Path('/cache')
 
