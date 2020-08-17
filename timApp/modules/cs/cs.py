@@ -473,16 +473,13 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
                     s = s + '\n----------------------FILE END----------------------</pre>'
         else:
             ucode = language.get_review(usercode)
-            if isinstance(ucode, str) and ttype != 'drawio':
+            if isinstance(ucode, str) and "drawio" not in ttype:
                 s = '<pre>' + ucode + '</ pre>' + s
-            elif ttype == 'drawio':
-                s = ucode
+            elif "drawio" in ttype:
+                return ucode
         if not s:
             s = "<pre>No answer</pre>"
-        if ttype == 'drawio':
-            result = s
-        else:
-            result = NOLAZY + '<div class="review" ng-non-bindable>' + s + '</div>'
+        result = NOLAZY + '<div class="review" ng-non-bindable>' + s + '</div>'
         return result
 
     r = runner
