@@ -909,38 +909,54 @@ tools.setDouble("t.points", 1);
 
     def test_group_wildcard(self):
         self.login_test1()
-        d = self.create_jsrun("""
+
+        def make_doc(*groups):
+            d = self.create_jsrun(f"""
 fields: [mmcqt]
-groups: ['*']
+groups: [{', '.join(groups)}]
 program: |!!
 tools.println(tools.getRealName());
 !!
-        """)
-        d.document.add_text("""
+            """)
+            d.document.add_text("""
 #- {plugin=mmcq #mmcqt}
 stem: "foo"
 choices:
-  -
-    correct: true
-    text: "a"
-  -
-    correct: false
-    text: "b"
+    -
+        correct: true
+        text: "a"
+    -
+        correct: false
+        text: "b"
 """)
-        plugin_type = 'mmcq'
-        task_id = f'{d.id}.mmcqt'
-        self.post_answer(plugin_type, task_id, [True, False])
-        self.test_user_2.grant_access(d, AccessType.edit)
-        db.session.commit()
-        self.login_test2()
-        self.post_answer(plugin_type, task_id, [True, True])
-        self.login_test1()
+            return d
 
-        self.do_jsrun(d, expect_content={
+        d1 = make_doc('"*"')
+
+        self.add_answer(d1, 'mmcqt', content=[True, False], user=self.test_user_1)
+        self.add_answer(d1, 'mmcqt', content=[True, True], user=self.test_user_2)
+        db.session.commit()
+
+        self.do_jsrun(d1, expect_content={
                 'web': {'errors': [],
                         'outdata': {},
                         'output': 'Test user 1\nTest user 2\n',
                         },
+        })
+
+        ug = self.create_test_group("jsrunnertestgroup1")
+        self.test_user_3.add_to_group(ug, None)
+        d2 = make_doc('"*"', 'jsrunnertestgroup1')
+
+        self.add_answer(d2, 'mmcqt', content=[True, False], user=self.test_user_1)
+        self.add_answer(d2, 'mmcqt', content=[True, True], user=self.test_user_2)
+        db.session.commit()
+
+        self.do_jsrun(d2, expect_content={
+            'web': {'errors': [],
+                    'outdata': {},
+                    'output': 'Test user 1\nTest user 2\nTest user 3\n',
+                    },
         })
 
 
