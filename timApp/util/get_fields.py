@@ -3,6 +3,7 @@ import json
 import re
 import time
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
 from typing import List, Optional, Tuple, DefaultDict, Dict, TypedDict, Any, Union
@@ -107,9 +108,15 @@ class UserFieldObj(TypedDict):
     styles: Any
 
 
+@dataclass
+class RequestedGroups:
+    groups: List[UserGroup]
+    include_all_answered:  bool = False
+
+
 def get_fields_and_users(
         u_fields: List[str],
-        requested_groups: List[Optional[UserGroup]],
+        requested_groups: RequestedGroups,
         d: DocInfo,
         current_user: User,
         autoalias: bool = False,
@@ -132,12 +139,11 @@ def get_fields_and_users(
     :param user_groups: user groups to always include in the result. NOTE: this bypasses view access checks!
     :return: fielddata, aliases, field_names
     """
-    include_all_answered = None in requested_groups
-    if include_all_answered:
+    if requested_groups.include_all_answered:
         allow_non_teacher = False
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
-    for group in requested_groups:
+    for group in requested_groups.groups:
         if not group:
             continue
         if needs_group_access_check and group.name != current_user.name:
@@ -245,7 +251,7 @@ def get_fields_and_users(
     join_relation = member_filter_relation_map[member_filter_type]
     tally_field_values = get_tally_field_values(d,
                                                 doc_map,
-                                                group_filter if not include_all_answered else None,
+                                                group_filter if not requested_groups.include_all_answered else None,
                                                 join_relation,
                                                 tally_fields)
     sub = []
@@ -255,7 +261,7 @@ def get_fields_and_users(
     not_global_taskids = [t for t in task_ids if not t.is_global]
     for task_chunk in chunks(not_global_taskids, 6):
         q = valid_answers_query(task_chunk).join(User, Answer.users)
-        if not include_all_answered:
+        if not requested_groups.include_all_answered:
             q = q.join(UserGroup, join_relation).filter(group_filter)
         sub += (
                 q
@@ -270,7 +276,7 @@ def get_fields_and_users(
         user_ids.add(uid)
 
     q1 = User.query.join(UserGroup, join_relation).filter(group_filter)
-    if include_all_answered:
+    if requested_groups.include_all_answered:
         # if no group filter is given, attempt to get users that have valid answers only using the user
         # ids from previous query
         id_filter = User.id.in_(user_ids)
@@ -324,7 +330,7 @@ def get_fields_and_users(
             obj = {'user': user, 'fields': user_tasks, 'styles': user_fieldstyles}
             res.append(obj)
             if member_filter_type != MembershipFilter.Current:
-                m_end = get_membership_end(user, group_id_set, include_all_answered)
+                m_end = get_membership_end(user, group_id_set, requested_groups.include_all_answered)
                 if m_end:
                     obj['groupinfo'] = {'membership_end': time.mktime(m_end.timetuple())}
             last_user = uid
