@@ -194,6 +194,14 @@ class Language:
     def sourcefilename(self, val):
         self.sourcefiles[0].path = val
 
+    @property
+    def fileext(self):
+        return self.sourcefiles[0].fileext
+
+    @fileext.setter
+    def fileext(self, val):
+        self.sourcefiles[0].fileext = val
+
     def extensions(self):
         return None, "", "" # list of the extensions or None for all, default fileext, default filedext
 
