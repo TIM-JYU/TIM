@@ -26,8 +26,8 @@ export function staticDynamicImport(s: string) {
             return import("tim/plugin/timTable");
         case "timMenu":
             return import("tim/plugin/timMenuController");
-        case "/cs/js/build/csPlugin.js":
-            return import("modules/cs/js/csPlugin");
+        case "/cs/js/build/csModule.js":
+            return import("modules/cs/js/csModule");
         case "/cs/js/build/stack.js":
             return import("modules/cs/js/stack");
         case "/cs/js/build/geogebra.js":
@@ -36,10 +36,6 @@ export function staticDynamicImport(s: string) {
             return import("modules/cs/js/jsav");
         case "/cs/js/build/jsframe.js":
             return import("modules/cs/js/jsframe");
-        case "/cs/js/build/extcheck.js":
-            return import("modules/cs/js/extcheck");
-        case "/cs/js/build/language_error.js":
-            return import("modules/cs/js/language_error");
         case "/field/js/build/multisave.js":
             return import("modules/fields/js/multisave");
         case "/svn/js/video.js":

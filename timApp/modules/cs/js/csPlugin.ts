@@ -1,28 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/tslint/config,no-underscore-dangle */
-import {Ace} from "ace-builds/src-noconflict/ace";
-import angular, {IController, IScope} from "angular";
+import {
+        Component,
+        ViewChild,
+        ChangeDetectorRef,
+        ElementRef,
+        Directive,
+    } from "@angular/core";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 import * as t from "io-ts";
 import $ from "jquery";
 import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {IAce} from "tim/editor/ace";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
-import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
-import {$compile, $http, $rootScope, $sce, $timeout, $upload} from "tim/util/ngimport";
+import {getFormBehavior} from "tim/plugin/util";
+import {$http} from "tim/util/ngimport";
 import {
     copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
     getClipboardHelper,
+    to2,
     to,
     valueDefu,
     valueOr,
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
-import {wrapText} from "tim/document/editing/utils";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
-type IAceEditor = Ace.Editor;
+import {Mode, EditorComponent, EditorFile} from "./editor/editor";
+import {CountBoardComponent} from "./editor/countboard";
+import {getInt} from "./util/util";
+import {IFile, FileSelectManagerComponent, IFileSpecification} from "./util/file-select";
+import {Set, OrderedSet} from "./util/set";
 
 // js-parsons is unused; just declare a stub to make TS happy
 declare class ParsonsWidget {
@@ -59,8 +71,6 @@ interface Vid {
 /*
 Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst#id3
 */
-
-export const csApp = angular.module("csApp", ["ngSanitize", "ngFileUpload"]);
 
 let taunoNr = 0;
 
@@ -123,35 +133,9 @@ class CWPD {
     }
 }
 
-const ConsolePWD = new CWPD();
+export const ConsolePWD = new CWPD();
 
 const csJSTypes = ["js", "glowscript", "vpython", "html", "processing", "wescheme"];
-
-// =================================================================================================================
-// Known upload files
-
-const uploadFileTypes = ["pdf", "xml"];
-
-function is(types: string[], file: string) {
-    if (!file) {
-        return false;
-    }
-    file = file.toLowerCase();
-    for (const ty of types) {
-        if (file.endsWith(ty)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function uploadFileTypesName(file: string) {
-    const s = file.split("\\").pop();
-    if (!s) {
-        return undefined;
-    }
-    return s.split("/").pop();
-}
 
 async function loadSimcir() {
     const load = await import("../simcir/simcir-all");
@@ -166,13 +150,13 @@ class LanguageTypes {
     runTypes = ["pascal", "fortran", "css", "jypeli", "scala", "java", "graphics", "cc", "c++", "shell", "vpython", "py2", "py", "fs", "clisp",
         "jjs", "psql", "sql", "alloy", "text", "cs", "run", "md", "js", "glowscript", "sage", "simcir",
         "xml", "octave", "lua", "quorum", "swift", "mathcheck", "html", "processing", "rust", "r", "wescheme", "ping", "kotlin",
-        "smalltalk", "upload", "extcheck"];
+        "smalltalk", "upload", "extcheck", "gitreg"];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
     aceModes = ["pascal", "fortran", "css", "csharp", "scala", "java", "java", "c_cpp", "c_cpp", "sh", "python", "python", "python", "fsharp", "lisp",
         "javascript", "sql", "sql", "alloy", "text", "csharp", "run", "text", "javascript", "javascript", "python", "json",
         "xml", "matlab", "lua", "quorum", "swift", "text", "html", "javascript", "text", "r", "scheme", "text", "kotlin",
-        "text", "text", "c_cpp"];
+        "text", "text", "c_cpp", "text"];
 
     // What are known test types (be careful not to include partial word):
     testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest"];
@@ -212,10 +196,10 @@ class LanguageTypes {
         return def;
     }
 
-    whatIsInAce(types: string[], type: string, def: string) {
+    whatIsInAce(types: string[], type: string) {
 
         if (!type) {
-            return def;
+            return undefined;
         }
         type = type.toLowerCase();
         for (let i = 0; i < types.length; i++) {
@@ -229,7 +213,7 @@ class LanguageTypes {
                 return this.testAceModes[i];
             }
         }
-        return def;
+        return undefined;
     }
 
     isAllType(type: string) {
@@ -253,11 +237,13 @@ class LanguageTypes {
         return this.whatIsIn(this.runTypes, type, def);
     }
 
-    getAceModeType(type: string, def: string) {
+    getAceModeType(type: string): string | undefined;
+    getAceModeType(type: string, def: string): string;
+    getAceModeType(type: string, def?: string) {
         if (def) {
             return def;
         }
-        return this.whatIsInAce(this.runTypes, type, def);
+        return this.whatIsInAce(this.runTypes, type) ?? def as string;
     }
 
     getTestType(type: string, language: string, def: string) {
@@ -293,7 +279,7 @@ class LanguageTypes {
     }
 }
 
-const languageTypes = new LanguageTypes();
+export const languageTypes = new LanguageTypes();
 
 // =================================================================================================================
 
@@ -321,223 +307,6 @@ function commentTrim(s: string) {
         return s;
     }
     return s.substr(3);
-}
-
-export function uploadTemplate() {
-    // language=HTML
-    return `
-    <div ng-if="::$ctrl.upload" class="form-inline small">
-        <div class="form-group small"> {{::$ctrl.uploadstem}}:
-            <input type="file" ngf-select="$ctrl.onFileSelect($file)">
-            <span ng-show="$ctrl.fileProgress >= 0 && !$ctrl.fileError"
-                ng-bind="$ctrl.fileProgress < 100 ? 'Uploading... ' + $ctrl.fileProgress + '%' : 'Done!'"></span>
-        </div>
-        <div class="error" ng-show="$ctrl.fileError" ng-bind="$ctrl.fileError"></div>
-        <div ng-if="$ctrl.uploadresult"><span ng-bind-html="$ctrl.uploadresult"></span></div>
-    </div>`;
-}
-
-function makeTemplate() {
-    // language=HTML
-    return `<div ng-class="::{'csRunDiv': $ctrl.attrs.borders}" class="type-{{::$ctrl.rtype}}">
-    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
-    <div ng-if="$ctrl.isTauno">
-        <p ng-if="$ctrl.taunoOn" class="pluginHide"><a ng-click="$ctrl.hideTauno()">{{$ctrl.hideText}} Tauno</a></p>
-        <iframe ng-if="$ctrl.iframesettings"
-                id="{{$ctrl.iframesettings.id}}"
-                class="showTauno"
-                ng-src="{{$ctrl.iframesettings.src}}"
-                ng-on-load="$ctrl.onIframeLoad($event)"
-                width="{{$ctrl.iframesettings.width}}"
-                height="{{$ctrl.iframesettings.height}}"
-                sandbox="allow-scripts"></iframe>
-        <p ng-if="!$ctrl.taunoOn" class="pluginShow"><a ng-click="$ctrl.showTauno()">{{$ctrl.showText}} Tauno</a></p>
-        <p ng-if="$ctrl.taunoOn"
-           class="pluginHide">
-            <a ng-click="$ctrl.copyTauno()">{{::$ctrl.copyFromTaunoText}}</a> |
-            <a ng-click="$ctrl.hideTauno()">{{::$ctrl.hideText}} Tauno</a></p>
-        <p ng-if="$ctrl.taunoOn" class="taunoOhje">
-            {{::$ctrl.taunoOhjeText}}</a></p>
-    </div>
-    <div ng-if="::$ctrl.isSimcir">
-        <p ng-if="$ctrl.simcirOn" class="pluginHide"><a ng-click="$ctrl.hideSimcir()">{{$ctrl.hideText}} SimCir</a></p>
-        <div class="simcirContainer"><p></p></div>
-        <p ng-if="!$ctrl.simcirOn" class="pluginShow"><a ng-click="$ctrl.showSimcir()">{{$ctrl.showText}} SimCir</a></p>
-        <p ng-if="$ctrl.simcirOn && !$ctrl.noeditor" class="pluginHide">
-            <a ng-click="$ctrl.copyFromSimcir()">copy from SimCir</a>
-            | <a ng-click="$ctrl.copyToSimcir()">copy to SimCir</a> | <a ng-click="$ctrl.hideSimcir()">hide SimCir</a>
-        </p>
-    </div>`
-    + uploadTemplate() +
-    `<div ng-show="::$ctrl.isAll" style="float: right;">{{::$ctrl.languageText}}
-        <select ng-model="$ctrl.selectedLanguage" ng-options="o for o in ::$ctrl.progLanguages" ng-required></select>
-    </div>
-    <pre ng-if="$ctrl.viewCode && $ctrl.codeover">{{$ctrl.code}}</pre>
-    <div class="csRunCode">
-        <pre class="csRunPre" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.precode}}</pre>
-        <div class="csEditorAreaDiv">
-            <div class="csrunEditorDiv" ng-hide="$ctrl.noeditor && !$ctrl.viewCode">
-            <textarea class="csRunArea csEditArea no-popup-menu"
-                      rows="{{$ctrl.rows}}"
-                      ng-model="$ctrl.usercode"
-                      ng-trim="false"
-                      ng-attr-placeholder="{{$ctrl.placeholder}}"> 
-            </textarea>
-            </div>
-            <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
-            <div class="csRunNotSaved" ng-show="$ctrl.isUnSaved()"></div>
-        </div>
-        <pre class="csRunPost" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.postcode}}</pre>
-    </div>
-    <div ng-if="::$ctrl.isSage" class="computeSage no-popup-menu"></div>
-    <div class="csInputDiv" ng-hide="::!$ctrl.showInput || !$ctrl.isInput"><p ng-show="::$ctrl.inputstem" class="stem">
-        {{::$ctrl.inputstem}}</p>
-        <div class="csRunCode"><textarea class="csRunArea csInputArea"
-                                         rows={{::$ctrl.inputrows}}
-                                         ng-model="$ctrl.userinput"
-                                         ng-trim="false"
-                                         placeholder="{{::$ctrl.inputplaceholder}}"></textarea></div>
-    </div>
-    <div class="csArgsDiv" ng-hide="::!$ctrl.showArgs || !$ctrl.isInput"><label>{{::$ctrl.argsstem}} </label>
-        <span><input type="text"
-                     class="csArgsArea"
-                     ng-model="$ctrl.userargs"
-                     ng-trim="false"
-                     placeholder="{{::$ctrl.argsplaceholder}}"></span>
-    </div>
-    <div ng-if="$ctrl.countItems" class="csPluginCountItems">
-        <span ng-if="$ctrl.countLines">Lines: <span>{{$ctrl.lineCount}}</span></span>
-        <span ng-if="$ctrl.countWords">Words: <span>{{$ctrl.wordCount}}</span></span>
-        <span ng-if="$ctrl.countChars">Chars: <span>{{$ctrl.charCount}}</span></span>
-    </div>    
-    <div ng-if="$ctrl.countError" class="csPluginCountError">
-        <p>{{$ctrl.countError}}</p>
-    </div>    
-    <p class="csRunSnippets" ng-if="::$ctrl.buttons">
-        <button ng-repeat="item in ::$ctrl.buttons" ng-click="$ctrl.addText(item)">{{$ctrl.addTextHtml(item)}}</button>
-        &nbsp;&nbsp;
-    </p>
-    <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
-        <p class="csRunMenu">
-            <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
-                    ng-disabled="$ctrl.isRunning || $ctrl.preventSave || ($ctrl.disableUnchanged && !$ctrl.isUnSaved() && $ctrl.isText)"
-                    class="timButton btn-sm"
-                    title="(Ctrl-S)"
-                    ng-click="$ctrl.runCode()"
-                    ng-bind-html="::$ctrl.buttonText()"></button>
-            <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
-            ng-click="$ctrl.tryResetChanges();">
-                &nbsp;{{::$ctrl.undoButton}}
-            </a>
-            &nbsp&nbsp
-            <span ng-if="$ctrl.savedText"
-                    class="savedText"
-                    ng-bind-html="$ctrl.savedText"></span>
-            &nbsp&nbsp
-            <button ng-if="::$ctrl.isTest"
-                    ng-disabled="$ctrl.isRunning"
-                    ng-click="$ctrl.runTest()"
-                    class="timButton btn-sm">Test</button>
-            &nbsp&nbsp
-            <button ng-if="::$ctrl.isUnitTest"
-                    class="timButton btn-sm"
-                    ng-disabled="$ctrl.isRunning"
-                    ng-click="$ctrl.runUnitTest()">UTest
-            </button>
-            <tim-loading ng-if="$ctrl.isRunning"></tim-loading>
-            &nbsp&nbsp<span ng-if="::$ctrl.isDocument">
-
-            <a href="" ng-disabled="$ctrl.isRunning"
-               ng-click="$ctrl.runDocument()">{{$ctrl.docLink}}</a>&nbsp&nbsp</span>
-            <a href=""
-               ng-if="::!$ctrl.nocode && ($ctrl.file || $ctrl.program)"
-               ng-click="$ctrl.showCode()">{{$ctrl.showCodeLink}}</a>&nbsp&nbsp
-            <a href=""
-               ng-if="$ctrl.muokattu"
-               ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a>
-            <a href=""
-               ng-if="$ctrl.toggleEditor"
-               ng-click="$ctrl.hideShowEditor()">{{$ctrl.toggleEditorText[$ctrl.noeditor ? 0 : 1]}}</a>
-            <a href=""
-               ng-if="!$ctrl.noeditor"
-               ng-click="$ctrl.showOtherEditor()">
-                {{$ctrl.editorText[$ctrl.editorModeIndecies[$ctrl.editorMode+1]]}}</a>&nbsp&nbsp
-            <a href=""
-               ng-if="::$ctrl.attrs.copyLink"
-               ng-click="$ctrl.copyCode()">{{$ctrl.attrs.copyLink}}</a>
-            <span ng-if="::$ctrl.showRuntime"
-                  class="inputSmall"
-                  style="float: right;"
-                  title="Run time in sec {{$ctrl.runtime}}">{{$ctrl.oneruntime}}</span>
-            <span ng-if="$ctrl.wrap.n!=-1 && !$ctrl.hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
-                <button class="timButton" title="Click to reformat text for given line length" ng-click="$ctrl.checkWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
-                </button>
-                <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto" style="position: relative;top: 0.3em;"/>
-                <input type="text" title="Choose linelength for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
-            </span>
-            <div ng-if="$ctrl.connectionErrorMessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionErrorMessage"></div>
-
-            <!--
-            <span ng-if="$ctrl.wrap.n!=-1" class="inputSmall" style="float: right;">
-              <label title="Put 0 to no wrap">wrap: <input type="text"
-                                                          ng-pattern="/[-0-9]*/"
-                                                          ng-model="$ctrl.wrap.n"
-                                                          size="1"/></label>
-            </span>
-            -->
-            </p>
-
-    </div>
-    <div ng-if="::$ctrl.isSage" class="outputSage no-popup-menu"></div>
-    <pre ng-if="$ctrl.viewCode && $ctrl.codeunder">{{$ctrl.code}}</pre>
-    <p class="unitTestGreen" ng-if="$ctrl.runTestGreen">&nbsp;ok</p>
-    <pre class="unitTestRed" ng-if="$ctrl.runTestRed">{{$ctrl.comtestError}}</pre>
-    <div class="csRunErrorClass" ng-if="$ctrl.runError">
-        <p class="pull-right">
-            <tim-close-button ng-click="$ctrl.closeError()"></tim-close-button>
-        </p>
-        <pre class="csRunError" >{{$ctrl.error}}</pre>
-        <p class="pull-right" style="margin-top: -1em">
-            <tim-close-button ng-click="$ctrl.closeError()"></tim-close-button>
-        </p>
-    </div>
-    <pre class="console" ng-show="$ctrl.result">{{$ctrl.result}}</pre>
-    <div class="htmlresult" ng-if="$ctrl.htmlresult"><span ng-bind-html="$ctrl.svgImageSnippet()"></span></div>
-    <div class="csrunPreview">
-        <div ng-if="$ctrl.iframesettings && !$ctrl.isTauno"
-         tim-draggable-fixed
-         caption="Preview"
-         detachable="true"
-         class="no-popup-menu">
-        <span class="csRunMenu">
-            <tim-close-button
-                    ng-click="$ctrl.closeFrame()"
-                    style="float: right"></tim-close-button>
-        </span>
-        <iframe id="{{$ctrl.iframesettings.id}}"
-                class="jsCanvas"
-                ng-src="{{$ctrl.iframesettings.src}}"
-                ng-on-load="$ctrl.onIframeLoad($event)"
-                width="{{$ctrl.iframesettings.width}}"
-                height="{{$ctrl.iframesettings.height}}"
-                sandbox="allow-scripts allow-forms"
-                style="border:0"></iframe>
-        </div>
-    </div>
-    <img ng-if="$ctrl.imgURL" class="grconsole" ng-src="{{$ctrl.imgURL}}" alt=""/>
-    <video ng-if="$ctrl.wavURL" ng-src="{{$ctrl.wavURL}}" type="video/mp4" controls="" autoplay="true" width="300"
-           height="40"></video>
-    <div ng-if="$ctrl.docURL" class="docurl">
-        <p class="pull-right">
-            <tim-close-button ng-click="$ctrl.closeDocument()"></tim-close-button>
-        </p>
-        <iframe width="800" height="600" ng-src="{{$ctrl.docURL}}" target="csdocument" allowfullscreen/>
-    </div>
-    <p class="footer" ng-bind-html="::$ctrl.footer"></p>
-</div>
-`;
 }
 
 function insertAtCaret(txtarea: HTMLTextAreaElement, text: string) {
@@ -574,24 +343,6 @@ function insertAtCaret(txtarea: HTMLTextAreaElement, text: string) {
     txtarea.scrollTop = scrollPos;
 }
 
-function getInt(s: string | number) {
-    if (typeof s === "number") {
-        return s;
-    }
-    const n = parseInt(s, 10);
-    if (isNaN(n)) {
-        return undefined;
-    }
-    return n;
-}
-
-function countChars(s: string, c: string) {
-    let n = 0;
-    for (let i = 0; i < s.length; n += +(c === s[i++])) {
-    }
-    return n;
-}
-
 function doVariables(v: string | undefined, name: string) {
     if (!v) {
         return "";
@@ -613,6 +364,12 @@ interface IExtraMarkup {
 
 const CspluginAnswer = t.type({usercode: t.string});
 
+interface IUploadResponse {
+    file: string;
+    type: string;
+    block: number;
+}
+
 /**
  * This defines the required format for the csPlugin YAML markup.
  * All fields in the markup are optional (as indicated by t.partial function).
@@ -621,34 +378,191 @@ const CspluginAnswer = t.type({usercode: t.string});
  * and the plugin won't work until the problem is fixed.
  */
 
-const Example = t.type({
+export const Example = t.type({
     expr: t.string,
     title: t.string,
 });
 
-const CopyFiles = t.union([
-    t.array(t.string),
+const CountLimit = t.partial({
+    show: t.boolean,
+    min: t.number,
+    max: t.number,
+    text: t.string,
+});
+interface ICountLimit extends t.TypeOf<typeof CountLimit> {}
+
+const CountType = t.partial({
+    preventSave: t.boolean,
+    tooManyWord: t.string,
+    tooFewWord: t.string,
+    lines: CountLimit,
+    words: CountLimit,
+    chars: CountLimit,
+});
+interface ICountType extends t.TypeOf<typeof CountType> {}
+
+const oneOrArray = <T extends t.Mixed>(type: T) => t.union([type, t.array(type)]);
+const listify = <T>(e: T | T[]) => Array.isArray(e) ? e : [e];
+
+const CommonMarkup = t.intersection([
+    t.union([
+        t.type({program: t.string}), // TODO
+        t.type({fullprogram: t.string}), // TODO
+        t.type({file: t.string}), // TODO
+        t.type({fullfile: t.string}), // TODO
+        t.type({}),
+    ]),
+    t.union([
+        t.type({byCode: t.string}),
+        t.type({byFile: t.string}), // TODO
+        t.type({}),
+    ]),
+    t.partial({maxSize: t.number}),
+]);
+type ICommonMarkup = t.TypeOf<typeof CommonMarkup>;
+
+const EditorMarkupFields = t.intersection([ // no source attribute
     t.type({
-        master: t.array(t.string),
-        task: t.array(t.string),
+        path: t.string,
+        canClose: withDefault(t.boolean, false),
+        canRename: withDefault(t.boolean, false),
     }),
+    t.partial({
+        mode: t.string,
+        placeholder: t.string,
+    }),
+    CommonMarkup,
 ]);
 
-interface ICountLimit {
-    show?: boolean;
-    min?: number;
-    max?: number;
-    text?: string;
-}
+const EditorMarkup = // with source attribute
+    t.intersection([
+        t.type({
+            source: t.literal("editor"),
+        }),
+        EditorMarkupFields,
+    ]);
+type IEditorMarkup = t.TypeOf<typeof EditorMarkup>;
 
-interface ICountType {
-    preventSave?: boolean;
-    tooManyWord?: string;
-    tooFewWord?: string;
-    lines?: ICountLimit;
-    words?: ICountLimit;
-    chars?: ICountLimit;
-}
+const UploadMarkupFields = t.intersection([// no source or paths attribute
+    t.partial({
+        maxSize: t.number,
+        extensions: oneOrArray(t.string),
+    }),
+    CommonMarkup,
+]);
+
+const UploadMarkup = // with source and paths attribute
+    t.intersection([
+        t.type({
+            paths: oneOrArray(t.string),
+            source: t.literal("upload"),
+        }),
+        UploadMarkupFields,
+    ]);
+type IUploadMarkup = t.TypeOf<typeof UploadMarkup>;
+
+const UploadByCodeMarkup =
+    t.intersection([
+        t.type({
+            source: t.literal("uploadByCode"),
+            show: withDefault(
+                t.union([
+                    t.boolean,
+                    t.literal("loaded"), // show after load
+                ]), false
+            ),
+        }),
+        EditorMarkupFields,
+        UploadMarkupFields,
+    ]);
+type IUploadByCodeMarkup = t.TypeOf<typeof UploadByCodeMarkup>;
+
+const ExternalSourceMarkup =
+    t.intersection([
+        t.type({
+            path: t.string,
+            source: t.string,
+        }),
+        t.partial({
+            maxSize: t.number,
+            maxTotalSize: t.number,
+        }),
+    ]);
+interface IExternalSourceMarkup extends t.TypeOf<typeof ExternalSourceMarkup> {}
+
+const FileMarkup =
+    t.union([
+        t.type({source: withDefault(t.string, "editor")}),
+        EditorMarkup,
+        UploadMarkup,
+        UploadByCodeMarkup,
+        ExternalSourceMarkup,
+    ]);
+type IFileMarkup = IEditorMarkup | IUploadMarkup | IUploadByCodeMarkup | IExternalSourceMarkup;
+
+const FileSubmission = t.intersection([
+    t.type({
+        source: t.string,
+        path: t.string,
+    }),
+    t.partial({
+        content: nullable(t.string),
+        type: t.string,
+    }),
+]);
+export interface IFileSubmission extends t.TypeOf<typeof FileSubmission> {}
+
+const UploadedFile = t.type({
+    path: t.string,
+    type: t.string,
+});
+interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
+
+const GitDefaultsMarkup = t.partial({
+    url: t.string,
+    user: t.string,
+    branch: t.string,
+    library: t.string,
+    glob: t.string,
+    cache: t.number,
+    apiProtocol: t.string,
+    librarySpecific: t.any,
+});
+
+const GitMarkup = t.partial({
+    onError: t.keyof({
+        raise: null,
+        remove: null,
+        removeall: null,
+        create: null,
+    }),
+    repo: t.intersection([
+        t.type({name: t.string}),
+        t.partial({
+            owner: t.string,
+            fork: t.boolean,
+            oldName: t.string,
+            oldOwner: t.string,
+            librarySpecific: t.unknown,
+        }),
+    ]),
+    library: t.string,
+    fields: t.dictionary(t.string,
+        t.intersection([
+            t.type({
+                value: t.unknown,
+            }),
+            t.partial({
+                onError: t.keyof({
+                    raise: null,
+                    ask: null,
+                    none: null,
+                }),
+            }),
+        ])
+    ),
+    askFields: t.array(t.string),
+});
 
 const CsMarkupOptional = t.partial({
     // TODO: this gets deleted in server but only conditionally,
@@ -656,6 +570,9 @@ const CsMarkupOptional = t.partial({
     //  Seems yes; GlowScript uses it at least.
     program: t.string,
 
+    // "*"" for everything
+    // TODO: add wildcard support to path options
+    allowedPaths: t.union([t.literal("*"), t.array(t.string)]),
     argsplaceholder: t.string,
     argsstem: t.string,
     autoupdate: t.number,
@@ -666,6 +583,8 @@ const CsMarkupOptional = t.partial({
     file: t.string,
     filename: t.string,
     fullhtml: t.string,
+    git: GitMarkup,
+    gitDefaults: GitDefaultsMarkup,
     height: t.union([t.number, t.string]),
     highlight: nullable(t.string),
     html: t.string,
@@ -698,14 +617,16 @@ const CsMarkupOptional = t.partial({
     wrap:  t.Integer,
     borders: withDefault(t.boolean, true),
     iframeopts: t.string,
-    count: t.any,
+    count: CountType,
     hide: t.any,
     savedText: t.string,
     rootPath: t.string,
     masterPath: t.string,
-    copyFiles: CopyFiles,
+    files: oneOrArray(FileMarkup),
+    moreFiles: oneOrArray(ExternalSourceMarkup),
     jsFiles: t.array(t.string),
     cssFiles: t.array(t.string),
+    deleteFiles: t.array(t.string),
 });
 
 const CsMarkupDefaults = t.type({
@@ -719,7 +640,7 @@ const CsMarkupDefaults = t.type({
     codeunder: withDefault(t.boolean, false),
     cols: withDefault(t.Integer, 10),
     copyLink: withDefault(t.string, "Copy"),
-    cssPrint: withDefault(t.boolean, false),
+    dragAndDrop: withDefault(t.boolean, true),
     editorMode: withDefault(t.Integer, -1),
     editorModes: withDefault(t.union([t.string, t.Integer]), "01"),
     iframe: withDefault(t.boolean, false), // TODO this maybe gets deleted on server
@@ -734,6 +655,7 @@ const CsMarkupDefaults = t.type({
     justSave: withDefault(t.boolean, false),
     lang: withDefault(t.string, "fi"),
     maxrows: withDefault(t.Integer, 100),
+    maxSize: withDefault(t.number, 50),
     noConsoleClear: withDefault(t.boolean, false),
     nocode: withDefault(t.boolean, false),
     norun: withDefault(t.boolean, false),
@@ -750,6 +672,9 @@ const CsMarkupDefaults = t.type({
     validityCheckForceSave: withDefault(t.boolean, false),
     viewCode: withDefault(t.boolean, false),
     words: withDefault(t.boolean, false),
+    allowMultipleFiles: withDefault(t.boolean, true),
+    multipleUploadElements: withDefault(t.boolean, true),
+    mayAddFiles: withDefault(t.boolean, false),
     /* eslint-enable quote-props */
 });
 
@@ -757,19 +682,23 @@ const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPlug
 
 const CsAll = t.intersection([
     t.partial({
+        uploadedFile: t.string,
+        uploadedType: t.string,
+        uploadedFiles: t.array(UploadedFile),
+        userargs: t.string,
+        usercode: t.string,
+        userinput: t.string,
+        submittedFiles: t.array(FileSubmission),
+        selectedLanguage: t.string,
         by: t.string,
         docurl: t.string,
         program: t.string,
         replace: t.string,
-        uploadedFile: t.string,
-        uploadedType: t.string,
-        userargs: t.string,
-        usercode: t.string,
-        userinput: t.string,
-        selectedLanguage: t.string,
         timeout: t.number,
         error: t.string,
         own_error: t.string,
+        gitRegistered: t.boolean,
+        isTauno: t.boolean,
     }),
     t.type({
         // anonymous: t.boolean,
@@ -784,19 +713,26 @@ const CsAll = t.intersection([
         // userPrint: t.boolean,
     })]);
 
-export class CsBase extends PluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
-    protected usercode: string = "";
+export class CsBase extends AngularPluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
+    usercode_: string = "";
+
+    get usercode(): string {
+        return this.usercode_;
+    }
+    set usercode(str: string) {
+        this.usercode_ = str;
+    }
 
     get byCode() {
-        return commentTrim((this.attrsall.by ?? this.attrs.byCode) ?? "");
+        return commentTrim((this.attrsall.by ?? this.markup.byCode) ?? "");
     }
 
     get type() {
-        return this.attrs.type;
+        return this.markup.type;
     }
 
     get path() {
-        return this.attrs.path;
+        return this.markup.path;
     }
 
     getAttributeType() {
@@ -848,14 +784,6 @@ function createIframe(
     return f;
 }
 
-function createLink(file: string, type: string, name?: string) {
-    const link = document.createElement("a");
-    link.href = file;
-    link.title = type;
-    link.innerText = name ?? "Link";
-    return link;
-}
-
 interface IFrameLoad {
     iframe: HTMLIFrameElement & { contentWindow: WindowProxy };
     channel: MessageChannel;
@@ -878,111 +806,322 @@ interface IRunResponseWeb {
     "-replyMD"?: string,
 }
 
-interface IRunResponse {
+export interface IRunResponse {
     web: IRunResponseWeb,
     savedNew: number,
 }
 
+interface IFetchResponse {
+    error?: string,
+    files: IFileSubmission[],
+}
+
+
+interface IRunRequestInput extends Partial<IExtraMarkup> {
+    usercode?: string;
+    submittedFiles?: IFileSubmission[];
+    userinput: string;
+    isInput: boolean;
+    userargs: string;
+    uploadedFile?: string;
+    uploadedType?: string;
+    uploadedFiles?: {path: string, type: string}[];
+    nosave: boolean;
+    type: string,
+    selectedLanguage?: string;
+}
+
+export interface IRunRequest {
+    input: IRunRequestInput;
+}
+
+@Directive() // needs this or compiler complains
 export class CsController extends CsBase implements ITimComponent {
-    private vctrl!: ViewCtrl;
+    vctrl!: ViewCtrl;
 
-    private aceEditor?: IAceEditor;
-    private canvasConsole: {log: (...args: string[]) => void};
-    private code?: string;
-    private codeInitialized: boolean = false;
-    private comtestError?: string;
-    private connectionErrorMessage?: string;
-    private copyingFromTauno: boolean;
-    private csparson: any;
-    private cursor: string;
-    private docLink: string;
-    private docURL?: string;
-    private edit!: HTMLTextAreaElement;
-    private edited: boolean = false;
-    private editArea?: Element;
-    private editorIndex: number;
-    private editorMode!: number;
-    private editorModeIndecies: number[];
-    private error?: string;
-    private errors: string[];
-    private fileError?: string;
-    private fileProgress?: number;
-    private htmlresult: string;
-    private iframeClientHeight: number;
-    private imgURL: string;
-    private indent!: number;
-    private initUserCode: boolean = false;
-    private isRunning: boolean = false;
-    private lastJS: string;
-    private lastMD: string;
-    private lastUserargs?: string;
-    private lastUserinput?: string;
-    private localcode?: string;
-    private maxRows!: number;
-    private muokattu: boolean;
-    private noeditor!: boolean;
-    private oneruntime?: string;
-    private out?: {write: () => void, writeln: () => void, canvas: Element};
-    private postcode?: string;
-    private precode?: string;
-    private preview!: JQuery<HTMLElement>;
-    private result?: string;
-    private runError?: string | boolean;
-    private runned: boolean = false;
-    private runSuccess: boolean;
-    private runTestGreen: boolean = false;
-    private runTestRed: boolean = false;
-    private runtime?: string;
-    private sageArea?: Element;
-    private sageButton?: HTMLElement;
-    private sagecellInfo?: CellInfo;
-    private sageInput?: HTMLInputElement;
-    private sageOutput?: Element;
-    private selectedLanguage!: string;
-    private simcir?: JQuery;
-    private tinyErrorStyle: Partial<CSSStyleDeclaration> = {};
-    private uploadedFile?: string;
-    private uploadedType?: string;
-    private uploadresult?: string;
-    private userargs: string = "";
-    private userinput: string = "";
-    private viewCode!: boolean;
-    private wavURL: string = "";
-    private wrap!:  {n: number, auto: boolean};
-    private buttons: string[] = [];
+    autoupdateHandle?: number;
+    canvasConsole: {log: (...args: string[]) => void};
+    code?: string;
+    codeInitialized: boolean = false;
+    comtestError?: string;
+    connectionErrorMessage?: string;
+    copyingFromTauno: boolean;
+    docLink: string;
+    docURL?: SafeResourceUrl;
+    edited: boolean = false;
+    editArea?: Element;
+    editorIndex: number;
+    error?: string;
+    errors: string[];
+    externalFiles?: IFileSubmission[];
+    fetchError?: string;
+    fileError?: string;
+    fileProgress?: number;
+    htmlresult: string;
+    iframeClientHeight: number;
+    imgURL: string;
+    indent!: number;
+    initUserCode: boolean = false;
+    isRunning: boolean = false;
+    lastJS: string;
+    lastMD: string;
+    lastUserargs?: string;
+    lastUserinput?: string;
+    localcode?: string;
+    muokattu: boolean;
+    noeditor!: boolean;
+    oneruntime?: string;
+    out?: {write: () => void, writeln: () => void, canvas: Element};
+    postcode?: string;
+    precode?: string;
+    preview!: JQuery<HTMLElement>;
+    result?: string;
+    runError?: string | boolean;
+    runned: boolean = false;
+    runSuccess: boolean;
+    runTestGreen: boolean = false;
+    runTestRed: boolean = false;
+    runtime?: string;
+    sageArea?: Element;
+    sageButton?: HTMLElement;
+    sagecellInfo?: CellInfo;
+    sageInput?: HTMLInputElement;
+    sageOutput?: Element;
+    selectedLanguage!: string;
+    simcir?: JQuery;
+    tinyErrorStyle: Partial<CSSStyleDeclaration> = {};
+    uploadedFiles = new Set((o: IUploadedFile) => this.uploadedFileName(o.path));
+    uploadUrl?: string;
+    userargs_: string = "";
+    userinput_: string = "";
+    viewCode!: boolean;
+    wavURL: string = "";
+    wrap!:  {n: number, auto: boolean};
+    buttons: string[] = [];
+    mdHtml?: string;
 
-    // These are used only in $doCheck to keep track of the old values.
-    private dochecks: {
-        userinput?: string;
-        userargs?: string;
-        usercode?: string;
-    } = {};
+    iframesettings?: { src?: SafeResourceUrl; width: number; id: string; height: number };
+    loadedIframe?: IFrameLoad;
+    taunoFrame?: IFrameLoad;
+    simcirElem?: HTMLElement;
+    taunoCopy?: TimDefer<string>;
+    iframedefer?: TimDefer<IFrameLoad>;
+    iframemessageHandler?: (e: MessageEvent) => void;
+    savedvals?: { args: string; input: string; code: string[] };
+    preventSave: boolean = false;
+    hide: {wrap?: boolean, changed?: boolean} = {};
+    savedText: string = "";
+    timeout: number = 0;
+    editorModes: Mode[] = [];
+    editor?: EditorComponent;
+    externalEditor?: EditorComponent;
+    hasExternalSources: boolean = false;
+    fileSelect?: FileSelectManagerComponent;
+    upload?: boolean;
+    uploadByCodeFiles: {path: string, show: boolean | "loaded"}[] = [];
+    @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
 
-    private editorText: string[] = [];
-    private rows: number = 1;
-    private iframesettings?: { src?: string; width: number; id: string; height: number };
-    private loadedIframe?: IFrameLoad;
-    private taunoFrame?: IFrameLoad;
-    private simcirElem?: HTMLElement;
-    private taunoCopy?: TimDefer<string>;
-    private iframedefer?: TimDefer<IFrameLoad>;
-    private iframemessageHandler?: (e: MessageEvent) => void;
-    private savedvals?: { args: string; input: string; code: string };
-    private countItems: boolean = false;
-    private countLines: boolean = false;
-    private countWords: boolean = false;
-    private countChars: boolean = false;
-    private lineCount: number = 0;
-    private wordCount: number = 0;
-    private charCount: number = 0;
-    private countError: string = "";
-    private preventSave: boolean = false;
-    private hide = {};
-    private savedText: string = "";
-    private timeout: number = 0;
+    @ViewChild("externalEditor")
+    set externalEditorViewSetter(new_value: EditorComponent | undefined) {
+        this.externalEditor = new_value;
+        this.updateExternalEditor();
+    }
 
-    constructor(scope: IScope, element: JQLite) {
-        super(scope, element);
+    updateExternalEditor() {
+        const files: EditorFile[] = [];
+        if (!this.externalEditor) {
+            return;
+        }
+
+        if (this.externalFiles) {
+            for (const f of this.externalFiles) {
+                const file = new EditorFile(f.path);
+                file.content = f.content ?? "";
+                files.push(file);
+            }
+        }
+
+        this.externalEditor.modes = [new Mode(Mode.Normal)];
+        this.externalEditor.setFiles(files);
+    }
+
+    @ViewChild("mainEditor")
+    set editorViewSetter(new_value: EditorComponent | undefined) {
+        this.editor = new_value;
+        if (!this.editor) {
+            return;
+        }
+
+        if (this.attrsall.submittedFiles || this.markup.files) {
+            const files = new OrderedSet<EditorFile>((f) => f.path);
+            const defaultMode = this.markup.mode ?? languageTypes.getAceModeType(this.type);
+            if (this.markup.files) {
+                const markupFiles = (listify(this.markup.files))
+                        .filter((f) => f.source == "editor" || (f.source == "uploadByCode" && (f as IUploadByCodeMarkup).show === true)) as
+                        (IEditorMarkup | IUploadByCodeMarkup)[];
+                for (const f of markupFiles) {
+                    let base: string | undefined;
+                    if ("byCode" in f) {
+                        this.initUserCode = true;
+                        base = f.byCode;
+                    }
+                    const file = new EditorFile(f.path, base, f.mode ?? defaultMode, f.canClose, f.canRename);
+                    files.push(file);
+                    file.placeholder = f.placeholder ?? this.placeholder;
+                }
+            }
+
+            if (this.attrsall.submittedFiles) {
+                for (const file of this.attrsall.submittedFiles) {
+                    let include = false;
+                    if (file.source == "editor") {
+                        include = true;
+                    } else if (file.source == "uploadByCode") {
+                        if (this.markup.files) {
+                            if (((listify(this.markup.files)).find((f) => f.source == "uploadByCode" && (f as IUploadByCodeMarkup).path == file.path) as IUploadByCodeMarkup)?.show) {
+                                include = true;
+                            }
+                        } else if(this.markup.uploadbycode && file.path == "") {
+                            include = true;
+                        }
+                    }
+                    if (include) {
+                        const f = files.getByKey(file.path) ?? new EditorFile(file.path, "", defaultMode);
+                        f.content = file.content ?? "";
+                        files.push(f);
+                    }
+                }
+            }
+
+            for (const file of files) {
+                let code = file.content;
+                code = commentTrim(code);
+                if (this.markup.blind) {
+                    code = code.replace(/@author.*/, "@author XXXX");
+                }
+                file.content = code;
+            }
+
+            this.editor.setFiles(files.toArray());
+
+            if (this.savedvals) {
+                this.savedvals.code = files.toArray().map((f) => f.content);
+            }
+        } else {
+            let usercode: string = this.attrsall.usercode ?? "";
+            if (this.attrsall.usercode == null) {
+                if (this.byCode) {
+                    usercode = this.byCode;
+                    this.initUserCode = true;
+                }
+            }
+            usercode = commentTrim(usercode);
+            if (this.markup.blind) {
+                usercode = usercode.replace(/@author.*/, "@author XXXX");
+            }
+            this.editor.content = usercode;
+            this.editor.languageMode = this.mode;
+
+            if (this.savedvals) {
+                this.savedvals.code = [this.usercode];
+            }
+        }
+        this.editor.placeholder = this.placeholder;
+        this.editor.mayAddFiles = this.markup.mayAddFiles;
+        if (this.markup?.allowedPaths != "*") {
+            this.editor.allowedPaths = this.editor.files.map((f) => f.path).concat(this.markup?.allowedPaths ?? []);
+        }
+    }
+
+    @ViewChild(FileSelectManagerComponent)
+    set fileSelectSetter(component: FileSelectManagerComponent | undefined) {
+        this.fileSelect = component;
+        if(!component || !this.upload) {
+            return;
+        }
+
+        const files: IFileSpecification[] = [];
+        if (this.markup.files) {
+            const markupFiles = (listify(this.markup.files))
+                    .filter((f) => f.source == "upload" || f.source == "uploadByCode") as
+                    (IUploadMarkup | IUploadByCodeMarkup)[];
+            for (const fs of markupFiles) {
+                const paths = listify("path" in fs ? fs.path : fs.paths);
+                let extensions: string[] | undefined;
+                if (fs.extensions) {
+                    extensions = listify(fs.extensions);
+                } else {
+                    const exts = paths.map((p) => "." + (p.split(".").slice(1)[0] ?? "")).filter((ext) => ext != ".");
+                    if (exts.length != 0) {
+                        extensions = exts;
+                    }
+                }
+                files.push({
+                    paths: paths, // TODO: handle no filename
+                    extensions: extensions,
+                    maxSize: fs.maxSize ?? this.markup.maxSize,
+                    upload: fs.source == "upload",
+                });
+                if (fs.source == "uploadByCode") {
+                    this.uploadByCodeFiles.push(
+                        ...paths.map((p) => ({path: p, show: fs.show ?? false}))
+                    );
+                }
+            }
+        } else if (this.markup.type.includes("upload") || this.markup.upload || this.markup.uploadbycode) {
+            const isByCode = !!this.markup.uploadbycode;
+            const path = this.markup.filename ?? "";
+            files.push({
+                paths: [path],
+                maxSize: this.markup.maxSize,
+                upload: !isByCode,
+            });
+            if (isByCode) {
+                this.uploadByCodeFiles.push({path: path, show: !this.noeditor});
+            }
+        }
+
+        component.allowMultiple = this.markup.allowMultipleFiles;
+        component.multipleElements = this.markup.multipleUploadElements;
+        component.files = files;
+    }
+
+    get usercode(): string {
+        return this.editor?.content ?? super.usercode;
+    }
+
+    set usercode(str: string) {
+        super.usercode = str;
+        if (this.editor) {
+            this.editor.content = str;
+        }
+    }
+
+    get userinput() {
+        return this.userinput_;
+    }
+    set userinput(str: string) {
+        const tmp = this.userinput_;
+        this.userinput_ = str;
+        if (tmp != str) {
+            this.anyChanged();
+        }
+    }
+
+    get userargs() {
+        return this.userargs_;
+    }
+    set userargs(str: string) {
+        const tmp = this.userargs_;
+        this.userargs_ = str;
+        if (tmp != str) {
+            this.anyChanged();
+        }
+    }
+
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer);
+
         this.errors = [];
         this.result = "";
         this.htmlresult = "";
@@ -1004,19 +1143,21 @@ export class CsController extends CsBase implements ITimComponent {
 
         this.lastJS = "";
         this.iframeClientHeight = -1;
-        this.cursor = "⁞"; // \u0383"; //"\u0347"; // "\u02FD";
         this.docLink = "Document";
         this.muokattu = false;
         this.editorIndex = 0;
-        this.editorModeIndecies = [];
     }
 
     onIframeLoad(e: Event) {
+        const fr = e.target as HTMLIFrameElement & {contentWindow: WindowProxy};
+        // onIframeLoad gets called twice on chrome, on the first time src is empty
+        if (fr.src == "") { return; }
+
         const channel = new MessageChannel();
         if (this.iframemessageHandler) {
             channel.port1.onmessage = this.iframemessageHandler;
         }
-        const fr = e.target as HTMLIFrameElement & {contentWindow: WindowProxy};
+
         fr.contentWindow.postMessage({msg: "init"}, "*", [channel.port2]);
         this.iframedefer?.resolve({iframe: fr, channel});
     }
@@ -1034,7 +1175,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     formBehavior(): FormModeOption {
-        return getFormBehavior(this.attrs.form, FormModeOption.Undecided);
+        return getFormBehavior(this.markup.form, FormModeOption.Undecided);
     }
 
     setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
@@ -1042,6 +1183,7 @@ export class CsController extends CsBase implements ITimComponent {
         let message;
         let ok = true;
         if (CspluginAnswer.is(content)) {
+            // TODO: add support for multiple files
             // TODO: Add support for userArgs/userInput
             this.usercode = content.usercode;
             this.initSaved();
@@ -1059,10 +1201,22 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     hasUnSavedInput(): boolean {
-        return this.savedvals != null && (
-            this.savedvals.code !== this.usercode ||
-            this.savedvals.args !== this.userargs ||
-            this.savedvals.input !== this.userinput) && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
+        if (this.savedvals == null) {
+            return false;
+        }
+        if (this.editor) {
+            const allFiles = this.editor.allFiles;
+            if (allFiles.length != this.savedvals.code.length) {
+                return true;
+            }
+            for (let i = 0; i < allFiles.length; ++i) {
+                if (allFiles[i].content != this.savedvals.code[i]) {
+                    return true;
+                }
+            }
+        }
+        return (this.savedvals.args !== this.userargs || this.savedvals.input !== this.userinput)
+                && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
     }
 
     /**
@@ -1088,13 +1242,7 @@ export class CsController extends CsBase implements ITimComponent {
         if (!taskId) {
             return;
         }
-        this.vctrl.informChangeListeners(taskId, state, (this.attrs.tag ? this.attrs.tag : undefined));
-    }
-
-    resetField(): undefined {
-        this.initCode();
-        this.error = undefined;
-        return undefined;
+        this.vctrl.informChangeListeners(taskId, state, (this.markup.tag ? this.markup.tag : undefined));
     }
 
     tryResetChanges(): void {
@@ -1105,94 +1253,31 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     resetChanges(): void {
-        this.usercode = (this.savedvals ? this.savedvals.code : "");
+        this.usercode = this.savedvals?.code[this.editor?.editorIndex ?? 0] ?? "";
         this.userargs = (this.savedvals ? this.savedvals.args : "");
         this.userinput = (this.savedvals ? this.savedvals.input : "");
         this.edited = false;
         this.updateListeners(ChangeType.Saved);
     }
 
-    svgImageSnippet() {
-        return $sce.trustAsHtml(this.htmlresult);
-    }
-
     get english() {
-        return this.attrs.lang === "en";
-    }
-
-    get kind() {
-        let kind;
-        switch (this.getRootElement().tagName.toLowerCase()) {
-            case "cs-runner":
-                kind = "console";
-                break;
-            case "cs-jypeli-runner":
-                kind = "jypeli";
-                break;
-            case "cs-comtest-runner":
-                kind = "comtest";
-                break;
-            case "cs-runner-input":
-                kind = "console";
-                break;
-            case "cs-jypeli-runner-input":
-                kind = "jypeli";
-                break;
-            case "cs-comtest-runner-input":
-                kind = "comtest";
-                break;
-            case "cs-tauno-runner":
-                kind = "tauno";
-                break;
-            case "cs-tauno-runner-input":
-                kind = "tauno";
-                break;
-            case "cs-parsons-runner":
-                kind = "parsons";
-                break;
-            case "cs-sage-runner":
-                kind = "sage";
-                break;
-            case "cs-geogebra-runner":
-                kind = "geogebra";
-                break;
-            case "cs-jsav-runner":
-                kind = "jsav";
-                break;
-            case "cs-simcir-runner":
-                kind = "simcir";
-                break;
-            case "cs-text-runner":
-                kind = "text";
-                break;
-            case "cs-wescheme-runner":
-                kind = "wescheme";
-                break;
-            case "cs-extcheck-runner":
-                kind = "extcheck";
-                break;
-            default:
-                console.warn("Unrecognized csplugin tag type, falling back to 'console'");
-                kind = "console";
-                break;
-        }
-        return kind;
+        return this.markup.lang === "en";
     }
 
     get isInput() {
-        return this.getRootElement().tagName.toLowerCase().endsWith("-input");
+        return this.markup.type.includes("input") || this.markup.type.includes("args");
     }
 
     get isSimcir() {
-        return this.kind === "simcir";
+        return this.markup.type.includes("simcir");
     }
 
     get isTauno() {
-        return this.kind === "tauno";
+        return !!this.attrsall.isTauno;
     }
 
     get program() {
-        return this.attrsall.program ?? this.attrs.program;
+        return this.attrsall.program ?? this.markup.program;
     }
 
     get hideText() {
@@ -1226,11 +1311,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get forcedupload() {
-        return this.type === "upload" && !this.attrs.button ;
-    }
-
-    get upload() {
-        return this.type === "upload" || this.attrs.upload || this.attrs.uploadbycode;
+        return this.type === "upload" && !this.markup.button ;
     }
 
     get rtype() {
@@ -1246,16 +1327,16 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get nocode() {
-        return this.type === "upload" || this.attrs.nocode;
+        return this.type === "upload" || this.markup.nocode;
     }
 
     get placeholder() {
         const tiny = this.type.includes("tiny");
-        return valueDefu(this.attrs.placeholder, (tiny ? "" : this.english ? "Write your code here" : "Kirjoita koodi tähän:"));
+        return valueDefu(this.markup.placeholder, (tiny ? "" : this.english ? "Write your code here" : "Kirjoita koodi tähän:"));
     }
 
     get inputplaceholder() {
-        return valueOr(this.attrs.inputplaceholder, (this.english ? "Write your input here" : "Kirjoita syöte tähän"));
+        return valueOr(this.markup.inputplaceholder, (this.english ? "Write your input here" : "Kirjoita syöte tähän"));
     }
 
     get isText() {
@@ -1264,15 +1345,15 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get argsplaceholder() {
-        return valueOr(this.attrs.argsplaceholder, (this.isText ? (this.english ? "Write file name here" : "Kirjoita tiedoston nimi tähän") : (this.english ? "Write your program args here" : "Kirjoita ohjelman argumentit tähän")));
+        return valueOr(this.markup.argsplaceholder, (this.isText ? (this.english ? "Write file name here" : "Kirjoita tiedoston nimi tähän") : (this.english ? "Write your program args here" : "Kirjoita ohjelman argumentit tähän")));
     }
 
     get argsstem() {
-        return valueOr(this.attrs.argsstem, (this.isText ? (this.english ? "File name:" : "Tiedoston nimi:") : (this.english ? "Args:" : "Args")));
+        return valueOr(this.markup.argsstem, (this.isText ? (this.english ? "File name:" : "Tiedoston nimi:") : (this.english ? "Args:" : "Args")));
     }
 
     get fullhtml() {
-        const r = this.attrs.fullhtml;
+        const r = this.markup.fullhtml;
         if (!r && this.type.includes("html") || this.isProcessing) {
             return "REPLACEBYCODE";
         }
@@ -1301,7 +1382,7 @@ ${fhtml}
     }
 
     get toggleEditor() {
-        return this.attrs.toggleEditor || this.isSimcir;
+        return this.markup.toggleEditor || this.isSimcir;
     }
 
     get toggleEditorText() {
@@ -1313,7 +1394,7 @@ ${fhtml}
     }
 
     get minRows() {
-        return getInt(this.attrs.rows) ?? 0;
+        return getInt(this.markup.rows) ?? 0;
     }
 
     get isAll() {
@@ -1325,9 +1406,9 @@ ${fhtml}
     }
 
     get isRun() {
-        return ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) && !this.attrs.norun)
-            || (this.type.includes("text") || this.isSimcir || this.attrs.justSave)
-            || this.attrs.button; // or this.buttonText()?
+        return ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) && !this.markup.norun)
+            || (this.type.includes("text") || this.isSimcir || this.markup.justSave)
+            || this.markup.button; // or this.buttonText()?
     }
 
     buttonText() {
@@ -1335,13 +1416,50 @@ ${fhtml}
         if (txt) {
             return txt;
         }
-        if (this.attrs.button === null || this.attrs.buttonText === null) {
+        if (this.markup.button === null || this.markup.buttonText === null) {
             return null;
         }
-        if (this.type.includes("text") || this.isSimcir || this.attrs.justSave) {
+        if (this.type.includes("text") || this.isSimcir || this.markup.justSave) {
             return this.english ? "Save" : "Tallenna";
         }
         return this.english ? "Run" : "Aja";
+    }
+
+    get isExternalFetch(): boolean {
+        return !!this.isRun && !!this.hasExternalSources;
+    }
+
+    externalFetchText() {
+        return this.english ? "Fetch" : "Nouda";
+    }
+
+    async fetchExternalFiles() {
+        if (this.isRunning) {
+            return;
+        }
+        this.isRunning = true;
+        this.fetchError = undefined;
+
+        const r = await to2(this.http.post<IFetchResponse>(`/plugin${this.pluginMeta.getTaskIdUrl()}/fetchExternal`, {},
+            {headers: new HttpHeaders({timeout: `${defaultTimeout}`})}
+        ).toPromise());
+        if (r.ok) {
+            if (r.result.error) {
+                this.fetchError = "Failed to fetch files: " + r.result.error;
+                this.externalFiles = undefined;
+            } else if(r.result.files.length == 0) {
+                this.fetchError = "No files were available";
+                this.externalFiles = undefined;
+            } else {
+                this.externalFiles = r.result.files;
+                this.updateExternalEditor();
+            }
+        } else {
+            this.fetchError = "Failed to fetch files: " + r.result.error;
+            this.externalFiles = undefined;
+        }
+        this.isRunning = false;
+        this.cdr.detectChanges();
     }
 
     get isTest() {
@@ -1365,31 +1483,27 @@ ${fhtml}
     }
 
     get uploadstem() {
-        return valueOr(this.attrs.uploadstem, (this.english ? "Upload image/file" : "Lataa kuva/tiedosto"));
+        return valueOr(this.markup.uploadstem, (this.english ? "Upload image/file" : "Lataa kuva/tiedosto"));
     }
 
     get file() {
-        return this.attrs.file;
+        return this.markup.file;
     }
 
     get showCodeOn() {
-        return valueDefu(this.attrs.showCodeOn, (this.english ? "Show all code" : "Näytä koko koodi"));
+        return valueDefu(this.markup.showCodeOn, (this.english ? "Show all code" : "Näytä koko koodi"));
     }
 
     get showCodeOff() {
-        return valueOr(this.attrs.showCodeOff, (this.english ? "Hide extra code" : "Piilota muu koodi"));
+        return valueOr(this.markup.showCodeOff, (this.english ? "Hide extra code" : "Piilota muu koodi"));
     }
 
     get resetText() {
-        return valueDefu(this.attrs.resetText, (this.english ? "Reset" : "Alusta"));
-    }
-
-    get editorModes() {
-        return this.attrs.editorModes.toString();
+        return valueDefu(this.markup.resetText, (this.english ? "Reset" : "Alusta"));
     }
 
     getTemplateButtons(): string[] {
-        let b = this.attrs.buttons;
+        let b = this.markup.buttons;
         if (b) {
             const helloButtons = "public \nclass \nHello \n\\n\n{\n}\n" +
                 "static \nvoid \n Main\n(\n)\n" +
@@ -1408,7 +1522,7 @@ ${fhtml}
 
     get progLanguages() {
         if (this.isAll) {
-            const langs = this.attrs.languages;
+            const langs = this.markup.languages;
             if (langs) {
                 return langs.split(/[\n;, \/]/);
             } else {
@@ -1417,83 +1531,71 @@ ${fhtml}
         }
     }
 
-    get cssPrint() {
-        return this.attrs.cssPrint;
-    }
-
     get mode() {
-        return languageTypes.getAceModeType(this.type, this.attrs.mode ?? "");
+        return languageTypes.getAceModeType(this.type, this.markup.mode ?? "");
     }
 
     get nosave() {
-        return this.attrs.nosave;
+        return this.markup.nosave;
     }
 
     get cols() {
-        return this.attrs.cols;
+        return this.markup.cols;
     }
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
+
+        this.upload = this.type === "upload" || this.markup.upload || this.markup.uploadbycode;
+        if (!this.upload) {
+            this.upload = listify(this.markup.files).some((f) => f?.source == "upload" || f?.source == "uploadByCode");
+        }
+
+        if (this.markup.files) {
+            this.hasExternalSources = listify(this.markup.files).some((f) => !["upload", "uploadByCode", "editor"].includes(f.source));
+        }
+
+        this.vctrl = vctrlInstance!;
         this.hide = this.attrsall.markup.hide || {};
-       //  if ( typeof this.attrs.borders !== 'undefined' ) this.attrs.borders = true;
+       //  if ( typeof this.markup.borders !== 'undefined' ) this.markup.borders = true;
         this.buttons = this.getTemplateButtons();
         const rt = this.rtype;
         const isText = this.isText;
         const isArgs = this.type.includes("args");
         if (this.attrsall.markup.docurl) {
-            this.docURL = this.attrsall.markup.docurl;
+            this.docURL = this.domSanitizer.bypassSecurityTrustResourceUrl(this.attrsall.markup.docurl);
             this.docLink = "Hide document";
         }
 
+        const taskId = this.pluginMeta.getTaskId();
+        if(this.upload && !this.markup.uploadbycode && taskId) {
+            this.uploadUrl = `/pluginUpload/${taskId.docId}/${taskId.name}/`;
+        }
+
         this.timeout = valueOr(this.attrsall.timeout, 0)*1000;
-        this.userinput = valueOr(this.attrsall.userinput, (this.attrs.userinput ?? "").toString());
-        this.userargs = valueOr(this.attrsall.userargs, (this.attrs.userargs ?? (isText && isArgs ? this.attrs.filename ?? "" : "")).toString());
+        this.userinput = valueOr(this.attrsall.userinput, (this.markup.userinput ?? "").toString());
+        this.userargs = valueOr(this.attrsall.userargs, (this.markup.userargs ?? (isText && isArgs ? this.markup.filename ?? "" : "")).toString());
         this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
-        this.noeditor = valueOr(this.attrs.noeditor, this.isSimcir || (this.type === "upload"));
-        const wn =  this.attrs.wrap ?? (isText ? 70 : -1);
+        this.noeditor = valueOr(this.markup.noeditor, this.isSimcir || (this.type === "upload"));
+
+        const wn =  this.markup.wrap ?? (isText ? 70 : -1);
         this.wrap = { n:wn == -1 ? -1 : Math.abs(wn), auto: wn > 0 };
 
-        this.editorMode = this.attrs.editorMode;
-        this.viewCode = this.attrs.viewCode;
-        this.editorText = [
-            valueDefu(this.attrs.normal, this.english ? "Normal" : "Tavallinen"),
-            valueDefu(this.attrs.highlight, "Highlight"),
-            this.attrs.parsons,
-            this.attrs.jsparsons,
+        this.viewCode = this.markup.viewCode;
+
+        const editorText = [
+            valueDefu(this.markup.normal, this.english ? "Normal" : "Tavallinen"),
+            valueDefu(this.markup.highlight, "Highlight"),
+            this.markup.parsons,
+            this.markup.jsparsons,
         ];
-        for (const c of this.editorModes) {
-            this.editorModeIndecies.push(parseInt(c, 10));
-        }
-        this.editorModeIndecies.push(parseInt(this.editorModes[0], 10));
-        if (this.editorModes.length <= 1) {
-            this.editorText = ["", "", "", "", "", "", ""];
-        }
-        this.checkEditorModeLocalStorage();
-
-        this.maxRows = getInt(this.attrs.maxrows) ?? 0;
-        this.rows = this.minRows;
-
-        if (this.attrsall.usercode == null) {
-            if (this.byCode) {
-                this.usercode = this.byCode;
-                this.initUserCode = true;
-            }
-        } else {
-            this.usercode = this.attrsall.usercode;
-        }
-        this.usercode = commentTrim(this.usercode);
-        if (this.attrs.blind) {
-            this.usercode = this.usercode.replace(/@author.*/, "@author XXXX");
+        for (const c of this.markup.editorModes.toString()) {
+            const mode = parseInt(c, 10);
+            this.editorModes.push(new Mode(mode, editorText[mode]));
         }
 
-        if (this.usercode) {
-            const rowCount = countChars(this.usercode, "\n") + 1;
-            if (this.maxRows < 0 && this.maxRows < rowCount) {
-                this.maxRows = rowCount;
-            }
-        } else if (this.maxRows < 0) {
-            this.maxRows = 10;
+        if (this.markup.editorMode != -1 && this.editorModes.findIndex((m) => m.id == this.markup.editorMode) == -1) {
+            this.editorModes.push(new Mode(this.markup.editorMode, editorText[this.markup.editorMode]));
         }
 
         if (this.indent < 0) {
@@ -1504,40 +1606,32 @@ ${fhtml}
             }
         }
 
-        if (this.editorMode !== 0 || this.editorModes !== "01" || this.cssPrint) {
-            this.showOtherEditor(this.editorMode);
-        } // Forces code editor to change to pre
-
         this.processPluginMath();
-        const tid = this.pluginMeta.getTaskId();
+        if (this.attrsall.uploadedFiles) {
+            this.uploadedFiles.push(...this.attrsall.uploadedFiles);
+        } else if (this.attrsall.uploadedFile || this.attrsall.uploadedType) {
+            this.uploadedFiles.push({path: this.attrsall.uploadedFile ?? "", type: this.attrsall.uploadedType ?? ""});
+        }
 
-        this.showUploaded(this.attrsall.uploadedFile, this.attrsall.uploadedType);
         this.initSaved();
         this.vctrl.addTimComponent(this);
-        if (this.attrs.count) {
-            const count = this.attrs.count;
-            this.countLines = !!count.lines;
-            this.countWords = !!count.words;
-            this.countChars = !!count.chars;
-            this.countItems = this.countLines || this.countWords || this.countChars;
-        }
         // if (this.isText) {
         //     this.preventSave = true;
         // }
     }
+    async ngAfterViewInit() {
+        if (!this.usercode) {
+            this.usercode = this.attrsall.usercode ?? this.byCode ?? "";
+        }
 
-    async $postLink() {
-        await $timeout(); // wait for AngularJS
-        this.edit = this.element.find("textarea")[0];
         this.preview = this.element.find(".csrunPreview");
-        const styleArgs = this.attrs["style-args"];
+        const styleArgs = this.markup["style-args"];
         if (styleArgs) {
             const argsEdit = this.getRootElement().getElementsByClassName("csArgsArea");
             if (argsEdit.length > 0) {
                 argsEdit[0].setAttribute("style", styleArgs);
             }
         }
-        this.initEditorKeyBindings();
         this.element.bind("keydown", (event) => {
             if (event.ctrlKey || event.metaKey) {
                 switch (String.fromCharCode(event.which).toLowerCase()) {
@@ -1551,7 +1645,7 @@ ${fhtml}
             }
         });
 
-        if (this.attrs.open) {
+        if (this.markup.open) {
             if (this.isTauno) {
                 await this.showTauno();
             }
@@ -1559,31 +1653,18 @@ ${fhtml}
                 await this.showSimcir();
             }
         }
-        if (this.attrs.autorun) {
+        if (this.markup.autorun) {
             this.runCodeLink(true);
         }
     }
 
-    updateEditSize() {
-        if (!this.usercode) {
-            return;
-        }
-        let n = countChars(this.usercode, "\n") + 1;
-        if (n < this.minRows) {
-            n = this.minRows;
-        }
-        if (n > this.maxRows) {
-            n = this.maxRows;
-        }
-        if (n < 1) {
-            n = 1;
-        }
-        this.rows = n;
+    uploadedFileName(url: string) {
+        return url.split("/").slice(6).join("/");
     }
 
     initSaved() {
         this.savedvals = {
-            code: this.usercode,
+            code: this.editor?.files.map((f) => f.content ?? f.base) ?? [""],
             args: this.userargs,
             input: this.userinput,
         };
@@ -1591,159 +1672,72 @@ ${fhtml}
         this.updateListeners(ChangeType.Saved);
     }
 
-    doCountWords(str: string) {
-        const matches = str.match(/[\w\d\’\'-åäöÅÄÖ]+/gi);
-        return matches ? matches.length : 0;
-    }
-
-    checkCountLimits(limits: any | undefined, count: number, countType: string): string {
-        if (!limits) { return ""; }
-        if (!this.attrs.count) { return ""; }
-        const tooFew = this.attrs.count.tooFewWord || "Too few";
-        const tooMany = this.attrs.count.tooManyWord || "Too Many";
-        const cType = limits.text || countType;
-        if (limits.min && count < limits.min) { return " " + tooFew + " " + cType + ", min: " + limits.min + "."; }
-        if (limits.max && count > limits.max) { return " " + tooMany + " " + cType + ", max: " + limits.max + "."; }
-        return "";
-    }
-
-    doCountItems() {
-        if (!this.attrs.count) { return; }
-        const s = this.usercode;
-        this.charCount = s.length;
-        let lcount = 0;
-        if (s.length > 0) { lcount = 1; }
-        for (const c of s) {
-            if (c=="\n") {
-                lcount++;
-            }
-        }
-        this.wordCount = this.doCountWords(s);
-        this.lineCount = lcount;
-        let countError: string = "";
-        countError += this.checkCountLimits(this.attrs.count.lines, this.lineCount, "lines");
-        countError += this.checkCountLimits(this.attrs.count.words, this.wordCount, "words");
-        countError += this.checkCountLimits(this.attrs.count.chars, this.charCount, "chars");
-        this.countError = countError;
-        this.preventSave = this.attrs.count.preventSave && countError !== "";
-    }
-
     isChanged(): boolean {
         return this.isUnSaved();
     }
 
-    async $doCheck() {
-
-        // Only the properties
-        //  * this.dochecks.user{code,input,args}
-        //  * this.user{code,input,args}
-        // should affect `anyChanged`. Don't make `anyChanged` depend on `this.savedvals` or anything else.
-        // Don't add more properties to `this.dochecks`.
-        let anyChanged = false;
-
-        if (this.usercode !== this.dochecks.usercode) {
-            this.dochecks.usercode = this.usercode;
-            this.checkByCodeRemove();
-            if (this.aceEditor && this.aceEditor.getSession().getValue() !== this.usercode) {
-                this.aceEditor.getSession().setValue(this.usercode);
-            }
-            if (!this.copyingFromTauno && this.usercode !== this.byCode) {
-                this.muokattu = true;
-            }
-            this.copyingFromTauno = false;
-            if (this.minRows < this.maxRows) {
-                this.updateEditSize();
-            }
-            if (this.viewCode) {
-                this.pushShowCodeNow();
-            }
-            if (this.wrap.auto) {
-                this.checkWrap();
-            }
-            if (this.countItems) {
-                this.doCountItems();
-            }
-            if (this.isText) {this.savedText = "";}
-
-            anyChanged = true;
+    onContentChange(str: string) {
+        super.usercode = str;
+        this.checkByCodeRemove();
+        if (!this.copyingFromTauno && str !== this.byCode) {
+            this.muokattu = true;
+        }
+        this.copyingFromTauno = false;
+        if (this.viewCode) {
+            this.pushShowCodeNow();
+        }
+        this.countBoard?.count(str);
+        if (this.isText) {
+            this.savedText = "";
         }
 
-        if (this.userargs !== this.dochecks.userargs) {
-            this.dochecks.userargs = this.userargs;
-            anyChanged = true;
-        }
-        if (this.userinput !== this.dochecks.userinput) {
-            this.dochecks.userinput = this.userinput;
-            anyChanged = true;
-        }
+        this.anyChanged();
+    }
 
-        if (anyChanged) {
-            this.textChanged();
-            const currUsercode = this.usercode;
-            const currUserargs = this.userargs;
-            const currUserinput = this.userinput;
-            if (this.runned && this.attrs.autoupdate) {
-                await $timeout(this.attrs.autoupdate);
-                if (currUsercode === this.usercode &&
-                    currUserargs === this.userargs &&
-                    currUserinput === this.userinput) {
+    anyChanged() {
+        this.textChanged();
+        if (this.runned && this.markup.autoupdate) {
+            if (this.autoupdateHandle) {
+                window.clearTimeout(this.autoupdateHandle);
+            }
+            this.autoupdateHandle = window.setTimeout(
+                () => {
+                    this.autoupdateHandle = undefined;
                     this.runCodeAuto();
-                }
-            }
+                }, this.markup.autoupdate
+            );
         }
     }
 
-    onFileSelect(file: File) {
-        const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
-            console.log("taskId missing");
-            return;
-        }
-
-        if (file) {
-            if (this.attrs.uploadbycode) {
-                const reader = new FileReader();
-                reader.onload = ((e) => {
-                    this.scope.$evalAsync(() => {
-                        this.usercode = reader.result as string;
-                        if (this.attrs.uploadautosave) { this.runCode(); }
-                    });
-                });
-                reader.readAsText(file);
-                return;
+    onFileLoad(file: IFile) {
+        let bycodefile = this.uploadByCodeFiles.find((f) => f.path == file.path);
+        if (bycodefile) {
+            if (bycodefile.show && this.editor) {
+                this.editor.setFileContent(file.path, file.content);
+                this.editor.activeFile = file.path;
             }
+        } else if (this.uploadByCodeFiles.length == 1 || this.markup.uploadbycode) {
+            bycodefile = this.uploadByCodeFiles[0];
+            if (bycodefile.show) {
+                this.editor?.setFileContent(bycodefile.path, file.content);
+            }
+        }
+        if (this.markup.uploadautosave) { this.runCode(); }
+    }
 
-            this.fileProgress = 0;
-            this.fileError = undefined;
-            this.uploadedFile = undefined;
-            this.uploadresult = undefined;
-            this.docURL = undefined;
-            const upload = $upload.upload<{file: string, type: string}>({
-                url: `/pluginUpload/${taskId.docId}/${taskId.name}/`,
-                data: {
-                    file: file,
-                },
-                method: "POST",
-            });
+    onUploadResponse(resp: unknown) {
+        if (!resp) {return;}
 
-            upload.then((response) => {
-                $timeout(() => {
-                    this.showUploaded(response.data.file, response.data.type);
-                    if (this.attrs.uploadautosave || !this.attrs.button) {
-                        this.doRunCode("upload", false);
-                    }
-                });
-            }, (response) => {
-                if (response.status > 0) {
-                    this.fileError = response.data.error;
-                }
-            }, (evt) => {
-                this.fileProgress = Math.min(100, Math.floor(100.0 *
-                    evt.loaded / evt.total));
-            });
+        const response = resp as IUploadResponse;
+        if (!this.markup.files) {
+            this.uploadedFiles.clear();
+        }
+        this.uploadedFiles.push({path: response.file, type: response.type});
+    }
 
-            upload.finally(() => {
-            });
+    onUploadDone(success: boolean) {
+        if (success && (this.markup.uploadautosave || (this.markup.type.includes("upload") && !this.markup.button) || !(this.isRun && this.buttonText()))) {
+            this.doRunCode("upload", false);
         }
     }
 
@@ -1752,90 +1746,8 @@ ${fhtml}
             return;
         }
 
-        await $timeout();
+        await new Promise((resolve) => { setTimeout(resolve); });
         await ParCompiler.processMathJaxAsciiMath(this.element[0]);
-    }
-
-    showUploaded(file: string | undefined, type: string | undefined) {
-        if (!file || !type) {
-            return;
-        }
-        this.uploadedFile = file;
-        this.uploadedType = type;
-        const name = uploadFileTypesName(file);
-        let html = `<p class="smalllink">${createLink(file, type, name).outerHTML}</p>`;
-        if (type.startsWith("image")) {
-            const img = document.createElement("img");
-            img.src = this.uploadedFile;
-            html += img.outerHTML;
-            this.uploadresult = $sce.trustAsHtml(html);
-            return;
-        }
-        if (type.startsWith("video")) {
-            const vid = document.createElement("video");
-            vid.src = this.uploadedFile;
-            vid.controls = true;
-            html += vid.outerHTML;
-            this.uploadresult = $sce.trustAsHtml(html);
-            return;
-        }
-        if (type.startsWith("audio")) {
-            const audio = document.createElement("audio");
-            audio.src = this.uploadedFile;
-            audio.controls = true;
-            html += audio.outerHTML;
-            this.uploadresult = $sce.trustAsHtml(html);
-            return;
-        }
-        if (type.startsWith("text")) {
-            html = '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;">';
-            html += createIframe({src: file, sandbox: "", width: 800}).outerHTML;
-            html += "</div>";
-            this.uploadresult = $sce.trustAsHtml(html);
-            return;
-
-        }
-
-        if (is(uploadFileTypes, file)) {
-            html += '<div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:1200px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;">';
-            // In Chrome, PDF does not work with sandbox.
-            html += createIframe({src: file, sandbox: undefined, width: 800, height: 900}).outerHTML;
-            html += "</div>";
-            this.uploadresult = $sce.trustAsHtml(html);
-            return;
-        }
-
-        html = `<p></p><p>Ladattu: ${createLink(file, type, name).outerHTML}</p>`;
-        this.uploadresult = $sce.trustAsHtml(html);
-        return;
-    }
-
-    checkWrap() {
-        if (this.wrap.n <= 0) { return; }
-        const r = wrapText(this.usercode, this.wrap.n);
-        if (r.modified) {
-            if (this.editorIndex === 0 && this.edit) {
-                const start = this.edit.selectionStart;
-
-                this.usercode = r.s;
-                this.edit.value = r.s;
-                this.edit.selectionStart = start;
-                this.edit.selectionEnd = start;
-            }
-            if (this.editorIndex === 1 && this.aceEditor) {
-                const editor = this.aceEditor;
-                let cursor = editor.selection.getCursor();
-                const sess = editor.getSession();
-                const index = sess.getDocument().positionToIndex(cursor, 0);
-                this.usercode = r.s;
-                sess.setValue(r.s);
-                cursor = sess.getDocument().indexToPosition(index, 0);
-                editor.selection.moveCursorToPosition(cursor);
-                editor.selection.clearSelection();
-            }
-
-        }
-
     }
 
     runCodeIfCR(event: KeyboardEvent) {
@@ -1896,7 +1808,7 @@ ${fhtml}
     }
 
     closeDocument() {
-        this.docURL = "";
+        this.docURL = undefined;
         this.docLink = "Document";
     }
 
@@ -1930,20 +1842,19 @@ ${fhtml}
             this.copyTauno();
         }
 
-        if (this.csparson) {
-            this.usercode = this.csparson.join("\n");
-            this.csparson.check(this.usercode);
+        if (this.editor?.parsonsEditor) {
+            this.editor.parsonsEditor.check();
         }
 
         this.checkIndent();
-        if (!this.attrs.autoupdate) {
+        if (!this.markup.autoupdate) {
             this.tinyErrorStyle = {};
         }
         this.isRunning = true;
         this.imgURL = "";
         this.wavURL = "";
         this.runSuccess = false;
-        if (!(languageTypes.isInArray(runType, csJSTypes) || this.attrs.noConsoleClear)) {
+        if (!(languageTypes.isInArray(runType, csJSTypes) || this.markup.noConsoleClear)) {
             this.result = "";
         }
         this.runTestGreen = false;
@@ -1954,28 +1865,67 @@ ${fhtml}
             isInput = true;
         }
 
-        this.languageResponse(null);
+        const validityCheck = (ucode2: string) => {
+            let msg2 = "";
+            if (this.markup.validityCheck) {
+                const re = new RegExp(this.markup.validityCheck);
+                if (!ucode2.match(re)) {
+                    this.tinyErrorStyle = {color: "red"};
+                    msg2 = this.markup.validityCheckMessage;
+                    if (!msg2) {
+                        msg2 = "Did not match to " + this.markup.validityCheck;
+                    }
+                    this.error = msg2;
+                    this.isRunning = false;
+                    this.runError = true;
+                    if (!this.markup.validityCheckForceSave) {
+                        return msg2;
+                    }
+                    noErrorClear = true;
+                }
+            }
+            return msg2;
+        };
+
+        const editorFiles: IFileSubmission[] = this.editor?.allFiles.map((f) => ({source: "editor", ...f})) ?? [];
+        const fileSelectFiles: IFileSubmission[] = this.fileSelect?.loadedFiles.toArray()
+                .filter((f) =>
+                    this.uploadByCodeFiles.find(
+                        (f2) => f2.path == f.path
+                    )?.show
+                ).map((f) => ({source: "uploadByCode", ...f})) ?? [];
+        const uploadedFiles: IFileSubmission[] = this.uploadedFiles.toArray().map((f) => ({source: "upload:" + f.path, path: this.uploadedFileName(f.path), type: f.type}));
+        const externalFiles = this.externalFiles ?? [];
+
+        let allFiles: IFileSubmission[] = editorFiles.concat(fileSelectFiles).concat(externalFiles);
+        if (allFiles.length == 0 && !this.noeditor) {
+            allFiles = [{source: "editor", path: "", content: this.usercode}];
+        }
+
+        let msg = "";
+        for (const file of allFiles) {
+            const m = validityCheck(file.content!.replace(/\r/g, ""));
+            if (m) {
+                msg += m + "\n";
+            }
+        }
+        if (msg) {
+            this.error = msg;
+            if (!this.markup.validityCheckForceSave) {
+                return;
+            }
+        }
+        allFiles.push(...uploadedFiles);
 
         let ucode = "";
         if (this.usercode) {
-            ucode = this.usercode.replace(this.cursor, "");
-        }
-        ucode = ucode.replace(/\r/g, "");
-        if (this.attrs.validityCheck) {
-            const re = new RegExp(this.attrs.validityCheck);
-            if (!ucode.match(re)) {
-                this.tinyErrorStyle = {color: "red"};
-                let msg = this.attrs.validityCheckMessage;
-                if (!msg) {
-                    msg = "Did not match to " + this.attrs.validityCheck;
-                }
+            ucode = this.usercode.replace(/\r/g, "");
+            msg = validityCheck(ucode);
+            if (msg) {
                 this.error = msg;
-                this.isRunning = false;
-                this.runError = true;
-                if (!this.attrs.validityCheckForceSave) {
+                if (!this.markup.validityCheckForceSave) {
                     return;
                 }
-                noErrorClear = true;
             }
         }
 
@@ -1986,29 +1936,36 @@ ${fhtml}
             return;
         }
 
-        const params = {
+        this.languageResponse(null);
+
+        const params: IRunRequest = {
             input: {
                 usercode: ucode,
                 userinput: this.userinput || "",
                 isInput: isInput,
                 userargs: this.userargs || "",
-                uploadedFile: this.uploadedFile,
-                uploadedType: this.uploadedType,
+                uploadedFiles: this.uploadedFiles.toArray(),
                 nosave: nosave || this.nosave,
                 type: runType,
                 ...extraMarkUp,
                 ...(this.isAll ? {selectedLanguage: this.selectedLanguage} : {}),
             },
         };
-        const url = this.pluginMeta.getAnswerUrl();
+
+        if (this.markup.files) {
+            // TODO: add byCode replacing support to multifile submissions so that this if isn't needed.
+            // For now, only include allFiles when no byCode replacing is needed
+            if (!this.file && !this.program) {
+                params.input.submittedFiles = allFiles;
+            }
+        }
+
         const t0run = performance.now();
-        const r = await to($http<IRunResponse>(
-            {method: "PUT", url: url, data: params, timeout: this.timeout + defaultTimeout}
-        ));
+        const r = await this.postAnswer<IRunResponse>(params, new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`}));
         if (r.ok) {
             this.isRunning = false;
             this.initSaved();
-            const data = r.result.data;
+            const data = r.result;
             const tsruntime = ((performance.now() - t0run) / 1000).toFixed(3);
             const runtime = (data.web.runtime ?? "").trim();
             this.oneruntime = "" + tsruntime + " " + runtime.split(" ", 1)[0];
@@ -2048,7 +2005,7 @@ ${fhtml}
 
             const err = data.web.console ?? "";
             if (docURL) {
-                this.docURL = docURL;
+                this.docURL = this.domSanitizer.bypassSecurityTrustResourceUrl(docURL);
                 this.docLink = "Hide document";
                 this.error = err.trim();
             }
@@ -2064,7 +2021,7 @@ ${fhtml}
                 this.result = err.trim();
             } else {
                 if (this.runSuccess) {
-                    if (this.attrs.isHtml) {
+                    if (this.markup.isHtml) {
                         this.htmlresult = removeXML(err) + this.htmlresult;
                     } else if (!languageTypes.isInArray(runType, csJSTypes)) {
                         this.result = err;
@@ -2077,15 +2034,14 @@ ${fhtml}
             this.languageResponse(data.web.language);
 
             this.processPluginMath();
-
         } else {
             this.isRunning = false;
-            const data = r.result.data;
+            const data = r.result.error;
             if (data?.error) {
                 this.error = data.error;
                 this.errors.push(data.error);
             }
-            this.connectionErrorMessage = this.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
+            this.connectionErrorMessage = this.error ?? this.markup.connectionErrorMessage ?? defaultErrorMessage;
         }
     }
 
@@ -2110,7 +2066,7 @@ ${fhtml}
         this.taunoFrame!.channel.port1.postMessage({msg: "getData"});
         let s = await this.taunoCopy.promise;
         this.copyingFromTauno = true;
-        const treplace = this.attrs.treplace ?? "";
+        const treplace = this.markup.treplace ?? "";
         if (treplace) {
             const treps = treplace.split("&");
             for (const trep of treps) {
@@ -2122,50 +2078,15 @@ ${fhtml}
         this.usercode = s;
         this.checkIndent();
         this.muokattu = false;
-        $rootScope.$applyAsync();
     }
 
-    async addText(s: string) {
+    addText(s: string) {
         if (this.noeditor) {
             this.userargs += s + " ";
             return;
         }
-        let tbox;
-        let editor: IAceEditor | undefined;
-        let i = 0;
-        if (this.editorIndex === 1) {
-            editor = this.aceEditor!;
-            i = editor.session.getDocument().positionToIndex(editor.selection.getCursor(), 0);
-        } else {
-            tbox = this.edit;
-            i = tbox.selectionStart || 0;
-        }
-        let uc = (this.usercode || "");
-        const ci = uc.indexOf(this.cursor);
-        if (ci >= 0) {
-            if (ci < i) {
-                i--;
-            }
-            uc = uc.replace(this.cursor, "");
-        }
         const text = s.replace(/\\n/g, "\n");
-        const cur = ""; // $scope.cursor;  // this would be needed by iPad because it does not show cursor
-        this.usercode = uc.substring(0, i) + text + cur + uc.substring(i);
-        // $scope.usercode = (uc + s.replace(/\\n/g,"\n")).replace($scope.cursor,"")+$scope.cursor;
-        // $scope.insertAtCursor(tbox, s);
-        // tbox.selectionStart += s.length;
-        // tbox.selectionEnd += s.length;
-        i += text.length;
-        await $timeout();
-        if (editor) {
-            const cursor = editor.session.getDocument().indexToPosition(i, 0);
-            editor.selection.moveCursorToPosition(cursor);
-            editor.selection.clearSelection();
-        } else if (tbox) {
-            tbox.selectionStart = i;
-            tbox.selectionEnd = i;
-            tbox.focus();
-        }
+        this.editor?.insert?.(text);
     }
 
     addTextHtml(s: string) {
@@ -2206,8 +2127,8 @@ ${fhtml}
         }
         return {
             vid: vid,
-            width: this.attrs.width ? getInt(this.attrs.width) ?? dw : dw,
-            height: this.attrs.height ? getInt(this.attrs.height) ?? dh : dh,
+            width: this.markup.width ? getInt(this.markup.width) ?? dw : dw,
+            height: this.markup.height ? getInt(this.markup.height) ?? dh : dh,
         };
     }
 
@@ -2227,7 +2148,7 @@ ${fhtml}
             this.runError = true;
         }
         try {
-            const initstr = this.attrs.initSimcir;
+            const initstr = this.markup.initSimcir;
             if (initstr) {
                 const initdata = JSON.parse(initstr);
                 data = {...data, ...initdata};
@@ -2238,8 +2159,8 @@ ${fhtml}
         }
 
         // width and height are passed to svg viewBox attribute that needs numbers
-        data.width = numOrDef(this.attrs.width, 800);
-        data.height = numOrDef(this.attrs.height, 400);
+        data.width = numOrDef(this.markup.width, 800);
+        data.height = numOrDef(this.markup.height, 400);
         this.simcir.children().remove();
         const simcir = await loadSimcir();
         simcir.setupSimcir(this.simcir, data);
@@ -2300,12 +2221,12 @@ ${fhtml}
     async showTauno() {
         const v = this.getVid();
         let p = "";
-        let tt = "/cs/tauno/index.html?lang=" + this.attrs.lang + "&";
-        if (this.attrs.taunotype && this.attrs.taunotype === "ptauno") {
-            tt = "/cs/tauno/index.html?lang=" + this.attrs.lang + "&s&";
+        let tt = "/cs/tauno/index.html?lang=" + this.markup.lang + "&";
+        if (this.markup.taunotype && this.markup.taunotype === "ptauno") {
+            tt = "/cs/tauno/index.html?lang=" + this.markup.lang + "&s&";
         }
         let taunoUrl = tt; // +"?"; // t=1,2,3,4,5,6&ma=4&mb=5&ialku=0&iloppu=5";
-        const s = this.attrs.table;
+        const s = this.markup.table;
         if (s && s.length > 0) {
             if (s.startsWith("s")) {
                 p = "ts=" + s.substring(1) + "&";
@@ -2314,15 +2235,15 @@ ${fhtml}
             }                      // table by it's items
         }
 
-        p += doVariables(this.attrs.variables, "m");
-        p += doVariables(this.attrs.indices, "i");
+        p += doVariables(this.markup.variables, "m");
+        p += doVariables(this.markup.indices, "i");
 
         taunoUrl = taunoUrl + p;
         this.iframesettings = {
             id: v.vid,
             width: v.width,
             height: v.height,
-            src: taunoUrl,
+            src: this.domSanitizer.bypassSecurityTrustResourceUrl(taunoUrl),
         };
         this.taunoFrame = await this.waitIframeLoad((e) => {
             if (e.data.data && this.taunoCopy) {
@@ -2337,15 +2258,15 @@ ${fhtml}
 
     initCode() {
         this.muokattu = false;
-        this.usercode = this.byCode;
         this.imgURL = "";
         this.runSuccess = false;
         this.runError = false;
         this.result = "";
-        this.viewCode = this.attrs.viewCode;
-        if (this.editorModeIndecies[this.editorMode] > 1) {
-            this.initUserCode = true;
-            this.showOtherEditor(this.editorMode);
+        this.viewCode = this.markup.viewCode;
+        if (this.editor) {
+            this.editor?.reset();
+        } else {
+            this.usercode = this.byCode;
         }
         if (this.isSage) {
             this.initSage(false);
@@ -2402,7 +2323,7 @@ ${fhtml}
             // code: cs.usercode,
             code: this.getReplacedCode(),
             getCode: () => this.getReplacedCode(),
-            autoeval: this.attrs.autorun || firstTime,
+            autoeval: this.markup.autorun || firstTime,
             callback: () => {
                 this.sageButton = this.sageArea!.getElementsByClassName("sagecell_evalButton")[0] as HTMLElement;
                 this.sageInput = this.sageArea!.getElementsByClassName("sagecell_commands")[0] as HTMLInputElement;
@@ -2552,7 +2473,6 @@ ${fhtml}
         if (!this.indent || !this.usercode) {
             return;
         }
-        let start = this.edit.selectionStart;
         let spaces = "";
         for (let j1 = 0; j1 < this.indent; j1++) {
             spaces += " ";
@@ -2579,9 +2499,6 @@ ${fhtml}
             } // do not indent empty lines
             s = spaces + s.substring(j);
             const dl = s.length - l;
-            if (len - l < start) {
-                start += dl;
-            }
             len += dl;
             st[i] = s;
             n++;
@@ -2603,10 +2520,10 @@ ${fhtml}
     }
 
     get replace() {
-        return this.attrs.replace ?? this.attrsall.replace;
+        return this.markup.replace ?? this.attrsall.replace;
     }
 
-    private maybeReplace(st: string[]): [string, string, string] {
+    maybeReplace(st: string[]): [string, string, string] {
         let r = "";
         const rp = ["", ""]; // alkuosa, loppuosa
         let step = 0;
@@ -2697,6 +2614,9 @@ ${fhtml}
 
     async showMD() {
         if (!this.usercode) {
+            if (this.mdHtml) {
+                this.mdHtml = "";
+            }
             return;
         }
         const taskId = this.pluginMeta.getTaskId();
@@ -2707,186 +2627,24 @@ ${fhtml}
         if (this.precode == undefined) {
             await this.getAllCode();
         }
-        const text = this.precode + "\n" + this.usercode.replace(this.cursor, "") + "\n" + this.postcode;
+        const text = this.precode + "\n" + this.usercode + "\n" + this.postcode;
         if (text === this.lastMD) {
             return;
         }
         this.lastMD = text;
-        const r = await to($http.post<IPluginInfoResponse>(
+        const r = await this.httpPost<IPluginInfoResponse>(
             `/preview/${taskId.docId}`, {
                 text: text,
-            }));
+            });
         if (r.ok) {
-            await ParCompiler.compileAndAppendTo(this.preview, r.result.data, this.scope);
+            const data = r.result;
+            const element: JQuery = $($.parseHTML(data.texts) as HTMLElement[]);
+            await ParCompiler.processAllMath(element);
+            this.mdHtml = element.html();
         } else {
-            const data = r.result.data;
+            const data = r.result;
             alert("Failed to show preview: " + data.error);
         }
-    }
-
-    async showCsParsons(sortable: Element) {
-        const csp = await import("./cs-parsons/csparsons");
-        const parson = new csp.CsParsonsWidget({
-            sortable: sortable,
-            words: this.attrs.words,
-            minWidth: "40px",
-            shuffle: this.initUserCode,
-            styleWords: this.attrs["style-words"],
-            maxcheck: this.attrs.parsonsmaxcheck,
-            notordermatters: this.attrs.parsonsnotordermatters,
-            onChange: (p) => {
-                this.usercode = p.join("\n");
-            },
-        });
-        parson.init(this.byCode, this.usercode);
-        parson.show();
-        this.csparson = parson;
-    }
-
-    initEditorKeyBindings() {
-        let eindex = this.editorModeIndecies[this.editorMode];
-        if (eindex !== 0) {
-            return;
-        }
-        $(this.edit).bind("keydown", (event) => {
-            eindex = this.editorModeIndecies[this.editorMode];
-            if (eindex !== 0) {
-                return;
-            }
-            if (this.editorMode !== 0) {
-                return;
-            }
-            if (event.which === 9) {
-                event.preventDefault();
-                if (event.shiftKey) {
-                    return;
-                }
-                insertAtCaret(this.edit, "    ");
-                this.usercode = this.edit.value;
-                return;
-            }
-        });
-    }
-
-    checkEditorModeLocalStorage() {
-        if (this.editorMode >= 0) {
-            return;
-        }
-        this.editorMode = 0;
-        const eindexStr = localStorage.getItem("editorIndex");
-        if (!eindexStr) {
-            return;
-        }
-        const eindex = parseInt(eindexStr, 10);
-        if (!this.editorModes.includes("0")) {
-            return;
-        }
-        if (!this.editorModes.includes("1")) {
-            return;
-        }
-        for (let em = 0; em < this.editorModeIndecies.length; em++) {
-            const ein = this.editorModeIndecies[em];
-            if (ein === eindex) {
-                this.editorMode = em;
-                break;
-            }
-        }
-    }
-
-    async showOtherEditor(editorMode?: number) {
-        this.csparson = null;
-
-        const editorHtml = `
-<textarea class="csRunArea csrunEditorDiv"
-          rows={{$ctrl.rows}}
-          ng-model="$ctrl.usercode"
-          ng-trim="false"
-          placeholder="{{$ctrl.placeholder}}"></textarea>
-`;
-
-        const aceHtml = `
-<div class="no-popup-menu">
-    <div ng-show="$ctrl.mode"
-         class="csRunArea csEditArea csAceEditor"></div>
-</div>
-`;
-
-        const cssHtml = `<pre>{{$ctrl.usercode}}</pre>`;
-
-        const parsonsHtml = `<div class="no-popup-menu"></div>`;
-
-        let html;
-        if (this.cssPrint) {
-            html = [cssHtml, cssHtml, cssHtml, cssHtml];
-        } else {
-            html = [editorHtml, aceHtml, parsonsHtml, parsonsHtml];
-        }
-
-        if (editorMode != undefined) {
-            this.editorMode = editorMode;
-        } else {
-            this.editorMode++;
-        }
-        if (this.editorMode >= this.editorModeIndecies.length - 1) {
-            this.editorMode = 0;
-        }
-        const eindex = this.editorModeIndecies[this.editorMode];
-        this.editorIndex = eindex;
-        const otherEditDiv = this.getRootElement().getElementsByClassName("csrunEditorDiv")[0];
-        const editorDiv = angular.element(otherEditDiv) as JQuery;
-        // editorDiv.empty();
-        this.edit = $compile(html[eindex])(this.scope)[0] as HTMLTextAreaElement; // TODO unsafe cast
-        // don't set the html immediately in case of Ace to avoid ugly flash because of lazy load
-        if (eindex === 1) {
-            const ace = (await import("tim/editor/ace")).ace;
-            editorDiv.empty();
-            editorDiv.append(this.edit);
-            // const editor = ace.edit(editorDiv.find(".csAceEditor")[0]) as IAceEditor;
-            const editor = ace.edit(this.edit);
-
-            this.aceLoaded(ace, editor);
-            if (this.mode) {
-                editor.getSession().setMode("ace/mode/" + this.mode);
-            }
-            editor.setOptions({
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: false,
-                enableSnippets: true,
-                maxLines: this.maxRows,
-                // showTokenInfo: true
-            });
-            editor.setFontSize(15);
-            if (editorDiv.parents(".reveal").length > 0) {
-                editor.setFontSize(25);
-            }
-            editor.getSession().setUseWorker(false); // syntax check away
-            editor.renderer.setScrollMargin(12, 12, 0, 0);
-            editor.getSession().setValue(this.usercode);
-            editor.getSession().on("change", () => {
-                this.scope.$evalAsync(() => {
-                    this.usercode = editor.getSession().getValue();
-                });
-
-            });
-        } else {
-            await 1; // TODO:  Miksi tässä pitää olla tämä?  Muuten tuo editorDiv.empty() aiheuttaa poikkeuksen
-            editorDiv.empty();
-            editorDiv.append(this.edit);
-            if (eindex === 2) {
-                this.showCsParsons(otherEditDiv.children[0]);
-            }
-        }
-        this.initEditorKeyBindings();
-        if (eindex <= 1) {
-            localStorage.setItem("editorIndex", eindex.toString());
-        }
-    }
-
-    // Runs when editor loads
-    aceLoaded(ace: IAce, editor: IAceEditor) {
-        this.aceEditor = editor;
-        const session = editor.getSession();
-        session.setUndoManager(new ace.UndoManager());
     }
 
     write(s: string) {
@@ -2903,7 +2661,7 @@ ${fhtml}
             this.getCodeFromLocalCode();
         }
         this.codeInitialized = true;
-        let text = this.usercode.replace(this.cursor, "");
+        let text = this.usercode;
         if (this.precode || this.postcode) {
             text = this.precode + "\n" + text + "\n" + this.postcode;
         }
@@ -2912,17 +2670,17 @@ ${fhtml}
 
     closeFrame() {
         this.iframesettings = undefined;
+        this.loadedIframe = undefined;
         this.lastJS = "";
     }
 
     async showJS() {
-        if (!this.attrs.runeverytime && !this.usercode && !this.userargs && !this.userinput) {
+        if (!this.markup.runeverytime && !this.usercode && !this.userargs && !this.userinput) {
             return;
         }
         if (this.type.includes("truthtable")) {
             const truthTable = (await import("./truthTable")).truthTable;
             this.result = truthTable(this.userargs);
-            this.scope.$applyAsync();
             return;
         }
         if (!this.iframesettings || this.fullhtml) { // create an iframe on first time
@@ -2947,18 +2705,18 @@ ${fhtml}
                 fsrc = "/cs/gethtml/processing.html";
             }
             const v = this.getVid(dw, dh);
-            html = (this.attrs.html ?? html);
+            html = (this.markup.html ?? html);
             html = encodeURI(html);
             const fh = this.getfullhtmlext(this.getCode());
             this.iframesettings = {
                 id: v.vid,
                 width: v.width,
                 height: v.height,
-                src: $sce.trustAsResourceUrl(fh ? getIFrameDataUrl(fh) : `${fsrc}?scripts=${this.attrs.scripts ?? scripts}&html=${html}`),
+                src: this.domSanitizer.bypassSecurityTrustResourceUrl(fh ? getIFrameDataUrl(fh) : `${fsrc}?scripts=${this.markup.scripts ?? scripts}&html=${html}`),
             };
         }
-        const text = this.usercode.replace(this.cursor, "");
-        if (!this.attrs.runeverytime && text === this.lastJS && this.userargs === this.lastUserargs && this.userinput === this.lastUserinput) {
+        const text = this.usercode;
+        if (!this.markup.runeverytime && text === this.lastJS && this.userargs === this.lastUserargs && this.userinput === this.lastUserinput) {
             return;
         }
         this.lastJS = text;
@@ -3010,23 +2768,23 @@ ${fhtml}
     }
 
     get showRuntime() {
-        return this.attrs.showRuntime;
+        return this.markup.showRuntime;
     }
 
     get codeover() {
-        return this.attrs.codeover;
+        return this.markup.codeover;
     }
 
     get codeunder() {
-        return this.attrs.codeunder;
+        return this.markup.codeunder;
     }
 
     get inputstem() {
-        return this.attrs.inputstem;
+        return this.markup.inputstem;
     }
 
     get inputrows() {
-        return this.attrs.inputrows;
+        return this.markup.inputrows;
     }
 
     async setData(data: any, save: boolean = false) {
@@ -3037,7 +2795,7 @@ ${fhtml}
                         const atrs = data[key]; // TODO: make the most important to work
                         for (const akey of Object.keys(atrs)) {
                             // @ts-ignore
-                            this.attrs[akey] = atrs[akey];
+                            this.markup[akey] = atrs[akey];
                         }
                     } else if (key === "commands") {
                         // TODO: implement commands
@@ -3068,329 +2826,245 @@ Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCir
         this.stroke();
     };
 
-const commonComponentOptions = {
-    bindings: pluginBindings,
-    controller: CsController,
-        require: {
-        vctrl: "^timView",
-    },
-};
-
-csApp.component("csRunner", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
-csApp.component("csJypeliRunner", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
-csApp.component("csComtestRunner", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
-csApp.component("csRunnerInput", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
-csApp.component("csJypeliRunnerInput", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
-csApp.component("csComtestRunnerInput", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
-csApp.component("csTaunoRunner", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
-csApp.component("csTaunoRunnerInput", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
-csApp.component("csParsonsRunner", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
-csApp.component("csSageRunner", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
-csApp.component("csSimcirRunner", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
-csApp.component("csTextRunner", {
-    ...commonComponentOptions,
+@Component({
+    selector: "cs-runner",
     template: `
-<div ng-class="::{'csRunDiv': $ctrl.attrs.borders}" class="csTinyDiv" style="text-align: left;">
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <span ng-if="::$ctrl.stem"
-          class="stem"
-          ng-bind-html="::$ctrl.stem"></span>
-    <input class="csTinyText no-popup-menu"
-           ng-class="{warnFrame: $ctrl.isUnSaved()}"
-           ng-hide="$ctrl.noeditor && !$ctrl.viewCode"
-           size="{{::$ctrl.cols}}"
-           ng-model="$ctrl.usercode"
-           ng-trim="false"
-           ng-attr-placeholder="{{$ctrl.placeholder}}"
-           ng-keypress="$ctrl.runCodeIfCR($event)"/>
-    <button ng-if="::$ctrl.isRun"
-            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.preventSave"
-            class = "timButton"
-            title="(Ctrl-S)"
-            ng-click="$ctrl.runCode();"
-            ng-bind-html="::$ctrl.buttonText()"></button>
-    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
-            ng-click="$ctrl.tryResetChanges();">
-            &nbsp;{{::$ctrl.undoButton}}
-            </a>
-    <span ng-if="$ctrl.savedText"
-                class="savedText"
-                ng-bind-html="$ctrl.savedText"></span>
-    <div ng-if="$ctrl.connectionErrorMessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionErrorMessage"></div>
-
-    &nbsp;&nbsp;<a href=""
-                   ng-if="$ctrl.muokattu"
-                   ng-click="$ctrl.initCode();">{{::$ctrl.resetText}}</a>&nbsp;&nbsp;
-    <pre class="console"
-         ng-show="$ctrl.result">{{$ctrl.result}}</pre>
-    <span class="csRunError"
-          ng-if="$ctrl.runError"
-          ng-style="$ctrl.tinyErrorStyle">{{$ctrl.error}}</span>
-    <div class="htmlresult"
-         ng-if="$ctrl.htmlresult">
-        <span ng-bind-html="$ctrl.svgImageSnippet()"></span>
+<div [ngClass]="{'csRunDiv': markup.borders}" class="type-{{rtype}}">
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <h4 *ngIf="header" [innerHTML]="header"></h4>
+    <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
+    <div *ngIf="isTauno">
+        <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
+        <iframe *ngIf="iframesettings"
+                id="iframesettings.id"
+                class="showTauno"
+                [src]="iframesettings.src"
+                (load)="onIframeLoad($event)"
+                [width]="iframesettings.width"
+                [height]="iframesettings.height"
+                sandbox="allow-scripts"></iframe>
+        <p *ngIf="!taunoOn" class="pluginShow"><a (click)="showTauno()">{{showText}} Tauno</a></p>
+        <p *ngIf="taunoOn" class="pluginHide">
+            <a (click)="copyTauno()">{{copyFromTaunoText}}</a> |
+            <a (click)="hideTauno()">{{hideText}} Tauno</a></p>
+        <p *ngIf="taunoOn" class="taunoOhje">
+            {{taunoOhjeText}}</p>
     </div>
-</div>
-`,
-});
-csApp.component("csWeschemeRunner", {
-    ...commonComponentOptions,
-    template: makeTemplate(),
-});
+    <div *ngIf="isSimcir">
+        <p *ngIf="simcirOn" class="pluginHide"><a (click)="hideSimcir()">{{hideText}} SimCir</a></p>
+        <div class="simcirContainer"><p></p></div>
+        <p *ngIf="!simcirOn" class="pluginShow"><a (click)="showSimcir()">{{showText}} SimCir</a></p>
+        <p *ngIf="simcirOn && !noeditor" class="pluginHide">
+            <a (click)="copyFromSimcir()">copy from SimCir</a>
+            | <a (click)="copyToSimcir()">copy to SimCir</a> | <a (click)="hideSimcir()">hide SimCir</a>
+        </p>
+    </div>
+    <ng-container *ngIf="upload">
+        <file-select-manager class="small"
+                [dragAndDrop]="markup.dragAndDrop"
+                [uploadUrl]="uploadUrl"
+                [stem]="uploadstem"
+                (file)="onFileLoad($event)"
+                (upload)="onUploadResponse($event)"
+                (uploadDone)="onUploadDone($event)">
+        </file-select-manager>
+        <div class="form-inline small">
+            <span *ngFor="let item of uploadedFiles">
+                <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
+            </span>
+        </div>
+    </ng-container>
+    <div *ngIf="isAll" style="float: right;">{{languageText}}
+        <select [(ngModel)]="selectedLanguage" required>
+            <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>
+        </select>
+    </div>
+    <pre *ngIf="viewCode && codeover">{{code}}</pre>
+    <div class="csRunCode">
+        <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
+        <div class="csEditorAreaDiv">
+            <cs-editor #mainEditor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
+                    [base]="byCode"
+                    [minRows]="markup.rows"
+                    [maxRows]="markup.maxrows"
+                    [wrap]="wrap"
+                    [modes]="editorModes"
+                    [editorIndex]="markup.editorMode"
+                    [parsonsShuffle]="initUserCode"
+                    [parsonsMaxcheck]="markup.parsonsmaxcheck"
+                    [parsonsNotordermatters]="markup.parsonsnotordermatters"
+                    [parsonsStyleWords]="markup['style-words']"
+                    [parsonsWords]="markup.words"
+                    (content)="onContentChange($event)">
+            </cs-editor>
+            <div class="csRunChanged" *ngIf="usercode !== byCode && !hide.changed"></div>
+            <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
+        </div>
+        <pre class="csRunPost" *ngIf="viewCode && !codeunder && !codeover">{{postcode}}</pre>
+    </div>
+    <div *ngIf="isSage" class="computeSage no-popup-menu"></div>
+    <div class="csInputDiv" *ngIf="showInput && isInput">
+        <p *ngIf="inputstem" class="stem">{{inputstem}}</p>
+        <div class="csRunCode">
+            <textarea class="csRunArea csInputArea"
+                    [rows]="inputrows"
+                    [(ngModel)]="userinput"
+                    [placeholder]="inputplaceholder">
+            </textarea>
+        </div>
+    </div>
+    <div class="csArgsDiv" *ngIf="showArgs && isInput"><label>{{argsstem}} </label>
+        <span><input type="text"
+                    class="csArgsArea"
+                    [(ngModel)]="userargs"
+                    [placeholder]="argsplaceholder"></span>
+    </div>
+    <cs-count-board *ngIf="markup.count" [options]="markup.count"></cs-count-board>
+    <p class="csRunSnippets" *ngIf="buttons">
+        <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
+        &nbsp;&nbsp;
+    </p>
+    <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
+            [maxRows]="markup.maxrows"
+            [disabled]="true">
+    </cs-editor>
+    <div class="csRunMenuArea" *ngIf="!forcedupload">
+        <p class="csRunMenu">
+            <button *ngIf="isRun && buttonText()"
+                    [disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved() && isText)"
+                    class="timButton btn-sm"
+                    title="(Ctrl-S)"
+                    (click)="runCode()"
+                    [innerHTML]="buttonText()"></button>
+            &nbsp;
+            <button *ngIf="isExternalFetch"
+                    [disabled]="isRunning"
+                    class="timButton btn-sm"
+                    (click)="fetchExternalFiles()"
+                    [innerHTML]="externalFetchText()"></button>
+            <a href="#" *ngIf="undoButton && isUnSaved()" title="undoTitle"
+                    (click)="tryResetChanges(); $event.preventDefault()"> &nbsp;{{undoButton}}</a>
+            &nbsp;&nbsp;
+            <span *ngIf="savedText"
+                    class="savedText"
+                    [innerHTML]="savedText"></span>
+            &nbsp;&nbsp;
+            <button *ngIf="isTest"
+                    [disabled]="isRunning"
+                    (click)="runTest()"
+                    class="timButton btn-sm">Test</button>
+            &nbsp;&nbsp;
+            <button *ngIf="isUnitTest"
+                    class="timButton btn-sm"
+                    [disabled]="isRunning"
+                    (click)="runUnitTest()">UTest
+            </button>
+            <tim-loading *ngIf="isRunning"></tim-loading>
+            &nbsp;&nbsp;
+            <span *ngIf="isDocument">
+                <a href="#" [ngClass]="{'link-disable': isRunning}"
+                        (click)="runDocument(); $event.preventDefault()">{{docLink}}</a>&nbsp;&nbsp;
+            </span>
+            <a href="#" *ngIf="!nocode && (file || program)"
+                    (click)="showCode(); $event.preventDefault()">{{showCodeLink}}</a>&nbsp;&nbsp;
+            <a href="#" *ngIf="editor && editor.modified"
+                    (click)="initCode(); $event.preventDefault()">{{resetText}}</a>
+            <a href="#" *ngIf="toggleEditor"
+                    (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
+            <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"
+                    (click)="editor?.showOtherEditor(); $event.preventDefault()">
+                {{editor.nextModeText}}
+            </a>&nbsp;&nbsp;
+            <a href="#" *ngIf="markup.copyLink"
+                    (click)="copyCode(); $event.preventDefault()">{{markup.copyLink}}</a>
+            <span *ngIf="showRuntime"
+                    class="inputSmall"
+                    style="float: right;"
+                    title="Run time in sec {{runtime}}">{{oneruntime}}</span>
+            <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
+                <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
+                </button>
+                &nbsp;
+                <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto" style="position: relative;top: 0.3em;"/>
+                &nbsp;
+                <input type="text" title="Choose linelength for text.  0=no wrap" pattern="[0-9]*" [(ngModel)]="wrap.n" size="2"/>
+            </span>
+            <span *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHTML]="connectionErrorMessage"></span>
 
-const csConsoleApp = angular.module("csConsoleApp", ["ngSanitize"]);
+            <!--
+            <span *ngIf="wrap.n!=-1" class="inputSmall" style="float: right;">
+              <label title="Put 0 to no wrap">wrap: <input type="text"
+                                                          pattern="[0-9]*"
+                                                          [(ngModel)]="wrap.n"
+                                                          size="1"/></label>
+            </span>
+            -->
+        </p>
 
-class CsConsoleController extends CsBase implements IController {
-    // isShell: boolean; method
-    cursor: number;
-    currentSize: string;
-    // isHtml: boolean;
-    oldpwd!: string;
-    currentInput: string;
-    pwd!: string;
-    // byCode: string; method
-    // content: AttrType;
-    examples: Array<t.TypeOf<typeof Example>>;
-    history: Array<{istem: string, ostem: string, input: string, response: string}>;
-    // savestate: string;
-    // path: string;
-    // type: string;
-
-    constructor(scope: IScope, element: JQLite) {
-        super(scope, element);
-        this.examples = [];
-        this.history = [];
-        this.currentSize = "normal";
-        this.currentInput = "";
-        this.cursor = this.history.length; // this.history.length means new input is last command.
-    }
-
-    $postLink() {
-        // nothing to do
-    }
-
-    get isShell() {
-        return languageTypes.getRunType(this.type, "") === "shell";
-    }
-
-    get savestate() {
-        return this.attrs.savestate;
-    }
-
-    $onInit() {
-        super.$onInit();
-
-        // This block could be re-used
-
-        // End of generally re-usable TIM stuff
-        if (this.attrs.examples) {
-            this.examples = this.attrs.examples;
-        }
-
-        this.pwd = ConsolePWD.getPWD(this);
-        this.oldpwd = this.pwd;
-        if (this.usercode === "" && this.byCode) {
-            this.usercode = this.byCode.split("\n")[0];
-        }
-        this.currentInput = this.usercode;
-        if (this.isShell) {
-            ConsolePWD.register(this);
-        }
-    }
-
-    setPWD(pwd: string) {
-        this.pwd = pwd;
-    }
-
-    loadExample(i: number) {
-        this.currentInput = this.examples[i].expr;
-        this.focusOnInput();
-    }
-
-    focusOnInput() {
-        const el: HTMLInputElement | null = this.getRootElement().querySelector(".console-input");
-        if (el) {
-            el.focus();
-        }
-    }
-
-    async handler() {
-        const url = this.pluginMeta.getAnswerUrl();
-        const ty = languageTypes.getRunType(this.type, "shell");
-        const ucode = this.currentInput;
-        const isInput = false;
-        const uargs = "";
-        const uinput = "";
-
-        const r = await to($http<{web: {pwd?: string, error?: string, console?: string}}>({
-            method: "PUT",
-            url: url,
-            data: {
-                input: {
-                    usercode: ucode,
-                    userinput: uinput,
-                    isInput: isInput,
-                    userargs: uargs,
-                    type: ty,
-                },
-            },
-        }));
-        if (r.ok) {
-            const data = r.result.data;
-            let s = "";
-            this.oldpwd = this.pwd;
-            if (data.web.pwd) {
-                ConsolePWD.setPWD(data.web.pwd, this);
-            }
-            if (data.web.error) {
-                s = data.web.error;
-                s = "<pre>" + s + "</pre>";
-            } else {
-                s = data.web.console ?? "";
-                if (!this.attrs.isHtml) {
-                    s = "<pre>" + s + "</pre>";
-                }
-            }
-            this.submit(s);
-        } else {
-            console.log(["protocol error", r.result.data]);
-            this.submit("Endless loop?");
-        }
-    }
-
-    toggleSize() {
-        if (this.currentSize === "normal") {
-            this.currentSize = "enlarged";
-        } else {
-            this.currentSize = "normal";
-        }
-    }
-
-    async submit(result: string) {
-        this.history.push({
-            istem: this.isShell ? this.history.length + " " + this.oldpwd + "$" : "in_" + this.history.length + ": ",
-            ostem: this.isShell ? "" : "out_" + this.history.length + ": ",
-            input: this.currentInput,
-            response: result,
-        });
-        this.currentInput = "";
-        this.cursor = this.history.length;
-        await $timeout();
-        const el = this.getRootElement().querySelector(".console-output");
-        if (el) {
-            el.scrollTop = el.scrollHeight;
-        }
-    }
-
-    load() {
-        if (this.cursor >= this.history.length) {
-            this.currentInput = "";
-            this.cursor = this.history.length;
-            return;
-        }
-        const norm = Math.min(this.history.length - 1, Math.max(0, this.cursor));
-        this.currentInput = this.history[norm].input;
-        this.cursor = norm;
-    }
-
-    up() {
-        if (!this.cursor) {
-            return;
-        }
-        this.cursor--;
-        this.load();
-    }
-
-    down() {
-        this.cursor++;
-        this.load();
-    }
-
-    handleKey(ev: KeyboardEvent) {
-        if (ev.which === 13) {
-            this.handler();
-        }
-        if (ev.which === 40) {
-            this.down();
-        }
-        if (ev.which === 38) {
-            this.up();
-        }
+    </div>
+    <div *ngIf="isSage" class="outputSage no-popup-menu"></div>
+    <pre *ngIf="viewCode && codeunder">{{code}}</pre>
+    <p class="unitTestGreen" *ngIf="runTestGreen">&nbsp;ok</p>
+    <pre class="unitTestRed" *ngIf="runTestRed">{{comtestError}}</pre>
+    <div class="csRunErrorClass" *ngIf="runError">
+        <p class="pull-right">
+            <tim-close-button (click)="closeError()"></tim-close-button>
+        </p>
+        <pre class="csRunError" >{{error}}</pre>
+        <p class="pull-right" style="margin-top: -1em">
+            <tim-close-button (click)="closeError()"></tim-close-button>
+        </p>
+    </div>
+    <div class="csRunErrorClass" *ngIf="fetchError">
+        <p class="pull-right">
+            <tim-close-button (click)="fetchError=undefined"></tim-close-button>
+        </p>
+        <pre class="csRunError" >{{fetchError}}</pre>
+        <p class="pull-right" style="margin-top: -1em">
+            <tim-close-button (click)="fetchError=undefined"></tim-close-button>
+        </p>
+    </div>
+    <pre class="console" *ngIf="result">{{result}}</pre>
+    <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"></span></div>
+    <div class="csrunPreview">
+        <div *ngIf="iframesettings && !isTauno"
+                tim-draggable-fixed
+                caption="Preview"
+                detachable="true"
+                class="no-popup-menu">
+            <span class="csRunMenu">
+                <tim-close-button
+                        (click)="closeFrame()"
+                        style="float: right">
+                </tim-close-button>
+            </span>
+            <iframe id="iframesettings.id"
+                    class="jsCanvas"
+                    [src]="iframesettings.src"
+                    (load)="onIframeLoad($event)"
+                    [width]="iframesettings.width"
+                    [height]="iframesettings.height"
+                    sandbox="allow-scripts allow-forms"
+                    style="border:0">
+            </iframe>
+        </div>
+        <div *ngIf="mdHtml" [innerHTML]="mdHtml | purify">
+        </div>
+    </div>
+    <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
+    <video *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
+            height="40"></video>
+    <div *ngIf="docURL" class="docurl">
+        <p class="pull-right">
+            <tim-close-button (click)="closeDocument()"></tim-close-button>
+        </p>
+        <iframe width="800" height="600" [src]="docURL" target="csdocument" allowfullscreen></iframe>
+    </div>
+    <p class="footer" [innerHTML]="markup.footer"></p>
+</div>`,
+})
+export class CsRunnerComponent extends CsController {
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
     }
 }
-
-csConsoleApp.component("csConsole", {
-    bindings: pluginBindings,
-    controller: CsConsoleController,
-    template: `
-<div class="web-console no-popup-menu {{$ctrl.currentSize}} " ng-keydown="$ctrl.handleKey($event)"><code
-        class="console-output">
-    <div class="console-output-elem"
-         ng-repeat="item in $ctrl.history track by $index"><span class="console-oldinput">  <span
-            class="console-in">{{item.istem}}</span>  <span class="console-userInput">{{item.input}}</span> </span>
-        <span class="console-oldresponse"><span ng-if="::!$ctrl.isShell">  <br/>  <span
-                class="console-out">{{item.ostem}}</span></span>  <span class="console-response"
-                                                                        ng-class="{error:item.error}"><span
-                ng-bind-html="item.response"></span></span>
-            <!-- Double span since ng-bind eats the innermost one -->
-            </span></div>
-    <span class="console-expander-sym" ng-click="$ctrl.toggleSize()"></span></code>
-    <div class="console-examples-box">
-        <span class="examples-title"
-              ng-click="$ctrl.examplesVisible=!$ctrl.examplesVisible">    ▼ example expressions ▲</span>
-        <div>Click to load:</div>
-        <ul>
-            <li ng-repeat="example in ::$ctrl.examples track by $index">
-                <a ng-click="$ctrl.loadExample($index)"
-                   title="{{example.expr}}">{{example.title||example.expr}}</a>
-            </li>
-            <ul>
-    </div>
-    <div class="console-curIndex" ng-if="::$ctrl.isShell">{{$ctrl.pwd}}</div>
-    <span class="console-curIndex">in_{{$ctrl.cursor}}</span><input type="text" placeholder="type expressions here"
-                                                                    class="console-input"
-                                                                    ng-model="$ctrl.currentInput"/>&nbsp;<div
-            class="console-buttons">
-        <button ng-click="$ctrl.up()">↑</button>&nbsp;<button ng-click="$ctrl.down()">↓</button>&nbsp;<button
-            ng-click="$ctrl.handler()">
-        Enter
-    </button>&nbsp;
-    </div>
-</div>
-`,
-});
-
-export const moduleDefs = [csApp, csConsoleApp];

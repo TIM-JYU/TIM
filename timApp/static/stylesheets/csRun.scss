@@ -167,6 +167,18 @@ p.stem {
       width: 100% !important;
     }
   }
+
+  file-select-manager {
+      margin-bottom: 0.5em;
+      margin-left: 0.3em;
+
+      .drag-and-drop {
+        height: 2.5em;
+        margin-left: 3%;
+        margin-right: 3%;
+        width: 94%;
+      }
+  }
 }
 
 .stem {
@@ -250,6 +262,11 @@ li span.stem {
     color: red;
     margin-top: 0.7em;
 }
+
+cs-editor {
+    display: block;
+}
+
 .sortitem {
   box-sizing: content-box;
 }
@@ -421,4 +438,165 @@ li span.stem {
 
 .stack_errors {
     text-align: left;
+}
+
+.link-disable {
+    pointer-events: none !important;
+    color: grey !important;
+}
+
+cs-git-reg-runner table {
+    border: none;
+    margin-bottom: 0;
+
+    td {
+        padding-top: 0.5em;
+        padding-right: 0.3em;
+    }
+}
+
+cs-editor {
+    $button-padding: 1.5em;
+
+    .add-view {
+        text-align: center;
+        border-left: 3px solid #00000026;
+        padding: 0.7em 0;
+
+        file-select {
+            width: 95%;
+            display: inline-block;
+        }
+
+        input {
+            margin-top: 0.4em;
+        }
+
+        button {
+            margin-top: 0.6em;
+        }
+    }
+
+    .tab-list {
+        display: flex;
+        border-radius: 0.5em 0.5em 0 0;
+        overflow: hidden;
+        flex-wrap: wrap-reverse;
+        width: 100%;
+        font-size: 0.96em;
+
+        &:after {
+          flex-grow: 1000000;
+          content: '';
+        }
+    }
+
+    .tab-label {
+        height: 2em;
+        padding: 0;
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #0000001f;
+        flex-grow: 1;
+        cursor: pointer;
+
+        &.tab-label-active, &:hover {
+            background-color: #0000003e;
+
+            tim-close-button {
+                display: block;
+
+                &:hover {
+                    background-color: #00000075;
+                }
+            }
+        }
+
+        &.file-tab {
+            min-width: 7em - 2 * $button-padding;
+
+            &:before {
+                content: '';
+                width: $button-padding;
+            }
+
+            .close-wrapper {
+                display: flex;
+                width: $button-padding;
+                align-content: center;
+            }
+        }
+
+        .file-add-tab {
+            transform: translate3d(0.02em, -0.02em, 0);
+            font-size: 0.75em;
+            width: 2em * 0.96em / 0.75em; // same as height
+            text-align: center;
+        }
+
+        tim-close-button {
+            display: none;
+            border: 1px solid transparent;
+            border-radius: 50%;
+            margin: 0 auto;
+            width: fit-content;
+            margin-top: 0.095em; // to align with text
+            font-size: 0.75em;
+        }
+    }
+}
+
+file-select-manager {
+    width: 100%;
+    display: inline-block;
+}
+
+file-select {
+    width: 100%;
+    display: block;
+
+    [hidden] {
+        display: none !important;
+    }
+
+    .drag-and-drop {
+        border: 2px dashed $csrunmenu-link-color;
+        width: 100%;
+        height: 100%;
+        min-height: 2em;
+        display: table;
+        border-radius: 0.2em;
+        color: $csrunmenu-link-color;
+
+        * {
+            pointer-events: none;
+        }
+
+        &:hover {
+            cursor: pointer;
+            filter: brightness(80%);
+        }
+
+        div {
+            display: table-cell;
+            vertical-align: middle;
+            div {
+                display: block;
+                text-align: center;
+                p {
+                    margin: auto;
+                    width: fit-content;
+                }
+            }
+        }
+
+        .error {
+            color: rgb(235, 30, 30);
+            text-align: center;
+            border: none;
+            background-color: transparent;
+        }
+    }
 }

@@ -83,8 +83,7 @@ type: text
         self.assertTrue(runbutton.is_enabled())
         savedtext = self.find_element('.savedText')
         self.assertTrue( savedtext.is_displayed())
-        margin = self.find_element('.csRunNotSaved')
-        self.assertFalse(margin.is_displayed())
+        self.should_not_exist('.csRunNotSaved')
         d = self.create_doc(initial_par="""
 #- {plugin=csPlugin #text}
 type: text
@@ -94,11 +93,11 @@ disableUnchanged: true
         self.assertFalse(runbutton.is_enabled())
         savedtext = self.find_element('.savedText')
         self.assertTrue(savedtext.is_displayed())
-        margin = self.find_element('.csRunNotSaved')
-        self.assertFalse(margin.is_displayed())
+        self.should_not_exist('.csRunNotSaved')
         textarea.send_keys("more input, let me save")
         self.assertTrue(runbutton.is_enabled())
         self.should_not_exist('.savedText')
+        margin = self.find_element('.csRunNotSaved')
         self.assertTrue(margin.is_displayed())
 
     def test_csplugin_require_type(self):

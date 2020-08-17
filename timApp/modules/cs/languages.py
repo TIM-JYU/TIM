@@ -2,6 +2,7 @@ from subprocess import check_output
 from typing import Optional
 
 import requests
+import re
 
 from points import *
 from run import *
@@ -9,10 +10,12 @@ from os.path import splitext
 from pathlib import Path
 from modifiers import Modifier
 from traceback import print_exc
+from dataclasses import dataclass, field
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
 from fileParams import *  # noqa
+from file_util import File, default_filename
 
 """
 Adding new language to csPlugin:
@@ -22,11 +25,11 @@ Adding new language to csPlugin:
     - in /opt/tim directory run ./dc build csplugin
     - if in varibles.sh was export IS_DEVELOPMENT=true, change it back to true
         - in /opt/tim directory run ./dc build csplugin
-    -  docker push cs3:rust    
+    -  docker push cs3:rust
 1. Add the language class starting with capital letter to this or new file
 2. Add language name to 'ttype' variable
 3. Mimic some existing language when creating the new class
-    - the simplest one is CC that works when just compiler name end extensions are enough to change 
+    - the simplest one is CC that works when just compiler name end extensions are enough to change
 4. Add language to csPlugin.ts languageTypes.runTypes list
    and to exactly same place the Ace editor highlighter name to languageTypes.aceModes
      - if there is a shorter language name in the list, add a new name before the
@@ -68,12 +71,11 @@ def is_compile_error(out, err):
 
 class Language:
     ttype = "_language"
-
-    def __init__(self, query: Optional[QueryClass], sourcecode=""):
+    def __init__(self, query: Optional[QueryClass], sourcefiles = ""):
         """
         :param self: object reference
         :param query: query to use
-        :param sourcecode: source code as a string
+        :param sourcecodes: source code as a string or list of files ({path: str, content: str})
         """
         self.query = query
         self.stdin = None
@@ -95,7 +97,6 @@ class Language:
         self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", f"timimages/cs3:{CS3_TAG}")
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
-        self.soucecode = sourcecode
         self.opt = get_param(query, "opt", "")
         self.is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
         self.hide_compile_out = False
@@ -146,29 +147,24 @@ class Language:
             mkdirs("/tmp/tmp")
 
         self.fullpath = "/tmp/" + self.basename  # check it is sure under userpath
-        fname = "prg"
-        # noinspection PyBroadException
-        try:  # Let's do filename that depends on the taskID. Needed when many autorun plugins in the same page.
-            tid = query.jso.get("taskID", "prg")
-            i = tid.find(".")
-            if i >= 0:
-                tid = tid[i + 1:]
-            asciified = re.sub(r"[^A-Za-z0-9_]", "", tid)
-            # taskID variable may end with a dot (when the plugin doesn't have a task id),
-            # so need to ensure asciified is not empty. Can also happen if task id has only non-ascii chars.
-            if asciified:
-                fname = asciified
-        except AttributeError:
-            pass
-        self.filename = get_param(query, "filename", fname)
+
+        if isinstance(sourcefiles, str):
+            sourcefiles = [File.default(query, sourcefiles)]
+        if sourcefiles[0].path is None:
+            sourcefiles[0].path = default_filename(query)
+
+        extensions, fileext, filedext = self.extensions()
+        self.filenames = [file.path for file in sourcefiles]
+        self.sourcefiles = sourcefiles
+        for file in self.sourcefiles:
+            file.fileext = fileext
+            file.filedext = fileext
+        self.check_extensions(extensions)
+
+        for i in range(len(self.filenames)):
+            self.sourcefiles[i].path = "/tmp/%s/%s%s" % (self.basename, self.filenames[i], self.sourcefiles[i].filedext)
+
         self.ifilename = get_param(query, "inputfilename", "/input.txt")
-
-        self.fileext = ""
-        self.filedext = ""
-
-        self.extension()
-
-        self.sourcefilename = "/tmp/%s/%s%s" % (self.basename, self.filename, self.filedext)
         self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
         # self.sourcefilename = "./%s%s" % (self.filename, self.filedext)
         # self.exename = "./%s.exe" % self.filename
@@ -181,20 +177,45 @@ class Language:
 
         self.before_code = get_param(query, "beforeCode", "")
 
-    def extension(self):
-        return
+    # single file submission compatibility
+    @property
+    def filename(self):
+        return self.filenames[0]
 
-    def check_extension(self, extensions, ext, _exe):
-        self.fileext = ext
-        self.filedext = ext
-        for ex in extensions:
-            if self.filename.endswith(ex):
-                self.fileext = ex.replace(".", "")
-                self.filedext = ex
-                self.filename = self.filename[:-len(ex)]
-                break
+    @filename.setter
+    def filename(self, val):
+        self.filenames[0] = val
 
-    def get_cmdline(self, sourcecode):
+    @property
+    def sourcefilename(self):
+        return self.sourcefiles[0].path
+
+    @sourcefilename.setter
+    def sourcefilename(self, val):
+        self.sourcefiles[0].path = val
+
+    @property
+    def fileext(self):
+        return self.sourcefiles[0].fileext
+
+    @fileext.setter
+    def fileext(self, val):
+        self.sourcefiles[0].fileext = val
+
+    def extensions(self):
+        return None, "", "" # list of the extensions or None for all, default fileext, default filedext
+
+    def check_extensions(self, extensions):
+        if extensions is not None:
+            for i in range(len(self.filenames)):
+                for ex in extensions:
+                    if self.filenames[i].endswith(ex):
+                        self.sourcefiles[i].fileext = ex.replace(".", "")
+                        self.sourcefiles[i].filedext = ex
+                        self.filenames[i] = self.filenames[i][:-len(ex)]
+                        break
+
+    def get_cmdline(self):
         return ""
 
     def set_stdin(self, userinput):
@@ -251,7 +272,7 @@ class Language:
         """
         :return: list of needed js-files (maybe copiled from ts-files)
         """
-        return ["/cs/js/build/csPlugin.js"]
+        return ["/cs/js/build/csModule.js"]
 
     @staticmethod
     def css_files():
@@ -292,26 +313,22 @@ class Language:
         if self.just_compile:
             args = []
 
-        def call_run(args, **kwargs):  # allows reuse of the function arguments
-            if self.rootpath:
-                return run2_subdir(args, dir=self.rootpath, **kwargs)
-            return run2(args, **kwargs)
-
-        code, out, err, pwddir = call_run(args,
-                                          cwd=df(cwd, self.prgpath),
-                                          shell=df(shell, False),
-                                          kill_tree=df(kill_tree, True),
-                                          timeout=df(timeout, self.timeout),
-                                          env=df(env, self.env),
-                                          stdin=df(stdin, self.stdin),
-                                          uargs=uargs,
-                                          code=df(code, "utf-8"),
-                                          extra=df(extra, ""),
-                                          ulimit=df(ulimit, self.ulimit),
-                                          no_x11=df(no_x11, self.no_x11),
-                                          savestate=df(savestate, self.savestate),
-                                          dockercontainer=df(dockercontainer, self.dockercontainer),
-                                          compile_commandline=self.compile_commandline)
+        code, out, err, pwddir = run2_subdir(args,
+                                    dir=self.rootpath,
+                                    cwd=df(cwd, self.prgpath),
+                                    shell=df(shell, False),
+                                    kill_tree=df(kill_tree, True),
+                                    timeout=df(timeout, self.timeout),
+                                    env=df(env, self.env),
+                                    stdin=df(stdin, self.stdin),
+                                    uargs=uargs,
+                                    code=df(code, "utf-8"),
+                                    extra=df(extra, ""),
+                                    ulimit=df(ulimit, self.ulimit),
+                                    no_x11=df(no_x11, self.no_x11),
+                                    savestate=df(savestate, self.savestate),
+                                    dockercontainer=df(dockercontainer, self.dockercontainer),
+                                    compile_commandline=self.compile_commandline)
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
         return code, out, err, pwddir
@@ -367,11 +384,15 @@ class Language:
             return cls.ttype[0]
         return cls.ttype
 
+    @staticmethod
+    def supports_multifiles():
+        """Whether the class supports multiple files as sourcecode"""
+        return False # technically True but we want to default to False for now
+
 
 class LanguageError(Language):
-    ttype = "_error"
-
-    def __init__(self, query, sourcecode, error_str):
+    ttype="_error"
+    def __init__(self, query, error_str, sourcecode = ""):
         try:
             super().__init__(query, sourcecode)
         except Exception as e:
@@ -393,10 +414,6 @@ class LanguageError(Language):
 
     def runner_name(self):
         return "cs-error"
-
-    @staticmethod
-    def js_files():
-        return ["/cs/js/build/language_error.js"]
 
     def is_valid(self):
         return self.valid
@@ -424,7 +441,7 @@ class CS(Language):
             s = s.replace('Console.ReadLine', 'TIMconsole.ReadLine')
         return s
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         cmdline = "%s /r:System.Numerics.dll /out:%s %s /cs/jypeli/TIMconsole.cs" % (
             self.compiler, self.exename, self.sourcefilename)
         return cmdline
@@ -446,8 +463,9 @@ class Jypeli(CS, Modifier):
         self.pure_exename = u"{0:s}.exe".format(self.filename)
         self.pure_mgdest = u"{0:s}.png".format(self.rndname)
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         mainfile = "/cs/jypeli/Ohjelma.cs"
+        sourcecode = self.sourcefiles[0].content
         if sourcecode.find(" Main(") >= 0:
             mainfile = ""
         else:
@@ -499,9 +517,6 @@ class Jypeli(CS, Modifier):
             remove(self.exename)
         return code, out, err, pwddir
 
-    def runner_name(self):
-        return "cs-jypeli-runner"
-
 
 class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers but they are used as such
     ttype = "comtest"
@@ -512,7 +527,7 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
         self.testdll = u"./{0:s}Test.dll".format(self.filename)
         self.hide_compile_out = True
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         testcs = "/tmp/%s/%sTest.cs" % (self.basename, self.filename)
         if not CSComtest.nunit:
             frms = os.listdir("/usr/lib/mono/gac/nunit.framework/")
@@ -567,9 +582,6 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
             give_points(points_rule, "test")
             self.run_points_given = True
         return code, out, err, pwddir
-
-    def runner_name(self):
-        return "cs-comtest-runner"
 
 
 class Shell(Language):
@@ -626,7 +638,7 @@ class Java(Language):
         self.javaname = self.filepath + "/" + self.classname + ".java"
         self.sourcefilename = self.javaname
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath} {self.javaname}"
 
     def run(self, result, sourcelines, points_rule):
@@ -648,7 +660,7 @@ class Kotlin(Java):
         self.sourcefilename = self.javaname
         self.jarname = self.classname + ".jar"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return "kotlinc  %s -include-runtime -d %s" % (self.filename, self.jarname)
 
     def run(self, result, sourcelines, points_rule):
@@ -724,16 +736,13 @@ class JComtest(Java, Modifier):
         self.testdll = self.javaclassname + "Test"
         self.hide_compile_out = True
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return "java comtest.ComTest %s && javac %s %s" % (self.sourcefilename, self.sourcefilename, self.testcs)
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.testdll], no_uargs=True)
         out, err = check_comtest(self, "jcomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
-
-    def runner_name(self):
-        return "cs-comtest-runner"
 
 
 class JUnit(Java, Modifier):
@@ -742,16 +751,13 @@ class JUnit(Java, Modifier):
     def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return "javac %s" % self.javaname
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.javaclassname])
         out, err = check_comtest(self, "junit", code, out, err, result, points_rule)
         return code, out, err, pwddir
-
-    def runner_name(self):
-        return "cs-comtest-runner"
 
 
 class Graphics(Java, Modifier):
@@ -780,9 +786,6 @@ class Graphics(Java, Modifier):
         err = re.sub('Xlib: {2}extension "RANDR" missing on display ":1"\\.\n', "", err)
         return code, out, err, pwddir
 
-    def runner_name(self):
-        return "cs-jypeli-runner"
-
 
 class Scala(Language):
     ttype = "scala"
@@ -793,7 +796,7 @@ class Scala(Language):
         self.classname = self.filename
         self.fileext = "scala"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return "scalac %s" % self.sourcefilename
 
     def run(self, result, sourcelines, points_rule):
@@ -806,15 +809,23 @@ class CC(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "gcc"
+        self.source_extensions = [".c", ".cc"]
 
-    def extension(self):
-        self.check_extension([".h", ".c", ".cc"], ".c", ".exe")
+    def extensions(self):
+        return [".h", ".c", ".cc"], ".c", ".exe"
 
-    def get_cmdline(self, sourcecode):
-        return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
+    def get_cmdline(self):
+        return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sources(), self.exename)
 
     def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
+
+    def sources(self):
+        return " ".join(file.path for file in self.sourcefiles if any(file.path.endswith(ext) for ext in self.source_extensions))
+
+    @staticmethod
+    def supports_multifiles():
+        return True
 
 
 class CPP(CC):
@@ -823,9 +834,10 @@ class CPP(CC):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.compiler = "g++ -std=c++14"
+        self.source_extensions = [".cpp", ".cc"]
 
-    def extension(self):
-        self.check_extension([".h", ".hpp", ".hh", ".cpp", ".cc"], ".cpp", ".exe")
+    def extensions(self):
+        return [".h", ".hpp", ".hh", ".cpp", ".cc"], ".cpp", ".exe"
 
 
 class CComtest(Language):
@@ -858,7 +870,7 @@ class Fortran(Language):
             self.sourcefilename = "/tmp/%s/%s.f" % (self.basename, self.filename)
         self.compiler = "gfortran"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
 
     def run(self, result, sourcelines, points_rule):
@@ -1050,9 +1062,6 @@ class Processing(JS):
 class WeScheme(JS):
     ttype = "wescheme"
 
-    def runner_name(self):
-        return "cs-wescheme-runner"
-
 
 class VPython(JS):
     ttype = "vpython"
@@ -1106,9 +1115,6 @@ class Alloy(Language):
         out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
 
-    def runner_name(self):
-        return "cs-jypeli-runner"
-
 
 class Run(Language):
     ttype = "run"
@@ -1158,15 +1164,9 @@ class SimCir(Language):
     def css_files():
         return ["/cs/simcir/simcir.css", "/cs/simcir/simcir-basicset.css"]
 
-    def runner_name(self):
-        return "cs-simcir-runner"
-
 
 class Sage(Language):
     ttype = "sage"
-
-    def runner_name(self):
-        return "cs-sage-runner"
 
 
 def get_by_id(jso, item_id, default=None):
@@ -1313,12 +1313,12 @@ class Jsav(Language):
         """
         return ["message"]
 
-    def runner_name(self):
-        return "cs-jsav-runner"
-
     @staticmethod
     def js_files():
         return ["/cs/js/build/jsav.js"]
+
+    def runner_name(self):
+        return "cs-jsav-runner"
 
     def deny_attributes(self):
         return {"srchtml": "",
@@ -1417,7 +1417,7 @@ class FS(Language):
         self.sourcefilename = "/tmp/%s/%s.fs" % (self.basename, self.filename)
         self.fileext = "fs"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return "fsharpc --out:%s %s" % (self.exename, self.sourcefilename)
 
     def run(self, result, sourcelines, points_rule):
@@ -1568,10 +1568,10 @@ class Rust(Language):
         super().__init__(query, sourcecode)
         self.compiler = "rustc"
 
-    def extension(self):
-        self.check_extension([".rs"], ".rs", ".exe")
+    def extensions(self):
+        return [".rs"], ".rs", ".exe"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return f"{self.compiler} -C debuginfo=0 -o {self.exename} {self.opt} {self.sourcefilename}"
 
     def run(self, result, sourcelines, points_rule):
@@ -1585,10 +1585,10 @@ class Pascal(Language):
         super().__init__(query, sourcecode)
         self.compiler = "fpc"
 
-    def extension(self):
-        self.check_extension([".pp", ".pas"], ".pas", ".exe")
+    def extensions(self):
+        return [".pp", ".pas"], ".pas", ".exe"
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         return self.compiler + " %s %s -o%s" % (self.opt, self.sourcefilename, self.exename)
 
     def run(self, result, sourcelines, points_rule):
@@ -1598,8 +1598,8 @@ class Pascal(Language):
 class Tauno(Language, Modifier):
     ttype = "tauno"
 
-    def runner_name(self):
-        return "cs-tauno-runner"
+    def modify_query(self):
+        self.query.set_param(True, "isTauno")
 
 
 # Copy this for new language class
@@ -1609,7 +1609,7 @@ class Lang(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
 
-    def get_cmdline(self, sourcecode):
+    def get_cmdline(self):
         cmdline = ""
         return cmdline
 

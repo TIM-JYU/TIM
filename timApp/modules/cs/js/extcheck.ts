@@ -1,17 +1,42 @@
-import {IScope, ICompileService, IAugmentedJQuery, IAttributes} from "angular";
-import {pluginBindings} from "tim/plugin/util";
-import {csApp, CsController, uploadTemplate} from "./csPlugin";
+/* eslint no-underscore-dangle: ["error", { "allow": ["hide_"] }] */
+import {
+        Input,
+        Component,
+        NgModule,
+        ViewChild,
+        ChangeDetectorRef,
+        ElementRef,
+        Directive,
+        Type,
+        ViewContainerRef,
+        Injector,
+        Compiler,
+        ComponentRef,
+    } from "@angular/core";
+import {CommonModule} from "@angular/common";
+import {HttpClient} from "@angular/common/http";
+import {DomSanitizer} from "@angular/platform-browser";
+import {CsController} from "./csPlugin";
+
+interface IAngularComponent {
+    template: string;
+}
+
+interface IAngularModule {
+    components: {[key: string]: IAngularComponent};
+    entry: string;
+}
 
 interface IDivContent {
     classes: string;
-    content?: string;
+    content: string;
     isHTML?: boolean;
-    isAngular?: boolean;
 }
 
 interface IOutputContainer {
     title?: IDivContent;
-    content?: IDivContent;
+    text?: IDivContent;
+    angular?: IAngularModule;
     hide?: boolean;
 }
 
@@ -20,10 +45,160 @@ interface IRunResult {
     penalties: string[];
 }
 
-class ExtcheckController extends CsController {
+@Component({
+    selector: "cs-extcheck-runner",
+    styleUrls: ["./extcheck.scss"],
+    template: `
+        <div [ngClass]="{'csRunDiv': markup.borders}" class="type-{{rtype}}">
+            <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+            <h4 *ngIf="header" [innerHTML]="header"></h4>
+            <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
+            <ng-container *ngIf="upload">
+                <file-select-manager class="small"
+                        [dragAndDrop]="markup.dragAndDrop"
+                        [uploadUrl]="uploadUrl"
+                        [stem]="uploadstem"
+                        (file)="onFileLoad($event)"
+                        (upload)="onUploadResponse($event)">
+                </file-select-manager>
+                <div class="form-inline small">
+                    <span *ngFor="let item in uploadedFiles">
+                        <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
+                    </span>
+                </div>
+            </ng-container>
+            <pre *ngIf="viewCode && codeover">{{code}}</pre>
+            <div class="csRunCode">
+                <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
+                <div class="csEditorAreaDiv">
+                    <cs-editor #mainEditor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
+                            [base]="byCode"
+                            [minRows]="markup.rows"
+                            [maxRows]="markup.maxrows"
+                            [wrap]="wrap"
+                            [modes]="editorModes"
+                            [editorIndex]="markup.editorMode"
+                            [parsonsShuffle]="initUserCode"
+                            [parsonsMaxcheck]="markup.parsonsmaxcheck"
+                            [parsonsNotordermatters]="markup.parsonsnotordermatters"
+                            [parsonsStyleWords]="markup['style-words']"
+                            [parsonsWords]="markup.words"
+                            (content)="onContentChange($event)">
+                    </cs-editor>
+                    <div class="csRunChanged" *ngIf="usercode !== byCode && !hide.changed"></div>
+                    <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
+                </div>
+                <pre class="csRunPost" *ngIf="viewCode && !codeunder && !codeover">{{postcode}}</pre>
+            </div>
+            <div *ngIf="isSage" class="computeSage no-popup-menu"></div>
+            <div class="csInputDiv" *ngIf="showInput && isInput">
+                <p *ngIf="inputstem" class="stem">{{inputstem}}</p>
+                <div class="csRunCode">
+                    <textarea class="csRunArea csInputArea"
+                            [rows]="inputrows"
+                            [(ngModel)]="userinput"
+                            placeholder="inputplaceholder">
+                    </textarea>
+                </div>
+            </div>
+            <div class="csArgsDiv" *ngIf="showArgs && isInput"><label>{{argsstem}} </label>
+                <span><input type="text"
+                            class="csArgsArea"
+                            [(ngModel)]="userargs"
+                            placeholder="argsplaceholder"></span>
+            </div>
+            <cs-count-board *ngIf="markup.count" [options]="markup.count"></cs-count-board>
+            <p class="csRunSnippets" *ngIf="buttons">
+                <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
+                &nbsp;&nbsp;
+            </p>
+            <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
+                    [maxRows]="markup.maxrows"
+                    [disabled]="true">
+            </cs-editor>
+            <div class="csRunMenuArea" *ngIf="!forcedupload">
+                <p class="csRunMenu">
+                    <button *ngIf="isRun && buttonText()"
+                            [attr.disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved() && isText)"
+                            class="timButton btn-sm"
+                            title="(Ctrl-S)"
+                            (click)="runCode()"
+                            [innerHTML]="buttonText()"></button>
+                    &nbsp;
+                    <button *ngIf="isExternalFetch"
+                            [disabled]="isRunning"
+                            class="timButton btn-sm"
+                            (click)="fetchExternalFiles()"
+                            [innerHTML]="externalFetchText()"></button>
+                    <a href="#" *ngIf="undoButton && isUnSaved()" title="undoTitle"
+                            (click)="tryResetChanges(); $event.preventDefault()"> &nbsp;{{undoButton}}</a>
+                    &nbsp;&nbsp;
+                    <span *ngIf="savedText"
+                            class="savedText"
+                            [innerHTML]="savedText"></span>
+                    &nbsp;&nbsp;
+                    <tim-loading *ngIf="isRunning"></tim-loading>
+                    &nbsp;&nbsp;
+                    <span *ngIf="isDocument">
+                        <a href="#" [attr.disabled]="isRunning"
+                                (click)="runDocument(); $event.preventDefault()">{{docLink}}</a>&nbsp;&nbsp;
+                    </span>
+                    <a href="#" *ngIf="!nocode && (file || program)"
+                            (click)="showCode(); $event.preventDefault()">{{showCodeLink}}</a>&nbsp;&nbsp;
+                    <a href="#" *ngIf="editor && editor.modified"
+                            (click)="editor?.reset(); $event.preventDefault()">{{resetText}}</a>
+                    <a href="#" *ngIf="toggleEditor"
+                            (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
+                    <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"
+                            (click)="editor?.showOtherEditor(); $event.preventDefault()">
+                        {{editor.nextModeText}}
+                    </a>&nbsp;&nbsp;
+                    <a href="#" *ngIf="markup.copyLink"
+                            (click)="copyCode(); $event.preventDefault()">{{markup.copyLink}}</a>
+                    <span *ngIf="showRuntime"
+                            class="inputSmall"
+                            style="float: right;"
+                            title="Run time in sec {{runtime}}">{{oneruntime}}</span>
+                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
+                        <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
+                        </button>
+                        <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto" style="position: relative;top: 0.3em;"/>
+                        <input type="text" title="Choose linelength for text.  0=no wrap" pattern="/[-0-9]*/" [(ngModel)]="wrap.n" size="2"/>
+                    </span>
+                    <span *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHTML]="connectionErrorMessage"></span>
+                </p>
+            </div>
+            <pre *ngIf="viewCode && codeunder">{{code}}</pre>
+            <div class="csRunErrorClass" *ngIf="runError">
+                <p class="pull-right">
+                    <tim-close-button (click)="closeError()"></tim-close-button>
+                </p>
+                <pre class="csRunError" >{{error}}</pre>
+                <p class="pull-right" style="margin-top: -1em">
+                    <tim-close-button (click)="closeError()"></tim-close-button>
+                </p>
+            </div>
+            <div class="csRunErrorClass" *ngIf="fetchError">
+                <p class="pull-right">
+                    <tim-close-button (click)="fetchError=undefined"></tim-close-button>
+                </p>
+                <pre class="csRunError" >{{fetchError}}</pre>
+                <p class="pull-right" style="margin-top: -1em">
+                    <tim-close-button (click)="fetchError=undefined"></tim-close-button>
+                </p>
+            </div>
+            <extcheck-output-container *ngIf="penalty_container" [data]="penalty_container"></extcheck-output-container>
+            <extcheck-output-container *ngFor="let container of containers" [data]="container"></extcheck-output-container>
+            <p class="footer" [innerHTML]="markup.footer"></p>
+        </div>`,
+})
+export class ExtcheckComponent extends CsController {
+    containers?: IOutputContainer[];
+    penalty_container?: IOutputContainer;
 
-    private containers?: IOutputContainer[];
-    private penalty_container?: IOutputContainer;
+    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+        super(el, http, domSanitizer, cdr);
+    }
 
     languageResponse(data: IRunResult) {
         if (data == null) {
@@ -40,7 +215,7 @@ class ExtcheckController extends CsController {
                         classes: "",
                         content: "Penalties",
                     },
-                    content: {
+                    text: {
                         classes: "",
                         content: data.penalties.map((e) => `<p class="penalty-text centermargin">${e}</p>`).join("\n"),
                         isHTML: true,
@@ -51,234 +226,116 @@ class ExtcheckController extends CsController {
     }
 }
 
-csApp.directive("compile", function($compile: ICompileService) {
-    return function(scope: IScope, element: IAugmentedJQuery, attrs: IAttributes) {
-        scope.$watch(
-            function(scope2: IScope) {
-                return scope2.$eval(attrs.compile as string) as string;
-            },
-            function(value: string) {
-                element.html(value);
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                $compile(element.contents() as any)(scope);
-            }
-        );
-    };
-});
-
-csApp.component("csExtcheckRunner", {
-    bindings: pluginBindings,
-    controller: ExtcheckController,
-    require: {
-        vctrl: "^timView",
-    },
-    template: `<div ng-class="::{'csRunDiv': $ctrl.attrs.borders}" class="type-{{::$ctrl.rtype}}">
-    <tim-markup-error ng-if="$ctrl.markupError" [data]="$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="$ctrl.header" ng-bind-html="$ctrl.header"></h4>
-    <p ng-if="$ctrl.stem" class="stem" ng-bind-html="$ctrl.stem"></p>`
-    + uploadTemplate() +
-    `<pre ng-if="$ctrl.viewCode && $ctrl.codeover">{{$ctrl.code}}</pre>
-    <div class="csRunCode">
-        <pre class="csRunPre" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.precode}}</pre>
-        <div class="csEditorAreaDiv">
-            <div class="csrunEditorDiv" ng-if="!$ctrl.noeditor || $ctrl.viewCode">
-            <textarea class="csRunArea csEditArea no-popup-menu"
-                      rows="{{$ctrl.rows}}"
-                      ng-model="$ctrl.usercode"
-                      ng-trim="false"
-                      ng-attr-placeholder="{{$ctrl.placeholder}}"> 
-            </textarea>
-            </div>
-            <div class="csRunChanged" ng-if="$ctrl.usercode !== $ctrl.byCode && !$ctrl.hide.changed"></div>
-            <div class="csRunNotSaved" ng-show="$ctrl.isUnSaved()"></div>
-        </div>
-        <pre class="csRunPost" ng-if="$ctrl.viewCode && !$ctrl.codeunder && !$ctrl.codeover">{{$ctrl.postcode}}</pre>
-    </div>
-    <div class="csInputDiv" ng-if="$ctrl.showInput && $ctrl.isInput">
-        <p ng-if="$ctrl.inputstem" class="stem">{{$ctrl.inputstem}}</p>
-        <div class="csRunCode">
-            <textarea class="csRunArea csInputArea"
-                                         rows={{::$ctrl.inputrows}}
-                                         ng-model="$ctrl.userinput"
-                                         ng-trim="false"
-                                         placeholder="{{::$ctrl.inputplaceholder}}"></textarea>
-        </div>
-    </div>
-    <div class="csArgsDiv" ng-if="$ctrl.showArgs && $ctrl.isInput"><label>{{::$ctrl.argsstem}} </label>
-        <span><input type="text"
-                     class="csArgsArea"
-                     ng-model="$ctrl.userargs"
-                     ng-trim="false"
-                     placeholder="{{::$ctrl.argsplaceholder}}"></span>
-    </div>
-    <div ng-if="$ctrl.countItems" class="csPluginCountItems">
-        <span ng-if="$ctrl.countLines">Lines: <span>{{$ctrl.lineCount}}</span></span>
-        <span ng-if="$ctrl.countWords">Words: <span>{{$ctrl.wordCount}}</span></span>
-        <span ng-if="$ctrl.countChars">Chars: <span>{{$ctrl.charCount}}</span></span>
-    </div>
-    <div ng-if="$ctrl.countError" class="csPluginCountError">
-        <p>{{$ctrl.countError}}</p>
-    </div>
-    <p class="csRunSnippets" ng-if="$ctrl.buttons && $ctrl.buttons.length">
-        <button ng-repeat="item in ::$ctrl.buttons" ng-click="$ctrl.addText(item)">{{$ctrl.addTextHtml(item)}}</button>
-        &nbsp;&nbsp;
-    </p>
-    <div class="csRunMenuArea" ng-if="::!$ctrl.forcedupload">
-        <p class="csRunMenu">
-            <button ng-if="::$ctrl.isRun && $ctrl.buttonText()"
-                    ng-disabled="$ctrl.isRunning || $ctrl.preventSave || ($ctrl.disableUnchanged && !$ctrl.isUnSaved() && $ctrl.isText)"
-                    class="timButton btn-sm"
-                    title="(Ctrl-S)"
-                    ng-click="$ctrl.runCode()"
-                    ng-bind-html="::$ctrl.buttonText()"></button>
-            <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}"
-            ng-click="$ctrl.tryResetChanges();">
-                &nbsp;{{::$ctrl.undoButton}}
-            </a>
-            &nbsp&nbsp
-            <span ng-if="$ctrl.savedText"
-                    class="savedText"
-                    ng-bind-html="$ctrl.savedText"></span>
-            &nbsp&nbsp
-            <tim-loading ng-if="$ctrl.isRunning"></tim-loading>
-            &nbsp&nbsp<span ng-if="::$ctrl.isDocument">
-
-            <a href="" ng-disabled="$ctrl.isRunning"
-               ng-click="$ctrl.runDocument()">{{$ctrl.docLink}}</a>&nbsp&nbsp</span>
-            <a href=""
-               ng-if="::!$ctrl.nocode && ($ctrl.file || $ctrl.program)"
-               ng-click="$ctrl.showCode()">{{$ctrl.showCodeLink}}</a>&nbsp&nbsp
-            <a href=""
-               ng-if="$ctrl.muokattu"
-               ng-click="$ctrl.initCode()">{{::$ctrl.resetText}}</a>
-            <a href=""
-               ng-if="$ctrl.toggleEditor"
-               ng-click="$ctrl.hideShowEditor()">{{$ctrl.toggleEditorText[$ctrl.noeditor ? 0 : 1]}}</a>
-            <a href=""
-               ng-if="!$ctrl.noeditor"
-               ng-click="$ctrl.showOtherEditor()">
-                {{$ctrl.editorText[$ctrl.editorModeIndecies[$ctrl.editorMode+1]]}}</a>&nbsp&nbsp
-            <a href=""
-               ng-if="::$ctrl.attrs.copyLink"
-               ng-click="$ctrl.copyCode()">{{$ctrl.attrs.copyLink}}</a>
-            <span ng-if="::$ctrl.showRuntime"
-                  class="inputSmall"
-                  style="float: right;"
-                  title="Run time in sec {{$ctrl.runtime}}">{{$ctrl.oneruntime}}</span>
-            <span ng-if="$ctrl.wrap.n!=-1 && !$ctrl.hide.wrap" class="inputSmall" style="float: right;" title="Put 0 to no wrap">
-                <button class="timButton" title="Click to reformat text for given line length" ng-click="$ctrl.checkWrap()" style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
-                </button>
-                <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto" style="position: relative;top: 0.3em;"/>
-                <input type="text" title="Choose linelength for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
-            </span>
-            <div ng-if="$ctrl.connectionErrorMessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionErrorMessage"></div>
-            </p>
-
-    </div>
-    <pre ng-if="$ctrl.viewCode && $ctrl.codeunder">{{$ctrl.code}}</pre>
-    <div class="csRunErrorClass" ng-if="$ctrl.runError">
-        <p class="pull-right">
-            <tim-close-button ng-click="$ctrl.closeError()"></tim-close-button>
-        </p>
-        <pre class="csRunError" >{{$ctrl.error}}</pre>
-        <p class="pull-right" style="margin-top: -1em">
-            <tim-close-button ng-click="$ctrl.closeError()"></tim-close-button>
-        </p>
-    </div>
-    <extcheck-output-container ng-if="$ctrl.penalty_container" data="$ctrl.penalty_container"></extcheck-output-container>
-    <extcheck-output-container ng-repeat="container in $ctrl.containers" data="container"></extcheck-output-container>
-    <p class="footer" ng-bind-html="$ctrl.footer"></p>
-</div>`,
-});
-
-class OutputContainerController implements IOutputContainer {
-    caret: string = "<span class='caret'></span>";
-
-    title: IDivContent = {classes: ""};
-    content: IDivContent = {classes: ""};
-    hide: boolean = false;
-
-    set data(data: IOutputContainer) {
-        this.title = data.title ?? {classes: ""};
-        this.content = data.content ?? {classes: ""};
-        this.hide = !!data.hide;
-    }
+@Directive({
+    selector: "[custom-data]",
+})
+export class CustomOutputDirective {
+    constructor(public viewContainerRef: ViewContainerRef) { }
 }
 
-csApp.component("extcheckOutputContainer", {
-    controller: OutputContainerController,
-    bindings: {
-        data: "<",
-    },
-    template: `
-        <ng-container ng-if="$ctrl.title.content && $ctrl.content.content">
-            <button ng-if="$ctrl.title.isAngular" ng-click="$ctrl.hide=!$ctrl.hide" ng-class="{'collapsed-button': $ctrl.hide}" class="title-button {{$ctrl.title.classes}}" compile="$ctrl.title.content + $ctrl.caret"></button>
-            <button ng-if="!$ctrl.title.isAngular && $ctrl.title.isHTML" ng-click="$ctrl.hide=!$ctrl.hide" ng-class="{'collapsed-button': $ctrl.hide}" class="title-button {{$ctrl.title.classes}}" ng-bind-html="$ctrl.title.content + $ctrl.caret"></button>
-            <button ng-if="!$ctrl.title.isAngular && !$ctrl.title.isHTML" ng-click="$ctrl.hide=!$ctrl.hide" ng-class="{'collapsed-button': $ctrl.hide}" class="title-button {{$ctrl.title.classes}}">{{$ctrl.title.content}}<span class='caret'></span></button>
-            <ng-container ng-if="!$ctrl.hide">
-                <div ng-if="$ctrl.content.isAngular" class="centermargin {{$ctrl.content.classes}}" compile="$ctrl.content.content"></div>
-                <div ng-if="!$ctrl.content.isAngular && $ctrl.content.isHTML" class="centermargin {{$ctrl.content.classes}}" ng-bind-html="$ctrl.content.content"></div>
-                <div ng-if="!$ctrl.content.isAngular && !$ctrl.content.isHTML">
-                    <pre class="centermargin {{$ctrl.content.classes}}">{{$ctrl.content.content}}</pre>
-                </div>
-            </ng-container>
-        </ng-container>`,
-});
+export class CustomOutputBase {
+    data?: string;
+}
 
-// TODO: replace extcheckOutputContainer with this. Requires a substitute for the compile directive
-/*
 @Component({
     selector: "extcheck-output-container",
     template: `
-        <ng-container *ngIf="title.content && content.content">
-            <button *ngIf="title.isAngular" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}" compile="title.content + caret"></button>
-            <button *ngIf="!title.isAngular && title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}" [innerHTML]="title.content + caret"></button>
-            <button *ngIf="!title.isAngular && !title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}">{{title.content}}<span class='caret'></span></button>
-            <ng-container *ngIf="!hide">
-                <div *ngIf="content.isAngular" class="centermargin {{content.classes}}" compile="content.content"></div>
-                <div *ngIf="!content.isAngular && content.isHTML" class="centermargin {{content.classes}}" [innerHTML]="content.content"></div>
-                <div *ngIf="!content.isAngular && !content.isHTML">
-                    <pre class="centermargin {{content.classes}}">{{content.content}}</pre>
-                </div>
-            </ng-container>
+        <button *ngIf="title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}" [innerHTML]="title.content + caret"></button>
+        <button *ngIf="!title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}">{{title.content}}<span class='caret'></span></button>
+        <div *ngIf="angularContent" class="centermargin" custom-data></div>
+        <ng-container *ngIf="!hide && textContent">
+            <div *ngIf="textContent.isHTML" class="centermargin {{textContent.classes}}" [innerHTML]="textContent.content"></div>
+            <div *ngIf="!textContent.isHTML">
+                <pre class="centermargin {{textContent.classes}}">{{textContent.content}}</pre>
+            </div>
         </ng-container>`,
 })
-class OutputContainerComponent implements IOutputContainer {
-    title: IDivContent = {classes: ""};
-    content: IDivContent = {classes: ""};
-    hide: boolean = false;
+export class OutputContainerComponent implements IOutputContainer {
+    private static components: {[key: string]: Type<unknown>};
+    static addComponent(name: string, type: Type<unknown>): Type<unknown> {
+        if (!this.components.hasOwnProperty(name)) {
+            this.components[name] = type;
+        }
+        return this.components[name];
+    }
+
+    title: IDivContent = {classes: "", content: ""};
+    textContent?: IDivContent;
+    angularContent?: IAngularModule;
+    componentRef?: ComponentRef<unknown>;
+    hide_: boolean = false;
+    @ViewChild(CustomOutputDirective) customOutput!: CustomOutputDirective;
 
     caret: string = "<span class='caret'></span>";
 
-    /* tslint:disable-next-line:no-unsafe-any / <-- put * back in
+    constructor(private injector: Injector, private compiler: Compiler) { }
+
+    async ngAfterViewInit() {
+        if (!this.angularContent) { return; }
+        if (!this.angularContent.entry || !Object.keys(this.angularContent.components).length) {
+            this.error("Angular entry or components not specified");
+            return;
+        }
+
+        const components = [];
+        const module = this.angularContent;
+        for (const key in module.components) {
+            if (!module.components.hasOwnProperty(key)) { continue; }
+            const tmpCmp = Component({selector: key, template: module.components[key].template})(class {});
+            components.push(tmpCmp);
+        }
+        const tmpModule = NgModule({declarations: components, imports: [CommonModule]})(class {});
+
+        const factories = await this.compiler.compileModuleAndAllComponentsAsync(tmpModule);
+        const m = factories.ngModuleFactory.create(this.injector);
+        const factory = factories.componentFactories.find((e) => e.selector == module.entry);
+        if (!factory) {
+            this.error("");
+            return;
+        }
+        this.componentRef = factory.create(this.injector, [], null, m);
+        this.customOutput.viewContainerRef.insert(this.componentRef.hostView);
+        this.hide = this.hide; // refresh style.display
+    }
+
+    ngOnDestroy() {
+        if (this.componentRef) {
+            this.componentRef.destroy();
+        }
+    }
+
+    get hide(): boolean {
+        return this.hide_;
+    }
+    set hide(b: boolean) {
+        this.hide_ = b;
+        if (this.componentRef) {
+            // ngIf destroys the component: use display
+            (this.componentRef.location.nativeElement as HTMLElement).style.display = b ? "none" : "";
+        }
+    }
+
+    /* eslint-disable-next-line @typescript-eslint/tslint/config -- decorators cause issues on setters */
     @Input()
     set data(data: IOutputContainer) {
-        this.title = data.title ?? {classes: ""};
-        this.content = data.content ?? {classes: ""};
+        if (data.title) {
+            this.title = data.title;
+        }
+        if (data.angular && data.text) {
+            this.error("Only either angular or text can be defined at once");
+            this.hide = false;
+            return;
+        }
+        if (data.angular) {
+            this.angularContent = data.angular;
+        } else {
+            this.textContent = data.text;
+        }
         this.hide = !!data.hide;
     }
-}
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
-@NgModule({
-    declarations: [
-        OutputContainerComponent,
-    ],
-    imports: [
-        BrowserModule,
-    ],
-})
-export class JsframeModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
+    error(str: string) {
+        this.angularContent = undefined;
+        this.textContent = {classes: "", content: str};
     }
 }
-
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(JsframeModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "extcheckOutputContainer", OutputContainerComponent);
-export const moduleDefs = [angularJsModule];
-*/

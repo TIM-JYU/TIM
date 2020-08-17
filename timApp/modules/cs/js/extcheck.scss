@@ -1,0 +1,25 @@
+.title-button {
+    width: 100%;
+    background-color: #dcdcdc;
+    border: none;
+    border-top: 1px solid black;
+    outline: none;
+
+    &:hover {
+        background-color: #b5b5b5;
+    }
+
+    &.collapsed-button {
+        background-color: #cccccc;
+    }
+}
+
+.penalty-text {
+    background-color: #da0000;
+    width: 95%;
+    padding: 2px 0.5em;
+}
+
+.centermargin {
+    margin: 0 auto !important;
+}

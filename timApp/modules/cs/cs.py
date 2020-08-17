@@ -7,8 +7,6 @@ import signal
 import socketserver
 
 from manager import *
-from modifiers import Tiny, Input, Args
-from languages import SimCir
 import os
 import glob
 from base64 import b64encode
@@ -16,8 +14,8 @@ from cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
 from os.path import splitext
 from fileParams import encode_json_data
 from pathlib import Path
-from loadable import LoadableJSONEncoder
 from ttype import TType
+from file_handler import FileHandler
 # noinspection PyUnresolvedReferences
 
 #  uid = pwd.getpwnam('agent')[2]
@@ -188,24 +186,8 @@ def delete_extra_files(extra_files, prgpath):
             except:
                 print("Can not delete: ", efilename)
 
-def copy_files_regex(files, source_dir, dest_dir):
-    if files is None or source_dir is None or dest_dir is None:
-        return
-    
-    regexs = [re.compile(file) for file in files]
-    
-    for root, dirs, files in os.walk(source_dir):
-        rootp = Path(root)
-        relpath = rootp.relative_to(source_dir)
-        for file in files:
-            relfilepath = relpath / file
-            if any(regex.fullmatch(str(relfilepath)) is not None for regex in regexs):
-                mkdirs(str(dest_dir / relpath))
-                shutil.copy2(str(rootp / file), str(dest_dir / relfilepath))
-
 def get_md(ttype: TType, query):
     _, bycode, js, runner = handle_common_params(query, ttype)
-    ttype = str(ttype) # TODO: make rest use the TType class
 
     usercode = None
     user_print = get_json_param(query.jso, "userPrint", None, False)
@@ -434,11 +416,6 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
 
     language, bycode, js, runner = handle_common_params(query, ttype)
 
-    ttype_obj = ttype
-    ttype = str(ttype) # TODO: make rest use the TType class
-
-    usercode = get_json_eparam(query.jso, "state", "usercode", None)
-
     state = query.jso.get("state")
     if state:
         state_copy = language.state_copy()
@@ -455,6 +432,8 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
     if do_lazy and not before_open:
         before_open = language.get_default_before_open()
 
+    usercode = get_json_eparam(query.jso, "state", "usercode", None)
+
     if before_open or is_rv:
         susercode = language.modify_usercode(usercode or "")
         before_open = before_open.replace('{USERCODE}', susercode)
@@ -470,16 +449,33 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
         userinput = get_json_eparam(query.jso, "state", "userinput", '')
         userargs = get_json_eparam(query.jso, "state", "userargs", '')
         uploaded_file = get_json_eparam(query.jso, "state", "uploadedFile", None)
+        uploaded_files = get_json_param(query.jso, "state", "uploadedFiles", None)
+        submitted_files = get_json_param(query.jso, "state", "submittedFiles", None)
         s = ""
-        if ttype.find('input') >= 0 :
+        if "input" in ttype:
             s = s + '<p>Input:</p><pre>' + userinput + '</pre>'
-        if ttype.find('args') >= 0:
+        if "args" in ttype:
             s = s + '<p>Args:</p><pre>' + userargs + '</pre>'
-        if uploaded_file is not None:
+        if uploaded_files is not None:
+            for f in uploaded_files:
+                s = s + f'<p>File:</p><pre>{os.path.basename(f["path"])}</pre>'
+        elif uploaded_file is not None:
             s = s + '<p>File:</p><pre>' + os.path.basename(uploaded_file) + '</pre>'
-        ucode =  language.get_review(usercode)
-        if isinstance(ucode, str):
-            s = '<pre>' + ucode + '</ pre>' + s
+
+        if submitted_files is not None:
+            for f in submitted_files:
+                s = s + f'<pre>{f["path"]}</pre>'
+                if "content" not in f:
+                    continue
+                ucode = language.get_review(f["content"])
+                if isinstance(ucode, str):
+                    s = s + f'<pre>---------------------FILE START---------------------\n'
+                    s = s + ucode
+                    s = s + '\n----------------------FILE END----------------------</pre>'
+        else:
+            ucode = language.get_review(usercode)
+            if isinstance(ucode, str):
+                s = '<pre>' + ucode + '</ pre>' + s
         if not s:
             s = "<pre>No answer</pre>"
         result = NOLAZY + '<div class="review" ng-non-bindable>' + s + '</div>'
@@ -510,7 +506,7 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
 
         if before_open:
             ebycode = before_open
-        if ttype_obj.has_modifier(Tiny):
+        if "tiny" in ttype:
             lazy_visible = '<div class="lazyVisible ' + cs_class\
                            + 'csTinyDiv no-popup-menu" >' + get_tiny_surrounding_headers(
                 query,
@@ -534,30 +530,28 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
         lazy_start = LAZYSTART
         lazy_end = LAZYEND
 
-    if ttype == "c1" or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
+    if "c1" in ttype or True:  # c1 oli testejä varten ettei sinä aikana rikota muita.
         s = f'{lazy_start}<{r}{lazy_class} ng-cloak json="{encode_json_data(jso)}"></{r}>{lazy_end}{lazy_visible}'
     return s
 
 
 def handle_common_params(query: QueryClass, ttype: TType):
-    if isinstance(ttype, str):
-        ttype = TType(ttype, query)
     language = ttype.get_language()
     runner = ttype.runner_name()
-    
+
     if query.hide_program:
         get_param_del(query, 'program', '')
     ttype.modify_query()
     js = query_params_to_map_check_parts(query, language.deny_attributes())
-    
-    if str(ttype) not in ["tauno", "simcir", "parsons"]: # TODO: make tauno, simcir and parsons work without this
+
+    if str(ttype) not in ["tauno", "parsons"]: # TODO: make tauno, simcir and parsons work without this
         if not "markup" in js or js["markup"] is None:
             js["markup"] = {}
         js["markup"]["type"] = str(ttype)
-    
+
     if not ttype.success:
         return language, "", js, runner
-    
+
     # print(js)
 
     q_bycode = get_param(query, "byCode", None)
@@ -582,13 +576,15 @@ def handle_common_params(query: QueryClass, ttype: TType):
     if uf and ut:
         js["uploadedFile"] = uf
         js["uploadedType"] = ut
+    ufs = get_param(query, "uploadedFiles", None)
+    ufs = get_json_param(query.jso, "state", "uploadedFiles", ufs)
+    if ufs:
+        js["uploadedFiles"] = ufs
     # jso)
     # print(ttype)
-    if ttype.has_modifier(Input) or ttype.has_modifier(Args): # TODO: modify so that this isn't needed
-        runner = runner + '-input'
-    if ttype.has_language(SimCir):
+    if "simcir" in ttype:
         bycode = ''
-    
+
     return language, bycode, js, runner
 
 
@@ -799,10 +795,10 @@ def update_markup_from_file(query):
     file = get_param(query, "fromFile", False)
     if not file:
         return query
-    
+
     if isinstance(file, bool):
         file = ""
-    
+
     if file.startswith('/'):
         file = Path(file)
     else:
@@ -810,21 +806,21 @@ def update_markup_from_file(query):
         if master_path is None:
             raise Exception("Cannot fetch markup from file as masterPath is not specified")
         file = "/cs/masters/" / Path(master_path) / file
-    
+
     if file.is_dir():
         file = file / "csmarkup.json"
-    
+
     if not file.is_file():
         raise FileNotFoundError("Markup file does not exist")
-    
+
     if query.jso is None:
         query.jso = {}
     if "markup" not in query.jso:
         query.jso["markup"] = {}
-    
+
     with open(str(file), "r") as f:
         query.jso["markup"] = dict(list(json.load(f).items()) + list(query.jso["markup"].items()))
-    
+
 # see: http://stackoverflow.com/questions/366682/how-to-limit-execution-time-of-a-function-call-in-python
 # noinspection PyUnusedLocal
 def signal_handler(signum, frame):
@@ -854,6 +850,17 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         # print("do_POST =================================================")
+        if self.path == "/cs/fetchExternal":
+            do_headers(self, "application/json")
+            response = {}
+            try:
+                response["files"] = FileHandler(post_params(self)).get_external_files()
+            except Exception as e:
+                response['error'] = str(e)
+                print_exc()
+            self.wout(json.dumps(response))
+            return
+
         multimd = self.path.find('/multimd') >= 0
 
         if self.path.find('/multihtml') < 0 and not multimd:
@@ -882,7 +889,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 update_markup_from_file(query)
             except:
                 pass # TODO: show error to user
-            
+
             ga = get_param(query, "GlobalAnonymous", None)
             if ga:
                 global_anonymous = True
@@ -893,6 +900,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             usercode = get_json_param(query.jso, "state", "usercode", None)
             if isinstance(usercode, str):
                 query.query["usercode"] = [usercode]
+
+            submitted_files = get_json_param(query.jso, "state", "submittedFiles", None)
+            if submitted_files is not None:
+                query.query["submittedFiles"] = [submitted_files]
+
             userinput = get_json_param(query.jso, "state", "userinput", None)
             if userinput is None:
                 userinput = get_json_param(query.jso, "markup", "userinput", None)
@@ -918,12 +930,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 ttype = 'simcir'
             if is_parsons:
                 ttype = 'parsons'
+            if is_graphviz:
+                ttype = "cs"
             # The graphviz conversion happens later, so need to check that here before giving an error.
-            if ttype is None and not is_graphviz:
+            if ttype is None:
                 s = '<div class="pluginError">Attribute "type" is required.</div>'
             else:
-                if is_graphviz:
-                    ttype = "cs"  # workaround: some functions expect ttype to always be str
+                ttype = TType(ttype, query)
                 check_fullprogram(query, True)
                 if multimd:
                     # noinspection PyBroadException
@@ -933,7 +946,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         print("ERROR: " + str(ex) + " " + json.dumps(query))
                         continue
                 else:
-                    s = get_html(self, TType(ttype, query), query)
+                    s = get_html(self, ttype, query)
                 # print(s)
             htmls.append(s)
 
@@ -977,13 +990,13 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         templs = {}
         jslist = all_js_files()
         csslist = all_css_files()
-        
+
         result_json = {"js": jslist,
                         "css": csslist, "multihtml": True, "multimd": True, "canGiveTask": True}
 
         if not (is_tauno or is_rikki or is_parsons or is_simcir or is_graphviz ):
             templs = get_all_templates('templates')
-        
+
         if is_parsons:
             result_json = {"js": ["/cs/js/build/csPlugin.js",
                                     "jqueryui-touch-punch",
@@ -1025,9 +1038,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             self.wout(str(e))
 
     def do_all_t(self, query: QueryClass):
-        
+
         convert_graphviz(query)
-        
+
         t1start = time.time()
         t_run_time = 0
         times_string = ""
@@ -1080,7 +1093,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         if "/reqs" in path:
             return self.do_reqs(query)
-        
+
         is_cache = get_param(query, "cache", False)
         is_template = path.find('/template') >= 0
         is_fullhtml = path.find('/fullhtml') >= 0
@@ -1157,7 +1170,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             p = self.path.split("?")
             self.wout(file_to_string(p[0]))
             return
-        
+
         if is_tauno and not is_answer:
             # print("PTAUNO: " + content_type)
             p = self.path.split("?")
@@ -1181,14 +1194,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         try:
             update_markup_from_file(query)
             # Get the template type
-            ttype = get_param(query, "type", "cs").lower()
-            ttype = type_splitter.split(ttype)
-            ttype = ttype[0]
+            ttype = TType.split(get_json_param(query.jso, "markup", "type", "cs"))
 
             if is_tauno and not is_answer:
-                ttype = 'tauno'  # answer is newer tauno
+                ttype[0] = 'tauno'  # answer is newer tauno
             if is_simcir:
-                ttype = 'simcir'
+                ttype[0] = 'simcir'
 
             # if ( query.jso != None and query.jso.has_key("state") and query.jso["state"].has_key("usercode") ):
             uploaded_file = get_json_param(query.jso, "input", "uploadedFile", None)
@@ -1199,6 +1210,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             usercode = get_json_param(query.jso, "state", "usercode", None)
             if isinstance(usercode, str):
                 query.query["usercode"] = [usercode]
+
+            submitted_files = get_json_param(query.jso, "input", "submittedFiles", None)
+            if submitted_files is not None:
+                query.query["submittedFiles"] = [submitted_files]
 
             userinput = get_json_param(query.jso, "input", "userinput", None)
             if userinput is None:
@@ -1245,6 +1260,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # print("Muutos ========")
             # pprint(query.__dict__, indent=2)
 
+            ttype = TType("/".join(ttype), query)
+            ttype.modify_query()
+
             if is_html and not is_iframe:
                 # print("HTML:==============")
                 s = get_html(self, ttype, query)
@@ -1257,12 +1275,18 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 self.wout(file_to_string('end.html'))
                 return
 
-            if is_iframe and not print_file and ttype not in ["js", "glowscript", "vpython", "processing"]:
+            if is_iframe and not print_file and not ttype.has_any_of(["js", "glowscript", "vpython", "processing"]):
                 s = string_to_string_replace_url(
                     '<iframe frameborder="0"  src="https://tim.it.jyu.fi/cs/fullhtml?##QUERYPARAMS##" ' +
                     'style="overflow:hidden;" height="##HEIGHT##" width="100%"  seamless></iframe>',
                     "##QUERYPARAMS##", query)
                 return self.wout(s)
+
+            nosave = get_param(query, "nosave", None)
+            nosave = get_json_param(query.jso, "input", "nosave", nosave)
+
+            if nosave:
+                result["save"] = {}
 
             check_fullprogram(query, print_file)
 
@@ -1287,99 +1311,84 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 s = replace_code(query.cut_errors, s)
                 return self.wout(s)
 
-            ttypeobj = TType(ttype, query, s)
-            if not ttypeobj.success:
+            # /answer-path comes here
+
+            fhandler = FileHandler(query, save)
+            submitted_files = fhandler.get_files(s)
+
+            # TODO: get_param is potentially unsafe as the client can change its value
+            # get_json_param from markup would be better, but all language and test
+            # languages change the type on client side
+            # get_param type also doesn't contain the modifiers
+            ttype = TType(get_param(query, "type", "cs"), query, submitted_files)
+            if not ttype.success:
                 raise Exception(f"Could not get language from type {ttype}")
 
-            language = ttypeobj.get_language()
-            
+            language = ttype.get_language()
+
             if not language.can_give_task() and query.jso.get("input",{}).get("getTask", False):
-                raise Exception("Give task not allowed for " + ttype)
+                raise Exception(f"Give task not allowed for {ttype}")
 
             mkdirs(language.prgpath)
-            # os.chdir(language.prgpath)
 
-            # /answer-path comes here
-            usercode = get_json_param(query.jso, "input", "usercode", None)
-            if isinstance(usercode, str):
-                save["usercode"] = usercode
-
+            nofilesave = get_param(query, 'nofilesave', False)
             filesaveattribute = get_param(query, "filesaveattribute", None)
-            if filesaveattribute:
-                attrnames = filesaveattribute.split(',')
-                usercode = ""
-                for aname in attrnames:
-                    usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
-                s = usercode
+            errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
+            warncondition = get_json_param(query.jso, "markup", "warncondition", False)
+            for file in language.sourcefiles:
+                if filesaveattribute:
+                    attrnames = filesaveattribute.split(',')
+                    usercode = ""
+                    for aname in attrnames:
+                        usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
+                    file.content = usercode
 
-            nosave = get_param(query, "nosave", None)
-            nosave = get_json_param(query.jso, "input", "nosave", nosave)
+                if file.content is None:
+                    continue
 
-            if nosave:
-                result["save"] = {}
+                if is_doc:
+                    file.content = replace_code(query.cut_errors, file.content)
 
-            if is_doc:
-                s = replace_code(query.cut_errors, s)
-
-            if not s.startswith("File not found"):
-                errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
-                if errorcondition:
-                    m = re.search(errorcondition, s, flags=re.S)
-                    if m:
+                if not file.content.startswith("File not found"):
+                    if errorcondition and re.search(errorcondition, file.content, flags=re.S):
                         errormessage = get_json_param(query.jso, "markup", "errormessage",
-                                                      "Not allowed to use: " + errorcondition)
+                                                    "Not allowed to use: " + errorcondition)
                         return write_json_error(self.wfile, errormessage, result)
 
-                warncondition = get_json_param(query.jso, "markup", "warncondition", False)
-                if warncondition:
-                    m = re.search(warncondition, s, flags=re.S)
-                    if m:
+                    if warncondition and re.search(warncondition, file.content, flags=re.S):
                         warnmessage = "\n" + get_json_param(query.jso, "markup", "warnmessage",
                                                             "Not recomended to use: " + warncondition)
 
-                # print(os.path.dirname(language.sourcefilename))
-                mkdirs(os.path.dirname(language.sourcefilename))
-                # print("Write file: " + language.sourcefilename)
-                if s == "":
-                    s = "\n"
+                    # print(os.path.dirname(language.sourcefilename))
+                    # print("Write file: " + language.sourcefilename)
+                    if file.content == "":
+                        file.content = "\n"
 
-                # Write the program to the file =======================================================
-                s = language.before_save(language.before_code + s)
-                nofilesave = get_param(query, 'nofilesave', False)
-                if not nofilesave:
-                    codecs.open(language.sourcefilename, "w", "utf-8").write(s)
-                slines = s
+                    file.content = language.before_save(language.before_code + file.content)
+                    slines = file.content
+
+            usercode = language.sourcefiles[0].content # for single file compatibility # TODO: make unnecessary
+
+            # Write the program to the file =======================================================
+            if not nofilesave:
+                fhandler.save_files(language.sourcefiles, language)
 
             save_extra_files(query, extra_files, language.prgpath)
-            
-            master_path = get_param(query, "masterPath", None)
-            if master_path is not None:
-                master_path = (Path("/cs/masters") / master_path).resolve()
-                if Path("/cs/masters") not in master_path.parents:
-                    return write_json_error(self.wfile, "Root path points outside of allowed directories (masterPath must be a relative subpath)", result)
-                
-                cfiles = get_param(query, "copyFiles", None)
-                
-                if "master" not in cfiles and "task" not in cfiles:
-                    cfiles["task"] = cfiles
-                
-                if language.rootpath is None:
-                    task_path = master_path
-                else:
-                    task_path = master_path / Path(language.prgpath).relative_to(language.rootpath)
-                    copy_files_regex(cfiles.get("master", None), master_path, Path(language.rootpath))
-                copy_files_regex(cfiles.get("task", None), task_path, Path(language.prgpath))
-            
-            if not os.path.isfile(language.sourcefilename) or os.path.getsize(language.sourcefilename) == 0:
-                if not nofilesave:
-                    return write_json_error(self.wfile, "Could not get the source file", result)
+
+            if not nofilesave:
+                for file in language.sourcefiles:
+                    path = Path(file.path)
+                    if not path.is_file():
+                        return write_json_error(self.wfile, "Could not get the source file", result)
+                    if path.stat().st_size == 0:
+                        return write_json_error(self.wfile, "Could not get the source file (file is empty)", result)
                 # self.wfile.write("Could not get the source file\n")
                 # print "=== Could not get the source file"
 
             nocode = get_param(query, "nocode", False)
 
             is_test = ""
-            if "test" in ttype:
+            if "test" in str(ttype): # str(ttype) to include all test types
                 is_test = "test"
             points_rule = get_param(query, "pointsRule", None)
             # if points_rule is None and language.readpoints_default:
@@ -1434,7 +1443,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # uid = pwd.getpwnam("agent").pw_uid
             # gid = grp.getgrnam("agent").gr_gid
             # os.chown(prgpath, uid, gid)
-            shutil.chown(language.prgpath, user="agent", group="agent")
             # print("t:", time.time() - t1start)
 
             # print(ttype)
@@ -1482,7 +1490,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 give_points(points_rule, "doc")
 
             else:
-                cmdline = language.get_cmdline(s)
+                cmdline = language.get_cmdline()
 
             if get_param(query, "justSave", False) or get_param(query, "justCmd", False):
                 cmdline = ""
@@ -1511,10 +1519,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             language.prgpath = sanitize_cmdline(language.prgpath)
 
-            if nocode and ttype != "jcomtest":
+            if nocode and "jcomtest" not in ttype:
                 print("Poistetaan ", ttype, language.sourcefilename)
                 # remove(language.sourcefilename)
                 # print(compiler_output)
+                # TODO(?): doesn't support multi file submissions
                 language.compile_commandline += " && rm " + \
                                                 language.sourcefilename.replace(language.prgpath, "/home/agent")
 
@@ -1555,9 +1564,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if is_doc:
                 pass  # jos doc ei ajeta
             elif get_param(query, "justSave", False):
-                showname = language.sourcefilename.replace(language.basename, "").replace("/tmp//", "")
-                if showname == "prg":
-                    showname = ""
+                showname = ", ".join(name if name != "prg" else "" for name in language.filenames)
                 saved_text = get_param(query, "savedText", "Saved {0}")
                 code, out, err, pwddir = (0, "", saved_text.format(showname), "")
             #elif get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
@@ -1566,11 +1573,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             #    code, out, err, pwddir = (0, "", ("Compiled " + language.filename), "")
 
             else:  # run cmd wins all other run types
-                if get_param(query, "justCompile", False) and ttype.find("comtest") < 0:
+                if get_param(query, "justCompile", False) and "comtest" not in str(ttype): # str(ttype) to include _comtest types
                     language.just_compile = True
                 language.set_stdin(userinput)
                 runcommand = get_param(query, "cmd", "")
-                if ttype != "run" and (runcommand or get_param(query, "cmds", "")) and not is_test:
+                if "run" not in ttype and (runcommand or get_param(query, "cmds", "")) and not is_test:
                     # print("runcommand: ", runcommand)
                     # code, out, err, pwddir = run2([runcommand], cwd=prgpath, timeout=10, env=env, stdin=stdin,
                     #                               uargs=get_param(query, "runargs", "") + " " + userargs)
@@ -1582,7 +1589,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                         uargs = ""
                     # print("run: ", cmd, extra, language.pure_exename, language.sourcefilename)
                     try:
-                        code, out, err, pwddir = run2(cmd, cwd=language.prgpath, timeout=language.timeout, env=env,
+                        code, out, err, pwddir = run2_subdir(cmd, dir=language.rootpath, cwd=language.prgpath, timeout=language.timeout, env=env,
                                                       stdin=language.stdin,
                                                       uargs=get_param(query, "runargs", "") + " " + uargs,
                                                       extra=extra, no_x11=language.no_x11,
@@ -1745,7 +1752,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         # self.wfile.write(out)
         # self.wfile.write(err)
-        sresult = json.dumps(result, cls = LoadableJSONEncoder)
+        sresult = json.dumps(result)
         if is_cache:
             return result
         self.wout(sresult)

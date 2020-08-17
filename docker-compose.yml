@@ -75,6 +75,7 @@ services:
    - ./timApp/modules/cs/static:/csstatic:ro
    - ./timApp/modules/py:/py:ro
    - /tmp/${COMPOSE_PROJECT_NAME:?}_uhome:/tmp
+   - /root/.ssh/
   working_dir: /cs
   command: ./startPlugins.sh
   environment:

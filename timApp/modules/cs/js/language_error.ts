@@ -1,28 +1,27 @@
-import {IScope} from "angular";
-import {pluginBindings} from "tim/plugin/util";
-import {csApp, CsBase} from "./csPlugin";
+import {
+        Component,
+    } from "@angular/core";
+import {CsBase} from "./csPlugin";
 
-class CSErrorController extends CsBase {
+@Component({
+    selector: "cs-error",
+    template: `
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <div *ngIf="!markupError" class="error">
+        <p>Error(s) initializing csPlugin:</p>
+        <pre *ngIf="error">{{error}}</pre>
+        <pre *ngIf="own_error">{{own_error}}</pre>
+    </div>`,
+})
+export class CsErrorComponent extends CsBase {
 
-    private error?: string;
-    private own_error?: string;
+    error?: string;
+    own_error?: string;
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
 
         this.error = this.attrsall.error ?? "";
         this.own_error = this.attrsall.own_error ?? "";
     }
 }
-
-csApp.component("csError", {
-    bindings: pluginBindings,
-    controller: CSErrorController,
-    template: `
-        <tim-markup-error ng-if="$ctrl.markupError" [data]="$ctrl.markupError"></tim-markup-error>
-        <div ng-if="!$ctrl.markupError" class="error">
-            <p>Error(s) initializing csPlugin:</p>
-            <pre ng-if="$ctrl.error">{{$ctrl.error}}</pre>
-            <pre ng-if="$ctrl.own_error">{{$ctrl.own_error}}</pre>
-        </div>`,
-});

@@ -7,7 +7,6 @@ import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $sce, $timeout} from "tim/util/ngimport";
 import {defaultTimeout, to} from "tim/util/utils";
-import {Subscription} from "rxjs";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 
 const geogebraApp = angular.module("geogebraApp", ["ngSanitize"]);

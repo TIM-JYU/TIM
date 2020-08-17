@@ -28,6 +28,40 @@ class QueryClass:
         self.jso = None
         self.deleted = {}
 
+    def set_jso_param(self, value, *keys):
+        if self.jso is None:
+            self.jso = {}
+        q = self.jso
+        for key in keys[:-1]:
+            if key not in q:
+                q[key] = {}
+            q = q[key]
+        q[keys[-1]] = value
+
+    def set_param(self, value, *keys, field=None, first_list=True):
+        if len(keys) == 0:
+            return
+
+        if field is None:
+            self.set_param(value, *keys, field=self.query)
+            self.set_param(value, *keys, field=self.get_query)
+            if self.jso is not None:
+                self.set_jso_param(value, *keys)
+            return
+
+        q = field
+        if len(keys) > 1:
+            if keys[0] not in q:
+                q[keys[0]] = [{}]
+            q = q[keys[0]][0]
+            for key in keys[1:-1]:
+                if key not in q:
+                    q[key] = {}
+                q = q[key]
+            q[keys[-1]] = value
+        else:
+            q[keys[-1]] = [value]
+
 
 def check_key(query: QueryClass, key: str):
     # return key
