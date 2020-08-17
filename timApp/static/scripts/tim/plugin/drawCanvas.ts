@@ -265,14 +265,23 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     }
 
     /**
+     * Checks if down event originates from middle or right mouse button
+     * @param e MouseOrTouch event to inspect
+     */
+    middleOrRightClick(e: MouseOrTouch): boolean {
+        return e instanceof MouseEvent && (e.button == 1 || e.button == 2);
+    }
+
+    /**
      * Starts the drawing and calls the callback function for clicks
      */
     downEvent(event: Event, e: MouseOrTouch): void {
-        if (!(e instanceof MouseEvent && (e.button == 1 || e.button == 2))) {  // allow inspect element and scrolling
+        const middleOrRightClick = this.middleOrRightClick(e);
+        if (!middleOrRightClick) { // allow inspect element and scrolling
             event.preventDefault();
         }
         const {x, y} = posToRelative(this.canvas.nativeElement, e);
-        if (this.drawingEnabled && e instanceof MouseEvent && !(e.button == 1 || e.button == 2)) {
+        if (this.drawingEnabled && !(middleOrRightClick)) {
             this.drawStarted = true;
             this.drawMoved = false;
             this.startX = x;
