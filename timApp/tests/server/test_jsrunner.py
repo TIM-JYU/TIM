@@ -12,6 +12,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
+from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
 class JsRunnerTestBase(TimRouteTest):
@@ -905,6 +906,42 @@ tools.setDouble("t.points", 1);
         self.assertEqual(1, a.points)
         self.do_jsrun(d)
         self.verify_answer_content(f'{d.id}.t', None, {'c': None}, self.test_user_1)
+
+    def test_group_wildcard(self):
+        self.login_test1()
+        d = self.create_jsrun("""
+fields: [mmcqt]
+groups: ['*']
+program: |!!
+tools.println(tools.getRealName());
+!!
+        """)
+        d.document.add_text("""
+#- {plugin=mmcq #mmcqt}
+stem: "foo"
+choices:
+  -
+    correct: true
+    text: "a"
+  -
+    correct: false
+    text: "b"
+""")
+        plugin_type = 'mmcq'
+        task_id = f'{d.id}.mmcqt'
+        self.post_answer(plugin_type, task_id, [True, False])
+        self.test_user_2.grant_access(d, AccessType.edit)
+        db.session.commit()
+        self.login_test2()
+        self.post_answer(plugin_type, task_id, [True, True])
+        self.login_test1()
+
+        self.do_jsrun(d, expect_content={
+                'web': {'errors': [],
+                        'outdata': {},
+                        'output': 'Test user 1\nTest user 2\n',
+                        },
+        })
 
 
 class JsRunnerGroupTest(JsRunnerTestBase):
