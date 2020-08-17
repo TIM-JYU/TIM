@@ -18,7 +18,7 @@ import {
     Require,
     to,
     touchEventToTouch,
-    valueOr
+    valueOr,
 } from "../util/utils";
 import {editorChangeValue} from "../editor/editorScope";
 import {ViewCtrl} from "../document/viewctrl";

@@ -19,51 +19,6 @@ import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 
-
-// TODO: These classes are probably redundant - DrawObject may be enough
-export class FreeDrawing {
-    public drawData: ILineSegment;
-
-    constructor(freeDrawing: ILineSegment) {
-        this.drawData = freeDrawing;
-    }
-
-    public makeDrawObject(): DrawObject {
-        return {
-            type: "freehand",
-            drawData: this.drawData,
-        };
-    }
-}
-
-export class Circle {
-    public drawData: IRectangleOrCircle;
-
-    constructor(circle: IRectangleOrCircle) {
-        this.drawData = circle;
-    }
-    public makeDrawObject(): DrawObject {
-        return {
-            type: "circle",
-            drawData: this.drawData,
-        };
-    }
-}
-
-export class Rectangle {
-    public drawData: IRectangleOrCircle;
-
-    constructor(rectangle: IRectangleOrCircle) {
-        this.drawData = rectangle;
-    }
-
-    public makeDrawObject(): DrawObject {
-        return {
-            type: "rectangle",
-            drawData: this.drawData,
-        };
-    }
-}
 interface IRectangle {
     type: "rectangle";
     drawData: IRectangleOrCircle;
@@ -208,9 +163,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     // keep track of mousedown while drawing enabled
     drawStarted = false;
     // drawings that can altered with undo (TODO: Redo, erase...?)
-    drawData: Array<FreeDrawing | Circle | Rectangle> = [];
+    drawData: DrawObject[] = [];
     // drawings that cannot be altered via undo, e.g background or permanent drawings
-    persistentDrawData: Array<FreeDrawing | Circle | Rectangle> = [];
+    persistentDrawData: DrawObject[] = [];
 
     // freehand drawing that is built while mouse is pressed
     freeDrawing?: ILineSegment;
@@ -375,33 +330,47 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         }
         this.drawStarted = false;
         if (this.drawType == DrawType.Circle) {
-            const circle = new Circle({
-                x: this.objX,
-                y: this.objY,
-                w: this.objW,
-                h: this.objH,
-                opacity: this.opacity,
-                color: this.color,
-                fillColor: this.drawFill ? this.color : undefined,
-                lineWidth: this.w,
-            });
+            const circle: ICircle = {
+                    type: "circle",
+                    drawData: this.makeFullRectangleOrCircle(),
+            };
             this.drawData.push(circle);
         } else if (this.drawType == DrawType.Rectangle) {
-            const rect = new Rectangle({
-                x: this.objX,
-                y: this.objY,
-                w: this.objW,
-                h: this.objH,
-                opacity: this.opacity,
-                color: this.color,
-                fillColor: this.drawFill ? this.color : undefined,
-                lineWidth: this.w,
-            });
+            const rect: IRectangle = {
+                type: "rectangle",
+                drawData: this.makeFullRectangleOrCircle(),
+
+            };
             this.drawData.push(rect);
         } else if (this.freeDrawing) {
-            this.drawData.push(new FreeDrawing(this.freeDrawing));
+            const freeDrawing: IFreeHand = {
+                type: "freehand",
+                drawData: this.freeDrawing,
+            };
+            this.drawData.push(freeDrawing);
             this.freeDrawing = undefined;
         }
+    }
+
+    /**
+     * Returns full shape information for ellipse or rectangle based on current settings
+     */
+    makeFullRectangleOrCircle(): IRectangleOrCircle {
+        let fillOrBorder = {};
+        if (this.drawFill) {
+            fillOrBorder = {fillColor: this.color};
+        } else {
+            fillOrBorder = {lineWidth: this.w};
+        }
+        return {
+            x: this.objX,
+            y: this.objY,
+            w: this.objW,
+            h: this.objH,
+            opacity: this.opacity,
+            color: this.color,
+            ...fillOrBorder,
+        };
     }
 
     /**
@@ -483,12 +452,12 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * Draws given input on canvas
      * @param data array of freehand drawings, circles and rectangles
      */
-    drawFromArray(data: Array<FreeDrawing | Circle | Rectangle>) {
+    drawFromArray(data: DrawObject[]) {
         for (const object of data) {
-            if (object instanceof Circle) {
+            if (object.type == "circle") {
                 this.setContextSettingsFromObject(object.drawData);
                 this.drawCircle(object.drawData);
-            } else if (object instanceof Rectangle) {
+            } else if (object.type == "rectangle") {
                 this.setContextSettingsFromObject(object.drawData);
                 this.drawRectangle(object.drawData);
             } else {
@@ -601,9 +570,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * Returns current drawing progress in an array
      */
     getDrawing(): DrawObject[] {
-        return this.drawData.map((drawObject) => {
-            return drawObject.makeDrawObject();
-        });
+        return this.drawData;
     }
 
     /**
@@ -627,17 +594,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * @param data Drawing to draw
      */
     setPersistentDrawData(data: DrawObject[]): void {
-        this.persistentDrawData = data.map((obj) => {
-            let shape: Circle | Rectangle | FreeDrawing;
-            if (obj.type == "freehand") {
-                shape = new FreeDrawing(obj.drawData);
-            } else if (obj.type == "circle") {
-                shape = new Circle(obj.drawData);
-            } else {
-                shape = new Rectangle(obj.drawData);
-            }
-            return shape;
-        });
+        this.persistentDrawData = data;
         this.redrawAll();
     }
 
