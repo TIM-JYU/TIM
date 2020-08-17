@@ -151,7 +151,7 @@ class Language:
         if isinstance(sourcefiles, str):
             sourcefiles = [File.default(query, sourcefiles)]
         if sourcefiles[0].path is None:
-            sourcefiles[0].path = default_filename(query, sourcefiles)
+            sourcefiles[0].path = default_filename(query)
 
         extensions, fileext, filedext = self.extensions()
         self.filenames = [file.path for file in sourcefiles]
