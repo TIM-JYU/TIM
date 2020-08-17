@@ -167,7 +167,8 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
         <div #wrapper style="overflow: auto; position: relative;" [style.height.px]="getWrapperHeight()">
             <img style="max-width: none; position: absolute; display: unset;" #backGround *ngIf="bypassedImage"
                  [src]="bypassedImage" (load)="onImgLoad()">
-            <div class="canvasObjectContainer"
+            <!-- 0-sized div for positioning custom objects on canvas-->
+            <div #objectContainer class="canvasObjectContainer"
                  style="width: 0px; height: 0px; overflow: visible; position: relative">
 
             </div>
@@ -186,6 +187,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     @ViewChild("drawbase") canvas!: ElementRef<HTMLCanvasElement>;
     @ViewChild("wrapper") wrapper!: ElementRef<HTMLDivElement>;
     @ViewChild("backGround") bgImage!: ElementRef<HTMLImageElement>;
+    @ViewChild("objectContainer") objectContainer!: ElementRef<HTMLDivElement>;
     ctx!: CanvasRenderingContext2D;
     imgHeight = 0;
 
@@ -258,6 +260,13 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         if (changes.bgSource) {
             this.setBg();
         }
+    }
+
+    /**
+     * Deletes all HTML elements within canvasObjectContainer
+     */
+    clearObjectContainer(): void {
+        $(this.objectContainer.nativeElement.children).remove();
     }
 
     /**

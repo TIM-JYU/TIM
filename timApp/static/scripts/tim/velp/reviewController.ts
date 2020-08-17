@@ -1212,6 +1212,7 @@ export class ReviewController {
      */
     setCanvas(answerId: number, canvas: DrawCanvasComponent): void {
         canvas.setClickCallback(this.clickFromCanvas);
+        canvas.clearObjectContainer();
         canvas.id = answerId;
         this.vctrl.addVelpCanvas(answerId, canvas);
         this.drawAnnotationsOnCanvas(canvas, answerId);
