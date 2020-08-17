@@ -684,7 +684,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 } if full else self.basic_info_dict
 
 
-def get_membership_end(u: User, group_ids: Set[int]):
+def get_membership_end(u: User, group_ids: Set[int], include_personal_group=False):
+    if include_personal_group:
+        group_ids = set(group_ids).union([u.get_personal_group().id])
     relevant_memberships: List[UserGroupMember] = [m for m in u.memberships if m.usergroup_id in group_ids]
     membership_end = None
     # If the user is not active in any of the groups, we'll show the lastly-ended membership.

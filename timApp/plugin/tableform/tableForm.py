@@ -32,7 +32,7 @@ from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import csv_string, json_response, text_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, ALL_ANSWERED_WILDCARD
 from timApp.util.utils import get_boolean, fin_timezone
 from utils import Missing
 
@@ -435,7 +435,7 @@ def tableform_get_fields(
         user_filter: List[str] = None,
 ):
     queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames)).all()
-    if '*' in groupnames:
+    if ALL_ANSWERED_WILDCARD in groupnames:
         queried_groups.append(None)
     fielddata, aliases, field_names, groups = \
         get_fields_and_users(

@@ -26,6 +26,7 @@ from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
 
+ALL_ANSWERED_WILDCARD = '*'
 
 def chunks(l: List, n: int):
     for i in range(0, len(l), n):
@@ -323,7 +324,7 @@ def get_fields_and_users(
             obj = {'user': user, 'fields': user_tasks, 'styles': user_fieldstyles}
             res.append(obj)
             if member_filter_type != MembershipFilter.Current:
-                m_end = get_membership_end(user, group_id_set)
+                m_end = get_membership_end(user, group_id_set, include_all_answered)
                 if m_end:
                     obj['groupinfo'] = {'membership_end': time.mktime(m_end.timetuple())}
             last_user = uid
