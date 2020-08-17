@@ -648,6 +648,21 @@ def post_answer(plugintype: str, task_id_ext: str):
             postprogram_name = "postProgram"
         if not postprogram:
             postprogram_name = ""
+        if not result.get('error', None):
+            result['error'] = ''
+        postoutput = plugin.values.get("postoutput", 'feedback')
+
+        def set_postoutput(result, output, postoutput):
+            if not postoutput or not output:
+                return
+            parts = postoutput.split(".")
+            r = result
+            lastkey = parts[-1]
+            for p in parts[:-1]:
+                if not p in r:
+                    r[p] = {}
+                r = r[p]
+            r[lastkey] = r.get(lastkey, '') + str(output)
 
         if (not is_teacher and should_save_answer) or ( 'savedata' in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(len(old_answers), tim_info)
@@ -666,12 +681,14 @@ def post_answer(plugintype: str, task_id_ext: str):
                     result['error'] = str(e)
                 else:
                     points_given_by = get_current_user_group()
+
             if postprogram:
                 data = { 'points': points,
                          'save_object': save_object,
                          'tags':       tags,
                          'is_valid':   is_valid,
                          'force_answer': force_answer,
+                         'error' : '',
                          'web' : web,
                          }
                 try:
@@ -682,9 +699,11 @@ def post_answer(plugintype: str, task_id_ext: str):
                     is_valid = data.get("is_valid", is_valid)
                     force_answer = data.get("force_answer", force_answer)
                     result["web"] = data.get("web", web)
-                    if output:  # TODO: korjaa tähän järkevä tulostus
-                        # return json_response({'web': {'error': output}})
-                        result["web"]["error"] = output
+                    result["error"] += data.get("error", "")
+                    set_postoutput(result, output, postoutput)
+                    #if output:  # TODO: korjaa tähän järkevä tulostus
+                    #    # return json_response({'web': {'error': output}})
+                    #    result["web"]["error"] = output
                 except JsRunnerError as e:
                     return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
 
@@ -728,6 +747,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                         'tags': tags,
                         'is_valid': True,
                         'force_answer': force_answer,
+                        'error': '',
                         'web': web,
                         }
                 try:
@@ -737,6 +757,8 @@ def post_answer(plugintype: str, task_id_ext: str):
                     output += "\nPoints: " + str(points)
                     result["web"] = data.get("web", web)
                     result["web"]["error"] = output
+                    result["error"] += data.get("error", "")
+                    set_postoutput(result, output, postoutput)
                 except JsRunnerError as e:
                     return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
         if result['savedNew'] is not None and uploads:
@@ -751,7 +773,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     except:
         pass
 
-    return json_response(result)
+    return json_response(result, headers={"No-Date-Conversion": "true"})
 
 
 def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocInfo, plugin: Plugin):

@@ -297,6 +297,7 @@ export interface ITaskInfo {
 export interface IAnswerSaveEvent {
     savedNew: number | false;
     error?: string;
+    feedback?: string;
 }
 
 type AnswerLoadCallback = (a: IAnswer) => void;
@@ -328,6 +329,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     public oldreview: boolean = false;
     private shouldFocus: boolean = false;
     private alerts: Array<unknown> = [];
+    private feedback: string = "";
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
     private loadedAnswer: { id: number | undefined } = {id: undefined};
@@ -361,6 +363,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         if (args.error) {
             this.alerts.push({msg: args.error, type: "warning"});
+        }
+        if (args.feedback) {
+            this.feedback = args.feedback;
+        } else {
+            this.feedback = "";
         }
     }
 
@@ -407,6 +414,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.review = false;
         this.shouldFocus = false;
         this.alerts = [];
+        this.feedback = "";
 
         const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
@@ -641,6 +649,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.oldreview = this.review;
 
             if (!changeReviewOnly) {
+                if (this.loadedAnswer.id != this.selectedAnswer?.id) {
+                    this.feedback = "";
+                }
                 this.loadedAnswer.id = this.selectedAnswer?.id;
                 // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
                 // have to be fully reloaded every time.
@@ -1142,6 +1153,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     closeAlert(index: number) {
         this.alerts.splice(index, 1);
+    }
+
+    closeFeedback() {
+        this.feedback = "";
     }
 
     $onDestroy() {

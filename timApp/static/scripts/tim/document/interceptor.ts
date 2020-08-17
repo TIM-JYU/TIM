@@ -94,6 +94,7 @@ timApp.config([() => {
                     const resp = response as IHttpResponse<IAnswerSaveEvent>;
                     handleAnswerResponse(taskIdFull, {
                         error: resp.data.error,
+                        feedback: resp.data.feedback,
                         savedNew: resp.data.savedNew,
                     });
                     return response;
