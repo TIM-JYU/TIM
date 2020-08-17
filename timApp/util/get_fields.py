@@ -109,7 +109,7 @@ class UserFieldObj(TypedDict):
 
 def get_fields_and_users(
         u_fields: List[str],
-        requested_groups: List[UserGroup],
+        requested_groups: List[Optional[UserGroup]],
         d: DocInfo,
         current_user: User,
         autoalias: bool = False,
@@ -123,7 +123,7 @@ def get_fields_and_users(
     :param user_filter: Additional filter to use.
     :param member_filter_type: Whether to use all, current or deleted users in groups.
     :param u_fields: list of fields to be used
-    :param requested_groups: requested user groups to be used; if None, requests for all users who posted a valid answer in the default document
+    :param requested_groups: requested user groups to be used; can contain None (means all answered users)
     :param d: default document
     :param current_user: current users, check his rights to fields
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
