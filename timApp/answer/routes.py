@@ -759,7 +759,6 @@ def post_answer(plugintype: str, task_id_ext: str):
                     points = data.get("points", points)
                     output += "\nPoints: " + str(points)
                     result["web"] = data.get("web", web)
-                    result["web"]["error"] = output
                     add_value(result, "error", data)
                     set_postoutput(result, output, postoutput)
                 except JsRunnerError as e:
