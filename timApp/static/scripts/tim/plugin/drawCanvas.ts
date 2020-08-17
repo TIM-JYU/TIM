@@ -14,11 +14,10 @@ import {
 import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {DrawToolbarModule, DrawType} from "tim/plugin/drawToolbar";
 import {ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
-import {numOrStringToNumber, posToRelative} from "tim/util/utils";
+import {MouseOrTouch, numOrStringToNumber, posToRelative, touchEventToTouch} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {Annotation} from "tim/velp/velptypes";
 
 
 // TODO: These classes are probably redundant - DrawObject may be enough
@@ -245,14 +244,30 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
     ngAfterViewInit() {
         this.ctx = this.canvas.nativeElement.getContext("2d")!;
+        // this.canvas.nativeElement.addEventListener("mousedown", (event) => {
+        //     this.downEvent(event);
+        // });
         this.canvas.nativeElement.addEventListener("mousedown", (event) => {
-            this.clickStart(event);
+            event.preventDefault();
+            this.downEvent(event, event);
+        });
+        this.canvas.nativeElement.addEventListener("touchstart", (event) => {
+            event.preventDefault();
+            this.downEvent(event, touchEventToTouch(event));
         });
         this.canvas.nativeElement.addEventListener("mousemove", (event) => {
-            this.clickMove(event);
+            this.moveEvent(event, event);
+        });
+        this.canvas.nativeElement.addEventListener("touchmove", (event) => {
+            event.preventDefault();
+            this.moveEvent(event, touchEventToTouch(event));
         });
         this.canvas.nativeElement.addEventListener("mouseup", (event) => {
-            this.clickFinish(event);
+            this.upEvent(event, event);
+        });
+        this.canvas.nativeElement.addEventListener("touchend", (event) => {
+            event.preventDefault();
+            this.upEvent(event, touchEventToTouch(event));
         });
     }
 
@@ -300,15 +315,19 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     /**
      * Starts the drawing and calls the callback function for clicks
      */
-    clickStart(e: MouseEvent): void {
-        if (this.drawingEnabled) {
+    downEvent(event: Event, e: MouseOrTouch): void {
+        if (!(e instanceof MouseEvent && e.button == 2)) {  // allow inspect element
+            event.preventDefault();
+        }
+        const {x, y} = posToRelative(this.canvas.nativeElement, e);
+        if (this.drawingEnabled && e instanceof MouseEvent && !(e.button == 1 || e.button == 2)) {
             this.drawStarted = true;
-            this.startX = e.offsetX;
-            this.startY = e.offsetY;
+            this.startX = x;
+            this.startY = y;
             this.startSegmentDraw(posToRelative(this.canvas.nativeElement, e));
         }
         if (this.clickCallback) {
-            this.clickCallback(this, e.offsetX, e.offsetY);
+            this.clickCallback(this, x, y);
         }
     }
 
@@ -316,16 +335,20 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * Handles drawing new image when mouse is moved
      * TODO: check if double-layered canvas is needed (for now we re-draw everything every time mouse moves during draw)
      */
-    clickMove(e: MouseEvent): void {
+    moveEvent(event: Event, e: MouseOrTouch): void {
+        event.preventDefault();
         if (!this.drawStarted) {
             return;
         }
+        const pxy = posToRelative(this.canvas.nativeElement, e);
+        const {x, y} = pxy;
+
         if (this.drawType == DrawType.Circle || this.drawType == DrawType.Rectangle) {
             this.redrawAll();
-            this.objX = Math.min(e.offsetX, this.startX);
-            this.objY = Math.min(e.offsetY, this.startY);
-            this.objW = Math.abs(e.offsetX - this.startX);
-            this.objH = Math.abs(e.offsetY - this.startY);
+            this.objX = Math.min(x, this.startX);
+            this.objY = Math.min(y, this.startY);
+            this.objW = Math.abs(x - this.startX);
+            this.objH = Math.abs(y - this.startY);
             this.setContextSettingsFromOptions();
             if (this.drawType == DrawType.Circle) {
                 this.drawPreviewCircle();
@@ -336,7 +359,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             if (this.drawType == DrawType.Line) {
                 this.popPoint(1);
             }
-            const pxy = posToRelative(this.canvas.nativeElement, e);
             this.line(this.prevPos, pxy);
             this.addPoint(pxy);
             this.redrawAll();
@@ -347,7 +369,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     /**
      * Finishes the draw event
      */
-    clickFinish(e: MouseEvent): void {
+    upEvent(event: Event, p: MouseOrTouch): void {
         if (!this.drawStarted) {
             return;
         }

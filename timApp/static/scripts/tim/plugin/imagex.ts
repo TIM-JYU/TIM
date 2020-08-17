@@ -10,7 +10,16 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {DrawToolbarModule, DrawType, IDrawVisibleOptions} from "tim/plugin/drawToolbar";
 import {$http, $sce, $timeout} from "../util/ngimport";
 import {TimDefer} from "../util/timdefer";
-import {defaultTimeout, MouseOrTouch, numOrStringToNumber, posToRelative, Require, to, valueOr} from "../util/utils";
+import {
+    defaultTimeout,
+    MouseOrTouch,
+    numOrStringToNumber,
+    posToRelative,
+    Require,
+    to,
+    touchEventToTouch,
+    valueOr
+} from "../util/utils";
 import {editorChangeValue} from "../editor/editorScope";
 import {ViewCtrl} from "../document/viewctrl";
 import {
@@ -522,7 +531,7 @@ class DragTask {
         });
         this.canvas.addEventListener("touchmove", (event) => {
             event.preventDefault();
-            this.moveEvent(event, this.te(event));
+            this.moveEvent(event, touchEventToTouch(event));
         });
         this.canvas.addEventListener("mousedown", (event) => {
             event.preventDefault();
@@ -533,7 +542,7 @@ class DragTask {
             // this.imgx.getScope().$evalAsync(() => {
             //     this.downEvent(event, this.te(event));
             // });
-            this.downEvent(event, this.te(event));
+            this.downEvent(event, touchEventToTouch(event));
         });
         this.canvas.addEventListener("mouseup", (event) => {
             event.preventDefault();
@@ -541,7 +550,7 @@ class DragTask {
         });
         this.canvas.addEventListener("touchend", (event) => {
             event.preventDefault();
-            this.upEvent(event, this.te(event));
+            this.upEvent(event, touchEventToTouch(event));
         });
 
         if (imgx.markup.freeHandShortCuts) {
@@ -768,11 +777,6 @@ class DragTask {
             this.mouseDown = false;
             this.freeHand.endSegment();
         }
-    }
-
-    te(event: TouchEvent) {
-        event.preventDefault();
-        return event.touches[0] || event.changedTouches[0];
     }
 
     addRightAnswers(answers: RightAnswerT[]) {
