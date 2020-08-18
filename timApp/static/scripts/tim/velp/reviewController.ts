@@ -15,7 +15,7 @@ import {
     DrawObject,
     getDrawingDimensions,
     IDrawUpdate,
-    isCoordWithinDrawing
+    isCoordWithinDrawing,
 } from "tim/plugin/drawCanvas";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
@@ -86,6 +86,7 @@ export class ReviewController {
     private velpSelection?: VelpSelectionController; // initialized through onInit
     public velpMode: boolean;
     public velps?: IVelpUI[];
+    private lastOpenedAnnotation = 0;
 
     constructor(public vctrl: ViewCtrl) {
         this.scope = vctrl.scope;
@@ -1261,6 +1262,7 @@ export class ReviewController {
             }
         } else if (updateArgs.x != undefined && updateArgs.y != undefined) {
             const anns = this.getAnnotationsByAnswerId(canvas.id);
+            const annCompsInCoord: AnnotationComponent[] = [];
             for (const a of anns) {
                 if (!a.draw_data) {
                     continue;
@@ -1269,14 +1271,39 @@ export class ReviewController {
                     const tanncomp = this.vctrl.getAnnotation(`t${a.id}`);
                     if (!tanncomp) {
                         console.log("couldn't find annotation via vctrl");
-                        return;
+                    } else {
+                        annCompsInCoord.push(tanncomp);
+                        console.log("found annotation via vctrl");
                     }
-                    console.log("found annotation via vctrl");
-                    tanncomp.toggleAnnotationShow();
-                    return;
-                    // TODO: if overlap then iterate which one was opened last
                 }
+            }
+            if (annCompsInCoord.length == 0) {
+                return;
+            }
+            if (annCompsInCoord.length == 1) {
+                annCompsInCoord[0].toggleAnnotationShow();
+            } else {
+                this.toggleAnnotationsInList(annCompsInCoord);
             }
         }
     };
+
+    /**
+     * Finds next non-visible annotation component and hides others in a list
+     * Used to let user iterate overlapping drawn annotations with repeated clicks
+     * @param anns AnnotationComponent[] to iterate
+     */
+    toggleAnnotationsInList(anns: AnnotationComponent[]) {
+        let found = false;
+        for (let i = this.lastOpenedAnnotation; i < anns.length + this.lastOpenedAnnotation; i++) {
+            const a = anns[i % anns.length];
+            if (!a.show && !found) {
+                a.toggleAnnotationShow();
+                this.lastOpenedAnnotation = i % anns.length;
+                found = true;
+            } else if (a.show) {
+                a.toggleAnnotationShow();
+            }
+        }
+    }
 }
