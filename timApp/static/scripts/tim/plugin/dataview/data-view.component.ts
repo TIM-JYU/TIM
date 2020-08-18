@@ -846,10 +846,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
         this.idTableCache.setSize(this.viewport.vertical.count, 2);
         // Get sizes in batch for speed
-        const sizes = Array.from(new Array(vertical.count)).map((value, index) => {
-            const rowIndex = this.rowAxis.visibleItems[index + vertical.startIndex];
-            return this.getHeaderRowHeight(rowIndex);
-        });
+        const sizes = Array.from(new Array(vertical.count)).map((value, index) =>
+            this.getHeaderRowHeight(this.rowAxis.visibleItems[index + vertical.startIndex])
+        );
         // Ensure the ID column is at least the size of the summary number column (needed for filtering)
         const minWidth = (this.summaryTable.nativeElement.querySelector(".nrcolumn") as HTMLElement).offsetWidth;
         for (let row = 0; row < vertical.count; row++) {
@@ -1429,7 +1428,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return res;
         }
         if (this.rowAxis.visibleItems.length == 0) {
-            return undefined;
+            return 0;
         }
         // We make use of getBoundingClientRect because it returns proper fractional size
         // (which is needed for at least on Firefox for table size sync to work)
