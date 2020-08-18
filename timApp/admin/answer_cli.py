@@ -132,8 +132,8 @@ def truncate_large(doc: str, limit: int, to: int, dry_run: bool) -> None:
         .options(joinedload(Answer.users_all))
         .all()
     )
-    note = '\n\n(answer truncated)'
-    try_keys = ['usercode', 'c']
+    note = ' (answer truncated)'
+    try_keys = ['usercode', 'c', 'userinput']
     truncated = 0
     for a in anss:
         diff = len(a.content) - to
