@@ -137,7 +137,7 @@ def get_fields_and_users(
     :param user_filter: Additional filter to use.
     :param member_filter_type: Whether to use all, current or deleted users in groups.
     :param u_fields: list of fields to be used
-    :param requested_groups: requested user groups to be used; can contain None (means all answered users)
+    :param requested_groups: requested user groups to be used
     :param d: default document
     :param current_user: current users, check his rights to fields
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
