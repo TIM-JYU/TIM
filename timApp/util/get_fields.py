@@ -151,8 +151,6 @@ def get_fields_and_users(
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
     for group in requested_groups.groups:
-        if not group:
-            continue
         if needs_group_access_check and group.name != current_user.name:
             if not verify_group_view_access(group, current_user, require=False):
                 # return abort(403, f'Missing view access for group {group.name}')
