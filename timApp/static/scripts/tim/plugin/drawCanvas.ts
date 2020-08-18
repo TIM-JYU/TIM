@@ -34,6 +34,12 @@ interface IFreeHand {
     drawData: ILineSegment
 }
 
+export interface IDrawUpdate {
+    x?: number;
+    y?: number;
+    drawingUpdated: boolean;
+}
+
 // TODO: Name overlap with imagex DrawObject
 export type DrawObject = IRectangle | ICircle | IFreeHand;
 
@@ -148,6 +154,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     // optional function to call when image is loaded to let external users know the canvas is ready for use
     @Input() imgLoadCallback?: (arg0: this) => void;
 
+    @Input() undoCallback?: (arg0: this) => void;
+
     // draw-related attributes
     @Input() drawingEnabled = true;
     drawType = DrawType.Freehand;
@@ -158,7 +166,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     drawFill = false;
 
     // optional function to call whenever mouse is pressed (whether drawing enabled or not)
-    clickCallback?: (arg0: this, arg1: number, arg2: number) => void;
+    updateCallback?: (arg0: this, arg1: IDrawUpdate) => void;
 
     // keep track of mousedown while drawing enabled
     drawStarted = false;
@@ -260,8 +268,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * Sets the optional function to call whenever mouse is pressed (whether drawing enabled or not)
      * @param cb function to execute on click
      */
-    public setClickCallback(cb: (arg0: DrawCanvasComponent, arg1: number, arg2: number) => void) {
-        this.clickCallback = cb;
+    public setUpdateCallback(cb: (arg0: DrawCanvasComponent, arg1: IDrawUpdate) => void) {
+        this.updateCallback = cb;
     }
 
     /**
@@ -359,8 +367,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             }
         }
 
-        if (this.clickCallback) {
-            this.clickCallback(this, x, y);
+        if (this.updateCallback) {
+            this.updateCallback(this, {x: x, y: y, drawingUpdated: this.drawMoved && this.drawingEnabled});
         }
     }
 
@@ -394,6 +402,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         }
         this.drawData.pop();
         this.redrawAll();
+        if (this.updateCallback) {
+            this.updateCallback(this, {drawingUpdated: true});
+        }
     };
 
     /**

@@ -10,7 +10,13 @@ import {
 } from "tim/velp/annotation.component";
 import {deserialize} from "typescript-json-serializer";
 import {TaskId} from "tim/plugin/taskid";
-import {DrawCanvasComponent, DrawObject, getDrawingDimensions, isCoordWithinDrawing} from "tim/plugin/drawCanvas";
+import {
+    DrawCanvasComponent,
+    DrawObject,
+    getDrawingDimensions,
+    IDrawUpdate,
+    isCoordWithinDrawing
+} from "tim/plugin/drawCanvas";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -1211,7 +1217,7 @@ export class ReviewController {
      * @param canvas - DrawCanvasComponent to set up
      */
     setCanvas(answerId: number, canvas: DrawCanvasComponent): void {
-        canvas.setClickCallback(this.clickFromCanvas);
+        canvas.setUpdateCallback(this.updateFromCanvas);
         canvas.clearObjectContainer();
         canvas.id = answerId;
         this.vctrl.addVelpCanvas(answerId, canvas);
@@ -1234,28 +1240,32 @@ export class ReviewController {
     }
 
     /**
-     * Handles click callbacks from canvas.
-     * If drawing is enabled, then select canvas as annotation target element.
-     * If drawing is disabled, then attempt to open an annotation under the click target.
-     * @param canvas - DrawCanvasComponent who sent the click
-     * @param x - Target coordinate
-     * @param y - Target coordinate
+     * Handles click and drawing update callbacks from canvas.
+     * If drawing mode is enabled and there is something drawn, then select canvas as annotation target element.
+     * If drawing mode is enabled and the drawing is cleared then unselect the canvas
+     * If drawing mode is disabled, then attempt to open an annotation under the click target.
+     * @param canvas
+     * @param updateArgs
      */
-    clickFromCanvas = (canvas: DrawCanvasComponent, x: number, y: number) => {
-        if (canvas.drawingEnabled && canvas.getDrawing().length > 0) {
-            this.selectedArea = undefined;
-            this.selectionIsDrawing = true;
-            const par = $(canvas.canvas.nativeElement).parents(".par")[0] as Element;
-            this.selectedElement = par;
-            this.selectedCanvas = canvas;
-            return;
-        } else {
+    updateFromCanvas = (canvas: DrawCanvasComponent, updateArgs: IDrawUpdate) => {
+        if (updateArgs.drawingUpdated) {
+            if (canvas.getDrawing().length > 0) {
+                this.selectedArea = undefined;
+                this.selectionIsDrawing = true;
+                const par = $(canvas.canvas.nativeElement).parents(".par")[0] as Element;
+                this.selectedElement = par;
+                this.selectedCanvas = canvas;
+            } else if (this.selectedCanvas == canvas) {
+                this.selectionIsDrawing = false;
+                this.selectedElement = undefined;
+            }
+        } else if (updateArgs.x != undefined && updateArgs.y != undefined) {
             const anns = this.getAnnotationsByAnswerId(canvas.id);
             for (const a of anns) {
                 if (!a.draw_data) {
                     continue;
                 }
-                if (isCoordWithinDrawing(a.draw_data, x, y)) {
+                if (isCoordWithinDrawing(a.draw_data, updateArgs.x, updateArgs.y)) {
                     const tanncomp = this.vctrl.getAnnotation(`t${a.id}`);
                     if (!tanncomp) {
                         console.log("couldn't find annotation via vctrl");
