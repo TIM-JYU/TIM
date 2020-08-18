@@ -124,12 +124,13 @@ def truncate_large(doc: str, limit: int, to: int, dry_run: bool) -> None:
         click.echo('limit must be >= to')
         sys.exit(1)
     d = get_doc_or_quit(doc)
+    q = Answer.query.filter(Answer.task_id.startswith(f'{d.id}.'))
+    total = q.count()
     anss: List[Answer] = (
-        Answer.query
-            .filter(Answer.task_id.startswith(f'{d.id}.'))
-            .filter(func.length(Answer.content) > limit)
-            .options(joinedload(Answer.users_all))
-            .all()
+        q
+        .filter(func.length(Answer.content) > limit)
+        .options(joinedload(Answer.users_all))
+        .all()
     )
     note = '\n\n(answer truncated)'
     try_keys = ['usercode', 'c']
@@ -155,5 +156,5 @@ def truncate_large(doc: str, limit: int, to: int, dry_run: bool) -> None:
                     loaded[k] = new_c
                     a.content = json.dumps(loaded)
                     break
-    print(f'Truncating {truncated} answers.')
+    print(f'Truncating {truncated} answers (out of {total}).')
     commit_if_not_dry(dry_run)
