@@ -1114,6 +1114,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private* buildPreviewTable() {
+        // Turn off vscroll in preview mode as no items are rendered in the first place
+        this.vScroll.enabled = false;
         this.viewport = this.getViewport();
         this.buildColumnHeaderTable();
         yield;
@@ -1413,10 +1415,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (res !== undefined) {
             return res;
         }
-        if (this.rowAxis.visibleItems.length == 0 || this.dataTableCache.rows.length == 0) {
-            return 0;
-        }
         const idealHeaderWidth = this.idealColHeaderWidth[columnIndex];
+        if (this.rowAxis.visibleItems.length == 0 || this.dataTableCache.rows.length == 0) {
+            return idealHeaderWidth;
+        }
         const firstCellWidth = this.dataTableCache.getCell(this.rowAxis.visibleItems[this.viewport.vertical.startIndex], this.colAxis.indexToOrdinal[columnIndex]).getBoundingClientRect().width;
         return Math.max(idealHeaderWidth, firstCellWidth);
     }
