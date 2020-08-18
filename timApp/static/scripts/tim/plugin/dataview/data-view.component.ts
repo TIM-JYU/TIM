@@ -665,7 +665,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.updateVTable();
         } else {
             for (const {row, col} of cells) {
-                const cell = this.dataTableCache.getCell(row, col);
+                const cell = this.getDataCell(row, col);
                 this.updateCell(cell, row, col, this.modelProvider.getCellContents(row, col));
                 DOMPurify.sanitize(cell, {IN_PLACE: true});
             }
