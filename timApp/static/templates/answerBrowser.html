@@ -181,7 +181,7 @@
         <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.hasUserChanged() && !$ctrl.loading">(hover/click to update)</span>
         <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="$ctrl.loading"> -->
     </div>
-    <div uib-alert ng-class="'alert-warning'" ng-show="$ctrl.feedback"
+    <div uib-alert class="alert-warning text-color-normal" ng-if="$ctrl.feedback"
          data-close="$ctrl.closeFeedback()">
         <div ng-bind-html="$ctrl.feedback"></div>
     </div>

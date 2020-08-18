@@ -329,7 +329,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     public oldreview: boolean = false;
     private shouldFocus: boolean = false;
     private alerts: Array<unknown> = [];
-    private feedback: string = "";
+    private feedback?: string;
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
     private loadedAnswer: { id: number | undefined } = {id: undefined};
@@ -364,11 +364,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (args.error) {
             this.alerts.push({msg: args.error, type: "warning"});
         }
-        if (args.feedback) {
-            this.feedback = args.feedback;
-        } else {
-            this.feedback = "";
-        }
+        this.feedback = args.feedback;
+        this.scope.$evalAsync(); // required because this method may be called from Angular context
     }
 
     async $onInit() {
