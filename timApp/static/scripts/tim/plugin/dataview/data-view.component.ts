@@ -723,7 +723,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     ngOnInit(): void {
         this.tableWidth = this.tableMaxWidth;
         this.vScroll = {...DEFAULT_VIRTUAL_SCROLL_SETTINGS, ...this.virtualScrolling};
-        this.isVirtual = !!this.virtualScrolling?.enabled;
+        if (this.modelProvider.isPreview()) {
+            this.vScroll.enabled = false;
+            this.tableWidth = "fit-content";
+        }
         // Detach change detection because most of this component is based on pure DOM manipulation
         this.cdr.detach();
         if (this.vScroll.enabled) {
@@ -1117,7 +1120,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private* buildPreviewTable() {
         // Turn off vscroll in preview mode as no items are rendered in the first place
-        this.vScroll.enabled = false;
         this.viewport = this.getViewport();
         this.buildColumnHeaderTable();
         yield;
