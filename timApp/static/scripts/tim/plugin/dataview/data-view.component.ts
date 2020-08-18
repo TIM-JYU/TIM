@@ -727,6 +727,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.vScroll.enabled = false;
             this.tableWidth = "fit-content";
         }
+        this.isVirtual = this.vScroll.enabled;
         // Detach change detection because most of this component is based on pure DOM manipulation
         this.cdr.detach();
         if (this.vScroll.enabled) {
