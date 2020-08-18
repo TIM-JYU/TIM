@@ -12,7 +12,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
-import {DrawToolbarModule, DrawType} from "tim/plugin/drawToolbar";
+import {DrawToolbarModule, DrawType, IDrawOptions} from "tim/plugin/drawToolbar";
 import {ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
 import {MouseOrTouch, numOrStringToNumber, posToRelative, touchEventToTouch} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
@@ -136,9 +136,7 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
             </canvas>
 <!--            </div>-->
         </div>
-        <draw-toolbar [(enabled)]="drawingEnabled" [(drawType)]="drawType"
-                      [(color)]="color" [(fill)]="drawFill" [undo]="undo"
-                      [(w)]="w" [(opacity)]="opacity"></draw-toolbar>
+        <draw-toolbar [drawSettings]="drawOptions" [undo]="undo"></draw-toolbar>
     `,
 })
 export class DrawCanvasComponent implements OnInit, OnChanges {
@@ -157,13 +155,22 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     @Input() undoCallback?: (arg0: this) => void;
 
     // draw-related attributes
-    @Input() drawingEnabled = true;
-    drawType = DrawType.Freehand;
-    color = "red";
-    w = 3;
-    opacity = 1;
-    // TODO: for now there's no option to draw for e.g filled rectangle with borders, but save format should support it
-    drawFill = false;
+    // @Input() drawingEnabled = true;
+    // drawType = DrawType.Freehand;
+    // color = "red";
+    // w = 3;
+    // opacity = 1;
+    // // TODO: for now there's no option to draw for e.g filled rectangle with borders, but save format should support it
+    // drawFill = false;
+
+    @Input() drawOptions: IDrawOptions = {
+        enabled: true,
+        drawType: DrawType.Freehand,
+        color: "red",
+        w: 3,
+        opacity: 1,
+        fill: false,
+    };
 
     // optional function to call whenever mouse is pressed (whether drawing enabled or not)
     updateCallback?: (arg0: this, arg1: IDrawUpdate) => void;
@@ -289,7 +296,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             event.preventDefault();
         }
         const {x, y} = posToRelative(this.canvas.nativeElement, e);
-        if (this.drawingEnabled && !(middleOrRightClick)) {
+        if (this.drawOptions.enabled && !(middleOrRightClick)) {
             this.drawStarted = true;
             this.drawMoved = false;
             this.startX = x;
@@ -311,20 +318,20 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         const pxy = posToRelative(this.canvas.nativeElement, e);
         const {x, y} = pxy;
 
-        if (this.drawType == DrawType.Circle || this.drawType == DrawType.Rectangle) {
+        if (this.drawOptions.drawType == DrawType.Circle || this.drawOptions.drawType == DrawType.Rectangle) {
             this.redrawAll();
             this.objX = Math.min(x, this.startX);
             this.objY = Math.min(y, this.startY);
             this.objW = Math.abs(x - this.startX);
             this.objH = Math.abs(y - this.startY);
             this.setContextSettingsFromOptions();
-            if (this.drawType == DrawType.Circle) {
+            if (this.drawOptions.drawType == DrawType.Circle) {
                 this.drawPreviewCircle();
             } else {
                 this.drawPreviewRectangle();
             }
         } else {
-            if (this.drawType == DrawType.Line) {
+            if (this.drawOptions.drawType == DrawType.Line) {
                 this.popPoint(1);
             }
             this.line(this.prevPos, pxy);
@@ -344,13 +351,13 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             this.drawStarted = false;
         }
         if (this.drawMoved) {
-            if (this.drawType == DrawType.Circle) {
+            if (this.drawOptions.drawType == DrawType.Circle) {
                 const circle: ICircle = {
                     type: "circle",
                     drawData: this.makeFullRectangleOrCircle(),
                 };
                 this.drawData.push(circle);
-            } else if (this.drawType == DrawType.Rectangle) {
+            } else if (this.drawOptions.drawType == DrawType.Rectangle) {
                 const rect: IRectangle = {
                     type: "rectangle",
                     drawData: this.makeFullRectangleOrCircle(),
@@ -368,7 +375,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         }
 
         if (this.updateCallback) {
-            this.updateCallback(this, {x: x, y: y, drawingUpdated: this.drawMoved && this.drawingEnabled});
+            this.updateCallback(this, {x: x, y: y, drawingUpdated: this.drawMoved && this.drawOptions.enabled});
         }
     }
 
@@ -377,18 +384,18 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      */
     makeFullRectangleOrCircle(): IRectangleOrCircle {
         let fillOrBorder = {};
-        if (this.drawFill) {
-            fillOrBorder = {fillColor: this.color};
+        if (this.drawOptions.fill) {
+            fillOrBorder = {fillColor: this.drawOptions.color};
         } else {
-            fillOrBorder = {lineWidth: this.w};
+            fillOrBorder = {lineWidth: this.drawOptions.w};
         }
         return {
             x: this.objX,
             y: this.objY,
             w: this.objW,
             h: this.objH,
-            opacity: this.opacity,
-            color: this.color,
+            opacity: this.drawOptions.opacity,
+            color: this.drawOptions.color,
             ...fillOrBorder,
         };
     }
@@ -430,7 +437,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             y: this.objY,
             w: this.objW,
             h: this.objH,
-            fillColor: this.drawFill ? this.color : undefined,
+            fillColor: this.drawOptions.fill ? this.drawOptions.color : undefined,
         };
     }
 
@@ -443,10 +450,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         }
         const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
         const ns: ILineSegment = {lines: [p]};
-        ns.color = this.color;
-        ns.w = this.w;
-        if (this.opacity < 1) {
-            ns.opacity = this.opacity;
+        ns.color = this.drawOptions.color;
+        ns.w = this.drawOptions.w;
+        if (this.drawOptions.opacity < 1) {
+            ns.opacity = this.drawOptions.opacity;
         }
         this.freeDrawing = ns;
         this.prevPos = p;
@@ -495,20 +502,20 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * @param obj IRectangleOrCircle object with options
      */
     setContextSettingsFromObject(obj: IRectangleOrCircle) {
-        this.ctx.strokeStyle = obj.color ?? this.color;
-        this.ctx.lineWidth = obj.lineWidth ?? this.w;
+        this.ctx.strokeStyle = obj.color ?? this.drawOptions.color;
+        this.ctx.lineWidth = obj.lineWidth ?? this.drawOptions.w;
         this.ctx.fillStyle = obj.fillColor ?? "transparent";
-        this.ctx.globalAlpha = obj.opacity ?? this.opacity;
+        this.ctx.globalAlpha = obj.opacity ?? this.drawOptions.opacity;
     }
 
     /**
      * Sets canvas options (line widths, colors, opacity) based on current toolbar settings
      */
     setContextSettingsFromOptions() {
-        this.ctx.globalAlpha = this.opacity;
-        this.ctx.strokeStyle = this.color;
-        this.ctx.lineWidth = this.w;
-        this.ctx.fillStyle = this.color;
+        this.ctx.globalAlpha = this.drawOptions.opacity;
+        this.ctx.strokeStyle = this.drawOptions.color;
+        this.ctx.lineWidth = this.drawOptions.w;
+        this.ctx.fillStyle = this.drawOptions.color;
     }
 
     /**
@@ -558,9 +565,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             return;
         }
         this.ctx.beginPath();
-        this.ctx.strokeStyle = this.color;
-        this.ctx.lineWidth = this.w;
-        this.ctx.globalAlpha = this.opacity;
+        this.ctx.strokeStyle = this.drawOptions.color;
+        this.ctx.lineWidth = this.drawOptions.w;
+        this.ctx.globalAlpha = this.drawOptions.opacity;
         this.ctx.moveTo(p1[0], p1[1]);
         this.ctx.lineTo(p2.x, p2.y);
         this.ctx.stroke();
@@ -577,7 +584,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
         const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
         this.freeDrawing.lines.push(p);
-        if (this.drawType != DrawType.Line) {
+        if (this.drawOptions.drawType != DrawType.Line) {
             this.prevPos = p;
         }
     }

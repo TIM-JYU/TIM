@@ -7,7 +7,7 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {DrawToolbarModule, DrawType, IDrawVisibleOptions} from "tim/plugin/drawToolbar";
+import {DrawToolbarModule, DrawType, IDrawOptions, IDrawVisibleOptions} from "tim/plugin/drawToolbar";
 import {$http, $sce, $timeout} from "../util/ngimport";
 import {TimDefer} from "../util/timdefer";
 import {
@@ -114,8 +114,8 @@ export class FreeHand {
         const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
         const ns: ILineSegment = {lines: [p]};
         if (!this.emotion) {
-            ns.color = this.imgx.color;
-            ns.w = this.imgx.w;
+            ns.color = this.imgx.drawSettings.color;
+            ns.w = this.imgx.drawSettings.w;
         }
         this.freeDrawing.push(ns);
         this.prevPos = p;
@@ -141,8 +141,8 @@ export class FreeHand {
         }
         const ns: ILineSegment = {lines: [p]};
         if (!this.emotion) {
-            ns.color = this.imgx.color;
-            ns.w = this.imgx.w;
+            ns.color = this.imgx.drawSettings.color;
+            ns.w = this.imgx.drawSettings.w;
         }
         this.freeDrawing.push(ns);
         this.prevPos = p;
@@ -215,16 +215,16 @@ export class FreeHand {
     }
 
     setColor(newColor: string) {
-        this.imgx.color = newColor;
+        this.imgx.drawSettings.color = newColor;
         if (this.prevPos) {
             this.startSegment(tupleToCoords(this.prevPos));
         }
     }
 
     setWidth(newWidth: number) {
-        this.imgx.w = newWidth;
-        if (this.imgx.w < 1) {
-            this.imgx.w = 1;
+        this.imgx.drawSettings.w = newWidth;
+        if (this.imgx.drawSettings.w < 1) {
+            this.imgx.drawSettings.w = 1;
         }
         if (this.prevPos) {
             this.startSegment(tupleToCoords(this.prevPos));
@@ -232,7 +232,7 @@ export class FreeHand {
     }
 
     incWidth(dw: number) {
-        this.setWidth(this.imgx.w + dw);
+        this.setWidth(this.imgx.drawSettings.w + dw);
     }
 
     // setLineMode(newMode: boolean) {
@@ -248,8 +248,8 @@ export class FreeHand {
             return;
         }
         ctx.beginPath();
-        ctx.strokeStyle = this.imgx.color;
-        ctx.lineWidth = this.imgx.w;
+        ctx.strokeStyle = this.imgx.drawSettings.color;
+        ctx.lineWidth = this.imgx.drawSettings.w;
         ctx.moveTo(p1[0], p1[1]);
         ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
@@ -443,8 +443,8 @@ const directiveTemplate = `
         &nbsp;&nbsp;<a *ngIf="button"
         (click)="resetExercise()">{{resetText}}</a>&nbsp;&nbsp;<a
                 href="" *ngIf="muokattu" (click)="initCode()">{{resetText}}</a>
-                <draw-toolbar [(enabled)]="freeHand" [(drawType)]="drawType" [undo]="passUndo"
-                    [drawVisibleOptions]="drawVisibleOptions" [(color)]="color" [(w)]="w"></draw-toolbar>
+                <draw-toolbar [drawSettings]="drawSettings" [undo]="passUndo"
+                    [drawVisibleOptions]="drawVisibleOptions"></draw-toolbar>
     </p>
     <div [hidden]="!preview"><span><span [ngStyle]="{'background-color': previewColor}"
                                              style="display: table-cell; text-align: center; width: 30px;"
@@ -596,7 +596,7 @@ class DragTask {
                 //     this.freeHand.flipLineMode();
                 // }
                 if (c === "f" && imgx.freeHandShortCut) {
-                    imgx.freeHand = !imgx.freeHand;
+                    imgx.drawSettings.enabled = !imgx.drawSettings.enabled;
                 }
             }, false);
         }
@@ -713,7 +713,7 @@ class DragTask {
                 yoffset: this.mousePosition.y - active.y,
             };
             this.draw();
-        } else if (this.imgx.freeHand) {
+        } else if (this.imgx.drawSettings.enabled) {
             this.canvas.style.cursor = "pointer";
             this.mouseDown = true;
             if (!this.imgx.emotion) {
@@ -1504,9 +1504,9 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
         return isTouchDevice() ? this.markup.extraGrabAreaHeight : 0;
     }
 
-    public w = 0;
-    public freeHand = false; // Drawing enabled
-    public drawType: DrawType = DrawType.Freehand;
+    // public w = 0;
+    // public freeHand = false; // Drawing enabled
+    // public drawType: DrawType = DrawType.Freehand;
     public drawVisibleOptions: IDrawVisibleOptions = {
         enabled: true,
         freeHand: true,
@@ -1514,7 +1514,15 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
         color: true,
         w: true,
     };
-    public color = "";
+    public drawSettings: IDrawOptions = {
+        enabled: false,
+        drawType: DrawType.Freehand,
+        w: 0,
+        color: "",
+        fill: false,
+        opacity: 1,
+    };
+    // public color = "";
     public freeHandDrawing!: FreeHand;
     public coords = "";
     public drags: DragObject[] = [];
@@ -1568,14 +1576,14 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
             this.attrsall.state?.freeHandData ?? [],
             this.videoPlayer);
         if (this.isFreeHandInUse) {
-            this.freeHand = true;
+            this.drawSettings.enabled = true;
         }
 
-        this.w = this.markup.freeHandWidth;
-        this.color = this.markup.freeHandColor;
+        this.drawSettings.w = this.markup.freeHandWidth;
+        this.drawSettings.color = this.markup.freeHandColor;
         // this.lineMode = this.markup.freeHandLine;
         if (this.markup.freeHandLine) {
-            this.drawType = DrawType.Line;
+            this.drawSettings.drawType = DrawType.Line;
         }
 
         const dt = new DragTask(this.canvas, this);
@@ -1709,7 +1717,7 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     lineMode(): boolean {
-        return this.drawType == DrawType.Line;
+        return this.drawSettings.drawType == DrawType.Line;
     }
 
     getPColor() {

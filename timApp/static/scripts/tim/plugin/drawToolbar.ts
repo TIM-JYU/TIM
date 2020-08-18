@@ -29,6 +29,15 @@ export interface IDrawVisibleOptions {
     opacity?: boolean,
 }
 
+export interface IDrawOptions {
+    enabled: boolean,
+    drawType: DrawType,
+    w: number,
+    color: string,
+    fill: boolean,
+    opacity: number,
+}
+
 export enum DrawType {
     Freehand,
     Line,
@@ -42,42 +51,42 @@ export enum DrawType {
         <!--        <span *ngIf="drawSettings">-->
         <label
                 *ngIf="drawVisibleOptions.enabled">Draw <input type="checkbox" name="enabled" value="true"
-                [(ngModel)]="enabled" (ngModelChange)="enabledChange.emit($event)" ></label> <span><span
-                [hidden]="!enabled">
+                [(ngModel)]="drawSettings.enabled"  ></label> <span><span
+                [hidden]="!drawSettings.enabled">
             <span *ngIf="drawVisibleOptions.freeHand">
                 <label>FreeHand
                 <input type="radio"
                        name="drawType"
                        value="0"
-                       [(ngModel)]="drawType" (ngModelChange)="drawTypeChange.emit($event)"></label>
+                       [(ngModel)]="drawSettings.drawType" ></label>
             </span>
             <span *ngIf="drawVisibleOptions.lineMode">
                 <label>Line
                 <input type="radio"
                        name="drawType"
                        value="1"
-                       [(ngModel)]="drawType" (ngModelChange)="drawTypeChange.emit($event)"></label>
+                       [(ngModel)]="drawSettings.drawType" ></label>
             </span>
             <span *ngIf="drawVisibleOptions.rectangleMode">
                 <label>Rectangle
                 <input type="radio"
                        name="drawType"
                        value="2"
-                       [(ngModel)]="drawType" (ngModelChange)="drawTypeChange.emit($event)"></label>
+                       [(ngModel)]="drawSettings.drawType" ></label>
             </span>
             <span *ngIf="drawVisibleOptions.circleMode">
                 <label>Circle
                 <input type="radio"
                        name="drawType"
                        value="3"
-                       [(ngModel)]="drawType" (ngModelChange)="drawTypeChange.emit($event)"></label>
+                       [(ngModel)]="drawSettings.drawType" ></label>
             </span>
             <span *ngIf="drawVisibleOptions.fill">
                 <label>Fill
                 <input type="checkbox"
                        name="fill"
                        value="true"
-                       [(ngModel)]="fill" (ngModelChange)="fillChange.emit($event)"></label>
+                       [(ngModel)]="drawSettings.fill" ></label>
             </span>
             <span>
                 <span *ngIf="drawVisibleOptions.w">
@@ -87,7 +96,7 @@ export enum DrawType {
                            size="1"
                            style="width: 2em"
                            type="number"
-                           [(ngModel)]="w" (ngModelChange)="wChange.emit($event)"/>
+                           [(ngModel)]="drawSettings.w" />
                 </span>
                 <span *ngIf="drawVisibleOptions.opacity">
                     Opacity:
@@ -96,13 +105,13 @@ export enum DrawType {
                            size="3"
                            type="number"
                            step="0.1" min="0" max="1"
-                           [(ngModel)]="opacity" (ngModelChange)="opacityChange.emit($event)"/>
+                           [(ngModel)]="drawSettings.opacity" />
                 </span>
             <span *ngIf="drawVisibleOptions.color">
             <input colorpicker="hex"
                    type="text"
-                   [ngStyle]="{'background-color': color}"
-                   [(ngModel)]="color" (ngModelChange)="setColor($event)" size="4"/> <span
+                   [ngStyle]="{'background-color': drawSettings.color}"
+                   [(ngModel)]="drawSettings.color" (ngModelChange)="setColor($event)" size="4"/> <span
                     style="background-color: red; display: table-cell; text-align: center; width: 30px;"
                     (click)="setColor('#f00')">R</span><span
                     style="background-color: blue; display: table-cell; text-align: center; width: 30px;"
@@ -131,28 +140,35 @@ export class DrawToolbarComponent implements OnInit {
     };
 
     // TODO: add these to single object
-    @Input() public enabled = false;
-    @Output() enabledChange: EventEmitter<boolean> = new EventEmitter();
+    @Input() public drawSettings: IDrawOptions = {
+        enabled: false,
+        w: 5,
+        opacity: 1,
+        color: "red",
+        fill: true,
+        drawType: DrawType.Freehand,
+    };
+    // @Output() drawSettingsChange: EventEmitter<IDrawOptions> = new EventEmitter();
 
-    @Input() public w = 5;
-    @Output() wChange: EventEmitter<number> = new EventEmitter();
-
-    @Input() public opacity = 1;
-    @Output() opacityChange: EventEmitter<number> = new EventEmitter();
-
-    @Input() public color = "red";
-    @Output() colorChange: EventEmitter<string> = new EventEmitter();
-
-    @Input() public fill = true;
-    @Output() fillChange: EventEmitter<boolean> = new EventEmitter();
-
-    @Input() public drawType?: DrawType;
-    @Output() drawTypeChange: EventEmitter<DrawType> = new EventEmitter();
+    // @Input() public enabled = false;
+    // @Output() enabledChange: EventEmitter<boolean> = new EventEmitter();
+    //
+    // @Input() public w = 5;
+    // @Output() wChange: EventEmitter<number> = new EventEmitter();
+    //
+    // @Input() public opacity = 1;
+    // @Output() opacityChange: EventEmitter<number> = new EventEmitter();
+    //
+    // @Input() public color = "red";
+    // @Output() colorChange: EventEmitter<string> = new EventEmitter();
+    //
+    // @Input() public fill = true;
+    // @Output() fillChange: EventEmitter<boolean> = new EventEmitter();
+    //
+    // @Input() public drawType?: DrawType;
+    // @Output() drawTypeChange: EventEmitter<DrawType> = new EventEmitter();
 
     @Input() public undo?: () => void;
-
-    @Input() public rectangleMode?: boolean;
-    @Output() rectangleModeChange: EventEmitter<boolean> = new EventEmitter();
 
     ngOnInit() {
     }
@@ -165,8 +181,8 @@ export class DrawToolbarComponent implements OnInit {
     }
 
     setColor(color: string) {
-        this.color = color;
-        this.colorChange.emit(color);
+        this.drawSettings.color = color;
+        // this.drawSettingsChange.emit(this.drawSettings);
     }
 }
 
