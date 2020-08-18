@@ -46,13 +46,15 @@ class TableFormStateModel:
 @dataclass
 class DataViewVirtualScrollingModel(GenericMarkupModel):
     enabled: Optional[bool] = True
-    verticalOverflow: Optional[int] = 1
-    horizontalOverflow: Optional[int] = 1
+    verticalOverflow: Union[int, Missing] = missing
+    horizontalOverflow: Union[int, Missing] = missing
 
 
 @dataclass
 class DataViewSettingsModel(GenericMarkupModel):
     virtual: Union[DataViewVirtualScrollingModel, Missing, None] = missing
+    rowHeight: Union[int, Missing] = missing
+    columnWidths: Union[List[int], Missing] = missing
 
 
 @dataclass

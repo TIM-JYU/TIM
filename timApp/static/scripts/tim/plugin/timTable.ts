@@ -276,6 +276,8 @@ export const DataViewVirtualScrollingSettingsType = t.type({
 
 export const DataViewSettingsType = t.type({
     virtual: nullable(DataViewVirtualScrollingSettingsType),
+    rowHeight: withDefault(t.number, 30),
+    columnWidths: withDefault(t.array(t.number), []),
 });
 
 export interface DataViewSettings extends t.TypeOf<typeof DataViewSettingsType> {
@@ -899,11 +901,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getRowHeight(rowIndex: number): number | undefined {
-        return 30;
+        return this.dataView?.rowHeight;
     }
 
     getColumnWidth(columnIndex: number): number | undefined {
-        return undefined;
+        return this.dataView?.columnWidths?.[columnIndex];
     }
 
     getCellContents(rowIndex: number, columnIndex: number): string {

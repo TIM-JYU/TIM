@@ -138,6 +138,10 @@ table {
       border-bottom-width: 0;
       border-top-width: 0;
     }
+
+    thead td {
+      overflow-x: hidden;
+    }
   }
 }
 
