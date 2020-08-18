@@ -61,7 +61,8 @@ from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, \
+    ALL_ANSWERED_WILDCARD
 from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
@@ -791,7 +792,8 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
     if groupnames is missing:
         groupnames = [runnermarkup.group]
     requested_groups = RequestedGroups.from_name_list(groupnames)
-    not_found_groups = sorted(list(set(groupnames) - set(g.name for g in requested_groups.groups)))
+    not_found_groups = sorted(list(set(groupnames) - set(g.name for g in requested_groups.groups)
+                                   - {ALL_ANSWERED_WILDCARD}))  # Ensure the wildcard is removed
     if not_found_groups:
         raise PluginException(f'The following groups were not found: {", ".join(not_found_groups)}')
     if runner_req.input.paramComps:  # TODO: add paramComps to the interface, so no need to manipulate source code
