@@ -299,7 +299,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      */
     downEvent(event: Event, e: MouseOrTouch): void {
         const middleOrRightClick = this.middleOrRightClick(e);
-        if (!middleOrRightClick) { // allow inspect element and scrolling
+        if (!middleOrRightClick && !(isTouchEvent(e) && !this.drawOptions.enabled)) { // allow inspect element and scrolling
             event.preventDefault();
         }
         const {x, y} = posToRelative(this.canvas.nativeElement, e);
