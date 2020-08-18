@@ -910,6 +910,14 @@ tools.setDouble("t.points", 1);
     def test_group_wildcard(self):
         self.login_test1()
 
+        def run_js(doc, output):
+            self.do_jsrun(doc, expect_content={
+                'web': {'errors': [],
+                        'outdata': {},
+                        'output': output,
+                        },
+            })
+
         def make_doc(*groups):
             d = self.create_jsrun(f"""
 fields: [mmcqt]
@@ -937,12 +945,7 @@ choices:
         self.add_answer(d1, 'mmcqt', content=[True, True], user=self.test_user_2)
         db.session.commit()
 
-        self.do_jsrun(d1, expect_content={
-                'web': {'errors': [],
-                        'outdata': {},
-                        'output': 'Test user 1\nTest user 2\n',
-                        },
-        })
+        run_js(d1, 'Test user 1\nTest user 2\n')
 
         ug = self.create_test_group("jsrunnertestgroup1")
         self.test_user_3.add_to_group(ug, None)
@@ -952,12 +955,15 @@ choices:
         self.add_answer(d2, 'mmcqt', content=[True, True], user=self.test_user_2)
         db.session.commit()
 
-        self.do_jsrun(d2, expect_content={
-            'web': {'errors': [],
-                    'outdata': {},
-                    'output': 'Test user 1\nTest user 2\nTest user 3\n',
-                    },
-        })
+        # Test User 3 appears in the result along with all the answered users
+        expected_names = 'Test user 1\nTest user 2\nTest user 3\n'
+        run_js(d2, expected_names)
+
+        self.add_answer(d2, 'mmcqt', content=[True, True], user=self.test_user_3)
+        db.session.commit()
+
+        # Test User 3 is not duplicated in the list
+        run_js(d2, expected_names)
 
 
 class JsRunnerGroupTest(JsRunnerTestBase):
