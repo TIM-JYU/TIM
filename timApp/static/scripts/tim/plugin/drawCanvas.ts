@@ -14,7 +14,7 @@ import {
 import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {DrawToolbarModule, DrawType, IDrawOptions} from "tim/plugin/drawToolbar";
 import {ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
-import {isTouchEvent, MouseOrTouch, numOrStringToNumber, posToRelative, touchEventToTouch} from "tim/util/utils";
+import {MouseOrTouch, numOrStringToNumber, posToRelative, touchEventToTouch} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -299,7 +299,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      */
     downEvent(event: Event, e: MouseOrTouch): void {
         const middleOrRightClick = this.middleOrRightClick(e);
-        if (!middleOrRightClick && !(isTouchEvent(e) && !this.drawOptions.enabled)) { // allow inspect element and scrolling
+        if (!middleOrRightClick && !(e instanceof Touch && !this.drawOptions.enabled)) { // allow inspect element and scrolling
             event.preventDefault();
         }
         const {x, y} = posToRelative(this.canvas.nativeElement, e);
@@ -317,7 +317,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * TODO: check if double-layered canvas is needed (for now we re-draw everything every time mouse moves during draw)
      */
     moveEvent(event: Event, e: MouseOrTouch): void {
-        if (!(isTouchEvent(e) && !this.drawOptions.enabled)) {
+        if (!(e instanceof Touch && !this.drawOptions.enabled)) {
             event.preventDefault();
         }
         if (!this.drawStarted) {
