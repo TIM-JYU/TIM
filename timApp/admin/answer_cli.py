@@ -151,7 +151,8 @@ def truncate_large(doc: str, limit: int, to: int, dry_run: bool) -> None:
                         new_c = c[:-(c_diff + len(note))] + note
                     except IndexError:
                         continue
-                    print(f'Truncating: {a.task_id}, {a.users_all[0].name}, {a.answered_on}, length {len(a.content)}')
+                    name = a.users_all[0].name if a.users_all else '(orphan)'
+                    print(f'Truncating: {a.task_id}, {name}, {a.answered_on}, length {len(a.content)}')
                     truncated += 1
                     loaded[k] = new_c
                     a.content = json.dumps(loaded)
