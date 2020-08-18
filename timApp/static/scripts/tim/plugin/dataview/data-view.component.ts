@@ -543,8 +543,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             });
         } else {
             // For normal mode: simply hide rows that are no more visible/show hidden rows
-            for (const [rowNumber, row] of this.dataTableCache.rows.entries()) {
-                const rowIndex = this.rowAxis.itemOrder[rowNumber];
+            for (const [rowIndex, row] of this.dataTableCache.rows.entries()) {
                 const shouldHide = !this.modelProvider.showRow(rowIndex);
                 const hidden = row.rowElement.hidden;
                 // Apparently always setting hidden will cause layout even if the value hasn't changed (?)
