@@ -594,7 +594,6 @@ export const StringOrNumber = t.union([t.string, t.number]);
 export type MouseOrTouch = MouseEvent | Touch;
 
 export function touchEventToTouch(event: TouchEvent) {
-    event.preventDefault();
     return event.touches[0] || event.changedTouches[0];
 }
 
