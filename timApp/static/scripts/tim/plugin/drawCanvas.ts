@@ -136,7 +136,7 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
             </canvas>
 <!--            </div>-->
         </div>
-        <draw-toolbar [drawSettings]="drawOptions" [undo]="undo"></draw-toolbar>
+        <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions" [undo]="undo"></draw-toolbar>
     `,
 })
 export class DrawCanvasComponent implements OnInit, OnChanges {
@@ -154,15 +154,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
     @Input() undoCallback?: (arg0: this) => void;
 
-    // draw-related attributes
-    // @Input() drawingEnabled = true;
-    // drawType = DrawType.Freehand;
-    // color = "red";
-    // w = 3;
-    // opacity = 1;
-    // // TODO: for now there's no option to draw for e.g filled rectangle with borders, but save format should support it
-    // drawFill = false;
-
+    // TODO: for now there's no option to draw for e.g filled rectangle with borders, but save format should support it
     @Input() drawOptions: IDrawOptions = {
         enabled: true,
         drawType: DrawType.Freehand,
@@ -171,6 +163,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         opacity: 1,
         fill: false,
     };
+
+    @Input() enabled = true;
+    @Input() toolBar = true;
 
     // optional function to call whenever mouse is pressed (whether drawing enabled or not)
     updateCallback?: (arg0: this, arg1: IDrawUpdate) => void;
@@ -206,6 +201,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
 
     ngOnInit() {
+        if (!this.enabled) {
+            this.drawOptions.enabled = false;
+        }
         this.setBg();
     }
 

@@ -168,7 +168,7 @@
 <!--                        </canvas>-->
 <!--                    </div>-->
 <!--                    <img ng-src="{{$ctrl.reviewHtml}}" ng-on-load="$ctrl.setImageReview()">-->
-                    <draw-canvas drawing-anything="false" bg-source="{{$ctrl.reviewHtml}}" [img-load-callback]="$ctrl.setImageReview"></draw-canvas>
+                    <draw-canvas [enabled]="false" [tool-bar]="$ctrl.viewctrl.velpMode" bg-source="{{$ctrl.reviewHtml}}" [img-load-callback]="$ctrl.setImageReview"></draw-canvas>
                 </div>
                 <div ng-if="!$ctrl.imageReview" class="review" ng-bind-html="$ctrl.reviewHtml">
 
