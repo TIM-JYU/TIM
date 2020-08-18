@@ -1346,9 +1346,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private getDataCell(row: number, col: number) {
         const itemRowOrdinal = this.rowAxis.indexToOrdinal[row];
         const itemColOrdinal = this.colAxis.indexToOrdinal[col];
-        const vpRowOrdinal = this.rowAxis.indexToOrdinal[this.viewport.vertical.startIndex];
-        const vpColOrdinal = this.colAxis.indexToOrdinal[this.viewport.horizontal.startIndex];
-        return this.dataTableCache.getCell(this.vScroll.enabled ? itemRowOrdinal - vpRowOrdinal : row, itemColOrdinal - vpColOrdinal);
+        const vpRowOrdinal = this.viewport.vertical.startIndex;
+        const vpColOrdinal = this.viewport.horizontal.startIndex;
+        return this.dataTableCache.getCell(itemRowOrdinal - vpRowOrdinal, itemColOrdinal - vpColOrdinal);
     }
 
     private getCellValue(rowIndex: number, columnIndex: number): string {
