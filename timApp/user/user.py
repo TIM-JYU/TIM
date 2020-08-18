@@ -689,7 +689,7 @@ def get_membership_end(u: User, group_ids: Set[int]):
     membership_end = None
     # If the user is not active in any of the groups, we'll show the lastly-ended membership.
     # TODO: It might be possible in the future that the membership_end is in the future.
-    if all(m.membership_end is not None for m in relevant_memberships):
+    if relevant_memberships and all(m.membership_end is not None for m in relevant_memberships):
         membership_end = (
             max(m.membership_end for m in relevant_memberships)
         )

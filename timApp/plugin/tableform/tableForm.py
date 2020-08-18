@@ -32,7 +32,7 @@ from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import csv_string, json_response, text_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups
 from timApp.util.utils import get_boolean, fin_timezone
 from utils import Missing
 
@@ -385,10 +385,9 @@ def update_fields():
     except TaskNotFoundException:
         return abort(404, f'Table not found: {tid}')
     groupnames = plug.values.get("groups",[])
-    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames))
     fielddata, _, field_names, _ = get_fields_and_users(
         fields_to_update,
-        queried_groups,
+        RequestedGroups.from_name_list(groupnames),
         doc,
         curr_user,
         plug.values.get("removeDocIds", True),
@@ -434,11 +433,10 @@ def tableform_get_fields(
         group_filter_type = MembershipFilter.Current,
         user_filter: List[str] = None,
 ):
-    queried_groups = UserGroup.query.filter(UserGroup.name.in_(groupnames)) if '*' not in groupnames else None
     fielddata, aliases, field_names, groups = \
         get_fields_and_users(
             flds,
-            queried_groups,
+            RequestedGroups.from_name_list(groupnames),
             doc,
             curr_user,
             remove_doc_ids,

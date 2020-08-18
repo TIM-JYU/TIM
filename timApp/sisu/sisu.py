@@ -36,7 +36,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_sisu_groups_by_filter
 from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFieldObj
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFieldObj, RequestedGroups
 from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time, fin_timezone
 from timApp.modules.py.utils import Missing
@@ -658,7 +658,7 @@ def get_sisu_assessments(
                     f'of the group "{ug.name}" does not match the course setting "{sisu_id}".')
     users, _, _, _ = get_fields_and_users(
         ['grade', 'credit', 'completionDate', 'sentGrade', 'sentCredit'],
-        ugs,
+        RequestedGroups(ugs),
         doc,
         teacher,
         user_filter=User.name.in_(filter_users) if filter_users else None,

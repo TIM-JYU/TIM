@@ -3,6 +3,7 @@ import json
 import re
 import time
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
 from typing import List, Optional, Tuple, DefaultDict, Dict, TypedDict, Any, Union
@@ -26,6 +27,7 @@ from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
 
+ALL_ANSWERED_WILDCARD = '*'
 
 def chunks(l: List, n: int):
     for i in range(0, len(l), n):
@@ -106,9 +108,22 @@ class UserFieldObj(TypedDict):
     styles: Any
 
 
+@dataclass
+class RequestedGroups:
+    groups: List[UserGroup]
+    include_all_answered:  bool = False
+
+    @staticmethod
+    def from_name_list(group_names: List[str]):
+        return RequestedGroups(
+            groups=UserGroup.query.filter(UserGroup.name.in_(group_names)).all(),
+            include_all_answered=ALL_ANSWERED_WILDCARD in group_names
+        )
+
+
 def get_fields_and_users(
         u_fields: List[str],
-        requested_groups: Optional[List[UserGroup]],
+        requested_groups: RequestedGroups,
         d: DocInfo,
         current_user: User,
         autoalias: bool = False,
@@ -122,7 +137,7 @@ def get_fields_and_users(
     :param user_filter: Additional filter to use.
     :param member_filter_type: Whether to use all, current or deleted users in groups.
     :param u_fields: list of fields to be used
-    :param requested_groups: requested user groups to be used; if None, requests for all users who posted a valid answer in the default document
+    :param requested_groups: requested user groups to be used
     :param d: default document
     :param current_user: current users, check his rights to fields
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
@@ -131,23 +146,20 @@ def get_fields_and_users(
     :param user_groups: user groups to always include in the result. NOTE: this bypasses view access checks!
     :return: fielddata, aliases, field_names
     """
+    if requested_groups.include_all_answered:
+        allow_non_teacher = False
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
-    # Explicitly check for None because [] is valid input (i.e. "no groups")
-    if requested_groups is not None:
-        for group in requested_groups:
-            if needs_group_access_check and group.name != current_user.name:
-                if not verify_group_view_access(group, current_user, require=False):
-                    # return abort(403, f'Missing view access for group {group.name}')
-                    continue  # TODO: study how to give just warning from missing access, extra return string?
-            ugroups.append(group)
+    for group in requested_groups.groups:
+        if needs_group_access_check and group.name != current_user.name:
+            if not verify_group_view_access(group, current_user, require=False):
+                # return abort(403, f'Missing view access for group {group.name}')
+                continue  # TODO: study how to give just warning from missing access, extra return string?
+        ugroups.append(group)
 
-        if not ugroups:  # if no access, give at least own group
-            ugroups.append(current_user.get_personal_group())
-        groups = ugroups
-    else:
-        groups = None
-        allow_non_teacher = False
+    if not ugroups:  # if no access, give at least own group
+        ugroups.append(current_user.get_personal_group())
+    groups = ugroups
 
     task_ids = []
     task_id_map = defaultdict(list)
@@ -237,14 +249,14 @@ def get_fields_and_users(
             except KeyError:
                 pass
 
-    group_id_set = set(ug.id for ug in groups) if groups else None
-    group_filter = UserGroup.id.in_([ug.id for ug in groups]) if groups else None
-    if user_filter is not None and group_filter is not None:
+    group_id_set = set(ug.id for ug in groups)
+    group_filter = UserGroup.id.in_([ug.id for ug in groups])
+    if user_filter is not None:
         group_filter = group_filter & user_filter
     join_relation = member_filter_relation_map[member_filter_type]
     tally_field_values = get_tally_field_values(d,
                                                 doc_map,
-                                                group_filter,
+                                                group_filter if not requested_groups.include_all_answered else None,
                                                 join_relation,
                                                 tally_fields)
     sub = []
@@ -254,7 +266,7 @@ def get_fields_and_users(
     not_global_taskids = [t for t in task_ids if not t.is_global]
     for task_chunk in chunks(not_global_taskids, 6):
         q = valid_answers_query(task_chunk).join(User, Answer.users)
-        if group_filter is not None:
+        if not requested_groups.include_all_answered:
             q = q.join(UserGroup, join_relation).filter(group_filter)
         sub += (
                 q
@@ -268,17 +280,18 @@ def get_fields_and_users(
         aid_uid_map[aid].append(uid)
         user_ids.add(uid)
 
-    q = User.query
-    if group_filter is not None:
-        q = q.join(UserGroup, join_relation).filter(group_filter)
-    else:
+    q1 = User.query.join(UserGroup, join_relation).filter(group_filter)
+    if requested_groups.include_all_answered:
         # if no group filter is given, attempt to get users that have valid answers only using the user
         # ids from previous query
         id_filter = User.id.in_(user_ids)
         # Ensure that user filter gets applied even if group filter was None
         if user_filter is not None:
             id_filter = id_filter & user_filter
-        q = q.filter(id_filter)
+        q2 = User.query.filter(id_filter)
+        q = q1.union(q2)
+    else:
+        q = q1
     q = q.with_entities(User).order_by(User.id).options(lazyload(User.groups))
     if member_filter_type != MembershipFilter.Current:
         q = q.options(joinedload(User.memberships))

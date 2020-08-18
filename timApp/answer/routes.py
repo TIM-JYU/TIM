@@ -61,7 +61,8 @@ from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, \
+    ALL_ANSWERED_WILDCARD
 from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
@@ -790,9 +791,9 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
     groupnames = runnermarkup.groups
     if groupnames is missing:
         groupnames = [runnermarkup.group]
-    g = UserGroup.query.filter(UserGroup.name.in_(groupnames))
-    found_groups = g.all()
-    not_found_groups = sorted(list(set(groupnames) - set(g.name for g in found_groups)))
+    requested_groups = RequestedGroups.from_name_list(groupnames)
+    not_found_groups = sorted(list(set(groupnames) - set(g.name for g in requested_groups.groups)
+                                   - {ALL_ANSWERED_WILDCARD}))  # Ensure the wildcard is removed
     if not_found_groups:
         raise PluginException(f'The following groups were not found: {", ".join(not_found_groups)}')
     if runner_req.input.paramComps:  # TODO: add paramComps to the interface, so no need to manipulate source code
@@ -806,7 +807,7 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
 
     answerdata['data'], answerdata['aliases'], _, _ = get_fields_and_users(
         runnermarkup.fields,
-        found_groups,
+        requested_groups,
         d,
         get_current_user_object(),
         allow_non_teacher=siw,
@@ -1495,7 +1496,7 @@ def get_plug_vals(doc: DocInfo, tid: TaskId, curr_user: User, user: User) -> Opt
 
     data, aliases, field_names, _ = get_fields_and_users(
         flds,
-        [user.personal_group_prop],
+        RequestedGroups([user.personal_group_prop]),
         doc,
         curr_user,
         add_missing_fields=True,

@@ -33,7 +33,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
-from timApp.util.get_fields import get_fields_and_users
+from timApp.util.get_fields import get_fields_and_users, RequestedGroups
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex, Range
 
@@ -168,7 +168,7 @@ class PluginPlacement:
                 if plugin_name in WANT_FIELDS and 'fields' in vals and user:
                     data, aliases, field_names, _ = get_fields_and_users(
                         vals['fields'],
-                        [user.get_personal_group()],
+                        RequestedGroups([user.get_personal_group()]),
                         block.doc.docinfo,
                         get_current_user_object(),
                         add_missing_fields=True,

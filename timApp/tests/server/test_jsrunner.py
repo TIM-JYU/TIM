@@ -12,6 +12,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
+from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
 class JsRunnerTestBase(TimRouteTest):
@@ -905,6 +906,64 @@ tools.setDouble("t.points", 1);
         self.assertEqual(1, a.points)
         self.do_jsrun(d)
         self.verify_answer_content(f'{d.id}.t', None, {'c': None}, self.test_user_1)
+
+    def test_group_wildcard(self):
+        self.login_test1()
+
+        def run_js(doc, output):
+            self.do_jsrun(doc, expect_content={
+                'web': {'errors': [],
+                        'outdata': {},
+                        'output': output,
+                        },
+            })
+
+        def make_doc(*groups):
+            d = self.create_jsrun(f"""
+fields: [mmcqt]
+groups: [{', '.join(groups)}]
+program: |!!
+tools.println(tools.getRealName());
+!!
+            """)
+            d.document.add_text("""
+#- {plugin=mmcq #mmcqt}
+stem: "foo"
+choices:
+    -
+        correct: true
+        text: "a"
+    -
+        correct: false
+        text: "b"
+""")
+            return d
+
+        d1 = make_doc('"*"')
+
+        self.add_answer(d1, 'mmcqt', content=[True, False], user=self.test_user_1)
+        self.add_answer(d1, 'mmcqt', content=[True, True], user=self.test_user_2)
+        db.session.commit()
+
+        run_js(d1, 'Test user 1\nTest user 2\n')
+
+        ug = self.create_test_group("jsrunnertestgroup1")
+        self.test_user_3.add_to_group(ug, None)
+        d2 = make_doc('"*"', 'jsrunnertestgroup1')
+
+        self.add_answer(d2, 'mmcqt', content=[True, False], user=self.test_user_1)
+        self.add_answer(d2, 'mmcqt', content=[True, True], user=self.test_user_2)
+        db.session.commit()
+
+        # Test User 3 appears in the result along with all the answered users
+        expected_names = 'Test user 1\nTest user 2\nTest user 3\n'
+        run_js(d2, expected_names)
+
+        self.add_answer(d2, 'mmcqt', content=[True, True], user=self.test_user_3)
+        db.session.commit()
+
+        # Test User 3 is not duplicated in the list
+        run_js(d2, expected_names)
 
 
 class JsRunnerGroupTest(JsRunnerTestBase):
