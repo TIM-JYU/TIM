@@ -14,7 +14,7 @@ import {
 import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {DrawToolbarModule, DrawType, IDrawOptions} from "tim/plugin/drawToolbar";
 import {ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
-import {MouseOrTouch, numOrStringToNumber, posToRelative, touchEventToTouch} from "tim/util/utils";
+import {isTouchEvent, MouseOrTouch, numOrStringToNumber, posToRelative, touchEventToTouch} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -317,7 +317,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * TODO: check if double-layered canvas is needed (for now we re-draw everything every time mouse moves during draw)
      */
     moveEvent(event: Event, e: MouseOrTouch): void {
-        event.preventDefault();
+        if (!(isTouchEvent(e) && !this.drawOptions.enabled)) {
+            event.preventDefault();
+        }
         if (!this.drawStarted) {
             return;
         }
