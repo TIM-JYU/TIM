@@ -55,6 +55,7 @@ class DataViewSettingsModel(GenericMarkupModel):
     virtual: Union[DataViewVirtualScrollingModel, Missing, None] = missing
     rowHeight: Union[int, Missing] = missing
     columnWidths: Union[List[int], Missing] = missing
+    tableWidth: Union[str, Missing] = missing
 
 
 @dataclass
