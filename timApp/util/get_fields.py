@@ -113,6 +113,13 @@ class RequestedGroups:
     groups: List[UserGroup]
     include_all_answered:  bool = False
 
+    @staticmethod
+    def from_name_list(group_names: List[str]):
+        return RequestedGroups(
+            groups=UserGroup.query.filter(UserGroup.name.in_(group_names)).all(),
+            include_all_answered=ALL_ANSWERED_WILDCARD in group_names
+        )
+
 
 def get_fields_and_users(
         u_fields: List[str],
