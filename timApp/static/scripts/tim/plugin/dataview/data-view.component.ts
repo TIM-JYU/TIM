@@ -1105,6 +1105,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private* buildTable(): Generator {
         // Visually hide the table to prevent any flickering owing to size syncing
         this.componentRef.nativeElement.style.visibility = "hidden";
+        // Sometimes table size style is not fully applied yet (e.g. open editor + click save quickly)
+        // So we wait for a single frame to ensure DOM is laid out
+        yield;
         const build = this.modelProvider.isPreview() ? this.buildPreviewTable() : this.buildMainTable();
         for (const _ of build) {
             yield;
