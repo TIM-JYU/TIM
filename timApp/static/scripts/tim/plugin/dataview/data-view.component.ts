@@ -613,7 +613,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
 
         for (const columnIndex of this.colAxis.visibleItems) {
-            const cell = this.headerIdTableCache.getCell(0, columnIndex);
+            const cell = this.headerIdTableCache.getCell(0, this.colAxis.indexToOrdinal[columnIndex]);
             const sortSymbolEl = cell.getElementsByTagName("span")[1];
             const {symbol, style} = this.modelProvider.getSortSymbolInfo(columnIndex);
             applyBasicStyle(sortSymbolEl, style);
@@ -630,10 +630,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
 
-        for (const row of this.rowAxis.visibleItems) {
-            for (const column of this.colAxis.visibleItems) {
-                const cell = this.dataTableCache.getCell(row, column);
-                this.updateCellStyle(cell, row, column);
+        for (const rowIndex of this.dataTableCache.rows.keys()) {
+            for (const columnIndex of this.colAxis.visibleItems) {
+                const cell = this.dataTableCache.getCell(rowIndex, this.colAxis.indexToOrdinal[columnIndex]);
+                this.updateCellStyle(cell, rowIndex, columnIndex);
             }
         }
     }
@@ -1348,7 +1348,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const itemColOrdinal = this.colAxis.indexToOrdinal[col];
         const vpRowOrdinal = this.rowAxis.indexToOrdinal[this.viewport.vertical.startIndex];
         const vpColOrdinal = this.colAxis.indexToOrdinal[this.viewport.horizontal.startIndex];
-        return this.dataTableCache.getCell(itemRowOrdinal - vpRowOrdinal, itemColOrdinal - vpColOrdinal);
+        return this.dataTableCache.getCell(this.vScroll.enabled ? itemRowOrdinal - vpRowOrdinal : row, itemColOrdinal - vpColOrdinal);
     }
 
     private getCellValue(rowIndex: number, columnIndex: number): string {
