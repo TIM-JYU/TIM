@@ -415,6 +415,13 @@ const VIRTUAL_SCROLL_TABLE_BORDER_SPACING = 0;
                 <tbody #filterBody></tbody>
             </table>
         </div>
+        <div *ngIf="fixedColumnCount > 0" class="fixed-col-header" #fixedColHeaderContainer>
+            <span>foo</span>
+            <table [ngStyle]="tableStyle" #fixedColHeaderTable>
+                <thead #fixedColHeaderIdBody></thead>
+                <tbody #fixedColFilterBody></tbody>
+            </table>
+        </div>
         <div class="summary">
             <table [ngStyle]="tableStyle" #summaryTable>
                 <thead>
@@ -472,6 +479,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
     @Input() tableMaxWidth: string = "100%";
+    @Input() fixedColumnCount: number = 0;
     totalRows: number = 0;
     visibleRows: number = 0;
     idHeaderCellWidth: string = "";
@@ -483,6 +491,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
     @ViewChild("filterBody") private filterBody?: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("fixedColHeaderContainer") private fixedColHeaderContainer?: ElementRef<HTMLDivElement>;
+    @ViewChild("fixedColHeaderTable") private fixedColHeaderTable?: ElementRef<HTMLTableElement>;
+    @ViewChild("fixedColHeaderIdBody") private fixedColHeaderIdBody?: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("fixedColFilterBody") private fixedColFilterBody?: ElementRef<HTMLTableSectionElement>;
     @ViewChild("idContainer") private idContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("idTable") private idTable?: ElementRef<HTMLTableElement>;
     @ViewChild("idBody") private idBody?: ElementRef<HTMLTableSectionElement>;

@@ -1,9 +1,9 @@
 :host {
   display: inline-grid;
   grid-template:
-        "summary header" auto
-        "ids content" auto
-        / auto auto;
+        "summary fixed-col-header header" auto
+        "ids ids content" auto
+        / auto auto auto;
 }
 
 table {
@@ -11,9 +11,16 @@ table {
   margin: 0;
 }
 
-.header {
+.header, .fixed-col-header {
   overflow-x: hidden;
-  grid-area: header;
+
+  &.header {
+    grid-area: header;
+  }
+
+  &.fixed-col-header {
+    grid-area: fixed-col-header;
+  }
 
   table {
     display: inline-table;

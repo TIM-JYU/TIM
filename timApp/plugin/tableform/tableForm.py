@@ -56,6 +56,7 @@ class DataViewSettingsModel:
     rowHeight: Union[int, Missing] = missing
     columnWidths: Union[List[int], Missing] = missing
     tableWidth: Union[str, Missing] = missing
+    fixedColumns: Union[int, Missing] = missing
 
 
 @dataclass

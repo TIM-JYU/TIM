@@ -282,6 +282,7 @@ export const DataViewSettingsType = t.type({
     // We use custom table width for DataView because its behaviour differs from TimTable
     // For example, max-content works for both Chrome and Firefox to do fullwidth
     tableWidth: withDefault(t.string, "max-content"),
+    fixedColumns: withDefault(t.number, 0),
 });
 
 export interface DataViewSettings extends t.TypeOf<typeof DataViewSettingsType> {
@@ -535,6 +536,7 @@ export enum ClearSort {
                                    [columnIdStart]="nrColStart"
                                    [tableMaxHeight]="maxRows"
                                    [tableMaxWidth]="dataView.tableWidth"
+                                   [fixedColumnCount]="dataView.fixedColumns"
                                    [headerStyle]="headersStyle" #dataViewComponent>
                         <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
                     </tim-data-view>
