@@ -1402,30 +1402,42 @@ interface IAnswerResponse {
                         height={{canvasheight}}></canvas>
                 <div class="content"></div>
             </div>
-            <p class="csRunMenu">&nbsp;<button *ngIf="button"
+            <p class="csRunMenu"><span *ngIf="button">&nbsp;<button 
                                                class="timButton"
                                                [disabled]="isRunning"
                                                (click)="save()">{{button}}
-            </button>
+            </button></span>
+                <span  *ngIf="buttonPlay">
                 &nbsp;&nbsp;
-                <button *ngIf="buttonPlay"
+                <button
                         [disabled]="isRunning"
                         (click)="videoPlay()">{{buttonPlay}}
                 </button>
+                </span>
+                <span *ngIf="buttonRevert">
                 &nbsp;&nbsp;
-                <button *ngIf="buttonRevert"
+                <button
                         [disabled]="isRunning"
                         (click)="videoBeginning()">{{buttonRevert}}
                 </button>
+                    </span>
+                <span [hidden]="!(finalanswer && userHasAnswered)">
                 &nbsp;&nbsp;
-                <button [hidden]="!(finalanswer && userHasAnswered)"
+                <button 
                         [disabled]="isRunning"
                         (click)="showAnswer()">
                     Show correct answer
                 </button>
-                &nbsp;&nbsp;<a *ngIf="button"
-                               (click)="resetExercise()">{{resetText}}</a>&nbsp;&nbsp;<a
-                        href="" *ngIf="muokattu" (click)="initCode()">{{resetText}}</a>
+                    </span>
+                <span *ngIf="button">
+                &nbsp;&nbsp;<a 
+                               (click)="resetExercise()">{{resetText}}</a>
+                    </span>
+                <span *ngIf="muokattu" >
+                &nbsp;&nbsp;<a
+                        href="" (click)="initCode()">{{resetText}}</a>
+                    </span>
+                &nbsp;&nbsp;
                 <draw-toolbar [drawSettings]="drawSettings" [undo]="passUndo"
                               [drawVisibleOptions]="drawVisibleOptions"></draw-toolbar>
             </p>

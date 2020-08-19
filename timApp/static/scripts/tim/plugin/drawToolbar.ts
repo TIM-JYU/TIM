@@ -48,64 +48,62 @@ export enum DrawType {
 @Component({
     selector: "draw-toolbar",
     template: `
-        <!--        <span *ngIf="drawSettings">-->
         <label
                 *ngIf="drawVisibleOptions.enabled">Draw <input type="checkbox" name="enabled" value="true"
-                [(ngModel)]="drawSettings.enabled"  ></label> <span><span
-                [hidden]="!drawSettings.enabled">
+                                                               [(ngModel)]="drawSettings.enabled"></label>
+        <span class="drawOptions" [hidden]="!drawSettings.enabled">
             <span *ngIf="drawVisibleOptions.freeHand">
                 <label>FreeHand
                 <input type="radio"
                        name="drawType"
                        value="0"
-                       [(ngModel)]="drawSettings.drawType" ></label>
+                       [(ngModel)]="drawSettings.drawType"></label>
             </span>
             <span *ngIf="drawVisibleOptions.lineMode">
                 <label>Line
                 <input type="radio"
                        name="drawType"
                        value="1"
-                       [(ngModel)]="drawSettings.drawType" ></label>
+                       [(ngModel)]="drawSettings.drawType"></label>
             </span>
             <span *ngIf="drawVisibleOptions.rectangleMode">
                 <label>Rectangle
                 <input type="radio"
                        name="drawType"
                        value="2"
-                       [(ngModel)]="drawSettings.drawType" ></label>
+                       [(ngModel)]="drawSettings.drawType"></label>
             </span>
             <span *ngIf="drawVisibleOptions.circleMode">
                 <label>Circle
                 <input type="radio"
                        name="drawType"
                        value="3"
-                       [(ngModel)]="drawSettings.drawType" ></label>
+                       [(ngModel)]="drawSettings.drawType"></label>
             </span>
             <span *ngIf="drawVisibleOptions.fill">
                 <label>Fill
                 <input type="checkbox"
                        name="fill"
                        value="true"
-                       [(ngModel)]="drawSettings.fill" ></label>
+                       [(ngModel)]="drawSettings.fill"></label>
             </span>
-            <span>
                 <span *ngIf="drawVisibleOptions.w">
                     Width:
-                    <input [hidden]="!true"
+                    <input
                            id="freeWidth"
                            size="1"
                            style="width: 2em"
                            type="number"
-                           [(ngModel)]="drawSettings.w" />
+                           [(ngModel)]="drawSettings.w"/>
                 </span>
                 <span *ngIf="drawVisibleOptions.opacity">
                     Opacity:
                     <input
-                           id="opacity"
-                           size="3"
-                           type="number"
-                           step="0.1" min="0" max="1"
-                           [(ngModel)]="drawSettings.opacity" />
+                            id="opacity"
+                            size="3"
+                            type="number"
+                            step="0.1" min="0" max="1"
+                            [(ngModel)]="drawSettings.opacity"/>
                 </span>
             <span *ngIf="drawVisibleOptions.color">
             <input colorpicker="hex"
@@ -121,10 +119,10 @@ export enum DrawType {
                     style="background-color: #0f0; display: table-cell; text-align: center; width: 30px;"
                     (click)="setColor('#0f0')">G</span>
                 </span>
-            <a href="" *ngIf="undo" (click)="toolbarUndo($event)">Undo</a>
-        </span></span></span>
-        <!--            </span> -->
+             <a href="" *ngIf="undo" (click)="toolbarUndo($event)">Undo</a>
+        </span>
     `,
+    styleUrls: ["./draw-toolbar.component.scss"],
 })
 export class DrawToolbarComponent implements OnInit {
     @Input() drawVisibleOptions: IDrawVisibleOptions = {
@@ -139,7 +137,6 @@ export class DrawToolbarComponent implements OnInit {
         opacity: true,
     };
 
-    // TODO: add these to single object
     @Input() public drawSettings: IDrawOptions = {
         enabled: false,
         w: 5,
@@ -148,25 +145,6 @@ export class DrawToolbarComponent implements OnInit {
         fill: true,
         drawType: DrawType.Freehand,
     };
-    // @Output() drawSettingsChange: EventEmitter<IDrawOptions> = new EventEmitter();
-
-    // @Input() public enabled = false;
-    // @Output() enabledChange: EventEmitter<boolean> = new EventEmitter();
-    //
-    // @Input() public w = 5;
-    // @Output() wChange: EventEmitter<number> = new EventEmitter();
-    //
-    // @Input() public opacity = 1;
-    // @Output() opacityChange: EventEmitter<number> = new EventEmitter();
-    //
-    // @Input() public color = "red";
-    // @Output() colorChange: EventEmitter<string> = new EventEmitter();
-    //
-    // @Input() public fill = true;
-    // @Output() fillChange: EventEmitter<boolean> = new EventEmitter();
-    //
-    // @Input() public drawType?: DrawType;
-    // @Output() drawTypeChange: EventEmitter<DrawType> = new EventEmitter();
 
     @Input() public undo?: () => void;
 

@@ -14,7 +14,7 @@ import {
 import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {DrawToolbarModule, DrawType, IDrawOptions} from "tim/plugin/drawToolbar";
 import {ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
-import {MouseOrTouch, numOrStringToNumber, posToRelative, touchEventToTouch} from "tim/util/utils";
+import {isTouchEvent, MouseOrTouch, numOrStringToNumber, posToRelative, touchEventToTouch} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -134,7 +134,6 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
             </div>
             <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
             </canvas>
-<!--            </div>-->
         </div>
         <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions" [undo]="undo"></draw-toolbar>
     `,
@@ -167,7 +166,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     @Input() enabled = true;
     @Input() toolBar = true;
 
-    // optional function to call whenever mouse is pressed (whether drawing enabled or not)
+    // optional function to call on clicks or undo events
     updateCallback?: (arg0: this, arg1: IDrawUpdate) => void;
 
     // keep track of mousedown while drawing enabled
@@ -213,9 +212,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
     ngAfterViewInit() {
         this.ctx = this.canvas.nativeElement.getContext("2d")!;
-        // this.canvas.nativeElement.addEventListener("mousedown", (event) => {
-        //     this.downEvent(event);
-        // });
         this.canvas.nativeElement.addEventListener("mousedown", (event) => {
             this.downEvent(event, event);
         });
@@ -265,7 +261,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         // this.wrapper.nativeElement.style = "height: 300px";
         this.imgHeight = this.bgImage.nativeElement.clientHeight;
         this.canvas.nativeElement.width = Math.max(this.bgImage.nativeElement.clientWidth, this.wrapper.nativeElement.clientWidth - 50);
-        this.canvas.nativeElement.height = Math.max(this.bgImage.nativeElement.clientHeight, this.getWrapperHeight() - 20);
+        this.canvas.nativeElement.height = Math.max(this.bgImage.nativeElement.clientHeight, this.getWrapperHeight() - 5);
         if (this.imgLoadCallback) {
             this.imgLoadCallback(this);
         }
@@ -299,7 +295,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      */
     downEvent(event: Event, e: MouseOrTouch): void {
         const middleOrRightClick = this.middleOrRightClick(e);
-        if (!middleOrRightClick && !(e instanceof Touch && !this.drawOptions.enabled)) { // allow inspect element and scrolling
+        if (!middleOrRightClick && !(isTouchEvent(event) && !this.drawOptions.enabled)) { // allow inspect element and scrolling
             event.preventDefault();
         }
         const {x, y} = posToRelative(this.canvas.nativeElement, e);
@@ -317,7 +313,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * TODO: check if double-layered canvas is needed (for now we re-draw everything every time mouse moves during draw)
      */
     moveEvent(event: Event, e: MouseOrTouch): void {
-        if (!(e instanceof Touch && !this.drawOptions.enabled)) {
+        if (!(isTouchEvent(event) && !this.drawOptions.enabled)) {
             event.preventDefault();
         }
         if (!this.drawStarted) {
