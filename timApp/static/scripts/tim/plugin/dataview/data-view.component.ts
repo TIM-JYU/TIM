@@ -1121,12 +1121,18 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             r();
             yield;
         }
-        this.mainDataBody.nativeElement.style.visibility = "visible";
+        const setTableVisibility = (vis: string) => {
+            this.mainDataBody.nativeElement.style.visibility = vis;
+            if (this.fixedDataTable) {
+                this.fixedDataTable.nativeElement.style.visibility = vis;
+            }
+        };
+        setTableVisibility("visible");
         // If we veered off the new safe view zone, we need to update it again!
         if (this.isOutsideSafeViewZone()) {
             // This could have been likely caused by fast scrolling, in which case hide the element to prevent
             // flickering
-            this.mainDataBody.nativeElement.style.visibility = "hidden";
+            setTableVisibility("hidden");
             this.viewport = this.getViewport();
             this.updateTableTransform();
             runMultiFrame(this.renderViewport());
