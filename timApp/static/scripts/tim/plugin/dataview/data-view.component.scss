@@ -2,7 +2,7 @@
   display: inline-grid;
   grid-template:
         "summary fixed-col-header header" auto
-        "ids ids content" auto
+        "ids fixed-col-data content" auto
         / auto auto auto;
 }
 
@@ -37,12 +37,20 @@ table {
   overflow-y: hidden;
 }
 
-.data {
-  grid-area: content;
+.data, .fixed-col-data {
   overflow: auto;
+
+  &.data {
+    grid-area: content;
+  }
+
+  &.fixed-col-data {
+    grid-area: fixed-col-data;
+    overflow-y: hidden;
+  }
 }
 
-.data, .ids {
+.data, .ids, .fixed-col-data {
   table {
     border: none;
   }
@@ -95,7 +103,7 @@ table {
     // When in virtual scrolling mode, you cannot combine `border-collapse: separate` and `transform: translate`
     // More info: https://stackoverflow.com/a/33778236
     // So for vscroll mode, handle borders manually
-    .ids, .data {
+    .ids, .data, .fixed-col-data {
       table {
         border-collapse: separate;
 

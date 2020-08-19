@@ -415,12 +415,20 @@ const VIRTUAL_SCROLL_TABLE_BORDER_SPACING = 0;
                 <tbody #filterBody></tbody>
             </table>
         </div>
-        <div *ngIf="fixedColumnCount > 0" class="fixed-col-header" #fixedColHeaderContainer>
-            <table [ngStyle]="tableStyle" #fixedColHeaderTable>
-                <thead #fixedColHeaderIdBody></thead>
-                <tbody #fixedColFilterBody></tbody>
-            </table>
-        </div>
+        <ng-container *ngIf="fixedColumnCount > 0">
+            <div class="fixed-col-header" #fixedColHeaderContainer>
+                <table [ngStyle]="tableStyle" #fixedColHeaderTable>
+                    <thead #fixedColHeaderIdBody></thead>
+                    <tbody #fixedColFilterBody></tbody>
+                </table>
+            </div>
+            <div class="fixed-col-data" [style.maxHeight]="tableMaxHeight" #fixedDataContainer>
+                <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
+                       #fixedDataTable>
+                    <tbody class="content" #fixedDataBody></tbody>
+                </table>
+            </div>
+        </ng-container>
         <div class="summary">
             <table [ngStyle]="tableStyle" #summaryTable>
                 <thead>
@@ -500,11 +508,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @ViewChild("mainDataBody") private mainDataBody!: ElementRef<HTMLTableSectionElement>;
     @ViewChild("mainDataTable") private mainDataTable!: ElementRef<HTMLTableElement>;
     @ViewChild("mainDataContainer") private mainDataContainer!: ElementRef<HTMLDivElement>;
+    @ViewChild("fixedDataBody") private fixedDataBody?: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("fixedDataTable") private fixedDataTable?: ElementRef<HTMLTableElement>;
+    @ViewChild("fixedDataContainer") private fixedDataContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("summaryTable") private summaryTable!: ElementRef<HTMLTableElement>;
     @ViewChild("allVisibleCell") private allVisibleCell!: ElementRef<HTMLTableDataCellElement>;
     private scrollDY = 0;
     private cellValueCache: Record<number, string[]> = {};
     private dataTableCache!: TableDOMCache;
+    private fixedTableCache?: TableDOMCache;
     private idTableCache?: TableDOMCache;
     private headerIdTableCache?: TableDOMCache;
     private fixedColHeaderIdTableCache?: TableDOMCache;
@@ -825,6 +837,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private initTableCaches() {
         this.dataTableCache = new TableDOMCache(this.mainDataBody.nativeElement);
+        if (this.fixedDataBody) {
+            this.fixedTableCache = new TableDOMCache(this.fixedDataBody.nativeElement);
+        }
         if (this.idBody) {
             this.idTableCache = new TableDOMCache(
                 this.idBody.nativeElement,
@@ -933,24 +948,28 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateColumnHeaderCellSizes(): void {
-        if (!this.headerIdTableCache || !this.filterTableCache) {
-            return;
-        }
+        const update = (axis: GridAxisManager, start: number, count: number, headers?: TableDOMCache, filters?: TableDOMCache) => {
+            if (!headers || !filters) {
+                return;
+            }
+            headers.setSize(1, count);
+            filters.setSize(1, count);
+            const sizes = Array.from(new Array(count)).map((value, index) =>
+                this.getHeaderColumnWidth(axis.visibleItems[index + start])
+            );
+            for (let column = 0; column < horizontal.count; column++) {
+                const width = sizes[column];
+                const headerCell = headers.getCell(0, column);
+                const filterCell = filters.getCell(0, column);
+                headerCell.style.width = `${width}px`;
+                headerCell.style.maxWidth = `${width}px`;
+                filterCell.style.width = `${width}px`;
+            }
+        };
         const {horizontal} = this.viewport;
 
-        this.headerIdTableCache.setSize(1, this.viewport.horizontal.count);
-        this.filterTableCache.setSize(1, this.viewport.horizontal.count);
-        const sizes = Array.from(new Array(horizontal.count)).map((value, index) =>
-            this.getHeaderColumnWidth(this.colAxis.visibleItems[index + horizontal.startIndex])
-        );
-        for (let column = 0; column < horizontal.count; column++) {
-            const width = sizes[column];
-            const headerCell = this.headerIdTableCache.getCell(0, column);
-            const filterCell = this.filterTableCache.getCell(0, column);
-            headerCell.style.width = `${width}px`;
-            headerCell.style.maxWidth = `${width}px`;
-            filterCell.style.width = `${width}px`;
-        }
+        update(this.colAxis, horizontal.startIndex, horizontal.count, this.headerIdTableCache, this.filterTableCache);
+        update(this.fixedColAxis, 0, this.fixedColumnCount, this.fixedColHeaderIdTableCache, this.fixedColFilterTableCache);
     }
 
     private updateSummaryCellSizes(): void {
@@ -1257,22 +1276,30 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private buildDataTable(): void {
-        const tbody = this.mainDataBody.nativeElement;
+        // const tbody = this.mainDataBody.nativeElement;
         const {vertical, horizontal} = this.viewport;
-        this.dataTableCache.setSize(vertical.count, horizontal.count);
-        for (let rowNumber = 0; rowNumber < vertical.count; rowNumber++) {
-            const rowIndex = this.rowAxis.visibleItems[vertical.startIndex + rowNumber];
-            this.updateRow(this.dataTableCache.getRow(rowNumber), rowIndex);
-            for (let columnNumber = 0; columnNumber < horizontal.count; columnNumber++) {
-                const columnIndex = this.colAxis.visibleItems[horizontal.startIndex + columnNumber];
-                const cell = this.dataTableCache.getCell(rowNumber, columnNumber);
-                this.updateCell(cell, rowIndex, columnIndex, this.getCellValue(rowIndex, columnIndex));
+        const build = (colAxis: GridAxisManager, colStart: number, colCount: number, tbody?: HTMLTableSectionElement, cache?: TableDOMCache) => {
+            if (!tbody || !cache) {
+                return;
             }
-        }
-        // Optimization in normal mode: sanitize whole tbody in place
-        if (!this.vScroll.enabled) {
-            DOMPurify.sanitize(tbody, {IN_PLACE: true});
-        }
+            cache.setSize(vertical.count, colCount);
+            for (let rowNumber = 0; rowNumber < vertical.count; rowNumber++) {
+                const rowIndex = this.rowAxis.visibleItems[vertical.startIndex + rowNumber];
+                this.updateRow(this.dataTableCache.getRow(rowNumber), rowIndex);
+                for (let columnNumber = 0; columnNumber < colCount; columnNumber++) {
+                    const columnIndex = colAxis.visibleItems[colStart + columnNumber];
+                    const cell = cache.getCell(rowNumber, columnNumber);
+                    this.updateCell(cell, rowIndex, columnIndex, this.getCellValue(rowIndex, columnIndex));
+                }
+            }
+            // Optimization in normal mode: sanitize whole tbody in place
+            if (!this.vScroll.enabled) {
+                DOMPurify.sanitize(tbody, {IN_PLACE: true});
+            }
+        };
+
+        build(this.colAxis, horizontal.startIndex, horizontal.count, this.mainDataBody.nativeElement, this.dataTableCache);
+        build(this.fixedColAxis, 0, this.fixedColumnCount, this.fixedDataBody?.nativeElement, this.fixedTableCache);
     }
 
     private buildColumnHeaderTable(): void {
@@ -1495,6 +1522,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         return this.idealColHeaderWidth[columnIndex];
     }
 
+    private getDataCacheForColumn(columnIndex: number): [TableDOMCache, GridAxisManager] {
+        if (this.fixedTableCache && this.fixedColAxis.indexToOrdinal[columnIndex] !== undefined) {
+            return [this.fixedTableCache, this.fixedColAxis];
+        }
+        return [this.dataTableCache, this.colAxis];
+    }
+
     private getHeaderColumnWidth(columnIndex: number): number {
         if (this.idealColWidths[columnIndex]) {
             return this.idealColWidths[columnIndex];
@@ -1507,7 +1541,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.rowAxis.visibleItems.length == 0 || this.dataTableCache.rows.length == 0) {
             return idealHeaderWidth;
         }
-        const firstCellWidth = this.dataTableCache.getCell(this.rowAxis.visibleItems[this.viewport.vertical.startIndex], this.colAxis.indexToOrdinal[columnIndex]).getBoundingClientRect().width;
+        const [ cache, colAxis ] = this.getDataCacheForColumn(columnIndex);
+        const firstCellWidth = cache.getCell(this.rowAxis.visibleItems[this.viewport.vertical.startIndex], colAxis.indexToOrdinal[columnIndex]).getBoundingClientRect().width;
         return Math.max(idealHeaderWidth, firstCellWidth);
     }
 
