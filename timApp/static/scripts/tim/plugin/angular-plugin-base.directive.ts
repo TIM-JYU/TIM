@@ -107,6 +107,7 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
                 savedNew: result.result.savedNew,
                 error: result.result.error,
                 feedback: result.result.feedback,
+                topfeedback: result.result.topfeedback,
             });
         } else {
             handleAnswerResponse(dt, {

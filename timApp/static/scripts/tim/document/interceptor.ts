@@ -95,6 +95,7 @@ timApp.config([() => {
                     handleAnswerResponse(taskIdFull, {
                         error: resp.data.error,
                         feedback: resp.data.feedback,
+                        topfeedback: resp.data.topfeedback,
                         savedNew: resp.data.savedNew,
                     });
                     return response;

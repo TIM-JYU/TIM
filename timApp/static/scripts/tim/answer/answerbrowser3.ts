@@ -99,6 +99,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             const c = clone!.filter("[data-plugin]");
             this.pluginElement = c;
             element.append(c);
+            // element.find(".pluginPlaceholder").before(c);
         });
         timLogTime("timPluginLoader constructor", "answ", 1);
     }
@@ -136,6 +137,21 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private removeActivationHandler() {
         this.element.off("mouseenter touchstart", this.loadPlugin);
     }
+
+    private feedbackElement?: JQuery = undefined;
+
+    async showFeedback(txt?: string) {
+        if (!this.feedbackElement) {
+            if (!txt) { return; }  // no need to create element
+            const compiled = await compileWithViewctrl($(feedbackHtml), this.scope, this.viewctrl);
+            this.feedbackElement = this.element.append(compiled);
+            // await $timeout(0);
+        }
+        this.feedback = txt;
+        this.scope.$evalAsync(); // required because this method may be called from Angular context
+        ParCompiler.processAllMathDelayed(this.feedbackElement);
+    }
+
 
     /**
      * Returns whether the given task id is valid.
@@ -284,13 +300,17 @@ timApp.component("timPluginLoader", {
                task-id="$ctrl.taskId"
                answer-id="$ctrl.answerId">
 </answerbrowser>
-    <div uib-alert class="alert-warning text-color-normal" ng-if="$ctrl.feedback"
-         data-close="$ctrl.feedback=''">
-        <div ng-bind-html="$ctrl.feedback"></div>
-    </div>
     `,
     transclude: true,
 });
+
+const feedbackHtml = `
+    <div uib-alert class="alert-warning text-color-normal" ng-if="$ctrl.feedback"
+         data-close="$ctrl.showFeedback('')">
+        <div ng-bind-html="$ctrl.feedback"></div>
+    </div>
+    `;
+
 
 export interface ITaskInfo {
     userMin: number;
@@ -302,6 +322,7 @@ export interface ITaskInfo {
 export interface IAnswerSaveEvent {
     savedNew: number | false;
     error?: string;
+    topfeedback?: string;
     feedback?: string;
 }
 
@@ -369,7 +390,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (args.error) {
             this.alerts.push({msg: args.error, type: "warning"});
         }
-        this.loader.feedback = args.feedback;
+        this.showFeedback(args.topfeedback);
+        this.loader.showFeedback(args.feedback);
         this.scope.$evalAsync(); // required because this method may be called from Angular context
     }
 
@@ -652,8 +674,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
             if (!changeReviewOnly) {
                 if (this.loadedAnswer.id != this.selectedAnswer?.id) {
-                    this.feedback = "";
-                    this.loader.feedback = "";
+                    this.showFeedback("");
+                    this.loader.showFeedback("");
                 }
                 this.loadedAnswer.id = this.selectedAnswer?.id;
                 // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
@@ -1158,8 +1180,22 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.alerts.splice(index, 1);
     }
 
+    private feedbackElement?: JQuery = undefined;
+
+    async showFeedback(txt?: string) {
+        if (!this.feedbackElement) {
+            if (!txt) { return; }  // no need to create element
+            const compiled = await compileWithViewctrl($(feedbackHtml), this.scope, this.viewctrl);
+            this.feedbackElement = this.element.append(compiled);
+            // await $timeout(0);
+        }
+        this.feedback = txt;
+        this.scope.$evalAsync(); // required because this method may be called from Angular context
+        ParCompiler.processAllMathDelayed(this.feedbackElement);
+    }
+
     closeFeedback() {
-        this.feedback = "";
+        this.showFeedback("");
     }
 
     $onDestroy() {

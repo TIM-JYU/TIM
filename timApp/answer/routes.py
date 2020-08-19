@@ -669,7 +669,18 @@ def post_answer(plugintype: str, task_id_ext: str):
             value = data.get(key, None)
             if value is None:
                 return
+            if value.startswith('md:'):
+                value = call_dumbo([value[3:]])[0]
             result[key] = result.get(key, "") + value
+
+        def postprogram_result(data, output):
+            result["web"] = data.get("web", web)
+            add_value(result, "error", data)
+            add_value(result, "feedback", data)
+            add_value(result, "topfeedback", data)
+            if output.startswith('md:'):
+                output = call_dumbo([output[3:]])[0]
+            set_postoutput(result, output, postoutput)
 
         if (not is_teacher and should_save_answer) or ('savedata' in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(len(old_answers), tim_info)
@@ -705,9 +716,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     save_object = data.get("save_object", save_object)
                     is_valid = data.get("is_valid", is_valid)
                     force_answer = data.get("force_answer", force_answer)
-                    result["web"] = data.get("web", web)
-                    add_value(result, "error", data)
-                    set_postoutput(result, output, postoutput)
+                    postprogram_result(data, output)
                 except JsRunnerError as e:
                     return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
 
@@ -759,9 +768,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     data, output = jsrunner_run(params)
                     points = data.get("points", points)
                     output += "\nPoints: " + str(points)
-                    result["web"] = data.get("web", web)
-                    add_value(result, "error", data)
-                    set_postoutput(result, output, postoutput)
+                    postprogram_result(data, output)
                 except JsRunnerError as e:
                     return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
         if result['savedNew'] is not None and uploads:
