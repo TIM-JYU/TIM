@@ -602,6 +602,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     updateVisible() {
         this.rowAxis.refresh();
         this.colAxis.refresh();
+        this.fixedColAxis.refresh();
         if (this.vScroll.enabled) {
             this.setTableSizes();
             this.updateVTable({
@@ -615,6 +616,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 // Apparently always setting hidden will cause layout even if the value hasn't changed (?)
                 if (shouldHide != hidden) {
                     row.rowElement.hidden = shouldHide;
+                    if (this.fixedTableCache) {
+                        this.fixedTableCache.getRow(rowIndex).hidden = shouldHide;
+                    }
                     if (this.idTableCache) {
                         this.idTableCache.getRow(rowIndex).hidden = shouldHide;
                     }
