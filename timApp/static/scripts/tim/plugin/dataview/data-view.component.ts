@@ -1062,21 +1062,30 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private* renderViewport(updateHeader: boolean = false): Generator {
         const {vertical, horizontal} = this.viewport;
         this.dataTableCache.setSize(this.viewport.vertical.count, this.viewport.horizontal.count);
+        this.fixedTableCache?.setSize(this.viewport.vertical.count, this.fixedColumnCount);
         this.idTableCache?.setSize(this.viewport.vertical.count, 2);
         this.headerIdTableCache?.setSize(1, this.viewport.horizontal.count);
         this.filterTableCache?.setSize(1, this.viewport.horizontal.count);
+        const updateCache = (rowNumber: number, colStart: number, colCount: number, colAxis?: GridAxisManager, dataCache?: TableDOMCache) => {
+            if (!dataCache || !colAxis) {
+                return;
+            }
+            const tr = dataCache.getRow(rowNumber);
+            tr.hidden = false;
+            const rowIndex = this.rowAxis.visibleItems[vertical.startIndex + rowNumber];
+            this.updateRow(tr, rowIndex);
+            for (let columnNumber = 0; columnNumber < colCount; columnNumber++) {
+                const td = dataCache.getCell(rowNumber, columnNumber);
+                td.hidden = false;
+                const columnIndex = colAxis.visibleItems[colStart + columnNumber];
+                this.updateCell(td, rowIndex, columnIndex, this.getCellValue(rowIndex, columnIndex));
+            }
+        };
         const render = (startRow: number, endRow: number) => {
             for (let rowNumber = startRow; rowNumber < endRow; rowNumber++) {
-                const tr = this.dataTableCache.getRow(rowNumber);
-                tr.hidden = false;
                 const rowIndex = this.rowAxis.visibleItems[vertical.startIndex + rowNumber];
-                this.updateRow(tr, rowIndex);
-                for (let columnNumber = 0; columnNumber < horizontal.count; columnNumber++) {
-                    const td = this.dataTableCache.getCell(rowNumber, columnNumber);
-                    td.hidden = false;
-                    const columnIndex = this.colAxis.visibleItems[horizontal.startIndex + columnNumber];
-                    this.updateCell(td, rowIndex, columnIndex, this.getCellValue(rowIndex, columnIndex));
-                }
+                updateCache(rowNumber, horizontal.startIndex, horizontal.count, this.colAxis, this.dataTableCache);
+                updateCache(rowNumber, 0, this.fixedColumnCount, this.fixedColAxis, this.fixedTableCache);
 
                 if (this.idTableCache) {
                     const idRow = this.idTableCache.getRow(rowNumber);
@@ -1098,6 +1107,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // * The main visible area
         // * The top part
         // * The bottom part
+        // The order of top/bottom depends on the scrolling direction to reduce flickering
         let renderOrder = [
             () => render(0, vertical.visibleStartIndex),
             () => render(vertical.visibleStartIndex + vertical.visibleCount, vertical.count),
@@ -1151,6 +1161,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const headerIdTable = this.headerTable.nativeElement;
         const filterTable = this.filterBody.nativeElement;
         this.mainDataBody.nativeElement.style.transform = `translateX(${this.viewport.horizontal.startPosition}px) translateY(${this.viewport.vertical.startPosition}px)`;
+        if (this.fixedDataBody) {
+            this.fixedDataBody.nativeElement.style.transform = `translateY(${this.viewport.vertical.startPosition}px)`;
+        }
         idTable.style.transform = `translateY(${this.viewport.vertical.startPosition}px)`;
         headerIdTable.style.transform = filterTable.style.transform = `translateX(${this.viewport.horizontal.startPosition}px)`;
     }
@@ -1164,6 +1177,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
         const table = this.mainDataTable.nativeElement;
+        const fixedColTable = this.fixedDataTable?.nativeElement;
         const idTable = this.idTable.nativeElement;
         const headerTable = this.headerTable.nativeElement;
         const totalWidth = this.colAxis.totalSize;
@@ -1175,10 +1189,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (totalHeight) {
             table.style.height = `${totalHeight}px`;
             idTable.style.height = `${totalHeight}px`;
+            if (fixedColTable) {
+                fixedColTable.style.height = `${totalHeight}px`;
+            }
         }
         table.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_SPACING}px`;
         idTable.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_SPACING}px`;
         headerTable.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_SPACING}px`;
+        if (fixedColTable) {
+            fixedColTable.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_SPACING}px`;
+        }
     }
 
     private getViewport(): Viewport {
@@ -1214,7 +1234,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private* buildTable(): Generator {
         // Visually hide the table to prevent any flickering owing to size syncing
-        // this.componentRef.nativeElement.style.visibility = "hidden";
+        this.componentRef.nativeElement.style.visibility = "hidden";
         // Sometimes table size style is not fully applied yet (e.g. open editor + click save quickly)
         // So we wait for a single frame to ensure DOM is laid out
         yield;
@@ -1222,7 +1242,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         for (const _ of build) {
             yield;
         }
-        // this.componentRef.nativeElement.style.visibility = "visible";
+        this.componentRef.nativeElement.style.visibility = "visible";
     }
 
     private* buildPreviewTable() {
@@ -1255,18 +1275,25 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private computeIdealColumnWidth(): void {
-        if (!this.vScroll.enabled || this.colAxis.isVirtual) {
+        if (!this.vScroll.enabled) {
             return;
         }
         this.idealColWidths = [];
-        for (const col of this.colAxis.visibleItems) {
-            let cWidth = 0;
-            for (const row of this.rowAxis.visibleItems) {
-                const c = this.measureText(row, col);
-                cWidth = Math.max(c.width, cWidth);
+        const measure = (colAxis?: GridAxisManager) => {
+            if (!colAxis || colAxis.isVirtual) {
+                return;
             }
-            this.idealColWidths[col] = cWidth;
-        }
+            for (const col of colAxis.visibleItems) {
+                let cWidth = 0;
+                for (const row of this.rowAxis.visibleItems) {
+                    const c = this.measureText(row, col);
+                    cWidth = Math.max(c.width, cWidth);
+                }
+                this.idealColWidths[col] = cWidth;
+            }
+        };
+        measure(this.colAxis);
+        measure(this.fixedColAxis);
         if (this.sizeContentContainer) {
             this.sizeContentContainer.textContent = "";
         }
