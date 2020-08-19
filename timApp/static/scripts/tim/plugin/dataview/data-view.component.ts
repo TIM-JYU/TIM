@@ -52,6 +52,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import * as DOMPurify from "dompurify";
+import Table = WebAssembly.Table;
 
 /**
  * General interface for an object that provides the data model for DataViewComponent.
@@ -416,7 +417,6 @@ const VIRTUAL_SCROLL_TABLE_BORDER_SPACING = 0;
             </table>
         </div>
         <div *ngIf="fixedColumnCount > 0" class="fixed-col-header" #fixedColHeaderContainer>
-            <span>foo</span>
             <table [ngStyle]="tableStyle" #fixedColHeaderTable>
                 <thead #fixedColHeaderIdBody></thead>
                 <tbody #fixedColFilterBody></tbody>
@@ -508,6 +508,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private dataTableCache!: TableDOMCache;
     private idTableCache?: TableDOMCache;
     private headerIdTableCache?: TableDOMCache;
+    private fixedColHeaderIdTableCache?: TableDOMCache;
+    private fixedColFilterTableCache?: TableDOMCache;
     private filterTableCache?: TableDOMCache;
     private scheduledUpdate = false;
     private viewport!: Viewport;
@@ -835,23 +837,34 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             );
         }
         if (this.headerIdBody) {
-            this.headerIdTableCache = new TableDOMCache(this.headerIdBody.nativeElement, "td", (cell) => {
+            const makeHeader = (cell: HTMLTableCellElement) => {
                 applyBasicStyle(cell, this.headerStyle);
                 cell.appendChild(el("span")); // Header text
                 cell.appendChild(el("span", {
                     className: "sort-marker",
                 })); // Sort marker
-            });
+            };
+            this.headerIdTableCache = new TableDOMCache(this.headerIdBody.nativeElement, "td", makeHeader);
+            if (this.fixedColHeaderIdBody) {
+                this.fixedColHeaderIdTableCache = new TableDOMCache(this.fixedColHeaderIdBody.nativeElement, "td", makeHeader);
+            }
         }
         if (this.filterBody) {
-            this.filterTableCache = new TableDOMCache(
-                this.filterBody.nativeElement,
-                "td",
-                (cell) => {
+            const makeFilter = (cell: HTMLTableCellElement) => {
                     cell.appendChild(el("input", {
                         type: "text",
                     }));
-                });
+                };
+            this.filterTableCache = new TableDOMCache(
+                this.filterBody.nativeElement,
+                "td",
+               makeFilter);
+            if (this.fixedColFilterBody) {
+                this.fixedColFilterTableCache = new TableDOMCache(
+                this.fixedColFilterBody.nativeElement,
+                "td",
+               makeFilter);
+            }
         }
     }
 
@@ -920,8 +933,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         const {horizontal} = this.viewport;
 
-        this.headerIdTableCache.setSize(1, this.viewport.horizontal.count);
-        this.filterTableCache.setSize(1, this.viewport.horizontal.count);
+        this.headerIdTableCache.setSize(1, this.viewport.horizontal.count - this.fixedColumnCount);
+        this.filterTableCache.setSize(1, this.viewport.horizontal.count - this.fixedColumnCount);
         const sizes = Array.from(new Array(horizontal.count)).map((value, index) =>
             this.getHeaderColumnWidth(this.colAxis.visibleItems[index + horizontal.startIndex])
         );
@@ -1159,7 +1172,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private* buildTable(): Generator {
         // Visually hide the table to prevent any flickering owing to size syncing
-        this.componentRef.nativeElement.style.visibility = "hidden";
+        // this.componentRef.nativeElement.style.visibility = "hidden";
         // Sometimes table size style is not fully applied yet (e.g. open editor + click save quickly)
         // So we wait for a single frame to ensure DOM is laid out
         yield;
@@ -1167,7 +1180,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         for (const _ of build) {
             yield;
         }
-        this.componentRef.nativeElement.style.visibility = "visible";
+        // this.componentRef.nativeElement.style.visibility = "visible";
     }
 
     private* buildPreviewTable() {
@@ -1261,8 +1274,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!this.headerIdTableCache || !this.filterTableCache) {
             return;
         }
-        this.headerIdTableCache.setSize(1, this.viewport.horizontal.count);
-        this.filterTableCache.setSize(1, this.viewport.horizontal.count);
+        this.headerIdTableCache.setSize(1, this.viewport.horizontal.count - this.fixedColumnCount);
+        this.filterTableCache.setSize(1, this.viewport.horizontal.count - this.fixedColumnCount);
+        this.fixedColHeaderIdTableCache?.setSize(1, this.fixedColumnCount);
+        this.fixedColFilterTableCache?.setSize(1, this.fixedColumnCount);
         const colIndices = this.updateColumnHeaders();
         for (const [cell, columnIndex] of colIndices) {
             this.idealColHeaderWidth[columnIndex] = cell.offsetWidth;
@@ -1293,8 +1308,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const {horizontal} = this.viewport;
         const colIndices: [HTMLTableCellElement, number][] = [];
         for (let column = 0; column < horizontal.count; column++) {
+            const columnNumber = column < this.fixedColumnCount ? column : column - this.fixedColumnCount;
             const columnIndex = this.colAxis.visibleItems[column + horizontal.startIndex];
-            const headerCell = this.headerIdTableCache.getCell(0, column);
+            const headerCell = this.getHeaderColumnCache(column)?.getCell(0, columnNumber);
+            if (!headerCell) {
+                continue;
+            }
             colIndices.push([headerCell, columnIndex]);
             const headerTitle = headerCell.getElementsByTagName("span")[0];
             headerTitle.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
@@ -1307,7 +1326,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 this.modelProvider.handleClickHeader(columnIndex);
             };
 
-            const filterCell = this.filterTableCache.getCell(0, column);
+            const filterCell = this.getHeaderColumnFilterCache(column)?.getCell(0, columnNumber);
+            if (!filterCell) {
+                continue;
+            }
             const input = filterCell.getElementsByTagName("input")[0];
             // TODO: Make own helper method because column index changes in vscroll mode
             input.oninput = () => {
@@ -1379,6 +1401,20 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // endregion
 
     // region Utils
+
+    private getHeaderColumnCache(columnOrdinal: number) {
+        if (columnOrdinal <  this.fixedColumnCount) {
+            return this.fixedColHeaderIdTableCache;
+        }
+        return this.headerIdTableCache;
+    }
+
+    private getHeaderColumnFilterCache(columnOrdinal: number) {
+        if (columnOrdinal <  this.fixedColumnCount) {
+            return this.fixedColFilterTableCache;
+        }
+        return this.filterTableCache;
+    }
 
     private getCellPosition(row: number, col: number) {
         const cell = this.getDataCell(row, col);
