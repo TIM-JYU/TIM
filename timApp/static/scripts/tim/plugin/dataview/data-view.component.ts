@@ -17,7 +17,7 @@
  * DataView operates in two modes: DOM table and virtual scrolling:
  *
  * In DOM table:
- *   - All data is put into DOM
+ *   - All data is sanitized put into DOM
  *   - Table caches contain all DOM elements in the order they were initially put into there
  *   - Items are hidden by applying hidden=true to relevant DOM elements
  *   - Viewport is static (contains number of visible elements)
@@ -26,6 +26,7 @@
  *
  * In vscroll mode:
  *   - Only visible data is put into DOM
+ *   - Data is sanitized concurrently on a separate Web Worker
  *   - Table caches only contain visible elements (plus some overflow)
  *   - Viewport and DOM contents are updated on scroll or resize
  *   - Viewport contains information about currently visible items
