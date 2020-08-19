@@ -3,7 +3,7 @@
   grid-template:
         "summary fixed-col-header header" auto
         "ids fixed-col-data content" auto
-        / auto auto auto;
+        / max-content max-content auto;
 }
 
 table {
