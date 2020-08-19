@@ -957,7 +957,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const sizes = Array.from(new Array(count)).map((value, index) =>
                 this.getHeaderColumnWidth(axis.visibleItems[index + start])
             );
-            for (let column = 0; column < horizontal.count; column++) {
+            for (let column = 0; column < count; column++) {
                 const width = sizes[column];
                 const headerCell = headers.getCell(0, column);
                 const filterCell = filters.getCell(0, column);
