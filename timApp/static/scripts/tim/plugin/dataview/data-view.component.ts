@@ -550,7 +550,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const widths = [
             this.mainDataContainer.nativeElement.offsetWidth,
             this.mainDataBody.nativeElement.offsetWidth,
-            this.componentRef.nativeElement.offsetWidth - this.summaryTable.nativeElement.offsetWidth,
+            this.componentRef.nativeElement.offsetWidth
+                - this.summaryTable.nativeElement.offsetWidth
+                - (this.fixedDataContainer?.nativeElement.offsetWidth ?? 0),
         ].filter((w) => w != 0);
         // Add table border width to prevent possible border cutoff when filtering in DOM mode
         return Math.min(...widths) + this.tableBaseBorderWidthPx;
