@@ -133,7 +133,7 @@ table {
     border-right: none;
   }
 
-  .header {
+  .header, .fixed-col-header {
     input {
       // Set as important to prevent existing markup from setting the size
       width: 90% !important;
