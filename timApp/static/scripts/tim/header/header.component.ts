@@ -4,6 +4,7 @@ import {BookmarkService, IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {TagService} from "tim/item/tag.service";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
+import {HttpClient} from "@angular/common/http";
 import {IDocSettings} from "../document/IDocSettings";
 import {DocumentOrFolder, IFolder, isRootFolder, ITag, ITranslation, TagType} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
@@ -86,6 +87,7 @@ export class HeaderComponent implements OnInit {
     constructor(
         private bookmarkService: BookmarkService,
         private tagService: TagService,
+        private http: HttpClient,
         ) {
     }
 
@@ -170,14 +172,11 @@ export class HeaderComponent implements OnInit {
         if (!viewctrl) {
             throw new Error("viewctrl not registered");
         }
-        if (!viewctrl.bookmarksCtrl) {
-            throw new Error("BookmarksComponent not registered");
-        }
         const mainCourseDocPath = this.getMainCourseDocPath();
         if (!mainCourseDocPath) {
             return;
         }
-        const r = await this.bookmarkService.addCourse(mainCourseDocPath);
+        const r = await this.bookmarkService.addCourse(this.http, mainCourseDocPath);
         if (!r.ok) {
             await showMessageDialog(r.result.error.error);
             return;
@@ -185,23 +184,23 @@ export class HeaderComponent implements OnInit {
         if (r.result.added_to_group) {
             await to(showMessageDialog("You were successfully added to the course group."));
         }
-        await viewctrl.bookmarksCtrl.refresh();
-        this.checkIfBookmarked(); // Instead of directly changing boolean this checks if it really was added.
+        await viewctrl.bookmarksCtrl?.refresh();
+        this.checkIfBookmarked();
     }
 
     /**
      * Marks page as bookmarked if it's in the course bookmark folder.
      */
-    private async checkIfBookmarked() {
+    private checkIfBookmarked() {
         this.bookmarked = false;
         if (!Users.isLoggedIn() || genericglobals().bookmarks == null) {
             return;
         }
-        const response = await this.bookmarkService.getBookmarks();
-        if (!response.ok) {
+        const groups = this.bookmarkService.getGroups();
+        if (!groups) {
             return;
         }
-        this.bookmarks = response.result;
+        this.bookmarks = groups;
         for (const folder of this.bookmarks) {
             if (folder.name === courseFolder) {
                 for (const bookmark of folder.items) {

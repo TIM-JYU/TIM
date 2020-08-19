@@ -1,10 +1,10 @@
 import {Component, OnInit} from "@angular/core";
 import {genericglobals} from "tim/util/globals";
-import {clone, to2} from "tim/util/utils";
+import {to2} from "tim/util/utils";
 import {showBookmarkDialog} from "tim/bookmark/bookmark-dialog.component";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/dialog";
-import {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
+import {BookmarkService, IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {RootCtrl} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
 
@@ -62,11 +62,11 @@ export class BookmarksComponent implements OnInit {
     deleting: boolean = false;
     private rootCtrl?: RootCtrl = rootInstance;
 
-    constructor(private http: HttpClient) {
+    constructor(private http: HttpClient, private bookmarkSvc: BookmarkService) {
     }
 
     ngOnInit(): void {
-        this.groups = clone(genericglobals().bookmarks) ?? undefined;
+        this.groups = this.bookmarkSvc.getGroups();
         if (this.rootCtrl) {
             this.rootCtrl.registerBookmarks(this);
         }
@@ -191,7 +191,7 @@ export class BookmarksComponent implements OnInit {
      * Updates bookmarks.
      */
     async refresh() {
-        const response = await to2(this.http.get<IBookmarkGroup[]>("/bookmarks/get").toPromise());
+        const response = await this.bookmarkSvc.fetchBookmarks(this.http);
         if (!response.ok) {
             return;
         }

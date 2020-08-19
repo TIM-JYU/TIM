@@ -75,7 +75,7 @@ def add_course_bookmark(m: AddCourseModel):
         db.session.commit()
     add_to_course_bookmark(wb.bookmarks, d)
     return {
-        'bookmarks': get_bookmarks(),
+        'bookmarks': g.bookmarks.as_dict(),
         'added_to_group': added_to_group,
     }
 
