@@ -90,6 +90,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private forceBrowser: boolean = false;
     private pluginElement?: JQuery;
     public showPlaceholder = true;
+    public feedback?: string = "";
     public abLoad = new TimDefer<AnswerBrowserController | null>();
 
     constructor(private element: JQLite, private scope: IScope, private transclude: ITranscludeFunction) {
@@ -283,6 +284,10 @@ timApp.component("timPluginLoader", {
                task-id="$ctrl.taskId"
                answer-id="$ctrl.answerId">
 </answerbrowser>
+    <div uib-alert class="alert-warning text-color-normal" ng-if="$ctrl.feedback"
+         data-close="$ctrl.feedback=''">
+        <div ng-bind-html="$ctrl.feedback"></div>
+    </div>
     `,
     transclude: true,
 });
@@ -364,7 +369,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (args.error) {
             this.alerts.push({msg: args.error, type: "warning"});
         }
-        this.feedback = args.feedback;
+        this.loader.feedback = args.feedback;
         this.scope.$evalAsync(); // required because this method may be called from Angular context
     }
 
@@ -648,6 +653,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             if (!changeReviewOnly) {
                 if (this.loadedAnswer.id != this.selectedAnswer?.id) {
                     this.feedback = "";
+                    this.loader.feedback = "";
                 }
                 this.loadedAnswer.id = this.selectedAnswer?.id;
                 // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
