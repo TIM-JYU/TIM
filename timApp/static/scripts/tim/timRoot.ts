@@ -1,7 +1,9 @@
 import {getUrlParams} from "tim/util/utils";
-import {genericglobals, IDocumentGlobals, isDocumentGlobals, someglobals, SomeGlobals} from "tim/util/globals";
+import {genericglobals, isDocumentGlobals, someglobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import {showMessageDialog} from "tim/ui/dialog";
+import {BookmarksComponent} from "tim/sidebarmenu/util/bookmarks.component";
+import {setRoot} from "tim/rootinstance";
 import {timApp} from "./app";
 
 export interface IVisibilityVars {
@@ -142,48 +144,56 @@ export function getVisibilityVars() {
     return hide;
 }
 
-timApp.component("timRoot", {
-    controller: class {
-        private hide = getVisibilityVars();
+export class RootCtrl {
+    public bookmarksCtrl: BookmarksComponent | undefined;
+    private hide = getVisibilityVars();
 
-        $onInit() {
-            const g = genericglobals();
-            if (g.config.hosts && Users.isLoggedIn()) {
-                if (!g.config.hosts.allowed.includes(location.hostname)) {
-                    let message;
-                    for (const [key, val] of Object.entries(g.config.hosts.warnings)) {
-                        if (location.hostname.startsWith(key)) {
-                            message = val;
-                            break;
-                        }
+    registerBookmarks(bookmarksCtrl: BookmarksComponent) {
+        this.bookmarksCtrl = bookmarksCtrl;
+    }
+
+    $onInit() {
+        setRoot(this);
+        const g = genericglobals();
+        if (g.config.hosts && Users.isLoggedIn()) {
+            if (!g.config.hosts.allowed.includes(location.hostname)) {
+                let message;
+                for (const [key, val] of Object.entries(g.config.hosts.warnings)) {
+                    if (location.hostname.startsWith(key)) {
+                        message = val;
+                        break;
                     }
-                    if (!message) {
-                        message = g.config.hosts.defaultwarning;
-                    }
-                    const u = Users.getCurrent();
-                    const name = (u.last_name ?? u.real_name?.split(" ")[0] ?? "").toLowerCase();
-                    message = message.replace(/LASTNAME/g, name);
-                    if (name) {
-                        let letter;
-                        if (name.length === 1) {
-                            letter = name;
-                        } else if (name.startsWith("k")) {
-                            if (name.localeCompare("ko") < 0) {
-                                letter = "ka";
-                            } else {
-                                letter = "ko";
-                            }
+                }
+                if (!message) {
+                    message = g.config.hosts.defaultwarning;
+                }
+                const u = Users.getCurrent();
+                const name = (u.last_name ?? u.real_name?.split(" ")[0] ?? "").toLowerCase();
+                message = message.replace(/LASTNAME/g, name);
+                if (name) {
+                    let letter;
+                    if (name.length === 1) {
+                        letter = name;
+                    } else if (name.startsWith("k")) {
+                        if (name.localeCompare("ko") < 0) {
+                            letter = "ka";
                         } else {
-                            letter = name[0];
+                            letter = "ko";
                         }
-                        message = message.replace(/LETTER/g, letter);
-                        localStorage.clear(); // Make sure the dialog is shown in default position.
-                        void showMessageDialog(message);
+                    } else {
+                        letter = name[0];
                     }
+                    message = message.replace(/LETTER/g, letter);
+                    localStorage.clear(); // Make sure the dialog is shown in default position.
+                    void showMessageDialog(message);
                 }
             }
         }
-    },
+    }
+}
+
+timApp.component("timRoot", {
+    controller: RootCtrl,
     template: `<div ng-transclude style="display: flex; min-height: 100vh; flex-direction: column"></div>`,
     transclude: true,
 });

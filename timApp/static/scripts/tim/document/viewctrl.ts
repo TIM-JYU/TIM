@@ -19,7 +19,6 @@ import {isPageDirty, markAsUsed, markPageNotDirty, to, UnknownRecord} from "tim/
 import {TimDefer} from "tim/util/timdefer";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
-import {BookmarksComponent} from "tim/sidebarmenu/util/bookmarks.component";
 import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
@@ -171,7 +170,6 @@ export class ViewCtrl implements IController {
     private document: Document;
     public selectedUser: IUser;
     public editing: boolean = false;
-    // public $storage: ngStorage.StorageService & { defaultAction: string | null; noteAccess: string };
     public $storage: ngStorage.StorageService & { defaultAction: string | null; noteAccess: string; };
     private liveUpdates: number;
     private oldWidth: number;
@@ -186,8 +184,6 @@ export class ViewCtrl implements IController {
     public parmenuHandler: ParmenuHandler;
     public popupmenu?: PopupMenuController;
     public viewRangeInfo: ViewRangeInfo;
-
-    public bookmarksCtrl: BookmarksComponent | undefined;
 
     // For search box.
     private displaySearch = false;
@@ -981,14 +977,6 @@ export class ViewCtrl implements IController {
             await this.popupmenu.closePromise();
             this.popupmenu = undefined;
         }
-    }
-
-    /**
-     * Add bookmark component.
-     * @param {BookmarksComponent} bookmarksCtrl
-     */
-    registerBookmarks(bookmarksCtrl: BookmarksComponent) {
-        this.bookmarksCtrl = bookmarksCtrl;
     }
 
     /**

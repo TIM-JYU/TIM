@@ -1,12 +1,12 @@
 import {Component, OnInit} from "@angular/core";
-import {ViewCtrl} from "tim/document/viewctrl";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {genericglobals} from "tim/util/globals";
 import {clone, to2} from "tim/util/utils";
 import {showBookmarkDialog} from "tim/bookmark/bookmark-dialog.component";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/dialog";
 import {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
+import {RootCtrl} from "tim/timRoot";
+import {rootInstance} from "tim/rootinstance";
 
 @Component({
     selector: "bookmarks-list",
@@ -60,15 +60,15 @@ import {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
 export class BookmarksComponent implements OnInit {
     groups?: IBookmarkGroup[];
     deleting: boolean = false;
-    private vCtrl?: ViewCtrl = vctrlInstance;
+    private rootCtrl?: RootCtrl = rootInstance;
 
     constructor(private http: HttpClient) {
     }
 
     ngOnInit(): void {
         this.groups = clone(genericglobals().bookmarks) ?? undefined;
-        if (this.vCtrl) {
-            this.vCtrl.registerBookmarks(this);
+        if (this.rootCtrl) {
+            this.rootCtrl.registerBookmarks(this);
         }
     }
 
