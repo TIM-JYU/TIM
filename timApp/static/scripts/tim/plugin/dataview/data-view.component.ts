@@ -52,7 +52,6 @@ import {
     ViewChild,
 } from "@angular/core";
 import * as DOMPurify from "dompurify";
-import Table = WebAssembly.Table;
 
 /**
  * General interface for an object that provides the data model for DataViewComponent.
@@ -166,7 +165,7 @@ class GridAxisManager {
                 private isDataViewVirtual: boolean,
                 private borderSpacing: number,
                 private getSize: (i: number) => number,
-                private showItem: (i: number) => boolean) {
+                private showItem: (index: number, ordinal: number) => boolean) {
         this.itemOrder = Array.from(new Array(size)).map((e, i) => i);
         this.refresh();
     }
@@ -196,7 +195,7 @@ class GridAxisManager {
      * Updates the visible items and recomputes the positions if needed.
      */
     refresh(): void {
-        this.visibleItems = this.itemOrder.filter((i) => this.showItem(i));
+        this.visibleItems = this.itemOrder.filter((index, ordinal) => this.showItem(index, ordinal));
         this.indexToOrdinal = {};
         for (const [ord, index] of this.visibleItems.entries()) {
             this.indexToOrdinal[index] = ord;
@@ -515,6 +514,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private viewport!: Viewport;
     private rowAxis!: GridAxisManager;
     private colAxis!: GridAxisManager;
+    private fixedColAxis!: GridAxisManager;
     private vScroll: VirtualScrollingOptions = DEFAULT_VIRTUAL_SCROLL_SETTINGS;
     private idealColHeaderWidth: number[] = [];
     private tableBaseBorderWidth: number = -1;
@@ -796,7 +796,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.vScroll.enabled,
             VIRTUAL_SCROLL_TABLE_BORDER_SPACING,
             (i) => this.modelProvider.getColumnWidth(i) ?? 0,
-            (i) => this.modelProvider.showColumn(i));
+            (i, o) => o >= this.fixedColumnCount && this.modelProvider.showColumn(i));
+        this.fixedColAxis = new GridAxisManager(this.fixedColumnCount,
+            this.vScroll.enabled,
+            VIRTUAL_SCROLL_TABLE_BORDER_SPACING,
+            (i) => this.modelProvider.getColumnWidth(i) ?? 0,
+            (i, o) => o < this.fixedColumnCount && this.modelProvider.showColumn(i));
         this.updateTableSummary();
     }
 
@@ -851,19 +856,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         if (this.filterBody) {
             const makeFilter = (cell: HTMLTableCellElement) => {
-                    cell.appendChild(el("input", {
-                        type: "text",
-                    }));
-                };
+                cell.appendChild(el("input", {
+                    type: "text",
+                }));
+            };
             this.filterTableCache = new TableDOMCache(
                 this.filterBody.nativeElement,
                 "td",
-               makeFilter);
+                makeFilter);
             if (this.fixedColFilterBody) {
                 this.fixedColFilterTableCache = new TableDOMCache(
-                this.fixedColFilterBody.nativeElement,
-                "td",
-               makeFilter);
+                    this.fixedColFilterBody.nativeElement,
+                    "td",
+                    makeFilter);
             }
         }
     }
@@ -933,8 +938,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         const {horizontal} = this.viewport;
 
-        this.headerIdTableCache.setSize(1, this.viewport.horizontal.count - this.fixedColumnCount);
-        this.filterTableCache.setSize(1, this.viewport.horizontal.count - this.fixedColumnCount);
+        this.headerIdTableCache.setSize(1, this.viewport.horizontal.count);
+        this.filterTableCache.setSize(1, this.viewport.horizontal.count);
         const sizes = Array.from(new Array(horizontal.count)).map((value, index) =>
             this.getHeaderColumnWidth(this.colAxis.visibleItems[index + horizontal.startIndex])
         );
@@ -1274,8 +1279,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (!this.headerIdTableCache || !this.filterTableCache) {
             return;
         }
-        this.headerIdTableCache.setSize(1, this.viewport.horizontal.count - this.fixedColumnCount);
-        this.filterTableCache.setSize(1, this.viewport.horizontal.count - this.fixedColumnCount);
+        this.headerIdTableCache.setSize(1, this.viewport.horizontal.count);
+        this.filterTableCache.setSize(1, this.viewport.horizontal.count);
         this.fixedColHeaderIdTableCache?.setSize(1, this.fixedColumnCount);
         this.fixedColFilterTableCache?.setSize(1, this.fixedColumnCount);
         const colIndices = this.updateColumnHeaders();
@@ -1302,45 +1307,31 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateColumnHeaders(): [HTMLTableCellElement, number][] {
-        if (!this.headerIdTableCache || !this.filterTableCache) {
-            return [];
-        }
+        const update = (axis: GridAxisManager, start: number, count: number, headers?: TableDOMCache, filters?: TableDOMCache) => {
+            if (!headers || !filters) {
+                return [];
+            }
+            const colIndices: [HTMLTableCellElement, number][] = [];
+            for (let column = 0; column < count; column++) {
+                const columnIndex = axis.visibleItems[column + start];
+                const headerCell = headers.getCell(0, column);
+                colIndices.push([headerCell, columnIndex]);
+                const headerTitle = headerCell.getElementsByTagName("span")[0];
+                headerTitle.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
+                headerCell.onclick = this.onHeaderColumnClick(columnIndex);
+
+                const filterCell = filters.getCell(0, column);
+                const input = filterCell.getElementsByTagName("input")[0];
+                input.oninput = this.onFilterInput(input, columnIndex);
+            }
+            return colIndices;
+        };
+
         const {horizontal} = this.viewport;
-        const colIndices: [HTMLTableCellElement, number][] = [];
-        for (let column = 0; column < horizontal.count; column++) {
-            const columnNumber = column < this.fixedColumnCount ? column : column - this.fixedColumnCount;
-            const columnIndex = this.colAxis.visibleItems[column + horizontal.startIndex];
-            const headerCell = this.getHeaderColumnCache(column)?.getCell(0, columnNumber);
-            if (!headerCell) {
-                continue;
-            }
-            colIndices.push([headerCell, columnIndex]);
-            const headerTitle = headerCell.getElementsByTagName("span")[0];
-            headerTitle.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
-
-            // TODO: Make own helper method because column index changes in vscroll mode
-            headerCell.onclick = () => {
-                if (this.modelProvider.isPreview()) {
-                    return;
-                }
-                this.modelProvider.handleClickHeader(columnIndex);
-            };
-
-            const filterCell = this.getHeaderColumnFilterCache(column)?.getCell(0, columnNumber);
-            if (!filterCell) {
-                continue;
-            }
-            const input = filterCell.getElementsByTagName("input")[0];
-            // TODO: Make own helper method because column index changes in vscroll mode
-            input.oninput = () => {
-                if (this.modelProvider.isPreview()) {
-                    return;
-                }
-                this.modelProvider.setRowFilter(columnIndex, input.value);
-                this.modelProvider.handleChangeFilter();
-            };
-        }
-        return colIndices;
+        return [
+            ...update(this.colAxis, horizontal.startIndex, horizontal.count, this.headerIdTableCache, this.filterTableCache),
+            ...update(this.fixedColAxis, 0, this.fixedColumnCount, this.fixedColHeaderIdTableCache, this.fixedColFilterTableCache),
+        ];
     }
 
     private updateRow(row: HTMLTableRowElement, rowIndex: number): HTMLTableRowElement {
@@ -1398,23 +1389,28 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         };
     }
 
+    private onHeaderColumnClick(columnIndex: number) {
+        return () => {
+            if (this.modelProvider.isPreview()) {
+                return;
+            }
+            this.modelProvider.handleClickHeader(columnIndex);
+        };
+    }
+
+    private onFilterInput(input: HTMLInputElement, columnIndex: number) {
+        return () => {
+            if (this.modelProvider.isPreview()) {
+                return;
+            }
+            this.modelProvider.setRowFilter(columnIndex, input.value);
+            this.modelProvider.handleChangeFilter();
+        };
+    }
+
     // endregion
 
     // region Utils
-
-    private getHeaderColumnCache(columnOrdinal: number) {
-        if (columnOrdinal <  this.fixedColumnCount) {
-            return this.fixedColHeaderIdTableCache;
-        }
-        return this.headerIdTableCache;
-    }
-
-    private getHeaderColumnFilterCache(columnOrdinal: number) {
-        if (columnOrdinal <  this.fixedColumnCount) {
-            return this.fixedColFilterTableCache;
-        }
-        return this.filterTableCache;
-    }
 
     private getCellPosition(row: number, col: number) {
         const cell = this.getDataCell(row, col);
