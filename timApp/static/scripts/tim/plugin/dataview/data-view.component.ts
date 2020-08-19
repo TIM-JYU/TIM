@@ -1119,10 +1119,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
         const header = this.headerContainer.nativeElement;
+        const fixedColData = this.fixedDataContainer?.nativeElement;
         const data = this.mainDataContainer.nativeElement;
         const ids = this.idContainer.nativeElement;
         header.scrollLeft = data.scrollLeft;
         ids.scrollTop = data.scrollTop;
+        if (fixedColData) {
+            fixedColData.scrollTop = data.scrollTop;
+        }
     }
 
     private updateTableTransform(): void {
