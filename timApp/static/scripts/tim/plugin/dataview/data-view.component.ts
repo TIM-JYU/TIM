@@ -1,3 +1,42 @@
+/**
+ * General DOM-based data view component. The component can be used to display large datasets without the penalty
+ * of Angular's change detection.
+ *
+ * DataView component is made of four tables combined with CSS grid:
+ * - Summary table (contains number of all elements, number of filter elements and helper checkboxes)
+ * - Column header table (contains column headers and the column filter inputs)
+ * - Row header table (contains row IDs and selection checkboxes)
+ * - Data table (contains the actual data)
+ *
+ * All tables (except summary) have a cache which contain all DOM elements in the table.
+ * In addition, only data table is scrollable, while the other tables are static (headers are autoscrolled to correct pos)
+ *
+ * DataView also contains information about the row/column axes and the viewport. The viewport represents the
+ * visible area of the table.
+ *
+ * DataView operates in two modes: DOM table and virtual scrolling:
+ *
+ * In DOM table:
+ *   - All data is put into DOM
+ *   - Table caches contain all DOM elements in the order they were initially put into there
+ *   - Items are hidden by applying hidden=true to relevant DOM elements
+ *   - Viewport is static (contains number of visible elements)
+ *   - GridAxisManager.itemOrder maps cell's ordinal to the cell's index
+ *   - GridAxisManager.positionStart is not defined as all sizes are automatically computed by the browser
+ *
+ * In vscroll mode:
+ *   - Only visible data is put into DOM
+ *   - Table caches only contain visible elements (plus some overflow)
+ *   - Viewport and DOM contents are updated on scroll or resize
+ *   - Viewport contains information about currently visible items
+ *   - GridAxisManager.indexToOrdinal can map data index to its current ordinal in the visible DOM
+ *
+ *  Finally, DataView uses two values to refer to data:
+ *  - cell's index is its absolute position in the table -- used to get the actual data and style of the cell
+ *  - cell's ordinal (or cell's "number") is its current position in the visible DOM
+ *  Cell's index can be different from its ordinal when filtering or sorting data.
+ *  GridAxisManager.visibleItems maps cell's ordinal to its index and GridAxisManager.indexToOrdinal does the reverse.
+ */
 import {
     AfterViewInit,
     ChangeDetectionStrategy,
