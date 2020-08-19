@@ -551,8 +551,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.mainDataContainer.nativeElement.offsetWidth,
             this.mainDataBody.nativeElement.offsetWidth,
             this.componentRef.nativeElement.offsetWidth
-                - this.summaryTable.nativeElement.offsetWidth
-                - (this.fixedDataContainer?.nativeElement.offsetWidth ?? 0),
+            - this.summaryTable.nativeElement.offsetWidth
+            - (this.fixedDataContainer?.nativeElement.offsetWidth ?? 0),
         ].filter((w) => w != 0);
         // Add table border width to prevent possible border cutoff when filtering in DOM mode
         return Math.min(...widths) + this.tableBaseBorderWidthPx;
@@ -671,6 +671,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             for (const rowIndex of order) {
                 const tableRow = this.dataTableCache.getRow(rowIndex);
                 this.mainDataBody.nativeElement.appendChild(tableRow);
+                if (this.fixedTableCache && this.fixedDataBody) {
+                    const fixedTableRow = this.fixedTableCache.getRow(rowIndex);
+                    this.fixedDataBody.nativeElement.appendChild(fixedTableRow);
+                }
 
                 if (this.idTableCache && this.idBody) {
                     const rowHeader = this.idTableCache.getRow(rowIndex);
@@ -679,17 +683,21 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
         }
 
-        if (!this.headerIdTableCache) {
-            return;
-        }
+        const updateSymbol = (cache?: TableDOMCache, colAxis?: GridAxisManager) => {
+            if (!cache || !colAxis) {
+                return;
+            }
+            for (const columnIndex of colAxis.visibleItems) {
+                const cell = cache.getCell(0, colAxis.indexToOrdinal[columnIndex]);
+                const sortSymbolEl = cell.getElementsByTagName("span")[1];
+                const {symbol, style} = this.modelProvider.getSortSymbolInfo(columnIndex);
+                applyBasicStyle(sortSymbolEl, style);
+                sortSymbolEl.textContent = symbol;
+            }
+        };
 
-        for (const columnIndex of this.colAxis.visibleItems) {
-            const cell = this.headerIdTableCache.getCell(0, this.colAxis.indexToOrdinal[columnIndex]);
-            const sortSymbolEl = cell.getElementsByTagName("span")[1];
-            const {symbol, style} = this.modelProvider.getSortSymbolInfo(columnIndex);
-            applyBasicStyle(sortSymbolEl, style);
-            sortSymbolEl.textContent = symbol;
-        }
+        updateSymbol(this.headerIdTableCache, this.colAxis);
+        updateSymbol(this.fixedColHeaderIdTableCache, this.fixedColAxis);
     }
 
     /**
@@ -1551,7 +1559,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.rowAxis.visibleItems.length == 0 || this.dataTableCache.rows.length == 0) {
             return idealHeaderWidth;
         }
-        const [ cache, colAxis ] = this.getDataCacheForColumn(columnIndex);
+        const [cache, colAxis] = this.getDataCacheForColumn(columnIndex);
         const firstCellWidth = cache.getCell(this.rowAxis.visibleItems[this.viewport.vertical.startIndex], colAxis.indexToOrdinal[columnIndex]).getBoundingClientRect().width;
         return Math.max(idealHeaderWidth, firstCellWidth);
     }
