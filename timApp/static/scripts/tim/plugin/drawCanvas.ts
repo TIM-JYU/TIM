@@ -154,7 +154,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     @Input() undoCallback?: (arg0: this) => void;
 
     // TODO: for now there's no option to draw for e.g filled rectangle with borders, but save format should support it
-    @Input() drawOptions: IDrawOptions = {
+    drawOptions: IDrawOptions = {
         enabled: true,
         drawType: DrawType.Freehand,
         color: "red",
@@ -162,6 +162,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         opacity: 1,
         fill: false,
     };
+
+    @Input() options?: Partial<IDrawOptions>;
 
     @Input() enabled = true;
     @Input() toolBar = true;
@@ -200,6 +202,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
 
     ngOnInit() {
+        console.log(this.options);
+        console.log(this.drawOptions);
+        this.drawOptions = {...this.drawOptions, ...this.options};
+        console.log(this.drawOptions);
         if (!this.enabled) {
             this.drawOptions.enabled = false;
         }

@@ -56,28 +56,28 @@ export enum DrawType {
                 <label>FreeHand
                 <input type="radio"
                        name="drawType"
-                       value="0"
+                       [value]="0"
                        [(ngModel)]="drawSettings.drawType"></label>
             </span>
             <span *ngIf="drawVisibleOptions.lineMode">
                 <label>Line
                 <input type="radio"
                        name="drawType"
-                       value="1"
+                       [value]="1"
                        [(ngModel)]="drawSettings.drawType"></label>
             </span>
             <span *ngIf="drawVisibleOptions.rectangleMode">
                 <label>Rectangle
                 <input type="radio"
                        name="drawType"
-                       value="2"
+                       [value]="2"
                        [(ngModel)]="drawSettings.drawType"></label>
             </span>
             <span *ngIf="drawVisibleOptions.circleMode">
                 <label>Circle
                 <input type="radio"
                        name="drawType"
-                       value="3"
+                       [value]="3"
                        [(ngModel)]="drawSettings.drawType"></label>
             </span>
             <span *ngIf="drawVisibleOptions.fill">

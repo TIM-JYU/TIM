@@ -158,17 +158,11 @@
                         </div>
                         </span>
                     </div><!-- end flex-->
-<!--                    <div ng-if="$ctrl.review" class="review" ng-bind-html="$ctrl.reviewHtml">-->
-
-<!--                    </div>-->
             <div class="reviewcontainer" ng-if="$ctrl.review">
                 <div ng-if="$ctrl.imageReview">
-<!--                    <div class="canvascontainer" style="width: 0px; height: 0px; overflow: visible">-->
-<!--                        <canvas class="drawbase" style="border:1px solid #000000; position: relative;">-->
-<!--                        </canvas>-->
-<!--                    </div>-->
-<!--                    <img ng-src="{{$ctrl.reviewHtml}}" ng-on-load="$ctrl.setImageReview()">-->
-                    <draw-canvas [enabled]="true" [tool-bar]="$ctrl.viewctrl.velpMode" bg-source="{{$ctrl.reviewHtml}}" [img-load-callback]="$ctrl.setImageReview"></draw-canvas>
+                    <draw-canvas [enabled]="true"
+                                 [options]="{color: 'blue', drawType: 2, opacity: 0.2, fill: true, w: 14}"
+                                 [tool-bar]="$ctrl.viewctrl.velpMode" bg-source="{{$ctrl.reviewHtml}}" [img-load-callback]="$ctrl.setImageReview"></draw-canvas>
                 </div>
                 <div ng-if="!$ctrl.imageReview" class="review" ng-bind-html="$ctrl.reviewHtml">
 
