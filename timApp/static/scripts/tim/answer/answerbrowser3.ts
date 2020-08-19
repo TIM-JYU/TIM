@@ -737,7 +737,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
      */
     public setImageReview = (canvas: DrawCanvasComponent) => {
         if (this.selectedAnswer && this.reviewHtml) {
-            const par = this.element.parents(".par");
+            const par = this.getPar();
             this.viewctrl.reviewCtrl.setCanvas(this.selectedAnswer.id, canvas);
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
         }

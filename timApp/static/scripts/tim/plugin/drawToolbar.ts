@@ -186,7 +186,6 @@ export class DrawToolbarComponent implements OnInit {
     }
 }
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [
         DrawToolbarComponent,

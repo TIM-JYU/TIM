@@ -639,7 +639,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
 }
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [
         DrawCanvasComponent,

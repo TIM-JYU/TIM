@@ -406,63 +406,6 @@ function showTime(ctx: CanvasRenderingContext2D, vt: number, x: number, y: numbe
     ctx.stroke();
 }
 
-const directiveTemplate = `
-<div class="csRunDiv no-popup-menu">
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <div class="pluginError" *ngIf="imageLoadError" [textContent]="imageLoadError"></div>
-    <h4 *ngIf="header" [innerHtml]="header"></h4>
-    <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
-    <div>
-        <canvas class="canvas no-popup-menu"
-                tabindex="1"
-                width={{canvaswidth}}
-                height={{canvasheight}}></canvas>
-        <div class="content"></div>
-    </div>
-    <p class="csRunMenu">&nbsp;<button *ngIf="button"
-                                       class="timButton"
-                                       [disabled]="isRunning"
-                                       (click)="save()">{{button}}
-    </button>
-        &nbsp;&nbsp;
-        <button *ngIf="buttonPlay"
-                [disabled]="isRunning"
-                (click)="videoPlay()">{{buttonPlay}}
-        </button>
-        &nbsp;&nbsp;
-        <button *ngIf="buttonRevert"
-                [disabled]="isRunning"
-                (click)="videoBeginning()">{{buttonRevert}}
-        </button>
-        &nbsp;&nbsp;
-        <button [hidden]="!(finalanswer && userHasAnswered)"
-                [disabled]="isRunning"
-                (click)="showAnswer()">
-            Show correct answer
-        </button>
-        &nbsp;&nbsp;<a *ngIf="button"
-        (click)="resetExercise()">{{resetText}}</a>&nbsp;&nbsp;<a
-                href="" *ngIf="muokattu" (click)="initCode()">{{resetText}}</a>
-                <draw-toolbar [drawSettings]="drawSettings" [undo]="passUndo"
-                    [drawVisibleOptions]="drawVisibleOptions"></draw-toolbar>
-    </p>
-    <div [hidden]="!preview"><span><span [ngStyle]="{'background-color': previewColor}"
-                                             style="display: table-cell; text-align: center; width: 30px;"
-                                             (click)="getPColor()">&lt;-</span>
-        <input [(ngModel)]="previewColor"
-               colorpicker="hex"
-               type="text"
-               (click)="getPColor()"
-               size="10"/> <label> Coord:
-            <input [(ngModel)]="coords" (click)="getPColor()" size="10"/></label></span></div>
-    <pre class="" *ngIf="error && preview">{{error}}</pre>
-    <pre class="" [hidden]="!result">{{result}}</pre>
-    <div class="replyHTML" *ngIf="replyHTML"><span [innerHtml]="svgImageSnippet()"></span></div>
-    <img *ngIf="replyImage" class="grconsole" [src]="replyImage" alt=""/>
-    <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
-</div>
-`;
-
 function drawFillCircle(ctx: CanvasRenderingContext2D, r: number, p1: number, p2: number, c: string, tr: number) {
     const p = ctx;
     p.globalAlpha = tr;
@@ -1446,8 +1389,64 @@ interface IAnswerResponse {
 @Component({
     selector: "imagex-runner",
     // changeDetection: ChangeDetectionStrategy.OnPush,
-    template: directiveTemplate,
+    template: `
+        <div class="csRunDiv no-popup-menu">
+            <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+            <div class="pluginError" *ngIf="imageLoadError" [textContent]="imageLoadError"></div>
+            <h4 *ngIf="header" [innerHtml]="header"></h4>
+            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
+            <div>
+                <canvas class="canvas no-popup-menu"
+                        tabindex="1"
+                        width={{canvaswidth}}
+                        height={{canvasheight}}></canvas>
+                <div class="content"></div>
+            </div>
+            <p class="csRunMenu">&nbsp;<button *ngIf="button"
+                                               class="timButton"
+                                               [disabled]="isRunning"
+                                               (click)="save()">{{button}}
+            </button>
+                &nbsp;&nbsp;
+                <button *ngIf="buttonPlay"
+                        [disabled]="isRunning"
+                        (click)="videoPlay()">{{buttonPlay}}
+                </button>
+                &nbsp;&nbsp;
+                <button *ngIf="buttonRevert"
+                        [disabled]="isRunning"
+                        (click)="videoBeginning()">{{buttonRevert}}
+                </button>
+                &nbsp;&nbsp;
+                <button [hidden]="!(finalanswer && userHasAnswered)"
+                        [disabled]="isRunning"
+                        (click)="showAnswer()">
+                    Show correct answer
+                </button>
+                &nbsp;&nbsp;<a *ngIf="button"
+                               (click)="resetExercise()">{{resetText}}</a>&nbsp;&nbsp;<a
+                        href="" *ngIf="muokattu" (click)="initCode()">{{resetText}}</a>
+                <draw-toolbar [drawSettings]="drawSettings" [undo]="passUndo"
+                              [drawVisibleOptions]="drawVisibleOptions"></draw-toolbar>
+            </p>
+            <div [hidden]="!preview"><span><span [ngStyle]="{'background-color': previewColor}"
+                                                 style="display: table-cell; text-align: center; width: 30px;"
+                                                 (click)="getPColor()">&lt;-</span>
+        <input [(ngModel)]="previewColor"
+               colorpicker="hex"
+               type="text"
+               (click)="getPColor()"
+               size="10"/> <label> Coord:
+            <input [(ngModel)]="coords" (click)="getPColor()" size="10"/></label></span></div>
+            <pre class="" *ngIf="error && preview">{{error}}</pre>
+            <pre class="" [hidden]="!result">{{result}}</pre>
+            <div class="replyHTML" *ngIf="replyHTML"><span [innerHtml]="svgImageSnippet()"></span></div>
+            <img *ngIf="replyImage" class="grconsole" [src]="replyImage" alt=""/>
+            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
+        </div>
+    `,
 })
+
 class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
 
     t.TypeOf<typeof ImageXAll>,
@@ -1912,15 +1911,6 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 }
 
-// imagexApp.component("imagexRunner", {
-//     bindings: pluginBindings,
-//     controller: ImageXController,
-//     require: {
-//         vctrl: "^timView",
-//     },
-//     template: directiveTemplate,
-// });
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [
         ImageXComponent,
