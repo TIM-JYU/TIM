@@ -100,7 +100,6 @@ export function isCoordWithinDrawing(drawing: DrawObject[], x: number, y: number
 
 // TODO: Repeated from imagex, move
 export function drawFreeHand(ctx: CanvasRenderingContext2D, dr: ILineSegment[]): void {
-    // console.log(dr);
     for (const seg of dr) {
         if (seg.lines.length < 2) {
             continue;
@@ -202,10 +201,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
 
     ngOnInit() {
-        console.log(this.options);
-        console.log(this.drawOptions);
         this.drawOptions = {...this.drawOptions, ...this.options};
-        console.log(this.drawOptions);
         if (!this.enabled) {
             this.drawOptions.enabled = false;
         }

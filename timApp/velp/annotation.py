@@ -42,6 +42,7 @@ class AddAnnotationModel:
     color: Optional[str] = None
     icon_id: Optional[int] = None
     answer_id: Optional[int] = None
+    draw_data: Optional[List[dict]] = None
 
 
 @annotations.route("/add_annotation", methods=['post'])
@@ -66,6 +67,7 @@ def add_annotation(m: AddAnnotationModel):
         document_id=m.doc_id,
         color=color,
         answer_id=m.answer_id,
+        draw_data=m.draw_data
     )
     db.session.add(ann)
     ann.set_position_info(m.coord)
@@ -89,7 +91,7 @@ class UpdateAnnotationModel(AnnotationIdModel):
     points: Optional[float] = None
     color: Optional[str] = None
     coord: Optional[AnnotationPosition] = None
-    drawData: Optional[List[dict]] = None
+    draw_data: Optional[List[dict]] = None
 
 
 @annotations.route("/update_annotation", methods=['post'])
@@ -103,7 +105,7 @@ def update_annotation(m: UpdateAnnotationModel):
     visible_to = m.visible_to
     points = m.points
     color = m.color
-    drawing = m.drawData
+    drawing = m.draw_data
 
     ann = get_annotation_or_abort(m.id)
     d = get_doc_or_abort(ann.document_id)
@@ -126,7 +128,7 @@ def update_annotation(m: UpdateAnnotationModel):
     if m.coord:
         ann.set_position_info(m.coord)
     if drawing:
-        ann.hash_start = json.dumps(drawing)
+        ann.draw_data = json.dumps(drawing)
 
     db.session.commit()
     return json_response(ann)

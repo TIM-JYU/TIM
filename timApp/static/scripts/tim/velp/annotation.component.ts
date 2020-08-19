@@ -46,7 +46,7 @@ export interface IAnnotationBindings {
     defaultcomment: string;
 }
 
-export async function updateAnnotationServer(updatevalues: IAnnotationEditableValues & { id: number, coord?: IAnnotationInterval, drawData?: DrawObject[] }): Promise<Result<Annotation, string>> {
+export async function updateAnnotationServer(updatevalues: IAnnotationEditableValues & { id: number, coord?: IAnnotationInterval, draw_data?: DrawObject[] }): Promise<Result<Annotation, string>> {
     const r2 = await to($http.post<Record<string, unknown>>("/update_annotation", updatevalues));
     if (!r2.ok) {
         return {ok: false, result: r2.result.data.error};

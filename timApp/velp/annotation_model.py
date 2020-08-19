@@ -121,6 +121,9 @@ class Annotation(db.Model):
     element_path_end = db.Column(db.Text)
     """Positional information about the annotation."""
 
+    draw_data = db.Column(db.Text)
+    """Drawing information about the annotation (for annotations on images)."""
+
     annotator = db.relationship('User', back_populates='annotations')
     answer = db.relationship('Answer', back_populates='annotations')
     comments = db.relationship('AnnotationComment', order_by='AnnotationComment.id')
@@ -192,9 +195,9 @@ class Annotation(db.Model):
             'velp': self.velp_version.velp_id,
             'visible_to': self.visible_to,
         }
-        if start.get('depth', 0) == 0 and end.get('depth', 0) == 0:  # placeholder
+        if self.draw_data:
             try:
-                ret['draw_data'] = json.loads(self.hash_start)
+                ret['draw_data'] = json.loads(self.draw_data)
             except json.decoder.JSONDecodeError:
                 pass
 

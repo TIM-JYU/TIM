@@ -285,15 +285,11 @@ export class ReviewController {
         for (const a of annotations) {
             const placeInfo = a.coord;
             let added = false;
-
             if (a.draw_data) {
-                if (!a.coord.start.t) {
-                    continue;
-                }
                 const targ = par.querySelector(".canvasObjectContainer");
                 if (targ) {
-                    const drawdata = JSON.parse(a.coord.start.t) as DrawObject[];
-                    const rect = getDrawingDimensions(drawdata);
+                    // const drawdata = JSON.parse(a.draw_data) as DrawObject[];
+                    const rect = getDrawingDimensions(a.draw_data);
                     const borderElement = this.createPictureBorder(rect.w, rect.h);
                     targ.appendChild(borderElement);
                     const ele = this.compilePopOver(targ, borderElement, a, AnnotationAddReason.LoadingExisting) as HTMLElement;
@@ -727,21 +723,14 @@ export class ReviewController {
             ele.style.left = corners.x + "px";
             ele.style.top = corners.y + "px";
 
-            // TODO: db column for drawdata. Until then assume coord depth 0 means image velp
             coord = {
                 start: {
                     par_id: parelement.id,
                     t: parelement.getAttribute("t") ?? undefined,
-                    offset: Math.round(corners.x),
-                    node: Math.round(corners.w),
-                    depth: 0,
                 },
                 end: {
                     par_id: parelement.id,
                     t: parelement.getAttribute("t") ?? undefined,
-                    offset: Math.round(corners.y),
-                    node: Math.round(corners.h),
-                    depth: 0,
                 },
             };
             this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.LoadingExisting, AnnotationPlacement.InMargin);
@@ -751,7 +740,7 @@ export class ReviewController {
                 id: ann.id,
                 ...ann.getEditableValues(),
                 coord,
-                drawData: velpDrawing,
+                draw_data: velpDrawing,
             });
             if (saved.ok) {
                 const annCopy = saved.result;
