@@ -47,12 +47,16 @@ table {
   &.fixed-col-data {
     grid-area: fixed-col-data;
     overflow-y: hidden;
+
+    table {
+      border-right-width: 1px;
+    }
   }
 }
 
 .data, .ids, .fixed-col-data {
   table {
-    border: none;
+    border-width: 0;
   }
 }
 
@@ -69,7 +73,7 @@ table {
     }
 
     td:last-child {
-      border-right: none;
+      border-right-width: 0;
     }
 
     tbody tr td {
@@ -81,9 +85,9 @@ table {
 
 table {
   display: block;
-  border-bottom: none;
-  border-left: none;
-  border-right: none;
+  border-bottom-width: 0;
+  border-left-width: 0;
+  border-right-width: 0;
 
   &.scroll {
     overflow: scroll;
@@ -138,7 +142,7 @@ table {
   }
 
   .ids table td:last-child {
-    border-right: none;
+    border-right-width: 0;
   }
 
   .header, .fixed-col-header {
