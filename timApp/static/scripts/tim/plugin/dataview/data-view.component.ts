@@ -741,11 +741,18 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
 
-        for (const rowIndex of this.dataTableCache.rows.keys()) {
-            for (const columnIndex of this.colAxis.visibleItems) {
-                const cell = this.dataTableCache.getCell(rowIndex, this.colAxis.indexToOrdinal[columnIndex]);
+        const updateCols = (rowIndex: number, colAxis?: GridAxisManager, cache?: TableDOMCache) => {
+            if (!colAxis || !cache) {
+                return;
+            }
+            for (const columnIndex of colAxis.visibleItems) {
+                const cell = cache.getCell(rowIndex, colAxis.indexToOrdinal[columnIndex]);
                 this.updateCellStyle(cell, rowIndex, columnIndex);
             }
+        };
+        for (const rowIndex of this.dataTableCache.rows.keys()) {
+            updateCols(rowIndex, this.colAxis, this.dataTableCache);
+            updateCols(rowIndex, this.fixedColAxis, this.fixedTableCache);
         }
     }
 
