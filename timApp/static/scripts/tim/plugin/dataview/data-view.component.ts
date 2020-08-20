@@ -1102,7 +1102,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
                 // If static size is set, there is possibility for vscrolling
                 if (this.colAxis.isVirtual) {
-                    this.updateColumnHeaders();
+                    this.updateColumnHeaders(false);
                 }
             }
         };
@@ -1387,7 +1387,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
-    private updateColumnHeaders(): [HTMLTableCellElement, number][] {
+    private updateColumnHeaders(updateFixed = true): [HTMLTableCellElement, number][] {
         const update = (axis: GridAxisManager, start: number, count: number, headers?: TableDOMCache, filters?: TableDOMCache) => {
             if (!headers || !filters) {
                 return [];
@@ -1411,7 +1411,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const {horizontal} = this.viewport;
         return [
             ...update(this.colAxis, horizontal.startIndex, horizontal.count, this.headerIdTableCache, this.filterTableCache),
-            ...update(this.fixedColAxis, 0, this.fixedColumnCount, this.fixedColHeaderIdTableCache, this.fixedColFilterTableCache),
+            ...(updateFixed ? update(this.fixedColAxis, 0, this.fixedColumnCount, this.fixedColHeaderIdTableCache, this.fixedColFilterTableCache) : []),
         ];
     }
 
