@@ -1661,14 +1661,11 @@ const WIDTH_ONLY_VALUES = new Set([
     "fit-content",
 ]);
 
+// Attempt to use max-width for absolute values of style to not mess up the scrollbar position
 function getWidthStyle(value: string): Record<string, string> {
-    const w: Record<string, string> = {};
-    if (WIDTH_ONLY_VALUES.has(value)) {
-        w.width = value;
-    } else {
-        w["max-width"] = value;
-    }
-    return w;
+    return {
+        [ WIDTH_ONLY_VALUES.has(value) ? "width" : "max-width" ]: value,
+    };
 }
 
 interface PurifyData {
