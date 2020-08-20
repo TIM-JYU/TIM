@@ -485,7 +485,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() headerStyle: Record<string, string> | null = {};
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
-    @Input() tableMaxWidth: string = "100%";
+    @Input() tableMaxWidth: string = "max-content";
     @Input() fixedColumnCount: number = 0;
     totalRows: number = 0;
     visibleRows: number = 0;
@@ -493,7 +493,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     cbAllVisibleRows = false;
     cbFilter = false;
     @HostBinding("class.virtual") private isVirtual: boolean = false;
-    @HostBinding("style.width") private tableWidth: string = "100%";
+    @HostBinding("style") private hostStyle = {};
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
@@ -800,11 +800,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Initialization
 
     ngOnInit(): void {
-        this.tableWidth = this.tableMaxWidth;
+        this.hostStyle = getWidthStyle(this.tableMaxWidth);
         this.vScroll = {...DEFAULT_VIRTUAL_SCROLL_SETTINGS, ...this.virtualScrolling};
         if (this.modelProvider.isPreview()) {
             this.vScroll.enabled = false;
-            this.tableWidth = "fit-content";
+            this.hostStyle = getWidthStyle("fit-content");
         }
         this.isVirtual = this.vScroll.enabled;
         // Detach change detection because most of this component is based on pure DOM manipulation
@@ -1653,6 +1653,22 @@ function applyBasicStyle(element: HTMLElement, style: Record<string, string> | n
 function viewportsEqual(vp1: Viewport, vp2: Viewport) {
     const visItemsEqual = (v1: VisibleItems, v2: VisibleItems) => v1.startIndex == v2.startIndex && v1.count == v2.count;
     return visItemsEqual(vp1.vertical, vp2.vertical) && visItemsEqual(vp1.horizontal, vp2.horizontal);
+}
+
+const WIDTH_ONLY_VALUES = new Set([
+    "max-content",
+    "min-content",
+    "fit-content",
+]);
+
+function getWidthStyle(value: string): Record<string, string> {
+    const w: Record<string, string> = {};
+    if (WIDTH_ONLY_VALUES.has(value)) {
+        w.width = value;
+    } else {
+        w["max-width"] = value;
+    }
+    return w;
 }
 
 interface PurifyData {
