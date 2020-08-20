@@ -556,6 +556,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private sizeContentContainer?: HTMLDivElement;
     private idealColWidths: number[] = [];
     private editorPosition = EditorPosition.MainData;
+    private prevEditorDOMPosition: TableArea = { horizontal: -1, vertical: -1 };
 
     // endregion
 
@@ -795,6 +796,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // Because of Angular, we need to pass the editor as ng-content (otherwise Angular seems to loose reference to
         // the element and stop updating it properly)
         // TODO: Figure out a better way to integrate the editor
+        if (row == this.prevEditorDOMPosition.vertical && col == this.prevEditorDOMPosition.horizontal) {
+            return;
+        }
+        this.prevEditorDOMPosition.horizontal = col;
+        this.prevEditorDOMPosition.vertical = row;
         const prevPos = this.editorPosition;
         if (this.fixedTableCache && this.fixedColAxis.indexToOrdinal[col] !== undefined) {
             this.editorPosition = EditorPosition.FixedColumn;
@@ -804,9 +810,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (prevPos != this.editorPosition) {
             this.cdr.detectChanges();
         }
-        const editor = this.mainDataContainer.nativeElement.querySelector(".timTableEditor");
-        const editInput = this.mainDataContainer.nativeElement.querySelector(".timTableEditor>input");
-        const inlineEditorButtons = this.mainDataContainer.nativeElement.querySelector(".timTableEditor>span");
+        const container = this.editorPosition == EditorPosition.MainData ? this.mainDataContainer : this.fixedDataContainer;
+        if (!container) {
+            return;
+        }
+        const editor = container.nativeElement.querySelector(".timTableEditor");
+        const editInput = container.nativeElement.querySelector(".timTableEditor>input");
+        const inlineEditorButtons = container.nativeElement.querySelector(".timTableEditor>span");
         if (!editor) {
             return;
         }
@@ -1550,11 +1560,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private getDataCell(row: number, col: number) {
+        const [cache, colAxis] = this.getDataCacheForColumn(col);
         const itemRowOrdinal = this.rowAxis.indexToOrdinal[row];
-        const itemColOrdinal = this.colAxis.indexToOrdinal[col];
+        const itemColOrdinal = colAxis.indexToOrdinal[col];
         const vpRowOrdinal = this.viewport.vertical.startIndex;
         const vpColOrdinal = this.viewport.horizontal.startIndex;
-        return this.dataTableCache.getCell(itemRowOrdinal - vpRowOrdinal, itemColOrdinal - vpColOrdinal);
+        return cache.getCell(itemRowOrdinal - vpRowOrdinal, itemColOrdinal - vpColOrdinal);
     }
 
     private getCellValue(rowIndex: number, columnIndex: number): string {
