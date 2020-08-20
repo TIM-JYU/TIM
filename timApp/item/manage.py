@@ -241,7 +241,7 @@ def edit_permissions(m: PermissionMassEditModel):
     if nonexistent:
         return abort(400, f'Non-existent groups: {nonexistent}')
     items = Block.query.filter(Block.id.in_(m.ids)
-                               & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])).all()
+                               & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])).order_by(Block.id).all()
     a = None
     owned_items_before = set()
     for i in items:
@@ -254,7 +254,7 @@ def edit_permissions(m: PermissionMassEditModel):
                 a = accs[0]
         else:
             for g in groups:
-                a = remove_perm(g, i, m.type)
+                a = remove_perm(g, i, m.type) or a
 
     if m.type == AccessType.owner:
         owned_items_after = set()

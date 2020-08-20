@@ -613,3 +613,29 @@ class PermissionTest(TimRouteTest):
                 'groups': ['testuser2'],
                 'confirm': False,
             })
+
+    def test_mass_permission_remove_partially_redundant(self):
+        """Rights are removed even if the selection contains redundant rows."""
+        self.login_test1()
+        d = self.create_doc()
+        d2 = self.create_doc()
+        self.test_user_2.grant_access(d, access_type=AccessType.view)
+        db.session.commit()
+        self.json_put(
+            f"/permissions/edit",
+            {
+                'groups': ['testuser2'],
+                'type': AccessType.view.value,
+                'action': 'remove',
+                'ids': [d.id, d2.id],
+                'time': {
+                    'type': 'always',
+                },
+                'confirm': False,
+            },
+        )
+        # The original bug was that db.session.commit() was not getting called when it should have,
+        # so doing a rollback here should reveal the bug in the assert if it reappears.
+        db.session.rollback()
+        d = DocEntry.find_by_id(d.id)
+        self.assertFalse(self.test_user_2.has_view_access(d))
