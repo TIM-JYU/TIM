@@ -236,6 +236,8 @@ class DrawIO(JSframe):
             if lastdel < 0:  # unescaped format
                 lastdel = c.find('/mxfile>"')
                 c = c[0:firstdel] + c[lastdel + 9:len(c)]
+                c = c.replace('<br>', '<br/>')
+                c = c.replace('&nbsp;', '')
             else:
                 c = c[0:firstdel] + c[lastdel+12:len(c)]
             # TODO: Add a way to inform the browser that review data is in image format
