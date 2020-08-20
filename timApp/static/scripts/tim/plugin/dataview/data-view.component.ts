@@ -515,7 +515,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     cbAllVisibleRows = false;
     cbFilter = false;
     @HostBinding("class.virtual") private isVirtual: boolean = false;
-    @HostBinding("style") private hostStyle = {};
+    @HostBinding("style.width") private dataViewWidth = "100%";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
@@ -857,11 +857,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Initialization
 
     ngOnInit(): void {
-        this.hostStyle = getWidthStyle(this.tableMaxWidth);
+        this.dataViewWidth = this.tableMaxWidth;
         this.vScroll = {...DEFAULT_VIRTUAL_SCROLL_SETTINGS, ...this.virtualScrolling};
         if (this.modelProvider.isPreview()) {
             this.vScroll.enabled = false;
-            this.hostStyle = getWidthStyle("fit-content");
+            this.dataViewWidth = "fit-content";
         }
         this.isVirtual = this.vScroll.enabled;
         // Detach change detection because most of this component is based on pure DOM manipulation
@@ -1713,19 +1713,6 @@ function applyBasicStyle(element: HTMLElement, style: Record<string, string> | n
 function viewportsEqual(vp1: Viewport, vp2: Viewport) {
     const visItemsEqual = (v1: VisibleItems, v2: VisibleItems) => v1.startIndex == v2.startIndex && v1.count == v2.count;
     return visItemsEqual(vp1.vertical, vp2.vertical) && visItemsEqual(vp1.horizontal, vp2.horizontal);
-}
-
-const WIDTH_ONLY_VALUES = new Set([
-    "max-content",
-    "min-content",
-    "fit-content",
-]);
-
-// Attempt to use max-width for absolute values of style to not mess up the scrollbar position
-function getWidthStyle(value: string): Record<string, string> {
-    return {
-        [WIDTH_ONLY_VALUES.has(value) ? "width" : "max-width"]: value,
-    };
 }
 
 interface PurifyData {
