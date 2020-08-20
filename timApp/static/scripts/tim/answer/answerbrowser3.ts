@@ -6,7 +6,7 @@ import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
 import {dereferencePar, getParId, Paragraph} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
-import {getRangeBeginParam} from "../document/viewRangeInfo";
+// import {getRangeBeginParam} from "../document/viewRangeInfo";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {IAnswerBrowserMarkupSettings, IGenericPluginMarkup} from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
@@ -16,7 +16,7 @@ import {isAdmin, Users} from "../user/userService";
 import {documentglobals} from "../util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
 import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
-import {Binding, getURLParameter, getUrlParams, markAsUsed, Require, to} from "../util/utils";
+import {Binding, getURLParameter, getUrlParams, markAsUsed, Require, to, isInViewport, scrollToElement} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
 
@@ -53,6 +53,17 @@ function isElement(n: Node): n is Element {
 }
 
 const angularPlugins = new Set(["timTable", "tableForm", "pali"]);
+
+// TODO: make PluginLoaderCtrl and AnswerBrowserController to implement this so
+//    many this.showFeedback(txt) implementations could be replaced just on one call:
+//    showFeedback(this: IFeedback, txt:string = '', scrollToView: boolean=false);
+/*
+export interface IFeedback {
+   scope: IScope;
+   viewctrl?: Require<ViewCtrl>;
+   feedback?: string;
+}
+ */
 
 async function loadPlugin(html: string, plugin: JQuery, scope: IScope, viewctrl: ViewCtrl) {
     const elementToCompile = $(html);
@@ -109,6 +120,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             this.viewctrl.registerPluginLoader(this);
         }
         if (this.isValidTaskId(this.taskId)) {
+            // noinspection JSUnusedLocalSymbols
             const [id, name] = this.taskId.split(".");
             if (getURLParameter("task") === name) {
                 this.loadPlugin();
@@ -150,6 +162,9 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         this.feedback = txt;
         this.scope.$evalAsync(); // required because this method may be called from Angular context
         ParCompiler.processAllMathDelayed(this.feedbackElement);
+        if (!isInViewport(this.feedbackElement[0])) {
+            scrollToElement(this.feedbackElement[0]);
+        }
     }
 
 
@@ -277,6 +292,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 }
 
+// noinspection HtmlUnknownAttribute
 timApp.component("timPluginLoader", {
     bindings: {
         answerId: "<?",
@@ -354,6 +370,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     public review: boolean = false;
     public oldreview: boolean = false;
     private shouldFocus: boolean = false;
+    // noinspection JSMismatchedCollectionQueryUpdate
     private alerts: Array<unknown> = [];
     private feedback?: string;
     private taskInfo: ITaskInfo | undefined;
@@ -450,6 +467,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             this.pointsStep = this.markupSettings?.pointsStep;
         }
 
+        // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
         this.scope.$watch(
             () => this.onlyValid,
             (newValue, oldValue, scope) => {
@@ -646,7 +664,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             review: this.review,
             user_id: this.user.id,
         };
-        let taskOrAnswer = {};
+        let taskOrAnswer;
         if (this.selectedAnswer) {
             taskOrAnswer = {answer_id: this.selectedAnswer.id};
         } else {
@@ -888,6 +906,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.alerts.push({msg: "Error: " + response.data.error, type: "danger"});
     }
 
+    // noinspection UnnecessaryLocalVariableJS
     getAnswerLink(single = false) {
         if (!this.user || !this.selectedAnswer) {
             return undefined;
@@ -896,7 +915,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (single && location.href.includes("/view/")) { newroute = "view"; }  // TODO: think other routes also?
         const par = this.getPar();
         const parId = getParId(par);
-        const currBegin = getRangeBeginParam() ?? 0;
+        // const currBegin = getRangeBeginParam() ?? 0;
         const params = getUrlParams();
         const group = params.get("group"); // TODO: should we save other params also?
         const rangeParams = single ? {
@@ -904,6 +923,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             size: 1,
             group: group,
         } : {};
+        // noinspection UnnecessaryLocalVariableJS
         const link = `/${newroute}/${this.viewctrl.item.path}?${$httpParamSerializer({
             answerNumber: this.answers.length - this.findSelectedAnswerIndexFromUnFiltered(),
             task: this.getTaskName(),
@@ -969,6 +989,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
     }
 
+    // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
     private getUserOrCurrentUserForAnswers(taskId: string): IUser | undefined {
         let user: IUser | undefined;
         if (this.user) { user = this.user; }
@@ -1063,6 +1084,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async loadUserAnswersIfChanged() {
         if (this.hasUserChanged()) {
+            // noinspection JSUnusedLocalSymbols
             const answers = await this.getAnswersAndUpdate();
             // if (!answers || answers.length === 0) {
             //     // if ( answers != null ) { this.resetITimComponent(); }
@@ -1157,6 +1179,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     updateFiltered() {
         this.anyInvalid = false;
+        // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
         this.filteredAnswers = $filter("filter")<IAnswer>(this.answers, (value, index, array) => {
             if (value.valid) {
                 return true;
@@ -1202,10 +1225,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     private getTaskName() {
+        // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
         const [id, name] = this.taskId.split(".");
         return name;
     }
 
+    // noinspection JSUnusedLocalSymbols
     private toggleInput() {
         if (this.saveTeacher) {
             this.unDimPlugin();
