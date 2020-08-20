@@ -929,6 +929,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         // For height it looks like it's enough to just set the height correctly
         this.idContainer.nativeElement.style.maxHeight = `${this.dataTableHeight}px`;
+        if (this.fixedDataContainer) {
+            this.fixedDataContainer.nativeElement.style.maxHeight = `${this.dataTableHeight}px`;
+        }
     }
 
     private updateHeaderCellSizes(): void {
