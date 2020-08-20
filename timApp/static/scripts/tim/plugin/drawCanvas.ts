@@ -13,7 +13,7 @@ import {
 } from "@angular/core";
 import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {DrawToolbarModule, DrawType, IDrawOptions} from "tim/plugin/drawToolbar";
-import {ILineSegment, IPoint, IRectangleOrCircle, TuplePoint} from "tim/plugin/imagextypes";
+import {ILineSegment, IPoint, IRectangleOrEllipse, TuplePoint} from "tim/plugin/imagextypes";
 import {isTouchEvent, MouseOrTouch, numOrStringToNumber, posToRelative, touchEventToTouch} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -21,12 +21,12 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 
 interface IRectangle {
     type: "rectangle";
-    drawData: IRectangleOrCircle;
+    drawData: IRectangleOrEllipse;
 }
 
-interface ICircle {
-    type: "circle";
-    drawData: IRectangleOrCircle;
+interface IEllipse {
+    type: "ellipse";
+    drawData: IRectangleOrEllipse;
 }
 
 interface IFreeHand {
@@ -41,7 +41,7 @@ export interface IDrawUpdate {
 }
 
 // TODO: Name overlap with imagex DrawObject
-export type DrawObject = IRectangle | ICircle | IFreeHand;
+export type DrawObject = IRectangle | IEllipse | IFreeHand;
 
 /**
  * Gets dimensions (start coordinates, width, height) from given drawing
@@ -325,15 +325,15 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         const pxy = posToRelative(this.canvas.nativeElement, e);
         const {x, y} = pxy;
 
-        if (this.drawOptions.drawType == DrawType.Circle || this.drawOptions.drawType == DrawType.Rectangle) {
+        if (this.drawOptions.drawType == DrawType.Ellipse || this.drawOptions.drawType == DrawType.Rectangle) {
             this.redrawAll();
             this.objX = Math.min(x, this.startX);
             this.objY = Math.min(y, this.startY);
             this.objW = Math.abs(x - this.startX);
             this.objH = Math.abs(y - this.startY);
             this.setContextSettingsFromOptions();
-            if (this.drawOptions.drawType == DrawType.Circle) {
-                this.drawPreviewCircle();
+            if (this.drawOptions.drawType == DrawType.Ellipse) {
+                this.drawPreviewEllipse();
             } else {
                 this.drawPreviewRectangle();
             }
@@ -358,16 +358,16 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             this.drawStarted = false;
         }
         if (this.drawMoved) {
-            if (this.drawOptions.drawType == DrawType.Circle) {
-                const circle: ICircle = {
-                    type: "circle",
-                    drawData: this.makeFullRectangleOrCircle(),
+            if (this.drawOptions.drawType == DrawType.Ellipse) {
+                const ellipse: IEllipse = {
+                    type: "ellipse",
+                    drawData: this.makeFullRectangleOrEllipse(),
                 };
-                this.drawData.push(circle);
+                this.drawData.push(ellipse);
             } else if (this.drawOptions.drawType == DrawType.Rectangle) {
                 const rect: IRectangle = {
                     type: "rectangle",
-                    drawData: this.makeFullRectangleOrCircle(),
+                    drawData: this.makeFullRectangleOrEllipse(),
 
                 };
                 this.drawData.push(rect);
@@ -389,7 +389,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     /**
      * Returns full shape information for ellipse or rectangle based on current settings
      */
-    makeFullRectangleOrCircle(): IRectangleOrCircle {
+    makeFullRectangleOrEllipse(): IRectangleOrEllipse {
         let fillOrBorder = {};
         if (this.drawOptions.fill) {
             fillOrBorder = {fillColor: this.drawOptions.color};
@@ -429,16 +429,16 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     }
 
     /**
-     * Draw circle during mouse move
+     * Draw ellipse during mouse move
      */
-    drawPreviewCircle() {
-        this.drawCircle(this.makeObj());
+    drawPreviewEllipse() {
+        this.drawEllipse(this.makeObj());
     }
 
     /**
      * Return dimension for current shape dimensions based on last draw event
      */
-    makeObj(): IRectangleOrCircle {
+    makeObj(): IRectangleOrEllipse {
         return {
             x: this.objX,
             y: this.objY,
@@ -487,13 +487,13 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
     /**
      * Draws given input on canvas
-     * @param data array of freehand drawings, circles and rectangles
+     * @param data array of freehand drawings, ellipses and rectangles
      */
     drawFromArray(data: DrawObject[]) {
         for (const object of data) {
-            if (object.type == "circle") {
+            if (object.type == "ellipse") {
                 this.setContextSettingsFromObject(object.drawData);
-                this.drawCircle(object.drawData);
+                this.drawEllipse(object.drawData);
             } else if (object.type == "rectangle") {
                 this.setContextSettingsFromObject(object.drawData);
                 this.drawRectangle(object.drawData);
@@ -506,9 +506,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     /**
      * Sets canvas options (line widths, colors, opacity) to suit given object
      * If any is missing use current canvas options
-     * @param obj IRectangleOrCircle object with options
+     * @param obj IRectangleOrEllipse object with options
      */
-    setContextSettingsFromObject(obj: IRectangleOrCircle) {
+    setContextSettingsFromObject(obj: IRectangleOrEllipse) {
         this.ctx.strokeStyle = obj.color ?? this.drawOptions.color;
         this.ctx.lineWidth = obj.lineWidth ?? this.drawOptions.w;
         this.ctx.fillStyle = obj.fillColor ?? "transparent";
@@ -526,25 +526,25 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     }
 
     /**
-     * Draws a circle (or ellipse)
-     * @param circle in IRectangleOrCircle format
+     * Draws a ellipse (or ellipse)
+     * @param ellipse in IRectangleOrEllipse format
      */
-    drawCircle(circle: IRectangleOrCircle) {
-        const ratio = circle.w / circle.h;
+    drawEllipse(ellipse: IRectangleOrEllipse) {
+        const ratio = ellipse.w / ellipse.h;
         this.ctx.save();
         this.ctx.beginPath();
         this.ctx.scale(ratio, 1);
-        const r = Math.min(circle.w / ratio, circle.h) / 2;
-        this.ctx.arc((circle.x + circle.w / 2) / ratio, circle.y + circle.h / 2, r, 0, 2 * Math.PI);
+        const r = Math.min(ellipse.w / ratio, ellipse.h) / 2;
+        this.ctx.arc((ellipse.x + ellipse.w / 2) / ratio, ellipse.y + ellipse.h / 2, r, 0, 2 * Math.PI);
         this.ctx.restore();
-        circle.fillColor ? this.ctx.fill() : this.ctx.stroke();
+        ellipse.fillColor ? this.ctx.fill() : this.ctx.stroke();
     }
 
     /**
      * Draws a rectangle
-     * @param rectangle in IRectangleOrCircle format
+     * @param rectangle in IRectangleOrEllipse format
      */
-    drawRectangle(rectangle: IRectangleOrCircle) {
+    drawRectangle(rectangle: IRectangleOrEllipse) {
             // TODO: Draw border with own settings but custom fill color
             rectangle.fillColor ?
                 this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h) :

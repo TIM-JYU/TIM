@@ -17,12 +17,12 @@ import {CommonModule} from "@angular/common";
 
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar
-    // For example imageX does not support circles
+    // For example imageX does not support ellipses
     enabled?: boolean,
     freeHand?: boolean,
     lineMode?: boolean,
     rectangleMode?: boolean,
-    circleMode?: boolean,
+    ellipseMode?: boolean,
     w?: boolean,
     color?: boolean,
     fill?: boolean,
@@ -42,7 +42,7 @@ export enum DrawType {
     Freehand,
     Line,
     Rectangle,
-    Circle,
+    Ellipse,
 }
 
 @Component({
@@ -73,8 +73,8 @@ export enum DrawType {
                        [value]="2"
                        [(ngModel)]="drawSettings.drawType"></label>
             </span>
-            <span *ngIf="drawVisibleOptions.circleMode">
-                <label>Circle
+            <span *ngIf="drawVisibleOptions.ellipseMode">
+                <label>Ellipse
                 <input type="radio"
                        name="drawType"
                        [value]="3"
@@ -130,7 +130,7 @@ export class DrawToolbarComponent implements OnInit {
         freeHand: true,
         lineMode: true,
         rectangleMode: true,
-        circleMode: true,
+        ellipseMode: true,
         w: true,
         color: true,
         fill: true,
