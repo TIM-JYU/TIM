@@ -165,7 +165,8 @@ class GridAxisManager {
                 private isDataViewVirtual: boolean,
                 private borderSpacing: number,
                 private getSize: (i: number) => number,
-                private showItem: (index: number, ordinal: number) => boolean) {
+                private showItem: (index: number) => boolean,
+                private skipItem?: (ordinal: number) => boolean) {
         this.itemOrder = Array.from(new Array(size)).map((e, i) => i);
         this.refresh();
     }
@@ -195,7 +196,15 @@ class GridAxisManager {
      * Updates the visible items and recomputes the positions if needed.
      */
     refresh(): void {
-        this.visibleItems = this.itemOrder.filter((index, ordinal) => this.showItem(index, ordinal));
+        let currentVisible = -1;
+        this.visibleItems = this.itemOrder.filter((index) => {
+            const result = this.showItem(index);
+            if (!result) {
+                return false;
+            }
+            currentVisible++;
+            return this.skipItem ? !this.skipItem(currentVisible) : true;
+        });
         this.indexToOrdinal = {};
         for (const [ord, index] of this.visibleItems.entries()) {
             this.indexToOrdinal[index] = ord;
@@ -398,6 +407,11 @@ const DEFAULT_VIRTUAL_SCROLL_SETTINGS: VirtualScrollingOptions = {
 // TODO: Right now, default TimTable style uses collapsed borders, in which case there is no need for spacing. Does this need a setting?
 const VIRTUAL_SCROLL_TABLE_BORDER_SPACING = 0;
 
+enum EditorPosition {
+    MainData,
+    FixedColumn,
+}
+
 /**
  * A DOM-based data view component that supports virtual scrolling.
  * The component handles DOM generation and updating based on the DataModelProvider.
@@ -427,6 +441,9 @@ const VIRTUAL_SCROLL_TABLE_BORDER_SPACING = 0;
                        #fixedDataTable>
                     <tbody class="content" #fixedDataBody></tbody>
                 </table>
+                <ng-container *ngIf="editorInFixedColumn">
+                    <ng-container *ngTemplateOutlet="editor"></ng-container>
+                </ng-container>
             </div>
         </ng-container>
         <div class="summary">
@@ -471,8 +488,13 @@ const VIRTUAL_SCROLL_TABLE_BORDER_SPACING = 0;
                    #mainDataTable>
                 <tbody class="content" #mainDataBody></tbody>
             </table>
-            <ng-content></ng-content>
+            <ng-container *ngIf="editorInData">
+                <ng-container *ngTemplateOutlet="editor"></ng-container>
+            </ng-container>
         </div>
+        <ng-template #editor>
+            <ng-content></ng-content>
+        </ng-template>
     `,
     styleUrls: ["./data-view.component.scss"],
 })
@@ -533,10 +555,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private sizeContainer?: HTMLDivElement;
     private sizeContentContainer?: HTMLDivElement;
     private idealColWidths: number[] = [];
+    private editorPosition = EditorPosition.MainData;
 
     // endregion
 
     constructor(private r2: Renderer2, private zone: NgZone, private componentRef: ElementRef<HTMLElement>, private cdr: ChangeDetectorRef) {
+    }
+
+    get editorInData() {
+        return this.editorPosition == EditorPosition.MainData;
+    }
+
+    get editorInFixedColumn() {
+        return this.editorPosition == EditorPosition.FixedColumn;
     }
 
     private get tableBaseBorderWidthPx(): number {
@@ -764,6 +795,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // Because of Angular, we need to pass the editor as ng-content (otherwise Angular seems to loose reference to
         // the element and stop updating it properly)
         // TODO: Figure out a better way to integrate the editor
+        const prevPos = this.editorPosition;
+        if (this.fixedTableCache && this.fixedColAxis.indexToOrdinal[col] !== undefined) {
+            this.editorPosition = EditorPosition.FixedColumn;
+        } else {
+            this.editorPosition = EditorPosition.MainData;
+        }
+        if (prevPos != this.editorPosition) {
+            this.cdr.detectChanges();
+        }
         const editor = this.mainDataContainer.nativeElement.querySelector(".timTableEditor");
         const editInput = this.mainDataContainer.nativeElement.querySelector(".timTableEditor>input");
         const inlineEditorButtons = this.mainDataContainer.nativeElement.querySelector(".timTableEditor>span");
@@ -822,12 +862,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.vScroll.enabled,
             VIRTUAL_SCROLL_TABLE_BORDER_SPACING,
             (i) => this.modelProvider.getColumnWidth(i) ?? 0,
-            (i, o) => o >= this.fixedColumnCount && this.modelProvider.showColumn(i));
-        this.fixedColAxis = new GridAxisManager(this.fixedColumnCount,
+            (i) => this.modelProvider.showColumn(i),
+            (o) => o < this.fixedColumnCount);
+        this.fixedColAxis = new GridAxisManager(columns,
             this.vScroll.enabled,
             VIRTUAL_SCROLL_TABLE_BORDER_SPACING,
             (i) => this.modelProvider.getColumnWidth(i) ?? 0,
-            (i, o) => o < this.fixedColumnCount && this.modelProvider.showColumn(i));
+            (i) => this.modelProvider.showColumn(i),
+            (o) => o >= this.fixedColumnCount);
         this.updateTableSummary();
     }
 
@@ -1339,7 +1381,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             cache.setSize(vertical.count, colCount);
             for (let rowNumber = 0; rowNumber < vertical.count; rowNumber++) {
                 const rowIndex = this.rowAxis.visibleItems[vertical.startIndex + rowNumber];
-                this.updateRow(this.dataTableCache.getRow(rowNumber), rowIndex);
+                this.updateRow(cache.getRow(rowNumber), rowIndex);
                 for (let columnNumber = 0; columnNumber < colCount; columnNumber++) {
                     const columnIndex = colAxis.visibleItems[colStart + columnNumber];
                     const cell = cache.getCell(rowNumber, columnNumber);
@@ -1664,7 +1706,7 @@ const WIDTH_ONLY_VALUES = new Set([
 // Attempt to use max-width for absolute values of style to not mess up the scrollbar position
 function getWidthStyle(value: string): Record<string, string> {
     return {
-        [ WIDTH_ONLY_VALUES.has(value) ? "width" : "max-width" ]: value,
+        [WIDTH_ONLY_VALUES.has(value) ? "width" : "max-width"]: value,
     };
 }
 
