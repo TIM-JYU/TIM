@@ -306,10 +306,10 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
 
         // Show results in result dialog.
         if (this.createNewWindow) {
-            void showSearchResultDialog(this);
+            showSearchResultDialog(this);
         } else {
             if (!this.resultsDialog) {
-                void showSearchResultDialog(this);
+                showSearchResultDialog(this);
             } else {
                 this.resultsDialog.updateAttributes(this);
             }

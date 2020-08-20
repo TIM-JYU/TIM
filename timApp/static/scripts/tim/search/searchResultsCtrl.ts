@@ -4,6 +4,7 @@
 
 import {IScope} from "angular";
 import {DialogController} from "tim/ui/dialogController";
+import {to} from "tim/util/utils";
 import {ITag, TagType} from "../item/IItem";
 import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {IDocSearchResult, ITagSearchResult, SearchBoxComponent} from "./search-box.component";
@@ -346,9 +347,9 @@ registerDialogComponent(SearchResultController,
 `,
     });
 
-export async function showSearchResultDialog(r: SearchBoxComponent) {
-    return await showDialog(
+export function showSearchResultDialog(r: SearchBoxComponent) {
+    void to(showDialog(
         SearchResultController,
         {ctrl: () => r},
-        {showMinimizeButton: false}).result;
+        {showMinimizeButton: false}).result);
 }
