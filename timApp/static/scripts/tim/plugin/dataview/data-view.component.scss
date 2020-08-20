@@ -32,6 +32,10 @@ table {
   }
 }
 
+:host:not(.virtual) .fixed-col-header table {
+  border-right-width: 1px;
+}
+
 .ids {
   grid-area: ids;
   overflow-y: hidden;
