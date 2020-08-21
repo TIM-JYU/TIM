@@ -680,26 +680,30 @@ const CsMarkupDefaults = t.type({
 
 const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPluginMarkup]);
 
+const CsAllPart = t.partial({
+    uploadedFile: t.string,
+    uploadedType: t.string,
+    uploadedFiles: t.array(UploadedFile),
+    userargs: t.string,
+    usercode: t.string,
+    userinput: t.string,
+    submittedFiles: t.array(FileSubmission),
+    selectedLanguage: t.string,
+    by: t.string,
+    docurl: t.string,
+    program: t.string,
+    replace: t.string,
+    timeout: t.number,
+    error: t.string,
+    own_error: t.string,
+    gitRegistered: t.boolean,
+    isTauno: t.boolean,
+});
+
+const SetData = CsAllPart; // TODO maybe make an own type for this instead of using CsAllPart
+
 const CsAll = t.intersection([
-    t.partial({
-        uploadedFile: t.string,
-        uploadedType: t.string,
-        uploadedFiles: t.array(UploadedFile),
-        userargs: t.string,
-        usercode: t.string,
-        userinput: t.string,
-        submittedFiles: t.array(FileSubmission),
-        selectedLanguage: t.string,
-        by: t.string,
-        docurl: t.string,
-        program: t.string,
-        replace: t.string,
-        timeout: t.number,
-        error: t.string,
-        own_error: t.string,
-        gitRegistered: t.boolean,
-        isTauno: t.boolean,
-    }),
+    CsAllPart,
     t.type({
         // anonymous: t.boolean,
         // doLazy: t.boolean,
@@ -2836,32 +2840,18 @@ ${fhtml}
         return this.markup.inputrows;
     }
 
-    async setData(data: any, save: boolean = false) {
-        for (const key of Object.keys(data)) {
-            if (key in this) {
-                try {
-                    if (key === "attrs") {
-                        const atrs = data[key]; // TODO: make the most important to work
-                        for (const akey of Object.keys(atrs)) {
-                            // @ts-ignore
-                            this.markup[akey] = atrs[akey];
-                        }
-                    } else if (key === "commands") {
-                        // TODO: implement commands
-                    } else {
-                        // @ts-ignore
-                        this[key] = data[key];
-                    }
-                }
-                catch(err) {
-                    console.log(err);
+    async setData(data: unknown, save: boolean = false) {
+        if (SetData.is(data)) {
+            for (const name of ["usercode", "userargs", "userinput"] as const) {
+                const v = data[name];
+                if (v !== undefined) {
+                    this[name] = v;
                 }
             }
         }
         if (save) {
             await this.runCode();
         }
-        return;
     }
 }
 
