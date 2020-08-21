@@ -1,8 +1,10 @@
 from dataclasses import dataclass
-from flask import Blueprint, abort
+
+from flask import Blueprint, abort, request
 from flask import current_app
 from flask import g
 
+from marshmallow_dataclass import class_schema
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.bookmark.bookmarks import Bookmarks
@@ -150,12 +152,20 @@ def delete_bookmark(args: BookmarkNoLink):
     return get_bookmarks()
 
 
+@dataclass
+class MarkLastReadModel:
+    view: str
+
+
+MLRSchema = class_schema(MarkLastReadModel)
+
 @bookmarks.route('/markLastRead/<int:doc_id>', methods=['POST'])
 def mark_last_read(doc_id):
     d = get_doc_or_abort(doc_id)
+    mlrm: MarkLastReadModel = MLRSchema().load(request.get_json())
     wb.bookmarks.add_bookmark('Last read',
                              d.title,
-                             d.url_relative,
+                             d.get_relative_url_for_view(mlrm.view),
                              move_to_top=True,
                              limit=current_app.config['LAST_READ_BOOKMARK_LIMIT']).save_bookmarks()
     return get_bookmarks()

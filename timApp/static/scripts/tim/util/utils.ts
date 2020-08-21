@@ -767,3 +767,7 @@ export function secondsToHHMMSS(time: number) {
 export function formatString(s: string, ...fmt: string[]) {
     return fmt.reduce((str, val, i) => str.replace(`{${i}}`, val), s);
 }
+
+export function getViewName() {
+    return document.location.pathname.split("/")[1];
+}

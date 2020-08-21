@@ -81,6 +81,9 @@ class Item(ItemBase):
     def get_url_for_view(self, name: str):
         return f'{current_app.config["TIM_HOST"]}/{name}/{self.path}'
 
+    def get_relative_url_for_view(self, name: str):
+        return f'/{name}/{self.path}'
+
     @property
     def url_relative(self):
         return '/view/' + self.path

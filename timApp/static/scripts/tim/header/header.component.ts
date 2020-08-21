@@ -10,7 +10,7 @@ import {DocumentOrFolder, IFolder, isRootFolder, ITag, ITranslation, TagType} fr
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {genericglobals, someglobals} from "../util/globals";
-import {capitalizeFirstLetter, to} from "../util/utils";
+import {capitalizeFirstLetter, getViewName, to} from "../util/utils";
 
 /**
  * Checks if the tag type is course code.
@@ -97,7 +97,7 @@ export class HeaderComponent implements OnInit {
         this.crumbs = "breadcrumbs" in g ? [...g.breadcrumbs].reverse() : undefined;
         this.translations = "translations" in g ? g.translations : [];
         this.docSettings = "docSettings" in g ? g.docSettings : undefined;
-        this.route = document.location.pathname.split("/")[1];
+        this.route = getViewName();
         if (!this.item) {
             return;
         }

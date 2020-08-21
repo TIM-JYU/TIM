@@ -7,7 +7,7 @@ import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout} from "../util/ngimport";
-import {IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
+import {getViewName, IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
 import {diffDialog, setDiffDialog, showDiffDialog} from "./diffDialog";
 import {EditPosition, EditType, IExtraData} from "./editing/edittypes";
 import {onClick, onMouseOver, onMouseOverOut} from "./eventhandlers";
@@ -256,7 +256,7 @@ export async function initReadings(item: IItem) {
 
     if (Users.isLoggedIn() && genericglobals().bookmarks != null) {
         await $timeout(10000);
-        await to($http.post("/bookmarks/markLastRead/" + item.id, {}));
+        await to($http.post("/bookmarks/markLastRead/" + item.id, {view: getViewName()}));
     }
 }
 
