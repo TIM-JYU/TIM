@@ -413,16 +413,16 @@ def par_response(pars: List[DocParagraph],
     if not preview:
         duplicates = check_duplicates(pars, doc)
         if edit_request and logged_in():
-            d = DocEntry.find_by_id(doc.doc_id)
-            if d is not None:
-                update_associated_uploads(pars, docu)
-                if current_app.config['BOOKMARKS_ENABLED']:
-                    bms = Bookmarks(get_current_user_object())
-                    bms.add_bookmark('Last edited',
-                                     d.title,
-                                     d.url_relative,
-                                     move_to_top=True,
-                                     limit=current_app.config['LAST_EDITED_BOOKMARK_LIMIT']).save_bookmarks()
+            update_associated_uploads(pars, docu)
+            if current_app.config['BOOKMARKS_ENABLED']:
+                bms = Bookmarks(get_current_user_object())
+                bms.add_bookmark(
+                    'Last edited',
+                    docu.title,
+                    docu.url_relative,
+                    move_to_top=True,
+                    limit=current_app.config['LAST_EDITED_BOOKMARK_LIMIT'],
+                ).save_bookmarks()
     else:
         duplicates = None
         if len(pars) == 1:
