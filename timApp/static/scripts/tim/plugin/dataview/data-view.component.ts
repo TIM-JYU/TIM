@@ -1172,16 +1172,17 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // The order of top/bottom depends on the scrolling direction to reduce flickering
         let renderOrder = [
             () => render(vertical.startIndex, vertical.visibleStartIndex),
-            () => render(vertical.visibleStartIndex + vertical.visibleCount, vertical.count),
+            () => render(vertical.visibleStartIndex + vertical.visibleCount, vertical.startIndex + vertical.count),
         ];
         if (this.scrollDY > 0) {
             renderOrder = renderOrder.reverse();
         }
         // If static size is set, there is possibility for vscrolling
-        if (this.colAxis.isVirtual) {
-            this.updateColumnHeaders(false);
-            this.updateColumnHeaderCellSizes(false);
-        }
+        // if (this.colAxis.isVirtual) {
+        //     this.updateColumnHeaders(false);
+        //     this.updateColumnHeaderCellSizes(false);
+        // }
+        // yield;
         render(vertical.visibleStartIndex, vertical.visibleStartIndex + vertical.visibleCount);
         yield;
         for (const r of renderOrder) {
