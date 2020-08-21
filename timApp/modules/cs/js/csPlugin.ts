@@ -2855,16 +2855,6 @@ ${fhtml}
     }
 }
 
-/* Add fillCircle to canvas context */
-Object.getPrototypeOf(document.createElement("canvas").getContext("2d")).fillCircle =
-    function(this: CanvasRenderingContext2D, x: number, y: number, r: number) {
-        this.beginPath();
-        this.arc(x, y, r, 0, Math.PI * 2, false);
-        this.closePath();
-        this.fill();
-        this.stroke();
-    };
-
 @Component({
     selector: "cs-runner",
     template: `
