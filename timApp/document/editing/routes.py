@@ -419,7 +419,7 @@ def par_response(pars: List[DocParagraph],
                 bms.add_bookmark(
                     'Last edited',
                     docu.title,
-                    docu.url_relative,
+                    docu.get_relative_url_for_view(edit_request.viewname or 'view'),
                     move_to_top=True,
                     limit=current_app.config['LAST_EDITED_BOOKMARK_LIMIT'],
                 ).save_bookmarks()

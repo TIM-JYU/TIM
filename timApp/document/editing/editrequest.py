@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 from timApp.auth.accesshelper import has_view_access
@@ -5,34 +6,32 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.exceptions import ValidationException
+from timApp.document.version import Version
 from timApp.util.flask.requesthelper import verify_json_params
 
 
+@dataclass
 class EditRequest:
-    def __init__(
-            self, doc: Document,
-            area_start: Optional[str] = None,
-            area_end: Optional[str] = None,
-            par: Optional[str] = None,
-            text: Optional[str] = None,
-            next_par_id: Optional[str] = None,
-            preview: bool = False,
-            forced_classes: Optional[List[str]] = None,
-            mark_translated: Optional[bool] = None,
-    ):
-        self.forced_classes = forced_classes or []
-        self.doc = doc
-        self.preview = preview
-        self.old_doc_version = doc.get_version()
-        self.area_start = area_start
-        self.area_end = area_end
-        self.next_par_id = next_par_id
-        self.par = par
-        self.text = text
+    doc: Document
+    area_start: Optional[str] = None
+    area_end: Optional[str] = None
+    par: Optional[str] = None
+    text: Optional[str] = None
+    next_par_id: Optional[str] = None
+    preview: bool = False
+    forced_classes: List[str] = field(default_factory=list)
+    mark_translated: Optional[bool] = None
+    viewname: Optional[str] = None,
+    old_doc_version: Version = field(init=False)
+    editor_pars: Optional[List[DocParagraph]] = field(init=False)
+    original_par: Optional[DocParagraph] = field(init=False)
+    context_par: Optional[DocParagraph] = field(init=False)
+
+    def __post_init__(self):
+        self.old_doc_version = self.doc.get_version()
         self.editor_pars = None
-        self.original_par = self.doc.get_paragraph(self.par) if not self.editing_area and par is not None and not self.is_adding else None
+        self.original_par = self.doc.get_paragraph(self.par) if not self.editing_area and self.par is not None and not self.is_adding else None
         self.context_par = self.get_context_par()
-        self.mark_translated = mark_translated
 
     @property
     def is_adding(self):
@@ -78,20 +77,27 @@ class EditRequest:
     def from_request(doc: Document, text: Optional[str] = None, preview: bool = False) -> 'EditRequest':
         if text is None:
             text, = verify_json_params('text')
-        area_start, area_end, par, par_next, forced_classes, tags = verify_json_params('area_start', 'area_end', 'par',
-                                                                                       'par_next', 'forced_classes',
-                                                                                       'tags',
-                                                                                       require=False)
+        (area_start, area_end, par,
+         par_next, forced_classes, tags,
+         view) = verify_json_params(
+            'area_start', 'area_end', 'par',
+            'par_next', 'forced_classes', 'tags',
+            'view',
+            require=False,
+        )
         mark_translated = tags.get('marktranslated') if tags else None
-        return EditRequest(doc=doc,
-                           text=text,
-                           area_start=area_start,
-                           area_end=area_end,
-                           par=par,
-                           next_par_id=par_next,
-                           preview=preview,
-                           forced_classes=forced_classes,
-                           mark_translated=mark_translated)
+        return EditRequest(
+            doc=doc,
+            text=text,
+            area_start=area_start,
+            area_end=area_end,
+            par=par,
+            next_par_id=par_next,
+            preview=preview,
+            forced_classes=forced_classes or [],
+            mark_translated=mark_translated,
+            viewname=view,
+        )
 
 
 def get_pars_from_editor_text(doc: Document, text: str,

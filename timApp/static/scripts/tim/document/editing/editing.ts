@@ -6,7 +6,7 @@ import {PareditorController} from "tim/editor/pareditor";
 import {IModalInstance, showMessageDialog} from "tim/ui/dialog";
 import {documentglobals} from "tim/util/globals";
 import {$http, $timeout} from "tim/util/ngimport";
-import {empty, isMobileDevice, markPageDirty, to} from "tim/util/utils";
+import {empty, getViewName, isMobileDevice, markPageDirty, to} from "tim/util/utils";
 import {openEditor} from "tim/editor/pareditorOpen";
 import {getCurrentEditor} from "tim/editor/editorScope";
 import {showDiffDialog} from "../diffDialog";
@@ -246,7 +246,11 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 return r.result.data;
             },
             saveCb: async (text, data) => {
-                const r = await to($http.post<IParResponse>(url, {text, ...data}));
+                const r = await to($http.post<IParResponse>(url, {
+                    text,
+                    ...data,
+                    view: getViewName(),
+                }));
                 if (!r.ok) {
                     return {error: r.result.data.error};
                 } else {
