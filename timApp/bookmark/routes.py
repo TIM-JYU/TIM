@@ -5,7 +5,7 @@ from flask import current_app
 from flask import g
 
 from marshmallow_dataclass import class_schema
-from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort
+from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.document.course.validate import CourseException, verify_valid_course
@@ -64,6 +64,7 @@ def add_course_bookmark(m: AddCourseModel):
     d = DocEntry.find_by_path(m.path)
     if not d:
         abort(404, 'Course not found')
+    verify_view_access(d)
     added_to_group = False
     try:
         ug = verify_valid_course(m.path)
@@ -162,6 +163,7 @@ MLRSchema = class_schema(MarkLastReadModel)
 @bookmarks.route('/markLastRead/<int:doc_id>', methods=['POST'])
 def mark_last_read(doc_id):
     d = get_doc_or_abort(doc_id)
+    verify_view_access(d)
     mlrm: MarkLastReadModel = MLRSchema().load(request.get_json())
     wb.bookmarks.add_bookmark('Last read',
                              d.title,
