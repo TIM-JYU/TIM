@@ -255,7 +255,7 @@ class GridAxisManager {
             startIndex: startIndex,
             count: Math.min(endIndex - startIndex + 1, this.visibleItems.length - startIndex),
             startPosition: this.positionStart[startIndex],
-            visibleStartIndex: viewStartIndex - startIndex,
+            visibleStartIndex: viewStartIndex,
             visibleCount: Math.min(viewEndIndex - viewStartIndex + 1, this.visibleItems.length - viewStartIndex),
         };
     }
@@ -518,8 +518,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @HostBinding("style.width") private dataViewWidth = "100%";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
-    @ViewChild("headerIdBody") private headerIdBody?: ElementRef<HTMLTableSectionElement>;
-    @ViewChild("filterBody") private filterBody?: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("headerIdBody") private headerIdBody!: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("filterBody") private filterBody!: ElementRef<HTMLTableSectionElement>;
     @ViewChild("fixedColHeaderContainer") private fixedColHeaderContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("fixedColHeaderTable") private fixedColHeaderTable?: ElementRef<HTMLTableElement>;
     @ViewChild("fixedColHeaderIdBody") private fixedColHeaderIdBody?: ElementRef<HTMLTableSectionElement>;
@@ -556,7 +556,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private sizeContentContainer?: HTMLDivElement;
     private idealColWidths: number[] = [];
     private editorPosition = EditorPosition.MainData;
-    private prevEditorDOMPosition: TableArea = { horizontal: -1, vertical: -1 };
+    private prevEditorDOMPosition: TableArea = {horizontal: -1, vertical: -1};
 
     // endregion
 
@@ -1023,7 +1023,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
-    private updateColumnHeaderCellSizes(): void {
+    private updateColumnHeaderCellSizes(updateFixed = true): void {
         const update = (axis: GridAxisManager, start: number, count: number, headers?: TableDOMCache, filters?: TableDOMCache) => {
             if (!headers || !filters) {
                 return;
@@ -1037,6 +1037,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 const width = sizes[column];
                 const headerCell = headers.getCell(0, column);
                 const filterCell = filters.getCell(0, column);
+                headerCell.hidden = false;
+                filterCell.hidden = false;
                 headerCell.style.width = `${width}px`;
                 headerCell.style.maxWidth = `${width}px`;
                 filterCell.style.width = `${width}px`;
@@ -1045,7 +1047,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const {horizontal} = this.viewport;
 
         update(this.colAxis, horizontal.startIndex, horizontal.count, this.headerIdTableCache, this.filterTableCache);
-        update(this.fixedColAxis, 0, this.fixedColumnCount, this.fixedColHeaderIdTableCache, this.fixedColFilterTableCache);
+        if (updateFixed) {
+            update(this.fixedColAxis, 0, this.fixedColumnCount, this.fixedColHeaderIdTableCache, this.fixedColFilterTableCache);
+        }
     }
 
     private updateSummaryCellSizes(): void {
@@ -1143,9 +1147,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 this.updateCell(td, rowIndex, columnIndex, this.getCellValue(rowIndex, columnIndex));
             }
         };
-        const render = (startRow: number, endRow: number) => {
-            for (let rowNumber = startRow; rowNumber < endRow; rowNumber++) {
-                const rowIndex = this.rowAxis.visibleItems[vertical.startIndex + rowNumber];
+        const render = (startRowOrdinal: number, endRowOrdinal: number) => {
+            for (let rowOrdinal = startRowOrdinal; rowOrdinal < endRowOrdinal; rowOrdinal++) {
+                const rowNumber = rowOrdinal - vertical.startIndex;
+                const rowIndex = this.rowAxis.visibleItems[rowOrdinal];
                 updateCache(rowNumber, horizontal.startIndex, horizontal.count, this.colAxis, this.dataTableCache);
                 updateCache(rowNumber, 0, this.fixedColumnCount, this.fixedColAxis, this.fixedTableCache);
 
@@ -1158,11 +1163,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                     input.checked = this.modelProvider.isRowChecked(rowIndex);
                     input.oninput = this.onRowCheckedHandler(input, rowIndex);
                 }
-
-                // If static size is set, there is possibility for vscrolling
-                if (this.colAxis.isVirtual) {
-                    this.updateColumnHeaders(false);
-                }
             }
         };
         // Render in three parts:
@@ -1171,11 +1171,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // * The bottom part
         // The order of top/bottom depends on the scrolling direction to reduce flickering
         let renderOrder = [
-            () => render(0, vertical.visibleStartIndex),
+            () => render(vertical.startIndex, vertical.visibleStartIndex),
             () => render(vertical.visibleStartIndex + vertical.visibleCount, vertical.count),
         ];
         if (this.scrollDY > 0) {
             renderOrder = renderOrder.reverse();
+        }
+        // If static size is set, there is possibility for vscrolling
+        if (this.colAxis.isVirtual) {
+            this.updateColumnHeaders(false);
+            this.updateColumnHeaderCellSizes(false);
         }
         render(vertical.visibleStartIndex, vertical.visibleStartIndex + vertical.visibleCount);
         yield;
@@ -1226,14 +1231,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
         const idTable = this.idBody.nativeElement;
-        const headerIdTable = this.headerTable.nativeElement;
-        const filterTable = this.filterBody.nativeElement;
+        const headerIdTable = this.headerIdBody.nativeElement;
+        const filterIdTable = this.filterBody.nativeElement;
         this.mainDataBody.nativeElement.style.transform = `translateX(${this.viewport.horizontal.startPosition}px) translateY(${this.viewport.vertical.startPosition}px)`;
         if (this.fixedDataBody) {
             this.fixedDataBody.nativeElement.style.transform = `translateY(${this.viewport.vertical.startPosition}px)`;
         }
         idTable.style.transform = `translateY(${this.viewport.vertical.startPosition}px)`;
-        headerIdTable.style.transform = filterTable.style.transform = `translateX(${this.viewport.horizontal.startPosition}px)`;
+        headerIdTable.style.transform = filterIdTable.style.transform = `translateX(${this.viewport.horizontal.startPosition}px)`;
     }
 
     // endregion
@@ -1252,6 +1257,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const totalHeight = this.rowAxis.totalSize;
         if (totalWidth) {
             table.style.width = `${totalWidth}px`;
+            table.style.minWidth = `${totalWidth}px`;
+            table.style.maxWidth = `${totalWidth}px`;
             headerTable.style.width = `${totalWidth}px`;
         }
         if (totalHeight) {
