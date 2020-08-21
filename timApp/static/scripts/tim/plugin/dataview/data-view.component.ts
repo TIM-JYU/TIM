@@ -535,7 +535,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @ViewChild("fixedDataContainer") private fixedDataContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("summaryTable") private summaryTable!: ElementRef<HTMLTableElement>;
     @ViewChild("allVisibleCell") private allVisibleCell!: ElementRef<HTMLTableDataCellElement>;
-    private scrollDY = 0;
+    private scrollDiff: TableArea = {vertical: 0, horizontal: 0};
     private cellValueCache: Record<number, string[]> = {};
     private dataTableCache!: TableDOMCache;
     private fixedTableCache?: TableDOMCache;
@@ -1092,7 +1092,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.scheduledUpdate = false;
             return;
         }
-        this.scrollDY = newViewport.vertical.startIndex - this.viewport.vertical.startIndex;
+        this.scrollDiff = {
+            vertical: newViewport.vertical.startIndex - this.viewport.vertical.startIndex,
+            horizontal: newViewport.horizontal.startIndex - this.viewport.horizontal.startIndex,
+        };
         this.viewport = newViewport;
         this.updateTableTransform();
         runMultiFrame(this.renderViewport(options.updateHeader));
@@ -1132,7 +1135,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.idTableCache?.setSize(this.viewport.vertical.count, 2);
         this.headerIdTableCache?.setSize(1, this.viewport.horizontal.count);
         this.filterTableCache?.setSize(1, this.viewport.horizontal.count);
-        const updateCache = (rowNumber: number, colStart: number, colCount: number, colAxis?: GridAxisManager, dataCache?: TableDOMCache) => {
+        const updateCache = (rowNumber: number, colStart: number, colCount: number, colAxis?: GridAxisManager, dataCache?: TableDOMCache, updateCellStyle: boolean = true) => {
             if (!dataCache || !colAxis) {
                 return;
             }
@@ -1144,14 +1147,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 const td = dataCache.getCell(rowNumber, columnNumber);
                 td.hidden = false;
                 const columnIndex = colAxis.visibleItems[colStart + columnNumber];
-                this.updateCell(td, rowIndex, columnIndex, this.getCellValue(rowIndex, columnIndex));
+                this.updateCell(td, rowIndex, columnIndex, this.getCellValue(rowIndex, columnIndex), updateCellStyle);
             }
         };
-        const render = (startRowOrdinal: number, endRowOrdinal: number) => {
+        const render = (startRowOrdinal: number, endRowOrdinal: number, updateCellStyles: boolean) => {
             for (let rowOrdinal = startRowOrdinal; rowOrdinal < endRowOrdinal; rowOrdinal++) {
                 const rowNumber = rowOrdinal - vertical.startIndex;
                 const rowIndex = this.rowAxis.visibleItems[rowOrdinal];
-                updateCache(rowNumber, horizontal.startIndex, horizontal.count, this.colAxis, this.dataTableCache);
+                updateCache(rowNumber, horizontal.startIndex, horizontal.count, this.colAxis, this.dataTableCache, updateCellStyles);
                 updateCache(rowNumber, 0, this.fixedColumnCount, this.fixedColAxis, this.fixedTableCache);
 
                 if (this.idTableCache) {
@@ -1165,25 +1168,31 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 }
             }
         };
+        const updateDataCellStylesOnRender = this.scrollDiff.horizontal == 0;
         // Render in three parts:
         // * The main visible area
         // * The top part
         // * The bottom part
         // The order of top/bottom depends on the scrolling direction to reduce flickering
         let renderOrder = [
-            () => render(vertical.startIndex, vertical.visibleStartIndex),
-            () => render(vertical.visibleStartIndex + vertical.visibleCount, vertical.startIndex + vertical.count),
+            () => render(vertical.startIndex, vertical.visibleStartIndex, updateDataCellStylesOnRender),
+            () => render(vertical.visibleStartIndex + vertical.visibleCount, vertical.startIndex + vertical.count, updateDataCellStylesOnRender),
         ];
-        if (this.scrollDY > 0) {
+        if (this.scrollDiff.vertical > 0) {
             renderOrder = renderOrder.reverse();
         }
-        // If static size is set, there is possibility for vscrolling
-        // if (this.colAxis.isVirtual) {
-        //     this.updateColumnHeaders(false);
-        //     this.updateColumnHeaderCellSizes(false);
-        // }
-        // yield;
-        render(vertical.visibleStartIndex, vertical.visibleStartIndex + vertical.visibleCount);
+        // Save update times by updating column headers only when scrolling horizontally
+        if (this.scrollDiff.horizontal != 0 && this.colAxis.isVirtual) {
+            this.updateColumnHeaders(false);
+            this.updateColumnHeaderCellSizes(false);
+
+            for (let rowOrdinal = 0; rowOrdinal < vertical.count; rowOrdinal++) {
+                for (let col = 0; col < horizontal.count; col++) {
+                    this.updateCellStyle(this.dataTableCache.getCell(rowOrdinal, col), this.rowAxis.visibleItems[rowOrdinal + vertical.startIndex], this.colAxis.visibleItems[col + horizontal.startIndex]);
+                }
+            }
+        }
+        render(vertical.visibleStartIndex, vertical.visibleStartIndex + vertical.visibleCount, updateDataCellStylesOnRender);
         yield;
         for (const r of renderOrder) {
             r();
@@ -1497,10 +1506,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         return row;
     }
 
-    private updateCell(cell: HTMLTableCellElement, rowIndex: number, columnIndex: number, contents?: string): HTMLTableCellElement {
+    private updateCell(cell: HTMLTableCellElement, rowIndex: number, columnIndex: number, contents?: string, updateStyle = true): HTMLTableCellElement {
         cell.hidden = !this.vScroll.enabled && !this.modelProvider.showColumn(columnIndex);
         cell.onclick = () => this.modelProvider.handleClickCell(rowIndex, columnIndex);
-        this.updateCellStyle(cell, rowIndex, columnIndex);
+        if (updateStyle) {
+            this.updateCellStyle(cell, rowIndex, columnIndex);
+        }
         if (contents !== undefined) {
             cell.innerHTML = contents;
         }
