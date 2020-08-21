@@ -1,6 +1,7 @@
 import {NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DataViewComponent} from "./data-view.component";
 
 @NgModule({
@@ -10,6 +11,7 @@ import {DataViewComponent} from "./data-view.component";
     imports: [
         CommonModule,
         FormsModule,
+        TimUtilityModule,
     ],
     exports: [
         DataViewComponent,

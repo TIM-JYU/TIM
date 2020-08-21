@@ -44,7 +44,6 @@ import {
     ChangeDetectorRef,
     Component,
     ElementRef,
-    HostBinding,
     Input,
     NgZone,
     OnInit,
@@ -420,7 +419,9 @@ enum EditorPosition {
     selector: "tim-data-view",
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="loader" *ngIf="isLoading"></div>
+        <div class="loader" *ngIf="isLoading">
+            <tim-loading></tim-loading>
+        </div>
         <div class="data-view" [class.virtual]="isVirtual" [style.width]="tableMaxWidth" #dataViewContainer>
             <div class="header" #headerContainer>
                 <table [ngStyle]="tableStyle" #headerTable>

@@ -10,18 +10,8 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  background-color: lightgrey;
+  background-color: white;
   z-index: 10;
-  animation: loader-anim alternate ease-in-out infinite 600ms;
-}
-
-@keyframes loader-anim {
-  0% {
-    opacity: 0;
-  }
-  1000% {
-    opacity: 1;
-  }
 }
 
 table {
