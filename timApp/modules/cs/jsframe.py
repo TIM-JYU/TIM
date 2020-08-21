@@ -221,7 +221,6 @@ class DrawIO(JSframe):
         super().modify_query()
         return
 
-
     def get_review(self, usercode):
         """
         return text to show when reviewing task
@@ -231,37 +230,18 @@ class DrawIO(JSframe):
             return None
         if isinstance(c, str):
             # Find svg data from the saved graph
-            firstdel = c.find('content="')
-            lastdel = c.find('/mxfile&gt;"')
-            if lastdel < 0:  # unescaped format
-                lastdel = c.find('/mxfile>"')
-                c = c[0:firstdel] + c[lastdel + 9:len(c)]
+            delete_start_str = 'content="'
+            delete_end_str = '/mxfile&gt;"'
+            first_del = c.find(delete_start_str)
+            last_del = c.find(delete_end_str)
+            if last_del < 0:  # unescaped format
+                delete_end_str = '/mxfile>"'
+                lastdel = c.find(delete_end_str)
+                c = c[0:first_del] + c[lastdel + len(delete_end_str):len(c)]
                 c = c.replace('<br>', '<br/>')
                 c = c.replace('&nbsp;', '')
             else:
-                c = c[0:firstdel] + c[lastdel+12:len(c)]
+                c = c[0:first_del] + c[last_del + len(delete_end_str):len(c)]
             # TODO: Add a way to inform the browser that review data is in image format
             c = 'data:image/svg+xml;base64,' + str(b64encode(c.encode("utf-8")), "utf-8")
         return c
-        # matches: Iterable[Match] = SVGTEXT_PROG.finditer(c)
-        # texts = ""
-        # line = ""
-        # for m in matches:
-        #     text = m.group(1)
-        #     try:
-        #         d = chr(195)
-        #         if text.find(d) >= 0:
-        #             text = bytes(text, 'ISO-8859-1').decode('utf-8') # TODO: miksi näin pitää tehdä???
-        #     except:
-        #         # let text be as it was
-        #         text = text
-        #     if text != "Viewer does not support full SVG 1.1":
-        #         if len(line) + len(text) > 75:
-        #             texts += line + "\n"
-        #             line = ""
-        #         line += text + ", "
-        # if line:
-        #     texts += line
-        # if not texts:
-        #     texts = "Labels: 0"
-        # return texts

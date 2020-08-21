@@ -132,8 +132,8 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timTimeLeft", TimeLeftComponent);
     doDowngrade(dg, "timCountdown", CountdownComponent);
     doDowngrade(dg, "timSidebarMenu", SidebarMenuComponent);
-    doDowngrade(dg, "drawToolbar", DrawToolbarComponent);
-    doDowngrade(dg, "drawCanvas", DrawCanvasComponent);
+    doDowngrade(dg, "timDrawToolbar", DrawToolbarComponent);
+    doDowngrade(dg, "timDrawCanvas", DrawCanvasComponent);
     return dg;
 }
 

@@ -49,50 +49,55 @@ export enum DrawType {
     selector: "draw-toolbar",
     template: `
         <label
-                *ngIf="drawVisibleOptions.enabled">Draw <input type="checkbox" name="enabled" value="true"
-                                                               [(ngModel)]="drawSettings.enabled"></label>
+                *ngIf="drawVisibleOptions.enabled"><input type="checkbox" name="enabled" value="true"
+                                                               [(ngModel)]="drawSettings.enabled">
+        Draw</label>
         <span class="drawOptions" [hidden]="!drawSettings.enabled">
             <span *ngIf="drawVisibleOptions.freeHand">
-                <label>FreeHand
+                <label>
                 <input type="radio"
                        name="drawType"
                        [value]="0"
-                       [(ngModel)]="drawSettings.drawType"></label>
+                       [(ngModel)]="drawSettings.drawType">
+                FreeHand</label>
             </span>
             <span *ngIf="drawVisibleOptions.lineMode">
-                <label>Line
+                <label>
                 <input type="radio"
                        name="drawType"
                        [value]="1"
-                       [(ngModel)]="drawSettings.drawType"></label>
+                       [(ngModel)]="drawSettings.drawType">
+                Line</label>
             </span>
             <span *ngIf="drawVisibleOptions.rectangleMode">
-                <label>Rectangle
+                <label>
                 <input type="radio"
                        name="drawType"
                        [value]="2"
-                       [(ngModel)]="drawSettings.drawType"></label>
+                       [(ngModel)]="drawSettings.drawType">
+                Rectangle</label>
             </span>
             <span *ngIf="drawVisibleOptions.ellipseMode">
-                <label>Ellipse
+                <label>
                 <input type="radio"
                        name="drawType"
                        [value]="3"
-                       [(ngModel)]="drawSettings.drawType"></label>
+                       [(ngModel)]="drawSettings.drawType">
+                Ellipse</label>
             </span>
             <span *ngIf="drawVisibleOptions.fill">
-                <label>Fill
+                <label>
                 <input type="checkbox"
                        name="fill"
                        value="true"
-                       [(ngModel)]="drawSettings.fill"></label>
+                       [(ngModel)]="drawSettings.fill">
+                Fill</label>
             </span>
                 <span *ngIf="drawVisibleOptions.w">
                     Width:
                     <input
                            id="freeWidth"
-                           size="1"
-                           style="width: 2em"
+                           size="3"
                            type="number"
                            [(ngModel)]="drawSettings.w"/>
                 </span>
@@ -105,11 +110,11 @@ export enum DrawType {
                             step="0.1" min="0" max="1"
                             [(ngModel)]="drawSettings.opacity"/>
                 </span>
-            <span *ngIf="drawVisibleOptions.color">
+            <span class="colorPicker" *ngIf="drawVisibleOptions.color">
             <input colorpicker="hex"
                    type="text"
                    [ngStyle]="{'background-color': drawSettings.color}"
-                   [(ngModel)]="drawSettings.color" (ngModelChange)="setColor($event)" size="4"/> <span
+                   [(ngModel)]="drawSettings.color" (ngModelChange)="setColor($event)" size="4"/><span
                     style="background-color: red; display: table-cell; text-align: center; width: 30px;"
                     (click)="setColor('#f00')">R</span><span
                     style="background-color: blue; display: table-cell; text-align: center; width: 30px;"
@@ -178,11 +183,3 @@ export class DrawToolbarModule implements DoBootstrap {
     }
 }
 
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(DrawToolbarModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "drawToolbar", DrawToolbarComponent);
-export const moduleDefs = [angularJsModule];

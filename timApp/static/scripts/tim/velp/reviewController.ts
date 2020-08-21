@@ -1095,10 +1095,6 @@ export class ReviewController {
         return {element, scope};
     }
 
-    isDrawnAnnotation(ann: Annotation): boolean { // placeholder to be removed when db is upgraded
-        return (ann.coord.start.depth == 0 && ann.coord.end.depth == 0);
-    }
-
     /**
      * Shows the annotation (despite the name).
      * @param ac - Annotation to be shown.

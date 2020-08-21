@@ -1,9 +1,13 @@
 
 .drawOptions {
-  margin-left: 0.2em;
+  margin-left: 0.8em;
 
-  span, a {
-    margin-left: 0.2em;
+  span + span, a {
+    margin-left: 0.8em;
+  }
+
+  .colorPicker {
+    white-space: nowrap;
   }
 }
 

@@ -160,10 +160,10 @@
                     </div><!-- end flex-->
             <div class="reviewcontainer" ng-if="$ctrl.review">
                 <div ng-if="$ctrl.imageReview">
-                    <draw-canvas
+                    <tim-draw-canvas
                             [options]="{enabled: false, color: 'blue', drawType: 2, opacity: 0.2, fill: true, w: 14}"
                             [tool-bar]="$ctrl.viewctrl.velpMode" bg-source="{{$ctrl.reviewHtml}}"
-                            [img-load-callback]="$ctrl.setImageReview"></draw-canvas>
+                            [img-load-callback]="$ctrl.setImageReview"></tim-draw-canvas>
                 </div>
                 <div ng-if="!$ctrl.imageReview" class="review" ng-bind-html="$ctrl.reviewHtml">
 

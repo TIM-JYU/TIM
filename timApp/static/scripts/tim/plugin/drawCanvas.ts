@@ -127,8 +127,8 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
     selector: "draw-canvas",
     template: `
         <div #wrapper style="overflow: auto; position: relative;" [style.height.px]="getWrapperHeight()">
-            <img style="max-width: none; position: absolute; display: unset;" #backGround *ngIf="bypassedImage"
-                 [src]="bypassedImage" (load)="onImgLoad()">
+            <img style="max-width: none; position: absolute; display: unset;" #backGround *ngIf="bgImage"
+                 [src]="bgImage" (load)="onImgLoad()">
             <!-- 0-sized div for positioning custom objects on canvas-->
             <div #objectContainer class="canvasObjectContainer"
                  style="width: 0px; height: 0px; overflow: visible; position: relative">
@@ -142,10 +142,10 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
 })
 export class DrawCanvasComponent implements OnInit, OnChanges {
     @Input() public bgSource = "";
-    bypassedImage: SafeResourceUrl = "";
+    bgImage: SafeResourceUrl = "";
     @ViewChild("drawbase") canvas!: ElementRef<HTMLCanvasElement>;
     @ViewChild("wrapper") wrapper!: ElementRef<HTMLDivElement>;
-    @ViewChild("backGround") bgImage!: ElementRef<HTMLImageElement>;
+    @ViewChild("backGround") bgElement!: ElementRef<HTMLImageElement>;
     @ViewChild("objectContainer") objectContainer!: ElementRef<HTMLDivElement>;
     ctx!: CanvasRenderingContext2D;
     imgHeight = 0;
@@ -210,7 +210,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * Sets up the background image
      */
     setBg() {
-        this.bypassedImage = this.domSanitizer.bypassSecurityTrustResourceUrl(this.bgSource);
+        // This goes to src of img tag, so there should be no XSS danger because imgs cannot execute scripts.
+        this.bgImage = this.domSanitizer.bypassSecurityTrustResourceUrl(this.bgSource);
     }
 
     ngAfterViewInit() {
@@ -261,9 +262,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * Resizes canvas and calls the image load callback function after image is loaded
      */
     onImgLoad(): void {
-        this.imgHeight = this.bgImage.nativeElement.clientHeight;
-        this.canvas.nativeElement.width = Math.max(this.bgImage.nativeElement.clientWidth, this.wrapper.nativeElement.clientWidth - 50);
-        this.canvas.nativeElement.height = Math.max(this.bgImage.nativeElement.clientHeight, this.getWrapperHeight() - 5);
+        this.imgHeight = this.bgElement.nativeElement.clientHeight;
+        this.canvas.nativeElement.width = Math.max(this.bgElement.nativeElement.clientWidth, this.wrapper.nativeElement.clientWidth - 50);
+        this.canvas.nativeElement.height = Math.max(this.bgElement.nativeElement.clientHeight, this.getWrapperHeight() - 5);
         if (this.imgLoadCallback) {
             this.imgLoadCallback(this);
         }
@@ -343,7 +344,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             } else {
                 this.drawPreviewRectangle();
             }
-        } else {
+        } else if (this.prevPos) {
             if (this.drawOptions.drawType == DrawType.Line) {
                 this.popPoint(1);
             }
@@ -351,7 +352,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
             this.addPoint(pxy);
             this.redrawAll();
         }
-
     }
 
     /**
@@ -458,9 +458,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * Start drawing freehand
      */
     startSegmentDraw(pxy: IPoint) {
-        if (!pxy) {
-            return;
-        }
         const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
         const ns: ILineSegment = {lines: [p]};
         ns.color = this.drawOptions.color;
@@ -551,10 +548,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * @param rectangle in IRectangleOrEllipse format
      */
     drawRectangle(rectangle: IRectangleOrEllipse) {
-            // TODO: Draw border with own settings but custom fill color
-            rectangle.fillColor ?
-                this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h) :
-                this.ctx.strokeRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+        // TODO: Draw border with own settings but custom fill color
+        rectangle.fillColor ?
+            this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h) :
+            this.ctx.strokeRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
     }
 
     /**
@@ -573,10 +570,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     /**
      * Draws a line between two points
      */
-    line(p1: TuplePoint | undefined, p2: IPoint) {
-        if (!p1 || !p2) {
-            return;
-        }
+    line(p1: TuplePoint, p2: IPoint) {
         this.ctx.beginPath();
         this.ctx.strokeStyle = this.drawOptions.color;
         this.ctx.lineWidth = this.drawOptions.w;
@@ -591,7 +585,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * @param pxy
      */
     addPoint(pxy: IPoint) {
-        if (!pxy || !this.freeDrawing) {
+        if (!this.freeDrawing) {
             return;
         }
 
@@ -650,12 +644,3 @@ export class DrawCanvasModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {
     }
 }
-
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(DrawCanvasModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "drawCanvas", DrawCanvasComponent);
-export const moduleDefs = [angularJsModule];
