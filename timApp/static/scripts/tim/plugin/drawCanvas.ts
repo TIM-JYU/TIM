@@ -34,6 +34,9 @@ interface IFreeHand {
     drawData: ILineSegment
 }
 
+// TODO: 4th variable for reporting MouseDown, TouchMove etc could be useful for fine-tuning the desired
+//  update behaviour - for now this is called on certain MouseUp/TouchEnd events, and the behaviour
+//  is not optimal for mobile (e.g contained objects register clicks when user just wanted to scroll the page)
 export interface IDrawUpdate {
     x?: number;
     y?: number;
@@ -150,8 +153,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     // optional function to call when image is loaded to let external users know the canvas is ready for use
     @Input() imgLoadCallback?: (arg0: this) => void;
 
-    @Input() undoCallback?: (arg0: this) => void;
-
     // TODO: for now there's no option to draw for e.g filled rectangle with borders, but save format should support it
     drawOptions: IDrawOptions = {
         enabled: true,
@@ -162,12 +163,12 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         fill: false,
     };
 
+    // initial draw options
     @Input() options?: Partial<IDrawOptions>;
 
-    @Input() enabled = true;
     @Input() toolBar = true;
 
-    // optional function to call on clicks or undo events
+    // optional function to call on certain drawing events and clicks
     updateCallback?: (arg0: this, arg1: IDrawUpdate) => void;
 
     // keep track of mousedown while drawing enabled
@@ -202,12 +203,12 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
     ngOnInit() {
         this.drawOptions = {...this.drawOptions, ...this.options};
-        if (!this.enabled) {
-            this.drawOptions.enabled = false;
-        }
         this.setBg();
     }
 
+    /**
+     * Sets up the background image
+     */
     setBg() {
         this.bypassedImage = this.domSanitizer.bypassSecurityTrustResourceUrl(this.bgSource);
     }
@@ -260,7 +261,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * Resizes canvas and calls the image load callback function after image is loaded
      */
     onImgLoad(): void {
-        // this.wrapper.nativeElement.style = "height: 300px";
         this.imgHeight = this.bgImage.nativeElement.clientHeight;
         this.canvas.nativeElement.width = Math.max(this.bgImage.nativeElement.clientWidth, this.wrapper.nativeElement.clientWidth - 50);
         this.canvas.nativeElement.height = Math.max(this.bgImage.nativeElement.clientHeight, this.getWrapperHeight() - 5);
@@ -269,6 +269,12 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         }
     }
 
+    /**
+     * Gets the outer wrapper div's height based on background image and min/max settings
+     * For now we set it to image + 100px to reduce scroll jumping when inner objects (e.g velps) are
+     * near bottom of the canvas
+     * // TODO: if canvas is used without inner objects then this 100px is a waste of screen space
+     */
     getWrapperHeight(): number {
         const min = 300;
         const max = 1024;
@@ -293,7 +299,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     }
 
     /**
-     * Starts the drawing and calls the callback function for clicks
+     * Starts the drawing event
      */
     downEvent(event: Event, e: MouseOrTouch): void {
         const middleOrRightClick = this.middleOrRightClick(e);
@@ -422,14 +428,14 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     };
 
     /**
-     * Draw rectangle during mouse move
+     * Draw a rectangle during mouse move
      */
     drawPreviewRectangle() {
         this.drawRectangle(this.makeObj());
     }
 
     /**
-     * Draw ellipse during mouse move
+     * Draw an ellipse during mouse move
      */
     drawPreviewEllipse() {
         this.drawEllipse(this.makeObj());
@@ -526,7 +532,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     }
 
     /**
-     * Draws a ellipse (or ellipse)
+     * Draws an ellipse
      * @param ellipse in IRectangleOrEllipse format
      */
     drawEllipse(ellipse: IRectangleOrEllipse) {
@@ -594,13 +600,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         if (this.drawOptions.drawType != DrawType.Line) {
             this.prevPos = p;
         }
-    }
-
-    // TODO Check if redundant
-    startSegment(pxy: IPoint) {
-        const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
-        this.freeDrawing = {lines: [p]};
-        this.prevPos = p;
     }
 
     /**
