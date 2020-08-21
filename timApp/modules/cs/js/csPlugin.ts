@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/tslint/config,no-underscore-dangle */
+/* eslint-disable @typescript-eslint/tslint/config,no-underscore-dangle */
 import {
         Component,
         ViewChild,
@@ -38,7 +38,7 @@ import {Set, OrderedSet} from "./util/set";
 
 // js-parsons is unused; just declare a stub to make TS happy
 declare class ParsonsWidget {
-    static _graders: any;
+    static _graders: unknown;
 
     constructor(data: unknown);
 
@@ -290,14 +290,6 @@ function removeXML(s: string) {
     return s;
 }
 
-function iotaPermutation(n: number) {
-    const permutation = [];
-    for (let i = 0; i < n; i++) {
-        permutation.push(i);
-    }
-    return permutation;
-}
-
 function commentTrim(s: string) {
     if (!s || s === "//") {
         return "";
@@ -307,40 +299,6 @@ function commentTrim(s: string) {
         return s;
     }
     return s.substr(3);
-}
-
-function insertAtCaret(txtarea: HTMLTextAreaElement, text: string) {
-    const doc = document as any;
-    const scrollPos = txtarea.scrollTop;
-    let strPos = 0;
-    const br = ((txtarea.selectionStart || txtarea.selectionStart === 0) ?
-        "ff" : (doc.selection ? "ie" : false));
-    if (br === "ie") {
-        txtarea.focus();
-        const range = doc.selection.createRange();
-        range.moveStart("character", -txtarea.value.length);
-        strPos = range.text.length;
-    } else if (br === "ff") {
-        strPos = txtarea.selectionStart;
-    }
-
-    const front = (txtarea.value).substring(0, strPos);
-    const back = (txtarea.value).substring(strPos, txtarea.value.length);
-    txtarea.value = front + text + back;
-    strPos = strPos + text.length;
-    if (br === "ie") {
-        txtarea.focus();
-        const range = doc.selection.createRange();
-        range.moveStart("character", -txtarea.value.length);
-        range.moveStart("character", strPos);
-        range.moveEnd("character", 0);
-        range.select();
-    } else if (br === "ff") {
-        txtarea.selectionStart = strPos;
-        txtarea.selectionEnd = strPos;
-        txtarea.focus();
-    }
-    txtarea.scrollTop = scrollPos;
 }
 
 function doVariables(v: string | undefined, name: string) {
@@ -526,7 +484,7 @@ const GitDefaultsMarkup = t.partial({
     glob: t.string,
     cache: t.number,
     apiProtocol: t.string,
-    librarySpecific: t.any,
+    librarySpecific: t.unknown,
 });
 
 const GitMarkup = t.partial({
@@ -618,7 +576,7 @@ const CsMarkupOptional = t.partial({
     borders: withDefault(t.boolean, true),
     iframeopts: t.string,
     count: CountType,
-    hide: t.any,
+    hide: t.partial({wrap: t.boolean, changed: t.boolean}),
     savedText: t.string,
     rootPath: t.string,
     masterPath: t.string,
@@ -1608,7 +1566,7 @@ ${fhtml}
         }
 
         this.vctrl = vctrlInstance!;
-        this.hide = this.attrsall.markup.hide || {};
+        this.hide = this.attrsall.markup.hide ?? {};
        //  if ( typeof this.markup.borders !== 'undefined' ) this.markup.borders = true;
         this.buttons = this.getTemplateButtons();
         const rt = this.rtype;
@@ -2150,24 +2108,6 @@ ${fhtml}
         return ret;
     }
 
-    insertAtCursor(myField: HTMLTextAreaElement, myValue: string) {
-        // IE support
-        const doc = document as any;
-        if (doc.selection) {
-            myField.focus();
-            const sel = doc.selection.createRange();
-            sel.text = myValue;
-        } else if (myField.selectionStart || myField.selectionStart === 0) {
-            const startPos = myField.selectionStart;
-            const endPos = myField.selectionEnd;
-            myField.value = myField.value.substring(0, startPos) +
-                myValue +
-                myField.value.substring(endPos, myField.value.length);
-        } else {
-            myField.value += myValue;
-        }
-    }
-
     // Returns the visible index for next item and the desired size
     getVid(dw?: number, dh?: number): Vid {
         taunoNr++;
@@ -2232,7 +2172,7 @@ ${fhtml}
             print(s);
             buf += "\r\n";
         };
-        const printArray = (array: any[]) => {
+        const printArray = (array: unknown[]) => {
             $.each(array, (i, item) => {
                 println("    " + JSON.stringify(item) +
                     (i + 1 < array.length ? "," : ""));
