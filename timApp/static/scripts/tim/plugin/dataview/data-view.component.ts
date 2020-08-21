@@ -419,82 +419,83 @@ enum EditorPosition {
 @Component({
     selector: "tim-data-view",
     changeDetection: ChangeDetectionStrategy.OnPush,
-    host: {
-        class: "data-view",
-    },
     template: `
-        <div class="header" #headerContainer>
-            <table [ngStyle]="tableStyle" #headerTable>
-                <thead #headerIdBody></thead>
-                <tbody #filterBody></tbody>
-            </table>
-        </div>
-        <ng-container *ngIf="fixedColumnCount > 0">
-            <div class="fixed-col-header" #fixedColHeaderContainer>
-                <table [ngStyle]="tableStyle" #fixedColHeaderTable>
-                    <thead #fixedColHeaderIdBody></thead>
-                    <tbody #fixedColFilterBody></tbody>
+        <div class="loader" *ngIf="isLoading"></div>
+        <div class="data-view" [class.virtual]="isVirtual" [style.width]="tableMaxWidth" #dataViewContainer>
+            <div class="header" #headerContainer>
+                <table [ngStyle]="tableStyle" #headerTable>
+                    <thead #headerIdBody></thead>
+                    <tbody #filterBody></tbody>
                 </table>
             </div>
-            <div class="fixed-col-data" [style.maxHeight]="tableMaxHeight" #fixedDataContainer>
-                <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
-                       #fixedDataTable>
-                    <tbody class="content" #fixedDataBody></tbody>
+            <ng-container *ngIf="fixedColumnCount > 0">
+                <div class="fixed-col-header" #fixedColHeaderContainer>
+                    <table [ngStyle]="tableStyle" #fixedColHeaderTable>
+                        <thead #fixedColHeaderIdBody></thead>
+                        <tbody #fixedColFilterBody></tbody>
+                    </table>
+                </div>
+                <div class="fixed-col-data" [style.maxHeight]="tableMaxHeight" #fixedDataContainer>
+                    <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
+                           #fixedDataTable>
+                        <tbody class="content" #fixedDataBody></tbody>
+                    </table>
+                    <ng-container *ngIf="editorInFixedColumn">
+                        <ng-container *ngTemplateOutlet="editor"></ng-container>
+                    </ng-container>
+                </div>
+            </ng-container>
+            <div class="summary">
+                <table [ngStyle]="tableStyle" #summaryTable>
+                    <thead>
+                    <tr>
+                        <td [style.width]="idHeaderCellWidth"
+                            class="nrcolumn totalnr"
+                            title="Click to show all"
+                            (click)="clearFilters()"
+                            #allVisibleCell>{{totalRows}}</td>
+                        <td class="cbColumn" *ngIf="!this.modelProvider.isPreview()">
+                            <input [(ngModel)]="cbAllVisibleRows"
+                                   (ngModelChange)="setAllVisible()"
+                                   type="checkbox"
+                                   title="Check for all visible rows">
+                        </td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td [style.width]="idHeaderCellWidth" class="nrcolumn totalnr">
+                            <ng-container *ngIf="totalRows != visibleRows">{{visibleRows}}</ng-container>
+                        </td>
+                        <td class="cbColumn" *ngIf="!this.modelProvider.isPreview()">
+                            <input type="checkbox"
+                                   title="Check to show only checked rows"
+                                   [(ngModel)]="cbFilter"
+                                   (ngModelChange)="setFilterSelected()">
+                        </td>
+                    </tr>
+                    </tbody>
                 </table>
-                <ng-container *ngIf="editorInFixedColumn">
+            </div>
+            <div class="ids" #idContainer>
+                <table [ngStyle]="tableStyle" #idTable>
+                    <tbody #idBody></tbody>
+                </table>
+            </div>
+            <div class="data" [style.maxHeight]="tableMaxHeight" #mainDataContainer>
+                <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
+                       #mainDataTable>
+                    <tbody class="content" #mainDataBody></tbody>
+                </table>
+                <ng-container *ngIf="editorInData">
                     <ng-container *ngTemplateOutlet="editor"></ng-container>
                 </ng-container>
             </div>
-        </ng-container>
-        <div class="summary">
-            <table [ngStyle]="tableStyle" #summaryTable>
-                <thead>
-                <tr>
-                    <td [style.width]="idHeaderCellWidth"
-                        class="nrcolumn totalnr"
-                        title="Click to show all"
-                        (click)="clearFilters()"
-                        #allVisibleCell>{{totalRows}}</td>
-                    <td class="cbColumn" *ngIf="!this.modelProvider.isPreview()">
-                        <input [(ngModel)]="cbAllVisibleRows"
-                               (ngModelChange)="setAllVisible()"
-                               type="checkbox"
-                               title="Check for all visible rows">
-                    </td>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td [style.width]="idHeaderCellWidth" class="nrcolumn totalnr">
-                        <ng-container *ngIf="totalRows != visibleRows">{{visibleRows}}</ng-container>
-                    </td>
-                    <td class="cbColumn" *ngIf="!this.modelProvider.isPreview()">
-                        <input type="checkbox"
-                               title="Check to show only checked rows"
-                               [(ngModel)]="cbFilter"
-                               (ngModelChange)="setFilterSelected()">
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <ng-template #editor>
+                <ng-content></ng-content>
+            </ng-template>
         </div>
-        <div class="ids" #idContainer>
-            <table [ngStyle]="tableStyle" #idTable>
-                <tbody #idBody></tbody>
-            </table>
-        </div>
-        <div class="data" [style.maxHeight]="tableMaxHeight" #mainDataContainer>
-            <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
-                   #mainDataTable>
-                <tbody class="content" #mainDataBody></tbody>
-            </table>
-            <ng-container *ngIf="editorInData">
-                <ng-container *ngTemplateOutlet="editor"></ng-container>
-            </ng-container>
-        </div>
-        <ng-template #editor>
-            <ng-content></ng-content>
-        </ng-template>
+
     `,
     styleUrls: ["./data-view.component.scss"],
 })
@@ -509,13 +510,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() tableMaxHeight: string = "2000em";
     @Input() tableMaxWidth: string = "max-content";
     @Input() fixedColumnCount: number = 0;
+    isLoading = true;
     totalRows: number = 0;
     visibleRows: number = 0;
     idHeaderCellWidth: string = "";
     cbAllVisibleRows = false;
     cbFilter = false;
-    @HostBinding("class.virtual") private isVirtual: boolean = false;
-    @HostBinding("style.width") private dataViewWidth = "100%";
+    // @HostBinding("class.virtual")
+    isVirtual: boolean = false;
+    // @HostBinding("style.width")
+    dataViewWidth = "100%";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody!: ElementRef<HTMLTableSectionElement>;
@@ -535,6 +539,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @ViewChild("fixedDataContainer") private fixedDataContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("summaryTable") private summaryTable!: ElementRef<HTMLTableElement>;
     @ViewChild("allVisibleCell") private allVisibleCell!: ElementRef<HTMLTableDataCellElement>;
+    @ViewChild("dataViewContainer") private dataViewContainer!: ElementRef<HTMLDivElement>;
     private scrollDiff: TableArea = {vertical: 0, horizontal: 0};
     private cellValueCache: Record<number, string[]> = {};
     private dataTableCache!: TableDOMCache;
@@ -560,7 +565,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     // endregion
 
-    constructor(private r2: Renderer2, private zone: NgZone, private componentRef: ElementRef<HTMLElement>, private cdr: ChangeDetectorRef) {
+    constructor(private r2: Renderer2, private zone: NgZone, private cdr: ChangeDetectorRef) {
     }
 
     get editorInData() {
@@ -582,7 +587,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const widths = [
             this.mainDataContainer.nativeElement.offsetWidth,
             this.mainDataBody.nativeElement.offsetWidth,
-            this.componentRef.nativeElement.offsetWidth
+            this.dataViewContainer.nativeElement.offsetWidth
             - this.summaryTable.nativeElement.offsetWidth
             - (this.fixedDataContainer?.nativeElement.offsetWidth ?? 0),
         ].filter((w) => w != 0);
@@ -1319,7 +1324,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private* buildTable(): Generator {
         // Visually hide the table to prevent any flickering owing to size syncing
-        this.componentRef.nativeElement.style.visibility = "hidden";
+        this.dataViewContainer.nativeElement.style.visibility = "hidden";
         // Sometimes table size style is not fully applied yet (e.g. open editor + click save quickly)
         // So we wait for a single frame to ensure DOM is laid out
         yield;
@@ -1327,7 +1332,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         for (const _ of build) {
             yield;
         }
-        this.componentRef.nativeElement.style.visibility = "visible";
+        this.dataViewContainer.nativeElement.style.visibility = "visible";
+        this.isLoading = false;
+        this.cdr.detectChanges();
     }
 
     private* buildPreviewTable() {
@@ -1342,6 +1349,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.setTableSizes();
         this.viewport = this.getViewport();
         this.updateTableTransform();
+        this.updateHeaderTableSizes();
+        yield;
 
         this.buildColumnHeaderTable();
         this.buildRowHeaderTable();
@@ -1396,7 +1405,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 whiteSpace: "nowrap",
                 visibility: "hidden",
             });
-            this.componentRef.nativeElement.appendChild(this.sizeContainer);
+            this.dataViewContainer.nativeElement.appendChild(this.sizeContainer);
         }
         const colWidth = this.getDataColumnWidth(column);
         this.sizeContentContainer.style.minWidth = `${colWidth}px`;
