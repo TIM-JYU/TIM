@@ -990,8 +990,8 @@ export class CsController extends CsBase implements ITimComponent {
         }
         this.editor.placeholder = this.placeholder;
         this.editor.mayAddFiles = this.markup.mayAddFiles;
-        if (this.markup?.allowedPaths != "*") {
-            this.editor.allowedPaths = this.editor.files.map((f) => f.path).concat(this.markup?.allowedPaths ?? []);
+        if (this.markup.allowedPaths != "*") {
+            this.editor.allowedPaths = this.editor.files.map((f) => f.path).concat(this.markup.allowedPaths ?? []);
         }
     }
 
