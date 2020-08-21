@@ -24,7 +24,7 @@ import {
     markAsUsed,
     Require,
     scrollToElement,
-    to
+    to,
 } from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
