@@ -157,7 +157,7 @@ def get_fields_and_users(
                 continue  # TODO: study how to give just warning from missing access, extra return string?
         ugroups.append(group)
 
-    if not ugroups:  # if no access, give at least own group
+    if not ugroups and not requested_groups.include_all_answered:  # if no access, give at least own group
         ugroups.append(current_user.get_personal_group())
     groups = ugroups
 
