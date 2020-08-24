@@ -103,6 +103,7 @@ export function isCoordWithinDrawing(drawing: DrawObject[], x: number, y: number
 
 // TODO: Repeated from imagex, move
 export function drawFreeHand(ctx: CanvasRenderingContext2D, dr: ILineSegment[]): void {
+    ctx.lineJoin = "round";
     for (const seg of dr) {
         if (seg.lines.length < 2) {
             continue;
@@ -216,6 +217,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
     ngAfterViewInit() {
         this.ctx = this.canvas.nativeElement.getContext("2d")!;
+        this.ctx.lineCap = "round";
         this.canvas.nativeElement.addEventListener("mousedown", (event) => {
             this.downEvent(event, event);
         });
@@ -549,6 +551,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      */
     drawRectangle(rectangle: IRectangleOrEllipse) {
         // TODO: Draw border with own settings but custom fill color
+        this.ctx.lineJoin = "miter";
         rectangle.fillColor ?
             this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h) :
             this.ctx.strokeRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
@@ -624,6 +627,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      * @param data Drawing to draw
      */
     setPersistentDrawData(data: DrawObject[]): void {
+        this.ctx.lineCap = "round";
         this.persistentDrawData = data;
         this.redrawAll();
     }
