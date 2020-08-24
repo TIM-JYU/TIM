@@ -83,35 +83,41 @@ export enum DrawType {
                 Fill</label>
             </span>
                 <span *ngIf="drawVisibleOptions.w">
+                    <span class="noWrap" >
                     Width:
-                    <input
-                            id="freeWidth"
-                            size="2"
-                            type="number"
-                            [(ngModel)]="drawSettings.w"/>
+                    <input class="width"
+                           id="freeWidth"
+                           size="2"
+                           type="number"
+                           [(ngModel)]="drawSettings.w"/>
+                    </span>
                 </span>
                 <span *ngIf="drawVisibleOptions.opacity">
+                    <span class="noWrap" >
                     Opacity:
-                    <input
+                    <input class="opacity"
                             id="opacity"
                             size="3"
                             type="number"
                             step="0.1" min="0" max="1"
                             [(ngModel)]="drawSettings.opacity"
                             (ngModelChange)="updateVisuals()"/>
+                    </span>
                 </span>
-            <span class="colorPicker" *ngIf="drawVisibleOptions.color">
-            <input #colorInput colorpicker="hex"
-                   type="text"
-                   [(ngModel)]="drawSettings.color" (ngModelChange)="setColor($event)" size="4"/><span
-                    style="background-color: red; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setColor('#f00')">R</span><span
-                    style="background-color: blue; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setColor('#00f')">B</span><span
-                    style="background-color: yellow; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setColor('#ff0')">Y</span><span
-                    style="background-color: #0f0; display: table-cell; text-align: center; width: 30px;"
-                    (click)="setColor('#0f0')">G</span>
+            <span *ngIf="drawVisibleOptions.color">
+                <span class="noWrap">
+                    <input #colorInput colorpicker="hex"
+                           type="text"
+                           [(ngModel)]="drawSettings.color" (ngModelChange)="setColor($event)" size="4"/><span
+                        style="background-color: red; display: table-cell; text-align: center; width: 30px;"
+                        (click)="setColor('#f00')">R</span><span
+                        style="background-color: blue; display: table-cell; text-align: center; width: 30px;"
+                        (click)="setColor('#00f')">B</span><span
+                        style="background-color: yellow; display: table-cell; text-align: center; width: 30px;"
+                        (click)="setColor('#ff0')">Y</span><span
+                        style="background-color: #0f0; display: table-cell; text-align: center; width: 30px;"
+                        (click)="setColor('#0f0')">G</span>
+                    </span>
                 </span>
              <a href="" *ngIf="undo" (click)="toolbarUndo($event)">Undo</a>
         </span>

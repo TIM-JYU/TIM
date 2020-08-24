@@ -6,8 +6,16 @@
     margin-left: 0.8em;
   }
 
-  .colorPicker {
-    white-space: nowrap;
+  .noWrap {
+    display: inline-table;
+  }
+
+  .width {
+    width: 3em;
+  }
+
+  .opacity {
+    width: 4em;
   }
 }
 
