@@ -2800,8 +2800,8 @@ ${fhtml}
     template: `
 <div [ngClass]="{'csRunDiv': borders}" class="type-{{rtype}}">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHTML]="header"></h4>
-    <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
+    <h4 *ngIf="header" [innerHTML]="header | purify"></h4>
+    <p *ngIf="stem" class="stem" [innerHTML]="stem | purify"></p>
     <div *ngIf="isTauno">
         <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
         <iframe *ngIf="iframesettings"
@@ -3029,7 +3029,7 @@ ${fhtml}
         </p>
         <iframe width="800" height="600" [src]="docURL" target="csdocument" allowfullscreen></iframe>
     </div>
-    <p class="footer" [innerHTML]="footer"></p>
+    <p class="footer" [innerHTML]="footer | purify"></p>
 </div>`,
 })
 export class CsRunnerComponent extends CsController {
