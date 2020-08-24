@@ -151,7 +151,7 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
             <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
             </canvas>
         </div>
-        <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions" [undo]="undo"></draw-toolbar>
+        <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions" (drawSettingsChange)="saveSettings()" [undo]="undo"></draw-toolbar>
     `,
 })
 export class DrawCanvasComponent implements OnInit, OnChanges {
@@ -211,12 +211,19 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     // identifier e.g for associating specific canvas with specific answer review
     public id: number = 0;
 
+    @Input() settingsId: string = "";
+
     constructor(el: ElementRef<HTMLElement>, private domSanitizer: DomSanitizer) {
     }
 
 
     ngOnInit() {
-        this.drawOptions = {...this.drawOptions, ...this.options};
+        const prevSettings = window.localStorage.getItem("drawCanvasOptions");
+        if (prevSettings) {
+            this.drawOptions = JSON.parse(prevSettings) as IDrawOptions;
+        } else {
+            this.drawOptions = {...this.drawOptions, ...this.options};
+        }
         this.setBg();
     }
 
@@ -264,6 +271,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         if (changes.bgSource) {
             this.setBg();
         }
+    }
+
+    saveSettings() {
+        window.localStorage.setItem("drawCanvasOptions", JSON.stringify(this.drawOptions));
     }
 
     /**

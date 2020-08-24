@@ -77,6 +77,7 @@ export class ReviewController {
     public selectedElement?: Element;
     private selectionIsDrawing = false; // whether the review area is for drawn annotations or not
     private selectedCanvas?: DrawCanvasComponent; // drawn annotation area
+    private drawMinDimensions = 10;
     public item: IItem;
     private annotations: Annotation[];
     public zIndex: number;
@@ -289,7 +290,7 @@ export class ReviewController {
                 const targ = par.querySelector(".canvasObjectContainer");
                 if (targ) {
                     // const drawdata = JSON.parse(a.draw_data) as DrawObject[];
-                    const rect = getDrawingDimensions(a.draw_data, 10);
+                    const rect = getDrawingDimensions(a.draw_data, this.drawMinDimensions);
                     const borderElement = this.createPictureBorder(rect.w, rect.h);
                     targ.appendChild(borderElement);
                     const ele = this.compilePopOver(targ, borderElement, a, AnnotationAddReason.LoadingExisting) as HTMLElement;
@@ -693,7 +694,7 @@ export class ReviewController {
                 return;
             }
             let corners = {x: 0, y: 0, h: 0, w: 0};
-            corners = this.selectedCanvas.getCurrentDrawingDimensions(10);
+            corners = this.selectedCanvas.getCurrentDrawingDimensions(this.drawMinDimensions);
             const borderElement = this.createPictureBorder(corners.w, corners.h);
             let parelement: Element | null = this.selectedElement;
             while (parelement && !parelement.hasAttribute("t")) {
@@ -1252,7 +1253,7 @@ export class ReviewController {
                 if (!a.draw_data) {
                     continue;
                 }
-                if (isCoordWithinDrawing(a.draw_data, updateArgs.x, updateArgs.y, 10)) {
+                if (isCoordWithinDrawing(a.draw_data, updateArgs.x, updateArgs.y, this.drawMinDimensions)) {
                     const tanncomp = this.vctrl.getAnnotation(`t${a.id}`);
                     if (!tanncomp) {
                         console.log("couldn't find annotation via vctrl");

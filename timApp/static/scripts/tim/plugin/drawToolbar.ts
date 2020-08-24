@@ -1,6 +1,7 @@
-import {AfterViewInit, ApplicationRef, Component, DoBootstrap, ElementRef, Input, NgModule, OnInit, ViewChild} from "@angular/core";
+import {AfterViewInit, ApplicationRef, Component, DoBootstrap, ElementRef, EventEmitter, Input, NgModule, OnInit, Output, ViewChild} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
+import {Annotation} from "tim/velp/velptypes";
 
 
 export interface IDrawVisibleOptions {
@@ -39,7 +40,7 @@ export enum DrawType {
         <label
                 *ngIf="drawVisibleOptions.enabled"><input type="checkbox" name="enabled" value="true"
                                                           [(ngModel)]="drawSettings.enabled"
-                                                          (ngModelChange)="updateVisuals()">
+                                                          (ngModelChange)="onSettingsChanged()">
             Draw</label>
         <span class="drawOptions" [hidden]="!drawSettings.enabled">
             <span *ngIf="drawVisibleOptions.freeHand">
@@ -47,7 +48,8 @@ export enum DrawType {
                 <input type="radio"
                        name="drawType"
                        [value]="0"
-                       [(ngModel)]="drawSettings.drawType">
+                       [(ngModel)]="drawSettings.drawType"
+                       (ngModelChange)="onSettingsChanged()">
                 FreeHand</label>
             </span>
             <span *ngIf="drawVisibleOptions.lineMode">
@@ -55,23 +57,28 @@ export enum DrawType {
                 <input type="radio"
                        name="drawType"
                        [value]="1"
-                       [(ngModel)]="drawSettings.drawType">
+                       [(ngModel)]="drawSettings.drawType"
+                       (ngModelChange)="onSettingsChanged()">
                 Line</label>
             </span>
-            <span *ngIf="drawVisibleOptions.rectangleMode">
+            <span *ngIf="drawVisibleOptions.rectangleMode"
+                  (ngModelChange)="onSettingsChanged()">
                 <label>
                 <input type="radio"
                        name="drawType"
                        [value]="2"
-                       [(ngModel)]="drawSettings.drawType">
+                       [(ngModel)]="drawSettings.drawType"
+                       (ngModelChange)="onSettingsChanged()">
                 Rectangle</label>
             </span>
-            <span *ngIf="drawVisibleOptions.ellipseMode">
+            <span *ngIf="drawVisibleOptions.ellipseMode"
+                  (ngModelChange)="onSettingsChanged()">
                 <label>
                 <input type="radio"
                        name="drawType"
                        [value]="3"
-                       [(ngModel)]="drawSettings.drawType">
+                       [(ngModel)]="drawSettings.drawType"
+                       (ngModelChange)="onSettingsChanged()">
                 Ellipse</label>
             </span>
             <span *ngIf="drawVisibleOptions.fill">
@@ -79,29 +86,31 @@ export enum DrawType {
                 <input type="checkbox"
                        name="fill"
                        value="true"
-                       [(ngModel)]="drawSettings.fill">
+                       [(ngModel)]="drawSettings.fill"
+                       (ngModelChange)="onSettingsChanged()">
                 Fill</label>
             </span>
                 <span *ngIf="drawVisibleOptions.w">
-                    <span class="noWrap" >
+                    <span class="noWrap">
                     Width:
                     <input class="width"
                            id="freeWidth"
                            size="2"
                            type="number"
-                           [(ngModel)]="drawSettings.w"/>
+                           [(ngModel)]="drawSettings.w"
+                           (ngModelChange)="onSettingsChanged()"/>
                     </span>
                 </span>
                 <span *ngIf="drawVisibleOptions.opacity">
-                    <span class="noWrap" >
+                    <span class="noWrap">
                     Opacity:
                     <input class="opacity"
-                            id="opacity"
-                            size="3"
-                            type="number"
-                            step="0.1" min="0" max="1"
-                            [(ngModel)]="drawSettings.opacity"
-                            (ngModelChange)="updateVisuals()"/>
+                           id="opacity"
+                           size="3"
+                           type="number"
+                           step="0.1" min="0" max="1"
+                           [(ngModel)]="drawSettings.opacity"
+                           (ngModelChange)="onSettingsChanged()"/>
                     </span>
                 </span>
             <span *ngIf="drawVisibleOptions.color">
@@ -145,12 +154,18 @@ export class DrawToolbarComponent implements AfterViewInit {
         fill: true,
         drawType: DrawType.Freehand,
     };
+    @Output() drawSettingsChange = new EventEmitter<IDrawOptions>();
 
     @ViewChild("colorInput") colorInput?: ElementRef<HTMLInputElement>;
 
     @Input() public undo?: () => void;
 
     ngAfterViewInit() {
+        this.updateVisuals();
+    }
+
+    onSettingsChanged() {
+        this.drawSettingsChange.emit();
         this.updateVisuals();
     }
 
@@ -166,8 +181,8 @@ export class DrawToolbarComponent implements AfterViewInit {
     }
 
     setColor(color: string) {
-        this.setInputBackgroundColor(color);
         this.drawSettings.color = color;
+        this.onSettingsChanged();
     }
 
     setInputBackgroundColor(color: string) {
