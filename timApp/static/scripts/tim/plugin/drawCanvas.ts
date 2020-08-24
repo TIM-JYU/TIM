@@ -50,7 +50,7 @@ export type DrawObject = IRectangle | IEllipse | IFreeHand;
  * Gets dimensions (start coordinates, width, height) from given drawing
  * @param drawing DrawObject[] to check
  */
-export function getDrawingDimensions(drawing: DrawObject[]): { x: number, y: number, w: number, h: number } {
+export function getDrawingDimensions(drawing: DrawObject[], minSize = 0): { x: number, y: number, w: number, h: number } {
     let x = Number.MAX_SAFE_INTEGER;
     let y = Number.MAX_SAFE_INTEGER;
     let w = 0;
@@ -58,20 +58,22 @@ export function getDrawingDimensions(drawing: DrawObject[]): { x: number, y: num
     for (const obj of drawing) {
         if (obj.type == "freehand") {
             for (const line of obj.drawData.lines) {
-                if (x == null || x > line[0]) {
-                    x = line[0];
+                const width = obj.drawData.w ? numOrStringToNumber(obj.drawData.w) / 2 : 0;
+                if (x == null || x > line[0] - width) {
+                    x = line[0] - width;
                 }
-                if (y == null || y > line[1]) {
-                    y = line[1];
+                if (y == null || y > line[1] - width) {
+                    y = line[1] - width;
                 }
-                if (w < line[0]) {
-                    w = line[0];
+                if (w < line[0] + width) {
+                    w = line[0] + width;
                 }
-                if (h < line[1]) {
-                    h = line[1];
+                if (h < line[1] + width) {
+                    h = line[1] + width;
                 }
             }
         } else {
+            // TODO: for now shapes don't start in pixel-perfect locations so lineWidth is currently ignored
             const shape = obj.drawData;
             if (x > shape.x) {
                 x = shape.x;
@@ -87,6 +89,14 @@ export function getDrawingDimensions(drawing: DrawObject[]): { x: number, y: num
             }
         }
     }
+    if (w - x < minSize) {
+        x = Math.max(x - minSize, 0);
+        w = w + minSize;
+    }
+    if (h - y < minSize) {
+        y = Math.max(y - minSize, 0);
+        h = h + minSize;
+    }
     return {x: x, y: y, w: w - x, h: h - y};
 }
 
@@ -96,9 +106,12 @@ export function getDrawingDimensions(drawing: DrawObject[]): { x: number, y: num
  * @param x start coordinate
  * @param y start coordinate
  */
-export function isCoordWithinDrawing(drawing: DrawObject[], x: number, y: number): boolean {
+export function isCoordWithinDrawing(drawing: DrawObject[], x: number, y: number, minSize = 0): boolean {
     const dimensions = getDrawingDimensions(drawing);
-    return (x > dimensions.x && x < dimensions.x + dimensions.w && y > dimensions.y && y < dimensions.y + dimensions.h);
+    const horizontalPadding = dimensions.w < minSize ? minSize : 0;
+    const verticalPadding = dimensions.h < minSize ? minSize : 0;
+    return (x > dimensions.x - horizontalPadding && x < dimensions.x + dimensions.w + horizontalPadding
+        && y > dimensions.y - verticalPadding && y < dimensions.y + dimensions.h + verticalPadding);
 }
 
 // TODO: Repeated from imagex, move
@@ -609,8 +622,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
     /**
      * Returns dimensions (start coordinate, max width/height) on current drawing progress
      */
-    getCurrentDrawingDimensions(): { x: number, y: number, w: number, h: number } {
-        return getDrawingDimensions(this.getDrawing());
+    getCurrentDrawingDimensions(minSize = 0): { x: number, y: number, w: number, h: number } {
+        return getDrawingDimensions(this.getDrawing(), minSize);
     }
 
     /**
