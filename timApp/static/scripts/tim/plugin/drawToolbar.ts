@@ -1,4 +1,4 @@
-import {ApplicationRef, Component, DoBootstrap, ElementRef, Input, NgModule, OnInit, ViewChild} from "@angular/core";
+import {AfterViewInit, ApplicationRef, Component, DoBootstrap, ElementRef, Input, NgModule, OnInit, ViewChild} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 
@@ -118,7 +118,7 @@ export enum DrawType {
     `,
     styleUrls: ["./draw-toolbar.component.scss"],
 })
-export class DrawToolbarComponent implements OnInit {
+export class DrawToolbarComponent implements AfterViewInit {
     @Input() drawVisibleOptions: IDrawVisibleOptions = {
         enabled: true,
         freeHand: true,
@@ -144,7 +144,7 @@ export class DrawToolbarComponent implements OnInit {
 
     @Input() public undo?: () => void;
 
-    ngOnInit() {
+    ngAfterViewInit() {
         this.updateVisuals();
     }
 
