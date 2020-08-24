@@ -965,6 +965,10 @@ choices:
         # Test User 3 is not duplicated in the list
         run_js(d2, expected_names)
 
+        # Test that current user is not visible if he hasn't answered
+        d3 = make_doc('"*"')
+        run_js(d3, '')
+
 
 class JsRunnerGroupTest(JsRunnerTestBase):
     def test_jsrunner_group(self):
