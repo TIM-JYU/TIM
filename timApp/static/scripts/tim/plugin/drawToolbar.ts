@@ -97,7 +97,7 @@ export enum DrawType {
                     Width:
                     <input
                            id="freeWidth"
-                           size="3"
+                           size="2"
                            type="number"
                            [(ngModel)]="drawSettings.w"/>
                 </span>
