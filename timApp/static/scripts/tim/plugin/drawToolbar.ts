@@ -1,17 +1,5 @@
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    EventEmitter,
-    Input,
-    NgModule,
-    OnInit,
-    Output,
-    StaticProvider,
-} from "@angular/core";
+import {ApplicationRef, Component, DoBootstrap, ElementRef, Input, NgModule, OnInit, ViewChild} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {CommonModule} from "@angular/common";
 
 
@@ -50,8 +38,9 @@ export enum DrawType {
     template: `
         <label
                 *ngIf="drawVisibleOptions.enabled"><input type="checkbox" name="enabled" value="true"
-                                                               [(ngModel)]="drawSettings.enabled">
-        Draw</label>
+                                                          [(ngModel)]="drawSettings.enabled"
+                                                          (ngModelChange)="updateVisuals()">
+            Draw</label>
         <span class="drawOptions" [hidden]="!drawSettings.enabled">
             <span *ngIf="drawVisibleOptions.freeHand">
                 <label>
@@ -96,10 +85,10 @@ export enum DrawType {
                 <span *ngIf="drawVisibleOptions.w">
                     Width:
                     <input
-                           id="freeWidth"
-                           size="2"
-                           type="number"
-                           [(ngModel)]="drawSettings.w"/>
+                            id="freeWidth"
+                            size="2"
+                            type="number"
+                            [(ngModel)]="drawSettings.w"/>
                 </span>
                 <span *ngIf="drawVisibleOptions.opacity">
                     Opacity:
@@ -108,12 +97,12 @@ export enum DrawType {
                             size="3"
                             type="number"
                             step="0.1" min="0" max="1"
-                            [(ngModel)]="drawSettings.opacity"/>
+                            [(ngModel)]="drawSettings.opacity"
+                            (ngModelChange)="updateVisuals()"/>
                 </span>
             <span class="colorPicker" *ngIf="drawVisibleOptions.color">
-            <input colorpicker="hex"
+            <input #colorInput colorpicker="hex"
                    type="text"
-                   [ngStyle]="{'background-color': drawSettings.color}"
                    [(ngModel)]="drawSettings.color" (ngModelChange)="setColor($event)" size="4"/><span
                     style="background-color: red; display: table-cell; text-align: center; width: 30px;"
                     (click)="setColor('#f00')">R</span><span
@@ -151,9 +140,16 @@ export class DrawToolbarComponent implements OnInit {
         drawType: DrawType.Freehand,
     };
 
+    @ViewChild("colorInput") colorInput?: ElementRef<HTMLInputElement>;
+
     @Input() public undo?: () => void;
 
     ngOnInit() {
+        this.updateVisuals();
+    }
+
+    updateVisuals() {
+        this.setInputBackgroundColor(this.drawSettings.color);
     }
 
     public toolbarUndo(e?: Event) {
@@ -164,8 +160,20 @@ export class DrawToolbarComponent implements OnInit {
     }
 
     setColor(color: string) {
+        this.setInputBackgroundColor(color);
         this.drawSettings.color = color;
-        // this.drawSettingsChange.emit(this.drawSettings);
+    }
+
+    setInputBackgroundColor(color: string) {
+        if (this.colorInput) {
+            this.colorInput.nativeElement.style.backgroundColor = color;
+            const prev = window.getComputedStyle(this.colorInput.nativeElement).backgroundColor;
+            if (prev.includes("rgb(")) {
+                this.colorInput.nativeElement.style.backgroundColor =
+                    prev.replace("rgb", "rgba")
+                        .replace(")", `, ${this.drawSettings.opacity})`);
+            }
+        }
     }
 }
 
