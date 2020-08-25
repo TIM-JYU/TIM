@@ -412,7 +412,7 @@ enum EditorPosition {
     FixedColumn,
 }
 
-const SLOW_SIZE_MEASURE_THRESHOLD = 0;
+const SLOW_SIZE_MEASURE_THRESHOLD = 3;
 
 /**
  * A DOM-based data view component that supports virtual scrolling.
