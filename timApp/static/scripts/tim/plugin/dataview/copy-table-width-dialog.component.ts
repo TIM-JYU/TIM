@@ -35,7 +35,7 @@ export class CopyTableWidthDialogComponent extends AngularDialogComponent<ICopyT
 
     ngOnInit(): void {
         this.settingYaml = "  columnWidths:\n";
-        this.settingYaml += this.data.columnWidths.map((val, i) => `    ${i}: ${val}`).filter((v) => v !== undefined).join("\n");
+        this.settingYaml += this.data.columnWidths.map((val, i) => `    '${i}': ${val}`).filter((v) => v !== undefined).join("\n");
     }
 
     copyText() {
