@@ -8,7 +8,6 @@ import {
     OnChanges,
     OnInit,
     SimpleChanges,
-    StaticProvider,
     ViewChild,
 } from "@angular/core";
 import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
@@ -16,8 +15,6 @@ import {DrawToolbarModule, DrawType, IDrawOptions} from "tim/plugin/drawToolbar"
 import {ILineSegment, IPoint, IRectangleOrEllipse, TuplePoint} from "tim/plugin/imagextypes";
 import {isTouchEvent, MouseOrTouch, numOrStringToNumber, posToRelative, touchEventToTouch} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 
 interface IRectangle {
     type: "rectangle";
@@ -49,6 +46,7 @@ export type DrawObject = IRectangle | IEllipse | IFreeHand;
 /**
  * Gets dimensions (start coordinates, width, height) from given drawing
  * @param drawing DrawObject[] to check
+ * @param minSize if width/height is less than this, then add extra padding (at both ends)
  */
 export function getDrawingDimensions(drawing: DrawObject[], minSize = 0): { x: number, y: number, w: number, h: number } {
     let x = Number.MAX_SAFE_INTEGER;
@@ -105,6 +103,7 @@ export function getDrawingDimensions(drawing: DrawObject[], minSize = 0): { x: n
  * @param drawing DrawObject[] to check
  * @param x start coordinate
  * @param y start coordinate
+ * @param minSize if width/height is less than this, then add extra padding (at both ends)
  */
 export function isCoordWithinDrawing(drawing: DrawObject[], x: number, y: number, minSize = 0): boolean {
     const dimensions = getDrawingDimensions(drawing);
@@ -632,6 +631,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
 
     /**
      * Returns dimensions (start coordinate, max width/height) on current drawing progress
+     * @param minSize extra padding to add if width/height is below this
      */
     getCurrentDrawingDimensions(minSize = 0): { x: number, y: number, w: number, h: number } {
         return getDrawingDimensions(this.getDrawing(), minSize);

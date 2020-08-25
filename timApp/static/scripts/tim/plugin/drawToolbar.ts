@@ -1,7 +1,17 @@
-import {AfterViewInit, ApplicationRef, Component, DoBootstrap, ElementRef, EventEmitter, Input, NgModule, OnInit, Output, ViewChild} from "@angular/core";
+import {
+    AfterViewInit,
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    EventEmitter,
+    Input,
+    NgModule,
+    Output,
+    ViewChild
+} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
-import {Annotation} from "tim/velp/velptypes";
 
 
 export interface IDrawVisibleOptions {

@@ -77,7 +77,7 @@ export class ReviewController {
     public selectedElement?: Element;
     private selectionIsDrawing = false; // whether the review area is for drawn annotations or not
     private selectedCanvas?: DrawCanvasComponent; // drawn annotation area
-    private drawMinDimensions = 10;
+    private drawMinDimensions = 10; // minimum width/height for drawn velp. If less then add extra padding
     public item: IItem;
     private annotations: Annotation[];
     public zIndex: number;
