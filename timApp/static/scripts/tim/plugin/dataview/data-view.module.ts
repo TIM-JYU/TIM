@@ -13,10 +13,10 @@ import {CopyTableWidthDialogComponent} from "./copy-table-width-dialog.component
         CopyTableWidthDialogComponent,
     ],
     imports: [
+        AlertModule.forRoot(),
         CommonModule,
         FormsModule,
         TimUtilityModule,
-        AlertModule.forRoot(),
         DialogModule,
     ],
     exports: [
