@@ -1256,10 +1256,8 @@ export class ReviewController {
                 if (isCoordWithinDrawing(a.draw_data, updateArgs.x, updateArgs.y, this.drawMinDimensions)) {
                     const tanncomp = this.vctrl.getAnnotation(`t${a.id}`);
                     if (!tanncomp) {
-                        console.log("couldn't find annotation via vctrl");
                     } else {
                         annCompsInCoord.push(tanncomp);
-                        console.log("found annotation via vctrl");
                     }
                 }
             }
