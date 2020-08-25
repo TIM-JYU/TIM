@@ -144,7 +144,7 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
                  [src]="bgImage" (load)="onImgLoad()">
             <!-- 0-sized div for positioning custom objects on canvas-->
             <div #objectContainer class="canvasObjectContainer"
-                 style="width: 0px; height: 0px; overflow: visible; position: relative">
+                 style="overflow: visible; position: absolute; height: 100%; width: 100%;">
 
             </div>
             <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">

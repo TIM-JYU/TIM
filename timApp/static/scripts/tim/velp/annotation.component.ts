@@ -10,7 +10,7 @@
 
 import {Users} from "tim/user/userService";
 import deepEqual from "deep-equal";
-import {AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit} from "@angular/core";
+import {AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {deserialize} from "typescript-json-serializer";
 import {DrawObject} from "tim/plugin/drawCanvas";
@@ -18,7 +18,7 @@ import {ViewCtrl} from "../document/viewctrl";
 import {showMessageDialog} from "../ui/dialog";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
-import {clone, isInViewport, Result, scrollToElement, to} from "../util/utils";
+import {angularWait, clone, isInViewport, Result, scrollToElement, to} from "../util/utils";
 import {Annotation, IAnnotationEditableValues, IAnnotationInterval} from "./velptypes";
 
 /**
@@ -57,21 +57,22 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
 @Component({
     selector: "annotation",
     template: `
-        <span (click)="setShowFull(false);toggleAnnotation()"
+        <span #contentSpan (click)="setShowFull(false);toggleAnnotation()"
               class="no-popup-menu"
               [ngClass]="['highlighted', 'clickable', 'emphasise', 'default', getClass()]"
               [ngStyle]="{backgroundColor: getCustomColor()}">
             <ng-content></ng-content>
         </span>
-        <span class="inlineAnnotation">
-            <div *ngIf="show"
+        <span #inlineSpan [ngClass]="placement != 4 ? 'inlineAnnotation' : 'inlineImageAnnotation'">
+            <div #inlineDiv *ngIf="show"
                  (click)="updateZIndex()"
                  class="no-popup-menu annotation-info emphasise default"
                  [ngClass]="getClass()"
                  (keydown)="keyDownFunc($event)"
                  (keyup)="keyUpFunc($event)"
                  [style.backgroundColor]="getCustomColor()"
-                 [style.z-index]="zIndex">
+                [style.z-index]="zIndex">
+
     <span class="fulldiv">
         <span class="div-90 annTopSection" (mouseenter)="setShowFull(true)">
             <p><span class="annHeader"><strong>{{ annotation.getContent() }}</strong></span></p>
@@ -197,6 +198,14 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     private prefix = "x";
     private readonly element: JQuery<HTMLElement>;
     zIndex = 0;
+    @ViewChild("inlineSpan") inlineSpan!: ElementRef<HTMLSpanElement>;
+    @ViewChild("contentSpan") contentSpan!: ElementRef<HTMLSpanElement>;
+
+    @ViewChild("inlineDiv") set inlineDiv(div: ElementRef<HTMLDivElement>)  {
+        if (div && this.placement == AnnotationPlacement.InPicture) {
+            this.adjustInPicturePosition(div.nativeElement);
+        }
+    }
 
     constructor(public e: ElementRef) {
         this.element = $(e.nativeElement);
@@ -207,6 +216,9 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         if (v) {
             this.show = true;
             this.updateZIndex();
+            if (this.inlineDiv) {
+                this.adjustInPicturePosition(this.inlineDiv.nativeElement);
+            }
         }
         this.toggleElementBorder();
     }
@@ -261,6 +273,56 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         if (this.reason == AnnotationAddReason.AddingNew && this.show) {
             this.scrollToIfNotInViewport();
         }
+    }
+
+    getInPictureLeft() {
+        if (!(this.placement == AnnotationPlacement.InPicture && this.inlineDiv)) {
+            console.log(this.inlineDiv, "not found");
+            return 0 + "px";
+        }
+        if (this.element.parent()[0].clientWidth - (this.element[0].offsetLeft + this.inlineDiv.nativeElement.clientWidth) < 0) {
+            if (this.element[0].offsetLeft - this.inlineDiv.nativeElement.clientWidth + this.element[0].clientWidth >= 0) {
+                return -this.inlineDiv.nativeElement.clientWidth + this.element[0].clientWidth + "px";
+            }
+        }
+    }
+
+    getInPictureTop() {
+        if (!(this.placement == AnnotationPlacement.InPicture && this.inlineDiv)) {
+            console.log(this.inlineDiv, "not found");
+            return;
+        }
+        if (this.element.parent()[0].clientHeight - (this.element[0].offsetTop + this.inlineDiv.nativeElement.clientHeight) < 0) {
+            if (this.element[0].offsetTop - this.inlineDiv.nativeElement.clientHeight + this.element[0].clientHeight >= 0) {
+                return -this.inlineDiv.nativeElement.clientHeight + this.element[0].clientWidth;
+            }
+        }
+    }
+
+    adjustInPicturePosition(div: HTMLDivElement) {
+        if (this.placement != AnnotationPlacement.InPicture) {
+            return;
+        }
+        let left = 0;
+        let top = this.element[0].clientHeight;
+        if (this.element[0].offsetLeft + div.clientWidth > this.element.parent()[0].clientWidth) {
+            const overlap = this.element.parent()[0].clientWidth - this.element[0].offsetLeft + this.element[0].clientWidth > 0;
+            if (overlap) {
+                if (this.element.parent()[0].clientWidth - div.clientWidth >= 0) {
+                    left = -(this.element[0].offsetLeft + div.clientWidth - this.element.parent()[0].clientWidth);
+                }
+            } else if (this.element[0].offsetLeft + this.element[0].clientWidth - div.clientWidth >= 0) {
+                left = -div.clientWidth + this.element[0].clientWidth;
+            }
+        }
+        const spanBottom = this.element[0].offsetTop + this.element[0].clientHeight;
+        if (this.element[0].offsetTop + this.element[0].clientHeight + div.clientHeight > this.element.parent()[0].clientHeight) {
+            if (this.element[0].offsetTop - div.clientHeight >= 0) {
+                top = -div.clientHeight;
+            }
+        }
+        this.inlineSpan.nativeElement.style.left = left + "px";
+        this.inlineSpan.nativeElement.style.top = top + "px";
     }
 
     get rctrl() {
