@@ -412,7 +412,7 @@ enum EditorPosition {
     FixedColumn,
 }
 
-const SLOW_SIZE_MEASURE_THRESHOLD = 3;
+const SLOW_SIZE_MEASURE_THRESHOLD = 0;
 
 /**
  * A DOM-based data view component that supports virtual scrolling.
@@ -425,10 +425,13 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 3;
         <div class="loader" *ngIf="isLoading">
             <tim-loading></tim-loading>
         </div>
-        <alert class="data-view-alert" type="warning" [dismissible]="true" *ngIf="showSlowLoadMessage" (onClosed)="hideSlowMessageDialog()" i18n>
-            <strong>Column size computation took {{sizeComputationTime}} seconds.</strong>
-            You can speed up loading by <a href="#" class="alert-link" (click)="showTableWidthExportDialog($event)">setting static column widths</a>.
-        </alert>
+        <tim-alert class="data-view-alert" severity="info" *ngIf="showSlowLoadMessage">
+            <div class="message" i18n>
+                <strong>Column size computation took {{sizeComputationTime}} seconds.</strong>
+                You can speed up loading by <a href="#" class="alert-link" (click)="showTableWidthExportDialog($event)">setting static column widths</a>.
+            </div>
+            <span class="close-icon glyphicon glyphicon-remove" (click)="hideSlowMessageDialog()"></span>
+        </tim-alert>
         <div class="data-view" [class.virtual]="isVirtual" [style.width]="tableMaxWidth" #dataViewContainer>
             <div class="header" #headerContainer>
                 <table [ngStyle]="tableStyle" #headerTable>
