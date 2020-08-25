@@ -425,7 +425,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
         <div class="loader" *ngIf="isLoading">
             <tim-loading></tim-loading>
         </div>
-        <alert class="data-view-alert" type="warning" [dismissible]="true" *ngIf="showSlowLoadMessage" (onClosed)="hideSlowMessageDialog()">
+        <alert class="data-view-alert" type="warning" [dismissible]="true" *ngIf="showSlowLoadMessage" (onClosed)="hideSlowMessageDialog()" i18n>
             <strong>Column size computation took {{sizeComputationTime}} seconds.</strong>
             You can speed up loading by <a href="#" class="alert-link" (click)="showTableWidthExportDialog($event)">setting static column widths</a>.
         </alert>

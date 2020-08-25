@@ -11,16 +11,18 @@ export interface ICopyTableWidthsParams {
     selector: "tim-copy-table-width-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>Copy table widths</ng-container>
+            <ng-container header i18n>Copy table widths</ng-container>
             <ng-container body>
-                <p>Loading times can be improved by setting static column widths.</p>
-                <p>Copy the below setting under <code>dataView</code> configuration:</p>
+                <ng-container i18n>
+                    <p>Loading times can be improved by setting static column widths.</p>
+                    <p>Copy the below setting under <code>dataView</code> configuration:</p>
+                </ng-container>
                 <pre>{{settingYaml}}</pre>
             </ng-container>
             <ng-container footer>
-                <span *ngIf="showCopiedMessage" >Copied!</span>
-                <button class="timButton" type="button" (click)="copyText()">Copy text</button>
-                <button class="btn btn-default" type="button" (click)="close()">Close</button>
+                <span *ngIf="showCopiedMessage" i18n>Copied!</span>
+                <button class="timButton" type="button" (click)="copyText()" i18n>Copy text</button>
+                <button class="btn btn-default" type="button" (click)="close()" i18n>Close</button>
             </ng-container>
         </tim-dialog-frame>
     `,
