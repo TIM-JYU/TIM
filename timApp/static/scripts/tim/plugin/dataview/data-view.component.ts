@@ -51,6 +51,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import * as DOMPurify from "dompurify";
+import {showCopyWidthsDialog} from "tim/plugin/dataview/copy-table-width-dialog.component";
 
 /**
  * General interface for an object that provides the data model for DataViewComponent.
@@ -411,7 +412,7 @@ enum EditorPosition {
     FixedColumn,
 }
 
-const SLOW_SIZE_MEASURE_THRESHOLD = 3;
+const SLOW_SIZE_MEASURE_THRESHOLD = 0;
 
 /**
  * A DOM-based data view component that supports virtual scrolling.
@@ -426,7 +427,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 3;
         </div>
         <alert class="data-view-alert" type="warning" [dismissible]="true" *ngIf="showSlowLoadMessage" (onClosed)="hideSlowMessageDialog()">
             <strong>Column size computation took {{sizeComputationTime}} seconds.</strong>
-            You can speed up loading by <a href="#" class="alert-link">setting static column widths</a>.
+            You can speed up loading by <a href="#" class="alert-link" (click)="showTableWidthExportDialog($event)">setting static column widths</a>.
         </alert>
         <div class="data-view" [class.virtual]="isVirtual" [style.width]="tableMaxWidth" #dataViewContainer>
             <div class="header" #headerContainer>
@@ -524,9 +525,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     idHeaderCellWidth: string = "";
     cbAllVisibleRows = false;
     cbFilter = false;
-    // @HostBinding("class.virtual")
     isVirtual: boolean = false;
-    // @HostBinding("style.width")
     dataViewWidth = "100%";
     @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
     @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
@@ -1593,6 +1592,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // endregion
 
     // region Utils
+
+    async showTableWidthExportDialog(evt: MouseEvent) {
+        evt.preventDefault();
+        await showCopyWidthsDialog({});
+    }
 
     hideSlowMessageDialog() {
         this.showSlowLoadMessage = false;
