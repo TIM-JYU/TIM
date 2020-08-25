@@ -411,6 +411,8 @@ enum EditorPosition {
     FixedColumn,
 }
 
+const SLOW_SIZE_MEASURE_THRESHOLD = 3;
+
 /**
  * A DOM-based data view component that supports virtual scrolling.
  * The component handles DOM generation and updating based on the DataModelProvider.
@@ -422,6 +424,10 @@ enum EditorPosition {
         <div class="loader" *ngIf="isLoading">
             <tim-loading></tim-loading>
         </div>
+        <alert class="data-view-alert" type="warning" [dismissible]="true" *ngIf="showSlowLoadMessage" (onClosed)="hideSlowMessageDialog()">
+            <strong>Column size computation took {{sizeComputationTime}} seconds.</strong>
+            You can speed up loading by <a href="#" class="alert-link">setting static column widths</a>.
+        </alert>
         <div class="data-view" [class.virtual]="isVirtual" [style.width]="tableMaxWidth" #dataViewContainer>
             <div class="header" #headerContainer>
                 <table [ngStyle]="tableStyle" #headerTable>
@@ -496,7 +502,6 @@ enum EditorPosition {
                 <ng-content></ng-content>
             </ng-template>
         </div>
-
     `,
     styleUrls: ["./data-view.component.scss"],
 })
@@ -511,6 +516,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() tableMaxHeight: string = "2000em";
     @Input() tableMaxWidth: string = "max-content";
     @Input() fixedColumnCount: number = 0;
+    showSlowLoadMessage = false;
+    sizeComputationTime = 0;
     isLoading = true;
     totalRows: number = 0;
     visibleRows: number = 0;
@@ -1367,12 +1374,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             yield;
             this.updateHeaderCellSizes();
         }
+        if (this.sizeComputationTime > SLOW_SIZE_MEASURE_THRESHOLD) {
+            this.showSlowMessageDialog();
+        }
     }
 
     private computeIdealColumnWidth(): void {
         if (!this.vScroll.enabled) {
             return;
         }
+        const start = performance.now();
         this.idealColWidths = [];
         const measure = (colAxis?: GridAxisManager) => {
             if (!colAxis || colAxis.isVirtual) {
@@ -1392,6 +1403,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.sizeContentContainer) {
             this.sizeContentContainer.textContent = "";
         }
+        const end = performance.now();
+        this.sizeComputationTime = Math.round((end - start) / 1000.0);
     }
 
     private measureText(row: number, column: number) {
@@ -1580,6 +1593,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // endregion
 
     // region Utils
+
+    hideSlowMessageDialog() {
+        this.showSlowLoadMessage = false;
+        this.cdr.detectChanges();
+    }
+
+    private showSlowMessageDialog() {
+        this.showSlowLoadMessage = true;
+        this.cdr.detectChanges();
+    }
 
     private getCellPosition(row: number, col: number) {
         const cell = this.getDataCell(row, col);
