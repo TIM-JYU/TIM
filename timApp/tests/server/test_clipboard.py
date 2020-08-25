@@ -93,9 +93,10 @@ class ClipboardTest(TimRouteTest):
         d.document.clear_mem_cache()
         pars_new = d.document.get_paragraphs()
         new_readings = get_readings(self.current_group().id, d.document)
-        self.assertEqual(6, len(new_readings))
-        self.assertEqual(2, len(list(filter(lambda r: r.type == ReadParagraphType.click_red, new_readings))))
-        self.assertEqual(4, len(list(filter(lambda r: r.type == ReadParagraphType.hover_par, new_readings))))
+        # Copying readings has been disabled for now; see comment in routes_clipboard.py.
+        self.assertEqual(3, len(new_readings))
+        self.assertEqual(1, len(list(filter(lambda r: r.type == ReadParagraphType.click_red, new_readings))))
+        self.assertEqual(2, len(list(filter(lambda r: r.type == ReadParagraphType.hover_par, new_readings))))
         self.assertListEqual(['test1', 'test2', 'test3', 'test1', 'test2', 'test3', 'test4'],
                              [p.get_markdown() for p in pars_new])
 

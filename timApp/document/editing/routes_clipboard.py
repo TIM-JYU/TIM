@@ -133,8 +133,10 @@ def paste_from_clipboard(doc_id):
                 if src_doc is None or str(src_doc.doc_id) != str(src_docid):
                     src_doc = Document(src_docid)
                 src_par = DocParagraph.get_latest(src_doc, src_parid)
-                if has_teacher_access(src_doc.get_docinfo()):
-                    copy_readings(src_par, dest_par)
+                # Copying readings has been disabled because it causes database bloat if paragraphs have hundreds
+                # of thousands of readings. It will also be very slow for the user.
+                # if has_teacher_access(src_doc.get_docinfo()):
+                #     copy_readings(src_par, dest_par)
                 if was_cut:
                     move_notes(src_par, dest_par)
 
