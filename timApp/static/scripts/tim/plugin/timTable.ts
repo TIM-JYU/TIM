@@ -278,7 +278,7 @@ export const DataViewVirtualScrollingSettingsType = t.type({
 export const DataViewSettingsType = t.type({
     virtual: nullable(DataViewVirtualScrollingSettingsType),
     rowHeight: withDefault(t.number, 30),
-    columnWidths: withDefault(t.array(t.number), []),
+    columnWidths: withDefault(t.record(t.string, t.number), {}),
     // We use custom table width for DataView because its behaviour differs from TimTable
     // For example, max-content works for both Chrome and Firefox to do fullwidth
     tableWidth: withDefault(t.string, "max-content"),
@@ -3962,7 +3962,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getColumnWidth(columnIndex: number): number | undefined {
-        return this.dataView?.columnWidths?.[columnIndex];
+        return this.dataView?.columnWidths?.[`${columnIndex}`];
     }
 
     getCellContents(rowIndex: number, columnIndex: number): string {

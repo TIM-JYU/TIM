@@ -1595,7 +1595,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     async showTableWidthExportDialog(evt: MouseEvent) {
         evt.preventDefault();
-        await showCopyWidthsDialog({ columnWidths: [10] });
+        await showCopyWidthsDialog({ columnWidths: this.idealColWidths });
     }
 
     hideSlowMessageDialog() {

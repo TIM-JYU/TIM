@@ -54,7 +54,7 @@ class DataViewVirtualScrollingModel:
 class DataViewSettingsModel:
     virtual: Union[DataViewVirtualScrollingModel, Missing, None] = missing
     rowHeight: Union[int, Missing] = missing
-    columnWidths: Union[List[int], Missing] = missing
+    columnWidths: Union[Dict[str, int], Missing] = missing
     tableWidth: Union[str, Missing] = missing
     fixedColumns: Union[int, Missing] = missing
 
