@@ -1069,7 +1069,7 @@ class DocParagraph:
     def has_dumbo_options(self):
         return bool(self.get_attr('math_type') or self.get_attr('math_preamble') or self.get_attr('input_format'))
 
-    def get_dumbo_options(self, base_opts: DumboOptions=DumboOptions.default()):
+    def get_dumbo_options(self, base_opts: DumboOptions=DumboOptions.default()) -> DumboOptions:
         return DumboOptions(
             math_type=MathType.from_string(self.get_attr('math_type') or base_opts.math_type),
             math_preamble=self.get_attr('math_preamble') or base_opts.math_preamble,

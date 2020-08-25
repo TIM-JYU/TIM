@@ -8,7 +8,6 @@ from timApp.timdb.sqa import db
 
 
 def save_plugin(p: Plugin, max_attr_width: Optional[float] = None) -> None:
-    assert p.par is not None
     old_ver = p.par.doc.get_version()
     p.save(max_attr_width)
     new_ver = p.par.doc.get_version()

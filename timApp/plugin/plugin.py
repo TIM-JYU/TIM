@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator, Match, List
+from typing import Tuple, Optional, Union, Iterable, Dict, NamedTuple, Generator, Match, List, Any
 
 import yaml
 from jinja2 import Environment, BaseLoader
@@ -181,7 +181,7 @@ class Plugin:
     def __init__(self, task_id: Optional[TaskId],
                  values: dict,
                  plugin_type: str,
-                 par: Optional[DocParagraph] = None):
+                 par: DocParagraph):
         self.answer: Optional[Answer] = None
         self.answer_count = None
         self.options: Optional[PluginRenderOptions] = None
@@ -337,7 +337,7 @@ class Plugin:
             self.answer, self.answer_count = answer
         self.options = options
 
-    def render_json(self):
+    def render_json(self) -> Dict[str, Any]:
         options = self.options
         if self.answer is not None:
             if self.task_id.is_points_ref:

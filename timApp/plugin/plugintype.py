@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import attr
 
 import timApp
@@ -10,7 +12,7 @@ CONTENT_FIELD_NAME_MAP = {
 }
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class PluginType:
     type: str
 
@@ -19,4 +21,4 @@ class PluginType:
 
     def can_give_task(self) -> bool:
         plugin_class = timApp.plugin.containerLink.get_plugin(self.type)  # type: ignore[attr-defined]
-        return plugin_class.get('canGiveTask', False)
+        return plugin_class.can_give_task

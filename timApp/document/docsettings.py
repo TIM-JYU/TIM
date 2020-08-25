@@ -371,7 +371,7 @@ class DocSettings:
     def live_updates(self, default=None):
         return self.__dict.get(self.live_updates_key, default)
 
-    def plugin_md(self, default=True):
+    def plugin_md(self, default=True) -> bool:
         return self.__dict.get(self.plugin_md_key, default)
 
     def nomacros(self, default=False):
@@ -423,7 +423,7 @@ class DocSettings:
     def input_format(self):
         return InputFormat.from_string(self.__dict.get(self.input_format_key, 'markdown'))
 
-    def get_dumbo_options(self):
+    def get_dumbo_options(self) -> DumboOptions:
         return DumboOptions(
             math_type=self.mathtype(),
             math_preamble=self.math_preamble(),

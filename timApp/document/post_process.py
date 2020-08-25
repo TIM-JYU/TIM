@@ -290,7 +290,7 @@ def process_areas(settings, pars: List[DocParagraph], macros, delimiter, env) ->
                 if str(vis).find(delimiter) >= 0:
                     vis = expand_macros(vis, macros, settings, delimiter, env=env, ignore_errors=True)
                 vis = get_boolean(vis, True)
-                if not vis:  #  TODO: if in preview, put this allways True
+                if not vis:  #  TODO: if in preview, put this always True
                     access = False  # TODO: this should be added as some kind of small par that is visible in edit-mode
                 # Timed paragraph
             if access:  # par itself is visible, is it in some area that is not visible

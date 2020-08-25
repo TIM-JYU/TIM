@@ -55,7 +55,7 @@ DUMBO_PARAMS = '/mdkeys'
 
 # class to enable direct calls from TIM container
 class TimTable:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
 

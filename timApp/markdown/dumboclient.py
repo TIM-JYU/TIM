@@ -1,7 +1,7 @@
 """Defines a client interface for using Dumbo, the markdown converter."""
 import json
 from enum import Enum
-from typing import List, Union, Dict, NamedTuple
+from typing import List, Union, Dict, NamedTuple, Optional
 
 import requests
 
@@ -70,7 +70,7 @@ KEYS_PATHS = {'/mdkeys', '/latexkeys'}
 
 def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='',
                options: DumboOptions = DumboOptions.default(),
-               data_opts: List[DumboOptions]=None) -> Union[
+               data_opts: Optional[List[DumboOptions]]=None) -> Union[
     List[str], Dict, List[Dict]]:
     """Calls Dumbo for converting the given markdown to HTML.
 

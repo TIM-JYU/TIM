@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Tuple
 
 import requests
 
@@ -16,11 +16,11 @@ class JsRunnerError(Exception):
     pass
 
 
-def jsrunner_run(params: JsRunnerParams):
+def jsrunner_run(params: JsRunnerParams) -> Tuple[Any, str]:
     """
     Run JavaScript code in jsrunner.
     """
-    runurl = get_plugin('jsrunner').get("host") + 'runScript/'
+    runurl = get_plugin('jsrunner').host + 'runScript/'
     r = requests.request('post', runurl, json={'code': params.code, 'data': params.data})
     result = r.json()
     error = result.get('error')

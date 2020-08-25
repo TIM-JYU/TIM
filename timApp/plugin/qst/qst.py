@@ -21,7 +21,7 @@ from timApp.lecture.askedjson import normalize_question_json
 from timApp.lecture.question_utils import qst_set_array_order, qst_pick_expls, qst_rand_array, qst_handle_randomization, \
     calculate_points_from_json_answer, create_points_table, qst_filter_markup_points
 from timApp.markdown.dumboclient import DumboOptions
-from timApp.plugin.containerLink import convert_md
+from timApp.plugin.containerLink import convert_md, get_plugin
 from timApp.plugin.containerLink import prepare_for_dumbo_attr_list_recursive, get_plugin_regex_obj
 from timApp.plugin.plugin import Plugin, PluginException
 from timApp.plugin.plugin import get_num_value

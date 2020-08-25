@@ -479,8 +479,7 @@ def pluginify(doc: Document,
         taketime("plg", plugin_name)
         try:
             plugin = get_plugin(plugin_name)
-            plugin_lazy = plugin.get("lazy", True)
-            plugin["canGiveTask"] = False
+            plugin_lazy = plugin.lazy
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
             for idx, r in plugin_block_map.keys():
@@ -489,7 +488,7 @@ def pluginify(doc: Document,
         # taketime("plg e", plugin_name)
         try:
             reqs = json.loads(resp)
-            plugin["canGiveTask"] = reqs.get("canGiveTask", False)
+            plugin.can_give_task = reqs.get("canGiveTask", False)
             if plugin_name == 'mmcq' or plugin_name == 'mcq':
                 reqs['multihtml'] = True
                 reqs['multimd'] = True
@@ -594,7 +593,7 @@ def pluginify(doc: Document,
 def get_all_reqs():
     allreqs = {}
     for plugin, vals in get_plugins().items():
-        if vals.get('skip_reqs', False):
+        if vals.skip_reqs:
             continue
         try:
             resp = plugin_reqs(plugin)
