@@ -57,6 +57,10 @@ const accessOrder = {
     "owner": 7,
 };
 
+const tips = {
+    teacher: "Teacher right does not give edit right by itself.",
+};
+
 class RightsEditorController implements IController {
     static $inject = ["$scope", "$element"];
     private durOpt: {
@@ -117,6 +121,7 @@ class RightsEditorController implements IController {
     private confirmExpire?: boolean;
     private clearInput?: boolean;
     private activeBoxLoading = false;
+    private tips = tips;
 
     constructor(private scope: IScope, private element: JQLite) {
         this.timeOpt = {type: "always"};

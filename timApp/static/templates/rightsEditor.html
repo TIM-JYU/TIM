@@ -42,6 +42,7 @@
     <a ng-click="$ctrl.showAddRightFn(type, $event)"
        href="#"
        title="Click to add {{ type.name }} right to some usergroup">{{ type.name }}</a>
+    <a ng-if="$ctrl.tips[type.name]" uib-tooltip="{{ $ctrl.tips[type.name] }}"><i class="glyphicon glyphicon-info-sign"></i></a>
     <span ng-if="filtered.length > 0"> ({{ filtered.length }})</span>:
     <span ng-if="filtered.length == 0">none</span>
 
