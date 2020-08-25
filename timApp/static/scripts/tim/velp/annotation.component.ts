@@ -201,6 +201,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     @ViewChild("inlineSpan") inlineSpan!: ElementRef<HTMLSpanElement>;
     @ViewChild("contentSpan") contentSpan!: ElementRef<HTMLSpanElement>;
 
+    // eslint-disable-next-line @typescript-eslint/tslint/config
     @ViewChild("inlineDiv") set inlineDiv(div: ElementRef<HTMLDivElement>)  {
         if (div && this.placement == AnnotationPlacement.InPicture) {
             this.adjustInPicturePosition(div.nativeElement);
@@ -275,50 +276,34 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         }
     }
 
-    getInPictureLeft() {
-        if (!(this.placement == AnnotationPlacement.InPicture && this.inlineDiv)) {
-            console.log(this.inlineDiv, "not found");
-            return 0 + "px";
-        }
-        if (this.element.parent()[0].clientWidth - (this.element[0].offsetLeft + this.inlineDiv.nativeElement.clientWidth) < 0) {
-            if (this.element[0].offsetLeft - this.inlineDiv.nativeElement.clientWidth + this.element[0].clientWidth >= 0) {
-                return -this.inlineDiv.nativeElement.clientWidth + this.element[0].clientWidth + "px";
-            }
-        }
-    }
-
-    getInPictureTop() {
-        if (!(this.placement == AnnotationPlacement.InPicture && this.inlineDiv)) {
-            console.log(this.inlineDiv, "not found");
-            return;
-        }
-        if (this.element.parent()[0].clientHeight - (this.element[0].offsetTop + this.inlineDiv.nativeElement.clientHeight) < 0) {
-            if (this.element[0].offsetTop - this.inlineDiv.nativeElement.clientHeight + this.element[0].clientHeight >= 0) {
-                return -this.inlineDiv.nativeElement.clientHeight + this.element[0].clientWidth;
-            }
-        }
-    }
-
     adjustInPicturePosition(div: HTMLDivElement) {
         if (this.placement != AnnotationPlacement.InPicture) {
             return;
         }
         let left = 0;
-        let top = this.element[0].clientHeight;
-        if (this.element[0].offsetLeft + div.clientWidth > this.element.parent()[0].clientWidth) {
-            const overlap = this.element.parent()[0].clientWidth - this.element[0].offsetLeft + this.element[0].clientWidth > 0;
+        const drawingWidth = this.element[0].clientWidth;
+        const drawingLeft = this.element[0].offsetLeft;
+        const annWidth = div.clientWidth;
+        const containerWidth = this.element.parent()[0].clientWidth;
+        if (drawingLeft + annWidth > containerWidth) {
+            const overlap = containerWidth - drawingLeft + drawingWidth > 0;
             if (overlap) {
-                if (this.element.parent()[0].clientWidth - div.clientWidth >= 0) {
-                    left = -(this.element[0].offsetLeft + div.clientWidth - this.element.parent()[0].clientWidth);
+                if (containerWidth - annWidth >= 0) {
+                    left = containerWidth - annWidth - drawingLeft;
                 }
-            } else if (this.element[0].offsetLeft + this.element[0].clientWidth - div.clientWidth >= 0) {
-                left = -div.clientWidth + this.element[0].clientWidth;
+            } else if (drawingLeft + drawingWidth - annWidth >= 0) {
+                left = -annWidth + drawingWidth;
             }
         }
-        const spanBottom = this.element[0].offsetTop + this.element[0].clientHeight;
-        if (this.element[0].offsetTop + this.element[0].clientHeight + div.clientHeight > this.element.parent()[0].clientHeight) {
-            if (this.element[0].offsetTop - div.clientHeight >= 0) {
-                top = -div.clientHeight;
+
+        const drawingHeight = this.element[0].clientHeight;
+        const drawingTop = this.element[0].offsetTop;
+        const annHeight = div.clientHeight;
+        const containerHeight =  this.element.parent()[0].clientHeight;
+        let top = drawingHeight;
+        if (drawingTop + drawingHeight + annHeight > containerHeight) {
+            if (drawingTop - annHeight >= 0) {
+                top = -annHeight;
             }
         }
         this.inlineSpan.nativeElement.style.left = left + "px";
