@@ -142,7 +142,7 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
         <div #wrapper style="overflow: auto; position: relative;" [style.height.px]="getWrapperHeight()">
             <img style="max-width: none; position: absolute; display: unset;" #backGround *ngIf="bgImage"
                  [src]="bgImage" (load)="onImgLoad()">
-            <!-- 0-sized div for positioning custom objects on canvas-->
+            <!-- div for positioning custom objects on canvas-->
             <div #objectContainer class="canvasObjectContainer"
                  style="overflow: visible; position: absolute; height: 100%; width: 100%;">
 
@@ -288,8 +288,12 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
      */
     onImgLoad(): void {
         this.imgHeight = this.bgElement.nativeElement.clientHeight;
-        this.canvas.nativeElement.width = Math.max(this.bgElement.nativeElement.clientWidth, this.wrapper.nativeElement.clientWidth - 50);
-        this.canvas.nativeElement.height = Math.max(this.bgElement.nativeElement.clientHeight, this.getWrapperHeight() - 5);
+        const newWidth = Math.max(this.bgElement.nativeElement.clientWidth, this.wrapper.nativeElement.clientWidth - 50);
+        const newHeight = Math.max(this.bgElement.nativeElement.clientHeight, this.getWrapperHeight() - 5);
+        this.canvas.nativeElement.width = newWidth;
+        this.canvas.nativeElement.height = newHeight;
+        this.objectContainer.nativeElement.style.width = newWidth + "px";
+        this.objectContainer.nativeElement.style.height = newHeight + "px";
         if (this.imgLoadCallback) {
             this.imgLoadCallback(this);
         }
