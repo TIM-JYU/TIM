@@ -62,7 +62,7 @@ interface IRunResult {
                         (upload)="onUploadResponse($event)">
                 </file-select-manager>
                 <div class="form-inline small">
-                    <span *ngFor="let item in uploadedFiles">
+                    <span *ngFor="let item of uploadedFiles">
                         <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
                     </span>
                 </div>
