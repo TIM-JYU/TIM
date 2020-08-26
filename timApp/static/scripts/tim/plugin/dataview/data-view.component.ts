@@ -52,6 +52,7 @@ import {
 } from "@angular/core";
 import * as DOMPurify from "dompurify";
 import {showCopyWidthsDialog} from "tim/plugin/dataview/copy-table-width-dialog.component";
+import {scrollToViewInsideParent} from "tim/util/utils";
 
 /**
  * General interface for an object that provides the data model for DataViewComponent.
@@ -585,6 +586,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     constructor(private r2: Renderer2, private zone: NgZone, private cdr: ChangeDetectorRef) {
     }
 
+    // region Properties
+
     get editorInData() {
         return this.editorPosition == EditorPosition.MainData;
     }
@@ -621,6 +624,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const e = this.mainDataContainer.nativeElement;
         return e.offsetWidth - e.clientWidth;
     }
+
+    // endregion
 
     // region Event handlers for summary table
 
@@ -855,7 +860,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             height: "0px",
             display: "block",
         });
-        const {x, y, w} = this.getCellPosition(row, col);
+        const {x, y, w, h} = this.getCellPosition(row, col);
         if (editInput) {
             applyBasicStyle(editInput as HTMLElement, {
                 position: "absolute",
@@ -872,6 +877,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 top: `${y - this.mainDataTable.nativeElement.offsetHeight + dir * e.offsetHeight}px`,
                 left: `${x}px`,
             });
+        }
+        if (this.editorPosition == EditorPosition.MainData) {
+            const cell = this.getDataCell(row, col);
+            scrollToViewInsideParent(cell, this.mainDataContainer.nativeElement, 0, 3 * h, 0, h);
         }
     }
 
@@ -1638,12 +1647,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const itemRowOrdinal = this.rowAxis.indexToOrdinal[row];
         const itemColOrdinal = this.colAxis.indexToOrdinal[col];
         if (!cell) {
-            return {x: 0, y: 0, w: 0};
+            return {x: 0, y: 0, w: 0, h: 0};
         }
         return {
             x: this.colAxis.isVirtual ? this.colAxis.positionStart[itemColOrdinal] : cell.offsetLeft,
             y: this.rowAxis.isVirtual ? this.rowAxis.positionStart[itemRowOrdinal] : cell.offsetTop,
             w: cell.offsetWidth,
+            h: cell.offsetHeight,
         };
     }
 
