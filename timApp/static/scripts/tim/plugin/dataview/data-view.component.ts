@@ -538,9 +538,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @ViewChild("fixedColHeaderTable") private fixedColHeaderTable?: ElementRef<HTMLTableElement>;
     @ViewChild("fixedColHeaderIdBody") private fixedColHeaderIdBody?: ElementRef<HTMLTableSectionElement>;
     @ViewChild("fixedColFilterBody") private fixedColFilterBody?: ElementRef<HTMLTableSectionElement>;
-    @ViewChild("idContainer") private idContainer?: ElementRef<HTMLDivElement>;
-    @ViewChild("idTable") private idTable?: ElementRef<HTMLTableElement>;
-    @ViewChild("idBody") private idBody?: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("idContainer") private idContainer!: ElementRef<HTMLDivElement>;
+    @ViewChild("idTable") private idTable!: ElementRef<HTMLTableElement>;
+    @ViewChild("idBody") private idBody!: ElementRef<HTMLTableSectionElement>;
     @ViewChild("mainDataBody") private mainDataBody!: ElementRef<HTMLTableSectionElement>;
     @ViewChild("mainDataTable") private mainDataTable!: ElementRef<HTMLTableElement>;
     @ViewChild("mainDataContainer") private mainDataContainer!: ElementRef<HTMLDivElement>;
@@ -919,7 +919,17 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.r2.listen(this.mainDataContainer.nativeElement, "scroll", () => this.handleScroll());
         });
         this.zone.runOutsideAngular(() => {
-            window.addEventListener("resize", () => this.handleWindowResize());
+            // Some versions of iOS seem to trigger resize events on scroll:
+            // https://stackoverflow.com/questions/8898412/iphone-ipad-triggering-unexpected-resize-events
+            let prevWidth = window.innerWidth;
+            window.addEventListener("resize", (e) => {
+                const curWidth = window.innerWidth;
+                if (prevWidth == curWidth) {
+                    return;
+                }
+                prevWidth = curWidth;
+                this.handleWindowResize();
+            });
         });
     }
 
@@ -1252,7 +1262,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateTableTransform(): void {
-        if (!this.vScroll.enabled || !this.idBody || !this.headerTable || !this.filterBody) {
+        if (!this.vScroll.enabled) {
             return;
         }
         const idTable = this.idBody.nativeElement;
