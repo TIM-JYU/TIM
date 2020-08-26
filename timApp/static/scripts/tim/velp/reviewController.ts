@@ -303,8 +303,16 @@ export class ReviewController {
                         textAnnotation.values.color = "transparent";
                     }
                     added = true;
-                } // end if (a.draw_data)
-            } else {
+                } else { // drawn annotation but no canvas found
+                    this.addAnnotationToMargin(
+                        par,
+                        a,
+                        AnnotationAddReason.LoadingExisting,
+                        AnnotationPlacement.InMarginAndUnknownIfItWillBeInText,
+                    );
+                    continue;
+                }
+            } else { // end if (a.draw_data)
 
                 const element = par.querySelector(".review pre")?.firstChild;
 

@@ -6,6 +6,7 @@ import {
     Input,
     NgModule,
     OnChanges,
+    OnDestroy,
     OnInit,
     SimpleChanges,
     ViewChild,
@@ -153,7 +154,7 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
         <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions" (drawSettingsChange)="saveSettings()" [undo]="undo"></draw-toolbar>
     `,
 })
-export class DrawCanvasComponent implements OnInit, OnChanges {
+export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     @Input() public bgSource = "";
     bgImage: SafeResourceUrl = "";
     @ViewChild("drawbase") canvas!: ElementRef<HTMLCanvasElement>;
@@ -270,6 +271,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges {
         if (changes.bgSource) {
             this.setBg();
         }
+    }
+
+    ngOnDestroy() {
+        this.clearObjectContainer();
     }
 
     saveSettings() {
