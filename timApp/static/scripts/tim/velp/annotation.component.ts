@@ -288,7 +288,6 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
             return;
         }
         let left = 0;
-        const drawingWidth = this.element[0].clientWidth;
         const drawingLeft = this.element[0].offsetLeft;
         const annWidth = div.clientWidth;
         const containerWidth = this.element.parent()[0].clientWidth;

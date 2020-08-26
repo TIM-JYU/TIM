@@ -143,7 +143,7 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
         <div #wrapper style="overflow: auto; position: relative;" [style.height.px]="getWrapperHeight()">
             <img style="max-width: none; position: absolute; display: unset;" #backGround *ngIf="bgImage"
                  [src]="bgImage" (load)="onImgLoad()">
-            <!-- div for positioning custom objects on canvas-->
+            <!-- div for positioning custom objects behind the canvas-->
             <div #objectContainer class="canvasObjectContainer"
                  style="overflow: visible; position: absolute; height: 100%; width: 100%;">
 
@@ -210,8 +210,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
 
     // identifier e.g for associating specific canvas with specific answer review
     public id: number = 0;
-
-    @Input() settingsId: string = "";
 
     constructor(el: ElementRef<HTMLElement>, private domSanitizer: DomSanitizer) {
     }
@@ -318,8 +316,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     /**
-     * Sets the optional function to call whenever mouse is pressed (whether drawing enabled or not)
-     * @param cb function to execute on click
+     * Sets the optional function to call on mouse or drawing update events
+     * @param cb function to execute
      */
     public setUpdateCallback(cb: (arg0: DrawCanvasComponent, arg1: IDrawUpdate) => void) {
         this.updateCallback = cb;

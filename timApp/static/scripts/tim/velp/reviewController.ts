@@ -289,7 +289,6 @@ export class ReviewController {
             if (a.draw_data) {
                 const targ = par.querySelector(".canvasObjectContainer");
                 if (targ) {
-                    // const drawdata = JSON.parse(a.draw_data) as DrawObject[];
                     const rect = getDrawingDimensions(a.draw_data, this.drawMinDimensions);
                     const borderElement = this.createPictureBorder(rect.w, rect.h);
                     targ.appendChild(borderElement);
@@ -1125,7 +1124,6 @@ export class ReviewController {
 
         // We might click a margin annotation, but we still want to open the corresponding inline annotation,
         // if it exists.
-        // TODO: If we click on margin annotation of a drawn annotation when the canvas is not loaded, then this fails
         const prefix = ((isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end)) || annotation.draw_data)  &&
         ((ac instanceof AnnotationComponent && ac.placement !== AnnotationPlacement.InMarginOnly)
             || ac instanceof Annotation) ? "t" : "m";
@@ -1236,9 +1234,10 @@ export class ReviewController {
 
     /**
      * Handles click and drawing update callbacks from canvas.
-     * If drawing mode is enabled and there is something drawn, then select canvas as annotation target element.
-     * If drawing mode is enabled and the drawing is cleared then unselect the canvas
-     * If drawing mode is disabled, then attempt to open an annotation under the click target.
+     * If the drawing was updated and not empty, then select canvas as annotation target element.
+     * If the drawing was updatend and cleared, then unselect the canvas
+     * If the drawing was not updated and there were click coordinates,
+     * then attempt to open one of the annotations under the click target.
      * @param canvas
      * @param updateArgs
      */
