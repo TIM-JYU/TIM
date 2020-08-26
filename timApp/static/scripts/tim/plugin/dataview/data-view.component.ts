@@ -414,6 +414,11 @@ enum EditorPosition {
 
 const SLOW_SIZE_MEASURE_THRESHOLD = 0;
 
+interface CellIndex {
+    x: number;
+    y: number;
+}
+
 /**
  * A DOM-based data view component that supports virtual scrolling.
  * The component handles DOM generation and updating based on the DataModelProvider.
@@ -572,6 +577,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private idealColWidths: number[] = [];
     private editorPosition = EditorPosition.MainData;
     private prevEditorDOMPosition: TableArea = {horizontal: -1, vertical: -1};
+    private selectedCells: CellIndex[] = [];
 
     // endregion
 
@@ -748,27 +754,24 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     /**
-     * Updates style information for all cells
+     * Marks the given cells as selected.
+     * Updates styles of selected cells and possibly previously selected ones too.
+     *
+     * @param cells Cells to select.
      */
-    updateStyles(): void {
+    markCellsSelected(cells: CellIndex[]): void {
         if (this.vScroll.enabled) {
             this.updateVTable();
             return;
         }
 
-        const updateCols = (rowIndex: number, colAxis?: GridAxisManager, cache?: TableDOMCache) => {
-            if (!colAxis || !cache) {
-                return;
-            }
-            for (const columnIndex of colAxis.visibleItems) {
-                const cell = cache.getCell(rowIndex, colAxis.indexToOrdinal[columnIndex]);
-                this.updateCellStyle(cell, rowIndex, columnIndex);
-            }
-        };
-        for (const rowIndex of this.dataTableCache.rows.keys()) {
-            updateCols(rowIndex, this.colAxis, this.dataTableCache);
-            updateCols(rowIndex, this.fixedColAxis, this.fixedTableCache);
+        for (const {x, y} of this.selectedCells) {
+            this.updateStyleForCell(y, x);
         }
+        for (const {x, y} of cells) {
+            this.updateStyleForCell(y, x);
+        }
+        this.selectedCells = cells;
     }
 
     /**

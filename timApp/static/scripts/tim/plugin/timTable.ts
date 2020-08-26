@@ -2422,7 +2422,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return; // we should never be able to get here
         }
         if (this.dataViewComponent) {
-            this.dataViewComponent.updateStyles();
+            this.dataViewComponent.markCellsSelected(this.selectedCells.cells);
         } else {
             const sr = this.permTableToScreen[rowi];
             const table = $(this.tableElem.nativeElement);
