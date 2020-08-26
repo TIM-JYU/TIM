@@ -517,7 +517,7 @@ interface CellIndex {
 })
 export class DataViewComponent implements AfterViewInit, OnInit {
     // region Fields
-    @Input() modelProvider!: DataModelProvider; // TODO: Make optional and error out if missing
+    @Input() modelProvider!: DataModelProvider;
     @Input() virtualScrolling: Partial<VirtualScrollingOptions> = DEFAULT_VIRTUAL_SCROLL_SETTINGS;
     @Input() tableClass: { [klass: string]: unknown } = {};
     @Input() tableStyle: { [klass: string]: string } = {};
@@ -536,8 +536,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     cbFilter = false;
     isVirtual: boolean = false;
     dataViewWidth = "100%";
-    @ViewChild("headerContainer") private headerContainer?: ElementRef<HTMLDivElement>;
-    @ViewChild("headerTable") private headerTable?: ElementRef<HTMLTableElement>;
+    @ViewChild("headerContainer") private headerContainer!: ElementRef<HTMLDivElement>;
+    @ViewChild("headerTable") private headerTable!: ElementRef<HTMLTableElement>;
     @ViewChild("headerIdBody") private headerIdBody!: ElementRef<HTMLTableSectionElement>;
     @ViewChild("filterBody") private filterBody!: ElementRef<HTMLTableSectionElement>;
     @ViewChild("fixedColHeaderContainer") private fixedColHeaderContainer?: ElementRef<HTMLDivElement>;
@@ -601,12 +601,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private get dataTableWidth(): number {
+        // Get the most fitting width out of the following:
         const widths = [
-            this.mainDataContainer.nativeElement.offsetWidth,
-            this.mainDataBody.nativeElement.offsetWidth,
+            this.mainDataContainer.nativeElement.offsetWidth, // Width of the the whole container (prevents table from overflowing over the visible area)
+            this.mainDataBody.nativeElement.offsetWidth,      // Width of the table body (makes visible area smaller when filtering)
             this.dataViewContainer.nativeElement.offsetWidth
             - this.summaryTable.nativeElement.offsetWidth
-            - (this.fixedDataContainer?.nativeElement.offsetWidth ?? 0),
+            - (this.fixedDataContainer?.nativeElement.offsetWidth ?? 0), // Ideal width of the data area (prevents table from expanding too much when filtering)
         ].filter((w) => w != 0);
         // Add table border width to prevent possible border cutoff when filtering in DOM mode
         return Math.min(...widths) + this.tableBaseBorderWidthPx;
@@ -645,7 +646,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 input.value = "";
             }
         }
-        // TODO: Clear sorting
     }
 
     // endregion
@@ -828,6 +828,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     updateEditorPosition(row: number, col: number): void {
         // Because of Angular, we need to pass the editor as ng-content (otherwise Angular seems to loose reference to
         // the element and stop updating it properly)
+        // We must use querySelector here because the editor can jump between fixed data table and main data table
         // TODO: Figure out a better way to integrate the editor
         if (row == this.prevEditorDOMPosition.vertical && col == this.prevEditorDOMPosition.horizontal) {
             return;
@@ -835,11 +836,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.prevEditorDOMPosition.horizontal = col;
         this.prevEditorDOMPosition.vertical = row;
         const prevPos = this.editorPosition;
-        if (this.fixedTableCache && this.fixedColAxis.indexToOrdinal[col] !== undefined) {
-            this.editorPosition = EditorPosition.FixedColumn;
-        } else {
-            this.editorPosition = EditorPosition.MainData;
-        }
+        this.editorPosition = columnInCache(col, this.fixedColAxis, this.fixedTableCache) ? EditorPosition.FixedColumn : EditorPosition.MainData;
         if (prevPos != this.editorPosition) {
             this.cdr.detectChanges();
         }
@@ -1015,7 +1012,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private updateHeaderTableSizes(): void {
-        if (!this.headerContainer || !this.idContainer || !this.headerTable || !this.viewport) {
+        if (!this.viewport) {
             return;
         }
         // Apparently to correctly handle column header table, we have to set its size to match that of data
@@ -1052,7 +1049,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         let axis = this.colAxis;
         let headers = this.headerIdTableCache;
         let filters = this.filterTableCache;
-        if (columnInCahce(column, this.fixedColAxis, this.fixedColHeaderIdTableCache) && columnInCahce(column, this.fixedColAxis, this.fixedColFilterTableCache)) {
+        const inCache = (cache?: TableDOMCache): cache is TableDOMCache => columnInCache(column, this.fixedColAxis, cache);
+        if (inCache(this.fixedColHeaderIdTableCache) && inCache(this.fixedColFilterTableCache)) {
             headers = this.fixedColHeaderIdTableCache;
             filters = this.fixedColFilterTableCache;
             axis = this.fixedColAxis;
@@ -1285,9 +1283,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Table building
 
     private syncHeaderScroll(): void {
-        if (!this.headerContainer || !this.idContainer) {
-            return;
-        }
         const header = this.headerContainer.nativeElement;
         const fixedColData = this.fixedDataContainer?.nativeElement;
         const data = this.mainDataContainer.nativeElement;
@@ -1315,7 +1310,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private setTableSizes(): void {
-        if (!this.vScroll.enabled || !this.idTable || !this.headerTable) {
+        if (!this.vScroll.enabled) {
             return;
         }
         const table = this.mainDataTable.nativeElement;
@@ -1475,7 +1470,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private buildDataTable(): void {
-        // const tbody = this.mainDataBody.nativeElement;
         const {vertical, horizontal} = this.viewport;
         const build = (colAxis: GridAxisManager, colStart: number, colCount: number, tbody?: HTMLTableSectionElement, cache?: TableDOMCache) => {
             if (!tbody || !cache) {
@@ -1502,9 +1496,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private buildColumnHeaderTable(): void {
-        if (!this.headerIdTableCache || !this.filterTableCache) {
-            return;
-        }
         this.headerIdTableCache.setSize(1, this.viewport.horizontal.count);
         this.filterTableCache.setSize(1, this.viewport.horizontal.count);
         this.fixedColHeaderIdTableCache?.setSize(1, this.fixedColumnCount);
@@ -1516,9 +1507,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private buildRowHeaderTable(): void {
-        if (!this.idTableCache) {
-            return;
-        }
         this.idTableCache.setSize(this.viewport.vertical.count, 2);
         const {vertical} = this.viewport;
         for (let row = 0; row < vertical.count; row++) {
@@ -1617,10 +1605,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         };
     }
 
-    // endregion
-
-    // region Utils
-
     private onHeaderColumnClick(columnIndex: number) {
         return () => {
             if (this.modelProvider.isPreview()) {
@@ -1639,6 +1623,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.modelProvider.handleChangeFilter();
         };
     }
+
+    // endregion
+
+    // region Utils
 
     private showSlowMessageDialog() {
         this.showSlowLoadMessage = true;
@@ -1698,15 +1686,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private startCellPurifying(): void {
         if (typeof Worker !== "undefined") {
-            // Note: this triggers worker-plugin to be run
-            // As of 27.7., worker-plugin triggers the following warning
-            //
+            // Currently worker-plugin 4.x triggers the following warning
             // WARNING in new Worker() will only be bundled if passed a String.
             //
             // Because of ACE editor using workers without {type: "module"}
-            // This was fixed in worker-plugin master:
+            // This was fixed in worker-plugin 5.0.0
             // https://github.com/GoogleChromeLabs/worker-plugin/pull/73
-            // but it's not yet released nor part of Angular CLI.
+            // And it's going to be part of Angular 10.1:
+            // https://github.com/angular/angular-cli/commit/75897676b33105cb42eee005f4c441061c981540
+            // TODO: Remove this comment after upgrade to Angular 10.1
             const worker = new Worker("./table-purify.worker", {type: "module"});
             worker.onmessage = ({data}: { data: PurifyData }) => {
                 this.cellValueCache[data.row] = data.data;
@@ -1730,7 +1718,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private getDataCacheForColumn(columnIndex: number): [TableDOMCache, GridAxisManager] {
-        if (columnInCahce(columnIndex, this.fixedColAxis, this.fixedTableCache)) {
+        if (columnInCache(columnIndex, this.fixedColAxis, this.fixedTableCache)) {
             return [this.fixedTableCache, this.fixedColAxis];
         }
         return [this.dataTableCache, this.colAxis];
@@ -1809,7 +1797,7 @@ function viewportsEqual(vp1: Viewport, vp2: Viewport) {
     return visItemsEqual(vp1.vertical, vp2.vertical) && visItemsEqual(vp1.horizontal, vp2.horizontal);
 }
 
-function columnInCahce(columnIndex: number, axis: GridAxisManager, cache?: TableDOMCache): cache is TableDOMCache {
+function columnInCache(columnIndex: number, axis: GridAxisManager, cache?: TableDOMCache): cache is TableDOMCache {
     return cache !== undefined && axis.indexToOrdinal[columnIndex] !== undefined;
 }
 
