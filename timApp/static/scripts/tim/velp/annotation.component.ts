@@ -204,7 +204,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     // eslint-disable-next-line @typescript-eslint/tslint/config
     @ViewChild("inlineDiv") set inlineDiv(div: ElementRef<HTMLDivElement>)  {
         if (div && this.placement == AnnotationPlacement.InPicture) {
-            this.adjustInPicturePosition(div.nativeElement);
+            this.adjustAnnotationInPicturePosition(div.nativeElement);
         }
     }
 
@@ -218,7 +218,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
             this.show = true;
             this.updateZIndex();
             if (this.inlineDiv) {
-                this.adjustInPicturePosition(this.inlineDiv.nativeElement);
+                this.adjustAnnotationInPicturePosition(this.inlineDiv.nativeElement);
             }
         }
         this.toggleElementBorder();
@@ -276,7 +276,11 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         }
     }
 
-    adjustInPicturePosition(div: HTMLDivElement) {
+    /**
+     * Checks if in-picture annotation would fit better if opened upwards or leftwards
+     * @param div Annotation info div
+     */
+    adjustAnnotationInPicturePosition(div: HTMLDivElement) {
         if (this.placement != AnnotationPlacement.InPicture) {
             return;
         }
@@ -286,13 +290,8 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         const annWidth = div.clientWidth;
         const containerWidth = this.element.parent()[0].clientWidth;
         if (drawingLeft + annWidth > containerWidth) {
-            const overlap = containerWidth - drawingLeft + drawingWidth > 0;
-            if (overlap) {
-                if (containerWidth - annWidth >= 0) {
-                    left = containerWidth - annWidth - drawingLeft;
-                }
-            } else if (drawingLeft + drawingWidth - annWidth >= 0) {
-                left = -annWidth + drawingWidth;
+            if (containerWidth - annWidth >= 0) {
+                left = containerWidth - annWidth - drawingLeft;
             }
         }
 
