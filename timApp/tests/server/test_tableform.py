@@ -27,6 +27,7 @@ class TableFormTest(TimRouteTest):
         res = self.get(f"/tableForm/fetchTableDataPreview", query_string=fetch_args)
         self.assertEqual(len(res["rows"]), 2, "all users' values should be visible for teacher access")
 
+        # Test that user filtering still works with the wildcard
         self.get(f"/tableForm/generateCSV", query_string={
             'docId': doc.id,
             'fields': 'mmcqexample',

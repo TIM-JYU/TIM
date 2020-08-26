@@ -269,6 +269,7 @@ def get_fields_and_users(
         if not requested_groups.include_all_answered:
             q = q.join(UserGroup, join_relation).filter(group_filter)
         elif user_filter is not None:
+            # Ensure user filter gets applied even if group filter is skipped in include_all_answered
             q = q.filter(user_filter)
         sub += (
                 q
