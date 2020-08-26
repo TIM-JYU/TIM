@@ -16,26 +16,27 @@ If validation fails, the plugin returns an error with status code 422.
 """
 import base64
 import json
-from enum import Enum
-from typing import Optional, Union, TypeVar, Generic, Dict, Type
-
 from dataclasses import dataclass, field
-from flask import Blueprint, request
+from enum import Enum
+from json import JSONEncoder
+from typing import Optional, Union, TypeVar, Generic, Dict, Type, Any, List
+
+from flask import Blueprint, request, Response
 from flask import render_template_string, jsonify, Flask
 from marshmallow import ValidationError, Schema
 from marshmallow.utils import missing
-from werkzeug.exceptions import UnprocessableEntity
 
-from marshmallow_dataclass import class_schema
 from markupmodels import list_not_missing_fields, GenericMarkupModel
+from marshmallow_dataclass import class_schema
 from utils import Missing
 
 
 class PluginJsonEncoder(json.JSONEncoder):
-    def default(self, o):
+    def default(self, o: Any) -> Optional[Any]:
         tojson = getattr(o, 'to_json', None)
         if tojson:
             return tojson()
+        return None
 
 
 @dataclass
@@ -69,7 +70,7 @@ class GenericAnswerModel(GenericRouteModel[PluginInput, PluginMarkup, PluginStat
     """Generic base class for answer route models."""
     input: PluginInput
 
-    def make_answer_error(self, msg: str):
+    def make_answer_error(self, msg: str) -> Response:
         return jsonify({'web': {'error': msg}})
 
 
@@ -78,10 +79,10 @@ class Laziness(Enum):
     Yes = True
     Never = 'NEVERLAZY'
 
-    def to_json(self):
+    def to_json(self) -> Union[str, bool]:
         return self.value
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         raise Exception("Please use Laziness.{Yes,No,Never} explicitly.")
 
 
@@ -126,10 +127,11 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         """
         raise NotImplementedError('Must be implemented by a derived class.')
 
-    def get_review(self):
-        # TODO: This "if" should be in field classes, not here.
-        if self.state and self.state.c:
-            return f"<pre>{json.dumps(self.state.c)}</pre>"
+    def get_review(self) -> str:
+        # TODO: This should be in field classes, not here.
+        c = getattr(self.state, 'c', None)
+        if c:
+            return f"<pre>{json.dumps(c)}</pre>"
 
         return "<pre>review</pre>"
 
@@ -162,7 +164,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
 
         return self.get_md()
 
-    def get_json_encoder(self):
+    def get_json_encoder(self) -> Type[PluginJsonEncoder]:
         """Set JSON-encoder."""
         return PluginJsonEncoder
 
@@ -183,13 +185,17 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         If component is not show in view mode return False
         :return: is component shown in view mode
         """
-        if self.markup.showInView != missing:
+        if isinstance(self.markup.showInView, bool):
             return self.markup.showInView
         return self.show_in_view_default()
 
 
-def render_validationerror(e: ValidationError):
+def render_validationerror(e: ValidationError) -> str:
     """Renders a validation error as HTML indicating which fields were erroneous."""
+    if isinstance(e.messages, dict):
+        msgs = e.messages
+    else:
+        msgs = {}  # TODO check if this is ever reached in practice
     return render_template_string(
         """
 <div class="pluginError">
@@ -201,10 +207,10 @@ The following fields have invalid values:
 </ul>
 </div>
         """.strip(),
-        errors=e.messages.get('markup', e.messages.get('input', e.messages)))
+        errors=msgs.get('markup', msgs.get('input', e.messages)))
 
 
-def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
+def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]) -> str:
     """Renders a static version of the plugin as HTML along with a request to log in."""
     return render_template_string(
         """
@@ -216,12 +222,12 @@ def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMark
     )
 
 
-def make_base64(d: dict, json_encoder=None):
+def make_base64(d: dict, json_encoder: Optional[Type[JSONEncoder]]=None) -> str:
     """Converts the given dict to a base64-encoded JSON string."""
     return base64.b64encode(json.dumps(d, sort_keys=True, cls=json_encoder).encode()).decode()
 
 
-def is_lazy(q: GenericHtmlModel):
+def is_lazy(q: GenericHtmlModel) -> bool:
     """Determines if the server should render a lazy version of the plugin."""
     if q.doLazy == Laziness.Never:
         return False
@@ -234,7 +240,7 @@ def is_lazy(q: GenericHtmlModel):
     return False
 
 
-def render_plugin_lazy(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
+def render_plugin_lazy(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]) -> str:
     """Renders lazy HTML for a plugin.
 
     The lazy HTML displays the static version of the plugin and has the real HTML in an attribute
@@ -255,7 +261,7 @@ def render_plugin_lazy(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginStat
     )
 
 
-def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
+def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]) -> str:
     """Renders HTML for a plugin.
 
     :param m: The plugin HTML schema.
@@ -268,7 +274,7 @@ def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginStat
     return m.get_real_html()
 
 
-def render_multihtml(args, schema: Schema):
+def render_multihtml(args: List[dict], schema: Schema) -> Response:
     """Renders HTMLs according to the given Schema.
 
     :param schema: The marshmallow schema to use for validating the plugin data.
@@ -281,14 +287,12 @@ def render_multihtml(args, schema: Schema):
             p = schema.load(a)
         except ValidationError as e:
             results.append(render_validationerror(e))
-        except Exception as e:
-            results.append(render_validationerror(e))
         else:
             results.append(render_plugin_html(p))
     return jsonify(results)
 
 
-def render_plugin_md(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]):
+def render_plugin_md(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]) -> str:
     """Renders HTML for a plugin.
 
     :param m: The plugin HTML schema.
@@ -299,10 +303,11 @@ def render_plugin_md(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
     return m.get_real_md()
 
 
-def render_multimd(args, schema):
+def render_multimd(args: List[dict], schema: Schema) -> Response:
     """Renders HTMLs according to the given Schema.
 
     :param args: Partially validated HTML arguments.
+    :param schema: The marshmallow schema to use for validating the plugin data.
     :return: List of HTMLs.
     """
     results = []
@@ -311,14 +316,12 @@ def render_multimd(args, schema):
             p = schema.load(a)
         except ValidationError as e:
             results.append(render_validationerror(e))
-        except Exception as e:
-            results.append(render_validationerror(e))
         else:
             results.append(render_plugin_md(p))
     return jsonify(results)
 
 
-def create_app(name: str, html_schema: Type[Schema]):
+def create_app(name: str, html_schema: Type[Schema]) -> Flask:
     """Creates the Flask app for the plugin server.
 
     :param name: Name of import. Usually __name__ should be passed.
@@ -330,18 +333,23 @@ def create_app(name: str, html_schema: Type[Schema]):
     return app
 
 
-def register_routes(app, html_schema: Type[Schema], csrf=None, pre=""):
+def register_routes(
+        app: Union[Flask, Blueprint],
+        html_schema: Type[Schema],
+        csrf: Optional[Any] = None,
+        pre: str = "",
+) -> None:
     @app.errorhandler(422)
-    def handle_invalid_request(error: UnprocessableEntity):
+    def handle_invalid_request(error: Any) -> Response:
         return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
 
     @app.route(pre+'/multihtml', methods=['post'])
-    def multihtml():
+    def multihtml() -> Response:
         ret = render_multihtml(request.get_json(), html_schema())
         return ret
 
     @app.route(pre+'/multimd', methods=['post'])
-    def multimd():
+    def multimd() -> Response:
         ret = render_multimd(request.get_json(), html_schema())
         return ret
 
@@ -350,15 +358,13 @@ def register_routes(app, html_schema: Type[Schema], csrf=None, pre=""):
         csrf.exempt(multimd)
 
     @app.before_request
-    def print_rq():
+    def print_rq() -> None:
         pass
         # pprint(request.get_json(silent=True))
         # print(request.get_json(silent=True))
 
-    return app
 
-
-def create_blueprint(name: str, plugin_name: str, html_schema: Type[Schema], csrf=None):
+def create_blueprint(name: str, plugin_name: str, html_schema: Type[Schema], csrf: Optional[Any]=None) -> Blueprint:
     bp = Blueprint(f'{plugin_name}_plugin',
                    name,
                    url_prefix=f'/{plugin_name}')

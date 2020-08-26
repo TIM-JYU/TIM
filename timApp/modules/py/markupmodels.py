@@ -115,7 +115,7 @@ def asdict_skip_missing(obj):
     return dict(result)
 
 
-def list_not_missing_fields(inst):
+def list_not_missing_fields(inst) -> List:
     return list(((k, v) for k, v in asdict_skip_missing(inst).items()))
 
 
@@ -152,5 +152,5 @@ class GenericMarkupModel(KnownMarkupFields):
     connectionErrorMessage: Union[str, Missing] = missing
     undo: Union[UndoInfo, Missing, None] = missing
 
-    def get_visible_data(self):
+    def get_visible_data(self) -> Dict:
         return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys and k != 'hidden_keys'}
