@@ -26,3 +26,11 @@ class TableFormTest(TimRouteTest):
 
         res = self.get(f"/tableForm/fetchTableDataPreview", query_string=fetch_args)
         self.assertEqual(len(res["rows"]), 2, "all users' values should be visible for teacher access")
+
+        self.get(f"/tableForm/generateCSV", query_string={
+            'docId': doc.id,
+            'fields': 'mmcqexample',
+            'groups': ['*'],
+            'userFilter': [self.test_user_2.name],
+            'separator': ';'
+        }, expect_status=200, expect_content=f"Username;{task_id}.c\r\n{self.test_user_2.name};[true, true, true]\r\n")

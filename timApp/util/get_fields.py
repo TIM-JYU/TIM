@@ -268,6 +268,8 @@ def get_fields_and_users(
         q = valid_answers_query(task_chunk).join(User, Answer.users)
         if not requested_groups.include_all_answered:
             q = q.join(UserGroup, join_relation).filter(group_filter)
+        elif user_filter is not None:
+            q = q.filter(user_filter)
         sub += (
                 q
                 .group_by(Answer.task_id, User.id)
