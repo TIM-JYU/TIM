@@ -155,7 +155,7 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
                         [style.height.px]="iframesettings.height"
                         [src]="iframesettings.src"
                         [sandbox]="iframesettings.sandbox"
-                        allow="camera;microphone"
+                        [attr.allow]="iframesettings.allow"
                 >
                 </iframe>
             </div>
