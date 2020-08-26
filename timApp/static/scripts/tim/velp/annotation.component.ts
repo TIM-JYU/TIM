@@ -32,11 +32,10 @@ export enum AnnotationAddReason {
 }
 
 export enum AnnotationPlacement {
-    InText,
+    AccuratelyPositioned,
     InMargin,
     InMarginOnly,
-    InMarginAndUnknownIfItWillBeInText,
-    InPicture,
+    InMarginAndUnknownIfItWillBeAccuratelyPositioned,
 }
 
 export interface IAnnotationBindings {
@@ -63,7 +62,7 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
               [ngStyle]="{backgroundColor: getCustomColor()}">
             <ng-content></ng-content>
         </span>
-        <span #inlineSpan [ngClass]="placement != 4 ? 'inlineAnnotation' : 'inlineImageAnnotation'">
+        <span #inlineSpan [ngClass]="(isImageAnnotation()) ? 'inlineImageAnnotation' : 'inlineAnnotation'">
             <div #inlineDiv *ngIf="show"
                  (click)="updateZIndex()"
                  class="no-popup-menu annotation-info emphasise default"
@@ -203,7 +202,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
 
     // eslint-disable-next-line @typescript-eslint/tslint/config
     @ViewChild("inlineDiv") set inlineDiv(div: ElementRef<HTMLDivElement>)  {
-        if (div && this.placement == AnnotationPlacement.InPicture) {
+        if (div && this.isImageAnnotation()) {
             this.adjustAnnotationInPicturePosition(div.nativeElement);
         }
     }
@@ -267,7 +266,11 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     }
 
     private isInMargin() {
-        return (this.placement !== AnnotationPlacement.InText && this.placement !== AnnotationPlacement.InPicture);
+        return (this.placement !== AnnotationPlacement.AccuratelyPositioned);
+    }
+
+    isImageAnnotation(): boolean {
+        return (this.placement == AnnotationPlacement.AccuratelyPositioned && this.annotation.draw_data != undefined);
     }
 
     ngAfterViewInit() {
@@ -281,7 +284,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
      * @param div Annotation info div
      */
     adjustAnnotationInPicturePosition(div: HTMLDivElement) {
-        if (this.placement != AnnotationPlacement.InPicture) {
+        if (!(this.isImageAnnotation())) {
             return;
         }
         let left = 0;
@@ -327,7 +330,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     }
 
     toggleElementBorder() {
-        if (this.placement == AnnotationPlacement.InPicture) {
+        if (this.isImageAnnotation()) {
             const innerRectangle = this.element.find(".annotation-picture-element");
             if (innerRectangle[0]) {
                 innerRectangle[0].style.border = this.show ? "1px solid #000000" : "none";

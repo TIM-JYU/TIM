@@ -308,7 +308,7 @@ export class ReviewController {
                         par,
                         a,
                         AnnotationAddReason.LoadingExisting,
-                        AnnotationPlacement.InMarginAndUnknownIfItWillBeInText,
+                        AnnotationPlacement.InMarginAndUnknownIfItWillBeAccuratelyPositioned,
                     );
                     continue;
                 }
@@ -324,7 +324,7 @@ export class ReviewController {
                         // If the coordinates exist but the review element does not, we don't know yet if the annotation can be
                         // successfully placed in text.
                         !isFullCoord(placeInfo.start) ||
-                        !isFullCoord(placeInfo.end) ? AnnotationPlacement.InMarginOnly : AnnotationPlacement.InMarginAndUnknownIfItWillBeInText,
+                        !isFullCoord(placeInfo.end) ? AnnotationPlacement.InMarginOnly : AnnotationPlacement.InMarginAndUnknownIfItWillBeAccuratelyPositioned,
                     );
                     continue;
                 }
@@ -358,7 +358,7 @@ export class ReviewController {
      * @param show - Whether annotation is shown when created or not
      */
     addAnnotationToCoord(range: Range, annotation: Annotation, show: AnnotationAddReason): boolean {
-        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.InText);
+        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.AccuratelyPositioned);
         try {
             range.surroundContents(element);
         } catch (err) {
@@ -378,7 +378,7 @@ export class ReviewController {
      * @param show - Whether annotation is shown when created or not
      */
     compilePopOver(container: Element, target: Element, annotation: Annotation, show: AnnotationAddReason): Element {
-        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.InPicture);
+        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.AccuratelyPositioned);
         element.appendChild(target);
         container.appendChild(element);
         $compile(element)(scope);
