@@ -335,6 +335,7 @@ def get_fields_and_users(
                 user_tasks = {}
             user_fieldstyles = {}
             user = users[user_index]
+            assert user.id == uid
             obj = {'user': user, 'fields': user_tasks, 'styles': user_fieldstyles}
             res.append(obj)
             if member_filter_type != MembershipFilter.Current:
