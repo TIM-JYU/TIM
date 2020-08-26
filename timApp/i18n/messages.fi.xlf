@@ -210,10 +210,11 @@
           <context context-type="linenumber">13</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="0c2b252d05920654bbf03cf858721cbe935e4bab" datatype="html">
+      <trans-unit id="98a9ce260e9e52f9af9b2311fc0364d497e50e59" datatype="html">
         <source>
                 <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Column size computation took <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> seconds.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>
-                You can speed up loading by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.
+                You can speed up loading by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>setting
+                static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.
             </source>
         <target state="new">
             <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Sarakeleveyksien määrittelyyn meni <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> sekunttia.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>
