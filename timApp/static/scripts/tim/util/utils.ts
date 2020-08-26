@@ -737,13 +737,17 @@ export function parseIframeopts(iframeopts: string) {
     const parse = Range.prototype.createContextualFragment.bind(document.createRange());
     const parsed = parse(`<div ${iframeopts}></div>`);
     let sandbox = "";
+    let allow = "";
     for (const c of parsed.firstElementChild!.attributes) {
         if (c.name === "sandbox") {
             sandbox = c.value;
         }
+        if (c.name === "allow") {
+            allow = c.value;
+        }
         // TODO: Handle possible other iframe options.
     }
-    return {sandbox};
+    return {sandbox, allow};
 }
 
 export function seconds2Time(seconds: number) {

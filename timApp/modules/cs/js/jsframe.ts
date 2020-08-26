@@ -155,6 +155,7 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
                         [style.height.px]="iframesettings.height"
                         [src]="iframesettings.src"
                         [sandbox]="iframesettings.sandbox"
+                        allow="iframesettings.allow"
                 >
                 </iframe>
             </div>
@@ -189,7 +190,7 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
 export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
     t.TypeOf<typeof JsframeAll>,
     typeof JsframeAll> implements ITimComponent, IUserChanged, AfterViewInit, OnDestroy {
-    iframesettings?: { sandbox: string, src: SafeResourceUrl, width: number, height: number };
+    iframesettings?: { allow: string, sandbox: string, src: SafeResourceUrl, width: number, height: number };
     private ab?: AnswerBrowserController;
 
     constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
@@ -409,8 +410,10 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         const iframeopts = this.markup.iframeopts ?? "sandbox='allow-scripts allow-same-origin'";
 
         const sandbox = parseIframeopts(iframeopts).sandbox;
+        const allow = parseIframeopts(iframeopts).allow;
+        // if (allow) { allow =  'allow="' + allow + '"'; }
         const source = this.domSanitizer.bypassSecurityTrustResourceUrl(src);
-        this.iframesettings = {sandbox, src: source, width: w, height: h};
+        this.iframesettings = {allow, sandbox, src: source, width: w, height: h};
     }
 
     getHtmlUrl(): string {
