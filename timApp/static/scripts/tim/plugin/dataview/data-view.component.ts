@@ -433,7 +433,8 @@ interface CellIndex {
         <tim-alert class="data-view-alert" severity="info" *ngIf="showSlowLoadMessage">
             <div class="message" i18n>
                 <strong>Column size computation took {{sizeComputationTime}} seconds.</strong>
-                You can speed up loading by <a href="#" class="alert-link" (click)="showTableWidthExportDialog($event)">setting static column widths</a>.
+                You can speed up loading by <a href="#" class="alert-link" (click)="showTableWidthExportDialog($event)">setting
+                static column widths</a>.
             </div>
             <span class="close-icon glyphicon glyphicon-remove" (click)="hideSlowMessageDialog()"></span>
         </tim-alert>
@@ -559,11 +560,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private cellValueCache: Record<number, string[]> = {};
     private dataTableCache!: TableDOMCache;
     private fixedTableCache?: TableDOMCache;
-    private idTableCache?: TableDOMCache;
-    private headerIdTableCache?: TableDOMCache;
+    private idTableCache!: TableDOMCache;
+    private headerIdTableCache!: TableDOMCache;
     private fixedColHeaderIdTableCache?: TableDOMCache;
     private fixedColFilterTableCache?: TableDOMCache;
-    private filterTableCache?: TableDOMCache;
+    private filterTableCache!: TableDOMCache;
     private scheduledUpdate = false;
     private viewport!: Viewport;
     private rowAxis!: GridAxisManager;
@@ -807,7 +808,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
         }
         requestAnimationFrame(() => {
-            this.updateHeaderCellSizes();
+            if (this.vScroll.enabled) {
+                this.updateHeaderCellSizes();
+            } else {
+                for (const {row, col} of cells) {
+                    this.updateHeaderSizesForCell(row, col);
+                }
+            }
+
             this.syncHeaderScroll();
         });
     }
@@ -936,56 +944,60 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         });
     }
 
+    async showTableWidthExportDialog(evt: MouseEvent) {
+        evt.preventDefault();
+        await showCopyWidthsDialog({columnWidths: this.idealColWidths});
+    }
+
+    hideSlowMessageDialog() {
+        this.showSlowLoadMessage = false;
+        this.cdr.detectChanges();
+    }
+
     private initTableCaches() {
         this.dataTableCache = new TableDOMCache(this.mainDataBody.nativeElement);
         if (this.fixedDataBody) {
             this.fixedTableCache = new TableDOMCache(this.fixedDataBody.nativeElement);
         }
-        if (this.idBody) {
-            this.idTableCache = new TableDOMCache(
-                this.idBody.nativeElement,
-                "td",
-                (cell, rowIndex, columnIndex) => {
-                    if (columnIndex == 0) {
-                        cell.className = "nrcolumn";
-                        return;
-                    }
-                    cell.className = "cbColumn";
-                    cell.appendChild(el("input", {
-                        type: "checkbox",
-                    }));
+        this.idTableCache = new TableDOMCache(
+            this.idBody.nativeElement,
+            "td",
+            (cell, rowIndex, columnIndex) => {
+                if (columnIndex == 0) {
+                    cell.className = "nrcolumn";
+                    return;
                 }
-            );
-        }
-        if (this.headerIdBody) {
-            const makeHeader = (cell: HTMLTableCellElement) => {
-                applyBasicStyle(cell, this.headerStyle);
-                cell.appendChild(el("span")); // Header text
-                cell.appendChild(el("span", {
-                    className: "sort-marker",
-                })); // Sort marker
-            };
-            this.headerIdTableCache = new TableDOMCache(this.headerIdBody.nativeElement, "td", makeHeader);
-            if (this.fixedColHeaderIdBody) {
-                this.fixedColHeaderIdTableCache = new TableDOMCache(this.fixedColHeaderIdBody.nativeElement, "td", makeHeader);
-            }
-        }
-        if (this.filterBody) {
-            const makeFilter = (cell: HTMLTableCellElement) => {
+                cell.className = "cbColumn";
                 cell.appendChild(el("input", {
-                    type: "text",
+                    type: "checkbox",
                 }));
-            };
-            this.filterTableCache = new TableDOMCache(
-                this.filterBody.nativeElement,
+            }
+        );
+        const makeHeader = (cell: HTMLTableCellElement) => {
+            applyBasicStyle(cell, this.headerStyle);
+            cell.appendChild(el("span")); // Header text
+            cell.appendChild(el("span", {
+                className: "sort-marker",
+            })); // Sort marker
+        };
+        this.headerIdTableCache = new TableDOMCache(this.headerIdBody.nativeElement, "td", makeHeader);
+        if (this.fixedColHeaderIdBody) {
+            this.fixedColHeaderIdTableCache = new TableDOMCache(this.fixedColHeaderIdBody.nativeElement, "td", makeHeader);
+        }
+        const makeFilter = (cell: HTMLTableCellElement) => {
+            cell.appendChild(el("input", {
+                type: "text",
+            }));
+        };
+        this.filterTableCache = new TableDOMCache(
+            this.filterBody.nativeElement,
+            "td",
+            makeFilter);
+        if (this.fixedColFilterBody) {
+            this.fixedColFilterTableCache = new TableDOMCache(
+                this.fixedColFilterBody.nativeElement,
                 "td",
                 makeFilter);
-            if (this.fixedColFilterBody) {
-                this.fixedColFilterTableCache = new TableDOMCache(
-                    this.fixedColFilterBody.nativeElement,
-                    "td",
-                    makeFilter);
-            }
         }
     }
 
@@ -1030,12 +1042,31 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.updateSummaryCellSizes();
     }
 
-    private updateRowHeaderCellSizes(): void {
-        if (!this.idTableCache) {
-            return;
-        }
-        const {vertical} = this.viewport;
+    private updateHeaderSizesForCell(row: number, column: number) {
+        const rowHeight = this.getHeaderRowHeight(row);
+        const columnWidth = this.getHeaderColumnWidth(column);
 
+        const trRow = this.idTableCache.getRow(this.rowAxis.indexToOrdinal[row]);
+        trRow.style.height = `${rowHeight}px`;
+
+        let axis = this.colAxis;
+        let headers = this.headerIdTableCache;
+        let filters = this.filterTableCache;
+        if (columnInCahce(column, this.fixedColAxis, this.fixedColHeaderIdTableCache) && columnInCahce(column, this.fixedColAxis, this.fixedColFilterTableCache)) {
+            headers = this.fixedColHeaderIdTableCache;
+            filters = this.fixedColFilterTableCache;
+            axis = this.fixedColAxis;
+        }
+
+        const headerCell = headers.getCell(0, axis.indexToOrdinal[column]);
+        const filterCell = filters.getCell(0, axis.indexToOrdinal[column]);
+        headerCell.style.width = `${columnWidth}px`;
+        headerCell.style.maxWidth = `${columnWidth}px`;
+        filterCell.style.width = `${columnWidth}px`;
+    }
+
+    private updateRowHeaderCellSizes(): void {
+        const {vertical} = this.viewport;
         this.idTableCache.setSize(this.viewport.vertical.count, 2);
         // Get sizes in batch for speed
         const sizes = Array.from(new Array(vertical.count)).map((value, index) =>
@@ -1080,6 +1111,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
+    // endregion
+
+    // region Virtual scrolling
+
     private updateSummaryCellSizes(): void {
         if (this.rowAxis.visibleItems.length == 0) {
             return;
@@ -1100,10 +1135,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             filterHeader.style.height = `${filterHeaderHeight}px`;
         }
     }
-
-    // endregion
-
-    // region Virtual scrolling
 
     private updateVTable(opts?: {
         skipIfSame?: boolean,
@@ -1249,6 +1280,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
+    // endregion
+
+    // region Table building
+
     private syncHeaderScroll(): void {
         if (!this.headerContainer || !this.idContainer) {
             return;
@@ -1278,10 +1313,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         idTable.style.transform = `translateY(${this.viewport.vertical.startPosition}px)`;
         headerIdTable.style.transform = filterIdTable.style.transform = `translateX(${this.viewport.horizontal.startPosition}px)`;
     }
-
-    // endregion
-
-    // region Table building
 
     private setTableSizes(): void {
         if (!this.vScroll.enabled || !this.idTable || !this.headerTable) {
@@ -1544,6 +1575,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         return row;
     }
 
+    // endregion
+
+    // region DOM handlers for common elements
+
     private updateCell(cell: HTMLTableCellElement, rowIndex: number, columnIndex: number, contents?: string, updateStyle = true): HTMLTableCellElement {
         cell.hidden = !this.vScroll.enabled && !this.modelProvider.showColumn(columnIndex);
         cell.onclick = () => this.modelProvider.handleClickCell(rowIndex, columnIndex);
@@ -1575,16 +1610,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
-    // endregion
-
-    // region DOM handlers for common elements
-
     private onRowCheckedHandler(checkBox: HTMLInputElement, rowIndex: number) {
         return () => {
             this.modelProvider.setRowChecked(rowIndex, checkBox.checked);
             this.modelProvider.handleChangeCheckbox(rowIndex);
         };
     }
+
+    // endregion
+
+    // region Utils
 
     private onHeaderColumnClick(columnIndex: number) {
         return () => {
@@ -1603,20 +1638,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.modelProvider.setRowFilter(columnIndex, input.value);
             this.modelProvider.handleChangeFilter();
         };
-    }
-
-    // endregion
-
-    // region Utils
-
-    async showTableWidthExportDialog(evt: MouseEvent) {
-        evt.preventDefault();
-        await showCopyWidthsDialog({ columnWidths: this.idealColWidths });
-    }
-
-    hideSlowMessageDialog() {
-        this.showSlowLoadMessage = false;
-        this.cdr.detectChanges();
     }
 
     private showSlowMessageDialog() {
@@ -1709,11 +1730,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private getDataCacheForColumn(columnIndex: number): [TableDOMCache, GridAxisManager] {
-        if (this.fixedTableCache && this.fixedColAxis.indexToOrdinal[columnIndex] !== undefined) {
+        if (columnInCahce(columnIndex, this.fixedColAxis, this.fixedTableCache)) {
             return [this.fixedTableCache, this.fixedColAxis];
         }
         return [this.dataTableCache, this.colAxis];
     }
+
 
     private getHeaderColumnWidth(columnIndex: number): number {
         if (this.idealColWidths[columnIndex]) {
@@ -1785,6 +1807,10 @@ function applyBasicStyle(element: HTMLElement, style: Record<string, string> | n
 function viewportsEqual(vp1: Viewport, vp2: Viewport) {
     const visItemsEqual = (v1: VisibleItems, v2: VisibleItems) => v1.startIndex == v2.startIndex && v1.count == v2.count;
     return visItemsEqual(vp1.vertical, vp2.vertical) && visItemsEqual(vp1.horizontal, vp2.horizontal);
+}
+
+function columnInCahce(columnIndex: number, axis: GridAxisManager, cache?: TableDOMCache): cache is TableDOMCache {
+    return cache !== undefined && axis.indexToOrdinal[columnIndex] !== undefined;
 }
 
 interface PurifyData {
