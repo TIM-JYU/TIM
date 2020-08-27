@@ -161,6 +161,10 @@ class GridAxisManager {
      */
     itemOrder: number[] = [];
 
+    /**
+     * A record that maps item index to its ordinal in the visible table.
+     * Essentially a reverse mapping of visibleItems.
+     */
     indexToOrdinal: Record<number, number> = {};
 
     constructor(size: number,
