@@ -725,20 +725,23 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.rowAxis.refresh();
 
         if (this.vScroll.enabled) {
-            this.updateVTable();
-        } else {
-            for (const rowIndex of order) {
-                const tableRow = this.dataTableCache.getRow(rowIndex);
-                this.mainDataBody.nativeElement.appendChild(tableRow);
-                if (this.fixedTableCache && this.fixedDataBody) {
-                    const fixedTableRow = this.fixedTableCache.getRow(rowIndex);
-                    this.fixedDataBody.nativeElement.appendChild(fixedTableRow);
-                }
+            this.updateVTable({
+                updateHeader: true,
+            });
+            return;
+        }
 
-                if (this.idTableCache && this.idBody) {
-                    const rowHeader = this.idTableCache.getRow(rowIndex);
-                    this.idBody.nativeElement.appendChild(rowHeader);
-                }
+        for (const rowIndex of order) {
+            const tableRow = this.dataTableCache.getRow(rowIndex);
+            this.mainDataBody.nativeElement.appendChild(tableRow);
+            if (this.fixedTableCache && this.fixedDataBody) {
+                const fixedTableRow = this.fixedTableCache.getRow(rowIndex);
+                this.fixedDataBody.nativeElement.appendChild(fixedTableRow);
+            }
+
+            if (this.idTableCache && this.idBody) {
+                const rowHeader = this.idTableCache.getRow(rowIndex);
+                this.idBody.nativeElement.appendChild(rowHeader);
             }
         }
 
@@ -1223,15 +1226,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 updateCache(rowNumber, horizontal.startIndex, horizontal.count, this.colAxis, this.dataTableCache, updateCellStyles);
                 updateCache(rowNumber, 0, this.fixedColumnCount, this.fixedColAxis, this.fixedTableCache);
 
-                if (this.idTableCache) {
-                    const idRow = this.idTableCache.getRow(rowNumber);
-                    idRow.style.height = `${this.modelProvider.getRowHeight(rowIndex)}px`;
-                    const idCell = this.idTableCache.getCell(rowNumber, 0);
-                    idCell.textContent = `${rowIndex + this.columnIdStart}`;
-                    const input = this.idTableCache.getCell(rowNumber, 1).getElementsByTagName("input")[0];
-                    input.checked = this.modelProvider.isRowChecked(rowIndex);
-                    input.oninput = this.onRowCheckedHandler(input, rowIndex);
-                }
+                const idRow = this.idTableCache.getRow(rowNumber);
+                idRow.style.height = `${this.modelProvider.getRowHeight(rowIndex)}px`;
+                const idCell = this.idTableCache.getCell(rowNumber, 0);
+                idCell.textContent = `${rowIndex + this.columnIdStart}`;
+                const input = this.idTableCache.getCell(rowNumber, 1).getElementsByTagName("input")[0];
+                input.checked = this.modelProvider.isRowChecked(rowIndex);
+                input.oninput = this.onRowCheckedHandler(input, rowIndex);
             }
         };
         const updateDataCellStylesOnRender = this.scrollDiff.horizontal == 0;
@@ -1248,7 +1249,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             renderOrder = renderOrder.reverse();
         }
         // Save update times by updating column headers only when scrolling horizontally
-        if (this.scrollDiff.horizontal != 0 && this.colAxis.isVirtual) {
+        if (updateHeader || (this.scrollDiff.horizontal != 0 && this.colAxis.isVirtual)) {
             this.updateColumnHeaders(false);
             this.updateColumnHeaderCellSizes(false);
 
@@ -1543,6 +1544,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 headerTitle.textContent = `${this.modelProvider.getColumnHeaderContents(columnIndex)}`;
                 headerCell.onclick = this.onHeaderColumnClick(columnIndex);
 
+                const sortSymbolEl = headerCell.getElementsByTagName("span")[1];
+                const {symbol, style} = this.modelProvider.getSortSymbolInfo(columnIndex);
+                applyBasicStyle(sortSymbolEl, style);
+                sortSymbolEl.textContent = symbol;
+
                 const filterCell = filters.getCell(0, column);
                 const input = filterCell.getElementsByTagName("input")[0];
                 input.oninput = this.onFilterInput(input, columnIndex);
@@ -1768,7 +1774,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // endregion
 }
 
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, props?: { [k in keyof HTMLElementTagNameMap[K]]?: (HTMLElementTagNameMap[K])[k] }): HTMLElementTagNameMap[K] {
+type HTMLElementProps<K extends keyof HTMLElementTagNameMap> = {
+    [k in keyof HTMLElementTagNameMap[K]]: (HTMLElementTagNameMap[K])[k]
+};
+
+function el<K extends keyof HTMLElementTagNameMap>(tag: K, props?: Partial<HTMLElementProps<K>>): HTMLElementTagNameMap[K] {
     return Object.assign(document.createElement(tag), props);
 }
 
