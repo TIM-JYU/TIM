@@ -1418,7 +1418,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private invalidateCacheAt(rowIndex: number, columnIndex: number) {
-        // In vscroll mode,
+        // In vscroll mode, we make use of the cell value cache to store all the sanitized table values for
+        // quick lookup. To update the value, we invalidate by emptying it. The next time table is refreshed,
+        // the new value will be polled from data model via getCellContents
         if (!this.vScroll.enabled) {
             return;
         }
