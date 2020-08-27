@@ -18,6 +18,7 @@ from timApp.auth.accesshelper import verify_logged_in, has_teacher_access, \
     get_doc_or_abort, verify_view_access, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.timdb.sqa import db
+from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response, no_cache_json_response, to_json_str
 from timApp.util.utils import get_current_time
@@ -94,6 +95,19 @@ class UpdateAnnotationModel(AnnotationIdModel):
     draw_data: Optional[List[dict]] = None
 
 
+def is_annotation_visible(user: User, ann: Annotation) -> bool:
+    if user.id == ann.annotator_id:
+        return True
+    if ann.visible_to == AnnotationVisibility.everyone.value:
+        return True
+    d = get_doc_or_abort(ann.document_id)
+    if ann.visible_to == AnnotationVisibility.teacher.value and user.has_teacher_access(d):
+        return True
+    if ann.visible_to == AnnotationVisibility.owner.value and user.has_ownership(d):
+        return True
+    return False
+
+
 @annotations.route("/update_annotation", methods=['post'])
 @use_model(UpdateAnnotationModel)
 def update_annotation(m: UpdateAnnotationModel):
@@ -110,7 +124,8 @@ def update_annotation(m: UpdateAnnotationModel):
     ann = get_annotation_or_abort(m.id)
     d = get_doc_or_abort(ann.document_id)
     if ann.annotator_id != user.id:
-        raise AccessDenied("You are not the annotator.")
+        if not is_annotation_visible(user, ann) or not user.has_manage_access(d):
+            raise AccessDenied("Sorry, you don't have permission to edit this annotation")
     if visible_to:
         ann.visible_to = visible_to.value
 
@@ -120,11 +135,6 @@ def update_annotation(m: UpdateAnnotationModel):
 
     if has_teacher_access(d):
         ann.points = points
-    else:
-        if points is None:
-            ann.points = points
-        else:
-            ann.points = None
     if m.coord:
         ann.set_position_info(m.coord)
     if drawing:
@@ -154,7 +164,9 @@ def invalidate_annotation(m: AnnotationIdModel):
     annotation = get_annotation_or_abort(m.id)
     user = get_current_user_object()
     if not annotation.annotator_id == user.id:
-        raise AccessDenied("You are not the annotator.")
+        d = get_doc_or_abort(annotation.document_id)
+        if not is_annotation_visible(user, annotation) or not user.has_manage_access(d):
+            raise AccessDenied("Sorry, you don't have permission to delete this annotation")
     annotation.valid_until = get_current_time()
     db.session.commit()
     return ok_response()
@@ -180,6 +192,8 @@ def add_comment_route(m: AddAnnotationCommentModel):
     verify_logged_in()
     commenter = get_current_user_object()
     a = get_annotation_or_abort(m.id)
+    if not is_annotation_visible(commenter, a):
+        raise AccessDenied("Sorry, you don't have permission to add comments to this annotation")
     if not m.content:
         raise RouteException('Comment must not be empty')
     a.comments.append(AnnotationComment(content=m.content, commenter_id=commenter.id))

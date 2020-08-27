@@ -85,13 +85,13 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
 
                 <div>
                     <div *ngIf="showFull">
-                        <p [hidden]="!isAnnotator() || !allowChangePoints()"><label>
+                        <p [hidden]="!canEditAnnotation() || !allowChangePoints()"><label>
                             Points: <input type="number"
                                            [(ngModel)]="values.points"
                                            step="any"
-                                           [disabled]="!isAnnotator()"/></label>
+                                           [disabled]="!canEditAnnotation()"/></label>
                         </p>
-                        <p *ngIf="!isAnnotator()"><label
+                        <p *ngIf="!canEditAnnotation()"><label
                                 [hidden]="values.points == null">Points:  {{ values.points }}</label></p>
                     </div>
                     <div [hidden]="showFull">
@@ -118,10 +118,10 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
                         <div>
                             <div class="form-inline adjustAnnForm">
                                 <div>
-                    <span [hidden]="!isAnnotator()">
-                        <label [ngClass]="{disabled: !isAnnotator()}"><div title="Visible to"
+                    <span [hidden]="!canEditAnnotation()">
+                        <label [ngClass]="{disabled: !canEditAnnotation()}"><div title="Visible to"
                                                                            [ngClass]="['glyphicon', 'glyphicon-eye-open' ]"></div></label>
-                        <select [(ngModel)]="values.visible_to" [disabled]="!isAnnotator()">
+                        <select [(ngModel)]="values.visible_to" [disabled]="!canEditAnnotation()">
                             <option *ngFor="let o of visibleOptions.values" [ngValue]="o.id">{{o.name}}</option>
                         </select>
                         <div [ngClass]="['glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
@@ -129,7 +129,7 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
                         </div>
                     </span>
 
-                                    <span *ngIf="!isAnnotator()" class="annotationVisibleText">
+                                    <span *ngIf="!canEditAnnotation()" class="annotationVisibleText">
 
                         <span title="Visible to" [ngClass]="['annqmark', 'glyphicon', 'glyphicon-eye-open' ]"></span>
                                         {{ getSelectedVisibleOption().name }}
@@ -139,7 +139,7 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
                         </span>
 
                     </span>
-                                    <span style="float: right">
+                                    <span [hidden]="!canEditAnnotation()" style="float: right">
                         <input type="color" [(ngModel)]="values.color"
                                class="colorchange-button" title="Change annotation color">
                         <button *ngIf="isVelpCustomColor()"
@@ -158,7 +158,7 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
                     </div>
                     <div *ngIf="showFull">
         <span class="pull-right glyphicon glyphicon-trash clickable-icon" title="Delete annotation"
-              [hidden]="!isAnnotator()"
+              [hidden]="!canEditAnnotation()"
               (click)="deleteAnnotation()"></span>
                     </div>
                     <div class="annotationVisibleText" [hidden]="showFull">
@@ -389,8 +389,10 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     async saveChanges() {
         const id = this.annotation.id;
 
+        let ann = this.annotation;
+
         // Add comment
-        if (this.newcomment.length > 0) {
+        if (this.commentChanged()) {
             const data = {id: id, content: this.newcomment};
             const r = await to($http.post<Record<string, unknown>>(
                 "/add_annotation_comment",
@@ -399,17 +401,21 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
             if (!r.ok) {
                 return;
             }
+            ann = deserialize(r.result.data, Annotation);
+            this.newcomment = "";
         }
-        this.newcomment = "";
-        const updatevalues = {
-            id: id,
-            ...this.values,
-        };
-        const r2 = await updateAnnotationServer(updatevalues);
-        if (!r2.ok) {
-            return;
+        if (this.valuesChanged()) {
+
+            const updatevalues = {
+                id: id,
+                ...this.values,
+            };
+            const r2 = await updateAnnotationServer(updatevalues);
+            if (!r2.ok) {
+                return;
+            }
+            ann = r2.result;
         }
-        const ann = r2.result;
         this.annotation = ann;
         this.original = this.annotation.getEditableValues();
         this.rctrl.updateAnnotation(ann);
@@ -420,10 +426,17 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     }
 
     /**
-     * Checks if the user has rights to edit the annotation.
+     * Checks if the user is the original annotator.
      */
     isAnnotator() {
         return this.annotation.annotator.id == Users.getCurrent().id;
+    }
+
+    /**
+     * Checks if the user has rights to edit the annotation.
+     */
+    canEditAnnotation(): boolean {
+        return this.isAnnotator() || this.vctrl.item.rights.manage;
     }
 
     /**
@@ -437,7 +450,15 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
      * Checks if there are unsaved changes.
      */
     hasChanged() {
-        return !deepEqual(this.original, this.values) || this.newcomment.length > 0;
+        return this.valuesChanged() || this.commentChanged();
+    }
+
+    valuesChanged() {
+        return !deepEqual(this.original, this.values);
+    }
+
+    commentChanged() {
+        return this.newcomment.length > 0;
     }
 
     /**
