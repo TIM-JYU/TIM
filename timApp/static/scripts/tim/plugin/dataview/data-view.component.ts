@@ -52,7 +52,22 @@ import {
 } from "@angular/core";
 import * as DOMPurify from "dompurify";
 import {showCopyWidthsDialog} from "tim/plugin/dataview/copy-table-width-dialog.component";
+import {GridAxisManager} from "tim/plugin/dataview/gridAxisManager";
+import {TableDOMCache} from "tim/plugin/dataview/tableDOMCache";
 import {scrollToViewInsideParent} from "tim/util/utils";
+import {
+    applyBasicStyle,
+    CellIndex,
+    columnInCache,
+    el,
+    joinCss,
+    PurifyData,
+    runMultiFrame,
+    TableArea,
+    Viewport,
+    viewportsEqual,
+    VisibleItems,
+} from "./util";
 
 /**
  * General interface for an object that provides the data model for DataViewComponent.
@@ -113,322 +128,18 @@ export interface VirtualScrollingOptions {
     viewOverflow: TableArea;
 }
 
-/**
- * Table area, starting from (0, 0).
- */
-interface TableArea {
-    horizontal: number;
-    vertical: number;
-}
-
-/**
- * Information about the visible items in a viewport's axis.
- */
-interface VisibleItems {
-    startOrdinal: number;
-    startPosition: number;
-    count: number;
-    visibleStartOrdinal: number;
-    visibleCount: number;
-    size: number;
-}
-
-/**
- * A viewport that represents the actual visible portion of the table.
- */
-interface Viewport {
-    horizontal: VisibleItems;
-    vertical: VisibleItems;
-}
-
-/**
- * A single axis manager for rows or columns. Handles caching visible items, item positions and order.
- * Provides simple API for determining the visible items.
- */
-class GridAxisManager {
-    /**
-     * An offset list that represents start positions of each visible item, taking into account possible border size
-     */
-    positionStart: number[] = [];
-
-    /**
-     * List of all visible items in their correct final order. Use this to map visible row index to actual row index.
-     */
-    visibleItems: number[] = [];
-
-    /**
-     * List of all items in their display order.
-     */
-    itemOrder: number[] = [];
-
-    /**
-     * A record that maps item index to its ordinal in the visible table.
-     * Essentially a reverse mapping of visibleItems.
-     */
-    indexToOrdinal: Record<number, number> = {};
-
-    constructor(size: number,
-                private isDataViewVirtual: boolean,
-                private borderSpacing: number,
-                private getSize: (i: number) => number,
-                private showItem: (index: number) => boolean,
-                private skipItem?: (ordinal: number) => boolean) {
-        this.itemOrder = Array.from(new Array(size)).map((e, i) => i);
-        this.refresh();
-    }
-
-    /**
-     * Total size of the axis. In other words, the sum of all grid item sizes.
-     */
-    get totalSize(): number {
-        return this.positionStart[this.positionStart.length - 1];
-    }
-
-    /**
-     * Whether the scrolling for the axis is virtual.
-     * Non-virtually scrolling axis doesn't have positionStart precomputed (as they can be determined from DOM)
-     * and getVisibleItemsInViewport returns all items in the axis.
-     */
-    get isVirtual(): boolean {
-        // If the total size of the axis is precomputed, we know the axis needs virtual scrolling
-        return !!this.totalSize;
-    }
-
-    get visibleCount(): number {
-        return this.visibleItems.length;
-    }
-
-    /**
-     * Updates the visible items and recomputes the positions if needed.
-     */
-    refresh(): void {
-        let currentVisible = -1;
-        this.visibleItems = this.itemOrder.filter((index) => {
-            const result = this.showItem(index);
-            if (!result) {
-                return false;
-            }
-            currentVisible++;
-            return this.skipItem ? !this.skipItem(currentVisible) : true;
-        });
-        this.indexToOrdinal = {};
-        for (const [ord, index] of this.visibleItems.entries()) {
-            this.indexToOrdinal[index] = ord;
-        }
-        if (!this.isDataViewVirtual) {
-            return;
-        }
-        this.positionStart = [0];
-        for (let i = 0; i <= this.visibleItems.length - 1; i++) {
-            const index = this.visibleItems[i];
-            let size = this.getSize(index);
-            if (size) {
-                size += this.borderSpacing;
-            }
-            this.positionStart[i + 1] = this.positionStart[i] + size;
-        }
-    }
-
-    /**
-     * Gets all items that are visible in the given area.
-     * Allows to specify the viewport and visible areas separately to account for overflow.
-     *
-     * @param vpStartPosition Start position of the viewport, in pixels.
-     * @param vpSize Viewport's total size, in pixels.
-     * @param visibleStartPosition Start position of the visible area of the viewport, in pixels.
-     * @param visibleSize Size of the visible area of the viewport, in pixels.
-     * @return A VisibleItems object that contains information about visible item indices.
-     */
-    getVisibleItemsInViewport(vpStartPosition: number, vpSize: number, visibleStartPosition: number, visibleSize: number): VisibleItems {
-        if (!this.isVirtual) {
-            return {
-                startPosition: 0,
-                count: this.visibleItems.length,
-                startOrdinal: 0,
-                visibleCount: 0,
-                visibleStartOrdinal: 0,
-                size: 0,
-            };
-        }
-        vpStartPosition = clamp(vpStartPosition, 0, this.totalSize);
-        visibleStartPosition = clamp(visibleStartPosition, 0, this.totalSize);
-        vpSize = Math.min(vpSize, this.totalSize - vpStartPosition);
-        visibleSize = Math.min(visibleSize, this.totalSize - visibleStartPosition);
-        const startIndex = this.search(vpStartPosition);
-        const viewStartIndex = this.search(visibleStartPosition);
-        const endIndex = this.search(vpStartPosition + vpSize);
-        const viewEndIndex = this.search(visibleStartPosition + visibleSize);
-        const count = Math.min(endIndex - startIndex + 1, this.visibleItems.length - startIndex);
-        const startPosition = this.positionStart[startIndex];
-        const endPosition = this.positionStart[startIndex + count];
-        return {
-            startOrdinal: startIndex,
-            count: count,
-            startPosition: startPosition,
-            visibleStartOrdinal: viewStartIndex,
-            visibleCount: Math.min(viewEndIndex - viewStartIndex + 1, this.visibleItems.length - viewStartIndex),
-            size: endPosition - startPosition,
-        };
-    }
-
-    private search(position: number): number {
-        let start = 0;
-        let end = this.positionStart.length - 1;
-        while (start < end) {
-            const mid = Math.floor((start + end) / 2);
-            const posStart = this.positionStart[mid];
-            if (position < posStart) {
-                end = mid - 1;
-            } else if (position > posStart) {
-                start = mid + 1;
-            } else {
-                return mid;
-            }
-        }
-        return end;
-    }
-}
-
-/**
- * A cache that contains all references to DOM elements in a table.
- * Additionally contains helper methods for resizing the table.
- *
- * The row/column numbering of the cache represents the positions of DOM elements in the visible table
- * and not actual row/column indices of the data.
- */
-class TableDOMCache {
-    rows: {
-        rowElement: HTMLTableRowElement;
-        cells: HTMLTableCellElement[];
-    }[] = [];
-    private activeArea: TableArea = {horizontal: 0, vertical: 0};
-
-    constructor(private tbody: HTMLTableSectionElement,
-                private cellElement: "td" | "th" = "td",
-                private createCellContent?: (cell: HTMLTableCellElement, rowIndex: number, columnIndex: number) => void) {
-    }
-
-    /**
-     * Gets the `tr` element at the given row.
-     *
-     * @param rowNumber The row number of the row.
-     * @return HTMLTableRowElement of the row.
-     */
-    getRow(rowNumber: number): HTMLTableRowElement {
-        if (rowNumber > this.activeArea.vertical) {
-            throw new Error(`No row ${rowNumber} found! This should be unreachable!`);
-        } else {
-            return this.rows[rowNumber].rowElement;
-        }
-    }
-
-    /**
-     * Gets the cell element in the table.
-     *
-     * @param rowNumber Row number of the cell.
-     * @param columnNumber Column number of the cell.
-     * @return The HTMLTableCellElement of the cell at the given position.
-     */
-    getCell(rowNumber: number, columnNumber: number): HTMLTableCellElement {
-        if (rowNumber > this.activeArea.vertical || columnNumber > this.activeArea.horizontal) {
-            throw new Error(`No cell ${rowNumber}, ${columnNumber} found! This should be unreachable!`);
-        }
-        return this.rows[rowNumber].cells[columnNumber];
-    }
-
-    /**
-     * Set the size of the visible table by adding or hiding DOM elements.
-     *
-     * @param rows Number of rows to show.
-     * @param columns Number of columns to show.
-     * @return True, if the table was resized in either axis.
-     */
-    setSize(rows: number, columns: number): boolean {
-        const rowDelta = rows - this.activeArea.vertical;
-        const colDelta = columns - this.activeArea.horizontal;
-        if (rowDelta > 0) {
-            // Too few rows => grow
-            // Readd possible hidden rows
-            for (let rowNumber = 0; rowNumber < rows; rowNumber++) {
-                let row = this.rows[rowNumber];
-                if (row) {
-                    row.rowElement.hidden = false;
-                    continue;
-                }
-                row = this.rows[rowNumber] = {
-                    rowElement: el("tr"),
-                    cells: [],
-                };
-                // Don't update col count to correct one yet, handle just rows first
-                for (let columnNumber = 0; columnNumber < columns; columnNumber++) {
-                    const cell = row.cells[columnNumber] = el(this.cellElement);
-                    if (this.createCellContent) {
-                        this.createCellContent(cell, rowNumber, columnNumber);
-                    }
-                    row.rowElement.appendChild(cell);
-                }
-                this.tbody.appendChild(row.rowElement);
-            }
-        } else if (rowDelta < 0) {
-            // Too many rows => hide unused ones
-            for (let rowNumber = rows; rowNumber < this.rows.length; rowNumber++) {
-                this.rows[rowNumber].rowElement.hidden = true;
-            }
-        }
-
-        if (colDelta > 0) {
-            // Columns need to be added => make use of colcache here
-            for (let rowNumber = 0; rowNumber < rows; rowNumber++) {
-                const row = this.rows[rowNumber];
-                for (let columnNumber = 0; columnNumber < columns; columnNumber++) {
-                    let cell = row.cells[columnNumber];
-                    if (cell) {
-                        cell.hidden = false;
-                    } else {
-                        cell = row.cells[columnNumber] = el(this.cellElement);
-                        if (this.createCellContent) {
-                            this.createCellContent(cell, rowNumber, columnNumber);
-                        }
-                        row.rowElement.appendChild(cell);
-                    }
-                }
-            }
-        } else if (colDelta < 0) {
-            // Need to hide columns
-            for (let rowNumber = 0; rowNumber < rows; rowNumber++) {
-                const row = this.rows[rowNumber];
-                for (let colNumber = columns; colNumber < row.cells.length; colNumber++) {
-                    row.cells[colNumber].hidden = true;
-                }
-            }
-        }
-        this.activeArea = {
-            horizontal: columns,
-            vertical: rows,
-        };
-        return rowDelta !== 0 && colDelta !== 0;
-    }
+enum EditorPosition {
+    MainData,
+    FixedColumn,
 }
 
 const DEFAULT_VIRTUAL_SCROLL_SETTINGS: VirtualScrollingOptions = {
     enabled: false,
     viewOverflow: {horizontal: 1, vertical: 1},
 };
-
 // TODO: Right now, default TimTable style uses collapsed borders, in which case there is no need for spacing. Does this need a setting?
 const VIRTUAL_SCROLL_TABLE_BORDER_SPACING = 0;
-
-enum EditorPosition {
-    MainData,
-    FixedColumn,
-}
-
 const SLOW_SIZE_MEASURE_THRESHOLD = 0;
-
-interface CellIndex {
-    x: number;
-    y: number;
-}
 
 /**
  * A DOM-based data view component that supports virtual scrolling.
@@ -1754,7 +1465,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         return [this.dataTableCache, this.colAxis];
     }
 
-
     private getHeaderColumnWidth(columnIndex: number): number {
         if (this.idealColWidths[columnIndex]) {
             return this.idealColWidths[columnIndex];
@@ -1786,56 +1496,4 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     // endregion
-}
-
-type HTMLElementProps<K extends keyof HTMLElementTagNameMap> = {
-    [k in keyof HTMLElementTagNameMap[K]]: (HTMLElementTagNameMap[K])[k]
-};
-
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, props?: Partial<HTMLElementProps<K>>): HTMLElementTagNameMap[K] {
-    return Object.assign(document.createElement(tag), props);
-}
-
-function clamp(val: number, min: number, max: number): number {
-    return Math.max(Math.min(val, max), min);
-}
-
-function runMultiFrame(iter: Generator): void {
-    const cb = () => {
-        const result = iter.next();
-        if (!result.done) {
-            requestAnimationFrame(cb);
-        }
-    };
-    requestAnimationFrame(cb);
-}
-
-function joinCss(obj: Record<string, string>) {
-    let result = "";
-    // eslint-disable-next-line guard-for-in
-    for (const k in obj) {
-        // noinspection JSUnfilteredForInLoop
-        result = `${result}; ${k}:${obj[k]}`;
-    }
-    return result;
-}
-
-function applyBasicStyle(element: HTMLElement, style: Record<string, string> | null) {
-    if (style != null) {
-        Object.assign(element.style, style);
-    }
-}
-
-function viewportsEqual(vp1: Viewport, vp2: Viewport) {
-    const visItemsEqual = (v1: VisibleItems, v2: VisibleItems) => v1.startOrdinal == v2.startOrdinal && v1.count == v2.count;
-    return visItemsEqual(vp1.vertical, vp2.vertical) && visItemsEqual(vp1.horizontal, vp2.horizontal);
-}
-
-function columnInCache(columnIndex: number, axis: GridAxisManager, cache?: TableDOMCache): cache is TableDOMCache {
-    return cache !== undefined && axis.indexToOrdinal[columnIndex] !== undefined;
-}
-
-interface PurifyData {
-    row: number;
-    data: string[];
 }
