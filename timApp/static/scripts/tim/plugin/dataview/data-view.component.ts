@@ -663,7 +663,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             // Some versions of iOS seem to trigger resize events on scroll:
             // https://stackoverflow.com/questions/8898412/iphone-ipad-triggering-unexpected-resize-events
             let prevWidth = window.innerWidth;
-            window.addEventListener("resize", (e) => {
+            window.addEventListener("resize", () => {
                 const curWidth = window.innerWidth;
                 if (prevWidth == curWidth) {
                     return;
@@ -951,7 +951,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 updateCache(rowNumber, 0, this.fixedColumnCount, this.fixedColAxis, this.fixedTableCache);
 
                 const idRow = this.idTableCache.getRow(rowNumber);
-                idRow.style.height = px(this.modelProvider.getRowHeight(rowIndex));
+                idRow.style.height = px(this.modelProvider.getRowHeight(rowIndex) ?? 0);
                 const idCell = this.idTableCache.getCell(rowNumber, 0);
                 idCell.textContent = `${rowIndex + this.columnIdStart}`;
                 const input = this.idTableCache.getCell(rowNumber, 1).getElementsByTagName("input")[0];
@@ -1484,7 +1484,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         return Math.max(idealHeaderWidth, firstCellWidth);
     }
 
-    private getHeaderRowHeight(rowIndex: number): number | undefined {
+    private getHeaderRowHeight(rowIndex: number): number {
         const res = this.modelProvider.getRowHeight(rowIndex);
         if (res !== undefined) {
             return res;

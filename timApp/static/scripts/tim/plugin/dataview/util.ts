@@ -84,9 +84,6 @@ export function columnInCache(columnIndex: number, axis: GridAxisManager, cache?
     return cache !== undefined && axis.indexToOrdinal[columnIndex] !== undefined;
 }
 
-export function px(n?: number) {
-    if (n === undefined) {
-        return "";
-    }
+export function px(n: number) {
     return `${n}px`;
 }
