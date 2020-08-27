@@ -19,7 +19,7 @@ from timApp.auth.accesshelper import verify_logged_in, has_teacher_access, \
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException, use_model
-from timApp.util.flask.responsehelper import json_response, ok_response, no_cache_json_response
+from timApp.util.flask.responsehelper import json_response, ok_response, no_cache_json_response, to_json_str
 from timApp.util.utils import get_current_time
 from timApp.velp.annotation_model import Annotation, AnnotationPosition
 from timApp.velp.annotations import AnnotationVisibility, get_annotations_with_comments_in_document, \
@@ -128,7 +128,7 @@ def update_annotation(m: UpdateAnnotationModel):
     if m.coord:
         ann.set_position_info(m.coord)
     if drawing:
-        ann.draw_data = json.dumps(drawing)
+        ann.draw_data = to_json_str(drawing)
 
     db.session.commit()
     return json_response(ann)
