@@ -83,3 +83,10 @@ export function viewportsEqual(vp1: Viewport, vp2: Viewport) {
 export function columnInCache(columnIndex: number, axis: GridAxisManager, cache?: TableDOMCache): cache is TableDOMCache {
     return cache !== undefined && axis.indexToOrdinal[columnIndex] !== undefined;
 }
+
+export function px(n?: number) {
+    if (n === undefined) {
+        return "";
+    }
+    return `${n}px`;
+}

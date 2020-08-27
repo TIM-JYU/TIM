@@ -61,7 +61,7 @@ import {
     columnInCache,
     el,
     joinCss,
-    PurifyData,
+    PurifyData, px,
     runMultiFrame,
     TableArea,
     Viewport,
@@ -241,8 +241,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Fields
     @Input() modelProvider!: DataModelProvider;
     @Input() virtualScrolling: Partial<VirtualScrollingOptions> = DEFAULT_VIRTUAL_SCROLL_SETTINGS;
-    @Input() tableClass: { [klass: string]: unknown } = {};
-    @Input() tableStyle: { [klass: string]: string } = {};
+    @Input() tableClass: Record<string, unknown> = {};
+    @Input() tableStyle: Record<string, string> = {};
     @Input() headerStyle: Record<string, string> | null = {};
     @Input() columnIdStart: number = 1;
     @Input() tableMaxHeight: string = "2000em";
@@ -555,7 +555,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
      * @param col Currently selected cell
      */
     updateEditorPosition(row: number, col: number): void {
-        // Because of Angular, we need to pass the editor as ng-content (otherwise Angular seems to loose reference to
+        // Because of Angular, we need to pass the editor as ng-content (otherwise Angular seems to lose reference to
         // the element and stop updating it properly)
         // We must use querySelector here because the editor can jump between fixed data table and main data table
         // TODO: Figure out a better way to integrate the editor
@@ -581,16 +581,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         applyBasicStyle(editor as HTMLElement, {
             position: "relative",
-            height: "0px",
+            height: px(0),
             display: "block",
         });
         const {x, y, w, h} = this.getCellPosition(row, col);
         if (editInput) {
             applyBasicStyle(editInput as HTMLElement, {
                 position: "absolute",
-                top: `${y - this.mainDataTable.nativeElement.offsetHeight}px`,
-                left: `${x}px`,
-                width: `${w}px`,
+                top: px(y - this.mainDataTable.nativeElement.offsetHeight),
+                left: px(x),
+                width: px(w),
             });
         }
         if (inlineEditorButtons) {
@@ -598,8 +598,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             const dir = row == 0 ? 1 : -1;
             applyBasicStyle(e, {
                 position: "absolute",
-                top: `${y - this.mainDataTable.nativeElement.offsetHeight + dir * e.offsetHeight}px`,
-                left: `${x}px`,
+                top: px(y - this.mainDataTable.nativeElement.offsetHeight + dir * e.offsetHeight),
+                left: px(x),
             });
         }
         if (this.editorPosition == EditorPosition.MainData) {
@@ -751,15 +751,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // Apparently to correctly handle column header table, we have to set its size to match that of data
         // and then add margin to pad the scrollbar width
         if (!this.modelProvider.isPreview() && this.rowAxis.visibleItems.length != 0) {
-            this.headerContainer.nativeElement.style.width = `${this.dataTableWidth}px`;
-            this.headerContainer.nativeElement.style.marginRight = `${this.verticalScrollbar}px`;
+            this.headerContainer.nativeElement.style.width = px(this.dataTableWidth);
+            this.headerContainer.nativeElement.style.marginRight = px(this.verticalScrollbar);
         } else {
             this.headerContainer.nativeElement.style.width = `auto`;
         }
         // For height it looks like it's enough to just set the height correctly
-        this.idContainer.nativeElement.style.maxHeight = `${this.dataTableHeight}px`;
+        this.idContainer.nativeElement.style.maxHeight = px(this.dataTableHeight);
         if (this.fixedDataContainer) {
-            this.fixedDataContainer.nativeElement.style.maxHeight = `${this.dataTableHeight}px`;
+            this.fixedDataContainer.nativeElement.style.maxHeight = px(this.dataTableHeight);
         }
     }
 
@@ -777,7 +777,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const columnWidth = this.getHeaderColumnWidth(column);
 
         const trRow = this.idTableCache.getRow(this.rowAxis.indexToOrdinal[row]);
-        trRow.style.height = `${rowHeight}px`;
+        trRow.style.height = px(rowHeight);
 
         let axis = this.colAxis;
         let headers = this.headerIdTableCache;
@@ -791,9 +791,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
         const headerCell = headers.getCell(0, axis.indexToOrdinal[column]);
         const filterCell = filters.getCell(0, axis.indexToOrdinal[column]);
-        headerCell.style.width = `${columnWidth}px`;
-        headerCell.style.maxWidth = `${columnWidth}px`;
-        filterCell.style.width = `${columnWidth}px`;
+        headerCell.style.width = px(columnWidth);
+        headerCell.style.maxWidth = px(columnWidth);
+        filterCell.style.width = px(columnWidth);
     }
 
     private updateRowHeaderCellSizes(): void {
@@ -807,9 +807,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const minWidth = (this.summaryTable.nativeElement.querySelector(".nrcolumn") as HTMLElement).offsetWidth;
         for (let row = 0; row < vertical.count; row++) {
             const tr = this.idTableCache.getRow(row);
-            tr.style.height = `${sizes[row]}px`;
+            tr.style.height = px(sizes[row]);
             const idCell = this.idTableCache.getCell(row, 0);
-            idCell.style.minWidth = `${minWidth}px`;
+            idCell.style.minWidth = px(minWidth);
         }
     }
 
@@ -829,9 +829,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 const filterCell = filters.getCell(0, column);
                 headerCell.hidden = false;
                 filterCell.hidden = false;
-                headerCell.style.width = `${width}px`;
-                headerCell.style.maxWidth = `${width}px`;
-                filterCell.style.width = `${width}px`;
+                headerCell.style.width = px(width);
+                headerCell.style.maxWidth = px(width);
+                filterCell.style.width = px(width);
             }
         };
         const {horizontal} = this.viewport;
@@ -856,14 +856,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (width) {
             this.summaryTable.nativeElement.querySelectorAll(".nrcolumn").forEach((e) => {
                 if (e instanceof HTMLElement) {
-                    e.style.width = `${width}px`;
+                    e.style.width = px(width);
                 }
             });
         }
         if (summaryTotalHeaderHeight && filterHeaderHeight) {
             const [summaryHeader, filterHeader] = this.summaryTable.nativeElement.getElementsByTagName("tr");
-            summaryHeader.style.height = `${summaryTotalHeaderHeight}px`;
-            filterHeader.style.height = `${filterHeaderHeight}px`;
+            summaryHeader.style.height = px(summaryTotalHeaderHeight);
+            filterHeader.style.height = px(filterHeaderHeight);
         }
     }
 
@@ -951,7 +951,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 updateCache(rowNumber, 0, this.fixedColumnCount, this.fixedColAxis, this.fixedTableCache);
 
                 const idRow = this.idTableCache.getRow(rowNumber);
-                idRow.style.height = `${this.modelProvider.getRowHeight(rowIndex)}px`;
+                idRow.style.height = px(this.modelProvider.getRowHeight(rowIndex));
                 const idCell = this.idTableCache.getCell(rowNumber, 0);
                 idCell.textContent = `${rowIndex + this.columnIdStart}`;
                 const input = this.idTableCache.getCell(rowNumber, 1).getElementsByTagName("input")[0];
@@ -1054,23 +1054,23 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const totalWidth = this.colAxis.totalSize;
         const totalHeight = this.rowAxis.totalSize;
         if (totalWidth) {
-            table.style.width = `${totalWidth}px`;
-            table.style.minWidth = `${totalWidth}px`;
-            table.style.maxWidth = `${totalWidth}px`;
-            headerTable.style.width = `${totalWidth}px`;
+            table.style.width = px(totalWidth);
+            table.style.minWidth = px(totalWidth);
+            table.style.maxWidth = px(totalWidth);
+            headerTable.style.width = px(totalWidth);
         }
         if (totalHeight) {
-            table.style.height = `${totalHeight}px`;
-            idTable.style.height = `${totalHeight}px`;
+            table.style.height = px(totalHeight);
+            idTable.style.height = px(totalHeight);
             if (fixedColTable) {
-                fixedColTable.style.height = `${totalHeight}px`;
+                fixedColTable.style.height = px(totalHeight);
             }
         }
-        table.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_SPACING}px`;
-        idTable.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_SPACING}px`;
-        headerTable.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_SPACING}px`;
+        table.style.borderSpacing = px(VIRTUAL_SCROLL_TABLE_BORDER_SPACING);
+        idTable.style.borderSpacing = px(VIRTUAL_SCROLL_TABLE_BORDER_SPACING);
+        headerTable.style.borderSpacing = px(VIRTUAL_SCROLL_TABLE_BORDER_SPACING);
         if (fixedColTable) {
-            fixedColTable.style.borderSpacing = `${VIRTUAL_SCROLL_TABLE_BORDER_SPACING}px`;
+            fixedColTable.style.borderSpacing = px(VIRTUAL_SCROLL_TABLE_BORDER_SPACING);
         }
     }
 
@@ -1198,7 +1198,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.dataViewContainer.nativeElement.appendChild(this.sizeContainer);
         }
         const colWidth = this.getDataColumnWidth(column);
-        this.sizeContentContainer.style.minWidth = `${colWidth}px`;
+        this.sizeContentContainer.style.minWidth = px(colWidth);
         this.sizeContentContainer.innerHTML = this.modelProvider.getCellContents(row, column);
         const size = this.sizeContentContainer.getBoundingClientRect();
         return {width: Math.ceil(size.width * 1.1), height: Math.ceil(size.height * 1.1)};
@@ -1294,10 +1294,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const rowHeight = this.modelProvider.getRowHeight(rowIndex);
         if (rowHeight) {
             if (this.vScroll.enabled) {
-                row.style.minHeight = `${rowHeight}px`;
-                row.style.maxHeight = `${rowHeight}px`;
+                row.style.minHeight = px(rowHeight);
+                row.style.maxHeight = px(rowHeight);
             }
-            row.style.height = `${rowHeight}px`;
+            row.style.height = px(rowHeight);
             row.style.overflow = "hidden";
         }
         return row;
@@ -1325,15 +1325,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const colWidth = this.getDataColumnWidth(columnIndex);
         const idealWidth = this.idealColWidths[columnIndex];
         if (colWidth) {
-            cell.style.minWidth = `${colWidth}px`;
+            cell.style.minWidth = px(colWidth);
             cell.style.overflow = "hidden";
             if (this.colAxis.isVirtual) {
-                cell.style.width = `${colWidth}px`;
-                cell.style.maxWidth = `${colWidth}px`;
+                cell.style.width = px(colWidth);
+                cell.style.maxWidth = px(colWidth);
             } else if (idealWidth) {
-                cell.style.minWidth = `${idealWidth}px`;
-                cell.style.maxWidth = `${idealWidth}px`;
-                cell.style.width = `${idealWidth}px`;
+                cell.style.minWidth = px(idealWidth);
+                cell.style.maxWidth = px(idealWidth);
+                cell.style.width = px(idealWidth);
             }
         }
     }
