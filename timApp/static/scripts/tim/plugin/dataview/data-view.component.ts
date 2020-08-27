@@ -125,10 +125,10 @@ interface TableArea {
  * Information about the visible items in a viewport's axis.
  */
 interface VisibleItems {
-    startIndex: number;
+    startOrdinal: number;
     startPosition: number;
     count: number;
-    visibleStartIndex: number;
+    visibleStartOrdinal: number;
     visibleCount: number;
 }
 
@@ -239,9 +239,9 @@ class GridAxisManager {
             return {
                 startPosition: 0,
                 count: this.visibleItems.length,
-                startIndex: 0,
+                startOrdinal: 0,
                 visibleCount: 0,
-                visibleStartIndex: 0,
+                visibleStartOrdinal: 0,
             };
         }
         vpStartPosition = clamp(vpStartPosition, 0, this.totalSize);
@@ -253,10 +253,10 @@ class GridAxisManager {
         const endIndex = this.search(vpStartPosition + vpSize);
         const viewEndIndex = this.search(visibleStartPosition + visibleSize);
         return {
-            startIndex: startIndex,
+            startOrdinal: startIndex,
             count: Math.min(endIndex - startIndex + 1, this.visibleItems.length - startIndex),
             startPosition: this.positionStart[startIndex],
-            visibleStartIndex: viewStartIndex,
+            visibleStartOrdinal: viewStartIndex,
             visibleCount: Math.min(viewEndIndex - viewStartIndex + 1, this.visibleItems.length - viewStartIndex),
         };
     }
@@ -1080,7 +1080,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.idTableCache.setSize(this.viewport.vertical.count, 2);
         // Get sizes in batch for speed
         const sizes = Array.from(new Array(vertical.count)).map((value, index) =>
-            this.getHeaderRowHeight(this.rowAxis.visibleItems[index + vertical.startIndex])
+            this.getHeaderRowHeight(this.rowAxis.visibleItems[index + vertical.startOrdinal])
         );
         // Ensure the ID column is at least the size of the summary number column (needed for filtering)
         const minWidth = (this.summaryTable.nativeElement.querySelector(".nrcolumn") as HTMLElement).offsetWidth;
@@ -1115,7 +1115,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         };
         const {horizontal} = this.viewport;
 
-        update(this.colAxis, horizontal.startIndex, horizontal.count, this.headerIdTableCache, this.filterTableCache);
+        update(this.colAxis, horizontal.startOrdinal, horizontal.count, this.headerIdTableCache, this.filterTableCache);
         if (updateFixed) {
             update(this.fixedColAxis, 0, this.fixedColumnCount, this.fixedColHeaderIdTableCache, this.fixedColFilterTableCache);
         }
@@ -1162,8 +1162,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return;
         }
         this.scrollDiff = {
-            vertical: newViewport.vertical.startIndex - this.viewport.vertical.startIndex,
-            horizontal: newViewport.horizontal.startIndex - this.viewport.horizontal.startIndex,
+            vertical: newViewport.vertical.startOrdinal - this.viewport.vertical.startOrdinal,
+            horizontal: newViewport.horizontal.startOrdinal - this.viewport.horizontal.startOrdinal,
         };
         this.viewport = newViewport;
         this.updateTableTransform();
@@ -1175,6 +1175,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const h = data.clientHeight * this.vScroll.viewOverflow.vertical;
         const w = data.clientWidth * this.vScroll.viewOverflow.horizontal;
         // Don't consider outside bounds if the axis is not virtual
+        console.log(`
+Math.abs(this.viewport.vertical.startPosition - data.scrollTop + h) = ${Math.abs(this.viewport.vertical.startPosition - data.scrollTop + h)};
+h = ${h};
+
+this.viewport.horizontal.startPosition = ${this.viewport.horizontal.startPosition};
+data.scrollLeft = ${data.scrollLeft};
+Math.abs(this.viewport.horizontal.startPosition - data.scrollLeft + w) = ${Math.abs(this.viewport.horizontal.startPosition - data.scrollLeft + w)};
+w = ${w};
+`);
         const overVertical = this.rowAxis.isVirtual && Math.abs(this.viewport.vertical.startPosition - data.scrollTop + h) > h;
         const overHorizontal = this.colAxis.isVirtual && Math.abs(this.viewport.horizontal.startPosition - data.scrollLeft + w) > w;
         return overHorizontal || overVertical;
@@ -1210,7 +1219,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
             const tr = dataCache.getRow(rowNumber);
             tr.hidden = false;
-            const rowIndex = this.rowAxis.visibleItems[vertical.startIndex + rowNumber];
+            const rowIndex = this.rowAxis.visibleItems[vertical.startOrdinal + rowNumber];
             this.updateRow(tr, rowIndex);
             for (let columnNumber = 0; columnNumber < colCount; columnNumber++) {
                 const td = dataCache.getCell(rowNumber, columnNumber);
@@ -1221,9 +1230,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         };
         const render = (startRowOrdinal: number, endRowOrdinal: number, updateCellStyles: boolean) => {
             for (let rowOrdinal = startRowOrdinal; rowOrdinal < endRowOrdinal; rowOrdinal++) {
-                const rowNumber = rowOrdinal - vertical.startIndex;
+                const rowNumber = rowOrdinal - vertical.startOrdinal;
                 const rowIndex = this.rowAxis.visibleItems[rowOrdinal];
-                updateCache(rowNumber, horizontal.startIndex, horizontal.count, this.colAxis, this.dataTableCache, updateCellStyles);
+                updateCache(rowNumber, horizontal.startOrdinal, horizontal.count, this.colAxis, this.dataTableCache, updateCellStyles);
                 updateCache(rowNumber, 0, this.fixedColumnCount, this.fixedColAxis, this.fixedTableCache);
 
                 const idRow = this.idTableCache.getRow(rowNumber);
@@ -1242,8 +1251,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         // * The bottom part
         // The order of top/bottom depends on the scrolling direction to reduce flickering
         let renderOrder = [
-            () => render(vertical.startIndex, vertical.visibleStartIndex, updateDataCellStylesOnRender),
-            () => render(vertical.visibleStartIndex + vertical.visibleCount, vertical.startIndex + vertical.count, updateDataCellStylesOnRender),
+            () => render(vertical.startOrdinal, vertical.visibleStartOrdinal, updateDataCellStylesOnRender),
+            () => render(vertical.visibleStartOrdinal + vertical.visibleCount, vertical.startOrdinal + vertical.count, updateDataCellStylesOnRender),
         ];
         if (this.scrollDiff.vertical > 0) {
             renderOrder = renderOrder.reverse();
@@ -1255,11 +1264,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
             for (let rowOrdinal = 0; rowOrdinal < vertical.count; rowOrdinal++) {
                 for (let col = 0; col < horizontal.count; col++) {
-                    this.updateCellStyle(this.dataTableCache.getCell(rowOrdinal, col), this.rowAxis.visibleItems[rowOrdinal + vertical.startIndex], this.colAxis.visibleItems[col + horizontal.startIndex]);
+                    this.updateCellStyle(this.dataTableCache.getCell(rowOrdinal, col), this.rowAxis.visibleItems[rowOrdinal + vertical.startOrdinal], this.colAxis.visibleItems[col + horizontal.startOrdinal]);
                 }
             }
         }
-        render(vertical.visibleStartIndex, vertical.visibleStartIndex + vertical.visibleCount, updateDataCellStylesOnRender);
+        render(vertical.visibleStartOrdinal, vertical.visibleStartOrdinal + vertical.visibleCount, updateDataCellStylesOnRender);
         yield;
         for (const r of renderOrder) {
             r();
@@ -1279,7 +1288,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             setTableVisibility("hidden");
             this.viewport = this.getViewport();
             this.updateTableTransform();
-            runMultiFrame(this.renderViewport());
+            runMultiFrame(this.renderViewport(updateHeader));
         } else {
             if (updateHeader) {
                 this.updateHeaderTableSizes();
@@ -1355,9 +1364,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const empty = (size: number): VisibleItems => ({
             startPosition: 0,
             count: size,
-            startIndex: 0,
+            startOrdinal: 0,
             visibleCount: 0,
-            visibleStartIndex: 0,
+            visibleStartOrdinal: 0,
         });
         if (this.vScroll.enabled) {
             const viewportWidth = data.clientWidth * (1 + 2 * this.vScroll.viewOverflow.horizontal);
@@ -1487,7 +1496,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
             cache.setSize(vertical.count, colCount);
             for (let rowNumber = 0; rowNumber < vertical.count; rowNumber++) {
-                const rowIndex = this.rowAxis.visibleItems[vertical.startIndex + rowNumber];
+                const rowIndex = this.rowAxis.visibleItems[vertical.startOrdinal + rowNumber];
                 this.updateRow(cache.getRow(rowNumber), rowIndex);
                 for (let columnNumber = 0; columnNumber < colCount; columnNumber++) {
                     const columnIndex = colAxis.visibleItems[colStart + columnNumber];
@@ -1501,7 +1510,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
         };
 
-        build(this.colAxis, horizontal.startIndex, horizontal.count, this.mainDataBody.nativeElement, this.dataTableCache);
+        build(this.colAxis, horizontal.startOrdinal, horizontal.count, this.mainDataBody.nativeElement, this.dataTableCache);
         build(this.fixedColAxis, 0, this.fixedColumnCount, this.fixedDataBody?.nativeElement, this.fixedTableCache);
     }
 
@@ -1520,7 +1529,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.idTableCache.setSize(this.viewport.vertical.count, 2);
         const {vertical} = this.viewport;
         for (let row = 0; row < vertical.count; row++) {
-            const rowIndex = this.rowAxis.visibleItems[row + vertical.startIndex];
+            const rowIndex = this.rowAxis.visibleItems[row + vertical.startOrdinal];
             const idCell = this.idTableCache.getCell(row, 0);
             idCell.textContent = `${rowIndex + this.columnIdStart}`;
 
@@ -1558,7 +1567,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
         const {horizontal} = this.viewport;
         return [
-            ...update(this.colAxis, horizontal.startIndex, horizontal.count, this.headerIdTableCache, this.filterTableCache),
+            ...update(this.colAxis, horizontal.startOrdinal, horizontal.count, this.headerIdTableCache, this.filterTableCache),
             ...(updateFixed ? update(this.fixedColAxis, 0, this.fixedColumnCount, this.fixedColHeaderIdTableCache, this.fixedColFilterTableCache) : []),
         ];
     }
@@ -1667,8 +1676,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const [cache, colAxis] = this.getDataCacheForColumn(col);
         const itemRowOrdinal = this.rowAxis.indexToOrdinal[row];
         const itemColOrdinal = colAxis.indexToOrdinal[col];
-        const vpRowOrdinal = this.viewport.vertical.startIndex;
-        const vpColOrdinal = this.viewport.horizontal.startIndex;
+        const vpRowOrdinal = this.viewport.vertical.startOrdinal;
+        const vpColOrdinal = this.viewport.horizontal.startOrdinal;
         return cache.getCell(itemRowOrdinal - vpRowOrdinal, itemColOrdinal - vpColOrdinal);
     }
 
@@ -1754,7 +1763,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return idealHeaderWidth;
         }
         const [cache, colAxis] = this.getDataCacheForColumn(columnIndex);
-        const firstCellWidth = cache.getCell(this.rowAxis.visibleItems[this.viewport.vertical.startIndex], colAxis.indexToOrdinal[columnIndex]).getBoundingClientRect().width;
+        const firstCellWidth = cache.getCell(this.rowAxis.visibleItems[this.viewport.vertical.startOrdinal], colAxis.indexToOrdinal[columnIndex]).getBoundingClientRect().width;
         return Math.max(idealHeaderWidth, firstCellWidth);
     }
 
@@ -1768,7 +1777,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         // We make use of getBoundingClientRect because it returns proper fractional size
         // (which is needed for at least on Firefox for table size sync to work)
-        return this.dataTableCache.getRow(this.rowAxis.visibleItems[this.viewport.vertical.startIndex]).getBoundingClientRect().height;
+        return this.dataTableCache.getRow(this.rowAxis.visibleItems[this.viewport.vertical.startOrdinal]).getBoundingClientRect().height;
     }
 
     // endregion
@@ -1813,7 +1822,7 @@ function applyBasicStyle(element: HTMLElement, style: Record<string, string> | n
 }
 
 function viewportsEqual(vp1: Viewport, vp2: Viewport) {
-    const visItemsEqual = (v1: VisibleItems, v2: VisibleItems) => v1.startIndex == v2.startIndex && v1.count == v2.count;
+    const visItemsEqual = (v1: VisibleItems, v2: VisibleItems) => v1.startOrdinal == v2.startOrdinal && v1.count == v2.count;
     return visItemsEqual(vp1.vertical, vp2.vertical) && visItemsEqual(vp1.horizontal, vp2.horizontal);
 }
 
