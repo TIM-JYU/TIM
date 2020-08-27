@@ -15,7 +15,7 @@ export interface ICopyTableWidthsParams {
             <ng-container body>
                 <ng-container i18n>
                     <p>Loading times can be improved by setting static column widths.</p>
-                    <p>Copy the below setting under <code>dataView</code> configuration:</p>
+                    <p>Copy the below settings under <code>dataView</code> configuration:</p>
                 </ng-container>
                 <pre>{{settingYaml}}</pre>
             </ng-container>

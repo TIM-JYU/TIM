@@ -180,10 +180,10 @@
           <context context-type="linenumber">3</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="325bb8fe03e7fb392a036bd794e46940ec606608" datatype="html">
+      <trans-unit id="a4d5f2fdae1d175da6444fcf327df77604de3b2d" datatype="html">
         <source>
                     <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Loading times can be improved by setting static column widths.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-                    <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Copy the below setting under <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> configuration:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
+                    <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Copy the below settings under <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> configuration:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
                 </source>
         <target state="new">
                     <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Taulun latautumista voidaan nopeuttaa asettamalla kiinteät sarakeleveydet.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
@@ -217,7 +217,7 @@
                 static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.
             </source>
         <target state="new">
-            <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Sarakeleveyksien määrittelyyn meni <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> sekunttia.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>
+            <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Sarakeleveyksien määrittelyyn meni <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> sekuntia.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>
             Latautumista voidaan nopeuttaa <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>asettamalla kiinteät sarakeleveydet<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.
         </target>
         <context-group purpose="location">
