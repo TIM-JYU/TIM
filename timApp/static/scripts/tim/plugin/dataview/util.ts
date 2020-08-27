@@ -63,10 +63,8 @@ export function runMultiFrame(iter: Generator): void {
 
 export function joinCss(obj: Record<string, string>) {
     let result = "";
-    // eslint-disable-next-line guard-for-in
-    for (const k in obj) {
-        // noinspection JSUnfilteredForInLoop
-        result = `${result}; ${k}:${obj[k]}`;
+    for (const [key, val] of Object.entries(obj)) {
+        result = `${result}; ${key}:${val}`;
     }
     return result;
 }
