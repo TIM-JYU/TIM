@@ -1184,7 +1184,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             return overTop || overBottom;
         };
         const data = this.mainDataContainer.nativeElement;
-        // Don't check for overflow in the axes without virtual scrolling
         const overVertical = this.rowAxis.isVirtual && isOver(data.scrollTop, data.clientHeight, this.viewport.vertical, this.rowAxis);
         const overHorizontal = this.colAxis.isVirtual && isOver(data.scrollLeft, data.clientWidth, this.viewport.horizontal, this.colAxis);
         return overHorizontal || overVertical;
