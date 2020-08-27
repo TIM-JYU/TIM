@@ -36,7 +36,7 @@ class PostProcessResult:
 def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False,
                       load_plugin_states=True) -> PostProcessResult:
     taketime("start pluginify")
-    final_pars, js_paths, css_paths, _ = pluginify(
+    presult = pluginify(
         doc,
         pars,
         user,
@@ -45,6 +45,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         edit_window=edit_window,
         load_states=load_plugin_states,
     )
+    final_pars = presult.pars
     taketime("end pluginify")
     should_mark_all_read = False
     settings = doc.get_settings()
@@ -71,8 +72,8 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         # Skip readings and notes
         return PostProcessResult(
             texts=process_areas(settings, final_pars, macros, delimiter, env),
-            js_paths=js_paths,
-            css_paths=css_paths,
+            js_paths=presult.js_paths,
+            css_paths=presult.css_paths,
             should_mark_all_read=should_mark_all_read
         )
 
@@ -175,8 +176,8 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
 
     return PostProcessResult(
         texts=process_areas(settings, final_pars, macros, delimiter, env),
-        js_paths=js_paths,
-        css_paths=css_paths,
+        js_paths=presult.js_paths,
+        css_paths=presult.css_paths,
         should_mark_all_read=should_mark_all_read
     )
 

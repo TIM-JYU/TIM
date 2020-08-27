@@ -1591,7 +1591,7 @@ def get_multi_states(args: GetMultiStatesModel):
         except AssertionError:
             return abort(400, 'answer_id is not associated with doc_id')
         block = plug.par
-        _, _, _, plug = pluginify(
+        presult = pluginify(
             doc,
             [block],
             user,
@@ -1599,6 +1599,7 @@ def get_multi_states(args: GetMultiStatesModel):
             pluginwrap=PluginWrap.Nothing,
             do_lazy=NEVERLAZY,
         )
+        plug = presult.custom_answer_plugin
         html = plug.get_final_output()
         response[ans.id] = {'html': html, 'reviewHtml': None}
     return json_response(response)
@@ -1648,7 +1649,7 @@ def get_state(args: GetStateModel):
         return abort(400, str(e))
     block = plug.par
 
-    _, _, _, plug = pluginify(
+    presult = pluginify(
         doc,
         [block],
         user,
@@ -1657,10 +1658,11 @@ def get_state(args: GetStateModel):
         pluginwrap=PluginWrap.Nothing,
         do_lazy=NEVERLAZY,
     )
+    plug = presult.custom_answer_plugin
     html = plug.get_final_output()
     if review:
         block.final_dict = None
-        _, _, _, rplug = pluginify(
+        presult2 = pluginify(
             doc,
             [block],
             user,
@@ -1670,6 +1672,7 @@ def get_state(args: GetStateModel):
             pluginwrap=PluginWrap.Nothing,
             do_lazy=NEVERLAZY,
         )
+        rplug = presult2.custom_answer_plugin
         rhtml = rplug.get_final_output()
         return json_response({'html': html, 'reviewHtml': rhtml})
     else:

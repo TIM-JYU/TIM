@@ -2,6 +2,7 @@
 """Functions for dealing with plugin paragraphs."""
 import json
 from collections import OrderedDict, defaultdict
+from dataclasses import dataclass
 from itertools import chain
 from typing import List, Tuple, Optional, Dict, Union, DefaultDict
 from xml.sax.saxutils import quoteattr
@@ -298,6 +299,14 @@ def get_answers(user, task_ids, answer_map):
     return cnt, answers
 
 
+@dataclass
+class PluginifyResult:
+    pars: List[DocParagraph]
+    js_paths: List[str]
+    css_paths: List[str]
+    custom_answer_plugin: Optional[Plugin]
+
+
 def pluginify(doc: Document,
               pars: List[DocParagraph],
               user: Optional[User],
@@ -312,7 +321,7 @@ def pluginify(doc: Document,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
               target_format: PrintFormat = PrintFormat.LATEX,
-              dereference=True) -> Tuple[List[DocParagraph], List[str], List[str], Optional[Plugin]]:
+              dereference=True) -> PluginifyResult:
     """
     "Pluginifies" the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
@@ -587,7 +596,12 @@ def pluginify(doc: Document,
             html_pars[idx][output_format.value] = sanitize_html(h)
     taketime("phtml done")
 
-    return pars, js_paths, css_paths, custom_answer_plugin
+    return PluginifyResult(
+        pars=pars,
+        js_paths=js_paths,
+        css_paths=css_paths,
+        custom_answer_plugin=custom_answer_plugin,
+    )
 
 
 def get_all_reqs():
