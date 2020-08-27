@@ -42,6 +42,7 @@ from timApp.notification.pending_notification import PendingNotification, Docume
 from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.readmark.readparagraph import ReadParagraph
+from timApp.peerreview.peerreview import PeerReview
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.slide.slidestatus import SlideStatus
 from timApp.timdb.sqa import db
@@ -90,6 +91,7 @@ all_models = (
     Message,
     NewUser,
     Notification,
+    PeerReview,
     PendingNotification,
     PersonalUniqueCode,
     PrintedDoc,

@@ -306,6 +306,7 @@ class PluginifyResult:
     js_paths: List[str]
     css_paths: List[str]
     custom_answer_plugin: Optional[Plugin]
+    all_plugins: List[Plugin]
 
 
 def pluginify(doc: Document,
@@ -473,11 +474,17 @@ def pluginify(doc: Document,
 
     taketime("glb/ucu", "done")
     settings = doc.get_settings()
+    all_plugins = []
     for plugin_name, plugin_block_map in plugins.items():
         taketime("plg", plugin_name)
         try:
             plugin = get_plugin(plugin_name)
             plugin_lazy = plugin.lazy
+
+            plugin_block_map_vals = [*plugin_block_map.values()]
+            for p in plugin_block_map_vals:
+                all_plugins.append(p)
+
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
             for idx, r in plugin_block_map.keys():
@@ -590,6 +597,7 @@ def pluginify(doc: Document,
         js_paths=js_paths,
         css_paths=css_paths,
         custom_answer_plugin=custom_answer_plugin,
+        all_plugins=all_plugins,
     )
 
 

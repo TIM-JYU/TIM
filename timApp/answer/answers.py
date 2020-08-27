@@ -50,6 +50,18 @@ def get_latest_answers_query(task_id: TaskId, users: List[User]) -> Query:
     return q
 
 
+def get_latest_valid_answers_query(task_id: TaskId, users: List[User]):
+    sq = (Answer.query
+        .filter_by(task_id=task_id.doc_task, valid=True)
+        .join(User, Answer.users)
+        .filter(User.id.in_([u.id for u in users]))
+        .group_by(User.id)
+        .with_entities(func.max(Answer.id).label('aid'), User.id.label('uid'))
+        .subquery())
+    datas = Answer.query.join(sq, Answer.id == sq.c.aid).with_entities(Answer)
+    return datas
+
+
 def is_redundant_answer(content: str, existing_answers: ExistingAnswersInfo, ptype: Optional[PluginType], valid: bool) -> bool:
     la = existing_answers.latest_answer
     is_redundant = la and (la.content == content and la.valid == valid)

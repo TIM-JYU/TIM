@@ -1,8 +1,8 @@
 {% import 'macros.jinja2' as m -%}
 
-{% set teacher_mode = route in ("teacher", "answers") %}
+{% set teacher_mode = route in ("teacher", "answers", "review") %}
 {% if doc_settings.show_velps() %}
-  {% set velp_mode = route in ("teacher", "answers", "velp") %}
+  {% set velp_mode = route in ("teacher", "answers", "velp", "review") %}
 {% else %}
   {% set velp_mode = route in ("velp") %}
 {% endif %}

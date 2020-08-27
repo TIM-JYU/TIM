@@ -32,7 +32,7 @@
         </div>
         <div ng-show="!$ctrl.hasUserChanged() || $ctrl.loading">
             <div ng-show="$ctrl.answers.length > 0">
-                <div class="flex align-center">
+                <div ng-if="$ctrl.showBrowseAnswers" class="flex align-center">
                     <div>
                         <div class="input-group input-group-xs">
                 <span class="input-group-btn">

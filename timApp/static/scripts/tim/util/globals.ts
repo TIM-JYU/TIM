@@ -101,6 +101,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     lectureMode: boolean;
     liveUpdates: number;
     memoMinutes?: string;
+    showReviewTab: boolean; // needs functionality
     noQuestionAutoNumbering: boolean;
     notifications: unknown[];
     readExpiry: string;

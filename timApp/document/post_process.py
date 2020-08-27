@@ -19,6 +19,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.note.notes import get_notes, UserNoteAndUser
+from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginControl import pluginify
 from timApp.readmark.readings import get_common_readings, get_read_expiry_condition, has_anything_read
 from timApp.readmark.readmarkcollection import ReadMarkCollection
@@ -34,6 +35,7 @@ class PostProcessResult:
     js_paths: List[str]
     css_paths: List[str]
     should_mark_all_read: bool
+    plugins: List[Plugin]
 
 
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??
@@ -77,7 +79,8 @@ def post_process_pars(
             texts=process_areas(settings, final_pars, macros, delimiter, env, view_ctx),
             js_paths=presult.js_paths,
             css_paths=presult.css_paths,
-            should_mark_all_read=should_mark_all_read
+            should_mark_all_read=should_mark_all_read,
+            plugins=presult.all_plugins,
         )
 
     if settings.show_authors():
@@ -187,7 +190,8 @@ def post_process_pars(
         texts=process_areas(settings, final_pars, macros, delimiter, env, view_ctx),
         js_paths=presult.js_paths,
         css_paths=presult.css_paths,
-        should_mark_all_read=should_mark_all_read
+        should_mark_all_read=should_mark_all_read,
+        plugins=presult.all_plugins,
     )
 
 

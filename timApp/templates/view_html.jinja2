@@ -1,5 +1,5 @@
 {% extends "item.jinja2" %}
-{% set teacher_mode = route in ("teacher", "answers") %}
+{% set teacher_mode = route in ("teacher", "answers", "review") %}
 {% block title %}{{ item.title }}{% endblock %}
 
 {% block head %}

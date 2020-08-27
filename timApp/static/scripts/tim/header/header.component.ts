@@ -121,7 +121,7 @@ export class HeaderComponent implements OnInit {
             if (this.item.rights.see_answers) {
                 allowedRoutes.push("answers");
             }
-            allowedRoutes.push("lecture", "velp", "slide");
+            allowedRoutes.push("lecture", "velp", "slide", "review"); // TODO: [Kuvio] Implement logic to show review tab for students properly
         }
         this.itemLinks = allowedRoutes.map((r) => ({
             route: r,

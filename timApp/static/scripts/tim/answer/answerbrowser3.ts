@@ -23,6 +23,7 @@ import {
     Binding,
     getURLParameter,
     getUrlParams,
+    getViewName,
     isInViewport,
     Require,
     scrollToElement,
@@ -431,6 +432,7 @@ export class AnswerBrowserController
     private hidden: boolean = false;
     private showDelete = false;
     private formMode = false;
+    private showBrowseAnswers = true;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -461,6 +463,9 @@ export class AnswerBrowserController
         this.formMode = this.loader.isInFormMode() && !this.forceBrowser();
         if (this.loader.hideBrowser || this.formMode) {
             this.hidden = true;
+        }
+        if (!this.viewctrl.item.rights.teacher && getViewName() == "review") {
+            this.showBrowseAnswers = false;
         }
 
         this.viewctrl.registerAnswerBrowser(this);

@@ -12,6 +12,7 @@ class ViewRoute(Enum):
     Teacher = 'teacher'
     Velp = 'velp'
     View = 'view'
+    Review = 'review'
     Unknown = 'unknown'
 
     @property

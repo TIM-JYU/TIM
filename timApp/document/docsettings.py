@@ -332,7 +332,7 @@ class DocSettings:
     def preamble(self, default=DEFAULT_PREAMBLE_DOC):
         return self.__dict.get(self.preamble_key, default)
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any=None) -> Any:
         return self.__dict.get(key, default)
 
     def is_texplain(self):

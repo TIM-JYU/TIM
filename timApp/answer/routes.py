@@ -54,6 +54,7 @@ from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId, TaskIdAccess
+from timApp.peerreview.peerreview_utils import check_review_access, get_reviews_for_user
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
@@ -62,6 +63,7 @@ from timApp.user.user import User, UserInfo
 from timApp.user.user import maxdate
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
+from timApp.user.users import get_user_for_id
 from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model, \
     get_urlmacros_from_request
@@ -1504,12 +1506,18 @@ def get_answers(task_id: str, user_id: int):
         return abort(400, str(e))
     d = get_doc_or_abort(tid.doc_id)
     user = User.get_by_id(user_id)
-    if user_id != get_current_user_id():
-        verify_seeanswers_access(d)
-    elif d.document.get_settings().get('need_view_for_answers', False):
-        verify_view_access(d)
     if user is None:
         abort(400, 'Non-existent user')
+    if user_id != get_current_user_id():
+        if not verify_seeanswers_access(d, require=False):
+            if d.document.get_settings().get('peer_review_enabled', False):
+                if not check_review_access(d.document, get_current_user_id(), tid, user):
+                    raise AccessDenied(f"User does not have access rights to resource.")
+            else:
+                raise AccessDenied(f"User does not have access rights to resource.")
+        
+    elif d.document.get_settings().get('need_view_for_answers', False):
+        verify_view_access(d)
     try:
         p = find_plugin_from_document(d.document, tid, user_context_with_logged_in(user), default_view_ctx)
     except TaskNotFoundException:
@@ -1682,10 +1690,18 @@ def get_state(args: GetStateModel):
     if user is None:
         abort(400, 'Non-existent user')
     if answer_id:
-        try:
-            answer, doc_id = verify_answer_access(answer_id, user_id, default_view_ctx, allow_grace_period=True)
-        except PluginException as e:
-            return abort(400, str(e))
+        answer = Answer.query.get(answer_id)
+        if not answer:
+            raise RouteException('Non-existent answer')
+        tid = TaskId.parse(answer.task_id)
+        d = get_doc_or_abort(tid.doc_id)
+        doc_id = d.id
+        peer_review_enabled = d.document.get_settings().get('peer_review_enabled', False)
+        if not peer_review_enabled or not check_review_access(d.document, get_current_user_id(), tid, user):
+            try:
+                answer, doc_id = verify_answer_access(answer_id, user_id, default_view_ctx, allow_grace_period=True)
+            except PluginException as e:
+                return abort(400, str(e))
         doc = Document(doc_id)
         tid = TaskId.parse(answer.task_id)
     elif task_id:
@@ -1771,7 +1787,23 @@ def verify_answer_access(
 def get_task_users(task_id):
     tid = TaskId.parse(task_id)
     d = get_doc_or_abort(tid.doc_id)
-    verify_seeanswers_access(d)
+    if not verify_seeanswers_access(d, require=False):
+        if d.document.get_settings().get('peer_review_enabled', False):
+            if not check_review_access(d.document, get_current_user_id(), tid, None):
+                raise AccessDenied(f"User does not have access rights to resource.")
+            else:
+                reviews = get_reviews_for_user(d.document, get_current_user_id()).all()
+                user_list = []
+                for review in reviews:
+                    users = get_user_for_id(review.reviewable_id)
+                    if users:
+                        user_list.append(users[0])
+                for u in user_list:
+                    if hide_names_in_teacher(d):
+                        maybe_hide_name(d,u)
+                return json_response(user_list)
+        else:
+            raise AccessDenied(f"User does not have access rights to resource.")
 
     usergroup = request.args.get('group')
     q = (
