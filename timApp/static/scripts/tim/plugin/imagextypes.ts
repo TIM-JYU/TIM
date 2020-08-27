@@ -12,11 +12,27 @@ const LineSegment = t.intersection([
     t.partial({
         color: t.string,
         w: t.union([t.number, t.string]), // TODO should convert w to number only in database
+        opacity: t.number,
     }),
 ]);
+
+const RectangleOrEllipse = t.intersection([
+    t.type({x: t.number, y: t.number, w: t.number, h: t.number}),
+    t.partial({
+        color: t.string,
+        fillColor: t.string,
+        lineWidth: t.number,
+        opacity: t.number,
+    }),
+]);
+
 export type TuplePoint = t.TypeOf<typeof TuplePointR>;
 
+
 export interface ILineSegment extends t.TypeOf<typeof LineSegment> {
+}
+
+export interface IRectangleOrEllipse extends t.TypeOf<typeof RectangleOrEllipse> {
 }
 
 export interface IFakeVideo {

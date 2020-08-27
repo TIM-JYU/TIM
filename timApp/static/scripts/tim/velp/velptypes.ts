@@ -3,6 +3,7 @@ import {IAnswerWithUsers} from "tim/answer/IAnswer";
 import {IUser} from "tim/user/IUser";
 import {Moment} from "moment";
 import {JsonProperty, Serializable} from "typescript-json-serializer";
+import {DrawObject} from "tim/plugin/drawCanvas";
 
 export type VelpGroupSelectionType = "show" | "default";
 
@@ -51,6 +52,7 @@ export class Annotation implements IAnnotation {
     @JsonProperty() public points!: number | null;
     @JsonProperty() public velp!: number;
     @JsonProperty() public visible_to!: number;
+    @JsonProperty() public draw_data?: DrawObject[];
 
     constructor() {
     }
@@ -69,6 +71,10 @@ export class Annotation implements IAnnotation {
 
     getVelpId(): number {
         return this.velp;
+    }
+
+    getDrawing(): DrawObject[] | undefined {
+        return this.draw_data;
     }
 
     getEditableValues(): Readonly<IAnnotationEditableValues> {

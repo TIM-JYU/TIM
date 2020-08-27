@@ -10,6 +10,13 @@ import {
 } from "tim/velp/annotation.component";
 import {deserialize} from "typescript-json-serializer";
 import {TaskId} from "tim/plugin/taskid";
+import {
+    DrawCanvasComponent,
+    DrawObject,
+    getDrawingDimensions,
+    IDrawUpdate,
+    isCoordWithinDrawing,
+} from "tim/plugin/drawCanvas";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -68,6 +75,9 @@ function tryCreateRange(
 export class ReviewController {
     private selectedArea?: Range;
     public selectedElement?: Element;
+    private selectionIsDrawing = false; // whether the review area is for drawn annotations or not
+    private selectedCanvas?: DrawCanvasComponent; // drawn annotation area
+    private drawMinDimensions = 10; // minimum width/height for drawn velp. If less then add extra padding
     public item: IItem;
     private annotations: Annotation[];
     public zIndex: number;
@@ -77,6 +87,7 @@ export class ReviewController {
     private velpSelection?: VelpSelectionController; // initialized through onInit
     public velpMode: boolean;
     public velps?: IVelpUI[];
+    private lastOpenedAnnotation = 0;
 
     constructor(public vctrl: ViewCtrl) {
         this.scope = vctrl.scope;
@@ -94,6 +105,7 @@ export class ReviewController {
 
             // Length check is important - we don't want to lose the previous selection in touch devices.
             if (range && range.toString().length > 0) {
+                this.selectionIsDrawing = false;
                 this.selectText($(range.startContainer).parents(".par")[0] as Element);
                 $rootScope.$applyAsync();
             }
@@ -108,7 +120,10 @@ export class ReviewController {
         if (!response.ok) {
             return;
         }
-        this.annotations = response.result.data.map((o) => deserialize(o, Annotation));
+        this.annotations = response.result.data.map((o) => {
+            const ann = deserialize(o, Annotation);
+            return ann;
+        });
         const annotationsToRemove = [];
 
         for (const a of this.annotations) {
@@ -270,27 +285,54 @@ export class ReviewController {
         const annotations = this.getAnnotationsByAnswerId(answerId);
         for (const a of annotations) {
             const placeInfo = a.coord;
-
-            const element = par.querySelector(".review pre")?.firstChild;
-
-            if (!isFullCoord(placeInfo.start) || !isFullCoord(placeInfo.end) || !element) {
-                this.addAnnotationToMargin(
-                    par,
-                    a,
-                    AnnotationAddReason.LoadingExisting,
-                    // If the coordinates exist but the review element does not, we don't know yet if the annotation can be
-                    // successfully placed in text.
-                    !isFullCoord(placeInfo.start) ||
-                    !isFullCoord(placeInfo.end) ? AnnotationPlacement.InMarginOnly : AnnotationPlacement.InMarginAndUnknownIfItWillBeInText,
-                );
-                continue;
-            }
-            const range = tryCreateRange(placeInfo.start, placeInfo.end, element, undefined);
             let added = false;
-            if (range) {
-                added = this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
-            } else {
-                log("annotation range invalid, adding to margin only");
+            if (a.draw_data) {
+                const targ = par.querySelector(".canvasObjectContainer");
+                if (targ) {
+                    const rect = getDrawingDimensions(a.draw_data, this.drawMinDimensions);
+                    const borderElement = this.createPictureBorder(rect.w, rect.h);
+                    targ.appendChild(borderElement);
+                    const ele = this.compilePopOver(targ, borderElement, a, AnnotationAddReason.LoadingExisting) as HTMLElement;
+                    ele.style.position = "absolute";
+                    ele.style.left = rect.x + "px";
+                    ele.style.top = rect.y + "px";
+                    const span = ele.querySelector("span");
+                    const textAnnotation = this.vctrl.getAnnotation(`t${a.id}`);
+                    if (textAnnotation) {
+                        textAnnotation.values.color = "transparent";
+                    }
+                    added = true;
+                } else { // drawn annotation but no canvas found
+                    this.addAnnotationToMargin(
+                        par,
+                        a,
+                        AnnotationAddReason.LoadingExisting,
+                        AnnotationPlacement.InMarginAndUnknownIfItWillBeAccuratelyPositioned,
+                    );
+                    continue;
+                }
+            } else { // end if (a.draw_data)
+
+                const element = par.querySelector(".review pre")?.firstChild;
+
+                if (!isFullCoord(placeInfo.start) || !isFullCoord(placeInfo.end) || !element) {
+                    this.addAnnotationToMargin(
+                        par,
+                        a,
+                        AnnotationAddReason.LoadingExisting,
+                        // If the coordinates exist but the review element does not, we don't know yet if the annotation can be
+                        // successfully placed in text.
+                        !isFullCoord(placeInfo.start) ||
+                        !isFullCoord(placeInfo.end) ? AnnotationPlacement.InMarginOnly : AnnotationPlacement.InMarginAndUnknownIfItWillBeAccuratelyPositioned,
+                    );
+                    continue;
+                }
+                const range = tryCreateRange(placeInfo.start, placeInfo.end, element, undefined);
+                if (range) {
+                    added = this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
+                } else {
+                    log("annotation range invalid, adding to margin only");
+                }
             }
             this.addAnnotationToMargin(par, a, AnnotationAddReason.LoadingExisting, added ? AnnotationPlacement.InMargin : AnnotationPlacement.InMarginOnly);
         }
@@ -315,7 +357,7 @@ export class ReviewController {
      * @param show - Whether annotation is shown when created or not
      */
     addAnnotationToCoord(range: Range, annotation: Annotation, show: AnnotationAddReason): boolean {
-        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.InText);
+        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.AccuratelyPositioned);
         try {
             range.surroundContents(element);
         } catch (err) {
@@ -325,6 +367,23 @@ export class ReviewController {
         $compile(element)(scope);
         return true;
     }
+
+    /**
+     * Adds an annotation around the given element and places it as a child within given container element
+     * It is assumed this is used to place annotations over an image
+     * @param container - Element to hold the annotation and target element within
+     * @param target - Element to wrap the annotation around
+     * @param annotation - Annotation to wrap
+     * @param show - Whether annotation is shown when created or not
+     */
+    compilePopOver(container: Element, target: Element, annotation: Annotation, show: AnnotationAddReason): Element {
+        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.AccuratelyPositioned);
+        element.appendChild(target);
+        container.appendChild(element);
+        $compile(element)(scope);
+        return element;
+    }
+
 
     /**
      * Adds an annotation to the given element. The annotation will be placed in the margin.
@@ -406,8 +465,16 @@ export class ReviewController {
     async deleteAnnotation(id: number) {
         const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
         const annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
-
-        if (annotationParents.length > 1) {
+        const annotation = this.annotations.find((a) => a.id == id);
+        this.annotations = this.annotations.filter((a) => a.id !== id);
+        if (annotation?.draw_data && annotation?.answer?.id && annotationParents.length > 1) {
+            // const canvas = this.getElementParentUntilAttribute(annotationParents[0], "lol");
+            const canvas = this.vctrl.getVelpCanvas(annotation.answer.id);
+            if (canvas) {
+                this.drawAnnotationsOnCanvas(canvas, annotation.answer.id);
+            }
+            $(annotationParents).remove();
+        } else if (annotationParents.length > 1) {
             let savedHTML = "";
             for (const a of annotationHighlights) {
                 let addHTML = a.innerHTML.replace('<span class="ng-scope">', "");
@@ -420,7 +487,6 @@ export class ReviewController {
             $(annotationParents[0]).remove();
         }
         await to($http.post("/invalidate_annotation", {id: id}));
-        this.annotations = this.annotations.filter((a) => a.id !== id);
     }
 
     /**
@@ -594,6 +660,20 @@ export class ReviewController {
     }
 
     /**
+     * Creates a bordered div around which drawn annotations can be wrapped
+     * @param width - div width
+     * @param height - div height
+     */
+    createPictureBorder(width: number, height: number): HTMLElement {
+        const ind = document.createElement("div");
+        ind.style.width = width + "px";
+        ind.style.height = height + "px";
+        ind.style.border = "1px solid #000000";
+        ind.className = "annotation-picture-element";
+        return ind;
+    }
+
+    /**
      * Adds an annotation with the selected velp's data to
      * the selected text area or element.
      * @todo When the annotations can cross HTML tags, end coordinate needs to be changed according to the end element.
@@ -611,7 +691,75 @@ export class ReviewController {
             null,
         );
         let coord: IAnnotationInterval;
-        if (this.selectedArea != null) {
+        if (this.selectionIsDrawing) {
+            const targ = this.selectedElement.querySelector(".canvasObjectContainer");
+            if (!this.selectedCanvas || !targ) {
+                return;
+            }
+            const velpDrawing = this.selectedCanvas.getDrawing();
+            if (Object.keys(velpDrawing).length == 0) {
+                return;
+            }
+            let corners = {x: 0, y: 0, h: 0, w: 0};
+            corners = this.selectedCanvas.getCurrentDrawingDimensions(this.drawMinDimensions);
+            const borderElement = this.createPictureBorder(corners.w, corners.h);
+            let parelement: Element | null = this.selectedElement;
+            while (parelement && !parelement.hasAttribute("t")) {
+                parelement = getElementParent(parelement);
+            }
+            if (!parelement) {
+                showMessageDialog("Could not add annotation (parelement missing)");
+                return;
+            }
+            const answerInfo = this.getAnswerInfo(parelement);
+            if (answerInfo != null) {
+                newAnnotation.answer_id = answerInfo.id;
+            } else {
+                showMessageDialog("Could not add annotation (answerinfo missing)");
+                return;
+            }
+            targ.appendChild(borderElement);
+            const ann = await this.addAnnotation(
+                newAnnotation,
+                {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
+                velp,
+            );
+            ann.draw_data = velpDrawing;
+
+            const ele = this.compilePopOver(targ, borderElement, ann, AnnotationAddReason.AddingNew) as HTMLElement;
+            ele.style.position = "absolute";
+            ele.style.left = corners.x + "px";
+            ele.style.top = corners.y + "px";
+
+            coord = {
+                start: {
+                    par_id: parelement.id,
+                    t: parelement.getAttribute("t") ?? undefined,
+                },
+                end: {
+                    par_id: parelement.id,
+                    t: parelement.getAttribute("t") ?? undefined,
+                },
+            };
+            this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.LoadingExisting, AnnotationPlacement.InMargin);
+            await angularWait();
+
+            const saved = await updateAnnotationServer({
+                id: ann.id,
+                ...ann.getEditableValues(),
+                coord,
+                draw_data: velpDrawing,
+            });
+            if (saved.ok) {
+                const annCopy = saved.result;
+                this.updateAnnotation(annCopy);
+
+                this.selectedCanvas.storeDrawing();
+            }
+            // TODO clear indicators and margins if !saved.ok
+            this.selectedElement = undefined;
+            // end if (this.selectionIsDrawing)
+        } else if (this.selectedArea != null) {
 
             let parelement = getElementParent(this.selectedArea.startContainer);
             const startElement = getElementParent(this.selectedArea.startContainer);
@@ -976,9 +1124,10 @@ export class ReviewController {
 
         // We might click a margin annotation, but we still want to open the corresponding inline annotation,
         // if it exists.
-        const prefix = isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end) &&
+        const prefix = ((isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end)) || annotation.draw_data)  &&
         ((ac instanceof AnnotationComponent && ac.placement !== AnnotationPlacement.InMarginOnly)
             || ac instanceof Annotation) ? "t" : "m";
+
         let actrl = this.vctrl.getAnnotation(prefix + annotation.id);
         if (!annotation.answer && !actrl) {
             actrl = this.vctrl.getAnnotation("m" + annotation.id);
@@ -1052,6 +1201,100 @@ export class ReviewController {
         actrl2.showAnnotation();
         if (scrollToAnnotation) {
             actrl2.scrollToIfNotInViewport();
+        }
+    }
+
+    /**
+     * Sets up a DrawCanvas to be used with drawn annotations
+     * @param answerId - Answer id to associate with canvas
+     * @param canvas - DrawCanvasComponent to set up
+     */
+    setCanvas(answerId: number, canvas: DrawCanvasComponent): void {
+        canvas.setUpdateCallback(this.updateFromCanvas);
+        canvas.clearObjectContainer();
+        canvas.id = answerId;
+        this.vctrl.addVelpCanvas(answerId, canvas);
+        this.drawAnnotationsOnCanvas(canvas, answerId);
+    }
+
+    /**
+     * Draws annotation drawings on canvas
+     * @param canvas - DrawCanvasComponent to use
+     * @param answerId - Answer for which to find annotations
+     */
+    drawAnnotationsOnCanvas(canvas: DrawCanvasComponent, answerId: number) {
+        const annotationDrawings = this.getAnnotationsByAnswerId(answerId).reduce((arr: DrawObject[], ann: Annotation) => {
+            if (ann.draw_data) {
+                arr = arr.concat(ann.draw_data);
+            }
+            return arr;
+        }, []);
+        canvas.setPersistentDrawData(annotationDrawings);
+    }
+
+    /**
+     * Handles click and drawing update callbacks from canvas.
+     * If the drawing was updated and not empty, then select canvas as annotation target element.
+     * If the drawing was updatend and cleared, then unselect the canvas
+     * If the drawing was not updated and there were click coordinates,
+     * then attempt to open one of the annotations under the click target.
+     * @param canvas
+     * @param updateArgs
+     */
+    updateFromCanvas = (canvas: DrawCanvasComponent, updateArgs: IDrawUpdate) => {
+        if (updateArgs.drawingUpdated) {
+            if (canvas.getDrawing().length > 0) {
+                this.selectedArea = undefined;
+                this.selectionIsDrawing = true;
+                const par = $(canvas.canvas.nativeElement).parents(".par")[0] as Element;
+                this.selectedElement = par;
+                this.selectedCanvas = canvas;
+            } else if (this.selectedCanvas == canvas) {
+                this.selectionIsDrawing = false;
+                this.selectedElement = undefined;
+            }
+        } else if (updateArgs.x != undefined && updateArgs.y != undefined) {
+            const anns = this.getAnnotationsByAnswerId(canvas.id);
+            const annCompsInCoord: AnnotationComponent[] = [];
+            for (const a of anns) {
+                if (!a.draw_data) {
+                    continue;
+                }
+                if (isCoordWithinDrawing(a.draw_data, updateArgs.x, updateArgs.y, this.drawMinDimensions)) {
+                    const tanncomp = this.vctrl.getAnnotation(`t${a.id}`);
+                    if (!tanncomp) {
+                    } else {
+                        annCompsInCoord.push(tanncomp);
+                    }
+                }
+            }
+            if (annCompsInCoord.length == 0) {
+                return;
+            }
+            if (annCompsInCoord.length == 1) {
+                annCompsInCoord[0].toggleAnnotationShow();
+            } else {
+                this.toggleAnnotationsInList(annCompsInCoord);
+            }
+        }
+    };
+
+    /**
+     * Finds next non-visible annotation component and hides others in a list
+     * Used to let user iterate overlapping drawn annotations with repeated clicks
+     * @param anns AnnotationComponent[] to iterate
+     */
+    toggleAnnotationsInList(anns: AnnotationComponent[]) {
+        let found = false;
+        for (let i = this.lastOpenedAnnotation; i < anns.length + this.lastOpenedAnnotation; i++) {
+            const a = anns[i % anns.length];
+            if (!a.show && !found) {
+                a.toggleAnnotationShow();
+                this.lastOpenedAnnotation = i % anns.length;
+                found = true;
+            } else if (a.show) {
+                a.toggleAnnotationShow();
+            }
         }
     }
 }

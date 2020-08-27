@@ -10,14 +10,15 @@
 
 import {Users} from "tim/user/userService";
 import deepEqual from "deep-equal";
-import {AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit} from "@angular/core";
+import {AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {deserialize} from "typescript-json-serializer";
+import {DrawObject} from "tim/plugin/drawCanvas";
 import {ViewCtrl} from "../document/viewctrl";
 import {showMessageDialog} from "../ui/dialog";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
-import {clone, isInViewport, log, Result, scrollToElement, to} from "../util/utils";
+import {angularWait, clone, isInViewport, Result, scrollToElement, to} from "../util/utils";
 import {Annotation, IAnnotationEditableValues, IAnnotationInterval} from "./velptypes";
 
 /**
@@ -31,10 +32,10 @@ export enum AnnotationAddReason {
 }
 
 export enum AnnotationPlacement {
-    InText,
+    AccuratelyPositioned,
     InMargin,
     InMarginOnly,
-    InMarginAndUnknownIfItWillBeInText,
+    InMarginAndUnknownIfItWillBeAccuratelyPositioned,
 }
 
 export interface IAnnotationBindings {
@@ -44,7 +45,7 @@ export interface IAnnotationBindings {
     defaultcomment: string;
 }
 
-export async function updateAnnotationServer(updatevalues: IAnnotationEditableValues & { id: number, coord?: IAnnotationInterval }): Promise<Result<Annotation, string>> {
+export async function updateAnnotationServer(updatevalues: IAnnotationEditableValues & { id: number, coord?: IAnnotationInterval, draw_data?: DrawObject[] }): Promise<Result<Annotation, string>> {
     const r2 = await to($http.post<Record<string, unknown>>("/update_annotation", updatevalues));
     if (!r2.ok) {
         return {ok: false, result: r2.result.data.error};
@@ -55,21 +56,22 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
 @Component({
     selector: "annotation",
     template: `
-        <span (click)="setShowFull(false);toggleAnnotation()"
+        <span #contentSpan (click)="setShowFull(false);toggleAnnotation()"
               class="no-popup-menu"
               [ngClass]="['highlighted', 'clickable', 'emphasise', 'default', getClass()]"
               [ngStyle]="{backgroundColor: getCustomColor()}">
             <ng-content></ng-content>
         </span>
-        <span class="inlineAnnotation">
-            <div *ngIf="show"
+        <span #inlineSpan [ngClass]="(isImageAnnotation()) ? 'inlineImageAnnotation' : 'inlineAnnotation'">
+            <div #inlineDiv *ngIf="show"
                  (click)="updateZIndex()"
                  class="no-popup-menu annotation-info emphasise default"
                  [ngClass]="getClass()"
                  (keydown)="keyDownFunc($event)"
                  (keyup)="keyUpFunc($event)"
                  [style.backgroundColor]="getCustomColor()"
-                 [style.z-index]="zIndex">
+                [style.z-index]="zIndex">
+
     <span class="fulldiv">
         <span class="div-90 annTopSection" (mouseenter)="setShowFull(true)">
             <p><span class="annHeader"><strong>{{ annotation.getContent() }}</strong></span></p>
@@ -181,7 +183,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     };
     newcomment = "";
     showFull = false;
-    show = false;
+    public show = false;
     @Input()
     public defaultcomment!: string;
     @Input()
@@ -195,6 +197,15 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     private prefix = "x";
     private readonly element: JQuery<HTMLElement>;
     zIndex = 0;
+    @ViewChild("inlineSpan") inlineSpan!: ElementRef<HTMLSpanElement>;
+    @ViewChild("contentSpan") contentSpan!: ElementRef<HTMLSpanElement>;
+
+    // eslint-disable-next-line @typescript-eslint/tslint/config
+    @ViewChild("inlineDiv") set inlineDiv(div: ElementRef<HTMLDivElement>)  {
+        if (div && this.isImageAnnotation()) {
+            this.adjustAnnotationInPicturePosition(div.nativeElement);
+        }
+    }
 
     constructor(public e: ElementRef) {
         this.element = $(e.nativeElement);
@@ -205,7 +216,11 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         if (v) {
             this.show = true;
             this.updateZIndex();
+            if (this.inlineDiv) {
+                this.adjustAnnotationInPicturePosition(this.inlineDiv.nativeElement);
+            }
         }
+        this.toggleElementBorder();
     }
 
     ngOnDestroy() {
@@ -251,13 +266,49 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     }
 
     private isInMargin() {
-        return this.placement !== AnnotationPlacement.InText;
+        return (this.placement !== AnnotationPlacement.AccuratelyPositioned);
+    }
+
+    isImageAnnotation(): boolean {
+        return (this.placement == AnnotationPlacement.AccuratelyPositioned && this.annotation.draw_data != undefined);
     }
 
     ngAfterViewInit() {
         if (this.reason == AnnotationAddReason.AddingNew && this.show) {
             this.scrollToIfNotInViewport();
         }
+    }
+
+    /**
+     * Checks if in-picture annotation would fit better if opened upwards or leftwards
+     * @param div Annotation info div
+     */
+    adjustAnnotationInPicturePosition(div: HTMLDivElement) {
+        if (!(this.isImageAnnotation())) {
+            return;
+        }
+        let left = 0;
+        const drawingLeft = this.element[0].offsetLeft;
+        const annWidth = div.clientWidth;
+        const containerWidth = this.element.parent()[0].clientWidth;
+        if (drawingLeft + annWidth > containerWidth) {
+            if (containerWidth - annWidth >= 0) {
+                left = containerWidth - annWidth - drawingLeft;
+            }
+        }
+
+        const drawingHeight = this.element[0].clientHeight;
+        const drawingTop = this.element[0].offsetTop;
+        const annHeight = div.clientHeight;
+        const containerHeight =  this.element.parent()[0].clientHeight;
+        let top = drawingHeight;
+        if (drawingTop + drawingHeight + annHeight > containerHeight) {
+            if (drawingTop - annHeight >= 0) {
+                top = -annHeight;
+            }
+        }
+        this.inlineSpan.nativeElement.style.left = left + "px";
+        this.inlineSpan.nativeElement.style.top = top + "px";
     }
 
     get rctrl() {
@@ -273,7 +324,17 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
 
     toggleAnnotationShow() {
         this.show = !this.show;
+        this.toggleElementBorder();
         this.updateZIndex();
+    }
+
+    toggleElementBorder() {
+        if (this.isImageAnnotation()) {
+            const innerRectangle = this.element.find(".annotation-picture-element");
+            if (innerRectangle[0]) {
+                innerRectangle[0].style.border = this.show ? "1px solid #000000" : "none";
+            }
+        }
     }
 
     clearColor() {
@@ -301,7 +362,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     showAnnotation() {
         this.setShowFull(false);
         this.show = true;
-
+        this.toggleElementBorder();
         this.updateZIndex();
     }
 

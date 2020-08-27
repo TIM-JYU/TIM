@@ -4,9 +4,9 @@ import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
+import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {dereferencePar, getParId, Paragraph} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
-// import {getRangeBeginParam} from "../document/viewRangeInfo";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {IAnswerBrowserMarkupSettings, IGenericPluginMarkup} from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
@@ -16,7 +16,16 @@ import {isAdmin, Users} from "../user/userService";
 import {documentglobals} from "../util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
 import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
-import {Binding, getURLParameter, getUrlParams, markAsUsed, Require, to, isInViewport, scrollToElement} from "../util/utils";
+import {
+    Binding,
+    getURLParameter,
+    getUrlParams,
+    isInViewport,
+    markAsUsed,
+    Require,
+    scrollToElement,
+    to,
+} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
 
@@ -368,6 +377,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private anyInvalid: boolean = false;
     private giveCustomPoints: boolean = false;
     public review: boolean = false;
+    private imageReview: boolean = false;
     public oldreview: boolean = false;
     private shouldFocus: boolean = false;
     // noinspection JSMismatchedCollectionQueryUpdate
@@ -705,6 +715,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 }
             }
             if (this.review) {
+                if (r.result.data.reviewHtml.startsWith("data:image")) {
+                    this.imageReview = true;
+                }
                 if (this.selectedAnswer) {
                     this.reviewHtml = r.result.data.reviewHtml;
                 } else {
@@ -712,6 +725,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 }
                 await $timeout();
             }
+        }
+        // if reviewhtml is image-based, then the image load callback should handle annotation loading
+        if (!(this.imageReview && this.review)) {
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer?.id, par[0]);
         }
         if (!changeReviewOnly) {
@@ -722,6 +738,18 @@ export class AnswerBrowserController extends DestroyScope implements IController
             }
         }
     }
+
+    /**
+     * Function to be passed for canvas on image-based reviews which is called when the canvas is ready and loaded.
+     * @param canvas DrawCanvasComponent who made the callback
+     */
+    public setImageReview = (canvas: DrawCanvasComponent) => {
+        if (this.selectedAnswer && this.reviewHtml) {
+            const par = this.getPar();
+            this.viewctrl.reviewCtrl.setCanvas(this.selectedAnswer.id, canvas);
+            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
+        }
+    };
 
     async changeAnswerTo(dir: (-1 | 1)) {
         if (!this.trySavePoints(true)) {

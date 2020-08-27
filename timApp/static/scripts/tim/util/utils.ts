@@ -593,6 +593,10 @@ export const StringOrNumber = t.union([t.string, t.number]);
 
 export type MouseOrTouch = MouseEvent | Touch;
 
+export function touchEventToTouch(event: TouchEvent) {
+    return event.touches[0] || event.changedTouches[0];
+}
+
 export function isTouchEvent(e: MouseOrTouch | TouchEvent | Event | JQuery.MouseEventBase | JQuery.TouchEventBase): e is TouchEvent {
     return (window as ExtendedWindow).TouchEvent && e instanceof TouchEvent;
 }

@@ -1,0 +1,21 @@
+
+.drawOptions {
+  margin-left: 0.8em;
+
+  span + span, a {
+    margin-left: 0.8em;
+  }
+
+  .noWrap {
+    display: inline-table;
+  }
+
+  .width {
+    width: 3em;
+  }
+
+  .opacity {
+    width: 4em;
+  }
+}
+
