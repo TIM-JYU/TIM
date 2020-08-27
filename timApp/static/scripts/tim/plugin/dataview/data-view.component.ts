@@ -130,6 +130,7 @@ interface VisibleItems {
     count: number;
     visibleStartOrdinal: number;
     visibleCount: number;
+    size: number;
 }
 
 /**
@@ -242,6 +243,7 @@ class GridAxisManager {
                 startOrdinal: 0,
                 visibleCount: 0,
                 visibleStartOrdinal: 0,
+                size: 0,
             };
         }
         vpStartPosition = clamp(vpStartPosition, 0, this.totalSize);
@@ -252,12 +254,16 @@ class GridAxisManager {
         const viewStartIndex = this.search(visibleStartPosition);
         const endIndex = this.search(vpStartPosition + vpSize);
         const viewEndIndex = this.search(visibleStartPosition + visibleSize);
+        const count = Math.min(endIndex - startIndex + 1, this.visibleItems.length - startIndex);
+        const startPosition = this.positionStart[startIndex];
+        const endPosition = this.positionStart[startIndex + count];
         return {
             startOrdinal: startIndex,
-            count: Math.min(endIndex - startIndex + 1, this.visibleItems.length - startIndex),
-            startPosition: this.positionStart[startIndex],
+            count: count,
+            startPosition: startPosition,
             visibleStartOrdinal: viewStartIndex,
             visibleCount: Math.min(viewEndIndex - viewStartIndex + 1, this.visibleItems.length - viewStartIndex),
+            size: endPosition - startPosition,
         };
     }
 
@@ -1171,21 +1177,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private isOutsideSafeViewZone(): boolean {
+        const isOver = (clientScroll: number, clientSize: number, items: VisibleItems, axis: GridAxisManager) => {
+            const overTop = items.startOrdinal > 0 && clientScroll - items.startPosition < 0;
+            const isNotAtEnd = items.startOrdinal + items.count < axis.visibleItems.length;
+            const overBottom = isNotAtEnd && items.startPosition + items.size - clientScroll < clientSize;
+            return overTop || overBottom;
+        };
         const data = this.mainDataContainer.nativeElement;
-        const h = data.clientHeight * this.vScroll.viewOverflow.vertical;
-        const w = data.clientWidth * this.vScroll.viewOverflow.horizontal;
-        // Don't consider outside bounds if the axis is not virtual
-        console.log(`
-Math.abs(this.viewport.vertical.startPosition - data.scrollTop + h) = ${Math.abs(this.viewport.vertical.startPosition - data.scrollTop + h)};
-h = ${h};
-
-this.viewport.horizontal.startPosition = ${this.viewport.horizontal.startPosition};
-data.scrollLeft = ${data.scrollLeft};
-Math.abs(this.viewport.horizontal.startPosition - data.scrollLeft + w) = ${Math.abs(this.viewport.horizontal.startPosition - data.scrollLeft + w)};
-w = ${w};
-`);
-        const overVertical = this.rowAxis.isVirtual && Math.abs(this.viewport.vertical.startPosition - data.scrollTop + h) > h;
-        const overHorizontal = this.colAxis.isVirtual && Math.abs(this.viewport.horizontal.startPosition - data.scrollLeft + w) > w;
+        // Don't check for overflow in the axes without virtual scrolling
+        const overVertical = this.rowAxis.isVirtual && isOver(data.scrollTop, data.clientHeight, this.viewport.vertical, this.rowAxis);
+        const overHorizontal = this.colAxis.isVirtual && isOver(data.scrollLeft, data.clientWidth, this.viewport.horizontal, this.colAxis);
         return overHorizontal || overVertical;
     }
 
@@ -1367,6 +1368,7 @@ w = ${w};
             startOrdinal: 0,
             visibleCount: 0,
             visibleStartOrdinal: 0,
+            size: 0,
         });
         if (this.vScroll.enabled) {
             const viewportWidth = data.clientWidth * (1 + 2 * this.vScroll.viewOverflow.horizontal);
