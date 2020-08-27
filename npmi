@@ -6,7 +6,6 @@ set -e
 # Just install the bare minimum grunt packages required for building it.
 ./run_command_workdir.sh timApp /bin/bash -c "\
 npm install --unsafe-perm && \
-npm run lint && \
 (cd modules/cs/jsav && npm i --no-save grunt grunt-contrib-concat grunt-contrib-uglify grunt-exec load-grunt-tasks && echo NOTE: You can ignore all Local Npm module warnings. && npx grunt) && \
-(cd modules/jsrunner/server && npm install --unsafe-perm && npm run lint)
+(cd modules/jsrunner/server && npm install --unsafe-perm)
 "

@@ -1,18 +1,9 @@
 image: tmaier/docker-compose:latest
 
-variables:
-  DOCKER_DRIVER: overlay2
-  GIT_SUBMODULE_STRATEGY: normal
-
-test:
-  services:
-  - docker:dind
-  stage: test
-  script:
+.setup: &setup
   - docker info
   - docker-compose --version
-  - apk add --update bash
-  - apk add --update git
+  - apk add --update bash git
   - cp docker-compose.prod.yml.template docker-compose.prod.yml
   - cp variables.sh.template variables.sh
   - chmod +x variables.sh
@@ -23,12 +14,39 @@ test:
   - ./dc pull --quiet
   - ./npmi
   - ./js
-  - ./run_tests.sh
+
+.dockervars: &dockervars
+  DOCKER_DRIVER: overlay2
+  GIT_SUBMODULE_STRATEGY: normal
+
+browser_tests:
+  variables:
+   <<: *dockervars
+  services:
+  - docker:dind
+  stage: test
+  before_script:
+  - *setup
+  script:
+  - TEST_PARAMS="discover -v tests/browser 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
   artifacts:
     name: failed_screenshots
     when: always
     paths:
     - screenshots
+
+other_tests:
+  variables:
+   <<: *dockervars
+  services:
+  - docker:dind
+  stage: test
+  before_script:
+  - *setup
+  script:
+  - TEST_PARAMS="discover -v tests/unit 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
+  - TEST_PARAMS="discover -v tests/db 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
+  - TEST_PARAMS="discover -v tests/server 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
 
 code_navigation:
   stage: test  # not really a test, but we want to execute this in parallel
@@ -41,3 +59,14 @@ code_navigation:
   artifacts:
     reports:
       lsif: timApp/dump.lsif
+
+lint:
+  stage: test
+  image: node:lts
+  script:
+  - cd timApp
+  - npm install --unsafe-perm
+  - npm run lint
+  - cd modules/jsrunner/server
+  - npm install --unsafe-perm
+  - npm run lint
