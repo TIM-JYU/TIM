@@ -116,7 +116,7 @@ def check_annotation_edit_access_and_maybe_get_doc(user: User, ann: Annotation) 
         return True, d
     if not d:
         d = get_doc_or_abort(ann.id)
-    return user.has_teacher_access(d)
+    return user.has_teacher_access(d), d
 
 
 @annotations.route("/update_annotation", methods=['post'])
