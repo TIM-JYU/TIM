@@ -44,6 +44,22 @@ class TableFormStateModel:
 
 
 @dataclass
+class DataViewVirtualScrollingModel:
+    enabled: Optional[bool] = True
+    verticalOverflow: Union[int, Missing] = missing
+    horizontalOverflow: Union[int, Missing] = missing
+
+
+@dataclass
+class DataViewSettingsModel:
+    virtual: Union[DataViewVirtualScrollingModel, Missing, None] = missing
+    rowHeight: Union[int, Missing] = missing
+    columnWidths: Union[Dict[str, int], Missing] = missing
+    tableWidth: Union[str, Missing] = missing
+    fixedColumns: Union[int, Missing] = missing
+
+
+@dataclass
 class TableFormMarkupModel(GenericMarkupModel):
     anonNames: Union[bool, Missing] = missing
     autosave: Union[bool, Missing] = missing
@@ -90,6 +106,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     toolbarTemplates: Union[List[Dict[Any, Any]], Missing] = missing
     userListButtonText: Union[str, Missing, None] = missing
     usernames: Union[bool, Missing] = missing
+    dataView: Union[DataViewSettingsModel, Missing, None] = missing
 
 
 @dataclass

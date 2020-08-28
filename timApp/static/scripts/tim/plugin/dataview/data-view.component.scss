@@ -1,0 +1,196 @@
+.data-view {
+  display: inline-grid;
+  grid-template:
+        "summary fixed-col-header header" auto
+        "ids fixed-col-data content" auto
+        / max-content max-content auto;
+}
+
+.loader {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  background-color: #FAFAFA;
+}
+
+table {
+  width: max-content;
+  margin: 0;
+}
+
+.header, .fixed-col-header {
+  overflow-x: hidden;
+
+  &.header {
+    grid-area: header;
+  }
+
+  &.fixed-col-header {
+    grid-area: fixed-col-header;
+  }
+
+  table {
+    display: inline-table;
+
+    tbody, thead {
+      display: block;
+      width: max-content;
+    }
+  }
+}
+
+.data-view:not(.virtual) .fixed-col-header table {
+  border-right-width: 1px;
+}
+
+.ids {
+  grid-area: ids;
+  overflow-y: hidden;
+}
+
+.data, .fixed-col-data {
+  overflow: auto;
+
+  &.data {
+    grid-area: content;
+  }
+
+  &.fixed-col-data {
+    grid-area: fixed-col-data;
+    overflow-y: hidden;
+
+    table {
+      border-right-width: 1px;
+    }
+  }
+}
+
+.data, .ids, .fixed-col-data {
+  table {
+    border-width: 0;
+  }
+}
+
+.summary {
+  grid-area: summary;
+
+  table {
+    display: table;
+    width: 100%;
+    height: 100%;
+
+    thead, tbody {
+      display: block;
+    }
+
+    td:last-child {
+      border-right-width: 0;
+    }
+
+    tbody tr td {
+      border-bottom: none;
+      border-top: none;
+    }
+  }
+}
+
+table {
+  display: block;
+  border-bottom-width: 0;
+  border-left-width: 0;
+  border-right-width: 0;
+
+  &.scroll {
+    overflow: scroll;
+  }
+}
+
+.fixed-width td, .fixed-width th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+::ng-deep .data-view-alert {
+  .alert {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 5px;
+    font-size: smaller;
+  }
+  div.message {
+    flex-grow: 1;
+  }
+  .close-icon:hover {
+    opacity: 0.5;
+    cursor: pointer;
+  }
+}
+
+// All ng-deep styles apply to all DOM table elements
+// Keep all ng-deep stuff under .data-view class to prevent leaking into other components
+::ng-deep .data-view {
+
+  &.virtual {
+    // When in virtual scrolling mode, you cannot combine `border-collapse: separate` and `transform: translate`
+    // More info: https://stackoverflow.com/a/33778236
+    // So for vscroll mode, handle borders manually
+    .ids, .data, .fixed-col-data {
+      table {
+        border-collapse: separate;
+
+        td {
+          border-right-width: 0;
+          border-bottom-width: 0;
+        }
+      }
+    }
+  }
+
+  // Fix border appearing behind background color for some reason
+  td {
+    background-clip: padding-box;
+
+    & .nrcolumn {
+      font-size: smaller;
+      text-align: right;
+    }
+  }
+
+  span.sort-marker {
+    min-width: 20px;
+    display: inline-block;
+  }
+
+  table .cbColumn {
+    padding-top: 0;
+    padding-bottom: 0;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .ids table td:last-child {
+    border-right-width: 0;
+  }
+
+  .header, .fixed-col-header {
+    input {
+      // Set as important to prevent existing markup from setting the size
+      width: 90% !important;
+      margin-right: 5%;
+      margin-left: 5%;
+    }
+
+    tbody td {
+      border-bottom-width: 0;
+      border-top-width: 0;
+    }
+
+    thead td {
+      overflow-x: hidden;
+    }
+  }
+}
+

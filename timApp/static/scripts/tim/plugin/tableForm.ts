@@ -37,7 +37,7 @@ import {
     CellToSave,
     ClearSort,
     colnumToLetters,
-    DataEntity,
+    DataEntity, DataViewSettings, DataViewSettingsType,
     isPrimitiveCell,
     TimTable,
     TimTableComponent,
@@ -79,6 +79,7 @@ const TableFormMarkup = t.intersection([
         }),
         sisugroups: t.string,
         runScripts: t.array(t.string),
+        dataView: nullable(DataViewSettingsType),
     }),
     GenericPluginMarkup,
     t.type({
@@ -330,7 +331,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         task: true,
         userdata: {type: "Relative", cells: {}},
         nonUserSpecific: true,
-
+        isPreview: false,
         // saveCallBack: this.singleCellSave
     };
     // TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
@@ -517,6 +518,8 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         this.data.maxRows = this.markup.maxRows;
         this.data.maxCols = this.markup.maxCols;
         this.data.toolbarTemplates = this.markup.toolbarTemplates;
+        this.data.dataView = this.markup.dataView;
+        this.data.isPreview = this.isPreview();
         // this.cdr.detectChanges();
     }
 

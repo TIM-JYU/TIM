@@ -64,6 +64,9 @@ import {Subscription} from "rxjs";
 import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
+import {DataViewModule} from "tim/plugin/dataview/data-view.module";
+import {DataViewComponent, DataModelProvider, VirtualScrollingOptions} from "tim/plugin/dataview/data-view.component";
+import {nullable, withDefault} from "tim/plugin/attributes";
 import {onClick} from "../document/eventhandlers";
 import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
@@ -262,6 +265,27 @@ export interface TimTable {
         title?: string;
         confirmation?: string;
     };
+    dataView?: DataViewSettings | null;
+    isPreview: boolean;
+}
+
+export const DataViewVirtualScrollingSettingsType = t.type({
+    enabled: withDefault(t.boolean, true),
+    verticalOverflow: withDefault(t.number, 1),
+    horizontalOverflow: withDefault(t.number, 1),
+});
+
+export const DataViewSettingsType = t.type({
+    virtual: nullable(DataViewVirtualScrollingSettingsType),
+    rowHeight: withDefault(t.number, 30),
+    columnWidths: withDefault(t.record(t.string, t.number), {}),
+    // We use custom table width for DataView because its behaviour differs from TimTable
+    // For example, max-content works for both Chrome and Firefox to do fullwidth
+    tableWidth: withDefault(t.string, "max-content"),
+    fixedColumns: withDefault(t.number, 0),
+});
+
+export interface DataViewSettings extends t.TypeOf<typeof DataViewSettingsType> {
 }
 
 interface Rng {
@@ -483,9 +507,12 @@ export enum ClearSort {
     selector: "tim-table",
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders}" class="timTableRunDiv no-popup-menu"
-             [style.max-height]="maxRows"
-             [style.width]="maxCols"
+        <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders, 'no-overflow': dataView}"
+             class="timTableRunDiv no-popup-menu"
+             [ngStyle]="dataView ? {} : {
+                'max-height': maxRows,
+                'maxCols': maxCols
+             }"
         >
             <h4 *ngIf="data.header" [innerHtml]="data.header"></h4>
             <p *ngIf="data.stem" class="stem" [innerHtml]="data.stem"></p>
@@ -498,82 +525,102 @@ export enum ClearSort {
                     <button class="timButton" title="Add column" *ngIf="addColEnabled()"
                             (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
                 </div>
-                <table #tableElem
-                       [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(),
-                                  forcedEditable: isInForcedEditMode()}"
-                       class="timTableTable"
-                       [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">
-                    <col class="nrcolumn" *ngIf="data.nrColumn" />
-                    <col *ngIf="data.cbColumn" />
-                    <col *ngFor="let c of columns; let i = index" [span]="c.span" [id]="c.id"
-                         [ngStyle]="stylingForColumn(c, i)"/>
-                    <thead>
-                    <tr *ngIf="data.charRow"> <!--Char coordinate row -->
-                        <td class="nrcolumn charRow" *ngIf="data.nrColumn"></td>
-                        <td class="cbColumn charRow" *ngIf="data.cbColumn"></td>
-                        <td class="charRow" [hidden]="!showColumn(coli)"
-                            *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
-                            <span [innerText]="coliToLetters(coli)"></span>
-                        </td>
-                    </tr>
-                    <tr *ngIf="data.headers"> <!-- Header row -->
-                        <td class="nrcolumn totalnr" *ngIf="data.nrColumn"
-                            (click)="handleClickClearFilters()"
-                            title="Click to show all"
-                        >{{totalRows()}}</td>
-                        <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbAllFilter"
-                                                         (ngModelChange)="handleChangeCheckbox(-1)"
-                                                         title="Check for all visible rows">
-                        </td>
-                        <td class="headers"
-                            *ngFor="let c of data.headers; let coli = index"
-                            [hidden]="!showColumn(coli)"
-                            (click)="handleClickHeader(coli)"
-                            title="Click to sort"
-                            [ngStyle]="headersStyle">{{c}}<span
-                                [ngStyle]="sortSymbolStyle[coli]">{{sortSymbol[coli]}}</span>
-                        </td>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr *ngIf="filterRow"> <!-- Filter row -->
-                        <td class="nrcolumn totalnr" *ngIf="data.nrColumn"><span
-                                *ngIf="hiddenRowCount()">{{visibleRowCount()}}</span></td>
-                        <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbFilter"
-                                                         (ngModelChange)="handleChangeFilter()"
-                                                         title="Check to show only checked rows"></td>
-
-                        <td [hidden]="!showColumn(coli)"
-                            *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
-                            <div class="filterdiv">
-                                <input type="text" (ngModelChange)="handleChangeFilter()" [(ngModel)]="filters[coli]"
-                                       title="Write filter condition">
-                            </div>
-                        </td>
-                    </tr> <!-- Now the matrix -->
-                    <tr *ngFor="let rowi of permTable; let i = index"
-                        [style]="stylingForRow(rowi)"
-                        [hidden]="!showRow(rowi)"
-                    >
-                        <td class="nrcolumn" *ngIf="data.nrColumn">{{i + nrColStart}}</td>
-                        <td class="cbColumn" *ngIf="data.cbColumn">
-                            <input type="checkbox" [(ngModel)]="cbs[rowi]" (ngModelChange)="handleChangeCheckbox(rowi)">
-                        </td>
-                        <ng-container *ngFor="let td of cellDataMatrix[rowi]; let coli = index">
-                            <td *ngIf="!td.underSpanOf"
-                                [hidden]="!showColumn(coli)"
-                                [class]="classForCell(rowi, coli)"
-                                [attr.colspan]="td.colspan"
-                                [attr.rowspan]="td.rowspan"
-                                [style]="stylingForCell(rowi, coli)"
-                                (click)="handleClickCell(rowi, coli, $event)"
-                                [innerHtml]="td.cell | purify">
-                                <!--                                <div [innerHtml]="td.cell"></div>-->
+                <ng-container *ngIf="dataView; else tableView">
+                    <tim-data-view [virtualScrolling]="dataViewVScrolling"
+                                   [modelProvider]="this"
+                                   [tableClass]="{editable: isInEditMode() && !isInForcedEditMode(),
+                                                forcedEditable: isInForcedEditMode(),
+                                                timTableTable: true}"
+                                   [tableStyle]="stylingForTable(data.table)"
+                                   [id]="data.table.id"
+                                   [columnIdStart]="nrColStart"
+                                   [tableMaxHeight]="maxRows"
+                                   [tableMaxWidth]="dataView.tableWidth"
+                                   [fixedColumnCount]="dataView.fixedColumns"
+                                   [headerStyle]="headersStyle" #dataViewComponent>
+                        <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
+                    </tim-data-view>
+                </ng-container>
+                <ng-template #tableView>
+                    <table #tableElem
+                           [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(),
+                                                  forcedEditable: isInForcedEditMode()}"
+                           class="timTableTable"
+                           [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">
+                        <col class="nrcolumn" *ngIf="data.nrColumn"/>
+                        <col *ngIf="data.cbColumn"/>
+                        <col *ngFor="let c of columns; let i = index" [span]="c.span" [id]="c.id"
+                             [ngStyle]="stylingForColumn(c, i)"/>
+                        <thead>
+                        <tr *ngIf="data.charRow"> <!--Char coordinate row -->
+                            <td class="nrcolumn charRow" *ngIf="data.nrColumn"></td>
+                            <td class="cbColumn charRow" *ngIf="data.cbColumn"></td>
+                            <td class="charRow" [hidden]="!showColumn(coli)"
+                                *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
+                                <span [innerText]="coliToLetters(coli)"></span>
                             </td>
-                        </ng-container> <!-- one cell -->
-                    </tr> <!-- the matrix -->
-                    </tbody>
-                </table>
+                        </tr>
+                        <tr *ngIf="data.headers"> <!-- Header row -->
+                            <td class="nrcolumn totalnr" *ngIf="data.nrColumn"
+                                (click)="handleClickClearFilters()"
+                                title="Click to show all"
+                            >{{totalRows()}}</td>
+                            <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbAllFilter"
+                                                             (ngModelChange)="handleChangeCheckbox(-1)"
+                                                             title="Check for all visible rows">
+                            </td>
+                            <td class="headers"
+                                *ngFor="let c of data.headers; let coli = index"
+                                [hidden]="!showColumn(coli)"
+                                (click)="handleClickHeader(coli)"
+                                title="Click to sort"
+                                [ngStyle]="headersStyle">{{c}}<span
+                                    [ngStyle]="sortSymbolStyle[coli]">{{sortSymbol[coli]}}</span>
+                            </td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr *ngIf="filterRow"> <!-- Filter row -->
+                            <td class="nrcolumn totalnr" *ngIf="data.nrColumn"><span
+                                    *ngIf="hiddenRowCount()">{{visibleRowCount()}}</span></td>
+                            <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbFilter"
+                                                             (ngModelChange)="handleChangeFilter()"
+                                                             title="Check to show only checked rows"></td>
+
+                            <td [hidden]="!showColumn(coli)"
+                                *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
+                                <div class="filterdiv">
+                                    <input type="text" (ngModelChange)="handleChangeFilter()"
+                                           [(ngModel)]="filters[coli]"
+                                           title="Write filter condition">
+                                </div>
+                            </td>
+                        </tr> <!-- Now the matrix -->
+                        <tr *ngFor="let rowi of permTable; let i = index"
+                            [style]="stylingForRow(rowi)"
+                            [hidden]="!showRow(rowi)"
+                        >
+                            <td class="nrcolumn" *ngIf="data.nrColumn">{{i + nrColStart}}</td>
+                            <td class="cbColumn" *ngIf="data.cbColumn">
+                                <input type="checkbox" [(ngModel)]="cbs[rowi]"
+                                       (ngModelChange)="handleChangeCheckbox(rowi)">
+                            </td>
+                            <ng-container *ngFor="let td of cellDataMatrix[rowi]; let coli = index">
+                                <td *ngIf="!td.underSpanOf"
+                                    [hidden]="!showColumn(coli)"
+                                    [class]="classForCell(rowi, coli)"
+                                    [attr.colspan]="td.colspan"
+                                    [attr.rowspan]="td.rowspan"
+                                    [style]="stylingForCell(rowi, coli)"
+                                    (click)="handleClickCell(rowi, coli, $event)"
+                                    [innerHtml]="td.cell | purify">
+                                    <!--                                <div [innerHtml]="td.cell"></div>-->
+                                </td>
+                            </ng-container> <!-- one cell -->
+                        </tr> <!-- the matrix -->
+                        </tbody>
+                    </table>
+                </ng-template>
                 <div class="buttonsRow">
                     <button class="timButton" title="Remove row" *ngIf="delRowEnabled()"
                             (click)="handleClickRemoveRow()"><span
@@ -582,6 +629,10 @@ export enum ClearSort {
                             (click)="handleClickAddRow()"><span
                             class="glyphicon glyphicon-plus" [innerText]="addRowButtonText"></span></button>
                 </div>
+                <ng-container *ngIf="!dataView">
+                    <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
+                </ng-container>
+                <ng-template #inlineEditorTemplate>
                 <div #inlineEditor class="timTableEditor inlineEditorDiv no-highlight" *ngIf="currentCell">
                     <input class="editInput" #editInput autocomplete="off"
                            (blur)="smallEditorLostFocus($event)"
@@ -591,7 +642,8 @@ export enum ClearSort {
                           class="inlineEditorButtons"
                           style="position: absolute; width: max-content"
                           [hidden]="hide.editorButtons">
-                    <span [hidden]="hide.editorPosition" [innerHtml]="editorPosition" (click)="handleClickEditorPostion()" style="background: yellow;"></span>
+                    <span [hidden]="hide.editorPosition" [innerHtml]="editorPosition"
+                          (click)="handleClickEditorPostion()" style="background: yellow;"></span>
                     <button
                             #buttonOpenBigEditor class="timButton buttonOpenBigEditor"
                             (click)="handleClickOpenBigEditor()"><span class="glyphicon glyphicon-pencil"></span>
@@ -604,23 +656,29 @@ export enum ClearSort {
                     </button>
                     </span>
                 </div>
+                    </ng-template>
             </div>
             <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton">
                 <p class="csRunMenu">
-                    <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="task && button" (click)="handleClickSave()">{{button}}</button>
+                    <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="task && button"
+                            (click)="handleClickSave()">{{button}}</button>
                     &nbsp;
-                    <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="tryResetChanges($event)">{{undoButton}}</a>
+                    <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
+                       (click)="tryResetChanges($event)">{{undoButton}}</a>
                     <span [hidden]="!result">{{result}}</span>
                 </p>
             </div>
             <p class="plgfooter" *ngIf="data.footer" [innerHtml]="data.footer"></p>
-            <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
+            <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px"
+                 [innerHtml]="connectionErrorMessage"></div>
         </div>
-        <div class="timTableError"><pre class="error" *ngIf="error" [innerText]="error"></pre></div>
+        <div class="timTableError">
+            <pre class="error" *ngIf="error" [innerText]="error"></pre>
+        </div>
     `,
     styleUrls: ["./timTable.scss"],
 })
-export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCheck, AfterViewChecked, AfterViewInit {
+export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCheck, AfterViewChecked, AfterViewInit, DataModelProvider {
     error: string = "";
     public viewctrl?: ViewCtrl;
     public cellDataMatrix: ICell[][] = [];  // this has all table data as original indecies (sort does not affect)
@@ -672,7 +730,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     @ViewChild("tableElem") private tableElem!: ElementRef<HTMLTableElement>;
     @ViewChild("timTableRunDiv") private timTableRunDiv!: ElementRef<HTMLDivElement>;
     @ViewChild("buttonOpenBigEditor") private buttonOpenBigEditor!: ElementRef<HTMLButtonElement>;
+    @ViewChild("dataViewComponent") private dataViewComponent?: DataViewComponent;
     @ViewChildren("editInput") private editInputs!: QueryList<ElementRef<HTMLInputElement>>;
+    dataView?: DataViewSettings | null;
     private editInputStyles: string = "";
     private editInputClass: string = "";
     headersStyle: Record<string, string> | null = null;
@@ -702,6 +762,18 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     constructor(private el: ElementRef, public cdr: ChangeDetectorRef, private zone: NgZone) {
         this.pluginMeta = new PluginMeta($(el.nativeElement));
         // if ( !this.data.hide ) this.data.hide = {};
+    }
+
+    get dataViewVScrolling() {
+        const opts: Partial<VirtualScrollingOptions> = {};
+        if (this.dataView?.virtual) {
+            opts.enabled = this.dataView.virtual.enabled;
+            opts.viewOverflow = {
+                vertical: this.dataView.virtual.verticalOverflow,
+                horizontal: this.dataView.virtual.horizontalOverflow,
+            };
+        }
+        return opts;
     }
 
     get element(): JQuery<HTMLElement> {
@@ -742,6 +814,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (this.data.hide) {
             this.hide = {...this.hide, ...this.data.hide};
         }
+
+        this.dataView = this.data.dataView;
 
         if (typeof this.data.nrColumn === "number") { // for backward compatibility
             this.nrColStart = this.data.nrColumn;
@@ -1040,9 +1114,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 }
                 this.cbs[i] = b;
             }
+            this.dataViewComponent?.updateAllSelected();
         }
         if (this.cbFilter) {
             await this.updateFilter();
+            this.dataViewComponent?.updateVisible();
         } else {
             this.countCBs(rowi);
         }
@@ -1172,6 +1248,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             }
         }
         if (!this.cbFilter && !isFilter) {
+            this.dataViewComponent?.updateVisible();
             return;
         }
 
@@ -1186,6 +1263,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.currentHiddenRows.push(i);
         }
         this.countCBs(-1);
+        this.dataViewComponent?.updateVisible();
     }
 
     sortByColumn(ai: number, bi: number, col: number, dir: number): number {
@@ -1222,6 +1300,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.sortSymbol = [];
         this.sortSymbolStyle = [];
         this.sortRing = this.emptyRing.slice();
+        this.dataViewComponent?.updateRowSortOrder(this.permTable);
     }
 
     async handleClickHeader(col: number) {
@@ -1263,6 +1342,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.permTableToScreen[this.permTable[i]] = i;
         }
         this.disableStartCell();
+        this.dataViewComponent?.updateRowSortOrder(this.permTable);
         this.c();
     }
 
@@ -1563,6 +1643,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             if (this.data.autosave) {
                 await this.sendDataBlockAsync();
             }
+            this.dataViewComponent?.updateCellsContents(selectedCells.cells.map((c) => ({ row: c.y, col: c.x })));
             return;
         }
 
@@ -1581,6 +1662,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         for (const c of cellHtmls) {
             this.cellDataMatrix[c.row][c.col].cell = c.cellHtml;
         }
+        this.dataViewComponent?.updateCellsContents(cellHtmls.map((c) => ({ row: c.row, col: c.col })));
     }
 
     /**
@@ -2336,20 +2418,24 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.selectedCells = this.getSelectedCells(rowi, coli);
         this.openToolbar();
 
-        const sr = this.permTableToScreen[rowi];
-        const table = $(this.tableElem.nativeElement);
         if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
             return; // we should never be able to get here
         }
-        // const ry = this.permTable[cell.renderIndexY];
-        const tablecell = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
+        if (this.dataViewComponent) {
+            this.dataViewComponent.markCellsSelected(this.selectedCells.cells);
+        } else {
+            const sr = this.permTableToScreen[rowi];
+            const table = $(this.tableElem.nativeElement);
+            // const ry = this.permTable[cell.renderIndexY];
+            const tablecell = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
 
-        const parent = $(this.timTableRunDiv.nativeElement);
-        // tablecell[0].scrollIntoView(false);
-        const h = tablecell.height();
-        const w = tablecell.width();
-        if (h != null && w != null) {
-            scrollToViewInsideParent(tablecell[0], parent[0], w, 3 * h, w, h);
+            const parent = $(this.timTableRunDiv.nativeElement);
+            // tablecell[0].scrollIntoView(false);
+            const h = tablecell.height();
+            const w = tablecell.width();
+            if (h != null && w != null) {
+                scrollToViewInsideParent(tablecell[0], parent[0], w, 3 * h, w, h);
+            }
         }
         this.updateSmallEditorPosition(); // TODO: vesa added here, because somtiems it did not update the pos
     }
@@ -2503,6 +2589,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private updateSmallEditorPosition() {
         const editInputElement = this.getEditInputElement();
         if (!this.currentCell || !editInputElement) {
+            return;
+        }
+        if (this.dataViewComponent) {
+            this.dataViewComponent.updateEditorPosition(this.currentCell.row, this.currentCell.col);
             return;
         }
         let rowi = this.currentCell.row;
@@ -3595,6 +3685,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (this.task) {
             for (const c of cellsToSave) {
                 this.setUserAttribute(c);
+                this.dataViewComponent?.updateStyleForCell(c.row, c.col);
             }
 
             if (this.data.saveStyleCallBack) {
@@ -3854,6 +3945,61 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             console.error("timTable.setData: unexpected data format: " + JSON.stringify(data));
         }
     }
+
+    getColumnHeaderContents(columnIndex: number): string {
+        if (!this.data.headers) {
+            return "";
+        }
+        return this.data.headers[columnIndex];
+    }
+
+    getDimension(): { rows: number; columns: number; } {
+        return {rows: this.cellDataMatrix.length, columns: this.cellDataMatrix[0].length};
+    }
+
+    getRowHeight(rowIndex: number): number | undefined {
+        return this.dataView?.rowHeight;
+    }
+
+    getColumnWidth(columnIndex: number): number | undefined {
+        return this.dataView?.columnWidths?.[`${columnIndex}`];
+    }
+
+    getCellContents(rowIndex: number, columnIndex: number): string {
+        return `${this.cellDataMatrix[rowIndex][columnIndex].cell}`;
+    }
+
+    getRowContents(rowIndex: number): string[] {
+        return this.cellDataMatrix[rowIndex].map((c) => `${c.cell}`);
+    }
+
+    setRowFilter(columnIndex: number, value: string): void {
+        this.filters[columnIndex] = value;
+    }
+
+    setRowChecked(rowIndex: number, checked: boolean): void {
+        this.cbs[rowIndex] = checked;
+    }
+
+    setSelectAll(state: boolean): void {
+        this.cbAllFilter = state;
+    }
+
+    isRowChecked(rowIndex: number): boolean {
+        return this.cbs[rowIndex];
+    }
+
+    setSelectedFilter(state: boolean): void {
+        this.cbFilter = state;
+    }
+
+    getSortSymbolInfo(columnIndex: number): { symbol: string; style: Record<string, string> } {
+        return {style: this.sortSymbolStyle[columnIndex], symbol: this.sortSymbol[columnIndex]};
+    }
+
+    isPreview(): boolean {
+        return this.data.isPreview;
+    }
 }
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
@@ -3867,6 +4013,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         FormsModule,
         TimUtilityModule,
         PurifyModule,
+        DataViewModule,
     ],
     exports: [TimTableComponent],
 })
