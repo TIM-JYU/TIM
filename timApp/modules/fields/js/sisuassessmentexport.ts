@@ -254,6 +254,14 @@ class SisuAssessmentExportController {
                 )
         ).filter((a) => StringOrNumber.is(a.gradeId) && !failGrades.has(a.gradeId.toString()));
         this.notSendable = this.assessments.filter(alreadyConfirmed);
+
+        // If the grade or credit has changed for someone, we cannot have "=" as default date filter because
+        // it would hide those rows.
+        // Ideally, we would have the default filter by selection (checked boxes) state,
+        // but it's not possible until we switch to tableForm
+        // (or more like not worth the effort to figure out how to do it with the obsolete AngularJS ui-grid).
+        const defaultDateFilter = hasChangedGrades || hasChangedCredits ? "" : "=";
+
         this.gridOptions = {
             onRegisterApi: async (grid) => {
                 this.grid = grid;
@@ -296,7 +304,7 @@ class SisuAssessmentExportController {
                     name: "Compl. date",
                     allowCellFocus: false,
                     width: 105,
-                    filter: {term: ""}, // The grade or credit may have changed, so we cannot have any filter here!
+                    filter: {term: defaultDateFilter},
                 },
                 {
                     field: "completionCredits",
