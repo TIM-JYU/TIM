@@ -19,12 +19,13 @@ import json
 from dataclasses import dataclass, field
 from enum import Enum
 from json import JSONEncoder
-from typing import Optional, Union, TypeVar, Generic, Dict, Type, Any, List
+from typing import Optional, Union, TypeVar, Generic, Dict, Type, Any, List, Callable
 
 from flask import Blueprint, request, Response
 from flask import render_template_string, jsonify, Flask
 from marshmallow import ValidationError, Schema
 from marshmallow.utils import missing
+from webargs.flaskparser import use_args
 
 from markupmodels import list_not_missing_fields, GenericMarkupModel
 from marshmallow_dataclass import class_schema
@@ -370,3 +371,37 @@ def create_blueprint(name: str, plugin_name: str, html_schema: Type[Schema], csr
                    url_prefix=f'/{plugin_name}')
     register_routes(bp, html_schema, csrf)
     return bp
+
+
+HtmlModel = TypeVar('HtmlModel', bound=GenericHtmlModel)
+AnswerModel = TypeVar('AnswerModel', bound=GenericAnswerModel)
+
+
+def register_plugin_app(
+        name: str,
+        html_model: Type[HtmlModel],
+        answer_model: Type[AnswerModel],
+        answer_handler: Callable[[AnswerModel], Dict],
+        reqs_handler: Callable[[], Dict],
+) -> Flask:
+    app = create_app(name, class_schema(html_model))
+
+    @app.route('/answer', methods=['put'])
+    @use_args(class_schema(answer_model)(), locations=("json",))
+    def ans(m: AnswerModel) -> Response:
+        return jsonify(answer_handler(m))
+
+    @app.route('/reqs')
+    def reqs() -> Response:
+        return jsonify(reqs_handler())
+
+    return app
+
+
+def launch_if_main(name: str, app: Flask) -> None:
+    if name == '__main__':
+        app.run(
+            host='0.0.0.0',
+            port=5000,
+            debug=False,  # for live reloading, this can be turned on
+        )

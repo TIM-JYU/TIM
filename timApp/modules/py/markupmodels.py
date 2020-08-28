@@ -1,13 +1,11 @@
-import typing
 from copy import copy
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timezone
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Any, Optional, Mapping, NewType
 
 import marshmallow
 from marshmallow import missing, pre_load
 
-from marshmallow_dataclass import NewType
 from utils import Missing
 
 
@@ -24,11 +22,11 @@ class PointsRule:
 
 class PluginDateTimeField(marshmallow.fields.Field):
 
-    def _serialize(self, value: typing.Any, attr: str, obj: typing.Any, **kwargs):
+    def _serialize(self, value: Any, attr: str, obj: Any, **kwargs: Dict[str, Any]) -> Any:
         raise NotImplementedError
 
-    def _deserialize(self, value: typing.Any, attr: typing.Optional[str],
-                     data: typing.Optional[typing.Mapping[str, typing.Any]], **kwargs):
+    def _deserialize(self, value: Any, attr: Optional[str],
+                     data: Optional[Mapping[str, Any]], **kwargs: Dict[str, Any]) -> datetime:
         d = None
         if isinstance(value, datetime):
             d = value
@@ -44,12 +42,13 @@ class PluginDateTimeField(marshmallow.fields.Field):
         raise self.make_error('validator_failed')
 
 
-PluginDateTime = NewType('PluginDateTime', datetime, field=PluginDateTimeField)
+PluginDateTime = NewType('PluginDateTime', datetime)
+PluginDateTime._marshmallow_field = PluginDateTimeField  # type: ignore
 
 
 class HiddenFieldsMixin:
     @pre_load
-    def process_minus(self, data, **_):
+    def process_minus(self, data: Any, **_: Dict[str, Any]) -> Any:
         if isinstance(data, dict):
             data = copy(data)  # Don't modify the original.
             hidden_keys = {k[1:] for k in data.keys() if isinstance(k, str) and k.startswith('-')}
@@ -88,23 +87,23 @@ class KnownMarkupFields(HiddenFieldsMixin):
     texbeforeprint: Union[str, None, Missing] = missing
     texprint: Union[str, None, Missing] = missing
 
-    def show_points(self):
-        if self.showPoints is not missing:
+    def show_points(self) -> bool:
+        if isinstance(self.showPoints, bool):
             return self.showPoints
         return True
 
-    def tries_text(self):
-        if self.triesText:
+    def tries_text(self) -> str:
+        if isinstance(self.triesText, str):
             return self.triesText
         return 'Tries left:'
 
-    def points_text(self):
-        if self.pointsText:
+    def points_text(self) -> str:
+        if isinstance(self.pointsText, str):
             return self.pointsText
         return 'Points:'
 
 
-def asdict_skip_missing(obj):
+def asdict_skip_missing(obj: Any) -> Dict[str, Any]:
     result = []
     for f in fields(obj):
         v = getattr(obj, f.name)
@@ -115,7 +114,7 @@ def asdict_skip_missing(obj):
     return dict(result)
 
 
-def list_not_missing_fields(inst) -> List:
+def list_not_missing_fields(inst: Any) -> List:
     return list(((k, v) for k, v in asdict_skip_missing(inst).items()))
 
 
@@ -153,4 +152,5 @@ class GenericMarkupModel(KnownMarkupFields):
     undo: Union[UndoInfo, Missing, None] = missing
 
     def get_visible_data(self) -> Dict:
+        assert isinstance(self.hidden_keys, list)
         return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys and k != 'hidden_keys'}

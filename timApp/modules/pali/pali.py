@@ -3,17 +3,15 @@ TIM example plugin: a palindrome checker.
 """
 import os
 import re
-from typing import Union, List
-
 from dataclasses import dataclass, asdict
-from flask import jsonify, render_template_string
-from marshmallow import validates, ValidationError, missing
-from webargs.flaskparser import use_args
+from typing import Union, List, Dict, Any
 
-from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, create_app
+from flask import render_template_string
+from marshmallow import validates, ValidationError, missing
+
 from markupmodels import GenericMarkupModel
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, register_plugin_app, launch_if_main
 from utils import Missing
 
 
@@ -33,8 +31,8 @@ class PaliMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
 
     @validates('points_array')
-    def validate_points_array(self, value):
-        if value is not missing and (len(value) != 2 or not all(len(v) == 2 for v in value)):
+    def validate_points_array(self, value: Union[List[List[float]], Missing]) -> None:
+        if isinstance(value, list) and (len(value) != 2 or not all(len(v) == 2 for v in value)):
             raise ValidationError('Must be of size 2 x 2.')
 
 
@@ -46,7 +44,7 @@ class PaliInputModel:
     nosave: Union[bool, Missing] = missing
 
     @validates('userword')
-    def validate_userword(self, word):
+    def validate_userword(self, word: str) -> None:
         if not word:
             raise ValidationError('Must not be empty.')
 
@@ -60,18 +58,12 @@ class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateM
         return render_static_pali(self)
 
 
-PaliHtmlSchema = class_schema(PaliHtmlModel)
-
-
 @dataclass
 class PaliAnswerModel(GenericAnswerModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
     pass
 
 
-PaliAnswerSchema = class_schema(PaliAnswerModel)
-
-
-def render_static_pali(m: PaliHtmlModel):
+def render_static_pali(m: PaliHtmlModel) -> str:
     return render_template_string(
         """
 <div class="csRunDiv no-popup-menu">
@@ -91,26 +83,23 @@ def render_static_pali(m: PaliHtmlModel):
     )
 
 
-app = create_app(__name__, PaliHtmlSchema)
-
-
-@app.route('/answer', methods=['put'])
-@use_args(PaliAnswerSchema(), locations=("json",))
-def answer(args: PaliAnswerModel):
-    web = {}
+def answer(args: PaliAnswerModel) -> Dict:
+    web: Dict[str, Any] = {}
     result = {'web': web}
     needed_len = args.markup.needed_len
     userword = args.input.userword
     pali_ok = args.input.paliOK or False
     len_ok = True
-    if needed_len:
+    if not isinstance(needed_len, Missing):
         len_ok = check_letters(userword, needed_len)
     if not len_ok:
         web['error'] = "Wrong length"
     if not needed_len and not pali_ok:
         len_ok = False
-    points_array = args.markup.points_array or [[0, 0.25], [0.5, 1]]
-    points = points_array[pali_ok][len_ok]
+    points_array = args.markup.points_array if isinstance(args.markup.points_array, list) else [[0, 0.25], [0.5, 1]]
+    p_index = 1 if pali_ok else 0
+    l_index = 1 if len_ok else 0
+    points = points_array[p_index][l_index]
 
     # plugin can ask not to save the word
     nosave = args.input.nosave
@@ -121,7 +110,7 @@ def answer(args: PaliAnswerModel):
         result["tim_info"] = tim_info
         web['result'] = "saved"
 
-    return jsonify(result)
+    return result
 
 
 def check_letters(word: str, needed_len: int) -> bool:
@@ -136,8 +125,7 @@ def check_letters(word: str, needed_len: int) -> bool:
     return len(re.sub("[^[A-ZÅÄÖ]", "", s)) == needed_len
 
 
-@app.route('/reqs')
-def reqs():
+def reqs() -> Dict:
     templates = ["""
 ``` {#ekapali plugin="pali"}
 header: Kirjoita palindromi
@@ -187,12 +175,16 @@ cols: 20
     }
     if os.environ.get('SHOW_TEMPLATES', "True") != "False":
         result['editor_tabs'] = editor_tabs
-    return jsonify(result)
+    return result
 
 
-if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False,  # for live reloading, this can be turned on
-    )
+app = register_plugin_app(
+    __name__,
+    html_model=PaliHtmlModel,
+    answer_model=PaliAnswerModel,
+    answer_handler=answer,
+    reqs_handler=reqs,
+)
+
+
+launch_if_main(__name__, app)

@@ -1,17 +1,15 @@
 """
 Module for serving drag item-plugin.
 """
-from typing import Union, List
-
 from dataclasses import dataclass, asdict
-from flask import jsonify, render_template_string
-from marshmallow.utils import missing
-from webargs.flaskparser import use_args
+from typing import Union, List, Dict, Any
 
-from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, create_app
+from flask import render_template_string
+from marshmallow.utils import missing
+
 from markupmodels import GenericMarkupModel
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, register_plugin_app, launch_if_main
 from utils import Missing
 
 
@@ -63,7 +61,7 @@ class DragAnswerModel(GenericAnswerModel[DragInputModel, DragMarkupModel, DragSt
     pass
 
 
-def render_static_drag(m: DragHtmlModel):
+def render_static_drag(m: DragHtmlModel) -> str:
     return render_template_string(
         """
 <div class="csRunDiv no-popup-menu">
@@ -86,17 +84,8 @@ def render_static_drag(m: DragHtmlModel):
     )
 
 
-DragHtmlSchema = class_schema(DragHtmlModel)
-DragAnswerSchema = class_schema(DragAnswerModel)
-
-
-app = create_app(__name__, DragHtmlSchema)
-
-
-@app.route('/answer', methods=['put'])
-@use_args(DragAnswerSchema(), locations=("json",))
-def answer(args: DragAnswerModel):
-    web = {}
+def answer(args: DragAnswerModel) -> Dict:
+    web: Dict[str, Any] = {}
     result = {'web': web}
     words = args.input.words
 
@@ -106,10 +95,10 @@ def answer(args: DragAnswerModel):
         result["save"] = save
         web['result'] = "saved"
 
-    return jsonify(result)
+    return result
 
-@app.route('/reqs')
-def reqs():
+
+def reqs() -> Dict:
     templates = ["""
 #- {defaultplugin="drag"}
 {#drag1 #}
@@ -121,7 +110,7 @@ def reqs():
 #- {defaultplugin="drag"}
 {#dragtrash trash: true #}
 """]
-    return jsonify({
+    return {
         "js": ["js/build/drag.js"],
         "multihtml": True,
         'editor_tabs': [
@@ -151,12 +140,16 @@ def reqs():
                 ],
             },
         ],
-    })
+    }
 
 
-if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False,
-    )
+app = register_plugin_app(
+    __name__,
+    html_model=DragHtmlModel,
+    answer_model=DragAnswerModel,
+    answer_handler=answer,
+    reqs_handler=reqs,
+)
+
+
+launch_if_main(__name__, app)

@@ -1,18 +1,16 @@
 """
 TIM feedback-plugin.
 """
-from typing import Union, Any, List
-
 from dataclasses import dataclass, asdict
-from flask import jsonify, render_template_string
+from typing import Union, Any, List, Dict
+
+from flask import render_template_string
 from marshmallow import validates, ValidationError
 from marshmallow.utils import missing
-from webargs.flaskparser import use_args
 
-from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, create_app
 from markupmodels import GenericMarkupModel
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, register_plugin_app, launch_if_main
 from utils import Missing
 
 
@@ -40,7 +38,7 @@ class FeedbackMarkupModel(GenericMarkupModel):
     shuffle: Union[bool, Missing] = missing
 
     @validates('points_array')
-    def validate_points_array(self, value):
+    def validate_points_array(self, value: List[float]) -> None:
         if len(value) != 2:
             raise ValidationError('Must be of size 1 x 2.')
 
@@ -69,7 +67,7 @@ class FeedbackAnswerModel(GenericAnswerModel[FeedbackInputModel, FeedbackMarkupM
     pass
 
 
-def render_static_feedback(m: FeedbackHtmlModel):
+def render_static_feedback(m: FeedbackHtmlModel) -> str:
     return render_template_string(
         """
 <div class="csRunDiv no-popup-menu">
@@ -88,23 +86,17 @@ def render_static_feedback(m: FeedbackHtmlModel):
     )
 
 
-FeedbackHtmlSchema = class_schema(FeedbackHtmlModel)
-FeedbackAnswerSchema = class_schema(FeedbackAnswerModel)
-
-
-app = create_app(__name__, FeedbackHtmlSchema)
-
-@app.route('/answer', methods=['put'])
-@use_args(FeedbackAnswerSchema(), locations=("json",))
-def answer(args: FeedbackAnswerModel):
-    web = {}
+def answer(args: FeedbackAnswerModel) -> Dict:
+    web: Dict[str, Any] = {}
     result = {'web': web}
     correct_answer = args.input.correct_answer
     feedback = args.input.feedback
     correct = args.input.correct
     user_answer = args.input.user_answer
-    points_array = args.markup.points_array or [0, 1]
-    points = points_array[correct]
+    points_array = args.markup.points_array
+    if isinstance(points_array, Missing):
+        points_array = [0, 1]
+    points = points_array[1 if correct else 0]
 
     # Plugin can ask not to save the word.
     nosave = args.input.nosave
@@ -115,11 +107,10 @@ def answer(args: FeedbackAnswerModel):
         result["tim_info"] = tim_info
         web['result'] = "saved"
 
-    return jsonify(result)
+    return result
 
 
-@app.route('/reqs')
-def reqs():
+def reqs() -> Dict:
     templates = ["""#- {area="dropdowntask1" .task}
 
 ## Instruction header {.instruction defaultplugin="dropdown"}
@@ -603,7 +594,7 @@ questionItems:
       levels: *defaultmatch
 
 ```"""]
-    return jsonify({
+    return {
         "js": ["js/build/feedback.js"],
         "multihtml": True,
         "css": ["css/feedback.css"],
@@ -659,13 +650,16 @@ questionItems:
                 ],
             },
         ],
-    },
-    )
+    }
 
 
-if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False,  # for live reloading, this can be turned on
-    )
+app = register_plugin_app(
+    __name__,
+    html_model=FeedbackHtmlModel,
+    answer_model=FeedbackAnswerModel,
+    answer_handler=answer,
+    reqs_handler=reqs,
+)
+
+
+launch_if_main(__name__, app)
