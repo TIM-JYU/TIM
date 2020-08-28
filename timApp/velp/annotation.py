@@ -9,7 +9,7 @@ as well as adding comments to the annotations. The module also retrieves the ann
 import json
 import re
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 from flask import Blueprint
 
@@ -17,6 +17,7 @@ from timApp.answer.routes import verify_answer_access
 from timApp.auth.accesshelper import verify_logged_in, has_teacher_access, \
     get_doc_or_abort, verify_view_access, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, use_model
@@ -95,17 +96,27 @@ class UpdateAnnotationModel(AnnotationIdModel):
     draw_data: Optional[List[dict]] = None
 
 
-def is_annotation_visible(user: User, ann: Annotation) -> bool:
+def check_visibility_and_maybe_get_doc(user: User, ann: Annotation) -> Tuple[bool, Optional[DocInfo]]:
+    d = None
     if user.id == ann.annotator_id:
-        return True
+        return True, d
     if ann.visible_to == AnnotationVisibility.everyone.value:
-        return True
+        return True, d
     d = get_doc_or_abort(ann.document_id)
     if ann.visible_to == AnnotationVisibility.teacher.value and user.has_teacher_access(d):
-        return True
+        return True, d
     if ann.visible_to == AnnotationVisibility.owner.value and user.has_ownership(d):
-        return True
-    return False
+        return True, d
+    return False, d
+
+
+def check_annotation_edit_access_and_maybe_get_doc(user: User, ann: Annotation) -> Tuple[bool, Optional[DocInfo]]:
+    vis, d = check_visibility_and_maybe_get_doc(user, ann)
+    if user.id == ann.annotator_id:
+        return True, d
+    if not d:
+        d = get_doc_or_abort(ann.id)
+    return user.has_teacher_access(d)
 
 
 @annotations.route("/update_annotation", methods=['post'])
@@ -122,10 +133,13 @@ def update_annotation(m: UpdateAnnotationModel):
     drawing = m.draw_data
 
     ann = get_annotation_or_abort(m.id)
-    d = get_doc_or_abort(ann.document_id)
-    if ann.annotator_id != user.id:
-        if not is_annotation_visible(user, ann) or not user.has_teacher_access(d):
-            raise AccessDenied("Sorry, you don't have permission to edit this annotation")
+    can_edit, d = check_annotation_edit_access_and_maybe_get_doc(user, ann)
+    if not can_edit:
+        raise AccessDenied("Sorry, you don't have permission to edit this annotation")
+
+    if not d:
+        d = get_doc_or_abort(m.id)
+
     if visible_to:
         ann.visible_to = visible_to.value
 
@@ -163,10 +177,9 @@ def invalidate_annotation(m: AnnotationIdModel):
     verify_logged_in()
     annotation = get_annotation_or_abort(m.id)
     user = get_current_user_object()
-    if not annotation.annotator_id == user.id:
-        d = get_doc_or_abort(annotation.document_id)
-        if not is_annotation_visible(user, annotation) or not user.has_teacher_access(d):
-            raise AccessDenied("Sorry, you don't have permission to delete this annotation")
+    can_edit, _ = check_annotation_edit_access_and_maybe_get_doc(user, annotation)
+    if not can_edit:
+        raise AccessDenied("Sorry, you don't have permission to delete this annotation")
     annotation.valid_until = get_current_time()
     db.session.commit()
     return ok_response()
@@ -192,7 +205,8 @@ def add_comment_route(m: AddAnnotationCommentModel):
     verify_logged_in()
     commenter = get_current_user_object()
     a = get_annotation_or_abort(m.id)
-    if not is_annotation_visible(commenter, a):
+    vis, _ = check_visibility_and_maybe_get_doc(commenter, a)
+    if not vis:
         raise AccessDenied("Sorry, you don't have permission to add comments to this annotation")
     if not m.content:
         raise RouteException('Comment must not be empty')
