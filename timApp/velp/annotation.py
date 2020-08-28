@@ -124,7 +124,7 @@ def update_annotation(m: UpdateAnnotationModel):
     ann = get_annotation_or_abort(m.id)
     d = get_doc_or_abort(ann.document_id)
     if ann.annotator_id != user.id:
-        if not is_annotation_visible(user, ann) or not user.has_manage_access(d):
+        if not is_annotation_visible(user, ann) or not user.has_teacher_access(d):
             raise AccessDenied("Sorry, you don't have permission to edit this annotation")
     if visible_to:
         ann.visible_to = visible_to.value
@@ -165,7 +165,7 @@ def invalidate_annotation(m: AnnotationIdModel):
     user = get_current_user_object()
     if not annotation.annotator_id == user.id:
         d = get_doc_or_abort(annotation.document_id)
-        if not is_annotation_visible(user, annotation) or not user.has_manage_access(d):
+        if not is_annotation_visible(user, annotation) or not user.has_teacher_access(d):
             raise AccessDenied("Sorry, you don't have permission to delete this annotation")
     annotation.valid_until = get_current_time()
     db.session.commit()

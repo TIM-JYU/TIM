@@ -436,7 +436,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
      * Checks if the user has rights to edit the annotation.
      */
     canEditAnnotation(): boolean {
-        return this.isAnnotator() || this.vctrl.item.rights.manage;
+        return this.isAnnotator() || this.vctrl.item.rights.teacher;
     }
 
     /**
