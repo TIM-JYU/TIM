@@ -1411,8 +1411,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const contents = this.modelProvider.getCellContents(rowIndex, columnIndex);
         if (contents) {
             // If the web worker hasn't sanitized the contents yet, do it ourselves
-            this.cellValueCache[rowIndex][columnIndex] = DOMPurify.sanitize(contents);
-            return contents;
+            return this.cellValueCache[rowIndex][columnIndex]  = DOMPurify.sanitize(contents);
         }
         return contents;
     }
