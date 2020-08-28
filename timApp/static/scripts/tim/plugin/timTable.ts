@@ -286,6 +286,10 @@ export const DataViewSettingsType = t.type({
 });
 
 export interface DataViewSettings extends t.TypeOf<typeof DataViewSettingsType> {
+    // Currently PyCharm isn't able to analyze types generated via io-ts inside Angular templates,
+    // which is why these two are defined twice
+    tableWidth: string;
+    fixedColumns: number;
 }
 
 interface Rng {
