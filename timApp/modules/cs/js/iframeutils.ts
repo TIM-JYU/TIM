@@ -9,7 +9,7 @@ export const communicationJS = `
     });
 
     function onMessage(event) {
-        // console.log(event.data);
+        console.log(event.data);
         // console.log(event.origin);
         if (event.data.msg === "setData") {
             if (window.setData) {
@@ -27,6 +27,9 @@ export const communicationJS = `
         }
         if (event.data.msg === "close") {
             close();
+        }
+        if (event.data.msg === "toggleEditorOptions"){
+            toggleOptions();
         }
     }
 

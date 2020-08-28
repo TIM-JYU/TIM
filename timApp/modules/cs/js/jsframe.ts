@@ -28,6 +28,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 import {getParId} from "tim/document/parhelpers";
 import {communicationJS} from "./iframeutils";
+import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "../../../static/scripts/tim/document/viewutils";
 
 const JsframeMarkup = t.intersection([
     t.partial({
@@ -102,7 +103,8 @@ type MessageToFrame =
 } | { msg: "init" }
     | { msg: "getData" }
     | { msg: "getDataSave" }
-    | { msg: "close" };
+    | { msg: "close" }
+    | { msg: "toggleEditorOptions"};
 
 type MessageFromFrame =
     | {
@@ -189,7 +191,7 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
 })
 export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
     t.TypeOf<typeof JsframeAll>,
-    typeof JsframeAll> implements ITimComponent, IUserChanged, AfterViewInit, OnDestroy {
+    typeof JsframeAll> implements ITimComponent, IUserChanged, AfterViewInit, OnDestroy, ICtrlWithMenuFunctionEntry {
     iframesettings?: { allow: string, sandbox: string, src: SafeResourceUrl, width: number, height: number };
     private ab?: AnswerBrowserController;
 
@@ -219,6 +221,19 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
 
     get saveButton() {
         return this.markup.saveButton;
+    }
+
+    toggleDrawioEditors() {
+        const c = this.addListener();
+        this.send({msg: "toggleEditorOptions"});
+    }
+
+    getMenuEntry(): IMenuFunctionEntry {
+        return {
+            func: () => this.toggleDrawioEditors(),
+            desc: "Toggle diagram editor",
+            show: !this.attrsall.markup.task,
+        };
     }
 
     buttonText() {
@@ -319,6 +334,12 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
                     ab.setAnswerLoader((a) => this.changeAnswer(a));
                 }
             })();
+        }
+        if (this.markup.type?.toLowerCase() == "drawio") {
+            const parId = getParId(this.getPar());
+            if (parId) {
+                this.viewctrl.addParMenuEntry(this, parId);
+            }
         }
     }
 
@@ -617,7 +638,6 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         }
         this.channel = new MessageChannel();
         this.channel.port1.onmessage = (event: MessageEvent) => {
-            // console.log(event);
             const d = event.data as MessageFromFrame;
             const msg = d.msg;
             if (msg === "data") {

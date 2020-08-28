@@ -43,6 +43,13 @@
         var wantSave = false;
         var receiveEvent;
 
+        var toggleOptions = function () {
+            var ops = document.getElementById('options');
+            if (ops) {
+                ops.style.display = ops.style.display === 'none' ? '' : 'none';
+            }
+        };
+
         var close = function () {
 
             if (TIMJS.frm) {
@@ -221,6 +228,9 @@
             } else {
                 document.getElementById('diagram').innerHTML = initial;
             }
+            if (TIMJS.options.hideOptionsBar){
+                toggleOptions();
+            }
         };
 
         var globaldata = null;
@@ -274,8 +284,10 @@
 </head>
 <body>
 <div>
-    <button onclick="edit(this);">Muokkaa</button>
-    Fullscreen <input id="fullscreen" type="checkbox"/>
+    <div id="options">
+        <button onclick="edit(this);">Muokkaa</button>
+        Fullscreen <input id="fullscreen" type="checkbox"/>
+    </div>
     <div id="wrapper">
         <div id="diagram"></div>
     </div>

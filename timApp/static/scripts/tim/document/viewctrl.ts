@@ -47,7 +47,7 @@ import {ParRefController} from "./parRef";
 import {PopupMenuController} from "./popupMenu";
 import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
-import {IMenuFunctionEntry} from "./viewutils";
+import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "./viewutils";
 
 markAsUsed(ngs, popupMenu, interceptor, helpPar, ParRefController);
 
@@ -158,6 +158,7 @@ export class ViewCtrl implements IController {
     private tableForms = new Map<string, TableFormComponent>();
     private jsRunners = new Map<string, IJsRunner>();
     private velpCanvases = new Map<number, DrawCanvasComponent>();
+    private parMenuEntries = new Map<string, ICtrlWithMenuFunctionEntry>();
 
     // TODO: Possibly redundant since same thing can be achieved by just using the array version
     private timComponents: Map<string, ITimComponent> = new Map();
@@ -531,6 +532,14 @@ export class ViewCtrl implements IController {
      */
     public getTableControllerFromParId(parId: string) {
         return this.timTables.get(parId);
+    }
+
+    public addParMenuEntry(controller: ICtrlWithMenuFunctionEntry, parId: string) {
+        this.parMenuEntries.set(parId, controller);
+    }
+
+    public getParMenuEntry(parId: string) {
+        return this.parMenuEntries.get(parId);
     }
 
     // TODO: Refactor plugin interface for tableForm:
