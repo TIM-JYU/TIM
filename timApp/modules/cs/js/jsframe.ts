@@ -27,8 +27,8 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 import {getParId} from "tim/document/parhelpers";
-import {communicationJS} from "./iframeutils";
 import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "../../../static/scripts/tim/document/viewutils";
+import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
     t.partial({
@@ -104,7 +104,7 @@ type MessageToFrame =
     | { msg: "getData" }
     | { msg: "getDataSave" }
     | { msg: "close" }
-    | { msg: "toggleEditorOptions"};
+    | { msg: "start", fullscreen: boolean};
 
 type MessageFromFrame =
     | {
@@ -148,6 +148,10 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
             <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen"></p>
             <div *ngIf="isOpen && iframesettings" id="output" class="jsFrameContainer jsframeOutput">
+                <div *ngIf="isDrawio() && this.optionsVisible" id="drawioOptions">
+                    <button (click)="editDrawio()">Muokkaa</button>
+                    Fullscreen <input id="fullscreen" [(ngModel)]="fullscreenChecked" type="checkbox"/>
+                </div>
                 <iframe #frame
                         class='showJsframe jsframeFrame'
                         style='margin-left: auto;
@@ -224,8 +228,8 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     toggleDrawioEditors() {
-        const c = this.addListener();
-        this.send({msg: "toggleEditorOptions"});
+        this.optionsVisible = !this.optionsVisible
+        this.c();
     }
 
     getMenuEntry(): IMenuFunctionEntry {
@@ -266,6 +270,8 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     connectionErrorMessage?: string;
     private prevdata?: JSFrameData;
     private currentData?: JSFrameData;
+    public optionsVisible = true;
+    public fullscreenChecked = false;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -341,6 +347,17 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
                 this.viewctrl.addParMenuEntry(this, parId);
             }
         }
+        if (this.isDrawio() && !this.isTask()) {
+            this.optionsVisible = false;
+        }
+    }
+
+    isDrawio(): boolean {
+        return this.markup.type?.toLowerCase() == "drawio";
+    }
+
+    editDrawio() {
+        this.send({msg: "start", fullscreen: this.fullscreenChecked});
     }
 
     private getDataFromMarkup() {
@@ -456,6 +473,10 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         return url;
     }
 
+    isTask(): boolean {
+        return this.getTaskId() != undefined;
+    }
+
     async runSend(data: unknown) {
         this.connectionErrorMessage = undefined;
         if (this.pluginMeta.isPreview()) {
@@ -469,7 +490,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.isRunning = true;
         let url = "";
         let params;
-        if (this.attrsall.markup.task) {
+        if (this.isTask()) {
             if (!this.getTaskId()) {
                 this.error = "Task-mode on but TaskId is missing!";
                 this.saveResponse.saved = false;

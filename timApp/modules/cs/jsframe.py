@@ -196,7 +196,7 @@ class DrawIO(JSframe):
         if isinstance(data, str):
             data = {}
         dopt = data.get("options", {})
-        templates = ma.get("templates", "");
+        templates = ma.get("templates", "")
         ar = data.get("aspectRatio", dopt.get('aspectRatio', None))
         if height and not ar:
             if not ma.get("data", None):
@@ -209,6 +209,7 @@ class DrawIO(JSframe):
         ma["saveButton"] = ma.get("saveButton", "")
         # TODO: prevent user options if thereis
         templates = ma.get("templates", "")
+        tid = self.query.jso.get('taskID','').split(".")[1]
         if isinstance(templates, str):
             templates = templates.replace('</mxlibrary>', '')
             templates = templates.replace('<mxlibrary>', '')
@@ -216,7 +217,7 @@ class DrawIO(JSframe):
                 templates = json.loads(templates)
             except json.decoder.JSONDecodeError:
                 pass
-        ma["options"] = {'fullscreen': ma.get("fullscreen", True), 'templates': templates, 'hideOptionsBar': not ma.get("task", True)}
+        ma["options"] = {'fullscreen': ma.get("fullscreen", True), 'templates': templates}
         super().modify_query()
         return
 
