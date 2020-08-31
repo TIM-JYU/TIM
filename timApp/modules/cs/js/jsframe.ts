@@ -116,6 +116,8 @@ type MessageFromFrame =
 } | {
     msg: "update";
     data: JSFrameData;
+} | {
+    msg: "frameInited" | "frameClosed";
 };
 
 
@@ -227,8 +229,12 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         return this.markup.saveButton;
     }
 
-    toggleDrawioEditors() {
-        this.optionsVisible = !this.optionsVisible
+    toggleDrawioEditors(open?: boolean) {
+        if (open != undefined) {
+            this.optionsVisible = open;
+        } else {
+            this.optionsVisible = !this.optionsVisible;
+        }
         this.c();
     }
 
@@ -660,19 +666,24 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.channel = new MessageChannel();
         this.channel.port1.onmessage = (event: MessageEvent) => {
             const d = event.data as MessageFromFrame;
-            const msg = d.msg;
-            if (msg === "data") {
+            if (d.msg === "data") {
                 this.getDataReady(d.data);
             }
-            if (msg === "update") {
+            if (d.msg === "update") {
                 this.console = "";
                 this.edited = true;
                 this.currentData = unwrapAllC(this.getDataReady(d.data));
                 this.updateListeners();
                 this.c();
             }
-            if (msg === "datasave") {
+            if (d.msg === "datasave") {
                 this.getDataReady(d.data, true);
+            }
+            if (d.msg === "frameInited") {
+                this.toggleDrawioEditors(false);
+            }
+            if (d.msg === "frameClosed") {
+                this.toggleDrawioEditors(true);
             }
         };
         const f = this.getFrame();

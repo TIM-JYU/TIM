@@ -54,6 +54,7 @@
 
             if (TIMJS.frm) {
                 document.body.removeChild(iframe);
+                window.port2.postMessage({msg: "frameClosed"});
             } else {
                 drw.close();
             }
@@ -154,6 +155,9 @@
                                 action: 'load',
                                 autosave: 1, xml: svg
                             }), '*');
+                        }
+                        if (TIMJS.frm) {
+                            window.port2.postMessage({msg: "frameInited"})
                         }
                     } else if (msg.event == 'export') {
                         // Extracts SVG DOM from data URI to enable links
