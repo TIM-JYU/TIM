@@ -209,7 +209,6 @@ class DrawIO(JSframe):
         ma["saveButton"] = ma.get("saveButton", "")
         # TODO: prevent user options if thereis
         templates = ma.get("templates", "")
-        tid = self.query.jso.get('taskID','').split(".")[1]
         if isinstance(templates, str):
             templates = templates.replace('</mxlibrary>', '')
             templates = templates.replace('<mxlibrary>', '')

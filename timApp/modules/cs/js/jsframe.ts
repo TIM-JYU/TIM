@@ -242,7 +242,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         return {
             func: () => this.toggleDrawioEditors(),
             desc: "Toggle diagram editor",
-            show: !this.attrsall.markup.task,
+            show: !this.getTaskId(),
         };
     }
 
