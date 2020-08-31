@@ -245,7 +245,8 @@ class SisuAssessmentExportController {
             creditHasChanged,
         );
         const hasChangedCredits = changedCredits.length > 0;
-        const alreadyConfirmed = (a: IAssessmentExt) => a.error && a.error === "Sisu: Aikaisempi vahvistettu suoritus";
+        const alreadyConfirmed = (a: IAssessmentExt) => a.error?.startsWith("Sisu: Aikaisempi vahvistettu suoritus");
+        const hasChangedGradesOrCreditsAndNotConfirmed = [...changedGrades, ...changedCredits].filter((a) => !alreadyConfirmed(a));
         this.notSendableButChanged = this.assessments.filter(
             (a) => alreadyConfirmed(a) &&
                 (gradeHasChanged(a) ||
@@ -260,7 +261,7 @@ class SisuAssessmentExportController {
         // Ideally, we would have the default filter by selection (checked boxes) state,
         // but it's not possible until we switch to tableForm
         // (or more like not worth the effort to figure out how to do it with the obsolete AngularJS ui-grid).
-        const defaultDateFilter = hasChangedGrades || hasChangedCredits ? "" : "=";
+        const defaultDateFilter = hasChangedGradesOrCreditsAndNotConfirmed.length > 0 ? "" : "=";
 
         this.gridOptions = {
             onRegisterApi: async (grid) => {
