@@ -103,6 +103,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     exam_mode: boolean;
     hide_sidemenu: boolean;
     score_infos: IDocScoreInfo[] | null;
+    current_list_user?: IUser;
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {
