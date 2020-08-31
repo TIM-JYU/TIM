@@ -55,6 +55,7 @@ class ImportDataMarkupModel(GenericMarkupModel):
     ignoreMissing: Union[bool, Missing, None] = missing
     joinProperty: Union[str, Missing, None] = missing
     createMissingUsers: Union[bool, Missing] = missing
+    addUsersToGroup: Union[str, Missing] = missing
 
 
 @dataclass
@@ -371,10 +372,14 @@ def answer(args: ImportDataAnswerModel):
         ]
     elif missing_users:
         return args.make_answer_error('missingUsers not implemented when joinProperty is "id"')
+    groups = None
+    if args.markup.addUsersToGroup:
+        groups = {'add': {args.markup.addUsersToGroup: [u['user'] for u in rows]}}
     jsonresp = {
         'ignoreMissing': args.markup.ignoreMissing,
         'allowMissing': args.markup.allowMissing,
         'savedata': rows,
+        'groups': groups,
         'createMissingUsers': args.input.createMissingUsers,
         'missingUsers': mu,
         'web': {

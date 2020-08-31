@@ -304,3 +304,39 @@ UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
             ,
             400,
         )
+
+    def test_import_add_to_group(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {#t plugin=importData}
+addUsersToGroup: tg1
+allowMissing: true
+        """)
+        self.imp(
+            d,
+            {'data': 'testuser2;x;1'},
+            'Group does not exist: tg1',
+            400,
+        )
+        ug = UserGroup.create('tg1')
+        db.session.add(ug)
+        ug.admin_doc = self.create_doc().block
+        db.session.commit()
+        self.imp(
+            d,
+            {'data': 'testuser2;x;1'},
+            {
+                'web': field_result(changed=1),
+            },
+            200,
+        )
+        self.imp(
+            d,
+            {'data': 'testuser3;x;1'},
+            {
+                'web': field_result(changed=1),
+            },
+            200,
+        )
+        ug = UserGroup.get_by_name('tg1')
+        self.assertEqual([self.test_user_2, self.test_user_3], sorted(ug.users, key=lambda u: u.name))

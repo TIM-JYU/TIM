@@ -25,6 +25,7 @@ const ImportDataMarkup = t.intersection([
         tool: t.boolean,
         fields: t.array(t.string),
         createMissingUsers: t.boolean,
+        addUsersToGroup: t.string,
     }),
     GenericPluginMarkup,
     t.type({
