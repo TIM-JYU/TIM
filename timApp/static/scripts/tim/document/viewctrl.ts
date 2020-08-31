@@ -218,8 +218,9 @@ export class ViewCtrl implements IController {
         this.document = new Document(this.docId);
         setActiveDocument(this.document);
 
+        const currSel = documentglobals().current_list_user;
         if (this.users.length > 0) {
-            this.selectedUser = this.users[0].user;
+            this.selectedUser = currSel ? this.findUserByName(currSel.name)!.user : this.users[0].user;
         } else {
             this.selectedUser = Users.getCurrent();
         }
@@ -355,6 +356,10 @@ export class ViewCtrl implements IController {
         window.addEventListener("scroll", (e) => {
             saveCurrentScreenPar();
         });
+    }
+
+    public findUserByName(userName: string) {
+        return this.users.find((u) => u.user.name === userName);
     }
 
     public isTranslation() {

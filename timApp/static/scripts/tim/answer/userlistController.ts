@@ -3,6 +3,7 @@ import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import uiGrid, {IFilterOptions, IGridColumnOf, IGridRowOf} from "ui-grid";
 import {DialogController} from "tim/ui/dialogController";
+import {documentglobals} from "tim/util/globals";
 import {ViewCtrl} from "../document/viewctrl";
 import {registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
 import {IUser, IUserListEntry} from "../user/IUser";
@@ -159,19 +160,19 @@ export class UserListController implements IController {
                 if (this.gridOptions?.data) {
                     gridApi.grid.modifyRows(this.gridOptions.data as IUserListEntry[]);
                     const firstRow = this.gridOptions.data[0] as IUserListEntry;
-                    gridApi.selection.selectRow(firstRow);
                     const userName = getURLParameter("user");
+                    let foundUser: IUserListEntry | undefined;
                     if (userName) {
-                        const foundUser = this.findUserByName(userName);
-                        if (foundUser) {
-                            this.gridApi.selection.selectRow(foundUser);
-                        } else {
+                        foundUser = this.viewctrl.findUserByName(userName);
+                        if (!foundUser) {
                             void showMessageDialog(`User ${userName} not found from answerers.`);
-                            gridApi.selection.selectRow(firstRow);
                         }
-                    } else {
-                        gridApi.selection.selectRow(firstRow);
                     }
+                    const currSel = documentglobals().current_list_user;
+                    if (!foundUser && currSel) {
+                        foundUser = this.viewctrl.findUserByName(currSel.name);
+                    }
+                    this.gridApi.selection.selectRow(foundUser ? foundUser : firstRow);
                 }
                 gridApi.cellNav.on.navigate(this.scope, (newRowCol, oldRowCol) => {
                     // TODO: check if simple way to cancel this event here
@@ -344,10 +345,6 @@ export class UserListController implements IController {
         opened.close();
         */
 
-    }
-
-    private findUserByName(userName: string) {
-        return this.viewctrl.users.find((u) => u.user.name === userName);
     }
 }
 

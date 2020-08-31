@@ -491,9 +491,9 @@ def view(item_path, template_name, route="view"):
 
     is_in_lecture = current_user_in_lecture()
     current_list_user: Optional[User] = None
+    # teacher view sorts user by real name and selects the lowest - ensure first loaded answer matches the user
     if user_list:
-        user_list = sorted(user_list, key=lambda u: u["user"].real_name)
-        current_list_user = user_list[0]["user"]
+        current_list_user = min(user_list, key=lambda u: (u["user"].real_name or '').lower())["user"]
 
     raw_css = doc_settings.css()
     if raw_css:
@@ -659,6 +659,7 @@ def view(item_path, template_name, route="view"):
         nav_ranges=nav_ranges,
         should_mark_all_read=post_process_result.should_mark_all_read,
         override_theme=override_theme,
+        current_list_user=current_list_user
     )
 
 
