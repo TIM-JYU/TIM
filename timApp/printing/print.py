@@ -188,7 +188,7 @@ def get_printed_document(doc_path):
     doc = g.doc_entry
 
     file_type = get_option(request, 'file_type', 'pdf')
-    if doc_path != doc.name and doc_path.doc_path.rfind('.') >= 0:  # name have been changed because . in name
+    if doc_path != doc.name and doc_path.rfind('.') >= 0:  # name have been changed because . in name
         file_type = 'plain'
     # template_doc_id = get_option(request, 'template_doc_id', -1)
     plugins_user_print = get_option(request, 'plugins_user_code', False)
