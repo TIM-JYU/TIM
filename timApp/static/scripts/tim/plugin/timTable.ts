@@ -515,7 +515,7 @@ export enum ClearSort {
              class="timTableRunDiv no-popup-menu"
              [ngStyle]="dataView ? {} : {
                 'max-height': maxRows,
-                'maxCols': maxCols
+                'width': maxCols
              }"
         >
             <h4 *ngIf="data.header" [innerHtml]="data.header"></h4>
