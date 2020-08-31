@@ -8,7 +8,7 @@ annotations as well as adding comments to the annotations. The module also retri
 """
 
 from enum import Enum, unique
-from typing import List
+from typing import List, Any
 
 from sqlalchemy import func, true
 from sqlalchemy.orm import joinedload, contains_eager
@@ -66,7 +66,7 @@ def get_annotations_with_comments_in_document(user: User, d: DocInfo) -> List[An
     return anns
 
 
-def set_annotation_query_opts(q):
+def set_annotation_query_opts(q) -> Any:
     return (q.options(joinedload(Annotation.velp_content, innerjoin=True).load_only(VelpContent.content))
             .options(joinedload(Annotation.comments).joinedload(AnnotationComment.commenter, innerjoin=True).raiseload(User.groups))
             .options(joinedload(Annotation.annotator, innerjoin=True).raiseload(User.groups))

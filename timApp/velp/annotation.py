@@ -11,7 +11,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Optional, List, Tuple
 
-from flask import Blueprint
+from flask import Blueprint, Response
 
 from timApp.answer.routes import verify_answer_access
 from timApp.auth.accesshelper import verify_logged_in, has_teacher_access, \
@@ -49,7 +49,7 @@ class AddAnnotationModel:
 
 @annotations.route("/add_annotation", methods=['post'])
 @use_model(AddAnnotationModel)
-def add_annotation(m: AddAnnotationModel):
+def add_annotation(m: AddAnnotationModel) -> Response:
     """Adds a new annotation.
     """
     d = get_doc_or_abort(m.doc_id)
@@ -57,7 +57,10 @@ def add_annotation(m: AddAnnotationModel):
     color = m.color
     validate_color(color)
     annotator = get_current_user_object()
-    velp_version_id = get_latest_velp_version(m.velp_id).version_id
+    latest_velp_version = get_latest_velp_version(m.velp_id)
+    if not latest_velp_version:
+        raise RouteException("f'Velp with id {m.velp_id} not found'")
+    velp_version_id = latest_velp_version.version_id
 
     if m.answer_id:
         verify_answer_access(m.answer_id, get_current_user_object().id, require_teacher_if_not_own=True)
@@ -77,7 +80,7 @@ def add_annotation(m: AddAnnotationModel):
     return json_response(ann)
 
 
-def validate_color(color: Optional[str]):
+def validate_color(color: Optional[str]) -> None:
     if color and not is_color_hex_string(color):
         raise RouteException("Color should be a hex string or None, e.g. '#FFFFFF'.")
 
@@ -116,12 +119,12 @@ def check_annotation_edit_access_and_maybe_get_doc(user: User, ann: Annotation) 
         return True, d
     if not d:
         d = get_doc_or_abort(ann.id)
-    return user.has_teacher_access(d), d
+    return user.has_teacher_access(d) is not None, d
 
 
 @annotations.route("/update_annotation", methods=['post'])
 @use_model(UpdateAnnotationModel)
-def update_annotation(m: UpdateAnnotationModel):
+def update_annotation(m: UpdateAnnotationModel) -> Response:
     """Updates the information of an annotation.
     """
     verify_logged_in()
@@ -170,7 +173,7 @@ def is_color_hex_string(s: str) -> bool:
 
 @annotations.route("/invalidate_annotation", methods=['post'])
 @use_model(AnnotationIdModel)
-def invalidate_annotation(m: AnnotationIdModel):
+def invalidate_annotation(m: AnnotationIdModel) -> Response:
     """Invalidates an annotation by setting its valid_until to current moment.
     """
 
@@ -199,7 +202,7 @@ def get_annotation_or_abort(ann_id: int) -> Annotation:
 
 @annotations.route("/add_annotation_comment", methods=['post'])
 @use_model(AddAnnotationCommentModel)
-def add_comment_route(m: AddAnnotationCommentModel):
+def add_comment_route(m: AddAnnotationCommentModel) -> Response:
     """Adds a new comment to the annotation.
     """
     verify_logged_in()
@@ -217,7 +220,7 @@ def add_comment_route(m: AddAnnotationCommentModel):
 
 
 @annotations.route("/<int:doc_id>/get_annotations", methods=['GET'])
-def get_annotations(doc_id: int):
+def get_annotations(doc_id: int) -> Response:
     """Returns all annotations with comments user can see, e.g. has access to them in a document.
 
     :param doc_id: ID of the document
