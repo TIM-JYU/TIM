@@ -15,7 +15,7 @@ from flask import Blueprint, Response
 
 from timApp.answer.routes import verify_answer_access
 from timApp.auth.accesshelper import verify_logged_in, has_teacher_access, \
-    get_doc_or_abort, verify_view_access, AccessDenied
+    get_doc_or_abort, verify_view_access, AccessDenied, verify_teacher_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
@@ -115,11 +115,14 @@ def check_visibility_and_maybe_get_doc(user: User, ann: Annotation) -> Tuple[boo
 
 def check_annotation_edit_access_and_maybe_get_doc(user: User, ann: Annotation) -> Tuple[bool, Optional[DocInfo]]:
     vis, d = check_visibility_and_maybe_get_doc(user, ann)
+    if not vis:
+        return False, d
     if user.id == ann.annotator_id:
         return True, d
     if not d:
-        d = get_doc_or_abort(ann.id)
-    return user.has_teacher_access(d) is not None, d
+        d = get_doc_or_abort(ann.document_id)
+    verify_teacher_access(d)
+    return True, d
 
 
 @annotations.route("/update_annotation", methods=['post'])
@@ -140,9 +143,6 @@ def update_annotation(m: UpdateAnnotationModel) -> Response:
     if not can_edit:
         raise AccessDenied("Sorry, you don't have permission to edit this annotation")
 
-    if not d:
-        d = get_doc_or_abort(m.id)
-
     if visible_to:
         ann.visible_to = visible_to.value
 
@@ -150,6 +150,8 @@ def update_annotation(m: UpdateAnnotationModel) -> Response:
 
     ann.color = color
 
+    if not d:
+        d = get_doc_or_abort(ann.document_id)
     if has_teacher_access(d):
         ann.points = points
     if m.coord:
