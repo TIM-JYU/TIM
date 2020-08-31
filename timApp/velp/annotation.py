@@ -59,11 +59,14 @@ def add_annotation(m: AddAnnotationModel) -> Response:
     annotator = get_current_user_object()
     latest_velp_version = get_latest_velp_version(m.velp_id)
     if not latest_velp_version:
-        raise RouteException("f'Velp with id {m.velp_id} not found'")
+        raise RouteException("f'Velp with id {m.velp_id} not found.'")
     velp_version_id = latest_velp_version.version_id
 
     if m.answer_id:
-        verify_answer_access(m.answer_id, get_current_user_object().id, require_teacher_if_not_own=True)
+        _, ans_doc_id = verify_answer_access(m.answer_id, get_current_user_object().id, require_teacher_if_not_own=True)
+        if m.doc_id != ans_doc_id:
+            raise RouteException("Answer id does not match the requested document.")
+
     ann = Annotation(
         velp_version_id=velp_version_id,
         visible_to=m.visible_to.value,
@@ -141,7 +144,7 @@ def update_annotation(m: UpdateAnnotationModel) -> Response:
     ann = get_annotation_or_abort(m.id)
     can_edit, d = check_annotation_edit_access_and_maybe_get_doc(user, ann)
     if not can_edit:
-        raise AccessDenied("Sorry, you don't have permission to edit this annotation")
+        raise AccessDenied("Sorry, you don't have permission to edit this annotation.")
 
     if visible_to:
         ann.visible_to = visible_to.value
@@ -184,7 +187,7 @@ def invalidate_annotation(m: AnnotationIdModel) -> Response:
     user = get_current_user_object()
     can_edit, _ = check_annotation_edit_access_and_maybe_get_doc(user, annotation)
     if not can_edit:
-        raise AccessDenied("Sorry, you don't have permission to delete this annotation")
+        raise AccessDenied("Sorry, you don't have permission to delete this annotation.")
     annotation.valid_until = get_current_time()
     db.session.commit()
     return ok_response()
@@ -212,7 +215,7 @@ def add_comment_route(m: AddAnnotationCommentModel) -> Response:
     a = get_annotation_or_abort(m.id)
     vis, _ = check_visibility_and_maybe_get_doc(commenter, a)
     if not vis:
-        raise AccessDenied("Sorry, you don't have permission to add comments to this annotation")
+        raise AccessDenied("Sorry, you don't have permission to add comments to this annotation.")
     if not m.content:
         raise RouteException('Comment must not be empty')
     a.comments.append(AnnotationComment(content=m.content, commenter_id=commenter.id))
