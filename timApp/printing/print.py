@@ -48,6 +48,9 @@ def pull_doc_path(endpoint, values):
         doc_path = values['doc_path']
         if doc_path is None:
             abort(400)
+        dot = doc_path.rfind('.') # change last . to -
+        if dot >= 0:
+            doc_path = doc_path[:dot] + '-' + doc_path[dot + 1:]
         g.doc_path = doc_path
         g.doc_entry = DocEntry.find_by_path(doc_path)
         if not g.doc_entry:
@@ -185,6 +188,8 @@ def get_printed_document(doc_path):
     doc = g.doc_entry
 
     file_type = get_option(request, 'file_type', 'pdf')
+    if doc_path != doc.name and doc_path.doc_path.rfind('.') >= 0:  # name have been changed because . in name
+        file_type = 'plain'
     # template_doc_id = get_option(request, 'template_doc_id', -1)
     plugins_user_print = get_option(request, 'plugins_user_code', False)
     line = request.args.get('line')
