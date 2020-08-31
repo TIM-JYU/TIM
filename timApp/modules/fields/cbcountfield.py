@@ -14,7 +14,7 @@ from pluginserver_flask import GenericHtmlModel, \
     render_multihtml, \
     create_blueprint
 
-from textfield import TextfieldAnswerModel, TextfieldAnswerSchema, TextfieldInputModel, \
+from timApp.modules.fields.textfield import TextfieldAnswerModel, TextfieldAnswerSchema, TextfieldInputModel, \
     TextfieldMarkupModel
 
 from timApp.tim_app import csrf
