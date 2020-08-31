@@ -40,6 +40,7 @@ from timApp.document.minutes.routes import minutes_blueprint
 from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
 from timApp.errorhandlers import register_errorhandlers
+from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.gamification.generateMap import generateMap
 from timApp.item.block import Block
 from timApp.item.manage import manage_page
@@ -114,6 +115,7 @@ blueprints = [
     qst_plugin,
     tableForm_plugin,
     tape_plugin,
+    cbcountfield_route,
     timMenu_plugin,
     timTable_plugin,
 ]

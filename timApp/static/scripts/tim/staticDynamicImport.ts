@@ -24,6 +24,8 @@ export function staticDynamicImport(s: string) {
             return import("tim/plugin/import-data.component");
         case "timTable":
             return import("tim/plugin/timTable");
+        case "cbcountfield":
+            return import("modules/fields/js/cbcountfield");
         case "timMenu":
             return import("tim/plugin/timMenuController");
         case "/cs/js/build/csModule.js":

@@ -1,5 +1,5 @@
 /**
- * Defines the client-side implementation of cbfield/label plugin.
+ * Defines the client-side implementation of cbcountfield/label plugin.
  */
 import angular from "angular"; // , {INgModelOptions}
 import * as t from "io-ts";
@@ -9,10 +9,10 @@ import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
 
-const cbfieldApp = angular.module("cbfieldApp", ["ngSanitize"]);
-export const moduleDefs = [cbfieldApp];
+const cbcountfieldApp = angular.module("cbcountfieldApp", ["ngSanitize"]);
+export const moduleDefs = [cbcountfieldApp];
 
-const CbfieldMarkup = t.intersection([
+const CbcountfieldMarkup = t.intersection([
     t.partial({
         tag: nullable(t.string),
         inputplaceholder: nullable(t.string),
@@ -23,24 +23,25 @@ const CbfieldMarkup = t.intersection([
         readOnlyStyle: nullable(t.string),
         showname: nullable(t.number),
         autosave: t.boolean,
+        count: nullable(t.number),
     }),
     GenericPluginMarkup,
     t.type({
         cols: withDefault(t.number, 0),
     }),
 ]);
-const CbfieldAll = t.intersection([
+const CbcountfieldAll = t.intersection([
     t.partial({
     }),
     t.type({
         info: Info,
-        markup: CbfieldMarkup,
+        markup: CbcountfieldMarkup,
         preview: t.boolean,
         state: nullable(t.type({c: t.union([t.string, t.number, t.null])})),
     }),
 ]);
 
-class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.TypeOf<typeof CbfieldAll>, typeof CbfieldAll> implements ITimComponent {
+class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMarkup>, t.TypeOf<typeof CbcountfieldAll>, typeof CbcountfieldAll> implements ITimComponent {
     private result?: string;
     private isRunning = false;
     private userword: boolean = false;
@@ -51,6 +52,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     private hideSavedText = true;
     private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
     private preventedAutosave = false;
+    private count = 0;
 
     getDefaultMarkup() {
         return {};
@@ -74,7 +76,8 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     $onInit() {
         super.$onInit();
         const uw = (valueOr(this.attrsall.state?.c, this.attrs.initword ?? "")).toString();
-        this.userword = CbfieldController.makeBoolean(uw);
+        this.userword = CbcountfieldController.makeBoolean(uw);
+        this.count = this.attrs.count ?? 0;
 
         if (this.attrs.tag) {
             this.vctrl.addTimComponent(this, this.attrs.tag);
@@ -119,7 +122,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             this.resetField();
         } else {
             try {
-                this.userword = CbfieldController.makeBoolean(content.c as string);
+                this.userword = CbcountfieldController.makeBoolean(content.c as string);
             } catch (e) {
                 this.userword = false;
                 ok = false;
@@ -159,7 +162,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      * Initialize content.
      */
     initCode() {
-        this.userword = CbfieldController.makeBoolean(this.attrs.initword ?? "");
+        this.userword = CbcountfieldController.makeBoolean(this.attrs.initword ?? "");
         this.initialValue = this.userword;
         this.result = undefined;
     }
@@ -209,7 +212,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
 
     // noinspection JSUnusedGlobalSymbols
     /**
-     * Autosaver used by ng-blur in cbfieldApp component.
+     * Autosaver used by ng-blur in cbcountfieldApp component.
      * Needed to seperate from other save methods because of the if-structure.
      * Unused method warning is suppressed, as the method is only called in template.
      */
@@ -249,13 +252,14 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
+        const r = await to($http.put<{web: {count: number, result: string, error?: string}}>(url, params));
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
             // TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
             // (Use premade bootstrap method / add listener for enter?)
             this.errormessage = data.web.error;
+            this.count = data.web.count;
             this.result = data.web.result;
             this.initialValue = this.userword;
             this.hideSavedText = false;
@@ -268,16 +272,16 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     }
 
     getAttributeType() {
-        return CbfieldAll;
+        return CbcountfieldAll;
     }
 }
 
 /**
- * Introducing cbfieldRunner as HTML component.
+ * Introducing cbcountfieldRunner as HTML component.
  */
-cbfieldApp.component("cbfieldRunner", {
+cbcountfieldApp.component("cbcountfieldRunner", {
     bindings: pluginBindings,
-    controller: CbfieldController,
+    controller: CbcountfieldController,
     require: {
         vctrl: "^timView",
     },
@@ -303,6 +307,7 @@ cbfieldApp.component("cbfieldRunner", {
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
                tooltip-trigger="mouseenter"
                >
+               <span class="cbfieldcount">{{$ctrl.count}}</span>
          </span>
          <span ng-if="::$ctrl.isPlainText()" style="">{{$ctrl.userword}}</span>
          </span>

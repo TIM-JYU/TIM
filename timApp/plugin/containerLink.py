@@ -78,6 +78,7 @@ def get_plugins() -> Dict[str, PluginReg]:
         PluginReg(name="field", domain=FIELDPLUGIN_DOMAIN, regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="textfield", domain=FIELDPLUGIN_DOMAIN, path="/tf/", regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="cbfield", domain=FIELDPLUGIN_DOMAIN, path="/cb/", regexattrs=TEXTFIELDATTRS, automd=True),
+        PluginReg(name="cbcountfield", domain="localhost", port=qst_port, path="/cbcountfield/", regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="rbfield", domain=FIELDPLUGIN_DOMAIN, path="/rb/", regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="numericfield", domain=FIELDPLUGIN_DOMAIN, path="/nf/", regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="goaltable", domain=FIELDPLUGIN_DOMAIN, path="/goaltable/", regexattrs=GOALTABLEATTRS, automd=True),

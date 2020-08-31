@@ -42,7 +42,7 @@ input:focus.alertframe {
     100% { opacity: 0; height: 0; }
 }
 
-.plugintextfield p, .plugincbfield p, .pluginrbfield p {
+.plugintextfield p, .plugincbfield p, .pluginrbfield p, .plugincbcountfield p {
     padding-top: 0px;
     padding-left: 0px;
     padding-bottom: 0px;
@@ -126,7 +126,9 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     white-space: nowrap;
 }
 
-.pluginrbfield input[type="radio"],.plugincbfield input[type="checkbox"] {
+.pluginrbfield input[type="radio"],
+.plugincbfield input[type="checkbox"],
+.plugincbcountfield input[type="checkbox"] {
     margin: 0;
     line-height: normal;
     -webkit-box-shadow: none;
@@ -134,22 +136,26 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     /* width: auto; */
 }
 
-.plugincbfield .warnFrame, .pluginrbfield .warnFrame {
+.plugincbfield .warnFrame, .pluginrbfield .warnFrame, .plugincbcountfield .warnFrame {
     border-bottom-style: solid;
     border-bottom-color: gold;
     border-bottom-width: thick;
 }
 
-.plugincbfield .stem, .pluginrbfield .stem {
+.plugincbfield .stem, .pluginrbfield .stem, .plugincbcountfield .stem {
     text-align: center;
 }
 
-.plugincbfield .form-control, .pluginrbfield .form-control {
+.plugincbfield .form-control, .pluginrbfield .form-control, .plugincbcountfield .form-control {
     width: 100%;
     height: auto;
     -webkit-box-shadow: none;
     top: 2px;
     position: relative;
+}
+
+.cbfieldcount {
+    font-size: x-small;
 }
 
 numericfield-runner .form-control, textfield-runner .form-control {

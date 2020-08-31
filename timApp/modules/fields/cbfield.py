@@ -33,9 +33,9 @@ def render_static_cdfield(m: CbfieldHtmlModel):
 <input type="checkbox"
 class="form-control"
 placeholder="{{ inputplaceholder or '' }}"
-size="{{cols}}"></span></label>
+size="{{cols or ''}}"></span></label>
 </div>
-<a>{{ resetText }}</a>
+<a>{{ resetText or ''}}</a>
 <p class="plgfooter">{{ '' }}</p>
 </div>""".strip(),
         **asdict(m.markup),
