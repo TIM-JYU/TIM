@@ -331,9 +331,18 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             this.initData += "    " + jsobject + "fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n";
         }
         // if ( data ) { this.setData(data); }
+
+        if (this.isDrawio() && !this.isTask()) {
+            this.optionsVisible = false;
+        }
+        this.updateIframeSettings();
+
+        if (this.isPreview()) {
+            return;
+        }
+
         this.viewctrl.addTimComponent(this);
         const tid = this.getTaskId();
-        this.updateIframeSettings();
         if (tid) {
             if (!this.markup.forceBrowser) {
                 this.viewctrl.addUserChangeListener(tid.docTask(), this);
@@ -353,9 +362,6 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
                 this.viewctrl.addParMenuEntry(this, parId);
             }
         }
-        if (this.isDrawio() && !this.isTask()) {
-            this.optionsVisible = false;
-        }
     }
 
     isDrawio(): boolean {
@@ -363,6 +369,10 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     editDrawio() {
+        if (this.isPreview()) {
+            this.showPreviewError();
+            return;
+        }
         this.send({msg: "start", fullscreen: this.fullscreenChecked});
     }
 
@@ -480,15 +490,19 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     isTask(): boolean {
-        return this.getTaskId() != undefined;
+        return this.attrsall.markup.task;
+    }
+
+    private showPreviewError() {
+        this.error = "Cannot run plugin while previewing.";
+        this.c();
     }
 
     async runSend(data: unknown) {
         this.connectionErrorMessage = undefined;
         if (this.pluginMeta.isPreview()) {
-            this.error = "Cannot run plugin while previewing.";
             this.saveResponse.saved = false;
-            this.c();
+            this.showPreviewError();
             return this.saveResponse;
         }
         this.jsframepeek = false;
