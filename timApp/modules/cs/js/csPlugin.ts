@@ -1137,6 +1137,9 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     formBehavior(): FormModeOption {
+        if (!this.isText) {
+            return FormModeOption.NoForm;
+        }
         return getFormBehavior(this.markup.form, FormModeOption.Undecided);
     }
 
