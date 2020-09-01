@@ -23,7 +23,6 @@ const CbcountfieldMarkup = t.intersection([
         readOnlyStyle: nullable(t.string),
         showname: nullable(t.number),
         autosave: t.boolean,
-        count: nullable(t.number),
     }),
     GenericPluginMarkup,
     t.type({
@@ -32,6 +31,7 @@ const CbcountfieldMarkup = t.intersection([
 ]);
 const CbcountfieldAll = t.intersection([
     t.partial({
+        count: t.number,
     }),
     t.type({
         info: Info,
@@ -77,7 +77,7 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
         super.$onInit();
         const uw = (valueOr(this.attrsall.state?.c, this.attrs.initword ?? "")).toString();
         this.userword = CbcountfieldController.makeBoolean(uw);
-        this.count = this.attrs.count ?? 0;
+        this.count = this.attrsall.count ?? 0;
 
         if (this.attrs.tag) {
             this.vctrl.addTimComponent(this, this.attrs.tag);

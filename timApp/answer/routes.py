@@ -62,7 +62,7 @@ from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, \
-    ALL_ANSWERED_WILDCARD
+    ALL_ANSWERED_WILDCARD, GetFieldsAccess
 from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
@@ -817,7 +817,7 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
         requested_groups,
         d,
         get_current_user_object(),
-        allow_non_teacher=siw,
+        access_option=GetFieldsAccess.from_bool(siw),
         member_filter_type=runner_req.input.includeUsers,
         user_filter=User.name.in_(runner_req.input.userNames) if runner_req.input.userNames else None
     )
@@ -1507,7 +1507,7 @@ def get_plug_vals(doc: DocInfo, tid: TaskId, curr_user: User, user: User) -> Opt
         doc,
         curr_user,
         add_missing_fields=True,
-        allow_non_teacher=True,
+        access_option=GetFieldsAccess.from_bool(True),
     )
     df = data[0]['fields']
     da = []
