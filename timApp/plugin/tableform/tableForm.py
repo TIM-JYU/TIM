@@ -32,7 +32,7 @@ from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import csv_string, json_response, text_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups
+from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, GetFieldsAccess
 from timApp.util.utils import get_boolean, fin_timezone
 from utils import Missing
 
@@ -409,7 +409,7 @@ def update_fields():
         curr_user,
         plug.values.get("removeDocIds", True),
         add_missing_fields=True,
-        allow_non_teacher=plug.values.get("showInView"),
+        access_option=GetFieldsAccess.from_bool(plug.values.get("showInView")),
     )
     rows = {}
     styles = {}
@@ -458,7 +458,7 @@ def tableform_get_fields(
             curr_user,
             remove_doc_ids,
             add_missing_fields=True,
-            allow_non_teacher=allow_non_teacher,
+            access_option=GetFieldsAccess.from_bool(allow_non_teacher),
             member_filter_type=group_filter_type,
             user_filter=User.name.in_(user_filter) if user_filter else None,
         )

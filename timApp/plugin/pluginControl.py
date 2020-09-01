@@ -34,7 +34,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
 from timApp.user.user import User
-from timApp.util.get_fields import get_fields_and_users, RequestedGroups
+from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFieldsAccess
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex, Range
 
@@ -173,7 +173,7 @@ class PluginPlacement:
                         block.doc.docinfo,
                         get_current_user_object(),
                         add_missing_fields=True,
-                        allow_non_teacher=True,  # TODO: the user selected from User list
+                        access_option=GetFieldsAccess.from_bool(True),  # TODO: the user selected from User list
                     )
                     df = data[0]['fields']
                     da = []

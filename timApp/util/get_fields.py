@@ -121,6 +121,16 @@ class RequestedGroups:
         )
 
 
+class GetFieldsAccess(Enum):
+    RequireTeacher = 0
+    AllowMaybeNonTeacher = 1
+    AllowAlwaysNonTeacher = 2
+
+    @staticmethod
+    def from_bool(b: bool):
+        return GetFieldsAccess.AllowMaybeNonTeacher if b else GetFieldsAccess.RequireTeacher
+
+
 def get_fields_and_users(
         u_fields: List[str],
         requested_groups: RequestedGroups,
@@ -128,7 +138,7 @@ def get_fields_and_users(
         current_user: User,
         autoalias: bool = False,
         add_missing_fields: bool = False,
-        allow_non_teacher: bool = False,
+        access_option: GetFieldsAccess = GetFieldsAccess.RequireTeacher,
         member_filter_type: MembershipFilter = MembershipFilter.Current,
         user_filter=None,
 ) -> Tuple[List[UserFieldObj], Dict[str, str], List[str], Optional[List[UserGroup]]]:
@@ -142,12 +152,15 @@ def get_fields_and_users(
     :param current_user: current users, check his rights to fields
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
     :param add_missing_fields: return estimated field even if it wasn't given previously
-    :param allow_non_teacher: can be used also for non techers if othre rights matches
+    :param access_option: can be used also for non techers if othre rights matches
     :param user_groups: user groups to always include in the result. NOTE: this bypasses view access checks!
     :return: fielddata, aliases, field_names
     """
-    if requested_groups.include_all_answered:
-        allow_non_teacher = False
+    allow_non_teacher = False
+    if access_option == GetFieldsAccess.AllowAlwaysNonTeacher:
+        allow_non_teacher = True
+    elif access_option == GetFieldsAccess.AllowMaybeNonTeacher:
+        allow_non_teacher = not requested_groups.include_all_answered
     needs_group_access_check = UserGroup.get_teachers_group() not in current_user.groups
     ugroups = []
     for group in requested_groups.groups:
