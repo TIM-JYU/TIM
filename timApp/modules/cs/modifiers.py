@@ -111,3 +111,7 @@ class Parsons(Modifier):
 
 class TruthTable(Modifier):
     ttype = "truthtable"
+
+
+class Console(Modifier):
+    ttype = "console"
