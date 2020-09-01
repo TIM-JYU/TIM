@@ -34,6 +34,12 @@ browser_tests:
     when: always
     paths:
     - screenshots
+  timeout: 35m  # usually takes less than 30 minutes
+  retry:
+    max: 2
+    when:
+      - stuck_or_timeout_failure
+      - runner_system_failure
 
 other_tests:
   variables:
