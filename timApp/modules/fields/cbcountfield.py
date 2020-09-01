@@ -44,9 +44,8 @@ class CbcountfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, CbcountfieldMa
 
     def get_browser_json(self) -> Dict:
         r = super().get_browser_json()
-        if self.info:
-            count, _ = get_checked_count(self.markup, self.taskID, self.info)
-            r['count'] = count
+        count, _ = get_checked_count(self.markup, self.taskID, self.current_user_id)
+        r['count'] = count
         return r
 
 
@@ -93,7 +92,7 @@ def cb_answer(args: CbcountfieldAnswerModel):
     result = {'web': web}
     c = args.input.c
 
-    count, previous = get_checked_count(args.markup, args.taskID, args.info)
+    count, previous = get_checked_count(args.markup, args.taskID, args.info.user_id)
 
     # Take the current answer into account.
     if previous is None:
@@ -114,12 +113,12 @@ def cb_answer(args: CbcountfieldAnswerModel):
     return jsonify(result)
 
 
-def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, info: InfoModel):
+def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: str):
     groups = ['*']
     if isinstance(markup.groups, list):
         groups = markup.groups
     tid = TaskId.parse(task_id)
-    curr_user = User.get_by_name(info.user_id)
+    curr_user = User.get_by_name(user_id)
     user_fields, _, _, _ = get_fields_and_users(
         [task_id],
         RequestedGroups.from_name_list(groups),
