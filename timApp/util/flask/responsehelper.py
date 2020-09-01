@@ -41,7 +41,7 @@ def text_response(data, status_code=200):
     return response
 
 
-def to_json_str(jsondata):
+def to_json_str(jsondata) -> str:
     return json.dumps(jsondata,
                       separators=(',', ':'),
                       cls=TimJsonEncoder)
