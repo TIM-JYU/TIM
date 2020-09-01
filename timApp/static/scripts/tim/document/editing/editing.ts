@@ -578,7 +578,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 {func: empty, desc: "Close menu", show: true},
             ];
         } else {
-            const ret: IMenuFunctionEntry[] = [
+            return [
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.notesHandler.showNoteWindow(e, p),
                     desc: "Comment/note",
@@ -688,11 +688,6 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 },
                 {func: empty, desc: "Close menu", show: true},
             ];
-            const parCustomMenuEntry = this.getParMenuEntry(par, parEditable);
-            if (parCustomMenuEntry) {
-                ret.push(parCustomMenuEntry);
-            }
-            return ret;
         }
     }
 

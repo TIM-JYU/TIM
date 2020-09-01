@@ -548,7 +548,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             this.c();
             return this.saveResponse;
         }
-        if (this.attrsall.markup.task) {
+        if (this.isTask()) {
             if (!r.result.data.web) {
                 this.error = "No web reply from csPlugin!";
                 this.saveResponse.saved = false;
@@ -565,7 +565,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.edited = false;
         this.updateListeners();
         this.prevdata = unwrapAllC(data);
-        if (this.attrsall.markup.task && r.result.data.web.console) {
+        if (this.isTask() && r.result.data.web.console) {
             this.console = r.result.data.web.console;
             this.saveResponse.saved = true;
             this.c();
