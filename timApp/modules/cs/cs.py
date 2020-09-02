@@ -1196,6 +1196,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             update_markup_from_file(query)
             # Get the template type
             ttype = TType.split(get_json_param(query.jso, "markup", "type", "cs"))
+            is_iframe = is_iframe or "js" in ttype
 
             if is_tauno and not is_answer:
                 ttype[0] = 'tauno'  # answer is newer tauno

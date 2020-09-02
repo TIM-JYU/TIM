@@ -64,10 +64,16 @@ class TType:
         return self.has_language(cls) or self.has_modifier(cls)
 
     def has_any_of(self, cls_list):
-        return any(self.has_language(cls) or self.has_modifier(cls) for cls in cls_list)
+        if cls_list and isinstance(cls_list[0], str):
+            return any(cls in self for cls in cls_list)
+        else:
+            return any(self.has_language(cls) or self.has_modifier(cls) for cls in cls_list)
 
     def has_all_of(self, cls_list):
-        return all(self.has_language(cls) or self.has_modifier(cls) for cls in cls_list)
+        if cls_list and isinstance(cls_list[0], str):
+            return all(cls in self for cls in cls_list)
+        else:
+            return all(self.has_language(cls) or self.has_modifier(cls) for cls in cls_list)
 
     def __str__(self):
         return "/".join(self.parts)
