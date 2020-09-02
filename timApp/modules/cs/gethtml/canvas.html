@@ -62,15 +62,14 @@
                 consoleText = "";
 
                 if (!canvas) canvas = document.getElementById('myCanvas');
-                var b = "";
-                var a = "";
+                var b = beforeCode;
+                var a = afterCode;
                 var cons = console;
                 if (wantsConsole) {
-                    b = beforeCode;
-                    a = afterCode;
                     cons = canvasConsole;
                 }
-                var paint = new Function("return (" + b + text + a + ")")();
+                var fullcode = "return (" + b + text + a + ")";
+                var paint = new Function(fullcode)();
                 var ctx = canvas.getContext("2d");
                 var out = myConsole;
                 out.write = write;

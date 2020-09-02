@@ -2743,7 +2743,9 @@ ${fhtml}
                 code: this.getCode(),
                 args: this.userargs,
                 input: this.userinput,
-                console: this.type.includes("/c"),
+                // TODO: Why would someone _not_ want console?
+                //  There won't be anything visible in UI without it.
+                console: true, // this.type.includes("/c"),
                 ...extra,
             },
             msg: "setData",
