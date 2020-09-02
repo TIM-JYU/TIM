@@ -270,3 +270,10 @@ Lorem ipsum.
             [({'id': 'test-test', 'level': 1, 'text': 'test (test)'}, [])],
             d.document.get_index(),
         )
+
+    def test_autonumber_link_only_heading(self):
+        self.login_test1()
+        d = self.create_doc(initial_par='# [Link only](https://example.com)')
+        d.document.set_settings({'auto_number_headings': 1})
+        r = self.get(d.url, as_tree=True)
+        self.assert_content(r, ['', '1. Link only'])

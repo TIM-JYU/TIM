@@ -468,7 +468,7 @@ def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bo
             except KeyError:
                 e.set('id', f'{curr_id}-{hcount}')
         if auto_number_headings:
-            e.text = format_heading(e.text, int(e.tag[1]), counts, heading_format)
+            e.text = format_heading(e.text or '', int(e.tag[1]), counts, heading_format)
     final_html = etree.tostring(tree)
     return final_html
 
