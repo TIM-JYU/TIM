@@ -43,10 +43,18 @@
         var wantSave = false;
         var receiveEvent;
 
+        var toggleOptions = function () {
+            var ops = document.getElementById('options');
+            if (ops) {
+                ops.style.display = ops.style.display === 'none' ? '' : 'none';
+            }
+        };
+
         var close = function () {
 
             if (TIMJS.frm) {
                 document.body.removeChild(iframe);
+                window.port2.postMessage({msg: "frameClosed"});
             } else {
                 drw.close();
             }
@@ -61,15 +69,8 @@
             // drw = null;
         };
 
-        function edit(elt) {
-            if (TIMJS.options && TIMJS.options.fullscreen) {
-                TIMJS.frm = !TIMJS.options.fullscreen;
-            }
-            var fs = document.getElementById('fullscreen');
-            if (fs) {
-                TIMJS.frm = !fs.checked;
-            }
-
+        function edit(fullscreen) {
+            TIMJS.frm = !fullscreen;
 
             if (drw && !drw.closed) {
                 drw.focus();
@@ -155,6 +156,9 @@
                                 autosave: 1, xml: svg
                             }), '*');
                         }
+                        if (TIMJS.frm) {
+                            window.port2.postMessage({msg: "frameInited"})
+                        }
                     } else if (msg.event == 'export') {
                         // Extracts SVG DOM from data URI to enable links
                         var svg = b64DecodeUnicode(msg.data.substring(msg.data.indexOf(',') + 1));
@@ -221,6 +225,9 @@
             } else {
                 document.getElementById('diagram').innerHTML = initial;
             }
+            if (TIMJS.options.hideOptionsBar){
+                toggleOptions();
+            }
         };
 
         var globaldata = null;
@@ -274,16 +281,14 @@
 </head>
 <body>
 <div>
-    <button onclick="edit(this);">Muokkaa</button>
-    Fullscreen <input id="fullscreen" type="checkbox"/>
     <div id="wrapper">
         <div id="diagram"></div>
     </div>
 </div>
 <script>
     //OPTIONS	// TIMJS
-    var fs = document.getElementById('fullscreen');
-    fs.checked = TIMJS.options.fullscreen;
+    // var fs = document.getElementById('fullscreen');
+    // fs.checked = TIMJS.options.fullscreen;
     //ORIGINALDATA
     //JAVASCRIPT
 </script>

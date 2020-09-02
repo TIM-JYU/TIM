@@ -28,6 +28,9 @@ export const communicationJS = `
         if (event.data.msg === "close") {
             close();
         }
+        if (event.data.msg === "start"){
+            edit(event.data.fullscreen);
+        }
     }
 
     // INITDATA

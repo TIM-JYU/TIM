@@ -32,7 +32,7 @@ import {
 } from "../parhelpers";
 import {handleUnread} from "../readings";
 import {ViewCtrl} from "../viewctrl";
-import {MenuFunctionList} from "../viewutils";
+import {IMenuFunctionEntry, MenuFunction, MenuFunctionList} from "../viewutils";
 import {EditPosition, EditType, IExtraData, IParResponse, ITags} from "./edittypes";
 import {isManageResponse, showRenameDialog} from "./pluginRenameForm";
 
@@ -532,10 +532,31 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         return getParAttributes(par).plugin === "qst";
     }
 
+    /**
+     * Checks whether given paragraph is a controller with a custom menu entry
+     * @param par - Paragraph to inspect
+     * @param editable - whether user can edit the paragraph
+     * TODO: Add support for multiple options per controller
+     */
+    getParMenuEntry(par: Paragraph | undefined, editable: boolean): IMenuFunctionEntry | undefined {
+        if (par == null || !editable) {
+            return undefined;
+        }
+
+        const parId = getParId(par);
+
+        if (parId == null) {
+            return undefined;
+        }
+
+        return this.viewctrl.getParMenuEntry(parId)?.getMenuEntry();
+    }
+
     getEditorFunctions(par?: Paragraph): MenuFunctionList {
         const parEditable = ((!par && this.viewctrl.item.rights.editable) || (par && canEditPar(this.viewctrl.item, par))) || false;
         const timTableEditMode = this.isTimTableInEditMode(par);
         const qstPar = this.isQST(par);
+        const customParMenuEntry = this.getParMenuEntry(par, parEditable);
         if (this.viewctrl.editing) {
             return [
                 {func: () => this.goToEditor(), desc: "Go to editor", show: true},
@@ -606,8 +627,17 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     show: this.viewctrl.item.rights.editable,
                 },
                 {func: (e: JQuery.Event, p: Paragraph) => this.showEditWindow(e, p), desc: "Edit", show: parEditable},
-                {func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Edit table", show: parEditable && timTableEditMode === false && par != null && !isReference(par)},
-                {func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p), desc: "Close table editor", show: parEditable && timTableEditMode === true},
+                {
+                    func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p),
+                    desc: "Edit table",
+                    show: parEditable && timTableEditMode === false && par != null && !isReference(par),
+                },
+                {
+                    func: (e: JQuery.Event, p: Paragraph) => this.toggleTableEditor(e, p),
+                    desc: "Close table editor",
+                    show: parEditable && timTableEditMode === true,
+                },
+                ...(customParMenuEntry ? [customParMenuEntry] : []),
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.clipboardHandler.cutPar(e, p),
                     desc: "Cut",
@@ -626,7 +656,11 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                     show: documentglobals().editMode != null,
                     closeAfter: false,
                 },
-                {func: (e, p: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, p), desc: "Move here...", show: documentglobals().allowMove},
+                {
+                    func: (e, p: Paragraph) => this.viewctrl.clipboardHandler.showMoveMenu(e, p),
+                    desc: "Move here...",
+                    show: documentglobals().allowMove,
+                },
                 {
                     func: (e: JQuery.Event, p: Paragraph) => this.viewctrl.areaHandler.removeAreaMarking(e, p),
                     desc: "Remove area marking",

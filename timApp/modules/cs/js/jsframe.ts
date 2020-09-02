@@ -27,6 +27,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 import {getParId} from "tim/document/parhelpers";
+import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "../../../static/scripts/tim/document/viewutils";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
@@ -102,7 +103,8 @@ type MessageToFrame =
 } | { msg: "init" }
     | { msg: "getData" }
     | { msg: "getDataSave" }
-    | { msg: "close" };
+    | { msg: "close" }
+    | { msg: "start", fullscreen: boolean};
 
 type MessageFromFrame =
     | {
@@ -114,6 +116,8 @@ type MessageFromFrame =
 } | {
     msg: "update";
     data: JSFrameData;
+} | {
+    msg: "frameInited" | "frameClosed";
 };
 
 
@@ -146,6 +150,10 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
             <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen"></p>
             <div *ngIf="isOpen && iframesettings" id="output" class="jsFrameContainer jsframeOutput">
+                <div *ngIf="isDrawio() && this.optionsVisible" id="drawioOptions">
+                    <button (click)="editDrawio()">Muokkaa</button>
+                    Fullscreen <input id="fullscreen" [(ngModel)]="fullscreenChecked" type="checkbox"/>
+                </div>
                 <iframe #frame
                         class='showJsframe jsframeFrame'
                         style='margin-left: auto;
@@ -189,7 +197,7 @@ function unwrapAllC<A>(data: unknown): { c: unknown } {
 })
 export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
     t.TypeOf<typeof JsframeAll>,
-    typeof JsframeAll> implements ITimComponent, IUserChanged, AfterViewInit, OnDestroy {
+    typeof JsframeAll> implements ITimComponent, IUserChanged, AfterViewInit, OnDestroy, ICtrlWithMenuFunctionEntry {
     iframesettings?: { allow: string, sandbox: string, src: SafeResourceUrl, width: number, height: number };
     private ab?: AnswerBrowserController;
 
@@ -219,6 +227,23 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
 
     get saveButton() {
         return this.markup.saveButton;
+    }
+
+    toggleDrawioEditors(open?: boolean) {
+        if (open != undefined) {
+            this.optionsVisible = open;
+        } else {
+            this.optionsVisible = !this.optionsVisible;
+        }
+        this.c();
+    }
+
+    getMenuEntry(): IMenuFunctionEntry {
+        return {
+            func: () => this.toggleDrawioEditors(),
+            desc: "Toggle diagram editor",
+            show: !this.isTask(),
+        };
     }
 
     buttonText() {
@@ -251,6 +276,8 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     connectionErrorMessage?: string;
     private prevdata?: JSFrameData;
     private currentData?: JSFrameData;
+    public optionsVisible = true;
+    public fullscreenChecked = false;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -304,9 +331,18 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             this.initData += "    " + jsobject + "fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n";
         }
         // if ( data ) { this.setData(data); }
+
+        if (this.isDrawio() && !this.isTask()) {
+            this.optionsVisible = false;
+        }
+        this.updateIframeSettings();
+
+        if (this.isPreview()) {
+            return;
+        }
+
         this.viewctrl.addTimComponent(this);
         const tid = this.getTaskId();
-        this.updateIframeSettings();
         if (tid) {
             if (!this.markup.forceBrowser) {
                 this.viewctrl.addUserChangeListener(tid.docTask(), this);
@@ -320,6 +356,24 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
                 }
             })();
         }
+        if (this.markup.type?.toLowerCase() == "drawio") {
+            const parId = getParId(this.getPar());
+            if (parId) {
+                this.viewctrl.addParMenuEntry(this, parId);
+            }
+        }
+    }
+
+    isDrawio(): boolean {
+        return this.markup.type?.toLowerCase() == "drawio";
+    }
+
+    editDrawio() {
+        if (this.isPreview()) {
+            this.showPreviewError();
+            return;
+        }
+        this.send({msg: "start", fullscreen: this.fullscreenChecked});
     }
 
     private getDataFromMarkup() {
@@ -435,12 +489,20 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         return url;
     }
 
+    isTask(): boolean {
+        return this.attrsall.markup.task;
+    }
+
+    private showPreviewError() {
+        this.error = "Cannot run plugin while previewing.";
+        this.c();
+    }
+
     async runSend(data: unknown) {
         this.connectionErrorMessage = undefined;
         if (this.pluginMeta.isPreview()) {
-            this.error = "Cannot run plugin while previewing.";
             this.saveResponse.saved = false;
-            this.c();
+            this.showPreviewError();
             return this.saveResponse;
         }
         this.jsframepeek = false;
@@ -448,7 +510,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.isRunning = true;
         let url = "";
         let params;
-        if (this.attrsall.markup.task) {
+        if (this.isTask()) {
             if (!this.getTaskId()) {
                 this.error = "Task-mode on but TaskId is missing!";
                 this.saveResponse.saved = false;
@@ -486,7 +548,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             this.c();
             return this.saveResponse;
         }
-        if (this.attrsall.markup.task) {
+        if (this.isTask()) {
             if (!r.result.data.web) {
                 this.error = "No web reply from csPlugin!";
                 this.saveResponse.saved = false;
@@ -503,7 +565,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.edited = false;
         this.updateListeners();
         this.prevdata = unwrapAllC(data);
-        if (this.attrsall.markup.task && r.result.data.web.console) {
+        if (this.isTask() && r.result.data.web.console) {
             this.console = r.result.data.web.console;
             this.saveResponse.saved = true;
             this.c();
@@ -617,21 +679,25 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         }
         this.channel = new MessageChannel();
         this.channel.port1.onmessage = (event: MessageEvent) => {
-            // console.log(event);
             const d = event.data as MessageFromFrame;
-            const msg = d.msg;
-            if (msg === "data") {
+            if (d.msg === "data") {
                 this.getDataReady(d.data);
             }
-            if (msg === "update") {
+            if (d.msg === "update") {
                 this.console = "";
                 this.edited = true;
                 this.currentData = unwrapAllC(this.getDataReady(d.data));
                 this.updateListeners();
                 this.c();
             }
-            if (msg === "datasave") {
+            if (d.msg === "datasave") {
                 this.getDataReady(d.data, true);
+            }
+            if (d.msg === "frameInited") {
+                this.toggleDrawioEditors(false);
+            }
+            if (d.msg === "frameClosed") {
+                this.toggleDrawioEditors(true);
             }
         };
         const f = this.getFrame();

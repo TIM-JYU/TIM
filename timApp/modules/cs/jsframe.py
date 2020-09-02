@@ -196,7 +196,7 @@ class DrawIO(JSframe):
         if isinstance(data, str):
             data = {}
         dopt = data.get("options", {})
-        templates = ma.get("templates", "");
+        templates = ma.get("templates", "")
         ar = data.get("aspectRatio", dopt.get('aspectRatio', None))
         if height and not ar:
             if not ma.get("data", None):
@@ -216,7 +216,6 @@ class DrawIO(JSframe):
                 templates = json.loads(templates)
             except json.decoder.JSONDecodeError:
                 pass
-
         ma["options"] = {'fullscreen': ma.get("fullscreen", True), 'templates': templates}
         super().modify_query()
         return
