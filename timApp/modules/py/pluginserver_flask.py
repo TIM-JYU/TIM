@@ -23,6 +23,7 @@ from typing import Optional, Union, TypeVar, Generic, Dict, Type, Any, List, Cal
 
 from flask import Blueprint, request, Response
 from flask import render_template_string, jsonify, Flask
+from flask_wtf import CSRFProtect
 from marshmallow import ValidationError, Schema
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
@@ -71,8 +72,8 @@ class GenericAnswerModel(GenericRouteModel[PluginInput, PluginMarkup, PluginStat
     """Generic base class for answer route models."""
     input: PluginInput
 
-    def make_answer_error(self, msg: str) -> Response:
-        return jsonify({'web': {'error': msg}})
+    def make_answer_error(self, msg: str) -> Dict:
+        return {'web': {'error': msg}}
 
 
 class Laziness(Enum):
@@ -143,10 +144,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
             return render_template_string("")
 
         if self.review:
-            try:
-                return self.get_review()
-            except:
-                return "<pre>review?</pre>"
+            return self.get_review()
 
         return render_template_string(
             """<{{component}} json="{{data}}"></{{component}}>""",
@@ -158,15 +156,12 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         return "Not implemented"
 
     def get_real_md(self) -> str:
-        """Renders the plugin as HTML."""
-        component = self.get_component_html_name()
         if self.viewmode and not self.show_in_view():
             return render_template_string("")
 
         return self.get_md()
 
-    def get_json_encoder(self) -> Type[PluginJsonEncoder]:
-        """Set JSON-encoder."""
+    def get_json_encoder(self) -> Type[json.JSONEncoder]:
         return PluginJsonEncoder
 
     def get_component_html_name(self) -> str:
@@ -322,37 +317,38 @@ def render_multimd(args: List[dict], schema: Schema) -> Response:
     return jsonify(results)
 
 
-def create_app(name: str, html_schema: Type[Schema]) -> Flask:
+def create_app(name: str) -> Flask:
     """Creates the Flask app for the plugin server.
 
     :param name: Name of import. Usually __name__ should be passed.
-    :param html_schema: Schema for the plugin HTML route.
     :return: The app.
     """
-    app = Flask(name, static_folder=".", static_url_path="")
-    register_routes(app, html_schema)
-    return app
+    return Flask(name, static_folder=".", static_url_path="")
 
 
-def register_routes(
+def register_html_routes(
         app: Union[Flask, Blueprint],
         html_schema: Type[Schema],
-        csrf: Optional[Any] = None,
-        pre: str = "",
+        reqs_handler: Callable[[], Dict],
+        csrf: Optional[CSRFProtect] = None,
 ) -> None:
     @app.errorhandler(422)
     def handle_invalid_request(error: Any) -> Response:
         return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
 
-    @app.route(pre+'/multihtml', methods=['post'])
+    @app.route('/multihtml', methods=['post'])
     def multihtml() -> Response:
         ret = render_multihtml(request.get_json(), html_schema())
         return ret
 
-    @app.route(pre+'/multimd', methods=['post'])
+    @app.route('/multimd', methods=['post'])
     def multimd() -> Response:
         ret = render_multimd(request.get_json(), html_schema())
         return ret
+
+    @app.route('/reqs')
+    def reqs() -> Response:
+        return jsonify(reqs_handler())
 
     if csrf:
         csrf.exempt(multihtml)
@@ -365,16 +361,62 @@ def register_routes(
         # print(request.get_json(silent=True))
 
 
-def create_blueprint(name: str, plugin_name: str, html_schema: Type[Schema], csrf: Optional[Any]=None) -> Blueprint:
-    bp = Blueprint(f'{plugin_name}_plugin',
-                   name,
-                   url_prefix=f'/{plugin_name}')
-    register_routes(bp, html_schema, csrf)
+HtmlModel = TypeVar('HtmlModel', bound=GenericHtmlModel)
+AnswerModel = TypeVar('AnswerModel', bound=GenericAnswerModel)
+
+
+T = TypeVar('T')
+
+def value_or_default(val: Union[T, None, Missing], default: T) -> T:
+    if val is None or isinstance(val, Missing):
+        return default
+    return val
+
+
+def create_blueprint(
+        name: str,
+        plugin_name: str,
+        html_model: Type[HtmlModel],
+        answer_model: Type[AnswerModel],
+        answer_handler: Callable[[AnswerModel], Dict],
+        reqs_handler: Callable[[], Dict],
+        csrf: Optional[CSRFProtect] = None,
+) -> Blueprint:
+    bp = create_nontask_blueprint(name, plugin_name, html_model, reqs_handler, csrf)
+    register_answer_route(bp, answer_model, answer_handler, csrf)
     return bp
 
 
-HtmlModel = TypeVar('HtmlModel', bound=GenericHtmlModel)
-AnswerModel = TypeVar('AnswerModel', bound=GenericAnswerModel)
+def create_nontask_blueprint(
+        name: str,
+        plugin_name: str,
+        html_model: Type[HtmlModel],
+        reqs_handler: Callable[[], Dict],
+        csrf: Optional[CSRFProtect] = None,
+) -> Blueprint:
+    bp = Blueprint(f'{plugin_name}_plugin',
+                   name,
+                   url_prefix=f'/{plugin_name}')
+    register_html_routes(bp, class_schema(html_model), reqs_handler, csrf)
+
+    return bp
+
+
+def register_answer_route(
+        app: Union[Flask, Blueprint],
+        answer_model: Type[AnswerModel],
+        answer_handler: Callable[[AnswerModel], Dict],
+        csrf: Optional[CSRFProtect] = None,
+) -> None:
+    @app.route('/answer', methods=['put'])
+    @use_args(class_schema(answer_model)(), locations=("json",))
+    def ans(m: AnswerModel) -> Response:
+        return jsonify(answer_handler(m))
+
+    if csrf:
+        csrf.exempt(ans)
+
+    return ans
 
 
 def register_plugin_app(
@@ -384,17 +426,9 @@ def register_plugin_app(
         answer_handler: Callable[[AnswerModel], Dict],
         reqs_handler: Callable[[], Dict],
 ) -> Flask:
-    app = create_app(name, class_schema(html_model))
-
-    @app.route('/answer', methods=['put'])
-    @use_args(class_schema(answer_model)(), locations=("json",))
-    def ans(m: AnswerModel) -> Response:
-        return jsonify(answer_handler(m))
-
-    @app.route('/reqs')
-    def reqs() -> Response:
-        return jsonify(reqs_handler())
-
+    app = create_app(name)
+    register_html_routes(app, class_schema(html_model), reqs_handler)
+    register_answer_route(app, answer_model, answer_handler)
     return app
 
 

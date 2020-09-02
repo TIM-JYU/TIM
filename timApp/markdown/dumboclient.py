@@ -1,7 +1,7 @@
 """Defines a client interface for using Dumbo, the markdown converter."""
 import json
 from enum import Enum
-from typing import List, Union, Dict, NamedTuple, Optional
+from typing import List, Union, Dict, NamedTuple, Optional, overload
 
 import requests
 
@@ -66,6 +66,24 @@ class DumboOptions(NamedTuple):
 DUMBO_URL = 'http://dumbo:5000'
 
 KEYS_PATHS = {'/mdkeys', '/latexkeys'}
+
+
+@overload
+def call_dumbo(data: List[str], path='',
+               options: DumboOptions = DumboOptions.default(),
+               data_opts: Optional[List[DumboOptions]]=None) -> List[str]: ...
+
+
+@overload
+def call_dumbo(data: Dict, path='',
+               options: DumboOptions = DumboOptions.default(),
+               data_opts: Optional[List[DumboOptions]]=None) -> Dict: ...
+
+
+@overload
+def call_dumbo(data: List[Dict], path='',
+               options: DumboOptions = DumboOptions.default(),
+               data_opts: Optional[List[DumboOptions]]=None) -> List[Dict]: ...
 
 
 def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='',

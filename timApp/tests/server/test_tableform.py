@@ -33,5 +33,6 @@ class TableFormTest(TimRouteTest):
             'fields': 'mmcqexample',
             'groups': ['*'],
             'userFilter': [self.test_user_2.name],
-            'separator': ';'
+            'separator': ';',
+            'removeDocIds': False,
         }, expect_status=200, expect_content=f"Username;{task_id}.c\r\n{self.test_user_2.name};[true, true, true]\r\n")

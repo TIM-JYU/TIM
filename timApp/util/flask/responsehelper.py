@@ -35,7 +35,7 @@ def json_response_and_commit(jsondata, status_code=200):
     return json_response(jsondata, status_code)
 
 
-def text_response(data, status_code=200):
+def text_response(data: str, status_code: int=200) -> Response:
     response = Response(data, mimetype='text/plain')
     response.status_code = status_code
     return response
@@ -98,10 +98,6 @@ def iter_csv(data, dialect: str, delimiter: str = ","):
 
 def csv_response(data, dialect='excel', delimiter=','):
     return Response(stream_with_context(iter_csv(data, dialect, delimiter)), mimetype='text/plain')
-
-
-def text_response(text):
-    return Response(text, mimetype='text/plain')
 
 
 def error_generic(error: str, code: int, template='error.html'):

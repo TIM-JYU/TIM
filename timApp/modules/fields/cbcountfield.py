@@ -4,15 +4,12 @@ TIM plugin: a checkbox field
 from dataclasses import dataclass, asdict
 from typing import Union, Dict, List
 
-from flask import jsonify, render_template_string, request
+from flask import render_template_string
 from marshmallow.utils import missing
-from webargs.flaskparser import use_args
 
 from common_schemas import TextfieldStateModel
-from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericHtmlModel, \
-    render_multihtml, \
-    create_blueprint, GenericAnswerModel, InfoModel
+    create_blueprint, GenericAnswerModel
 from timApp.document.docentry import DocEntry
 from timApp.modules.fields.textfield import TextfieldMarkupModel
 from timApp.plugin.taskid import TaskId
@@ -54,8 +51,7 @@ class CbcountfieldAnswerModel(GenericAnswerModel[TextfieldInputModel, Cbcountfie
     pass
 
 
-
-def render_static_cdfield(m: CbcountfieldHtmlModel):
+def render_static_cdfield(m: CbcountfieldHtmlModel) -> str:
     return render_template_string("""
 <div>
 <h4>{{ header or '' }}</h4>
@@ -73,21 +69,7 @@ size="{{ cols or '' }}"></span></label>
     )
 
 
-CbcountfieldHtmlSchema = class_schema(CbcountfieldHtmlModel)
-CbcountfieldAnswerSchema = class_schema(CbcountfieldAnswerModel)
-
-cbcountfield_route = create_blueprint(__name__, 'cbcountfield', CbcountfieldHtmlSchema, csrf)
-
-@cbcountfield_route.route('/multihtml', methods=['post'])
-def cb_multihtml():
-    ret = render_multihtml(request.get_json(), CbcountfieldHtmlSchema())
-    return ret
-
-
-@cbcountfield_route.route('/answer', methods=['put'])
-@csrf.exempt
-@use_args(CbcountfieldAnswerSchema(), locations=("json",))
-def cb_answer(args: CbcountfieldAnswerModel):
+def cb_answer(args: CbcountfieldAnswerModel) -> Dict:
     web = {}
     result = {'web': web}
     c = args.input.c
@@ -110,7 +92,7 @@ def cb_answer(args: CbcountfieldAnswerModel):
         web['result'] = "saved"
         web['count'] = count
 
-    return jsonify(result)
+    return result
 
 
 def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: str):
@@ -139,11 +121,20 @@ def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: st
     return count, previous
 
 
-@cbcountfield_route.route('/reqs')
-def cb_reqs():
-    return jsonify({
+def cb_reqs() -> Dict:
+    return {
         "js": ["cbcountfield"],
         "css": ["/field/css/field.css"],
         "multihtml": True,
-    },
-    )
+    }
+
+
+cbcountfield_route = create_blueprint(
+    __name__,
+    'cbcountfield',
+    CbcountfieldHtmlModel,
+    CbcountfieldAnswerModel,
+    cb_answer,
+    cb_reqs,
+    csrf,
+)

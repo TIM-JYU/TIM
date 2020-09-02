@@ -3,20 +3,19 @@ TimMenu-plugin.
 """
 import uuid
 from dataclasses import dataclass, asdict
-from typing import Union, Optional
+from typing import Union, Optional, Dict, List, Type
 
-from flask import jsonify, render_template_string
+from flask import render_template_string
 from marshmallow.utils import missing
 
-from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericHtmlModel, \
-    create_blueprint
 from markupmodels import GenericMarkupModel
-from utils import Missing
+from pluginserver_flask import GenericHtmlModel, \
+    create_nontask_blueprint
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.tim_app import csrf
+from utils import Missing
 
 
 @dataclass
@@ -33,7 +32,7 @@ class TimMenuIndentation:
         self.spaces_max = spaces_max
         self.level = level
 
-    def is_this_level(self, index: int):
+    def is_this_level(self, index: int) -> bool:
         """
         Check whether the given number of spaces is within the closed range of the indentation level.
         :param index: First index of the hyphen marking i.e. number of spaces preceding it.
@@ -41,10 +40,10 @@ class TimMenuIndentation:
         """
         return self.spaces_min <= index <= self.spaces_max
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{{level: {self.level}, spaces_min: {self.spaces_min}, spaces_max: {self.spaces_max}}}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
 
@@ -53,17 +52,17 @@ class TimMenuItem:
     Menu item with mandatory attributes (content, level, id, list of contained menu items and opening state)
     and optional styles.
     """
-    def __init__(self, text: str, level: int, items, is_open = False):
+    def __init__(self, text: str, level: int, items: List['TimMenuItem'], is_open: bool = False) -> None:
         self.text = text
         self.level = level
         self.id = ""
         self.items = items
         self.open = is_open
-        self.width = None
-        self.height = None
-        self.rights = None
+        self.width: Optional[str] = None
+        self.height: Optional[str] = None
+        self.rights: Optional[str] = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         s = f"{{level: {self.level}, id: '{self.id}', text: '{self.text}', items: {self.items}"
         if self.width:
             s += f", width: '{self.width}'"
@@ -73,17 +72,17 @@ class TimMenuItem:
             s += f", rights: '{self.rights}'"
         return f"{s}}}"
 
-    def generate_id(self):
+    def generate_id(self) -> None:
         """
         Generate an id string for the menu item.
         :return: None.
         """
         self.id = str(uuid.uuid4())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def to_json(self):
+    def to_json(self) -> Dict:
         s = {"level": self.level, "id": self.id, "text": self.text, "open": self.open, "items": self.items}
         if self.width:
             s.update({"width": self.width})
@@ -127,7 +126,12 @@ class TimMenuInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
 
 
-def decide_menu_level(index: int, previous_level: int,  level_indentations, max_level: int = 3) -> int:
+def decide_menu_level(
+        index: int,
+        previous_level: int,
+        level_indentations: List[TimMenuIndentation],
+        max_level: int = 3,
+) -> int:
     """
     Parse menu level from indentations by comparing to previously used, i.e. if user
     used (for first instances) 1 space for level 0, 3 spaces for level 1 and 5 spaces for level 2, then:
@@ -162,7 +166,7 @@ def decide_menu_level(index: int, previous_level: int,  level_indentations, max_
     return level
 
 
-def set_attributes(line: str, item: TimMenuItem):
+def set_attributes(line: str, item: TimMenuItem) -> None:
     """
     Adds attributes recognized from non-list line to the above menu item.
     Note: supports only one attribute per line.
@@ -196,7 +200,7 @@ def get_attribute(line: str, attr_name: str) -> Optional[str]:
         return None
 
 
-def parse_menu_string(menu_str, replace_tabs: bool = False):
+def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> List[TimMenuItem]:
     """
     Converts menu-attribute string into a menu structure with html content.
     Note: string uses a custom syntax similar to markdown lists, with hyphen (-) marking
@@ -279,10 +283,10 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
         """Renders a static version of the plugin."""
         return render_static_timmenu(self)
 
-    def get_json_encoder(self):
+    def get_json_encoder(self) -> Type[TimJsonEncoder]:
         return TimJsonEncoder
 
-    def get_browser_json(self):
+    def get_browser_json(self) -> Dict:
         r = super().get_browser_json()
         r['menu'] = parse_menu_string(r['markup']['menu'], replace_tabs=True)
         return r
@@ -290,11 +294,11 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
     def requires_login(self) -> bool:
         return False
 
-    def get_md(self):
+    def get_md(self) -> str:
         return ""
 
 
-def render_static_timmenu(m: TimMenuHtmlModel):
+def render_static_timmenu(m: TimMenuHtmlModel) -> str:
     return render_template_string(
         f"""
 <div class="TimMenu">TimMenu static placeholder</div>
@@ -304,14 +308,7 @@ def render_static_timmenu(m: TimMenuHtmlModel):
     )
 
 
-TimMenuHtmlSchema = class_schema(TimMenuHtmlModel)
-
-
-timMenu_plugin = create_blueprint(__name__, 'timMenu', TimMenuHtmlSchema, csrf)
-
-
-@timMenu_plugin.route('/reqs')
-def reqs():
+def reqs() -> Dict:
     # Note: selecting the whole line doesn't work with underscore in some devices, so
     # camel case is used for parts meant to be replaced by the user.
     templates = ["""
@@ -446,10 +443,18 @@ menu: |!!
                 ],
             },
         ]
-    return jsonify({
+    return {
         "js": ["timMenu"],
         "multihtml": True,
         "multimd": True,
         'editor_tabs': editor_tabs,
-    },
-    )
+    }
+
+
+timMenu_plugin = create_nontask_blueprint(
+    __name__,
+    'timMenu',
+    TimMenuHtmlModel,
+    reqs,
+    csrf,
+)

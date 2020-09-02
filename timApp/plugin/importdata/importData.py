@@ -6,23 +6,21 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, asdict, field
 from enum import Enum
-from typing import Union, List, DefaultDict, Dict
+from typing import Union, List, DefaultDict, Dict, Generator, Any
 
-from flask import jsonify, render_template_string
+from flask import render_template_string
 from marshmallow.utils import missing
-from webargs.flaskparser import use_args
 
-from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, create_blueprint
 from markupmodels import GenericMarkupModel
-from utils import Missing
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, create_blueprint, value_or_default
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
 from timApp.user.hakaorganization import HakaOrganization
 from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode
 from timApp.user.user import User, UserInfo
 from timApp.util.utils import widen_fields
+from utils import Missing
 
 
 @dataclass
@@ -77,10 +75,12 @@ class ImportDataHtmlModel(GenericHtmlModel[ImportDataInputModel, ImportDataMarku
         return False
 
     def get_static_html(self) -> str:
-        s = self.markup.beforeOpen or "+ Open Import"
+        s = self.markup.beforeOpen
+        if not isinstance(s, str):
+            s = 'Open import'
         return render_static_import_data(self, s)
 
-    def get_md(self):
+    def get_md(self) -> str:
         return ""
 
 
@@ -89,7 +89,7 @@ class ImportDataAnswerModel(GenericAnswerModel[ImportDataInputModel, ImportDataM
     pass
 
 
-def render_static_import_data(m: ImportDataHtmlModel, s: str):
+def render_static_import_data(m: ImportDataHtmlModel, s: str) -> str:
     return render_template_string(
         f"""
 <div class="ImportData">
@@ -101,17 +101,11 @@ def render_static_import_data(m: ImportDataHtmlModel, s: str):
     )
 
 
-ImportDataHtmlSchema = class_schema(ImportDataHtmlModel)
-ImportDataAnswerSchema = class_schema(ImportDataAnswerModel)
-
-importData_plugin = create_blueprint(__name__, 'importData', ImportDataHtmlSchema, csrf)
-
-
 class LineErrorKind(Enum):
     TooFewParts = 0
     OddNumberOfFieldValuePairs = 1
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self == LineErrorKind.TooFewParts:
             return 'too few parts'
         else:
@@ -123,7 +117,7 @@ class FieldLineError:
     line: str
     kind: LineErrorKind
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.line}: {self.kind}'
 
 
@@ -132,15 +126,15 @@ class FieldValues:
     values: DefaultDict[str, Dict[str, str]] = field(default_factory=lambda: defaultdict(dict))
     error_lines: List[FieldLineError] = field(default_factory=list)
 
-    def add_val(self, user_ident: str, field_name: str, value: str):
+    def add_val(self, user_ident: str, field_name: str, value: str) -> None:
         self.values[user_ident][field_name] = value
 
-    def to_tim_format(self, separator=';') -> List[str]:
+    def to_tim_format(self, separator: str = ';') -> List[str]:
         return [f'{u}{separator}{separator.join(f"{n}{separator}{v}" for n, v in vals.items())}' for u, vals in
                 self.values.items()]
 
     @staticmethod
-    def from_tim_format(data: List[str], separator=';'):
+    def from_tim_format(data: List[str], separator: str = ';') -> 'FieldValues':
         v = FieldValues()
         for d in data:
             parts = d.split(separator)
@@ -153,7 +147,7 @@ class FieldValues:
                     v.add_val(parts[0], name, value)
         return v
 
-    def list_errors(self):
+    def list_errors(self) -> Generator[str, None, None]:
         for e in self.error_lines:
             yield str(e)
 
@@ -246,20 +240,17 @@ class MissingUser:
     fields: Dict[str, str]
 
 
-@importData_plugin.route('/answer', methods=['put'])
-@csrf.exempt
-@use_args(ImportDataAnswerSchema(), locations=("json",))
-def answer(args: ImportDataAnswerModel):
+def answer(args: ImportDataAnswerModel) -> Dict:
     sdata = args.input.data
-    defaultseparator = args.markup.separator or ";"
-    separator = args.input.separator or defaultseparator
+    defaultseparator = value_or_default(args.markup.separator, ";")
+    separator = value_or_default(args.input.separator, defaultseparator)
     data = sdata.splitlines()
     output = ""
     field_names = args.input.fields
-    vals = convert_data(data, field_names, separator)
+    vals = convert_data(data, value_or_default(field_names, []), separator)
     if field_names:
         data = vals.to_tim_format()
-    if args.markup.prefilter:
+    if isinstance(args.markup.prefilter, str):
         params = JsRunnerParams(code=args.markup.prefilter, data=data)
         try:
             processed_data, output = jsrunner_run(params)
@@ -267,10 +258,10 @@ def answer(args: ImportDataAnswerModel):
             return args.make_answer_error('Error in JavaScript: ' + e.args[0])
         vals = FieldValues.from_tim_format(processed_data)
     did = int(args.taskID.split(".")[0])
-    if args.markup.docid:
+    if isinstance(args.markup.docid, int):
         did = args.markup.docid
     rows = []
-    id_prop = args.markup.joinProperty or 'username'
+    id_prop = value_or_default(args.markup.joinProperty, 'username')
     idents = [r for r in vals.values.keys()]
 
     m = re.fullmatch(r'studentID\((?P<org>[a-z.]+)\)', id_prop)
@@ -322,7 +313,7 @@ def answer(args: ImportDataAnswerModel):
 
     mu = []
     if org:
-        if args.input.url and args.input.url.startswith('https://plus.cs.aalto.fi/api/v2/courses/'):
+        if isinstance(args.input.url, str) and args.input.url.startswith('https://plus.cs.aalto.fi/api/v2/courses/'):
             reader = csv.reader(data, delimiter=',')
             student_id_email_map = {}
             for row in reader:
@@ -387,7 +378,7 @@ def answer(args: ImportDataAnswerModel):
         },
     }
 
-    save = {}
+    save: Dict[str, Any] = {}
 
     if args.input.url != args.markup.url or \
             (args.state and args.state.url and args.state.url != args.input.url):
@@ -404,11 +395,10 @@ def answer(args: ImportDataAnswerModel):
         save['fields'] = field_names
     if save:
         jsonresp["save"] = save
-    return jsonify(jsonresp)
+    return jsonresp
 
 
-@importData_plugin.route('/reqs')
-def reqs():
+def reqs() -> Dict:
     templates = ["""
 ``` {#ImportData plugin="importData"}
 buttonText: Import
@@ -430,10 +420,20 @@ buttonText: Import
             ],
         },
     ]
-    return jsonify({
+    return {
         "js": ["importData"],
         "multihtml": True,
         "multimd": True,
         'editor_tabs': editor_tabs,
-    },
-    )
+    }
+
+
+importData_plugin = create_blueprint(
+    __name__,
+    'importData',
+    ImportDataHtmlModel,
+    ImportDataAnswerModel,
+    answer,
+    reqs,
+    csrf,
+)
