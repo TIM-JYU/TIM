@@ -269,6 +269,7 @@ export class EditorComponent implements IMultiEditor {
         } else {
             this.modeIndex_ = 0;
         }
+        this.cdr.detectChanges();
     }
 
     @Input()
@@ -320,15 +321,18 @@ export class EditorComponent implements IMultiEditor {
     }
     set files(files: EditorFile[]) {
         this.files_ = files;
-        this.cdr.detectChanges();
         if(files.length == 0) {
             this.fileIndex = 0;
         } else {
-            this.content = files[this.clampIndex(this.fileIndex)].content ?? files[this.clampIndex(this.fileIndex)].base;
+            const clampedIndex = this.clampIndex(this.fileIndex);
+            if (files[clampedIndex]) {
+                this.content = files[clampedIndex].content ?? files[clampedIndex].base;
+            }
         }
         // refresh index in case it is outside the new range
         this.setFileIndex(this.fileIndex);
         this.maxFiles = this.mayAddFiles ? -1 : this.files.length;
+        this.cdr.detectChanges();
     }
 
     get mayAddFiles() {
