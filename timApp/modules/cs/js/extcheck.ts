@@ -20,6 +20,7 @@ import {CsController} from "./csPlugin";
 
 interface IAngularComponent {
     template: string;
+    component: string;
 }
 
 interface IAngularModule {
@@ -281,7 +282,8 @@ export class OutputContainerComponent implements IOutputContainer {
         const module = this.angularContent;
         for (const key in module.components) {
             if (!module.components.hasOwnProperty(key)) { continue; }
-            const tmpCmp = Component({selector: key, template: module.components[key].template})(class {});
+            const tmpCls = Function(`return ${module.components[key].component};`)();
+            const tmpCmp = Component({selector: key, template: module.components[key].template})(tmpCls);
             components.push(tmpCmp);
         }
         const tmpModule = NgModule({declarations: components, imports: [CommonModule]})(class {});

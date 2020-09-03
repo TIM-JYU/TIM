@@ -7,6 +7,7 @@ from loadable import Loadable
 @dataclass
 class AngularComponent(Loadable):
     template: str = field(default="")
+    component: str = field(default="class {}")
 
 @dataclass
 class AngularModule(Loadable):
