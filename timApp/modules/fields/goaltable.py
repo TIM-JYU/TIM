@@ -2,20 +2,16 @@
 TIM plugin: a radiobutton field
 """
 import json
+from dataclasses import dataclass, asdict
 from typing import Union, List, Dict
 
-from dataclasses import dataclass, asdict
-from flask import jsonify, render_template_string, Blueprint, request
+from flask import render_template_string
 from marshmallow.utils import missing
-from webargs.flaskparser import use_args
 
-from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, render_multihtml, render_multimd
 from markupmodels import GenericMarkupModel
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, create_blueprint, value_or_default, PluginAnswerResp, PluginAnswerWeb, PluginReqs
 from utils import Missing
-
-goaltable_route = Blueprint('goaltable', __name__, url_prefix="/goaltable")
 
 
 @dataclass
@@ -27,7 +23,6 @@ class GoalTableStateModel:
 
 @dataclass
 class GoalTableMarkupModel(GenericMarkupModel):
-    buttonText: Union[str, Missing, None] = missing
     editText: Union[str, Missing, None] = missing
     goalText: Union[str, Missing, None] = missing
     bloom: Union[bool, Missing, None] = missing
@@ -37,6 +32,18 @@ class GoalTableMarkupModel(GenericMarkupModel):
     mingoal: Union[int, Missing, None] = missing
     maxgoal: Union[int, Missing, None] = missing
     initgoal: Union[int, Missing, None] = missing
+
+    def get_mingoal(self) -> int:
+        return max(value_or_default(self.mingoal, 1), 1)
+
+    def get_maxgoal(self) -> int:
+        return value_or_default(self.maxgoal, 6)
+
+    def get_goals(self) -> List[str]:
+        goals = self.goals
+        if not isinstance(goals, list):
+            return []
+        return goals
 
 
 @dataclass
@@ -58,10 +65,10 @@ class GoalTableHtmlModel(GenericHtmlModel[GoalTableInputModel, GoalTableMarkupMo
     def get_static_html(self) -> str:
         return render_static_goaltable(self)
 
-    def get_md(self):
+    def get_md(self) -> str:
         return render_md_goaltable(self)
 
-    def get_review(self):
+    def get_review(self) -> str:
         if self.state and self.state.c:
             ret = json.dumps(self.state.c)
             ret = ret.replace(",", "\n")
@@ -75,19 +82,19 @@ class GoalTableAnswerModel(GenericAnswerModel[GoalTableInputModel, GoalTableMark
     pass
 
 
-def render_static_goaltable(m: GoalTableHtmlModel):
+def render_static_goaltable(m: GoalTableHtmlModel) -> str:
     template = """
 <div>
 <h4>{{ header or '' }}</h4>
 <p class="stem">{{ stem or '' }}</p>
 """
     table = f'<table><tr><th>{m.markup.goalText or "Osattava asia"}</th>'
-    mingoal = max(m.markup.mingoal or 1, 1)
-    maxgoal = m.markup.maxgoal or 6
+    mingoal = m.markup.get_mingoal()
+    maxgoal = m.markup.get_maxgoal()
     for i in range(mingoal, maxgoal+1):
         table += f"<th>{i}</th>"
     table += "</tr>"
-    for s in m.markup.goals or []:
+    for s in m.markup.get_goals():
         parts = s.split(";", 3)
         goal = int(parts[1].strip() or "0")
         iid = s.find(";")
@@ -108,22 +115,22 @@ def render_static_goaltable(m: GoalTableHtmlModel):
     )
 
 
-def render_md_goaltable(m: GoalTableHtmlModel):
+def render_md_goaltable(m: GoalTableHtmlModel) -> str:
     template = ""
-    if m.markup.header:
+    if isinstance(m.markup.header, str):
         template += "#### " + m.markup.header + "\n\n"
-    template += (m.markup.stem or "")  + "\n\n"
+    template += (value_or_default(m.markup.stem, ""))  + "\n\n"
 
-    table = "|" + (m.markup.goalText or "Osattava asia")
-    mingoal = max(m.markup.mingoal or 1, 1)
-    maxgoal = m.markup.maxgoal or 6
+    table = "|" + value_or_default(m.markup.goalText, "Osattava asia")
+    mingoal = m.markup.get_mingoal()
+    maxgoal = m.markup.get_maxgoal()
     for i in range(mingoal, maxgoal+1):
         table += " | " + str(i)
     table += " |\n|" + "-"*30
     for i in range(mingoal, maxgoal+1):
         table += "|---"
     table += " |\n"
-    for s in m.markup.goals or []:
+    for s in m.markup.get_goals():
         parts = s.split(";", 3)
         goal = int(parts[1].strip() or "0")
         itemtext = parts[2].strip() or ""
@@ -140,27 +147,9 @@ def render_md_goaltable(m: GoalTableHtmlModel):
     return result
 
 
-GoalTableHtmlSchema = class_schema(GoalTableHtmlModel)
-GoalTableAnswerSchema = class_schema(GoalTableAnswerModel)
-
-
-@goaltable_route.route('/multihtml', methods=['post'])
-def goaltable_multihtml():
-    ret = render_multihtml(request.get_json(), GoalTableHtmlSchema())
-    return ret
-
-
-@goaltable_route.route('/multimd', methods=['post'])
-def goaltable_multimd():
-    ret = render_multimd(request.get_json(), GoalTableHtmlSchema)
-    return ret
-
-
-@goaltable_route.route('/answer', methods=['put'])
-@use_args(GoalTableAnswerSchema(), locations=("json",))
-def goaltable_answer(args: GoalTableAnswerModel):
-    web = {}
-    result = {'web': web}
+def goaltable_answer(args: GoalTableAnswerModel) -> PluginAnswerResp:
+    web: PluginAnswerWeb = {}
+    result: PluginAnswerResp = {'web': web}
     c = args.input.c
 
     nosave = args.input.nosave
@@ -170,7 +159,7 @@ def goaltable_answer(args: GoalTableAnswerModel):
         result["save"] = save
         web['result'] = "saved"
 
-    return jsonify(result)
+    return result
 
 
 templates = [
@@ -193,9 +182,9 @@ goals:
 ```""",
 ]
 
-@goaltable_route.route('/reqs')
-def goaltable_reqs():
-    return jsonify({
+
+def goaltable_reqs() -> PluginReqs:
+    return {
         "js": ["/field/js/build/goaltable.js"],
         "css": ["/field/css/field.css"],
         "multihtml": True,
@@ -217,5 +206,14 @@ def goaltable_reqs():
                 ],
             },
         ],
-    },
-    )
+    }
+
+
+goaltable_route = create_blueprint(
+    __name__,
+    'goaltable',
+    GoalTableHtmlModel,
+    GoalTableAnswerModel,
+    goaltable_answer,
+    goaltable_reqs,
+)

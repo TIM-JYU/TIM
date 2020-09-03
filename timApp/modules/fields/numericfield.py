@@ -4,21 +4,16 @@ TIM plugin: a numericfield
 
 import re
 from dataclasses import dataclass, asdict
-from typing import Union, List
+from typing import Union, List, Any, Dict
 
-from flask import jsonify, render_template_string, Blueprint, request
+from flask import render_template_string
 from marshmallow.utils import missing
-from webargs.flaskparser import use_args
 
 from common_schemas import TextfieldStateModel
-from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, render_multihtml, render_multimd
 from markupmodels import GenericMarkupModel
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, create_blueprint, PluginAnswerResp, PluginAnswerWeb, PluginReqs
 from utils import Missing
-
-numericfield_route = Blueprint('nf', __name__, url_prefix="/nf")
-
 
 NumericfieldStateModel = TextfieldStateModel
 
@@ -62,7 +57,7 @@ class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, Numericfiel
     def get_static_html(self) -> str:
         return render_static_numericfield(self)
 
-    def get_md(self):
+    def get_md(self) -> str:
         return "___"
 
 
@@ -72,7 +67,7 @@ class NumericfieldAnswerModel(GenericAnswerModel[NumericfieldInputModel,
     pass
 
 
-def render_static_numericfield(m: NumericfieldHtmlModel):
+def render_static_numericfield(m: NumericfieldHtmlModel) -> str:
     return render_template_string("""
 <div>
 <h4>{{ header or '' }}</h4>
@@ -93,24 +88,9 @@ size="{{cols}}"></span></label>
     )
 
 
-NumericfieldHtmlSchema = class_schema(NumericfieldHtmlModel)
-NumericfieldAnswerSchema = class_schema(NumericfieldAnswerModel)
-
-
-@numericfield_route.route('/multihtml', methods=['post'])
-def nf_multihtml():
-    ret = render_multihtml(request.get_json(), NumericfieldHtmlSchema())
-    return ret
-
-@numericfield_route.route('/multimd', methods=['post'])
-def nf_multimd():
-    ret = render_multimd(request.get_json(), NumericfieldHtmlSchema)
-    return ret
-
-
 REDOUBLE = re.compile(r"[^0-9,.e\-+]+")
 
-def get_double(c):
+def get_double(c: Union[float, int, str]) -> float:
     if isinstance(c, float):
         return c
     if isinstance(c, int):
@@ -123,43 +103,46 @@ def get_double(c):
         return float(c)
     return 0
 
-@numericfield_route.route('/answer', methods=['put'])
-@use_args(NumericfieldAnswerSchema(), locations=("json",))
-def answer(args: NumericfieldAnswerModel):
-    web = {}
-    result = {'web': web}
-    c = args.input.c
+
+class NumericFieldAnswerWeb(PluginAnswerWeb, total=False):
+    clear: bool
+    value: Union[str, float, int]
+
+
+def answer(args: NumericfieldAnswerModel) -> PluginAnswerResp:
+    web: NumericFieldAnswerWeb = {}
+    result: PluginAnswerResp = {'web': web}
+    c_input = args.input.c
 
     nosave = args.input.nosave
     if args.markup.nosave:
         nosave = True
 
-    error = ""
+    if isinstance(c_input, Missing) or c_input is None:
+        web['result'] = "unsaved"
+        web['error'] = "Please enter a number"
+        return result
     try:
-        if isinstance(c, Missing):
-            web['result'] = "unsaved"
-            web['error'] = "Please enter a number"
-            return jsonify(result)
-        elif c.strip() == "":
-            c = ""
+        if c_input.strip() == "":
+            c: Union[str, float, int] = ""
         elif args.markup.save == "double" or not args.markup.save:
-            c = get_double(c)
+            c = get_double(c_input)
         elif args.markup.save == "int":
-            c = get_double(c)
+            c = get_double(c_input)
             c = int(c)
         elif args.markup.save == "round":
-            c = get_double(c)
+            c = get_double(c_input)
             c = round(c, 0)
-    except Exception as e:
+        else:
+            raise ValueError(f'Unknown save attribute value: {args.markup.save}')
+    except ValueError as e:
         error = str(e)
-
-    if error:
         web['result'] = "error"
-        web['error'] = error + " " + args.input.c
-        return jsonify(result)
+        web['error'] = error + " " + c_input
+        return result
 
     if not nosave:
-        save = {"c": c}
+        save: Dict[str, Any] = {"c": c}
         if not args.markup.clearstyles and args.state is not None:
             if args.state.styles:
                 save = {"c": c, "styles": args.state.styles}
@@ -169,11 +152,10 @@ def answer(args: NumericfieldAnswerModel):
         if args.markup.clearstyles:
             web['clear'] = True
 
-    return jsonify(result)
+    return result
 
 
-@numericfield_route.route('/reqs')
-def reqs():
+def reqs() -> PluginReqs:
     templates = ["""``` {#PLUGINNAMEHERE plugin="numericfield"}
 header:          # otsikko, tyhjä = ei otsikkoa
 stem:            # kysymys, tyhjä = ei kysymystä
@@ -191,7 +173,7 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
 ```""", """#- {defaultplugin="numericfield" readonly="view" .fieldCell}
 %% 'ht=Harhoitustyö;osa=Osasuoritus' |  gfields('cols: 3')  %%
 """, ]
-    return jsonify({
+    return {
         "js": ["/field/js/build/numericfield.js"],
         "multihtml": True,
         "multimd": True,
@@ -263,5 +245,14 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
                 ],
             },
         ],
-    },
-    )
+    }
+
+
+numericfield_route = create_blueprint(
+    __name__,
+    'nf',
+    NumericfieldHtmlModel,
+    NumericfieldAnswerModel,
+    answer,
+    reqs,
+)

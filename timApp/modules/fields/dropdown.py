@@ -1,21 +1,17 @@
 """
 Module for serving dropdown item-plugin.
 """
+from dataclasses import dataclass, asdict
 from typing import Union, List
 
-from dataclasses import dataclass, asdict
-from flask import jsonify, render_template_string, Blueprint, request
-from marshmallow import validates, ValidationError
+from flask import render_template_string
+from marshmallow import validates
 from marshmallow.utils import missing
-from webargs.flaskparser import use_args
 
-from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, make_base64, render_multihtml
 from markupmodels import GenericMarkupModel
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, create_blueprint, PluginAnswerResp, PluginAnswerWeb, PluginReqs
 from utils import Missing
-
-dropdown_route = Blueprint('dropdown', __name__, url_prefix="/dropdown")
 
 
 @dataclass
@@ -40,7 +36,7 @@ class DropdownInputModel:
     shuffle: Union[bool, Missing] = missing
 
     @validates('selectedWord')
-    def validate_selected_word(self, word):
+    def validate_selected_word(self, word: str) -> None:
         pass
 
 
@@ -58,7 +54,7 @@ class DropdownAnswerModel(GenericAnswerModel[DropdownInputModel, DropdownMarkupM
     pass
 
 
-def render_static_dropdown(m: DropdownHtmlModel):
+def render_static_dropdown(m: DropdownHtmlModel) -> str:
     return render_template_string(
         """
 <div class="csRunDiv no-popup-menu">
@@ -81,21 +77,9 @@ def render_static_dropdown(m: DropdownHtmlModel):
     )
 
 
-DropdownHtmlSchema = class_schema(DropdownHtmlModel)
-DropdownAnswerSchema = class_schema(DropdownAnswerModel)
-
-
-@dropdown_route.route('/multihtml', methods=['post'])
-def dropdown_multihtml():
-    ret = render_multihtml(request.get_json(), DropdownHtmlSchema())
-    return ret
-
-
-@dropdown_route.route('/answer', methods=['put'])
-@use_args(DropdownAnswerSchema(), locations=("json",))
-def answer(args: DropdownAnswerModel):
-    web = {}
-    result = {'web': web}
+def answer(args: DropdownAnswerModel) -> PluginAnswerResp:
+    web: PluginAnswerWeb = {}
+    result: PluginAnswerResp = {'web': web}
     selectedword = args.input.selectedWord
     # plugin can ask not to save the word
     nosave = args.input.nosave
@@ -108,11 +92,10 @@ def answer(args: DropdownAnswerModel):
         result["save"] = save
         web['result'] = "saved"
 
-    return jsonify(result)
+    return result
 
 
-@dropdown_route.route('/reqs')
-def reqs():
+def reqs() -> PluginReqs:
     templates = ["""{#test:dropdown words: [option 1, option 2, option 3]#}""", """
 #- {defaultplugin="dropdown"}
 
@@ -122,7 +105,7 @@ The weather {#drop1 words: [is,do,are⁞]#} nice today.
 
 The weather {#drop2 words: [is,do,are⁞]#} terrible {#drop3 words: [yesterday, today, tomorrow]#}, don't you think?
 """]
-    return jsonify({
+    return {
         "js": ["/field/js/build/dropdown.js"],
         "multihtml": True,
         "css": ["/field/css/field.css"],
@@ -153,4 +136,14 @@ The weather {#drop2 words: [is,do,are⁞]#} terrible {#drop3 words: [yesterday, 
                 ],
             },
         ],
-    })
+    }
+
+
+dropdown_route = create_blueprint(
+    __name__,
+    'dropdown',
+    DropdownHtmlModel,
+    DropdownAnswerModel,
+    answer,
+    reqs,
+)

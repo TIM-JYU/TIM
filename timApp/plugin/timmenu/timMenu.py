@@ -10,7 +10,7 @@ from marshmallow.utils import missing
 
 from markupmodels import GenericMarkupModel
 from pluginserver_flask import GenericHtmlModel, \
-    create_nontask_blueprint
+    create_nontask_blueprint, PluginReqs, EditorTab
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
 from timApp.markdown.dumboclient import call_dumbo
@@ -308,7 +308,7 @@ def render_static_timmenu(m: TimMenuHtmlModel) -> str:
     )
 
 
-def reqs() -> Dict:
+def reqs() -> PluginReqs:
     # Note: selecting the whole line doesn't work with underscore in some devices, so
     # camel case is used for parts meant to be replaced by the user.
     templates = ["""
@@ -411,7 +411,7 @@ menu: |!!
 !!
 ```
 """]
-    editor_tabs = [
+    editor_tabs: List[EditorTab] = [
             {
                 'text': 'Insert',
                 'items': [

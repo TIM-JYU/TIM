@@ -6,14 +6,14 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, asdict, field
 from enum import Enum
-from typing import Union, List, DefaultDict, Dict, Generator, Any
+from typing import Union, List, DefaultDict, Dict, Generator, Any, Optional
 
 from flask import render_template_string
 from marshmallow.utils import missing
 
 from markupmodels import GenericMarkupModel
 from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, create_blueprint, value_or_default
+    GenericAnswerModel, create_blueprint, value_or_default, PluginAnswerResp, PluginReqs, EditorTab
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
 from timApp.user.hakaorganization import HakaOrganization
@@ -240,7 +240,16 @@ class MissingUser:
     fields: Dict[str, str]
 
 
-def answer(args: ImportDataAnswerModel) -> Dict:
+class ImportDataAnswerResp(PluginAnswerResp, total=False):
+    ignoreMissing: Union[bool, Missing, None]
+    allowMissing: Union[bool, Missing, None]
+    savedata: List[Dict[str, Any]]
+    groups: Optional[Dict[str, Dict[str, List[str]]]]
+    createMissingUsers: bool
+    missingUsers: List[MissingUser]
+
+
+def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
     sdata = args.input.data
     defaultseparator = value_or_default(args.markup.separator, ";")
     separator = value_or_default(args.input.separator, defaultseparator)
@@ -364,9 +373,9 @@ def answer(args: ImportDataAnswerModel) -> Dict:
     elif missing_users:
         return args.make_answer_error('missingUsers not implemented when joinProperty is "id"')
     groups = None
-    if args.markup.addUsersToGroup:
+    if isinstance(args.markup.addUsersToGroup, str):
         groups = {'add': {args.markup.addUsersToGroup: [u['user'] for u in rows]}}
-    jsonresp = {
+    jsonresp: ImportDataAnswerResp = {
         'ignoreMissing': args.markup.ignoreMissing,
         'allowMissing': args.markup.allowMissing,
         'savedata': rows,
@@ -398,12 +407,12 @@ def answer(args: ImportDataAnswerModel) -> Dict:
     return jsonresp
 
 
-def reqs() -> Dict:
+def reqs() -> PluginReqs:
     templates = ["""
 ``` {#ImportData plugin="importData"}
 buttonText: Import
 ```"""]
-    editor_tabs = [
+    editor_tabs: List[EditorTab] = [
         {
             'text': 'Fields',
             'items': [

@@ -19,7 +19,7 @@ import json
 from dataclasses import dataclass, field
 from enum import Enum
 from json import JSONEncoder
-from typing import Optional, Union, TypeVar, Generic, Dict, Type, Any, List, Callable
+from typing import Optional, Union, TypeVar, Generic, Dict, Type, Any, List, Callable, TypedDict
 
 from flask import Blueprint, request, Response
 from flask import render_template_string, jsonify, Flask
@@ -39,6 +39,46 @@ class PluginJsonEncoder(json.JSONEncoder):
         if tojson:
             return tojson()
         return None
+
+
+class PluginAnswerWeb(TypedDict, total=False):
+    result: str
+    error: str
+
+
+class TimInfo(TypedDict, total=False):
+    points: float
+    # TODO add others when needed
+
+
+class PluginAnswerResp(TypedDict, total=False):
+    web: PluginAnswerWeb
+    save: Dict[str, Any]
+    tim_info: TimInfo
+
+
+class EditorMenuItem(TypedDict):
+    data: str
+    expl: str
+    text: str
+
+
+class EditorMenu(TypedDict):
+    text: str
+    items: List[EditorMenuItem]
+
+
+class EditorTab(TypedDict):
+    text: str
+    items: List[EditorMenu]
+
+
+class PluginReqs(TypedDict, total=False):
+    js: List[str]
+    multihtml: bool
+    multimd: bool
+    editor_tabs: List[EditorTab]
+    css: List[str]
 
 
 @dataclass
@@ -71,8 +111,9 @@ class GenericRouteModel(Generic[PluginInput, PluginMarkup, PluginState]):
 class GenericAnswerModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]):
     """Generic base class for answer route models."""
     input: PluginInput
+    info: InfoModel
 
-    def make_answer_error(self, msg: str) -> Dict:
+    def make_answer_error(self, msg: str) -> PluginAnswerResp:
         return {'web': {'error': msg}}
 
 
@@ -329,7 +370,7 @@ def create_app(name: str) -> Flask:
 def register_html_routes(
         app: Union[Flask, Blueprint],
         html_schema: Type[Schema],
-        reqs_handler: Callable[[], Dict],
+        reqs_handler: Callable[[], PluginReqs],
         csrf: Optional[CSRFProtect] = None,
 ) -> None:
     @app.errorhandler(422)
@@ -378,8 +419,8 @@ def create_blueprint(
         plugin_name: str,
         html_model: Type[HtmlModel],
         answer_model: Type[AnswerModel],
-        answer_handler: Callable[[AnswerModel], Dict],
-        reqs_handler: Callable[[], Dict],
+        answer_handler: Callable[[AnswerModel], PluginAnswerResp],
+        reqs_handler: Callable[[], PluginReqs],
         csrf: Optional[CSRFProtect] = None,
 ) -> Blueprint:
     bp = create_nontask_blueprint(name, plugin_name, html_model, reqs_handler, csrf)
@@ -391,10 +432,10 @@ def create_nontask_blueprint(
         name: str,
         plugin_name: str,
         html_model: Type[HtmlModel],
-        reqs_handler: Callable[[], Dict],
+        reqs_handler: Callable[[], PluginReqs],
         csrf: Optional[CSRFProtect] = None,
 ) -> Blueprint:
-    bp = Blueprint(f'{plugin_name}_plugin',
+    bp = Blueprint(plugin_name,
                    name,
                    url_prefix=f'/{plugin_name}')
     register_html_routes(bp, class_schema(html_model), reqs_handler, csrf)
@@ -405,7 +446,7 @@ def create_nontask_blueprint(
 def register_answer_route(
         app: Union[Flask, Blueprint],
         answer_model: Type[AnswerModel],
-        answer_handler: Callable[[AnswerModel], Dict],
+        answer_handler: Callable[[AnswerModel], PluginAnswerResp],
         csrf: Optional[CSRFProtect] = None,
 ) -> None:
     @app.route('/answer', methods=['put'])
@@ -423,8 +464,8 @@ def register_plugin_app(
         name: str,
         html_model: Type[HtmlModel],
         answer_model: Type[AnswerModel],
-        answer_handler: Callable[[AnswerModel], Dict],
-        reqs_handler: Callable[[], Dict],
+        answer_handler: Callable[[AnswerModel], PluginAnswerResp],
+        reqs_handler: Callable[[], PluginReqs],
 ) -> Flask:
     app = create_app(name)
     register_html_routes(app, class_schema(html_model), reqs_handler)

@@ -99,7 +99,8 @@ member_filter_relation_map = {
     MembershipFilter.Deleted: User.groups_inactive,
 }
 
-UserFields = Dict[str, Union[str, float, None]]
+FieldValue = Union[str, float, None]
+UserFields = Dict[str, FieldValue]
 
 
 class UserFieldObj(TypedDict):

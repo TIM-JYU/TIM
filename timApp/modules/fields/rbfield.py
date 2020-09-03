@@ -2,17 +2,14 @@
 TIM plugin: a radiobutton field
 """
 from dataclasses import dataclass, asdict
-from flask import jsonify, render_template_string, Blueprint, request
-from webargs.flaskparser import use_args
+
+from flask import render_template_string
 
 from common_schemas import TextfieldStateModel
-from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericHtmlModel, \
-    render_multihtml
-from textfield import TextfieldAnswerModel, TextfieldAnswerSchema, TextfieldInputModel, \
+    create_blueprint, PluginAnswerResp, PluginAnswerWeb, PluginReqs
+from textfield import TextfieldAnswerModel, TextfieldInputModel, \
     TextfieldMarkupModel
-
-rbfield_route = Blueprint('rb', __name__, url_prefix="/rb")
 
 
 @dataclass
@@ -24,7 +21,7 @@ class RbfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupMode
         return render_static_rbfield(self)
 
 
-def render_static_rbfield(m: RbfieldHtmlModel):
+def render_static_rbfield(m: RbfieldHtmlModel) -> str:
     return render_template_string("""
 <div>
 <h4>{{ header or '' }}</h4>
@@ -42,23 +39,9 @@ size="{{cols}}"></span></label>
     )
 
 
-# register_routes(app, CbfieldHtmlSchema(), '/cb')
-
-
-RbfieldHtmlSchema = class_schema(RbfieldHtmlModel)
-
-
-@rbfield_route.route('/multihtml', methods=['post'])
-def rb_multihtml():
-    ret = render_multihtml(request.get_json(), RbfieldHtmlSchema())
-    return ret
-
-
-@rbfield_route.route('/answer', methods=['put'])
-@use_args(TextfieldAnswerSchema(), locations=("json",))
-def rb_answer(args: TextfieldAnswerModel):
-    web = {}
-    result = {'web': web}
+def rb_answer(args: TextfieldAnswerModel) -> PluginAnswerResp:
+    web: PluginAnswerWeb = {}
+    result: PluginAnswerResp = {'web': web}
     c = args.input.c
 
     nosave = args.input.nosave
@@ -68,12 +51,11 @@ def rb_answer(args: TextfieldAnswerModel):
         result["save"] = save
         web['result'] = "saved"
 
-    return jsonify(result)
+    return result
 
 
-@rbfield_route.route('/reqs')
-def rb_reqs():
-    return jsonify({
+def rb_reqs() -> PluginReqs:
+    return {
         "js": ["/field/js/build/rbfield.js"],
         "css": ["/field/css/field.css"],
         "multihtml": True,
@@ -104,5 +86,14 @@ def rb_reqs():
                 ],
             },
         ],
-    },
-    )
+    }
+
+
+rbfield_route = create_blueprint(
+    __name__,
+    'rb',
+    RbfieldHtmlModel,
+    TextfieldAnswerModel,
+    rb_answer,
+    rb_reqs,
+)

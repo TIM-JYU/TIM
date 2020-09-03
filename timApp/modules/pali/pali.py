@@ -4,14 +4,14 @@ TIM example plugin: a palindrome checker.
 import os
 import re
 from dataclasses import dataclass, asdict
-from typing import Union, List, Dict, Any
+from typing import Union, List
 
 from flask import render_template_string
 from marshmallow import validates, ValidationError, missing
 
 from markupmodels import GenericMarkupModel
 from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, register_plugin_app, launch_if_main
+    GenericAnswerModel, register_plugin_app, launch_if_main, PluginAnswerResp, PluginAnswerWeb, PluginReqs, EditorTab
 from utils import Missing
 
 
@@ -83,9 +83,9 @@ def render_static_pali(m: PaliHtmlModel) -> str:
     )
 
 
-def answer(args: PaliAnswerModel) -> Dict:
-    web: Dict[str, Any] = {}
-    result = {'web': web}
+def answer(args: PaliAnswerModel) -> PluginAnswerResp:
+    web: PluginAnswerWeb = {}
+    result: PluginAnswerResp = {'web': web}
     needed_len = args.markup.needed_len
     userword = args.input.userword
     pali_ok = args.input.paliOK or False
@@ -104,10 +104,9 @@ def answer(args: PaliAnswerModel) -> Dict:
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
-        tim_info = {"points": points}
         save = {"userword": userword}
         result["save"] = save
-        result["tim_info"] = tim_info
+        result["tim_info"] = {"points": points}
         web['result'] = "saved"
 
     return result
@@ -125,7 +124,7 @@ def check_letters(word: str, needed_len: int) -> bool:
     return len(re.sub("[^[A-ZÅÄÖ]", "", s)) == needed_len
 
 
-def reqs() -> Dict:
+def reqs() -> PluginReqs:
     templates = ["""
 ``` {#ekapali plugin="pali"}
 header: Kirjoita palindromi
@@ -147,7 +146,7 @@ answerLimit: 4
 initword: muikku
 cols: 20
 ```"""]
-    editor_tabs = [
+    editor_tabs: List[EditorTab] = [
             {
                 'text': 'Plugins',
                 'items': [
@@ -169,7 +168,7 @@ cols: 20
                 ],
             },
         ]
-    result = {
+    result: PluginReqs = {
         "js": ["js/build/pali.js"],
         "multihtml": True,
     }

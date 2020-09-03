@@ -1,13 +1,14 @@
 """
 TIM plugin: a field to start other fileds
 """
+from flask import Response
 
 from cbfield import cbfield_route
 from dropdown import dropdown_route
 from goaltable import goaltable_route
 from multisave import multisave_route
 from numericfield import numericfield_route
-from pluginserver_flask import jsonify, create_app
+from pluginserver_flask import jsonify, create_app, launch_if_main
 from rbfield import rbfield_route
 from textfield import textfield_route
 
@@ -23,7 +24,7 @@ app.register_blueprint(goaltable_route)
 
 
 @app.route('/reqs')
-def reqs():
+def reqs() -> Response:
     return jsonify({
         "js": [],
         "multihtml": False,
@@ -33,9 +34,4 @@ def reqs():
     )
 
 
-if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False,  # for live reloading, this can be turned on
-    )
+launch_if_main(__name__, app)

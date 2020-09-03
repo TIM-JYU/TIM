@@ -2,7 +2,7 @@
 TIM feedback-plugin.
 """
 from dataclasses import dataclass, asdict
-from typing import Union, Any, List, Dict
+from typing import Union, Any, List
 
 from flask import render_template_string
 from marshmallow import validates, ValidationError
@@ -10,7 +10,7 @@ from marshmallow.utils import missing
 
 from markupmodels import GenericMarkupModel
 from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, register_plugin_app, launch_if_main
+    GenericAnswerModel, register_plugin_app, launch_if_main, PluginAnswerResp, PluginAnswerWeb, PluginReqs
 from utils import Missing
 
 
@@ -86,9 +86,9 @@ def render_static_feedback(m: FeedbackHtmlModel) -> str:
     )
 
 
-def answer(args: FeedbackAnswerModel) -> Dict:
-    web: Dict[str, Any] = {}
-    result = {'web': web}
+def answer(args: FeedbackAnswerModel) -> PluginAnswerResp:
+    web: PluginAnswerWeb = {}
+    result: PluginAnswerResp = {'web': web}
     correct_answer = args.input.correct_answer
     feedback = args.input.feedback
     correct = args.input.correct
@@ -101,16 +101,15 @@ def answer(args: FeedbackAnswerModel) -> Dict:
     # Plugin can ask not to save the word.
     nosave = args.input.nosave
     if not nosave:
-        tim_info = {"points": points}
         save = {"correct_answer": correct_answer, "correct": correct, "feedback": feedback, "user_answer": user_answer}
         result["save"] = save
-        result["tim_info"] = tim_info
+        result["tim_info"] = {"points": points}
         web['result'] = "saved"
 
     return result
 
 
-def reqs() -> Dict:
+def reqs() -> PluginReqs:
     templates = ["""#- {area="dropdowntask1" .task}
 
 ## Instruction header {.instruction defaultplugin="dropdown"}

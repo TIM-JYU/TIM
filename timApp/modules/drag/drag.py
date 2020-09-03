@@ -2,14 +2,14 @@
 Module for serving drag item-plugin.
 """
 from dataclasses import dataclass, asdict
-from typing import Union, List, Dict, Any
+from typing import Union, List
 
 from flask import render_template_string
 from marshmallow.utils import missing
 
 from markupmodels import GenericMarkupModel
 from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, register_plugin_app, launch_if_main
+    GenericAnswerModel, register_plugin_app, launch_if_main, PluginAnswerResp, PluginAnswerWeb, PluginReqs
 from utils import Missing
 
 
@@ -84,9 +84,9 @@ def render_static_drag(m: DragHtmlModel) -> str:
     )
 
 
-def answer(args: DragAnswerModel) -> Dict:
-    web: Dict[str, Any] = {}
-    result = {'web': web}
+def answer(args: DragAnswerModel) -> PluginAnswerResp:
+    web: PluginAnswerWeb = {}
+    result: PluginAnswerResp = {'web': web}
     words = args.input.words
 
     nosave = args.input.nosave
@@ -98,7 +98,7 @@ def answer(args: DragAnswerModel) -> Dict:
     return result
 
 
-def reqs() -> Dict:
+def reqs() -> PluginReqs:
     templates = ["""
 #- {defaultplugin="drag"}
 {#drag1 #}

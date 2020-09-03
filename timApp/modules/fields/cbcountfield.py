@@ -2,20 +2,20 @@
 TIM plugin: a checkbox field
 """
 from dataclasses import dataclass, asdict
-from typing import Union, Dict, List
+from typing import Union, Dict, List, Tuple
 
 from flask import render_template_string
 from marshmallow.utils import missing
 
 from common_schemas import TextfieldStateModel
 from pluginserver_flask import GenericHtmlModel, \
-    create_blueprint, GenericAnswerModel
+    create_blueprint, GenericAnswerModel, PluginAnswerWeb, PluginAnswerResp, PluginReqs
 from timApp.document.docentry import DocEntry
 from timApp.modules.fields.textfield import TextfieldMarkupModel
 from timApp.plugin.taskid import TaskId
 from timApp.tim_app import csrf
 from timApp.user.user import User
-from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFieldsAccess
+from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFieldsAccess, FieldValue
 from utils import Missing
 
 
@@ -69,9 +69,17 @@ size="{{ cols or '' }}"></span></label>
     )
 
 
-def cb_answer(args: CbcountfieldAnswerModel) -> Dict:
-    web = {}
-    result = {'web': web}
+class CbAnswerWeb(PluginAnswerWeb, total=False):
+    count: int
+
+
+class CbAnswerResp(PluginAnswerResp, total=False):
+    pass
+
+
+def cb_answer(args: CbcountfieldAnswerModel) -> CbAnswerResp:
+    web: CbAnswerWeb = {}
+    result = CbAnswerResp(web=web)
     c = args.input.c
 
     count, previous = get_checked_count(args.markup, args.taskID, args.info.user_id)
@@ -95,16 +103,20 @@ def cb_answer(args: CbcountfieldAnswerModel) -> Dict:
     return result
 
 
-def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: str):
+def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: str) -> Tuple[int, FieldValue]:
     groups = ['*']
     if isinstance(markup.groups, list):
         groups = markup.groups
-    tid = TaskId.parse(task_id)
+    doc_id = TaskId.parse_doc_id(task_id)
     curr_user = User.get_by_name(user_id)
+    assert curr_user is not None
+    d = DocEntry.find_by_id(doc_id)
+    if not d:
+        return 0, None  # TODO handle error properly
     user_fields, _, _, _ = get_fields_and_users(
         [task_id],
         RequestedGroups.from_name_list(groups),
-        DocEntry.find_by_id(tid.doc_id),
+        d,
         curr_user,
         access_option=GetFieldsAccess.AllowAlwaysNonTeacher,
     )
@@ -121,7 +133,7 @@ def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: st
     return count, previous
 
 
-def cb_reqs() -> Dict:
+def cb_reqs() -> PluginReqs:
     return {
         "js": ["cbcountfield"],
         "css": ["/field/css/field.css"],

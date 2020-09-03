@@ -1,19 +1,16 @@
 """
 A button plugin to save other plugins on the same page
 """
+from dataclasses import dataclass, asdict
 from typing import Union, List
 
-from dataclasses import dataclass, asdict
-from flask import jsonify, render_template_string, Blueprint, request
+from flask import render_template_string
 from marshmallow.utils import missing
 
-from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericHtmlModel, \
-    render_multihtml
 from markupmodels import GenericMarkupModel
+from pluginserver_flask import GenericHtmlModel, \
+    create_nontask_blueprint, PluginReqs
 from utils import Missing
-
-multisave_route = Blueprint('ms', __name__, url_prefix="/ms")
 
 
 @dataclass
@@ -46,6 +43,7 @@ class MultisaveMarkupModel(GenericMarkupModel):
     includeUsers: Union[str, Missing] = missing  # TODO: Should be MembershipFilter, but cannot import
     testOnly: Union[bool, Missing] = missing
 
+
 @dataclass
 class MultisaveInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
@@ -61,7 +59,7 @@ class MultisaveHtmlModel(GenericHtmlModel[MultisaveInputModel, MultisaveMarkupMo
         return render_static_multisave(self)
 
 
-def render_static_multisave(m: MultisaveHtmlModel):
+def render_static_multisave(m: MultisaveHtmlModel) -> str:
     return render_template_string("""
 <div>
 <button class="timButton">
@@ -72,17 +70,7 @@ def render_static_multisave(m: MultisaveHtmlModel):
     )
 
 
-MultisaveHtmlSchema = class_schema(MultisaveHtmlModel)
-
-
-@multisave_route.route('/multihtml', methods=['post'])
-def ms_multihtml():
-    ret = render_multihtml(request.get_json(), MultisaveHtmlSchema())
-    return ret
-
-
-@multisave_route.route('/reqs')
-def reqs():
+def reqs() -> PluginReqs:
     templates = ["""
 ``` {plugin="multisave"}
 ```""", """
@@ -99,7 +87,7 @@ buttonText: "Lähetä arvioinnit Sisuun"
 destCourse: jy-CUR-xxxx  # tähän kurssin Sisu-id
 showInView: false
 ```"""]
-    return jsonify({
+    return {
         "js": ["/field/js/build/multisave.js"],
         "multihtml": True,
         "css": ["/field/css/field.css"],
@@ -135,5 +123,12 @@ showInView: false
                 ],
             },
         ],
-    },
-    )
+    }
+
+
+multisave_route = create_nontask_blueprint(
+    __name__,
+    'ms',
+    MultisaveHtmlModel,
+    reqs,
+)

@@ -1,8 +1,7 @@
 import re
+from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
-
-import attr
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import is_valid_id
@@ -11,11 +10,11 @@ from timApp.plugin.pluginexception import PluginException
 KNOWN_FIELD_NAMES = {'points', 'datetime', 'ALL'}
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class UnvalidatedTaskId:
     s: str
 
-    def validate(self):
+    def validate(self) -> 'TaskId':
         return TaskId.parse(self.s, require_doc_id=False, allow_block_hint=False)
 
 
@@ -24,17 +23,17 @@ class TaskIdAccess(Enum):
     ReadOnly = 'readonly'
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class TaskId:
     doc_id: Optional[int]
-    task_name: str = attr.ib()
+    task_name: str
     block_id_hint: Optional[str] = None
     field: Optional[str] = None
     plugin_type: Optional[str] = None
     access_specifier: Optional[TaskIdAccess] = None
 
-    @task_name.validator
-    def _check_name(self, attribute, value):
+    def __post_init__(self):
+        value = self.task_name
         if '.' in value:
             raise PluginException('Task name cannot contain dots.')
         if value.isdigit():
@@ -123,3 +122,9 @@ class TaskId:
 
     def update_doc_id_from_block(self, par: DocParagraph):
         self.doc_id = par.ref_doc.doc_id if par.ref_doc else par.doc.doc_id
+
+    @staticmethod
+    def parse_doc_id(tid: str) -> int:
+        tid = TaskId.parse(tid, require_doc_id=True)
+        assert tid.doc_id is not None
+        return tid.doc_id

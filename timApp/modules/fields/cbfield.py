@@ -2,17 +2,14 @@
 TIM plugin: a checkbox field
 """
 from dataclasses import dataclass, asdict
-from flask import jsonify, render_template_string, Blueprint, request
-from webargs.flaskparser import use_args
+
+from flask import render_template_string
 
 from common_schemas import TextfieldStateModel
-from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericHtmlModel, \
-    render_multihtml
-from textfield import TextfieldAnswerModel, TextfieldAnswerSchema, TextfieldInputModel, \
+    create_blueprint, PluginAnswerResp, PluginAnswerWeb, PluginReqs
+from textfield import TextfieldAnswerModel, TextfieldInputModel, \
     TextfieldMarkupModel
-
-cbfield_route = Blueprint('cb', __name__, url_prefix="/cb")
 
 
 @dataclass
@@ -24,7 +21,7 @@ class CbfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupMode
         return render_static_cdfield(self)
 
 
-def render_static_cdfield(m: CbfieldHtmlModel):
+def render_static_cdfield(m: CbfieldHtmlModel) -> str:
     return render_template_string("""
 <div>
 <h4>{{ header or '' }}</h4>
@@ -38,24 +35,13 @@ size="{{cols or ''}}"></span></label>
 <a>{{ resetText or ''}}</a>
 <p class="plgfooter">{{ '' }}</p>
 </div>""".strip(),
-        **asdict(m.markup),
-    )
+                                  **asdict(m.markup),
+                                  )
 
 
-CbfieldHtmlSchema = class_schema(CbfieldHtmlModel)
-
-
-@cbfield_route.route('/multihtml', methods=['post'])
-def cb_multihtml():
-    ret = render_multihtml(request.get_json(), CbfieldHtmlSchema())
-    return ret
-
-
-@cbfield_route.route('/answer', methods=['put'])
-@use_args(TextfieldAnswerSchema(), locations=("json",))
-def cb_answer(args: TextfieldAnswerModel):
-    web = {}
-    result = {'web': web}
+def cb_answer(args: TextfieldAnswerModel) -> PluginAnswerResp:
+    web: PluginAnswerWeb = {}
+    result: PluginAnswerResp = {'web': web}
     c = args.input.c
 
     nosave = args.input.nosave
@@ -65,12 +51,11 @@ def cb_answer(args: TextfieldAnswerModel):
         result["save"] = save
         web['result'] = "saved"
 
-    return jsonify(result)
+    return result
 
 
-@cbfield_route.route('/reqs')
-def cb_reqs():
-    return jsonify({
+def cb_reqs() -> PluginReqs:
+    return {
         "js": ["/field/js/build/cbfield.js"],
         "css": ["/field/css/field.css"],
         "multihtml": True,
@@ -100,5 +85,14 @@ def cb_reqs():
                 ],
             },
         ],
-    },
-    )
+    }
+
+
+cbfield_route = create_blueprint(
+    __name__,
+    'cb',
+    CbfieldHtmlModel,
+    TextfieldAnswerModel,
+    cb_answer,
+    cb_reqs,
+)

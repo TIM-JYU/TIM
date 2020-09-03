@@ -14,7 +14,7 @@ from webargs.flaskparser import use_args
 from markupmodels import GenericMarkupModel
 from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, create_blueprint, value_or_default
+    GenericAnswerModel, create_blueprint, value_or_default, PluginAnswerResp, PluginAnswerWeb, PluginReqs, EditorTab
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
@@ -189,9 +189,8 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
     def get_browser_json(self) -> Dict:
         r = super().get_browser_json()
         if self.markup.open:
-            tid = TaskId.parse(self.taskID)
-            assert tid.doc_id is not None
-            d = get_doc_or_abort(tid.doc_id)
+            doc_id = TaskId.parse_doc_id(self.taskID)
+            d = get_doc_or_abort(doc_id)
             user = User.get_by_name(self.current_user_id)
             assert user is not None
             if isinstance(self.markup.sisugroups, str):
@@ -248,7 +247,11 @@ class GenerateCSVModel:
 GenerateCSVSchema = class_schema(GenerateCSVModel)
 
 
-def answer(args: TableFormAnswerModel) -> Dict:
+class TableformAnswerResp(PluginAnswerResp):
+    savedata: List[Dict[str, Any]]
+
+
+def answer(args: TableFormAnswerModel) -> PluginAnswerResp:
     rows = args.input.replyRows
     save_rows = []
     for u, r in rows.items():
@@ -257,15 +260,13 @@ def answer(args: TableFormAnswerModel) -> Dict:
             return args.make_answer_error(f'User not found: {u}')
         save_rows.append({'user': user.id, 'fields': r})
 
-    web: Dict[str, Any] = {}
-    result: Dict[str, Any] = {'web': web}
-    savedata = save_rows
-    result["savedata"] = savedata
+    web: PluginAnswerWeb = {}
+    result: TableformAnswerResp = {'web': web, 'savedata': save_rows}
     web['result'] = "saved"
     return result
 
 
-def reqs() -> Dict:
+def reqs() -> PluginReqs:
     templates = ["""
 ``` {#tableForm_table plugin="tableForm"}
 # Add attribute 'showInView: true' to show the plugin in normal view
@@ -324,7 +325,7 @@ separator: ";"  # Define your value separator here, ";" as default
 anonNames: false # To show or hide user (and full) names in report, true or false
 reportButton: "Name your generate report button here"
 ```"""]
-    editor_tabs = [
+    editor_tabs: List[EditorTab] = [
             {
                 'text': 'Fields',
                 'items': [

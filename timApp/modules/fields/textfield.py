@@ -1,21 +1,17 @@
 """
 TIM plugin: a textfield
 """
-from typing import Union, List
-
 from dataclasses import dataclass, asdict
-from flask import jsonify, render_template_string, Blueprint, request
+from typing import Union, List, Any, Dict
+
+from flask import render_template_string
 from marshmallow.utils import missing
-from webargs.flaskparser import use_args
 
 from common_schemas import TextfieldStateModel
-from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, render_multihtml
 from markupmodels import GenericMarkupModel
+from pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, create_blueprint, PluginAnswerResp, PluginAnswerWeb, PluginReqs
 from utils import Missing
-
-textfield_route = Blueprint('tf', __name__, url_prefix="/tf")
 
 
 @dataclass
@@ -62,7 +58,7 @@ class TextfieldAnswerModel(GenericAnswerModel[TextfieldInputModel, TextfieldMark
     pass
 
 
-def render_static_textfield(m: TextfieldHtmlModel):
+def render_static_textfield(m: TextfieldHtmlModel) -> str:
     return render_template_string("""
 <div>
 <h4>{{ header or '' }}</h4>
@@ -83,20 +79,13 @@ size="{{cols}}"></span></label>
     )
 
 
-TextFieldHtmlSchema = class_schema(TextfieldHtmlModel)
-TextfieldAnswerSchema = class_schema(TextfieldAnswerModel)
-
-@textfield_route.route('/multihtml', methods=['post'])
-def tf_multihtml():
-    ret = render_multihtml(request.get_json(), TextFieldHtmlSchema())
-    return ret
+class TextfieldAnswerWeb(PluginAnswerWeb, total=False):
+    clear: bool
 
 
-@textfield_route.route('/answer', methods=['put'])
-@use_args(TextfieldAnswerSchema(), locations=("json",))
-def answer(args: TextfieldAnswerModel):
-    web = {}
-    result = {'web': web}
+def answer(args: TextfieldAnswerModel) -> PluginAnswerResp:
+    web: TextfieldAnswerWeb = {}
+    result: PluginAnswerResp = {'web': web}
     c = args.input.c
 
 
@@ -105,7 +94,7 @@ def answer(args: TextfieldAnswerModel):
         nosave = True
 
     if not nosave:
-        save = {"c": c}
+        save: Dict[str, Any] = {"c": c}
         if not args.markup.clearstyles and args.state is not None:
             if args.state.styles:
                 save = {"c": c, "styles": args.state.styles}
@@ -114,11 +103,10 @@ def answer(args: TextfieldAnswerModel):
         if args.markup.clearstyles:
             web['clear'] = True
 
-    return jsonify(result)
+    return result
 
 
-@textfield_route.route('/reqs')
-def reqs():
+def reqs() -> PluginReqs:
     templates = [
 """``` {#PLUGINNAMEHERE plugin="textfield"}
 header:          # otsikko, tyhjä = ei otsikkoa
@@ -133,7 +121,7 @@ validinput: '^(hyv|hyl|[12345])$' # käyttäjäsyötteen rajoitin, tyhjä = ei r
 errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
 ```""",
 ]
-    return jsonify({
+    return {
         "js": ["/field/js/build/textfield.js"],
         "multihtml": True,
         "css": ["/field/css/field.css"],
@@ -184,5 +172,14 @@ errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
                 ],
             },
         ],
-    },
-    )
+    }
+
+
+textfield_route = create_blueprint(
+    __name__,
+    'tf',
+    TextfieldHtmlModel,
+    TextfieldAnswerModel,
+    answer,
+    reqs,
+)
