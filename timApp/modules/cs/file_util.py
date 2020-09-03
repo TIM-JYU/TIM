@@ -97,7 +97,11 @@ def copy_files_regex(f: str, source: str, dest: str):
                 if dest.is_file():
                     dest.unlink()
                 mkdirs(str(dest))
-                copy2(str(rootp / file), str(dest / file))
+                filepath = dest / file
+                copy2(str(rootp / file), str(filepath))
+                chown(filepath, user="agent", group="agent")
+                for f in filepath.parents:
+                    chown(f, user="agent", group="agent")
 
 
 def copy_files_glob(glob: str, source: str, dest: str):
@@ -130,10 +134,17 @@ def copy_files_glob(glob: str, source: str, dest: str):
 
     if len(matches) == 1 and matches[0].is_dir():
         m = matches[0]
+        destination = dest
         if dest_dir:
-            copytree(str(m), str(dest / Path(source).relative_to(m)), dirs_exist_ok=True)
-        else:
-            copytree(str(m), dest, dirs_exist_ok=True)
+            destination = str(dest / Path(source).relative_to(m))
+
+        copytree(str(m), destination, dirs_exist_ok=True)
+        chown(destination, user="agent", group="agent")
+        for root, dirs, files in os.walk(destination):
+            for d in dirs:
+                chown(os.path.join(root, d), user="agent", group="agent")
+            for f in files:
+                chown(os.path.join(root, f), user="agent", group="agent")
         return
     elif len(matches) > 1 and not dest_dir:
         raise Exception("Cannot copy multiple files to a single filename")
@@ -151,8 +162,12 @@ def copy_files_glob(glob: str, source: str, dest: str):
                 copy2(str(m), str(destination))
             else:
                 raise FileExistsError(f"{str(m)} is of unknown type (not a file or directory)")
+            chown(destination, user="agent", group="agent")
+            for f in m.relative_to(source).parents:
+                chown(dest / f, user="agent", group="agent")
     else:
         copy2(str(matches[0]), dest)
+        chown(dest, user="agent", group="agent")
 
 
 def is_parent_of(parent: str, child: str):
