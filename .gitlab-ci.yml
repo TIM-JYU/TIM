@@ -65,6 +65,7 @@ code_navigation:
   artifacts:
     reports:
       lsif: timApp/dump.lsif
+  allow_failure: true  # https://gitlab.com/gitlab-org/gitlab/-/issues/224101
 
 lint:
   stage: test
