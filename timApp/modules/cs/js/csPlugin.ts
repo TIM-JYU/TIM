@@ -1461,7 +1461,7 @@ ${fhtml}
                 this.fetchError = "Failed to fetch files: " + r.result.error;
                 this.externalFiles = undefined;
             } else if(r.result.files.length == 0) {
-                this.fetchError = "No files were available";
+                this.fetchError = "No files were received. Make sure they are in the correct place";
                 this.externalFiles = undefined;
             } else {
                 this.externalFiles = r.result.files;
@@ -1566,6 +1566,9 @@ ${fhtml}
 
         if (this.markup.files) {
             this.hasExternalSources = listify(this.markup.files).some((f) => !["upload", "uploadByCode", "editor"].includes(f.source));
+            if (this.attrsall.submittedFiles) {
+                this.externalFiles = this.attrsall.submittedFiles.filter((f) => !["upload", "uploadByCode", "editor"].includes(f.source));
+            }
         }
 
         this.vctrl = vctrlInstance!;
