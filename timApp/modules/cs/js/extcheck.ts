@@ -240,6 +240,7 @@ export class CustomOutputBase {
 
 @Component({
     selector: "extcheck-output-container",
+    styleUrls: ["./extcheck.scss"],
     template: `
         <button *ngIf="title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}" [innerHTML]="title.content + caret"></button>
         <button *ngIf="!title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}">{{title.content}}<span class='caret'></span></button>
