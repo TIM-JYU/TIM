@@ -116,6 +116,8 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
                         par_id=p.get_id(),
                         type=paragraph_type,
                     ).order_by(ReadParagraph.timestamp.desc()).first())
+                if not rp:
+                    raise RouteException('Reading not found')
                 db.session.delete(rp)
             else:
                 mark_read(group_id, p.doc, p, paragraph_type)

@@ -9,7 +9,7 @@ import {Users} from "../user/userService";
 import {$http, $log, $timeout} from "../util/ngimport";
 import {getViewName, IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
 import {diffDialog, setDiffDialog, showDiffDialog} from "./diffDialog";
-import {EditPosition, EditType, IExtraData} from "./editing/edittypes";
+import {EditPosition, EditType} from "./editing/edittypes";
 import {onClick, onMouseOver, onMouseOverOut} from "./eventhandlers";
 import {canSeeSource, dereferencePar, getArea, getParId} from "./parhelpers";
 
@@ -260,15 +260,17 @@ export async function initReadings(item: IItem) {
     }
 }
 
-export async function handleUnread(item: IItem, extraData: IExtraData, pos: EditPosition) {
+export async function handleUnread(pos: EditPosition) {
     if (pos.type !== EditType.Edit) {
         return;
     }
-    const result = await to($http.put<IOkResponse & {latest?: unknown}>(`/unread/${item.id}/${extraData.par}`, {}));
+    const first = pos.pars.first();
+    const [docid, parid] = dereferencePar(first)!;
+    const result = await to($http.put<IOkResponse & {latest?: unknown}>(`/unread/${docid}/${parid}`, {}));
     if (!result.ok) {
         return;
     }
-    const rline = pos.pars.first().find(".readline");
+    const rline = first.find(".readline");
     rline.removeClass("read read-modified");
     if (result.result.data.latest) {
         rline.addClass("read-modified");

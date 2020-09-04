@@ -166,7 +166,7 @@ export class NotesHandler {
                 return {};
             },
             unreadCb: async () => {
-                await handleUnread(this.viewctrl.item, extraData, params);
+                await handleUnread(params);
             },
         });
         this.editorInstance = await this.editorLoad;

@@ -253,3 +253,9 @@ testuser2,3,0,0,0,0
         d.document.clear_mem_cache()
         d.document.insert_preamble_pars()
         self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
+
+    def test_unread_nonexistent(self):
+        self.login_test1()
+        d = self.create_doc(initial_par='test')
+        parid = d.document.get_paragraphs()[0].get_id()
+        self.mark_as_unread(d, parid, expect_status=400)

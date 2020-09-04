@@ -274,7 +274,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                 return {};
             },
             unreadCb: async () => {
-                await handleUnread(this.viewctrl.item, extraData, params);
+                await handleUnread(params);
             },
         });
         const awaited = await this.editorLoad;
