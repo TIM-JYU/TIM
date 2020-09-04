@@ -91,7 +91,7 @@ def validate_node_sign(signature_node, elem, cert=None, fingerprint=None, finger
 OneLogin_Saml2_Utils.validate_node_sign = validate_node_sign
 
 
-def init_saml_auth(req, entity_id: str) -> OneLogin_Saml2_Auth:
+def init_saml_auth(req, entity_id: str, try_new_cert: bool) -> OneLogin_Saml2_Auth:
     idp_metadata_xml = get_haka_metadata()
     idp_data = OneLogin_Saml2_IdPMetadataParser.parse(idp_metadata_xml, entity_id=entity_id)
     if 'idp' not in idp_data:
@@ -107,6 +107,8 @@ def init_saml_auth(req, entity_id: str) -> OneLogin_Saml2_Auth:
     except (FingerPrintException, OneLogin_Saml2_ValidationError) as e:
         raise RouteException(f'Failed to validate Haka metadata: {e}')
     saml_path = app.config['SAML_PATH']
+    if try_new_cert:
+        saml_path += '/new'
     osett = OneLogin_Saml2_Settings(custom_base_path=saml_path, sp_validation_only=True)
     sp = osett.get_sp_data()
 
@@ -147,9 +149,9 @@ class SSOData:
     addUser: bool = False
 
 
-def prepare_and_init(entity_id: str) -> OneLogin_Saml2_Auth:
+def prepare_and_init(entity_id: str, try_new_cert: bool) -> OneLogin_Saml2_Auth:
     req = prepare_flask_request(request)
-    auth = init_saml_auth(req, entity_id)
+    auth = init_saml_auth(req, entity_id, try_new_cert)
     return auth
 
 
@@ -235,7 +237,10 @@ class TimRequestedAttributes:
 @saml.route('/sso')
 @use_model(SSOData)
 def sso(m: SSOData):
-    auth = prepare_and_init(m.entityID)
+    try:
+        auth = prepare_and_init(m.entityID, try_new_cert=True)
+    except OneLogin_Saml2_Error:
+        auth = prepare_and_init(m.entityID, try_new_cert=False)
     session['entityID'] = m.entityID
     login_url = auth.login(return_to=m.return_to)
     session['requestID'] = auth.get_last_request_id()
@@ -255,19 +260,20 @@ def acs():
     entity_id = session.get('entityID')
     if not entity_id:
         raise RouteException('entityID not in session')
-    auth = prepare_and_init(entity_id)
-    request_id = session.get('requestID')
-    if not request_id:
-        err = 'requestID missing from session'
-        log_warning(err)
-        raise RouteException(err)
-
     try:
-        auth.process_response(request_id=request_id)
-    except Exception as e:
-        err = f'Error processing SAML response: {str(e)}'
-        log_warning(err)
-        raise RouteException(err)
+        auth = try_process_saml_response(entity_id, try_new_cert=True)
+    except (SamlProcessingError, OneLogin_Saml2_Error) as e:
+        # OneLogin_Saml2_Error happens if there is no new certificate in the file system. That means there is no
+        # rollover going on, so nothing interesting is happening.
+        #
+        # If instead we get a SamlProcessingError, that means there is a new certificate, but the IdP encrypted
+        # the SAML response with the old certificate, so we should account for that.
+        if isinstance(e, SamlProcessingError):
+            log_warning(f'Failed to process SAML response with the new certificate; trying with old.')
+        try:
+            auth = try_process_saml_response(entity_id, try_new_cert=False)
+        except SamlProcessingError as e:
+            raise RouteException(str(e))
     errors = auth.get_errors()
     if not auth.is_authenticated():
         err = f'Authentication failed: {auth.get_last_error_reason()}'
@@ -317,6 +323,26 @@ def acs():
     if rs:
         return redirect(auth.redirect_to(rs))
     return redirect(url_for('start_page'))
+
+
+class SamlProcessingError(Exception):
+    pass
+
+
+def try_process_saml_response(entity_id: str, try_new_cert: bool):
+    auth = prepare_and_init(entity_id, try_new_cert)
+    request_id = session.get('requestID')
+    if not request_id:
+        err = 'requestID missing from session'
+        log_warning(err)
+        raise RouteException(err)
+    try:
+        auth.process_response(request_id=request_id)
+    except Exception as e:
+        err = f'Error processing SAML response: {str(e)}'
+        log_warning(err)
+        raise SamlProcessingError(err)
+    return auth
 
 
 @saml.route('')

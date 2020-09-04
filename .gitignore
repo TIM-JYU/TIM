@@ -23,6 +23,7 @@
 /timApp/prodconfig.py
 /timApp/hosts.json
 /timApp/auth/saml/prod/settings.json
+/timApp/auth/saml/prod/new/
 /timApp/messages.xlf
 /timApp/modules/cs/data/
 /timApp/modules/cs/generated
