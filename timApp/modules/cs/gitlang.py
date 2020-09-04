@@ -62,7 +62,7 @@ class GitReg(Language):
 
         self.lib, self.options = get_lib_and_options(query)
 
-        self.is_logged_in = get_json_param(query.jso, "info", "user_id", "Anonymous") != "Anonymous"
+        self.is_logged_in = query.jso.get("user_id", "Anonymous") != "Anonymous" if query.jso else False
         self.is_registered = False
         self.askFields = self.options.askFields
         self.repo = self.options.repo

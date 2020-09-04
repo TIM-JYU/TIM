@@ -73,10 +73,10 @@ def get_score_infos(
 
             task = task_id.task_name
             if count_method == PointCountMethod.max:
-                user_points = max((a.points for a in u.get_answers_for_task(task_id.doc_task)), default=0)
+                user_points = max((a.points for a in u.get_answers_for_task(task_id.doc_task) if a.points is not None), default=0)
             elif count_method == PointCountMethod.latest:
                 latest_answer = u.get_answers_for_task(task_id.doc_task).first()
-                user_points = latest_answer.points if latest_answer else 0
+                user_points = latest_answer.points if latest_answer and latest_answer.points is not None else 0
             else:
                 raise Exception(f'Unexpected count_method: {count_method}')
 

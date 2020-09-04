@@ -6,11 +6,11 @@
     outline: none;
 
     &:hover {
-        background-color: #b5b5b5;
+        filter: brightness(80%) !important;
     }
 
     &.collapsed-button {
-        background-color: #cccccc;
+        filter: brightness(92%);
     }
 }
 

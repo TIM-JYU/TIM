@@ -60,14 +60,15 @@ fi
 
 cd /cs
 
-if [ ! -f ~/.ssh/id_rsa ]; then
+if [ ! -f /root/.ssh/id_rsa ]; then
     echo "Creating ssh keys"
-    ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa -C csPlugin@TIM
-    chmod 700 ~/.ssh
-    chmod 600 ~/.ssh/id_rsa
-    chmod 644 ~/.ssh/id_rsa.pub
+    mkdir /root/.ssh
+    ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa -C csPlugin@TIM
+    chmod 700 /root/.ssh
+    chmod 600 /root/.ssh/id_rsa
+    chmod 644 /root/.ssh/id_rsa.pub
     echo "Public key:"
-    cat ~/.ssh/id_rsa.pub
+    cat /root/.ssh/id_rsa.pub
 fi
 
 ./startAll.sh

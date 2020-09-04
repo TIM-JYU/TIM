@@ -20,6 +20,7 @@ import {CsController} from "./csPlugin";
 
 interface IAngularComponent {
     template: string;
+    component: string;
 }
 
 interface IAngularModule {
@@ -239,6 +240,7 @@ export class CustomOutputBase {
 
 @Component({
     selector: "extcheck-output-container",
+    styleUrls: ["./extcheck.scss"],
     template: `
         <button *ngIf="title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}" [innerHTML]="title.content + caret"></button>
         <button *ngIf="!title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}">{{title.content}}<span class='caret'></span></button>
@@ -279,9 +281,9 @@ export class OutputContainerComponent implements IOutputContainer {
 
         const components = [];
         const module = this.angularContent;
-        for (const key in module.components) {
-            if (!module.components.hasOwnProperty(key)) { continue; }
-            const tmpCmp = Component({selector: key, template: module.components[key].template})(class {});
+        for (const [key, value] of Object.entries(module.components)) {
+            const tmpCls = Function(`return ${value.component};`)();
+            const tmpCmp = Component({selector: key, template: value.template})(tmpCls);
             components.push(tmpCmp);
         }
         const tmpModule = NgModule({declarations: components, imports: [CommonModule]})(class {});

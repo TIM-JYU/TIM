@@ -179,7 +179,7 @@ webargs \
 RUN python3.8 -m pip install requests --upgrade && bash -c "${APT_CLEANUP}"
 
 # git
-RUN bash -c "${APT_INSTALL} git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
 RUN wget -q https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14%2B36/OpenJDK14U-jdk_x64_linux_hotspot_14_36.tar.gz && \
  tar -xf OpenJDK14U-jdk_x64_linux_hotspot_14_36.tar.gz && \

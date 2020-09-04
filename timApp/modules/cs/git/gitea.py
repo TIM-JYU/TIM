@@ -166,15 +166,15 @@ class GiteaLib(GitLib):
 
         return errors
 
-    def fork(self, repo, private=True, owner=None, new_name=None, new_owner=None):
-        if owner is None:
-            owner = self.get_token_user()
-            if isinstance(owner, dict):
-                return owner
+    def fork(self, settings: RepoSettings):
+        if settings.oldOwner is None:
+            settings.oldOwner = self.get_token_user()
+            if isinstance(settings.oldOwner, dict):
+                return LibResponse(False, str(settings.oldOwner))
 
-        data = {'organization': new_owner, 'name': self.sanitize_repo_path(new_name)}
-        repo_resp = self.post(f'repos/{owner}/{self.sanitize_repo_path(repo)}/forks', data)
-
+        data = {'organization': settings.owner, 'name': self.sanitize_repo_path(settings.name)}
+        repo_resp = self.post(f'repos/{settings.oldOwner}/{self.sanitize_repo_path(settings.oldName)}/forks', data)
+        print(repo_resp)
         return LibResponse(repo_resp.status == 202)
 
     def library_specific(self, credentials, repo_settings: RepoSettings):
