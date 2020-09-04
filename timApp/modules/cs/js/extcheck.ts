@@ -281,10 +281,9 @@ export class OutputContainerComponent implements IOutputContainer {
 
         const components = [];
         const module = this.angularContent;
-        for (const key in module.components) {
-            if (!module.components.hasOwnProperty(key)) { continue; }
-            const tmpCls = Function(`return ${module.components[key].component};`)();
-            const tmpCmp = Component({selector: key, template: module.components[key].template})(tmpCls);
+        for (const [key, value] of Object.entries(module.components)) {
+            const tmpCls = Function(`return ${value.component};`)();
+            const tmpCmp = Component({selector: key, template: value.template})(tmpCls);
             components.push(tmpCmp);
         }
         const tmpModule = NgModule({declarations: components, imports: [CommonModule]})(class {});
