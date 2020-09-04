@@ -79,7 +79,10 @@ class ExtCheck(Language):
             self.command = self.command.replace("points_rule", json.dumps(points_rule))
 
         code, out, err, pwddir = self.runself(self.command)
-        if code != 0:
+        if code == -9:
+            err = "Failed to run the test: Timed out\n" + err
+            return code, "", err, pwddir
+        elif code != 0:
             err = "Failed to run the test:\n" + err
             return code, "", err, pwddir
 
