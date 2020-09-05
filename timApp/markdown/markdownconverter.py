@@ -304,7 +304,8 @@ def par_list_to_html_list(pars,
     } for p in pars]
 
     texplain = settings.is_texplain()
-    if texplain:  # add pre-markers to tex paragrpahs
+    textplain = settings.is_textplain()
+    if texplain or textplain:  # add pre-markers to tex paragrpahs
         for i in range(0, len(texts)):
             text = texts[i]
             if text.find('```') != 0 and text.find('#') != 0:

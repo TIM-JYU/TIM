@@ -146,6 +146,7 @@ class DocSettings:
     max_points_key = 'max_points'
     nomacros_key = 'nomacros'
     texplain_key = 'texplain'
+    textplain_key = 'textplain'
     live_updates_key = 'live_updates'
     plugin_md_key = 'plugin_md'
     print_settings_key = 'print_settings'
@@ -394,6 +395,10 @@ class DocSettings:
     def is_texplain(self):
         texplain = self.__dict.get(self.texplain_key, False)
         return texplain
+
+    def is_textplain(self):
+        textplain = self.__dict.get(self.textplain_key, False)
+        return textplain
 
     def show_authors(self, default=False):
         return self.__dict.get(self.show_authors_key, default)

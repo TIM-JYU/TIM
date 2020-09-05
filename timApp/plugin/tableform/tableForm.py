@@ -268,90 +268,56 @@ def answer(args: TableFormAnswerModel) -> PluginAnswerResp:
 
 def reqs() -> PluginReqs:
     templates = ["""
-``` {#tableForm_table plugin="tableForm"}
-# Add attribute 'showInView: true' to show the plugin in normal view
+``` {#tableForm_table plugin="tableForm"}    
+# showInView: true # Add attribute  to show the plugin in normal view
 groups: 
- - Group Name   # Use Group Name here
+ - Group Name     # Use Group Name here
 fields:
- - d1=demo1     # List your fields here, = for alias
-table: true
-report: false
-openButtonText: Avaa taulukko # text for open the table if closed as default
-hideButtonText: Sulje taulukko # tex for closing the table
-open: true 
-maxRows: 40em     # max height for the table before scrollbar 
-realnames: true   # Show full name in 2nd column, true or false
-buttonText:       # Name your save button here
-autosave: true    # autosave, true or false
-cbColumn: true    # show checkboxes
-nrColumn: true    # show numbers
-filterRow: true   # show filters 
-singleLine: true  #
-emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email
-```""", """
-``` {#tableForm_table_report plugin="tableForm"}
-# Add attribute 'showInView: true' to show the plugin in normal view
-groups: 
- - Group Name   # Use Group Name here
-fields:
- - d1=demo1     # List your fields here, = for alias
+ - d1=demo1       # List your fields here, = for alias
 table: true
 report: true
 openButtonText: Avaa taulukko # text for open the table if closed as default
 hideButtonText: Sulje taulukko # tex for closing the table
-open: true 
+open: true        # use false if table is big and you do not want it open automatically
+autosave: true    # save fields automatically
 maxRows: 40em     # max height for the table before scrollbar 
 realnames: true   # Show full name in 2nd column, true or false
-buttonText:       # Name your save button here
-autosave: true    # autosave, true or false
+usernames: false  # Show user name column
+emails: false     # Show email column
+#buttonText: Tallenna    # Name your save button here
 cbColumn: true    # show checkboxes
 nrColumn: true    # show numbers
 filterRow: true   # show filters 
-singleLine: true  #
+singleLine: true  # show every line as a single line
 emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email 
-separator: ";"  # Define your value separator here, ";" as default
-anonNames: false # To show or hide user (and full) names in report, true or false
-reportButton: "Name your generate report button here"
-```""", """
-``` {#tableForm_report plugin="tableForm"}
-# Add attribute 'showInView: true' to show the plugin in normal view
-groups: 
- - Group Name   # Use Group Name here
-fields:
- - d1=demo1     # List your fields here, = for alias
-table: false
-report: true
-separator: ";"  # Define your value separator here, ";" as default
-anonNames: false # To show or hide user (and full) names in report, true or false
-reportButton: "Name your generate report button here"
+separator: ";"    # Define your value separator here, ";" as default
+anonNames: false  # To show or hide user (and full) names in report, true or false
+reportButton: "Raportti"
+userListButtonText: "Käyttäjälista"
+showToolbar: true # toolbar for editing the table
+#dataView:        # uncomment this if table is big or want to use special properties
+#   tableWidth: 90vw
+#   virtual:
+#    enabled: true  # toggles virtual mode on or off; default true
+#   fixedColumns: 1 # how many not scrolling columns in left
 ```"""]
     editor_tabs: List[EditorTab] = [
-            {
-                'text': 'Fields',
-                'items': [
-                    {
-                        'text': 'Tables',
-                        'items': [
-                            {
-                                'data': templates[0].strip(),
-                                'text': 'Table only',
-                                'expl': 'Form a table for editing forms',
-                            },
-                            {
-                                'data': templates[1].strip(),
-                                'text': 'Table and report',
-                                'expl': 'Form a table for editing forms, that can be converted to report',
-                            },
-                            {
-                                'data': templates[2].strip(),
-                                'text': 'Report only',
-                                'expl': 'Form a report',
-                            },
-                        ],
-                    },
-                ],
-            },
-        ]
+        {
+            'text': 'Fields',
+            'items': [
+                {
+                    'text': 'Tables',
+                    'items': [
+                        {
+                            'data': templates[0].strip(),
+                            'text': 'Table and report',
+                            'expl': 'Form a table for editing forms, that can be converted to report',
+                        },
+                    ],
+                },
+            ],
+        },
+    ]
     return {
         "js": ["tableForm"],
         "multihtml": True,
@@ -388,7 +354,7 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
     docid, groups, separator, show_real_names, show_user_names, show_emails, remove_doc_ids, fields, user_filter, \
         filter_fields, filter_values = args.docId, args.groups, args.separator, args.realnames, \
         args.usernames, args.emails, args.removeDocIds, args.fields, args.userFilter, \
-                  args.filterFields, args.filterValues
+        args.filterFields, args.filterValues
     if len(separator) > 1:
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now"
@@ -457,13 +423,14 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
 
     csv = csv_string(data, 'excel', separator)
     output = ''
-    if isinstance(args.reportFilter, str):
+    if isinstance(args.reportFilter, str) and args.reportFilter:
         params = JsRunnerParams(code=args.reportFilter, data=csv)
         try:
             csv, output = jsrunner_run(params)
         except JsRunnerError as e:
             raise RouteException('Error in JavaScript: ' + str(e)) from e
     return text_response(output+csv)
+
 
 """
     # This did not work because if code is just return data; then it is not identical when returned

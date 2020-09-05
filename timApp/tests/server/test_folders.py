@@ -159,7 +159,7 @@ class FolderTest(TimRouteTest):
         self.create_folder(invalid4,
                            expect_content={'error': 'The folder path cannot have empty parts.'},
                            expect_status=400)
-        for c in 'ãàáäâåẽèéëêìíïîõòóöôùúüûñç·,:;<>|^~¨"!½#¤%&()=?`.@£$€{[]}\\ ':
+        for c in 'ãàáäâåẽèéëêìíïîõòóöôùúüûñç·,:;<>|^~¨"!½#¤%&()=?`@£$€{[]}\\ ':
             self.create_folder(self.get_personal_item_path(c),
                                expect_content={
                                    'error': 'The folder path has invalid characters. Only letters, numbers, '

@@ -28,7 +28,7 @@ class RedirectTest(TimRouteTest):
                      expect_content=f'{route}/{testing_spoce}?{params}', query_string={'a': 'b'})
             self.get(f'{route}/{personal_folder}/testing spåce', expect_status=302,
                      expect_content=f'{route}/{testing_space}?{params}', query_string={'a': 'b'})
-            for c in '<>|½!"#¤%&()=?`´¨~^\',.;:@£$€{[]}\\':
+            for c in '<>|½!"#¤%&()=?`´¨~^\',;:@£$€{[]}\\':
                 self.get(quote_plus(f'{route}/{personal_folder}/testing{c}remove'),
                          expect_status=302,
                          expect_content=f'{route}/{testing_remove}?{params}', query_string={'a': 'b'})

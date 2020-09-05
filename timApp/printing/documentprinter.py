@@ -103,6 +103,7 @@ class DocumentPrinter:
         self._print_hash = None
         self._macros = {}
         self.texplain = False
+        self.textplain = False
         self.texfiles = None
         self.urlroot = urlroot
 
@@ -139,6 +140,7 @@ class DocumentPrinter:
         pars = dereference_pars(pars, context_doc=self._doc_entry.document)
         pars_to_print = []
         self.texplain = settings.is_texplain()
+        self.textplain = settings.is_textplain()
 
         self.texfiles = settings.get_macroinfo(key=TEX_MACROS_KEY). \
             get_macros().get('texfiles')
@@ -155,7 +157,7 @@ class DocumentPrinter:
             p_info = par, *get_tex_settings_and_macros(par.doc)
             _, _, pdoc_plugin_attrs, _, pdoc_macros, pdoc_macro_delimiter = p_info
 
-            if self.texplain:
+            if self.texplain or self.textplain:
                 if par.get_markdown().find("#") == 0:
                     continue
 
@@ -219,7 +221,7 @@ class DocumentPrinter:
                                                                                                           par_infos):
             md = p.get_final_dict()['md']
             if not p.is_plugin() and not p.is_question():
-                if not self.texplain:
+                if not self.texplain and not self.textplain:
                     md = expand_macros(
                         text=md,
                         macros=pdoc_macros,
@@ -251,7 +253,7 @@ class DocumentPrinter:
                         md = add_nonumber(md)
                     md = beginraw + md + endraw
 
-                if self.texplain:
+                if self.texplain or self.textplain:
                     if md.startswith('```'):
                         md = md[3:-3]
                 if not pdoc_macros.get('texautonumber') and settings.auto_number_headings():
@@ -274,7 +276,7 @@ class DocumentPrinter:
                     continue
             export_pars.append(md)
 
-        if self.texplain:
+        if self.texplain or self.textplain:
             content = '\n'.join(export_pars)
         else:
             content = settings.get_doctexmacros() + '\n' + '\n\n'.join(export_pars)
@@ -328,6 +330,8 @@ class DocumentPrinter:
             os.environ["texdocid"] = str(self._doc_entry.document.doc_id)
             from_format = 'markdown'
             if self.texplain:
+                from_format = 'latex'
+            if self.textplain:
                 from_format = 'latex'
 
             texfiles = None
@@ -737,10 +741,10 @@ def get_file(latex_file, fileurl, new_env):
     if end < 0:
         end = len(fileurl)
     filename = fileurl[fileurl.rfind("/") + 1:end]
-    dot = filename.rfind('.')  # change last - to . if tehre is no dot at the end
+    dot = filename.rfind('.')  # change last - to . if there is no dot at the end
     minus = filename.rfind('-')
     if dot < minus:
-        filename = filename[:minus] + '.' + filename[minus + 1:]
+        filename = filename[:minus] + '.' + filename[minus + 1:] # TODO: Remove this when all texfiles are changed and renamed
     args = ['wget', fileurl, '-O', filename]
     p = subprocess.Popen(
         args,

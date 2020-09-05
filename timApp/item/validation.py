@@ -86,4 +86,4 @@ def validate_uploaded_document_content(file_content):
 
 
 def has_special_chars(item_path: str):
-    return set(item_path.lower()) - set('abcdefghijklmnopqrstuvwxyz0123456789/-_')
+    return set(item_path.lower()) - set('abcdefghijklmnopqrstuvwxyz0123456789/-_.')

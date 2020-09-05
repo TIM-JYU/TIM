@@ -6,13 +6,13 @@ export function slugify(str: string) {
     str = str.toLowerCase();
 
     // remove accents, swap ñ for n, etc.
-    const f = "ãàáäâåẽèéëêìíïîõòóöôùúüûñç·/,:;.";
-    const t = "aaaaaaeeeeeiiiiooooouuuunc------";
+    const f = "ãàáäâåẽèéëêìíïîõòóöôùúüûñç·/,:;";
+    const t = "aaaaaaeeeeeiiiiooooouuuunc-----";
     for (let i = 0, l = f.length; i < l; i++) {
         str = str.replace(new RegExp(escapeRegExp(f.charAt(i)), "g"), t.charAt(i));
     }
 
-    str = str.replace(/[^a-z0-9 _-]/g, "") // remove invalid chars
+    str = str.replace(/[^a-z0-9 _.-]/g, "") // remove invalid chars
         .replace(/\s+/g, "-") // collapse whitespace and replace by -
         .replace(/-+/g, "-"); // collapse dashes
 
