@@ -20,14 +20,17 @@ The command should print a json string to standard output with the following str
         title: {
             classes: <classes to add to title element>,
             content: <actual title>,
-            isHTML: <if the title is html>,
             isAngular: <if the title is angular html>
         },
-        content: {
+        angular: { // angular content (does not work)
+        },
+        html: { // html content
             classes: <classes to add to content element>,
             content: <actual content>,
-            isHTML: <if the content is html>,
-            isAngular: <if the content is angular html>
+        }
+        text: { // pure text content
+            classes: <classes to add to content element>,
+            content: <actual content>,
         }
     }
 }

@@ -31,13 +31,13 @@ interface IAngularModule {
 interface IDivContent {
     classes: string;
     content: string;
-    isHTML?: boolean;
 }
 
 interface IOutputContainer {
     title?: IDivContent;
     text?: IDivContent;
     angular?: IAngularModule;
+    html?: IDivContent;
     hide?: boolean;
 }
 
@@ -221,7 +221,7 @@ export class ExtcheckComponent extends CsController {
                         classes: "",
                         content: "Penalties",
                     },
-                    text: {
+                    html: {
                         classes: "",
                         content: data.penalties
                             .map(
@@ -229,7 +229,6 @@ export class ExtcheckComponent extends CsController {
                                     `<p class="penalty-text centermargin">${e}</p>`
                             )
                             .join("\n"),
-                        isHTML: true,
                     },
                 };
             }
@@ -252,14 +251,11 @@ export class CustomOutputBase {
     selector: "extcheck-output-container",
     styleUrls: ["./extcheck.scss"],
     template: `
-        <button *ngIf="title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}" [innerHTML]="title.content + caret"></button>
-        <button *ngIf="!title.isHTML" (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}">{{title.content}}<span class='caret'></span></button>
+        <button (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}">{{title.content}}<span class='caret'></span></button>
         <div *ngIf="angularContent" class="centermargin" custom-data></div>
-        <ng-container *ngIf="!hide && textContent">
-            <div *ngIf="textContent.isHTML" class="centermargin {{textContent.classes}}" [innerHTML]="textContent.content"></div>
-            <div *ngIf="!textContent.isHTML">
-                <pre class="centermargin {{textContent.classes}}">{{textContent.content}}</pre>
-            </div>
+        <ng-container *ngIf="!hide">
+            <div *ngIf="htmlContent" class="centermargin {{htmlContent.classes}}" [innerHTML]="htmlContent.content"></div>
+            <pre *ngIf="textContent" class="centermargin {{textContent.classes}}">{{textContent.content}}</pre>
         </ng-container>`,
 })
 export class OutputContainerComponent implements IOutputContainer {
@@ -274,6 +270,7 @@ export class OutputContainerComponent implements IOutputContainer {
     title: IDivContent = {classes: "", content: ""};
     textContent?: IDivContent;
     angularContent?: IAngularModule;
+    htmlContent?: IDivContent;
     componentRef?: ComponentRef<unknown>;
     hide_: boolean = false;
     @ViewChild(CustomOutputDirective) customOutput!: CustomOutputDirective;
@@ -347,16 +344,19 @@ export class OutputContainerComponent implements IOutputContainer {
         if (data.title) {
             this.title = data.title;
         }
-        if (data.angular && data.text) {
-            this.error("Only either angular or text can be defined at once");
+        if ((data.angular ? 1 : 0) + (data.html ? 1 : 0) + (data.text ? 1 : 0) > 1) {
+            this.error("Only one of angular, text or html can be defined at once");
             this.hide = false;
             return;
         }
         if (data.angular) {
             this.angularContent = data.angular;
+        } else if (data.html) {
+            this.htmlContent = data.html;
         } else {
             this.textContent = data.text;
         }
+
         this.hide = !!data.hide;
     }
 
