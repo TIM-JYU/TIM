@@ -538,7 +538,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
      * @param editable - whether user can edit the paragraph
      * TODO: Add support for multiple options per controller
      */
-    getParMenuEntry(par: Paragraph | undefined, editable: boolean): IMenuFunctionEntry | undefined {
+    getParMenuEntry(par: Paragraph, editable: boolean): IMenuFunctionEntry | undefined {
         if (par == null || !editable) {
             return undefined;
         }
@@ -556,7 +556,7 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
         const parEditable = ((!par && this.viewctrl.item.rights.editable) || (par && canEditPar(this.viewctrl.item, par))) || false;
         const timTableEditMode = this.isTimTableInEditMode(par);
         const qstPar = this.isQST(par);
-        const customParMenuEntry = this.getParMenuEntry(par, parEditable);
+        const customParMenuEntry = par ? this.getParMenuEntry(par, parEditable) : undefined;
         if (this.viewctrl.editing) {
             return [
                 {func: () => this.goToEditor(), desc: "Go to editor", show: true},
