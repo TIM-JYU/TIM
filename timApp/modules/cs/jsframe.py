@@ -224,9 +224,12 @@ class DrawIO(JSframe):
         """
         return text to show when reviewing task
         """
-        c = self.query.jso.get('state', {}).get('c', None)
+        state = self.query.jso.get('state', {})
+        if not state:
+            return ""
+        c = state.get('c', None)
         if not c:
-            return None
+            return ""
         if isinstance(c, str):
             # Find svg data from the saved graph
             delete_start_str = 'content="'

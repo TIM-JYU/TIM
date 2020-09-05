@@ -715,9 +715,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 }
             }
             if (this.review) {
-                if (r.result.data.reviewHtml.startsWith("data:image")) {
-                    this.imageReview = true;
-                }
+                this.imageReview = r.result.data.reviewHtml.startsWith("data:image");
                 if (this.selectedAnswer) {
                     this.reviewHtml = r.result.data.reviewHtml;
                 } else {
