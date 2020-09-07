@@ -36,6 +36,7 @@ videoApp.component("videoZoom", {
     },
     template: `
 <p ng-if="$ctrl.c.videoOn" class="pluginShow"><span ng-if="::$ctrl.c.video.playbackRate"> Speed:
+    <span class="videoSpeed">{{$ctrl.c.playbackRateString}}</span>
     <a ng-click="$ctrl.c.speed(1.0/1.2)" title="Slow speed"> - </a>
     <a ng-click="$ctrl.c.speed(0)" title="Speed to 1x"> 1x </a>
     <a ng-click="$ctrl.c.speed(1.2)" title="Faster speed"> + </a> </span><span class="zoom">Zoom:
@@ -164,6 +165,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     private height?: number;
     private vctrl?: ViewCtrl;
     private iframeopts?: string;
+    private playbackRateString: string = "";
 
     $onInit() {
         super.$onInit();
@@ -242,6 +244,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         } else {
             this.video.playbackRate *= mult;
         }
+        this.playbackRateString = this.video.playbackRate.toFixed(1);
     }
 
     zoom(mult: number) {
