@@ -2,6 +2,7 @@ import angular, {IHttpResponse, IPromise} from "angular";
 import * as t from "io-ts";
 import moment from "moment";
 import {AbstractControl, ValidatorFn} from "@angular/forms";
+import humanizeDuration from "humanize-duration";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
@@ -778,4 +779,18 @@ export function formatString(s: string, ...fmt: string[]) {
 
 export function getViewName() {
     return document.location.pathname.split("/")[1];
+}
+
+export function secondsToShortTime(time: number, displayUnits: humanizeDuration.Unit[] = [], locale: string = "en") {
+    const DAY_LIMIT = 24 * 60 * 60;
+    let prefix = "";
+    if (time > DAY_LIMIT && displayUnits.length != 0) {
+        prefix = humanizeDuration(time * 1000, {
+            units: displayUnits,
+            round: true,
+            language: locale,
+        }) + " + ";
+        time %= DAY_LIMIT;
+    }
+    return `${prefix}${secondsToHHMMSS(time)}`;
 }
