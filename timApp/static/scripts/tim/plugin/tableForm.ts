@@ -1159,6 +1159,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         this.ngOnInit();
         await this.updateTable();
         this.timTable?.clearSortOrder();
+        this.timTable?.handleChangeFilter();
         this.timTable?.c();
         this.tableFetched = true;
     }
