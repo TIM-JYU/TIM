@@ -12,6 +12,7 @@ from flask import abort
 from flask import current_app
 from flask import request
 from flask import session
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import verify_ownership, get_doc_or_abort
@@ -722,7 +723,7 @@ def join_lecture():
 
 
 def update_activity(lecture: Lecture, u: User):
-    ua = Useractivity(user_id=u.id, lecture_id=lecture.lecture_id)
+    ua = Useractivity(user_id=u.id, lecture_id=lecture.lecture_id, active=func.now())
     db.session.merge(ua)
 
 

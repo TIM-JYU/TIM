@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
 import humanizeDuration from "humanize-duration";
-import {formatString, secondsToHHMMSS, to2} from "tim/util/utils";
+import {formatString, secondsToShortTime, to2} from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import moment from "moment";
 import {HttpClient} from "@angular/common/http";
@@ -44,20 +44,11 @@ export class CountdownComponent implements OnInit {
     }
 
     get timeLeft() {
-        let prefix = "";
         const clampedCountdown = Math.max(this.currentCountdown, 0);
         // We need time as a whole number so we won't render fractional parts
-        let timeS = Math.floor(clampedCountdown);
+        const timeS = Math.floor(clampedCountdown);
         const msPostfix = timeS < DISPLAY_TENTHS_LIMIT ? `,${Math.trunc((clampedCountdown % 1) * 10)}` : "";
-        if (timeS > DAY_LIMIT && this.displayUnits.length != 0) {
-            prefix = humanizeDuration(timeS * 1000, {
-                units: this.displayUnits,
-                round: true,
-                language: this.locale,
-            }) + " + ";
-            timeS %= DAY_LIMIT;
-        }
-        return `${prefix}${secondsToHHMMSS(timeS)}${msPostfix}`;
+        return `${secondsToShortTime(timeS, this.displayUnits, this.locale)}${msPostfix}`;
     }
 
     private async getEndDate() {
