@@ -71,6 +71,7 @@ const TableFormMarkup = t.intersection([
         removeUsersButtonText: nullable(t.string),
         userListButtonText: nullable(t.string),
         emailUsersButtonText: nullable(t.string),
+        forceUpdateButtonText: nullable(t.string),
         fields: t.array(t.string),
         showToolbar: t.boolean,
         hide: t.partial({
@@ -245,6 +246,11 @@ export class TimEmailComponent {
                     {{hideButtonText}}
                 </button>
                 <button class="timButton"
+                        (click)="forceUpdateTable()"
+                        *ngIf="forceUpdateButtonText">
+                    {{forceUpdateButtonText}}
+                </button>
+                <button class="timButton"
                         (click)="removeUsers()"
                         *ngIf="removeUsersButtonText && cbCount">
                     {{removeUsersButtonText}}
@@ -391,6 +397,10 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
 
     get emailUsersButtonText() {
         return this.markup.emailUsersButtonText;
+    }
+
+    get forceUpdateButtonText() {
+        return this.markup.forceUpdateButtonText;
     }
 
     get runScripts() {
@@ -691,13 +701,15 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             // TODO: Check if any value changed.  If not do not call reInitialize
             for (const f of tableFields) {
                 for (let y = 0; y < this.rowKeys.length; y++) {
-                    if (styles && !angular.equals(styles, {})) {
+                    if (styles && !angular.equals(styles, {}) && styles[this.rowKeys[y]]) {
                         this.data.userdata.cells[taskColumns[f] + (y + 1)] = {
                             cell: rows[this.rowKeys[y]][f],
                             ...styles[this.rowKeys[y]][f],
                         };
                     } else {
-                        this.data.userdata.cells[taskColumns[f] + (y + 1)] = {cell: rows[this.rowKeys[y]][f]};
+                        if (rows[this.rowKeys[y]]) {
+                            this.data.userdata.cells[taskColumns[f] + (y + 1)] = {cell: rows[this.rowKeys[y]][f]};
+                        }
                     }
                 }
             }
@@ -1140,6 +1152,15 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             this.tableFetched = true;
         }
         this.showTable = true;
+    }
+
+    async forceUpdateTable() {
+        this.timTable?.ngOnInit();
+        this.ngOnInit();
+        await this.updateTable();
+        this.timTable?.clearSortOrder();
+        this.timTable?.c();
+        this.tableFetched = true;
     }
 
     closeTable() {

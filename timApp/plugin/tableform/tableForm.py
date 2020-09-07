@@ -72,6 +72,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     filterRow: Union[bool, Missing, None] = missing
     fixedColor: Union[str, Missing, None] = missing
     fontSize: Union[str, Missing, None] = missing
+    forceUpdateButtonText: Union[str, Missing, None] = missing
     groups: Union[List[str], Missing] = missing
     hiddenColumns: Union[List[int], Missing, None] = missing
     hiddenRows: Union[List[int], Missing, None] = missing
@@ -295,6 +296,7 @@ anonNames: false  # To show or hide user (and full) names in report, true or fal
 reportButton: "Raportti"
 userListButtonText: "Käyttäjälista"
 showToolbar: true # toolbar for editing the table
+# forceUpdateButtonText: "Virkistä" # button for refreshing the table
 #dataView:        # uncomment this if table is big or want to use special properties
 #   tableWidth: 90vw
 #   virtual:
