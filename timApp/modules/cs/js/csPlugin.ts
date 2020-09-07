@@ -1855,7 +1855,7 @@ ${fhtml}
         if (this.simcir) {
             this.usercode = await this.getCircuitData(this.simcir);
         } else if (this.taunoFrame && (!this.muokattu || !this.usercode)) {
-            this.copyTauno();
+            await this.copyTauno();
         }
 
         if (this.editor?.parsonsEditor) {
