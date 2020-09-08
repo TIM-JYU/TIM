@@ -734,7 +734,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     @ViewChild("tableElem") private tableElem!: ElementRef<HTMLTableElement>;
     @ViewChild("timTableRunDiv") private timTableRunDiv!: ElementRef<HTMLDivElement>;
     @ViewChild("buttonOpenBigEditor") private buttonOpenBigEditor!: ElementRef<HTMLButtonElement>;
-    @ViewChild("dataViewComponent") private dataViewComponent?: DataViewComponent;
+    @ViewChild("dataViewComponent") dataViewComponent?: DataViewComponent;
     @ViewChildren("editInput") private editInputs!: QueryList<ElementRef<HTMLInputElement>>;
     dataView?: DataViewSettings | null;
     private editInputStyles: string = "";
