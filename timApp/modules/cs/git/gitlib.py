@@ -129,7 +129,7 @@ class GitLib:
             try:
                 file.content = file.bcontent.decode(encoding="utf-8")
             except Exception as e:
-                file.content = None
+                continue
             files.append(file)
 
         return files
