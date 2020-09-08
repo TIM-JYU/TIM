@@ -1571,8 +1571,7 @@ def get_multi_states(args: GetMultiStatesModel):
     :return: {answerID: {'html': html, 'reviewHtml': None}}
     """
     answer_ids, user_id = args.answer_ids, args.user_id
-    print(args)
-    user = User.query.get(user_id)
+    user = User.get_by_id(user_id)
     if user is None:
         abort(400, 'Non-existent user')
     answs = Answer.query.filter(Answer.id.in_(answer_ids)).all()
@@ -1616,7 +1615,7 @@ def get_state(args: GetStateModel):
     answer = None
     block = None
     doc = None
-    user = User.query.get(user_id)
+    user = User.get_by_id(user_id)
     if user is None:
         abort(400, 'Non-existent user')
     if answer_id:

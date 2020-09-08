@@ -11,7 +11,7 @@ from functools import lru_cache
 from typing import Union, Optional, List, Dict, Tuple, Any
 from urllib.parse import urlparse
 
-from flask import Response, current_app
+from flask import Response
 from flask import session
 from flask.testing import FlaskClient
 from lxml import html
@@ -550,7 +550,7 @@ class TimRouteTest(TimDbTest):
     @property
     def current_user(self) -> Optional[User]:
         curr_id = self.current_user_id()
-        return User.query.get(curr_id) if curr_id is not None else None
+        return User.get_by_id(curr_id) if curr_id is not None else None
 
     def current_group(self) -> UserGroup:
         return self.current_user.get_personal_group()

@@ -13,12 +13,12 @@ def get_current_user():
 def get_current_user_object() -> User:
     if not hasattr(g, 'user'):
         curr_id = get_current_user_id()
-        u = User.query.get(curr_id)
+        u = User.get_by_id(curr_id)
         if u is None:
             if curr_id != 0:
                 curr_id = 0
                 session['user_id'] = curr_id
-                u = User.query.get(curr_id)
+                u = User.get_by_id(curr_id)
         if not u:
             raise Exception(dedent(f"""
             Database has no users; you need to re-initialize it:
@@ -43,7 +43,7 @@ def get_session_users():
 
 
 def get_session_users_objs():
-    return [User.query.get(u['id']) for u in get_session_users()]
+    return [User.get_by_id(u['id']) for u in get_session_users()]
 
 
 def get_session_users_ids():
@@ -51,7 +51,7 @@ def get_session_users_ids():
 
 
 def get_session_usergroup_ids():
-    return [User.query.get(u['id']).get_personal_group().id for u in get_session_users()]
+    return [User.get_by_id(u['id']).get_personal_group().id for u in get_session_users()]
 
 
 def get_current_user_id():

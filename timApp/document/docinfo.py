@@ -3,6 +3,8 @@ from __future__ import annotations
 from itertools import accumulate
 from typing import List, Iterable, Generator, Tuple, Optional, TYPE_CHECKING
 
+from sqlalchemy.orm import joinedload
+
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
@@ -145,7 +147,10 @@ class DocInfo(Item):
         for a in self.aliases:
             items.update(a.parents_to_root())
         items.add(self)
-        q = Notification.query.filter(Notification.doc_id.in_([f.id for f in items]))
+        from timApp.user.user import User
+        q = (Notification.query
+             .options(joinedload(Notification.user).joinedload(User.groups))
+             .filter(Notification.doc_id.in_([f.id for f in items])))
         q = q.filter(condition)
         return q.all()
 

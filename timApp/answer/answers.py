@@ -5,9 +5,8 @@ from datetime import datetime
 from operator import itemgetter
 from typing import List, Optional, Dict, Tuple, Iterable, Any
 
-from flask import current_app
 from sqlalchemy import func, Numeric, Float, true
-from sqlalchemy.orm import selectinload, defaultload
+from sqlalchemy.orm import selectinload, defaultload, Query
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
@@ -202,7 +201,7 @@ def get_all_answers(task_ids: List[TaskId],
     return result
 
 
-def get_all_answer_initial_query(period_from, period_to, task_ids, valid):
+def get_all_answer_initial_query(period_from, period_to, task_ids, valid) -> Query:
     q = (Answer
          .query
          .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))

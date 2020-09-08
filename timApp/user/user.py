@@ -1,10 +1,9 @@
 import json
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import List, Tuple
 from typing import Optional, Union, Set
-
-from dataclasses import dataclass, field
 
 from sqlalchemy import func
 from sqlalchemy.orm import Query, joinedload
@@ -159,6 +158,10 @@ def last_name_to_last(full_name: Optional[str]):
 deleted_user_suffix = '_deleted'
 
 
+def user_query_with_joined_groups() -> Query:
+    return User.query.options(joinedload(User.groups))
+
+
 class User(db.Model, TimeStampMixin, SCIMEntity):
     """A user account.
 
@@ -231,7 +234,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,
         back_populates='users',
-        lazy='joined',
+        lazy='select',
     )
     groups_dyn = db.relationship(
         UserGroup,
@@ -342,21 +345,21 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_by_name(name: str) -> Optional['User']:
-        return User.query.filter_by(name=name).first()
+        return user_query_with_joined_groups().filter_by(name=name).first()
 
     @staticmethod
     def get_by_id(uid: int) -> Optional['User']:
-        return User.query.get(uid)
+        return user_query_with_joined_groups().get(uid)
 
     @staticmethod
     def get_by_email(email: str) -> Optional['User']:
         if email is None:
             raise Exception('Tried to find an user by null email')
-        return User.query.filter_by(email=email).first()
+        return user_query_with_joined_groups().filter_by(email=email).first()
 
     @staticmethod
     def get_by_email_case_insensitive_or_username(email_or_username: str) -> List['User']:
-        users = User.query.filter(func.lower(User.email).in_([email_or_username])).all()
+        users = user_query_with_joined_groups().filter(func.lower(User.email).in_([email_or_username])).all()
         if users:
             return users
         u = User.get_by_name(email_or_username)
@@ -495,7 +498,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_anon() -> 'User':
-        return User.query.get(0)
+        return User.get_by_id(0)
 
     def update_info(
             self,
