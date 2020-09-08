@@ -61,7 +61,8 @@ import {
     columnInCache,
     el,
     joinCss,
-    PurifyData, px,
+    PurifyData,
+    px,
     runMultiFrame,
     TableArea,
     Viewport,
@@ -301,6 +302,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     private editorPosition = EditorPosition.MainData;
     private prevEditorDOMPosition: TableArea = {horizontal: -1, vertical: -1};
     private selectedCells: CellIndex[] = [];
+    private shouldRenderTable = true;
 
     // endregion
 
@@ -608,6 +610,42 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
     }
 
+    /**
+     * Begins table reset procedure. This blocks all render events that can occur during model resetting.
+     */
+    startReset() {
+        this.shouldRenderTable = false;
+    }
+
+    /**
+     * Rebuilds the whole table, invalidating all caches and fetching the latest data from the model view.
+     */
+    endReset() {
+        this.shouldRenderTable = true;
+        const clear = <T extends HTMLElement>(e?: ElementRef<T>)  => {
+            if (e) {
+                e.nativeElement.textContent = "";
+            }
+        };
+        clear(this.mainDataBody);
+        clear(this.headerIdBody);
+        clear(this.filterBody);
+        clear(this.fixedDataBody);
+        clear(this.fixedColHeaderIdBody);
+        clear(this.idBody);
+        clear(this.fixedColFilterBody);
+        this.idealColWidths = [];
+        this.idealColHeaderWidth = [];
+        this.cellValueCache = {};
+        this.scrollDiff = {horizontal: 0, vertical: 0};
+
+        // Reset all the axes, should be pretty fast
+        this.ngOnInit();
+        // Resets the whole table data, might take more time!
+        // TODO: maybe run diff between data and insert/remove items as needed? Going to be faster but much more logic.
+        this.initView();
+    }
+
     // endregion
 
     // region Initialization
@@ -647,9 +685,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     ngAfterViewInit(): void {
-        this.initTableCaches();
-        // Run table building in multiple frames to ensure layout happens so that size of elements is known
-        runMultiFrame(this.buildTable());
+        this.initView();
 
         // Scrolling can cause change detection on some cases, which slows down the table
         // Since scrolling is
@@ -672,6 +708,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 this.handleWindowResize();
             });
         });
+    }
+
+    private initView() {
+        this.initTableCaches();
+        // Run table building in multiple frames to ensure layout happens so that size of elements is known
+        runMultiFrame(this.buildTable());
     }
 
     async showTableWidthExportDialog(evt: MouseEvent) {
@@ -847,19 +889,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Virtual scrolling
 
     private updateSummaryCellSizes(): void {
-        if (this.rowAxis.visibleItems.length == 0) {
-            return;
+        let width = "5em";
+        if (this.rowAxis.visibleItems.length != 0) {
+             width = !this.modelProvider.isPreview() ? px(this.idTableCache?.getCell(this.rowAxis.visibleItems[0], 0)?.offsetWidth) : "";
         }
-        const width = !this.modelProvider.isPreview() ? this.idTableCache?.getCell(this.rowAxis.visibleItems[0], 0)?.offsetWidth : undefined;
-        const summaryTotalHeaderHeight = this.headerIdTableCache?.getRow(0).offsetHeight;
-        const filterHeaderHeight = this.filterTableCache?.getRow(0).offsetHeight;
         if (width) {
             this.summaryTable.nativeElement.querySelectorAll(".nrcolumn").forEach((e) => {
                 if (e instanceof HTMLElement) {
-                    e.style.width = px(width);
+                    e.style.width = width;
                 }
             });
         }
+        const summaryTotalHeaderHeight = this.headerIdTableCache?.getRow(0).offsetHeight;
+        const filterHeaderHeight = this.filterTableCache?.getRow(0).offsetHeight;
         if (summaryTotalHeaderHeight && filterHeaderHeight) {
             const [summaryHeader, filterHeader] = this.summaryTable.nativeElement.getElementsByTagName("tr");
             summaryHeader.style.height = px(summaryTotalHeaderHeight);
@@ -871,6 +913,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         skipIfSame?: boolean,
         updateHeader?: boolean
     }) {
+        if (!this.shouldRenderTable) {
+            return;
+        }
         const options = {
             skipIfSame: false,
             updateHeader: false,

@@ -1155,6 +1155,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
     }
 
     async forceUpdateTable() {
+        this.timTable?.dataViewComponent?.startReset();
         this.timTable?.ngOnInit();
         this.ngOnInit();
         await this.updateTable();
@@ -1162,6 +1163,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         this.timTable?.handleChangeFilter();
         this.timTable?.c();
         this.tableFetched = true;
+        this.timTable?.dataViewComponent?.endReset();
     }
 
     closeTable() {
