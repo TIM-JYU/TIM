@@ -190,7 +190,7 @@ class GiteaLib(GitLib):
                 permission = repo.get("permission", default_permission)
                 errors = self.add_collaborators(repo["name"], repo.get("owner", None), [], [credentials["username"]], permission)
                 if len(errors) != 0:
-                    return LibResponse(False, "Failed to add collaborators: " + ", ".join(errors))
+                    return LibResponse(False, "Failed to add collaborators: " + ", ".join(str(err) for err in errors))
 
         uteams = repo_settings.librarySpecific.get("userTeams", None)
         if uteams is not None:
