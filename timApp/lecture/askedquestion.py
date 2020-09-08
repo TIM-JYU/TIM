@@ -118,14 +118,17 @@ def get_asked_question(asked_id: int) -> Optional[AskedQuestion]:
 
 @contextmanager
 def user_activity_lock(user: UserType):
-    db.session.query(func.pg_advisory_lock(user.id)).all()
-    try:
-        yield
-    finally:
-        try:
-            r = db.session.query(func.pg_advisory_unlock(user.id)).scalar()
-        except InvalidRequestError:
-            db.session.rollback()
-            r = db.session.query(func.pg_advisory_unlock(user.id)).scalar()
-        if not r:
-            raise Exception(f'Failed to release lock: {user.id}')
+    db.session.query(func.pg_advisory_xact_lock(user.id)).all()
+    yield
+    return
+    # db.session.query(func.pg_advisory_lock(user.id)).all()
+    # try:
+    #     yield
+    # finally:
+    #     try:
+    #         r = db.session.query(func.pg_advisory_unlock(user.id)).scalar()
+    #     except InvalidRequestError:
+    #         db.session.rollback()
+    #         r = db.session.query(func.pg_advisory_unlock(user.id)).scalar()
+    #     if not r:
+    #         raise Exception(f'Failed to release lock: {user.id}')
