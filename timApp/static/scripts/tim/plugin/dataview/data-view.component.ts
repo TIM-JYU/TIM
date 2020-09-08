@@ -61,7 +61,8 @@ import {
     columnInCache,
     el,
     joinCss,
-    PurifyData, px,
+    PurifyData,
+    px,
     runMultiFrame,
     TableArea,
     Viewport,
@@ -847,19 +848,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Virtual scrolling
 
     private updateSummaryCellSizes(): void {
-        if (this.rowAxis.visibleItems.length == 0) {
-            return;
+        let width = "5em";
+        if (this.rowAxis.visibleItems.length != 0) {
+             width = !this.modelProvider.isPreview() ? px(this.idTableCache?.getCell(this.rowAxis.visibleItems[0], 0)?.offsetWidth) : "";
         }
-        const width = !this.modelProvider.isPreview() ? this.idTableCache?.getCell(this.rowAxis.visibleItems[0], 0)?.offsetWidth : undefined;
-        const summaryTotalHeaderHeight = this.headerIdTableCache?.getRow(0).offsetHeight;
-        const filterHeaderHeight = this.filterTableCache?.getRow(0).offsetHeight;
         if (width) {
             this.summaryTable.nativeElement.querySelectorAll(".nrcolumn").forEach((e) => {
                 if (e instanceof HTMLElement) {
-                    e.style.width = px(width);
+                    e.style.width = width;
                 }
             });
         }
+        const summaryTotalHeaderHeight = this.headerIdTableCache?.getRow(0).offsetHeight;
+        const filterHeaderHeight = this.filterTableCache?.getRow(0).offsetHeight;
         if (summaryTotalHeaderHeight && filterHeaderHeight) {
             const [summaryHeader, filterHeader] = this.summaryTable.nativeElement.getElementsByTagName("tr");
             summaryHeader.style.height = px(summaryTotalHeaderHeight);
