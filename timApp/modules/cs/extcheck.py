@@ -142,7 +142,7 @@ class ExtCheck(Language):
         files = []
 
         path = Path("/cs/masters")
-        if not path.is_dir:
+        if not path.is_dir():
             return files
 
         for dir in os.listdir("/cs/masters"):
