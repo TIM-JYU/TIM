@@ -384,6 +384,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
      * Updates all visible elements in the table
      */
     updateVisible() {
+        if (!this.shouldRenderTable) {
+            return;
+        }
         this.rowAxis.refresh();
         this.colAxis.refresh();
         this.fixedColAxis.refresh();
@@ -444,6 +447,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
      * @param order New sort order to use. This is an array of row indices in the order they should be shown to the user.
      */
     updateRowSortOrder(order: number[]): void {
+        if (!this.shouldRenderTable) {
+            return;
+        }
         this.rowAxis.itemOrder = order;
         this.rowAxis.refresh();
 
