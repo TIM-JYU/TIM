@@ -1137,10 +1137,11 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     formBehavior(): FormModeOption {
-        if (!this.isText) {
-            return FormModeOption.NoForm;
-        }
-        return getFormBehavior(this.markup.form, FormModeOption.Undecided);
+        // if (!this.isText) {
+        //    return FormModeOption.NoForm;
+        // }
+        return getFormBehavior(this.markup.form, FormModeOption.NoForm);
+        // return getFormBehavior(this.markup.form, FormModeOption.Undecided);
     }
 
     setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
