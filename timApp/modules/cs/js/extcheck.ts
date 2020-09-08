@@ -254,7 +254,7 @@ export class CustomOutputBase {
         <button (click)="hide=!hide" [ngClass]="{'collapsed-button': hide}" class="title-button {{title.classes}}">{{title.content}}<span class='caret'></span></button>
         <div *ngIf="angularContent" class="centermargin" custom-data></div>
         <ng-container *ngIf="!hide">
-            <div *ngIf="htmlContent" class="centermargin {{htmlContent.classes}}" [innerHTML]="htmlContent.content"></div>
+            <div *ngIf="htmlContent" class="centermargin {{htmlContent.classes}}" [innerHTML]="htmlContent.content | purify"></div>
             <pre *ngIf="textContent" class="centermargin {{textContent.classes}}">{{textContent.content}}</pre>
         </ng-container>`,
 })
