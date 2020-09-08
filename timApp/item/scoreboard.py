@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Dict, Optional
+from collections import OrderedDict
 
 from timApp.answer.pointsumrule import PointCountMethod
 from timApp.document.docinfo import DocInfo
@@ -32,12 +33,17 @@ def get_score_infos(
         doc_paths: List[str],
         user_ctx: UserContext,
 ) -> List[DocScoreInfo]:
-    total_table = {}
+    total_table = OrderedDict()
     u = user_ctx.logged_user
     docs = folder.get_all_documents(
         relative_paths=doc_paths,
         filter_user=u,
     )
+
+    def doc_sorter(d: DocInfo) -> int:
+        rel_path = folder.relative_path(d)
+        return doc_paths.index(rel_path)
+    docs.sort(key=doc_sorter)
 
     for d in docs:
         d.document.insert_preamble_pars()
