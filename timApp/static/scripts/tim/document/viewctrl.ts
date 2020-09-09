@@ -593,7 +593,7 @@ export class ViewCtrl implements IController {
         // form functionality
         const taskId = component.getTaskId();
         if (taskId) {
-            const name = taskId.docTask();
+            const name = taskId.docTaskField();
             this.timComponents.set(name, component);
             if (tag) {
                 const prev = this.timComponentTags.get(tag);
@@ -761,7 +761,7 @@ export class ViewCtrl implements IController {
             const fieldsToChange = new Map<string, AnswerBrowserController>();
             for (const fab of this.formAbs.entities.values()) {
                 if (!fab.isUseCurrentUser()) {
-                    fieldsToChange.set(fab.taskId, fab);
+                    fieldsToChange.set(fab.taskId.docTaskField(), fab);
                 }
             }
             this.getFormAnswersAndUpdate(fieldsToChange, this.selectedUser);
@@ -781,14 +781,26 @@ export class ViewCtrl implements IController {
         } else {
             fab.changeUserAndAnswers(user, [ans]);
         }
-        const timComps = this.getTimComponentArray(fab.taskId);
+        const timComps = this.getTimComponentArray(fab.taskId.docTaskField());
         if (timComps) {
             for (const timComp of timComps) {
                 if (timComp.isUnSaved() && !force) {
                     continue;
                 }
                 if (fab.selectedAnswer) {
-                    const parsed = JSON.parse(fab.selectedAnswer.content);
+                    const tid = fab.taskId;
+                    let parsed;
+                    if (tid.field) {
+                        if (tid.field === "points") {
+                            // We assume that the plugin is textfield/numericfield, so it understands "c".
+                            parsed = {c: fab.selectedAnswer.points};
+                        } else {
+                            // TODO grab custom field inside answer content?
+                        }
+                    } else {
+                        parsed = JSON.parse(fab.selectedAnswer.content);
+                    }
+
                     if (UnknownRecord.is(parsed)) {
                         timComp.setAnswer(parsed);
                     } else {
@@ -821,14 +833,14 @@ export class ViewCtrl implements IController {
             const fab = this.getFormAnswerBrowser(t);
             if (fab) {
                 if (!fab.isUseCurrentUser()) {
-                    formAbMap.set(fab.taskId, fab);
+                    formAbMap.set(fab.taskId.docTaskField(), fab);
                 } else {
-                    currentUserFormAbs.set(fab.taskId, fab);
+                    currentUserFormAbs.set(fab.taskId.docTaskField(), fab);
                 }
             } else {
                 const ab = this.getAnswerBrowser(t);
                 if (ab) {
-                    regularAbMap.set(ab.taskId, ab);
+                    regularAbMap.set(ab.taskId.docTaskField(), ab);
                 }
             }
         }
@@ -856,7 +868,8 @@ export class ViewCtrl implements IController {
         const answerResponse = r.result;
         if (answerResponse.data.userId == user.id) {
             for (const fab of formAnswerBrowsers.values()) {
-                const ans = answerResponse.data.answers[fab.taskId];
+                // Note: here docTask() is correct, not docTaskField().
+                const ans = answerResponse.data.answers[fab.taskId.docTask()];
                 this.handleAnswerSet(ans, fab, user, true);
             }
         }
@@ -1034,11 +1047,12 @@ export class ViewCtrl implements IController {
      * @param ab AnswerBrowserController to be registered
      */
     registerAnswerBrowser(ab: AnswerBrowserController) {
-        const timComp = this.getTimComponentByName(ab.taskId);
+        const dtf = ab.taskId.docTaskField();
+        const timComp = this.getTimComponentByName(dtf);
         if (timComp) {
             if (this.isTimComponentInFormMode(timComp)) {
-                // TODO: Should propably iterate like below in case of duplicates
-                this.formAbs.set(ab.taskId, ab);
+                // TODO: Should probably iterate like below in case of duplicates
+                this.formAbs.set(dtf, ab);
                 return;
             }
         }
@@ -1053,7 +1067,7 @@ export class ViewCtrl implements IController {
         //     }
         //     this.abs.set(ab.taskId + index, ab);
         // } else { this.abs.set(ab.taskId, ab); }
-        this.abs.set(ab.taskId, ab);
+        this.abs.set(dtf, ab);
     }
 
     getAnswerBrowser(taskId: string) {

@@ -54,6 +54,11 @@ export class TaskId {
         return `${this.docId}.${this.name}`;
     }
 
+    docTaskField() {
+        const f = this.field ? `.${this.field}` : "";
+        return `${this.docTask()}${f}`;
+    }
+
     /**
      * Tries to parse a task id. Never throws.
      */

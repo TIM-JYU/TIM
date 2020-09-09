@@ -104,6 +104,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private compiled = false;
     private viewctrl?: Require<ViewCtrl>;
     public taskId!: Binding<string, "@">;
+    public parsedTaskId?: TaskId;
     private type!: Binding<string, "@">;
     private showBrowser: boolean = false;
     public hideBrowser: boolean = false;
@@ -128,7 +129,9 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         if (this.viewctrl) {
             this.viewctrl.registerPluginLoader(this);
         }
-        if (this.isValidTaskId(this.taskId)) {
+        const r = TaskId.tryParse(this.taskId);
+        if (r.ok) {
+            this.parsedTaskId = r.result;
             // noinspection JSUnusedLocalSymbols
             const [id, name] = this.taskId.split(".");
             if (getURLParameter("task") === name) {
@@ -176,17 +179,6 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         }
     }
 
-
-    /**
-     * Returns whether the given task id is valid.
-     * A valid task id is of the form '1.taskname'.
-     * @param taskId {string} The task id to validate.
-     * @returns {boolean} True if the task id is valid, false otherwise.
-     */
-    isValidTaskId(taskId: string) {
-        return taskId && !taskId.endsWith("."); // TODO should check more accurately
-    }
-
     public pluginObject(): ITimComponent | undefined {
         if (!this.viewctrl || !this.taskId) {
             return undefined;
@@ -231,7 +223,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             this.compiled = true;
             if (this.viewctrl &&
                 (!this.viewctrl.noBrowser || this.forceBrowser) &&
-                this.isValidTaskId(this.taskId) &&
+                this.parsedTaskId &&
                 this.type !== "lazyonly" && Users.isLoggedIn()) {
                 this.showBrowser = true;
             } else {
@@ -322,7 +314,7 @@ timApp.component("timPluginLoader", {
      style="width: 1px; height: 23px;"></div>
 <answerbrowser ng-class="{'has-answers': ($ctrl.answerId && !$ctrl.hideBrowser)}"
                ng-if="$ctrl.showBrowser && !$ctrl.isPreview()"
-               task-id="$ctrl.taskId"
+               task-id="$ctrl.parsedTaskId"
                answer-id="$ctrl.answerId">
 </answerbrowser>
     `,
@@ -363,7 +355,7 @@ const DEFAULT_MARKUP_CONFIG: IAnswerBrowserMarkupSettings = {
 
 export class AnswerBrowserController extends DestroyScope implements IController {
     static $inject = ["$scope", "$element"];
-    public taskId!: Binding<string, "<">;
+    public taskId!: Binding<TaskId, "<">;
     private loading: number;
     private viewctrl!: Require<ViewCtrl>;
     private user: IUser | undefined;
@@ -606,7 +598,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.selectedAnswer || !this.user) {
             return;
         }
-        const r = await to($http.put("/savePoints/" + this.user.id + "/" + this.selectedAnswer.id,
+        const r = await to($http.put(`/savePoints/${this.user.id}/${this.selectedAnswer.id}`,
             {points: this.points}));
         this.shouldFocus = true;
         if (!r.ok) {
@@ -639,7 +631,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     setAnswerLoader(ac: AnswerLoadCallback) {
         if (this.answerLoader) {
-            console.warn(`answerListener was already set for task ${this.taskId}`);
+            console.warn(`answerListener was already set for task ${this.taskId.docTaskField()}`);
         }
         this.answerLoader = ac;
     }
@@ -919,7 +911,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async getAvailableUsers() {
         this.loading++;
-        const r = await to($http.get<IUser[]>("/getTaskUsers/" + this.taskId, {params: {group: this.viewctrl.group}}));
+        const r = await to($http.get<IUser[]>(`/getTaskUsers/${this.taskId.docTask()}`, {params: {group: this.viewctrl.group}}));
         this.loading--;
         if (!r.ok) {
             this.showError(r.result);
@@ -1016,11 +1008,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
-    private getUserOrCurrentUserForAnswers(taskId: string): IUser | undefined {
+    private getUserOrCurrentUserForAnswers(): IUser | undefined {
         let user: IUser | undefined;
         if (this.user) { user = this.user; }
         // TODO: refactor to use pluginMarkup()
-        const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
+        const c = this.viewctrl.getTimComponentByName(this.taskId.docTaskField());
         if (!c) { return user; }
         const a = c.attrsall;
         if (a?.markup?.useCurrentUser) {
@@ -1034,7 +1026,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.viewctrl || !this.taskId) {
             return undefined;
         }
-        const c = this.viewctrl.getTimComponentByName(this.taskId); // TODO: why here is no split?
+        const c = this.viewctrl.getTimComponentByName(this.taskId.docTaskField());
         if (!c) {
             return undefined;
         }
@@ -1048,7 +1040,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     public isGlobal() {
-        return this.taskId.includes("GLO_");
+        return this.taskId.name.startsWith("GLO_");
         // return this.pluginMarkup().globalField;
     }
 
@@ -1059,13 +1051,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     /* Return user answers, null = do not care */
     private async getAnswers() {
-        const user = this.getUserOrCurrentUserForAnswers(this.taskId);
+        const user = this.getUserOrCurrentUserForAnswers();
         if (!user) {
             return undefined;
         }
         this.loading++;
 
-        const r = await to($http.get<IAnswer[]>(`/getAnswers/${this.taskId}/${user.id}`, {
+        const r = await to($http.get<IAnswer[]>(`/getAnswers/${this.taskId.docTask()}/${user.id}`, {
             params: {
                 _: Date.now(),
             },
@@ -1099,25 +1091,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
         return this.taskInfo.userMin != null && this.taskInfo.userMax != null;
     }
 
-    // TODO: Delete? Possibly only plugins registered as form plugins should reset,
-    //  and that is handled by viewctrl
-    resetITimComponent() {
-        const c = this.viewctrl.getTimComponentByName(this.taskId.split(".")[1]);
-        if (c) {
-            c.resetField();
-        }
-    }
-
     async loadUserAnswersIfChanged() {
         if (this.hasUserChanged()) {
-            // noinspection JSUnusedLocalSymbols
-            const answers = await this.getAnswersAndUpdate();
-            // if (!answers || answers.length === 0) {
-            //     // if ( answers != null ) { this.resetITimComponent(); }
-            // } else {
-            //     this.loadedAnswer = {review: false, id: undefined};
-            //     this.changeAnswer();
-            // }
+            await this.getAnswersAndUpdate();
             await this.loadInfo();
         }
     }
@@ -1147,7 +1123,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         this.loading++;
-        const r = await to($http.get<ITaskInfo>("/taskinfo/" + this.taskId));
+        const r = await to($http.get<ITaskInfo>(`/taskinfo/${this.taskId.docTask()}`));
         this.loading--;
         if (!r.ok) {
             this.showError(r.result);
@@ -1173,8 +1149,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async getAllAnswers() {
         await showAllAnswers({
-            url: "/allAnswersPlain/" + this.taskId,
-            identifier: this.taskId,
+            url: `/allAnswersPlain/${this.taskId.docTask()}`,
+            identifier: this.taskId.docTask(),
             allTasks: false,
         });
     }
@@ -1251,9 +1227,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     private getTaskName() {
-        // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
-        const [id, name] = this.taskId.split(".");
-        return name;
+        return this.taskId.name;
     }
 
     // noinspection JSUnusedLocalSymbols
