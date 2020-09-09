@@ -87,6 +87,9 @@ class MMCQ extends MCQBase<null | boolean[]> {
             input: this.extract(),
         };
         const ident = this.getId();
+        if (!ident) {
+            return;
+        }
 
         const r = await to($http<{web: MMCQ["content"]}>({
             method: "PUT",
@@ -164,6 +167,9 @@ class MCQ extends MCQBase<number | null> {
             input: this.userSelection,
         };
         const ident = this.getId();
+        if (!ident) {
+            return;
+        }
 
         const r = await to($http<{web: MCQ["content"]}>({
             method: "PUT",

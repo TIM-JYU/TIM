@@ -538,6 +538,7 @@ export class ToolsBase {
 
     protected reportInputTypeErrorAndReturnDef<T>(s: unknown, def: T) {
         if (!this.useDefComplaint) { return def; }
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         this.reportError(`Found value '${s}' of type ${typeof s}, using default value ${def}`);
         return def;
     }
@@ -850,27 +851,20 @@ export class Tools extends ToolsBase {
     getDouble(fieldName: unknown, defa: unknown = 0): number {
         const f = ensureStringFieldName(fieldName);
         const def = ensureNumberDefault(defa);
-        let s = null;
-        try {
-            s = this.normalizeAndGet(f);
-            if (s === null || s === undefined) {
-                return def;
-            }
-            const st = ("" + s).replace(REDOUBLE, "");
-            if (st == "") {
-                return def;
-            }
-            let sp = st.replace(",", ".");
-            // this.println("sp1=" + sp);
-            if (sp.startsWith("e")) { sp = "1" + sp; }
-            // this.println("sp2=" + sp);
-            const r = parseFloat(sp);
-            return this.handlePossibleNaN(r, s, def);
-        } catch (e) {
-            if (!this.useDefComplaint) { return def; }
-            this.reportError(`Error: ${e}. Found value '${s}' of type ${typeof s}, using default value ${def}`);
+        const s = this.normalizeAndGet(f);
+        if (s === null || s === undefined) {
             return def;
         }
+        const st = ("" + s).replace(REDOUBLE, "");
+        if (st == "") {
+            return def;
+        }
+        let sp = st.replace(",", ".");
+        // this.println("sp1=" + sp);
+        if (sp.startsWith("e")) { sp = "1" + sp; }
+        // this.println("sp2=" + sp);
+        const r = parseFloat(sp);
+        return this.handlePossibleNaN(r, s, def);
     }
 
     getInt(fieldName: unknown, defa: unknown = 0): number {

@@ -204,7 +204,7 @@ router.put("/", async (req, res, next) => {
     const script = await isolate.compileScript(
         `
         const tools_1 = toolsjs;
-        ${runner}
+        ${runner.toString()}
         JSON.stringify(runner(JSON.parse(g)))`,
         {
             filename: "script.js",

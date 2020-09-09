@@ -37,6 +37,15 @@ const TextfieldMarkup = t.intersection([
         rows: withDefault(t.number, 1),
     }),
 ]);
+export const FieldBasicData = t.type({
+    c: t.union([t.string, t.number, t.null]),
+});
+export const FieldDataWithStyles = t.intersection([
+    FieldBasicData,
+    t.partial({
+        styles: nullable(t.record(t.string, t.string)),
+    }),
+]);
 const TextfieldAll = t.intersection([
     t.partial({}),
     t.type({
@@ -44,14 +53,7 @@ const TextfieldAll = t.intersection([
         markup: TextfieldMarkup,
         preview: t.boolean,
         state: nullable(
-            t.intersection([
-                t.type({
-                    c: t.union([t.string, t.number, t.null]),
-                }),
-                t.partial({
-                    styles: nullable(t.record(t.string, t.string)),
-                }),
-            ]),
+            FieldDataWithStyles,
         ),
     }),
 ]);

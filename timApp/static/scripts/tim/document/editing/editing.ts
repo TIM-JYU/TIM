@@ -613,9 +613,12 @@ This will delete the whole ${options.area ? "area" : "paragraph"} from the docum
                         }
                         const attrs = getRefAttrs(par);
                         const docId = attrs["ref-doc-id"];
-                        const w = window.open(`/view/${docId}#${attrs["ref-id"]}`);
-                        if (w) {
-                            w.focus();
+                        const refId = attrs["ref-id"];
+                        if (docId && refId) {
+                            const w = window.open(`/view/${docId}#${refId}`);
+                            if (w) {
+                                w.focus();
+                            }
                         }
                     },
                     desc: "Follow reference",

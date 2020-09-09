@@ -79,7 +79,7 @@ export class ParmenuHandler {
                 const parId = getParId(par) ?? "";
                 showMessageDialog(`
 <p>This paragraph is from a preamble document.
-To comment or edit this, go to the corresponding <a href="/view/${getPreambleDocId(par)}">preamble document</a>.</p>
+To comment or edit this, go to the corresponding <a href="/view/${getPreambleDocId(par)!}">preamble document</a>.</p>
 
 <p>Citation help: <code>${getCitePar(this.viewctrl.item.id, parId)}</code></p>
 `);

@@ -138,6 +138,9 @@ async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
         return;
     }
     const [id, blockId, t] = derefData;
+    if (!id || !blockId) {
+        return;
+    }
     const parData = await to($http.get<Array<{par_hash: string}>>(`/read/${id}/${blockId}`));
     if (!parData.ok) {
     } else {
@@ -266,7 +269,7 @@ export async function handleUnread(pos: EditPosition) {
     }
     const first = pos.pars.first();
     const [docid, parid] = dereferencePar(first)!;
-    const result = await to($http.put<IOkResponse & {latest?: unknown}>(`/unread/${docid}/${parid}`, {}));
+    const result = await to($http.put<IOkResponse & {latest?: unknown}>(`/unread/${docid!}/${parid!}`, {}));
     if (!result.ok) {
         return;
     }

@@ -767,8 +767,6 @@ function alignToDir(a: PinAlign, diagonalFactor: number) {
         case "center":
             alignOffset = {x: 0, y: 0};
             break;
-        default:
-            throw new Error(`Unexpected alignment: ${a}`);
     }
     return alignOffset;
 }
@@ -1694,7 +1692,7 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
             if (d.pendingImage) {
                 const r = await d.pendingImage;
                 if (r instanceof Event) {
-                    this.imageLoadError = `Failed to load image ${(r.target as Element).getAttribute("src")}`;
+                    this.imageLoadError = `Failed to load image ${(r.target as Element).getAttribute("src") ?? "(no src)"}`;
                     break;
                 }
             }

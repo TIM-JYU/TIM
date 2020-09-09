@@ -8,6 +8,7 @@ import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attri
 import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
+import {FieldBasicData} from "./textfield";
 
 const rbfieldApp = angular.module("rbfieldApp", ["ngSanitize"]);
 export const moduleDefs = [rbfieldApp];
@@ -37,7 +38,7 @@ const RbfieldAll = t.intersection([
         info: Info,
         markup: RbfieldMarkup,
         preview: t.boolean,
-        state: nullable(t.type({c: t.union([t.string, t.number, t.null])})),
+        state: nullable(FieldBasicData),
     }),
 ]);
 
@@ -239,7 +240,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
      */
     autoSave() {
         const tid = this.getTaskId();
-        if (!tid) {
+        if (!tid?.docId) {
             return;
         }
         const comps = this.vctrl.getTimComponentsByRegex(`${tid.docId}\.${this.rbname}.*`, RegexOption.DontPrependCurrentDocId);

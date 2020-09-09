@@ -8,6 +8,7 @@ import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attri
 import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
+import {FieldBasicData} from "./textfield";
 
 const cbcountfieldApp = angular.module("cbcountfieldApp", ["ngSanitize"]);
 export const moduleDefs = [cbcountfieldApp];
@@ -37,7 +38,7 @@ const CbcountfieldAll = t.intersection([
         info: Info,
         markup: CbcountfieldMarkup,
         preview: t.boolean,
-        state: nullable(t.type({c: t.union([t.string, t.number, t.null])})),
+        state: nullable(FieldBasicData),
     }),
 ]);
 

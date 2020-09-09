@@ -1585,7 +1585,7 @@ ${fhtml}
         }
 
         const taskId = this.pluginMeta.getTaskId();
-        if(this.upload && !this.markup.uploadbycode && taskId) {
+        if(this.upload && !this.markup.uploadbycode && taskId?.docId) {
             this.uploadUrl = `/pluginUpload/${taskId.docId}/${taskId.name}/`;
         }
 
@@ -2620,7 +2620,7 @@ ${fhtml}
             return;
         }
         const taskId = this.pluginMeta.getTaskId();
-        if (!taskId) {
+        if (!taskId?.docId) {
             console.log("taskId missing");
             return;
         }

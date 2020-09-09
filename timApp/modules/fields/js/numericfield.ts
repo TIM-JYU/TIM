@@ -8,6 +8,7 @@ import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attri
 import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
+import {FieldDataWithStyles} from "./textfield";
 
 const numericfieldApp = angular.module("numericfieldApp", ["ngSanitize"]);
 export const moduleDefs = [numericfieldApp];
@@ -46,14 +47,7 @@ const NumericfieldAll = t.intersection([
         markup: NumericfieldMarkup,
         preview: t.boolean,
         state: nullable(
-            t.intersection([
-                t.type({
-                    c: t.union([t.string, t.number, t.null]),
-                }),
-                t.partial({
-                    styles: nullable(t.record(t.string, t.string)),
-                }),
-            ]),
+            FieldDataWithStyles,
         ),
     }),
 ]);
@@ -74,7 +68,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private styles: {[index: string]: string} = {};
     private saveCalledExternally = false;
 
-    getDouble(s: string): number {
+    getDouble(s: string | number): number {
         if (typeof (s) === "number") {
             return s;
         }
@@ -93,7 +87,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * null is used in jsrunner scripts to specify missing value
      * @param c input to inspect
      */
-    isAllowedNull(c?: string): boolean {
+    isAllowedNull(c: string | null | number): boolean {
         return c == null || c == "";
     }
 
@@ -120,7 +114,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         } else {
             if (typeof state === "number") {
                 this.numericvalue = state.toString();
-            } else if (state !== null) {
+            } else {
                 if (this.isAllowedNull(state)) {
                     this.numericvalue = undefined;
                 } else {
@@ -183,39 +177,29 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.updateListeners(ChangeType.Saved);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setAnswer(content: { [index: string]: any }): ISetAnswerResult {
+    setAnswer(content: unknown): ISetAnswerResult {
         this.errormessage = undefined;
         let message;
         let ok = true;
         // TODO: should receiving empty answer reset to defaultnumber or clear field?
-        if (Object.keys(content).length == 0) {
+        if (!FieldDataWithStyles.is(content)) {
             this.resetField();
         } else {
-            try {
-                // eslint-disable-next-line @typescript-eslint/tslint/config
-                if (this.isAllowedNull(content.c)) {
-                    this.numericvalue = undefined;
-                } else {
-                    // eslint-disable-next-line @typescript-eslint/tslint/config
-                    const parsed = this.getDouble(content.c);
-                    if (isNaN(parsed)) {
-                        this.numericvalue = undefined;
-                        ok = false;
-                        message = "Value at \"c\" was not a valid number";
-                        this.errormessage = `Content is not a number (${content.c}); showing empty value.`;
-                    } else {
-                        this.numericvalue = parsed.toString();
-                    }
-                }
-            } catch (e) {
+            if (content.c == null || this.isAllowedNull(content.c)) {
                 this.numericvalue = undefined;
-                ok = false;
-                message = `Couldn't find related content ("c") from ${JSON.stringify(content)}`;
-                this.errormessage = message;
+            } else {
+                const parsed = this.getDouble(content.c);
+                if (isNaN(parsed)) {
+                    this.numericvalue = undefined;
+                    ok = false;
+                    message = "Value at \"c\" was not a valid number";
+                    this.errormessage = `Content is not a number (${content.c}); showing empty value.`;
+                } else {
+                    this.numericvalue = parsed.toString();
+                }
             }
-            if (!this.attrs.ignorestyles) {
-                // eslint-disable-next-line @typescript-eslint/tslint/config
+
+            if (!this.attrs.ignorestyles && content.styles) {
                 this.applyStyling(content.styles);
             }
         }
@@ -319,7 +303,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * See TODOs at textfield
      */
     applyStyling(styles: {[index: string]: string}) {
-        if (!styles || Object.keys(styles).length == 0) {
+        if (Object.keys(styles).length == 0) {
             this.styles = {};
             return;
         }

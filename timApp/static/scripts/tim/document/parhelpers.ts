@@ -252,7 +252,7 @@ export function saveCurrentScreenPar() {
     if (parId) {
         // Don't replace if the hash is going to stay the same.
         let hash = getParHash(parId);
-        if (hash == "#HELP_PAR") {
+        if (hash == "#HELP_PAR" || hash == null) {
             hash = "";
         }
         if (location.hash !== hash) {

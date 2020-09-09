@@ -201,10 +201,14 @@ export class HeaderComponent implements OnInit {
             return;
         }
         this.bookmarks = groups;
+        const mainCourseDocPath = this.getMainCourseDocPath();
+        if (!mainCourseDocPath) {
+            return;
+        }
         for (const folder of this.bookmarks) {
             if (folder.name === courseFolder) {
                 for (const bookmark of folder.items) {
-                    if (bookmark.link === `/view/${this.getMainCourseDocPath()}`) {
+                    if (bookmark.link === `/view/${mainCourseDocPath}`) {
                         this.bookmarked = true;
                         return;
                     }

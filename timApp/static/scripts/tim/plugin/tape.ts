@@ -238,11 +238,12 @@ export class CommandInstance {
             return this.command.name;
         }
 
+        // TODO: if this.parameter is undefined, what should be the default?
         if (this.command.isLabel()) {
-            return `${this.parameter}:`;
+            return `${this.parameter ?? "undefined"}:`;
         }
 
-        return `${this.command.name}(${this.parameter})`;
+        return `${this.command.name}(${this.parameter ?? "undefined"})`;
     }
 }
 

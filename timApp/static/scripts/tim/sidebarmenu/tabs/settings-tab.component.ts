@@ -316,7 +316,7 @@ export class SettingsTabComponent implements OnInit {
     }
 
     async markTranslated() {
-        await this.confirmPost($localize`:@@markAllTranslatedConfirm:This will mark all paragraphs in this document as translated. Continue?`, `/markTranslated/${this.item?.id}`);
+        await this.confirmPost($localize`:@@markAllTranslatedConfirm:This will mark all paragraphs in this document as translated. Continue?`, `/markTranslated/${this.item!.id}`);
     }
 
     private async confirmPost(message: string, url: string) {

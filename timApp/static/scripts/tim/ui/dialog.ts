@@ -112,11 +112,11 @@ export function showDialog<T extends DialogController<unknown, unknown>, Service
     } = {}): IModalInstance<T> {
     $templateCache.put("uib/template/modal/window.html", `
 <div tim-draggable-fixed
-     click="${opts.showMinimizeButton !== undefined ? opts.showMinimizeButton : true}"
+     click="${(opts.showMinimizeButton !== undefined ? opts.showMinimizeButton : true).toString()}"
      resize="true"
      save="${opts.saveKey ?? component.component}"
-     absolute="${opts.absolute ?? false}"
-     force-maximized="${opts.forceMaximized ?? false}"
+     absolute="${(opts.absolute ?? false).toString()}"
+     force-maximized="${(opts.forceMaximized ?? false).toString()}"
      style="pointer-events: auto;"
      class="modal-dialog {{size ? 'modal-' + size : ''}}">
     <div class="draggable-content modal-content" uib-modal-transclude>

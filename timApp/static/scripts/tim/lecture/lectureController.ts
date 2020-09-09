@@ -41,7 +41,8 @@ import {
     ILectureMessage,
     ILecturePerson,
     ILectureResponse,
-    ILectureSettings, INoUpdatesResponse,
+    ILectureSettings,
+    INoUpdatesResponse,
     IQuestionAsked,
     IQuestionHasAnswer,
     IQuestionResult,
@@ -212,8 +213,7 @@ export class LectureController {
         } else {
             tryToAutoJoin = false;
         }
-        const tryToJoin = lectureCode != null && lectureCode !== AUTOJOIN_CODE;
-        if (tryToJoin) {
+        if (lectureCode != null && lectureCode !== AUTOJOIN_CODE) {
             const r = await to($http<ILecture>({
                 url: "/getLectureByCode",
                 method: "GET",

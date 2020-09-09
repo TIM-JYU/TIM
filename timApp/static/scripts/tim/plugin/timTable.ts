@@ -3970,11 +3970,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getCellContents(rowIndex: number, columnIndex: number): string {
-        return `${this.cellDataMatrix[rowIndex][columnIndex].cell}`;
+        return (this.cellDataMatrix[rowIndex][columnIndex].cell ?? "null").toString();
     }
 
     getRowContents(rowIndex: number): string[] {
-        return this.cellDataMatrix[rowIndex].map((c) => `${c.cell}`);
+        return this.cellDataMatrix[rowIndex].map((c) => (c.cell ?? "null").toString());
     }
 
     setRowFilter(columnIndex: number, value: string): void {
