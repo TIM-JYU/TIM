@@ -1307,14 +1307,30 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.dataViewComponent?.updateRowSortOrder(this.permTable);
     }
 
+    private lastSortCol = -1;
+    private lastSortDir = -1;
+
+    repeatLastSort() {
+        this.doSort(this.lastSortCol, this.lastSortDir);
+    }
+
     async handleClickHeader(col: number) {
         await this.saveAndCloseSmallEditor();
-        if (this.hide.sort) { return; }
+        if (this.hide.sort) {
+            return;
+        }
         let dir = this.sortDir[col];
         if (!dir) {
             dir = -1;
         }
         dir = -dir;
+        this.doSort(col, dir);
+    }
+
+    doSort(col: number, dir: number) {
+        if (col < 0) { return; }
+        this.lastSortCol = col;
+        this.lastSortDir = dir;
         this.sortDir[col] = dir;
 
         const nl = this.sortRing.length - 1;
