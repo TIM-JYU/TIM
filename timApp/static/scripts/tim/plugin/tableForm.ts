@@ -183,7 +183,7 @@ export class TimEmailComponent {
             return;
         }
         this.emailMsg = ""; // JSON.stringify(response);
-        const url = `/multiSendEmail/${this.taskid.docTask()}`;
+        const url = `/multiSendEmail/${this.taskid.docTask().toString()}`;
         const response = await to($http.post<string[]>(url, {
             rcpt: this.emaillist.replace(/\n/g, ";"),
             subject: this.emailsubject,

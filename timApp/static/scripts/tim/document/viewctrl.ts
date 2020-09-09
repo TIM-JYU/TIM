@@ -27,7 +27,7 @@ import {IDocument} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
 import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "../plugin/attributes";
 import {TableFormComponent} from "../plugin/tableForm";
-import {TaskId} from "../plugin/taskid";
+import {DocIdDotName, TaskId} from "../plugin/taskid";
 import {TimTableComponent} from "../plugin/timTable";
 import {initCssPrint} from "../printing/cssPrint";
 import {IUser, IUserListEntry} from "../user/IUser";
@@ -495,7 +495,7 @@ export class ViewCtrl implements IController {
                     if (tid) {
                         const p = TaskId.tryParse(tid);
                         if (p.ok) {
-                            const ab = this.getAnswerBrowser(p.result.docTask());
+                            const ab = this.getAnswerBrowser(p.result.docTask().toString());
                             if (ab) {
                                 const changed = await ab.checkKeyPress(e);
 
@@ -544,8 +544,8 @@ export class ViewCtrl implements IController {
 
     // TODO: Refactor plugin interface for tableForm:
     //  - Export entire controller & keep own map vs implement ITimComponent
-    public addTableForm(controller: TableFormComponent, taskId: string) {
-        this.tableForms.set(taskId, controller);
+    public addTableForm(controller: TableFormComponent, taskId: DocIdDotName) {
+        this.tableForms.set(taskId.toString(), controller);
     }
 
     public getTableForm(taskId: string) {
@@ -562,8 +562,8 @@ export class ViewCtrl implements IController {
         this.inputChangeListeners.add(controller);
     }
 
-    public addJsRunner(runner: IJsRunner, taskId: string) {
-        this.jsRunners.set(taskId, runner);
+    public addJsRunner(runner: IJsRunner, taskId: DocIdDotName) {
+        this.jsRunners.set(taskId.toString(), runner);
     }
 
     public getJsRunner(taskId: string) {
@@ -571,8 +571,8 @@ export class ViewCtrl implements IController {
         return this.jsRunners.get(taskId);
     }
 
-    public addUserChangeListener(name: string, listener: IUserChanged) {
-        this.userChangeListeners.set(name, listener);
+    public addUserChangeListener(name: DocIdDotName, listener: IUserChanged) {
+        this.userChangeListeners.set(name.toString(), listener);
     }
 
     public addVelpCanvas(id: number, canvas: DrawCanvasComponent) {
@@ -758,10 +758,10 @@ export class ViewCtrl implements IController {
         }
 
         if (this.formAbs.getSize() > 0) {
-            const fieldsToChange = new Map<string, AnswerBrowserController>();
+            const fieldsToChange = new Map<DocIdDotName, AnswerBrowserController>();
             for (const fab of this.formAbs.entities.values()) {
                 if (!fab.isUseCurrentUser()) {
-                    fieldsToChange.set(fab.taskId.docTaskField(), fab);
+                    fieldsToChange.set(fab.taskId.docTask(), fab);
                 }
             }
             this.getFormAnswersAndUpdate(fieldsToChange, this.selectedUser);
@@ -818,9 +818,9 @@ export class ViewCtrl implements IController {
         // TODO: Change regular answerBrowser's user and force update
         // TODO: Refactor (repeated lines from changeUser)
         taskids = widenFields(taskids);
-        const formAbMap = new Map<string, AnswerBrowserController>();
+        const formAbMap = new Map<DocIdDotName, AnswerBrowserController>();
         const regularAbMap = new Map<string, AnswerBrowserController>();
-        const currentUserFormAbs = new Map<string, AnswerBrowserController>();
+        const currentUserFormAbs = new Map<DocIdDotName, AnswerBrowserController>();
         for (const t of taskids) {
             const loader = this.getPluginLoader(t);
             if (!loader) {
@@ -833,9 +833,9 @@ export class ViewCtrl implements IController {
             const fab = this.getFormAnswerBrowser(t);
             if (fab) {
                 if (!fab.isUseCurrentUser()) {
-                    formAbMap.set(fab.taskId.docTaskField(), fab);
+                    formAbMap.set(fab.taskId.docTask(), fab);
                 } else {
-                    currentUserFormAbs.set(fab.taskId.docTaskField(), fab);
+                    currentUserFormAbs.set(fab.taskId.docTask(), fab);
                 }
             } else {
                 const ab = this.getAnswerBrowser(t);
@@ -856,7 +856,7 @@ export class ViewCtrl implements IController {
         }
     }
 
-    async getFormAnswersAndUpdate(formAnswerBrowsers: Map<string, AnswerBrowserController>, user: IUser) {
+    async getFormAnswersAndUpdate(formAnswerBrowsers: Map<DocIdDotName, AnswerBrowserController>, user: IUser) {
         const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
             tasks: Array.from(formAnswerBrowsers.keys()),
             user: user.id,
@@ -869,7 +869,7 @@ export class ViewCtrl implements IController {
         if (answerResponse.data.userId == user.id) {
             for (const fab of formAnswerBrowsers.values()) {
                 // Note: here docTask() is correct, not docTaskField().
-                const ans = answerResponse.data.answers[fab.taskId.docTask()];
+                const ans = answerResponse.data.answers[fab.taskId.docTask().toString()];
                 this.handleAnswerSet(ans, fab, user, true);
             }
         }
@@ -897,7 +897,7 @@ export class ViewCtrl implements IController {
             const taskId = table.getTaskId();
             if (taskId) {
                 const tid = taskId.docTask();
-                const comptab = this.getTimComponentByName(tid);
+                const comptab = this.getTimComponentByName(tid.toString());
                 if (comptab?.isUnSaved()) {
                     continue;
                 }
@@ -1075,7 +1075,8 @@ export class ViewCtrl implements IController {
         return (this.abs.get(taskId) ?? this.formAbs.get(taskId));
     }
 
-    getAnswerBrowserAsync(taskId: string) {
+    getAnswerBrowserAsync(tid: DocIdDotName) {
+        let taskId = tid.toString();
         taskId = this.normalizeTaskId(taskId);
         const p1 = this.abs.getEntityAsync(taskId);
         const p2 = this.formAbs.getEntityAsync(taskId);

@@ -229,7 +229,7 @@ class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<ty
         $timeout(0);
         const tid = this.pluginMeta.getTaskId()!;
         const taskId = tid.docTask();
-        const ab = this.viewCtrl.getAnswerBrowser(taskId);
+        const ab = this.viewCtrl.getAnswerBrowser(taskId.toString());
         let anr = 0;
         if (ab) {
             anr = ab.findSelectedAnswerIndex();

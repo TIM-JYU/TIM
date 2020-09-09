@@ -18,6 +18,7 @@ import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plug
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
+import {DocIdDotName} from "../../../static/scripts/tim/plugin/taskid";
 
 const DragMarkup = t.intersection([
     t.partial({
@@ -54,7 +55,7 @@ interface WordObject {
     word: string;
     type?: string;
     effectAllowed: EffectAllowed;
-    taskId?: string;
+    taskId?: DocIdDotName;
 }
 
 @Component({

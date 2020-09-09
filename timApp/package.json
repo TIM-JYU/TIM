@@ -63,6 +63,8 @@
     "mathjs": "^7.0.2",
     "mobile-drag-drop": "^2.3.0-rc.2",
     "moment": "^2.27.0",
+    "monocle-ts": "^2.3.3",
+    "newtype-ts": "^0.3.4",
     "ng-file-upload": "^12.2.13",
     "ngstorage": "^0.3.11",
     "ngx-bootstrap": "^5.6.1",

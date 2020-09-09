@@ -911,7 +911,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async getAvailableUsers() {
         this.loading++;
-        const r = await to($http.get<IUser[]>(`/getTaskUsers/${this.taskId.docTask()}`, {params: {group: this.viewctrl.group}}));
+        const r = await to($http.get<IUser[]>(`/getTaskUsers/${this.taskId.docTask().toString()}`, {params: {group: this.viewctrl.group}}));
         this.loading--;
         if (!r.ok) {
             this.showError(r.result);
@@ -1057,7 +1057,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         this.loading++;
 
-        const r = await to($http.get<IAnswer[]>(`/getAnswers/${this.taskId.docTask()}/${user.id}`, {
+        const r = await to($http.get<IAnswer[]>(`/getAnswers/${this.taskId.docTask().toString()}/${user.id}`, {
             params: {
                 _: Date.now(),
             },
@@ -1123,7 +1123,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         this.loading++;
-        const r = await to($http.get<ITaskInfo>(`/taskinfo/${this.taskId.docTask()}`));
+        const r = await to($http.get<ITaskInfo>(`/taskinfo/${this.taskId.docTask().toString()}`));
         this.loading--;
         if (!r.ok) {
             this.showError(r.result);
@@ -1149,8 +1149,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async getAllAnswers() {
         await showAllAnswers({
-            url: `/allAnswersPlain/${this.taskId.docTask()}`,
-            identifier: this.taskId.docTask(),
+            url: `/allAnswersPlain/${this.taskId.docTask().toString()}`,
+            identifier: this.taskId.docTask().toString(),
             allTasks: false,
         });
     }

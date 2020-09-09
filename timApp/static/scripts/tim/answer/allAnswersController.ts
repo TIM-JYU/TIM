@@ -76,7 +76,7 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
         (async () => {
             const r = await to($http.get<{last_answer_fetch: {[index: string]: string}}>("/settings/get/last_answer_fetch"));
             if (r.ok && r.result.data.last_answer_fetch) {
-                this.lastFetch = r.result.data.last_answer_fetch[options.identifier];
+                this.lastFetch = r.result.data.last_answer_fetch[options.identifier.toString()];
                 if (!this.lastFetch) {
                     this.lastFetch = "no fetches yet";
                 }

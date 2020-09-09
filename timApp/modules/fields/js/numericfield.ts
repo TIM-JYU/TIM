@@ -406,7 +406,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             if (this.vctrl && !this.saveCalledExternally) {
                 const taskId = this.getTaskId();
                 if (taskId) {
-                    const tid = taskId.docTask();
+                    const tid = taskId.docTask().toString();
                     if (this.attrs.autoUpdateTables) {
                         this.vctrl.updateAllTables([tid]);
                     }

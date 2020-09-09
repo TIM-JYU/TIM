@@ -77,7 +77,7 @@ export class PluginMeta {
         if (i > 0) {
             url = url.substring(i);
         }
-        url += `/${this.getTaskId()!.docTask()}`;
+        url += `/${this.getTaskId()!.docTask().toString()}`;
         return url;
     }
 

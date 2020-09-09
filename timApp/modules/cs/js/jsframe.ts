@@ -404,7 +404,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         if (!tid) {
             return;
         }
-        const res = await to($http.get<unknown>(`/jsframe/userChange/${tid.docTask()}/${user.id}`));
+        const res = await to($http.get<unknown>(`/jsframe/userChange/${tid.docTask().toString()}/${user.id}`));
         this.initData = "";
         let data: { c: unknown, fielddata?: unknown } = this.getDataFromMarkup();
         if (res.result.data) { // there os no more fielddata-attribute

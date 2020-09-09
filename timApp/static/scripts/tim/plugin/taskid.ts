@@ -1,3 +1,4 @@
+import {iso, Newtype} from "newtype-ts";
 import {Result} from "../util/utils";
 
 // Note: this regex allows empty task name because we want to detect that case when parsing.
@@ -33,6 +34,11 @@ function isValidId(blockHint: string) {
     return blockHint.length === 12; // TODO more accurate check
 }
 
+// Denotes a stringified TaskId that has only docId and name parts.
+export interface DocIdDotName extends Newtype<{ readonly TaskDocIdStr: unique symbol }, string> {}
+
+const docIdDotName = iso<DocIdDotName>();
+
 /**
  * Represents a task id. Every plugin that wants to save answers needs to have one.
  */
@@ -51,12 +57,12 @@ export class TaskId {
         if (!this.docId) {
             throw new Error("Task id does not have docId");
         }
-        return `${this.docId}.${this.name}`;
+        return docIdDotName.wrap(`${this.docId}.${this.name}`);
     }
 
     docTaskField() {
         const f = this.field ? `.${this.field}` : "";
-        return `${this.docTask()}${f}`;
+        return `${this.docTask().toString()}${f}`;
     }
 
     /**

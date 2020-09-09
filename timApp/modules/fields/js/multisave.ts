@@ -263,7 +263,7 @@ export class MultisaveController
                 this.savedFields++;
                 const tid = componentsToSave[savedIndex].getTaskId();
                 if (tid) {
-                    fieldsToUpdate.push(tid.docTask());
+                    fieldsToUpdate.push(tid.docTask().toString());
                 }
             }
             savedIndex++;
@@ -317,7 +317,7 @@ export class MultisaveController
         if (!this.attrs.listener) {
             return;
         }
-        const docTask = taskId.docTask();
+        const docTask = taskId.docTask().toString();
         if (state == ChangeType.Saved) {
             if (this.unsavedTimComps.delete(docTask)) {
                 if (this.unsavedTimComps.size == 0) {

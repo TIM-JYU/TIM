@@ -95,7 +95,7 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
         if (!tid) {
             throw Error("Task id missing.");
         }
-        const dt = tid.docTask();
+        const dt = tid.docTask().toString();
         const {url, data} = prepareAnswerRequest(dt, this.pluginMeta.getAnswerUrl());
         const finaldata = {
             ...answerdata,
