@@ -89,6 +89,7 @@ module.exports = {
         ],
         "@typescript-eslint/strict-boolean-expressions": "off", // TODO enable
         "@typescript-eslint/restrict-template-expressions": "error",
+        "@typescript-eslint/no-base-to-string": "error",
         "@typescript-eslint/triple-slash-reference": "error",
         "@typescript-eslint/type-annotation-spacing": "error",
         "@typescript-eslint/unbound-method": "off",

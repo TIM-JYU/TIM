@@ -35,7 +35,9 @@ function isValidId(blockHint: string) {
 }
 
 // Denotes a stringified TaskId that has only docId and name parts.
-export interface DocIdDotName extends Newtype<{ readonly TaskDocIdStr: unique symbol }, string> {}
+export interface DocIdDotName extends Newtype<{ readonly TaskDocIdStr: unique symbol }, string> {
+    toString(): string;
+}
 
 const docIdDotName = iso<DocIdDotName>();
 

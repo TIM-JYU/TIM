@@ -243,7 +243,7 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
                 this.error.message = e;
                 return;
             }
-            this.error.message = (r.result.data).toString();
+            this.error.message = r.result.data.error;
             return;
         }
         if (!r.result.data.web) {

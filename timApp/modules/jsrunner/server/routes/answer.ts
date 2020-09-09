@@ -19,6 +19,7 @@ const router = express.Router();
 function compileProgram(code: string): string {
     try {
         const ret = parse(code);
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
         return ret.toString();
     } catch (e) {
         const err: Error = e;

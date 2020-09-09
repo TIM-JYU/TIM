@@ -3,6 +3,7 @@ import {parse} from "acorn";
 function compileProgram(code: string): string {
     // const ret = child_process.spawnSync("acorn", ["--silent"], {input: code});
     const ret = parse(code);
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     return ret.toString();
 }
 

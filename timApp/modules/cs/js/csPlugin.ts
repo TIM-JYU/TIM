@@ -1469,7 +1469,7 @@ ${fhtml}
                 this.updateExternalEditor();
             }
         } else {
-            this.fetchError = "Failed to fetch files: " + r.result.error;
+            this.fetchError = "Failed to fetch files: " + r.result.error.error;
             this.externalFiles = undefined;
         }
         this.isRunning = false;
@@ -2643,7 +2643,7 @@ ${fhtml}
             this.mdHtml = element.html();
         } else {
             const data = r.result;
-            alert("Failed to show preview: " + data.error);
+            alert("Failed to show preview: " + data.error.error);
         }
     }
 
