@@ -33,11 +33,11 @@ import {widenFields} from "../util/common";
 import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, nullable, withDefault} from "./attributes";
 import {
     CellAttrToSave,
-    CellEntity,
     CellToSave,
     ClearSort,
     colnumToLetters,
-    DataEntity, DataViewSettings, DataViewSettingsType,
+    DataEntity,
+    DataViewSettingsType,
     isPrimitiveCell,
     TimTable,
     TimTableComponent,
@@ -1191,7 +1191,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         if (keys.length == 0) {
             return;
         }
-        const replyRows: Record<string, Record<string, CellEntity>> = {};
+        const replyRows: Record<string, Record<string, string | null | Record<string, unknown>>> = {};
         const styleRows: Record<string, Record<string, string>> = {};
         const changedFields = new Set<string>();
         try {
@@ -1210,14 +1210,12 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                 }
                 const cell = this.data.userdata.cells[coord];
                 let cellContent;
-                let cellStyle = null;
+                let cellStyle: Record<string, unknown> | null = null;
                 if (!isPrimitiveCell(cell)) {
                     cellContent = cell.cell;
                     if (this.markup.saveStyles) {
-                        const cellcopy = clone(cell);
-                        delete cellcopy.cell;
-                        // cellStyle = JSON.stringify(cellcopy);
-                        cellStyle = cellcopy;
+                        cellStyle = clone(cell);
+                        delete cellStyle.cell;
                     }
                 } else {
                     cellContent = cell;

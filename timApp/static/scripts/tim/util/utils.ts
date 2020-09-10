@@ -350,26 +350,11 @@ export type Binding<T, Type extends BindingType> = T;
 export type Require<T> = Binding<T, "<">;
 
 interface ExtendedWindow extends Window {
-    visualViewport?: {
-        height: number,
-        offsetLeft: number,
-        offsetTop: number,
-        onresize: null,
-        onscroll: null,
-        pageLeft: number,
-        pageTop: number,
-        scale: number,
-        width: number,
-    };
     TouchEvent?: unknown;
 }
 
-function getVisualViewport() {
-    const w = window as ExtendedWindow;
-    if (!w.visualViewport) {
-        return undefined;
-    }
-    return w.visualViewport;
+function getVisualViewport(): VisualViewport | undefined {
+    return window.visualViewport;
 }
 
 function fixClientRectForVisualViewport(r: ClientRect | DOMRect) {

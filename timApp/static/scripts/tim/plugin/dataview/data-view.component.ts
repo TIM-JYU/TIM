@@ -1479,15 +1479,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private startCellPurifying(): void {
         if (typeof Worker !== "undefined") {
-            // Currently worker-plugin 4.x triggers the following warning
-            // WARNING in new Worker() will only be bundled if passed a String.
-            //
-            // Because of ACE editor using workers without {type: "module"}
-            // This was fixed in worker-plugin 5.0.0
-            // https://github.com/GoogleChromeLabs/worker-plugin/pull/73
-            // And it's going to be part of Angular 10.1:
-            // https://github.com/angular/angular-cli/commit/75897676b33105cb42eee005f4c441061c981540
-            // TODO: Remove this comment after upgrade to Angular 10.1
             const worker = new Worker("./table-purify.worker", {type: "module"});
             worker.onmessage = ({data}: { data: PurifyData }) => {
                 this.cellValueCache[data.row] = data.data;
