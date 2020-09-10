@@ -73,6 +73,7 @@ lint:
   script:
   - cd timApp
   - npm install --unsafe-perm
+  - npm run checkformat
   - npm run lint
   - cd modules/jsrunner/server
   - npm install --unsafe-perm
