@@ -1,8 +1,8 @@
 diff --git a/node_modules/@types/angular/jqlite.d.ts b/node_modules/@types/angular/jqlite.d.ts
-index 864208b..4bbd604 100644
+index 15cd9cb..4bbd604 100644
 --- a/node_modules/@types/angular/jqlite.d.ts
 +++ b/node_modules/@types/angular/jqlite.d.ts
-@@ -26,812 +26,4 @@
+@@ -26,811 +26,4 @@
  // Definitions copied from https://github.com/DefinitelyTyped/DefinitelyTyped/blob/0480c5ec87fab41aa23047a02b27f0ea71aaf975/types/jquery/v2/index.d.ts
  
  interface JQLite extends JQuery {
@@ -754,7 +754,6 @@ index 864208b..4bbd604 100644
 -    pageY: number;
 -    /**
 -     * For key or mouse events, this property indicates the specific key or button that was pressed.
--     * @deprecated Use `key` for KeyEvents or `button` for MouseEvents instead.
 -     * @see {@link https://api.jquery.com/event.which/}
 -     */
 -    which: number;
