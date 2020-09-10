@@ -754,6 +754,7 @@ export class TimTableComponent
     public emptyRing: number[] = [-1, -1, -1]; // keep this and sortSymbolStyles equal length
     public sortSymbols: string[] = [" ▼", "", " ▲"];
     public sortRing: number[] = [];
+    public sortDirRing: number[] = [];
     // ["🢓", "", "🢑"];  // this small does not work in iPad/Android
     private currentHiddenRows: number[] = [];
     private rowDelta = 0;
@@ -1379,14 +1380,26 @@ export class TimTableComponent
         this.sortSymbol = [];
         this.sortSymbolStyle = [];
         this.sortRing = this.emptyRing.slice();
+        this.sortDirRing = this.emptyRing.slice();
         this.dataViewComponent?.updateRowSortOrder(this.permTable);
     }
 
-    private lastSortCol = -1;
-    private lastSortDir = -1;
+    private lastSortCol = this.emptyRing.slice();
+    private lastSortDir = this.emptyRing.slice();
 
     repeatLastSort() {
-        this.doSort(this.lastSortCol, this.lastSortDir);
+        const cols = this.lastSortCol.slice();
+        const dirs = this.lastSortDir.slice();
+        for (let i = 0; i < cols.length; i++) {
+            this.doSort(cols[i], dirs[i]);
+        }
+        this.c();
+    }
+
+    copyArray(a: number[], b: number[]) {
+        for (let i = 0; i < a.length; i++) {
+            b[i] = a[i];
+        }
     }
 
     async handleClickHeader(col: number) {
@@ -1400,14 +1413,13 @@ export class TimTableComponent
         }
         dir = -dir;
         this.doSort(col, dir);
+        this.c();
     }
 
     doSort(col: number, dir: number) {
         if (col < 0) {
             return;
         }
-        this.lastSortCol = col;
-        this.lastSortDir = dir;
         this.sortDir[col] = dir;
 
         const nl = this.sortRing.length - 1;
@@ -1418,6 +1430,7 @@ export class TimTableComponent
             if (coli < 0) {
                 // drop lefmost away
                 const last = this.sortRing.shift() ?? -1;
+                this.sortDirRing.shift();
                 if (last >= 0) {
                     this.sortDir[last] = 0;
                     this.sortSymbol[last] = "";
@@ -1425,12 +1438,16 @@ export class TimTableComponent
                 }
             } else {
                 this.sortRing.splice(coli, 1);
+                this.sortDirRing.splice(coli, 1);
             }
             this.sortRing.push(col);
+            this.sortDirRing.push(dir);
             for (let i = 0; i < this.sortRing.length; i++) {
                 const ic = this.sortRing[i];
                 this.sortSymbolStyle[ic] = this.sortSymbolStyles[i];
             }
+        } else {
+            this.sortDirRing[nl] = dir;
         }
         this.sortSymbolStyle[col] = this.sortSymbolStyles[nl];
         this.sortSymbol[col] = this.sortSymbols[dir + 1];
@@ -1442,7 +1459,10 @@ export class TimTableComponent
         }
         this.disableStartCell();
         this.dataViewComponent?.updateRowSortOrder(this.permTable);
-        this.c();
+
+        // Keep track from last sort col and dir
+        this.copyArray(this.sortRing, this.lastSortCol);
+        this.copyArray(this.sortDirRing, this.lastSortDir);
     }
 
     /**

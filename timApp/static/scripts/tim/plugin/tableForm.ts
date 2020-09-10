@@ -288,11 +288,12 @@ export class TimEmailComponent {
                         *ngIf="emailUsersButtonText && cbCount">
                     {{emailUsersButtonText}}
                 </button>
-                <ng-container *ngIf="runScripts && cbCount">
+                <ng-container *ngIf="runScripts">
                     <button class="timButton"
                             *ngFor="let s of runScripts"
+                            [hidden]="!s.startsWith('*') && !cbCount"
                             (click)="runJsRunner(s)">
-                        Run {{s}}
+                        {{runnerButton(s)}}
                     </button>
                 </ng-container>
                 <button class="timButton"
@@ -1501,11 +1502,31 @@ export class TableFormComponent
         }
     }
 
+    runnerName(s: string) {
+        if (s.length == 0) {
+            return "";
+        }
+        if (s.startsWith("*")) {
+            return s.substr(1);
+        }
+        return s;
+    }
+
+    runnerButton(s: string) {
+        const parts = s.split("=");
+        const runner = this.runnerName(parts[0]);
+        if (parts.length == 1) {
+            return "Run " + runner;
+        }
+        return parts[1];
+    }
+
     runJsRunner(runner: string) {
         const timTable = this.getTimTable();
         if (timTable == null) {
             return;
         }
+        runner = this.runnerName(runner.split("=")[0]);
         if (this.viewctrl) {
             const selUsers = timTable.getCheckedRows(0, true);
             const users = TableFormComponent.makeUserArray(
