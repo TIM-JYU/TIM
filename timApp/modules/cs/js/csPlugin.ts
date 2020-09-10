@@ -588,7 +588,6 @@ const CsMarkupOptional = t.partial({
 });
 
 const CsMarkupDefaults = t.type({
-    /* eslint-disable quote-props */
     autorun: withDefault(t.boolean, false),
     parsonsnotordermatters: withDefault(t.boolean, false),
     blind: withDefault(t.boolean, false),
@@ -633,7 +632,6 @@ const CsMarkupDefaults = t.type({
     allowMultipleFiles: withDefault(t.boolean, true),
     multipleUploadElements: withDefault(t.boolean, true),
     mayAddFiles: withDefault(t.boolean, false),
-    /* eslint-enable quote-props */
 });
 
 const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPluginMarkup]);

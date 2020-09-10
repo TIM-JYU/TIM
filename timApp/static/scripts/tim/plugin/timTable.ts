@@ -3941,7 +3941,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.data.headers = data.headers;
                 // this.data.saveAttrs.push("headers");
             }
-            // eslint-disable-next-line guard-for-in
             for (const key in data) {
                 if (key in ["matrix", "headers"]) { continue; }
                 // @ts-ignore

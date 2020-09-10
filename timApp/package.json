@@ -12,7 +12,7 @@
     "bdw": "ng build --watch --deleteOutputPath --deployUrl /js/",
     "stats": "ng build --prod --statsJson --deployUrl /js/ && npx webpack-bundle-analyzer static/scripts/build/stats.json",
     "postinstall": "patch-package",
-    "lint": "eslint --format codeframe --ext ts static/scripts/tim modules",
+    "lint": "eslint --report-unused-disable-directives --format codeframe --ext ts static/scripts/tim modules",
     "lintfix": "eslint --ext ts static/scripts/tim modules --fix",
     "extract-i18n": "ng xi18n tim && ng run tim:xliffmerge"
   },

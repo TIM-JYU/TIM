@@ -7,7 +7,7 @@
     "buildtools": "npx rollup -c",
     "buildserver": "npx rollup -c rollup.server.config.js",
     "postinstall": "npm run buildtools",
-    "lint": "eslint --format codeframe --ext ts .",
+    "lint": "eslint --report-unused-disable-directives --format codeframe --ext ts .",
     "lintfix": "eslint --format codeframe --ext ts . --fix"
   },
   "dependencies": {

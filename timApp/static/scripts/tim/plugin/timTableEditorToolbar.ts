@@ -285,7 +285,6 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
 
     private borderRect() {
         const brect = {
-            // eslint-disable-next-line quote-props
             rect: {
                 b: {style: {class: "bb"}},
                 c1b: {style: {class: "bb bl br"}},

@@ -32,7 +32,6 @@ const keywordPlaceHolder = /\|kw:.*\|/;
 enum Mode {
     // TODO: Make it so that the instructions and practice item are not presented at the same time.
     Instruction = 0,
-    // eslint-disable-next-line no-shadow
     QuestionItem = 1,
     Feedback = 2,
     EndTask = 3,
