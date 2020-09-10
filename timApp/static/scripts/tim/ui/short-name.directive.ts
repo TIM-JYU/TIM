@@ -9,7 +9,9 @@ export function isValidShortName(val: string) {
 
 @Directive({
     selector: "[timShortName]",
-    providers: [{provide: NG_VALIDATORS, useExisting: ShortNameDirective, multi: true}],
+    providers: [
+        {provide: NG_VALIDATORS, useExisting: ShortNameDirective, multi: true},
+    ],
 })
 export class ShortNameDirective implements Validator {
     validate(control: AbstractControl) {

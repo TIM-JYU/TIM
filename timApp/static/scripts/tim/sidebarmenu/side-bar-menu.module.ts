@@ -38,8 +38,12 @@ import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
         FormsModule,
         TabsModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
         TooltipModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
-        BsDropdownModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
-        CollapseModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
+        BsDropdownModule.forRoot() as ModuleWithProviders<
+            Record<string, unknown>
+        >,
+        CollapseModule.forRoot() as ModuleWithProviders<
+            Record<string, unknown>
+        >,
     ],
     entryComponents: [
         BookmarksTabComponent,
@@ -50,5 +54,4 @@ import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
         LoggedUsersTabComponent,
     ],
 })
-export class SideBarMenuModule {
-}
+export class SideBarMenuModule {}

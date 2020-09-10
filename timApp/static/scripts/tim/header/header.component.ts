@@ -6,7 +6,14 @@ import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
 import {HttpClient} from "@angular/common/http";
 import {IDocSettings} from "../document/IDocSettings";
-import {DocumentOrFolder, IFolder, isRootFolder, ITag, ITranslation, TagType} from "../item/IItem";
+import {
+    DocumentOrFolder,
+    IFolder,
+    isRootFolder,
+    ITag,
+    ITranslation,
+    TagType,
+} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {genericglobals, someglobals} from "../util/globals";
@@ -38,8 +45,8 @@ interface IItemLink {
 }
 
 @Component({
-  selector: "tim-header",
-  template: `
+    selector: "tim-header",
+    template: `
 <div *ngIf="!hideLinks && item">
     <div class="pull-right">
         <button *ngIf="!hideVars.headerDocumentActions && showAddToMyCourses()"
@@ -87,14 +94,14 @@ export class HeaderComponent implements OnInit {
     constructor(
         private bookmarkService: BookmarkService,
         private tagService: TagService,
-        private http: HttpClient,
-        ) {
-    }
+        private http: HttpClient
+    ) {}
 
     ngOnInit() {
         const g = someglobals();
         this.hideLinks = "hideLinks" in g ? g.hideLinks : false;
-        this.crumbs = "breadcrumbs" in g ? [...g.breadcrumbs].reverse() : undefined;
+        this.crumbs =
+            "breadcrumbs" in g ? [...g.breadcrumbs].reverse() : undefined;
         this.translations = "translations" in g ? g.translations : [];
         this.docSettings = "docSettings" in g ? g.docSettings : undefined;
         this.route = getViewName();
@@ -114,7 +121,10 @@ export class HeaderComponent implements OnInit {
             }
             allowedRoutes.push("lecture", "velp", "slide");
         }
-        this.itemLinks = allowedRoutes.map((r) => ({route: r, title: capitalizeFirstLetter(r)}));
+        this.itemLinks = allowedRoutes.map((r) => ({
+            route: r,
+            title: capitalizeFirstLetter(r),
+        }));
         (async () => {
             await this.checkIfBookmarked();
             void this.checkIfTaggedAsCourse();
@@ -176,13 +186,20 @@ export class HeaderComponent implements OnInit {
         if (!mainCourseDocPath) {
             return;
         }
-        const r = await this.bookmarkService.addCourse(this.http, mainCourseDocPath);
+        const r = await this.bookmarkService.addCourse(
+            this.http,
+            mainCourseDocPath
+        );
         if (!r.ok) {
             await showMessageDialog(r.result.error.error);
             return;
         }
         if (r.result.added_to_group) {
-            await to(showMessageDialog("You were successfully added to the course group."));
+            await to(
+                showMessageDialog(
+                    "You were successfully added to the course group."
+                )
+            );
         }
         await viewctrl.bookmarksCtrl?.refresh();
         this.checkIfBookmarked();

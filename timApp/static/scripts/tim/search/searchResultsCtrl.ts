@@ -7,7 +7,11 @@ import {DialogController} from "tim/ui/dialogController";
 import {to} from "tim/util/utils";
 import {ITag, TagType} from "../item/IItem";
 import {registerDialogComponent, showDialog} from "../ui/dialog";
-import {IDocSearchResult, ITagSearchResult, SearchBoxComponent} from "./search-box.component";
+import {
+    IDocSearchResult,
+    ITagSearchResult,
+    SearchBoxComponent,
+} from "./search-box.component";
 
 export interface ISearchResultDisplay {
     result: IDocSearchResult;
@@ -16,7 +20,10 @@ export interface ISearchResultDisplay {
     num_tag_results: number; // Same tag may contain the search word more than once.
 }
 
-export class SearchResultController extends DialogController<{ ctrl: SearchBoxComponent }, void> {
+export class SearchResultController extends DialogController<
+    {ctrl: SearchBoxComponent},
+    void
+> {
     static component = "timSearchResults";
     static $inject = ["$element", "$scope"] as const;
     private results: IDocSearchResult[] = [];
@@ -34,10 +41,11 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCo
     private collapsables = false; // True if there are any collapsable results.
     private searchComponent: undefined | SearchBoxComponent;
     private sortingOptions = [
-            {value: "1", name: "Sort by relevance"},
-            {value: "2", name: "Sort by title"},
-            {value: "3", name: "Sort by matches"},
-            {value: "4", name: "Sort by path"}];
+        {value: "1", name: "Sort by relevance"},
+        {value: "2", name: "Sort by title"},
+        {value: "3", name: "Sort by matches"},
+        {value: "4", name: "Sort by path"},
+    ];
 
     private orderByOption = this.sortingOptions[0];
 
@@ -72,7 +80,11 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCo
         this.tagResults = ctrl.tagResults;
         this.titleResults = ctrl.titleResults;
         this.pathResults = ctrl.pathResults;
-        this.totalResults = ctrl.titleMatchCount + ctrl.tagMatchCount + ctrl.wordMatchCount + ctrl.pathMatchCount;
+        this.totalResults =
+            ctrl.titleMatchCount +
+            ctrl.tagMatchCount +
+            ctrl.wordMatchCount +
+            ctrl.pathMatchCount;
         this.folder = ctrl.folder!;
         this.errorMessage = ctrl.resultErrorMessage;
         this.searchWord = ctrl.query;
@@ -81,7 +93,10 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCo
         if (this.totalResults > this.limitedDisplayThreshold) {
             this.limitedDisplay = true;
         }
-        if (!this.limitedDisplay && (ctrl.tagMatchCount > 0 || ctrl.wordMatchCount > 0)) {
+        if (
+            !this.limitedDisplay &&
+            (ctrl.tagMatchCount > 0 || ctrl.wordMatchCount > 0)
+        ) {
             this.collapsables = true;
         }
         this.filterResults();
@@ -107,7 +122,8 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCo
                 // If path and title result are from same doc, combine.
                 if (t.doc.id === p.doc.id) {
                     const temp = t;
-                    temp.num_title_results = t.num_title_results + p.num_title_results;
+                    temp.num_title_results =
+                        t.num_title_results + p.num_title_results;
                     titleAndPathResults.push(temp);
                     pathResultsFound = true;
                     break;
@@ -141,7 +157,7 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCo
                 num_tag_results: 0,
                 result: r,
                 tags: [],
-                };
+            };
             // Add tags to existing word search result objects.
             for (const t of this.tagResults) {
                 if (t.doc.id === r.doc.id) {
@@ -152,8 +168,11 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCo
             // Add titlematches to existing word search result objects.
             for (const t of titleAndPathResults) {
                 if (t.doc.id === r.doc.id) {
-                    newDisplayResult.result.title_results.push(...t.title_results);
-                    newDisplayResult.result.num_title_results = t.num_title_results;
+                    newDisplayResult.result.title_results.push(
+                        ...t.title_results
+                    );
+                    newDisplayResult.result.num_title_results =
+                        t.num_title_results;
                 }
             }
             this.displayResults.push(newDisplayResult);
@@ -249,14 +268,18 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCo
      * @param {number} orderByOption A number corresponding to different order rules.
      * @returns {any} Search result order for AngularJS elements.
      */
-    private resultOrder(orderByOption: {value: string, name: string}) {
+    private resultOrder(orderByOption: {value: string; name: string}) {
         if (orderByOption.value === "2") {
-            return (r: ISearchResultDisplay) =>  r.result.doc.title;
+            return (r: ISearchResultDisplay) => r.result.doc.title;
         }
         if (orderByOption.value === "3") {
-            return (r: ISearchResultDisplay) =>  {
+            return (r: ISearchResultDisplay) => {
                 // Negative values to get ascending order.
-                let matches =  - (r.result.num_par_results + r.num_tag_results + r.result.num_title_results);
+                let matches = -(
+                    r.result.num_par_results +
+                    r.num_tag_results +
+                    r.result.num_title_results
+                );
                 // Show "x or more matches" before "x matches".
                 if (r.result.incomplete) {
                     matches -= 1;
@@ -265,8 +288,12 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCo
             };
         }
         if (orderByOption.value === "1") {
-            return (r: ISearchResultDisplay) =>  {
-                let matches =  - (r.result.num_par_results + r.num_tag_results + r.result.num_title_results);
+            return (r: ISearchResultDisplay) => {
+                let matches = -(
+                    r.result.num_par_results +
+                    r.num_tag_results +
+                    r.result.num_title_results
+                );
                 // Show "x or more matches" before "x matches".
                 if (r.result.incomplete) {
                     matches -= 1;
@@ -279,15 +306,13 @@ export class SearchResultController extends DialogController<{ ctrl: SearchBoxCo
                 return matches - relevanceValue;
             };
         } else {
-            return (r: ISearchResultDisplay) =>  r.result.doc.path;
+            return (r: ISearchResultDisplay) => r.result.doc.path;
         }
     }
 }
 
-registerDialogComponent(SearchResultController,
-    {
-        template:
-            `<tim-dialog class="search-result-dialog">
+registerDialogComponent(SearchResultController, {
+    template: `<tim-dialog class="search-result-dialog">
     <dialog-header>
     </dialog-header>
     <dialog-body>
@@ -345,11 +370,14 @@ registerDialogComponent(SearchResultController,
     </dialog-footer>
 </tim-dialog>
 `,
-    });
+});
 
 export function showSearchResultDialog(r: SearchBoxComponent) {
-    void to(showDialog(
-        SearchResultController,
-        {ctrl: () => r},
-        {showMinimizeButton: false}).result);
+    void to(
+        showDialog(
+            SearchResultController,
+            {ctrl: () => r},
+            {showMinimizeButton: false}
+        ).result
+    );
 }

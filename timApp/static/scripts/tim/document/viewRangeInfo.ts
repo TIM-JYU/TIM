@@ -70,7 +70,7 @@ export function partitionDocument(b: number, e: number, loadPreamble: boolean) {
     params.set("b", b.toString());
     params.set("e", e.toString());
     params.set("preamble", loadPreamble.toString());
-    params.delete("size");  // to prevent collision between e and size
+    params.delete("size"); // to prevent collision between e and size
     setURLSearchParams(params);
 }
 
@@ -110,7 +110,11 @@ export function getPieceSize() {
  * @param index Begin (or end, if fetching previous range) index.
  * @param forwards True if next piece, false if previous.
  */
-export async function getViewRange(docId: number, index: number, forwards: boolean) {
+export async function getViewRange(
+    docId: number,
+    index: number,
+    forwards: boolean
+) {
     if (!index) {
         index = 0;
     }
@@ -118,7 +122,9 @@ export async function getViewRange(docId: number, index: number, forwards: boole
     if (!forwards) {
         forwardsInt = 0;
     }
-    const r = await to($http.get<IViewRange>(`/viewrange/get/${docId}/${index}/${forwardsInt}`));
+    const r = await to(
+        $http.get<IViewRange>(`/viewrange/get/${docId}/${index}/${forwardsInt}`)
+    );
     if (!r.ok) {
         return undefined;
     } else {
@@ -131,8 +137,13 @@ export async function getViewRange(docId: number, index: number, forwards: boole
  * @param docId
  * @param headerId
  */
-export async function getViewRangeWithHeaderId(docId: number, headerId: string) {
-    const r = await to($http.get<IViewRange>(`/viewrange/getWithHeaderId/${docId}/${headerId}`));
+export async function getViewRangeWithHeaderId(
+    docId: number,
+    headerId: string
+) {
+    const r = await to(
+        $http.get<IViewRange>(`/viewrange/getWithHeaderId/${docId}/${headerId}`)
+    );
     if (!r.ok) {
         return undefined;
     } else {
@@ -168,7 +179,9 @@ export function getCurrentViewRange() {
     const pieceSize = getPieceSize();
     let name = "Current";
     const params = getCurrentPartitionURLParams();
-    if (params && !params.get("e")) { name = "Only"; }
+    if (params && !params.get("e")) {
+        name = "Only";
+    }
     if (viewRange && pieceSize) {
         return {
             ...viewRange,
@@ -197,7 +210,9 @@ export class ViewRangeInfo {
         const ranges = documentglobals().nav_ranges;
         const current = getCurrentViewRange();
         this.isOnly = false;
-        if (current && current.name === "Only") { this.isOnly = true; }
+        if (current && current.name === "Only") {
+            this.isOnly = true;
+        }
         if (!current || !ranges || ranges.length != 4) {
             return;
         }

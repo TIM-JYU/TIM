@@ -4,11 +4,20 @@ import {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {LectureController} from "tim/lecture/lectureController";
 import {showTagDialog} from "tim/item/tagCtrl";
-import {DocumentOrFolder, IDocument, isRootFolder, redirectToItem} from "tim/item/IItem";
+import {
+    DocumentOrFolder,
+    IDocument,
+    isRootFolder,
+    redirectToItem,
+} from "tim/item/IItem";
 import {isDocumentGlobals, someglobals} from "tim/util/globals";
 import {showRelevanceEditDialog} from "tim/item/relevanceEditDialog";
 import {showTagSearchDialog} from "tim/item/tagSearchCtrl";
-import {getCurrentViewRange, IViewRange, toggleViewRange} from "tim/document/viewRangeInfo";
+import {
+    getCurrentViewRange,
+    IViewRange,
+    toggleViewRange,
+} from "tim/document/viewRangeInfo";
 import {showViewRangeEditDialog} from "tim/document/viewRangeEditDialog";
 import {getStorage, IOkResponse, to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
@@ -16,7 +25,11 @@ import {showMessageDialog} from "tim/ui/dialog";
 import {getActiveDocument} from "tim/document/activedocument";
 import {ITemplateParams, showPrintDialog} from "tim/printing/printCtrl";
 import {showCourseDialog} from "tim/document/course/courseDialogCtrl";
-import {ADMIN_GROUPNAME, IGroupWithSisuPath, TEACHERS_GROUPNAME} from "tim/user/IUser";
+import {
+    ADMIN_GROUPNAME,
+    IGroupWithSisuPath,
+    TEACHERS_GROUPNAME,
+} from "tim/user/IUser";
 import {IDocSettings} from "tim/document/IDocSettings";
 import {IRelevanceResponse} from "tim/item/relevanceEdit";
 import {showMergePdfDialog} from "tim/document/minutes/mergePdfCtrl";
@@ -225,8 +238,12 @@ export class SettingsTabComponent implements OnInit {
     constructor(private http: HttpClient) {
         const globals = someglobals();
         this.item = globals.curr_item;
-        this.docSettings = isDocumentGlobals(globals) ? globals.docSettings : undefined;
-        this.documentMemoMinutes = isDocumentGlobals(globals) ? globals.memoMinutes : undefined;
+        this.docSettings = isDocumentGlobals(globals)
+            ? globals.docSettings
+            : undefined;
+        this.documentMemoMinutes = isDocumentGlobals(globals)
+            ? globals.memoMinutes
+            : undefined;
         if (isDocumentGlobals(globals) && globals.linked_groups) {
             this.updateLinkedGroups(globals.linked_groups);
         }
@@ -235,7 +252,8 @@ export class SettingsTabComponent implements OnInit {
     ngOnInit(): void {
         void this.getCurrentRelevance();
         if (this.item) {
-            this.showFolderSettings = this.users.isLoggedIn() && this.item.isFolder;
+            this.showFolderSettings =
+                this.users.isLoggedIn() && this.item.isFolder;
         }
         if (!this.item?.isFolder) {
             this.loadViewRangeSettings();
@@ -293,9 +311,13 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        const r = await to2(this.http.put(`/read/${this.item.id}`, {}).toPromise());
+        const r = await to2(
+            this.http.put(`/read/${this.item.id}`, {}).toPromise()
+        );
         if (!r.ok) {
-            await showMessageDialog($localize`:@@markAllReadFail:Could not mark the document as read.`);
+            await showMessageDialog(
+                $localize`:@@markAllReadFail:Could not mark the document as read.`
+            );
             return;
         }
         const doc = getActiveDocument();
@@ -307,16 +329,25 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        const r = await to2(this.http.get<number>(`/read/${this.item.id}/groupCount`).toPromise());
+        const r = await to2(
+            this.http
+                .get<number>(`/read/${this.item.id}/groupCount`)
+                .toPromise()
+        );
         let message = $localize`:@@markAllUnreadConfirm:This document is in exam mode. Marking document unread will remove read marks from all users! Continue?`;
         if (r.ok) {
-            message += "\n" + $localize`:@@markAllUnreadAffectedCount:This will affect ${r.result}:INTERPOLATION: users in total.`;
+            message +=
+                "\n" +
+                $localize`:@@markAllUnreadAffectedCount:This will affect ${r.result}:INTERPOLATION: users in total.`;
         }
         await this.confirmPost(message, `/markAllUnread/${this.item.id}`);
     }
 
     async markTranslated() {
-        await this.confirmPost($localize`:@@markAllTranslatedConfirm:This will mark all paragraphs in this document as translated. Continue?`, `/markTranslated/${this.item!.id}`);
+        await this.confirmPost(
+            $localize`:@@markAllTranslatedConfirm:This will mark all paragraphs in this document as translated. Continue?`,
+            `/markTranslated/${this.item!.id}`
+        );
     }
 
     private async confirmPost(message: string, url: string) {
@@ -342,7 +373,11 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        const r = await to2(this.http.get<ITemplateParams>(`/print/templates/${this.item.path}`).toPromise());
+        const r = await to2(
+            this.http
+                .get<ITemplateParams>(`/print/templates/${this.item.path}`)
+                .toPromise()
+        );
         if (r.ok) {
             await showPrintDialog({document: this.item, params: r.result});
         }
@@ -370,7 +405,13 @@ export class SettingsTabComponent implements OnInit {
             return;
         }
         await showCourseDialog(this.item);
-        const r = await to2(this.http.get<IGroupWithSisuPath[]>(`/items/linkedGroups/${this.item.id}`).toPromise());
+        const r = await to2(
+            this.http
+                .get<IGroupWithSisuPath[]>(
+                    `/items/linkedGroups/${this.item.id}`
+                )
+                .toPromise()
+        );
         if (r.ok) {
             this.updateLinkedGroups(r.result);
         } else {
@@ -398,7 +439,10 @@ export class SettingsTabComponent implements OnInit {
      * @returns {boolean}
      */
     get userBelongsToTeachersOrIsAdmin() {
-        return this.users.belongsToGroup(ADMIN_GROUPNAME) || this.users.belongsToGroup(TEACHERS_GROUPNAME);
+        return (
+            this.users.belongsToGroup(ADMIN_GROUPNAME) ||
+            this.users.belongsToGroup(TEACHERS_GROUPNAME)
+        );
     }
 
     /**
@@ -406,11 +450,18 @@ export class SettingsTabComponent implements OnInit {
      * @returns {boolean} Whether the button for creating extracts should be displayed.
      */
     get enableCreateExtractsButton() {
-        return this.docSettings?.macros?.knro && this.documentMemoMinutes == "minutes" && this.item?.rights.manage;
+        return (
+            this.docSettings?.macros?.knro &&
+            this.documentMemoMinutes == "minutes" &&
+            this.item?.rights.manage
+        );
     }
 
     createMinuteExtracts() {
-        window.location.href = window.location.href.replace("/view/", "/minutes/createMinuteExtracts/");
+        window.location.href = window.location.href.replace(
+            "/view/",
+            "/minutes/createMinuteExtracts/"
+        );
     }
 
     /**
@@ -418,7 +469,11 @@ export class SettingsTabComponent implements OnInit {
      * @returns {boolean} Whether the button for creating minutes should be displayed.
      */
     get enableCreateMinutesButton() {
-        return this.docSettings?.macros?.knro && this.documentMemoMinutes == "memo" && this.item?.rights.manage;
+        return (
+            this.docSettings?.macros?.knro &&
+            this.documentMemoMinutes == "memo" &&
+            this.item?.rights.manage
+        );
     }
 
     /**
@@ -426,20 +481,28 @@ export class SettingsTabComponent implements OnInit {
      */
     async createMinutes() {
         if (!this.item) {
-            await showMessageDialog($localize`:@@notInDocumentError:Not in a document`);
+            await showMessageDialog(
+                $localize`:@@notInDocumentError:Not in a document`
+            );
             return;
         }
 
         if (!this.docSettings?.macros?.knro) {
-            await showMessageDialog($localize`:@@noKnroMacroError:The document has no 'knro' macro defined`);
+            await showMessageDialog(
+                $localize`:@@noKnroMacroError:The document has no 'knro' macro defined`
+            );
             return;
         }
 
-        const r = await to2(this.http.post<{ path: string }>("/minutes/createMinutes", {
-            item_path: `${this.item.location}/pk/pk${this.docSettings.macros.knro}`,
-            item_title: `pk${this.docSettings.macros.knro}`,
-            copy: this.item.id,
-        }).toPromise());
+        const r = await to2(
+            this.http
+                .post<{path: string}>("/minutes/createMinutes", {
+                    item_path: `${this.item.location}/pk/pk${this.docSettings.macros.knro}`,
+                    item_title: `pk${this.docSettings.macros.knro}`,
+                    copy: this.item.id,
+                })
+                .toPromise()
+        );
         if (r.ok) {
             window.location.href = `/view/${r.result.path}`;
         } else {
@@ -452,9 +515,12 @@ export class SettingsTabComponent implements OnInit {
      * @returns {boolean} Whether the document is a faculty council meeting document.
      */
     get isMinutesOrInvitation() {
-        return this.docSettings?.macros?.knro
-            && this.item?.rights.manage
-            && (this.documentMemoMinutes == "minutes" || this.documentMemoMinutes == "memo");
+        return (
+            this.docSettings?.macros?.knro &&
+            this.item?.rights.manage &&
+            (this.documentMemoMinutes == "minutes" ||
+                this.documentMemoMinutes == "memo")
+        );
     }
 
     async mergePdf() {
@@ -471,7 +537,9 @@ export class SettingsTabComponent implements OnInit {
             text: "Enter name of the usergroup",
             title: "Create group",
             validator: async (s) => {
-                const r = await to2(this.http.get<IDocument>(`/groups/create/${s}`).toPromise());
+                const r = await to2(
+                    this.http.get<IDocument>(`/groups/create/${s}`).toPromise()
+                );
                 if (r.ok) {
                     return {ok: true, result: r.result};
                 } else {
@@ -487,7 +555,13 @@ export class SettingsTabComponent implements OnInit {
      */
     private async getCurrentRelevance() {
         if (this.item && !isRootFolder(this.item)) {
-            const r = await to2(this.http.get<IRelevanceResponse>(`/items/relevance/get/${this.item.id}`).toPromise());
+            const r = await to2(
+                this.http
+                    .get<IRelevanceResponse>(
+                        `/items/relevance/get/${this.item.id}`
+                    )
+                    .toPromise()
+            );
             if (r.ok) {
                 this.currentRelevance = r.result.relevance.relevance;
             }

@@ -10,14 +10,18 @@ markAsUsed(chart);
 
 export type IStatisticsParams = IAskedQuestion;
 
-export interface IStatisticsResult {
-}
+export interface IStatisticsResult {}
 
 function getQuestionEndTime(q: IAskedQuestion) {
-    return q.asked_time.clone().add(moment.duration(q.json.json.timeLimit ?? 999999, "seconds"));
+    return q.asked_time
+        .clone()
+        .add(moment.duration(q.json.json.timeLimit ?? 999999, "seconds"));
 }
 
-export class StatisticsToQuestionController extends DialogController<{params: IStatisticsParams}, IStatisticsResult> {
+export class StatisticsToQuestionController extends DialogController<
+    {params: IStatisticsParams},
+    IStatisticsResult
+> {
     static component = "timQuestionStatistics";
     static $inject = ["$element", "$scope"] as const;
     private answers: IQuestionAnswerPlain[] = [];
@@ -39,20 +43,26 @@ export class StatisticsToQuestionController extends DialogController<{params: IS
     private async getLectureAnswers() {
         while (!this.closed) {
             const now = moment();
-            const r = await to($http.get<IQuestionAnswerPlain[]>("/getLectureAnswers", {
-                params: {
-                    after: this.lastFetch.toISOString(),
-                    asked_id: this.resolve.params.asked_id,
-                    buster: new Date().getTime(),
-                },
-            }));
+            const r = await to(
+                $http.get<IQuestionAnswerPlain[]>("/getLectureAnswers", {
+                    params: {
+                        after: this.lastFetch.toISOString(),
+                        asked_id: this.resolve.params.asked_id,
+                        buster: new Date().getTime(),
+                    },
+                })
+            );
             if (r.ok) {
                 const data = r.result.data;
                 for (const ans of data) {
                     this.answers.push(ans);
                 }
                 if (this.answers.length > 0) {
-                    this.lastFetch = this.answers[this.answers.length - 1].answered_on.clone().add(1, "ms");
+                    this.lastFetch = this.answers[
+                        this.answers.length - 1
+                    ].answered_on
+                        .clone()
+                        .add(1, "ms");
                 }
                 if (getQuestionEndTime(this.resolve.params) < now) {
                     this.ended = true;
@@ -67,9 +77,8 @@ export class StatisticsToQuestionController extends DialogController<{params: IS
     }
 }
 
-registerDialogComponent(StatisticsToQuestionController,
-    {
-        template: `
+registerDialogComponent(StatisticsToQuestionController, {
+    template: `
 <tim-dialog>
     <dialog-body>
         <div class="flex" style="height: 100%; flex-direction: column">
@@ -84,8 +93,9 @@ registerDialogComponent(StatisticsToQuestionController,
     </dialog-footer>
 </tim-dialog>
 `,
-    });
+});
 
 export async function showStatisticsDialog(p: IStatisticsParams) {
-    return await showDialog(StatisticsToQuestionController, {params: () => p}).result;
+    return await showDialog(StatisticsToQuestionController, {params: () => p})
+        .result;
 }

@@ -73,7 +73,11 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
 /**
  * The high-level operational logic behind this plugin
  */
-class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<typeof JsavAll>, typeof JsavAll> {
+class JsavController extends PluginBase<
+    t.TypeOf<typeof JsavMarkup>,
+    t.TypeOf<typeof JsavAll>,
+    typeof JsavAll
+> {
     get english() {
         return this.attrs.lang === "en";
     }
@@ -118,7 +122,7 @@ class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<ty
             this.isOpen = true;
         }
         const aa = this.attrsall;
-        this.userCode = aa.usercode ??  "";
+        this.userCode = aa.usercode ?? "";
         this.message = this.attrs.message ?? "";
     }
 
@@ -159,10 +163,11 @@ class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<ty
 
         this.console = "";
 
-        const r = await to($http<{
-            web: {error?: string, console?: string},
-        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
-        ));
+        const r = await to(
+            $http<{
+                web: {error?: string; console?: string};
+            }>({method: "PUT", url: url, data: params, timeout: defaultTimeout})
+        );
         this.isRunning = false;
 
         if (!r.ok) {
@@ -212,9 +217,9 @@ class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<ty
             this.getData(true);
             f.contentWindow.exercise.showModelanswer();
         } else {
-            this.console = this.english ?
-                "No model answer available." :
-                "Mallivastausta ei ole saatavilla.";
+            this.console = this.english
+                ? "No model answer available."
+                : "Mallivastausta ei ole saatavilla.";
         }
     }
 
@@ -238,11 +243,22 @@ class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<ty
         const userId = selectedUser.id;
         const w = this.attrs.width ?? 800;
         const h = this.attrs.height ?? 600;
-        this.jsavOutput = "<iframe id=\"jsav-iframe1\"\n" +
-            "        style=\"width:calc(" + w + "px + 2px);height:calc(" + h + "px + 2px);border: none;\"\n" +
-            "        sandbox=\"allow-scripts allow-same-origin\"\n" +
-            "        class=\"jsavFrame\"\n" +
-            'src="' + this.getHtmlUrl() + "/" + userId + "/" + anr + '"' +
+        this.jsavOutput =
+            '<iframe id="jsav-iframe1"\n' +
+            '        style="width:calc(' +
+            w +
+            "px + 2px);height:calc(" +
+            h +
+            'px + 2px);border: none;"\n' +
+            '        sandbox="allow-scripts allow-same-origin"\n' +
+            '        class="jsavFrame"\n' +
+            'src="' +
+            this.getHtmlUrl() +
+            "/" +
+            userId +
+            "/" +
+            anr +
+            '"' +
             "</iframe>";
 
         return $sce.trustAsHtml(this.jsavOutput);
@@ -252,7 +268,9 @@ class JsavController extends PluginBase<t.TypeOf<typeof JsavMarkup>, t.TypeOf<ty
         if (this.htmlUrl) {
             return this.htmlUrl;
         }
-        const url = "/iframehtml" + this.pluginMeta.getAnswerUrl().replace("/answer", "");
+        const url =
+            "/iframehtml" +
+            this.pluginMeta.getAnswerUrl().replace("/answer", "");
 
         this.htmlUrl = url;
         return url;
@@ -313,5 +331,4 @@ jsavApp.component("csJsavRunner", {
     </p>
 </div>
 `,
-
 });

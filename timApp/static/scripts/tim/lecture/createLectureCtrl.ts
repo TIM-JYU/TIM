@@ -3,7 +3,11 @@ import moment from "moment";
 import {KEY_S} from "tim/util/keycodes";
 import {DialogController} from "tim/ui/dialogController";
 import {getItem, IItem} from "../item/IItem";
-import {registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {
+    registerDialogComponent,
+    showDialog,
+    showMessageDialog,
+} from "../ui/dialog";
 import {DurationChoice} from "../ui/durationPicker";
 import {$http} from "../util/ngimport";
 import {dateFormat, to} from "../util/utils";
@@ -22,7 +26,8 @@ import {ILecture, ILectureFormParams, ILectureOptions} from "./lecturetypes";
 
 function isLecture(item: unknown): item is ILecture {
     const l = item as ILecture;
-    return l.end_time !== undefined &&
+    return (
+        l.end_time !== undefined &&
         l.is_access_code !== undefined &&
         l.lecture_code !== undefined &&
         l.doc_id !== undefined &&
@@ -30,10 +35,14 @@ function isLecture(item: unknown): item is ILecture {
         l.lecture_id !== undefined &&
         l.options !== undefined &&
         l.password !== undefined &&
-        l.start_time !== undefined;
+        l.start_time !== undefined
+    );
 }
 
-export class CreateLectureCtrl extends DialogController<{params: ILectureFormParams}, ILecture> {
+export class CreateLectureCtrl extends DialogController<
+    {params: ILectureFormParams},
+    ILecture
+> {
     static component = "timCreateLecture";
     static $inject = ["$element", "$scope"] as const;
     private useDate: boolean;
@@ -59,8 +68,11 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
         this.lectureCode = "";
         this.password = "";
         this.options = {
-            max_students: 300, poll_interval: 4, poll_interval_t: 1,
-            long_poll: false, long_poll_t: false,
+            max_students: 300,
+            poll_interval: 4,
+            poll_interval_t: 1,
+            long_poll: false,
+            long_poll_t: false,
         };
 
         this.dateTimeOptions = {
@@ -73,7 +85,9 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
     }
 
     public getTitle() {
-        return isLecture(this.resolve.params) ? "Edit lecture" : "Create lecture";
+        return isLecture(this.resolve.params)
+            ? "Edit lecture"
+            : "Create lecture";
     }
 
     setLecture(data: ILecture) {
@@ -94,7 +108,9 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
     $onInit() {
         super.$onInit();
         (async () => {
-            this.item = isLecture(this.resolve.params) ? (await getItem(this.resolve.params.doc_id)) : this.resolve.params;
+            this.item = isLecture(this.resolve.params)
+                ? await getItem(this.resolve.params.doc_id)
+                : this.resolve.params;
             if (isLecture(this.resolve.params)) {
                 this.setLecture(this.resolve.params);
             }
@@ -116,14 +132,20 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
         if (!this.item) {
             return "";
         }
-        return `${location.protocol}//${encodeURIComponent(location.host)}/lecture/${this.item.path}?lecture=${encodeURIComponent(this.lectureCode)}`;
+        return `${location.protocol}//${encodeURIComponent(
+            location.host
+        )}/lecture/${this.item.path}?lecture=${encodeURIComponent(
+            this.lectureCode
+        )}`;
     }
 
     getAutoJoinLink() {
         if (!this.item) {
             return "";
         }
-        return `${location.protocol}//${encodeURIComponent(location.host)}/lecture/${this.item.path}?lecture=autojoin`;
+        return `${location.protocol}//${encodeURIComponent(
+            location.host
+        )}/lecture/${this.item.path}?lecture=autojoin`;
     }
 
     /**
@@ -167,11 +189,17 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
         if (this.useDate) {
             return this.endTime;
         } else {
-            if (this.startTime == null || this.durationAmount == null || this.durationType == null) {
+            if (
+                this.startTime == null ||
+                this.durationAmount == null ||
+                this.durationType == null
+            ) {
                 return undefined;
             }
-            return moment(this.startTime)
-                .add(this.durationAmount, this.durationType);
+            return moment(this.startTime).add(
+                this.durationAmount,
+                this.durationType
+            );
         }
     }
 
@@ -188,7 +216,9 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
     }
 
     endingBeforeNow() {
-        return this.getEndTime() != null && moment().diff(this.getEndTime()) >= 0;
+        return (
+            this.getEndTime() != null && moment().diff(this.getEndTime()) >= 0
+        );
     }
 
     /**
@@ -223,8 +253,9 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
             options: this.options,
         };
         this.submittingLecture = true;
-        const r = await
-            to($http.post<ILecture>("/createLecture", lectureParams));
+        const r = await to(
+            $http.post<ILecture>("/createLecture", lectureParams)
+        );
         this.submittingLecture = false;
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
@@ -241,11 +272,15 @@ export class CreateLectureCtrl extends DialogController<{params: ILectureFormPar
     }
 }
 
-registerDialogComponent(CreateLectureCtrl,
+registerDialogComponent(
+    CreateLectureCtrl,
     {templateUrl: "/static/templates/start_lecture.html"},
-    "clctrl");
+    "clctrl"
+);
 
-export async function showLectureDialog(item: IItem | ILecture): Promise<ILecture> {
+export async function showLectureDialog(
+    item: IItem | ILecture
+): Promise<ILecture> {
     return showDialog(CreateLectureCtrl, {
         params: () => item,
     }).result;

@@ -40,18 +40,22 @@ function AutoPageBreak() {
     pars.each((index, par) => {
         if (headersFound) {
             selectedPars.push(par);
-            if (!$(par).has("h2:only-child").length &&
+            if (
+                !$(par).has("h2:only-child").length &&
                 !$(par).has("h3:only-child").length &&
                 !$(par).has("h4:only-child").length &&
-                !$(par).has("h5:only-child").length) {
+                !$(par).has("h5:only-child").length
+            ) {
                 headersFound = 0;
                 $(selectedPars).wrapAll("<div id='noBreak'>");
             }
         } else {
-            if ($(par).has("h2:only-child").length ||
+            if (
+                $(par).has("h2:only-child").length ||
                 $(par).has("h3:only-child").length ||
                 $(par).has("h4:only-child").length ||
-                $(par).has("h5:only-child").length) {
+                $(par).has("h5:only-child").length
+            ) {
                 headersFound = 1;
                 selectedPars = [];
                 selectedPars.push(par);

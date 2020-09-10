@@ -1,8 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["options_"] }] */
-import {
-    Component,
-    Input,
-} from "@angular/core";
+import {Component, Input} from "@angular/core";
 
 import {countLines, countWords} from "../util/util";
 
@@ -44,24 +41,49 @@ export class CountBoardComponent {
     preventSave: boolean = false;
 
     count(str: string) {
-        if (!this.options_) { return; }
+        if (!this.options_) {
+            return;
+        }
         this.chars = str.length;
         this.lines = countLines(str);
         this.words = countWords(str);
         this.countError = "";
-        this.countError += this.checkCountLimits(this.options_.lines, this.lines, "lines");
-        this.countError += this.checkCountLimits(this.options_.words, this.words, "words");
-        this.countError += this.checkCountLimits(this.options_.chars, this.chars, "chars");
-        this.preventSave = !!this.options_?.preventSave && this.countError !== "";
+        this.countError += this.checkCountLimits(
+            this.options_.lines,
+            this.lines,
+            "lines"
+        );
+        this.countError += this.checkCountLimits(
+            this.options_.words,
+            this.words,
+            "words"
+        );
+        this.countError += this.checkCountLimits(
+            this.options_.chars,
+            this.chars,
+            "chars"
+        );
+        this.preventSave =
+            !!this.options_?.preventSave && this.countError !== "";
     }
 
-    checkCountLimits(limits: ICountLimit | undefined, count: number, countType: string): string {
-        if (!limits) { return ""; }
+    checkCountLimits(
+        limits: ICountLimit | undefined,
+        count: number,
+        countType: string
+    ): string {
+        if (!limits) {
+            return "";
+        }
         const tooFew = this.options_?.tooFewWord ?? "Too few";
         const tooMany = this.options_?.tooManyWord ?? "Too Many";
         const cType = limits.text ?? countType;
-        if (limits.min && count < limits.min) { return " " + tooFew + " " + cType + ", min: " + limits.min + "."; }
-        if (limits.max && count > limits.max) { return " " + tooMany + " " + cType + ", max: " + limits.max + "."; }
+        if (limits.min && count < limits.min) {
+            return " " + tooFew + " " + cType + ", min: " + limits.min + ".";
+        }
+        if (limits.max && count > limits.max) {
+            return " " + tooMany + " " + cType + ", max: " + limits.max + ".";
+        }
         return "";
     }
 

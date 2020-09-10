@@ -7,6 +7,8 @@ export const formErrorMessages: Record<string, string> = {
     // eslint-disable-next-line id-blacklist
     number: "This must be a number.",
     required: "This field is required.",
-    timLocation: "Location can only contain letters a-z, numbers, underscores, dashes and slashes.",
-    timShortName: "Short name can only contain letters a-z, numbers, underscores and dashes.",
+    timLocation:
+        "Location can only contain letters a-z, numbers, underscores, dashes and slashes.",
+    timShortName:
+        "Short name can only contain letters a-z, numbers, underscores and dashes.",
 };

@@ -52,7 +52,8 @@ export function truthTable(sentence: string) {
             // eslint-disable-next-line no-bitwise
             z.push((n >> (count - 1 - i)) & 1);
         }
-        result += z.reduce((str, binaryValue) => str + binaryValue + " ", "") + "= ";
+        result +=
+            z.reduce((str, binaryValue) => str + binaryValue + " ", "") + "= ";
         for (let i = 0; i < inp.length; i++) {
             try {
                 result += " " + (evaluate(inp[i], {z}) ? 1 : 0) + fills[i];

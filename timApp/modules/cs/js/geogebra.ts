@@ -58,9 +58,11 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
     contentWindow: T;
 }
 
-class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
+class GeogebraController extends PluginBase<
+    t.TypeOf<typeof GeogebraMarkup>,
     t.TypeOf<typeof GeogebraAll>,
-    typeof GeogebraAll> {
+    typeof GeogebraAll
+> {
     private ab?: AnswerBrowserController;
 
     get english() {
@@ -109,7 +111,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         super.$onInit();
         this.button = this.buttonText();
         const aa = this.attrsall;
-        this.userCode = aa.usercode ??  "";
+        this.userCode = aa.usercode ?? "";
 
         this.message = this.attrs.message ?? "";
 
@@ -127,8 +129,7 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         })();
     }
 
-    $onDestroy() {
-    }
+    $onDestroy() {}
 
     runShowTask() {
         this.isOpen = true;
@@ -170,14 +171,21 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
 
         let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
         url = url.replace("//", "/");
-        this.geogebraoutput = "<iframe id=\"jsxFrame-stack-jsxgraph-1-div1\"\n" +
-            "        class=\"showGeoGebra geogebraFrame\" \n" +
-            "        style=\"width:calc(" + w + "px + 2px);height:calc(" + h + "px + 2px);border: none;\"\n" +
-            "        sandbox=\"allow-scripts allow-same-origin\"\n" +
+        this.geogebraoutput =
+            '<iframe id="jsxFrame-stack-jsxgraph-1-div1"\n' +
+            '        class="showGeoGebra geogebraFrame" \n' +
+            '        style="width:calc(' +
+            w +
+            "px + 2px);height:calc(" +
+            h +
+            'px + 2px);border: none;"\n' +
+            '        sandbox="allow-scripts allow-same-origin"\n' +
             // "        src=\"data:text/html;base64," + datasrc + "\">\n" +
             // "src=\"https://www.geogebra.org/material/iframe/id/23587/width/1600/height/715/border/888888/rc/false/ai/false/sdz/false/smb/false/stb/false/stbh/true/ld/false/sri/false\"" +
             // 'src="'+ '/cs/reqs' + '"' +
-            'src="' + url + '"' +
+            'src="' +
+            url +
+            '"' +
             "</iframe>";
         const s = $sce.trustAsHtml(this.geogebraoutput);
         return s;
@@ -192,7 +200,9 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         if (this.htmlUrl) {
             return this.htmlUrl;
         }
-        const url = "/iframehtml" + this.pluginMeta.getAnswerUrl().replace("/answer", "");
+        const url =
+            "/iframehtml" +
+            this.pluginMeta.getAnswerUrl().replace("/answer", "");
 
         this.htmlUrl = url;
         return url;
@@ -223,10 +233,11 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
 
         this.console = "";
 
-        const r = await to($http<{
-            web: {error?: string, console?: string},
-        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
-        ));
+        const r = await to(
+            $http<{
+                web: {error?: string; console?: string};
+            }>({method: "PUT", url: url, data: params, timeout: defaultTimeout})
+        );
         this.isRunning = false;
 
         if (!r.ok) {

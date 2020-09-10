@@ -10,5 +10,7 @@ RegisterHTMLHandler(browserAdaptor());
 const tex = new TeX({packages: AllPackages});
 const asciimath = new AsciiMath({});
 const svg = new SVG();
-export const texprocessor = () => mathjax.document(document, {InputJax: tex, OutputJax: svg});
-export const asciimathprocessor = () => mathjax.document(document, {InputJax: asciimath, OutputJax: svg});
+export const texprocessor = () =>
+    mathjax.document(document, {InputJax: tex, OutputJax: svg});
+export const asciimathprocessor = () =>
+    mathjax.document(document, {InputJax: asciimath, OutputJax: svg});

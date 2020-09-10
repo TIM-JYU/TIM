@@ -12,7 +12,14 @@
 
 import ifvisible from "ifvisible.js";
 import moment from "moment";
-import {clone, getURLParameter, markAsUsed, setStorage, to, truncate} from "tim/util/utils";
+import {
+    clone,
+    getURLParameter,
+    markAsUsed,
+    setStorage,
+    to,
+    truncate,
+} from "tim/util/utils";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {ViewCtrl} from "../document/viewctrl";
 import {IModalInstance, showMessageDialog} from "../ui/dialog";
@@ -119,11 +126,16 @@ export class LectureController {
     }
 
     lectureViewOrInLecture() {
-        return this.lectureSettings.lectureMode || this.lectureSettings.inLecture;
+        return (
+            this.lectureSettings.lectureMode || this.lectureSettings.inLecture
+        );
     }
 
     static get instance() {
-        return vctrlInstance?.lectureCtrl ?? LectureController.createAndInit(vctrlInstance);
+        return (
+            vctrlInstance?.lectureCtrl ??
+            LectureController.createAndInit(vctrlInstance)
+        );
     }
 
     static createAndInit(vctrl: ViewCtrl | undefined) {
@@ -181,11 +193,16 @@ export class LectureController {
      * Makes http request to check if the current user is in lecture.
      */
     async checkIfInLecture() {
-        const response = await to($http<ILectureResponse | ILectureListResponse | IEmptyResponse>({
-            url: "/checkLecture",
-            method: "GET",
-            params: {doc_id: this.getDocIdOrNull(), buster: new Date().getTime()},
-        }));
+        const response = await to(
+            $http<ILectureResponse | ILectureListResponse | IEmptyResponse>({
+                url: "/checkLecture",
+                method: "GET",
+                params: {
+                    doc_id: this.getDocIdOrNull(),
+                    buster: new Date().getTime(),
+                },
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -204,9 +221,13 @@ export class LectureController {
                 lectureCode = answer.lectures[0].lecture_code;
             } else {
                 if (tryToAutoJoin && answer.lectures.length > 1) {
-                    showMessageDialog("Cannot autojoin a lecture because there are more than one lecture in this document going on.");
+                    showMessageDialog(
+                        "Cannot autojoin a lecture because there are more than one lecture in this document going on."
+                    );
                 } else if (tryToAutoJoin && answer.lectures.length <= 0) {
-                    showMessageDialog("There are no ongoing lectures for this document.");
+                    showMessageDialog(
+                        "There are no ongoing lectures for this document."
+                    );
                 }
                 return this.showRightView(answer);
             }
@@ -214,20 +235,26 @@ export class LectureController {
             tryToAutoJoin = false;
         }
         if (lectureCode != null && lectureCode !== AUTOJOIN_CODE) {
-            const r = await to($http<ILecture>({
-                url: "/getLectureByCode",
-                method: "GET",
-                params: {
-                    doc_id: this.viewctrl!.docId,
-                    lecture_code: lectureCode,
-                    buster: new Date().getTime(),
-                },
-            }));
+            const r = await to(
+                $http<ILecture>({
+                    url: "/getLectureByCode",
+                    method: "GET",
+                    params: {
+                        doc_id: this.viewctrl!.docId,
+                        lecture_code: lectureCode,
+                        buster: new Date().getTime(),
+                    },
+                })
+            );
             if (!r.ok) {
                 if (tryToAutoJoin) {
-                    await showMessageDialog("Could not find a lecture for this document.");
+                    await showMessageDialog(
+                        "Could not find a lecture for this document."
+                    );
                 } else {
-                    await showMessageDialog(`Lecture ${lectureCode} not found.`);
+                    await showMessageDialog(
+                        `Lecture ${lectureCode} not found.`
+                    );
                 }
                 this.showRightView(answer);
                 return;
@@ -255,7 +282,9 @@ export class LectureController {
                 if (this.lecture.lecture_code === lectureCode) {
                     changeLecture = false;
                 } else {
-                    changeLecture = window.confirm(`You are already in lecture ${this.lecture.lecture_code}. Do you want to switch to lecture ${lectureCode}?`);
+                    changeLecture = window.confirm(
+                        `You are already in lecture ${this.lecture.lecture_code}. Do you want to switch to lecture ${lectureCode}?`
+                    );
                 }
             }
         }
@@ -265,21 +294,27 @@ export class LectureController {
 
         let passwordGuess = null;
         if (codeRequired) {
-            passwordGuess = window.prompt(`Please enter a password to join the lecture '${lecture.lecture_code}':`, "") ?? undefined;
+            passwordGuess =
+                window.prompt(
+                    `Please enter a password to join the lecture '${lecture.lecture_code}':`,
+                    ""
+                ) ?? undefined;
             if (passwordGuess == null) {
                 return false;
             }
         }
-        const response = await to($http<ILectureResponse>({
-            url: "/joinLecture",
-            method: "POST",
-            params: {
-                doc_id: this.viewctrl!.docId,
-                lecture_code: lectureCode,
-                password_quess: passwordGuess,
-                buster: new Date().getTime(),
-            },
-        }));
+        const response = await to(
+            $http<ILectureResponse>({
+                url: "/joinLecture",
+                method: "POST",
+                params: {
+                    doc_id: this.viewctrl!.docId,
+                    lecture_code: lectureCode,
+                    password_quess: passwordGuess,
+                    buster: new Date().getTime(),
+                },
+            })
+        );
         if (!response.ok) {
             return false;
         }
@@ -306,7 +341,6 @@ export class LectureController {
             this.lectureSettings.useQuestions = true;
             void this.refreshWall();
             return true;
-
         }
     }
 
@@ -331,11 +365,16 @@ export class LectureController {
      * Starts lecture that is in future lecture list.
      */
     async startFutureLecture(l: ILecture) {
-        const response = await to($http<ILectureResponse>({
-            url: "/startFutureLecture",
-            method: "POST",
-            params: {doc_id: this.viewctrl!.docId, lecture_code: l.lecture_code},
-        }));
+        const response = await to(
+            $http<ILectureResponse>({
+                url: "/startFutureLecture",
+                method: "POST",
+                params: {
+                    doc_id: this.viewctrl!.docId,
+                    lecture_code: l.lecture_code,
+                },
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -418,11 +457,16 @@ export class LectureController {
         const endTimeDate = moment(lecture.end_time).add(minutes, "minutes");
         $log.info("extending lecture");
         $log.info(endTimeDate);
-        const r = await to($http({
-            url: "/extendLecture",
-            method: "POST",
-            params: {lecture_id: lecture.lecture_id, new_end_time: endTimeDate},
-        }));
+        const r = await to(
+            $http({
+                url: "/extendLecture",
+                method: "POST",
+                params: {
+                    lecture_id: lecture.lecture_id,
+                    new_end_time: endTimeDate,
+                },
+            })
+        );
         if (!r.ok) {
             return;
         }
@@ -437,11 +481,13 @@ export class LectureController {
      */
     async editLecture(lectureId: string) {
         const params = {lecture_id: lectureId};
-        const response = await to($http<ILecture>({
-            url: "/showLectureInfoGivenName",
-            method: "GET",
-            params,
-        }));
+        const response = await to(
+            $http<ILecture>({
+                url: "/showLectureInfoGivenName",
+                method: "GET",
+                params,
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -454,13 +500,17 @@ export class LectureController {
      */
     async endLecture() {
         // TODO: Change to some better confirm dialog.
-        const confirmAnswer = window.confirm("Do you really want to end this lecture?");
+        const confirmAnswer = window.confirm(
+            "Do you really want to end this lecture?"
+        );
         if (confirmAnswer) {
-            const response = await to($http<ILectureListResponse>({
-                url: "/endLecture",
-                method: "POST",
-                params: {lecture_id: this.lectureOrThrow().lecture_id},
-            }));
+            const response = await to(
+                $http<ILectureListResponse>({
+                    url: "/endLecture",
+                    method: "POST",
+                    params: {lecture_id: this.lectureOrThrow().lecture_id},
+                })
+            );
             if (!response.ok) {
                 return;
             }
@@ -474,14 +524,16 @@ export class LectureController {
      * Sends http request to leave the lecture.
      */
     async leaveLecture() {
-        const _ = await to($http<ILectureListResponse>({
-            url: "/leaveLecture",
-            method: "POST",
-            params: {
-                buster: new Date().getTime(),
-                lecture_id: this.lectureOrThrow().lecture_id,
-            },
-        }));
+        const _ = await to(
+            $http<ILectureListResponse>({
+                url: "/leaveLecture",
+                method: "POST",
+                params: {
+                    buster: new Date().getTime(),
+                    lecture_id: this.lectureOrThrow().lecture_id,
+                },
+            })
+        );
         await this.checkIfInLecture();
     }
 
@@ -513,19 +565,21 @@ export class LectureController {
     async pollOnce(lastID: number): Promise<[number, number]> {
         let buster = "" + new Date().getTime();
         buster = buster.substring(buster.length - 4);
-        const r = await to($http<IUpdateResponse>({
-            url: "/getUpdates",
-            method: "GET",
-            params: {
-                c: lastID,   //  client_message_id
-                d: this.getDocIdOrNull(), // doc_id
-                m: this.lectureSettings.useWall ? "t" : null, // get_messages
-                q: this.lectureSettings.useQuestions ? "t" : null, // get_questions
-                i: this.getCurrentQuestionId(), // current_question_id
-                p: this.getCurrentPointsId(), // current_points_id
-                b: buster,
-            },
-        }));
+        const r = await to(
+            $http<IUpdateResponse>({
+                url: "/getUpdates",
+                method: "GET",
+                params: {
+                    c: lastID, //  client_message_id
+                    d: this.getDocIdOrNull(), // doc_id
+                    m: this.lectureSettings.useWall ? "t" : null, // get_messages
+                    q: this.lectureSettings.useQuestions ? "t" : null, // get_questions
+                    i: this.getCurrentQuestionId(), // current_question_id
+                    p: this.getCurrentPointsId(), // current_points_id
+                    b: buster,
+                },
+            })
+        );
         if (!r.ok) {
             // in case of an error, wait 30 seconds before trying again
             return [30000, lastID];
@@ -543,14 +597,23 @@ export class LectureController {
             if (answer.lectureEnding !== 100) {
                 if (answer.lectureEnding === 1 && !this.lectureEnded) {
                     this.lectureEnded = true;
-                    if (this.lectureEndingDialogState !== LectureEndingDialogState.Open) {
-                        this.lectureEndingDialogState = LectureEndingDialogState.NotAnswered;
+                    if (
+                        this.lectureEndingDialogState !==
+                        LectureEndingDialogState.Open
+                    ) {
+                        this.lectureEndingDialogState =
+                            LectureEndingDialogState.NotAnswered;
                     }
                 }
-                if (this.lectureEndingDialogState === LectureEndingDialogState.NotAnswered) {
-                    this.lectureEndingDialogState = LectureEndingDialogState.Open;
+                if (
+                    this.lectureEndingDialogState ===
+                    LectureEndingDialogState.NotAnswered
+                ) {
+                    this.lectureEndingDialogState =
+                        LectureEndingDialogState.Open;
                     const result = await showLectureEnding(this.lecture);
-                    this.lectureEndingDialogState = LectureEndingDialogState.Answered;
+                    this.lectureEndingDialogState =
+                        LectureEndingDialogState.Answered;
                     switch (result.result) {
                         case "dontextend":
                             break;
@@ -574,21 +637,29 @@ export class LectureController {
                             currentQuestion.close();
                         }
                     } else {
-                        $log.error("got points_closed, but there was no currentQuestion");
+                        $log.error(
+                            "got points_closed, but there was no currentQuestion"
+                        );
                     }
-                } else if (!alreadyAnswered(answer.extra) && !questionHasAnswer(answer.extra)) {
+                } else if (
+                    !alreadyAnswered(answer.extra) &&
+                    !questionHasAnswer(answer.extra)
+                ) {
                     if (
                         // Lecturer asked a question from this window/tab. Show it of course.
-                        (this.lastQuestion && getAskedQuestionFromQA(answer.extra.data).asked_id === this.lastQuestion.asked_id)
-
+                        (this.lastQuestion &&
+                            getAskedQuestionFromQA(answer.extra.data)
+                                .asked_id === this.lastQuestion.asked_id) ||
                         // lecturer has multiple windows/tabs open in the lecture document. Show the question in all of them.
-                        || (this.isLecturer && this.viewctrl && this.viewctrl.item.id == this.lecture.doc_id)
-
+                        (this.isLecturer &&
+                            this.viewctrl &&
+                            this.viewctrl.item.id == this.lecture.doc_id) ||
                         // The question is not open in any other window/tab, so it needs to be shown in whichever got the
                         // message first. We also need to make sure we are not the lecturer because in that case the dialog
                         // might open in the wrong window (because we specifically want the one where the lecturer
                         // pressed the Ask button).
-                        || (!isOpenInAnotherTab(answer.extra.data) && !this.isLecturer)
+                        (!isOpenInAnotherTab(answer.extra.data) &&
+                            !this.isLecturer)
                     ) {
                         void this.showQuestion(answer.extra);
                     }
@@ -600,7 +671,10 @@ export class LectureController {
             });
             this.newMessagesAmount += answer.msgs.length;
             this.newMessagesAmountText = " (" + this.newMessagesAmount + ")";
-            this.wallName = "Wall - " + this.lecture.lecture_code + this.newMessagesAmountText;
+            this.wallName =
+                "Wall - " +
+                this.lecture.lecture_code +
+                this.newMessagesAmountText;
 
             let pollInterval = answer.ms;
             if (isNaN(pollInterval) || pollInterval < 1000) {
@@ -627,7 +701,9 @@ export class LectureController {
             if (currentQuestion) {
                 currentQuestion.updateEndTime(answer.question_end_time);
             } else {
-                $log.error("currentQuestion was undefined when trying to update end time");
+                $log.error(
+                    "currentQuestion was undefined when trying to update end time"
+                );
             }
         }
     }
@@ -660,21 +736,28 @@ export class LectureController {
             currentQuestion.setData(answer.data);
             return;
         } else {
-            const r = await to(showQuestionAnswerDialog({qa: answer.data, isLecturer: this.isLecturer}));
+            const r = await to(
+                showQuestionAnswerDialog({
+                    qa: answer.data,
+                    isLecturer: this.isLecturer,
+                })
+            );
             if (!r.ok) {
                 return;
             }
             result = r.result;
         }
         if (result.type === "pointsclosed") {
-            await to($http({
-                url: "/closePoints",
-                method: "PUT",
-                params: {
-                    asked_id: result.askedId,
-                    buster: new Date().getTime(),
-                },
-            }));
+            await to(
+                $http({
+                    url: "/closePoints",
+                    method: "PUT",
+                    params: {
+                        asked_id: result.askedId,
+                        buster: new Date().getTime(),
+                    },
+                })
+            );
         } else if (result.type === "closed") {
             // empty
         } else if (result.type === "reask") {
@@ -683,18 +766,29 @@ export class LectureController {
             // empty
         } else {
             // reask as new
-            this.lastQuestion = await askQuestion({parId: question.par_id, docId: question.doc_id});
+            this.lastQuestion = await askQuestion({
+                parId: question.par_id,
+                docId: question.doc_id,
+            });
         }
     }
 
     async getQuestionManually() {
-        const response = await to($http<IAlreadyAnswered | IQuestionAsked | IQuestionHasAnswer | IQuestionResult | null>({
-            url: "/getQuestionManually",
-            method: "GET",
-            params: {
-                buster: new Date().getTime(),
-            },
-        }));
+        const response = await to(
+            $http<
+                | IAlreadyAnswered
+                | IQuestionAsked
+                | IQuestionHasAnswer
+                | IQuestionResult
+                | null
+            >({
+                url: "/getQuestionManually",
+                method: "GET",
+                params: {
+                    buster: new Date().getTime(),
+                },
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -702,7 +796,9 @@ export class LectureController {
         if (!answer) {
             await showMessageDialog("No running questions.");
         } else if (alreadyAnswered(answer)) {
-            await showMessageDialog("You have already answered to the current question.");
+            await showMessageDialog(
+                "You have already answered to the current question."
+            );
         } else if (questionAsked(answer) || questionAnswerReceived(answer)) {
             this.showQuestion(answer);
         }

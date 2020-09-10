@@ -17,7 +17,6 @@ import {LoadingComponent} from "./loadingIndicator";
 import {MarkupErrorComponent} from "./markup-error.component";
 import {CloseButtonComponent} from "./close-button.component";
 
-
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [
@@ -54,10 +53,6 @@ import {CloseButtonComponent} from "./close-button.component";
         CountdownComponent,
         TimeLeftComponent,
     ],
-    imports: [
-        CommonModule,
-        FormsModule,
-    ],
+    imports: [CommonModule, FormsModule],
 })
-export class TimUtilityModule {
-}
+export class TimUtilityModule {}

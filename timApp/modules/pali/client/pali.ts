@@ -2,9 +2,22 @@
  * Defines the client-side implementation of an example plugin (a palindrome checker).
  */
 import * as t from "io-ts";
-import {GenericPluginMarkup, getTopLevelFields, nullable, withDefault} from "tim/plugin/attributes";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 import {valueDefu} from "tim/util/utils";
-import {ApplicationRef, Component, DoBootstrap, NgModule, OnDestroy, OnInit, StaticProvider} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    NgModule,
+    OnDestroy,
+    OnInit,
+    StaticProvider,
+} from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -85,7 +98,12 @@ function isPalindrome(s: string) {
     `,
     styleUrls: ["./pali.scss"],
 })
-export class PaliComponent extends AngularPluginBase<t.TypeOf<typeof PluginMarkupFields>, t.TypeOf<typeof PluginFields>, typeof PluginFields>
+export class PaliComponent
+    extends AngularPluginBase<
+        t.TypeOf<typeof PluginMarkupFields>,
+        t.TypeOf<typeof PluginFields>,
+        typeof PluginFields
+    >
     implements OnInit, OnDestroy {
     result?: string;
     error?: string;
@@ -106,10 +124,7 @@ export class PaliComponent extends AngularPluginBase<t.TypeOf<typeof PluginMarku
         super.ngOnInit();
         this.userword = this.attrsall.state?.userword ?? this.getInitWord();
         this.modelChangeSub = this.modelChanged
-            .pipe(
-                debounceTime(this.autoupdate),
-                distinctUntilChanged()
-            )
+            .pipe(debounceTime(this.autoupdate), distinctUntilChanged())
             .subscribe((newValue) => {
                 this.userword = newValue;
             });
@@ -176,7 +191,9 @@ export class PaliComponent extends AngularPluginBase<t.TypeOf<typeof PluginMarku
             },
         };
 
-        const r = await this.postAnswer<{ web: { result: string, error?: string } }>(params);
+        const r = await this.postAnswer<{
+            web: {result: string; error?: string};
+        }>(params);
         this.isRunning = false;
         if (r.ok) {
             const data = r.result;
@@ -194,19 +211,11 @@ export class PaliComponent extends AngularPluginBase<t.TypeOf<typeof PluginMarku
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
-    declarations: [
-        PaliComponent,
-    ],
-    imports: [
-        BrowserModule,
-        HttpClientModule,
-        FormsModule,
-        TimUtilityModule,
-    ],
+    declarations: [PaliComponent],
+    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
 })
 export class PaliModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
 const bootstrapFn = (extraProviders: StaticProvider[]) => {

@@ -1,8 +1,14 @@
 import {Component, NgZone} from "@angular/core";
 import {TimDefer} from "tim/util/timdefer";
 import {DialogService} from "tim/ui/angulardialog/dialog.service";
-import {DialogConstructor, IDialogInstanceEvent} from "tim/ui/angulardialog/dialog-host.directive";
-import {AngularDialogComponent, IDialogOptions} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {
+    DialogConstructor,
+    IDialogInstanceEvent,
+} from "tim/ui/angulardialog/dialog-host.directive";
+import {
+    AngularDialogComponent,
+    IDialogOptions,
+} from "tim/ui/angulardialog/angular-dialog-component.directive";
 
 let nextDialogId = 0;
 
@@ -27,7 +33,10 @@ interface IDialogEntry {
 })
 export class DialogContainerComponent {
     dialogs: IDialogEntry[] = [];
-    private loading = new Map<number, TimDefer<AngularDialogComponent<unknown, unknown>>>();
+    private loading = new Map<
+        number,
+        TimDefer<AngularDialogComponent<unknown, unknown>>
+    >();
 
     constructor(private ds: DialogService, private zone: NgZone) {
         ds.registerContainer(this);
@@ -49,7 +58,11 @@ export class DialogContainerComponent {
         this.dialogs.splice(f, 1);
     }
 
-    add<P, R>(dialog: new(...args: unknown[]) => AngularDialogComponent<P, R>, params: P, dialogOptions?: IDialogOptions): Promise<AngularDialogComponent<P, R>> {
+    add<P, R>(
+        dialog: new (...args: unknown[]) => AngularDialogComponent<P, R>,
+        params: P,
+        dialogOptions?: IDialogOptions
+    ): Promise<AngularDialogComponent<P, R>> {
         return this.zone.run(() => {
             const p = {
                 comp: dialog as DialogConstructor,
@@ -60,7 +73,10 @@ export class DialogContainerComponent {
             nextDialogId++;
             const defer = new TimDefer<AngularDialogComponent<P, R>>();
             this.dialogs.push(p);
-            this.loading.set(p.id, defer as TimDefer<AngularDialogComponent<unknown, unknown>>);
+            this.loading.set(
+                p.id,
+                defer as TimDefer<AngularDialogComponent<unknown, unknown>>
+            );
             return defer.promise;
         });
     }

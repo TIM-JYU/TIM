@@ -8,7 +8,10 @@ import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {dereferencePar, getParId, Paragraph} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
-import {IAnswerBrowserMarkupSettings, IGenericPluginMarkup} from "../plugin/attributes";
+import {
+    IAnswerBrowserMarkupSettings,
+    IGenericPluginMarkup,
+} from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
 import {IUser} from "../user/IUser";
@@ -74,7 +77,12 @@ export interface IFeedback {
 }
  */
 
-async function loadPlugin(html: string, plugin: JQuery, scope: IScope, viewctrl: ViewCtrl) {
+async function loadPlugin(
+    html: string,
+    plugin: JQuery,
+    scope: IScope,
+    viewctrl: ViewCtrl
+) {
     const elementToCompile = $(html);
     const plugintype = plugin.attr("data-plugin");
     elementToCompile.attr("plugintype", plugintype ?? null);
@@ -93,7 +101,11 @@ async function loadPlugin(html: string, plugin: JQuery, scope: IScope, viewctrl:
             elementToCompile.attr("taskid", taskidstr);
         }
     }
-    const compiled = await compileWithViewctrl(elementToCompile, scope, viewctrl);
+    const compiled = await compileWithViewctrl(
+        elementToCompile,
+        scope,
+        viewctrl
+    );
     await ParCompiler.processAllMath(compiled);
     plugin.empty().append(compiled);
     plugin.css("opacity", "1.0");
@@ -114,7 +126,11 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     public feedback?: string = "";
     public abLoad = new TimDefer<AnswerBrowserController | null>();
 
-    constructor(private element: JQLite, private scope: IScope, private transclude: ITranscludeFunction) {
+    constructor(
+        private element: JQLite,
+        private scope: IScope,
+        private transclude: ITranscludeFunction
+    ) {
         super(scope, element);
         transclude((clone, _) => {
             const c = clone!.filter("[data-plugin]");
@@ -137,13 +153,19 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
         }
         const m = this.pluginMarkup();
-        if (m?.hideBrowser || this.viewctrl?.docSettings.hideBrowser
-            || this.isUseCurrentUser() || this.isGlobal()
-            || this.isInFormMode()) {
+        if (
+            m?.hideBrowser ||
+            this.viewctrl?.docSettings.hideBrowser ||
+            this.isUseCurrentUser() ||
+            this.isGlobal() ||
+            this.isInFormMode()
+        ) {
             this.hideBrowser = true;
             this.showPlaceholder = false;
         }
-        if (m?.forceBrowser) { this.forceBrowser = true; }
+        if (m?.forceBrowser) {
+            this.forceBrowser = true;
+        }
 
         this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
     }
@@ -164,8 +186,14 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
 
     async showFeedback(txt?: string) {
         if (!this.feedbackElement) {
-            if (!txt) { return; }  // no need to create element
-            const compiled = await compileWithViewctrl($(feedbackHtml), this.scope, this.viewctrl);
+            if (!txt) {
+                return;
+            } // no need to create element
+            const compiled = await compileWithViewctrl(
+                $(feedbackHtml),
+                this.scope,
+                this.viewctrl
+            );
             this.feedbackElement = this.element.append(compiled);
             // await $timeout(0);
         }
@@ -219,10 +247,13 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             const plugin = this.getPluginElement();
 
             this.compiled = true;
-            if (this.viewctrl &&
+            if (
+                this.viewctrl &&
                 (!this.viewctrl.noBrowser || this.forceBrowser) &&
                 this.parsedTaskId &&
-                this.type !== "lazyonly" && Users.isLoggedIn()) {
+                this.type !== "lazyonly" &&
+                Users.isLoggedIn()
+            ) {
                 this.showBrowser = true;
             } else {
                 this.abLoad.resolve(null); // this plugin instance doesn't have answer browser
@@ -244,13 +275,22 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         const cns = pe[0].childNodes;
         let nonLazyHtml;
         for (const n of cns) {
-            if (n.nodeType === Node.COMMENT_NODE &&
+            if (
+                n.nodeType === Node.COMMENT_NODE &&
                 n.nodeValue &&
                 n.nodeValue.startsWith(LAZY_MARKER) &&
-                n.nodeValue.endsWith(LAZY_MARKER)) {
-                nonLazyHtml = n.nodeValue.slice(LAZY_MARKER_LENGTH, n.nodeValue.length - LAZY_MARKER_LENGTH);
+                n.nodeValue.endsWith(LAZY_MARKER)
+            ) {
+                nonLazyHtml = n.nodeValue.slice(
+                    LAZY_MARKER_LENGTH,
+                    n.nodeValue.length - LAZY_MARKER_LENGTH
+                );
                 break;
-            } else if (isElement(n) && n.tagName === "DIV" && n.className === LAZY_MARKER) {
+            } else if (
+                isElement(n) &&
+                n.tagName === "DIV" &&
+                n.className === LAZY_MARKER
+            ) {
                 nonLazyHtml = n.getAttribute("data-html");
                 break;
             }
@@ -326,7 +366,6 @@ const feedbackHtml = `
     </div>
     `;
 
-
 export interface ITaskInfo {
     userMin: number;
     userMax: number;
@@ -344,14 +383,24 @@ export interface IAnswerSaveEvent {
 type AnswerLoadCallback = (a: IAnswer) => void;
 
 export type AnswerBrowserData =
-    { saveAnswer: boolean; teacher: boolean; saveTeacher: false }
-    | { saveAnswer: boolean; teacher: boolean; saveTeacher: boolean; answer_id: number | undefined; userId: number; points: number | undefined; giveCustomPoints: boolean };
+    | {saveAnswer: boolean; teacher: boolean; saveTeacher: false}
+    | {
+          saveAnswer: boolean;
+          teacher: boolean;
+          saveTeacher: boolean;
+          answer_id: number | undefined;
+          userId: number;
+          points: number | undefined;
+          giveCustomPoints: boolean;
+      };
 
 const DEFAULT_MARKUP_CONFIG: IAnswerBrowserMarkupSettings = {
     pointsStep: 0,
 };
 
-export class AnswerBrowserController extends DestroyScope implements IController {
+export class AnswerBrowserController
+    extends DestroyScope
+    implements IController {
     static $inject = ["$scope", "$element"];
     public taskId!: Binding<TaskId, "<">;
     private loading: number;
@@ -375,7 +424,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
     private feedback?: string;
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
-    private loadedAnswer: { id: number | undefined } = {id: undefined};
+    private loadedAnswer: {id: number | undefined} = {id: undefined};
     private answerId?: Binding<number, "<?">;
     private loader!: PluginLoaderCtrl;
     private reviewHtml?: string;
@@ -413,21 +462,24 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     async $onInit() {
-        this.formMode = (this.loader.isInFormMode() && !this.forceBrowser());
+        this.formMode = this.loader.isInFormMode() && !this.forceBrowser();
         if (this.loader.hideBrowser || this.formMode) {
             this.hidden = true;
         }
 
         this.viewctrl.registerAnswerBrowser(this);
-        this.scope.$watch(() => this.taskId, (newValue, oldValue) => {
-            if (newValue === oldValue) {
-                return;
+        this.scope.$watch(
+            () => this.taskId,
+            (newValue, oldValue) => {
+                if (newValue === oldValue) {
+                    return;
+                }
+                if (this.viewctrl.teacherMode) {
+                    this.getAvailableUsers();
+                }
+                this.getAnswersAndUpdate();
             }
-            if (this.viewctrl.teacherMode) {
-                this.getAvailableUsers();
-            }
-            this.getAnswersAndUpdate();
-        });
+        );
 
         if (this.isUseCurrentUser() || this.isGlobal()) {
             this.user = Users.getCurrent();
@@ -441,11 +493,18 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.loadedAnswer.id = this.getPluginHtmlAnswerId();
 
         // TODO: This condition is inaccurate because we don't really know who the initially loaded user is.
-        if (this.viewctrl.users.length > 0 && this.user !== this.viewctrl.users[0].user
-            && !this.isUseCurrentUser() && !this.isGlobal()) {
+        if (
+            this.viewctrl.users.length > 0 &&
+            this.user !== this.viewctrl.users[0].user &&
+            !this.isUseCurrentUser() &&
+            !this.isGlobal()
+        ) {
             this.dimPlugin();
         }
-        this.saveTeacher = (this.viewctrl.docSettings.save_teacher && this.viewctrl.teacherMode) ?? false;
+        this.saveTeacher =
+            (this.viewctrl.docSettings.save_teacher &&
+                this.viewctrl.teacherMode) ??
+            false;
         this.showDelete = isAdmin() && getURLParameter("showAdmin") != null;
         this.users = undefined;
         this.answers = [];
@@ -475,7 +534,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
                     return;
                 }
                 this.updateFilteredAndSetNewest();
-            });
+            }
+        );
 
         // If task is in form_mode, only last (already loaded) answer should matter.
         // Answer changes are handled by viewctrl, so don't bother querying them here
@@ -483,7 +543,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         //  always hidden and queries as they are now do not handle global task correctly, causing useless plugin update
         if (!this.formMode && !this.isGlobal()) {
             const answs = await this.getAnswers();
-            if (answs && (answs.length > 0)) {
+            if (answs && answs.length > 0) {
                 this.answers = answs;
                 const updated = this.updateAnswerFromURL();
                 if (!updated) {
@@ -520,7 +580,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
         } else if (this.hasUserChanged()) {
             this.dimPlugin();
             const par = this.getPar();
-            this.viewctrl.reviewCtrl.clearAnswerAnnotationsFromParMargin(par[0]);
+            this.viewctrl.reviewCtrl.clearAnswerAnnotationsFromParMargin(
+                par[0]
+            );
         } else {
             this.unDimPlugin();
         }
@@ -533,7 +595,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         this.answers = answers;
         this.updateFiltered();
-        this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
+        this.selectedAnswer =
+            this.filteredAnswers.length > 0
+                ? this.filteredAnswers[0]
+                : undefined;
     }
 
     private unDimPlugin() {
@@ -556,10 +621,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.selectedAnswer) {
             return;
         }
-        await to($http.put("/answer/saveValidity", {
-            valid: this.isValidAnswer,
-            answer_id: this.selectedAnswer.id,
-        }));
+        await to(
+            $http.put("/answer/saveValidity", {
+                valid: this.isValidAnswer,
+                answer_id: this.selectedAnswer.id,
+            })
+        );
         this.selectedAnswer.valid = this.isValidAnswer;
     }
 
@@ -583,10 +650,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
 
         const doSavePoints = async () => {
-          await this.savePoints(false);
-          if (updateAnswers) {
-              await this.getAnswersAndUpdate();
-          }
+            await this.savePoints(false);
+            if (updateAnswers) {
+                await this.getAnswersAndUpdate();
+            }
         };
         doSavePoints();
         return true;
@@ -596,8 +663,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.selectedAnswer || !this.user) {
             return;
         }
-        const r = await to($http.put(`/savePoints/${this.user.id}/${this.selectedAnswer.id}`,
-            {points: this.points}));
+        const r = await to(
+            $http.put(`/savePoints/${this.user.id}/${this.selectedAnswer.id}`, {
+                points: this.points,
+            })
+        );
         this.shouldFocus = true;
         if (!r.ok) {
             this.showError(r.result);
@@ -617,7 +687,8 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.points = this.selectedAnswer.points;
         this.isValidAnswer = this.selectedAnswer.valid;
         if (this.points != null) {
-            this.giveCustomPoints = this.selectedAnswer.last_points_modifier != null;
+            this.giveCustomPoints =
+                this.selectedAnswer.last_points_modifier != null;
         } else {
             this.giveCustomPoints = false;
         }
@@ -629,7 +700,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     setAnswerLoader(ac: AnswerLoadCallback) {
         if (this.answerLoader) {
-            console.warn(`answerListener was already set for task ${this.taskId.docTaskField()}`);
+            console.warn(
+                `answerListener was already set for task ${this.taskId.docTaskField()}`
+            );
         }
         this.answerLoader = ac;
     }
@@ -672,16 +745,23 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         // get new state as long as the previous answer was not explicitly the same as the one before
         // otherwise we might not see the unanswered plugin exactly how the user sees it
-        if (!(this.selectedAnswer && this.loadedAnswer
-            && this.selectedAnswer.id == this.loadedAnswer.id
-            && this.oldreview == this.review)) {
+        if (
+            !(
+                this.selectedAnswer &&
+                this.loadedAnswer &&
+                this.selectedAnswer.id == this.loadedAnswer.id &&
+                this.oldreview == this.review
+            )
+        ) {
             this.loading++;
-            const r = await to($http.get<{ html: string, reviewHtml: string }>("/getState", {
-                params: {
-                    ...preParams,
-                    ...taskOrAnswer,
-                },
-            }));
+            const r = await to(
+                $http.get<{html: string; reviewHtml: string}>("/getState", {
+                    params: {
+                        ...preParams,
+                        ...taskOrAnswer,
+                    },
+                })
+            );
             this.loading--;
             if (!r.ok) {
                 this.showError(r.result);
@@ -701,11 +781,18 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 if (this.answerLoader && this.selectedAnswer) {
                     this.answerLoader(this.selectedAnswer);
                 } else {
-                    await loadPlugin(r.result.data.html, this.loader.getPluginElement(), this.scope, this.viewctrl);
+                    await loadPlugin(
+                        r.result.data.html,
+                        this.loader.getPluginElement(),
+                        this.scope,
+                        this.viewctrl
+                    );
                 }
             }
             if (this.review) {
-                this.imageReview = r.result.data.reviewHtml.startsWith("data:image");
+                this.imageReview = r.result.data.reviewHtml.startsWith(
+                    "data:image"
+                );
                 if (this.selectedAnswer) {
                     this.reviewHtml = r.result.data.reviewHtml;
                 } else {
@@ -716,10 +803,17 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         // if reviewhtml is image-based, then the image load callback should handle annotation loading
         if (!(this.imageReview && this.review)) {
-            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer?.id, par[0]);
+            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(
+                this.selectedAnswer?.id,
+                par[0]
+            );
         }
         if (!changeReviewOnly) {
-            if (this.viewctrl.teacherMode && !this.selectedAnswer && !this.saveTeacher) {
+            if (
+                this.viewctrl.teacherMode &&
+                !this.selectedAnswer &&
+                !this.saveTeacher
+            ) {
                 this.dimPlugin();
             } else {
                 this.unDimPlugin();
@@ -735,11 +829,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.selectedAnswer && this.reviewHtml) {
             const par = this.getPar();
             this.viewctrl.reviewCtrl.setCanvas(this.selectedAnswer.id, canvas);
-            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(this.selectedAnswer.id, par[0]);
+            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(
+                this.selectedAnswer.id,
+                par[0]
+            );
         }
     };
 
-    async changeAnswerTo(dir: (-1 | 1)) {
+    async changeAnswerTo(dir: -1 | 1) {
         if (!this.trySavePoints(true)) {
             return;
         }
@@ -770,8 +867,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (this.loading > 0 || this.markupSettings.pointsStep) {
             return;
         }
-        if ((e.key === "ArrowUp" || e.which === KEY_UP) ||
-            (e.key === "ArrowDown" || e.which === KEY_DOWN)) {
+        if (
+            e.key === "ArrowUp" ||
+            e.which === KEY_UP ||
+            e.key === "ArrowDown" ||
+            e.which === KEY_DOWN
+        ) {
             e.preventDefault();
         }
     }
@@ -782,19 +883,19 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         if (e.ctrlKey) {
             // e.key does not work on IE but it is more readable, so let's use both
-            if ((e.key === "ArrowUp" || e.which === KEY_UP)) {
+            if (e.key === "ArrowUp" || e.which === KEY_UP) {
                 e.preventDefault();
                 await this.changeStudent(-1);
                 return true;
-            } else if ((e.key === "ArrowDown" || e.which === KEY_DOWN)) {
+            } else if (e.key === "ArrowDown" || e.which === KEY_DOWN) {
                 e.preventDefault();
                 await this.changeStudent(1);
                 return true;
-            } else if ((e.key === "ArrowLeft" || e.which === KEY_LEFT)) {
+            } else if (e.key === "ArrowLeft" || e.which === KEY_LEFT) {
                 e.preventDefault();
                 await this.changeAnswerTo(-1);
                 return true;
-            } else if ((e.key === "ArrowRight" || e.which === KEY_RIGHT)) {
+            } else if (e.key === "ArrowRight" || e.which === KEY_RIGHT) {
                 e.preventDefault();
                 await this.changeAnswerTo(1);
                 return true;
@@ -891,9 +992,13 @@ export class AnswerBrowserController extends DestroyScope implements IController
                 userId = Users.getCurrent().id;
             }
             return {
-                answer_id: this.selectedAnswer ? this.selectedAnswer.id : undefined,
-                saveTeacher: this.saveTeacher ||
-                    (this.viewctrl.teacherMode && (this.loader.isInFormMode() || this.isGlobal())) , // TODO: Check if correct
+                answer_id: this.selectedAnswer
+                    ? this.selectedAnswer.id
+                    : undefined,
+                saveTeacher:
+                    this.saveTeacher ||
+                    (this.viewctrl.teacherMode &&
+                        (this.loader.isInFormMode() || this.isGlobal())), // TODO: Check if correct
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: userId,
@@ -909,7 +1014,12 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async getAvailableUsers() {
         this.loading++;
-        const r = await to($http.get<IUser[]>(`/getTaskUsers/${this.taskId.docTask().toString()}`, {params: {group: this.viewctrl.group}}));
+        const r = await to(
+            $http.get<IUser[]>(
+                `/getTaskUsers/${this.taskId.docTask().toString()}`,
+                {params: {group: this.viewctrl.group}}
+            )
+        );
         this.loading--;
         if (!r.ok) {
             this.showError(r.result);
@@ -918,8 +1028,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.users = r.result.data;
     }
 
-    showError(response: { data: { error: string } }) {
-        this.alerts.push({msg: "Error: " + response.data.error, type: "danger"});
+    showError(response: {data: {error: string}}) {
+        this.alerts.push({
+            msg: "Error: " + response.data.error,
+            type: "danger",
+        });
     }
 
     // noinspection UnnecessaryLocalVariableJS
@@ -928,20 +1041,28 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return undefined;
         }
         let newroute = "answers";
-        if (single && location.href.includes("/view/")) { newroute = "view"; }  // TODO: think other routes also?
+        if (single && location.href.includes("/view/")) {
+            newroute = "view";
+        } // TODO: think other routes also?
         const par = this.getPar();
         const parId = getParId(par);
         // const currBegin = getRangeBeginParam() ?? 0;
         const params = getUrlParams();
         const group = params.get("group"); // TODO: should we save other params also?
-        const rangeParams = single ? {
-            b: parId,
-            size: 1,
-            group: group,
-        } : {};
+        const rangeParams = single
+            ? {
+                  b: parId,
+                  size: 1,
+                  group: group,
+              }
+            : {};
         // noinspection UnnecessaryLocalVariableJS
-        const link = `/${newroute}/${this.viewctrl.item.path}?${$httpParamSerializer({
-            answerNumber: this.answers.length - this.findSelectedAnswerIndexFromUnFiltered(),
+        const link = `/${newroute}/${
+            this.viewctrl.item.path
+        }?${$httpParamSerializer({
+            answerNumber:
+                this.answers.length -
+                this.findSelectedAnswerIndexFromUnFiltered(),
             task: this.getTaskName(),
             user: this.user.name,
             ...rangeParams,
@@ -956,11 +1077,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
             if (index >= 0 && index < this.answers.length) {
                 this.onlyValid = false;
                 this.updateFiltered();
-                this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[index] : undefined;
+                this.selectedAnswer =
+                    this.filteredAnswers.length > 0
+                        ? this.filteredAnswers[index]
+                        : undefined;
                 this.changeAnswer();
                 return true;
             } else {
-                void showMessageDialog(`Answer number ${answerNumber} is out of range for this task and user.`);
+                void showMessageDialog(
+                    `Answer number ${answerNumber} is out of range for this task and user.`
+                );
             }
         }
         return false;
@@ -969,7 +1095,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
     async getAnswersAndUpdate() {
         // if ( this.isUseCurrentUser(this.taskId) ) { return null; }
 
-        if (!this.viewctrl.item.rights || !this.viewctrl.item.rights.browse_own_answers) {
+        if (
+            !this.viewctrl.item.rights ||
+            !this.viewctrl.item.rights.browse_own_answers
+        ) {
             return;
         }
 
@@ -982,14 +1111,24 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     private async handleAnswerFetch(data: IAnswer[], newSelectedId?: number) {
-        if (data.length > 0 && (this.hasUserChanged() || data.length !== this.answers.length)
-            || this.forceBrowser() || newSelectedId) {
+        if (
+            (data.length > 0 &&
+                (this.hasUserChanged() ||
+                    data.length !== this.answers.length)) ||
+            this.forceBrowser() ||
+            newSelectedId
+        ) {
             this.answers = data;
             this.updateFiltered();
             if (newSelectedId) {
-                this.selectedAnswer = this.filteredAnswers.find((ans) => ans.id == newSelectedId);
+                this.selectedAnswer = this.filteredAnswers.find(
+                    (ans) => ans.id == newSelectedId
+                );
             } else {
-                this.selectedAnswer = this.filteredAnswers.length > 0 ? this.filteredAnswers[0] : undefined;
+                this.selectedAnswer =
+                    this.filteredAnswers.length > 0
+                        ? this.filteredAnswers[0]
+                        : undefined;
             }
             if (!this.selectedAnswer && !this.forceBrowser()) {
                 this.dimPlugin();
@@ -1008,13 +1147,19 @@ export class AnswerBrowserController extends DestroyScope implements IController
     // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
     private getUserOrCurrentUserForAnswers(): IUser | undefined {
         let user: IUser | undefined;
-        if (this.user) { user = this.user; }
+        if (this.user) {
+            user = this.user;
+        }
         // TODO: refactor to use pluginMarkup()
-        const c = this.viewctrl.getTimComponentByName(this.taskId.docTaskField());
-        if (!c) { return user; }
+        const c = this.viewctrl.getTimComponentByName(
+            this.taskId.docTaskField()
+        );
+        if (!c) {
+            return user;
+        }
         const a = c.attrsall;
         if (a?.markup?.useCurrentUser) {
-            this.user = Users.getCurrent();  // TODO: looks bad when function has a side effect?
+            this.user = Users.getCurrent(); // TODO: looks bad when function has a side effect?
             return Users.getCurrent();
         }
         return user;
@@ -1024,7 +1169,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
         if (!this.viewctrl || !this.taskId) {
             return undefined;
         }
-        const c = this.viewctrl.getTimComponentByName(this.taskId.docTaskField());
+        const c = this.viewctrl.getTimComponentByName(
+            this.taskId.docTaskField()
+        );
         if (!c) {
             return undefined;
         }
@@ -1055,11 +1202,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
         }
         this.loading++;
 
-        const r = await to($http.get<IAnswer[]>(`/getAnswers/${this.taskId.docTask().toString()}/${user.id}`, {
-            params: {
-                _: Date.now(),
-            },
-        }));
+        const r = await to(
+            $http.get<IAnswer[]>(
+                `/getAnswers/${this.taskId.docTask().toString()}/${user.id}`,
+                {
+                    params: {
+                        _: Date.now(),
+                    },
+                }
+            )
+        );
 
         this.loading--;
         if (!r.ok) {
@@ -1075,7 +1227,9 @@ export class AnswerBrowserController extends DestroyScope implements IController
     }
 
     hasUserChanged() {
-        return (this.user ?? {id: null}).id !== (this.fetchedUser ?? {id: null}).id;
+        return (
+            (this.user ?? {id: null}).id !== (this.fetchedUser ?? {id: null}).id
+        );
     }
 
     dimPlugin() {
@@ -1102,7 +1256,10 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     showVelpsCheckBox() {
         // return this.$parent.teacherMode || $window.velpMode; // && this.$parent.item.rights.teacher;
-        return documentglobals().velpMode || this.getPar().hasClass("has-annotation");
+        return (
+            documentglobals().velpMode ||
+            this.getPar().hasClass("has-annotation")
+        );
     }
 
     getTriesLeft() {
@@ -1121,7 +1278,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         this.loading++;
-        const r = await to($http.get<ITaskInfo>(`/taskinfo/${this.taskId.docTask().toString()}`));
+        const r = await to(
+            $http.get<ITaskInfo>(
+                `/taskinfo/${this.taskId.docTask().toString()}`
+            )
+        );
         this.loading--;
         if (!r.ok) {
             this.showError(r.result);
@@ -1180,13 +1341,16 @@ export class AnswerBrowserController extends DestroyScope implements IController
     updateFiltered() {
         this.anyInvalid = false;
         // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
-        this.filteredAnswers = $filter("filter")<IAnswer>(this.answers, (value, index, array) => {
-            if (value.valid) {
-                return true;
+        this.filteredAnswers = $filter("filter")<IAnswer>(
+            this.answers,
+            (value, index, array) => {
+                if (value.valid) {
+                    return true;
+                }
+                this.anyInvalid = true;
+                return !this.onlyValid;
             }
-            this.anyInvalid = true;
-            return !this.onlyValid;
-        });
+        );
     }
 
     async updateFilteredAndSetNewest() {
@@ -1207,8 +1371,14 @@ export class AnswerBrowserController extends DestroyScope implements IController
 
     async showFeedback(txt?: string) {
         if (!this.feedbackElement) {
-            if (!txt) { return; }  // no need to create element
-            const compiled = await compileWithViewctrl($(feedbackHtml), this.scope, this.viewctrl);
+            if (!txt) {
+                return;
+            } // no need to create element
+            const compiled = await compileWithViewctrl(
+                $(feedbackHtml),
+                this.scope,
+                this.viewctrl
+            );
             this.feedbackElement = this.element.append(compiled);
             // await $timeout(0);
         }
@@ -1221,8 +1391,7 @@ export class AnswerBrowserController extends DestroyScope implements IController
         this.showFeedback("");
     }
 
-    $onDestroy() {
-    }
+    $onDestroy() {}
 
     private getTaskName() {
         return this.taskId.name;
@@ -1245,9 +1414,11 @@ export class AnswerBrowserController extends DestroyScope implements IController
             return;
         }
         const aid = this.selectedAnswer.id;
-        await to($http.post("/answer/delete", {
-            answer_id: aid,
-        }));
+        await to(
+            $http.post("/answer/delete", {
+                answer_id: aid,
+            })
+        );
         const index = this.answers.findIndex((a) => a.id === aid);
         if (index < 0) {
             return;
@@ -1265,7 +1436,6 @@ export class AnswerBrowserController extends DestroyScope implements IController
     getPar(): Paragraph {
         return this.element.parents(".par");
     }
-
 }
 
 timApp.component("answerbrowser", {

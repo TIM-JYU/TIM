@@ -8,7 +8,12 @@ import {isAdmin, Users} from "../user/userService";
 import {lectureinfoglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {showLectureDialog} from "./createLectureCtrl";
-import {IAskedQuestion, ILecture, ILectureMessage, IQuestionAnswerPlain} from "./lecturetypes";
+import {
+    IAskedQuestion,
+    ILecture,
+    ILectureMessage,
+    IQuestionAnswerPlain,
+} from "./lecturetypes";
 
 markAsUsed(showChart);
 
@@ -56,17 +61,19 @@ export class LectureInfoController implements IController {
      * Sends http request to get info about the specific lecture.
      */
     private async getLectureInfo() {
-        const response = await to($http<{
-            messages: ILectureMessage[],
-            answers: IQuestionAnswerPlain[],
-            questions: IAskedQuestion[],
-            isLecturer: boolean,
-            answerers: IUser[],
-        }>({
-            url: "/getLectureInfo",
-            method: "GET",
-            params: {lecture_id: this.lecture.lecture_id},
-        }));
+        const response = await to(
+            $http<{
+                messages: ILectureMessage[];
+                answers: IQuestionAnswerPlain[];
+                questions: IAskedQuestion[];
+                isLecturer: boolean;
+                answerers: IUser[];
+            }>({
+                url: "/getLectureInfo",
+                method: "GET",
+                params: {lecture_id: this.lecture.lecture_id},
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -86,15 +93,19 @@ export class LectureInfoController implements IController {
 
     private updateAnswerMap() {
         this.answerMap = {};
-        this.questions.forEach((q) => this.answerMap[q.asked_id] = this.getAnswers(q));
+        this.questions.forEach(
+            (q) => (this.answerMap[q.asked_id] = this.getAnswers(q))
+        );
     }
 
     private async editPoints(askedId: number) {
-        const response = await to($http<IAskedQuestion>({
-            url: "/getAskedQuestionById",
-            method: "GET",
-            params: {asked_id: askedId},
-        }));
+        const response = await to(
+            $http<IAskedQuestion>({
+                url: "/getAskedQuestionById",
+                method: "GET",
+                params: {asked_id: askedId},
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -102,22 +113,30 @@ export class LectureInfoController implements IController {
     }
 
     private getAnswers(question: IAskedQuestion) {
-        return this.answers.filter((q) =>
-            q.asked_id === question.asked_id &&
-            (this.showAll || !this.selectedUser || this.selectedUser.id === q.user_id));
+        return this.answers.filter(
+            (q) =>
+                q.asked_id === question.asked_id &&
+                (this.showAll ||
+                    !this.selectedUser ||
+                    this.selectedUser.id === q.user_id)
+        );
     }
 
     /**
      * Sends http request to delete the lecture.
      */
     private async deleteLecture() {
-        const confirmAnswer = window.confirm("Do you really want to delete this lecture?");
+        const confirmAnswer = window.confirm(
+            "Do you really want to delete this lecture?"
+        );
         if (confirmAnswer) {
-            const response = await to($http({
-                url: "/deleteLecture",
-                method: "POST",
-                params: {lecture_id: this.lecture.lecture_id},
-            }));
+            const response = await to(
+                $http({
+                    url: "/deleteLecture",
+                    method: "POST",
+                    params: {lecture_id: this.lecture.lecture_id},
+                })
+            );
             if (!response.ok) {
                 return;
             }
@@ -126,11 +145,13 @@ export class LectureInfoController implements IController {
     }
 
     private async editLecture() {
-        const response = await to($http<ILecture>({
-            url: "/showLectureInfoGivenName",
-            method: "GET",
-            params: {lecture_id: this.lecture.lecture_id},
-        }));
+        const response = await to(
+            $http<ILecture>({
+                url: "/showLectureInfoGivenName",
+                method: "GET",
+                params: {lecture_id: this.lecture.lecture_id},
+            })
+        );
         if (!response.ok) {
             return;
         }

@@ -14,8 +14,10 @@ export interface IAngularResizableDirectivePublic {
 }
 
 class ResizableDraggableWrapper {
-    constructor(private ngResizable: IAngularResizableDirectivePublic, private ngDraggable: AngularDraggableDirective) {
-    }
+    constructor(
+        private ngResizable: IAngularResizableDirectivePublic,
+        private ngDraggable: AngularDraggableDirective
+    ) {}
 
     getSize() {
         return this.ngResizable._currSize;
@@ -89,13 +91,17 @@ export class DialogFrame {
     index = 1;
     areaMinimized = false;
     private oldSize: ISize = {width: 600, height: 400};
-    @ViewChild("resizable") private ngResizable!: IAngularResizableDirectivePublic;
+    @ViewChild("resizable")
+    private ngResizable!: IAngularResizableDirectivePublic;
     @ViewChild("draggable") private ngDraggable!: AngularDraggableDirective;
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};
 
     ngAfterViewInit() {
-        this.resizable = new ResizableDraggableWrapper(this.ngResizable, this.ngDraggable);
+        this.resizable = new ResizableDraggableWrapper(
+            this.ngResizable,
+            this.ngDraggable
+        );
     }
 
     canDrag() {
@@ -106,8 +112,7 @@ export class DialogFrame {
         this.position = p;
     }
 
-    toggleDetach() {
-    }
+    toggleDetach() {}
 
     toggleMinimize() {
         const res = this.ngResizable;
@@ -122,7 +127,9 @@ export class DialogFrame {
         } else {
             cs.set(this.oldSize);
         }
-        cp.x += (this.oldSize.width - minimizedWidth) / 2 * (this.areaMinimized ? 1 : -1);
+        cp.x +=
+            ((this.oldSize.width - minimizedWidth) / 2) *
+            (this.areaMinimized ? 1 : -1);
         res.doResize();
     }
 }

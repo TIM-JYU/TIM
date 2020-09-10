@@ -1,7 +1,6 @@
 import {Component} from "@angular/core";
 import {getVisibilityVars} from "tim/timRoot";
 
-
 @Component({
     selector: "tim-site-header",
     template: `

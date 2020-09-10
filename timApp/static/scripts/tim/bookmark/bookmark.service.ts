@@ -16,11 +16,9 @@ export interface IBookmark {
     name: string;
 }
 
-@Injectable(
-    {
-        providedIn: "platform",
-    }
-)
+@Injectable({
+    providedIn: "platform",
+})
 export class BookmarkService {
     private groups: IBookmarkGroup[] | undefined;
 
@@ -33,9 +31,13 @@ export class BookmarkService {
     }
 
     async addCourse(http: HttpClient, path: string) {
-        const resp = to2(http.post<{ bookmarks: IBookmarkGroup[], added_to_group: boolean }>(
-            "/bookmarks/addCourse",
-            {path: path}).toPromise(),
+        const resp = to2(
+            http
+                .post<{bookmarks: IBookmarkGroup[]; added_to_group: boolean}>(
+                    "/bookmarks/addCourse",
+                    {path: path}
+                )
+                .toPromise()
         );
         const r = await resp;
         if (r.ok) {

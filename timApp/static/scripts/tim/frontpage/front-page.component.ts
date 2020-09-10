@@ -153,7 +153,9 @@ export class FrontPageComponent implements IController {
             void showCourseListDialog({settings: r.result.data});
             return;
         }
-        void showMessageDialog(`Course settings not found: ${r.result.data.error}`);
+        void showMessageDialog(
+            `Course settings not found: ${r.result.data.error}`
+        );
     }
 
     notFinnish() {

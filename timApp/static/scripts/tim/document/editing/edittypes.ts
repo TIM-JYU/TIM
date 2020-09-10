@@ -7,7 +7,7 @@ export interface IParResponse {
     changed_pars: {[id: string]: string};
     version: [number, number];
     duplicates?: Duplicate[];
-    original_par?: {md: string, attrs: unknown};
+    original_par?: {md: string; attrs: unknown};
     new_par_ids?: string[];
 }
 
@@ -28,7 +28,10 @@ export interface IParInfo {
     area_end?: string;
 }
 
-export interface ITags {markread: boolean; marktranslated?: boolean; }
+export interface ITags {
+    markread: boolean;
+    marktranslated?: boolean;
+}
 
 export interface IExtraData extends IParInfo {
     // attrs: {classes: string[], [i: string]: any};
@@ -42,9 +45,7 @@ export interface IExtraData extends IParInfo {
 
 export type Duplicate = [string, string] | [string, string, "hasAnswers"];
 
-export interface IChangelogEntry {
-
-}
+export interface IChangelogEntry {}
 
 export enum EditType {
     Edit,
@@ -54,7 +55,7 @@ export enum EditType {
 }
 
 export type EditPosition =
-    | {type: EditType.Edit, pars: JQuery}
-    | {type: EditType.AddAbove, par: JQuery}
-    | {type: EditType.AddBelow, par: JQuery}
+    | {type: EditType.Edit; pars: JQuery}
+    | {type: EditType.AddAbove; par: JQuery}
+    | {type: EditType.AddBelow; par: JQuery}
     | {type: EditType.AddBottom};

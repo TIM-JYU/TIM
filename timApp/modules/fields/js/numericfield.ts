@@ -3,8 +3,19 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {
+    ChangeType,
+    FormModeOption,
+    ISetAnswerResult,
+    ITimComponent,
+    ViewCtrl,
+} from "tim/document/viewctrl";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
@@ -46,13 +57,17 @@ const NumericfieldAll = t.intersection([
         info: Info,
         markup: NumericfieldMarkup,
         preview: t.boolean,
-        state: nullable(
-            FieldDataWithStyles,
-        ),
+        state: nullable(FieldDataWithStyles),
     }),
 ]);
 
-class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMarkup>, t.TypeOf<typeof NumericfieldAll>, typeof NumericfieldAll> implements ITimComponent {
+class NumericfieldController
+    extends PluginBase<
+        t.TypeOf<typeof NumericfieldMarkup>,
+        t.TypeOf<typeof NumericfieldAll>,
+        typeof NumericfieldAll
+    >
+    implements ITimComponent {
     private changes = false;
     private result?: string;
     private isRunning = false;
@@ -63,13 +78,16 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     private errormessage?: string;
     private hideSavedText = true;
     private redAlert = false;
-    private saveResponse: { saved: boolean, message: (string | undefined) } = {saved: false, message: undefined};
+    private saveResponse: {saved: boolean; message: string | undefined} = {
+        saved: false,
+        message: undefined,
+    };
     private preventedAutosave = false;
     private styles: {[index: string]: string} = {};
     private saveCalledExternally = false;
 
     getDouble(s: string | number): number {
-        if (typeof (s) === "number") {
+        if (typeof s === "number") {
             return s;
         }
         s = s.replace(REDOUBLE, "");
@@ -103,7 +121,10 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
     }
 
     get valueOrEmpty(): string {
-        return valueOr<string | number, string>(this.numericvalue, "").toString();
+        return valueOr<string | number, string>(
+            this.numericvalue,
+            ""
+        ).toString();
     }
 
     $onInit() {
@@ -130,9 +151,16 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 }
             }
         }
-        if (!this.attrs.wheel) { this.element.bind("mousewheel DOMMouseScroll", () => false); }
-        if (!this.attrs.verticalkeys) { this.element.bind("keydown",
-            (e) => { if (e.which == 38 || e.which == 40) { e.preventDefault(); } }); }
+        if (!this.attrs.wheel) {
+            this.element.bind("mousewheel DOMMouseScroll", () => false);
+        }
+        if (!this.attrs.verticalkeys) {
+            this.element.bind("keydown", (e) => {
+                if (e.which == 38 || e.which == 40) {
+                    e.preventDefault();
+                }
+            });
+        }
         this.modelOpts = {debounce: {blur: 0}};
         this.vctrl.addTimComponent(this, this.attrs.tag);
         this.initialValue = this.numericvalue;
@@ -192,7 +220,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 if (isNaN(parsed)) {
                     this.numericvalue = undefined;
                     ok = false;
-                    message = "Value at \"c\" was not a valid number";
+                    message = 'Value at "c" was not a valid number';
                     this.errormessage = `Content is not a number (${content.c}); showing empty value.`;
                 } else {
                     this.numericvalue = parsed.toString();
@@ -207,7 +235,6 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.changes = false;
         this.updateListeners(ChangeType.Saved);
         return {ok: ok, message: message};
-
     }
 
     /**
@@ -236,7 +263,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      */
     initCode() {
         if (this.attrs.initnumber == undefined) {
-                this.numericvalue = "";
+            this.numericvalue = "";
         } else {
             this.numericvalue = "" + this.attrs.initnumber;
         }
@@ -284,7 +311,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Unused method warning is suppressed, as the method is only called in template.
      */
     stepCheck() {
-        return (this.attrs.step);
+        return this.attrs.step;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -294,7 +321,10 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
-        return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
+        return (
+            this.attrs.readOnlyStyle == "plaintext" &&
+            window.location.pathname.startsWith("/view/")
+        );
     }
 
     /**
@@ -332,10 +362,15 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Unused method warning is suppressed, as the method is only called in template.
      */
     changeFocus() {
-        const inputfields = document.querySelectorAll("numericfield-runner input, textfield-runner input");
+        const inputfields = document.querySelectorAll(
+            "numericfield-runner input, textfield-runner input"
+        );
         for (let i = 0; i < inputfields.length; ++i) {
             const selectedfield = inputfields[i] as HTMLInputElement;
-            if (selectedfield === document.activeElement && inputfields[i + 1]) {
+            if (
+                selectedfield === document.activeElement &&
+                inputfields[i + 1]
+            ) {
                 const nextfield = inputfields[i + 1] as HTMLInputElement;
                 return nextfield.focus();
             }
@@ -350,7 +385,7 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isUnSaved() {
-        return (!this.attrs.nosave && this.changes);
+        return !this.attrs.nosave && this.changes;
     }
 
     /**
@@ -361,7 +396,9 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         this.errormessage = undefined;
         if (this.attrs.validinput) {
             if (!this.validityCheck(this.attrs.validinput)) {
-                this.errormessage = this.attrs.errormessage ?? "Input does not pass the RegEx: " + this.attrs.validinput;
+                this.errormessage =
+                    this.attrs.errormessage ??
+                    "Input does not pass the RegEx: " + this.attrs.validinput;
                 this.redAlert = true;
                 this.saveResponse.message = this.errormessage;
                 return this.saveResponse;
@@ -382,7 +419,16 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean, value: string}}>(url, params, {timeout: defaultTimeout}));
+        const r = await to(
+            $http.put<{
+                web: {
+                    result: string;
+                    error?: string;
+                    clear?: boolean;
+                    value: string;
+                };
+            }>(url, params, {timeout: defaultTimeout})
+        );
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -422,14 +468,17 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
                 }
             }
         } else {
-            this.errormessage = r.result.data?.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
+            this.errormessage =
+                r.result.data?.error ??
+                this.attrs.connectionErrorMessage ??
+                defaultErrorMessage;
         }
         return this.saveResponse;
     }
 
     formBehavior(): FormModeOption {
         return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
-   }
+    }
 
     getAttributeType() {
         return NumericfieldAll;
@@ -451,7 +500,11 @@ class NumericfieldController extends PluginBase<t.TypeOf<typeof NumericfieldMark
         if (!taskId) {
             return;
         }
-        this.vctrl.informChangeListeners(taskId, state, (this.attrs.tag ? this.attrs.tag : undefined));
+        this.vctrl.informChangeListeners(
+            taskId,
+            state,
+            this.attrs.tag ? this.attrs.tag : undefined
+        );
     }
 }
 

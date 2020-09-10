@@ -1,8 +1,4 @@
-import {
-    Component,
-    ChangeDetectorRef,
-    ElementRef,
-} from "@angular/core";
+import {Component, ChangeDetectorRef, ElementRef} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import {CsController} from "./csPlugin";
@@ -51,7 +47,12 @@ import {CsController} from "./csPlugin";
         </div>`,
 })
 export class CsTextComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        cdr: ChangeDetectorRef
+    ) {
         super(el, http, domSanitizer, cdr);
     }
 }

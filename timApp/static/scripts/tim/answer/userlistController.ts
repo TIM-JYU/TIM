@@ -5,11 +5,21 @@ import uiGrid from "ui-grid";
 import {DialogController} from "tim/ui/dialogController";
 import {documentglobals} from "tim/util/globals";
 import {ViewCtrl} from "../document/viewctrl";
-import {registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {
+    registerDialogComponent,
+    showDialog,
+    showMessageDialog,
+} from "../ui/dialog";
 import {IUser, IUserListEntry} from "../user/IUser";
 import {withComparatorFilters} from "../util/comparatorfilter";
 import {$timeout} from "../util/ngimport";
-import {Binding, copyToClipboard, getURLParameter, markAsUsed, Require} from "../util/utils";
+import {
+    Binding,
+    copyToClipboard,
+    getURLParameter,
+    markAsUsed,
+    Require,
+} from "../util/utils";
 import {showAllAnswers} from "./allAnswersController";
 import {showFeedbackAnswers} from "./feedbackAnswersController";
 
@@ -39,31 +49,38 @@ function numericSort(a: number | null, b: number | null) {
 
 export class UserListController implements IController {
     static $inject = ["$scope", "$element"];
-    private gridOptions?: uiGrid.IGridOptionsOf<IUserListEntry> & {gridMenuCustomItems: unknown};
+    private gridOptions?: uiGrid.IGridOptionsOf<IUserListEntry> & {
+        gridMenuCustomItems: unknown;
+    };
     private gridApi?: uiGrid.IGridApiOf<IUserListEntry>;
     private instantUpdate: boolean = false;
-    private onUserChange!: Binding<(params: {$USER: IUser, $UPDATEALL: boolean}) => void, "&">;
+    private onUserChange!: Binding<
+        (params: {$USER: IUser; $UPDATEALL: boolean}) => void,
+        "&"
+    >;
     private viewctrl!: Require<ViewCtrl>;
     private preventedChange = false;
 
-    constructor(private scope: IScope, private element: JQLite) {
-    }
+    constructor(private scope: IScope, private element: JQLite) {}
 
     $onInit() {
         this.scope.$watch(
             () => this.element[0].offsetHeight + this.element[0].offsetWidth,
             (sum) => {
                 const grid = this.element.find(".grid");
-                grid.css("width", (this.element[0].offsetWidth - 5) + "px");
-                grid.css("height", (this.element[0].offsetHeight - 30) + "px");
-            },
+                grid.css("width", this.element[0].offsetWidth - 5 + "px");
+                grid.css("height", this.element[0].offsetHeight - 30 + "px");
+            }
         );
 
         let anyAnnotations = false;
         let smallFieldWidth = 59;
 
         function nameCompare(a: IUserListEntry, b: IUserListEntry) {
-            return (a.user.real_name ?? "").localeCompare(b.user.real_name ?? "", sortLang);
+            return (a.user.real_name ?? "").localeCompare(
+                b.user.real_name ?? "",
+                sortLang
+            );
         }
 
         this.viewctrl.users.sort(nameCompare);
@@ -76,13 +93,16 @@ export class UserListController implements IController {
             }
         }
 
-        const columns: Array<uiGrid.IColumnDefOf<IUserListEntry>> = withComparatorFilters([
+        const columns: Array<uiGrid.IColumnDefOf<
+            IUserListEntry
+        >> = withComparatorFilters([
             {
                 field: "user.real_name",
                 name: "Full name",
                 cellTooltip: true,
                 headerTooltip: true,
-                sortingAlgorithm: (a: string, b: string) => a.localeCompare(b, sortLang),
+                sortingAlgorithm: (a: string, b: string) =>
+                    a.localeCompare(b, sortLang),
             },
             {
                 field: "user.name",
@@ -154,45 +174,73 @@ export class UserListController implements IController {
                     this.fireUserChange(row, this.instantUpdate);
                 });
                 if (this.gridOptions?.data) {
-                    gridApi.grid.modifyRows(this.gridOptions.data as IUserListEntry[]);
+                    gridApi.grid.modifyRows(
+                        this.gridOptions.data as IUserListEntry[]
+                    );
                     const firstRow = this.gridOptions.data[0] as IUserListEntry;
                     const userName = getURLParameter("user");
                     let foundUser: IUserListEntry | undefined;
                     if (userName) {
                         foundUser = this.viewctrl.findUserByName(userName);
                         if (!foundUser) {
-                            void showMessageDialog(`User ${userName} not found from answerers.`);
+                            void showMessageDialog(
+                                `User ${userName} not found from answerers.`
+                            );
                         }
                     }
                     const currSel = documentglobals().current_list_user;
                     if (!foundUser && currSel) {
                         foundUser = this.viewctrl.findUserByName(currSel.name);
                     }
-                    this.gridApi.selection.selectRow(foundUser ? foundUser : firstRow);
+                    this.gridApi.selection.selectRow(
+                        foundUser ? foundUser : firstRow
+                    );
                 }
-                gridApi.cellNav.on.navigate(this.scope, (newRowCol, oldRowCol) => {
-                    // TODO: check if simple way to cancel this event here
-                    //  or make unsavitimcomponents checks at keyboardpress/click events before on.navigate gets called
-                    if (this.preventedChange) {
-                        this.preventedChange = false;
-                        return;
-                    }
-
-                    if (oldRowCol && oldRowCol.row === newRowCol.row) { return; }
-                    const unsavedTimComponents = this.viewctrl.checkUnSavedTimComponents(true);
-                    if (unsavedTimComponents && !window.confirm("You have unsaved changes. Change user anyway?")) {
-                        this.preventedChange = true;
-                        if (oldRowCol) {
-                            gridApi.cellNav.scrollToFocus(oldRowCol.row.entity, oldRowCol.col.colDef);
-                        } else {
-                            if (this.gridOptions?.data && this.gridOptions.columnDefs) {
-                                gridApi.cellNav.scrollToFocus(this.gridOptions.data[0] as IUserListEntry, this.gridOptions.columnDefs[0]);
-                            }
+                gridApi.cellNav.on.navigate(
+                    this.scope,
+                    (newRowCol, oldRowCol) => {
+                        // TODO: check if simple way to cancel this event here
+                        //  or make unsavitimcomponents checks at keyboardpress/click events before on.navigate gets called
+                        if (this.preventedChange) {
+                            this.preventedChange = false;
+                            return;
                         }
-                        return;
+
+                        if (oldRowCol && oldRowCol.row === newRowCol.row) {
+                            return;
+                        }
+                        const unsavedTimComponents = this.viewctrl.checkUnSavedTimComponents(
+                            true
+                        );
+                        if (
+                            unsavedTimComponents &&
+                            !window.confirm(
+                                "You have unsaved changes. Change user anyway?"
+                            )
+                        ) {
+                            this.preventedChange = true;
+                            if (oldRowCol) {
+                                gridApi.cellNav.scrollToFocus(
+                                    oldRowCol.row.entity,
+                                    oldRowCol.col.colDef
+                                );
+                            } else {
+                                if (
+                                    this.gridOptions?.data &&
+                                    this.gridOptions.columnDefs
+                                ) {
+                                    gridApi.cellNav.scrollToFocus(
+                                        this.gridOptions
+                                            .data[0] as IUserListEntry,
+                                        this.gridOptions.columnDefs[0]
+                                    );
+                                }
+                            }
+                            return;
+                        }
+                        gridApi.selection.selectRow(newRowCol.row.entity);
                     }
-                    gridApi.selection.selectRow(newRowCol.row.entity);
-                });
+                );
             },
             gridMenuCustomItems: [
                 {
@@ -231,7 +279,9 @@ export class UserListController implements IController {
                     title: "Answers as plain text",
                     action: async ($event: IAngularEvent) => {
                         await showAllAnswers({
-                            url: "/allDocumentAnswersPlain/" + this.viewctrl.item.id,
+                            url:
+                                "/allDocumentAnswersPlain/" +
+                                this.viewctrl.item.id,
                             identifier: this.viewctrl.item.id.toString(),
                             allTasks: true,
                         });
@@ -249,7 +299,8 @@ export class UserListController implements IController {
 
                             const visibleRows = this.gridApi.core.getVisibleRows();
 
-                            for (const row of visibleRows) { // Create string array of visible item.
+                            for (const row of visibleRows) {
+                                // Create string array of visible item.
                                 if (row.entity !== selectedUser) {
                                     iusers.push(row.entity.user);
                                 }
@@ -282,7 +333,11 @@ export class UserListController implements IController {
     }
 
     exportKorppi(options: IExportOptions) {
-        if (!options.taskPointField && !options.velpPointField && !options.totalPointField) {
+        if (
+            !options.taskPointField &&
+            !options.velpPointField &&
+            !options.totalPointField
+        ) {
             return;
         }
         if (!this.gridApi) {
@@ -300,14 +355,20 @@ export class UserListController implements IController {
         for (const f of fields) {
             const fieldName = fieldNames.get(f);
             if (fieldName) {
-                filename = (filename ?? fieldName + ".txt");
+                filename = filename ?? fieldName + ".txt";
                 if (dataKorppi !== "") {
                     dataKorppi += "\n";
                 }
                 for (const d of data) {
                     const entity = d.entity;
                     if (entity[f] != null) {
-                        dataKorppi += entity.user.name + ";" + fieldName + ";" + entity[f] + "\n";
+                        dataKorppi +=
+                            entity.user.name +
+                            ";" +
+                            fieldName +
+                            ";" +
+                            entity[f] +
+                            "\n";
                     }
                 }
             }
@@ -340,7 +401,6 @@ export class UserListController implements IController {
         opened.document.write(dataKorppi);
         opened.close();
         */
-
     }
 }
 
@@ -370,7 +430,12 @@ timApp.component("timUserList", {
 export class KorppiExportCtrl extends DialogController<void, IExportOptions> {
     static component = "timKorppiExport";
     static $inject = ["$element", "$scope"] as const;
-    private options: IExportOptions = {totalPointField: "", velpPointField: "", taskPointField: "", copy: false};
+    private options: IExportOptions = {
+        totalPointField: "",
+        velpPointField: "",
+        taskPointField: "",
+        copy: false,
+    };
 
     protected getTitle() {
         return "Export to Korppi";
@@ -386,7 +451,9 @@ export class KorppiExportCtrl extends DialogController<void, IExportOptions> {
     }
 }
 
-registerDialogComponent(KorppiExportCtrl, {templateUrl: "/static/templates/korppiExport.html"});
+registerDialogComponent(KorppiExportCtrl, {
+    templateUrl: "/static/templates/korppiExport.html",
+});
 
 function showKorppiExportDialog() {
     return showDialog(KorppiExportCtrl, {}).result;

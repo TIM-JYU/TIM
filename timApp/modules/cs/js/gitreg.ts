@@ -1,15 +1,8 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["hide_"] }] */
-import {
-        Component,
-        ChangeDetectorRef,
-        ElementRef,
-    } from "@angular/core";
+import {Component, ChangeDetectorRef, ElementRef} from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
-import {
-    defaultTimeout,
-    to2,
-} from "tim/util/utils";
+import {defaultTimeout, to2} from "tim/util/utils";
 import {CsController, IRunRequest, IRunResponse} from "./csPlugin";
 
 @Component({
@@ -55,7 +48,12 @@ export class GitRegComponent extends CsController {
     askFields: string[] = [];
     isRegistered: boolean = false;
 
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        cdr: ChangeDetectorRef
+    ) {
         super(el, http, domSanitizer, cdr);
     }
 
@@ -69,7 +67,9 @@ export class GitRegComponent extends CsController {
     }
 
     getContent(): string {
-        return this.isRegistered ? "You are registered" : "Register to git here";
+        return this.isRegistered
+            ? "You are registered"
+            : "Register to git here";
     }
 
     async submit(event: Event) {
@@ -81,10 +81,14 @@ export class GitRegComponent extends CsController {
         const data: {[key: string]: string | undefined} = {};
 
         for (const field of this.askFields) {
-            data[field] = ((event.target as HTMLFormElement)[field] as HTMLInputElement | undefined)?.value;
+            data[field] = ((event.target as HTMLFormElement)[field] as
+                | HTMLInputElement
+                | undefined)?.value;
         }
 
-        const params: IRunRequest & {input: {gitRegFields: {[key: string]: string | undefined}}} = {
+        const params: IRunRequest & {
+            input: {gitRegFields: {[key: string]: string | undefined}};
+        } = {
             input: {
                 gitRegFields: data,
                 submittedFiles: [],
@@ -99,9 +103,15 @@ export class GitRegComponent extends CsController {
         };
 
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to2(this.http.put<IRunResponse>(url, params,
-            {headers: new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`})}
-        ).toPromise());
+        const r = await to2(
+            this.http
+                .put<IRunResponse>(url, params, {
+                    headers: new HttpHeaders({
+                        timeout: `${this.timeout + defaultTimeout}`,
+                    }),
+                })
+                .toPromise()
+        );
         if (r.ok) {
             this.error = r.result.web.error;
             this.isRegistered = !!r.result.web.language;

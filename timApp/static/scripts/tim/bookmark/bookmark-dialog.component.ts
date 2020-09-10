@@ -70,7 +70,10 @@ import {IBookmark} from "tim/bookmark/bookmark.service";
         </tim-dialog-frame>
     `,
 })
-export class BookmarkDialogComponent extends AngularDialogComponent<IBookmark, IBookmark> {
+export class BookmarkDialogComponent extends AngularDialogComponent<
+    IBookmark,
+    IBookmark
+> {
     showParamsCheckbox?: boolean;
     showHashCheckbox?: boolean;
     bookmark!: IBookmark; // ngOnInit
@@ -80,7 +83,10 @@ export class BookmarkDialogComponent extends AngularDialogComponent<IBookmark, I
 
     ngOnInit() {
         this.bookmark = this.data;
-        if (this.bookmark.group === "Last edited" || this.bookmark.group === "Last read") {
+        if (
+            this.bookmark.group === "Last edited" ||
+            this.bookmark.group === "Last read"
+        ) {
             this.bookmark.group = "";
         }
         this.showParamsCheckbox = window.location.search.length > 1;

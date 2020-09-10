@@ -3,7 +3,7 @@ export class TimDefer<T> {
 
     // These are initialized by the Promise constructor.
     public reject!: (reason?: unknown) => void;
-    public resolve!: (value?: (T | PromiseLike<T> | undefined)) => void;
+    public resolve!: (value?: T | PromiseLike<T> | undefined) => void;
 
     constructor() {
         this.promise = new Promise<T>((resolve, reject) => {

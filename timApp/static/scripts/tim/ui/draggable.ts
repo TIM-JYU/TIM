@@ -49,31 +49,33 @@ const draggableTemplate = `
      class="resizehandle-rd resizehandle"></div>
     `;
 
-timApp.directive("timDraggableFixed", [() => {
-    return {
-        bindToController: {
-            absolute: "<?",
-            caption: "@?",
-            click: "<?",
-            detachable: "<?",
-            forceMaximized: "<?",
-            resize: "<?",
-            draggable: "<?",
-            save: "@?",
-        },
-        controller: DraggableController,
-        controllerAs: "d", // default $ctrl does not work, possibly because of some ng-init
-        require: {
-            parentDraggable: "?^^timDraggableFixed", // for checking whether we are inside some other draggable
-        },
-        restrict: "A",
-        scope: {},
-        // template: draggableTemplate,
-        // transclude: true,
-        // Using template + transclude here does not work for some reason with uib-modal, so we compile the
-        // template manually in $postLink.
-    };
-}]);
+timApp.directive("timDraggableFixed", [
+    () => {
+        return {
+            bindToController: {
+                absolute: "<?",
+                caption: "@?",
+                click: "<?",
+                detachable: "<?",
+                forceMaximized: "<?",
+                resize: "<?",
+                draggable: "<?",
+                save: "@?",
+            },
+            controller: DraggableController,
+            controllerAs: "d", // default $ctrl does not work, possibly because of some ng-init
+            require: {
+                parentDraggable: "?^^timDraggableFixed", // for checking whether we are inside some other draggable
+            },
+            restrict: "A",
+            scope: {},
+            // template: draggableTemplate,
+            // transclude: true,
+            // Using template + transclude here does not work for some reason with uib-modal, so we compile the
+            // template manually in $postLink.
+        };
+    },
+]);
 
 export interface Pos {
     X: number;
@@ -117,7 +119,12 @@ export class DraggableController implements IController {
     private setTop: boolean = true;
     private prev: IBounds = {left: 0, right: 0, bottom: 0, top: 0};
     private prevSize: ISize = {width: 0, height: 0};
-    private resizeStates: IResizeStates = {up: false, down: false, right: false, left: false};
+    private resizeStates: IResizeStates = {
+        up: false,
+        down: false,
+        right: false,
+        left: false,
+    };
     private lastPos: Pos = {X: 0, Y: 0};
     private lastPageXYPos = {X: 0, Y: 0};
     private handle?: HTMLElement;
@@ -139,8 +146,7 @@ export class DraggableController implements IController {
     private dragEnabled = true;
     private draggable?: boolean;
 
-    constructor(private scope: IScope, private element: JQLite) {
-    }
+    constructor(private scope: IScope, private element: JQLite) {}
 
     isModal() {
         return this.element.parent(".modal").length === 1;
@@ -304,20 +310,28 @@ export class DraggableController implements IController {
             return;
         }
         const SizeType = t.partial({width: t.string, height: t.string});
-        const oldSize = getStorage(this.posKey +
-            "Size");
+        const oldSize = getStorage(this.posKey + "Size");
         if (SizeType.is(oldSize) && this.canDrag()) {
             const vps = getViewPortSize();
             if (oldSize.width) {
-                this.element.css("width",
-                    Math.min(getPixels(oldSize.width), vps.width * 0.97));
+                this.element.css(
+                    "width",
+                    Math.min(getPixels(oldSize.width), vps.width * 0.97)
+                );
             }
             if (oldSize.height && !this.autoHeight) {
-                this.element.css("height",
-                    Math.min(getPixels(oldSize.height), vps.height * 0.97));
+                this.element.css(
+                    "height",
+                    Math.min(getPixels(oldSize.height), vps.height * 0.97)
+                );
             }
         }
-        const PosType = t.partial({left: t.string, right: t.string, top: t.string, bottom: t.string});
+        const PosType = t.partial({
+            left: t.string,
+            right: t.string,
+            top: t.string,
+            bottom: t.string,
+        });
         const oldPos = getStorage(this.posKey);
         // it doesn't make sense to restore Y position if the dialog has absolute position (instead of fixed)
         if (await this.modalHasAbsolutePosition()) {
@@ -331,7 +345,7 @@ export class DraggableController implements IController {
             if (oldPos.right && this.setRight) {
                 this.element.css("right", oldPos.right);
             }
-            if (!await this.modalHasAbsolutePosition()) {
+            if (!(await this.modalHasAbsolutePosition())) {
                 if (oldPos.top && this.setTop) {
                     this.element.css("top", oldPos.top);
                 }
@@ -425,16 +439,31 @@ export class DraggableController implements IController {
             bottom: getPixels(this.element.css("bottom")),
             right: getPixels(this.element.css("right")),
         };
-        timLogTime("set:" + [this.setLeft, this.setTop, this.setBottom, this.setRight].join(", "), "drag");
+        timLogTime(
+            "set:" +
+                [this.setLeft, this.setTop, this.setBottom, this.setRight].join(
+                    ", "
+                ),
+            "drag"
+        );
     }
 
-    private resizeElement(e: MouseEvent | TouchEvent, up: boolean, right: boolean, down: boolean, left: boolean) {
+    private resizeElement(
+        e: MouseEvent | TouchEvent,
+        up: boolean,
+        right: boolean,
+        down: boolean,
+        left: boolean
+    ) {
         e.preventDefault();
         this.resizeStates = {up, down, left, right};
         this.refreshEventListeners(e, this.moveResize);
     }
 
-    private refreshEventListeners(e: MouseEvent | TouchEvent, handler: (e: MouseEvent | TouchEvent) => unknown) {
+    private refreshEventListeners(
+        e: MouseEvent | TouchEvent,
+        handler: (e: MouseEvent | TouchEvent) => unknown
+    ) {
         this.removeMouseUp();
         this.removeMouseMove(handler);
         this.lastPos = this.getPageXY(e);
@@ -453,7 +482,7 @@ export class DraggableController implements IController {
         document.removeEventListener("touchend", this.release);
     }
 
-    private removeMouseMove(handler: (e: (MouseEvent | TouchEvent)) => unknown) {
+    private removeMouseMove(handler: (e: MouseEvent | TouchEvent) => unknown) {
         document.removeEventListener("mousemove", handler);
         document.removeEventListener("pointermove", handler);
         document.removeEventListener("touchmove", handler);
@@ -520,8 +549,7 @@ export class DraggableController implements IController {
         this.removeMouseMove(this.moveResize);
         this.ensureVisibleInViewport();
         if (this.posKey) {
-            const css = this.element.css(["top", "bottom", "left",
-                "right"]);
+            const css = this.element.css(["top", "bottom", "left", "right"]);
             setStorage(this.posKey, css);
 
             timLogTime("pos:" + css.left + "," + css.top, "drag");
@@ -544,7 +572,12 @@ export class DraggableController implements IController {
     }
 
     private setCssFromBound(bound: IBounds) {
-        if (bound.bottom === 0 && bound.top === 0 && bound.right === 0 && bound.left === 0) {
+        if (
+            bound.bottom === 0 &&
+            bound.top === 0 &&
+            bound.right === 0 &&
+            bound.left === 0
+        ) {
             return;
         }
         if (this.setTop) {
@@ -570,9 +603,8 @@ export class DraggableController implements IController {
 
     private doMove(pos: Pos) {
         const delta = {
-            X: pos.X -
-
-                this.lastPos.X, Y: pos.Y - this.lastPos.Y,
+            X: pos.X - this.lastPos.X,
+            Y: pos.Y - this.lastPos.Y,
         };
 
         if (this.setTop) {
@@ -582,20 +614,18 @@ export class DraggableController implements IController {
             this.element.css("left", this.prev.left + delta.X);
         }
         if (this.setBottom) {
-            this.element.css("bottom",
-                this.prev.bottom - delta.Y);
+            this.element.css("bottom", this.prev.bottom - delta.Y);
         }
         if (this.setRight) {
-            this.element.css("right"
-                , this.prev.right - delta.X);
+            this.element.css("right", this.prev.right - delta.X);
         }
     }
 
     moveResize = async (e: MouseEvent | TouchEvent) => {
         const pos = this.getPageXY(e);
         const delta = {
-            X: pos.X - this.lastPos.X, Y: pos.Y -
-                this.lastPos.Y,
+            X: pos.X - this.lastPos.X,
+            Y: pos.Y - this.lastPos.Y,
         };
 
         // If the top and left styles have not been set, resizing behaves illogically.
@@ -607,15 +637,13 @@ export class DraggableController implements IController {
         }
 
         if (this.resizeStates.up) {
-            this.element.css("height",
-                this.prevSize.height - delta.Y);
+            this.element.css("height", this.prevSize.height - delta.Y);
             if (this.setTop) {
                 this.element.css("top", this.prev.top + delta.Y);
             }
         }
         if (this.resizeStates.left) {
-            this.element.css(
-                "width", this.prevSize.width - delta.X);
+            this.element.css("width", this.prevSize.width - delta.X);
             if (this.setLeft) {
                 this.element.css("left", this.prev.left + delta.X);
             }
@@ -630,8 +658,7 @@ export class DraggableController implements IController {
             this.element.css("width", this.prevSize.width + delta.X);
 
             if (this.setRight && delta.X >= 0) {
-                this.element.css(
-                    "right", this.prev.right - delta.X);
+                this.element.css("right", this.prev.right - delta.X);
             }
         }
 
@@ -644,7 +671,7 @@ export class DraggableController implements IController {
         }
         if (this.resizeCallback) {
             this.resizeCallback({
-                ...await this.getSizeAsNum(),
+                ...(await this.getSizeAsNum()),
                 state: this.resizeStates,
             });
         }
@@ -652,7 +679,10 @@ export class DraggableController implements IController {
 
     async getSize() {
         await this.layoutReady.promise;
-        return {width: this.element[0].style.width || null, height: this.element[0].style.height || null};
+        return {
+            width: this.element[0].style.width || null,
+            height: this.element[0].style.height || null,
+        };
     }
 
     async getSizeAsNum() {

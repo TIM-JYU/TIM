@@ -21,7 +21,7 @@ const tagParsingSeparator = ",";
 /*
  * Tag editing dialog's controller.
  */
-export class TagController extends DialogController<{ params: IItem }, void> {
+export class TagController extends DialogController<{params: IItem}, void> {
     static component = "timEditTags";
     static $inject = ["$element", "$scope"] as const;
     private tagName: string = "";
@@ -112,7 +112,10 @@ export class TagController extends DialogController<{ params: IItem }, void> {
             if (!allTags) {
                 return;
             }
-            this.allUnusedTags = arrayDifference(allTags, Object.assign([], tagsListStrings));
+            this.allUnusedTags = arrayDifference(
+                allTags,
+                Object.assign([], tagsListStrings)
+            );
             return;
         }
     }
@@ -206,14 +209,12 @@ export class TagController extends DialogController<{ params: IItem }, void> {
         const tagObjects: ITag[] = [];
         this.tagName.split(tagParsingSeparator).forEach((tag) => {
             if (tag) {
-                tagObjects.push(
-                    {
-                        block_id: this.resolve.params.id,
-                        expires: this.expires,
-                        name: tag.trim(),
-                        type: TagType.Regular,
-                    });
-
+                tagObjects.push({
+                    block_id: this.resolve.params.id,
+                    expires: this.expires,
+                    name: tag.trim(),
+                    type: TagType.Regular,
+                });
             }
         });
         const data = {tags: tagObjects};
@@ -274,10 +275,8 @@ function arrayDifference<T>(a1: T[], a2: T[]) {
     return a1.filter((item) => !a2.includes(item));
 }
 
-registerDialogComponent(TagController,
-    {
-        template:
-            `<tim-dialog class="overflow-visible">
+registerDialogComponent(TagController, {
+    template: `<tim-dialog class="overflow-visible">
     <dialog-header>
     </dialog-header>
     <dialog-body>
@@ -343,7 +342,7 @@ registerDialogComponent(TagController,
     </dialog-footer>
 </tim-dialog>
 `,
-    });
+});
 
 export async function showTagDialog(d: IItem) {
     return await showDialog(TagController, {params: () => d}).result;

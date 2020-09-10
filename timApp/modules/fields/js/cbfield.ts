@@ -3,8 +3,18 @@
  */
 import angular from "angular"; // , {INgModelOptions}
 import * as t from "io-ts";
-import {FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {
+    FormModeOption,
+    ISetAnswerResult,
+    ITimComponent,
+    ViewCtrl,
+} from "tim/document/viewctrl";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
@@ -31,8 +41,7 @@ const CbfieldMarkup = t.intersection([
     }),
 ]);
 const CbfieldAll = t.intersection([
-    t.partial({
-    }),
+    t.partial({}),
     t.type({
         info: Info,
         markup: CbfieldMarkup,
@@ -41,7 +50,13 @@ const CbfieldAll = t.intersection([
     }),
 ]);
 
-class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.TypeOf<typeof CbfieldAll>, typeof CbfieldAll> implements ITimComponent {
+class CbfieldController
+    extends PluginBase<
+        t.TypeOf<typeof CbfieldMarkup>,
+        t.TypeOf<typeof CbfieldAll>,
+        typeof CbfieldAll
+    >
+    implements ITimComponent {
     private result?: string;
     private isRunning = false;
     private userword: boolean = false;
@@ -50,7 +65,10 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     private initialValue: boolean = false;
     private errormessage?: string;
     private hideSavedText = true;
-    private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
+    private saveResponse: {saved: boolean; message: string | undefined} = {
+        saved: false,
+        message: undefined,
+    };
     private preventedAutosave = false;
 
     getDefaultMarkup() {
@@ -65,16 +83,27 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     }
 
     static makeBoolean(s: string): boolean {
-        if (s == "") { return false; }
-        if (s == "0") { return false; }
-        if (s == "false") { return false; }
-        if (s == "1") { return true; }
+        if (s == "") {
+            return false;
+        }
+        if (s == "0") {
+            return false;
+        }
+        if (s == "false") {
+            return false;
+        }
+        if (s == "1") {
+            return true;
+        }
         return true;
     }
 
     $onInit() {
         super.$onInit();
-        const uw = (valueOr(this.attrsall.state?.c, this.attrs.initword ?? "")).toString();
+        const uw = valueOr(
+            this.attrsall.state?.c,
+            this.attrs.initword ?? ""
+        ).toString();
         this.userword = CbfieldController.makeBoolean(uw);
 
         if (this.attrs.tag) {
@@ -83,7 +112,9 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
-        if (this.attrs.showname) { this.initCode(); }
+        if (this.attrs.showname) {
+            this.initCode();
+        }
     }
 
     /**
@@ -111,7 +142,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
-    setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
+    setAnswer(content: {[index: string]: unknown}): ISetAnswerResult {
         this.errormessage = undefined;
         let message;
         let ok = true;
@@ -120,17 +151,20 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             this.resetField();
         } else {
             try {
-                this.userword = CbfieldController.makeBoolean(content.c as string);
+                this.userword = CbfieldController.makeBoolean(
+                    content.c as string
+                );
             } catch (e) {
                 this.userword = false;
                 ok = false;
-                message = `Couldn't find related content ("c") from ${JSON.stringify(content)}`;
+                message = `Couldn't find related content ("c") from ${JSON.stringify(
+                    content
+                )}`;
                 this.errormessage = message;
             }
         }
         this.initialValue = this.userword;
         return {ok: ok, message: message};
-
     }
 
     /**
@@ -144,14 +178,19 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      * Returns (user) set col size (size of the field).
      */
     get cols() {
-        if (!this.attrs.cols) { return {}; }
+        if (!this.attrs.cols) {
+            return {};
+        }
         return {width: this.attrs.cols + "em", display: "inline-block"};
     }
 
     // noinspection JSUnusedGlobalSymbols
     get cbStyle() {
-        if (!this.inputstem && (this.stem || this.header)) { return {}; }
-        return { // otherwise input stem and cb are vertical
+        if (!this.inputstem && (this.stem || this.header)) {
+            return {};
+        }
+        return {
+            // otherwise input stem and cb are vertical
             width: "auto",
         };
     }
@@ -160,7 +199,9 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      * Initialize content.
      */
     initCode() {
-        this.userword = CbfieldController.makeBoolean(this.attrs.initword ?? "");
+        this.userword = CbfieldController.makeBoolean(
+            this.attrs.initword ?? ""
+        );
         this.initialValue = this.userword;
         this.result = undefined;
     }
@@ -187,11 +228,17 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
-        return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
+        return (
+            this.attrs.readOnlyStyle == "plaintext" &&
+            window.location.pathname.startsWith("/view/")
+        );
     }
 
     isReadOnly() {
-        return (this.attrs.readOnlyStyle == "box" && window.location.pathname.startsWith("/view/")) ? "disable" : "";
+        return this.attrs.readOnlyStyle == "box" &&
+            window.location.pathname.startsWith("/view/")
+            ? "disable"
+            : "";
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -205,7 +252,7 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         if (this.initialValue != this.userword) {
             this.hideSavedText = true;
         }
-        return (this.initialValue != this.userword);
+        return this.initialValue != this.userword;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -237,7 +284,9 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
         this.errormessage = undefined;
         this.isRunning = true;
         let c = "0";
-        if (this.userword) { c = "1"; }
+        if (this.userword) {
+            c = "1";
+        }
         this.result = undefined;
         const params = {
             input: {
@@ -250,7 +299,9 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
+        const r = await to(
+            $http.put<{web: {result: string; error?: string}}>(url, params)
+        );
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -263,7 +314,9 @@ class CbfieldController extends PluginBase<t.TypeOf<typeof CbfieldMarkup>, t.Typ
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
         } else {
-            this.errormessage = r.result.data.error || "Syntax error, infinite loop or some other error?";
+            this.errormessage =
+                r.result.data.error ||
+                "Syntax error, infinite loop or some other error?";
         }
         return this.saveResponse;
     }

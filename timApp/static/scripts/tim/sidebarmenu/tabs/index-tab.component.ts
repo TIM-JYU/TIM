@@ -1,7 +1,13 @@
 import {Component, Input, OnInit} from "@angular/core";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
-import {HeaderIndexerService, IHeaderDisplayIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
-import {getViewRangeWithHeaderId, partitionDocument} from "tim/document/viewRangeInfo";
+import {
+    HeaderIndexerService,
+    IHeaderDisplayIndexItem,
+} from "tim/sidebarmenu/services/header-indexer.service";
+import {
+    getViewRangeWithHeaderId,
+    partitionDocument,
+} from "tim/document/viewRangeInfo";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 
 @Component({
@@ -43,11 +49,9 @@ export class IndexTabComponent implements OnInit {
     pageUrl = `${document.location.origin}${document.location.pathname}${document.location.search}`;
     isFullRange = true;
 
-    constructor(private headerIndexer: HeaderIndexerService) {
-    }
+    constructor(private headerIndexer: HeaderIndexerService) {}
 
-    ngOnInit(): void {
-    }
+    ngOnInit(): void {}
 
     get displayIndex() {
         return this.headerIndexer.headers;
@@ -71,12 +75,14 @@ export class IndexTabComponent implements OnInit {
     async headerClicked(evt: Event, headerId: string) {
         const isInCurrentPart = document.getElementById(headerId);
         if (!isInCurrentPart && !this.isFullRange && vctrlInstance) {
-            const headerRange = await getViewRangeWithHeaderId(vctrlInstance.docId, headerId);
+            const headerRange = await getViewRangeWithHeaderId(
+                vctrlInstance.docId,
+                headerId
+            );
             if (headerRange) {
                 partitionDocument(headerRange.b, headerRange.e, true);
             }
         }
         evt.stopPropagation();
     }
-
 }

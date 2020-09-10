@@ -1,4 +1,13 @@
-import {ApplicationRef, Component, DoBootstrap, ElementRef, Input, NgModule, OnDestroy, OnInit} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    Input,
+    NgModule,
+    OnDestroy,
+    OnInit,
+} from "@angular/core";
 import {to} from "tim/util/utils";
 import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -6,7 +15,10 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import $ from "jquery";
 import {showDialog} from "../../ui/dialog";
 import {$injector} from "../../util/ngimport";
-import {ISpellErrorParams, SpellErrorDialogController} from "./spellErrorDialog";
+import {
+    ISpellErrorParams,
+    SpellErrorDialogController,
+} from "./spellErrorDialog";
 
 @Component({
     selector: "tim-spell-error",
@@ -20,8 +32,7 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
     @Input() private count?: number;
     private dlg?: SpellErrorDialogController;
 
-    constructor(private e: ElementRef<HTMLElement>) {
-    }
+    constructor(private e: ElementRef<HTMLElement>) {}
 
     ngOnDestroy() {
         if (this.dlg) {
@@ -29,8 +40,7 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
         }
     }
 
-    ngOnInit() {
-    }
+    ngOnInit() {}
 
     async selectWord(e: MouseEvent) {
         if (this.dlg) {
@@ -55,16 +65,11 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
-    declarations: [
-        SpellErrorComponent,
-    ],
-    imports: [
-        BrowserModule,
-    ],
+    declarations: [SpellErrorComponent],
+    imports: [BrowserModule],
 })
 export class SpellModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
 async function showSpellErrorDialog(s: ISpellErrorParams) {

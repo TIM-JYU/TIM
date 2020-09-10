@@ -8,6 +8,10 @@ import {Users} from "tim/user/userService";
 })
 export class TimeSincePipe implements PipeTransform {
     transform(date: string): string {
-        return secondsToShortTime(moment().diff(date, "seconds"), [ "d" ], Users.getCurrentLanguage());
+        return secondsToShortTime(
+            moment().diff(date, "seconds"),
+            ["d"],
+            Users.getCurrentLanguage()
+        );
     }
 }

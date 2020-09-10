@@ -97,7 +97,16 @@ export function timLogTime(msg: string, id: string, level?: number) {
         timLogText = "";
         str = diff.valueOf();
     } else {
-        str = sid + ": " + d.toLocaleTimeString() + " " + diff.valueOf() + " " + diffLast.valueOf() + " - " + msg;
+        str =
+            sid +
+            ": " +
+            d.toLocaleTimeString() +
+            " " +
+            diff.valueOf() +
+            " " +
+            diffLast.valueOf() +
+            " - " +
+            msg;
     }
     if (timTimingLog) {
         console.log(str);

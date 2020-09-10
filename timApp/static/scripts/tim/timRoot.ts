@@ -158,7 +158,9 @@ export class RootCtrl {
         if (g.config.hosts && Users.isLoggedIn()) {
             if (!g.config.hosts.allowed.includes(location.hostname)) {
                 let message;
-                for (const [key, val] of Object.entries(g.config.hosts.warnings)) {
+                for (const [key, val] of Object.entries(
+                    g.config.hosts.warnings
+                )) {
                     if (location.hostname.startsWith(key)) {
                         message = val;
                         break;
@@ -168,7 +170,11 @@ export class RootCtrl {
                     message = g.config.hosts.defaultwarning;
                 }
                 const u = Users.getCurrent();
-                const name = (u.last_name ?? u.real_name?.split(" ")[0] ?? "").toLowerCase();
+                const name = (
+                    u.last_name ??
+                    u.real_name?.split(" ")[0] ??
+                    ""
+                ).toLowerCase();
                 message = message.replace(/LASTNAME/g, name);
                 if (name) {
                     let letter;

@@ -5,14 +5,23 @@
 import {IFormController, IScope} from "angular";
 import {Moment} from "moment";
 import {DialogController} from "tim/ui/dialogController";
-import {ICourseSettings, IItem, ISubjectList, ITag, TagType} from "../../item/IItem";
+import {
+    ICourseSettings,
+    IItem,
+    ISubjectList,
+    ITag,
+    TagType,
+} from "../../item/IItem";
 import {registerDialogComponent, showDialog} from "../../ui/dialog";
 import {$http} from "../../util/ngimport";
 import {dateFormat, to} from "../../util/utils";
 
 const groupTagPrefix = "group:";
 
-export class CourseDialogController extends DialogController<{params: IItem}, void> {
+export class CourseDialogController extends DialogController<
+    {params: IItem},
+    void
+> {
     static component = "timCourseDialog";
     static $inject = ["$element", "$scope"] as const;
     private f!: IFormController; // initialized in the template
@@ -77,7 +86,8 @@ export class CourseDialogController extends DialogController<{params: IItem}, vo
                     this.currentSubject = tag;
                 }
                 if (tag.name.startsWith(groupTagPrefix)) {
-                    this.studentGroupName += groupSep + tag.name.slice(groupTagPrefix.length);
+                    this.studentGroupName +=
+                        groupSep + tag.name.slice(groupTagPrefix.length);
                     groupSep = ";";
                 }
             }
@@ -89,12 +99,12 @@ export class CourseDialogController extends DialogController<{params: IItem}, vo
      */
     private async removeCurrentSpecialTags() {
         const docPath = this.resolve.params.path;
-        const r = await to($http.post(`/tags/setCourseTags/${docPath}`,
-            {
+        const r = await to(
+            $http.post(`/tags/setCourseTags/${docPath}`, {
                 groups: [],
                 tags: [],
-            },
-        ));
+            })
+        );
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
             this.successMessage = undefined;
@@ -151,18 +161,25 @@ export class CourseDialogController extends DialogController<{params: IItem}, vo
 
         const codeName = this.courseCode.trim().toUpperCase();
         const codeTag = {
-            expires: this.expires, name: codeName, type: TagType.CourseCode,
+            expires: this.expires,
+            name: codeName,
+            type: TagType.CourseCode,
         };
         const subjectTag = {
-            expires: this.expires, name: this.courseSubject.trim(), type: TagType.Subject,
+            expires: this.expires,
+            name: this.courseSubject.trim(),
+            type: TagType.Subject,
         };
 
-        const r = await to($http.post(`/tags/setCourseTags/${docPath}`,
-            {
-                groups: this.studentGroupName.length > 0 ? this.studentGroupName.split(";") : [],
+        const r = await to(
+            $http.post(`/tags/setCourseTags/${docPath}`, {
+                groups:
+                    this.studentGroupName.length > 0
+                        ? this.studentGroupName.split(";")
+                        : [],
                 tags: [codeTag, subjectTag],
-            },
-        ));
+            })
+        );
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
             this.successMessage = undefined;
@@ -188,10 +205,8 @@ export class CourseDialogController extends DialogController<{params: IItem}, vo
     }
 }
 
-registerDialogComponent(CourseDialogController,
-    {
-        template:
-            `<tim-dialog class="overflow-visible">
+registerDialogComponent(CourseDialogController, {
+    template: `<tim-dialog class="overflow-visible">
     <dialog-header>
     </dialog-header>
     <dialog-body>
@@ -262,7 +277,7 @@ registerDialogComponent(CourseDialogController,
     </dialog-footer>
 </tim-dialog>
 `,
-    });
+});
 
 export async function showCourseDialog(d: IItem) {
     return await showDialog(CourseDialogController, {params: () => d}).result;

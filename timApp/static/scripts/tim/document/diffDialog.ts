@@ -16,7 +16,10 @@ export function setDiffDialog(d: DiffController | undefined) {
     diffDialog = d;
 }
 
-export class DiffController extends DialogController<{params: IDiffParams}, void> {
+export class DiffController extends DialogController<
+    {params: IDiffParams},
+    void
+> {
     static component = "timDiff";
     static $inject = ["$element", "$scope"] as const;
     private options = {editCost: 4};
@@ -48,9 +51,8 @@ export class DiffController extends DialogController<{params: IDiffParams}, void
     }
 }
 
-registerDialogComponent(DiffController,
-    {
-        template: `
+registerDialogComponent(DiffController, {
+    template: `
 <tim-dialog>
     <dialog-body>
         <div class="diff border">
@@ -59,16 +61,18 @@ registerDialogComponent(DiffController,
     </dialog-body>
 </tim-dialog>
     `,
-    },
-);
+});
 
 export async function showDiffDialog(p: IDiffParams) {
     const module = await import("angular-diff-match-patch");
     $injector.loadNewModules([module.default]);
-    return showDialog(DiffController, {params: () => p},
+    return showDialog(
+        DiffController,
+        {params: () => p},
         {
             absolute: false,
             showMinimizeButton: false,
             size: "xs",
-        });
+        }
+    );
 }

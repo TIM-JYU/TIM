@@ -15,23 +15,28 @@ function fixPageCoords(e: JQuery.MouseEventBase) {
     return e;
 }
 
-export function onClick(className: string,
-                        func: (obj: JQuery, e: JQuery.MouseEventBase) => unknown,
-                        overrideModalCheck = false) {
+export function onClick(
+    className: string,
+    func: (obj: JQuery, e: JQuery.MouseEventBase) => unknown,
+    overrideModalCheck = false
+) {
     let downEvent: JQuery.MouseEventBase | undefined;
     let downCoords: Coords | undefined;
     let lastDownEvent: JQuery.Event | undefined;
     let lastclicktime: number | undefined;
 
-    $(document).on("mousedown", className, (e) => { // touchstart
-        if (!overrideModalCheck && ($(EDITOR_CLASS_DOT).length > 0)) {
+    $(document).on("mousedown", className, (e) => {
+        // touchstart
+        if (!overrideModalCheck && $(EDITOR_CLASS_DOT).length > 0) {
             // Disable while there are modal gui elements
             return;
         }
-        if (lastDownEvent &&
+        if (
+            lastDownEvent &&
             lastclicktime &&
             lastDownEvent.type !== e.type &&
-            new Date().getTime() - lastclicktime < 500) {
+            new Date().getTime() - lastclicktime < 500
+        ) {
             // This is to prevent chaotic behavior from both mouseDown and touchStart
             // events happening at the same coordinates
             $log.info("Ignoring event:", e);
@@ -43,7 +48,8 @@ export function onClick(className: string,
         downCoords = {left: downEvent.pageX, top: downEvent.pageY};
         lastclicktime = new Date().getTime();
     });
-    $document.on("mousemove", className, (e) => { // touchmove
+    $document.on("mousemove", className, (e) => {
+        // touchmove
         if (downEvent == null) {
             return;
         }
@@ -61,7 +67,7 @@ export function onClick(className: string,
         downEvent = undefined;
     });
     // it is wrong to register both events at the same time; see https://stackoverflow.com/questions/8503453
-    const isIOS = ((/iphone|ipad/gi).test(navigator.appVersion));
+    const isIOS = /iphone|ipad/gi.test(navigator.appVersion);
     const eventName = isIOS ? "touchend" : "mouseup";
     $document.on(eventName, className, (e) => {
         if (downEvent != null) {
@@ -82,7 +88,8 @@ export function onClick(className: string,
 }
 
 export function onMouseOver(className: string, func: MouseFn) {
-    $document.on("mouseover", className, (e) => { // touchstart
+    $document.on("mouseover", className, (e) => {
+        // touchstart
         func($(e.currentTarget), fixPageCoords(e));
     });
 }
@@ -94,7 +101,11 @@ export function onMouseOut(className: string, func: MouseFn) {
 }
 
 export type MouseFn = (p: JQuery, e: JQuery.MouseEventBase) => void;
-export type MouseOverOutFn = (p: JQuery, e: JQuery.MouseEventBase, over: boolean) => void;
+export type MouseOverOutFn = (
+    p: JQuery,
+    e: JQuery.MouseEventBase,
+    over: boolean
+) => void;
 
 export function onMouseOverOut(className: string, func: MouseOverOutFn) {
     // A combination function with a third parameter

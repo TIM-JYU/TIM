@@ -10,7 +10,9 @@ export function isValidLocation(viewValue: string) {
 
 @Directive({
     selector: "[timLocation]",
-    providers: [{provide: NG_VALIDATORS, useExisting: LocationDirective, multi: true}],
+    providers: [
+        {provide: NG_VALIDATORS, useExisting: LocationDirective, multi: true},
+    ],
 })
 export class LocationDirective implements Validator {
     validate(control: AbstractControl) {

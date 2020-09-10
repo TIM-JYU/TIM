@@ -1,20 +1,31 @@
 import * as t from "io-ts";
 import {widenFields} from "tim/util/common";
-import {IError, IGroupData, IJsRunnerMarkup, INumbersObject} from "../../shared/jsrunnertypes";
+import {
+    IError,
+    IGroupData,
+    IJsRunnerMarkup,
+    INumbersObject,
+} from "../../shared/jsrunnertypes";
 import {AliasDataT, UserFieldDataT} from "../servertypes";
 
 /**
  * From name=alias list returns two lists
  * @param fields list of name=alias pairs
  */
-function separateNamesAndAliases(fields: string[]): {names: string[], aliases: string[] } {
+function separateNamesAndAliases(
+    fields: string[]
+): {names: string[]; aliases: string[]} {
     const raliases: string[] = [];
     const rnames: string[] = [];
     for (const f of fields) {
         const parts = f.split("=");
         const fn = parts[0].trim();
-        if (!fn) { continue; }
-        if (rnames.includes(fn)) { continue; }
+        if (!fn) {
+            continue;
+        }
+        if (rnames.includes(fn)) {
+            continue;
+        }
         rnames.push(fn);
         if (parts.length < 2) {
             raliases.push(fn);
@@ -22,11 +33,13 @@ function separateNamesAndAliases(fields: string[]): {names: string[], aliases: s
             raliases.push(parts[1].trim());
         }
     }
-    return { names: rnames, aliases: raliases};
+    return {names: rnames, aliases: raliases};
 }
 
 function genericTypeError(parameterDescription: string, v: unknown) {
-    return new Error(`${parameterDescription} has unexpected type: ${typeof v}`);
+    return new Error(
+        `${parameterDescription} has unexpected type: ${typeof v}`
+    );
 }
 
 function fieldNameTypeError(v: unknown) {
@@ -102,7 +115,9 @@ function ensureStringLikeValue(s: unknown): string {
 }
 
 function round(c: number, decim: number): number {
-    if (decim == null || isNaN(decim)) { return c; }
+    if (decim == null || isNaN(decim)) {
+        return c;
+    }
     const mul = Math.pow(10, decim);
     return Math.round(c * mul) / mul;
 }
@@ -114,7 +129,8 @@ interface Point {
     y: number;
 }
 
-interface Linear { // y = a + bb
+interface Linear {
+    // y = a + bb
     a: number;
     b: number;
 }
@@ -138,16 +154,15 @@ class WithGtools {
         }
         return this.gt;
     }
-
 }
 
 class LineFitter extends WithGtools {
     // see: http://mathworld.wolfram.com/LeastSquaresFitting.html
     private n = 0;
-    private sumX  = 0;
+    private sumX = 0;
     private sumX2 = 0;
     private sumXY = 0;
-    private sumY  = 0;
+    private sumY = 0;
     private sumY2 = 0;
     private minX = 1e100;
     private maxX = -1e100;
@@ -158,7 +173,12 @@ class LineFitter extends WithGtools {
     private cab: Linear | null = null;
     public readonly autoadd: boolean;
 
-    constructor(gtools: GTools, xname: string, yname: string, autoadd: boolean = true) {
+    constructor(
+        gtools: GTools,
+        xname: string,
+        yname: string,
+        autoadd: boolean = true
+    ) {
         super(gtools);
         this.autoadd = autoadd;
         this.xname = xname;
@@ -166,17 +186,25 @@ class LineFitter extends WithGtools {
     }
 
     add(x: number, y: number): Point {
-        if (!isNaN(x) &&  !isNaN(y)) {
+        if (!isNaN(x) && !isNaN(y)) {
             this.n++;
             this.sumX += x;
             this.sumX2 += x * x;
             this.sumXY += x * y;
             this.sumY += y;
             this.sumY2 += y * y;
-            if (x < this.minX) { this.minX = x; }
-            if (x > this.maxX) { this.maxX = x; }
-            if (y < this.minY) { this.minY = y; }
-            if (y > this.maxY) { this.maxY = y; }
+            if (x < this.minX) {
+                this.minX = x;
+            }
+            if (x > this.maxX) {
+                this.maxX = x;
+            }
+            if (y < this.minY) {
+                this.minY = y;
+            }
+            if (y > this.maxY) {
+                this.maxY = y;
+            }
             this.cab = null;
         }
         return {x: x, y: y};
@@ -188,16 +216,28 @@ class LineFitter extends WithGtools {
     }
 
     addField(): Point {
-        return this.add(this.gtools.tools.getDouble(this.xname, NaN), this.gtools.tools.getDouble(this.yname, NaN));
+        return this.add(
+            this.gtools.tools.getDouble(this.xname, NaN),
+            this.gtools.tools.getDouble(this.yname, NaN)
+        );
     }
 
     ab(adecim: number = NaN, bdecim: number = NaN): Linear {
-        if (this.cab) { return this.cab; }
+        if (this.cab) {
+            return this.cab;
+        }
         const div = this.n * this.sumX2 - this.sumX * this.sumX;
-        let a = (this.sumY * this.sumX2  - this.sumX * this.sumXY) / div;
+        let a = (this.sumY * this.sumX2 - this.sumX * this.sumXY) / div;
         let b = (this.n * this.sumXY - this.sumX * this.sumY) / div;
-        if (!isNaN(adecim)) { a = round(a, adecim); if (isNaN(bdecim)) { bdecim = adecim; }}
-        if (!isNaN(bdecim)) { b = round(b, bdecim); }
+        if (!isNaN(adecim)) {
+            a = round(a, adecim);
+            if (isNaN(bdecim)) {
+                bdecim = adecim;
+            }
+        }
+        if (!isNaN(bdecim)) {
+            b = round(b, bdecim);
+        }
         this.cab = {a: a, b: b};
         return this.cab;
     }
@@ -208,13 +248,19 @@ class LineFitter extends WithGtools {
     }
 
     limits() {
-        return {minX: this.minX, maxX: this.maxX, minY: this.minY, maxY: this.maxY, n: this.n};
+        return {
+            minX: this.minX,
+            maxX: this.maxX,
+            minY: this.minY,
+            maxY: this.maxY,
+            n: this.n,
+        };
     }
 
     r2() {
-        const ssxx = this.sumX2 - this.sumX * this.sumX / this.n;
-        const ssyy = this.sumY2 - this.sumY * this.sumY / this.n;
-        const ssxy = this.sumXY - this.sumX * this.sumY / this.n;
+        const ssxx = this.sumX2 - (this.sumX * this.sumX) / this.n;
+        const ssyy = this.sumY2 - (this.sumY * this.sumY) / this.n;
+        const ssxy = this.sumXY - (this.sumX * this.sumY) / this.n;
         return (ssxy * ssxy) / (ssxx * ssyy);
     }
 
@@ -231,26 +277,40 @@ class LineFitter extends WithGtools {
     }
 
     line(xdecim: number = NaN, ydecim: number = NaN): Point[] {
-        if (!isNaN(xdecim) && isNaN(ydecim)) { ydecim = xdecim; }
+        if (!isNaN(xdecim) && isNaN(ydecim)) {
+            ydecim = xdecim;
+        }
         const x1 = round(this.minX, xdecim);
         const x2 = round(this.maxX, xdecim);
         const y1 = round(this.f(x1), ydecim);
         const y2 = round(this.f(x2), ydecim);
-        return [{x: x1, y: y1}, {x: x2, y: y2}];
+        return [
+            {x: x1, y: y1},
+            {x: x2, y: y2},
+        ];
     }
 }
 
 class Distribution extends WithGtools {
     public labels: number[] = [];
-    public data: number[]   = [];
+    public data: number[] = [];
     private n = 0;
     private readonly fieldName: string;
     public readonly autoadd: boolean = true;
 
-    constructor(gtools: GTools, fieldName: string, n1: number, n2: number, mul: number = 1, autoadd: boolean) {
+    constructor(
+        gtools: GTools,
+        fieldName: string,
+        n1: number,
+        n2: number,
+        mul: number = 1,
+        autoadd: boolean
+    ) {
         super(gtools);
         this.autoadd = autoadd;
-        if (mul == 0) { mul = 1; }
+        if (mul == 0) {
+            mul = 1;
+        }
         for (let i = n1; i * mul <= n2 + 0.000001; i++) {
             this.labels[i] = i * mul;
             this.data[i] = 0;
@@ -260,25 +320,30 @@ class Distribution extends WithGtools {
 
     // Add to closest category
     add(x: number): number {
-         if (isNaN(x)) { return x; }
-         let mini = 0;
-         let mind = 1e100;
-         for (let i = 0; i < this.labels.length; i++) {
-             const d = Math.abs(this.labels[i] - x);
-             if (d <= mind) { mind = d; mini = i; }
-         }
-         this.data[mini]++;
-         this.n++;
-         return x;
+        if (isNaN(x)) {
+            return x;
+        }
+        let mini = 0;
+        let mind = 1e100;
+        for (let i = 0; i < this.labels.length; i++) {
+            const d = Math.abs(this.labels[i] - x);
+            if (d <= mind) {
+                mind = d;
+                mini = i;
+            }
+        }
+        this.data[mini]++;
+        this.n++;
+        return x;
     }
 
     addField(): number {
-         const x = this.gtools.tools.getDouble(this.fieldName, NaN);
-         return this.add(x);
+        const x = this.gtools.tools.getDouble(this.fieldName, NaN);
+        return this.add(x);
     }
 
     get() {
-        return { labels: this.labels, data: this.data, n: this.n };
+        return {labels: this.labels, data: this.data, n: this.n};
     }
 }
 
@@ -289,7 +354,12 @@ class XY extends WithGtools {
     public readonly fitter: LineFitter;
     public readonly autoadd: boolean;
 
-    constructor(gtools: GTools, xname: string, yname: string, autoadd: boolean = true) {
+    constructor(
+        gtools: GTools,
+        xname: string,
+        yname: string,
+        autoadd: boolean = true
+    ) {
         super(gtools);
         this.autoadd = autoadd;
         this.xname = xname;
@@ -307,7 +377,10 @@ class XY extends WithGtools {
     }
 
     addField(): Record<string, unknown> {
-        return this.add(this.gtools.tools.getDouble(this.xname, NaN), this.gtools.tools.getDouble(this.yname, NaN));
+        return this.add(
+            this.gtools.tools.getDouble(this.xname, NaN),
+            this.gtools.tools.getDouble(this.yname, NaN)
+        );
     }
 
     clearGtools() {
@@ -327,15 +400,16 @@ class StatCounter {
     private ex = 0;
     private ex2 = 0;
 
-    constructor() {
-    }
+    constructor() {}
 
     addValue(v: number) {
         if (v === undefined) {
             return;
         }
         // See: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-        if (this.n == 0) { this.k = v; }
+        if (this.n == 0) {
+            this.k = v;
+        }
         this.n++;
         this.sum += v;
         const d = v - this.k;
@@ -349,10 +423,12 @@ class StatCounter {
         }
     }
 
-    getStat(): { [hname: string]: number }  {
+    getStat(): {[hname: string]: number} {
         let sd = 0;
-        const dd = (this.ex2 -  (this.ex * this.ex) / this.n);
-        if (this.n > 1) { sd =  Math.sqrt(dd / (this.n - 1)); }
+        const dd = this.ex2 - (this.ex * this.ex) / this.n;
+        if (this.n > 1) {
+            sd = Math.sqrt(dd / (this.n - 1));
+        }
         return {
             n: this.n,
             sum: this.sum,
@@ -365,12 +441,16 @@ class StatCounter {
 }
 
 class Stats extends WithGtools {
-    private counters: { [fieldname: string]: StatCounter } = {};
-    readonly fields: string [] = [];
-    readonly aliases: string [] = [];
+    private counters: {[fieldname: string]: StatCounter} = {};
+    readonly fields: string[] = [];
+    readonly aliases: string[] = [];
     readonly autoadd: boolean;
 
-    constructor(gtools: GTools, fields: string | string[], autoadd: boolean = true) {
+    constructor(
+        gtools: GTools,
+        fields: string | string[],
+        autoadd: boolean = true
+    ) {
         super(gtools);
         this.autoadd = autoadd;
         const fa = separateNamesAndAliases(widenFields(fields));
@@ -386,7 +466,9 @@ class Stats extends WithGtools {
         const maxv = 1e100;
         for (const name of this.fields) {
             let v = this.gtools.tools.getDouble(name, NaN);
-            if (isNaN(v)) { continue; }
+            if (isNaN(v)) {
+                continue;
+            }
             v = Math.min(v, maxv);
             this.addValue(name, v);
         }
@@ -394,18 +476,28 @@ class Stats extends WithGtools {
 
     ensureCounter(fieldName: string): StatCounter {
         let sc: StatCounter = this.counters[fieldName];
-        if (sc === undefined) { sc = new StatCounter(); this.counters[fieldName] = sc; }
+        if (sc === undefined) {
+            sc = new StatCounter();
+            this.counters[fieldName] = sc;
+        }
         return sc;
     }
 
     addValue(fieldName: string, value: number, max: number = 1e100) {
         const sc: StatCounter = this.ensureCounter(fieldName);
-        if (isNaN(value)) { return; }
+        if (isNaN(value)) {
+            return;
+        }
         const v = Math.min(value, max);
         sc.addValue(v);
     }
 
-    addData(fieldName: string, start: number, end: number, max: unknown = 1e100) {
+    addData(
+        fieldName: string,
+        start: number,
+        end: number,
+        max: unknown = 1e100
+    ) {
         const maxv = ensureNumberDefault(max);
         if (!(checkInt(start) && checkInt(end))) {
             throw new Error("Parameters 'start' and 'end' must be integers.");
@@ -414,7 +506,9 @@ class Stats extends WithGtools {
             const name = fieldName + i.toString();
             const sc = this.ensureCounter(name);
             let v = this.gtools.tools.getDouble(name, NaN);
-            if (isNaN(v)) { continue; }
+            if (isNaN(v)) {
+                continue;
+            }
             v = Math.min(v, maxv);
             sc.addValue(v);
         }
@@ -426,7 +520,9 @@ class Stats extends WithGtools {
         for (const name of fields) {
             const sc = this.ensureCounter(name);
             let v = this.gtools.tools.getDouble(name, NaN);
-            if (isNaN(v)) { continue; }
+            if (isNaN(v)) {
+                continue;
+            }
             v = Math.min(v, maxv);
             // this.print(name + ": " + v);
             sc.addValue(v);
@@ -443,12 +539,14 @@ class Stats extends WithGtools {
 
     // noinspection JSUnusedGlobalSymbols
     getForTable(headers: string[] | string = "", decim: number = 2): unknown {
-        if (!headers) { headers = defaultStatHeaders; }
+        if (!headers) {
+            headers = defaultStatHeaders;
+        }
         if (!(headers instanceof Array)) {
             headers = headers.split(";");
         }
         const matrix: unknown[] = [];
-        const result = { headers: [""], matrix: matrix };
+        const result = {headers: [""], matrix: matrix};
         for (const hs of headers) {
             if (hs) {
                 result.headers.push(hs);
@@ -457,28 +555,39 @@ class Stats extends WithGtools {
         const statData = this.getData();
         let keys = this.fields;
         let alis = this.aliases;
-        if (keys.length == 0) { keys = Object.keys(statData); alis = keys; }
+        if (keys.length == 0) {
+            keys = Object.keys(statData);
+            alis = keys;
+        }
         for (let i = 0; i < keys.length; i++) {
             const f = keys[i];
             const a = alis[i];
             const stat = statData[f];
-            if (!stat) { continue; }
+            if (!stat) {
+                continue;
+            }
             const row: unknown[] = [a];
             for (const hs of headers) {
-                if (!hs) { continue; }
+                if (!hs) {
+                    continue;
+                }
                 const val: number = stat[hs];
-                row.push((round(val, decim)));
+                row.push(round(val, decim));
             }
-          matrix.push(row);
+            matrix.push(row);
         }
         return result;
     }
 
     // noinspection JSUnusedGlobalSymbols
-    getForGraph(fields: string | string[], item: string = "avg", decim: number = 2): unknown {
+    getForGraph(
+        fields: string | string[],
+        item: string = "avg",
+        decim: number = 2
+    ): unknown {
         const labels: string[] = [];
         const data: number[] = [];
-        const result = { labels: labels, data: data };
+        const result = {labels: labels, data: data};
         let flds = this.fields;
         let alis = this.aliases;
         const statData = this.getData();
@@ -516,9 +625,8 @@ export class ToolsBase {
     constructor(
         protected currDoc: string,
         protected markup: IJsRunnerMarkup,
-        protected aliases: AliasDataT,
-    ) {
-    }
+        protected aliases: AliasDataT
+    ) {}
 
     getNumber(s: string) {
         const r = parseFloat(s);
@@ -537,18 +645,26 @@ export class ToolsBase {
     }
 
     protected reportInputTypeErrorAndReturnDef<T>(s: unknown, def: T) {
-        if (!this.useDefComplaint) { return def; }
+        if (!this.useDefComplaint) {
+            return def;
+        }
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        this.reportError(`Found value '${s}' of type ${typeof s}, using default value ${def}`);
+        this.reportError(
+            `Found value '${s}' of type ${typeof s}, using default value ${def}`
+        );
         return def;
     }
 
     public createLimitArray(table: string | string[]): number[][] {
         const res: number[][] = [];
-        if (!(table instanceof Array)) { table = table.split("\n"); }
+        if (!(table instanceof Array)) {
+            table = table.split("\n");
+        }
         for (const s of table) {
             const parts = s.split(",");
-            if (parts.length < 2) { return this.reportInputTypeErrorAndReturnDef(table, []); }
+            if (parts.length < 2) {
+                return this.reportInputTypeErrorAndReturnDef(table, []);
+            }
             const limit = this.getNumber(parts[0]);
             const value = this.getNumber(parts[1]);
             res.push([limit, value]);
@@ -562,7 +678,9 @@ export class ToolsBase {
         for (const r of limits) {
             const limit: number = r[0];
             const value: number = r[1];
-            if (c >= limit) { res = value; }
+            if (c >= limit) {
+                res = value;
+            }
         }
         return res;
     }
@@ -586,7 +704,7 @@ export class ToolsBase {
     }
 
     // noinspection JSMethodCanBeStatic
-    public wf(fields: string | string[]): string[]  {
+    public wf(fields: string | string[]): string[] {
         return widenFields(fields);
     }
 
@@ -600,7 +718,9 @@ export class ToolsBase {
             this.output += sep + as;
             sep = " ";
         }
-        if (!this.usePrintLine) { this.output += "\n"; }
+        if (!this.usePrintLine) {
+            this.output += "\n";
+        }
     }
 
     public println(...args: unknown[]) {
@@ -629,7 +749,9 @@ export class ToolsBase {
     }
 
     public getTimeZoneDiff(): number {
-        if (!this.markup.timeZoneDiff) { return 0; }
+        if (!this.markup.timeZoneDiff) {
+            return 0;
+        }
         return this.markup.timeZoneDiff;
     }
 
@@ -648,7 +770,9 @@ export class ToolsBase {
     }
 
     public replace2(s: string, c: string, n: number): string {
-        return s.replace(c + c, this.fillLeft("" + n, 2, "0")).replace(c, "" + n);
+        return s
+            .replace(c + c, this.fillLeft("" + n, 2, "0"))
+            .replace(c, "" + n);
     }
 
     public formatTime(date: Date, format: string = "d.M.yyyy H:mm"): string {
@@ -667,18 +791,24 @@ export class ToolsBase {
 
         const ms = date.getMilliseconds();
         str = str.replace("fff", this.fillLeft("" + ms, 3, "0"));
-        str = str.replace("ff", this.fillLeft("" + Math.trunc(ms / 10), 1, "0"));
-        str = str.replace("f", this.fillLeft("" + Math.trunc(ms / 100), 1, "0"));
+        str = str.replace(
+            "ff",
+            this.fillLeft("" + Math.trunc(ms / 10), 1, "0")
+        );
+        str = str.replace(
+            "f",
+            this.fillLeft("" + Math.trunc(ms / 100), 1, "0")
+        );
         return str;
     }
 }
 
 export class GTools extends ToolsBase {
     public outdata: Record<string, unknown> = {};
-    public fitters: { [fieldname: string]: LineFitter } = {};
-    public dists: { [fieldname: string]: Distribution } = {};
-    public xys: { [fieldname: string]: XY } = {};
-    public stats: { [name: string]: Stats } = {};
+    public fitters: {[fieldname: string]: LineFitter} = {};
+    public dists: {[fieldname: string]: Distribution} = {};
+    public xys: {[fieldname: string]: XY} = {};
+    public stats: {[name: string]: Stats} = {};
 
     public tools: Tools;
 
@@ -689,7 +819,7 @@ export class GTools extends ToolsBase {
         markup: IJsRunnerMarkup,
         aliases: AliasDataT,
         tools: Tools,
-        public saveUsersFields: IToolsResult[],
+        public saveUsersFields: IToolsResult[]
     ) {
         super(currDoc, markup, aliases);
         this.tools = tools;
@@ -702,33 +832,39 @@ export class GTools extends ToolsBase {
         return fitter;
     }
 
-    createDistribution(fieldName: string, n1: number, n2: number, mul: number = 1, autoadd = true) {
+    createDistribution(
+        fieldName: string,
+        n1: number,
+        n2: number,
+        mul: number = 1,
+        autoadd = true
+    ) {
         const dist = new Distribution(this, fieldName, n1, n2, mul, autoadd);
-        if (fieldName) { this.dists[fieldName] = dist; }
+        if (fieldName) {
+            this.dists[fieldName] = dist;
+        }
         return dist;
     }
 
     addToDatas() {
         for (const datas of [this.dists, this.xys, this.fitters, this.stats]) {
             // noinspection JSUnusedLocalSymbols
-            Object.entries(datas).forEach(
-                ([key, da]) => {
-                    const d = da as Distribution | XY | LineFitter | Stats;
-                    if (d.autoadd) {
-                        d.addField();
-                    }
-                });
+            Object.entries(datas).forEach(([key, da]) => {
+                const d = da as Distribution | XY | LineFitter | Stats;
+                if (d.autoadd) {
+                    d.addField();
+                }
+            });
         }
     }
 
     clearGtools() {
         for (const datas of [this.dists, this.xys, this.fitters, this.stats]) {
             // noinspection JSUnusedLocalSymbols
-            Object.entries(datas).forEach(
-                ([key, da]) => {
-                    const d = da as Distribution | XY | LineFitter | Stats;
-                    d.clearGtools();
-                 });
+            Object.entries(datas).forEach(([key, da]) => {
+                const d = da as Distribution | XY | LineFitter | Stats;
+                d.clearGtools();
+            });
         }
     }
 
@@ -738,7 +874,11 @@ export class GTools extends ToolsBase {
         return xy;
     }
 
-    createStatCounter(name: string, fields: string | string[], autoadd: boolean = true) {
+    createStatCounter(
+        name: string,
+        fields: string | string[],
+        autoadd: boolean = true
+    ) {
         const stats = new Stats(this, fields, autoadd);
         this.stats[name] = stats;
         return stats;
@@ -748,7 +888,12 @@ export class GTools extends ToolsBase {
         this.stats.GLOBAL.addValue(fieldName, value);
     }
 
-    addStatData(fieldName: string, start: number, end: number, max: number = 1e100) {
+    addStatData(
+        fieldName: string,
+        start: number,
+        end: number,
+        max: number = 1e100
+    ) {
         this.stats.GLOBAL.addData(fieldName, start, end, max);
     }
 
@@ -804,7 +949,7 @@ export class Tools extends ToolsBase {
         protected data: UserFieldDataT,
         currDoc: string,
         markup: IJsRunnerMarkup,
-        aliases: AliasDataT,
+        aliases: AliasDataT
     ) {
         super(currDoc, markup, aliases);
     }
@@ -836,7 +981,8 @@ export class Tools extends ToolsBase {
         return this.data.user.real_name;
     }
 
-    getStudentName(): string {  // alias for Korppi compatibility
+    getStudentName(): string {
+        // alias for Korppi compatibility
         return this.getRealName();
     }
 
@@ -845,7 +991,9 @@ export class Tools extends ToolsBase {
     }
 
     getLeaveDate() {
-        return this.data.groupinfo ? this.data.groupinfo.membership_end : undefined;
+        return this.data.groupinfo
+            ? this.data.groupinfo.membership_end
+            : undefined;
     }
 
     getDouble(fieldName: unknown, defa: unknown = 0): number {
@@ -861,7 +1009,9 @@ export class Tools extends ToolsBase {
         }
         let sp = st.replace(",", ".");
         // this.println("sp1=" + sp);
-        if (sp.startsWith("e")) { sp = "1" + sp; }
+        if (sp.startsWith("e")) {
+            sp = "1" + sp;
+        }
         // this.println("sp2=" + sp);
         const r = parseFloat(sp);
         return this.handlePossibleNaN(r, s, def);
@@ -900,7 +1050,13 @@ export class Tools extends ToolsBase {
         return s;
     }
 
-    getSum(fieldName: unknown, start: unknown, end: unknown, defa: unknown = 0, max: unknown = 1e100): number {
+    getSum(
+        fieldName: unknown,
+        start: unknown,
+        end: unknown,
+        defa: unknown = 0,
+        max: unknown = 1e100
+    ): number {
         const f = ensureStringFieldName(fieldName);
         const def = ensureNumberDefault(defa);
         const maxv = ensureNumberDefault(max);
@@ -914,7 +1070,12 @@ export class Tools extends ToolsBase {
         return sum;
     }
 
-    getRBi(fieldName: unknown, start: unknown, end: unknown, defa: number = -1): number {
+    getRBi(
+        fieldName: unknown,
+        start: unknown,
+        end: unknown,
+        defa: number = -1
+    ): number {
         const f = ensureStringFieldName(fieldName);
         const def = defa;
         if (!(checkInt(start) && checkInt(end))) {
@@ -924,15 +1085,25 @@ export class Tools extends ToolsBase {
         for (let i = start; i <= end; i++) {
             const name = f + i.toString();
             const rb = this.getString(name, "");
-            if (rb === "1") { id = i; break; }
+            if (rb === "1") {
+                id = i;
+                break;
+            }
         }
         return id;
     }
 
-    getRBname(fieldName: unknown, start: unknown, end: unknown, defa: string = ""): string {
+    getRBname(
+        fieldName: unknown,
+        start: unknown,
+        end: unknown,
+        defa: string = ""
+    ): string {
         const f = ensureStringFieldName(fieldName);
         const i = this.getRBi(f, start, end, -1);
-        if (i < 0) { return defa; }
+        if (i < 0) {
+            return defa;
+        }
         return f + i.toString();
     }
 
@@ -947,7 +1118,12 @@ export class Tools extends ToolsBase {
         return sum;
     }
 
-    getArray(func: (fname: string) => unknown, fieldName: unknown, start: unknown, end: unknown): unknown[] {
+    getArray(
+        func: (fname: string) => unknown,
+        fieldName: unknown,
+        start: unknown,
+        end: unknown
+    ): unknown[] {
         const f = ensureStringFieldName(fieldName);
         if (!(checkInt(start) && checkInt(end))) {
             throw new Error("Parameters 'start' and 'end' must be integers.");
@@ -959,7 +1135,10 @@ export class Tools extends ToolsBase {
         return a;
     }
 
-    getArrayOf(func: (fname: string) => unknown, ...fieldNames: string[]): unknown[] {
+    getArrayOf(
+        func: (fname: string) => unknown,
+        ...fieldNames: string[]
+    ): unknown[] {
         const a = [];
         const fields = widenFields([...fieldNames]);
         for (const fn of fields) {
@@ -976,7 +1155,11 @@ export class Tools extends ToolsBase {
         this.data.fields[fn] = c;
     }
 
-    setInt(fieldName: unknown, content: unknown, maxNotToSave: number = -1000000000): void {
+    setInt(
+        fieldName: unknown,
+        content: unknown,
+        maxNotToSave: number = -1000000000
+    ): void {
         const f = ensureStringFieldName(fieldName);
         const c = ensureNumberLikeValue(content);
         const fn = this.checkAliasAndNormalize(f);
@@ -984,7 +1167,9 @@ export class Tools extends ToolsBase {
             throw valueTypeError(content);
         }
         if (c <= maxNotToSave) {
-            if (this.getValue(fieldName, "") !== "") { this.setString(fieldName, ""); }
+            if (this.getValue(fieldName, "") !== "") {
+                this.setString(fieldName, "");
+            }
             this.data.fields[fn] = "";
             return;
         }
@@ -992,12 +1177,19 @@ export class Tools extends ToolsBase {
         this.data.fields[fn] = c;
     }
 
-    setDouble(fieldName: unknown, content: unknown, maxNotToSave: number = -1e100, decim: number = NaN): void {
+    setDouble(
+        fieldName: unknown,
+        content: unknown,
+        maxNotToSave: number = -1e100,
+        decim: number = NaN
+    ): void {
         const f = ensureStringFieldName(fieldName);
         let c = ensureNumberLikeValue(content);
         const fn = this.checkAliasAndNormalize(f);
         if (c <= maxNotToSave) {
-            if (this.getValue(fieldName, "") !== "") { this.setString(fieldName, ""); }
+            if (this.getValue(fieldName, "") !== "") {
+                this.setString(fieldName, "");
+            }
             this.data.fields[fn] = "";
             return;
         }
@@ -1036,11 +1228,17 @@ export class Tools extends ToolsBase {
     }
 
     isBetter(gv1: unknown, gv2: unknown) {
-        if (gv1 == undefined) { return false; }
+        if (gv1 == undefined) {
+            return false;
+        }
         const st1 = String(gv1).toLowerCase();
         const st2 = String(gv2).toLowerCase();
-        if (st1 === "") { return false; }
-        if (st1 === "hyl") { return false; }
+        if (st1 === "") {
+            return false;
+        }
+        if (st1 === "hyl") {
+            return false;
+        }
         return st1 > st2;
     }
 
@@ -1059,21 +1257,39 @@ export class Tools extends ToolsBase {
         if (!this.markup.overrideGrade) {
             const oldGrade = this.getValue(gf);
             if (this.isBetter(oldGrade, gradeVal)) {
-                this.print(this.getRealName() + ": not changing grade " + oldGrade + " to " + gradeVal + "\n");
+                this.print(
+                    this.getRealName() +
+                        ": not changing grade " +
+                        oldGrade +
+                        " to " +
+                        gradeVal +
+                        "\n"
+                );
                 return;
             }
             const oldPoints = this.getDouble(cf, -1);
             if (oldPoints > p) {
-                this.print(this.getRealName() + ": not changing credit " + oldPoints + " to " + points + "\n");
+                this.print(
+                    this.getRealName() +
+                        ": not changing credit " +
+                        oldPoints +
+                        " to " +
+                        points +
+                        "\n"
+                );
                 return;
             }
         }
         const fng = this.checkAliasAndNormalize(gf);
         // this.println(this.getRealName() + ": " + gradeVal);
         this.result[fng] = gradeVal;
-        if (!points) { return; }
+        if (!points) {
+            return;
+        }
         const fnc = this.checkAliasAndNormalize(cf);
-        if (p < 0) { p = ""; }
+        if (p < 0) {
+            p = "";
+        }
         this.result[fnc] = p;
     }
 
@@ -1086,7 +1302,7 @@ export class Tools extends ToolsBase {
         const localDateTime = new Date(s);
         // const offset = localDateTime.getTimezoneOffset() * 60;
         const offset = -this.getTimeZoneDiff() * 60 * 60;
-        return (localDateTime.getTime() / 1000) + offset;
+        return localDateTime.getTime() / 1000 + offset;
     }
 
     getDateTime(fieldName: unknown, defa: unknown = NaN): number {

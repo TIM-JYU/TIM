@@ -27,22 +27,22 @@ app.use("/reqs", routes);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
-  next(createError(404));
+    next(createError(404));
 });
 
 // error handler
 app.use(((err, req, res, next) => {
-  // set locals, only providing error in development
+    // set locals, only providing error in development
 
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    res.locals.message = err.message;
+    res.locals.error = req.app.get("env") === "development" ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+    // render the error page
+    res.status(err.status || 500);
+    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
-  res.render("error");
+    res.render("error");
 }) as ErrorRequestHandler);
 
 export default app;

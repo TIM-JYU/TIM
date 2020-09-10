@@ -11,7 +11,13 @@ import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {saveCurrentScreenPar} from "../document/parhelpers";
 import {genericglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
-import {capitalizeFirstLetter, IOkResponse, markAsUsed, to, ToReturn} from "../util/utils";
+import {
+    capitalizeFirstLetter,
+    IOkResponse,
+    markAsUsed,
+    to,
+    ToReturn,
+} from "../util/utils";
 import * as hakaLogin from "./haka-login.component";
 import {IDiscoveryFeedEntry, loadIdPs} from "./haka-login.component";
 import {Users} from "./userService";
@@ -40,7 +46,6 @@ const orgNames: Record<string, string | undefined> = {
 function getHomeOrgDisplay(s: string): string {
     return orgNames[s] ?? s;
 }
-
 
 @Component({
     selector: "tim-login-dialog",
@@ -255,7 +260,10 @@ function getHomeOrgDisplay(s: string): string {
 </tim-dialog-frame>
     `,
 })
-export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, void> {
+export class LoginDialogComponent extends AngularDialogComponent<
+    ILoginParams,
+    void
+> {
     hideVars: IVisibilityVars = getVisibilityVars();
     showSignup?: boolean; // Show sign up form instead of log in.
     private loggingout = false;
@@ -320,12 +328,12 @@ export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, v
 
     public getTitle() {
         if (this.addingToSession) {
-            return $localize `:@@addToSession:Add a user to this session`;
+            return $localize`:@@addToSession:Add a user to this session`;
         }
         if (this.showSignup) {
-            return $localize `:@@signUp:Sign up`;
+            return $localize`:@@signUp:Sign up`;
         } else {
-            return $localize `:@@logIn:Log in`;
+            return $localize`:@@logIn:Log in`;
         }
     }
 
@@ -338,7 +346,8 @@ export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, v
         const result = await Users.loginWithEmail(
             this.loginForm.email,
             this.loginForm.password,
-            this.addingToSession);
+            this.addingToSession
+        );
         this.loggingIn = false;
         if (!result.ok) {
             this.loginError = result.result.data.error;
@@ -371,10 +380,13 @@ export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, v
         if (!this.email || !this.tempPassword || this.signUpRequestInProgress) {
             return;
         }
-        const r = await this.sendRequest<IOkResponse | INameResponse>("/checkTempPass", {
-            email: this.email,
-            token: this.tempPassword,
-        });
+        const r = await this.sendRequest<IOkResponse | INameResponse>(
+            "/checkTempPass",
+            {
+                email: this.email,
+                token: this.tempPassword,
+            }
+        );
         if (!r.ok) {
             this.signUpError = r.result.data.error;
         } else {
@@ -393,7 +405,9 @@ export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, v
                         return;
                     }
                 }
-                const lastName = capitalizeFirstLetter(nameParts[nameParts.length - 1]);
+                const lastName = capitalizeFirstLetter(
+                    nameParts[nameParts.length - 1]
+                );
                 let firstName = "";
                 if (nameParts.length > 1) {
                     firstName = capitalizeFirstLetter(nameParts[0]);
@@ -407,13 +421,16 @@ export class LoginDialogComponent extends AngularDialogComponent<ILoginParams, v
         if (!this.name || this.signUpRequestInProgress) {
             return;
         }
-        const r = await this.sendRequest<{status: "registered" | "updated"}>("/altsignup2", {
-            email: this.email,
-            passconfirm: this.rePassword,
-            password: this.newPassword,
-            realname: this.name,
-            token: this.tempPassword,
-        });
+        const r = await this.sendRequest<{status: "registered" | "updated"}>(
+            "/altsignup2",
+            {
+                email: this.email,
+                passconfirm: this.rePassword,
+                password: this.newPassword,
+                realname: this.name,
+                token: this.tempPassword,
+            }
+        );
         if (!r.ok) {
             this.signUpError = r.result.data.error;
         } else {
@@ -462,7 +479,9 @@ export async function showLoginDialog(params: ILoginParams) {
     if (instance) {
         return;
     }
-    const dialog = angularDialog.open(LoginDialogComponent, params, { resetSize: true });
+    const dialog = angularDialog.open(LoginDialogComponent, params, {
+        resetSize: true,
+    });
     instance = await dialog;
     await to(instance.result);
     instance = undefined;

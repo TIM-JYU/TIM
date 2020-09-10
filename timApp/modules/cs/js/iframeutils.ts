@@ -38,5 +38,12 @@ export const communicationJS = `
     `;
 
 export function getIFrameDataUrl(html: string, initdata?: string) {
-    return "data:text/html;base64," + btoa(html.replace("</body>", communicationJS + "\n</body>").replace("// INITDATA", initdata ?? ""));
+    return (
+        "data:text/html;base64," +
+        btoa(
+            html
+                .replace("</body>", communicationJS + "\n</body>")
+                .replace("// INITDATA", initdata ?? "")
+        )
+    );
 }

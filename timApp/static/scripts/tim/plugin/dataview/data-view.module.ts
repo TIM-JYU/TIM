@@ -7,19 +7,8 @@ import {DataViewComponent} from "./data-view.component";
 import {CopyTableWidthDialogComponent} from "./copy-table-width-dialog.component";
 
 @NgModule({
-    declarations: [
-        DataViewComponent,
-        CopyTableWidthDialogComponent,
-    ],
-    imports: [
-        CommonModule,
-        FormsModule,
-        TimUtilityModule,
-        DialogModule,
-    ],
-    exports: [
-        DataViewComponent,
-    ],
+    declarations: [DataViewComponent, CopyTableWidthDialogComponent],
+    imports: [CommonModule, FormsModule, TimUtilityModule, DialogModule],
+    exports: [DataViewComponent],
 })
-export class DataViewModule {
-}
+export class DataViewModule {}

@@ -9,5 +9,4 @@ import {Component} from "@angular/core";
     `,
     styleUrls: ["./plugin-header.component.scss"],
 })
-export class PluginHeaderComponent {
-}
+export class PluginHeaderComponent {}

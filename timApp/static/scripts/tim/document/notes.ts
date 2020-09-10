@@ -10,9 +10,20 @@ import {IModalInstance, showMessageDialog} from "../ui/dialog";
 import {documentglobals} from "../util/globals";
 import {$compile, $http} from "../util/ngimport";
 import {isMobileDevice, to} from "../util/utils";
-import {EditPosition, EditType, IExtraData, IParResponse} from "./editing/edittypes";
+import {
+    EditPosition,
+    EditType,
+    IExtraData,
+    IParResponse,
+} from "./editing/edittypes";
 import {onClick} from "./eventhandlers";
-import {addElementToParagraphMargin, getFirstParId, isActionablePar, Paragraph, ParOrArea} from "./parhelpers";
+import {
+    addElementToParagraphMargin,
+    getFirstParId,
+    isActionablePar,
+    Paragraph,
+    ParOrArea,
+} from "./parhelpers";
 import {handleUnread, markParRead, ReadingType} from "./readings";
 import {ViewCtrl} from "./viewctrl";
 
@@ -53,7 +64,9 @@ export class NotesHandler {
             }
             const id = $this.attr("note-id");
             if (!id) {
-                showMessageDialog("Cannot edit this note; missing id attribute.");
+                showMessageDialog(
+                    "Cannot edit this note; missing id attribute."
+                );
                 return;
             }
             this.toggleNoteEditor($this.parents(".par"), {noteData: {id: id}});
@@ -61,7 +74,10 @@ export class NotesHandler {
         });
     }
 
-    async toggleNoteEditor(parOrArea: ParOrArea, options: INoteEditorOptions = {}) {
+    async toggleNoteEditor(
+        parOrArea: ParOrArea,
+        options: INoteEditorOptions = {}
+    ) {
         if (getCurrentEditor() || this.editorInstance || this.editorLoad) {
             // Double-clicking a comment will trigger this message, but it seems like on Chrome, the message dialog
             // interferes with the editor dialog if it opens first, making the editor invisible.
@@ -92,19 +108,26 @@ export class NotesHandler {
             };
         } else {
             url = "/editNote";
-            const r = await to($http.get<{text: string, extraData: INote}>("/note/" + options.noteData.id));
+            const r = await to(
+                $http.get<{text: string; extraData: INote}>(
+                    "/note/" + options.noteData.id
+                )
+            );
 
             if (r.ok) {
                 const notedata = r.result.data;
                 initialText = notedata.text;
                 data = {
                     id: options.noteData.id,
-                    access: notedata.extraData.access, tags: {
+                    access: notedata.extraData.access,
+                    tags: {
                         markread: false,
                     },
                 };
             } else {
-                await showMessageDialog(`Failed to open comment editor: ${r.result.data.error}`);
+                await showMessageDialog(
+                    `Failed to open comment editor: ${r.result.data.error}`
+                );
                 return;
             }
         }
@@ -130,38 +153,64 @@ export class NotesHandler {
                 tags: [],
                 showPlugins: false,
                 touchDevice: isMobileDevice(),
-                choices: [{
-                    desc: "Show note to:",
-                    name: "access",
-                    title: "Who can see the note. With everyone only teachers can see the user name",
-                    opts: [
-                        {desc: "Everyone", value: "everyone", title: "User name is visible only for teachers"},
-                        {desc: "Just me", value: "justme", title: "No one can answer to this note!"},
-                    ],
-                }],
+                choices: [
+                    {
+                        desc: "Show note to:",
+                        name: "access",
+                        title:
+                            "Who can see the note. With everyone only teachers can see the user name",
+                        opts: [
+                            {
+                                desc: "Everyone",
+                                value: "everyone",
+                                title: "User name is visible only for teachers",
+                            },
+                            {
+                                desc: "Just me",
+                                value: "justme",
+                                title: "No one can answer to this note!",
+                            },
+                        ],
+                    },
+                ],
             },
             deleteCb: async () => {
-                const r = await to($http.post<IParResponse>(`/deleteNote`, extraData));
+                const r = await to(
+                    $http.post<IParResponse>(`/deleteNote`, extraData)
+                );
                 if (!r.ok) {
                     return {error: r.result.data.error};
                 } else {
-                    this.viewctrl.editingHandler.addSavedParToDom(r.result.data, params);
+                    this.viewctrl.editingHandler.addSavedParToDom(
+                        r.result.data,
+                        params
+                    );
                 }
                 return {};
             },
             previewCb: async (text, proofread) => {
-                const r = await to($http.post<IPluginInfoResponse>(`/preview/${this.viewctrl.docId}`, {text, proofread, ...extraData}));
+                const r = await to(
+                    $http.post<IPluginInfoResponse>(
+                        `/preview/${this.viewctrl.docId}`,
+                        {text, proofread, ...extraData}
+                    )
+                );
                 if (!r.ok) {
                     throw Error("preview failed");
                 }
                 return r.result.data;
             },
             saveCb: async (text, eData) => {
-                const r = await to($http.post<IParResponse>(url, {text, ...eData}));
+                const r = await to(
+                    $http.post<IParResponse>(url, {text, ...eData})
+                );
                 if (!r.ok) {
                     return {error: r.result.data.error};
                 } else {
-                    this.viewctrl.editingHandler.addSavedParToDom(r.result.data, params);
+                    this.viewctrl.editingHandler.addSavedParToDom(
+                        r.result.data,
+                        params
+                    );
                 }
                 return {};
             },
@@ -228,7 +277,9 @@ export class NotesHandler {
         }
         $event.stopPropagation();
         let par = $($event.target as HTMLElement);
-        if (!par.hasClass("par")) { par = par.parents(".par"); }
+        if (!par.hasClass("par")) {
+            par = par.parents(".par");
+        }
         this.updateNoteBadge(par);
     }
 
@@ -237,8 +288,12 @@ export class NotesHandler {
      * @param par - Element where the badge needs to be attached
      */
     updateNoteBadge(par: Paragraph) {
-        if (this.hideVars.noteBadgeButton) { return; }
-        if (!par) { return; }
+        if (this.hideVars.noteBadgeButton) {
+            return;
+        }
+        if (!par) {
+            return;
+        }
         if (!isActionablePar(par)) {
             return;
         }
@@ -247,7 +302,9 @@ export class NotesHandler {
         }
         markParRead(par, ReadingType.ClickPar);
         const newElement = par[0];
-        if (!newElement) { return; }
+        if (!newElement) {
+            return;
+        }
         addElementToParagraphMargin(newElement, this.createNoteBadge(par));
     }
 

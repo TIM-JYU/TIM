@@ -6,20 +6,20 @@ import {showMessageDialog} from "../ui/dialog";
 const mcqMod = angular.module("MCQ", []);
 
 interface MMCQContent<State> {
-    state?: State,
+    state?: State;
     question: {
-        headerText: string | null,
-        buttonText: string | null,
-        falseText: string | null,
-        trueText: string | null,
-        wrongText: string | null,
-        correctText: string | null,
+        headerText: string | null;
+        buttonText: string | null;
+        falseText: string | null;
+        trueText: string | null;
+        wrongText: string | null;
+        correctText: string | null;
         choices: Array<{
-            text: string,
-            reason?: string,
-            correct?: boolean,
-        }>,
-    },
+            text: string;
+            reason?: string;
+            correct?: boolean;
+        }>;
+    };
 }
 
 class MCQBase<State> implements IController {
@@ -28,12 +28,12 @@ class MCQBase<State> implements IController {
     protected buttonText: string = "Submit";
     protected content!: MMCQContent<State>;
 
-    constructor(protected element: JQLite) {
-
-    }
+    constructor(protected element: JQLite) {}
 
     $onInit() {
-        this.content = JSON.parse(this.element.attr("data-content")!) as MMCQContent<State>;
+        this.content = JSON.parse(
+            this.element.attr("data-content")!
+        ) as MMCQContent<State>;
     }
 
     protected getId() {
@@ -52,7 +52,14 @@ class MMCQ extends MCQBase<null | boolean[]> {
 
     $onInit() {
         super.$onInit();
-        const fields = ["headerText", "buttonText", "falseText", "trueText", "correctText", "wrongText"] as const;
+        const fields = [
+            "headerText",
+            "buttonText",
+            "falseText",
+            "trueText",
+            "correctText",
+            "wrongText",
+        ] as const;
         fields.forEach((opt) => {
             const o = this.content.question[opt];
             if (o !== null) {
@@ -91,11 +98,13 @@ class MMCQ extends MCQBase<null | boolean[]> {
             return;
         }
 
-        const r = await to($http<{web: MMCQ["content"]}>({
-            method: "PUT",
-            url: `/mmcq/${ident}/answer/`,
-            data: message,
-        }));
+        const r = await to(
+            $http<{web: MMCQ["content"]}>({
+                method: "PUT",
+                url: `/mmcq/${ident}/answer/`,
+                data: message,
+            })
+        );
         if (r.ok) {
             this.content = r.result.data.web;
             this.checked = true;
@@ -171,11 +180,13 @@ class MCQ extends MCQBase<number | null> {
             return;
         }
 
-        const r = await to($http<{web: MCQ["content"]}>({
-            method: "PUT",
-            url: `/mcq/${ident}/answer/`,
-            data: message,
-        }));
+        const r = await to(
+            $http<{web: MCQ["content"]}>({
+                method: "PUT",
+                url: `/mcq/${ident}/answer/`,
+                data: message,
+            })
+        );
         if (r.ok) {
             this.content = r.result.data.web;
         } else {

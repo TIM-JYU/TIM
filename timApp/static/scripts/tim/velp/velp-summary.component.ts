@@ -8,7 +8,14 @@
  * @copyright 2016 Timber project members
  */
 
-import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    OnChanges,
+    Output,
+    SimpleChanges,
+} from "@angular/core";
 import {IUser} from "tim/user/IUser";
 import {Annotation} from "./velptypes";
 
@@ -72,16 +79,22 @@ export class VelpSummaryComponent implements OnChanges {
     }
 
     private updateFilters(anns: Annotation[]) {
-        const sortFn = (a: Annotation, b: Annotation) => a.creation_time.diff(b.creation_time);
-        this.taskAnns = anns.filter(
-            (a) => a.answer?.users.map((u) => u.id).includes(this.selectedUser.id)
-        ).sort(sortFn);
+        const sortFn = (a: Annotation, b: Annotation) =>
+            a.creation_time.diff(b.creation_time);
+        this.taskAnns = anns
+            .filter((a) =>
+                a.answer?.users.map((u) => u.id).includes(this.selectedUser.id)
+            )
+            .sort(sortFn);
         this.docAnns = anns.filter((a) => a.answer == null).sort(sortFn);
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (changes.annotations) { // TODO check if these are redundant
-            this.updateFilters(changes.annotations.currentValue as Annotation[]);
+        if (changes.annotations) {
+            // TODO check if these are redundant
+            this.updateFilters(
+                changes.annotations.currentValue as Annotation[]
+            );
         }
         if (changes.selectedUser) {
             this.updateFilters(this.annotations);

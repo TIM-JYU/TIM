@@ -12,7 +12,6 @@ declare module "angular-diff-match-patch" {
     export = moduleName;
 }
 declare module "katex/contrib/auto-render/auto-render" {
-
     interface Delimiter {
         left: string;
         right: string;
@@ -25,7 +24,10 @@ declare module "katex/contrib/auto-render/auto-render" {
         errorCallback: (s: string) => void;
     }
 
-    const renderMathInElement: (e: Element, options?: KatexRenderOptions) => void;
+    const renderMathInElement: (
+        e: Element,
+        options?: KatexRenderOptions
+    ) => void;
     export = renderMathInElement;
 }
 

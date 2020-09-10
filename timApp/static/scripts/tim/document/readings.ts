@@ -7,7 +7,14 @@ import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout} from "../util/ngimport";
-import {getViewName, IOkResponse, isInViewport, markPageDirty, posToRelative, to} from "../util/utils";
+import {
+    getViewName,
+    IOkResponse,
+    isInViewport,
+    markPageDirty,
+    posToRelative,
+    to,
+} from "../util/utils";
 import {diffDialog, setDiffDialog, showDiffDialog} from "./diffDialog";
 import {EditPosition, EditType} from "./editing/edittypes";
 import {onClick, onMouseOver, onMouseOverOut} from "./eventhandlers";
@@ -48,7 +55,10 @@ export async function markParRead(par: JQuery, readingType: ReadingType) {
     }
 
     // If the paragraph is only a preview, ignore it.
-    if (par.parents(".previewcontent").length > 0 || par.parents(".csrunPreview").length > 0) {
+    if (
+        par.parents(".previewcontent").length > 0 ||
+        par.parents(".csrunPreview").length > 0
+    ) {
         return;
     }
 
@@ -81,14 +91,21 @@ async function markParsRead($pars: JQuery) {
     const parIds = $pars
         .toArray()
         .map((e) => $(e))
-        .filter((e) => !isAlreadyRead(e.find(".readline"), ReadingType.ClickRed))
+        .filter(
+            (e) => !isAlreadyRead(e.find(".readline"), ReadingType.ClickRed)
+        )
         .map((e) => {
             const d = dereferencePar(e)!;
             return [d[0], d[1]];
         });
     $pars.find(".readline").addClass(readClasses[ReadingType.ClickRed]);
     const doc = getActiveDocument();
-    const r = await to($http.put("/read/" + doc.getId() + "/" + "null" + "/" + ReadingType.ClickRed, {pars: parIds}));
+    const r = await to(
+        $http.put(
+            "/read/" + doc.getId() + "/" + "null" + "/" + ReadingType.ClickRed,
+            {pars: parIds}
+        )
+    );
     if (!r.ok) {
         $log.error("Could not save the read markings");
         return;
@@ -100,7 +117,10 @@ let readPromise: IPromise<unknown> | null = null;
 let readingParId: string | undefined;
 
 function queueParagraphForReading() {
-    const visiblePars = $(".par:not('.preamble')").filter((i, e) => isInViewport(e)).find(".readline").not((i, e) => isAlreadyRead($(e), ReadingType.OnScreen));
+    const visiblePars = $(".par:not('.preamble')")
+        .filter((i, e) => isInViewport(e))
+        .find(".readline")
+        .not((i, e) => isAlreadyRead($(e), ReadingType.OnScreen));
     const parToRead = visiblePars.first().parents(".par");
     const parId = getParId(parToRead);
 
@@ -114,11 +134,15 @@ function queueParagraphForReading() {
         return;
     }
     readingParId = parId;
-    const numWords = parToRead.find(".parContent").text().trim().split(/[\s\n]+/).length;
-    readPromise = $timeout((async () => {
+    const numWords = parToRead
+        .find(".parContent")
+        .text()
+        .trim()
+        .split(/[\s\n]+/).length;
+    readPromise = $timeout(async () => {
         await markParRead(parToRead, ReadingType.OnScreen);
         queueParagraphForReading();
-    }), 300 * numWords);
+    }, 300 * numWords);
 }
 
 async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
@@ -131,7 +155,9 @@ async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
     if (!id || !blockId) {
         return;
     }
-    const parData = await to($http.get<Array<{par_hash: string}>>(`/read/${id}/${blockId}`));
+    const parData = await to(
+        $http.get<Array<{par_hash: string}>>(`/read/${id}/${blockId}`)
+    );
     if (!parData.ok) {
     } else {
         const oldb = $http.get<{text: string}>("/getBlock", {
@@ -208,9 +234,13 @@ export async function initReadings(item: IItem) {
         $log.info($this);
 
         (async () => {
-            const r = await to($http.put("/read/" + item.id + "/" + areaId, {}));
+            const r = await to(
+                $http.put("/read/" + item.id + "/" + areaId, {})
+            );
             if (r.ok) {
-                getArea(areaId).find(".readline").attr("class", "areareadline read");
+                getArea(areaId)
+                    .find(".readline")
+                    .attr("class", "areareadline read");
                 markPageDirty();
             } else {
                 await showMessageDialog("Could not save the read marking.");
@@ -241,7 +271,11 @@ export async function initReadings(item: IItem) {
         $readsection.remove();
     });
 
-    onMouseOverOut(".par:not('.preamble')", function mouseOverHandler($this, e, select) {
+    onMouseOverOut(".par:not('.preamble')", function mouseOverHandler(
+        $this,
+        e,
+        select
+    ) {
         if (select) {
             markParRead($this, ReadingType.HoverPar);
         }
@@ -249,7 +283,11 @@ export async function initReadings(item: IItem) {
 
     if (Users.isLoggedIn() && genericglobals().bookmarks != null) {
         await $timeout(10000);
-        await to($http.post("/bookmarks/markLastRead/" + item.id, {view: getViewName()}));
+        await to(
+            $http.post("/bookmarks/markLastRead/" + item.id, {
+                view: getViewName(),
+            })
+        );
     }
 }
 
@@ -259,7 +297,12 @@ export async function handleUnread(pos: EditPosition) {
     }
     const first = pos.pars.first();
     const [docid, parid] = dereferencePar(first)!;
-    const result = await to($http.put<IOkResponse & {latest?: unknown}>(`/unread/${docid!}/${parid!}`, {}));
+    const result = await to(
+        $http.put<IOkResponse & {latest?: unknown}>(
+            `/unread/${docid!}/${parid!}`,
+            {}
+        )
+    );
     if (!result.ok) {
         return;
     }

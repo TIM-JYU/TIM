@@ -6,6 +6,4 @@ import {Component} from "@angular/core";
 <i class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></i>
     `,
 })
-export class LoadingComponent {
-
-}
+export class LoadingComponent {}

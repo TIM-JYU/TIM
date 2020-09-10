@@ -82,6 +82,5 @@ export class ScoreInfoTabComponent implements OnInit {
         this.scoreBoard = scoreBoard;
     }
 
-    ngOnInit(): void {
-    }
+    ngOnInit(): void {}
 }

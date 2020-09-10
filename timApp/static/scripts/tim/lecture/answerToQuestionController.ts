@@ -1,9 +1,19 @@
 import {IScope} from "angular";
 import moment, {Moment} from "moment";
 import {DialogController} from "tim/ui/dialogController";
-import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
-import {fetchAskedQuestion, showQuestionEditDialog} from "../document/question/questionController";
-import {registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {
+    IPreviewParams,
+    makePreview,
+} from "../document/question/dynamicAnswerSheet";
+import {
+    fetchAskedQuestion,
+    showQuestionEditDialog,
+} from "../document/question/questionController";
+import {
+    registerDialogComponent,
+    showDialog,
+    showMessageDialog,
+} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
 import {getStorage, setStorage, to} from "../util/utils";
 import {
@@ -44,17 +54,20 @@ export function getAskedQuestionFromQA(qa: QuestionOrAnswer): IAskedQuestion {
 }
 
 export type IAnswerQuestionResult =
-    { type: "pointsclosed", askedId: number }
-    | { type: "closed" }
-    | { type: "answered" }
-    | { type: "reask" }
-    | { type: "reask_as_new" };
+    | {type: "pointsclosed"; askedId: number}
+    | {type: "closed"}
+    | {type: "answered"}
+    | {type: "reask"}
+    | {type: "reask_as_new"};
 
 export let currentQuestion: AnswerToQuestionController | undefined;
 
 export const QUESTION_STORAGE = "lectureQuestion";
 
-export class AnswerToQuestionController extends DialogController<{ params: IAnswerQuestionParams }, IAnswerQuestionResult> {
+export class AnswerToQuestionController extends DialogController<
+    {params: IAnswerQuestionParams},
+    IAnswerQuestionResult
+> {
     static component = "timAnswerQuestion";
     static $inject = ["$element", "$scope"] as const;
     private barFilled?: number;
@@ -104,15 +117,17 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
     }
 
     private async answerToQuestion() {
-        const response = await to($http<{ questionLate?: string }>({
-            url: "/answerToQuestion",
-            method: "PUT",
-            params: {
-                asked_id: this.question.asked_id,
-                buster: new Date().getTime(),
-                input: {answers: this.answer},
-            },
-        }));
+        const response = await to(
+            $http<{questionLate?: string}>({
+                url: "/answerToQuestion",
+                method: "PUT",
+                params: {
+                    asked_id: this.question.asked_id,
+                    buster: new Date().getTime(),
+                    input: {answers: this.answer},
+                },
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -127,7 +142,9 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
     }
 
     private disableAnswerSheet() {
-        this.preview = makePreview(this.preview.markup, {answerTable: this.answer});
+        this.preview = makePreview(this.preview.markup, {
+            answerTable: this.answer,
+        });
     }
 
     public close() {
@@ -135,7 +152,10 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
             this.stopQuestion();
         }
         if (this.result) {
-            super.close({type: "pointsclosed", askedId: this.question.asked_id});
+            super.close({
+                type: "pointsclosed",
+                askedId: this.question.asked_id,
+            });
         } else {
             super.close({type: "closed"});
         }
@@ -146,13 +166,15 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
     }
 
     private async stopQuestion() {
-        const _ = await to($http({
-            url: "/stopQuestion",
-            method: "POST",
-            params: {
-                asked_id: this.question.asked_id,
-            },
-        }));
+        const _ = await to(
+            $http({
+                url: "/stopQuestion",
+                method: "POST",
+                params: {
+                    asked_id: this.question.asked_id,
+                },
+            })
+        );
         // Don't call endQuestion here; it will come from lectureController.
     }
 
@@ -174,9 +196,11 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
         if (isAskedQuestion(this.resolve.params.qa)) {
             this.setData(await fetchAskedQuestion(this.question.asked_id));
         } else {
-            const resp = await to($http.get<IQuestionAnswer>("/getQuestionAnswer", {
-                params: {id: this.resolve.params.qa.answer_id},
-            }));
+            const resp = await to(
+                $http.get<IQuestionAnswer>("/getQuestionAnswer", {
+                    params: {id: this.resolve.params.qa.answer_id},
+                })
+            );
             if (!resp.ok) {
                 return;
             }
@@ -185,14 +209,16 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
     }
 
     private async showPoints() {
-        const response = await to($http<IGetNewQuestionResponse>({
-            url: "/showAnswerPoints",
-            method: "POST",
-            params: {
-                asked_id: this.question.asked_id,
-                current_question_id: this.question.asked_id, // TODO useless parameter
-            },
-        }));
+        const response = await to(
+            $http<IGetNewQuestionResponse>({
+                url: "/showAnswerPoints",
+                method: "POST",
+                params: {
+                    asked_id: this.question.asked_id,
+                    current_question_id: this.question.asked_id, // TODO useless parameter
+                },
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -250,10 +276,14 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
      */
     private async updateBar(updateInterval: number) {
         // TODO: Problem with inactive tab.
-        while (!this.closed && !this.questionEnded && !(!this.endTime || !this.progressMax)) {
+        while (
+            !this.closed &&
+            !this.questionEnded &&
+            !(!this.endTime || !this.progressMax)
+        ) {
             const now = moment();
             const timeLeft = this.endTime.diff(now);
-            this.barFilled = (this.endTime.diff(this.askedTime)) - timeLeft;
+            this.barFilled = this.endTime.diff(this.askedTime) - timeLeft;
             this.progressText = Math.max(timeLeft / 1000, 0).toFixed(0) + " s";
             if (this.barFilled >= this.progressMax) {
                 await this.endQuestion();
@@ -292,21 +322,21 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
         } else {
             this.question = data.asked_question;
             this.result = true;
-            this.preview = makePreview(
-                this.question.json.json, {
-                    answerTable: data.answer,
-                    showCorrectChoices: true,
-                    showExplanations: true,
-                    userpoints: data.points,
-                },
-            );
+            this.preview = makePreview(this.question.json.json, {
+                answerTable: data.answer,
+                showCorrectChoices: true,
+                showExplanations: true,
+                userpoints: data.points,
+            });
             this.questionEnded = true;
             this.answered = true;
         }
         this.askedTime = this.question.asked_time.clone();
 
         if (this.question.json.json.timeLimit) {
-            this.endTime = this.askedTime.clone().add(this.question.json.json.timeLimit, "seconds");
+            this.endTime = this.askedTime
+                .clone()
+                .add(this.question.json.json.timeLimit, "seconds");
         }
         this.isLecturer = this.resolve.params.isLecturer;
 
@@ -329,9 +359,8 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
     }
 }
 
-registerDialogComponent(AnswerToQuestionController,
-    {
-        template: `
+registerDialogComponent(AnswerToQuestionController, {
+    template: `
 <tim-dialog>
     <dialog-header>
         Answer question
@@ -377,10 +406,11 @@ registerDialogComponent(AnswerToQuestionController,
     </dialog-footer>
 </tim-dialog>
 `,
-    });
+});
 
 export async function showQuestionAnswerDialog(p: IAnswerQuestionParams) {
-    return await showDialog(AnswerToQuestionController, {params: () => p}).result;
+    return await showDialog(AnswerToQuestionController, {params: () => p})
+        .result;
 }
 
 export function isOpenInAnotherTab(qa: QuestionOrAnswer) {

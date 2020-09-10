@@ -9,7 +9,10 @@ import {relevanceSuggestions} from "../item/relevanceEdit";
 import {someglobals} from "../util/globals";
 import {$http, $localStorage} from "../util/ngimport";
 import {to} from "../util/utils";
-import {SearchResultController, showSearchResultDialog} from "./searchResultsCtrl";
+import {
+    SearchResultController,
+    showSearchResultDialog,
+} from "./searchResultsCtrl";
 
 /**
  * All data title/word search route returns.
@@ -220,10 +223,10 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
     loading = false; // Display loading icon.
     private item?: DocumentOrFolder = someglobals().curr_item;
     private storage: ngStorage.StorageService & {
-        maxDocResultsStorage: null | string,
-        relevanceThresholdStorage: null | string,
-        searchWordStorage: null | string,
-        optionsStorage: null | boolean[]
+        maxDocResultsStorage: null | string;
+        relevanceThresholdStorage: null | string;
+        searchWordStorage: null | string;
+        optionsStorage: null | boolean[];
     };
     folderSuggestions: string[] = []; // A list of folder path suggestions.
     private resultsDialog: SearchResultController | undefined; // The most recent search result dialog.
@@ -264,8 +267,13 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
 
         this.resetAttributes();
         this.loading = true;
-        if (!this.searchTitles && !this.searchTags && !this.searchContent && !this.searchPaths) {
-            this.errorMessage = (`All search scope options are unchecked.`);
+        if (
+            !this.searchTitles &&
+            !this.searchTags &&
+            !this.searchContent &&
+            !this.searchPaths
+        ) {
+            this.errorMessage = `All search scope options are unchecked.`;
             this.loading = false;
             return;
         }
@@ -283,8 +291,13 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
             await this.wordSearch();
         }
         this.loading = false;
-        if (this.results.length === 0 && this.tagResults.length === 0 &&
-            this.titleResults.length === 0 && this.pathResults.length === 0 && !this.errorMessage) {
+        if (
+            this.results.length === 0 &&
+            this.tagResults.length === 0 &&
+            this.titleResults.length === 0 &&
+            this.pathResults.length === 0 &&
+            !this.errorMessage
+        ) {
             this.errorMessage = `Your search '${this.query}' did not match any documents.`;
             return;
         }
@@ -295,12 +308,14 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         this.updateLocalStorage();
 
         // Give warnings if search was incomplete or took a long time.
-        if (((new Date().getTime() - start) / 1000) > this.timeWarningLimit) {
-            this.resultErrorMessage = "The search took a long time. " +
+        if ((new Date().getTime() - start) / 1000 > this.timeWarningLimit) {
+            this.resultErrorMessage =
+                "The search took a long time. " +
                 "Use more specific search settings for a faster search.";
         }
         if (this.incompleteSearchReason) {
-            this.resultErrorMessage = `Incomplete search: ${this.incompleteSearchReason}.` +
+            this.resultErrorMessage =
+                `Incomplete search: ${this.incompleteSearchReason}.` +
                 ` For better results choose more specific search settings.`;
         }
 
@@ -338,9 +353,19 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
             this.storage.maxDocResultsStorage = this.maxDocResults.toString();
         }
         this.storage.optionsStorage = [];
-        this.storage.optionsStorage = [this.advancedSearch, this.caseSensitive, this.createNewWindow,
-            this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
-            this.searchOwned, this.searchContent, this.searchPaths];
+        this.storage.optionsStorage = [
+            this.advancedSearch,
+            this.caseSensitive,
+            this.createNewWindow,
+            this.ignorePlugins,
+            this.regex,
+            this.searchTitles,
+            this.searchWholeWords,
+            this.searchTags,
+            this.searchOwned,
+            this.searchContent,
+            this.searchPaths,
+        ];
     }
 
     /**
@@ -356,10 +381,23 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         if (this.storage.maxDocResultsStorage != null) {
             this.maxDocResults = +this.storage.maxDocResultsStorage;
         }
-        if (this.storage.optionsStorage && this.storage.optionsStorage.length > 10) {
-            [this.advancedSearch, this.caseSensitive, this.createNewWindow,
-                this.ignorePlugins, this.regex, this.searchTitles, this.searchWholeWords, this.searchTags,
-                this.searchOwned, this.searchContent, this.searchPaths] = this.storage.optionsStorage;
+        if (
+            this.storage.optionsStorage &&
+            this.storage.optionsStorage.length > 10
+        ) {
+            [
+                this.advancedSearch,
+                this.caseSensitive,
+                this.createNewWindow,
+                this.ignorePlugins,
+                this.regex,
+                this.searchTitles,
+                this.searchWholeWords,
+                this.searchTags,
+                this.searchOwned,
+                this.searchContent,
+                this.searchPaths,
+            ] = this.storage.optionsStorage;
         }
     }
 
@@ -426,11 +464,13 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
      * Document path search.
      */
     private async pathSearch() {
-        const r = await to($http<ISearchResultsInfo>({
-            method: "GET",
-            params: {...this.getCommonSearchOptions()},
-            url: "/search/paths",
-        }));
+        const r = await to(
+            $http<ISearchResultsInfo>({
+                method: "GET",
+                params: {...this.getCommonSearchOptions()},
+                url: "/search/paths",
+            })
+        );
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
             this.pathResults = [];
@@ -439,7 +479,8 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         // Path results use title interface.
         this.pathResults.push(...r.result.data.title_results);
         if (r.result.data.incomplete_search_reason) {
-            this.incompleteSearchReason = r.result.data.incomplete_search_reason;
+            this.incompleteSearchReason =
+                r.result.data.incomplete_search_reason;
         }
         this.pathMatchCount = r.result.data.title_result_count;
     }
@@ -448,11 +489,13 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
      * Document title search (unused).
      */
     private async titleSearch() {
-        const r = await to($http<ISearchResultsInfo>({
-            method: "GET",
-            params: {...this.getCommonSearchOptions()},
-            url: "/search/titles",
-        }));
+        const r = await to(
+            $http<ISearchResultsInfo>({
+                method: "GET",
+                params: {...this.getCommonSearchOptions()},
+                url: "/search/titles",
+            })
+        );
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
             this.titleResults = [];
@@ -460,7 +503,8 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         }
         this.titleResults = r.result.data.title_results;
         if (r.result.data.incomplete_search_reason) {
-            this.incompleteSearchReason = r.result.data.incomplete_search_reason;
+            this.incompleteSearchReason =
+                r.result.data.incomplete_search_reason;
         }
         this.titleMatchCount = r.result.data.title_result_count;
     }
@@ -469,18 +513,20 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
      * Document paragraph word and title search.
      */
     private async wordSearch() {
-        const r = await to($http<ISearchResultsInfo>({
-            method: "GET",
-            params: {
-                ignorePlugins: this.ignorePlugins,
-                maxDocResults: this.maxDocResults,
-                searchContent: this.searchContent,
-                searchTitles: this.searchTitles,
-                searchAttrs: true,
-                ...this.getCommonSearchOptions(),
-            },
-            url: "/search",
-        }));
+        const r = await to(
+            $http<ISearchResultsInfo>({
+                method: "GET",
+                params: {
+                    ignorePlugins: this.ignorePlugins,
+                    maxDocResults: this.maxDocResults,
+                    searchContent: this.searchContent,
+                    searchTitles: this.searchTitles,
+                    searchAttrs: true,
+                    ...this.getCommonSearchOptions(),
+                },
+                url: "/search",
+            })
+        );
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
             this.results = [];
@@ -491,7 +537,8 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         this.results = response.data.content_results;
         this.titleResults = response.data.title_results;
         if (response.data.incomplete_search_reason) {
-            this.incompleteSearchReason = response.data.incomplete_search_reason;
+            this.incompleteSearchReason =
+                response.data.incomplete_search_reason;
         }
         this.wordMatchCount = response.data.word_result_count;
         this.titleMatchCount = response.data.title_result_count;
@@ -501,37 +548,41 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
      * Search document tags.
      */
     private async tagSearch() {
-        const r = await to($http<ITagSearchResultsInfo>({
-            method: "GET",
-            params: {...this.getCommonSearchOptions()},
-            url: "/search/tags",
-        }));
+        const r = await to(
+            $http<ITagSearchResultsInfo>({
+                method: "GET",
+                params: {...this.getCommonSearchOptions()},
+                url: "/search/tags",
+            })
+        );
         if (r.ok) {
             const response = r.result;
             this.tagResults = response.data.results;
             this.tagMatchCount = response.data.tag_result_count;
             if (response.data.incomplete_search_reason) {
-                this.incompleteSearchReason = response.data.incomplete_search_reason;
+                this.incompleteSearchReason =
+                    response.data.incomplete_search_reason;
             }
         } else {
             this.errorMessage = r.result.data.error;
             this.tagResults = [];
             return;
         }
-
     }
 
     /**
      * Makes a list of folder paths starting from the current default search folder.
      */
     private async loadFolderSuggestions() {
-        const response = await to($http<string[]>({
-            method: "GET",
-            params: {
-                folder: this.folder,
-            },
-            url: "/search/getFolders",
-        }));
+        const response = await to(
+            $http<string[]>({
+                method: "GET",
+                params: {
+                    folder: this.folder,
+                },
+                url: "/search/getFolders",
+            })
+        );
         if (!response.ok) {
             return;
         }

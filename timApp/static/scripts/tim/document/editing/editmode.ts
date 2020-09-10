@@ -3,7 +3,11 @@ import $ from "jquery";
 import {documentglobals} from "../../util/globals";
 import {EditMode} from "../popupMenu";
 
-export function watchEditMode(newVal: EditMode | null, oldVal: string | null | undefined, $scope: IScope) {
+export function watchEditMode(
+    newVal: EditMode | null,
+    oldVal: string | null | undefined,
+    $scope: IScope
+) {
     documentglobals().editMode = newVal;
     $(".editmode").removeClass("editmode");
 
@@ -30,21 +34,20 @@ export function watchEditMode(newVal: EditMode | null, oldVal: string | null | u
 }
 
 function enableParEdit() {
-    $(".editline-disabled").removeClass("editline-disabled").addClass("editline");
+    $(".editline-disabled")
+        .removeClass("editline-disabled")
+        .addClass("editline");
 }
 
 function disableParEdit() {
     $(".editline").removeClass("editline").addClass("editline-disabled");
 }
 
-function enableAreaEditActive() {
-}
+function enableAreaEditActive() {}
 
-function enableAreaEditPassive() {
-}
+function enableAreaEditPassive() {}
 
-function disableAreaEdit() {
-}
+function disableAreaEdit() {}
 
 function showHidden(showParam: string | null) {
     const displayValue = showParam == null ? "none" : "initial";

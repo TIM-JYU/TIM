@@ -58,7 +58,8 @@ const ITimMenuItem: t.Type<ITimMenuItem> = t.recursion("ITimMenuItem", () =>
             level: t.number,
             open: t.boolean,
             text: t.string,
-        })]),
+        }),
+    ])
 );
 
 const TimMenuAll = t.intersection([
@@ -72,7 +73,11 @@ const TimMenuAll = t.intersection([
     }),
 ]);
 
-class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.TypeOf<typeof TimMenuAll>, typeof TimMenuAll> {
+class TimMenuController extends PluginBase<
+    t.TypeOf<typeof TimMenuMarkup>,
+    t.TypeOf<typeof TimMenuAll>,
+    typeof TimMenuAll
+> {
     private menu: ITimMenuItem[] = [];
     private vctrl?: Require<ViewCtrl>;
     private openingSymbol: string = "";
@@ -120,7 +125,9 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
         }
         if (this.topMenu && !this.attrsall.preview) {
             // Divided by two because the check is half of the user given height towards either direction.
-            this.topMenuTriggerHeight = Math.floor(this.attrs.topMenuTriggerHeight / 2);
+            this.topMenuTriggerHeight = Math.floor(
+                this.attrs.topMenuTriggerHeight / 2
+            );
             if (this.topMenuTriggerHeight == 0) {
                 // Logic doesn't work if the height is zero. Negative number makes it stay after appearing
                 // until scrolled to its original location in document.
@@ -156,13 +163,21 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
      * @param parent2 Further menu item parent.
      * @param clicked Toggled by a mouse click.
      */
-    toggleSubmenu(item: ITimMenuItem, parent1: ITimMenuItem | undefined, parent2: ITimMenuItem | undefined, clicked: boolean) {
+    toggleSubmenu(
+        item: ITimMenuItem,
+        parent1: ITimMenuItem | undefined,
+        parent2: ITimMenuItem | undefined,
+        clicked: boolean
+    ) {
         // If called by mouseenter and either hover open is off or touch mode is on, do nothing.
         if (!clicked && (!this.hoverOpen || this.touchMode)) {
             return;
         }
         // Toggle open menu closed and back again when clicking.
-        if (this.previouslyClicked && (this.previouslyClicked === item || item.open)) {
+        if (
+            this.previouslyClicked &&
+            (this.previouslyClicked === item || item.open)
+        ) {
             item.open = !item.open;
             this.previouslyClicked = item;
             return;
@@ -220,17 +235,22 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             return;
         }
         // Placeholder and its content are separate, because when hidden y is 0.
-        const placeholderContent = this.element.find(".tim-menu-placeholder-content")[0];
+        const placeholderContent = this.element.find(
+            ".tim-menu-placeholder-content"
+        )[0];
         const belowPlaceholder = placeholder.getBoundingClientRect().bottom < 0;
         const scrollingDown = scrollY > this.previousScroll;
-        const scrollDirHasChanged = (this.previouslyScrollingDown && !scrollingDown) || (!this.previouslyScrollingDown && scrollingDown);
+        const scrollDirHasChanged =
+            (this.previouslyScrollingDown && !scrollingDown) ||
+            (!this.previouslyScrollingDown && scrollingDown);
         if (scrollDirHasChanged) {
             // If scrolling direction has changed, set the scroll trigger distance to be centered at that y-coordinate.
             this.previousSwitch = scrollY;
         }
         this.previouslyScrollingDown = scrollingDown;
         this.previousScroll = $(window).scrollTop();
-        const isSmallScreen = ($(".device-xs").is(":visible") || $(".device-sm").is(":visible"));
+        const isSmallScreen =
+            $(".device-xs").is(":visible") || $(".device-sm").is(":visible");
 
         // Sticky can only show when the element's place in document goes outside upper bounds.
         if (belowPlaceholder) {
@@ -240,7 +260,11 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             if (scrollingDown) {
                 // If topMenu is already hidden, don't try hiding it again.
                 // If scroll distance is smaller than min height, don't do anything.
-                if (!this.topMenuVisible || (!this.previousSwitch || scrollY > this.previousSwitch + this.topMenuTriggerHeight)) {
+                if (
+                    !this.topMenuVisible ||
+                    !this.previousSwitch ||
+                    scrollY > this.previousSwitch + this.topMenuTriggerHeight
+                ) {
                     return;
                 }
                 menu.classList.remove("top-menu");
@@ -249,8 +273,17 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
                 this.topMenuVisible = false;
             } else {
                 // If topMenu is already visible, the rest are redundant.
-                if (this.topMenuVisible || (this.previousSwitch &&
-                    !(scrollY > this.previousSwitch + this.topMenuTriggerHeight || scrollY < this.previousSwitch - this.topMenuTriggerHeight))) {
+                if (
+                    this.topMenuVisible ||
+                    (this.previousSwitch &&
+                        !(
+                            scrollY >
+                                this.previousSwitch +
+                                    this.topMenuTriggerHeight ||
+                            scrollY <
+                                this.previousSwitch - this.topMenuTriggerHeight
+                        ))
+                ) {
                     return;
                 }
                 menu.classList.add("top-menu");
@@ -343,7 +376,11 @@ class TimMenuController extends PluginBase<t.TypeOf<typeof TimMenuMarkup>, t.Typ
             }
         } else {
             // Non-logged in users who see the page have only view rights.
-            return (!(item.rights == "edit" || item.rights == "manage" || item.rights == "owner"));
+            return !(
+                item.rights == "edit" ||
+                item.rights == "manage" ||
+                item.rights == "owner"
+            );
         }
     }
 

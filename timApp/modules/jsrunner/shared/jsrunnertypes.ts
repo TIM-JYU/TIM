@@ -1,14 +1,16 @@
 import * as t from "io-ts";
-import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, withDefault} from "tim/plugin/attributes";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    IncludeUsersOption,
+    withDefault,
+} from "tim/plugin/attributes";
 import {IToolsResult} from "../server/routes/tools";
 
 export {IncludeUsersOption} from "tim/plugin/attributes";
 
 // t.brand causes problems, so we use the deprecated refinement for now.
-export const Max1000 = t.refinement(
-    t.number,
-    (n) => n >= 0 && n <= 4000,
-);
+export const Max1000 = t.refinement(t.number, (n) => n >= 0 && n <= 4000);
 
 export const JsrunnerMarkup = t.intersection([
     t.partial({
@@ -17,9 +19,9 @@ export const JsrunnerMarkup = t.intersection([
         docid: t.boolean,
         failGrade: t.string,
         fieldhelper: t.boolean,
-        fields: t.array(t.string),       // fields to use in calculations
+        fields: t.array(t.string), // fields to use in calculations
         updateFields: t.array(t.string), // Fields to update after run
-        paramFields: t.array(t.string),  // fields to bring to calculation as parameter
+        paramFields: t.array(t.string), // fields to bring to calculation as parameter
         gradeField: t.string,
         gradingScale: t.record(t.string, t.number),
         groups: t.array(t.string),
@@ -42,8 +44,7 @@ export const JsrunnerMarkup = t.intersection([
     }),
 ]);
 
-export interface IJsRunnerMarkup extends t.TypeOf<typeof JsrunnerMarkup> {
-}
+export interface IJsRunnerMarkup extends t.TypeOf<typeof JsrunnerMarkup> {}
 
 export const JsrunnerAll = t.intersection([
     t.partial({
@@ -64,22 +65,23 @@ export interface IError {
     stackTrace?: string;
 }
 
-export type ErrorList = Array<{errors: IError[], user: string}>;
+export type ErrorList = Array<{errors: IError[]; user: string}>;
 
 interface AnswerReturnSuccess {
-    web:
-        {
-            output: string,
-            errors: ErrorList,
-            fatalError?: undefined,
-            outdata?: { exportdata?: Array<{ plugin: string, save?: boolean, data: unknown }> },
+    web: {
+        output: string;
+        errors: ErrorList;
+        fatalError?: undefined;
+        outdata?: {
+            exportdata?: Array<{plugin: string; save?: boolean; data: unknown}>;
         };
+    };
     savedata: IToolsResult[];
     groups: IGroupData;
 }
 
 interface AnswerReturnError {
-    web: {output: string, fatalError: IError};
+    web: {output: string; fatalError: IError};
 }
 
 export interface IStatData {
@@ -96,4 +98,6 @@ export interface INumbersObject {
 }
 
 export type AnswerReturn = AnswerReturnSuccess | AnswerReturnError;
-export type AnswerReturnBrowser = Omit<AnswerReturnSuccess & {web: {error?: string}}, "savedata"> | AnswerReturnError;
+export type AnswerReturnBrowser =
+    | Omit<AnswerReturnSuccess & {web: {error?: string}}, "savedata">
+    | AnswerReturnError;

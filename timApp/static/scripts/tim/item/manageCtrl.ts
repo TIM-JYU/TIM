@@ -1,7 +1,10 @@
 import {IController, IFormController, IHttpResponse} from "angular";
 import {timApp} from "tim/app";
 import {IChangelogEntry, IManageResponse} from "../document/editing/edittypes";
-import {isManageResponse, showRenameDialog} from "../document/editing/pluginRenameForm";
+import {
+    isManageResponse,
+    showRenameDialog,
+} from "../document/editing/pluginRenameForm";
 import * as copyFolder from "../folder/copyFolder";
 import {showMessageDialog} from "../ui/dialog";
 import {IGroup} from "../user/IUser";
@@ -9,7 +12,15 @@ import {Users} from "../user/userService";
 import {manageglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {capitalizeFirstLetter, clone, markAsUsed, to} from "../util/utils";
-import {IDocument, IFolder, IFullDocument, IItem, IEditableTranslation, redirectToItem, getItemTypeName} from "./IItem";
+import {
+    IDocument,
+    IFolder,
+    IFullDocument,
+    IItem,
+    IEditableTranslation,
+    redirectToItem,
+    getItemTypeName,
+} from "./IItem";
 
 markAsUsed(copyFolder);
 
@@ -27,7 +38,7 @@ export class PermCtrl implements IController {
     private newFolderName: string;
     private hasMoreChangelog?: boolean;
     private translations: Array<IEditableTranslation> = [];
-    private newTranslation: {language: string, title: string};
+    private newTranslation: {language: string; title: string};
     private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
     private item: IFullDocument | IFolder;
@@ -91,7 +102,11 @@ export class PermCtrl implements IController {
         const d = this.itemAsDocument();
         const newLength = d.versions.length + 100;
         this.changelogLoading = true;
-        const r = await to($http.get<{versions: IChangelogEntry[]}>("/changelog/" + this.item.id + "/" + (newLength)));
+        const r = await to(
+            $http.get<{versions: IChangelogEntry[]}>(
+                "/changelog/" + this.item.id + "/" + newLength
+            )
+        );
         this.changelogLoading = false;
         if (r.ok) {
             d.versions = r.result.data.versions;
@@ -105,9 +120,12 @@ export class PermCtrl implements IController {
         const r = await to($http.get<IItem[]>("/alias/" + this.item.id, {}));
         if (r.ok) {
             const data = r.result.data;
-            if (this.aliases && this.aliases.length > 0 &&
+            if (
+                this.aliases &&
+                this.aliases.length > 0 &&
                 data.length > 0 &&
-                data[0].path !== this.aliases[0].path) {
+                data[0].path !== this.aliases[0].path
+            ) {
                 // The first name has changed, reload to update the links
                 window.location.replace("/manage/" + data[0].path);
             } else {
@@ -126,7 +144,12 @@ export class PermCtrl implements IController {
             return [];
         }
 
-        const r = await to($http.get<Array<IEditableTranslation>>("/translations/" + this.item.id, {}));
+        const r = await to(
+            $http.get<Array<IEditableTranslation>>(
+                "/translations/" + this.item.id,
+                {}
+            )
+        );
         if (r.ok) {
             const data = r.result.data;
             this.translations = [];
@@ -139,9 +162,10 @@ export class PermCtrl implements IController {
             }
 
             this.oldTitle = this.item.title;
-
         } else {
-            await showMessageDialog(`Error loading translations: ${r.result.data.error}`);
+            await showMessageDialog(
+                `Error loading translations: ${r.result.data.error}`
+            );
         }
 
         return [];
@@ -152,11 +176,13 @@ export class PermCtrl implements IController {
     }
 
     async updateTranslation(tr: IEditableTranslation) {
-        const r = await to($http.post("/translation/" + tr.id, {
-            new_langid: tr.lang_id,
-            new_title: tr.title,
-            old_title: tr.old_title,
-        }));
+        const r = await to(
+            $http.post("/translation/" + tr.id, {
+                new_langid: tr.lang_id,
+                new_title: tr.title,
+                old_title: tr.old_title,
+            })
+        );
         if (r.ok) {
             await this.getTranslations();
             if (tr.id === this.item.id) {
@@ -184,9 +210,11 @@ export class PermCtrl implements IController {
             showMessageDialog("Title not provided.");
             return;
         }
-        const r = await to($http.put("/changeTitle/" + this.item.id, {
-            new_title: this.newTitle,
-        }));
+        const r = await to(
+            $http.put("/changeTitle/" + this.item.id, {
+                new_title: this.newTitle,
+            })
+        );
         if (r.ok) {
             this.syncTitle(this.newTitle);
         } else {
@@ -195,9 +223,11 @@ export class PermCtrl implements IController {
     }
 
     async renameFolder(newName: string) {
-        const r = await to($http.put<{new_name: string}>("/rename/" + this.item.id, {
-            new_name: this.oldFolderName + "/" + newName,
-        }));
+        const r = await to(
+            $http.put<{new_name: string}>("/rename/" + this.item.id, {
+                new_name: this.oldFolderName + "/" + newName,
+            })
+        );
         if (r.ok) {
             window.location.assign("/manage/" + r.result.data.new_name);
         } else {
@@ -206,9 +236,11 @@ export class PermCtrl implements IController {
     }
 
     async moveFolder(newLocation: string) {
-        const r = await to($http.put<{new_name: string}>("/rename/" + this.item.id, {
-            new_name: newLocation + "/" + this.oldName,
-        }));
+        const r = await to(
+            $http.put<{new_name: string}>("/rename/" + this.item.id, {
+                new_name: newLocation + "/" + this.oldName,
+            })
+        );
         if (r.ok) {
             window.location.assign("/manage/" + r.result.data.new_name);
         } else {
@@ -226,14 +258,21 @@ export class PermCtrl implements IController {
     }
 
     aliasChanged(alias: IAlias) {
-        return alias.publicChanged || alias.path !== this.combine(alias.location, alias.name);
+        return (
+            alias.publicChanged ||
+            alias.path !== this.combine(alias.location, alias.name)
+        );
     }
 
     async addAlias(newAlias: IAlias) {
-        const path = encodeURIComponent(this.combine(newAlias.location || "", newAlias.name));
-        const r = await to($http.put(`/alias/${this.item.id}/${path}`, {
-            public: newAlias.public,
-        }));
+        const path = encodeURIComponent(
+            this.combine(newAlias.location || "", newAlias.name)
+        );
+        const r = await to(
+            $http.put(`/alias/${this.item.id}/${path}`, {
+                public: newAlias.public,
+            })
+        );
         if (r.ok) {
             await this.getAliases();
         } else {
@@ -242,7 +281,9 @@ export class PermCtrl implements IController {
     }
 
     async removeAlias(alias: IAlias) {
-        const r = await to($http.delete("/alias/" + encodeURIComponent(alias.path), {}));
+        const r = await to(
+            $http.delete("/alias/" + encodeURIComponent(alias.path), {})
+        );
         if (r.ok) {
             await this.getAliases();
         } else {
@@ -252,10 +293,12 @@ export class PermCtrl implements IController {
 
     async updateAlias(alias: IAlias, first: boolean) {
         const newAlias = this.combine(alias.location, alias.name);
-        const r = await to($http.post("/alias/" + encodeURIComponent(alias.path), {
-            new_name: newAlias,
-            public: alias.public,
-        }));
+        const r = await to(
+            $http.post("/alias/" + encodeURIComponent(alias.path), {
+                new_name: newAlias,
+                public: alias.public,
+            })
+        );
         if (r.ok) {
             if (!first || newAlias === alias.path) {
                 await this.getAliases();
@@ -279,7 +322,11 @@ export class PermCtrl implements IController {
     }
 
     async deleteFolder() {
-        if (window.confirm(`Are you sure you want to delete the folder ${this.item.path}?`)) {
+        if (
+            window.confirm(
+                `Are you sure you want to delete the folder ${this.item.path}?`
+            )
+        ) {
             const r = await to($http.delete(`/folders/${this.item.id}`));
             if (r.ok) {
                 location.replace(`/view/${this.item.location}`);
@@ -297,12 +344,15 @@ export class PermCtrl implements IController {
         let text = this.tracWikiText;
         const wikiSource = this.wikiRoot.replace("wiki", "browser");
         // var text = this.fulltext;
-        text = text.replace(/\[\[PageOutline\]\].*\n/g, "");  // remove contents
-        text = text.replace(/ !([a-zA-Z])/g, " $1");                   // remove cat !IsBig
-        text = text.replace(/\r\n/g, "\n");                   // change windows nl's
-        text = text.replace(/{{{(.*?)}}}/g, "`$1`");         // change verbatim
+        text = text.replace(/\[\[PageOutline\]\].*\n/g, ""); // remove contents
+        text = text.replace(/ !([a-zA-Z])/g, " $1"); // remove cat !IsBig
+        text = text.replace(/\r\n/g, "\n"); // change windows nl's
+        text = text.replace(/{{{(.*?)}}}/g, "`$1`"); // change verbatim
         // text = text.replace(/{{{\n(.*?)\n}}}/, "```\n$1\n```"); // change code blocks
-        text = text.replace(/\n{{{#!comment\n((.|\s|\S)*?)\n}}}\n/g, "\n#- {.comment}\n$1\n#-\n"); // comments
+        text = text.replace(
+            /\n{{{#!comment\n((.|\s|\S)*?)\n}}}\n/g,
+            "\n#- {.comment}\n$1\n#-\n"
+        ); // comments
         text = text.replace(/\n{{{\n/g, "\n#-\n```\n"); // change code blocks
         text = text.replace(/\n}}}\n/g, "\n```\n"); // change code blocks
         text = text.replace(/\n====\s+(.*?)\s+====.*\n/g, "\n#-\n#### $1\n"); // headings
@@ -314,14 +364,29 @@ export class PermCtrl implements IController {
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
             if (true || line.lastIndexOf("    ", 0) !== 0) {
-                line = line.replace(/\[((https?|mms):\/\/[^\s\[\]]+)\s+([^\[\]]+)\]/g, "[$3]($1)"); // ordinary links
-                line = line.replace(/\[((https?|mms):\/\/[^\s\[\]]+)\s+(\[.*?\])\]/g, "[$3]($1)");   // links like [url [text]]
-                line = line.replace(/\[wiki:([^\s\[\]]+)\]/g, "[$1](" + (this.wikiRoot || "") + "$1)"); // [wiki:local] -> [local](URL)
-                line = line.replace(/\[wiki:([^\s\[\]]+)\s+([^\[\]]+)\]/g, "[$2](" + (this.wikiRoot || "") + "$1)"); // [wiki:local text] -> [text](URL)
-                line = line.replace(/\[source:([^\s\[\]]+)\s+([^\[\]]+)\]/g, "[$2](" + (wikiSource || "") + "$1)");
+                line = line.replace(
+                    /\[((https?|mms):\/\/[^\s\[\]]+)\s+([^\[\]]+)\]/g,
+                    "[$3]($1)"
+                ); // ordinary links
+                line = line.replace(
+                    /\[((https?|mms):\/\/[^\s\[\]]+)\s+(\[.*?\])\]/g,
+                    "[$3]($1)"
+                ); // links like [url [text]]
+                line = line.replace(
+                    /\[wiki:([^\s\[\]]+)\]/g,
+                    "[$1](" + (this.wikiRoot || "") + "$1)"
+                ); // [wiki:local] -> [local](URL)
+                line = line.replace(
+                    /\[wiki:([^\s\[\]]+)\s+([^\[\]]+)\]/g,
+                    "[$2](" + (this.wikiRoot || "") + "$1)"
+                ); // [wiki:local text] -> [text](URL)
+                line = line.replace(
+                    /\[source:([^\s\[\]]+)\s+([^\[\]]+)\]/g,
+                    "[$2](" + (wikiSource || "") + "$1)"
+                );
                 line = line.replace(/\!(([A-Z][a-z0-9]+){2,})/, "$1");
-                line = line.replace(/\'\'\'(.*?)\'\'\'/, "**$1**");  // bold
-                line = line.replace(/\'\'(.*?)\'\'/, "*$1*");   // italics
+                line = line.replace(/\'\'\'(.*?)\'\'\'/, "**$1**"); // bold
+                line = line.replace(/\'\'(.*?)\'\'/, "*$1*"); // italics
             }
             lines[i] = line;
         }
@@ -368,7 +433,8 @@ export class PermCtrl implements IController {
 
     itemAsDocument() {
         if (this.item.isFolder) {
-            const message = "Current item is unexpectedly folder instead of document";
+            const message =
+                "Current item is unexpectedly folder instead of document";
             void showMessageDialog(message);
             throw new Error(message);
         }
@@ -381,19 +447,24 @@ export class PermCtrl implements IController {
             return;
         }
         this.saving = true;
-        const r = await to<IHttpResponse<IManageResponse>,
-            {data: {error: string, is_warning?: boolean}}>($http.post<IManageResponse>(`/update/${this.item.id}`,
-            {
+        const r = await to<
+            IHttpResponse<IManageResponse>,
+            {data: {error: string; is_warning?: boolean}}
+        >(
+            $http.post<IManageResponse>(`/update/${this.item.id}`, {
                 fulltext: this.fulltext,
                 original: d.fulltext,
                 version: d.versions[0],
-            }));
+            })
+        );
         if (r.ok) {
             let data = r.result.data;
             if (data.duplicates.length > 0) {
-                const renameResult = await to(showRenameDialog({
-                    duplicates: data.duplicates,
-                }));
+                const renameResult = await to(
+                    showRenameDialog({
+                        duplicates: data.duplicates,
+                    })
+                );
                 if (renameResult.ok && isManageResponse(renameResult.result)) {
                     data = renameResult.result;
                 }
@@ -405,7 +476,12 @@ export class PermCtrl implements IController {
             const data = r.result.data;
             this.saving = false;
             if (data.is_warning) {
-                if (window.confirm(data.error + "\n\nDo you still wish to save the document?")) {
+                if (
+                    window.confirm(
+                        data.error +
+                            "\n\nDo you still wish to save the document?"
+                    )
+                ) {
                     this.saveDocumentWithWarnings();
                 }
             } else {
@@ -417,13 +493,14 @@ export class PermCtrl implements IController {
     async saveDocumentWithWarnings() {
         const d = this.itemAsDocument();
         this.saving = true;
-        const r = await to($http.post<IManageResponse>("/update/" + this.item.id,
-            {
+        const r = await to(
+            $http.post<IManageResponse>("/update/" + this.item.id, {
                 fulltext: this.fulltext,
                 ignore_warnings: true,
                 original: d.fulltext,
                 version: d.versions[0],
-            }));
+            })
+        );
         this.saving = false;
         if (r.ok) {
             const data = r.result.data;
@@ -446,9 +523,14 @@ export class PermCtrl implements IController {
     }
 
     async createTranslation() {
-        const r = await to($http.post<IDocument>(`/translate/${this.item.id}/${this.newTranslation.language}`, {
-            doc_title: this.newTranslation.title,
-        }));
+        const r = await to(
+            $http.post<IDocument>(
+                `/translate/${this.item.id}/${this.newTranslation.language}`,
+                {
+                    doc_title: this.newTranslation.title,
+                }
+            )
+        );
         if (r.ok) {
             const data = r.result.data;
             redirectToItem(data);
@@ -465,16 +547,22 @@ export class PermCtrl implements IController {
         if (r.ok) {
             this.notifySettings = r.result.data;
         } else {
-            await showMessageDialog(`Could not get notification settings. Error message is: ${r.result.data.error}`);
+            await showMessageDialog(
+                `Could not get notification settings. Error message is: ${r.result.data.error}`
+            );
         }
     }
 
     async notifyChanged() {
-        const r = await to($http.post("/notify/" + this.item.id, this.notifySettings));
+        const r = await to(
+            $http.post("/notify/" + this.item.id, this.notifySettings)
+        );
         if (r.ok) {
             // nothing to do
         } else {
-            await showMessageDialog(`Could not change notification settings. Error message is: ${r.result.data.error}`);
+            await showMessageDialog(
+                `Could not change notification settings. Error message is: ${r.result.data.error}`
+            );
         }
     }
 

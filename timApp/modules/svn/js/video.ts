@@ -1,7 +1,12 @@
 ﻿import angular from "angular";
 import * as t from "io-ts";
 import {ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {seconds2Time, valueDefu, valueOr} from "tim/util/utils";
 
@@ -116,10 +121,11 @@ const ShowFileAll = t.type({
     preview: t.boolean,
 });
 
-class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
+class ShowFileController extends PluginBase<
+    t.TypeOf<typeof ShowFileMarkup>,
     t.TypeOf<typeof ShowFileAll>,
-    typeof ShowFileAll> {
-
+    typeof ShowFileAll
+> {
     get videoicon() {
         return valueOr(this.attrs.videoicon, "/csstatic/video_small.png");
     }
@@ -170,7 +176,9 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
     $onInit() {
         super.$onInit();
         const n = this.attrs.file || "";
-        this.iframeopts =  this.attrs.iframeopts ?? 'sandbox="allow-scripts allow-same-origin"';
+        this.iframeopts =
+            this.attrs.iframeopts ??
+            'sandbox="allow-scripts allow-same-origin"';
         if (n.endsWith(".pdf")) {
             this.iframeopts = ""; // for Chrome :-( Sandboxed viewer does not work!
         }
@@ -181,7 +189,9 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         this.height = this.attrs.height;
         if (this.start != null && this.end != null) {
             this.duration = `(${time2String(this.end - this.start)})`;
-            this.limits = `(${time2String(this.start)}-${time2String(this.end)})`;
+            this.limits = `(${time2String(this.start)}-${time2String(
+                this.end
+            )})`;
             this.startt = `, ${time2String(this.start)}`;
         } else {
             this.duration = null;
@@ -288,7 +298,7 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         if (this.iframe) {
             let file = this.attrs.file;
             if (isYoutube(file) && !file.includes("embed")) {
-                const yname = "youtu.be/";  // could be also https://youtu.be/1OygRiwlAok
+                const yname = "youtu.be/"; // could be also https://youtu.be/1OygRiwlAok
                 const yembed = "//www.youtube.com/embed/";
                 const iy = file.indexOf(yname);
                 const parts = file.split("=");
@@ -337,17 +347,25 @@ class ShowFileController extends PluginBase<t.TypeOf<typeof ShowFileMarkup>,
         if (this.attrs.followid && this.vctrl) {
             this.vctrl.registerVideo(this.attrs.followid, this.video);
         }
-        this.video.addEventListener("loadedmetadata", () => {
-            this.video!.currentTime = this.start ?? 0;
-        }, false);
+        this.video.addEventListener(
+            "loadedmetadata",
+            () => {
+                this.video!.currentTime = this.start ?? 0;
+            },
+            false
+        );
 
         this.watchEnd = this.end;
-        this.video.addEventListener("timeupdate", () => {
-            if (this.watchEnd && this.video!.currentTime > this.watchEnd) {
-                this.video!.pause();
-                this.watchEnd = 1000000;
-            }
-        }, false);
+        this.video.addEventListener(
+            "timeupdate",
+            () => {
+                if (this.watchEnd && this.video!.currentTime > this.watchEnd) {
+                    this.video!.pause();
+                    this.watchEnd = 1000000;
+                }
+            },
+            false
+        );
     }
 
     getDefaultMarkup() {

@@ -5,7 +5,11 @@ import {timApp} from "tim/app";
 import {fixQuestionJson} from "tim/document/question/dynamicAnswerSheet";
 import {Overwrite} from "type-zoo";
 import {assertNotNull, clone, truncate} from "../util/utils";
-import {IAskedQuestion, IQuestionAnswer, IQuestionAnswerPlain} from "./lecturetypes";
+import {
+    IAskedQuestion,
+    IQuestionAnswer,
+    IQuestionAnswerPlain,
+} from "./lecturetypes";
 
 /**
  * Created by hajoviin on 13.5.2015.
@@ -20,7 +24,7 @@ import {IAskedQuestion, IQuestionAnswer, IQuestionAnswerPlain} from "./lecturety
  */
 
 function timStripHtml(s: string) {
-    s = s.replace(/<[^>]*>?/gm, "");  // problem: <img src=http://www.google.com.kh/images/srpr/nav_logo27.png onload="alert(42)" >
+    s = s.replace(/<[^>]*>?/gm, ""); // problem: <img src=http://www.google.com.kh/images/srpr/nav_logo27.png onload="alert(42)" >
     s = s.replace("\\(", "");
     s = s.replace("\\)", "");
     s = s.replace("&lt;", "<");
@@ -59,7 +63,7 @@ function qstFormatLabel(str: string, maxwidth: number, maxrows: number) {
                 sections.push(temp);
                 temp = "";
             } else {
-                if (index == (words.length - 1)) {
+                if (index == words.length - 1) {
                     sections.push(concat);
                     return;
                 } else {
@@ -69,7 +73,7 @@ function qstFormatLabel(str: string, maxwidth: number, maxrows: number) {
             }
         }
 
-        if (index == (words.length - 1)) {
+        if (index == words.length - 1) {
             sections.push(item);
             return;
         }
@@ -79,7 +83,6 @@ function qstFormatLabel(str: string, maxwidth: number, maxrows: number) {
         } else {
             sections.push(item);
         }
-
     });
 
     return sections;
@@ -304,13 +307,15 @@ class ChartController implements IController {
         this.element = element;
     }
 
-    $onInit() {
-
-    }
+    $onInit() {}
 
     $onChanges(onChangesObj: IOnChangesObject) {
-        const qdata = onChangesObj.question as IChangesObject<IAskedQuestion> | undefined;
-        const adata = onChangesObj.answers as IChangesObject<AnswerList> | undefined;
+        const qdata = onChangesObj.question as
+            | IChangesObject<IAskedQuestion>
+            | undefined;
+        const adata = onChangesObj.answers as
+            | IChangesObject<AnswerList>
+            | undefined;
         if (qdata) {
             this.createChart();
         } else if (adata) {
@@ -326,7 +331,9 @@ class ChartController implements IController {
     }
 
     $postLink() {
-        this.div = this.element.find(".canvasContainer") as JQuery<HTMLDivElement>;
+        this.div = this.element.find(".canvasContainer") as JQuery<
+            HTMLDivElement
+        >;
         assertNotNull(this.div);
         this.createChart();
     }
@@ -345,8 +352,12 @@ class ChartController implements IController {
         dataSets[index].data = emptyData.slice();
         const color = this.basicSets[index % this.basicSets.length].fill;
         dataSets[index].backgroundColor = timFillArray(emptyData.length, color);
-        const bordercolor = this.basicSets[index % this.basicSets.length].borderColor;
-        dataSets[index].borderColor = timFillArray(emptyData.length, bordercolor as string);
+        const bordercolor = this.basicSets[index % this.basicSets.length]
+            .borderColor;
+        dataSets[index].borderColor = timFillArray(
+            emptyData.length,
+            bordercolor as string
+        );
         dataSets[index].borderWidth = 1;
     }
 
@@ -406,29 +417,38 @@ class ChartController implements IController {
                 },
                 legend: {
                     display: showLegend,
-                    labels: {
-                    },
+                    labels: {},
                 },
                 scales: {
-                    xAxes: [{
-                        ticks: {
-                            min: 0,
-                            callback: (value) => {
-                                // According to http://www.chartjs.org/docs/latest/axes/labelling.html#creating-custom-tick-formats,
-                                // this callback is allowed to return undefined. Type definition is not accurate,
-                                // so we use "as number".
-                                return this.intScale(value as number, 0) as number;
+                    xAxes: [
+                        {
+                            ticks: {
+                                min: 0,
+                                callback: (value) => {
+                                    // According to http://www.chartjs.org/docs/latest/axes/labelling.html#creating-custom-tick-formats,
+                                    // this callback is allowed to return undefined. Type definition is not accurate,
+                                    // so we use "as number".
+                                    return this.intScale(
+                                        value as number,
+                                        0
+                                    ) as number;
+                                },
                             },
                         },
-                    }],
-                    yAxes: [{
-                        ticks: {
-                            min: 0,
-                            callback: (value) => {
-                                return this.intScale(value as number, 1) as number;
+                    ],
+                    yAxes: [
+                        {
+                            ticks: {
+                                min: 0,
+                                callback: (value) => {
+                                    return this.intScale(
+                                        value as number,
+                                        1
+                                    ) as number;
+                                },
                             },
                         },
-                    }],
+                    ],
                 },
             },
         };

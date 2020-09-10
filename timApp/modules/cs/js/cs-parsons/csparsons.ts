@@ -62,8 +62,15 @@ export class CsParsonsWidget {
                 w = "\\n";
             } else {
                 div = document.createElement(type);
-                if (this.options.words && this.options.minWidth && w.length < 3) {
-                    div.setAttribute("style", "width: " + this.options.minWidth);
+                if (
+                    this.options.words &&
+                    this.options.minWidth &&
+                    w.length < 3
+                ) {
+                    div.setAttribute(
+                        "style",
+                        "width: " + this.options.minWidth
+                    );
                 }
             }
             div.setAttribute("class", "sortitem");
@@ -80,26 +87,33 @@ export class CsParsonsWidget {
             }
         }
         parsonsEditDiv.setAttribute("class", classes);
-        parsonsEditDiv.setAttribute("style", "float: left; width: 100%" + ";" + this.options.styleWords);
+        parsonsEditDiv.setAttribute(
+            "style",
+            "float: left; width: 100%" + ";" + this.options.styleWords
+        );
         const a = $(parsonsEditDiv);
         if (this.options.maxcheck) {
             a.sortable({
                 items: ":not(.parsonsstatic)",
-                start: function() {
-                    $(".parsonsstatic", this).each(function() {
+                start: function () {
+                    $(".parsonsstatic", this).each(function () {
                         const thisJq = $(this);
                         thisJq.data("pos", thisJq.index());
                     });
                 },
-                change: function(this: Element) {
+                change: function (this: Element) {
                     const sortable = $(this);
                     const statics = $(".parsonsstatic", this).detach();
-                    const helper = $("<" + type + "></" + type + ">").prependTo(this);
-                    statics.each(function() {
+                    const helper = $("<" + type + "></" + type + ">").prependTo(
+                        this
+                    );
+                    statics.each(function () {
                         const thisJq = $(this);
                         const target = thisJq.data("pos");
 
-                        thisJq.insertAfter($(type, sortable).eq(target as number));
+                        thisJq.insertAfter(
+                            $(type, sortable).eq(target as number)
+                        );
                     });
                     helper.remove();
                 },
@@ -155,7 +169,10 @@ export class CsParsonsWidget {
             return "";
         }
         let maxn = div.childElementCount;
-        if (this.options.maxcheck && this.options.maxcheck < div.childElementCount) {
+        if (
+            this.options.maxcheck &&
+            this.options.maxcheck < div.childElementCount
+        ) {
             maxn = this.options.maxcheck;
         }
         for (let i = 0; i < maxn; i++) {

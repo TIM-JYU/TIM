@@ -17,6 +17,5 @@ export interface TabEntry {
     selector: "[timMenuTab]",
 })
 export class MenuTabDirective {
-    constructor(public vcr: ViewContainerRef) {
-    }
+    constructor(public vcr: ViewContainerRef) {}
 }

@@ -20,7 +20,6 @@ import {Users} from "./userService";
     `,
 })
 export class LoginMenuComponent implements OnInit {
-
     isLoggedIn() {
         return Users.isLoggedIn();
     }
@@ -40,13 +39,21 @@ export class LoginMenuComponent implements OnInit {
                 test: "https://testidp.funet.fi/idp/shibboleth",
                 aalto: "https://idp.aalto.fi/idp/shibboleth",
             };
-            window.open("/saml/sso?" + $httpParamSerializer({
-                addUser: false,
-                entityID: entities[hakaLogin] ?? "https://login.jyu.fi/idp/shibboleth",
-                return_to: document.location.origin + "?" + $httpParamSerializer({
-                    sendLoginSuccessMsg: true,
-                }),
-            }));
+            window.open(
+                "/saml/sso?" +
+                    $httpParamSerializer({
+                        addUser: false,
+                        entityID:
+                            entities[hakaLogin] ??
+                            "https://login.jyu.fi/idp/shibboleth",
+                        return_to:
+                            document.location.origin +
+                            "?" +
+                            $httpParamSerializer({
+                                sendLoginSuccessMsg: true,
+                            }),
+                    })
+            );
             return;
         }
         void showLoginDialog({showSignup: false, addingToSession: false});

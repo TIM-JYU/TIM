@@ -9,8 +9,23 @@ class DurationPickerCtrl {
     }
 }
 
-export type DurationChoice = "seconds" | "minutes" | "hours" | "days" | "weeks" | "months" | "years";
-export const durationTypes: DurationChoice[] = ["seconds", "minutes", "hours", "days", "weeks", "months", "years"];
+export type DurationChoice =
+    | "seconds"
+    | "minutes"
+    | "hours"
+    | "days"
+    | "weeks"
+    | "months"
+    | "years";
+export const durationTypes: DurationChoice[] = [
+    "seconds",
+    "minutes",
+    "hours",
+    "days",
+    "weeks",
+    "months",
+    "years",
+];
 
 timApp.component("timDurationPicker", {
     bindings: {

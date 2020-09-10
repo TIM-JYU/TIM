@@ -28,20 +28,25 @@ export interface ICopyTableWidthsParams {
     `,
     styleUrls: ["./copy-table-width-dialog.component.scss"],
 })
-export class CopyTableWidthDialogComponent extends AngularDialogComponent<ICopyTableWidthsParams, void> implements OnInit {
+export class CopyTableWidthDialogComponent
+    extends AngularDialogComponent<ICopyTableWidthsParams, void>
+    implements OnInit {
     protected dialogName: string = "copy-table-width";
     settingYaml: string = "";
     showCopiedMessage = false;
 
     ngOnInit(): void {
         this.settingYaml = "  columnWidths:\n";
-        this.settingYaml += this.data.columnWidths.map((val, i) => `    '${i}': ${val}`).filter((v) => v !== undefined).join("\n");
+        this.settingYaml += this.data.columnWidths
+            .map((val, i) => `    '${i}': ${val}`)
+            .filter((v) => v !== undefined)
+            .join("\n");
     }
 
     copyText() {
         copyToClipboard(this.settingYaml);
         this.showCopiedMessage = true;
-        setTimeout(() => this.showCopiedMessage = false, 1000);
+        setTimeout(() => (this.showCopiedMessage = false), 1000);
     }
 
     close() {
@@ -54,7 +59,9 @@ export async function showCopyWidthsDialog(params: ICopyTableWidthsParams) {
     if (instance) {
         return;
     }
-    const dialog = angularDialog.open(CopyTableWidthDialogComponent, params, { resetSize: true });
+    const dialog = angularDialog.open(CopyTableWidthDialogComponent, params, {
+        resetSize: true,
+    });
     instance = await dialog;
     await to(instance.result);
     instance = undefined;

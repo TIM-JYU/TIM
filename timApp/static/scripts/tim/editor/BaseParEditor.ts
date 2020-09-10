@@ -4,9 +4,13 @@ import {AceParEditor} from "./AceParEditor";
 import {TextAreaParEditor} from "./TextAreaParEditor";
 type IAceEditor = Ace_.Editor;
 
-export function focusAfter(target: TextAreaParEditor | AceParEditor, key: string, descriptor: PropertyDescriptor) {
+export function focusAfter(
+    target: TextAreaParEditor | AceParEditor,
+    key: string,
+    descriptor: PropertyDescriptor
+) {
     const originalMethod = descriptor.value as (...args: unknown[]) => void;
-    descriptor.value = function(this: BaseParEditor, ...args: unknown[]) {
+    descriptor.value = function (this: BaseParEditor, ...args: unknown[]) {
         originalMethod.apply(this, args);
         this.callbacks.wrapFn();
     };
@@ -47,7 +51,11 @@ export abstract class BaseParEditor {
 
     public abstract pageBreakClicked(): void;
 
-    public abstract surroundClicked(before: string, after: string, func?: () => boolean): void;
+    public abstract surroundClicked(
+        before: string,
+        after: string,
+        func?: () => boolean
+    ): void;
 
     public italicSurroundClicked() {
         this.surroundClicked("*", "*", () => this.surroundedByItalic());
@@ -60,12 +68,18 @@ export abstract class BaseParEditor {
     public abstract setPosition(pos: SelectionRange): void;
 
     public surroundedByItalic() {
-        return (this.surroundedBy("*", "*") && !this.surroundedBy("**", "**")) || this.surroundedBy("***", "***");
+        return (
+            (this.surroundedBy("*", "*") && !this.surroundedBy("**", "**")) ||
+            this.surroundedBy("***", "***")
+        );
     }
 
     checkWrap() {
-        if (this.getWrapValue() <= 0) { return; }
-        $timeout(() => { // time to let new char happend
+        if (this.getWrapValue() <= 0) {
+            return;
+        }
+        $timeout(() => {
+            // time to let new char happend
             this.forceWrap(false);
         });
     }

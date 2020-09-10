@@ -19,15 +19,7 @@ import {ParsonsEditorComponent} from "./parsons";
         CountBoardComponent,
         JSParsonsEditorComponent,
     ],
-    imports: [
-        BrowserModule,
-        FormsModule,
-        TimUtilityModule,
-        CsUtilityModule,
-    ],
-    exports: [
-        CountBoardComponent,
-        EditorComponent,
-    ],
+    imports: [BrowserModule, FormsModule, TimUtilityModule, CsUtilityModule],
+    exports: [CountBoardComponent, EditorComponent],
 })
 export class EditorModule {}

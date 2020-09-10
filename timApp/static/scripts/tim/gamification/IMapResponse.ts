@@ -7,9 +7,14 @@ export interface IMapResponse {
     tilewidth: number;
     tileheight: number;
     layers: Array<{
-        properties: {title: string, maxpoints: number, studentpoints: number, site: string},
-        name: string,
-        data: ILayerData,
+        properties: {
+            title: string;
+            maxpoints: number;
+            studentpoints: number;
+            site: string;
+        };
+        name: string;
+        data: ILayerData;
     }>;
     tilesets: ITileSet[];
 }

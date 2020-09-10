@@ -5,9 +5,12 @@ import {DraggableController, Pos, VisibilityFix} from "tim/ui/draggable";
 import {KEY_ESC} from "tim/util/keycodes";
 import {IModalInstance} from "tim/ui/dialog";
 
-type ModalScope =
-    IScope
-    & { $$topModalIndex?: number, $$childHead?: ModalScope, $$prevSibling: ModalScope, $$nextSibling: ModalScope };
+type ModalScope = IScope & {
+    $$topModalIndex?: number;
+    $$childHead?: ModalScope;
+    $$prevSibling: ModalScope;
+    $$nextSibling: ModalScope;
+};
 
 /**
  * @deprecated In new dialogs, use AngularDialogComponent class. See BookmarkDialogComponent for an example.
@@ -17,12 +20,14 @@ export abstract class DialogController<T, Ret> implements IController {
     public readonly resolve!: Binding<T, "<">;
     public closed = false;
     protected readonly draggable!: Require<DraggableController>;
-    private readonly modalInstance!: Binding<IModalInstance<DialogController<unknown, unknown>>, "<">;
+    private readonly modalInstance!: Binding<
+        IModalInstance<DialogController<unknown, unknown>>,
+        "<"
+    >;
 
     protected abstract getTitle(): string;
 
-    constructor(protected element: JQLite, protected scope: IScope) {
-    }
+    constructor(protected element: JQLite, protected scope: IScope) {}
 
     // The signature void | undefined ensures that the $onInit in the derived class is not async.
     // They must not be async because otherwise Edge browser (at least certain versions of it) gives

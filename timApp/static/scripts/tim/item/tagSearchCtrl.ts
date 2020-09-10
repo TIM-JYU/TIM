@@ -24,7 +24,9 @@ export class TagSearchController extends DialogController<void, void> {
     private caseSensitive = false;
     private listDocTags = true;
     private exactMatch = false;
-    private storage: ngStorage.StorageService & {searchOptionStorage: null | boolean[]};
+    private storage: ngStorage.StorageService & {
+        searchOptionStorage: null | boolean[];
+    };
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -40,14 +42,25 @@ export class TagSearchController extends DialogController<void, void> {
         super.$onInit();
         if (this.enableSearch) {
             this.header = "Input a tag name to search documents";
-            if (this.storage.searchOptionStorage && this.storage.searchOptionStorage.length === 3) {
-                [this.caseSensitive, this.exactMatch, this.listDocTags] = this.storage.searchOptionStorage;
-        }
+            if (
+                this.storage.searchOptionStorage &&
+                this.storage.searchOptionStorage.length === 3
+            ) {
+                [
+                    this.caseSensitive,
+                    this.exactMatch,
+                    this.listDocTags,
+                ] = this.storage.searchOptionStorage;
+            }
         }
     }
 
     $onDestroy() {
-        this.storage.searchOptionStorage = [this.caseSensitive, this.exactMatch, this.listDocTags];
+        this.storage.searchOptionStorage = [
+            this.caseSensitive,
+            this.exactMatch,
+            this.listDocTags,
+        ];
     }
 
     /*
@@ -56,13 +69,10 @@ export class TagSearchController extends DialogController<void, void> {
     public getTitle() {
         return "Tag search";
     }
-
 }
 
-registerDialogComponent(TagSearchController,
-    {
-        template:
-            `<tim-dialog>
+registerDialogComponent(TagSearchController, {
+    template: `<tim-dialog>
     <dialog-header>
     </dialog-header>
     <dialog-body>
@@ -86,7 +96,7 @@ registerDialogComponent(TagSearchController,
     </dialog-footer>
 </tim-dialog>
 `,
-    });
+});
 
 export async function showTagSearchDialog() {
     return await showDialog(TagSearchController, {}).result;

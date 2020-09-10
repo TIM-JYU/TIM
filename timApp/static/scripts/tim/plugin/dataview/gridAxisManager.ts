@@ -26,12 +26,14 @@ export class GridAxisManager {
      */
     indexToOrdinal: Record<number, number> = {};
 
-    constructor(size: number,
-                private isDataViewVirtual: boolean,
-                private borderSpacing: number,
-                private getSize: (i: number) => number,
-                private showItem: (index: number) => boolean,
-                private skipItem?: (ordinal: number) => boolean) {
+    constructor(
+        size: number,
+        private isDataViewVirtual: boolean,
+        private borderSpacing: number,
+        private getSize: (i: number) => number,
+        private showItem: (index: number) => boolean,
+        private skipItem?: (ordinal: number) => boolean
+    ) {
         this.itemOrder = Array.from(new Array(size)).map((e, i) => i);
         this.refresh();
     }
@@ -98,7 +100,12 @@ export class GridAxisManager {
      * @param visibleSize Size of the visible area of the viewport, in pixels.
      * @return A VisibleItems object that contains information about visible item indices.
      */
-    getVisibleItemsInViewport(vpStartPosition: number, vpSize: number, visibleStartPosition: number, visibleSize: number): VisibleItems {
+    getVisibleItemsInViewport(
+        vpStartPosition: number,
+        vpSize: number,
+        visibleStartPosition: number,
+        visibleSize: number
+    ): VisibleItems {
         if (!this.isVirtual) {
             return {
                 startPosition: 0,
@@ -112,12 +119,18 @@ export class GridAxisManager {
         vpStartPosition = clamp(vpStartPosition, 0, this.totalSize);
         visibleStartPosition = clamp(visibleStartPosition, 0, this.totalSize);
         vpSize = Math.min(vpSize, this.totalSize - vpStartPosition);
-        visibleSize = Math.min(visibleSize, this.totalSize - visibleStartPosition);
+        visibleSize = Math.min(
+            visibleSize,
+            this.totalSize - visibleStartPosition
+        );
         const startIndex = this.search(vpStartPosition);
         const viewStartIndex = this.search(visibleStartPosition);
         const endIndex = this.search(vpStartPosition + vpSize);
         const viewEndIndex = this.search(visibleStartPosition + visibleSize);
-        const count = Math.min(endIndex - startIndex + 1, this.visibleItems.length - startIndex);
+        const count = Math.min(
+            endIndex - startIndex + 1,
+            this.visibleItems.length - startIndex
+        );
         const startPosition = this.positionStart[startIndex];
         const endPosition = this.positionStart[startIndex + count];
         return {
@@ -125,7 +138,10 @@ export class GridAxisManager {
             count: count,
             startPosition: startPosition,
             visibleStartOrdinal: viewStartIndex,
-            visibleCount: Math.min(viewEndIndex - viewStartIndex + 1, this.visibleItems.length - viewStartIndex),
+            visibleCount: Math.min(
+                viewEndIndex - viewStartIndex + 1,
+                this.visibleItems.length - viewStartIndex
+            ),
             size: endPosition - startPosition,
         };
     }

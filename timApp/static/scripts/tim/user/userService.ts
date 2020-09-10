@@ -32,7 +32,9 @@ export class UserService {
     }
 
     public async logout(user: IUser, logoutFromKorppi = false) {
-        const r = await to($http.post<ILoginResponse>("/logout", {user_id: user.id}));
+        const r = await to(
+            $http.post<ILoginResponse>("/logout", {user_id: user.id})
+        );
         if (!r.ok) {
             void showMessageDialog(r.result.data.error);
             return;
@@ -74,11 +76,15 @@ export class UserService {
         const cameFromRaw = "";
         const anchorRaw = window.location.hash.replace("#", "");
         const redirectFn = () => {
-            window.location.replace(targetUrl + separator + $httpParamSerializer({
-                came_from: cameFromRaw,
-                anchor: anchorRaw,
-                add_user: addUser,
-            }));
+            window.location.replace(
+                targetUrl +
+                    separator +
+                    $httpParamSerializer({
+                        came_from: cameFromRaw,
+                        anchor: anchorRaw,
+                        add_user: addUser,
+                    })
+            );
         };
         if (addUser) {
             this.korppiLogout(redirectFn);
@@ -104,21 +110,24 @@ export class UserService {
     }
 
     public korppiLogout(redirectFn: () => void) {
-        $http(
-            {
-                withCredentials: true,
-                method: "POST",
-                url: "https://korppi.jyu.fi/openid/manage/manage",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                data: $httpParamSerializer({logout: "Logout"}),
-            }).finally(redirectFn);
+        $http({
+            withCredentials: true,
+            method: "POST",
+            url: "https://korppi.jyu.fi/openid/manage/manage",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            data: $httpParamSerializer({logout: "Logout"}),
+        }).finally(redirectFn);
     }
 
-    public async loginWithEmail(email: string, password: string, addUser: boolean): ToReturn<ILoginResponse> {
-        const r = await to($http<ILoginResponse>(
-            {
+    public async loginWithEmail(
+        email: string,
+        password: string,
+        addUser: boolean
+    ): ToReturn<ILoginResponse> {
+        const r = await to(
+            $http<ILoginResponse>({
                 method: "POST",
                 url: "/altlogin",
                 headers: {
@@ -130,7 +139,8 @@ export class UserService {
                     password,
                     add_user: addUser,
                 }),
-            }));
+            })
+        );
         if (r.ok) {
             this.group = r.result.data.other_users;
             this.current = r.result.data.current_user;
@@ -139,7 +149,10 @@ export class UserService {
     }
 }
 
-export const Users = new UserService(genericglobals().current_user, genericglobals().other_users);
+export const Users = new UserService(
+    genericglobals().current_user,
+    genericglobals().other_users
+);
 
 export function isAdmin() {
     return Users.belongsToGroup(ADMIN_GROUPNAME);

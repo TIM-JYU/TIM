@@ -27,7 +27,8 @@ function clamp(val: number, min: number, max: number) {
 }
 
 @Directive()
-export abstract class AngularDialogComponent<Params, Result> implements AfterViewInit {
+export abstract class AngularDialogComponent<Params, Result>
+    implements AfterViewInit {
     @Input() data!: Params;
     @Output() closeWithResult = new EventEmitter<Result>();
     @ViewChild(DialogFrame) frame?: DialogFrame;
@@ -53,7 +54,9 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
 
     ngAfterViewInit() {
         if (!this.frame) {
-            throw Error("All AngularDialogComponents must have tim-angular-dialog component in their template.");
+            throw Error(
+                "All AngularDialogComponents must have tim-angular-dialog component in their template."
+            );
         }
         this.frame.closeFn = () => this.dismiss();
         const TwoTuple = t.tuple([t.number, t.number]);
@@ -62,7 +65,9 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
         } else {
             const savedSize = getStorage(this.getSizeKey());
             if (TwoTuple.is(savedSize)) {
-                this.frame.resizable.getSize().set({width: savedSize[0], height: savedSize[1]});
+                this.frame.resizable
+                    .getSize()
+                    .set({width: savedSize[0], height: savedSize[1]});
             }
         }
         const savedPos = getStorage(this.getPosKey());

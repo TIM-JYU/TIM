@@ -1,9 +1,18 @@
 import {to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
-import {registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
+import {
+    registerDialogComponent,
+    showDialog,
+    showMessageDialog,
+} from "../../ui/dialog";
 import {KEY_S} from "../../util/keycodes";
 import {$http} from "../../util/ngimport";
-import {Duplicate, IExtraData, IManageResponse, IParResponse} from "./edittypes";
+import {
+    Duplicate,
+    IExtraData,
+    IManageResponse,
+    IParResponse,
+} from "./edittypes";
 
 export interface IManageRenameParams {
     duplicates: Duplicate[];
@@ -14,12 +23,14 @@ export interface IManageRenameParams {
 
 export interface IParRenameParams {
     duplicates: Duplicate[];
-    original_par?: {md: string, attrs: unknown};
+    original_par?: {md: string; attrs: unknown};
     new_par_ids: string[];
     extraData: IExtraData;
 }
 
-function isFromPar(p: IParRenameParams | IManageRenameParams): p is IParRenameParams {
+function isFromPar(
+    p: IParRenameParams | IManageRenameParams
+): p is IParRenameParams {
     return (p as IParRenameParams).extraData != null;
 }
 
@@ -31,7 +42,10 @@ export function isManageResponse(r: RenameResult): r is IManageResponse {
     return (r as IManageResponse).fulltext != null;
 }
 
-class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameResult> {
+class PluginRenameForm extends DialogController<
+    {params: IRenameParams},
+    RenameResult
+> {
     static component = "timPluginRename";
     static $inject = ["$element", "$scope"] as const;
     private newNames: string[] = [];
@@ -45,7 +59,9 @@ class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameR
     }
 
     getExtraData() {
-        return isFromPar(this.resolve.params) ? this.resolve.params.extraData : {};
+        return isFromPar(this.resolve.params)
+            ? this.resolve.params.extraData
+            : {};
     }
 
     getDuplicates() {
@@ -58,13 +74,15 @@ class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameR
     async cancelPluginRenameClicked() {
         // Cancels recent changes to paragraph/document
         if (isFromPar(this.resolve.params)) {
-            await to($http.post("/cancelChanges/", {
-                docId: this.resolve.params.extraData.docId,
-                newPars: this.resolve.params.new_par_ids,
-                originalPar: this.resolve.params.original_par,
-                parId: this.resolve.params.extraData.par,
-                ...this.getExtraData(),
-            }));
+            await to(
+                $http.post("/cancelChanges/", {
+                    docId: this.resolve.params.extraData.docId,
+                    newPars: this.resolve.params.new_par_ids,
+                    originalPar: this.resolve.params.original_par,
+                    parId: this.resolve.params.extraData.par,
+                    ...this.getExtraData(),
+                })
+            );
         }
         this.dismiss();
     }
@@ -87,14 +105,20 @@ class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameR
         } else {
             // use the given names
             for (let j = 0; j < duplicates.length; j++) {
-                duplicateData.push([duplicates[j][0], this.newNames[j], duplicates[j][1]]);
+                duplicateData.push([
+                    duplicates[j][0],
+                    this.newNames[j],
+                    duplicates[j][1],
+                ]);
             }
         }
         // Save the new task names for duplicates
-        const response = await to($http.post<IParResponse | IManageResponse>("/postNewTaskNames/", {
-            duplicates: duplicateData,
-            ...this.getExtraData(),
-        }));
+        const response = await to(
+            $http.post<IParResponse | IManageResponse>("/postNewTaskNames/", {
+                duplicates: duplicateData,
+                ...this.getExtraData(),
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -107,7 +131,9 @@ class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameR
 
         // If there still are duplicates, refresh the form
         if (data.duplicates.length > 0) {
-            await showMessageDialog("Some duplicates are still remaining. Please rename them. Click OK to update the form.");
+            await showMessageDialog(
+                "Some duplicates are still remaining. Please rename them. Click OK to update the form."
+            );
             this.resolve.params.duplicates = data.duplicates;
         }
     }
@@ -122,9 +148,8 @@ class PluginRenameForm extends DialogController<{params: IRenameParams}, RenameR
     }
 }
 
-registerDialogComponent(PluginRenameForm,
-    {
-        template: `<tim-dialog>
+registerDialogComponent(PluginRenameForm, {
+    template: `<tim-dialog>
     <dialog-header>
 
     </dialog-header>
@@ -161,7 +186,7 @@ registerDialogComponent(PluginRenameForm,
     </dialog-footer>
 </tim-dialog>
     `,
-    });
+});
 
 export function showRenameDialog(p: IRenameParams) {
     return showDialog(PluginRenameForm, {params: () => p}).result;

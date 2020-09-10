@@ -23,7 +23,10 @@ markAsUsed(focusMe);
 /*
  * Restamping dialog's controller.
  */
-export class RestampDialogController extends DialogController<{params: IStampingData}, RestampDialogClose> {
+export class RestampDialogController extends DialogController<
+    {params: IStampingData},
+    RestampDialogClose
+> {
     static component = "restampDialog";
     static $inject = ["$element", "$scope"] as const;
     private header = "";
@@ -75,9 +78,8 @@ export class RestampDialogController extends DialogController<{params: IStamping
             } else {
                 this.errorMessage = undefined;
                 this.successMessage = `Stamps successfully updated.`;
-
-        }
-    } else {
+            }
+        } else {
             // This should never show up.
             this.errorMessage = "Unable to find attachments!";
         }
@@ -115,13 +117,10 @@ export class RestampDialogController extends DialogController<{params: IStamping
     private saveAndExit() {
         this.close(RestampDialogClose.SaveAndExit);
     }
-
 }
 
-registerDialogComponent(RestampDialogController,
-    {
-        template:
-            `<tim-dialog>
+registerDialogComponent(RestampDialogController, {
+    template: `<tim-dialog>
     <dialog-header>
     </dialog-header>
     <dialog-body>
@@ -152,8 +151,9 @@ registerDialogComponent(RestampDialogController,
     </dialog-footer>
 </tim-dialog>
 `,
-    });
+});
 
 export function showRestampDialog(stampingData: IStampingData) {
-    return showDialog(RestampDialogController, {params: () => stampingData}).result;
+    return showDialog(RestampDialogController, {params: () => stampingData})
+        .result;
 }

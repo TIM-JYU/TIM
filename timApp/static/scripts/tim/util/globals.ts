@@ -4,9 +4,22 @@ import {IDocScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
 import {IDocSettings} from "../document/IDocSettings";
 import {EditMode} from "../document/popupMenu";
 import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
-import {DocumentOrFolder, IDocument, IFolder, IFullDocument, IItem, ITranslation} from "../item/IItem";
+import {
+    DocumentOrFolder,
+    IDocument,
+    IFolder,
+    IFullDocument,
+    IItem,
+    ITranslation,
+} from "../item/IItem";
 import {ILecture} from "../lecture/lecturetypes";
-import {IFullUser, IGroup, IGroupWithSisuPath, IUser, IUserListEntry} from "../user/IUser";
+import {
+    IFullUser,
+    IGroup,
+    IGroupWithSisuPath,
+    IUser,
+    IUserListEntry,
+} from "../user/IUser";
 import {ICssFile, INotification, ISettings} from "../user/settings.component";
 
 interface ILayout {
@@ -179,5 +192,5 @@ export function isDocumentGlobals(g: SomeGlobals): g is IDocumentGlobals {
 }
 
 function someGlobals<T extends IGenericGlobals>(): T {
-    return window as unknown as T;
+    return (window as unknown) as T;
 }

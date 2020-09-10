@@ -57,27 +57,28 @@ timApp.component("timSettingsPar", {
         private showSettingsYaml = false;
         private yaml?: string;
 
-        constructor(private element: JQLite) {
-
-        }
+        constructor(private element: JQLite) {}
 
         async $onInit() {
             const p = this.element.parents(".par");
-            this.showSettingsYaml = !this.vctrl.editingHandler.hasNonSettingsPars()
-                && this.vctrl.item.rights.editable
-                && isActionablePar(p);
+            this.showSettingsYaml =
+                !this.vctrl.editingHandler.hasNonSettingsPars() &&
+                this.vctrl.item.rights.editable &&
+                isActionablePar(p);
             if (!this.showSettingsYaml) {
                 return;
             }
 
             const parId = getParId($(p));
-            const r = await to($http.get<{text: string}>("/getBlock", {
-                params: {
-                    doc_id: this.vctrl.item.id,
-                    par_id: parId,
-                    use_exported: false,
-                },
-            }));
+            const r = await to(
+                $http.get<{text: string}>("/getBlock", {
+                    params: {
+                        doc_id: this.vctrl.item.id,
+                        par_id: parId,
+                        use_exported: false,
+                    },
+                })
+            );
             if (r.ok) {
                 this.yaml = r.result.data.text;
             }

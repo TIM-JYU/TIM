@@ -40,20 +40,23 @@ const StackAll = t.intersection([
     }),
 ]);
 
-type StackResult = string | {
-    answernotes: string,
-    api_time: number,
-    error: false,
-    formatcorrectresponse: string,
-    generalfeedback: string,
-    questiontext: string,
-    request_time: number,
-    score: number,
-    summariseresponse: unknown,
-} | {
-    error: true,
-    message: string,
-};
+type StackResult =
+    | string
+    | {
+          answernotes: string;
+          api_time: number;
+          error: false;
+          formatcorrectresponse: string;
+          generalfeedback: string;
+          questiontext: string;
+          request_time: number;
+          score: number;
+          summariseresponse: unknown;
+      }
+    | {
+          error: true;
+          message: string;
+      };
 
 interface IStackData {
     answer: {[name: string]: string};
@@ -62,10 +65,11 @@ interface IStackData {
     verifyvar: string;
 }
 
-class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
+class StackController extends PluginBase<
+    t.TypeOf<typeof StackMarkup>,
     t.TypeOf<typeof StackAll>,
-    typeof StackAll> {
-
+    typeof StackAll
+> {
     get english() {
         return this.attrs.lang === "en";
     }
@@ -107,8 +111,8 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         super.$onInit();
         this.button = this.buttonText();
         const aa = this.attrsall;
-        this.userCode = (aa.usercode ?? this.attrs.by) ?? "";
-        this.timWay = (aa.timWay ?? this.attrs.timWay) ?? false;
+        this.userCode = aa.usercode ?? this.attrs.by ?? "";
+        this.timWay = aa.timWay ?? this.attrs.timWay ?? false;
 
         this.element.on("keydown", (event) => {
             if (event.ctrlKey || event.metaKey) {
@@ -126,14 +130,24 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         }
     }
 
-    processNodes(res: {[name: string]: string}, nodes: HTMLCollectionOf<HTMLInputElement> |
-        HTMLCollectionOf<HTMLTextAreaElement> | HTMLCollectionOf<HTMLSelectElement>, id: string): {[name: string]: string} {
+    processNodes(
+        res: {[name: string]: string},
+        nodes:
+            | HTMLCollectionOf<HTMLInputElement>
+            | HTMLCollectionOf<HTMLTextAreaElement>
+            | HTMLCollectionOf<HTMLSelectElement>,
+        id: string
+    ): {[name: string]: string} {
         for (const element of nodes) {
-            if (element.name.startsWith(STACK_VARIABLE_PREFIX) &&
+            if (
+                element.name.startsWith(STACK_VARIABLE_PREFIX) &&
                 !element.name.includes("_val") &&
                 element.name.includes(id)
             ) {
-                if (element instanceof HTMLInputElement && (element.type === "checkbox" || element.type === "radio")) {
+                if (
+                    element instanceof HTMLInputElement &&
+                    (element.type === "checkbox" || element.type === "radio")
+                ) {
                     if (element.checked) {
                         res[element.name] = element.value;
                     }
@@ -207,7 +221,8 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         const i = qt.indexOf('<div class="stackinputfeedback"');
         const helper = await import("../stack/ServerSyncValues");
         windowAsAny().ServerSyncValues = helper.ServerSyncValues;
-        windowAsAny().findParentElementFromScript = helper.findParentElementFromScript;
+        windowAsAny().findParentElementFromScript =
+            helper.findParentElementFromScript;
         if (this.attrs.buttonBottom || i < 0) {
             this.stackoutput = qt;
             this.stackinputfeedback = "";
@@ -218,14 +233,20 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
 
         if (!getTask) {
             this.stackfeedback = this.replace(r.generalfeedback);
-            this.stackformatcorrectresponse = this.replace(r.formatcorrectresponse);
-            this.stacksummariseresponse = this.replace(JSON.stringify(r.summariseresponse));
+            this.stackformatcorrectresponse = this.replace(
+                r.formatcorrectresponse
+            );
+            this.stacksummariseresponse = this.replace(
+                JSON.stringify(r.summariseresponse)
+            );
             this.stackanswernotes = this.replace(JSON.stringify(r.answernotes));
         }
         this.stackscore = r.score.toString();
-        this.stacktime = "Request Time: "
-            + (r.request_time).toFixed(2)
-            + " Api Time: " + (r.api_time).toFixed(2);
+        this.stacktime =
+            "Request Time: " +
+            r.request_time.toFixed(2) +
+            " Api Time: " +
+            r.api_time.toFixed(2);
 
         ParCompiler.processAllMathDelayed(this.element, 1);
         const html = this.element.find(".stackOutput");
@@ -233,7 +254,8 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         const inputse = html.find("textarea");
         $(inputs).keyup((e) => this.inputHandler(e));
         $(inputse).keyup((e) => this.inputHandler(e));
-        if (getTask) { // remove input validation texts
+        if (getTask) {
+            // remove input validation texts
             const divinput = this.element.find(".stackinputfeedback");
             divinput.remove();
         }
@@ -244,7 +266,10 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         const target = e.currentTarget as HTMLInputElement;
         this.lastInputFieldElement = target;
         const id: string = target.id;
-        if (this.lastInputFieldId === id && this.lastInputFieldValue === target.value) {
+        if (
+            this.lastInputFieldId === id &&
+            this.lastInputFieldValue === target.value
+        ) {
             return;
         }
         this.lastInputFieldId = id;
@@ -267,7 +292,9 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         const peekDiv = this.element.find(".peekdiv");
         const peekDivC = peekDiv.children();
         // editorDiv.empty();
-        const pdiv = $('<div><div class="math">' + r.questiontext + "</div></div>");
+        const pdiv = $(
+            '<div><div class="math">' + r.questiontext + "</div></div>"
+        );
         await ParCompiler.processAllMath(pdiv);
         peekDivC.replaceWith(pdiv); // TODO: still flashes
     }
@@ -302,7 +329,8 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         await this.runValidationPeek(data);
     }
 
-    async runPeek() { // called from template
+    async runPeek() {
+        // called from template
         // let data = this.collectData();
         // await this.runValidationPeek(data, 'ans1');
         if (this.lastInputFieldId) {
@@ -316,7 +344,8 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             return;
         }
         this.isRunning = true;
-        if (!this.stackpeek) { // remove extra fields from sceen
+        if (!this.stackpeek) {
+            // remove extra fields from sceen
             let divinput = this.element.find(".stackinputfeedback");
             divinput.remove();
             divinput = this.element.find(".stackprtfeedback");
@@ -336,16 +365,18 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
             },
         };
         this.error = "";
-        const r = await to($http<{
-            web: {
-                stackResult: StackResult,
-            },
-        }>({
-            data: params,
-            method: "PUT",
-            timeout: defaultTimeout,
-            url: url,
-        }));
+        const r = await to(
+            $http<{
+                web: {
+                    stackResult: StackResult;
+                };
+            }>({
+                data: params,
+                method: "PUT",
+                timeout: defaultTimeout,
+                url: url,
+            })
+        );
         this.isRunning = false;
         if (!r.ok) {
             this.error = r.result.data.error;
@@ -383,14 +414,17 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
                 getTask: getTask,
                 stackData: stackData,
                 type: "stack",
-                usercode: this.timWay ? this.userCode : JSON.stringify(stackData.answer),
+                usercode: this.timWay
+                    ? this.userCode
+                    : JSON.stringify(stackData.answer),
             },
         };
 
-        const r = await to($http<{
-            web: {stackResult: StackResult, error?: string},
-        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
-        ));
+        const r = await to(
+            $http<{
+                web: {stackResult: StackResult; error?: string};
+            }>({method: "PUT", url: url, data: params, timeout: defaultTimeout})
+        );
         this.isRunning = false;
 
         if (!r.ok) {
@@ -408,7 +442,9 @@ class StackController extends PluginBase<t.TypeOf<typeof StackMarkup>,
         const stackResult = r.result.data.web.stackResult;
         await this.handleServerResult(stackResult, getTask);
         if (this.lastInputFieldId) {
-            this.lastInputFieldElement = this.element.find("#" + this.lastInputFieldId)[0] as HTMLInputElement;
+            this.lastInputFieldElement = this.element.find(
+                "#" + this.lastInputFieldId
+            )[0] as HTMLInputElement;
             if (this.lastInputFieldElement) {
                 this.lastInputFieldElement.focus();
                 this.lastInputFieldElement.selectionStart = 0;

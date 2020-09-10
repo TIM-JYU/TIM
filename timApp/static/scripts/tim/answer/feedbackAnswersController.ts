@@ -26,11 +26,16 @@ export interface IFeedbackAnswersParams {
     allTasks: boolean;
 }
 
-export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnswersParams}, void> {
+export class FeedbackAnswersCtrl extends DialogController<
+    {params: IFeedbackAnswersParams},
+    void
+> {
     static component = "timFeedbackAnswers";
     static $inject = ["$element", "$scope"] as const;
     private options?: IFBOptions<Moment>;
-    private storage?: ngStorage.StorageService & {feedbackAnswersOptions: IFBOptions<number | null>};
+    private storage?: ngStorage.StorageService & {
+        feedbackAnswersOptions: IFBOptions<number | null>;
+    };
     private showSort: boolean = false;
     private datePickerOptionsFrom?: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsTo?: EonasdanBootstrapDatetimepicker.SetOptions;
@@ -62,8 +67,12 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
 
         this.options = {
             ...this.storage.feedbackAnswersOptions,
-            periodFrom: moment(this.storage.feedbackAnswersOptions.periodFrom ?? Date.now()),
-            periodTo: moment(this.storage.feedbackAnswersOptions.periodFrom ?? Date.now()),
+            periodFrom: moment(
+                this.storage.feedbackAnswersOptions.periodFrom ?? Date.now()
+            ),
+            periodTo: moment(
+                this.storage.feedbackAnswersOptions.periodFrom ?? Date.now()
+            ),
         };
         this.datePickerOptionsFrom = {
             format: dateFormat,
@@ -79,10 +88,14 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
         this.lastFetch = null;
 
         (async () => {
-            const r =
-                await to($http.get<{last_answer_fetch: {[index: string]: string}}>("/settings/get/last_answer_fetch"));
+            const r = await to(
+                $http.get<{last_answer_fetch: {[index: string]: string}}>(
+                    "/settings/get/last_answer_fetch"
+                )
+            );
             if (r.ok && r.result.data.last_answer_fetch) {
-                this.lastFetch = r.result.data.last_answer_fetch[options.identifier];
+                this.lastFetch =
+                    r.result.data.last_answer_fetch[options.identifier];
                 if (!this.lastFetch) {
                     this.lastFetch = "no fetches yet";
                 }
@@ -108,7 +121,10 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
             periodFrom: this.options.periodFrom.valueOf(),
             periodTo: this.options.periodTo.valueOf(),
         };
-        window.open(this.resolve.params.url + "?" + $httpParamSerializer(toSerialize), "_blank");
+        window.open(
+            this.resolve.params.url + "?" + $httpParamSerializer(toSerialize),
+            "_blank"
+        );
         this.close();
     }
     cancel() {
@@ -116,8 +132,9 @@ export class FeedbackAnswersCtrl extends DialogController<{params: IFeedbackAnsw
     }
 }
 
-registerDialogComponent(FeedbackAnswersCtrl,
-    {templateUrl: "/static/templates/allFeedbackAnswersOptions.html"});
+registerDialogComponent(FeedbackAnswersCtrl, {
+    templateUrl: "/static/templates/allFeedbackAnswersOptions.html",
+});
 
 export function showFeedbackAnswers(p: IFeedbackAnswersParams) {
     return showDialog(FeedbackAnswersCtrl, {params: () => p}).result;

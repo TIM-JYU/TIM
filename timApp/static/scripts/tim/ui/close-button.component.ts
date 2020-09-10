@@ -8,5 +8,4 @@ import {Component} from "@angular/core";
     `,
     styleUrls: ["./close-button.component.scss"],
 })
-export class CloseButtonComponent {
-}
+export class CloseButtonComponent {}

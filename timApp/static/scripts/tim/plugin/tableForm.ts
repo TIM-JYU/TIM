@@ -30,7 +30,13 @@ import {ViewCtrl} from "../document/viewctrl";
 import {InputDialogKind, showInputDialog} from "../ui/inputDialog";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
-import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, nullable, withDefault} from "./attributes";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    IncludeUsersOption,
+    nullable,
+    withDefault,
+} from "./attributes";
 import {
     CellAttrToSave,
     CellToSave,
@@ -66,7 +72,9 @@ const TableFormMarkup = t.intersection([
         report: nullable(t.boolean),
         reportButton: nullable(t.string),
         separator: nullable(t.string),
-        sortBy: nullable(t.string), /* TODO! Username and task, or task and username -- what about points? */
+        sortBy: nullable(
+            t.string
+        ) /* TODO! Username and task, or task and username -- what about points? */,
         table: nullable(t.boolean),
         removeUsersButtonText: nullable(t.string),
         userListButtonText: nullable(t.string),
@@ -106,11 +114,16 @@ const TableFormMarkup = t.intersection([
     }),
 ]);
 
-const Rows = t.record(t.string, t.record(t.string, t.union([t.string, t.null, t.number])));
-const Styles = t.record(t.string, t.record(t.string, t.union([t.null, t.record(t.string, t.string)])));
+const Rows = t.record(
+    t.string,
+    t.record(t.string, t.union([t.string, t.null, t.number]))
+);
+const Styles = t.record(
+    t.string,
+    t.record(t.string, t.union([t.null, t.record(t.string, t.string)]))
+);
 
-interface IRowsType extends t.TypeOf<typeof Rows> {
-}
+interface IRowsType extends t.TypeOf<typeof Rows> {}
 
 const TableFormAll = t.intersection([
     t.partial({
@@ -184,12 +197,14 @@ export class TimEmailComponent {
         }
         this.emailMsg = ""; // JSON.stringify(response);
         const url = `/multiSendEmail/${this.taskid.docTask().toString()}`;
-        const response = await to($http.post<string[]>(url, {
-            rcpt: this.emaillist.replace(/\n/g, ";"),
-            subject: this.emailsubject,
-            msg: this.emailbody,
-            bccme: this.emailbccme,
-        }));
+        const response = await to(
+            $http.post<string[]>(url, {
+                rcpt: this.emaillist.replace(/\n/g, ";"),
+                subject: this.emailsubject,
+                msg: this.emailbody,
+                bccme: this.emailbccme,
+            })
+        );
         this.emailMsg = response.ok ? "Sent" : response.result.data.error;
     }
 
@@ -211,10 +226,18 @@ export class TimEmailComponent {
             }
             bcc += Users.getCurrent().email;
         }
-        window.location.href = "mailto:" + addrs
-            + "?" + "subject=" + this.emailsubject
-            + "&" + "body=" + this.emailbody
-            + "&" + "bcc=" + bcc;
+        window.location.href =
+            "mailto:" +
+            addrs +
+            "?" +
+            "subject=" +
+            this.emailsubject +
+            "&" +
+            "body=" +
+            this.emailbody +
+            "&" +
+            "bcc=" +
+            bcc;
     }
 }
 
@@ -318,13 +341,18 @@ export class TimEmailComponent {
     `,
     styleUrls: ["./tableForm.scss"],
 })
-export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableFormMarkup>, t.TypeOf<typeof TableFormAll>, typeof TableFormAll>
+export class TableFormComponent
+    extends AngularPluginBase<
+        t.TypeOf<typeof TableFormMarkup>,
+        t.TypeOf<typeof TableFormAll>,
+        typeof TableFormAll
+    >
     implements OnInit {
     public viewctrl?: ViewCtrl;
     result?: string;
     error?: string;
     private userfilter = "";
-    data: TimTable & { userdata: DataEntity } = {
+    data: TimTable & {userdata: DataEntity} = {
         hide: {edit: false, insertMenu: true, editMenu: true},
         hiddenRows: [],
         hiddenColumns: [],
@@ -415,14 +443,14 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
      * Used to define table view & relative save button in angular, true or false.
      */
     buttonText() {
-        return (this.markup.buttonText ?? "Tallenna taulukko");
+        return this.markup.buttonText ?? "Tallenna taulukko";
     }
 
     /**
      * Used to define table view & relative save button in angular, true or false.
      */
     reportButton() {
-        return (this.markup.reportButton ?? "Luo Raportti");
+        return this.markup.reportButton ?? "Luo Raportti";
     }
 
     addHiddenIndex(i: number) {
@@ -445,7 +473,12 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         return false;
     }
 
-    constructor(el: ElementRef, http: HttpClient, domSanitizer: DomSanitizer, private cdr: ChangeDetectorRef) {
+    constructor(
+        el: ElementRef,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private cdr: ChangeDetectorRef
+    ) {
         super(el, http, domSanitizer);
         // cdr.detach();
     }
@@ -484,10 +517,26 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         }
 
         this.userfilter = "";
-        this.realnames = this.checkToShow(this.markup.realnames, realNameColIndex, true);
-        this.usernames = this.checkToShow(this.markup.usernames, userNameColIndex, true);
-        this.emails = this.checkToShow(this.markup.emails, emailColIndex, false);
-        this.checkToShow(this.markup.includeUsers !== "current", memberShipColIndex, false);
+        this.realnames = this.checkToShow(
+            this.markup.realnames,
+            realNameColIndex,
+            true
+        );
+        this.usernames = this.checkToShow(
+            this.markup.usernames,
+            userNameColIndex,
+            true
+        );
+        this.emails = this.checkToShow(
+            this.markup.emails,
+            emailColIndex,
+            false
+        );
+        this.checkToShow(
+            this.markup.includeUsers !== "current",
+            memberShipColIndex,
+            false
+        );
 
         this.rows = this.attrsall.rows ?? {};
         this.rowKeys = Object.keys(this.rows);
@@ -501,9 +550,11 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
 
         this.setDataMatrix();
 
-        this.data.saveCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
+        this.data.saveCallBack = (cellsTosave, colValuesAreSame) =>
+            this.cellChanged(cellsTosave, colValuesAreSame);
         if (this.markup.saveStyles) {
-            this.data.saveStyleCallBack = (cellsTosave, colValuesAreSame) => this.cellChanged(cellsTosave, colValuesAreSame);
+            this.data.saveStyleCallBack = (cellsTosave, colValuesAreSame) =>
+                this.cellChanged(cellsTosave, colValuesAreSame);
         }
         this.data.cbCallBack = (cbs, n, index) => this.cbChanged(cbs, n, index);
 
@@ -550,7 +601,10 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             return 0;
         }
         try {
-            return this.realnamemap[a].localeCompare(this.realnamemap[b], sortLang);
+            return this.realnamemap[a].localeCompare(
+                this.realnamemap[b],
+                sortLang
+            );
         } catch (e) {
             return 0;
         }
@@ -576,15 +630,15 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             return;
         }
         // TODO: Save before reset?
-        type TableFetchResponse = ({
-            aliases: Record<string, string>,
-            fields: string[],
-            realnamemap: Record<string, string>,
-            membershipmap: Record<string, string>,
-            emailmap: Record<string, string>,
-            rows: IRowsType,
-            styles: t.TypeOf<typeof Styles>,
-        });
+        type TableFetchResponse = {
+            aliases: Record<string, string>;
+            fields: string[];
+            realnamemap: Record<string, string>;
+            membershipmap: Record<string, string>;
+            emailmap: Record<string, string>;
+            rows: IRowsType;
+            styles: t.TypeOf<typeof Styles>;
+        };
         let prom;
         const tid = this.getTaskId();
         if (!tid) {
@@ -593,16 +647,22 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         }
         this.loading = true;
         if (this.isPreview()) {
-            prom = $http.get<TableFetchResponse>("/tableForm/fetchTableDataPreview?" + $httpParamSerializer({
-                taskid: tid.docTask(),
-                fields: this.markup.fields,
-                groups: this.markup.groups,
-                removeDocIds: this.markup.removeDocIds,
-            }));
+            prom = $http.get<TableFetchResponse>(
+                "/tableForm/fetchTableDataPreview?" +
+                    $httpParamSerializer({
+                        taskid: tid.docTask(),
+                        fields: this.markup.fields,
+                        groups: this.markup.groups,
+                        removeDocIds: this.markup.removeDocIds,
+                    })
+            );
         } else {
-            prom = $http.get<TableFetchResponse>("/tableForm/fetchTableData?" + $httpParamSerializer({
-                taskid: tid.docTask(),
-            }));
+            prom = $http.get<TableFetchResponse>(
+                "/tableForm/fetchTableData?" +
+                    $httpParamSerializer({
+                        taskid: tid.docTask(),
+                    })
+            );
         }
         const r = await to(prom);
         this.loading = false;
@@ -669,14 +729,19 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             if (!tid) {
                 return;
             }
-            const r = await to($http.get <{
-                rows: IRowsType,
-                styles: t.TypeOf<typeof Styles>,
-                fields: string[],
-            }>("/tableForm/updateFields?" + $httpParamSerializer({
-                fields: fieldsToUpdate,
-                taskid: tid.docTask(),
-            })));
+            const r = await to(
+                $http.get<{
+                    rows: IRowsType;
+                    styles: t.TypeOf<typeof Styles>;
+                    fields: string[];
+                }>(
+                    "/tableForm/updateFields?" +
+                        $httpParamSerializer({
+                            fields: fieldsToUpdate,
+                            taskid: tid.docTask(),
+                        })
+                )
+            );
             if (!r.ok) {
                 return;
             }
@@ -701,14 +766,20 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             // TODO: Check if any value changed.  If not do not call reInitialize
             for (const f of tableFields) {
                 for (let y = 0; y < this.rowKeys.length; y++) {
-                    if (styles && !angular.equals(styles, {}) && styles[this.rowKeys[y]]) {
+                    if (
+                        styles &&
+                        !angular.equals(styles, {}) &&
+                        styles[this.rowKeys[y]]
+                    ) {
                         this.data.userdata.cells[taskColumns[f] + (y + 1)] = {
                             cell: rows[this.rowKeys[y]][f],
                             ...styles[this.rowKeys[y]][f],
                         };
                     } else {
                         if (rows[this.rowKeys[y]]) {
-                            this.data.userdata.cells[taskColumns[f] + (y + 1)] = {cell: rows[this.rowKeys[y]][f]};
+                            this.data.userdata.cells[
+                                taskColumns[f] + (y + 1)
+                            ] = {cell: rows[this.rowKeys[y]][f]};
                         }
                     }
                 }
@@ -736,7 +807,6 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                 this.rowKeys.sort((a, b) => this.sortByRealName(a, b));
                 this.data.lockedColumns.push(realNameColumn);
             } else if (this.usernames) {
-
             } else {
                 this.rowKeys.sort((a, b) => this.sortByEmail(a, b));
             }
@@ -746,12 +816,22 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             }
             if (this.attrsall.markup.sisugroups) {
                 // These require unique names, otherwise could just use empty strings in place of "invisibleX".
-                this.data.headers = ["Kuvaus", "Sisu-nimi", "invisible1", "invisible2"];
+                this.data.headers = [
+                    "Kuvaus",
+                    "Sisu-nimi",
+                    "invisible1",
+                    "invisible2",
+                ];
             } else {
-                this.data.headers = ["Henkilön nimi", "Käyttäjänimi", "eMail", "Poistunut?"];
+                this.data.headers = [
+                    "Henkilön nimi",
+                    "Käyttäjänimi",
+                    "eMail",
+                    "Poistunut?",
+                ];
             }
             this.data.headersStyle = {
-                "backgroundColor": this.fixedColor,
+                backgroundColor: this.fixedColor,
                 "font-weight": "bold",
             };
 
@@ -761,7 +841,10 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             this.data.table.countRow = Object.keys(this.rows).length;
             let y = 1;
             for (const r of this.rowKeys) {
-                this.data.userdata.cells[userNameColumn + y] = {cell: r, backgroundColor: this.fixedColor};
+                this.data.userdata.cells[userNameColumn + y] = {
+                    cell: r,
+                    backgroundColor: this.fixedColor,
+                };
                 this.userLocations[y] = r;
                 for (const [map, col] of [
                     [this.realnamemap, realNameColumn],
@@ -781,7 +864,6 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             const xOffset = memberShipColIndex + 1;
             if (this.fields) {
                 for (let x = 0; x < this.fields.length; x++) {
-
                     const colheader = this.fields[x];
                     const currentCol = colnumToLetters(x + xOffset);
                     const expandedLockedFields = widenFields(this.lockedFields);
@@ -802,7 +884,9 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                     } else {
                         contentalias = colheader;
                     }
-                    this.taskLocations[colnumToLetters(x + xOffset)] = contentalias;
+                    this.taskLocations[
+                        colnumToLetters(x + xOffset)
+                    ] = contentalias;
                     // this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
                     // y = 0;
                     // for (const [u, r] of Object.entries(this.rows)) {
@@ -815,11 +899,17 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                         // this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
                         if (this.styles && !angular.equals(this.styles, {})) {
                             this.data.userdata.cells[currentCol + (y + 1)] = {
-                                cell: this.rows[this.rowKeys[y]][this.fields[x]],
+                                cell: this.rows[this.rowKeys[y]][
+                                    this.fields[x]
+                                ],
                                 ...this.styles[this.rowKeys[y]][this.fields[x]],
                             };
                         } else {
-                            this.data.userdata.cells[currentCol + (y + 1)] = {cell: this.rows[this.rowKeys[y]][this.fields[x]]};
+                            this.data.userdata.cells[currentCol + (y + 1)] = {
+                                cell: this.rows[this.rowKeys[y]][
+                                    this.fields[x]
+                                ],
+                            };
                         }
                     }
                 }
@@ -860,7 +950,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
      * Used to define create report button in angular, true or false.
      */
     reportCheck() {
-        return (this.markup.report == true);
+        return this.markup.report == true;
     }
 
     /**
@@ -868,7 +958,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
      * Choises are username, username and full name and anonymous. Username as default.
      */
     sortBy() {
-        return (this.markup.sortBy ?? "username");
+        return this.markup.sortBy ?? "username";
     }
 
     /**
@@ -896,7 +986,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             fields: this.markup.fields,
             groups: this.markup.groups,
             removeDocIds: this.markup.removeDocIds,
-            separator: (this.markup.separator ?? ","),
+            separator: this.markup.separator ?? ",",
             anonNames: this.markup.anonNames,
             realnames: this.markup.realnames,
             usernames: this.markup.usernames,
@@ -905,7 +995,10 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         };
         let filterParams = {};
         const selUsers = timTable.getCheckedRows(0, false);
-        const users = TableFormComponent.makeUserArray(selUsers, userNameColIndex);
+        const users = TableFormComponent.makeUserArray(
+            selUsers,
+            userNameColIndex
+        );
 
         if (selUsers.length > 0) {
             filterParams = {userFilter: users};
@@ -940,10 +1033,14 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             filterParams = {filterFields, filterValues};
         }
 
-        const win = window.open("/tableForm/generateCSV?" + $httpParamSerializer({
-            ...reportParams,
-            ...filterParams,
-        }), "WINDOWID");
+        const win = window.open(
+            "/tableForm/generateCSV?" +
+                $httpParamSerializer({
+                    ...reportParams,
+                    ...filterParams,
+                }),
+            "WINDOWID"
+        );
         if (win == null) {
             this.error = "Failed to open report window.";
         }
@@ -956,7 +1053,12 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
      * @param preseparator what comes before evyry item
      * @param midseparator what comes between items
      */
-    static makeUserList(users: string[][], colIndex: number, preseparator: string, midseparator: string): string {
+    static makeUserList(
+        users: string[][],
+        colIndex: number,
+        preseparator: string,
+        midseparator: string
+    ): string {
         let result = "";
         let sep = "";
         for (const r of users) {
@@ -997,14 +1099,26 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         const group = this.markup.groups[0];
 
         await showInputDialog({
-            text: "<b>Really remove the following users from group:</b> " + group + "<br>\n<pre>\n" + msg + "\n</pre>",
+            text:
+                "<b>Really remove the following users from group:</b> " +
+                group +
+                "<br>\n<pre>\n" +
+                msg +
+                "\n</pre>",
             title: "Remove users from group " + group,
             isInput: InputDialogKind.ValidatorOnly,
             validator: async () => {
-                const ulist = TableFormComponent.makeUserList(selUsers, 1, "", ",");
-                const r = await to($http.post<unknown>(
-                    `/groups/removemember/${group}`,
-                    {names: ulist.split(",")}));
+                const ulist = TableFormComponent.makeUserList(
+                    selUsers,
+                    1,
+                    "",
+                    ","
+                );
+                const r = await to(
+                    $http.post<unknown>(`/groups/removemember/${group}`, {
+                        names: ulist.split(","),
+                    })
+                );
                 if (r.ok) {
                     return {ok: true, result: r.result.data} as const;
                 } else {
@@ -1054,12 +1168,17 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         // if ( this.listEmail ) { midseparator = "\n"; preseparator = "";  }
         if (sep == "") {
             sep = "\n";
-        }  // radio could not give \n?
+        } // radio could not give \n?
         if (sep != "-") {
             midseparator = sep;
             preseparator = "";
         }
-        this.userlist = TableFormComponent.makeUserList(ulist, colindex, preseparator, midseparator);
+        this.userlist = TableFormComponent.makeUserList(
+            ulist,
+            colindex,
+            preseparator,
+            midseparator
+        );
     }
 
     copyList() {
@@ -1076,7 +1195,12 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             return;
         }
         const selUsers = timTable.getCheckedRows(0, true);
-        this.emaillist = TableFormComponent.makeUserList(selUsers, emailColIndex, "", "\n");
+        this.emaillist = TableFormComponent.makeUserList(
+            selUsers,
+            emailColIndex,
+            "",
+            "\n"
+        );
     }
 
     /**
@@ -1094,7 +1218,10 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
      * @param cellsToSave list of cells that needs to be saved
      * @param colValuesAreSame if all values in on column has same value
      */
-    async cellChanged(cellsToSave: CellToSave[] | CellAttrToSave[], colValuesAreSame: boolean) {
+    async cellChanged(
+        cellsToSave: CellToSave[] | CellAttrToSave[],
+        colValuesAreSame: boolean
+    ) {
         // TODO make better implementation so singleCellSave is not called one by one
         // TODO: maybe done so that push cells to chengedCells and call save
         // TODO: but first check if saved to person or group and to that column by column
@@ -1111,13 +1238,22 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             const changedStyle = c.key;
             if (changedStyle) {
                 if (changedStyle == "CLEAR") {
-                    this.clearStylesCells.add(colnumToLetters(coli) + (rowi + 1));
+                    this.clearStylesCells.add(
+                        colnumToLetters(coli) + (rowi + 1)
+                    );
                 } else {
-                    this.clearStylesCells.delete(colnumToLetters(coli) + (rowi + 1));
+                    this.clearStylesCells.delete(
+                        colnumToLetters(coli) + (rowi + 1)
+                    );
                 }
             }
             if (this.markup.autosave) {
-                await this.singleCellSave(rowi, coli, content, globalChangedFields);
+                await this.singleCellSave(
+                    rowi,
+                    coli,
+                    content,
+                    globalChangedFields
+                );
             } else {
                 this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
             }
@@ -1139,9 +1275,12 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
      * @param content unused
      * @param globalChangedFields set where save fields than should be updated
      */
-    async singleCellSave(rowi: number, coli: number,
-                         content: string,
-                         globalChangedFields: Set<string> | undefined = undefined) {
+    async singleCellSave(
+        rowi: number,
+        coli: number,
+        content: string,
+        globalChangedFields: Set<string> | undefined = undefined
+    ) {
         const cells = [colnumToLetters(coli) + (rowi + 1)];
         await this.doSaveText(cells, globalChangedFields);
     }
@@ -1176,7 +1315,10 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
      * @param cells to save
      * @param globalChangedFields set where save fields than should be updated
      */
-    async doSaveText(cells: string[], globalChangedFields: Set<string> | undefined = undefined) {
+    async doSaveText(
+        cells: string[],
+        globalChangedFields: Set<string> | undefined = undefined
+    ) {
         // this.error = "... saving ...";
         let keys: string[] = [];
         if (cells && cells.length > 0) {
@@ -1189,7 +1331,10 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         if (keys.length == 0) {
             return;
         }
-        const replyRows: Record<string, Record<string, string | null | Record<string, unknown>>> = {};
+        const replyRows: Record<
+            string,
+            Record<string, string | null | Record<string, unknown>>
+        > = {};
         const changedFields = new Set<string>();
         try {
             for (const coord of keys) {
@@ -1200,9 +1345,12 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                 }
                 const columnPlace = alpha[0];
                 const numberPlace = coord.substring(columnPlace.length);
-                if (columnPlace === userNameColumn
-                    || columnPlace === realNameColumn  // TODO: Do we need this anymore?
-                    || columnPlace === emailColumn) {  // TODO: Do we need this anymore?
+                if (
+                    columnPlace === userNameColumn ||
+                    columnPlace === realNameColumn || // TODO: Do we need this anymore?
+                    columnPlace === emailColumn
+                ) {
+                    // TODO: Do we need this anymore?
                     continue;
                 }
                 const cell = this.data.userdata.cells[coord];
@@ -1219,7 +1367,10 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                 }
                 if (cellContent === null) {
                     cellContent = "";
-                } else if (typeof cellContent === "boolean" || typeof cellContent === "number") {
+                } else if (
+                    typeof cellContent === "boolean" ||
+                    typeof cellContent === "number"
+                ) {
                     cellContent = cellContent.toString();
                 }
                 // else if (typeof cellContent === "boolean") {
@@ -1227,10 +1378,17 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
 
                 // TODO: If attr (auto)updatefields...
                 if (true && this.viewctrl) {
-                    if (this.viewctrl.selectedUser.name == this.userLocations[numberPlace]) {
-                        const taskWithField = this.taskLocations[columnPlace].split(".");
-                        const docTask = taskWithField[0] + "." + taskWithField[1];
-                        if (globalChangedFields) { // if call from cellChanged update global
+                    if (
+                        this.viewctrl.selectedUser.name ==
+                        this.userLocations[numberPlace]
+                    ) {
+                        const taskWithField = this.taskLocations[
+                            columnPlace
+                        ].split(".");
+                        const docTask =
+                            taskWithField[0] + "." + taskWithField[1];
+                        if (globalChangedFields) {
+                            // if call from cellChanged update global
                             globalChangedFields.add(docTask);
                         } else {
                             changedFields.add(docTask);
@@ -1238,22 +1396,39 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
                     }
                 }
                 try {
-                    replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
+                    replyRows[this.userLocations[numberPlace]][
+                        this.taskLocations[columnPlace]
+                    ] = cellContent;
                 } catch (e) {
                     replyRows[this.userLocations[numberPlace]] = {};
-                    replyRows[this.userLocations[numberPlace]][this.taskLocations[columnPlace]] = cellContent;
+                    replyRows[this.userLocations[numberPlace]][
+                        this.taskLocations[columnPlace]
+                    ] = cellContent;
                 }
                 /* TODO: instead of iterating clearStylesCells could decide that absence of any styles
                     (e.g primitivecell) would mean result in null style value being sent
                 */
                 if (this.clearStylesCells.has(columnPlace + numberPlace)) {
-                    const taskWithField = this.taskLocations[columnPlace].split(".");
-                    const docTaskStyles = taskWithField[0] + "." + taskWithField[1] + ".styles";
-                    replyRows[this.userLocations[numberPlace]][docTaskStyles] = null;
-                } else if (cellStyle != null && Object.keys(cellStyle).length != 0) {
-                    const taskWithField = this.taskLocations[columnPlace].split(".");
-                    const docTaskStyles = taskWithField[0] + "." + taskWithField[1] + ".styles";
-                    replyRows[this.userLocations[numberPlace]][docTaskStyles] = cellStyle;
+                    const taskWithField = this.taskLocations[columnPlace].split(
+                        "."
+                    );
+                    const docTaskStyles =
+                        taskWithField[0] + "." + taskWithField[1] + ".styles";
+                    replyRows[this.userLocations[numberPlace]][
+                        docTaskStyles
+                    ] = null;
+                } else if (
+                    cellStyle != null &&
+                    Object.keys(cellStyle).length != 0
+                ) {
+                    const taskWithField = this.taskLocations[columnPlace].split(
+                        "."
+                    );
+                    const docTaskStyles =
+                        taskWithField[0] + "." + taskWithField[1] + ".styles";
+                    replyRows[this.userLocations[numberPlace]][
+                        docTaskStyles
+                    ] = cellStyle;
                 }
             }
         } catch (e) {
@@ -1267,7 +1442,9 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             },
         };
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
+        const r = await to(
+            $http.put<{web: {result: string; error?: string}}>(url, params)
+        );
         this.loading = false;
         if (r.ok) {
             const data = r.result.data;
@@ -1281,13 +1458,13 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             return;
         }
         timtab.confirmSaved();
-        if (this.viewctrl && changedFields.size > 0) {  // if this.globalChangedFields then this is empty
+        if (this.viewctrl && changedFields.size > 0) {
+            // if this.globalChangedFields then this is empty
             if (this.markup.autoUpdateFields) {
                 this.viewctrl.updateFields(Array.from(changedFields));
             }
             if (this.markup.autoUpdateTables) {
                 this.viewctrl.updateAllTables(Array.from(changedFields));
-
             }
         }
         this.clearStylesCells.clear();
@@ -1300,10 +1477,21 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             return;
         }
         const selUsers = timTable.getCheckedRows(0, true);
-        const groups = TimTableComponent.makeSmallerMatrix(selUsers, [1, this.data.headers.indexOf("TIM-nimi")]);
-        const params = groups.map(([sisuid, timname]) => ({externalId: sisuid, name: timname}));
+        const groups = TimTableComponent.makeSmallerMatrix(selUsers, [
+            1,
+            this.data.headers.indexOf("TIM-nimi"),
+        ]);
+        const params = groups.map(([sisuid, timname]) => ({
+            externalId: sisuid,
+            name: timname,
+        }));
         this.loading = true;
-        const r = await to($http.post<{ web: { result: string, error?: string } }>("/sisu/createGroupDocs", params));
+        const r = await to(
+            $http.post<{web: {result: string; error?: string}}>(
+                "/sisu/createGroupDocs",
+                params
+            )
+        );
         this.loading = false;
         if (r.ok) {
             timTable.confirmSaved();
@@ -1320,7 +1508,10 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         }
         if (this.viewctrl) {
             const selUsers = timTable.getCheckedRows(0, true);
-            const users = TableFormComponent.makeUserArray(selUsers, userNameColIndex);
+            const users = TableFormComponent.makeUserArray(
+                selUsers,
+                userNameColIndex
+            );
             this.viewctrl.runJsRunner(runner, users);
         }
     }
@@ -1332,10 +1523,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
-    declarations: [
-        TableFormComponent,
-        TimEmailComponent,
-    ],
+    declarations: [TableFormComponent, TimEmailComponent],
     imports: [
         BrowserModule,
         HttpClientModule,
@@ -1345,8 +1533,7 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
     ],
 })
 export class TableFormModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
 const bootstrapFn = (extraProviders: StaticProvider[]) => {

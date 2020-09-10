@@ -52,8 +52,7 @@ export class LectureInfoTabComponent implements OnTabSelect {
     vctrl?: ViewCtrl = vctrlInstance;
     lctrl: LectureController = LectureController.instance;
 
-    constructor(private http: HttpClient) {
-    }
+    constructor(private http: HttpClient) {}
 
     onSelect() {
         void this.toggleLectures();
@@ -61,14 +60,20 @@ export class LectureInfoTabComponent implements OnTabSelect {
 
     private async toggleLectures() {
         if (!this.vctrl) {
-            await showMessageDialog($localize`:@@notInDocViewError:Not currently in document view.`);
+            await showMessageDialog(
+                $localize`:@@notInDocViewError:Not currently in document view.`
+            );
             return;
         }
-        const response = await to2(this.http.get<ILectureListResponse2>("/getAllLecturesFromDocument", {
-            params: {
-                doc_id: this.vctrl.docId.toString(),
-            },
-        }).toPromise());
+        const response = await to2(
+            this.http
+                .get<ILectureListResponse2>("/getAllLecturesFromDocument", {
+                    params: {
+                        doc_id: this.vctrl.docId.toString(),
+                    },
+                })
+                .toPromise()
+        );
         if (!response.ok) {
             return;
         }

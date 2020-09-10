@@ -9,7 +9,13 @@ import {
     makePreview,
     minimizeJson,
 } from "tim/document/question/dynamicAnswerSheet";
-import {dateFormat, getStorage, markAsUsed, setStorage, to} from "tim/util/utils";
+import {
+    dateFormat,
+    getStorage,
+    markAsUsed,
+    setStorage,
+    to,
+} from "tim/util/utils";
 import {KEY_R, KEY_S} from "tim/util/keycodes";
 import {DialogController} from "tim/ui/dialogController";
 import {ParCompiler} from "../../editor/parCompiler";
@@ -26,7 +32,11 @@ import {
     QuestionType,
 } from "../../lecture/lecturetypes";
 import {IGenericPluginMarkup} from "../../plugin/attributes";
-import {registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
+import {
+    registerDialogComponent,
+    showDialog,
+    showMessageDialog,
+} from "../../ui/dialog";
 import {$http, $timeout} from "../../util/ngimport";
 import {IParResponse} from "../editing/edittypes";
 import {QuestionMatrixController} from "./questionMatrix";
@@ -88,39 +98,57 @@ export interface IPointsUpdate {
     type: "points";
 }
 
-function isNewQuestion(params: IQuestionDialogParams): params is INewQuestionParams {
+function isNewQuestion(
+    params: IQuestionDialogParams
+): params is INewQuestionParams {
     return (params as INewQuestionParams).par_id_next != null;
 }
 
-function isAskedQuestion(params: IQuestionDialogParams): params is IAskedQuestion {
+function isAskedQuestion(
+    params: IQuestionDialogParams
+): params is IAskedQuestion {
     return (params as IAskedQuestion).asked_id != null;
 }
 
-export async function fetchQuestion(docId: number, parId: string, edit: boolean = true): Promise<IQuestionParagraph> {
-    const response = await to($http<IQuestionParagraph>({
-        url: "/getQuestionByParId",
-        method: "GET",
-        params: {par_id: parId, doc_id: docId, edit},
-    }));
+export async function fetchQuestion(
+    docId: number,
+    parId: string,
+    edit: boolean = true
+): Promise<IQuestionParagraph> {
+    const response = await to(
+        $http<IQuestionParagraph>({
+            url: "/getQuestionByParId",
+            method: "GET",
+            params: {par_id: parId, doc_id: docId, edit},
+        })
+    );
     if (!response.ok) {
         throw Error("getQuestionByParId failed");
     }
     return response.result.data;
 }
 
-export async function fetchAskedQuestion(askedId: number): Promise<IAskedQuestion> {
-    const response = await to($http<IAskedQuestion>({
-        url: "/getAskedQuestionById",
-        method: "GET",
-        params: {asked_id: askedId},
-    }));
+export async function fetchAskedQuestion(
+    askedId: number
+): Promise<IAskedQuestion> {
+    const response = await to(
+        $http<IAskedQuestion>({
+            url: "/getAskedQuestionById",
+            method: "GET",
+            params: {asked_id: askedId},
+        })
+    );
     if (!response.ok) {
         throw Error("getQuestionByParId failed");
     }
     return response.result.data;
 }
 
-export async function fetchAndEditQuestion(docId: number, parId: string, edit: boolean = true) {
+export async function fetchAndEditQuestion(
+    docId: number,
+    parId: string,
+    edit: boolean = true
+) {
     const q = await fetchQuestion(docId, parId, edit);
     if (q.isPreamble) {
         await showMessageDialog("Cannot edit a question in preamble.");
@@ -129,10 +157,17 @@ export async function fetchAndEditQuestion(docId: number, parId: string, edit: b
     return await showQuestionEditDialog(q);
 }
 
-export async function deleteQuestionWithConfirm(docId: number, parId: string): Promise<IParResponse | null> {
-    const confirmDi = window.confirm("Are you sure you want to delete this question?");
+export async function deleteQuestionWithConfirm(
+    docId: number,
+    parId: string
+): Promise<IParResponse | null> {
+    const confirmDi = window.confirm(
+        "Are you sure you want to delete this question?"
+    );
     if (confirmDi) {
-        const response = await to($http.post<IParResponse>(`/deleteParagraph/${docId}`, {par: parId}));
+        const response = await to(
+            $http.post<IParResponse>(`/deleteParagraph/${docId}`, {par: parId})
+        );
         if (!response.ok) {
             throw Error("getQuestionByParId failed");
         }
@@ -141,7 +176,10 @@ export async function deleteQuestionWithConfirm(docId: number, parId: string): P
     return null;
 }
 
-export class QuestionController extends DialogController<{params: IQuestionDialogParams}, IQuestionDialogResult> {
+export class QuestionController extends DialogController<
+    {params: IQuestionDialogParams},
+    IQuestionDialogResult
+> {
     static component = "timEditQuestion";
     static $inject = ["$element", "$scope"] as const;
     private answerFieldTypes: IAnswerField[];
@@ -205,7 +243,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     }
 
     public getTitle() {
-        return isNewQuestion(this.resolve.params) ? "Create a question" : "Edit question";
+        return isNewQuestion(this.resolve.params)
+            ? "Create a question"
+            : "Edit question";
     }
 
     $onInit() {
@@ -290,14 +330,18 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             this.defaultPoints = json.defaultPoints;
         }
         if (json.questionTitle) {
-            this.question.questionTitle = this.putBackQuotations(json.questionTitle);
+            this.question.questionTitle = this.putBackQuotations(
+                json.questionTitle
+            );
         }
         if (this.question.questionTitle === "Untitled") {
             this.question.questionTitle = "";
             this.titleChanged = true;
         }
         if (json.questionText) {
-            this.question.questionText = this.putBackQuotations(json.questionText);
+            this.question.questionText = this.putBackQuotations(
+                json.questionText
+            );
         }
         if (json.questionType) {
             this.question.questionType = json.questionType;
@@ -324,8 +368,12 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             }
         }
         this.columnHeaders = columnHeaders;
-        const pointsTable = getPointsTable(isAskedQuestion(data) ? data.json.json.points : data.markup.points);
-        const expl: IExplCollection | undefined = isAskedQuestion(data) ? data.json.json.expl : data.markup.expl;
+        const pointsTable = getPointsTable(
+            isAskedQuestion(data) ? data.json.json.points : data.markup.points
+        );
+        const expl: IExplCollection | undefined = isAskedQuestion(data)
+            ? data.json.json.expl
+            : data.markup.expl;
 
         let locks: number[] = [];
         if (!isAskedQuestion(data) && data.markup.doNotMove) {
@@ -360,11 +408,15 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             for (let j = 0; j < jsonColumns.length; j++) {
                 let columnPoints = "";
 
-                if (this.question.questionType === "matrix" || this.question.questionType === "true-false") {
+                if (
+                    this.question.questionType === "matrix" ||
+                    this.question.questionType === "true-false"
+                ) {
                     if (this.question.matrixType !== "textArea") {
                         if (pointsTable.length > i) {
                             if ((j + 1).toString() in pointsTable[i]) {
-                                columnPoints = pointsTable[i][(j + 1).toString()];
+                                columnPoints =
+                                    pointsTable[i][(j + 1).toString()];
                             }
                         }
                     }
@@ -458,7 +510,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
      * @param type The answer type of the matrix.
      */
     private createMatrix(type: QuestionType) {
-
         if (!this.oldHeaders) {
             this.oldHeaders = [];
         }
@@ -474,7 +525,7 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
         const constHeaders: {[key: string]: string[] | undefined} = {
             "true-false": ["True", "False"],
-            "likert": ["1", "2", "3", "4", "5"],
+            likert: ["1", "2", "3", "4", "5"],
         };
         let rowsCount = 0;
         let columnsCount = 0;
@@ -498,7 +549,11 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             }
         }
 
-        if (type === "radio-vertical" || type === "true-false" || type === "likert") {
+        if (
+            type === "radio-vertical" ||
+            type === "true-false" ||
+            type === "likert"
+        ) {
             this.question.answerFieldType = "radio";
         } else if (type === "checkbox-vertical") {
             this.question.answerFieldType = "checkbox";
@@ -605,15 +660,14 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         }
 
         const columns = this.createColumnsForRow(location);
-        this.rows.splice(loc, 0,
-            {
-                id: location,
-                text: "",
-                type: "question",
-                value: "",
-                columns,
-                expl: "",
-            });
+        this.rows.splice(loc, 0, {
+            id: location,
+            text: "",
+            type: "question",
+            value: "",
+            columns,
+            expl: "",
+        });
 
         for (let i = 0; i < this.rows.length; i++) {
             this.rows[i].id = i + 1;
@@ -710,7 +764,11 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
      * Formats a string of form {id}:{point value} based on column point value or defaultPoints attribute
      */
     private createPointVal(id: number, colVal: string): string {
-        return id.toString() + ":" + (parseFloat(colVal) ?? this.question.defaultPoints ?? 0);
+        return (
+            id.toString() +
+            ":" +
+            (parseFloat(colVal) ?? this.question.defaultPoints ?? 0)
+        );
     }
 
     /**
@@ -722,7 +780,10 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         let separator = "";
         let separator2 = "";
         let n = 0;
-        if (this.question.questionType === "matrix" || this.question.questionType === "true-false") {
+        if (
+            this.question.questionType === "matrix" ||
+            this.question.questionType === "true-false"
+        ) {
             if (this.question.matrixType !== "textArea") {
                 for (const r of this.rows) {
                     points += separator;
@@ -731,7 +792,10 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
                         if (currentColumn.points !== "") {
                             points += separator2;
                             const id = currentColumn.id + 1;
-                            points += this.createPointVal(id, currentColumn.points);
+                            points += this.createPointVal(
+                                id,
+                                currentColumn.points
+                            );
                             separator2 = ";";
                             n++;
                         }
@@ -783,7 +847,11 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         }
         this.customError = undefined;
         if (this.rows.length > 0) {
-            if ((this.question.questionType === "radio-vertical" /* || this.question.type === "checkbox-vertical"*/) && this.rows.length < 2) {
+            if (
+                this.question.questionType ===
+                    "radio-vertical" /* || this.question.type === "checkbox-vertical"*/ &&
+                this.rows.length < 2
+            ) {
                 this.customError = "You must have at least two choices.";
             }
         } else if (this.question.questionType !== "") {
@@ -791,22 +859,24 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         }
         let timeLimit: number | undefined;
         if (this.ui.durationAmount != null) {
-            timeLimit = moment.duration(this.ui.durationAmount, this.ui.durationType).asSeconds();
+            timeLimit = moment
+                .duration(this.ui.durationAmount, this.ui.durationType)
+                .asSeconds();
             if (timeLimit <= 0) {
-                this.customError = "Please enter a duration greater than zero, or for unending question, leave the duration box empty.";
+                this.customError =
+                    "Please enter a duration greater than zero, or for unending question, leave the duration box empty.";
             }
         } else {
             timeLimit = undefined;
         }
 
-        if (this.customError != null || (this.f?.$invalid)) {
+        if (this.customError != null || this.f?.$invalid) {
             if (this.question.questionTitle === "Untitled") {
                 this.question.questionTitle = "";
             }
             return;
         }
         if (this.question.questionType === "matrix") {
-
             if (this.question.matrixType === "radiobutton-horizontal") {
                 this.question.answerFieldType = "radio";
             }
@@ -819,15 +889,27 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
             }
         }
 
-        if (this.question.questionText == null || this.question.questionTitle == null || this.question.answerFieldType == null) {
+        if (
+            this.question.questionText == null ||
+            this.question.questionTitle == null ||
+            this.question.answerFieldType == null
+        ) {
             return;
         }
 
-        this.question.questionText = this.replaceLinebreaksWithHTML(this.question.questionText);
-        this.question.questionTitle = this.replaceLinebreaksWithHTML(this.question.questionTitle);
+        this.question.questionText = this.replaceLinebreaksWithHTML(
+            this.question.questionText
+        );
+        this.question.questionTitle = this.replaceLinebreaksWithHTML(
+            this.question.questionTitle
+        );
 
         const headersJson: IHeader[] = [];
-        if (this.question.questionType === "matrix" || this.question.questionType === "true-false" || this.question.questionType === "") {
+        if (
+            this.question.questionType === "matrix" ||
+            this.question.questionType === "true-false" ||
+            this.question.questionType === ""
+        ) {
             for (const h of this.columnHeaders) {
                 const header = {
                     type: h.type,
@@ -899,9 +981,11 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     private async updatePreview() {
         const mdStr = JSON.stringify(this.question, null, 4);
-        const response = await to($http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", {
-            text: mdStr,
-        }));
+        const response = await to(
+            $http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", {
+                text: mdStr,
+            })
+        );
         if (!response.ok) {
             throw Error("getQuestionMD failed");
         }
@@ -943,7 +1027,8 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         if (!this.randomization) {
             this.question.randomizedRows = undefined;
         } else {
-            this.question.randomizedRows = this.randomizedRows ?? this.rows.length; // TODO: better alternative for "all"
+            this.question.randomizedRows =
+                this.randomizedRows ?? this.rows.length; // TODO: better alternative for "all"
             this.question.doNotMove = this.getLockedRowIds();
         }
 
@@ -958,16 +1043,19 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
         const docId = p.docId;
 
         // Change undefined to null. This avoids "null" being saved in the markup for answerLimit.
-        this.pluginMarkup.answerLimit = this.pluginMarkup.answerLimit ?? undefined;
+        this.pluginMarkup.answerLimit =
+            this.pluginMarkup.answerLimit ?? undefined;
 
-        const r = await to($http.post<IParResponse>(route, {
-            docId,
-            ...params,
-            question: {
-                ...this.pluginMarkup, // this also retains the other attributes that are not visible in edit dialog
-                ...this.question,
-            },
-        }));
+        const r = await to(
+            $http.post<IParResponse>(route, {
+                docId,
+                ...params,
+                question: {
+                    ...this.pluginMarkup, // this also retains the other attributes that are not visible in edit dialog
+                    ...this.question,
+                },
+            })
+        );
         if (r.ok) {
             const data = r.result.data;
             this.close({data, deleted: false, ask, type: "edit"});
@@ -982,24 +1070,30 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     private async updatePoints(a: IAskedQuestion) {
         const points = this.createPoints();
         const expl = this.createExplanation();
-        await to($http({
-            method: "POST",
-            url: "/updatePoints/",
-            params: {
-                asked_id: a.asked_id,
-                expl,
-                points,
-            },
-        }));
+        await to(
+            $http({
+                method: "POST",
+                url: "/updatePoints/",
+                params: {
+                    asked_id: a.asked_id,
+                    expl,
+                    points,
+                },
+            })
+        );
     }
 
     private async deleteQuestion() {
         if (isNewQuestion(this.resolve.params)) {
-            await showMessageDialog("Not editing a question - there is nothing to delete.");
+            await showMessageDialog(
+                "Not editing a question - there is nothing to delete."
+            );
             return;
         }
         if (isAskedQuestion(this.resolve.params)) {
-            await showMessageDialog("Editing an asked question - cannot delete now.");
+            await showMessageDialog(
+                "Editing an asked question - cannot delete now."
+            );
             return;
         }
         const docId = this.resolve.params.docId;
@@ -1037,11 +1131,15 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
     }
 }
 
-registerDialogComponent(QuestionController,
+registerDialogComponent(
+    QuestionController,
     {templateUrl: "/static/templates/question.html"},
-    "qctrl");
+    "qctrl"
+);
 
-export async function showQuestionEditDialog(params: IQuestionDialogParams): Promise<IQuestionDialogResult> {
+export async function showQuestionEditDialog(
+    params: IQuestionDialogParams
+): Promise<IQuestionDialogResult> {
     return showDialog(QuestionController, {
         params: () => params,
     }).result;

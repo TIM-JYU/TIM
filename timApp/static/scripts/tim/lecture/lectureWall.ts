@@ -7,7 +7,10 @@ import {KEY_ENTER} from "../util/keycodes";
 import {$http, $timeout} from "../util/ngimport";
 import {ILectureMessage} from "./lecturetypes";
 
-export class LectureWallController extends DialogController<{params: {messages: ILectureMessage[]}}, void> {
+export class LectureWallController extends DialogController<
+    {params: {messages: ILectureMessage[]}},
+    void
+> {
     static component = "timLectureWall";
     static $inject = ["$element", "$scope"] as const;
     private messageName = true;
@@ -63,11 +66,13 @@ export class LectureWallController extends DialogController<{params: {messages: 
         if (message.trim() === "") {
             return false;
         }
-        await to($http({
-            url: "/sendMessage",
-            method: "POST",
-            params: {message},
-        }));
+        await to(
+            $http({
+                url: "/sendMessage",
+                method: "POST",
+                params: {message},
+            })
+        );
         this.newMsg = "";
     }
 
@@ -108,10 +113,8 @@ timApp.component("timLectureWallContent", {
     `,
 });
 
-registerDialogComponent(
-    LectureWallController,
-    {
-        template: `
+registerDialogComponent(LectureWallController, {
+    template: `
 <tim-dialog>
     <dialog-header>
         Lecture wall
@@ -157,10 +160,12 @@ registerDialogComponent(
     </dialog-footer>
 </tim-dialog>
         `,
-    });
+});
 
 export function showLectureWall(messages: ILectureMessage[]) {
-    return showDialog(LectureWallController,
+    return showDialog(
+        LectureWallController,
         {params: () => ({messages})},
-        {size: "sm"});
+        {size: "sm"}
+    );
 }

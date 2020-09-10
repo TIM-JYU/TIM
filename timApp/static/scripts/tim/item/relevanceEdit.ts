@@ -13,12 +13,13 @@ import {$http} from "../util/ngimport";
 import {IItem, IRelevance} from "./IItem";
 
 export const relevanceSuggestions = [
-            {value: -100, name:  "-100 = Buried"},
-            {value: 0, name:    "0 = Ignored"},
-            {value: 1, name:    "1 = Not important"},
-            {value: 10, name:   "10 = Normal"},
-            {value: 50, name:   "50 = Important"},
-            {value: 100, name:  "100 = Very important"}];
+    {value: -100, name: "-100 = Buried"},
+    {value: 0, name: "0 = Ignored"},
+    {value: 1, name: "1 = Not important"},
+    {value: 10, name: "10 = Normal"},
+    {value: 50, name: "50 = Important"},
+    {value: 100, name: "100 = Very important"},
+];
 
 export interface IRelevanceResponse {
     default: boolean; // Item and its parents don't have set relevance.
@@ -29,10 +30,10 @@ export interface IRelevanceResponse {
 class RelevanceCtrl implements IController {
     static $inject = ["$element", "$scope"];
     private item!: Binding<IItem, "<">;
-    private relevance: number|undefined;
+    private relevance: number | undefined;
     private isDefault: boolean = false;
     private isInherited: boolean = false;
-    private errorMessage: string|undefined;
+    private errorMessage: string | undefined;
     private suggestions = relevanceSuggestions;
 
     $onInit() {
@@ -44,7 +45,11 @@ class RelevanceCtrl implements IController {
      */
     private async getRelevance() {
         this.errorMessage = undefined;
-        const r = await to($http.get<IRelevanceResponse>(`/items/relevance/get/${this.item.id}`));
+        const r = await to(
+            $http.get<IRelevanceResponse>(
+                `/items/relevance/get/${this.item.id}`
+            )
+        );
         if (r.ok) {
             // console.log(r.result.data);
             this.isDefault = r.result.data.default;
@@ -61,9 +66,11 @@ class RelevanceCtrl implements IController {
      */
     private async setRelevance(newValue: number) {
         this.errorMessage = undefined;
-        const r = await to($http.post(
-            `/items/relevance/set/${this.item.id}`,
-            {value: newValue}));
+        const r = await to(
+            $http.post(`/items/relevance/set/${this.item.id}`, {
+                value: newValue,
+            })
+        );
         if (r.ok) {
             this.isDefault = false;
             this.isInherited = false;
@@ -77,7 +84,9 @@ class RelevanceCtrl implements IController {
      */
     private async resetRelevance() {
         this.errorMessage = undefined;
-        const r = await to($http.get<IRelevance>(`/items/relevance/reset/${this.item.id}`));
+        const r = await to(
+            $http.get<IRelevance>(`/items/relevance/reset/${this.item.id}`)
+        );
         if (!r.ok) {
             this.errorMessage = r.result.data.error;
         }
@@ -92,7 +101,8 @@ class RelevanceCtrl implements IController {
         if (this.relevance != null) {
             await this.setRelevance(this.relevance);
         } else {
-            this.errorMessage = "Incorrect relevance value: input a whole number!";
+            this.errorMessage =
+                "Incorrect relevance value: input a whole number!";
         }
     }
 }

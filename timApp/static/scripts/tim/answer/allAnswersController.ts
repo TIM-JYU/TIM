@@ -21,12 +21,17 @@ export interface IAllAnswersParams {
     allTasks: boolean;
 }
 
-export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}, void> {
+export class AllAnswersCtrl extends DialogController<
+    {params: IAllAnswersParams},
+    void
+> {
     static component = "timAllAnswers";
     static $inject = ["$element", "$scope"] as const;
     private showSort: boolean = false;
     private options?: IOptions<Moment>;
-    private storage?: ngStorage.StorageService & {allAnswersOptions: IOptions<number | null>};
+    private storage?: ngStorage.StorageService & {
+        allAnswersOptions: IOptions<number | null>;
+    };
     private datePickerOptionsFrom?: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsTo?: EonasdanBootstrapDatetimepicker.SetOptions;
     private lastFetch: unknown;
@@ -55,8 +60,12 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
 
         this.options = {
             ...this.storage.allAnswersOptions,
-            periodFrom: moment(this.storage.allAnswersOptions.periodFrom ?? Date.now()),
-            periodTo: moment(this.storage.allAnswersOptions.periodFrom ?? Date.now()),
+            periodFrom: moment(
+                this.storage.allAnswersOptions.periodFrom ?? Date.now()
+            ),
+            periodTo: moment(
+                this.storage.allAnswersOptions.periodFrom ?? Date.now()
+            ),
             // The consent option was removed from the dialog (because the consent dialog was disabled),
             // so make sure that it does not restrict the search in case in is in local storage.
             consent: "any",
@@ -74,9 +83,16 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
 
         this.lastFetch = null;
         (async () => {
-            const r = await to($http.get<{last_answer_fetch: {[index: string]: string}}>("/settings/get/last_answer_fetch"));
+            const r = await to(
+                $http.get<{last_answer_fetch: {[index: string]: string}}>(
+                    "/settings/get/last_answer_fetch"
+                )
+            );
             if (r.ok && r.result.data.last_answer_fetch) {
-                this.lastFetch = r.result.data.last_answer_fetch[options.identifier.toString()];
+                this.lastFetch =
+                    r.result.data.last_answer_fetch[
+                        options.identifier.toString()
+                    ];
                 if (!this.lastFetch) {
                     this.lastFetch = "no fetches yet";
                 }
@@ -98,7 +114,10 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
             periodFrom: this.options.periodFrom.valueOf(),
             periodTo: this.options.periodTo.valueOf(),
         };
-        window.open(this.resolve.params.url + "?" + $httpParamSerializer(toSerialize), "_blank");
+        window.open(
+            this.resolve.params.url + "?" + $httpParamSerializer(toSerialize),
+            "_blank"
+        );
         this.close();
     }
 
@@ -107,7 +126,9 @@ export class AllAnswersCtrl extends DialogController<{params: IAllAnswersParams}
     }
 }
 
-registerDialogComponent(AllAnswersCtrl, {templateUrl: "/static/templates/allAnswersOptions.html"});
+registerDialogComponent(AllAnswersCtrl, {
+    templateUrl: "/static/templates/allAnswersOptions.html",
+});
 
 export function showAllAnswers(p: IAllAnswersParams) {
     return showDialog(AllAnswersCtrl, {params: () => p}).result;

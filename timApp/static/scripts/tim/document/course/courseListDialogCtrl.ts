@@ -6,7 +6,14 @@ import {IScope} from "angular";
 import {ngStorage} from "ngstorage";
 import {to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
-import {getCourseCode, ICourseSettings, ISubjectList, ITaggedItem, tagIsExpired, TagType} from "../../item/IItem";
+import {
+    getCourseCode,
+    ICourseSettings,
+    ISubjectList,
+    ITaggedItem,
+    tagIsExpired,
+    TagType,
+} from "../../item/IItem";
 import {registerDialogComponent, showDialog} from "../../ui/dialog";
 import {KEY_ENTER} from "../../util/keycodes";
 import {$http, $localStorage} from "../../util/ngimport";
@@ -25,14 +32,19 @@ export interface IGroupedCourses {
 /**
  * Tag search dialog's controller.
  */
-export class CourseListDialogController extends DialogController<{ params: ICourseListParams }, void> {
+export class CourseListDialogController extends DialogController<
+    {params: ICourseListParams},
+    void
+> {
     static component = "timCourseListDialog";
     static $inject = ["$element", "$scope"] as const;
     private docList: ITaggedItem[] = [];
     private subjects: ISubjectList | undefined;
     private grouped: IGroupedCourses[];
     private closedSubjects: boolean[] = [];
-    private storage: ngStorage.StorageService & {subjectsStorage: null | boolean[]};
+    private storage: ngStorage.StorageService & {
+        subjectsStorage: null | boolean[];
+    };
     private toggleCollapseAll: boolean = false;
     private filterText: string = "";
 
@@ -70,8 +82,15 @@ export class CourseListDialogController extends DialogController<{ params: ICour
      * Loads subjects collapse states.
      */
     private loadCollapseStates() {
-        if (this.grouped && this.closedSubjects && this.closedSubjects.length === this.grouped.length) {
-            for (const {subject, i} of this.grouped.map((s, ind) => ({ subject: s, i: ind }))) {
+        if (
+            this.grouped &&
+            this.closedSubjects &&
+            this.closedSubjects.length === this.grouped.length
+        ) {
+            for (const {subject, i} of this.grouped.map((s, ind) => ({
+                subject: s,
+                i: ind,
+            }))) {
                 subject.closed = this.closedSubjects[i];
             }
         }
@@ -104,16 +123,22 @@ export class CourseListDialogController extends DialogController<{ params: ICour
      * @param listDocTags Get also tags in each document.
      * If false will also search for partial matches.
      */
-    private async getDocumentsByTag(tagName: string, exactMatch: boolean, listDocTags: boolean) {
-        const response = await to($http<ITaggedItem[]>({
-            method: "GET",
-            params: {
-                exact_search: exactMatch,
-                list_doc_tags: listDocTags,
-                name: tagName,
-            },
-            url: "/tags/getDocs",
-        }));
+    private async getDocumentsByTag(
+        tagName: string,
+        exactMatch: boolean,
+        listDocTags: boolean
+    ) {
+        const response = await to(
+            $http<ITaggedItem[]>({
+                method: "GET",
+                params: {
+                    exact_search: exactMatch,
+                    list_doc_tags: listDocTags,
+                    name: tagName,
+                },
+                url: "/tags/getDocs",
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -149,17 +174,28 @@ export class CourseListDialogController extends DialogController<{ params: ICour
                 for (const d of this.docList) {
                     let isSameSubject = false;
                     let isNonExpiredCourse = false;
-                    let passesFilter = false;  // Won't be added unless this is true.
-                    if (this.filterText.length === 0 ||
-                        d.title.toLowerCase().includes(this.filterText.toLowerCase())) {
+                    let passesFilter = false; // Won't be added unless this is true.
+                    if (
+                        this.filterText.length === 0 ||
+                        d.title
+                            .toLowerCase()
+                            .includes(this.filterText.toLowerCase())
+                    ) {
                         passesFilter = true;
                     }
                     for (const tag of d.tags) {
                         if (tag.type === TagType.Subject && tag.name === s) {
                             isSameSubject = true;
                         }
-                        if (tag.type === TagType.CourseCode && !tagIsExpired(tag)) {
-                            if (tag.name.toLowerCase().includes(this.filterText.toLowerCase())) {
+                        if (
+                            tag.type === TagType.CourseCode &&
+                            !tagIsExpired(tag)
+                        ) {
+                            if (
+                                tag.name
+                                    .toLowerCase()
+                                    .includes(this.filterText.toLowerCase())
+                            ) {
                                 passesFilter = true;
                             }
                             isNonExpiredCourse = true;
@@ -171,7 +207,12 @@ export class CourseListDialogController extends DialogController<{ params: ICour
                 }
                 // If a subject has no non-expired course documents in it, don't display it.
                 if (documents.length > 0) {
-                    this.grouped.push({subject: s, closed: close, docs: documents, subsubjects: []});
+                    this.grouped.push({
+                        subject: s,
+                        closed: close,
+                        docs: documents,
+                        subsubjects: [],
+                    });
                     close = true;
                 }
             } else {
@@ -229,10 +270,8 @@ export class CourseListDialogController extends DialogController<{ params: ICour
     }
 }
 
-registerDialogComponent(CourseListDialogController,
-    {
-        template:
-            `<tim-dialog>
+registerDialogComponent(CourseListDialogController, {
+    template: `<tim-dialog>
     <dialog-header>
     </dialog-header>
     <dialog-body>
@@ -278,8 +317,9 @@ registerDialogComponent(CourseListDialogController,
     </dialog-footer>
 </tim-dialog>
 `,
-    });
+});
 
 export async function showCourseListDialog(d: ICourseListParams) {
-    return await showDialog(CourseListDialogController, {params: () => d}).result;
+    return await showDialog(CourseListDialogController, {params: () => d})
+        .result;
 }

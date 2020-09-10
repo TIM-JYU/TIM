@@ -33,16 +33,24 @@ export abstract class Command {
         return this.name;
     }
 
-    public isLabel(): boolean { return false; }
+    public isLabel(): boolean {
+        return false;
+    }
 
-    public getParameterType(): ParameterType { return ParameterType.STRING; }
+    public getParameterType(): ParameterType {
+        return ParameterType.STRING;
+    }
 }
 
 /**
  * The parameters given to a command when it is executed.
  */
 export class CommandParameters<T> {
-    constructor(state: TapeState, mainParam: T, commandList: CommandInstance[]) {
+    constructor(
+        state: TapeState,
+        mainParam: T,
+        commandList: CommandInstance[]
+    ) {
         this.state = state;
         this.mainParam = mainParam;
         this.commandList = commandList;
@@ -94,27 +102,33 @@ class MemoryCommand extends Command {
         super(name, abbr);
     }
 
-    public execute(params: CommandParameters<unknown>) { }
+    public execute(params: CommandParameters<unknown>) {}
 
     public getParameterName() {
         return "Memory index";
     }
 
-    public getParameterType(): ParameterType { return ParameterType.NUMBER; }
+    public getParameterType(): ParameterType {
+        return ParameterType.NUMBER;
+    }
 }
 
 class Add extends MemoryCommand {
     constructor() {
-         super("ADD", "a");
+        super("ADD", "a");
     }
 
     public execute(params: CommandParameters<number>) {
         const memoryIndex = params.mainParam;
-        if (memoryIndex >= params.state.memory.length || params.state.hand == null) {
+        if (
+            memoryIndex >= params.state.memory.length ||
+            params.state.hand == null
+        ) {
             return;
         }
 
-        params.state.hand = params.state.hand + params.state.memory[memoryIndex];
+        params.state.hand =
+            params.state.hand + params.state.memory[memoryIndex];
     }
 }
 
@@ -125,11 +139,15 @@ class Sub extends MemoryCommand {
 
     public execute(params: CommandParameters<number>) {
         const memoryIndex = params.mainParam;
-        if (memoryIndex >= params.state.memory.length || params.state.hand == null) {
+        if (
+            memoryIndex >= params.state.memory.length ||
+            params.state.hand == null
+        ) {
             return;
         }
 
-        params.state.hand = params.state.hand - params.state.memory[memoryIndex];
+        params.state.hand =
+            params.state.hand - params.state.memory[memoryIndex];
     }
 }
 
@@ -163,11 +181,15 @@ class DefineLabel extends Command {
         super("Define Label", ".");
     }
 
-    public execute(params: CommandParameters<unknown>) { }
+    public execute(params: CommandParameters<unknown>) {}
 
-    public getParameterName() { return "Label"; }
+    public getParameterName() {
+        return "Label";
+    }
 
-    public isLabel() { return true; }
+    public isLabel() {
+        return true;
+    }
 
     public toString(param: string): string {
         return param + ":";
@@ -184,13 +206,17 @@ class Jump extends Command {
     }
 
     protected jumpToLabel(params: CommandParameters<unknown>) {
-        const index = params.commandList.findIndex((c) => c.command.isLabel() && c.parameter === params.mainParam);
+        const index = params.commandList.findIndex(
+            (c) => c.command.isLabel() && c.parameter === params.mainParam
+        );
         if (index > -1) {
             params.state.instructionPointer = index + 1;
         }
     }
 
-    public getParameterName() { return "Label"; }
+    public getParameterName() {
+        return "Label";
+    }
 }
 
 class JumpIfZero extends Jump {
@@ -216,7 +242,9 @@ class JumpIfNeg extends Jump {
         }
     }
 
-    public getParameterName() { return "Label"; }
+    public getParameterName() {
+        return "Label";
+    }
 }
 
 // </editor-fold>
@@ -276,37 +304,45 @@ export interface TapeAttrs {
 }
 
 function isiOS(): boolean {
-      const iDevices = [
+    const iDevices = [
         "iPad Simulator",
         "iPhone Simulator",
         "iPod Simulator",
         "iPad",
         "iPhone",
         "iPod",
-      ];
+    ];
 
-      if (!!navigator.platform) {
+    if (!!navigator.platform) {
         while (iDevices.length) {
-          if (navigator.platform === iDevices.pop()) { return true; }
+            if (navigator.platform === iDevices.pop()) {
+                return true;
+            }
         }
-      }
-      return false;
+    }
+    return false;
 }
 
-function scrollElementVisibleInParent(el: Element, par: Element, extraY: number) {
+function scrollElementVisibleInParent(
+    el: Element,
+    par: Element,
+    extraY: number
+) {
     // Scroll par window so that el comes visible if it is not visible
     // it is ensured that at least extraY times el hight is over or under el
     const rect = el.getBoundingClientRect();
     const prect = par.getBoundingClientRect();
 
     let dy = prect.top - rect.top;
-    if (dy > 0) { // el too high
+    if (dy > 0) {
+        // el too high
         par.scrollTop -= dy + extraY * rect.height;
         return false;
     }
 
-    dy = (prect.top + prect.height) - (rect.top + rect.height);
-    if (dy < 0) { // el too low
+    dy = prect.top + prect.height - (rect.top + rect.height);
+    if (dy < 0) {
+        // el too low
         par.scrollTop -= dy - extraY * rect.height;
         return false;
     }
@@ -321,8 +357,18 @@ export class TapeController implements IController {
 
     constructor(protected scope: IScope, protected element: JQLite) {
         this.state = new TapeState();
-        this.possibleCommandList = [new Input(), new Output(), new Add(), new Sub(),
-            new CopyTo(), new CopyFrom(), new DefineLabel(), new Jump("JUMP", "j"), new JumpIfZero(), new JumpIfNeg()];
+        this.possibleCommandList = [
+            new Input(),
+            new Output(),
+            new Add(),
+            new Sub(),
+            new CopyTo(),
+            new CopyFrom(),
+            new DefineLabel(),
+            new Jump("JUMP", "j"),
+            new JumpIfZero(),
+            new JumpIfNeg(),
+        ];
     }
 
     $onInit() {
@@ -375,24 +421,32 @@ export class TapeController implements IController {
             return;
         }
         if (this.textmode) {
-            const n = this.element.find(".textAreaRobotProgram").getSelection().start;
+            const n = this.element.find(".textAreaRobotProgram").getSelection()
+                .start;
             let r = 0;
             const text = this.programAsText;
             for (let i = 0; i < n; i++) {
-                if (text[i] === "\n") { r++; }
+                if (text[i] === "\n") {
+                    r++;
+                }
             }
             this.selectedCommandIndex = r;
         }
 
         const commandToAdd = this.possibleCommandList[this.newCommandIndex];
-        this.addCommand(commandToAdd, this.newCommandParameter, this.selectedCommandIndex);
+        this.addCommand(
+            commandToAdd,
+            this.newCommandParameter,
+            this.selectedCommandIndex
+        );
         if (this.selectedCommandIndex !== -1) {
             this.selectedCommandIndex++;
         }
-        if (this.textmode) { this.textAll(); }
+        if (this.textmode) {
+            this.textAll();
+        }
 
         this.checkCommandInView(this.selectedCommandIndex);
-
     }
 
     /**
@@ -402,7 +456,11 @@ export class TapeController implements IController {
      * @param parameterString The parameter of the command given as a string.
      * @param index (Optional) The place where the command is inserted in the program, if not to the end.
      */
-    private addCommand(commandToAdd: Command, parameterString: string, index: number = -1): boolean {
+    private addCommand(
+        commandToAdd: Command,
+        parameterString: string,
+        index: number = -1
+    ): boolean {
         let parameter;
 
         // TODO maybe move parameter validation to the commands themselves?
@@ -410,12 +468,16 @@ export class TapeController implements IController {
             if (commandToAdd.getParameterType() === ParameterType.NUMBER) {
                 parameter = parseInt(parameterString, 10);
                 // for now we assume all numbers are memory indexes
-                if (isNaN(parameter) || parameter < 0 || parameter >= this.state.memory.length) {
+                if (
+                    isNaN(parameter) ||
+                    parameter < 0 ||
+                    parameter >= this.state.memory.length
+                ) {
                     return false;
                 }
             } else {
-                if (parameterString === "" ||
-                    parameterString.includes(" ")) { // don't allow spaces to make parsing easier
+                if (parameterString === "" || parameterString.includes(" ")) {
+                    // don't allow spaces to make parsing easier
                     // TODO show error?
                     return false;
                 }
@@ -433,9 +495,14 @@ export class TapeController implements IController {
     }
 
     private checkCommandInView(n: number) {
-        if (this.commandList.length > 10) { // long program, ensure command is visible
-            if (n >= this.commandList.length) { n = this.commandList.length - 1; }
-            if (n < 0) { return; }
+        if (this.commandList.length > 10) {
+            // long program, ensure command is visible
+            if (n >= this.commandList.length) {
+                n = this.commandList.length - 1;
+            }
+            if (n < 0) {
+                return;
+            }
             const cmdul = this.element.find(".cmditems");
             const cmdli = cmdul.children()[n];
             scrollElementVisibleInParent(cmdli, cmdul[0], 1);
@@ -451,7 +518,10 @@ export class TapeController implements IController {
      */
     private step() {
         this.changeList();
-        if (this.state.instructionPointer >= this.commandList.length || this.state.stopped) {
+        if (
+            this.state.instructionPointer >= this.commandList.length ||
+            this.state.stopped
+        ) {
             if (this.timer) {
                 this.stop();
                 this.scope.$apply();
@@ -461,7 +531,13 @@ export class TapeController implements IController {
 
         const command = this.commandList[this.state.instructionPointer];
         this.state.instructionPointer++;
-        command.command.execute(new CommandParameters(this.state, command.parameter, this.commandList));
+        command.command.execute(
+            new CommandParameters(
+                this.state,
+                command.parameter,
+                this.commandList
+            )
+        );
 
         this.checkCurrentCommandInView();
     }
@@ -475,7 +551,10 @@ export class TapeController implements IController {
      * Handles clicks on the Run / Stop button.
      */
     private run() {
-        if (this.state.instructionPointer >= this.commandList.length || this.state.stopped) {
+        if (
+            this.state.instructionPointer >= this.commandList.length ||
+            this.state.stopped
+        ) {
             return;
         }
 
@@ -487,15 +566,21 @@ export class TapeController implements IController {
     }
 
     private static arrayFromString(s?: string): number[] {
-        if (!s) { return []; }
+        if (!s) {
+            return [];
+        }
         s = s.trim();
-        if (s === "") { return []; }
+        if (s === "") {
+            return [];
+        }
 
         const result = [];
         const pieces = s.split(",");
         for (const n of pieces) {
             let val = Number(n.trim());
-            if (!val) { val = 0; }
+            if (!val) {
+                val = 0;
+            }
             result.push(val);
         }
         return result;
@@ -513,7 +598,7 @@ export class TapeController implements IController {
 
         this.state.stopped = false;
 
-        this.state.input = TapeController.arrayFromString(this.inputString);  // Array.from(this.data.presetInput);
+        this.state.input = TapeController.arrayFromString(this.inputString); // Array.from(this.data.presetInput);
 
         if (this.data.presetHand) {
             this.state.hand = this.data.presetHand;
@@ -529,9 +614,13 @@ export class TapeController implements IController {
 
         this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-        const memState = TapeController.arrayFromString(this.memString);  // Array.from(this.data.presetInput);
+        const memState = TapeController.arrayFromString(this.memString); // Array.from(this.data.presetInput);
 
-        for (let i = 0; i < memState.length && i < this.state.memory.length; i++) {
+        for (
+            let i = 0;
+            i < memState.length && i < this.state.memory.length;
+            i++
+        ) {
             this.state.memory[i] = memState[i];
         }
 
@@ -560,7 +649,10 @@ export class TapeController implements IController {
      * Handles clicks on the "Remove command" button.
      */
     private removeCommand() {
-        if (this.selectedCommandIndex > -1 && this.selectedCommandIndex < this.commandList.length) {
+        if (
+            this.selectedCommandIndex > -1 &&
+            this.selectedCommandIndex < this.commandList.length
+        ) {
             this.commandList.splice(this.selectedCommandIndex, 1);
         }
         // this.textAll();
@@ -572,16 +664,19 @@ export class TapeController implements IController {
 
     private selectAllText(name: string, newtext: string) {
         const jh = this.element.find(name);
-        if (newtext) { jh.val(newtext); }
+        if (newtext) {
+            jh.val(newtext);
+        }
         const h = jh[0] as HTMLTextAreaElement;
-        if (!h) { return; }
+        if (!h) {
+            return;
+        }
         if (this.iOS) {
             h.focus();
-            h.setSelectionRange(0, 99999);  // select is not working in iOS
+            h.setSelectionRange(0, 99999); // select is not working in iOS
         } else {
             jh.select();
         }
-
     }
 
     private copyAll() {
@@ -595,27 +690,37 @@ export class TapeController implements IController {
     }
 
     private paste() {
-        if (this.programAsText === "") { return; }
+        if (this.programAsText === "") {
+            return;
+        }
         this.commandList = [];
         this.fromText(this.programAsText);
     }
 
     private changeList() {
-        if (!this.textmode) { return; }
+        if (!this.textmode) {
+            return;
+        }
         this.textmode = false;
         this.textmodeCB = false;
         this.paste();
     }
 
     private changeText() {
-        if (this.textmode) { return; }
+        if (this.textmode) {
+            return;
+        }
         this.textmode = true;
         this.textmodeCB = true;
         this.textAll();
     }
 
     private changeMode() {
-        if (this.textmode) { this.changeList(); } else { this.changeText(); }
+        if (this.textmode) {
+            this.changeList();
+        } else {
+            this.changeText();
+        }
     }
 
     /**
@@ -625,7 +730,7 @@ export class TapeController implements IController {
         let result: string = "";
         // this.commandList.forEach(c => result += `${c.command.name} ${c.parameter}\n`);
         for (const c of this.commandList) {
-             result += c.command.toString(c.parameter) + "\n";
+            result += c.command.toString(c.parameter) + "\n";
         }
         return result;
     }
@@ -646,9 +751,14 @@ export class TapeController implements IController {
             const colonIndex = line.indexOf(":");
             if (colonIndex == line.length - 1 && line.length > 1) {
                 // label found
-                const defineLabelCommand = this.possibleCommandList.find((c) => c.name === "Define Label");
+                const defineLabelCommand = this.possibleCommandList.find(
+                    (c) => c.name === "Define Label"
+                );
                 if (defineLabelCommand) {
-                    this.addCommand(defineLabelCommand, line.slice(0, line.length - 1));
+                    this.addCommand(
+                        defineLabelCommand,
+                        line.slice(0, line.length - 1)
+                    );
                 }
 
                 continue;
@@ -685,7 +795,9 @@ export class TapeController implements IController {
             }
 
             const name = components[0].trim().toUpperCase();
-            const command = this.possibleCommandList.find((c) => c.name === name);
+            const command = this.possibleCommandList.find(
+                (c) => c.name === name
+            );
             if (!command) {
                 continue;
             }

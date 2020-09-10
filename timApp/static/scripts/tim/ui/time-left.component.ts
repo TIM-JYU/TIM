@@ -41,7 +41,10 @@ export class TimeLeftComponent {
     isLowTime = false;
     isGlowing = false;
     isTimeUp = false;
-    settings: ITimeLeftSettings = {...TIME_LEFT_DEFAULTS, ...documentglobals()?.docSettings?.timeLeft};
+    settings: ITimeLeftSettings = {
+        ...TIME_LEFT_DEFAULTS,
+        ...documentglobals()?.docSettings?.timeLeft,
+    };
     syncInterval = this.settings.sync_interval;
     syncIntervalDeviation = this.settings.sync_interval_deviation;
 
@@ -49,7 +52,10 @@ export class TimeLeftComponent {
         this.isLowTime = true;
         this.syncInterval = this.settings.low_time_sync_interval;
         this.syncIntervalDeviation = this.settings.low_time_sync_deviation;
-        if (this.settings.low_time_glow_duration >= this.settings.low_time_glow_period) {
+        if (
+            this.settings.low_time_glow_duration >=
+            this.settings.low_time_glow_period
+        ) {
             this.isGlowing = true;
         } else {
             this.glow();
@@ -59,20 +65,28 @@ export class TimeLeftComponent {
     async glow() {
         while (true) {
             this.isGlowing = true;
-            if (await this.wait(this.settings.low_time_glow_duration)) { return; }
+            if (await this.wait(this.settings.low_time_glow_duration)) {
+                return;
+            }
             this.isGlowing = false;
-            if (await this.wait(this.settings.low_time_glow_period)) { return; }
+            if (await this.wait(this.settings.low_time_glow_period)) {
+                return;
+            }
         }
     }
 
     private wait(seconds: number) {
-        return new Promise<boolean>((resolve) => setTimeout(() => resolve(this.isTimeUp), seconds * 1000));
+        return new Promise<boolean>((resolve) =>
+            setTimeout(() => resolve(this.isTimeUp), seconds * 1000)
+        );
     }
 
     onTimeUp() {
         this.isLowTime = false;
         this.isGlowing = false;
         this.isTimeUp = true;
-        showMessageDialog($localize`:@@timeUpMessage:Time is up. You can still save answers for a while, but any new saves will be marked as late.`);
+        showMessageDialog(
+            $localize`:@@timeUpMessage:Time is up. You can still save answers for a while, but any new saves will be marked as late.`
+        );
     }
 }

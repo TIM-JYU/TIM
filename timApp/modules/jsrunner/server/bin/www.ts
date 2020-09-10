@@ -44,14 +44,12 @@ function normalizePort(val: string) {
 /**
  * Event listener for HTTP server "error" event.
  */
-function onError(error: {syscall?: string, code?: string}) {
+function onError(error: {syscall?: string; code?: string}) {
     if (error.syscall !== "listen") {
         throw error;
     }
 
-    const bind = typeof port === "string"
-        ? "Pipe " + port
-        : "Port " + port;
+    const bind = typeof port === "string" ? "Pipe " + port : "Port " + port;
 
     // handle specific listen errors with friendly messages
     switch (error.code) {
@@ -74,9 +72,8 @@ function onError(error: {syscall?: string, code?: string}) {
 function onListening() {
     const addr = server.address();
     if (addr !== null) {
-        const bind = typeof addr === "string"
-            ? "pipe " + addr
-            : "port " + addr.port;
+        const bind =
+            typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
         debug("Listening on " + bind);
     } else {
         debug("addr is null!");

@@ -10,7 +10,15 @@
 
 import {Users} from "tim/user/userService";
 import deepEqual from "deep-equal";
-import {AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild} from "@angular/core";
+import {
+    AfterViewInit,
+    Component,
+    ElementRef,
+    Input,
+    OnDestroy,
+    OnInit,
+    ViewChild,
+} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {deserialize} from "typescript-json-serializer";
 import {DrawObject} from "tim/plugin/drawCanvas";
@@ -19,7 +27,11 @@ import {showMessageDialog} from "../ui/dialog";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
 import {clone, isInViewport, Result, scrollToElement, to} from "../util/utils";
-import {Annotation, IAnnotationEditableValues, IAnnotationInterval} from "./velptypes";
+import {
+    Annotation,
+    IAnnotationEditableValues,
+    IAnnotationInterval,
+} from "./velptypes";
 
 /**
  * Lists the possible reasons why an annotation is added to the document.
@@ -45,8 +57,16 @@ export interface IAnnotationBindings {
     defaultcomment: string;
 }
 
-export async function updateAnnotationServer(updatevalues: IAnnotationEditableValues & { id: number, coord?: IAnnotationInterval, draw_data?: DrawObject[] }): Promise<Result<Annotation, string>> {
-    const r2 = await to($http.post<Record<string, unknown>>("/update_annotation", updatevalues));
+export async function updateAnnotationServer(
+    updatevalues: IAnnotationEditableValues & {
+        id: number;
+        coord?: IAnnotationInterval;
+        draw_data?: DrawObject[];
+    }
+): Promise<Result<Annotation, string>> {
+    const r2 = await to(
+        $http.post<Record<string, unknown>>("/update_annotation", updatevalues)
+    );
     if (!r2.ok) {
         return {ok: false, result: r2.result.data.error};
     }
@@ -171,7 +191,8 @@ export async function updateAnnotationServer(updatevalues: IAnnotationEditableVa
     `,
     styleUrls: ["./annotation.component.scss"],
 })
-export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IAnnotationBindings {
+export class AnnotationComponent
+    implements OnDestroy, OnInit, AfterViewInit, IAnnotationBindings {
     private ctrlDown = false;
     visibleOptions = {
         values: [
@@ -200,7 +221,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     @ViewChild("inlineSpan") inlineSpan!: ElementRef<HTMLSpanElement>;
     @ViewChild("contentSpan") contentSpan!: ElementRef<HTMLSpanElement>;
 
-    @ViewChild("inlineDiv") set inlineDiv(div: ElementRef<HTMLDivElement>)  {
+    @ViewChild("inlineDiv") set inlineDiv(div: ElementRef<HTMLDivElement>) {
         if (div && this.isImageAnnotation()) {
             this.adjustAnnotationInPicturePosition(div.nativeElement);
         }
@@ -216,7 +237,9 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
             this.show = true;
             this.updateZIndex();
             if (this.inlineDiv) {
-                this.adjustAnnotationInPicturePosition(this.inlineDiv.nativeElement);
+                this.adjustAnnotationInPicturePosition(
+                    this.inlineDiv.nativeElement
+                );
             }
         }
         this.toggleElementBorder();
@@ -243,7 +266,9 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     }
 
     getSelectedVisibleOption() {
-        return this.visibleOptions.values.find((o) => o.id === this.values.visible_to)!;
+        return this.visibleOptions.values.find(
+            (o) => o.id === this.values.visible_to
+        )!;
     }
 
     ngOnInit() {
@@ -265,11 +290,14 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     }
 
     private isInMargin() {
-        return (this.placement !== AnnotationPlacement.AccuratelyPositioned);
+        return this.placement !== AnnotationPlacement.AccuratelyPositioned;
     }
 
     isImageAnnotation(): boolean {
-        return (this.placement == AnnotationPlacement.AccuratelyPositioned && this.annotation.draw_data != undefined);
+        return (
+            this.placement == AnnotationPlacement.AccuratelyPositioned &&
+            this.annotation.draw_data != undefined
+        );
     }
 
     ngAfterViewInit() {
@@ -283,7 +311,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
      * @param div Annotation info div
      */
     adjustAnnotationInPicturePosition(div: HTMLDivElement) {
-        if (!(this.isImageAnnotation())) {
+        if (!this.isImageAnnotation()) {
             return;
         }
         let left = 0;
@@ -299,7 +327,7 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         const drawingHeight = this.element[0].clientHeight;
         const drawingTop = this.element[0].offsetTop;
         const annHeight = div.clientHeight;
-        const containerHeight =  this.element.parent()[0].clientHeight;
+        const containerHeight = this.element.parent()[0].clientHeight;
         let top = drawingHeight;
         if (drawingTop + drawingHeight + annHeight > containerHeight) {
             if (drawingTop - annHeight >= 0) {
@@ -329,9 +357,13 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
 
     toggleElementBorder() {
         if (this.isImageAnnotation()) {
-            const innerRectangle = this.element.find(".annotation-picture-element");
+            const innerRectangle = this.element.find(
+                ".annotation-picture-element"
+            );
             if (innerRectangle[0]) {
-                innerRectangle[0].style.border = this.show ? "1px solid #000000" : "none";
+                innerRectangle[0].style.border = this.show
+                    ? "1px solid #000000"
+                    : "none";
             }
         }
     }
@@ -392,10 +424,12 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
 
         // Add comment
         if (this.commentChanged()) {
-            const r = await to($http.post<Record<string, unknown>>(
-                "/add_annotation_comment",
-                {id: id, content: this.newcomment},
-            ));
+            const r = await to(
+                $http.post<Record<string, unknown>>("/add_annotation_comment", {
+                    id: id,
+                    content: this.newcomment,
+                })
+            );
             if (!r.ok) {
                 return;
             }
@@ -403,7 +437,6 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
             this.newcomment = "";
         }
         if (this.valuesChanged()) {
-
             const updatevalues = {
                 id: id,
                 ...this.values,
@@ -466,7 +499,10 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
         if (event.keyCode === KEY_CTRL) {
             this.ctrlDown = true;
         }
-        if (this.ctrlDown && (event.which === KEY_S || event.keyCode === KEY_ENTER)) {
+        if (
+            this.ctrlDown &&
+            (event.which === KEY_S || event.keyCode === KEY_ENTER)
+        ) {
             event.preventDefault();
             this.ctrlDown = false;
             if (this.hasChanged()) {

@@ -3,8 +3,18 @@
  */
 import angular from "angular"; // , {INgModelOptions}
 import * as t from "io-ts";
-import {FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {
+    FormModeOption,
+    ISetAnswerResult,
+    ITimComponent,
+    ViewCtrl,
+} from "tim/document/viewctrl";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
@@ -42,7 +52,13 @@ const CbcountfieldAll = t.intersection([
     }),
 ]);
 
-class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMarkup>, t.TypeOf<typeof CbcountfieldAll>, typeof CbcountfieldAll> implements ITimComponent {
+class CbcountfieldController
+    extends PluginBase<
+        t.TypeOf<typeof CbcountfieldMarkup>,
+        t.TypeOf<typeof CbcountfieldAll>,
+        typeof CbcountfieldAll
+    >
+    implements ITimComponent {
     private result?: string;
     private isRunning = false;
     private userword: boolean = false;
@@ -51,7 +67,10 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
     private initialValue: boolean = false;
     private errormessage?: string;
     private hideSavedText = true;
-    private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
+    private saveResponse: {saved: boolean; message: string | undefined} = {
+        saved: false,
+        message: undefined,
+    };
     private preventedAutosave = false;
     private count = 0;
 
@@ -67,16 +86,27 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
     }
 
     static makeBoolean(s: string): boolean {
-        if (s == "") { return false; }
-        if (s == "0") { return false; }
-        if (s == "false") { return false; }
-        if (s == "1") { return true; }
+        if (s == "") {
+            return false;
+        }
+        if (s == "0") {
+            return false;
+        }
+        if (s == "false") {
+            return false;
+        }
+        if (s == "1") {
+            return true;
+        }
         return true;
     }
 
     $onInit() {
         super.$onInit();
-        const uw = (valueOr(this.attrsall.state?.c, this.attrs.initword ?? "")).toString();
+        const uw = valueOr(
+            this.attrsall.state?.c,
+            this.attrs.initword ?? ""
+        ).toString();
         this.userword = CbcountfieldController.makeBoolean(uw);
         this.count = this.attrsall.count ?? 0;
 
@@ -86,7 +116,9 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
             this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
-        if (this.attrs.showname) { this.initCode(); }
+        if (this.attrs.showname) {
+            this.initCode();
+        }
     }
 
     /**
@@ -114,7 +146,7 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
-    setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
+    setAnswer(content: {[index: string]: unknown}): ISetAnswerResult {
         this.errormessage = undefined;
         let message;
         let ok = true;
@@ -123,17 +155,20 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
             this.resetField();
         } else {
             try {
-                this.userword = CbcountfieldController.makeBoolean(content.c as string);
+                this.userword = CbcountfieldController.makeBoolean(
+                    content.c as string
+                );
             } catch (e) {
                 this.userword = false;
                 ok = false;
-                message = `Couldn't find related content ("c") from ${JSON.stringify(content)}`;
+                message = `Couldn't find related content ("c") from ${JSON.stringify(
+                    content
+                )}`;
                 this.errormessage = message;
             }
         }
         this.initialValue = this.userword;
         return {ok: ok, message: message};
-
     }
 
     /**
@@ -147,14 +182,19 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
      * Returns (user) set col size (size of the field).
      */
     get cols() {
-        if (!this.attrs.cols) { return {}; }
+        if (!this.attrs.cols) {
+            return {};
+        }
         return {width: this.attrs.cols + "em", display: "inline-block"};
     }
 
     // noinspection JSUnusedGlobalSymbols
     get cbStyle() {
-        if (!this.inputstem && (this.stem || this.header)) { return {}; }
-        return { // otherwise input stem and cb are vertical
+        if (!this.inputstem && (this.stem || this.header)) {
+            return {};
+        }
+        return {
+            // otherwise input stem and cb are vertical
             width: "auto",
         };
     }
@@ -163,7 +203,9 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
      * Initialize content.
      */
     initCode() {
-        this.userword = CbcountfieldController.makeBoolean(this.attrs.initword ?? "");
+        this.userword = CbcountfieldController.makeBoolean(
+            this.attrs.initword ?? ""
+        );
         this.initialValue = this.userword;
         this.result = undefined;
     }
@@ -190,11 +232,17 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
-        return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
+        return (
+            this.attrs.readOnlyStyle == "plaintext" &&
+            window.location.pathname.startsWith("/view/")
+        );
     }
 
     isReadOnly() {
-        return (this.attrs.readOnlyStyle == "box" && window.location.pathname.startsWith("/view/")) ? "disable" : "";
+        return this.attrs.readOnlyStyle == "box" &&
+            window.location.pathname.startsWith("/view/")
+            ? "disable"
+            : "";
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -208,7 +256,7 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
         if (this.initialValue != this.userword) {
             this.hideSavedText = true;
         }
-        return (this.initialValue != this.userword);
+        return this.initialValue != this.userword;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -240,7 +288,9 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
         this.errormessage = undefined;
         this.isRunning = true;
         let c = "0";
-        if (this.userword) { c = "1"; }
+        if (this.userword) {
+            c = "1";
+        }
         this.result = undefined;
         const params = {
             input: {
@@ -253,7 +303,12 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {count: number, result: string, error?: string}}>(url, params));
+        const r = await to(
+            $http.put<{web: {count: number; result: string; error?: string}}>(
+                url,
+                params
+            )
+        );
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -267,7 +322,9 @@ class CbcountfieldController extends PluginBase<t.TypeOf<typeof CbcountfieldMark
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
         } else {
-            this.errormessage = r.result.data.error || "Syntax error, infinite loop or some other error?";
+            this.errormessage =
+                r.result.data.error ||
+                "Syntax error, infinite loop or some other error?";
         }
         return this.saveResponse;
     }

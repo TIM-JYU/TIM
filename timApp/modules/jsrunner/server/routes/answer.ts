@@ -7,7 +7,13 @@ import {isLeft} from "fp-ts/lib/Either";
 
 // import numberLines from "./runscript";
 import {Branded, IntBrand} from "io-ts";
-import {AnswerReturn, ErrorList, IError, IGroupData, IJsRunnerMarkup} from "../../shared/jsrunnertypes";
+import {
+    AnswerReturn,
+    ErrorList,
+    IError,
+    IGroupData,
+    IJsRunnerMarkup,
+} from "../../shared/jsrunnertypes";
 import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
 import {GTools, IToolsResult, Tools, ToolsBase} from "./tools";
 
@@ -42,14 +48,14 @@ interface IRunnerData {
 
 type RunnerResult =
     | {
-    output: string,
-    res: IToolsResult[],
-    errors: ErrorList,
-    fatalError?: never,
-    outdata: Record<string, unknown>,
-    groups: IGroupData,
-}
-    | {output: string, fatalError: IError, errorprg: string};
+          output: string;
+          res: IToolsResult[];
+          errors: ErrorList;
+          fatalError?: never;
+          outdata: Record<string, unknown>;
+          groups: IGroupData;
+      }
+    | {output: string; fatalError: IError; errorprg: string};
 
 /**
  * Runs jsrunner script with the provided data and returns the result.
@@ -59,15 +65,16 @@ type RunnerResult =
  * @param d The data to use.
  */
 function runner(d: IRunnerData): RunnerResult {
-
     // TODO: This is already in runscipt, but does not allow with 2 params???
     // And for some reason it is not found if it is outside this function???
     function numberLines2(s: string, delta: number): string {
-        if (!s) { return ""; }
+        if (!s) {
+            return "";
+        }
         const lines = s.split("\n");
         let result = "";
         for (let i = 0; i < lines.length; i++) {
-            const space = (i + delta < 10) ? "0" : "";
+            const space = i + delta < 10 ? "0" : "";
             result += space + (i + delta) + ": " + lines[i] + "\n";
         }
         return result;
@@ -87,14 +94,39 @@ function runner(d: IRunnerData): RunnerResult {
         // const guser1 = data[0];
         // const guser2 = data[data.length - 1];
 
-        const dummyUser = {user: {id: -1 as Branded<number, IntBrand>, name: "pre/post", real_name: "", email: ""},
-                       fields: {}, styles: {}};
+        const dummyUser = {
+            user: {
+                id: -1 as Branded<number, IntBrand>,
+                name: "pre/post",
+                real_name: "",
+                email: "",
+            },
+            fields: {},
+            styles: {},
+        };
         const dummyTools = new Tools(dummyUser, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
-        const gtools = new GTools(currDoc, markup, aliases, dummyTools, saveUsersFields); // create global tools
+        const gtools = new GTools(
+            currDoc,
+            markup,
+            aliases,
+            dummyTools,
+            saveUsersFields
+        ); // create global tools
         // Fake parameters hide the outer local variables so user script won't accidentally touch them.
         /* eslint-disable @typescript-eslint/no-shadow,no-eval */
-        function runProgram(program: string, pname: string, tools: ToolsBase, saveUsersFields?: never, output?: never, errors?: never,
-                            data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
+        function runProgram(
+            program: string,
+            pname: string,
+            tools: ToolsBase,
+            saveUsersFields?: never,
+            output?: never,
+            errors?: never,
+            data?: never,
+            d?: never,
+            currDoc?: never,
+            markup?: never,
+            aliases?: never
+        ) {
             errorprg = program;
             prgname = pname;
             eval(`function main() {${program}\n} main();`);
@@ -144,10 +176,12 @@ function runner(d: IRunnerData): RunnerResult {
             const prg = "\n" + prgname + ":\n" + numberLines2(errorprg, 1);
             errors.push({
                 user: "program",
-                errors: [{
-                    msg: "See program",
-                    stackTrace: prg,
-                }],
+                errors: [
+                    {
+                        msg: "See program",
+                        stackTrace: prg,
+                    },
+                ],
             });
         }
         return {
@@ -172,11 +206,17 @@ function runner(d: IRunnerData): RunnerResult {
             if (i1 >= 0) {
                 i1 += ano.length;
                 let i2 = stack.indexOf(")", i1);
-                if (i2 < 0) { i2 = stack.length - 1; }
+                if (i2 < 0) {
+                    i2 = stack.length - 1;
+                }
                 stack = "Index (" + stack.substring(i1 + 1, i2 + 1) + "\n";
             }
         }
-        return {output, fatalError: {msg: err.message, stackTrace: stack + prg}, errorprg};
+        return {
+            output,
+            fatalError: {msg: err.message, stackTrace: stack + prg},
+            errorprg,
+        };
     }
 }
 
@@ -199,7 +239,9 @@ router.put("/", async (req, res, next) => {
         inspector: false,
     });
 
-    const toolsScript = await isolate.compileScript(toolsSource, {filename: "tools.js"});
+    const toolsScript = await isolate.compileScript(toolsSource, {
+        filename: "tools.js",
+    });
 
     // Do not add more code inside the string. Edit the 'runner' function instead.
     const script = await isolate.compileScript(
@@ -209,7 +251,7 @@ router.put("/", async (req, res, next) => {
         JSON.stringify(runner(JSON.parse(g)))`,
         {
             filename: "script.js",
-        },
+        }
     );
     const ctx = await isolate.createContext({inspector: false});
     await toolsScript.run(ctx);
@@ -225,16 +267,18 @@ router.put("/", async (req, res, next) => {
     let r: AnswerReturn;
     try {
         const result: ReturnType<typeof runner> = JSON.parse(
-            await script.run(ctx, {timeout: value.markup.timeout ?? 1000}),
+            await script.run(ctx, {timeout: value.markup.timeout ?? 1000})
         );
 
         // console.log(JSON.stringify(result));
 
         if (result.fatalError) {
             const rese = result;
-            if (rese.errorprg) { // TODO: compile here, because I could not do it in runner???
+            if (rese.errorprg) {
+                // TODO: compile here, because I could not do it in runner???
                 const err = compileProgram(rese.errorprg);
-                result.fatalError.stackTrace = err + "\n" + result.fatalError.stackTrace;
+                result.fatalError.stackTrace =
+                    err + "\n" + result.fatalError.stackTrace;
             }
             r = {
                 web: {

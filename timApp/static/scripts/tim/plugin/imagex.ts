@@ -1,13 +1,26 @@
 import deepmerge from "deepmerge";
 import * as t from "io-ts";
-import {ApplicationRef, Component, DoBootstrap, ElementRef, NgModule, OnInit, StaticProvider} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    OnInit,
+    StaticProvider,
+} from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {DrawToolbarModule, DrawType, IDrawOptions, IDrawVisibleOptions} from "tim/plugin/drawToolbar";
+import {
+    DrawToolbarModule,
+    DrawType,
+    IDrawOptions,
+    IDrawVisibleOptions,
+} from "tim/plugin/drawToolbar";
 import {$http, $sce, $timeout} from "../util/ngimport";
 import {TimDefer} from "../util/timdefer";
 import {
@@ -66,7 +79,10 @@ export function tupleToCoords(p: TuplePoint) {
     return {x: p[0], y: p[1]};
 }
 
-function tupleToSizedOrDef(p: SizeT | undefined | null, def: ISizedPartial | undefined) {
+function tupleToSizedOrDef(
+    p: SizeT | undefined | null,
+    def: ISizedPartial | undefined
+) {
     return p ? {width: p[0], height: p[1]} : def;
 }
 
@@ -81,7 +97,11 @@ export class FreeHand {
     private lastVT?: number;
     private ctx: CanvasRenderingContext2D;
 
-    constructor(imgx: ImageXComponent, drawData: ILineSegment[], player: HTMLVideoElement | undefined) {
+    constructor(
+        imgx: ImageXComponent,
+        drawData: ILineSegment[],
+        player: HTMLVideoElement | undefined
+    ) {
         this.freeDrawing = drawData;
         this.ctx = imgx.getCanvasCtx();
         this.emotion = imgx.emotion;
@@ -90,9 +110,19 @@ export class FreeHand {
         if (this.emotion && this.imgx.teacherMode) {
             if (!isFakePlayer(this.videoPlayer)) {
                 if (this.imgx.markup.analyzeDot) {
-                    this.videoPlayer.ontimeupdate = () => this.drawCirclesVideoDot(this.ctx, this.freeDrawing, this.videoPlayer);
+                    this.videoPlayer.ontimeupdate = () =>
+                        this.drawCirclesVideoDot(
+                            this.ctx,
+                            this.freeDrawing,
+                            this.videoPlayer
+                        );
                 } else {
-                    this.videoPlayer.ontimeupdate = () => this.drawCirclesVideo(this.ctx, this.freeDrawing, this.videoPlayer);
+                    this.videoPlayer.ontimeupdate = () =>
+                        this.drawCirclesVideo(
+                            this.ctx,
+                            this.freeDrawing,
+                            this.videoPlayer
+                        );
                 }
             }
         }
@@ -102,7 +132,11 @@ export class FreeHand {
         if (this.emotion) {
             if (this.imgx.teacherMode) {
                 if (isFakePlayer(this.videoPlayer)) {
-                    this.drawCirclesVideo(ctx, this.freeDrawing, this.videoPlayer);
+                    this.drawCirclesVideo(
+                        ctx,
+                        this.freeDrawing,
+                        this.videoPlayer
+                    );
                 }
             }
         } else {
@@ -134,8 +168,12 @@ export class FreeHand {
             if (this.freeDrawing.length != 0) {
                 return;
             }
-            p = [Math.round(pxy.x), Math.round(pxy.y),
-                Date.now() / 1000, this.videoPlayer.currentTime];
+            p = [
+                Math.round(pxy.x),
+                Math.round(pxy.y),
+                Date.now() / 1000,
+                this.videoPlayer.currentTime,
+            ];
         } else {
             p = [Math.round(pxy.x), Math.round(pxy.y)];
         }
@@ -154,8 +192,12 @@ export class FreeHand {
         }
         let p: TuplePoint;
         if (this.emotion) {
-            p = [Math.round(pxy.x), Math.round(pxy.y),
-                Date.now() / 1000, this.videoPlayer.currentTime];
+            p = [
+                Math.round(pxy.x),
+                Math.round(pxy.y),
+                Date.now() / 1000,
+                this.videoPlayer.currentTime,
+            ];
         } else {
             p = [Math.round(pxy.x), Math.round(pxy.y)];
         }
@@ -243,7 +285,11 @@ export class FreeHand {
     //     this.setLineMode(!this.imgx.lineMode);
     // }
 
-    line(ctx: CanvasRenderingContext2D, p1: TuplePoint | undefined, p2: IPoint) {
+    line(
+        ctx: CanvasRenderingContext2D,
+        p1: TuplePoint | undefined,
+        p2: IPoint
+    ) {
         if (!p1 || !p2) {
             return;
         }
@@ -256,7 +302,11 @@ export class FreeHand {
     }
 
     // TODO get rid of type assertions ("as number")
-    drawCirclesVideoDot(ctx: CanvasRenderingContext2D, dr: ILineSegment[], videoPlayer: VideoPlayer) {
+    drawCirclesVideoDot(
+        ctx: CanvasRenderingContext2D,
+        dr: ILineSegment[],
+        videoPlayer: VideoPlayer
+    ) {
         for (const seg of dr) {
             const vt = videoPlayer.currentTime;
             // console.log("vt: " + vt + " " + this.lastDrawnSeg );
@@ -273,7 +323,12 @@ export class FreeHand {
 
             // console.log("" + seg1 + "-" + seg2 + ": " + seg.lines[seg2][3]);
             let drawDone = false;
-            if (this.imgx.markup.dotVisibleTime && this.lastVT && (vt - this.lastVT) > this.imgx.markup.dotVisibleTime) { // remove old dot if needed
+            if (
+                this.imgx.markup.dotVisibleTime &&
+                this.lastVT &&
+                vt - this.lastVT > this.imgx.markup.dotVisibleTime
+            ) {
+                // remove old dot if needed
                 this.imgx.draw();
                 drawDone = true;
             }
@@ -304,10 +359,23 @@ export class FreeHand {
                 ctx.lineTo(seg.lines[seg2][0], seg.lines[seg2][1]);
             }
             ctx.stroke();
-            drawFillCircle(ctx, 30, seg.lines[seg2][0], seg.lines[seg2][1], "black", 0.5);
+            drawFillCircle(
+                ctx,
+                30,
+                seg.lines[seg2][0],
+                seg.lines[seg2][1],
+                "black",
+                0.5
+            );
             if (this.imgx.markup.showTimes) {
                 s = dateToString(seg.lines[seg2][3] as number, false);
-                drawText(ctx, s, seg.lines[seg2][0], seg.lines[seg2][1], "13px Arial");
+                drawText(
+                    ctx,
+                    s,
+                    seg.lines[seg2][0],
+                    seg.lines[seg2][1],
+                    "13px Arial"
+                );
             }
 
             this.lastDrawnSeg = seg2;
@@ -315,7 +383,11 @@ export class FreeHand {
     }
 
     // TODO get rid of type assertions ("as number")
-    drawCirclesVideo(ctx: CanvasRenderingContext2D, dr: ILineSegment[], videoPlayer: VideoPlayer) {
+    drawCirclesVideo(
+        ctx: CanvasRenderingContext2D,
+        dr: ILineSegment[],
+        videoPlayer: VideoPlayer
+    ) {
         if (!isFakePlayer(videoPlayer)) {
             this.imgx.draw();
         }
@@ -333,7 +405,14 @@ export class FreeHand {
                 drawText(ctx, s, seg.lines[0][0], seg.lines[0][1]);
             } else {
                 if (vt >= (seg.lines[0][3] as number)) {
-                    drawFillCircle(ctx, 5, seg.lines[0][0], seg.lines[0][1], "black", 0.5);
+                    drawFillCircle(
+                        ctx,
+                        5,
+                        seg.lines[0][0],
+                        seg.lines[0][1],
+                        "black",
+                        0.5
+                    );
                 }
             }
             for (let lni = 1; lni < seg.lines.length; lni++) {
@@ -357,7 +436,10 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
     ctx.globalAlpha = seg.opacity ?? 1;
 }
 
-export function drawFreeHand(ctx: CanvasRenderingContext2D, dr: ILineSegment[]): void {
+export function drawFreeHand(
+    ctx: CanvasRenderingContext2D,
+    dr: ILineSegment[]
+): void {
     // console.log(dr);
     for (const seg of dr) {
         if (seg.lines.length < 2) {
@@ -384,10 +466,23 @@ function dateToString(d: number, h: boolean) {
     if (h) {
         hs = pad(dt.getHours(), 2) + ":";
     }
-    return hs + pad(dt.getMinutes(), 2) + ":" + pad(dt.getSeconds(), 2) + "." + pad(dt.getMilliseconds(), 3);
+    return (
+        hs +
+        pad(dt.getMinutes(), 2) +
+        ":" +
+        pad(dt.getSeconds(), 2) +
+        "." +
+        pad(dt.getMilliseconds(), 3)
+    );
 }
 
-function drawText(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, font = "10px Arial") {
+function drawText(
+    ctx: CanvasRenderingContext2D,
+    s: string,
+    x: number,
+    y: number,
+    font = "10px Arial"
+) {
     ctx.save();
     ctx.textBaseline = "top";
     ctx.font = font;
@@ -399,14 +494,27 @@ function drawText(ctx: CanvasRenderingContext2D, s: string, x: number, y: number
     ctx.restore();
 }
 
-function showTime(ctx: CanvasRenderingContext2D, vt: number, x: number, y: number, font: string) {
+function showTime(
+    ctx: CanvasRenderingContext2D,
+    vt: number,
+    x: number,
+    y: number,
+    font: string
+) {
     ctx.beginPath();
     const s = dateToString(vt, false);
     drawText(ctx, s, x, y, font);
     ctx.stroke();
 }
 
-function drawFillCircle(ctx: CanvasRenderingContext2D, r: number, p1: number, p2: number, c: string, tr: number) {
+function drawFillCircle(
+    ctx: CanvasRenderingContext2D,
+    r: number,
+    p1: number,
+    p2: number,
+    c: string,
+    tr: number
+) {
     const p = ctx;
     p.globalAlpha = tr;
     p.beginPath();
@@ -426,14 +534,18 @@ function toRange(range: TuplePoint, p: number) {
     return p;
 }
 
-function isObjectOnTopOf(position: IPoint, object: DrawObject, grabOffset: number) {
+function isObjectOnTopOf(
+    position: IPoint,
+    object: DrawObject,
+    grabOffset: number
+) {
     return object.isPointInside(position, grabOffset);
 }
 
 function areObjectsOnTopOf<T extends DrawObject>(
     position: IPoint,
     objects: T[],
-    grabOffset: number | undefined,
+    grabOffset: number | undefined
 ): T | undefined {
     for (const o of objects) {
         const collision = isObjectOnTopOf(position, o, grabOffset ?? 0);
@@ -455,11 +567,18 @@ class DragTask {
     private mousePosition: IPoint;
     private freeHand: FreeHand;
     private mouseDown = false;
-    private activeDragObject?: { obj: DragObject, xoffset: number, yoffset: number };
+    private activeDragObject?: {
+        obj: DragObject;
+        xoffset: number;
+        yoffset: number;
+    };
     public drawObjects: DrawObject[];
     public lines?: Line[];
 
-    constructor(private canvas: HTMLCanvasElement, private imgx: ImageXComponent) {
+    constructor(
+        private canvas: HTMLCanvasElement,
+        private imgx: ImageXComponent
+    ) {
         this.ctx = canvas.getContext("2d")!;
         this.drawObjects = [];
         this.mousePosition = {x: 0, y: 0};
@@ -497,51 +616,55 @@ class DragTask {
         });
 
         if (imgx.markup.freeHandShortCuts) {
-            this.canvas.addEventListener("keypress", (event) => {
-                const c = String.fromCharCode(event.keyCode);
-                if (event.keyCode === 26) {
-                    this.freeHand.popSegment(0);
-                }
-                if (c === "c") {
-                    this.freeHand.clear();
-                }
-                if (c === "r") {
-                    this.freeHand.setColor("#f00");
-                }
-                if (c === "b") {
-                    this.freeHand.setColor("#00f");
-                }
-                if (c === "y") {
-                    this.freeHand.setColor("#ff0");
-                }
-                if (c === "g") {
-                    this.freeHand.setColor("#0f0");
-                }
-                if (c === "+") {
-                    this.freeHand.incWidth(+1);
-                }
-                if (c === "-") {
-                    this.freeHand.incWidth(-1);
-                }
-                if (c === "1") {
-                    this.freeHand.setWidth(1);
-                }
-                if (c === "2") {
-                    this.freeHand.setWidth(2);
-                }
-                if (c === "3") {
-                    this.freeHand.setWidth(3);
-                }
-                if (c === "4") {
-                    this.freeHand.setWidth(4);
-                }
-                // if (c === "l") {
-                //     this.freeHand.flipLineMode();
-                // }
-                if (c === "f" && imgx.freeHandShortCut) {
-                    imgx.drawSettings.enabled = !imgx.drawSettings.enabled;
-                }
-            }, false);
+            this.canvas.addEventListener(
+                "keypress",
+                (event) => {
+                    const c = String.fromCharCode(event.keyCode);
+                    if (event.keyCode === 26) {
+                        this.freeHand.popSegment(0);
+                    }
+                    if (c === "c") {
+                        this.freeHand.clear();
+                    }
+                    if (c === "r") {
+                        this.freeHand.setColor("#f00");
+                    }
+                    if (c === "b") {
+                        this.freeHand.setColor("#00f");
+                    }
+                    if (c === "y") {
+                        this.freeHand.setColor("#ff0");
+                    }
+                    if (c === "g") {
+                        this.freeHand.setColor("#0f0");
+                    }
+                    if (c === "+") {
+                        this.freeHand.incWidth(+1);
+                    }
+                    if (c === "-") {
+                        this.freeHand.incWidth(-1);
+                    }
+                    if (c === "1") {
+                        this.freeHand.setWidth(1);
+                    }
+                    if (c === "2") {
+                        this.freeHand.setWidth(2);
+                    }
+                    if (c === "3") {
+                        this.freeHand.setWidth(3);
+                    }
+                    if (c === "4") {
+                        this.freeHand.setWidth(4);
+                    }
+                    // if (c === "l") {
+                    //     this.freeHand.flipLineMode();
+                    // }
+                    if (c === "f" && imgx.freeHandShortCut) {
+                        imgx.drawSettings.enabled = !imgx.drawSettings.enabled;
+                    }
+                },
+                false
+            );
         }
 
         // Lisatty eventlistenereiden poistamiseen.
@@ -588,10 +711,16 @@ class DragTask {
             const xlimits: [number, number] = dobj.obj.xlimits ?? [0, 1e100];
             const ylimits: [number, number] = dobj.obj.ylimits ?? [0, 1e100];
             if (dobj.obj.lock !== "x") {
-                dobj.obj.x = toRange(xlimits, this.mousePosition.x - dobj.xoffset);
+                dobj.obj.x = toRange(
+                    xlimits,
+                    this.mousePosition.x - dobj.xoffset
+                );
             }
             if (dobj.obj.lock !== "y") {
-                dobj.obj.y = toRange(ylimits, this.mousePosition.y - dobj.yoffset);
+                dobj.obj.y = toRange(
+                    ylimits,
+                    this.mousePosition.y - dobj.yoffset
+                );
             }
         }
         const targets = this.targets;
@@ -599,19 +728,28 @@ class DragTask {
             o.draw();
             if (o.name === "dragobject") {
                 if (this.activeDragObject) {
-                    const onTopOf = areObjectsOnTopOf(this.activeDragObject.obj,
-                        targets, this.imgx.grabOffset);
+                    const onTopOf = areObjectsOnTopOf(
+                        this.activeDragObject.obj,
+                        targets,
+                        this.imgx.grabOffset
+                    );
                     if (onTopOf && onTopOf.objectCount < onTopOf.maxObjects) {
                         onTopOf.state = TargetState.Snap;
                     }
-                    const onTopOfB = areObjectsOnTopOf(o,
-                        targets, this.imgx.grabOffset);
+                    const onTopOfB = areObjectsOnTopOf(
+                        o,
+                        targets,
+                        this.imgx.grabOffset
+                    );
                     if (onTopOfB && o !== this.activeDragObject.obj) {
                         onTopOfB.state = TargetState.Drop;
                     }
                 } else {
-                    const onTopOfA = areObjectsOnTopOf(o,
-                        targets, this.imgx.grabOffset);
+                    const onTopOfA = areObjectsOnTopOf(
+                        o,
+                        targets,
+                        this.imgx.grabOffset
+                    );
                     if (onTopOfA) {
                         onTopOfA.state = TargetState.Drop;
                     }
@@ -634,11 +772,22 @@ class DragTask {
         this.mousePosition = posToRelative(this.canvas, p);
         let active = areObjectsOnTopOf(this.mousePosition, this.dragobjects, 0);
         if (!active) {
-            active = areObjectsOnTopOf(this.mousePosition, this.dragobjects, this.imgx.grabOffset);
+            active = areObjectsOnTopOf(
+                this.mousePosition,
+                this.dragobjects,
+                this.imgx.grabOffset
+            );
         }
 
         if (this.imgx.emotion) {
-            drawFillCircle(this.ctx, 30, this.mousePosition.x, this.mousePosition.y, "black", 0.5);
+            drawFillCircle(
+                this.ctx,
+                30,
+                this.mousePosition.x,
+                this.mousePosition.y,
+                "black",
+                0.5
+            );
             this.freeHand.startSegmentDraw(this.mousePosition);
             this.freeHand.addPointDraw(this.ctx, this.mousePosition);
             if (this.imgx.markup.autosave) {
@@ -665,7 +814,9 @@ class DragTask {
         }
 
         if (this.imgx.attrsall.preview) {
-            this.imgx.coords = `[${Math.round(this.mousePosition.x)}, ${Math.round(this.mousePosition.y)}]`;
+            this.imgx.coords = `[${Math.round(
+                this.mousePosition.x
+            )}, ${Math.round(this.mousePosition.y)}]`;
             editorChangeValue(["position:"], this.imgx.coords);
         }
     }
@@ -685,7 +836,10 @@ class DragTask {
                 event.preventDefault();
             }
             if (!this.imgx.emotion) {
-                this.freeHand.addPointDraw(this.ctx, posToRelative(this.canvas, p));
+                this.freeHand.addPointDraw(
+                    this.ctx,
+                    posToRelative(this.canvas, p)
+                );
             }
         }
     }
@@ -698,14 +852,19 @@ class DragTask {
             }
             this.mousePosition = posToRelative(this.canvas, p);
 
-            const isTarget = areObjectsOnTopOf(this.activeDragObject.obj,
-                this.targets, undefined);
+            const isTarget = areObjectsOnTopOf(
+                this.activeDragObject.obj,
+                this.targets,
+                undefined
+            );
 
             if (isTarget) {
                 if (isTarget.objectCount < isTarget.maxObjects) {
                     if (isTarget.snap) {
-                        this.activeDragObject.obj.x = isTarget.x + isTarget.snapOffset.x;
-                        this.activeDragObject.obj.y = isTarget.y + isTarget.snapOffset.y;
+                        this.activeDragObject.obj.x =
+                            isTarget.x + isTarget.snapOffset.x;
+                        this.activeDragObject.obj.y =
+                            isTarget.y + isTarget.snapOffset.y;
                     }
                 }
             }
@@ -714,7 +873,6 @@ class DragTask {
             if (!this.imgx.emotion) {
                 this.draw();
             }
-
         } else if (this.mouseDown) {
             this.canvas.style.cursor = "default";
             this.mouseDown = false;
@@ -728,7 +886,12 @@ class DragTask {
         for (const d of answers) {
             for (const o of objects) {
                 if (o.id === d.id) {
-                    const line = new Line("green", 2, o, tupleToCoords(d.position));
+                    const line = new Line(
+                        "green",
+                        2,
+                        o,
+                        tupleToCoords(d.position)
+                    );
                     this.lines.push(line);
                 }
             }
@@ -776,14 +939,16 @@ class Pin {
 
     constructor(
         private values: RequiredNonNull<PinPropsT>,
-        defaultAlign: PinAlign,
+        defaultAlign: PinAlign
     ) {
         const a = values.position.align ?? defaultAlign;
         const {x, y} = alignToDir(a, 1 / Math.sqrt(2));
         const lngth = values.length;
         this.pos = {
             align: a,
-            coord: tupleToCoords(values.position.coord ?? [x * lngth, y * lngth]),
+            coord: tupleToCoords(
+                values.position.coord ?? [x * lngth, y * lngth]
+            ),
             start: tupleToCoords(values.position.start ?? [0, 0]),
         };
     }
@@ -812,7 +977,10 @@ class Pin {
             ctx.beginPath();
             ctx.moveTo(0, 0);
             ctx.lineWidth = this.values.linewidth;
-            ctx.lineTo(-(this.pos.coord.x - this.pos.start.x), -(this.pos.coord.y - this.pos.start.y));
+            ctx.lineTo(
+                -(this.pos.coord.x - this.pos.start.x),
+                -(this.pos.coord.y - this.pos.start.y)
+            );
             ctx.stroke();
         }
     }
@@ -833,7 +1001,9 @@ const toRadians = Math.PI / 180;
 
 type ImageLoadResult = HTMLImageElement | Event;
 
-abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropNames>> {
+abstract class ObjBase<
+    T extends RequireExcept<CommonPropsT, OptionalCommonPropNames>
+> {
     public x: number;
     public y: number;
     public a: number;
@@ -853,13 +1023,15 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
         return point(this.x + rotOff.x, this.y + rotOff.y);
     }
 
-    protected constructor(protected ctx: CanvasRenderingContext2D,
-                          protected values: T,
-                          public did: string) {
+    protected constructor(
+        protected ctx: CanvasRenderingContext2D,
+        protected values: T,
+        public did: string
+    ) {
         const z = values.position;
         this.x = z[0];
         this.y = z[1];
-        this.a = -(valueOr(this.values.a, 0));
+        this.a = -valueOr(this.values.a, 0);
         let s;
         if (ValidCoord.is(this.values.size)) {
             const [width, height] = this.values.size;
@@ -872,56 +1044,89 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
             case "img":
                 let img;
                 if (this.values.imgproperties) {
-                    [this.pendingImage, img] = loadImage(this.values.imgproperties.src);
+                    [this.pendingImage, img] = loadImage(
+                        this.values.imgproperties.src
+                    );
                     if (this.values.imgproperties.textbox) {
                         this.childShapes.push({
-                            p: this.values.textboxproperties ? tupleToCoords(this.values.textboxproperties.position ?? [0, 0]) : {
-                                x: 0,
-                                y: 0,
-                            },
-                            s: textboxFromProps(this.values, s, () => this.overrideColor, this.id),
+                            p: this.values.textboxproperties
+                                ? tupleToCoords(
+                                      this.values.textboxproperties
+                                          .position ?? [0, 0]
+                                  )
+                                : {
+                                      x: 0,
+                                      y: 0,
+                                  },
+                            s: textboxFromProps(
+                                this.values,
+                                s,
+                                () => this.overrideColor,
+                                this.id
+                            ),
                         });
                     }
                 } else {
-                    [this.pendingImage, img] = loadImage("/static/images/Imagex.png");
+                    [this.pendingImage, img] = loadImage(
+                        "/static/images/Imagex.png"
+                    );
                 }
                 this.mainShape = new DImage(img, s);
                 break;
             case "ellipse":
-                this.mainShape = new Ellipse(() => (this.overrideColor ?? this.values.color) ?? "black", 2, s);
+                this.mainShape = new Ellipse(
+                    () => this.overrideColor ?? this.values.color ?? "black",
+                    2,
+                    s
+                );
                 break;
             case "textbox":
-                this.mainShape = textboxFromProps(this.values, s, () => this.overrideColor, this.id);
+                this.mainShape = textboxFromProps(
+                    this.values,
+                    s,
+                    () => this.overrideColor,
+                    this.id
+                );
                 break;
             case "vector":
                 const vprops = this.values.vectorproperties ?? {};
                 this.mainShape = new Vector(
-                    () => (this.overrideColor ?? vprops.color) ?? this.values.color ?? "black",
+                    () =>
+                        this.overrideColor ??
+                        vprops.color ??
+                        this.values.color ??
+                        "black",
                     2,
                     s,
                     vprops.arrowheadwidth,
-                    vprops.arrowheadlength,
+                    vprops.arrowheadlength
                 );
                 break;
-            default: // rectangle
-                this.mainShape = new Rectangle(() => (this.overrideColor ?? this.values.color) ?? "black",
+            default:
+                // rectangle
+                this.mainShape = new Rectangle(
+                    () => this.overrideColor ?? this.values.color ?? "black",
                     "transparent",
                     this.values.borderWidth ?? 2,
                     0,
-                    s);
+                    s
+                );
                 break;
         }
     }
 
     isPointInside(p: IPoint, offset?: number) {
         // TODO check child shapes too
-        return this.mainShape.isNormalizedPointInsideShape(this.normalizePoint(p), offset);
+        return this.mainShape.isNormalizedPointInsideShape(
+            this.normalizePoint(p),
+            offset
+        );
     }
 
     normalizePoint(p: IPoint) {
         const {x, y} = this.center;
-        const xdiff = (p.x - x);
-        const ydiff = (p.y - y);
+        const xdiff = p.x - x;
+        const ydiff = p.y - y;
         return this.getRotatedPoint(xdiff, ydiff, -this.a);
     }
 
@@ -948,10 +1153,16 @@ abstract class ObjBase<T extends RequireExcept<CommonPropsT, OptionalCommonPropN
         this.ctx.save();
         this.mainShape.draw(this.ctx);
         this.ctx.restore();
-        this.ctx.translate(-this.mainShape.size.width / 2, -this.mainShape.size.height / 2);
+        this.ctx.translate(
+            -this.mainShape.size.width / 2,
+            -this.mainShape.size.height / 2
+        );
         for (const s of this.childShapes) {
             this.ctx.save();
-            this.ctx.translate(s.p.x + s.s.size.width / 2, s.p.y + s.s.size.height / 2);
+            this.ctx.translate(
+                s.p.x + s.s.size.width / 2,
+                s.p.y + s.s.size.height / 2
+            );
             s.s.draw(this.ctx);
             this.ctx.restore();
         }
@@ -968,25 +1179,28 @@ function setIdentityTransform(ctx: CanvasRenderingContext2D) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
-function textboxFromProps(values: { textboxproperties?: TextboxPropsT | null, color?: string | null },
-                          s: ISizedPartial | undefined,
-                          overrideColorFn: () => string | undefined,
-                          defaultText: string) {
+function textboxFromProps(
+    values: {textboxproperties?: TextboxPropsT | null; color?: string | null},
+    s: ISizedPartial | undefined,
+    overrideColorFn: () => string | undefined,
+    defaultText: string
+) {
     const props = values.textboxproperties ?? {};
     return new Textbox(
-        () => (overrideColorFn() ?? props.borderColor) ?? values.color ?? "black",
+        () => overrideColorFn() ?? props.borderColor ?? values.color ?? "black",
         props.textColor ?? "black",
         props.fillColor ?? "white",
         valueOr(props.borderWidth, 2),
         valueOr(props.cornerradius, 2),
         tupleToSizedOrDef(props.size, s),
         props.text ?? defaultText,
-        props.font ?? "14px Arial",
+        props.font ?? "14px Arial"
     );
 }
 
-class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>> {
-
+class DragObject extends ObjBase<
+    RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>
+> {
     public name: "dragobject" = "dragobject";
     private pin: Pin;
 
@@ -1002,18 +1216,23 @@ class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObj
         return this.values.ylimits;
     }
 
-    constructor(ctx: CanvasRenderingContext2D,
-                values: RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>,
-                defId: string) {
+    constructor(
+        ctx: CanvasRenderingContext2D,
+        values: RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>,
+        defId: string
+    ) {
         super(ctx, values, defId);
-        this.pin = new Pin({
-            color: values.pin.color ?? "blue",
-            dotRadius: valueOr(values.pin.dotRadius, 3),
-            length: valueOr(values.pin.length, 15),
-            linewidth: valueOr(values.pin.linewidth, 2),
-            position: values.pin.position ?? {},
-            visible: valueOr(values.pin.visible, true),
-        }, this.values.type === "vector" ? "west" : "northwest");
+        this.pin = new Pin(
+            {
+                color: values.pin.color ?? "blue",
+                dotRadius: valueOr(values.pin.dotRadius, 3),
+                length: valueOr(values.pin.length, 15),
+                linewidth: valueOr(values.pin.linewidth, 2),
+                position: values.pin.position ?? {},
+                visible: valueOr(values.pin.visible, true),
+            },
+            this.values.type === "vector" ? "west" : "northwest"
+        );
     }
 
     draw() {
@@ -1032,7 +1251,9 @@ class DragObject extends ObjBase<RequireExcept<DragObjectPropsT, OptionalDragObj
     }
 }
 
-class Target extends ObjBase<RequireExcept<TargetPropsT, OptionalTargetPropNames>> {
+class Target extends ObjBase<
+    RequireExcept<TargetPropsT, OptionalTargetPropNames>
+> {
     public name: "target" = "target";
     objectCount = 0;
     maxObjects = 1000;
@@ -1057,19 +1278,25 @@ class Target extends ObjBase<RequireExcept<TargetPropsT, OptionalTargetPropNames
         }
     }
 
-    constructor(ctx: CanvasRenderingContext2D,
-                values: RequireExcept<TargetPropsT, OptionalTargetPropNames>,
-                defId: string) {
+    constructor(
+        ctx: CanvasRenderingContext2D,
+        values: RequireExcept<TargetPropsT, OptionalTargetPropNames>,
+        defId: string
+    ) {
         super(ctx, values, defId);
     }
 }
 
-class FixedObject extends ObjBase<RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>> {
+class FixedObject extends ObjBase<
+    RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>
+> {
     public name: "fixedobject" = "fixedobject";
 
-    constructor(ctx: CanvasRenderingContext2D,
-                values: RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>,
-                defId: string) {
+    constructor(
+        ctx: CanvasRenderingContext2D,
+        values: RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>,
+        defId: string
+    ) {
         super(ctx, values, defId);
     }
 
@@ -1084,9 +1311,7 @@ function isSized(s: ISizedPartial): s is ISized {
 }
 
 abstract class Shape {
-    protected constructor(protected explicitSize: ISizedPartial | undefined) {
-
-    }
+    protected constructor(protected explicitSize: ISizedPartial | undefined) {}
 
     /**
      * Size of the object if no size has been explicitly set.
@@ -1101,7 +1326,10 @@ abstract class Shape {
                 return this.explicitSize;
             } else {
                 const p = this.preferredSize;
-                return {width: this.explicitSize.width, height: this.explicitSize.width * p.height / p.width};
+                return {
+                    width: this.explicitSize.width,
+                    height: (this.explicitSize.width * p.height) / p.width,
+                };
             }
         } else {
             return this.preferredSize;
@@ -1118,8 +1346,9 @@ abstract class Shape {
         const s = this.size;
         const r1 = s.width + (offset ?? 0);
         const r2 = s.height + (offset ?? 0);
-        return p.x >= -r1 / 2 && p.x <= r1 / 2 &&
-            p.y >= -r2 / 2 && p.y <= r2 / 2;
+        return (
+            p.x >= -r1 / 2 && p.x <= r1 / 2 && p.y >= -r2 / 2 && p.y <= r2 / 2
+        );
     }
 
     abstract draw(ctx: CanvasRenderingContext2D): void;
@@ -1130,10 +1359,8 @@ class Line {
         private readonly color: string,
         private readonly lineWidth: number,
         private readonly beg: IPoint,
-        private readonly end: IPoint,
-    ) {
-
-    }
+        private readonly end: IPoint
+    ) {}
 
     draw(ctx: CanvasRenderingContext2D) {
         ctx.beginPath();
@@ -1149,7 +1376,7 @@ class Ellipse extends Shape {
     constructor(
         private readonly color: () => string,
         private readonly lineWidth: number,
-        size: ISizedPartial | undefined,
+        size: ISizedPartial | undefined
     ) {
         super(size);
     }
@@ -1172,8 +1399,11 @@ class Ellipse extends Shape {
         const {width, height} = this.size;
         const r1 = width + (offset ?? 0);
         const r2 = height + (offset ?? 0);
-        return (Math.pow(p.x, 2) / Math.pow(r1 / 2, 2)) +
-            (Math.pow(p.y, 2) / Math.pow(r2 / 2, 2)) <= 1;
+        return (
+            Math.pow(p.x, 2) / Math.pow(r1 / 2, 2) +
+                Math.pow(p.y, 2) / Math.pow(r2 / 2, 2) <=
+            1
+        );
     }
 }
 
@@ -1183,7 +1413,7 @@ class Rectangle extends Shape {
         protected readonly fillColor: string,
         protected readonly lineWidth: number,
         protected readonly cornerRadius: number,
-        size: ISizedPartial | undefined,
+        size: ISizedPartial | undefined
     ) {
         super(size);
         const {width, height} = this.size;
@@ -1205,17 +1435,37 @@ class Rectangle extends Shape {
         ctx.beginPath();
         ctx.moveTo(-width / 2 + this.cornerRadius, -height / 2);
         ctx.lineTo(width / 2 - this.cornerRadius, -height / 2);
-        ctx.arc(width / 2 - this.cornerRadius, -height / 2 + this.cornerRadius,
-            this.cornerRadius, 1.5 * Math.PI, 0);
+        ctx.arc(
+            width / 2 - this.cornerRadius,
+            -height / 2 + this.cornerRadius,
+            this.cornerRadius,
+            1.5 * Math.PI,
+            0
+        );
         ctx.lineTo(width / 2, height / 2 - this.cornerRadius);
-        ctx.arc(width / 2 - this.cornerRadius, height / 2 - this.cornerRadius,
-            this.cornerRadius, 0, 0.5 * Math.PI);
+        ctx.arc(
+            width / 2 - this.cornerRadius,
+            height / 2 - this.cornerRadius,
+            this.cornerRadius,
+            0,
+            0.5 * Math.PI
+        );
         ctx.lineTo(-width / 2 + this.cornerRadius, height / 2);
-        ctx.arc(-width / 2 + this.cornerRadius, height / 2 - this.cornerRadius,
-            this.cornerRadius, 0.5 * Math.PI, Math.PI);
+        ctx.arc(
+            -width / 2 + this.cornerRadius,
+            height / 2 - this.cornerRadius,
+            this.cornerRadius,
+            0.5 * Math.PI,
+            Math.PI
+        );
         ctx.lineTo(-width / 2, -height / 2 + this.cornerRadius);
-        ctx.arc(-width / 2 + this.cornerRadius, -height / 2 +
-            this.cornerRadius, this.cornerRadius, Math.PI, 1.5 * Math.PI);
+        ctx.arc(
+            -width / 2 + this.cornerRadius,
+            -height / 2 + this.cornerRadius,
+            this.cornerRadius,
+            Math.PI,
+            1.5 * Math.PI
+        );
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
@@ -1242,12 +1492,14 @@ class Textbox extends Shape {
         protected readonly cornerRadius: number,
         size: ISizedPartial | undefined,
         text: string,
-        protected readonly font: string,
+        protected readonly font: string
     ) {
         super(size);
         this.lines = text.split("\n");
         auxctx.font = this.font;
-        const lineWidths = this.lines.map((line) => auxctx.measureText(line).width);
+        const lineWidths = this.lines.map(
+            (line) => auxctx.measureText(line).width
+        );
         this.textwidth = Math.max(...lineWidths);
         this.textHeight = parseInt(auxctx.font, 10);
 
@@ -1260,14 +1512,22 @@ class Textbox extends Shape {
                 this.cornerRadius = height / 2;
             }
         }
-        this.rect = new Rectangle(borderColor, fillColor, lineWidth, cornerRadius, this.size);
+        this.rect = new Rectangle(
+            borderColor,
+            fillColor,
+            lineWidth,
+            cornerRadius,
+            this.size
+        );
     }
 
     get preferredSize() {
         return {
             width: this.textwidth + this.leftMargin + this.rightMargin,
-            height: (this.textHeight * this.lines.length)
-                + this.topMargin + this.bottomMargin,
+            height:
+                this.textHeight * this.lines.length +
+                this.topMargin +
+                this.bottomMargin,
         };
     }
 
@@ -1294,7 +1554,7 @@ class Vector extends Shape {
         private readonly lineWidth: number,
         size: ISizedPartial | undefined,
         arrowHeadWidth: number | undefined,
-        arrowHeadLength: number | undefined,
+        arrowHeadLength: number | undefined
     ) {
         super(size);
         this.arrowHeadWidth = valueOr(arrowHeadWidth, this.size.height * 3);
@@ -1316,11 +1576,15 @@ class Vector extends Shape {
         ctx.beginPath();
         ctx.lineTo(0, height);
         ctx.lineTo(width - this.arrowHeadLength, height);
-        ctx.lineTo(width - this.arrowHeadLength, height / 2 +
-            this.arrowHeadWidth / 2);
+        ctx.lineTo(
+            width - this.arrowHeadLength,
+            height / 2 + this.arrowHeadWidth / 2
+        );
         ctx.lineTo(width, height / 2);
-        ctx.lineTo(width - this.arrowHeadLength,
-            height / 2 - this.arrowHeadWidth / 2);
+        ctx.lineTo(
+            width - this.arrowHeadLength,
+            height / 2 - this.arrowHeadWidth / 2
+        );
         ctx.lineTo(width - this.arrowHeadLength, 0);
         ctx.lineTo(0, 0);
         ctx.fill();
@@ -1330,7 +1594,7 @@ class Vector extends Shape {
 class DImage extends Shape {
     constructor(
         private readonly image: HTMLImageElement,
-        size: ISizedPartial | undefined,
+        size: ISizedPartial | undefined
     ) {
         super(size);
     }
@@ -1366,7 +1630,10 @@ function loadImage(src: string): [Promise<ImageLoadResult>, HTMLImageElement] {
     return [deferred.promise, sprite];
 }
 
-function baseDefs(objType: ObjectTypeT, color: string): RequireExcept<DefaultPropsT, OptionalPropNames> {
+function baseDefs(
+    objType: ObjectTypeT,
+    color: string
+): RequireExcept<DefaultPropsT, OptionalPropNames> {
     return {
         a: 0,
         color,
@@ -1456,11 +1723,13 @@ interface IAnswerResponse {
         </div>
     `,
 })
-
-class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
-
-    t.TypeOf<typeof ImageXAll>,
-    typeof ImageXAll> implements OnInit {
+class ImageXComponent
+    extends AngularPluginBase<
+        t.TypeOf<typeof ImageXMarkup>,
+        t.TypeOf<typeof ImageXAll>,
+        typeof ImageXAll
+    >
+    implements OnInit {
     public imageLoadError?: string | null;
 
     get emotion() {
@@ -1498,11 +1767,17 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
     }
 
     get buttonPlay() {
-        return this.markup.buttonPlay ?? (this.videoPlayer ? "Aloita/pysäytä" : null);
+        return (
+            this.markup.buttonPlay ??
+            (this.videoPlayer ? "Aloita/pysäytä" : null)
+        );
     }
 
     get buttonRevert() {
-        return this.markup.buttonRevert ?? (this.videoPlayer ? "Video alkuun" : null);
+        return (
+            this.markup.buttonRevert ??
+            (this.videoPlayer ? "Video alkuun" : null)
+        );
     }
 
     get teacherMode() {
@@ -1581,9 +1856,11 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
         });
 
         this.tries = this.attrsall.info?.earlier_answers ?? 0;
-        this.freeHandDrawing = new FreeHand(this,
+        this.freeHandDrawing = new FreeHand(
+            this,
             this.attrsall.state?.freeHandData ?? [],
-            this.videoPlayer);
+            this.videoPlayer
+        );
         if (this.isFreeHandInUse) {
             this.drawSettings.enabled = true;
         }
@@ -1609,40 +1886,45 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
 
         if (this.markup.background) {
             const background = new FixedObject(
-                ctx, {
+                ctx,
+                {
                     a: this.markup.background.a ?? 0,
-                    imgproperties: {src: this.markup.background.src, textbox: false},
+                    imgproperties: {
+                        src: this.markup.background.src,
+                        textbox: false,
+                    },
                     position: [0, 0],
                     size: this.markup.background.size,
                     type: "img",
                 },
-                "background");
+                "background"
+            );
             dt.drawObjects.push(background);
         }
 
         this.error = "";
 
         // We don't ever want to concatenate arrays when merging.
-        const opts: deepmerge.Options = {arrayMerge: (destinationArray, sourceArray, options) => sourceArray};
+        const opts: deepmerge.Options = {
+            arrayMerge: (destinationArray, sourceArray, options) => sourceArray,
+        };
 
-        let fixedDef = deepmerge<RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>>(
-            baseDefs("rectangle", "blue"),
-            this.markup.defaults ?? {},
-            opts,
-        );
+        let fixedDef = deepmerge<
+            RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>
+        >(baseDefs("rectangle", "blue"), this.markup.defaults ?? {}, opts);
 
         if (userFixedObjects) {
             for (let i = 0; i < userFixedObjects.length; i++) {
                 fixedDef = deepmerge(fixedDef, userFixedObjects[i], opts);
-                fixedobjects.push(new FixedObject(ctx, fixedDef, "fix" + (i + 1)));
+                fixedobjects.push(
+                    new FixedObject(ctx, fixedDef, "fix" + (i + 1))
+                );
             }
         }
 
-        let targetDef = deepmerge<RequireExcept<TargetPropsT, OptionalTargetPropNames>>(
-            baseDefs("rectangle", "blue"),
-            this.markup.defaults ?? {},
-            opts,
-        );
+        let targetDef = deepmerge<
+            RequireExcept<TargetPropsT, OptionalTargetPropNames>
+        >(baseDefs("rectangle", "blue"), this.markup.defaults ?? {}, opts);
         if (userTargets) {
             for (let i = 0; i < userTargets.length; i++) {
                 targetDef = deepmerge(targetDef, userTargets[i], opts);
@@ -1658,11 +1940,9 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
             }
         }
 
-        let dragDef = deepmerge<RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>>(
-            baseDefs("textbox", "black"),
-            this.markup.defaults ?? {},
-            opts,
-        );
+        let dragDef = deepmerge<
+            RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>
+        >(baseDefs("textbox", "black"), this.markup.defaults ?? {}, opts);
         if (userObjects) {
             for (let i = 0; i < userObjects.length; i++) {
                 dragDef = deepmerge(dragDef, userObjects[i], opts);
@@ -1687,12 +1967,19 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
             }
         }
 
-        dt.drawObjects = [...dt.drawObjects, ...fixedobjects, ...targets, ...objects];
+        dt.drawObjects = [
+            ...dt.drawObjects,
+            ...fixedobjects,
+            ...targets,
+            ...objects,
+        ];
         for (const d of dt.drawObjects) {
             if (d.pendingImage) {
                 const r = await d.pendingImage;
                 if (r instanceof Event) {
-                    this.imageLoadError = `Failed to load image ${(r.target as Element).getAttribute("src") ?? "(no src)"}`;
+                    this.imageLoadError = `Failed to load image ${
+                        (r.target as Element).getAttribute("src") ?? "(no src)"
+                    }`;
                     break;
                 }
             }
@@ -1732,7 +2019,10 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
     getPColor() {
         if (this.attrsall.preview) {
             globalPreviewColor = this.previewColor;
-            editorChangeValue(["[a-zA-Z]*[cC]olor[a-zA-Z]*:"], `"${globalPreviewColor}"`);
+            editorChangeValue(
+                ["[a-zA-Z]*[cC]olor[a-zA-Z]*:"],
+                `"${globalPreviewColor}"`
+            );
         }
     }
 
@@ -1753,8 +2043,8 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
         }));
     }
 
-// This is pretty much identical to the normal save except that a query to
-// show correct answer is also sent.
+    // This is pretty much identical to the normal save except that a query to
+    // show correct answer is also sent.
     async doshowAnswer() {
         if (this.answer?.rightanswers) {
             this.dt.addRightAnswers(this.answer.rightanswers);
@@ -1773,12 +2063,16 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
             },
         };
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http<{
-            web: {
-                error?: string, result: string, tries: number, answer: IAnswerResponse,
-            },
-        }>({method: "PUT", url, data: params, timeout: defaultTimeout},
-        ));
+        const r = await to(
+            $http<{
+                web: {
+                    error?: string;
+                    result: string;
+                    tries: number;
+                    answer: IAnswerResponse;
+                };
+            }>({method: "PUT", url, data: params, timeout: defaultTimeout})
+        );
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -1856,16 +2150,17 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
         }
         const url = this.pluginMeta.getAnswerUrl();
 
-        const r = await to($http<{
-            web: {
-                error?: string,
-                result: string,
-                tries: number,
-                "-replyImage": string,
-                "-replyHTML": string,
-            },
-        }>({method: "PUT", url, data: params, timeout: defaultTimeout},
-        ));
+        const r = await to(
+            $http<{
+                web: {
+                    error?: string;
+                    result: string;
+                    tries: number;
+                    "-replyImage": string;
+                    "-replyHTML": string;
+                };
+            }>({method: "PUT", url, data: params, timeout: defaultTimeout})
+        );
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -1922,9 +2217,7 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
 }
 
 @NgModule({
-    declarations: [
-        ImageXComponent,
-    ],
+    declarations: [ImageXComponent],
     imports: [
         BrowserModule,
         DrawToolbarModule,
@@ -1934,8 +2227,7 @@ class ImageXComponent extends AngularPluginBase<t.TypeOf<typeof ImageXMarkup>,
     ],
 })
 export class ImagexModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
 const bootstrapFn = (extraProviders: StaticProvider[]) => {

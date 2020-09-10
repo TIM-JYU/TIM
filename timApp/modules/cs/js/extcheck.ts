@@ -1,18 +1,18 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["hide_"] }] */
 import {
-        Input,
-        Component,
-        NgModule,
-        ViewChild,
-        ChangeDetectorRef,
-        ElementRef,
-        Directive,
-        Type,
-        ViewContainerRef,
-        Injector,
-        Compiler,
-        ComponentRef,
-    } from "@angular/core";
+    Input,
+    Component,
+    NgModule,
+    ViewChild,
+    ChangeDetectorRef,
+    ElementRef,
+    Directive,
+    Type,
+    ViewContainerRef,
+    Injector,
+    Compiler,
+    ComponentRef,
+} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -197,7 +197,12 @@ export class ExtcheckComponent extends CsController {
     containers?: IOutputContainer[];
     penalty_container?: IOutputContainer;
 
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        cdr: ChangeDetectorRef
+    ) {
         super(el, http, domSanitizer, cdr);
     }
 
@@ -218,7 +223,12 @@ export class ExtcheckComponent extends CsController {
                     },
                     text: {
                         classes: "",
-                        content: data.penalties.map((e) => `<p class="penalty-text centermargin">${e}</p>`).join("\n"),
+                        content: data.penalties
+                            .map(
+                                (e) =>
+                                    `<p class="penalty-text centermargin">${e}</p>`
+                            )
+                            .join("\n"),
                         isHTML: true,
                     },
                 };
@@ -231,7 +241,7 @@ export class ExtcheckComponent extends CsController {
     selector: "[custom-data]",
 })
 export class CustomOutputDirective {
-    constructor(public viewContainerRef: ViewContainerRef) { }
+    constructor(public viewContainerRef: ViewContainerRef) {}
 }
 
 export class CustomOutputBase {
@@ -270,11 +280,16 @@ export class OutputContainerComponent implements IOutputContainer {
 
     caret: string = "<span class='caret'></span>";
 
-    constructor(private injector: Injector, private compiler: Compiler) { }
+    constructor(private injector: Injector, private compiler: Compiler) {}
 
     async ngAfterViewInit() {
-        if (!this.angularContent) { return; }
-        if (!this.angularContent.entry || !Object.keys(this.angularContent.components).length) {
+        if (!this.angularContent) {
+            return;
+        }
+        if (
+            !this.angularContent.entry ||
+            !Object.keys(this.angularContent.components).length
+        ) {
             this.error("Angular entry or components not specified");
             return;
         }
@@ -283,14 +298,23 @@ export class OutputContainerComponent implements IOutputContainer {
         const module = this.angularContent;
         for (const [key, value] of Object.entries(module.components)) {
             const tmpCls = Function(`return ${value.component};`)();
-            const tmpCmp = Component({selector: key, template: value.template})(tmpCls);
+            const tmpCmp = Component({selector: key, template: value.template})(
+                tmpCls
+            );
             components.push(tmpCmp);
         }
-        const tmpModule = NgModule({declarations: components, imports: [CommonModule]})(class {});
+        const tmpModule = NgModule({
+            declarations: components,
+            imports: [CommonModule],
+        })(class {});
 
-        const factories = await this.compiler.compileModuleAndAllComponentsAsync(tmpModule);
+        const factories = await this.compiler.compileModuleAndAllComponentsAsync(
+            tmpModule
+        );
         const m = factories.ngModuleFactory.create(this.injector);
-        const factory = factories.componentFactories.find((e) => e.selector == module.entry);
+        const factory = factories.componentFactories.find(
+            (e) => e.selector == module.entry
+        );
         if (!factory) {
             this.error("");
             return;
@@ -313,7 +337,8 @@ export class OutputContainerComponent implements IOutputContainer {
         this.hide_ = b;
         if (this.componentRef) {
             // ngIf destroys the component: use display
-            (this.componentRef.location.nativeElement as HTMLElement).style.display = b ? "none" : "";
+            (this.componentRef.location
+                .nativeElement as HTMLElement).style.display = b ? "none" : "";
         }
     }
 

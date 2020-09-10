@@ -34,6 +34,5 @@ import {LectureController} from "tim/lecture/lectureController";
 export class LoggedUsersTabComponent {
     lctrl: LectureController = LectureController.instance;
 
-    constructor() {
-    }
+    constructor() {}
 }

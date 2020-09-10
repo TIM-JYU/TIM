@@ -29,7 +29,10 @@ export interface INameAreaOptions {
     title?: string;
 }
 
-class NameAreaController extends DialogController<void, {areaName: string, options: INameAreaOptions}> {
+class NameAreaController extends DialogController<
+    void,
+    {areaName: string; options: INameAreaOptions}
+> {
     static component = "timNameArea";
     static $inject = ["$element", "$scope"] as const;
     private areaName: string;
@@ -62,9 +65,9 @@ class NameAreaController extends DialogController<void, {areaName: string, optio
     }
 }
 
-registerDialogComponent(
-    NameAreaController,
-    {templateUrl: "/static/templates/nameArea.html"});
+registerDialogComponent(NameAreaController, {
+    templateUrl: "/static/templates/nameArea.html",
+});
 
 export async function showNameAreaDialog() {
     return await showDialog(NameAreaController, {}).result;

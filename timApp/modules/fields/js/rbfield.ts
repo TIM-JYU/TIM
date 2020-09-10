@@ -3,8 +3,19 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {FormModeOption, ISetAnswerResult, ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {
+    FormModeOption,
+    ISetAnswerResult,
+    ITimComponent,
+    RegexOption,
+    ViewCtrl,
+} from "tim/document/viewctrl";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {to, valueOr} from "tim/util/utils";
@@ -32,8 +43,7 @@ const RbfieldMarkup = t.intersection([
     }),
 ]);
 const RbfieldAll = t.intersection([
-    t.partial({
-    }),
+    t.partial({}),
     t.type({
         info: Info,
         markup: RbfieldMarkup,
@@ -42,7 +52,13 @@ const RbfieldAll = t.intersection([
     }),
 ]);
 
-class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.TypeOf<typeof RbfieldAll>, typeof RbfieldAll> implements ITimComponent {
+class RbfieldController
+    extends PluginBase<
+        t.TypeOf<typeof RbfieldMarkup>,
+        t.TypeOf<typeof RbfieldAll>,
+        typeof RbfieldAll
+    >
+    implements ITimComponent {
     private result?: string;
     private isRunning = false;
     private userword: string = "0";
@@ -52,8 +68,11 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     private errormessage?: string;
     private hideSavedText = true;
     private redAlert = false;
-    private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
-    private preventedAutosave = false;  // looks depracated???
+    private saveResponse: {saved: boolean; message: string | undefined} = {
+        saved: false,
+        message: undefined,
+    };
+    private preventedAutosave = false; // looks depracated???
     private rbName: string = "";
 
     getDefaultMarkup() {
@@ -66,7 +85,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     buttonText() {
         return super.buttonText() ?? null;
     }
-/*
+    /*
     makeBoolean(s: string): boolean {
         if ( s == "" ) { return false; }
         if ( s == "0" ) { return false; }
@@ -78,7 +97,10 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     $onInit() {
         super.$onInit();
         this.rbName = this.rbname;
-        const uw = (valueOr(this.attrsall.state?.c, this.attrs.initword ?? "0")).toString();
+        const uw = valueOr(
+            this.attrsall.state?.c,
+            this.attrs.initword ?? "0"
+        ).toString();
         this.userword = uw; // this.makeBoolean(uw);
 
         if (this.attrs.tag) {
@@ -87,7 +109,9 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
             this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
-        if (this.attrs.showname) { this.initCode(); }
+        if (this.attrs.showname) {
+            this.initCode();
+        }
     }
 
     get inputtype(): string {
@@ -95,7 +119,9 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
     }
 
     get rbname(): string {
-        if (this.rbName) { return this.rbName; }
+        if (this.rbName) {
+            return this.rbName;
+        }
         let n: string = this.getName() ?? "rb";
         n = n.replace(/[0-9]+/, "");
         this.rbName = n;
@@ -126,7 +152,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
     }
 
-    setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
+    setAnswer(content: {[index: string]: unknown}): ISetAnswerResult {
         this.errormessage = undefined;
         let message;
         let ok = true;
@@ -139,13 +165,14 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
             } catch (e) {
                 this.userword = "";
                 ok = false;
-                message = `Couldn't find related content ("c") from ${JSON.stringify(content)}`;
+                message = `Couldn't find related content ("c") from ${JSON.stringify(
+                    content
+                )}`;
                 this.errormessage = message;
             }
         }
         this.initialValue = this.userword;
         return {ok: ok, message: message};
-
     }
 
     /**
@@ -159,14 +186,19 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
      * Returns (user) set col size (size of the field).
      */
     get cols() {
-        if (!this.attrs.cols) { return {}; }
+        if (!this.attrs.cols) {
+            return {};
+        }
         return {width: this.attrs.cols + "em", display: "inline-block"};
     }
 
     // noinspection JSUnusedGlobalSymbols
     get cbStyle() {
-        if (!this.inputstem && (this.stem || this.header)) { return {}; }
-        return { // otherwise input stem and cb are vertical
+        if (!this.inputstem && (this.stem || this.header)) {
+            return {};
+        }
+        return {
+            // otherwise input stem and cb are vertical
             width: "auto",
         };
     }
@@ -202,11 +234,17 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
-        return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
+        return (
+            this.attrs.readOnlyStyle == "plaintext" &&
+            window.location.pathname.startsWith("/view/")
+        );
     }
 
     isReadOnly() {
-        return (this.attrs.readOnlyStyle == "box" && window.location.pathname.startsWith("/view/")) ? "disable" : "";
+        return this.attrs.readOnlyStyle == "box" &&
+            window.location.pathname.startsWith("/view/")
+            ? "disable"
+            : "";
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -220,7 +258,7 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         if (this.initialValue != this.userword) {
             this.hideSavedText = true;
         }
-        return (this.initialValue != this.userword);
+        return this.initialValue != this.userword;
     }
 
     setChecked(b: boolean) {
@@ -243,11 +281,18 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
         if (!tid?.docId) {
             return;
         }
-        const comps = this.vctrl.getTimComponentsByRegex(`${tid.docId}\.${this.rbname}.*`, RegexOption.DontPrependCurrentDocId);
+        const comps = this.vctrl.getTimComponentsByRegex(
+            `${tid.docId}\.${this.rbname}.*`,
+            RegexOption.DontPrependCurrentDocId
+        );
         const n = this.getName();
         for (const c of comps) {
-            if (c.getName() == n) { continue; }
-            if (!(c instanceof RbfieldController)) { continue; }
+            if (c.getName() == n) {
+                continue;
+            }
+            if (!(c instanceof RbfieldController)) {
+                continue;
+            }
             c.setChecked(false);
         }
         if (this.preventedAutosave) {
@@ -279,7 +324,9 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string}}>(url, params));
+        const r = await to(
+            $http.put<{web: {result: string; error?: string}}>(url, params)
+        );
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -292,7 +339,9 @@ class RbfieldController extends PluginBase<t.TypeOf<typeof RbfieldMarkup>, t.Typ
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
         } else {
-            this.errormessage = r.result.data.error || "Syntax error, infinite loop or some other error?";
+            this.errormessage =
+                r.result.data.error ||
+                "Syntax error, infinite loop or some other error?";
         }
         return this.saveResponse;
     }

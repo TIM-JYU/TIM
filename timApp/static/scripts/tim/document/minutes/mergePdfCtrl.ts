@@ -4,7 +4,11 @@
 import {IScope} from "angular";
 import {DialogController} from "tim/ui/dialogController";
 import {IItem} from "../../item/IItem";
-import {registerDialogComponent, showDialog, showMessageDialog} from "../../ui/dialog";
+import {
+    registerDialogComponent,
+    showDialog,
+    showMessageDialog,
+} from "../../ui/dialog";
 import {$http} from "../../util/ngimport";
 import {to} from "../../util/utils";
 
@@ -29,7 +33,10 @@ export interface IAttachment {
     selected: boolean;
 }
 
-export class MergePdfController extends DialogController<{ params: IMergeParams }, void> {
+export class MergePdfController extends DialogController<
+    {params: IMergeParams},
+    void
+> {
     static component = "timMergePdf";
     static $inject = ["$element", "$scope"] as const;
     private attachmentList: IAttachment[] = [];
@@ -131,10 +138,8 @@ export class MergePdfController extends DialogController<{ params: IMergeParams 
 /**
  * HTML Template for merge dialog.
  */
-registerDialogComponent(MergePdfController,
-    {
-        template:
-            `<tim-dialog>
+registerDialogComponent(MergePdfController, {
+    template: `<tim-dialog>
     <dialog-header ng-bind-html="$ctrl.getTitle()">
     </dialog-header>
     <dialog-body>
@@ -182,7 +187,7 @@ registerDialogComponent(MergePdfController,
 </dialog-footer>
 </tim-dialog>
 `,
-    });
+});
 
 export async function showMergePdfDialog(p: IMergeParams) {
     return await showDialog(MergePdfController, {params: () => p}).result;

@@ -11,37 +11,57 @@ export async function openEditor(p: IEditorParams) {
     return showDialog(
         ctrl,
         {params: () => p},
-        {saveKey: p.options.localSaveTag, absolute: true, size: p.defaultSize, forceMaximized: true});
+        {
+            saveKey: p.options.localSaveTag,
+            absolute: true,
+            size: p.defaultSize,
+            forceMaximized: true,
+        }
+    );
 }
 
-export async function openEditorSimple(docId: number, text: string, caption: string, localSaveTag: string) {
-    return (await openEditor({
-        defaultSize: "lg",
-        initialText: text,
-        extraData: {docId, tags: {markread: false}, par: "nothing"}, options: {
-            caption: caption,
-            choices: undefined,
-            localSaveTag: localSaveTag,
-            showDelete: false,
-            showImageUpload: true,
-            showPlugins: false,
-            showSettings: false,
-            tags: [],
-            touchDevice: false,
-        }, previewCb: async (txt, proofread) => {
-            const resp = await to($http.post<IPluginInfoResponse>(`/preview/${docId}`, {text: txt, proofread, isComment: true}));
-            if (!resp.ok) {
-                throw new Error("preview route failed");
-            }
-            return resp.result.data;
-        },
-        saveCb: async (txt, data) => {
-            return await {};
-        },
-        deleteCb: async () => {
-            return await {};
-        },
-        unreadCb: async () => {
-        },
-    })).result;
+export async function openEditorSimple(
+    docId: number,
+    text: string,
+    caption: string,
+    localSaveTag: string
+) {
+    return (
+        await openEditor({
+            defaultSize: "lg",
+            initialText: text,
+            extraData: {docId, tags: {markread: false}, par: "nothing"},
+            options: {
+                caption: caption,
+                choices: undefined,
+                localSaveTag: localSaveTag,
+                showDelete: false,
+                showImageUpload: true,
+                showPlugins: false,
+                showSettings: false,
+                tags: [],
+                touchDevice: false,
+            },
+            previewCb: async (txt, proofread) => {
+                const resp = await to(
+                    $http.post<IPluginInfoResponse>(`/preview/${docId}`, {
+                        text: txt,
+                        proofread,
+                        isComment: true,
+                    })
+                );
+                if (!resp.ok) {
+                    throw new Error("preview route failed");
+                }
+                return resp.result.data;
+            },
+            saveCb: async (txt, data) => {
+                return await {};
+            },
+            deleteCb: async () => {
+                return await {};
+            },
+            unreadCb: async () => {},
+        })
+    ).result;
 }

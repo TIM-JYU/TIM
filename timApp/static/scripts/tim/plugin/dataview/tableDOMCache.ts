@@ -14,10 +14,15 @@ export class TableDOMCache {
     }[] = [];
     private activeArea: TableArea = {horizontal: 0, vertical: 0};
 
-    constructor(private tbody: HTMLTableSectionElement,
-                private cellElement: "td" | "th" = "td",
-                private createCellContent?: (cell: HTMLTableCellElement, rowIndex: number, columnIndex: number) => void) {
-    }
+    constructor(
+        private tbody: HTMLTableSectionElement,
+        private cellElement: "td" | "th" = "td",
+        private createCellContent?: (
+            cell: HTMLTableCellElement,
+            rowIndex: number,
+            columnIndex: number
+        ) => void
+    ) {}
 
     /**
      * Gets the `tr` element at the given row.
@@ -27,7 +32,9 @@ export class TableDOMCache {
      */
     getRow(rowNumber: number): HTMLTableRowElement {
         if (rowNumber > this.activeArea.vertical) {
-            throw new Error(`No row ${rowNumber} found! This should be unreachable!`);
+            throw new Error(
+                `No row ${rowNumber} found! This should be unreachable!`
+            );
         } else {
             return this.rows[rowNumber].rowElement;
         }
@@ -41,8 +48,13 @@ export class TableDOMCache {
      * @return The HTMLTableCellElement of the cell at the given position.
      */
     getCell(rowNumber: number, columnNumber: number): HTMLTableCellElement {
-        if (rowNumber > this.activeArea.vertical || columnNumber > this.activeArea.horizontal) {
-            throw new Error(`No cell ${rowNumber}, ${columnNumber} found! This should be unreachable!`);
+        if (
+            rowNumber > this.activeArea.vertical ||
+            columnNumber > this.activeArea.horizontal
+        ) {
+            throw new Error(
+                `No cell ${rowNumber}, ${columnNumber} found! This should be unreachable!`
+            );
         }
         return this.rows[rowNumber].cells[columnNumber];
     }
@@ -71,8 +83,14 @@ export class TableDOMCache {
                     cells: [],
                 };
                 // Don't update col count to correct one yet, handle just rows first
-                for (let columnNumber = 0; columnNumber < columns; columnNumber++) {
-                    const cell = row.cells[columnNumber] = el(this.cellElement);
+                for (
+                    let columnNumber = 0;
+                    columnNumber < columns;
+                    columnNumber++
+                ) {
+                    const cell = (row.cells[columnNumber] = el(
+                        this.cellElement
+                    ));
                     if (this.createCellContent) {
                         this.createCellContent(cell, rowNumber, columnNumber);
                     }
@@ -82,7 +100,11 @@ export class TableDOMCache {
             }
         } else if (rowDelta < 0) {
             // Too many rows => hide unused ones
-            for (let rowNumber = rows; rowNumber < this.rows.length; rowNumber++) {
+            for (
+                let rowNumber = rows;
+                rowNumber < this.rows.length;
+                rowNumber++
+            ) {
                 this.rows[rowNumber].rowElement.hidden = true;
             }
         }
@@ -91,14 +113,22 @@ export class TableDOMCache {
             // Columns need to be added => make use of colcache here
             for (let rowNumber = 0; rowNumber < rows; rowNumber++) {
                 const row = this.rows[rowNumber];
-                for (let columnNumber = 0; columnNumber < columns; columnNumber++) {
+                for (
+                    let columnNumber = 0;
+                    columnNumber < columns;
+                    columnNumber++
+                ) {
                     let cell = row.cells[columnNumber];
                     if (cell) {
                         cell.hidden = false;
                     } else {
                         cell = row.cells[columnNumber] = el(this.cellElement);
                         if (this.createCellContent) {
-                            this.createCellContent(cell, rowNumber, columnNumber);
+                            this.createCellContent(
+                                cell,
+                                rowNumber,
+                                columnNumber
+                            );
                         }
                         row.rowElement.appendChild(cell);
                     }
@@ -108,7 +138,11 @@ export class TableDOMCache {
             // Need to hide columns
             for (let rowNumber = 0; rowNumber < rows; rowNumber++) {
                 const row = this.rows[rowNumber];
-                for (let colNumber = columns; colNumber < row.cells.length; colNumber++) {
+                for (
+                    let colNumber = columns;
+                    colNumber < row.cells.length;
+                    colNumber++
+                ) {
                     row.cells[colNumber].hidden = true;
                 }
             }

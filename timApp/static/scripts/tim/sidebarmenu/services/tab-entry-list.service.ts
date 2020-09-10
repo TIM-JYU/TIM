@@ -17,10 +17,10 @@ import {HeaderIndexerService} from "./header-indexer.service";
     providedIn: "root",
 })
 export class TabEntryListService {
-
-    constructor(private headerIndexer: HeaderIndexerService,
-                private scoreboard: ScoreboardService) {
-    }
+    constructor(
+        private headerIndexer: HeaderIndexerService,
+        private scoreboard: ScoreboardService
+    ) {}
 
     get defaultTabOrder() {
         return ["tab-index", "tab-bookmark"];
@@ -49,7 +49,8 @@ export class TabEntryListService {
                 id: "tab-index",
                 icon: "book",
                 title: $localize`:@@indexTabTitle:Document index`,
-                visible: () => !hide.index && this.headerIndexer.headers.length > 0,
+                visible: () =>
+                    !hide.index && this.headerIndexer.headers.length > 0,
                 component: IndexTabComponent,
             },
             {
@@ -63,21 +64,28 @@ export class TabEntryListService {
                 id: "tab-lecture-info",
                 icon: "education",
                 title: $localize`:@@lectureInfoTabTitle:Lecture`,
-                visible: () => !hide.lecturetab && lectureCtrl.lectureSettings.lectureMode,
+                visible: () =>
+                    !hide.lecturetab && lectureCtrl.lectureSettings.lectureMode,
                 component: LectureInfoTabComponent,
             },
             {
                 id: "tab-get-question",
                 icon: "question-sign",
                 title: $localize`:@@loadQuestionsTabTitle:Get question`,
-                visible: () => !hide.getquestion && lectureCtrl.lectureSettings.inLecture && !lectureCtrl.isLecturer,
+                visible: () =>
+                    !hide.getquestion &&
+                    lectureCtrl.lectureSettings.inLecture &&
+                    !lectureCtrl.isLecturer,
                 component: LoadQuestionsTabComponent,
             },
             {
                 id: "tab-logged-users",
                 icon: "user",
                 title: $localize`:@@loggedUsersTabTitle:Lecture participants`,
-                visible: () => !hide.lecturer && lectureCtrl.lectureSettings.inLecture && lectureCtrl.isLecturer,
+                visible: () =>
+                    !hide.lecturer &&
+                    lectureCtrl.lectureSettings.inLecture &&
+                    lectureCtrl.isLecturer,
                 component: LoggedUsersTabComponent,
             },
         ];

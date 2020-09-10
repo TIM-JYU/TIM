@@ -4,9 +4,7 @@ import {Directive, OnInit, ElementRef} from "@angular/core";
     selector: "[focusMe]",
 })
 export class FocusMeDirective implements OnInit {
-
-    constructor(private elementRef: ElementRef<HTMLElement>) {
-    }
+    constructor(private elementRef: ElementRef<HTMLElement>) {}
 
     ngOnInit() {
         // setTimeout required to avoid ExpressionChangedAfterItHasBeenCheckedError,

@@ -6,7 +6,10 @@ export interface IPoint {
     y: number;
 }
 
-const TuplePointR = t.union([t.tuple([t.number, t.number]), t.tuple([t.number, t.number, t.number, t.number])]);
+const TuplePointR = t.union([
+    t.tuple([t.number, t.number]),
+    t.tuple([t.number, t.number, t.number, t.number]),
+]);
 const LineSegment = t.intersection([
     t.type({lines: t.array(TuplePointR)}),
     t.partial({
@@ -28,12 +31,10 @@ const RectangleOrEllipse = t.intersection([
 
 export type TuplePoint = t.TypeOf<typeof TuplePointR>;
 
+export interface ILineSegment extends t.TypeOf<typeof LineSegment> {}
 
-export interface ILineSegment extends t.TypeOf<typeof LineSegment> {
-}
-
-export interface IRectangleOrEllipse extends t.TypeOf<typeof RectangleOrEllipse> {
-}
+export interface IRectangleOrEllipse
+    extends t.TypeOf<typeof RectangleOrEllipse> {}
 
 export interface IFakeVideo {
     currentTime: number;
@@ -63,15 +64,20 @@ export interface ISizedPartial {
 
 // These two are from type-zoo: https://github.com/pelotom/type-zoo
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Omit<T, K extends keyof any> = T extends any ? Pick<T, Exclude<keyof T, K>> : never;
+export type Omit<T, K extends keyof any> = T extends any
+    ? Pick<T, Exclude<keyof T, K>>
+    : never;
 export type Overwrite<T, U> = Omit<T, keyof T & keyof U> & U;
 
-type MakeOptional<T, U extends keyof T> = Overwrite<T, { [P in U]?: T[P] }>;
+type MakeOptional<T, U extends keyof T> = Overwrite<T, {[P in U]?: T[P]}>;
 export type RequireExcept<T, U extends keyof T> = MakeOptional<Required<T>, U>;
 export type RequiredNonNull<T> = {
     [P in keyof T]-?: NonNullable<T[P]>;
 };
-export type RequireNonNullExcept<T, U extends keyof T> = MakeOptional<RequiredNonNull<T>, U>;
+export type RequireNonNullExcept<T, U extends keyof T> = MakeOptional<
+    RequiredNonNull<T>,
+    U
+>;
 
 const ObjectType = t.keyof({
     ellipse: null,
@@ -127,7 +133,8 @@ const TextboxProps = t.intersection([
         font: nullable(t.string),
         text: nullable(t.string),
         textColor: nullable(t.string),
-    })]);
+    }),
+]);
 
 const VectorProps = t.partial({
     arrowheadlength: t.number,
@@ -162,8 +169,7 @@ const PinProps = t.partial({
     visible: t.boolean,
 });
 
-export interface PinPropsT extends t.TypeOf<typeof PinProps> {
-}
+export interface PinPropsT extends t.TypeOf<typeof PinProps> {}
 
 const FixedObjectProps = CommonProps;
 
@@ -175,7 +181,8 @@ const TargetProps = t.intersection([
         snap: t.boolean,
         snapColor: t.string,
         snapOffset: ValidCoord,
-    })]);
+    }),
+]);
 
 const Lock = t.keyof({
     x: null,
@@ -192,26 +199,19 @@ const DragObjectProps = t.intersection([
     FixedObjectProps,
 ]);
 
-export interface CommonPropsT extends t.TypeOf<typeof CommonProps> {
-}
+export interface CommonPropsT extends t.TypeOf<typeof CommonProps> {}
 
-export interface DragObjectPropsT extends t.TypeOf<typeof DragObjectProps> {
-}
+export interface DragObjectPropsT extends t.TypeOf<typeof DragObjectProps> {}
 
-export interface TargetPropsT extends t.TypeOf<typeof TargetProps> {
-}
+export interface TargetPropsT extends t.TypeOf<typeof TargetProps> {}
 
-export interface FixedObjectPropsT extends t.TypeOf<typeof FixedObjectProps> {
-}
+export interface FixedObjectPropsT extends t.TypeOf<typeof FixedObjectProps> {}
 
-export interface TextboxPropsT extends t.TypeOf<typeof TextboxProps> {
-}
+export interface TextboxPropsT extends t.TypeOf<typeof TextboxProps> {}
 
-export interface ImgPropsT extends t.TypeOf<typeof ImgProps> {
-}
+export interface ImgPropsT extends t.TypeOf<typeof ImgProps> {}
 
-export interface VectorPropsT extends t.TypeOf<typeof VectorProps> {
-}
+export interface VectorPropsT extends t.TypeOf<typeof VectorProps> {}
 
 export type ObjectTypeT = t.TypeOf<typeof ObjectType>;
 
@@ -227,8 +227,7 @@ const BackgroundProps = t.intersection([
 
 const DefaultProps = t.intersection([DragObjectProps, TargetProps]);
 
-export interface DefaultPropsT extends t.TypeOf<typeof DefaultProps> {
-}
+export interface DefaultPropsT extends t.TypeOf<typeof DefaultProps> {}
 
 export const ImageXMarkup = t.intersection([
     t.partial({
@@ -275,21 +274,24 @@ export const RightAnswer = t.type({
     position: ValidCoord,
 });
 
-export interface RightAnswerT extends t.TypeOf<typeof RightAnswer> {
-}
+export interface RightAnswerT extends t.TypeOf<typeof RightAnswer> {}
 
 export const ImageXAll = t.intersection([
     t.partial({
-        state: nullable(t.partial({
-            freeHandData: t.array(LineSegment),
-            userAnswer: t.partial({
-                drags: t.array(t.type({
-                    did: t.string,
-                    id: t.string,
-                    position: ValidCoord,
-                })),
-            }),
-        })),
+        state: nullable(
+            t.partial({
+                freeHandData: t.array(LineSegment),
+                userAnswer: t.partial({
+                    drags: t.array(
+                        t.type({
+                            did: t.string,
+                            id: t.string,
+                            position: ValidCoord,
+                        })
+                    ),
+                }),
+            })
+        ),
     }),
     t.type({
         info: Info,
@@ -309,6 +311,13 @@ export type OptionalCommonPropNames =
     | "color"
     | "borderWidth";
 export type OptionalFixedObjPropNames = OptionalCommonPropNames;
-export type OptionalDragObjectPropNames = OptionalFixedObjPropNames | "xlimits" | "ylimits" | "lock";
+export type OptionalDragObjectPropNames =
+    | OptionalFixedObjPropNames
+    | "xlimits"
+    | "ylimits"
+    | "lock";
 export type OptionalTargetPropNames = "points" | OptionalFixedObjPropNames;
-export type OptionalPropNames = OptionalFixedObjPropNames | OptionalDragObjectPropNames | OptionalTargetPropNames;
+export type OptionalPropNames =
+    | OptionalFixedObjPropNames
+    | OptionalDragObjectPropNames
+    | OptionalTargetPropNames;

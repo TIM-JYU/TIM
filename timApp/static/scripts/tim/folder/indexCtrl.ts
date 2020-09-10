@@ -22,18 +22,18 @@ class IndexCtrl implements IController {
         this.canCreate = Users.isLoggedIn();
     }
 
-    $onInit() {
-
-    }
+    $onInit() {}
 
     async getItems() {
-        const r = await to($http<IItem[]>({
-            method: "GET",
-            url: "/getItems",
-            params: {
-                folder: this.item.location,
-            },
-        }));
+        const r = await to(
+            $http<IItem[]>({
+                method: "GET",
+                url: "/getItems",
+                params: {
+                    folder: this.item.location,
+                },
+            })
+        );
         if (r.ok) {
             this.itemList = r.result.data;
         } else {

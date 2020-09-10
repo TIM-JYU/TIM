@@ -2,7 +2,14 @@ import {Ace} from "ace-builds/src-noconflict/ace";
 import {wrapText} from "tim/document/editing/utils";
 import {IAce} from "tim/editor/ace";
 import {$log} from "../util/ngimport";
-import {BaseParEditor, CURSOR, EditorType, focusAfter, IEditorCallbacks, SelectionRange} from "./BaseParEditor";
+import {
+    BaseParEditor,
+    CURSOR,
+    EditorType,
+    focusAfter,
+    IEditorCallbacks,
+    SelectionRange,
+} from "./BaseParEditor";
 import AceAjax = Ace;
 import IAceEditor = Ace.Editor;
 
@@ -16,16 +23,23 @@ export class AceParEditor extends BaseParEditor {
     private ace: IAce;
     type: EditorType.Ace = EditorType.Ace;
 
-    constructor(ace: IAce, editor: AceAjax.Editor, callbacks: IEditorCallbacks, mode: string = "ace/mode/markdown") {
+    constructor(
+        ace: IAce,
+        editor: AceAjax.Editor,
+        callbacks: IEditorCallbacks,
+        mode: string = "ace/mode/markdown"
+    ) {
         super(editor, callbacks);
         this.editor = editor;
         this.ace = ace;
-        const snippetModule = ace.require("ace/snippets") as {snippetManager: ISnippetManager};
+        const snippetModule = ace.require("ace/snippets") as {
+            snippetManager: ISnippetManager;
+        };
         this.snippetManager = snippetModule.snippetManager;
         const line = editor.renderer.lineHeight;
         const containertop = $(".editorContainer").position().top;
         const height = ($(window).innerHeight() ?? 700) - containertop;
-        const max = Math.floor((height / 2) / line);
+        const max = Math.floor(height / 2 / line);
 
         this.editor.renderer.setPadding(10);
         this.editor.renderer.setScrollMargin(2, 2, 2, 40);
@@ -184,11 +198,10 @@ export class AceParEditor extends BaseParEditor {
             },
         });
         this.editor.keyBinding.setKeyboardHandler({
-                handleKeyboard: () => {
-                    this.checkWrap();
-                },
+            handleKeyboard: () => {
+                this.checkWrap();
             },
-        );
+        });
     }
 
     // Navigation
@@ -218,7 +231,7 @@ export class AceParEditor extends BaseParEditor {
             toKeepInLine = "";
         }
         let toNextLine;
-        if ((line.length - cursor.column) > 0) {
+        if (line.length - cursor.column > 0) {
             toNextLine = line.substring(cursor.column, line.length);
         } else {
             toNextLine = "";
@@ -236,11 +249,19 @@ export class AceParEditor extends BaseParEditor {
         const lastrow = this.editor.renderer.getLastFullyVisibleRow();
         const cursor = this.editor.getCursorPosition();
         if (cursor.row < firstrow) {
-            this.editor.renderer.scrollToLine(cursor.row, false, true, () => {
-            });
+            this.editor.renderer.scrollToLine(
+                cursor.row,
+                false,
+                true,
+                () => {}
+            );
         } else if (cursor.row > lastrow) {
-            this.editor.renderer.scrollToLine(cursor.row - (lastrow - firstrow), false, true, () => {
-            });
+            this.editor.renderer.scrollToLine(
+                cursor.row - (lastrow - firstrow),
+                false,
+                true,
+                () => {}
+            );
         }
     }
 
@@ -311,11 +332,17 @@ export class AceParEditor extends BaseParEditor {
 
     @focusAfter
     surroundClicked(before: string, after: string, func?: () => boolean) {
-        if ((this.editor.session.getTextRange(this.editor.getSelectionRange()) === "")) {
+        if (
+            this.editor.session.getTextRange(
+                this.editor.getSelectionRange()
+            ) === ""
+        ) {
             this.selectWord();
         }
-        const text = this.editor.session.getTextRange(this.editor.getSelectionRange());
-        const surrounded = (func) ? func() : this.surroundedBy(before, after);
+        const text = this.editor.session.getTextRange(
+            this.editor.getSelectionRange()
+        );
+        const surrounded = func ? func() : this.surroundedBy(before, after);
         if (surrounded) {
             const range = this.editor.getSelectionRange();
             range.start.column -= before.length;
@@ -323,14 +350,19 @@ export class AceParEditor extends BaseParEditor {
             this.editor.selection.setRange(range, false);
             this.snippetManager.insertSnippet(this.editor, "${0:" + text + "}");
         } else {
-            this.snippetManager.insertSnippet(this.editor, before + "${0:$SELECTION}" + after);
+            this.snippetManager.insertSnippet(
+                this.editor,
+                before + "${0:$SELECTION}" + after
+            );
         }
     }
 
     selectWord() {
         const cursor = this.editor.getCursorPosition();
-        const wordrange = this.editor.getSession().getAWordRange(cursor.row, cursor.column);
-        const word = (this.editor.session.getTextRange(wordrange));
+        const wordrange = this.editor
+            .getSession()
+            .getAWordRange(cursor.row, cursor.column);
+        const word = this.editor.session.getTextRange(wordrange);
         if (/^\s*$/.test(word)) {
             return false;
         }
@@ -345,13 +377,16 @@ export class AceParEditor extends BaseParEditor {
         const range = this.editor.getSelectionRange();
         range.start.column -= before.length;
         range.end.column += after.length;
-        const word = (this.editor.session.getTextRange(range));
-        return (word.startsWith(before) && word.endsWith(after));
+        const word = this.editor.session.getTextRange(range);
+        return word.startsWith(before) && word.endsWith(after);
     }
 
     @focusAfter
     codeBlockClicked() {
-        this.snippetManager.insertSnippet(this.editor, "```\n${0:$SELECTION}\n```");
+        this.snippetManager.insertSnippet(
+            this.editor,
+            "```\n${0:$SELECTION}\n```"
+        );
     }
 
     @focusAfter
@@ -377,14 +412,25 @@ export class AceParEditor extends BaseParEditor {
      */
     @focusAfter
     styleClicked(descDefault: string, styleDefault: string) {
-        if ((this.editor.session.getTextRange(this.editor.getSelectionRange()) === "")) {
+        if (
+            this.editor.session.getTextRange(
+                this.editor.getSelectionRange()
+            ) === ""
+        ) {
             if (this.selectWord()) {
-                descDefault = this.editor.session.getTextRange(this.editor.getSelectionRange());
+                descDefault = this.editor.session.getTextRange(
+                    this.editor.getSelectionRange()
+                );
             }
         } else {
-            descDefault = this.editor.session.getTextRange(this.editor.getSelectionRange());
+            descDefault = this.editor.session.getTextRange(
+                this.editor.getSelectionRange()
+            );
         }
-        this.snippetManager.insertSnippet(this.editor, "[" + descDefault + "]{.${0:" + styleDefault + "}}");
+        this.snippetManager.insertSnippet(
+            this.editor,
+            "[" + descDefault + "]{.${0:" + styleDefault + "}}"
+        );
     }
 
     /**
@@ -394,15 +440,26 @@ export class AceParEditor extends BaseParEditor {
      */
     @focusAfter
     linkClicked(descDefault: string, linkDefault: string, isImage: boolean) {
-        const image = (isImage) ? "!" : "";
-        if ((this.editor.session.getTextRange(this.editor.getSelectionRange()) === "")) {
+        const image = isImage ? "!" : "";
+        if (
+            this.editor.session.getTextRange(
+                this.editor.getSelectionRange()
+            ) === ""
+        ) {
             if (this.selectWord()) {
-                descDefault = this.editor.session.getTextRange(this.editor.getSelectionRange());
+                descDefault = this.editor.session.getTextRange(
+                    this.editor.getSelectionRange()
+                );
             }
         } else {
-            descDefault = this.editor.session.getTextRange(this.editor.getSelectionRange());
+            descDefault = this.editor.session.getTextRange(
+                this.editor.getSelectionRange()
+            );
         }
-        this.snippetManager.insertSnippet(this.editor, image + "[" + descDefault + "](${0:" + linkDefault + "})");
+        this.snippetManager.insertSnippet(
+            this.editor,
+            image + "[" + descDefault + "](${0:" + linkDefault + "})"
+        );
     }
 
     @focusAfter
@@ -430,7 +487,7 @@ export class AceParEditor extends BaseParEditor {
             toKeepInLine = "";
         }
         let toNextLine;
-        if ((line.length - pos.column) > 0) {
+        if (line.length - pos.column > 0) {
             toNextLine = line.substring(pos.column, line.length);
         } else {
             toNextLine = "";
@@ -443,7 +500,9 @@ export class AceParEditor extends BaseParEditor {
     @focusAfter
     insertTemplate(text: string) {
         const ci = text.indexOf(CURSOR);
-        if (ci >= 0) { text = text.slice(0, ci) + text.slice(ci + 1); }
+        if (ci >= 0) {
+            text = text.slice(0, ci) + text.slice(ci + 1);
+        }
         const range = this.editor.getSelectionRange();
         const start = range.start;
         this.snippetManager.insertSnippet(this.editor, text);
@@ -457,8 +516,12 @@ export class AceParEditor extends BaseParEditor {
             this.editor.selection.setRange(range, false);
         }
         if (ci >= 0) {
-            const pos = this.editor.session.getDocument().positionToIndex(start, 0);
-            const r = this.editor.session.getDocument().indexToPosition(pos + ci, 0);
+            const pos = this.editor.session
+                .getDocument()
+                .positionToIndex(start, 0);
+            const r = this.editor.session
+                .getDocument()
+                .indexToPosition(pos + ci, 0);
             range.start = r;
             range.end = r;
             this.editor.selection.setRange(range, false);
@@ -488,7 +551,6 @@ export class AceParEditor extends BaseParEditor {
                 break;
             }
         }
-
     }
 
     @focusAfter
@@ -506,7 +568,11 @@ export class AceParEditor extends BaseParEditor {
         const range = selection.getRange();
         const pos = this.editor.getCursorPosition();
         // If cursor is at the start of a line and there is no selection
-        if (pos.column === 0 && (range.start.row === range.end.row && range.start.column === range.end.column)) {
+        if (
+            pos.column === 0 &&
+            range.start.row === range.end.row &&
+            range.start.column === range.end.column
+        ) {
             this.editor.selection.selectLine();
         } else {
             // If there is nothing but a comment block in line erase it
@@ -561,7 +627,10 @@ export class AceParEditor extends BaseParEditor {
 
     @focusAfter
     squareClicked() {
-        this.snippetManager.insertSnippet(this.editor, "\\sqrt{${0:$SELECTION}}");
+        this.snippetManager.insertSnippet(
+            this.editor,
+            "\\sqrt{${0:$SELECTION}}"
+        );
     }
 
     getEditorText(): string {
@@ -581,8 +650,12 @@ export class AceParEditor extends BaseParEditor {
     }
 
     setPosition([start, end]: SelectionRange) {
-        const range = this.editor.session.getDocument().indexToPosition(start, 0);
-        const range2 = this.editor.session.getDocument().indexToPosition(end, 0);
+        const range = this.editor.session
+            .getDocument()
+            .indexToPosition(start, 0);
+        const range2 = this.editor.session
+            .getDocument()
+            .indexToPosition(end, 0);
         const Range = this.ace.Range;
         this.editor.selection.setRange(Range.fromPoints(range, range2), false);
         this.gotoCursor();
@@ -594,15 +667,25 @@ export class AceParEditor extends BaseParEditor {
 
     forceWrap(force: boolean) {
         let n = this.getWrapValue();
-        if (!n) { return; }
-        if (n < 0) { n = -n; }
+        if (!n) {
+            return;
+        }
+        if (n < 0) {
+            n = -n;
+        }
         const text = this.getEditorText();
         if (!force) {
-            if (text.includes("```")) { return; }
-            if (text.includes("|")) { return; }
+            if (text.includes("```")) {
+                return;
+            }
+            if (text.includes("|")) {
+                return;
+            }
         }
         const r = wrapText(text, n);
-        if (!r.modified) { return; }
+        if (!r.modified) {
+            return;
+        }
         const editor = this.editor;
         let cursor = editor.selection.getCursor();
         const sess = editor.getSession();

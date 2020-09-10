@@ -4,7 +4,11 @@ import {to2} from "tim/util/utils";
 import {showBookmarkDialog} from "tim/bookmark/bookmark-dialog.component";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/dialog";
-import {BookmarkService, IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
+import {
+    BookmarkService,
+    IBookmark,
+    IBookmarkGroup,
+} from "tim/bookmark/bookmark.service";
 import {RootCtrl} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
 
@@ -62,8 +66,10 @@ export class BookmarksComponent implements OnInit {
     deleting: boolean = false;
     private rootCtrl?: RootCtrl = rootInstance;
 
-    constructor(private http: HttpClient, private bookmarkSvc: BookmarkService) {
-    }
+    constructor(
+        private http: HttpClient,
+        private bookmarkSvc: BookmarkService
+    ) {}
 
     ngOnInit(): void {
         this.groups = this.bookmarkSvc.getGroups();
@@ -72,7 +78,10 @@ export class BookmarksComponent implements OnInit {
         }
     }
 
-    getFromServer(response: IBookmarkGroup[], groupToKeepOpen?: IBookmarkGroup) {
+    getFromServer(
+        response: IBookmarkGroup[],
+        groupToKeepOpen?: IBookmarkGroup
+    ) {
         this.groups = response;
         this.keepGroupOpen(groupToKeepOpen);
     }
@@ -103,7 +112,8 @@ export class BookmarksComponent implements OnInit {
 
     async newBookmark(e: Event, group?: string) {
         e.preventDefault();
-        const suggestedName = genericglobals().curr_item?.title ?? document.title;
+        const suggestedName =
+            genericglobals().curr_item?.title ?? document.title;
         const bookmark = await showBookmarkDialog({
             group: group ?? "",
             name: suggestedName,
@@ -113,7 +123,11 @@ export class BookmarksComponent implements OnInit {
         if (!bookmark.name) {
             return;
         }
-        const resp = await to2(this.http.post<IBookmarkGroup[]>("/bookmarks/add", bookmark).toPromise());
+        const resp = await to2(
+            this.http
+                .post<IBookmarkGroup[]>("/bookmarks/add", bookmark)
+                .toPromise()
+        );
         if (!resp.ok) {
             return;
         }
@@ -123,11 +137,13 @@ export class BookmarksComponent implements OnInit {
     async editItem(e: Event, group: IBookmarkGroup, item: IBookmark) {
         e.stopPropagation();
         e.preventDefault();
-        const r = await to2(showBookmarkDialog({
-            group: group.name,
-            name: item.name,
-            link: item.link,
-        }));
+        const r = await to2(
+            showBookmarkDialog({
+                group: group.name,
+                name: item.name,
+                link: item.link,
+            })
+        );
         if (!r.ok) {
             setTimeout(() => {
                 this.keepGroupOpen(group);
@@ -137,13 +153,17 @@ export class BookmarksComponent implements OnInit {
         if (!r.result.name) {
             return;
         }
-        const response = await to2(this.http.post<IBookmarkGroup[]>("/bookmarks/edit", {
-            old: {
-                group: group.name,
-                name: item.name,
-            },
-            new: r.result,
-        }).toPromise());
+        const response = await to2(
+            this.http
+                .post<IBookmarkGroup[]>("/bookmarks/edit", {
+                    old: {
+                        group: group.name,
+                        name: item.name,
+                    },
+                    new: r.result,
+                })
+                .toPromise()
+        );
         if (!response.ok) {
             return;
         }
@@ -153,10 +173,14 @@ export class BookmarksComponent implements OnInit {
     async deleteItem(e: Event, group: IBookmarkGroup, item: IBookmark) {
         e.stopPropagation();
         e.preventDefault();
-        const r = await to2(this.http.post<IBookmarkGroup[]>("/bookmarks/delete", {
-            group: group.name,
-            name: item.name,
-        }).toPromise());
+        const r = await to2(
+            this.http
+                .post<IBookmarkGroup[]>("/bookmarks/delete", {
+                    group: group.name,
+                    name: item.name,
+                })
+                .toPromise()
+        );
         if (!r.ok) {
             showMessageDialog("Could not delete bookmark.");
             return;
@@ -168,10 +192,18 @@ export class BookmarksComponent implements OnInit {
     async deleteGroup(e: Event, group: IBookmarkGroup) {
         e.stopPropagation();
         e.preventDefault();
-        if (window.confirm("Are you sure you want to delete this bookmark group?")) {
-            const r = await to2(this.http.post<IBookmarkGroup[]>("/bookmarks/deleteGroup", {
-                group: group.name,
-            }).toPromise());
+        if (
+            window.confirm(
+                "Are you sure you want to delete this bookmark group?"
+            )
+        ) {
+            const r = await to2(
+                this.http
+                    .post<IBookmarkGroup[]>("/bookmarks/deleteGroup", {
+                        group: group.name,
+                    })
+                    .toPromise()
+            );
             if (!r.ok) {
                 showMessageDialog("Could not delete bookmark group.");
                 return;

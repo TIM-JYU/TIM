@@ -1,4 +1,10 @@
-import {AfterContentInit, ContentChild, Directive, ElementRef, OnDestroy} from "@angular/core";
+import {
+    AfterContentInit,
+    ContentChild,
+    Directive,
+    ElementRef,
+    OnDestroy,
+} from "@angular/core";
 import {NgModel} from "@angular/forms";
 import {Subscription} from "rxjs";
 import {InputService} from "./input.service";
@@ -11,8 +17,7 @@ export class ErrorStateDirective implements AfterContentInit, OnDestroy {
     @ContentChild(NgModel, {static: false}) c?: NgModel;
     private sub?: Subscription;
 
-    constructor(private i: InputService, private e: ElementRef<HTMLElement>) {
-    }
+    constructor(private i: InputService, private e: ElementRef<HTMLElement>) {}
 
     ngAfterContentInit() {
         if (this.c?.statusChanges) {

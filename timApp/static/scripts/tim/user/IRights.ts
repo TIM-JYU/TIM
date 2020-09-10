@@ -13,6 +13,4 @@ const Rights = t.type({
 
 export const RightNames = t.keyof(Rights.props);
 
-export interface IRights extends t.TypeOf<typeof Rights> {
-
-}
+export interface IRights extends t.TypeOf<typeof Rights> {}

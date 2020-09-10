@@ -30,15 +30,17 @@ export class Tile {
      * @param y Tiles y-coordinate on the map
      * @param scaleGetter Function for getting the current scale
      */
-    constructor(json: IMapResponse,
-                imageIndex: number,
-                tileset: ITileSet,
-                spreadsheet: HTMLImageElement,
-                layerNo: number,
-                dataIndex: number,
-                x: number,
-                y: number,
-                scaleGetter: () => number) {
+    constructor(
+        json: IMapResponse,
+        imageIndex: number,
+        tileset: ITileSet,
+        spreadsheet: HTMLImageElement,
+        layerNo: number,
+        dataIndex: number,
+        x: number,
+        y: number,
+        scaleGetter: () => number
+    ) {
         this.scaleGetter = scaleGetter;
         // Index for the image on spreadsheet
         this.imageIndex = imageIndex;
@@ -112,7 +114,8 @@ export class Tile {
             return;
         }
         const scale = this.scaleGetter();
-        context.drawImage(this.spreadsheet,
+        context.drawImage(
+            this.spreadsheet,
             this.sourceX,
             this.sourceY,
             this.tileset.tilewidth,
@@ -120,15 +123,23 @@ export class Tile {
             (this.x + this.offsetX) * scale,
             (this.y + this.offsetY + this.heightCorr) * scale,
             this.tileset.tilewidth * scale,
-            this.tileset.tileheight * scale);
+            this.tileset.tileheight * scale
+        );
     }
 
     // Check if point is inside the tile
     public isPointInside(x: number, y: number) {
         const scale = this.scaleGetter();
-        return (x >= (this.x + this.offsetX) * scale &&
+        return (
+            x >= (this.x + this.offsetX) * scale &&
             x <= (this.x + this.tileset.tilewidth + this.offsetX) * scale &&
             y >= (this.y + this.offsetY + this.heightCorr) * scale &&
-            y <= (this.y + this.tileset.tileheight + this.offsetY + this.heightCorr) * scale);
+            y <=
+                (this.y +
+                    this.tileset.tileheight +
+                    this.offsetY +
+                    this.heightCorr) *
+                    scale
+        );
     }
 }

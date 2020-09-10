@@ -3,9 +3,25 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
-import {getFormBehavior, PluginBase, pluginBindings, shuffleStrings} from "tim/plugin/util";
+import {
+    ChangeType,
+    FormModeOption,
+    ISetAnswerResult,
+    ITimComponent,
+    ViewCtrl,
+} from "tim/document/viewctrl";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
+import {
+    getFormBehavior,
+    PluginBase,
+    pluginBindings,
+    shuffleStrings,
+} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {defaultErrorMessage, defaultTimeout, to} from "tim/util/utils";
 
@@ -28,8 +44,7 @@ const DropdownMarkup = t.intersection([
     }),
 ]);
 const DropdownAll = t.intersection([
-    t.partial({
-    }),
+    t.partial({}),
     t.type({
         info: Info,
         markup: DropdownMarkup,
@@ -38,7 +53,13 @@ const DropdownAll = t.intersection([
     }),
 ]);
 
-class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.TypeOf<typeof DropdownAll>, typeof DropdownAll> implements ITimComponent {
+class DropdownController
+    extends PluginBase<
+        t.TypeOf<typeof DropdownMarkup>,
+        t.TypeOf<typeof DropdownAll>,
+        typeof DropdownAll
+    >
+    implements ITimComponent {
     private error?: string;
     // noinspection JSMismatchedCollectionQueryUpdate
     private wordList?: string[];
@@ -57,7 +78,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
 
     $onInit() {
         super.$onInit();
-        this.selectedWord = (this.attrsall.state?.c) ?? undefined;
+        this.selectedWord = this.attrsall.state?.c ?? undefined;
         this.shuffle = this.attrs.shuffle;
         if (this.shuffle && this.attrs.words) {
             this.wordList = shuffleStrings(this.attrs.words);
@@ -116,7 +137,11 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         }
 
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params, {timeout: defaultTimeout}));
+        const r = await to(
+            $http.put<{web: {result: string; error?: string}}>(url, params, {
+                timeout: defaultTimeout,
+            })
+        );
 
         if (r.ok) {
             this.changes = false;
@@ -125,7 +150,10 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             this.error = data.web.error;
         } else {
             this.error = r.result.data?.error;
-            this.connectionErrorMessage = this.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
+            this.connectionErrorMessage =
+                this.error ??
+                this.attrs.connectionErrorMessage ??
+                defaultErrorMessage;
         }
         this.initialWord = this.selectedWord;
         return {saved: r.ok, message: this.error};
@@ -190,7 +218,7 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setAnswer(content: { [index: string]: any }): ISetAnswerResult {
+    setAnswer(content: {[index: string]: any}): ISetAnswerResult {
         this.error = undefined;
         let message;
         let ok = true;
@@ -202,7 +230,9 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             } catch (e) {
                 this.selectedWord = "";
                 ok = false;
-                message = `Couldn't find related content ("c") from ${JSON.stringify(content)}`;
+                message = `Couldn't find related content ("c") from ${JSON.stringify(
+                    content
+                )}`;
                 this.error = message;
             }
         }
@@ -210,7 +240,6 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         this.updateListeners(ChangeType.Saved);
         this.initialWord = this.selectedWord;
         return {ok: ok, message: message};
-
     }
 
     resetField(): undefined {
@@ -227,7 +256,6 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
         this.changes = false;
         this.updateListeners(ChangeType.Saved);
     }
-
 }
 
 dropdownApp.component("dropdownRunner", {

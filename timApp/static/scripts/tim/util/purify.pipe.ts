@@ -6,14 +6,14 @@ import DOMPurify from "dompurify";
     name: "purify",
 })
 export class PurifyPipe implements PipeTransform {
-
-    constructor(protected sanitizer: DomSanitizer) {
-    }
+    constructor(protected sanitizer: DomSanitizer) {}
 
     public transform(value: unknown) {
         if (typeof value !== "string") {
             return value;
         }
-        return this.sanitizer.bypassSecurityTrustHtml(DOMPurify.sanitize(value));
+        return this.sanitizer.bypassSecurityTrustHtml(
+            DOMPurify.sanitize(value)
+        );
     }
 }

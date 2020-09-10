@@ -4,7 +4,12 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {defaultTimeout, to} from "tim/util/utils";
@@ -34,8 +39,7 @@ const GoalTableMarkup = t.intersection([
     }),
 ]);
 const GoalTableAll = t.intersection([
-    t.partial({
-    }),
+    t.partial({}),
     t.type({
         info: Info,
         markup: GoalTableMarkup,
@@ -60,27 +64,34 @@ interface Words {
 }
 
 const goalTableWords: Words = {
-    btnText :  { fi: "Tallenna", en: "Save"},
-    editText:  { fi: "Muokkaa", en: "Modify"},
-    goalText:  { fi: "Osattava asia", en: "Learning outcomes"},
-    editTitle: { fi: "Ruksi jotta voit siirellä", en: "Check this to move items"},
+    btnText: {fi: "Tallenna", en: "Save"},
+    editText: {fi: "Muokkaa", en: "Modify"},
+    goalText: {fi: "Osattava asia", en: "Learning outcomes"},
+    editTitle: {
+        fi: "Ruksi jotta voit siirellä",
+        en: "Check this to move items",
+    },
 };
 const scaleValueWords: Word[] = [
-    {fi: "ei kuullut",      en: "never heard"},  // 0
-    {fi: "muistaa",         en: "remember"},     // 1
-    {fi: "ymmärtää",        en: "understands"},  // 2
-    {fi: "osaa soveltaa",   en: "apply"},        // 3
-    {fi: "osaa analysoida", en: "analyze"},      // 4
-    {fi: "osaa arvioida",   en: "evaluate"},     // 5
-    {fi: "osaa luoda",      en: "create"},       // 6
+    {fi: "ei kuullut", en: "never heard"}, // 0
+    {fi: "muistaa", en: "remember"}, // 1
+    {fi: "ymmärtää", en: "understands"}, // 2
+    {fi: "osaa soveltaa", en: "apply"}, // 3
+    {fi: "osaa analysoida", en: "analyze"}, // 4
+    {fi: "osaa arvioida", en: "evaluate"}, // 5
+    {fi: "osaa luoda", en: "create"}, // 6
 ];
 
-class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
-                                  t.TypeOf<typeof GoalTableAll>, typeof GoalTableAll>
-                                  implements ITimComponent {
+class GoalTableController
+    extends PluginBase<
+        t.TypeOf<typeof GoalTableMarkup>,
+        t.TypeOf<typeof GoalTableAll>,
+        typeof GoalTableAll
+    >
+    implements ITimComponent {
     private vctrl!: ViewCtrl;
     private isRunning = false;
-    private error: {message?: string, stacktrace?: string} = {};
+    private error: {message?: string; stacktrace?: string} = {};
     private result: string = "";
     // noinspection JSMismatchedCollectionQueryUpdate
     private headings: string[] = [];
@@ -91,7 +102,10 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
     private initgoal: number = 0;
     private editMode: boolean = false;
     private initialValue: string = "";
-    private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
+    private saveResponse: {saved: boolean; message: string | undefined} = {
+        saved: false,
+        message: undefined,
+    };
     private content: string = "";
     private bloomText: string = "";
     private editText: string = "";
@@ -122,11 +136,16 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
             const iid = s.indexOf(";");
             const ig = s.indexOf(";", iid + 1);
             const id = parts[0].trim();
-            const goal = (parts[1].trim() || "0");
+            const goal = parts[1].trim() || "0";
             const itemtext = s.substring(ig + 1).trim() || "";
-            const userselection = state[id] || ("" + this.initgoal);
+            const userselection = state[id] || "" + this.initgoal;
 
-            this.rows.push({id: id, goal: goal, itemtext: itemtext, userSelection: userselection});
+            this.rows.push({
+                id: id,
+                goal: goal,
+                itemtext: itemtext,
+                userSelection: userselection,
+            });
         }
         this.calcContent();
         this.initialValue = this.getContent();
@@ -144,7 +163,8 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
             if (this.attrs.lang === "en") {
                 this.bloomText = "(learning outcomes by Bloom's taxonomy: ";
             } else {
-                this.bloomText = "(osaamisen taso sovelletulla Bloomin asteikolla: ";
+                this.bloomText =
+                    "(osaamisen taso sovelletulla Bloomin asteikolla: ";
             }
             let sep = "";
             for (let i = 1; i < this.scaleWords.length; i++) {
@@ -226,11 +246,12 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
         this.error = {};
         this.result = "";
 
-        const r = await to($http<{
-            web?: { result?: string, error?: string }
-            error?: string,
-        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
-        ));
+        const r = await to(
+            $http<{
+                web?: {result?: string; error?: string};
+                error?: string;
+            }>({method: "PUT", url: url, data: params, timeout: defaultTimeout})
+        );
 
         this.isRunning = false;
         if (!r.ok) {
@@ -263,7 +284,9 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
 
     // noinspection JSUnusedLocalSymbols
     private rbClicked(row: GoalLine, h: string) {
-        if (!this.editMode) { return; }
+        if (!this.editMode) {
+            return;
+        }
         row.userSelection = h;
         this.calcContent();
         this.result = "";

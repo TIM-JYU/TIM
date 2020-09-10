@@ -23,8 +23,16 @@ export interface IAnnotationCoordinate {
     depth?: number;
 }
 
-export function isFullCoord(c: IAnnotationCoordinate): c is Required<IAnnotationCoordinate> {
-    return c.offset != null && c.el_path != null && c.node != null && c.depth != null && c.t != null;
+export function isFullCoord(
+    c: IAnnotationCoordinate
+): c is Required<IAnnotationCoordinate> {
+    return (
+        c.offset != null &&
+        c.el_path != null &&
+        c.node != null &&
+        c.depth != null &&
+        c.t != null
+    );
 }
 
 export interface IAnnotationInterval {
@@ -54,8 +62,7 @@ export class Annotation implements IAnnotation {
     @JsonProperty() public visible_to!: number;
     @JsonProperty() public draw_data?: DrawObject[];
 
-    constructor() {
-    }
+    constructor() {}
 
     getAnswerId(): number | undefined {
         return this.answer?.id;
@@ -96,9 +103,8 @@ export class NewAnnotation implements IAnnotation {
     constructor(
         public velp: IVelp,
         public annotator: IUser,
-        public answer_id: number | null,
-    ) {
-    }
+        public answer_id: number | null
+    ) {}
 
     getAnswerId(): number | undefined {
         return this.answer_id ?? undefined;
@@ -166,14 +172,19 @@ export interface IVelpGroup {
     edit_access?: boolean;
 }
 
-export type INewLabel = Overwrite<ILabel, { id: null | number }> & IUIFields;
-export type INewVelp = Overwrite<IVelp, { id: null | number, visible_to: number | null }> & IUIFields;
-export type INewVelpGroup = Overwrite<IVelpGroup, { id: null | number }> & IUIFields;
+export type INewLabel = Overwrite<ILabel, {id: null | number}> & IUIFields;
+export type INewVelp = Overwrite<
+    IVelp,
+    {id: null | number; visible_to: number | null}
+> &
+    IUIFields;
+export type INewVelpGroup = Overwrite<IVelpGroup, {id: null | number}> &
+    IUIFields;
 
 export type ILabelUI = ILabel & IUIFields;
 export type IVelpUI = IVelp & IUIFields;
 export type IVelpGroupUI = IVelpGroup & IUIFields;
 
 export interface IVelpGroupCollection {
-    [index: string]: Array<{ id: number, selected?: boolean }>;
+    [index: string]: Array<{id: number; selected?: boolean}>;
 }

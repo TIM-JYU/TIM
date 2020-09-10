@@ -9,18 +9,28 @@ export enum InputDialogKind {
     InputAndValidator,
 }
 
-type InputDialogParams<T> =
-    {
-        title: string;
-        text: string;
-        okText?: string;
-        cancelText?: string;
-    }
-    & ({ isInput: InputDialogKind.NoValidator, okValue: T } |
-    { isInput: InputDialogKind.ValidatorOnly, validator: () => Promise<Result<T, string>> } |
-    { isInput: InputDialogKind.InputAndValidator, defaultValue: string, validator: (s: string) => Promise<Result<T, string>> });
+type InputDialogParams<T> = {
+    title: string;
+    text: string;
+    okText?: string;
+    cancelText?: string;
+} & (
+    | {isInput: InputDialogKind.NoValidator; okValue: T}
+    | {
+          isInput: InputDialogKind.ValidatorOnly;
+          validator: () => Promise<Result<T, string>>;
+      }
+    | {
+          isInput: InputDialogKind.InputAndValidator;
+          defaultValue: string;
+          validator: (s: string) => Promise<Result<T, string>>;
+      }
+);
 
-class InputDialogCtrl<T> extends DialogController<{ params: InputDialogParams<T> }, T> {
+class InputDialogCtrl<T> extends DialogController<
+    {params: InputDialogParams<T>},
+    T
+> {
     static component = "timInputDialog";
     static $inject = ["$element", "$scope"] as const;
     private value = "";
@@ -34,7 +44,8 @@ class InputDialogCtrl<T> extends DialogController<{ params: InputDialogParams<T>
 
     $onInit() {
         super.$onInit();
-        this.isInput = this.resolve.params.isInput == InputDialogKind.InputAndValidator;
+        this.isInput =
+            this.resolve.params.isInput == InputDialogKind.InputAndValidator;
         if (this.resolve.params.isInput !== InputDialogKind.InputAndValidator) {
             this.value = "-";
         } else {
@@ -80,9 +91,8 @@ class InputDialogCtrl<T> extends DialogController<{ params: InputDialogParams<T>
     }
 }
 
-registerDialogComponent(InputDialogCtrl,
-    {
-        template: `
+registerDialogComponent(InputDialogCtrl, {
+    template: `
 <tim-dialog>
     <dialog-body>
         <p ng-bind-html="::$ctrl.text()"></p>
@@ -105,8 +115,11 @@ registerDialogComponent(InputDialogCtrl,
     </dialog-footer>
 </tim-dialog>
     `,
-    });
+});
 
 export function showInputDialog<T>(p: InputDialogParams<T>) {
-    return showDialog<InputDialogCtrl<T>, readonly ["$element", "$scope"]>(InputDialogCtrl, {params: () => p}).result;
+    return showDialog<InputDialogCtrl<T>, readonly ["$element", "$scope"]>(
+        InputDialogCtrl,
+        {params: () => p}
+    ).result;
 }

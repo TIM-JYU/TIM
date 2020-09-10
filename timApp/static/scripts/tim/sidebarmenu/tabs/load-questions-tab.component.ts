@@ -10,8 +10,7 @@ import {LectureController} from "tim/lecture/lectureController";
     `,
 })
 export class LoadQuestionsTabComponent implements OnTabSelect {
-    constructor() {
-    }
+    constructor() {}
 
     onSelect() {
         void LectureController.instance.getQuestionManually();

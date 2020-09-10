@@ -6,18 +6,21 @@ import {Max1000} from "../../shared/jsrunnertypes";
 console.log("rs");
 const router = express.Router();
 
-const RunScriptInput = t.intersection([t.type({
-    code: t.string,
-    data: t.unknown,
-}), t.partial({
-    timeout: Max1000,
-})]);
+const RunScriptInput = t.intersection([
+    t.type({
+        code: t.string,
+        data: t.unknown,
+    }),
+    t.partial({
+        timeout: Max1000,
+    }),
+]);
 
 function numberLines(s: string, delta: number): string {
     const lines = s.split("\n");
     let result = "";
     for (let i = 0; i < lines.length; i++) {
-        const space = (i + delta < 10) ? "0" : "";
+        const space = i + delta < 10 ? "0" : "";
         result += space + (i + delta) + ": " + lines[i] + "\n";
     }
     return result;
@@ -58,7 +61,7 @@ function runScript() {
 JSON.stringify(runScript())`,
             {
                 filename: "script.js",
-            },
+            }
         );
     } catch (e) {
         const lines = "\n<pre>\n" + numberLines(inputs.code, 11) + "</pre>\n";
@@ -69,12 +72,20 @@ JSON.stringify(runScript())`,
     const ctx = await isolate.createContext({inspector: false});
     await ctx.global.set("g", JSON.stringify(inputs.data));
     try {
-        const result = await script.run(ctx, {timeout: inputs.timeout ?? 500}) as string;
-        const jresult = JSON.parse(result) as {result: unknown, output: unknown};
+        const result = (await script.run(ctx, {
+            timeout: inputs.timeout ?? 500,
+        })) as string;
+        const jresult = JSON.parse(result) as {
+            result: unknown;
+            output: unknown;
+        };
         if ("result" in jresult) {
             res.json({result: jresult.result, output: jresult.output});
         } else {
-            res.json({error: "Script failed to return anything (the return value must be JSON serializable)."});
+            res.json({
+                error:
+                    "Script failed to return anything (the return value must be JSON serializable).",
+            });
         }
     } catch (e) {
         const err = e as Error;

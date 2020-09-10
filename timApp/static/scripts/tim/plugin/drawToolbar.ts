@@ -13,28 +13,27 @@ import {
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 
-
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar
     // For example imageX does not support ellipses
-    enabled?: boolean,
-    freeHand?: boolean,
-    lineMode?: boolean,
-    rectangleMode?: boolean,
-    ellipseMode?: boolean,
-    w?: boolean,
-    color?: boolean,
-    fill?: boolean,
-    opacity?: boolean,
+    enabled?: boolean;
+    freeHand?: boolean;
+    lineMode?: boolean;
+    rectangleMode?: boolean;
+    ellipseMode?: boolean;
+    w?: boolean;
+    color?: boolean;
+    fill?: boolean;
+    opacity?: boolean;
 }
 
 export interface IDrawOptions {
-    enabled: boolean,
-    drawType: DrawType,
-    w: number,
-    color: string,
-    fill: boolean,
-    opacity: number,
+    enabled: boolean;
+    drawType: DrawType;
+    w: number;
+    color: string;
+    fill: boolean;
+    opacity: number;
 }
 
 export enum DrawType {
@@ -198,27 +197,22 @@ export class DrawToolbarComponent implements AfterViewInit {
     setInputBackgroundColor(color: string) {
         if (this.colorInput) {
             this.colorInput.nativeElement.style.backgroundColor = color;
-            const prev = window.getComputedStyle(this.colorInput.nativeElement).backgroundColor;
+            const prev = window.getComputedStyle(this.colorInput.nativeElement)
+                .backgroundColor;
             if (prev.includes("rgb(")) {
-                this.colorInput.nativeElement.style.backgroundColor =
-                    prev.replace("rgb", "rgba")
-                        .replace(")", `, ${this.drawSettings.opacity})`);
+                this.colorInput.nativeElement.style.backgroundColor = prev
+                    .replace("rgb", "rgba")
+                    .replace(")", `, ${this.drawSettings.opacity})`);
             }
         }
     }
 }
 
 @NgModule({
-    declarations: [
-        DrawToolbarComponent,
-    ], imports: [
-        CommonModule,
-        FormsModule,
-    ],
+    declarations: [DrawToolbarComponent],
+    imports: [CommonModule, FormsModule],
     exports: [DrawToolbarComponent],
 })
 export class DrawToolbarModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
-

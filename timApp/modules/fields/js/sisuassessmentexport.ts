@@ -50,7 +50,9 @@ function getAssessments(data: IGradeResponse) {
 
 export const Sisu = angular.module("sisuModule", []);
 
-async function getFakeData(opts: ISendGradeOptions): Promise<{data: IGradeResponse}> {
+async function getFakeData(
+    opts: ISendGradeOptions
+): Promise<{data: IGradeResponse}> {
     await $timeout(500);
     const d = opts.completionDate;
     return {
@@ -86,11 +88,20 @@ async function getFakeData(opts: ISendGradeOptions): Promise<{data: IGradeRespon
                         email: "akuankka3@example.com",
                     },
                 },
-            ].filter((u) => opts.filterUsers === undefined || opts.filterUsers.includes(u.user.name))
-                .map((u) => (d ? {
-                    ...u,
-                    completionDate: d.format("YYYY-MM-DD"),
-                } : u)),
+            ]
+                .filter(
+                    (u) =>
+                        opts.filterUsers === undefined ||
+                        opts.filterUsers.includes(u.user.name)
+                )
+                .map((u) =>
+                    d
+                        ? {
+                              ...u,
+                              completionDate: d.format("YYYY-MM-DD"),
+                          }
+                        : u
+                ),
             default_selection: opts.dryRun ? [-1, -2] : [],
             assessment_errors: [
                 {
@@ -106,7 +117,11 @@ async function getFakeData(opts: ISendGradeOptions): Promise<{data: IGradeRespon
                     },
                     message: "Sisu: Ilmoittautumista toteutukseen ei löytynyt",
                 },
-            ].filter((u) => opts.filterUsers === undefined || opts.filterUsers.includes(u.assessment.user.name)),
+            ].filter(
+                (u) =>
+                    opts.filterUsers === undefined ||
+                    opts.filterUsers.includes(u.assessment.user.name)
+            ),
         },
     };
 }
@@ -150,17 +165,23 @@ class SisuAssessmentExportController {
             return;
         }
         this.loading = true;
-        const groups: string[] | undefined = t.string.is(this.group) ? [this.group] : this.group;
-        const r = this.testOnly ? await to(getFakeData(opts)) : await to($http.post<IGradeResponse>("/sisu/sendGrades", {
-            completionDate: opts.completionDate,
-            destCourse: this.destCourse,
-            docId: this.docId,
-            dryRun: opts.dryRun,
-            filterUsers: opts.filterUsers,
-            groups: groups,
-            partial: opts.partial,
-            includeUsers: this.includeUsers,
-        }));
+        const groups: string[] | undefined = t.string.is(this.group)
+            ? [this.group]
+            : this.group;
+        const r = this.testOnly
+            ? await to(getFakeData(opts))
+            : await to(
+                  $http.post<IGradeResponse>("/sisu/sendGrades", {
+                      completionDate: opts.completionDate,
+                      destCourse: this.destCourse,
+                      docId: this.docId,
+                      dryRun: opts.dryRun,
+                      filterUsers: opts.filterUsers,
+                      groups: groups,
+                      partial: opts.partial,
+                      includeUsers: this.includeUsers,
+                  })
+              );
         this.loading = false;
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
@@ -177,7 +198,9 @@ class SisuAssessmentExportController {
             partial: true,
             dryRun: false,
             completionDate: this.completionDate,
-            filterUsers: this.grid.selection.getSelectedRows().map((r) => r.user.name),
+            filterUsers: this.grid.selection
+                .getSelectedRows()
+                .map((r) => r.user.name),
         });
         if (!data) {
             return;
@@ -193,7 +216,9 @@ class SisuAssessmentExportController {
             if (index !== undefined) {
                 this.assessments[index] = a;
             } else {
-                console.warn(`sendAssessments returned a user that did not exist in preview: ${a.user.name}`);
+                console.warn(
+                    `sendAssessments returned a user that did not exist in preview: ${a.user.name}`
+                );
             }
         }
         await $timeout();
@@ -219,10 +244,12 @@ class SisuAssessmentExportController {
         this.assessments = getAssessments(data);
         const defaults = new Set(data.default_selection);
         const hasNumericGrades = this.assessments.find(
-            (a) => t.number.is(a.gradeId) || (t.string.is(a.gradeId) && !isNaN(parseInt(a.gradeId, 10))),
+            (a) =>
+                t.number.is(a.gradeId) ||
+                (t.string.is(a.gradeId) && !isNaN(parseInt(a.gradeId, 10)))
         );
         const hasNonNumericGrades = this.assessments.find(
-            (a) => t.string.is(a.gradeId) && a.gradeId === "HYV",
+            (a) => t.string.is(a.gradeId) && a.gradeId === "HYV"
         );
         let defaultFilter = ">0";
         if (hasNonNumericGrades) {
@@ -231,29 +258,41 @@ class SisuAssessmentExportController {
                 defaultFilter = ".";
             }
         }
-        const gradeHasChanged = (a: IAssessmentExt) => StringOrNumber.is(a.sentGrade) && StringOrNumber.is(a.gradeId) && a.sentGrade && a.gradeId && a.sentGrade.toString() !== a.gradeId.toString();
-        const changedGrades = this.assessments.filter(
-            gradeHasChanged,
-        );
+        const gradeHasChanged = (a: IAssessmentExt) =>
+            StringOrNumber.is(a.sentGrade) &&
+            StringOrNumber.is(a.gradeId) &&
+            a.sentGrade &&
+            a.gradeId &&
+            a.sentGrade.toString() !== a.gradeId.toString();
+        const changedGrades = this.assessments.filter(gradeHasChanged);
         const hasChangedGrades = changedGrades.length > 0;
         const creditHasChanged = (a: IAssessmentExt) =>
-            (StringOrNumber.is(a.sentCredit) &&
-                StringOrNumber.is(a.completionCredits) &&
-                a.sentCredit && a.completionCredits &&
-                a.sentCredit.toString() !== a.completionCredits.toString());
-        const changedCredits = this.assessments.filter(
-            creditHasChanged,
-        );
+            StringOrNumber.is(a.sentCredit) &&
+            StringOrNumber.is(a.completionCredits) &&
+            a.sentCredit &&
+            a.completionCredits &&
+            a.sentCredit.toString() !== a.completionCredits.toString();
+        const changedCredits = this.assessments.filter(creditHasChanged);
         const hasChangedCredits = changedCredits.length > 0;
-        const alreadyConfirmed = (a: IAssessmentExt) => a.error?.startsWith("Sisu: Aikaisempi vahvistettu suoritus");
-        const hasChangedGradesOrCreditsAndNotConfirmed = [...changedGrades, ...changedCredits].filter((a) => !alreadyConfirmed(a));
-        this.notSendableButChanged = this.assessments.filter(
-            (a) => alreadyConfirmed(a) &&
-                (gradeHasChanged(a) ||
-                    creditHasChanged(a) ||
-                    a.sentGrade == null
-                )
-        ).filter((a) => StringOrNumber.is(a.gradeId) && !failGrades.has(a.gradeId.toString()));
+        const alreadyConfirmed = (a: IAssessmentExt) =>
+            a.error?.startsWith("Sisu: Aikaisempi vahvistettu suoritus");
+        const hasChangedGradesOrCreditsAndNotConfirmed = [
+            ...changedGrades,
+            ...changedCredits,
+        ].filter((a) => !alreadyConfirmed(a));
+        this.notSendableButChanged = this.assessments
+            .filter(
+                (a) =>
+                    alreadyConfirmed(a) &&
+                    (gradeHasChanged(a) ||
+                        creditHasChanged(a) ||
+                        a.sentGrade == null)
+            )
+            .filter(
+                (a) =>
+                    StringOrNumber.is(a.gradeId) &&
+                    !failGrades.has(a.gradeId.toString())
+            );
         this.notSendable = this.assessments.filter(alreadyConfirmed);
 
         // If the grade or credit has changed for someone, we cannot have "=" as default date filter because
@@ -261,7 +300,8 @@ class SisuAssessmentExportController {
         // Ideally, we would have the default filter by selection (checked boxes) state,
         // but it's not possible until we switch to tableForm
         // (or more like not worth the effort to figure out how to do it with the obsolete AngularJS ui-grid).
-        const defaultDateFilter = hasChangedGradesOrCreditsAndNotConfirmed.length > 0 ? "" : "=";
+        const defaultDateFilter =
+            hasChangedGradesOrCreditsAndNotConfirmed.length > 0 ? "" : "=";
 
         this.gridOptions = {
             onRegisterApi: async (grid) => {
@@ -336,7 +376,9 @@ class SisuAssessmentExportController {
                 },
             ]),
             isRowSelectable: (row) => {
-                const a = (row as unknown as uiGrid.IGridRowOf<IAssessmentExt>).entity;
+                const a = ((row as unknown) as uiGrid.IGridRowOf<
+                    IAssessmentExt
+                >).entity;
                 return a.gradeId != null;
             },
             data: this.assessments,
@@ -367,7 +409,9 @@ class SisuAssessmentExportController {
         let s = "real_name;username;grade\n";
         for (const a of [...list].sort(sortAssessments)) {
             const gradeToPrint = StringOrNumber.is(a.gradeId) ? a.gradeId : "";
-            s += `${a.user.real_name ?? "(null)"};${a.user.name};${gradeToPrint}\n`;
+            s += `${a.user.real_name ?? "(null)"};${
+                a.user.name
+            };${gradeToPrint}\n`;
         }
         copyToClipboard(s);
         void showMessageDialog("CSV copied to clipboard.");

@@ -8,9 +8,7 @@ export interface IExplCollection {
     [idString: string]: string;
 }
 
-export interface IQuestionMarkup extends IAskedJsonJson, IGenericPluginMarkup {
-
-}
+export interface IQuestionMarkup extends IAskedJsonJson, IGenericPluginMarkup {}
 
 export interface IQuestionParagraph extends IUniqueParId {
     markup: IQuestionMarkup;
@@ -30,16 +28,14 @@ export interface IAskedJsonBase {
     questionText: string;
     questionTitle: string;
     questionType: QuestionType;
-    randomizedRows?: number
+    randomizedRows?: number;
     timeLimit?: number;
 }
 
-export interface IAskedJsonJson extends IUnprocessedHeaders, IAskedJsonBase {
-
-}
+export interface IAskedJsonJson extends IUnprocessedHeaders, IAskedJsonBase {}
 
 export type QuestionType =
-    "checkbox-vertical"
+    | "checkbox-vertical"
     | "matrix"
     | "radio-vertical"
     | "true-false"
@@ -47,9 +43,18 @@ export type QuestionType =
     | "likert"
     | "";
 
-export type MatrixType = "textArea" | "radiobutton-horizontal" | "checkbox" | "inputText";
+export type MatrixType =
+    | "textArea"
+    | "radiobutton-horizontal"
+    | "checkbox"
+    | "inputText";
 
-export type AnswerFieldType = "radio" | "checkbox" | "matrix" | "text" | "inputText"; // TODO matrix seems wrong
+export type AnswerFieldType =
+    | "radio"
+    | "checkbox"
+    | "matrix"
+    | "text"
+    | "inputText"; // TODO matrix seems wrong
 
 export interface IHeader {
     text: string;
@@ -150,11 +155,18 @@ export interface ILecturePerson {
     user: IUser;
 }
 
-export function isLectureListResponse(response: unknown): response is ILectureListResponse {
-    return (response as ILectureListResponse).lectures != null && (response as ILectureListResponse).futureLectures != null;
+export function isLectureListResponse(
+    response: unknown
+): response is ILectureListResponse {
+    return (
+        (response as ILectureListResponse).lectures != null &&
+        (response as ILectureListResponse).futureLectures != null
+    );
 }
 
-export function isNoUpdatesResponse(response: unknown): response is INoUpdatesResponse {
+export function isNoUpdatesResponse(
+    response: unknown
+): response is INoUpdatesResponse {
     return (response as INoUpdatesResponse).ms != null;
 }
 
@@ -198,7 +210,10 @@ export interface IUniqueParId {
     docId: number;
 }
 
-export type IUpdateResponse = IGotUpdatesResponse | INoUpdatesResponse | ILectureListResponse;
+export type IUpdateResponse =
+    | IGotUpdatesResponse
+    | INoUpdatesResponse
+    | ILectureListResponse;
 
 export interface IPointsClosed {
     points_closed: true;
@@ -223,12 +238,10 @@ export interface IQuestionResult {
     data: IQuestionAnswer;
 }
 
-export type IExtraResponse =
-    | IPointsClosed
-    | IGetNewQuestionResponse;
+export type IExtraResponse = IPointsClosed | IGetNewQuestionResponse;
 
 export type IGetNewQuestionResponse =
-    IAlreadyAnswered
+    | IAlreadyAnswered
     | IQuestionAsked
     | IQuestionResult
     | IQuestionHasAnswer
@@ -247,7 +260,9 @@ export interface IEmptyResponse {
     empty: true;
 }
 
-export function isEmptyResponse(r: ILectureResponse | ILectureListResponse | IEmptyResponse): r is IEmptyResponse {
+export function isEmptyResponse(
+    r: ILectureResponse | ILectureListResponse | IEmptyResponse
+): r is IEmptyResponse {
     return (r as IEmptyResponse).empty;
 }
 
@@ -272,7 +287,9 @@ export function questionAsked(r: IExtraResponse): r is IQuestionAsked {
     return (r as IQuestionAsked).type === "question";
 }
 
-export function questionAnswerReceived(r: IExtraResponse): r is IQuestionResult {
+export function questionAnswerReceived(
+    r: IExtraResponse
+): r is IQuestionResult {
     return (r as IQuestionResult).type === "result";
 }
 

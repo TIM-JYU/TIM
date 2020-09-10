@@ -19,13 +19,15 @@ import {
 import {ViewCtrl} from "../viewctrl";
 import {EditType, IParResponse} from "./edittypes";
 
-export type ClipboardMetaResponse = {
-    area_name?: string;
-    disable_ref: boolean;
-    disable_content: boolean;
-    last_action?: "copy" | "cut" | "paste";
-    empty: false;
-} | {empty: true};
+export type ClipboardMetaResponse =
+    | {
+          area_name?: string;
+          disable_ref: boolean;
+          disable_content: boolean;
+          last_action?: "copy" | "cut" | "paste";
+          empty: false;
+      }
+    | {empty: true};
 
 export interface IClipboardMeta {
     area_name?: string;
@@ -84,7 +86,12 @@ export class ClipboardHandler {
     }
 
     async deleteFromSource() {
-        const r = await to($http.post<IClipBoardResponse>("/clipboard/deletesrc/" + this.viewctrl.docId, {}));
+        const r = await to(
+            $http.post<IClipBoardResponse>(
+                "/clipboard/deletesrc/" + this.viewctrl.docId,
+                {}
+            )
+        );
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
@@ -94,68 +101,106 @@ export class ClipboardHandler {
             const firstPar = pars[0].id;
             const lastPar = pars[pars.length - 1].id;
             this.viewctrl.editingHandler.handleDelete({
-                pars: getPars(getElementByParId(firstPar), getElementByParId(lastPar)),
+                pars: getPars(
+                    getElementByParId(firstPar),
+                    getElementByParId(lastPar)
+                ),
                 type: EditType.Edit,
             });
         }
     }
 
     async moveAbove(e: JQuery.Event, parOrArea: ParOrArea) {
-
-        const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
-            par_before: getFirstParId(parOrArea),
-        }));
+        const r = await to(
+            $http.post<IParResponse>(
+                "/clipboard/paste/" + this.viewctrl.docId,
+                {
+                    par_before: getFirstParId(parOrArea),
+                }
+            )
+        );
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddAbove, par: parOrArea});
+        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {
+            type: EditType.AddAbove,
+            par: parOrArea,
+        });
         this.deleteFromSource();
     }
 
     async moveBelow(e: JQuery.Event, parOrArea: ParOrArea) {
-
-        const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
-            par_after: getLastParId(parOrArea),
-        }));
+        const r = await to(
+            $http.post<IParResponse>(
+                "/clipboard/paste/" + this.viewctrl.docId,
+                {
+                    par_after: getLastParId(parOrArea),
+                }
+            )
+        );
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddBelow, par: parOrArea});
+        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {
+            type: EditType.AddBelow,
+            par: parOrArea,
+        });
         this.deleteFromSource();
     }
 
-    async pasteAbove(e: JQuery.Event, parOrArea: ParOrArea | undefined, asRef: boolean) {
-
-        const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
-            par_before: parOrArea ? getFirstParId(parOrArea) : null,
-            as_ref: asRef,
-        }));
+    async pasteAbove(
+        e: JQuery.Event,
+        parOrArea: ParOrArea | undefined,
+        asRef: boolean
+    ) {
+        const r = await to(
+            $http.post<IParResponse>(
+                "/clipboard/paste/" + this.viewctrl.docId,
+                {
+                    par_before: parOrArea ? getFirstParId(parOrArea) : null,
+                    as_ref: asRef,
+                }
+            )
+        );
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, parOrArea ? {
-            type: EditType.AddAbove,
-            par: parOrArea,
-        } : {type: EditType.AddBottom});
+        this.viewctrl.editingHandler.addSavedParToDom(
+            r.result.data,
+            parOrArea
+                ? {
+                      type: EditType.AddAbove,
+                      par: parOrArea,
+                  }
+                : {type: EditType.AddBottom}
+        );
     }
 
     async pasteBelow(e: JQuery.Event, parOrArea: ParOrArea, asRef: boolean) {
-        const r = await to($http.post<IParResponse>("/clipboard/paste/" + this.viewctrl.docId, {
-            par_after: getLastParId(parOrArea),
-            as_ref: asRef,
-        }));
+        const r = await to(
+            $http.post<IParResponse>(
+                "/clipboard/paste/" + this.viewctrl.docId,
+                {
+                    par_after: getLastParId(parOrArea),
+                    as_ref: asRef,
+                }
+            )
+        );
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
         }
 
-        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {type: EditType.AddBelow, par: parOrArea});
+        this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {
+            type: EditType.AddBelow,
+            par: parOrArea,
+        });
     }
 
     async updateClipboardStatus() {
@@ -165,7 +210,9 @@ export class ClipboardHandler {
             return;
         }
 
-        const r = await to($http.get<ClipboardMetaResponse>("/clipboardstatus", {}));
+        const r = await to(
+            $http.get<ClipboardMetaResponse>("/clipboardstatus", {})
+        );
         if (!r.ok) {
             this.viewctrl.clipMeta.allowPasteContent = false;
             this.viewctrl.clipMeta.allowPasteRef = false;
@@ -192,28 +239,33 @@ export class ClipboardHandler {
         await this.updateClipboardStatus();
         return [
             {
-                func: (e: JQuery.Event, p: Paragraph) => this.pasteRefAbove(e, p),
+                func: (e: JQuery.Event, p: Paragraph) =>
+                    this.pasteRefAbove(e, p),
                 desc: "Above, as a reference",
                 show: this.viewctrl.clipMeta.allowPasteRef,
             },
             {
-                func: (e: JQuery.Event, p: Paragraph) => this.pasteContentAbove(e, p),
+                func: (e: JQuery.Event, p: Paragraph) =>
+                    this.pasteContentAbove(e, p),
                 desc: "Above, as content",
                 show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {
-                func: (e: JQuery.Event, p: Paragraph) => this.pasteRefBelow(e, p),
+                func: (e: JQuery.Event, p: Paragraph) =>
+                    this.pasteRefBelow(e, p),
                 desc: "Below, as a reference",
                 show: this.viewctrl.clipMeta.allowPasteRef,
             },
             {
-                func: (e: JQuery.Event, p: Paragraph) => this.pasteContentBelow(e, p),
+                func: (e: JQuery.Event, p: Paragraph) =>
+                    this.pasteContentBelow(e, p),
                 desc: "Below, as content",
                 show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {
-                func: (e: JQuery.Event, p: Paragraph) => {
-                }, desc: "Cancel", show: true,
+                func: (e: JQuery.Event, p: Paragraph) => {},
+                desc: "Cancel",
+                show: true,
             },
         ];
     }
@@ -237,7 +289,17 @@ export class ClipboardHandler {
     async cutPar(e: JQuery.Event, par: Paragraph) {
         const docParId = [this.viewctrl.docId, par.attr("id")];
 
-        const r = await to($http.post<IClipBoardResponse>("/clipboard/cut/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {}));
+        const r = await to(
+            $http.post<IClipBoardResponse>(
+                "/clipboard/cut/" +
+                    docParId[0] +
+                    "/" +
+                    docParId[1] +
+                    "/" +
+                    docParId[1],
+                {}
+            )
+        );
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
@@ -247,7 +309,10 @@ export class ClipboardHandler {
             const firstPar = pars[0].id;
             const lastPar = pars[pars.length - 1].id;
             this.viewctrl.editingHandler.handleDelete({
-                pars: getPars(getElementByParId(firstPar), getElementByParId(lastPar)),
+                pars: getPars(
+                    getElementByParId(firstPar),
+                    getElementByParId(lastPar)
+                ),
                 type: EditType.Edit,
             });
         }
@@ -259,14 +324,29 @@ export class ClipboardHandler {
             return;
         }
 
-        const r = await to($http.post("/clipboard/copy/" + docParId[0] + "/" + docParId[1] + "/" + docParId[1], {}));
+        const r = await to(
+            $http.post(
+                "/clipboard/copy/" +
+                    docParId[0] +
+                    "/" +
+                    docParId[1] +
+                    "/" +
+                    docParId[1],
+                {}
+            )
+        );
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
             return;
         }
     }
 
-    async copyOrCutArea(e: JQuery.Event, parOrArea: ParOrArea, overrideDocId: number, cut: boolean) {
+    async copyOrCutArea(
+        e: JQuery.Event,
+        parOrArea: ParOrArea,
+        overrideDocId: number,
+        cut: boolean
+    ) {
         let refDocId;
         let areaName;
         let areaStart;
@@ -287,10 +367,14 @@ export class ClipboardHandler {
         const docId = overrideDocId ? overrideDocId : this.viewctrl.docId;
 
         if (cut) {
-
-            const r = await to($http.post<IClipBoardResponse>("/clipboard/cut/" + docId + "/" + areaStart + "/" + areaEnd, {
-                area_name: areaName,
-            }));
+            const r = await to(
+                $http.post<IClipBoardResponse>(
+                    "/clipboard/cut/" + docId + "/" + areaStart + "/" + areaEnd,
+                    {
+                        area_name: areaName,
+                    }
+                )
+            );
             if (!r.ok) {
                 await showMessageDialog(r.result.data.error);
                 return;
@@ -304,17 +388,29 @@ export class ClipboardHandler {
                     const firstPar = pars[0].id;
                     const lastPar = pars[pars.length - 1].id;
                     this.viewctrl.editingHandler.handleDelete({
-                        pars: getPars(getElementByParId(firstPar), getElementByParId(lastPar)),
+                        pars: getPars(
+                            getElementByParId(firstPar),
+                            getElementByParId(lastPar)
+                        ),
                         type: EditType.Edit,
                     });
                 }
             }
-
         } else {
-            const r = await to($http.post("/clipboard/copy/" + docId + "/" + areaStart + "/" + areaEnd, {
-                refDocId,
-                areaName,
-            }));
+            const r = await to(
+                $http.post(
+                    "/clipboard/copy/" +
+                        docId +
+                        "/" +
+                        areaStart +
+                        "/" +
+                        areaEnd,
+                    {
+                        refDocId,
+                        areaName,
+                    }
+                )
+            );
             if (!r.ok) {
                 await showMessageDialog(r.result.data.error);
                 return;

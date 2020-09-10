@@ -9,7 +9,8 @@ export const AnswerBrowserSettings = t.type({
     pointsStep: nullable(t.number),
 });
 
-export interface IAnswerBrowserMarkupSettings extends t.TypeOf<typeof AnswerBrowserSettings> {
+export interface IAnswerBrowserMarkupSettings
+    extends t.TypeOf<typeof AnswerBrowserSettings> {
     // Empty
 }
 
@@ -40,12 +41,16 @@ export const GenericPluginMarkup = t.partial({
     answerBrowser: nullable(AnswerBrowserSettings),
 });
 
-export const Info = nullable(t.type({
-    // TODO add the rest of the fields
-    earlier_answers: t.Integer,
-}));
+export const Info = nullable(
+    t.type({
+        // TODO add the rest of the fields
+        earlier_answers: t.Integer,
+    })
+);
 
-export function getTopLevelFields<M extends IGenericPluginMarkup>(m: t.Type<M>) {
+export function getTopLevelFields<M extends IGenericPluginMarkup>(
+    m: t.Type<M>
+) {
     return t.intersection([
         t.partial({
             access: t.keyof({
@@ -64,18 +69,21 @@ export function getTopLevelFields<M extends IGenericPluginMarkup>(m: t.Type<M>) 
 
 const UnknownTopLevel = getTopLevelFields(GenericPluginMarkup);
 
-export interface IGenericPluginTopLevelFields<MarkupType extends IGenericPluginMarkup> extends t.TypeOf<typeof UnknownTopLevel> {
+export interface IGenericPluginTopLevelFields<
+    MarkupType extends IGenericPluginMarkup
+> extends t.TypeOf<typeof UnknownTopLevel> {
     markup: MarkupType;
 }
 
-export interface IGenericPluginMarkup extends t.TypeOf<typeof GenericPluginMarkup> {
+export interface IGenericPluginMarkup
+    extends t.TypeOf<typeof GenericPluginMarkup> {
     // should be empty
 }
 
 // from https://github.com/teamdigitale/italia-ts-commons/blob/de4d85a2a1502da54f78aace8c6d7b263803f115/src/types.ts
 export function withDefault<T extends t.Any>(
     type: T,
-    defaultValue: t.TypeOf<T>,
+    defaultValue: t.TypeOf<T>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): t.Type<t.TypeOf<T>, any> {
     return new t.Type(
@@ -83,7 +91,7 @@ export function withDefault<T extends t.Any>(
         (v: unknown): v is T => type.is(v),
         (v: unknown, c: t.Context) =>
             type.validate(v !== undefined && v !== null ? v : defaultValue, c),
-        (v: unknown) => type.encode(v) as t.TypeOf<T>,
+        (v: unknown) => type.encode(v) as t.TypeOf<T>
     );
 }
 
@@ -91,4 +99,8 @@ export function nullable<T extends t.Any>(type: T) {
     return t.union([t.null, type]);
 }
 
-export const IncludeUsersOption = t.keyof({current: null, all: null, deleted: null});
+export const IncludeUsersOption = t.keyof({
+    current: null,
+    all: null,
+    deleted: null,
+});

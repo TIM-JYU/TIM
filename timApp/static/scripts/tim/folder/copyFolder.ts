@@ -5,7 +5,7 @@ import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 
-type PreviewList = Array<{from: string, to: string}>;
+type PreviewList = Array<{from: string; to: string}>;
 
 interface PreviewResponse {
     preview: PreviewList;
@@ -35,10 +35,12 @@ class CopyFolderCtrl implements IController {
 
     async copyFolderPreview(path: string, exclude: string) {
         this.copyingFolder = "notcopying";
-        const r = await to($http.post<PreviewResponse>(`/copy/${this.item.id}/preview`, {
-            destination: path,
-            exclude: exclude,
-        }));
+        const r = await to(
+            $http.post<PreviewResponse>(`/copy/${this.item.id}/preview`, {
+                destination: path,
+                exclude: exclude,
+            })
+        );
         if (r.ok) {
             this.copyPreviewList = r.result.data.preview;
             this.destExists = r.result.data.dest_exists;
@@ -49,7 +51,12 @@ class CopyFolderCtrl implements IController {
 
     async copyFolder(path: string, exclude: string) {
         this.copyingFolder = "copying";
-        const r = await to($http.post<IFolder>(`/copy/${this.item.id}`, {destination: path, exclude: exclude}));
+        const r = await to(
+            $http.post<IFolder>(`/copy/${this.item.id}`, {
+                destination: path,
+                exclude: exclude,
+            })
+        );
         if (r.ok) {
             this.copyingFolder = "finished";
             this.copyPreviewList = undefined;

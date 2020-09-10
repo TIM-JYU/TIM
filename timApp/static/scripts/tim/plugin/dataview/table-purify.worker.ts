@@ -15,16 +15,16 @@
  * enabled. The size of the entire compiled worker is under 1kB which shouldn't cause any visible loading times.
  */
 
-import * as sanitizeHtml from 'sanitize-html';
+import * as sanitizeHtml from "sanitize-html";
 
 interface PurifyData {
     row: number;
     data: string[];
 }
 
-addEventListener('message', ({data}: { data: PurifyData }) => {
+addEventListener("message", ({data}: {data: PurifyData}) => {
     postMessage({
-        data: data.data.map(c => sanitizeHtml(c)),
-        row: data.row
+        data: data.data.map((c) => sanitizeHtml(c)),
+        row: data.row,
     } as PurifyData);
 });

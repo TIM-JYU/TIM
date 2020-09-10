@@ -35,7 +35,8 @@ function isValidId(blockHint: string) {
 }
 
 // Denotes a stringified TaskId that has only docId and name parts.
-export interface DocIdDotName extends Newtype<{ readonly TaskDocIdStr: unique symbol }, string> {
+export interface DocIdDotName
+    extends Newtype<{readonly TaskDocIdStr: unique symbol}, string> {
     toString(): string;
 }
 
@@ -51,9 +52,8 @@ export class TaskId {
         public field?: string,
         public blockHint?: string,
         public plugintype?: string,
-        public access?: TaskIdAccess,
-    ) {
-    }
+        public access?: TaskIdAccess
+    ) {}
 
     docTask() {
         if (!this.docId) {
@@ -74,7 +74,7 @@ export class TaskId {
         tid: string,
         docidOpt: DocIdOption = DocIdOption.Required,
         blockHintOpt: BlockHintOption = BlockHintOption.Optional,
-        typeOpt: TypeOption = TypeOption.Forbidden,
+        typeOpt: TypeOption = TypeOption.Forbidden
     ): Result<TaskId, string> {
         const match: Array<string | undefined> | null = taskIdRe.exec(tid);
         if (!match) {
@@ -82,19 +82,27 @@ export class TaskId {
         }
         const [, , docId, name, , blockHintOrField, , plugintype, , rw] = match;
         if (name === undefined) {
-            throw new Error("name should've been defined because regex passed?");
+            throw new Error(
+                "name should've been defined because regex passed?"
+            );
         }
         if (!name) {
             return {ok: false, result: `Task id has empty name: ${tid}`};
         }
         if (docidOpt == DocIdOption.Required && !docId) {
-            return {ok: false, result: `Task id does not have required docId: ${tid}`};
+            return {
+                ok: false,
+                result: `Task id does not have required docId: ${tid}`,
+            };
         }
         if (docidOpt == DocIdOption.Forbidden && docId) {
             return {ok: false, result: `Task id has forbidden docId: ${tid}`};
         }
         if (typeOpt == TypeOption.Forbidden && plugintype) {
-            return {ok: false, result: `Task id has forbidden plugintype: ${tid}`};
+            return {
+                ok: false,
+                result: `Task id has forbidden plugintype: ${tid}`,
+            };
         }
         let field: string | undefined;
         let blockHint: string | undefined;
@@ -104,11 +112,17 @@ export class TaskId {
             }
         } else if (blockHintOpt == BlockHintOption.Optional) {
             if (blockHintOrField && !isValidId(blockHintOrField)) {
-                return {ok: false, result: `Invalid block id format in task id: ${tid}`};
+                return {
+                    ok: false,
+                    result: `Invalid block id format in task id: ${tid}`,
+                };
             }
             blockHint = blockHintOrField;
         } else if (blockHintOrField) {
-            return {ok: false, result: `Invalid field access in task id: ${tid}`};
+            return {
+                ok: false,
+                result: `Invalid field access in task id: ${tid}`,
+            };
         }
         let access: TaskIdAccess | undefined;
         if (rw == "readonly") {
@@ -124,7 +138,7 @@ export class TaskId {
                 field,
                 blockHint,
                 plugintype,
-                access,
+                access
             ),
         };
     }

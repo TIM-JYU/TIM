@@ -15,15 +15,15 @@ const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,]*) *(!?) */g;
 type NumStr = number | string;
 type FilterComparator = (a: NumStr, b: NumStr) => boolean;
 const filterComparatorOperators = {
-    "<": ((a: NumStr, b: NumStr) => a < b),
-    "<=": ((a: NumStr, b: NumStr) => a <= b),
-    "=": ((a: NumStr, b: NumStr) => a === b),
-    "==": ((a: NumStr, b: NumStr) => a === b),
-    "!==": ((a: NumStr, b: NumStr) => a !== b),
-    "!=": ((a: NumStr, b: NumStr) => a !== b),
-    "!": ((a: NumStr, b: NumStr) => a !== b),
-    ">": ((a: NumStr, b: NumStr) => a > b),
-    ">=": ((a: NumStr, b: NumStr) => a >= b),
+    "<": (a: NumStr, b: NumStr) => a < b,
+    "<=": (a: NumStr, b: NumStr) => a <= b,
+    "=": (a: NumStr, b: NumStr) => a === b,
+    "==": (a: NumStr, b: NumStr) => a === b,
+    "!==": (a: NumStr, b: NumStr) => a !== b,
+    "!=": (a: NumStr, b: NumStr) => a !== b,
+    "!": (a: NumStr, b: NumStr) => a !== b,
+    ">": (a: NumStr, b: NumStr) => a > b,
+    ">=": (a: NumStr, b: NumStr) => a >= b,
 };
 
 export class ComparatorFilter {
@@ -36,7 +36,11 @@ export class ComparatorFilter {
         // this.m = numFilterEx.exec(fltr);
         // if ( !this.m ) { return; }
         // if ( fltr.indexOf("!") >= 0 ) { fltr = fltr.replace("!", ""); this.negate = true; }
-        for (let result = numFilterEx.exec(fltr); result !== null; result = numFilterEx.exec(fltr)) {
+        for (
+            let result = numFilterEx.exec(fltr);
+            result !== null;
+            result = numFilterEx.exec(fltr)
+        ) {
             const op = result[1] as keyof typeof filterComparatorOperators; // We know that it'll be one of the operators.
             this.funcs.push(filterComparatorOperators[op]);
             const vs = result[2];
@@ -92,12 +96,14 @@ export class ComparatorFilter {
     }
 }
 
-export function withComparatorFilters<T>(params: Array<uiGrid.IColumnDefOf<T>>) {
+export function withComparatorFilters<T>(
+    params: Array<uiGrid.IColumnDefOf<T>>
+) {
     const matchFn = (
         searchTerm: string,
         cellValue: string | number | null | undefined,
         row: uiGrid.IGridRowOf<T>,
-        column: uiGrid.IGridColumnOf<T>,
+        column: uiGrid.IGridColumnOf<T>
     ) => {
         if (cellValue == null) {
             return searchTerm === "" || searchTerm === "=";

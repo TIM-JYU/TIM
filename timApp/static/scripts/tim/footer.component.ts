@@ -2,7 +2,6 @@ import {Component} from "@angular/core";
 import {getVisibilityVars} from "tim/timRoot";
 import {genericglobals} from "tim/util/globals";
 
-
 @Component({
     selector: "tim-footer",
     template: `

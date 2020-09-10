@@ -6,7 +6,14 @@ import {showMessageDialog} from "../ui/dialog";
 import {$http, $timeout} from "../util/ngimport";
 import {INameAreaOptions, showNameAreaDialog} from "./editing/nameArea";
 import {onClick, onMouseOverOut} from "./eventhandlers";
-import {Area, getArea, getFirstParId, getLastParId, Paragraph, Paragraphs} from "./parhelpers";
+import {
+    Area,
+    getArea,
+    getFirstParId,
+    getLastParId,
+    Paragraph,
+    Paragraphs,
+} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
 
 markAsUsed(nameArea);
@@ -53,16 +60,24 @@ export class AreaHandler {
             selectArea(areaName, ".areaeditline3", select);
         });
 
-        onClick(".areaeditline1", ($this, e) => this.onAreaEditClicked($this, e, ".areaeditline1"));
+        onClick(".areaeditline1", ($this, e) =>
+            this.onAreaEditClicked($this, e, ".areaeditline1")
+        );
 
-        onClick(".areaeditline2", ($this, e) => this.onAreaEditClicked($this, e, ".areaeditline2"));
+        onClick(".areaeditline2", ($this, e) =>
+            this.onAreaEditClicked($this, e, ".areaeditline2")
+        );
 
-        onClick(".areaeditline3", ($this, e) => this.onAreaEditClicked($this, e, ".areaeditline3"));
+        onClick(".areaeditline3", ($this, e) =>
+            this.onAreaEditClicked($this, e, ".areaeditline3")
+        );
 
         onClick(".areaexpand, .areacollapse", ($this, e) => {
-            if ($(e.target).hasClass("areareadline") ||
+            if (
+                $(e.target).hasClass("areareadline") ||
                 $(e.target).hasClass("readline") ||
-                $(e.target).hasClass("editline")) {
+                $(e.target).hasClass("editline")
+            ) {
                 return;
             }
             let expanding = true;
@@ -93,7 +108,11 @@ export class AreaHandler {
         });
     }
 
-    onAreaEditClicked($this: JQuery, e: JQuery.MouseEventBase, className: string) {
+    onAreaEditClicked(
+        $this: JQuery,
+        e: JQuery.MouseEventBase,
+        className: string
+    ) {
         this.viewctrl.closePopupIfOpen();
         const areaName = $this.attr("data-area");
         if (!areaName) {
@@ -103,7 +122,9 @@ export class AreaHandler {
         const areaPart = $this.parent().filter(".area");
 
         this.selectedAreaName = areaName;
-        $(".area.area_" + areaName).children(className).addClass("menuopen");
+        $(".area.area_" + areaName)
+            .children(className)
+            .addClass("menuopen");
 
         // We need the timeout so we don't trigger the ng-clicks on the buttons
         $timeout(() => {
@@ -111,8 +132,17 @@ export class AreaHandler {
         }, 80);
     }
 
-    showAreaOptionsWindow(e: JQuery.MouseEventBase, $area: Area, $pars: Paragraphs) {
-        this.viewctrl.parmenuHandler.showPopupMenu(e, $pars, this.viewctrl.parmenuHandler.getPopupAttrs(), "area");
+    showAreaOptionsWindow(
+        e: JQuery.MouseEventBase,
+        $area: Area,
+        $pars: Paragraphs
+    ) {
+        this.viewctrl.parmenuHandler.showPopupMenu(
+            e,
+            $pars,
+            this.viewctrl.parmenuHandler.getPopupAttrs(),
+            "area"
+        );
     }
 
     startArea(e: JQuery.Event, par: Paragraph) {
@@ -124,15 +154,21 @@ export class AreaHandler {
             return;
         }
         const result = await showNameAreaDialog();
-        await this.nameAreaOk(this.viewctrl.selection.pars, result.areaName, result.options);
+        await this.nameAreaOk(
+            this.viewctrl.selection.pars,
+            result.areaName,
+            result.options
+        );
     }
 
     async nameAreaOk($area: Area, areaName: string, options: INameAreaOptions) {
-        const r = await to($http.post("/name_area/" + this.viewctrl.docId + "/" + areaName, {
-            area_start: getFirstParId($area.first()),
-            area_end: getLastParId($area.last()),
-            options,
-        }));
+        const r = await to(
+            $http.post("/name_area/" + this.viewctrl.docId + "/" + areaName, {
+                area_start: getFirstParId($area.first()),
+                area_end: getLastParId($area.last()),
+                options,
+            })
+        );
         if (r.ok) {
             this.viewctrl.reload();
         } else {
@@ -151,7 +187,12 @@ export class AreaHandler {
             await showMessageDialog("Could not get area name");
         }
 
-        const r = await to($http.post("/unwrap_area/" + this.viewctrl.docId + "/" + areaName, {}));
+        const r = await to(
+            $http.post(
+                "/unwrap_area/" + this.viewctrl.docId + "/" + areaName,
+                {}
+            )
+        );
         if (r.ok) {
             this.viewctrl.reload();
         } else {

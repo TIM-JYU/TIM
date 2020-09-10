@@ -6,7 +6,12 @@ import angular from "angular";
 import * as t from "io-ts";
 import {EditMode} from "tim/document/popupMenu";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {documentglobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
@@ -23,8 +28,15 @@ const matchPlaceHolderRegExp = /\|match\[[0-9]+\]\|/g;
 const matchWordPlaceHolderRegExp = /\|match\[[0-9]+:[0-9]+\]\|/g;
 const matchWordsPlaceHolderRegExp = /\|match\[[0-9]+:[0-9]+-[0-9]+\]\|/g;
 const partPlaceHolderRegExp = /\|part\[[0-9]+\]\|/g;
-const answerRegExpArray = [answerPlaceHolderRegExp, answerWordsPlaceHolderRegExp];
-const matchRegExpArray = [matchPlaceHolderRegExp, matchWordPlaceHolderRegExp, matchWordsPlaceHolderRegExp];
+const answerRegExpArray = [
+    answerPlaceHolderRegExp,
+    answerWordsPlaceHolderRegExp,
+];
+const matchRegExpArray = [
+    matchPlaceHolderRegExp,
+    matchWordPlaceHolderRegExp,
+    matchWordsPlaceHolderRegExp,
+];
 const keywordPlaceHolder = /\|kw:.*\|/;
 
 // TODO: A placeholder for the level the learner currently is to be shown back to them.
@@ -42,9 +54,7 @@ const MatchElement = t.type({
     index: t.Integer,
 });
 
-interface IMatchElementT extends t.TypeOf<typeof MatchElement> {
-
-}
+interface IMatchElementT extends t.TypeOf<typeof MatchElement> {}
 
 const MatchElementArray = t.array(MatchElement);
 const StringArray = t.array(t.string);
@@ -55,16 +65,15 @@ const Choice = t.type({
     match: t.union([StringArray, MatchElementArray]),
 });
 
-interface IQuestionItemT extends t.TypeOf<typeof QuestionItem> {
-
-}
+interface IQuestionItemT extends t.TypeOf<typeof QuestionItem> {}
 
 // TODO: Change words to optional so it works with plugins that set their own words. Check that getSentence() doesn't break at the same time.
 const QuestionItem = t.intersection([
     t.partial({
         area: t.string,
         dragSource: t.string,
-    }), t.type({
+    }),
+    t.type({
         choices: t.array(Choice),
         pluginNames: StringArray,
         words: t.array(StringArray),
@@ -89,12 +98,14 @@ const FeedbackMarkup = t.intersection([
 ]);
 const FeedbackAll = t.intersection([
     t.partial({
-        state: nullable(t.type({
-            correct: t.boolean,
-            correct_answer: t.string,
-            feedback: t.string,
-            user_answer: t.string,
-        })),
+        state: nullable(
+            t.type({
+                correct: t.boolean,
+                correct_answer: t.string,
+                feedback: t.string,
+                user_answer: t.string,
+            })
+        ),
     }),
     t.type({
         info: Info,
@@ -103,7 +114,13 @@ const FeedbackAll = t.intersection([
     }),
 ]);
 
-class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.TypeOf<typeof FeedbackAll>, typeof FeedbackAll> implements ITimComponent {
+class FeedbackController
+    extends PluginBase<
+        t.TypeOf<typeof FeedbackMarkup>,
+        t.TypeOf<typeof FeedbackAll>,
+        typeof FeedbackAll
+    >
+    implements ITimComponent {
     private error?: string;
     private vctrl!: ViewCtrl;
     private userAnswer: string[] = [];
@@ -135,7 +152,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         super.$onInit();
         this.addToCtrl();
         this.setPluginWords();
-        this.isAnsweredArray = new Array(this.attrs.questionItems.length).fill(false);
+        this.isAnsweredArray = new Array(this.attrs.questionItems.length).fill(
+            false
+        );
         if (this.attrs.shuffle) {
             const questionIndex = this.getRandomQuestion(this.isAnsweredArray);
             if (questionIndex !== undefined) {
@@ -165,7 +184,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (!this.showAnswers) {
             await import("style-loader!../css/hideanswerbrowser.css" as string);
         }
-        if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
+        if (
+            !this.vctrl.item.rights.editable ||
+            !this.vctrl.item.rights.teacher
+        ) {
             await import("style-loader!../css/viewhide.css" as string);
             this.vctrl.actionsDisabled = true;
         }
@@ -248,7 +270,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         for (const item of items) {
             for (const choice of item.choices) {
                 if (choice.correct) {
-                    if (item.pluginNames.length !== choice.match.length && !this.error) {
+                    if (
+                        item.pluginNames.length !== choice.match.length &&
+                        !this.error
+                    ) {
                         this.error = `${item.pluginNames.toString()}'s correct answer is missing a match for some of its plugins`;
                     }
                 }
@@ -266,11 +291,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         if (id) {
             const inst = this.vctrl.getTimComponentByName(id);
             if (!inst && !this.error) {
-                this.error = "Feedback plugin has instruction plugin defined but it cannot be found from the document.";
+                this.error =
+                    "Feedback plugin has instruction plugin defined but it cannot be found from the document.";
             }
         }
         if (!id && instruction.length < 1 && !this.error) {
-            this.error = "Missing an instruction block or it has no .instruction-class defined.";
+            this.error =
+                "Missing an instruction block or it has no .instruction-class defined.";
         }
     }
 
@@ -295,7 +322,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
     checkDefaultMatch() {
         const items = this.attrs.questionItems;
         for (const item of items) {
-            const defaultMatch = item.choices.filter((x) => x.match.length === 0);
+            const defaultMatch = item.choices.filter(
+                (x) => x.match.length === 0
+            );
             if (defaultMatch.length === 0 && !this.error) {
                 this.error = `A question item (${item.pluginNames.toString()}) is missing default feedback.`;
             }
@@ -438,11 +467,24 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * with the selections that are correct.
      */
     async save() {
-        const userAnswer = this.getSentence(this.answerArray, this.selectionMap).join(" ");
-        return await this.doSave(false, this.correctAnswer, this.correctAnswerString, userAnswer);
+        const userAnswer = this.getSentence(
+            this.answerArray,
+            this.selectionMap
+        ).join(" ");
+        return await this.doSave(
+            false,
+            this.correctAnswer,
+            this.correctAnswerString,
+            userAnswer
+        );
     }
 
-    async doSave(nosave: boolean, correct: boolean, correctAnswer: string, userAnswer: string) {
+    async doSave(
+        nosave: boolean,
+        correct: boolean,
+        correctAnswer: string,
+        userAnswer: string
+    ) {
         this.saving = true;
         const params = {
             input: {
@@ -461,7 +503,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{ web: { result: string, error?: string } }>(url, params));
+        const r = await to(
+            $http.put<{web: {result: string; error?: string}}>(url, params)
+        );
         this.saving = false;
         if (r.ok) {
             const data = r.result.data;
@@ -539,7 +583,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         }
 
         if (this.pluginMode === Mode.Instruction) {
-            const instructionQuestion = this.vctrl.getTimComponentByName(this.attrs.practiceID ?? "");
+            const instructionQuestion = this.vctrl.getTimComponentByName(
+                this.attrs.practiceID ?? ""
+            );
             if (this.attrs.practiceID && instructionQuestion) {
                 if (instructionQuestion.getContent() === undefined) {
                     this.printFeedback("Please select a choice");
@@ -554,8 +600,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     this.hideComponent(instructionQuestion);
                 }
             } else {
-                const instruction = document.querySelectorAll(".par.instruction");
-                if (instruction && (!this.teacherRight || this.editMode == null)) {
+                const instruction = document.querySelectorAll(
+                    ".par.instruction"
+                );
+                if (
+                    instruction &&
+                    (!this.teacherRight || this.editMode == null)
+                ) {
                     this.hideParagraph(instruction[0]);
                 }
                 const result = await this.doSave(false, false, "", "");
@@ -575,7 +626,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 this.showBlock(this.questionItemIndex);
                 this.itemHidden = false;
             }
-            if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
+            if (
+                !this.vctrl.item.rights.editable ||
+                !this.vctrl.item.rights.teacher
+            ) {
                 this.vctrl.doingTask = true;
             }
             return;
@@ -593,11 +647,18 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             const selections = this.getAnswerFromPlugins();
             this.correctMap = this.getCorrectValues();
             // TODO: Fix this so that if there is a dot after the plugin in a paragraph, there is no space between the word and the dot.
-            this.correctAnswerString = this.getSentence(this.answerArray, this.correctMap).join(" ");
-            const matchIndex = this.compareChoices(this.questionItemIndex, selections);
+            this.correctAnswerString = this.getSentence(
+                this.answerArray,
+                this.correctMap
+            ).join(" ");
+            const matchIndex = this.compareChoices(
+                this.questionItemIndex,
+                selections
+            );
 
             if (!this.teacherRight || this.editMode == null) {
-                const area = this.attrs.questionItems[this.questionItemIndex].area;
+                const area = this.attrs.questionItems[this.questionItemIndex]
+                    .area;
                 if (area) {
                     this.hideArea(area);
                 } else {
@@ -607,20 +668,25 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             }
 
             if (matchIndex === undefined) {
-                this.error = "You have no choices defined, got no matches or using match objects";
+                this.error =
+                    "You have no choices defined, got no matches or using match objects";
             } else {
                 // Get the choice in matchIndex and the feedbacks assigned to it.
                 if (matchIndex !== undefined) {
                     const choice = plugins.choices[matchIndex];
                     const feedbackLevels = choice.levels;
                     if (choice.correct) {
-                        this.printFeedback(feedbackLevels[feedbackLevels.length - 1]);
+                        this.printFeedback(
+                            feedbackLevels[feedbackLevels.length - 1]
+                        );
                         this.correctAnswer = true;
                         // TODO: Might be useful, if the incorrect answers were presented to the user again. Maybe add an attribute for it.
                         this.isAnsweredArray[this.questionItemIndex] = true;
                         this.streak++;
                     } else {
-                        this.printFeedback(feedbackLevels[this.currentFeedbackLevel++]);
+                        this.printFeedback(
+                            feedbackLevels[this.currentFeedbackLevel++]
+                        );
                         this.correctAnswer = false;
                         this.isAnsweredArray[this.questionItemIndex] = true;
                         this.streak = 0;
@@ -660,11 +726,18 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 questionIndex = this.questionItemIndex;
             }
 
-            if (questionIndex === undefined || this.streak === this.attrs.correctsInRow ||
-                this.isAnsweredArray.every((x) => x) || this.currentFeedbackLevel === this.feedbackMax
-                || this.questionItemIndex >= this.attrs.questionItems.length) {
+            if (
+                questionIndex === undefined ||
+                this.streak === this.attrs.correctsInRow ||
+                this.isAnsweredArray.every((x) => x) ||
+                this.currentFeedbackLevel === this.feedbackMax ||
+                this.questionItemIndex >= this.attrs.questionItems.length
+            ) {
                 this.pluginMode = Mode.EndTask;
-                if (!this.vctrl.item.rights.editable || !this.vctrl.item.rights.teacher) {
+                if (
+                    !this.vctrl.item.rights.editable ||
+                    !this.vctrl.item.rights.teacher
+                ) {
                     this.vctrl.doingTask = false;
                 }
                 this.itemHidden = true;
@@ -693,7 +766,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param plugins Plugins to check.
      */
     hasContent(plugins: IQuestionItemT): boolean {
-        if (!plugins) { return false; }
+        if (!plugins) {
+            return false;
+        }
         for (const p of plugins.pluginNames) {
             const plugin = this.vctrl.getTimComponentByName(p);
             if (plugin && plugin.getContent() === undefined) {
@@ -780,7 +855,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             return true;
         }
 
-        if (match.length !== answer.length) { return false; }
+        if (match.length !== answer.length) {
+            return false;
+        }
         for (let i = 0; i < answer.length; i++) {
             // TODO: Keyword not really needed with RegExp, but leave it in anyway for now if users happen to use it.
             const kw = match[i].match(keywordPlaceHolder);
@@ -791,7 +868,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 }
                 continue;
             }
-            if (match[i] === answer[i]) { continue; }
+            if (match[i] === answer[i]) {
+                continue;
+            }
             const re = new RegExp(`\\b${match[i]}\\b`);
             if (!re.test(answer[i])) {
                 return false;
@@ -805,7 +884,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @param match MatchElement defined in the markup for question item's choices.
      * @param answer Array of selections the user has made as the answers for the question item.
      */
-    checkMatchObjectArray(match: IMatchElementT[], answer: string[]): number | undefined {
+    checkMatchObjectArray(
+        match: IMatchElementT[],
+        answer: string[]
+    ): number | undefined {
         return;
     }
 
@@ -818,7 +900,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
         const answer = this.userAnswer.join(" ");
         this.feedback = feedback;
         this.feedback = this.feedback.replace(answerPlaceHolder, answer);
-        this.feedback = this.feedback.replace(correctPlaceHolder, this.correctAnswerString);
+        this.feedback = this.feedback.replace(
+            correctPlaceHolder,
+            this.correctAnswerString
+        );
         const placere = this.feedback.match(partPlaceHolderRegExp);
         if (placere) {
             this.replacePlaceHolder(placere, this.partArray);
@@ -864,14 +949,20 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 const wordString = word.toString();
                 const wordIndex = parseInt(wordString.split(":")[1], 10);
                 if (replacementArray[wordIndex]) {
-                    this.feedback = this.feedback.replace(placeholder, replacementArray[wordIndex]);
+                    this.feedback = this.feedback.replace(
+                        placeholder,
+                        replacementArray[wordIndex]
+                    );
                 } else {
                     this.feedback = this.feedback.replace(placeholder, "");
                 }
             }
 
             if (words) {
-                const result = this.replaceMultipleWords(replacementArray, words);
+                const result = this.replaceMultipleWords(
+                    replacementArray,
+                    words
+                );
                 this.feedback = this.feedback.replace(placeholder, result);
             }
 
@@ -882,7 +973,6 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
             if (!word && !words && !indices) {
                 this.feedback = this.feedback.replace(placeholder, replacement);
             }
-
         }
     }
 
@@ -913,14 +1003,17 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      * @returns(string[]) The user's selections to the question item.
      */
     getAnswerFromPlugins(): string[] {
-        const plugins = this.attrs.questionItems[this.questionItemIndex].pluginNames;
+        const plugins = this.attrs.questionItems[this.questionItemIndex]
+            .pluginNames;
         const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
 
         if (timComponent) {
             const par = timComponent.getPar();
             const content = par.children(".parContent");
             // Add additional nodes to be accepted if the need arises.
-            const treeWalker = document.createTreeWalker(content[0], NodeFilter.SHOW_ALL,
+            const treeWalker = document.createTreeWalker(
+                content[0],
+                NodeFilter.SHOW_ALL,
                 {
                     acceptNode: (node) => {
                         if (node.nodeName === "#text") {
@@ -936,7 +1029,8 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                         // need to be modified if div is ever changed to be accepted.
                         return NodeFilter.FILTER_REJECT;
                     },
-                });
+                }
+            );
 
             const answer: string[] = [];
             const parts: string[] = [];
@@ -960,9 +1054,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
 
                 if (node.nodeName === "TIM-PLUGIN-LOADER") {
                     if (node instanceof Element) {
-                        const name = node.getAttribute("task-id")!.split(".")[1];
+                        const name = node
+                            .getAttribute("task-id")!
+                            .split(".")[1];
                         if (name && plugins.includes(name)) {
-                            const plugin = this.vctrl.getTimComponentByName(name);
+                            const plugin = this.vctrl.getTimComponentByName(
+                                name
+                            );
                             if (plugin) {
                                 if (plugin.getContentArray) {
                                     const pluginNodeArrayContent = plugin.getContentArray();
@@ -982,12 +1080,14 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                                 } else {
                                     const pluginNodeContent = plugin.getContent();
                                     if (pluginNodeContent !== undefined) {
-                                        values.set(name, pluginNodeContent.trim());
+                                        values.set(
+                                            name,
+                                            pluginNodeContent.trim()
+                                        );
                                         answer.push(name);
                                         parts.push(pluginNodeContent);
                                         selections.push(pluginNodeContent);
                                     }
-
                                 }
                             }
                         }
@@ -1012,14 +1112,15 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      */
     getSentence(sentence: string[], choices: Map<string, string>): string[] {
         const temp = [];
-        const wordlists = this.attrs.questionItems[this.questionItemIndex].words;
+        const wordlists = this.attrs.questionItems[this.questionItemIndex]
+            .words;
         let i = 0;
         let j = 0;
         for (const [k, v] of choices) {
             const re = new RegExp(v);
             let value = v;
             if (j < wordlists.length) {
-                const word = wordlists[j].filter((x) => re.test((`\\b${x}\\b`)));
+                const word = wordlists[j].filter((x) => re.test(`\\b${x}\\b`));
                 if (word.length > 0) {
                     value = word[0];
                 }
@@ -1096,7 +1197,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 }
             }
             if (item.dragSource) {
-                const timComponent = this.vctrl.getTimComponentByName(item.dragSource);
+                const timComponent = this.vctrl.getTimComponentByName(
+                    item.dragSource
+                );
                 if (timComponent) {
                     timComponent.resetField();
                 } else {
@@ -1111,7 +1214,10 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
      *
      */
     $doCheck() {
-        if (!this.attrsall.preview && this.editMode != documentglobals().editMode) {
+        if (
+            !this.attrsall.preview &&
+            this.editMode != documentglobals().editMode
+        ) {
             this.editMode = documentglobals().editMode;
             const instructions = document.querySelectorAll(".par.instruction");
             if (!this.edited) {
@@ -1119,7 +1225,9 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                 const items = this.attrs.questionItems;
                 for (const item of items) {
                     if (item.pluginNames.length > 0) {
-                        const plugin = this.vctrl.getTimComponentByName(item.pluginNames[0]);
+                        const plugin = this.vctrl.getTimComponentByName(
+                            item.pluginNames[0]
+                        );
                         if (plugin) {
                             const par = plugin.getPar();
                             this.showParagraph(par.children(".parContent")[0]);
@@ -1127,12 +1235,13 @@ class FeedbackController extends PluginBase<t.TypeOf<typeof FeedbackMarkup>, t.T
                     }
                 }
                 this.edited = true;
-
             } else {
                 const items = this.attrs.questionItems;
                 for (const item of items) {
                     if (item.pluginNames.length > 0) {
-                        const plugin = this.vctrl.getTimComponentByName(item.pluginNames[0]);
+                        const plugin = this.vctrl.getTimComponentByName(
+                            item.pluginNames[0]
+                        );
                         if (plugin) {
                             const par = plugin.getPar();
                             this.hideParagraph(par.children(".parContent")[0]);

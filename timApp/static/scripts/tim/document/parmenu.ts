@@ -3,20 +3,36 @@ import $ from "jquery";
 import {showMessageDialog} from "../ui/dialog";
 import {Coords, dist, getPageXY, to} from "../util/utils";
 import {onClick} from "./eventhandlers";
-import {getCitePar, getParId, getPreambleDocId, isActionablePar, isPreamble, Paragraph} from "./parhelpers";
+import {
+    getCitePar,
+    getParId,
+    getPreambleDocId,
+    isActionablePar,
+    isPreamble,
+    Paragraph,
+} from "./parhelpers";
 import {EditMode, showPopupMenu} from "./popupMenu";
 import {ViewCtrl} from "./viewctrl";
 import {getEmptyCoords, MenuFunctionList} from "./viewutils";
 
 function selectionToStr(selection: JQuery) {
-    return selection.toArray().map((e) => "#" + e.id).join(",");
+    return selection
+        .toArray()
+        .map((e) => "#" + e.id)
+        .join(",");
 }
 
-function checkIfIgnored(ignoredTags: string[], ignoredClasses: string[], element: JQuery) {
+function checkIfIgnored(
+    ignoredTags: string[],
+    ignoredClasses: string[],
+    element: JQuery
+) {
     const classSelector = ignoredClasses.map((c) => "." + c).join(",");
     const tagSelector = ignoredTags.join(",");
-    return element.parents(tagSelector).addBack(tagSelector).length > 0
-        || element.parents(classSelector).addBack(classSelector).length > 0;
+    return (
+        element.parents(tagSelector).addBack(tagSelector).length > 0 ||
+        element.parents(classSelector).addBack(classSelector).length > 0
+    );
 }
 
 export class ParmenuHandler {
@@ -28,43 +44,62 @@ export class ParmenuHandler {
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
-        onClick(".paragraphs .parContent", ($this, e) => {
-            if (this.viewctrl.editing) {
-                return false;
-            }
+        onClick(
+            ".paragraphs .parContent",
+            ($this, e) => {
+                if (this.viewctrl.editing) {
+                    return false;
+                }
 
-            const target = $(e.target) as JQuery;
-            const par = $this.parents(".par");
-            if (!isActionablePar(par)) {
-                return;
-            }
+                const target = $(e.target) as JQuery;
+                const par = $this.parents(".par");
+                if (!isActionablePar(par)) {
+                    return;
+                }
 
-            // Don't show paragraph menu on these specific tags or classes
-            if (checkIfIgnored(
-                ["button", "input", "textarea", "a", "answerbrowser", "select", "label"],
-                ["no-popup-menu", "ace_editor", "btn"],
-                target,
-            )) {
-                return false;
-            }
+                // Don't show paragraph menu on these specific tags or classes
+                if (
+                    checkIfIgnored(
+                        [
+                            "button",
+                            "input",
+                            "textarea",
+                            "a",
+                            "answerbrowser",
+                            "select",
+                            "label",
+                        ],
+                        ["no-popup-menu", "ace_editor", "btn"],
+                        target
+                    )
+                ) {
+                    return false;
+                }
 
-            if (this.viewctrl.selection.start != null) {
-                this.viewctrl.editingHandler.extendSelection(par, true);
-            } else {
-                const offset = par.offset() ?? getEmptyCoords();
-                const coords = {left: e.pageX - offset.left, top: e.pageY - offset.top};
-                const toggle1 = !par.hasClass("lightselect");
-                const toggle2 = par.hasClass("lightselect") && !this.isCloseMenuDefault();
+                if (this.viewctrl.selection.start != null) {
+                    this.viewctrl.editingHandler.extendSelection(par, true);
+                } else {
+                    const offset = par.offset() ?? getEmptyCoords();
+                    const coords = {
+                        left: e.pageX - offset.left,
+                        top: e.pageY - offset.top,
+                    };
+                    const toggle1 = !par.hasClass("lightselect");
+                    const toggle2 =
+                        par.hasClass("lightselect") &&
+                        !this.isCloseMenuDefault();
 
-                $(".par.selected").removeClass("selected");
-                $(".par.lightselect").removeClass("lightselect");
-                this.viewctrl.closePopupIfOpen();
-                this.toggleActionButtons(e, par, toggle1, toggle2, coords);
-            }
-            this.viewctrl.reviewCtrl.selectText(par[0]);
-            sc.$apply();
-            return true;
-        }, true);
+                    $(".par.selected").removeClass("selected");
+                    $(".par.lightselect").removeClass("lightselect");
+                    this.viewctrl.closePopupIfOpen();
+                    this.toggleActionButtons(e, par, toggle1, toggle2, coords);
+                }
+                this.viewctrl.reviewCtrl.selectText(par[0]);
+                sc.$apply();
+                return true;
+            },
+            true
+        );
 
         this.viewctrl.defaultAction = {
             desc: "Show options window",
@@ -72,45 +107,56 @@ export class ParmenuHandler {
             show: true,
         };
 
-        onClick(".editline", async ($this, e) => {
-            await this.viewctrl.closePopupIfOpen();
-            const par = $this.parent().filter(".par");
-            if (isPreamble(par)) {
-                const parId = getParId(par) ?? "";
-                showMessageDialog(`
+        onClick(
+            ".editline",
+            async ($this, e) => {
+                await this.viewctrl.closePopupIfOpen();
+                const par = $this.parent().filter(".par");
+                if (isPreamble(par)) {
+                    const parId = getParId(par) ?? "";
+                    showMessageDialog(`
 <p>This paragraph is from a preamble document.
-To comment or edit this, go to the corresponding <a href="/view/${getPreambleDocId(par)!}">preamble document</a>.</p>
+To comment or edit this, go to the corresponding <a href="/view/${getPreambleDocId(
+                        par
+                    )!}">preamble document</a>.</p>
 
 <p>Citation help: <code>${getCitePar(this.viewctrl.item.id, parId)}</code></p>
 `);
-            }
-            if (!isActionablePar(par)) {
-                return;
-            }
-            if (this.viewctrl.selection.start != null) {
-                this.viewctrl.editingHandler.extendSelection(par);
-            }
+                }
+                if (!isActionablePar(par)) {
+                    return;
+                }
+                if (this.viewctrl.selection.start != null) {
+                    this.viewctrl.editingHandler.extendSelection(par);
+                }
 
-            if (!this.viewctrl.actionsDisabled) {
-                this.showOptionsWindow(e, par);
-            }
-            return false;
-        }, true);
+                if (!this.viewctrl.actionsDisabled) {
+                    this.showOptionsWindow(e, par);
+                }
+                return false;
+            },
+            true
+        );
     }
 
     private isCloseMenuDefault() {
-        return this.viewctrl.defaultAction && this.viewctrl.defaultAction.desc === "Close menu";
+        return (
+            this.viewctrl.defaultAction &&
+            this.viewctrl.defaultAction.desc === "Close menu"
+        );
     }
 
-    async showPopupMenu(e: JQuery.MouseEventBase,
-                        $pars: Paragraph,
-                        attrs: {
-                            actions: MenuFunctionList,
-                            save: boolean,
-                            contenturl?: string,
-                            editbutton: boolean,
-                        },
-                        editcontext?: EditMode) {
+    async showPopupMenu(
+        e: JQuery.MouseEventBase,
+        $pars: Paragraph,
+        attrs: {
+            actions: MenuFunctionList;
+            save: boolean;
+            contenturl?: string;
+            editbutton: boolean;
+        },
+        editcontext?: EditMode
+    ) {
         const pos = getPageXY(e);
         const p = {
             actions: attrs.actions,
@@ -133,17 +179,22 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         editline.removeClass("menuopen");
     }
 
-    toggleActionButtons(e: JQuery.MouseEventBase, par: Paragraph, toggle1: boolean, toggle2: boolean, coords: Coords) {
-        if (!this.viewctrl.item.rights.editable && !this.viewctrl.item.rights.can_comment) {
+    toggleActionButtons(
+        e: JQuery.MouseEventBase,
+        par: Paragraph,
+        toggle1: boolean,
+        toggle2: boolean,
+        coords: Coords
+    ) {
+        if (
+            !this.viewctrl.item.rights.editable &&
+            !this.viewctrl.item.rights.can_comment
+        ) {
             return;
         }
 
         const target = $(e.target) as JQuery;
-        if (checkIfIgnored(
-            ["answerbrowser"],
-            ["no-highlight"],
-            target,
-        )) {
+        if (checkIfIgnored(["answerbrowser"], ["no-highlight"], target)) {
             return false;
         }
 
@@ -181,10 +232,10 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
     }
 
     updatePopupMenuIfOpen(attrs: {
-        actions: MenuFunctionList,
-        save: boolean,
-        contenturl?: string,
-        editbutton: boolean,
+        actions: MenuFunctionList;
+        save: boolean;
+        contenturl?: string;
+        editbutton: boolean;
     }) {
         if (this.viewctrl.popupmenu) {
             this.viewctrl.popupmenu.updateAttrs(attrs);

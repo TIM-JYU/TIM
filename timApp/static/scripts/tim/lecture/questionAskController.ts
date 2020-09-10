@@ -2,7 +2,10 @@ import {IScope} from "angular";
 import * as answerSheet from "tim/document/question/dynamicAnswerSheet";
 import {markAsUsed, to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
-import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
+import {
+    IPreviewParams,
+    makePreview,
+} from "../document/question/dynamicAnswerSheet";
 import {
     deleteQuestionWithConfirm,
     fetchAndEditQuestion,
@@ -10,7 +13,11 @@ import {
     fetchQuestion,
     showQuestionEditDialog,
 } from "../document/question/questionController";
-import {registerDialogComponent, showDialog, showMessageDialog} from "../ui/dialog";
+import {
+    registerDialogComponent,
+    showDialog,
+    showMessageDialog,
+} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {IAskedQuestion, IUniqueParId} from "./lecturetypes";
 
@@ -31,8 +38,7 @@ export interface IShowAsk {
     showAsk: boolean;
 }
 
-export interface IAskNew extends IUniqueParId {
-}
+export interface IAskNew extends IUniqueParId {}
 
 export interface IReAsk {
     askedId: number;
@@ -47,22 +53,33 @@ function isReasking(p: AskParams): p is IReAsk {
 export type QuestionPreviewParams = AskParams & IShowAsk;
 
 export async function askQuestion(p: AskParams) {
-    const args = isReasking(p) ? {
-        asked_id: p.askedId,
-    } : {
-        doc_id: p.docId,
-        par_id: p.parId,
-    };
-    const response = await to($http.post<IAskedQuestion>("/askQuestion", {}, {
-        params: {buster: new Date().getTime(), ...args},
-    }));
+    const args = isReasking(p)
+        ? {
+              asked_id: p.askedId,
+          }
+        : {
+              doc_id: p.docId,
+              par_id: p.parId,
+          };
+    const response = await to(
+        $http.post<IAskedQuestion>(
+            "/askQuestion",
+            {},
+            {
+                params: {buster: new Date().getTime(), ...args},
+            }
+        )
+    );
     if (!response.ok) {
         throw Error("askQuestion failed");
     }
     return response.result.data;
 }
 
-export class QuestionPreviewController extends DialogController<{params: QuestionPreviewParams}, IAskedQuestion> {
+export class QuestionPreviewController extends DialogController<
+    {params: QuestionPreviewParams},
+    IAskedQuestion
+> {
     static component = "timAskQuestion";
     static $inject = ["$element", "$scope"] as const;
     private questiondata?: IPreviewParams;
@@ -79,14 +96,20 @@ export class QuestionPreviewController extends DialogController<{params: Questio
         super.$onInit();
         (async () => {
             if (!isReasking(this.resolve.params)) {
-                const data = await fetchQuestion(this.resolve.params.docId, this.resolve.params.parId, false);
+                const data = await fetchQuestion(
+                    this.resolve.params.docId,
+                    this.resolve.params.parId,
+                    false
+                );
                 this.questiondata = makePreview(data.markup, {
                     enabled: false,
                     showCorrectChoices: false,
                     showExplanations: false,
                 });
             } else {
-                const data = await fetchAskedQuestion(this.resolve.params.askedId);
+                const data = await fetchAskedQuestion(
+                    this.resolve.params.askedId
+                );
                 this.questiondata = makePreview(data.json.json, {
                     enabled: false,
                     showCorrectChoices: false,
@@ -102,9 +125,14 @@ export class QuestionPreviewController extends DialogController<{params: Questio
 
     private async editQuestion() {
         if (!isReasking(this.resolve.params)) {
-            await fetchAndEditQuestion(this.resolve.params.docId, this.resolve.params.parId);
+            await fetchAndEditQuestion(
+                this.resolve.params.docId,
+                this.resolve.params.parId
+            );
         } else {
-            await showQuestionEditDialog(await fetchAskedQuestion(this.resolve.params.askedId));
+            await showQuestionEditDialog(
+                await fetchAskedQuestion(this.resolve.params.askedId)
+            );
         }
         this.dismiss();
     }
@@ -121,7 +149,10 @@ export class QuestionPreviewController extends DialogController<{params: Questio
 
     private async deleteQuestion() {
         if (!isReasking(this.resolve.params)) {
-            await deleteQuestionWithConfirm(this.resolve.params.docId, this.resolve.params.parId);
+            await deleteQuestionWithConfirm(
+                this.resolve.params.docId,
+                this.resolve.params.parId
+            );
             this.dismiss();
         }
     }
@@ -148,7 +179,10 @@ export class QuestionPreviewController extends DialogController<{params: Questio
         } else {
             locks = 0;
         }
-        const randomRows = Math.min(this.questiondata.markup.randomizedRows, this.questiondata.markup.rows.length - locks);
+        const randomRows = Math.min(
+            this.questiondata.markup.randomizedRows,
+            this.questiondata.markup.rows.length - locks
+        );
         let ret = `Answerers will see ${randomRows} randomly picked rows`;
         if (locks) {
             ret += ` and ${locks} guaranteed rows`;
@@ -186,5 +220,6 @@ registerDialogComponent(QuestionPreviewController, {
 });
 
 export async function showQuestionAskDialog(p: QuestionPreviewParams) {
-    return await showDialog(QuestionPreviewController, {params: () => p}).result;
+    return await showDialog(QuestionPreviewController, {params: () => p})
+        .result;
 }

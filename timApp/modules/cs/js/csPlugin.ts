@@ -1,19 +1,30 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access,no-underscore-dangle */
 import {
-        Component,
-        ViewChild,
-        ChangeDetectorRef,
-        ElementRef,
-        Directive,
-    } from "@angular/core";
+    Component,
+    ViewChild,
+    ChangeDetectorRef,
+    ElementRef,
+    Directive,
+} from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import * as t from "io-ts";
 import $ from "jquery";
-import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {
+    ChangeType,
+    FormModeOption,
+    ISetAnswerResult,
+    ITimComponent,
+    ViewCtrl,
+} from "tim/document/viewctrl";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 import {getFormBehavior} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {
@@ -33,9 +44,12 @@ import {getIFrameDataUrl} from "./iframeutils";
 import {Mode, EditorComponent, EditorFile} from "./editor/editor";
 import {CountBoardComponent} from "./editor/countboard";
 import {getInt} from "./util/util";
-import {IFile, FileSelectManagerComponent, IFileSpecification} from "./util/file-select";
+import {
+    IFile,
+    FileSelectManagerComponent,
+    IFileSpecification,
+} from "./util/file-select";
 import {Set, OrderedSet} from "./util/set";
-
 
 // TODO better name?
 interface Vid {
@@ -64,15 +78,15 @@ interface IPwd {
     setPWD(s: string): void;
 }
 
-type IPwdWithoutSetPWD = Pick<IPwd, "savestate" | "path" | "attrs"> & {setPWD?(s: string): void};
+type IPwdWithoutSetPWD = Pick<IPwd, "savestate" | "path" | "attrs"> & {
+    setPWD?(s: string): void;
+};
 
 class CWPD {
     pwdHolders: IPwd[] = [];
     currentPWD: {[i: string]: string} = {};
 
-    constructor() {
-
-    }
+    constructor() {}
 
     register(scope: IPwd) {
         if (!this.isUser(scope)) {
@@ -82,7 +96,10 @@ class CWPD {
     }
 
     isUser(scope: IPwdWithoutSetPWD) {
-        return (scope.path === "user" || (scope.attrs && scope.attrs.path === "user"));
+        return (
+            scope.path === "user" ||
+            (scope.attrs && scope.attrs.path === "user")
+        );
     }
 
     setPWD(pwd: string, scope: IPwdWithoutSetPWD) {
@@ -111,7 +128,14 @@ class CWPD {
 
 export const ConsolePWD = new CWPD();
 
-const csJSTypes = ["js", "glowscript", "vpython", "html", "processing", "wescheme"];
+const csJSTypes = [
+    "js",
+    "glowscript",
+    "vpython",
+    "html",
+    "processing",
+    "wescheme",
+];
 
 async function loadSimcir() {
     const load = await import("../simcir/simcir-all");
@@ -123,16 +147,100 @@ async function loadSimcir() {
 
 class LanguageTypes {
     // What are known language types (be careful not to include partial word):
-    runTypes = ["pascal", "fortran", "css", "jypeli", "scala", "java", "graphics", "cc", "c++", "shell", "vpython", "py2", "py", "fs", "clisp",
-        "jjs", "psql", "sql", "alloy", "text", "cs", "run", "md", "js", "glowscript", "sage", "simcir",
-        "xml", "octave", "lua", "quorum", "swift", "mathcheck", "html", "processing", "rust", "r", "wescheme", "ping", "kotlin",
-        "smalltalk", "upload", "extcheck", "gitreg"];
+    runTypes = [
+        "pascal",
+        "fortran",
+        "css",
+        "jypeli",
+        "scala",
+        "java",
+        "graphics",
+        "cc",
+        "c++",
+        "shell",
+        "vpython",
+        "py2",
+        "py",
+        "fs",
+        "clisp",
+        "jjs",
+        "psql",
+        "sql",
+        "alloy",
+        "text",
+        "cs",
+        "run",
+        "md",
+        "js",
+        "glowscript",
+        "sage",
+        "simcir",
+        "xml",
+        "octave",
+        "lua",
+        "quorum",
+        "swift",
+        "mathcheck",
+        "html",
+        "processing",
+        "rust",
+        "r",
+        "wescheme",
+        "ping",
+        "kotlin",
+        "smalltalk",
+        "upload",
+        "extcheck",
+        "gitreg",
+    ];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
-    aceModes = ["pascal", "fortran", "css", "csharp", "scala", "java", "java", "c_cpp", "c_cpp", "sh", "python", "python", "python", "fsharp", "lisp",
-        "javascript", "sql", "sql", "alloy", "text", "csharp", "run", "text", "javascript", "javascript", "python", "json",
-        "xml", "matlab", "lua", "quorum", "swift", "text", "html", "javascript", "text", "r", "scheme", "text", "kotlin",
-        "text", "text", "c_cpp", "text"];
+    aceModes = [
+        "pascal",
+        "fortran",
+        "css",
+        "csharp",
+        "scala",
+        "java",
+        "java",
+        "c_cpp",
+        "c_cpp",
+        "sh",
+        "python",
+        "python",
+        "python",
+        "fsharp",
+        "lisp",
+        "javascript",
+        "sql",
+        "sql",
+        "alloy",
+        "text",
+        "csharp",
+        "run",
+        "text",
+        "javascript",
+        "javascript",
+        "python",
+        "json",
+        "xml",
+        "matlab",
+        "lua",
+        "quorum",
+        "swift",
+        "text",
+        "html",
+        "javascript",
+        "text",
+        "r",
+        "scheme",
+        "text",
+        "kotlin",
+        "text",
+        "text",
+        "c_cpp",
+        "text",
+    ];
 
     // What are known test types (be careful not to include partial word):
     testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest"];
@@ -141,25 +249,24 @@ class LanguageTypes {
 
     // If test type is comtest, how to change it for specific languages
     impTestTypes: {[i: string]: string | undefined} = {
-        "cs": "comtest",
-        "console": "comtest",
-        "cc": "ccomtest",
-        "java": "jcomtest",
-        "scala": "scomtest",
+        cs: "comtest",
+        console: "comtest",
+        cc: "ccomtest",
+        java: "jcomtest",
+        scala: "scomtest",
         "c++": "ccomtest",
     };
     // If test type is unit, how to change it for specific languages
     impUnitTestTypes: {[i: string]: string | undefined} = {
-        "cs": "nunit",
-        "console": "nunit",
-        "cc": "cunit",
-        "java": "junit",
-        "scala": "junit",
+        cs: "nunit",
+        console: "nunit",
+        cc: "cunit",
+        java: "junit",
+        scala: "junit",
         "c++": "cunit",
     };
 
     whatIsIn(types: string[], type: string, def: string) {
-
         if (!type) {
             return def;
         }
@@ -173,7 +280,6 @@ class LanguageTypes {
     }
 
     whatIsInAce(types: string[], type: string) {
-
         if (!type) {
             return undefined;
         }
@@ -193,7 +299,6 @@ class LanguageTypes {
     }
 
     isAllType(type: string) {
-
         if (!type) {
             return false;
         }
@@ -205,11 +310,9 @@ class LanguageTypes {
             return true;
         }
         return false;
-
     }
 
     getRunType(type: string, def: string) {
-
         return this.whatIsIn(this.runTypes, type, def);
     }
 
@@ -219,11 +322,10 @@ class LanguageTypes {
         if (def) {
             return def;
         }
-        return this.whatIsInAce(this.runTypes, type) ?? def as string;
+        return this.whatIsInAce(this.runTypes, type) ?? (def as string);
     }
 
     getTestType(type: string, language: string, def: string) {
-
         const ty = this.whatIsIn(this.testTypes, type, def);
         if (ty !== "comtest") {
             return ty;
@@ -237,7 +339,6 @@ class LanguageTypes {
     }
 
     getUnitTestType(type: string, language: string, def: string) {
-
         const ty = this.whatIsIn(this.unitTestTypes, type, def);
         if (ty !== "unit") {
             return ty;
@@ -333,8 +434,9 @@ const CountType = t.partial({
     chars: CountLimit,
 });
 
-const oneOrArray = <T extends t.Mixed>(type: T) => t.union([type, t.array(type)]);
-const listify = <T>(e: T | T[]) => Array.isArray(e) ? e : [e];
+const oneOrArray = <T extends t.Mixed>(type: T) =>
+    t.union([type, t.array(type)]);
+const listify = <T>(e: T | T[]) => (Array.isArray(e) ? e : [e]);
 
 const CommonMarkup = t.intersection([
     t.union([
@@ -352,7 +454,8 @@ const CommonMarkup = t.intersection([
     t.partial({maxSize: t.number}),
 ]);
 
-const EditorMarkupFields = t.intersection([ // no source attribute
+const EditorMarkupFields = t.intersection([
+    // no source attribute
     t.type({
         path: t.string,
         canClose: withDefault(t.boolean, false),
@@ -365,16 +468,17 @@ const EditorMarkupFields = t.intersection([ // no source attribute
     CommonMarkup,
 ]);
 
-const EditorMarkup = // with source attribute
-    t.intersection([
-        t.type({
-            source: t.literal("editor"),
-        }),
-        EditorMarkupFields,
-    ]);
+const EditorMarkup = t.intersection([
+    // with source attribute
+    t.type({
+        source: t.literal("editor"),
+    }),
+    EditorMarkupFields,
+]);
 type IEditorMarkup = t.TypeOf<typeof EditorMarkup>;
 
-const UploadMarkupFields = t.intersection([// no source or paths attribute
+const UploadMarkupFields = t.intersection([
+    // no source or paths attribute
     t.partial({
         maxSize: t.number,
         extensions: oneOrArray(t.string),
@@ -382,52 +486,50 @@ const UploadMarkupFields = t.intersection([// no source or paths attribute
     CommonMarkup,
 ]);
 
-const UploadMarkup = // with source and paths attribute
-    t.intersection([
-        t.type({
-            paths: oneOrArray(t.string),
-            source: t.literal("upload"),
-        }),
-        UploadMarkupFields,
-    ]);
+const UploadMarkup = t.intersection([
+    // with source and paths attribute
+    t.type({
+        paths: oneOrArray(t.string),
+        source: t.literal("upload"),
+    }),
+    UploadMarkupFields,
+]);
 type IUploadMarkup = t.TypeOf<typeof UploadMarkup>;
 
-const UploadByCodeMarkup =
-    t.intersection([
-        t.type({
-            source: t.literal("uploadByCode"),
-            show: withDefault(
-                t.union([
-                    t.boolean,
-                    t.literal("loaded"), // show after load
-                ]), false
-            ),
-        }),
-        EditorMarkupFields,
-        UploadMarkupFields,
-    ]);
+const UploadByCodeMarkup = t.intersection([
+    t.type({
+        source: t.literal("uploadByCode"),
+        show: withDefault(
+            t.union([
+                t.boolean,
+                t.literal("loaded"), // show after load
+            ]),
+            false
+        ),
+    }),
+    EditorMarkupFields,
+    UploadMarkupFields,
+]);
 type IUploadByCodeMarkup = t.TypeOf<typeof UploadByCodeMarkup>;
 
-const ExternalSourceMarkup =
-    t.intersection([
-        t.type({
-            path: t.string,
-            source: t.string,
-        }),
-        t.partial({
-            maxSize: t.number,
-            maxTotalSize: t.number,
-        }),
-    ]);
+const ExternalSourceMarkup = t.intersection([
+    t.type({
+        path: t.string,
+        source: t.string,
+    }),
+    t.partial({
+        maxSize: t.number,
+        maxTotalSize: t.number,
+    }),
+]);
 
-const FileMarkup =
-    t.union([
-        t.type({source: withDefault(t.string, "editor")}),
-        EditorMarkup,
-        UploadMarkup,
-        UploadByCodeMarkup,
-        ExternalSourceMarkup,
-    ]);
+const FileMarkup = t.union([
+    t.type({source: withDefault(t.string, "editor")}),
+    EditorMarkup,
+    UploadMarkup,
+    UploadByCodeMarkup,
+    ExternalSourceMarkup,
+]);
 
 const FileSubmission = t.intersection([
     t.type({
@@ -476,7 +578,8 @@ const GitMarkup = t.partial({
         }),
     ]),
     library: t.string,
-    fields: t.dictionary(t.string,
+    fields: t.dictionary(
+        t.string,
         t.intersection([
             t.type({
                 value: t.unknown,
@@ -543,7 +646,7 @@ const CsMarkupOptional = t.partial({
     userinput: t.union([t.string, t.number]),
     variables: t.string,
     width: t.union([t.number, t.string]),
-    wrap:  t.Integer,
+    wrap: t.Integer,
     borders: withDefault(t.boolean, true),
     iframeopts: t.string,
     count: CountType,
@@ -605,7 +708,11 @@ const CsMarkupDefaults = t.type({
     mayAddFiles: withDefault(t.boolean, false),
 });
 
-const CsMarkup = t.intersection([CsMarkupOptional, CsMarkupDefaults, GenericPluginMarkup]);
+const CsMarkup = t.intersection([
+    CsMarkupOptional,
+    CsMarkupDefaults,
+    GenericPluginMarkup,
+]);
 
 const CsAllPart = t.partial({
     uploadedFile: t.string,
@@ -642,9 +749,14 @@ const CsAll = t.intersection([
         // taskID: t.string,
         // taskIDExt: t.string,
         // userPrint: t.boolean,
-    })]);
+    }),
+]);
 
-export class CsBase extends AngularPluginBase<t.TypeOf<typeof CsMarkup>, t.TypeOf<typeof CsAll>, typeof CsAll> {
+export class CsBase extends AngularPluginBase<
+    t.TypeOf<typeof CsMarkup>,
+    t.TypeOf<typeof CsAll>,
+    typeof CsAll
+> {
     usercode_: string = "";
 
     get usercode(): string {
@@ -655,7 +767,7 @@ export class CsBase extends AngularPluginBase<t.TypeOf<typeof CsMarkup>, t.TypeO
     }
 
     get byCode() {
-        return commentTrim((this.attrsall.by ?? this.markup.byCode) ?? "");
+        return commentTrim(this.attrsall.by ?? this.markup.byCode ?? "");
     }
 
     get type() {
@@ -683,37 +795,36 @@ function numOrDef(val: string | number | undefined, def: number) {
 }
 
 interface IFrameLoad {
-    iframe: HTMLIFrameElement & { contentWindow: WindowProxy };
+    iframe: HTMLIFrameElement & {contentWindow: WindowProxy};
     channel: MessageChannel;
 }
 
 interface IRunResponseWeb {
-    error?: string,
-    pwd?: string,
-    image?: string,
-    wav?: string,
-    testGreen?: boolean,
-    testRed?: boolean,
-    comtestError?: string,
-    docurl?: string,
-    console?: string,
-    runtime?: string,
-    language?: unknown, // determined by language
-    "-replyImage"?: string,
-    "-replyHTML"?: string,
-    "-replyMD"?: string,
+    error?: string;
+    pwd?: string;
+    image?: string;
+    wav?: string;
+    testGreen?: boolean;
+    testRed?: boolean;
+    comtestError?: string;
+    docurl?: string;
+    console?: string;
+    runtime?: string;
+    language?: unknown; // determined by language
+    "-replyImage"?: string;
+    "-replyHTML"?: string;
+    "-replyMD"?: string;
 }
 
 export interface IRunResponse {
-    web: IRunResponseWeb,
-    savedNew: number,
+    web: IRunResponseWeb;
+    savedNew: number;
 }
 
 interface IFetchResponse {
-    error?: string,
-    files: IFileSubmission[],
+    error?: string;
+    files: IFileSubmission[];
 }
-
 
 interface IRunRequestInput extends Partial<IExtraMarkup> {
     usercode?: string;
@@ -723,9 +834,9 @@ interface IRunRequestInput extends Partial<IExtraMarkup> {
     userargs: string;
     uploadedFile?: string;
     uploadedType?: string;
-    uploadedFiles?: {path: string, type: string}[];
+    uploadedFiles?: {path: string; type: string}[];
     nosave: boolean;
-    type: string,
+    type: string;
     selectedLanguage?: string;
 }
 
@@ -769,7 +880,7 @@ export class CsController extends CsBase implements ITimComponent {
     muokattu: boolean;
     noeditor!: boolean;
     oneruntime?: string;
-    out?: {write: () => void, writeln: () => void, canvas: Element};
+    out?: {write: () => void; writeln: () => void; canvas: Element};
     postcode?: string;
     precode?: string;
     preview!: JQuery<HTMLElement>;
@@ -788,26 +899,33 @@ export class CsController extends CsBase implements ITimComponent {
     selectedLanguage!: string;
     simcir?: JQuery;
     tinyErrorStyle: Partial<CSSStyleDeclaration> = {};
-    uploadedFiles = new Set((o: IUploadedFile) => this.uploadedFileName(o.path));
+    uploadedFiles = new Set((o: IUploadedFile) =>
+        this.uploadedFileName(o.path)
+    );
     uploadUrl?: string;
     userargs_: string = "";
     userinput_: string = "";
     viewCode!: boolean;
     wavURL: string = "";
-    wrap!:  {n: number, auto: boolean};
+    wrap!: {n: number; auto: boolean};
     buttons: string[] = [];
     mdHtml?: string;
 
-    iframesettings?: { src?: SafeResourceUrl; width: number; id: string; height: number };
+    iframesettings?: {
+        src?: SafeResourceUrl;
+        width: number;
+        id: string;
+        height: number;
+    };
     loadedIframe?: IFrameLoad;
     taunoFrame?: IFrameLoad;
     simcirElem?: HTMLElement;
     taunoCopy?: TimDefer<string>;
     iframedefer?: TimDefer<IFrameLoad>;
     iframemessageHandler?: (e: MessageEvent) => void;
-    savedvals?: { args: string; input: string; code: string[] };
+    savedvals?: {args: string; input: string; code: string[]};
     preventSave: boolean = false;
-    hide: {wrap?: boolean, changed?: boolean} = {};
+    hide: {wrap?: boolean; changed?: boolean} = {};
     savedText: string = "";
     timeout: number = 0;
     editorModes: Mode[] = [];
@@ -816,7 +934,7 @@ export class CsController extends CsBase implements ITimComponent {
     hasExternalSources: boolean = false;
     fileSelect?: FileSelectManagerComponent;
     upload?: boolean;
-    uploadByCodeFiles: {path: string, show: boolean | "loaded"}[] = [];
+    uploadByCodeFiles: {path: string; show: boolean | "loaded"}[] = [];
     @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
 
     @ViewChild("externalEditor")
@@ -852,18 +970,28 @@ export class CsController extends CsBase implements ITimComponent {
 
         if (this.attrsall.submittedFiles || this.markup.files) {
             const files = new OrderedSet<EditorFile>((f) => f.path);
-            const defaultMode = this.markup.mode ?? languageTypes.getAceModeType(this.type);
+            const defaultMode =
+                this.markup.mode ?? languageTypes.getAceModeType(this.type);
             if (this.markup.files) {
-                const markupFiles = (listify(this.markup.files))
-                        .filter((f) => f.source == "editor" || (f.source == "uploadByCode" && (f as IUploadByCodeMarkup).show === true)) as
-                        (IEditorMarkup | IUploadByCodeMarkup)[];
+                const markupFiles = listify(this.markup.files).filter(
+                    (f) =>
+                        f.source == "editor" ||
+                        (f.source == "uploadByCode" &&
+                            (f as IUploadByCodeMarkup).show === true)
+                ) as (IEditorMarkup | IUploadByCodeMarkup)[];
                 for (const f of markupFiles) {
                     let base: string | undefined;
                     if ("byCode" in f) {
                         this.initUserCode = true;
                         base = f.byCode;
                     }
-                    const file = new EditorFile(f.path, base, f.mode ?? defaultMode, f.canClose, f.canRename);
+                    const file = new EditorFile(
+                        f.path,
+                        base,
+                        f.mode ?? defaultMode,
+                        f.canClose,
+                        f.canRename
+                    );
                     files.push(file);
                     file.placeholder = f.placeholder ?? this.placeholder;
                 }
@@ -876,15 +1004,27 @@ export class CsController extends CsBase implements ITimComponent {
                         include = true;
                     } else if (file.source == "uploadByCode") {
                         if (this.markup.files) {
-                            if (((listify(this.markup.files)).find((f) => f.source == "uploadByCode" && (f as IUploadByCodeMarkup).path == file.path) as IUploadByCodeMarkup)?.show) {
+                            if (
+                                (listify(this.markup.files).find(
+                                    (f) =>
+                                        f.source == "uploadByCode" &&
+                                        (f as IUploadByCodeMarkup).path ==
+                                            file.path
+                                ) as IUploadByCodeMarkup)?.show
+                            ) {
                                 include = true;
                             }
-                        } else if (this.markup.uploadbycode && file.path == "") {
+                        } else if (
+                            this.markup.uploadbycode &&
+                            file.path == ""
+                        ) {
                             include = true;
                         }
                     }
                     if (include) {
-                        const f = files.getByKey(file.path) ?? new EditorFile(file.path, "", defaultMode);
+                        const f =
+                            files.getByKey(file.path) ??
+                            new EditorFile(file.path, "", defaultMode);
                         f.content = file.content ?? "";
                         files.push(f);
                     }
@@ -927,7 +1067,9 @@ export class CsController extends CsBase implements ITimComponent {
         this.editor.placeholder = this.placeholder;
         this.editor.mayAddFiles = this.markup.mayAddFiles;
         if (this.markup.allowedPaths != "*") {
-            this.editor.allowedPaths = this.editor.files.map((f) => f.path).concat(this.markup.allowedPaths ?? []);
+            this.editor.allowedPaths = this.editor.files
+                .map((f) => f.path)
+                .concat(this.markup.allowedPaths ?? []);
         }
     }
 
@@ -940,16 +1082,18 @@ export class CsController extends CsBase implements ITimComponent {
 
         const files: IFileSpecification[] = [];
         if (this.markup.files) {
-            const markupFiles = (listify(this.markup.files))
-                    .filter((f) => f.source == "upload" || f.source == "uploadByCode") as
-                    (IUploadMarkup | IUploadByCodeMarkup)[];
+            const markupFiles = listify(this.markup.files).filter(
+                (f) => f.source == "upload" || f.source == "uploadByCode"
+            ) as (IUploadMarkup | IUploadByCodeMarkup)[];
             for (const fs of markupFiles) {
                 const paths = listify("path" in fs ? fs.path : fs.paths);
                 let extensions: string[] | undefined;
                 if (fs.extensions) {
                     extensions = listify(fs.extensions);
                 } else {
-                    const exts = paths.map((p) => "." + (p.split(".").slice(1)[0] ?? "")).filter((ext) => ext != ".");
+                    const exts = paths
+                        .map((p) => "." + (p.split(".").slice(1)[0] ?? ""))
+                        .filter((ext) => ext != ".");
                     if (exts.length != 0) {
                         extensions = exts;
                     }
@@ -966,7 +1110,11 @@ export class CsController extends CsBase implements ITimComponent {
                     );
                 }
             }
-        } else if (this.markup.type.includes("upload") || this.markup.upload || this.markup.uploadbycode) {
+        } else if (
+            this.markup.type.includes("upload") ||
+            this.markup.upload ||
+            this.markup.uploadbycode
+        ) {
             const isByCode = !!this.markup.uploadbycode;
             const path = this.markup.filename ?? "";
             files.push({
@@ -1017,7 +1165,12 @@ export class CsController extends CsBase implements ITimComponent {
         }
     }
 
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        public cdr: ChangeDetectorRef
+    ) {
         super(el, http, domSanitizer);
 
         this.errors = [];
@@ -1049,7 +1202,9 @@ export class CsController extends CsBase implements ITimComponent {
     onIframeLoad(e: Event) {
         const fr = e.target as HTMLIFrameElement & {contentWindow: WindowProxy};
         // onIframeLoad gets called twice on chrome, on the first time src is empty
-        if (fr.src == "") { return; }
+        if (fr.src == "") {
+            return;
+        }
 
         const channel = new MessageChannel();
         if (this.iframemessageHandler) {
@@ -1080,7 +1235,7 @@ export class CsController extends CsBase implements ITimComponent {
         // return getFormBehavior(this.markup.form, FormModeOption.Undecided);
     }
 
-    setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
+    setAnswer(content: {[index: string]: unknown}): ISetAnswerResult {
         this.error = undefined;
         let message;
         let ok = true;
@@ -1092,7 +1247,9 @@ export class CsController extends CsBase implements ITimComponent {
         } else {
             this.usercode = "";
             ok = false;
-            message = `Couldn't find related content ("usercode") from ${JSON.stringify(content)}`;
+            message = `Couldn't find related content ("usercode") from ${JSON.stringify(
+                content
+            )}`;
             this.error = message;
         }
         return {ok: ok, message: message};
@@ -1117,8 +1274,12 @@ export class CsController extends CsBase implements ITimComponent {
                 }
             }
         }
-        return (this.savedvals.args !== this.userargs || this.savedvals.input !== this.userinput)
-                && this.pluginMeta.getTaskId() !== undefined && !this.nosave;
+        return (
+            (this.savedvals.args !== this.userargs ||
+                this.savedvals.input !== this.userinput) &&
+            this.pluginMeta.getTaskId() !== undefined &&
+            !this.nosave
+        );
     }
 
     /**
@@ -1144,7 +1305,11 @@ export class CsController extends CsBase implements ITimComponent {
         if (!taskId) {
             return;
         }
-        this.vctrl.informChangeListeners(taskId, state, (this.markup.tag ? this.markup.tag : undefined));
+        this.vctrl.informChangeListeners(
+            taskId,
+            state,
+            this.markup.tag ? this.markup.tag : undefined
+        );
     }
 
     tryResetChanges(): void {
@@ -1155,9 +1320,10 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     resetChanges(): void {
-        this.usercode = this.savedvals?.code[this.editor?.editorIndex ?? 0] ?? "";
-        this.userargs = (this.savedvals ? this.savedvals.args : "");
-        this.userinput = (this.savedvals ? this.savedvals.input : "");
+        this.usercode =
+            this.savedvals?.code[this.editor?.editorIndex ?? 0] ?? "";
+        this.userargs = this.savedvals ? this.savedvals.args : "";
+        this.userinput = this.savedvals ? this.savedvals.input : "";
         this.edited = false;
         this.updateListeners(ChangeType.Saved);
     }
@@ -1167,7 +1333,10 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get isInput() {
-        return this.markup.type.includes("input") || this.markup.type.includes("args");
+        return (
+            this.markup.type.includes("input") ||
+            this.markup.type.includes("args")
+        );
     }
 
     get isSimcir() {
@@ -1183,17 +1352,17 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get hideText() {
-        return (this.english ? "Hide " : "Piilota ");
+        return this.english ? "Hide " : "Piilota ";
     }
 
     get showText() {
-        return (this.english ? "Show " : "Näytä ");
+        return this.english ? "Show " : "Näytä ";
     }
 
     get taunoOhjeText() {
-        return this.english ?
-            'Copy the code you made by Tauno by pressing the link "copy from Tauno". Then press Run button. Note that the running code may have different code than in Tauno!' :
-            'Kopioi Taunolla tekemäsi koodi "kopioi Taunosta"-linkkiä painamalla. Sitten paina Aja-painiketta. Huomaa, että ajossa voi olla eri taulukko kuin Taunossa!';
+        return this.english
+            ? 'Copy the code you made by Tauno by pressing the link "copy from Tauno". Then press Run button. Note that the running code may have different code than in Tauno!'
+            : 'Kopioi Taunolla tekemäsi koodi "kopioi Taunosta"-linkkiä painamalla. Sitten paina Aja-painiketta. Huomaa, että ajossa voi olla eri taulukko kuin Taunossa!';
     }
 
     get copyFromTaunoText() {
@@ -1213,7 +1382,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get forcedupload() {
-        return this.type === "upload" && !this.markup.button ;
+        return this.type === "upload" && !this.markup.button;
     }
 
     get rtype() {
@@ -1234,11 +1403,21 @@ export class CsController extends CsBase implements ITimComponent {
 
     get placeholder() {
         const tiny = this.type.includes("tiny");
-        return valueDefu(this.markup.placeholder, (tiny ? "" : this.english ? "Write your code here" : "Kirjoita koodi tähän:"));
+        return valueDefu(
+            this.markup.placeholder,
+            tiny
+                ? ""
+                : this.english
+                ? "Write your code here"
+                : "Kirjoita koodi tähän:"
+        );
     }
 
     get inputplaceholder() {
-        return valueOr(this.markup.inputplaceholder, (this.english ? "Write your input here" : "Kirjoita syöte tähän"));
+        return valueOr(
+            this.markup.inputplaceholder,
+            this.english ? "Write your input here" : "Kirjoita syöte tähän"
+        );
     }
 
     get isText() {
@@ -1247,16 +1426,34 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get argsplaceholder() {
-        return valueOr(this.markup.argsplaceholder, (this.isText ? (this.english ? "Write file name here" : "Kirjoita tiedoston nimi tähän") : (this.english ? "Write your program args here" : "Kirjoita ohjelman argumentit tähän")));
+        return valueOr(
+            this.markup.argsplaceholder,
+            this.isText
+                ? this.english
+                    ? "Write file name here"
+                    : "Kirjoita tiedoston nimi tähän"
+                : this.english
+                ? "Write your program args here"
+                : "Kirjoita ohjelman argumentit tähän"
+        );
     }
 
     get argsstem() {
-        return valueOr(this.markup.argsstem, (this.isText ? (this.english ? "File name:" : "Tiedoston nimi:") : (this.english ? "Args:" : "Args")));
+        return valueOr(
+            this.markup.argsstem,
+            this.isText
+                ? this.english
+                    ? "File name:"
+                    : "Tiedoston nimi:"
+                : this.english
+                ? "Args:"
+                : "Args"
+        );
     }
 
     get fullhtml() {
         const r = this.markup.fullhtml;
-        if (!r && this.type.includes("html") || this.isProcessing) {
+        if ((!r && this.type.includes("html")) || this.isProcessing) {
             return "REPLACEBYCODE";
         }
         return r;
@@ -1336,7 +1533,10 @@ ${fhtml}
     }
 
     get toggleEditorText() {
-        if (typeof this.toggleEditor === "string" && this.toggleEditor.includes("|")) {
+        if (
+            typeof this.toggleEditor === "string" &&
+            this.toggleEditor.includes("|")
+        ) {
             return this.toggleEditor.split("|");
         } else {
             return this.english ? ["Edit", "Hide"] : ["Muokkaa", "Piilota"];
@@ -1356,9 +1556,14 @@ ${fhtml}
     }
 
     get isRun() {
-        return ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) && !this.markup.norun)
-            || (this.type.includes("text") || this.isSimcir || this.markup.justSave)
-            || this.markup.button; // or this.buttonText()?
+        return (
+            ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) &&
+                !this.markup.norun) ||
+            this.type.includes("text") ||
+            this.isSimcir ||
+            this.markup.justSave ||
+            this.markup.button
+        ); // or this.buttonText()?
     }
 
     buttonText() {
@@ -1369,7 +1574,11 @@ ${fhtml}
         if (this.markup.button === null || this.markup.buttonText === null) {
             return null;
         }
-        if (this.type.includes("text") || this.isSimcir || this.markup.justSave) {
+        if (
+            this.type.includes("text") ||
+            this.isSimcir ||
+            this.markup.justSave
+        ) {
             return this.english ? "Save" : "Tallenna";
         }
         return this.english ? "Run" : "Aja";
@@ -1390,15 +1599,22 @@ ${fhtml}
         this.isRunning = true;
         this.fetchError = undefined;
 
-        const r = await to2(this.http.post<IFetchResponse>(`/plugin${this.pluginMeta.getTaskIdUrl()}/fetchExternal`, {},
-            {headers: new HttpHeaders({timeout: `${defaultTimeout}`})}
-        ).toPromise());
+        const r = await to2(
+            this.http
+                .post<IFetchResponse>(
+                    `/plugin${this.pluginMeta.getTaskIdUrl()}/fetchExternal`,
+                    {},
+                    {headers: new HttpHeaders({timeout: `${defaultTimeout}`})}
+                )
+                .toPromise()
+        );
         if (r.ok) {
             if (r.result.error) {
                 this.fetchError = "Failed to fetch files: " + r.result.error;
                 this.externalFiles = undefined;
             } else if (r.result.files.length == 0) {
-                this.fetchError = "No files were received. Make sure they are in the correct place";
+                this.fetchError =
+                    "No files were received. Make sure they are in the correct place";
                 this.externalFiles = undefined;
             } else {
                 this.externalFiles = r.result.files;
@@ -1413,11 +1629,20 @@ ${fhtml}
     }
 
     get isTest() {
-        return languageTypes.getTestType(this.type, this.selectedLanguage, "") !== "";
+        return (
+            languageTypes.getTestType(this.type, this.selectedLanguage, "") !==
+            ""
+        );
     }
 
     get isUnitTest() {
-        return languageTypes.getUnitTestType(this.type, this.selectedLanguage, "") !== "";
+        return (
+            languageTypes.getUnitTestType(
+                this.type,
+                this.selectedLanguage,
+                ""
+            ) !== ""
+        );
     }
 
     get isDocument() {
@@ -1433,7 +1658,10 @@ ${fhtml}
     }
 
     get uploadstem() {
-        return valueOr(this.markup.uploadstem, (this.english ? "Upload image/file" : "Lataa kuva/tiedosto"));
+        return valueOr(
+            this.markup.uploadstem,
+            this.english ? "Upload image/file" : "Lataa kuva/tiedosto"
+        );
     }
 
     get file() {
@@ -1441,25 +1669,37 @@ ${fhtml}
     }
 
     get showCodeOn() {
-        return valueDefu(this.markup.showCodeOn, (this.english ? "Show all code" : "Näytä koko koodi"));
+        return valueDefu(
+            this.markup.showCodeOn,
+            this.english ? "Show all code" : "Näytä koko koodi"
+        );
     }
 
     get showCodeOff() {
-        return valueOr(this.markup.showCodeOff, (this.english ? "Hide extra code" : "Piilota muu koodi"));
+        return valueOr(
+            this.markup.showCodeOff,
+            this.english ? "Hide extra code" : "Piilota muu koodi"
+        );
     }
 
     get resetText() {
-        return valueDefu(this.markup.resetText, (this.english ? "Reset" : "Alusta"));
+        return valueDefu(
+            this.markup.resetText,
+            this.english ? "Reset" : "Alusta"
+        );
     }
 
     getTemplateButtons(): string[] {
         let b = this.markup.buttons;
         if (b) {
-            const helloButtons = "public \nclass \nHello \n\\n\n{\n}\n" +
+            const helloButtons =
+                "public \nclass \nHello \n\\n\n{\n}\n" +
                 "static \nvoid \n Main\n(\n)\n" +
                 '        Console.WriteLine(\n"\nworld!\n;\n ';
-            const typeButtons = "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
-            const charButtons = "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
+            const typeButtons =
+                "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
+            const charButtons =
+                "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
             b = b.replace("$hellobuttons$", helloButtons);
             b = b.replace("$typebuttons$", typeButtons);
             b = b.replace("$charbuttons$", charButtons);
@@ -1496,27 +1736,39 @@ ${fhtml}
     ngOnInit() {
         super.ngOnInit();
 
-        this.upload = this.type === "upload" || this.markup.upload || this.markup.uploadbycode;
+        this.upload =
+            this.type === "upload" ||
+            this.markup.upload ||
+            this.markup.uploadbycode;
         if (!this.upload) {
-            this.upload = listify(this.markup.files).some((f) => f?.source == "upload" || f?.source == "uploadByCode");
+            this.upload = listify(this.markup.files).some(
+                (f) => f?.source == "upload" || f?.source == "uploadByCode"
+            );
         }
 
         if (this.markup.files) {
-            this.hasExternalSources = listify(this.markup.files).some((f) => !["upload", "uploadByCode", "editor"].includes(f.source));
+            this.hasExternalSources = listify(this.markup.files).some(
+                (f) => !["upload", "uploadByCode", "editor"].includes(f.source)
+            );
             if (this.attrsall.submittedFiles) {
-                this.externalFiles = this.attrsall.submittedFiles.filter((f) => !["upload", "uploadByCode", "editor"].includes(f.source));
+                this.externalFiles = this.attrsall.submittedFiles.filter(
+                    (f) =>
+                        !["upload", "uploadByCode", "editor"].includes(f.source)
+                );
             }
         }
 
         this.vctrl = vctrlInstance!;
         this.hide = this.attrsall.markup.hide ?? {};
-       //  if ( typeof this.markup.borders !== 'undefined' ) this.markup.borders = true;
+        //  if ( typeof this.markup.borders !== 'undefined' ) this.markup.borders = true;
         this.buttons = this.getTemplateButtons();
         const rt = this.rtype;
         const isText = this.isText;
         const isArgs = this.type.includes("args");
         if (this.attrsall.markup.docurl) {
-            this.docURL = this.domSanitizer.bypassSecurityTrustResourceUrl(this.attrsall.markup.docurl);
+            this.docURL = this.domSanitizer.bypassSecurityTrustResourceUrl(
+                this.attrsall.markup.docurl
+            );
             this.docLink = "Hide document";
         }
 
@@ -1526,18 +1778,33 @@ ${fhtml}
         }
 
         this.timeout = valueOr(this.attrsall.timeout, 0) * 1000;
-        this.userinput = valueOr(this.attrsall.userinput, (this.markup.userinput ?? "").toString());
-        this.userargs = valueOr(this.attrsall.userargs, (this.markup.userargs ?? (isText && isArgs ? this.markup.filename ?? "" : "")).toString());
+        this.userinput = valueOr(
+            this.attrsall.userinput,
+            (this.markup.userinput ?? "").toString()
+        );
+        this.userargs = valueOr(
+            this.attrsall.userargs,
+            (
+                this.markup.userargs ??
+                (isText && isArgs ? this.markup.filename ?? "" : "")
+            ).toString()
+        );
         this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
-        this.noeditor = valueOr(this.markup.noeditor, this.isSimcir || (this.type === "upload"));
+        this.noeditor = valueOr(
+            this.markup.noeditor,
+            this.isSimcir || this.type === "upload"
+        );
 
-        const wn =  this.markup.wrap ?? (isText ? 70 : -1);
-        this.wrap = { n: wn == -1 ? -1 : Math.abs(wn), auto: wn > 0 };
+        const wn = this.markup.wrap ?? (isText ? 70 : -1);
+        this.wrap = {n: wn == -1 ? -1 : Math.abs(wn), auto: wn > 0};
 
         this.viewCode = this.markup.viewCode;
 
         const editorText = [
-            valueDefu(this.markup.normal, this.english ? "Normal" : "Tavallinen"),
+            valueDefu(
+                this.markup.normal,
+                this.english ? "Normal" : "Tavallinen"
+            ),
             valueDefu(this.markup.highlight, "Highlight"),
             this.markup.parsons,
             this.markup.jsparsons,
@@ -1547,8 +1814,17 @@ ${fhtml}
             this.editorModes.push(new Mode(mode, editorText[mode]));
         }
 
-        if (this.markup.editorMode != -1 && this.editorModes.findIndex((m) => m.id == this.markup.editorMode) == -1) {
-            this.editorModes.push(new Mode(this.markup.editorMode, editorText[this.markup.editorMode]));
+        if (
+            this.markup.editorMode != -1 &&
+            this.editorModes.findIndex((m) => m.id == this.markup.editorMode) ==
+                -1
+        ) {
+            this.editorModes.push(
+                new Mode(
+                    this.markup.editorMode,
+                    editorText[this.markup.editorMode]
+                )
+            );
         }
 
         if (this.indent < 0) {
@@ -1563,7 +1839,10 @@ ${fhtml}
         if (this.attrsall.uploadedFiles) {
             this.uploadedFiles.push(...this.attrsall.uploadedFiles);
         } else if (this.attrsall.uploadedFile || this.attrsall.uploadedType) {
-            this.uploadedFiles.push({path: this.attrsall.uploadedFile ?? "", type: this.attrsall.uploadedType ?? ""});
+            this.uploadedFiles.push({
+                path: this.attrsall.uploadedFile ?? "",
+                type: this.attrsall.uploadedType ?? "",
+            });
         }
 
         this.initSaved();
@@ -1580,7 +1859,9 @@ ${fhtml}
         this.preview = this.element.find(".csrunPreview");
         const styleArgs = this.markup["style-args"];
         if (styleArgs) {
-            const argsEdit = this.getRootElement().getElementsByClassName("csArgsArea");
+            const argsEdit = this.getRootElement().getElementsByClassName(
+                "csArgsArea"
+            );
             if (argsEdit.length > 0) {
                 argsEdit[0].setAttribute("style", styleArgs);
             }
@@ -1653,29 +1934,34 @@ ${fhtml}
             if (this.autoupdateHandle) {
                 window.clearTimeout(this.autoupdateHandle);
             }
-            this.autoupdateHandle = window.setTimeout(
-                () => {
-                    this.autoupdateHandle = undefined;
-                    this.runCodeAuto();
-                }, this.markup.autoupdate
-            );
+            this.autoupdateHandle = window.setTimeout(() => {
+                this.autoupdateHandle = undefined;
+                this.runCodeAuto();
+            }, this.markup.autoupdate);
         }
     }
 
     onFileLoad(file: IFile) {
-        let bycodefile = this.uploadByCodeFiles.find((f) => f.path == file.path);
+        let bycodefile = this.uploadByCodeFiles.find(
+            (f) => f.path == file.path
+        );
         if (bycodefile) {
             if (bycodefile.show && this.editor) {
                 this.editor.setFileContent(file.path, file.content);
                 this.editor.activeFile = file.path;
             }
-        } else if (this.uploadByCodeFiles.length == 1 || this.markup.uploadbycode) {
+        } else if (
+            this.uploadByCodeFiles.length == 1 ||
+            this.markup.uploadbycode
+        ) {
             bycodefile = this.uploadByCodeFiles[0];
             if (bycodefile.show) {
                 this.editor?.setFileContent(bycodefile.path, file.content);
             }
         }
-        if (this.markup.uploadautosave) { this.runCode(); }
+        if (this.markup.uploadautosave) {
+            this.runCode();
+        }
     }
 
     onUploadResponse(resp: unknown) {
@@ -1691,7 +1977,12 @@ ${fhtml}
     }
 
     onUploadDone(success: boolean) {
-        if (success && (this.markup.uploadautosave || (this.markup.type.includes("upload") && !this.markup.button) || !(this.isRun && this.buttonText()))) {
+        if (
+            success &&
+            (this.markup.uploadautosave ||
+                (this.markup.type.includes("upload") && !this.markup.button) ||
+                !(this.isRun && this.buttonText()))
+        ) {
             this.doRunCode("upload", false);
         }
     }
@@ -1701,7 +1992,9 @@ ${fhtml}
             return;
         }
 
-        await new Promise((resolve) => { setTimeout(resolve); });
+        await new Promise((resolve) => {
+            setTimeout(resolve);
+        });
         await ParCompiler.processMathJaxAsciiMath(this.element[0]);
     }
 
@@ -1743,12 +2036,20 @@ ${fhtml}
     }
 
     runTest() {
-        const ty = languageTypes.getTestType(this.type, this.selectedLanguage, "comtest");
+        const ty = languageTypes.getTestType(
+            this.type,
+            this.selectedLanguage,
+            "comtest"
+        );
         this.doRunCode(ty, false);
     }
 
     runUnitTest() {
-        const ty = languageTypes.getUnitTestType(this.type, this.selectedLanguage, "junit");
+        const ty = languageTypes.getUnitTestType(
+            this.type,
+            this.selectedLanguage,
+            "junit"
+        );
         this.doRunCode(ty, false);
     }
 
@@ -1771,12 +2072,15 @@ ${fhtml}
         this.runError = false;
     }
 
-
     hideShowEditor() {
         this.noeditor = !this.noeditor;
     }
 
-    async doRunCode(runType: string, nosave: boolean, extraMarkUp?: IExtraMarkup) {
+    async doRunCode(
+        runType: string,
+        nosave: boolean,
+        extraMarkUp?: IExtraMarkup
+    ) {
         this.connectionErrorMessage = undefined;
         this.error = undefined;
         if (this.isRunning) {
@@ -1809,7 +2113,12 @@ ${fhtml}
         this.imgURL = "";
         this.wavURL = "";
         this.runSuccess = false;
-        if (!(languageTypes.isInArray(runType, csJSTypes) || this.markup.noConsoleClear)) {
+        if (
+            !(
+                languageTypes.isInArray(runType, csJSTypes) ||
+                this.markup.noConsoleClear
+            )
+        ) {
             this.result = "";
         }
         this.runTestGreen = false;
@@ -1842,17 +2151,29 @@ ${fhtml}
             return msg2;
         };
 
-        const editorFiles: IFileSubmission[] = this.editor?.allFiles.map((f) => ({source: "editor", ...f})) ?? [];
-        const fileSelectFiles: IFileSubmission[] = this.fileSelect?.loadedFiles.toArray()
-                .filter((f) =>
-                    this.uploadByCodeFiles.find(
-                        (f2) => f2.path == f.path
-                    )?.show
-                ).map((f) => ({source: "uploadByCode", ...f})) ?? [];
-        const uploadedFiles: IFileSubmission[] = this.uploadedFiles.toArray().map((f) => ({source: "upload:" + f.path, path: this.uploadedFileName(f.path), type: f.type}));
+        const editorFiles: IFileSubmission[] =
+            this.editor?.allFiles.map((f) => ({source: "editor", ...f})) ?? [];
+        const fileSelectFiles: IFileSubmission[] =
+            this.fileSelect?.loadedFiles
+                .toArray()
+                .filter(
+                    (f) =>
+                        this.uploadByCodeFiles.find((f2) => f2.path == f.path)
+                            ?.show
+                )
+                .map((f) => ({source: "uploadByCode", ...f})) ?? [];
+        const uploadedFiles: IFileSubmission[] = this.uploadedFiles
+            .toArray()
+            .map((f) => ({
+                source: "upload:" + f.path,
+                path: this.uploadedFileName(f.path),
+                type: f.type,
+            }));
         const externalFiles = this.externalFiles ?? [];
 
-        let allFiles: IFileSubmission[] = editorFiles.concat(fileSelectFiles).concat(externalFiles);
+        let allFiles: IFileSubmission[] = editorFiles
+            .concat(fileSelectFiles)
+            .concat(externalFiles);
         if (allFiles.length == 0 && !this.noeditor) {
             allFiles = [{source: "editor", path: "", content: this.usercode}];
         }
@@ -1903,7 +2224,9 @@ ${fhtml}
                 nosave: nosave || this.nosave,
                 type: runType,
                 ...extraMarkUp,
-                ...(this.isAll ? {selectedLanguage: this.selectedLanguage} : {}),
+                ...(this.isAll
+                    ? {selectedLanguage: this.selectedLanguage}
+                    : {}),
             },
         };
 
@@ -1916,7 +2239,10 @@ ${fhtml}
         }
 
         const t0run = performance.now();
-        const r = await this.postAnswer<IRunResponse>(params, new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`}));
+        const r = await this.postAnswer<IRunResponse>(
+            params,
+            new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`})
+        );
         if (r.ok) {
             this.isRunning = false;
             this.initSaved();
@@ -1930,13 +2256,19 @@ ${fhtml}
                 // this.savedText = data.web.error ?? "saved";
                 this.savedText = this.attrsall.markup.savedText ?? "saved";
                 // this.preventSave = true;
-                if (data.web.error === "Saved") { data.web.error = ""; }
+                if (data.web.error === "Saved") {
+                    data.web.error = "";
+                }
             }
-            if (data.web.error === "Saved" && data.web.console) { data.web.error = ""; }
+            if (data.web.error === "Saved" && data.web.console) {
+                data.web.error = "";
+            }
             if (data.web.pwd) {
                 ConsolePWD.setPWD(data.web.pwd, this);
             }
-            if (!noErrorClear) { this.error = data.web.error; }
+            if (!noErrorClear) {
+                this.error = data.web.error;
+            }
             this.runSuccess = true;
 
             this.runError = this.error;
@@ -1944,7 +2276,8 @@ ${fhtml}
             const imgURL = data.web.image;
             // if ( !imgURL ) imgURL = data.web["-replyImage"];
             this.imgURL = data.web["-replyImage"] ?? "";
-            this.htmlresult = (data.web["-replyHTML"] ?? "") + (data.web["-replyMD"] ?? "");
+            this.htmlresult =
+                (data.web["-replyHTML"] ?? "") + (data.web["-replyMD"] ?? "");
             const wavURL = data.web.wav;
             if (data.web.testGreen) {
                 this.runTestGreen = true;
@@ -1961,7 +2294,9 @@ ${fhtml}
 
             const err = data.web.console ?? "";
             if (docURL) {
-                this.docURL = this.domSanitizer.bypassSecurityTrustResourceUrl(docURL);
+                this.docURL = this.domSanitizer.bypassSecurityTrustResourceUrl(
+                    docURL
+                );
                 this.docLink = "Hide document";
                 this.error = err.trim();
             }
@@ -1997,7 +2332,10 @@ ${fhtml}
                 this.error = data.error;
                 this.errors.push(data.error);
             }
-            this.connectionErrorMessage = this.error ?? this.markup.connectionErrorMessage ?? defaultErrorMessage;
+            this.connectionErrorMessage =
+                this.error ??
+                this.markup.connectionErrorMessage ??
+                defaultErrorMessage;
         }
     }
 
@@ -2075,7 +2413,7 @@ ${fhtml}
             console.warn("setCircuitData: simcir not loaded");
             return;
         }
-        let data: {width: number, height: number} = {width: 0, height: 0};
+        let data: {width: number; height: number} = {width: 0, height: 0};
         this.runError = false;
         try {
             if (this.usercode) {
@@ -2119,8 +2457,11 @@ ${fhtml}
         };
         const printArray = (array: unknown[]) => {
             $.each(array, (i, item) => {
-                println("    " + JSON.stringify(item) +
-                    (i + 1 < array.length ? "," : ""));
+                println(
+                    "    " +
+                        JSON.stringify(item) +
+                        (i + 1 < array.length ? "," : "")
+                );
             });
         };
         println("{");
@@ -2170,7 +2511,7 @@ ${fhtml}
                 p = "ts=" + s.substring(1) + "&";
             } else {
                 p = "t=" + s.trim() + "&";
-            }                      // table by it's items
+            } // table by it's items
         }
 
         p += doVariables(this.markup.variables, "m");
@@ -2245,9 +2586,15 @@ ${fhtml}
             this.sageInput.value = this.getReplacedCode();
             return;
         }
-        this.sageArea = this.getRootElement().getElementsByClassName("computeSage")[0];
-        this.editArea = this.getRootElement().getElementsByClassName("csEditArea")[0];
-        this.sageOutput = this.getRootElement().getElementsByClassName("outputSage")[0];
+        this.sageArea = this.getRootElement().getElementsByClassName(
+            "computeSage"
+        )[0];
+        this.editArea = this.getRootElement().getElementsByClassName(
+            "csEditArea"
+        )[0];
+        this.sageOutput = this.getRootElement().getElementsByClassName(
+            "outputSage"
+        )[0];
 
         this.sagecellInfo = sagecell.makeSagecell({
             inputLocation: this.sageArea,
@@ -2263,16 +2610,24 @@ ${fhtml}
             getCode: () => this.getReplacedCode(),
             autoeval: this.markup.autorun || firstTime,
             callback: () => {
-                this.sageButton = this.sageArea!.getElementsByClassName("sagecell_evalButton")[0] as HTMLElement;
-                this.sageInput = this.sageArea!.getElementsByClassName("sagecell_commands")[0] as HTMLInputElement;
+                this.sageButton = this.sageArea!.getElementsByClassName(
+                    "sagecell_evalButton"
+                )[0] as HTMLElement;
+                this.sageInput = this.sageArea!.getElementsByClassName(
+                    "sagecell_commands"
+                )[0] as HTMLInputElement;
 
                 this.sageButton.onclick = () => {
                     // cs.checkSageSave();
                     this.sagecellInfo!.code = this.getReplacedCode();
                     // cs.sagecellInfo.session.code = cs.sagecellInfo.code;
                 };
-                const sagecellOptions = this.getRootElement().getElementsByClassName("sagecell_options")[0] as HTMLElement;
-                const csRunMenuArea = this.getRootElement().getElementsByClassName("csRunMenuArea")[0];
+                const sagecellOptions = this.getRootElement().getElementsByClassName(
+                    "sagecell_options"
+                )[0] as HTMLElement;
+                const csRunMenuArea = this.getRootElement().getElementsByClassName(
+                    "csRunMenuArea"
+                )[0];
                 if (csRunMenuArea && sagecellOptions) {
                     csRunMenuArea.appendChild(sagecellOptions);
                 }
@@ -2303,7 +2658,8 @@ ${fhtml}
         this.showCodeNow();
     }
 
-    getFromClipboard() {  // This does not work, it is not possible to get user clp contents
+    getFromClipboard() {
+        // This does not work, it is not possible to get user clp contents
         const e1 = getClipboardHelper();
         e1.select();
         document.execCommand("paste");
@@ -2350,12 +2706,14 @@ ${fhtml}
         let pre = "";
         let post = "";
         let extra = false;
-        if (this.viewCode && this.precode) { // TODO: get if not present?
+        if (this.viewCode && this.precode) {
+            // TODO: get if not present?
             pre = this.precode + "\n";
             extra = true;
         }
 
-        if (this.viewCode && this.postcode) { // TODO: get if not present?
+        if (this.viewCode && this.postcode) {
+            // TODO: get if not present?
             post = this.postcode + "\n";
             extra = true;
         }
@@ -2366,10 +2724,10 @@ ${fhtml}
         let ind = "";
         if (extra) {
             ind = this.getSameIndent(this.usercode, 0);
-            pre += ind + "// BYCODEBEGIN\n";  // TODO: ask comment string from language
+            pre += ind + "// BYCODEBEGIN\n"; // TODO: ask comment string from language
             const i = this.findLastNonEmpty(usercode);
             ind = this.getSameIndent(this.usercode, i);
-            post = "\n" + ind + "// BYCODEEND\n" + post;  // TODO: ask comment string from language
+            post = "\n" + ind + "// BYCODEEND\n" + post; // TODO: ask comment string from language
         }
         const s = pre + this.usercode + post;
         copyToClipboard(s);
@@ -2512,7 +2870,8 @@ ${fhtml}
         }
 
         const params = this.attrsall;
-        const r = await to($http<{ msg: string, error: string } | string>({
+        const r = await to(
+            $http<{msg: string; error: string} | string>({
                 method: "POST",
                 url: "/cs/",
                 params: {
@@ -2520,8 +2879,8 @@ ${fhtml}
                     replace: "",
                 },
                 data: params,
-            },
-        ));
+            })
+        );
         if (r.ok) {
             const data = r.result.data;
 
@@ -2566,9 +2925,11 @@ ${fhtml}
         }
         this.lastMD = text;
         const r = await this.httpPost<IPluginInfoResponse>(
-            `/preview/${taskId.docId}`, {
+            `/preview/${taskId.docId}`,
+            {
                 text: text,
-            });
+            }
+        );
         if (r.ok) {
             const data = r.result;
             const element: JQuery = $($.parseHTML(data.texts) as HTMLElement[]);
@@ -2608,7 +2969,12 @@ ${fhtml}
     }
 
     async showJS() {
-        if (!this.markup.runeverytime && !this.usercode && !this.userargs && !this.userinput) {
+        if (
+            !this.markup.runeverytime &&
+            !this.usercode &&
+            !this.userargs &&
+            !this.userinput
+        ) {
             return;
         }
         if (this.type.includes("truthtable")) {
@@ -2616,12 +2982,15 @@ ${fhtml}
             this.result = truthTable(this.userargs);
             return;
         }
-        if (!this.iframesettings || this.fullhtml) { // create an iframe on first time
+        if (!this.iframesettings || this.fullhtml) {
+            // create an iframe on first time
             let html = "";
             let scripts = "";
             if (this.type.includes("/vis")) {
-                html = '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
-                scripts = "https://cdnjs.cloudflare.com/ajax/libs/vis/4.20.0/vis.min.js";
+                html =
+                    '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
+                scripts =
+                    "https://cdnjs.cloudflare.com/ajax/libs/vis/4.20.0/vis.min.js";
             }
             let fsrc = "/cs/gethtml/canvas.html";
             if (this.type === "wescheme") {
@@ -2638,18 +3007,29 @@ ${fhtml}
                 fsrc = "/cs/gethtml/processing.html";
             }
             const v = this.getVid(dw, dh);
-            html = (this.markup.html ?? html);
+            html = this.markup.html ?? html;
             html = encodeURI(html);
             const fh = this.getfullhtmlext(this.getCode());
             this.iframesettings = {
                 id: v.vid,
                 width: v.width,
                 height: v.height,
-                src: this.domSanitizer.bypassSecurityTrustResourceUrl(fh ? getIFrameDataUrl(fh) : `${fsrc}?scripts=${this.markup.scripts ?? scripts}&html=${html}`),
+                src: this.domSanitizer.bypassSecurityTrustResourceUrl(
+                    fh
+                        ? getIFrameDataUrl(fh)
+                        : `${fsrc}?scripts=${
+                              this.markup.scripts ?? scripts
+                          }&html=${html}`
+                ),
             };
         }
         const text = this.usercode;
-        if (!this.markup.runeverytime && text === this.lastJS && this.userargs === this.lastUserargs && this.userinput === this.lastUserinput) {
+        if (
+            !this.markup.runeverytime &&
+            text === this.lastJS &&
+            this.userargs === this.lastUserargs &&
+            this.userinput === this.lastUserinput
+        ) {
             return;
         }
         this.lastJS = text;
@@ -2696,7 +3076,9 @@ ${fhtml}
         // }
     }
 
-    async waitIframeLoad(messageHandler?: (e: MessageEvent) => void): Promise<IFrameLoad | undefined> {
+    async waitIframeLoad(
+        messageHandler?: (e: MessageEvent) => void
+    ): Promise<IFrameLoad | undefined> {
         this.iframedefer = new TimDefer<IFrameLoad>();
         this.iframemessageHandler = messageHandler;
         return this.iframedefer.promise;
@@ -2975,7 +3357,12 @@ ${fhtml}
 </div>`,
 })
 export class CsRunnerComponent extends CsController {
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, cdr: ChangeDetectorRef) {
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        cdr: ChangeDetectorRef
+    ) {
         super(el, http, domSanitizer, cdr);
     }
 }

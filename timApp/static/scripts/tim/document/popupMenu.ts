@@ -27,7 +27,10 @@ export interface IPopupParams {
 /**
  * A popup menu component that is used in the document view.
  */
-export class PopupMenuController extends DialogController<{params: IPopupParams}, void> {
+export class PopupMenuController extends DialogController<
+    {params: IPopupParams},
+    void
+> {
     static component = "popupMenu";
     static $inject = ["$element", "$scope"] as const;
     public editState: EditMode | null;
@@ -127,7 +130,10 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
         if (!this.p.save) {
             return;
         }
-        if (this.vctrl.defaultAction && this.vctrl.defaultAction.desc === f.desc) {
+        if (
+            this.vctrl.defaultAction &&
+            this.vctrl.defaultAction.desc === f.desc
+        ) {
             this.vctrl.defaultAction = undefined;
             this.vctrl.$storage.defaultAction = null;
         } else {
@@ -142,7 +148,11 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
             return;
         }
 
-        const r = await to($http.get<{texts: string}>(contentUrl, {params: {doc_id: this.vctrl.item.id}}));
+        const r = await to(
+            $http.get<{texts: string}>(contentUrl, {
+                params: {doc_id: this.vctrl.item.id},
+            })
+        );
         if (r.ok) {
             this.content = r.result.data.texts;
             this.draggable.ensureFullyInViewport();
@@ -150,7 +160,11 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
     }
 
     watchEditMode(newEditMode: EditMode | null, oldEditMode: EditMode | null) {
-        if (this.p.editcontext && newEditMode && newEditMode !== this.p.editcontext) {
+        if (
+            this.p.editcontext &&
+            newEditMode &&
+            newEditMode !== this.p.editcontext
+        ) {
             // We don't want to destroy our scope before returning from this function
             window.setTimeout(() => this.close(), 0.1);
         }
@@ -161,9 +175,8 @@ export class PopupMenuController extends DialogController<{params: IPopupParams}
     }
 }
 
-registerDialogComponent(PopupMenuController,
-    {
-        template: `
+registerDialogComponent(PopupMenuController, {
+    template: `
 <tim-dialog>
     <dialog-body>
         <div class="flex cl">
@@ -201,16 +214,18 @@ registerDialogComponent(PopupMenuController,
     </dialog-body>
 </tim-dialog>
     `,
-    },
-);
+});
 
 export function showPopupMenu(p: IPopupParams) {
     // debugTextToHeader("showPopupMenu" + JSON.stringify(p.pos));
-    return showDialog(PopupMenuController, {params: () => p},
-    // return showDialog<PopupMenuController>(null, {params: () => p},
+    return showDialog(
+        PopupMenuController,
+        {params: () => p},
+        // return showDialog<PopupMenuController>(null, {params: () => p},
         {
             absolute: true,
             showMinimizeButton: false,
             size: "xs",
-        });
+        }
+    );
 }

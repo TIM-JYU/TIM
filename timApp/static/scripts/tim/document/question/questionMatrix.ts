@@ -2,8 +2,7 @@ import {IController} from "angular";
 import {timApp} from "../../app";
 
 export class QuestionMatrixController implements IController {
-    $onInit() {
-    }
+    $onInit() {}
 }
 
 timApp.component("timQuestionMatrix", {

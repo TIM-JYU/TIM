@@ -1,12 +1,7 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "languageMode_"] }] */
 import $ from "jquery";
 import {Ace} from "ace-builds/src-noconflict/ace";
-import {
-    ElementRef,
-    ViewChild,
-    Component,
-    Input,
-} from "@angular/core";
+import {ElementRef, ViewChild, Component, Input} from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
 import {IEditor} from "./editor";
 
@@ -96,7 +91,9 @@ export class AceEditorComponent implements IEditor {
 
     doWrap(wrap: number) {
         const r = wrapText(this.content, wrap);
-        if (!r.modified) { return; }
+        if (!r.modified) {
+            return;
+        }
 
         const editor = this.aceEditor;
         const sess = editor.getSession();

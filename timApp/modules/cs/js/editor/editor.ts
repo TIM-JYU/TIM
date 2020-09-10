@@ -59,7 +59,12 @@ export interface IMultiEditor extends IEditor {
 
     setFiles(files: EditorFile[]): void;
     addFile(file: EditorFile): void;
-    addFile(path: string, base?: string, languageMode?: string, content?: string): void;
+    addFile(
+        path: string,
+        base?: string,
+        languageMode?: string,
+        content?: string
+    ): void;
     removeFile(filename: string): void;
     renameFile(path: string, oldPath?: string): void;
     setFileContent(path: string, content: string): void;
@@ -75,7 +80,13 @@ export class EditorFile {
     canRename: boolean; // TODO: implement renaming
     placeholder?: string;
 
-    constructor(path?: string, base?: string, languageMode?: string, canClose?: boolean, canRename?: boolean) {
+    constructor(
+        path?: string,
+        base?: string,
+        languageMode?: string,
+        canClose?: boolean,
+        canRename?: boolean
+    ) {
         this.path = path ?? "";
         this.base = base ?? "";
         this.languageMode = languageMode;
@@ -167,11 +178,16 @@ export class EditorComponent implements IMultiEditor {
     maxFiles: number = 1;
     mayAddFiles_: boolean = false;
 
-    @Output("content") private contentChange: EventEmitter<string> = new EventEmitter(true);
-    @Output("close") private fileCloseEmitter: EventEmitter<{file: EditorFile, index: number}> = new EventEmitter(true);
+    @Output("content") private contentChange: EventEmitter<
+        string
+    > = new EventEmitter(true);
+    @Output("close") private fileCloseEmitter: EventEmitter<{
+        file: EditorFile;
+        index: number;
+    }> = new EventEmitter(true);
     minRows_: number = 1;
     maxRows_: number = 100;
-    private wrap_?: {n: number, auto: boolean};
+    private wrap_?: {n: number; auto: boolean};
 
     @Input() parsonsShuffle: boolean = false;
     @Input() parsonsMaxcheck?: number;
@@ -191,7 +207,9 @@ export class EditorComponent implements IMultiEditor {
     filenameInput: string = "";
 
     constructor(private cdr: ChangeDetectorRef) {
-        this.showOtherEditor(this.savedEditorMode ?? EditorComponent.defaultMode);
+        this.showOtherEditor(
+            this.savedEditorMode ?? EditorComponent.defaultMode
+        );
     }
 
     ngOnInit() {
@@ -227,17 +245,23 @@ export class EditorComponent implements IMultiEditor {
     }
 
     // For after ngIf sets the value
-    @ViewChild(NormalEditorComponent) private set normalEditorViewSetter(component: NormalEditorComponent | undefined) {
+    @ViewChild(NormalEditorComponent) private set normalEditorViewSetter(
+        component: NormalEditorComponent | undefined
+    ) {
         const oldContent = this.normalEditor?.content ?? this.content;
         this.normalEditor = component;
         this.initEditor(oldContent);
     }
-    @ViewChild(AceEditorComponent) private set aceEditorViewSetter(component: AceEditorComponent | undefined) {
+    @ViewChild(AceEditorComponent) private set aceEditorViewSetter(
+        component: AceEditorComponent | undefined
+    ) {
         const oldContent = this.aceEditor?.content ?? this.content;
         this.aceEditor = component;
         this.initEditor(oldContent);
     }
-    @ViewChild(ParsonsEditorComponent) private set parsonsEditorViewSetter(component: ParsonsEditorComponent | undefined) {
+    @ViewChild(ParsonsEditorComponent) private set parsonsEditorViewSetter(
+        component: ParsonsEditorComponent | undefined
+    ) {
         const oldContent = this.parsonsEditor?.content ?? this.content;
         this.parsonsEditor = component;
         this.initEditor(oldContent);
@@ -272,12 +296,12 @@ export class EditorComponent implements IMultiEditor {
     }
 
     @Input()
-    private set wrap(wrap: {n: number, auto: boolean} | undefined) {
+    private set wrap(wrap: {n: number; auto: boolean} | undefined) {
         this.wrap_ = wrap;
         if (this.wrap_ && this.wrap_.n <= 0) {
             this.wrap_ = undefined;
         }
-        if(this.wrap_?.auto) {
+        if (this.wrap_?.auto) {
             this.doWrap();
         }
     }
@@ -308,8 +332,9 @@ export class EditorComponent implements IMultiEditor {
     private clampIndex(index: number) {
         if (index < 0) {
             return 0;
-        } if (index >= this.files.length) {
-            return this.files.length-1;
+        }
+        if (index >= this.files.length) {
+            return this.files.length - 1;
         } else {
             return index;
         }
@@ -320,12 +345,13 @@ export class EditorComponent implements IMultiEditor {
     }
     set files(files: EditorFile[]) {
         this.files_ = files;
-        if(files.length == 0) {
+        if (files.length == 0) {
             this.fileIndex = 0;
         } else {
             const clampedIndex = this.clampIndex(this.fileIndex);
             if (files[clampedIndex]) {
-                this.content = files[clampedIndex].content ?? files[clampedIndex].base;
+                this.content =
+                    files[clampedIndex].content ?? files[clampedIndex].base;
             }
         }
         // refresh index in case it is outside the new range
@@ -345,7 +371,9 @@ export class EditorComponent implements IMultiEditor {
     }
 
     get allFiles(): IEditorFile[] {
-        const out = this.files.map((f) => ({path: f.path, content: f.content ?? f.base}) as IEditorFile);
+        const out = this.files.map(
+            (f) => ({path: f.path, content: f.content ?? f.base} as IEditorFile)
+        );
         if (out) {
             out[this.fileIndex].content = this.content;
         }
@@ -374,7 +402,7 @@ export class EditorComponent implements IMultiEditor {
     }
 
     get editor(): IEditor | undefined {
-        switch(this.mode) {
+        switch (this.mode) {
             case Mode.Normal:
                 return this.normalEditor;
             case Mode.ACE:
@@ -393,7 +421,7 @@ export class EditorComponent implements IMultiEditor {
     set content(str: string) {
         if (this.editor) {
             this.editor.content = str;
-        } else if(this.file) {
+        } else if (this.file) {
             this.file.content = str;
         }
     }
@@ -402,7 +430,7 @@ export class EditorComponent implements IMultiEditor {
         return this.file?.content_;
     }
     set content_(str: string | undefined) {
-        if(this.file) {
+        if (this.file) {
             this.file.content_ = str;
         }
     }
@@ -411,7 +439,7 @@ export class EditorComponent implements IMultiEditor {
         return this.file?.oldContent ?? "";
     }
     set oldContent(str: string) {
-        if(this.file) {
+        if (this.file) {
             this.file.oldContent = str;
         }
     }
@@ -421,7 +449,7 @@ export class EditorComponent implements IMultiEditor {
     }
     @Input()
     set base(str: string) {
-        if(this.file) {
+        if (this.file) {
             this.file.base = str;
         }
     }
@@ -430,7 +458,7 @@ export class EditorComponent implements IMultiEditor {
         return this.file?.languageMode ?? "text";
     }
     set languageMode(str: string) {
-        if(this.file) {
+        if (this.file) {
             this.file.languageMode = str;
         }
     }
@@ -439,7 +467,7 @@ export class EditorComponent implements IMultiEditor {
         if (this.modes.length <= 1) {
             return undefined;
         }
-        return this.modes[(this.modeIndex+1) % this.modes.length].text;
+        return this.modes[(this.modeIndex + 1) % this.modes.length].text;
     }
 
     get modeIndex(): number {
@@ -451,7 +479,7 @@ export class EditorComponent implements IMultiEditor {
     }
 
     get mode(): ModeID {
-        if(this.modeIndex == -1 || this.modeIndex >= this.modes.length) {
+        if (this.modeIndex == -1 || this.modeIndex >= this.modes.length) {
             return -1;
         }
         return this.modes[this.modeIndex].id;
@@ -473,7 +501,7 @@ export class EditorComponent implements IMultiEditor {
 
     get savedEditorMode(): ModeID | null {
         let emode: ModeID | null = null;
-         // TODO: change editorIndex into a list of priority?
+        // TODO: change editorIndex into a list of priority?
         const emodestr = localStorage.getItem("editorIndex"); // TODO: change to editorMode?
         if (emodestr !== null) {
             emode = parseInt(emodestr, 10);
@@ -484,7 +512,9 @@ export class EditorComponent implements IMultiEditor {
         return emode;
     }
     set savedEditorMode(mode: ModeID | null) {
-        if (mode === null) { return; }
+        if (mode === null) {
+            return;
+        }
         localStorage.setItem("editorIndex", mode.toString());
     }
 
@@ -503,13 +533,20 @@ export class EditorComponent implements IMultiEditor {
     }
 
     get disableAddButton(): boolean {
-        return !this.filenameInput || (!!this.allowedPaths && !this.allowedPaths.includes(this.filenameInput));
+        return (
+            !this.filenameInput ||
+            (!!this.allowedPaths &&
+                !this.allowedPaths.includes(this.filenameInput))
+        );
     }
 
     get addButtonTitle(): string | null {
         if (!this.filenameInput) {
             return "Filename cannot be empty!";
-        } else if (this.allowedPaths && !this.allowedPaths.includes(this.filenameInput)) {
+        } else if (
+            this.allowedPaths &&
+            !this.allowedPaths.includes(this.filenameInput)
+        ) {
             return `Filename ${this.filenameInput} is not allowed!`;
         }
         return null;
@@ -534,7 +571,7 @@ export class EditorComponent implements IMultiEditor {
             }
             this.mode = editorMode;
         } else {
-            this.mode = this.modes[(this.modeIndex+1) % this.modes.length].id;
+            this.mode = this.modes[(this.modeIndex + 1) % this.modes.length].id;
         }
     }
 
@@ -549,16 +586,32 @@ export class EditorComponent implements IMultiEditor {
     }
 
     addFile(file: EditorFile): void;
-    addFile(path: string, base?: string, languageMode?: string, content?: string): void;
-    addFile(fileorpath: unknown, base?: string, languageMode?: string, content?: string) {
+    addFile(
+        path: string,
+        base?: string,
+        languageMode?: string,
+        content?: string
+    ): void;
+    addFile(
+        fileorpath: unknown,
+        base?: string,
+        languageMode?: string,
+        content?: string
+    ) {
         let file: EditorFile;
         if (fileorpath instanceof EditorFile) {
             file = fileorpath;
         } else {
             file = new EditorFile(fileorpath as string);
-            if(base) { file.base = base; }
-            if(languageMode) { file.languageMode = languageMode; }
-            if(content) { file.content = content; }
+            if (base) {
+                file.base = base;
+            }
+            if (languageMode) {
+                file.languageMode = languageMode;
+            }
+            if (content) {
+                file.content = content;
+            }
         }
 
         const index = this.findFile(file.path);
@@ -579,7 +632,7 @@ export class EditorComponent implements IMultiEditor {
             return;
         }
         let nindex = this.fileIndex;
-        if(nindex > index) {
+        if (nindex > index) {
             nindex--;
         }
         if (this.fileIndex == index) {
@@ -612,13 +665,13 @@ export class EditorComponent implements IMultiEditor {
 
     renameFile(path: string, oldPath?: string) {
         if (!oldPath) {
-            if(this.file) {
+            if (this.file) {
                 this.file.path = path;
             }
             return;
         }
 
-        const index =  this.findFile(oldPath);
+        const index = this.findFile(oldPath);
         if (index != -1) {
             this.files[index].path = path;
         }
@@ -638,7 +691,7 @@ export class EditorComponent implements IMultiEditor {
 
     onFileLoad(file: IFile) {
         this.loadedFile = file;
-        if(!this.filenameInput) {
+        if (!this.filenameInput) {
             this.filenameInput = file.realName;
         }
     }

@@ -3,8 +3,19 @@
  */
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
-import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "tim/plugin/attributes";
+import {
+    ChangeType,
+    FormModeOption,
+    ISetAnswerResult,
+    ITimComponent,
+    ViewCtrl,
+} from "tim/document/viewctrl";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $timeout} from "tim/util/ngimport";
 import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
@@ -52,13 +63,17 @@ const TextfieldAll = t.intersection([
         info: Info,
         markup: TextfieldMarkup,
         preview: t.boolean,
-        state: nullable(
-            FieldDataWithStyles,
-        ),
+        state: nullable(FieldDataWithStyles),
     }),
 ]);
 
-class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t.TypeOf<typeof TextfieldAll>, typeof TextfieldAll> implements ITimComponent {
+class TextfieldController
+    extends PluginBase<
+        t.TypeOf<typeof TextfieldMarkup>,
+        t.TypeOf<typeof TextfieldAll>,
+        typeof TextfieldAll
+    >
+    implements ITimComponent {
     private changes = false;
     private result?: string;
     private isRunning = false;
@@ -69,7 +84,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     private errormessage?: string;
     private hideSavedText = true;
     private redAlert = false;
-    private saveResponse: {saved: boolean, message: (string | undefined)} = {saved: false, message: undefined};
+    private saveResponse: {saved: boolean; message: string | undefined} = {
+        saved: false,
+        message: undefined,
+    };
     private preventedAutosave = false;
     private styles: {[index: string]: string} = {};
     private saveCalledExternally = false;
@@ -87,12 +105,17 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
 
     $onInit() {
         super.$onInit();
-        this.userword = (valueOr(this.attrsall.state?.c, this.attrs.initword ?? "")).toString();
+        this.userword = valueOr(
+            this.attrsall.state?.c,
+            this.attrs.initword ?? ""
+        ).toString();
         // this.modelOpts = {debounce: this.autoupdate};
-        this.modelOpts = {debounce: { blur: 0}};
+        this.modelOpts = {debounce: {blur: 0}};
         this.vctrl.addTimComponent(this, this.attrs.tag);
         this.initialValue = this.userword;
-        if (this.attrs.showname) { this.initCode(); }
+        if (this.attrs.showname) {
+            this.initCode();
+        }
         if (this.attrsall.state?.styles && !this.attrs.ignorestyles) {
             this.applyStyling(this.attrsall.state.styles);
         }
@@ -139,7 +162,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
     // TODO: Use answer content as arg or entire IAnswer?
     // TODO: get rid of any (styles can arrive as object)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setAnswer(content: { [index: string]: any }): ISetAnswerResult {
+    setAnswer(content: {[index: string]: any}): ISetAnswerResult {
         this.errormessage = undefined;
         let message;
         let ok = true;
@@ -152,7 +175,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             } catch (e) {
                 this.userword = "";
                 ok = false;
-                message = `Couldn't find related content ("c") from ${JSON.stringify(content)}`;
+                message = `Couldn't find related content ("c") from ${JSON.stringify(
+                    content
+                )}`;
                 this.errormessage = message;
             }
             if (!this.attrs.ignorestyles) {
@@ -162,7 +187,6 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.changes = false;
         this.updateListeners(ChangeType.Saved);
         return {ok: ok, message: message};
-
     }
 
     /**
@@ -202,7 +226,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             if (this.attrs.showname == 2) {
                 this.userword = u.name;
             }
-        } else { this.userword = this.attrs.initword ?? ""; }
+        } else {
+            this.userword = this.attrs.initword ?? "";
+        }
         this.initialValue = this.userword;
         this.result = undefined;
         this.changes = false;
@@ -243,10 +269,15 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     changeFocus() {
-        const inputfields = document.querySelectorAll("textfield-runner input, numericfield-runner input");
+        const inputfields = document.querySelectorAll(
+            "textfield-runner input, numericfield-runner input"
+        );
         for (let i = 0; i < inputfields.length; ++i) {
             const selectedfield = inputfields[i] as HTMLInputElement;
-            if (selectedfield === document.activeElement && inputfields[i + 1]) {
+            if (
+                selectedfield === document.activeElement &&
+                inputfields[i + 1]
+            ) {
                 const nextfield = inputfields[i + 1] as HTMLInputElement;
                 this.preventedAutosave = true;
                 return nextfield.focus();
@@ -261,8 +292,13 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
-        if (this.attrs.showname) { return true; }
-        return (this.attrs.readOnlyStyle == "plaintext" && window.location.pathname.startsWith("/view/"));
+        if (this.attrs.showname) {
+            return true;
+        }
+        return (
+            this.attrs.readOnlyStyle == "plaintext" &&
+            window.location.pathname.startsWith("/view/")
+        );
     }
 
     isTextArea() {
@@ -311,7 +347,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isUnSaved() {
-        return (!this.attrs.nosave && this.changes);
+        return !this.attrs.nosave && this.changes;
     }
 
     // noinspection JSUnusedGlobalSymbols
@@ -345,7 +381,9 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         this.errormessage = undefined;
         if (this.attrs.validinput) {
             if (!this.validityCheck(this.attrs.validinput)) {
-                this.errormessage = this.attrs.errormessage ?? "Input does not pass the RegEx: " + this.attrs.validinput;
+                this.errormessage =
+                    this.attrs.errormessage ??
+                    "Input does not pass the RegEx: " + this.attrs.validinput;
                 this.redAlert = true;
                 this.saveResponse.message = this.errormessage;
                 return this.saveResponse;
@@ -364,7 +402,13 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             params.input.nosave = true;
         }
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<{web: {result: string, error?: string, clear?: boolean}}>(url, params, {timeout: defaultTimeout}));
+        const r = await to(
+            $http.put<{web: {result: string; error?: string; clear?: boolean}}>(
+                url,
+                params,
+                {timeout: defaultTimeout}
+            )
+        );
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
@@ -402,7 +446,10 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
                 }
             }
         } else {
-            this.errormessage = r.result.data?.error ?? this.attrs.connectionErrorMessage ?? defaultErrorMessage;
+            this.errormessage =
+                r.result.data?.error ??
+                this.attrs.connectionErrorMessage ??
+                defaultErrorMessage;
         }
         return this.saveResponse;
     }
@@ -419,7 +466,7 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (scrollHeight < prevHeight) {
             return;
         }
-        ele.css("height",  ele[0].scrollHeight + "px");
+        ele.css("height", ele[0].scrollHeight + "px");
     }
 
     formBehavior(): FormModeOption {
@@ -443,7 +490,11 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
         if (!taskId) {
             return;
         }
-        this.vctrl.informChangeListeners(taskId, state, (this.attrs.tag ? this.attrs.tag : undefined));
+        this.vctrl.informChangeListeners(
+            taskId,
+            state,
+            this.attrs.tag ? this.attrs.tag : undefined
+        );
     }
 }
 

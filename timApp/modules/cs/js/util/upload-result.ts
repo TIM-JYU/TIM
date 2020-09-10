@@ -26,7 +26,8 @@ import {SafeResourceUrl, DomSanitizer} from "@angular/platform-browser";
         </ng-container>
     </ng-container>`,
 })
-export class UploadResultComponent { // TODO: test
+export class UploadResultComponent {
+    // TODO: test
     static specializedTypes = ["image", "video", "audio", "text"];
     static otherTypes = ["pdf", "xml"];
 
@@ -34,7 +35,7 @@ export class UploadResultComponent { // TODO: test
     src_?: SafeResourceUrl;
     name?: string;
 
-    constructor(private sanitizer: DomSanitizer) { }
+    constructor(private sanitizer: DomSanitizer) {}
 
     @Input()
     set src(src: string) {

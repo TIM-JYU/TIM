@@ -1,7 +1,6 @@
 import {Component, Input} from "@angular/core";
 import {PluginMarkupErrors} from "tim/plugin/util";
 
-
 @Component({
     selector: "tim-markup-error",
     template: `

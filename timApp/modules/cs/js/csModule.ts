@@ -1,9 +1,9 @@
 import {
-        DoBootstrap,
-        NgModule,
-        StaticProvider,
-        ApplicationRef,
-    } from "@angular/core";
+    DoBootstrap,
+    NgModule,
+    StaticProvider,
+    ApplicationRef,
+} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -15,7 +15,11 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {CsRunnerComponent} from "./csPlugin";
 import {CsTextComponent} from "./text";
 import {CsConsoleComponent} from "./console";
-import {ExtcheckComponent, OutputContainerComponent, CustomOutputDirective} from "./extcheck";
+import {
+    ExtcheckComponent,
+    OutputContainerComponent,
+    CustomOutputDirective,
+} from "./extcheck";
 import {GitRegComponent} from "./gitreg";
 import {CsErrorComponent} from "./language_error";
 import {CsUtilityModule} from "./util/module";
@@ -52,8 +56,7 @@ import {EditorModule} from "./editor/module";
     ],
 })
 export class CsPluginModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
 const bootstrapFn = (extraProviders: StaticProvider[]) => {

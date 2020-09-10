@@ -8,24 +8,40 @@ import {Document} from "tim/document/document";
 import {ClipboardHandler, IClipboardMeta} from "tim/document/editing/clipboard";
 import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
-import {getElementByParId, Paragraph, saveCurrentScreenPar} from "tim/document/parhelpers";
+import {
+    getElementByParId,
+    Paragraph,
+    saveCurrentScreenPar,
+} from "tim/document/parhelpers";
 import {ParmenuHandler} from "tim/document/parmenu";
 import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {setViewCtrl} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
-import {isPageDirty, markAsUsed, markPageNotDirty, to, UnknownRecord} from "tim/util/utils";
+import {
+    isPageDirty,
+    markAsUsed,
+    markPageNotDirty,
+    to,
+    UnknownRecord,
+} from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
-import {AnswerBrowserController, PluginLoaderCtrl} from "../answer/answerbrowser3";
+import {
+    AnswerBrowserController,
+    PluginLoaderCtrl,
+} from "../answer/answerbrowser3";
 import {IAnswer} from "../answer/IAnswer";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument} from "../item/IItem";
 import {LectureController} from "../lecture/lectureController";
-import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "../plugin/attributes";
+import {
+    IGenericPluginMarkup,
+    IGenericPluginTopLevelFields,
+} from "../plugin/attributes";
 import {TableFormComponent} from "../plugin/tableForm";
 import {DocIdDotName, TaskId} from "../plugin/taskid";
 import {TimTableComponent} from "../plugin/timTable";
@@ -34,7 +50,14 @@ import {IUser, IUserListEntry} from "../user/IUser";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {documentglobals} from "../util/globals";
-import {$compile, $filter, $http, $interval, $localStorage, $timeout} from "../util/ngimport";
+import {
+    $compile,
+    $filter,
+    $http,
+    $interval,
+    $localStorage,
+    $timeout,
+} from "../util/ngimport";
 import {AnnotationComponent} from "../velp/annotation.component";
 import {ReviewController} from "../velp/reviewController";
 import {diffDialog} from "./diffDialog";
@@ -52,7 +75,11 @@ import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "./viewutils";
 markAsUsed(ngs, popupMenu, interceptor, helpPar, ParRefController);
 
 export interface IChangeListener {
-    informAboutChanges: (taskId: TaskId, state: ChangeType, tag?: string) => void;
+    informAboutChanges: (
+        taskId: TaskId,
+        state: ChangeType,
+        tag?: string
+    ) => void;
 }
 
 export interface ITimComponent {
@@ -65,7 +92,7 @@ export interface ITimComponent {
     belongsToArea: (area: string) => boolean;
     formBehavior: () => FormModeOption;
     isUnSaved: (userChange?: boolean) => boolean;
-    save: () => Promise<{saved: boolean, message: (string | undefined)}>;
+    save: () => Promise<{saved: boolean; message: string | undefined}>;
     getPar: () => Paragraph;
     setPluginWords?: (words: string[]) => void;
     setForceAnswerSave?: (force: boolean) => void;
@@ -76,8 +103,8 @@ export interface ITimComponent {
 }
 
 export interface ISetAnswerResult {
-    ok: boolean,
-    message: (string | undefined)
+    ok: boolean;
+    message: string | undefined;
 }
 
 export interface IJsRunner {
@@ -114,7 +141,11 @@ export interface IChangeDiffResult {
     id: string;
 }
 
-export type DiffResult = IInsertDiffResult | IReplaceDiffResult | IDeleteDiffResult | IChangeDiffResult;
+export type DiffResult =
+    | IInsertDiffResult
+    | IReplaceDiffResult
+    | IDeleteDiffResult
+    | IChangeDiffResult;
 
 export enum RegexOption {
     PrependCurrentDocId,
@@ -136,8 +167,12 @@ export class ViewCtrl implements IController {
     private hideVars: IVisibilityVars = getVisibilityVars();
     private notification: string = "";
     private videoElements = new Map<string, HTMLVideoElement>();
-    clipMeta: IClipboardMeta = {allowPasteContent: false, allowPasteRef: false, empty: true};
-    selection: { pars?: JQuery; start?: Paragraph; end?: Paragraph } = {};
+    clipMeta: IClipboardMeta = {
+        allowPasteContent: false,
+        allowPasteRef: false,
+        empty: true,
+    };
+    selection: {pars?: JQuery; start?: Paragraph; end?: Paragraph} = {};
     public par: JQuery | undefined;
 
     static $inject = ["$scope"];
@@ -173,7 +208,10 @@ export class ViewCtrl implements IController {
     private document: Document;
     public selectedUser: IUser;
     public editing: boolean = false;
-    public $storage: ngStorage.StorageService & { defaultAction: string | null; noteAccess: string; };
+    public $storage: ngStorage.StorageService & {
+        defaultAction: string | null;
+        noteAccess: string;
+    };
     private liveUpdates: number;
     private oldWidth: number;
     public defaultAction: IMenuFunctionEntry | undefined;
@@ -221,7 +259,9 @@ export class ViewCtrl implements IController {
 
         const currSel = documentglobals().current_list_user;
         if (this.users.length > 0) {
-            this.selectedUser = currSel ? this.findUserByName(currSel.name)!.user : this.users[0].user;
+            this.selectedUser = currSel
+                ? this.findUserByName(currSel.name)!.user
+                : this.users[0].user;
         } else {
             this.selectedUser = Users.getCurrent();
         }
@@ -252,50 +292,61 @@ export class ViewCtrl implements IController {
         } else {
             initSlideView(this.item);
         }
-        onClick("html", ($this, e) => {
-            // Clicking anywhere
-            const tagName = (e.target as Element).tagName.toLowerCase();
-            const jqTarget = $(e.target);
-            const ignoreTags = ["button", "input", "label", "i"];
-            const ignoreClasses = [
-                "areaeditline",
-                "draghandle",
-                "editline",
-                "menu-icon",
-                "modal-dialog",
-            ];
+        onClick(
+            "html",
+            ($this, e) => {
+                // Clicking anywhere
+                const tagName = (e.target as Element).tagName.toLowerCase();
+                const jqTarget = $(e.target);
+                const ignoreTags = ["button", "input", "label", "i"];
+                const ignoreClasses = [
+                    "areaeditline",
+                    "draghandle",
+                    "editline",
+                    "menu-icon",
+                    "modal-dialog",
+                ];
 
-            let curElement = jqTarget;
-            let limit = 10;
-            while (curElement != null) {
-                if (this.editing || ignoreTags.includes(tagName) || curElement.attr("position") === "absolute") {
-                    return false;
-                }
-
-                for (const c of ignoreClasses) {
-                    if (curElement.hasClass(c)) {
+                let curElement = jqTarget;
+                let limit = 10;
+                while (curElement != null) {
+                    if (
+                        this.editing ||
+                        ignoreTags.includes(tagName) ||
+                        curElement.attr("position") === "absolute"
+                    ) {
                         return false;
+                    }
+
+                    for (const c of ignoreClasses) {
+                        if (curElement.hasClass(c)) {
+                            return false;
+                        }
+                    }
+
+                    curElement = curElement.parent();
+                    if (--limit < 0) {
+                        break;
                     }
                 }
 
-                curElement = curElement.parent();
-                if (--limit < 0) {
-                    break;
+                this.closePopupIfOpen();
+                if (diffDialog) {
+                    diffDialog.close();
                 }
-            }
 
-            this.closePopupIfOpen();
-            if (diffDialog) {
-                diffDialog.close();
-            }
-
-            return false;
-
-        }, true);
+                return false;
+            },
+            true
+        );
 
         // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android
         $("body,html").bind("scroll wheel DOMMouseScroll mousewheel", (e) => {
-            if ((e.which && e.which > 0) || e.type === "mousedown" || e.type === "mousewheel") {
+            if (
+                (e.which && e.which > 0) ||
+                e.type === "mousedown" ||
+                e.type === "mousewheel"
+            ) {
                 $("html,body").stop();
             }
         });
@@ -310,7 +361,8 @@ export class ViewCtrl implements IController {
         if (isPageDirty()) {
             showInputDialog({
                 isInput: InputDialogKind.NoValidator,
-                text: "The page has been modified since the last reload. Refresh now?",
+                text:
+                    "The page has been modified since the last reload. Refresh now?",
                 title: "Page was modified - reload?",
                 okValue: true,
             });
@@ -322,13 +374,15 @@ export class ViewCtrl implements IController {
         }
 
         try {
-            const found = $filter("filter")(this.editingHandler.getEditorFunctions(),
-                {desc: this.$storage.defaultAction, show: true}, true);
+            const found = $filter("filter")(
+                this.editingHandler.getEditorFunctions(),
+                {desc: this.$storage.defaultAction, show: true},
+                true
+            );
             if (found.length) {
                 this.defaultAction = found[0];
             }
-        } catch (e) {
-        }
+        } catch (e) {}
         this.reviewCtrl = new ReviewController(this);
         timLogTime("ViewCtrl end", "view");
     }
@@ -344,11 +398,17 @@ export class ViewCtrl implements IController {
         window.addEventListener("beforeunload", (e) => {
             saveCurrentScreenPar();
 
-            if ((!this.editing && !this.checkUnSavedTimComponents() && !this.doingTask) || documentglobals().IS_TESTING) {
+            if (
+                (!this.editing &&
+                    !this.checkUnSavedTimComponents() &&
+                    !this.doingTask) ||
+                documentglobals().IS_TESTING
+            ) {
                 return undefined;
             }
 
-            const msg = "You are currently editing something. Are you sure you want to leave the page?";
+            const msg =
+                "You are currently editing something. Are you sure you want to leave the page?";
 
             (e || window.event).returnValue = msg; // Gecko + IE
             return msg; // Gecko + Webkit, Safari, Chrome etc.
@@ -364,7 +424,9 @@ export class ViewCtrl implements IController {
     }
 
     public isTranslation() {
-        return this.item.src_docid != null && this.item.src_docid !== this.item.id;
+        return (
+            this.item.src_docid != null && this.item.src_docid !== this.item.id
+        );
     }
 
     getVideo(followid: string) {
@@ -382,7 +444,11 @@ export class ViewCtrl implements IController {
 
     // noinspection JSUnusedGlobalSymbols (used in view_html.html)
     showVelpSelection() {
-        return (this.reviewCtrl.velpMode || (this.teacherMode && this.docSettings.show_velps)) && !this.hide.velps;
+        return (
+            (this.reviewCtrl.velpMode ||
+                (this.teacherMode && this.docSettings.show_velps)) &&
+            !this.hide.velps
+        );
     }
 
     startLiveUpdates() {
@@ -393,7 +459,20 @@ export class ViewCtrl implements IController {
         }
         let stop: IPromise<unknown> | undefined;
         stop = $interval(async () => {
-            const r = await to($http.get<{ version: [number, number], diff: DiffResult[], live: number }>("/getParDiff/" + this.docId + "/" + this.docVersion[0] + "/" + this.docVersion[1]));
+            const r = await to(
+                $http.get<{
+                    version: [number, number];
+                    diff: DiffResult[];
+                    live: number;
+                }>(
+                    "/getParDiff/" +
+                        this.docId +
+                        "/" +
+                        this.docVersion[0] +
+                        "/" +
+                        this.docVersion[1]
+                )
+            );
             if (!r.ok) {
                 return;
             }
@@ -414,15 +493,23 @@ export class ViewCtrl implements IController {
             for (const d of response.data.diff) {
                 if (d.type === "delete") {
                     if (d.end_id != null) {
-                        getElementByParId(d.start_id).nextUntil(getElementByParId(d.end_id)).addBack().remove();
+                        getElementByParId(d.start_id)
+                            .nextUntil(getElementByParId(d.end_id))
+                            .addBack()
+                            .remove();
                     } else {
-                        getElementByParId(d.start_id).nextAll(".par").addBack().remove();
+                        getElementByParId(d.start_id)
+                            .nextAll(".par")
+                            .addBack()
+                            .remove();
                     }
                 } else if (d.type === "replace") {
                     const first = getElementByParId(d.start_id);
                     if (d.start_id !== d.end_id) {
                         if (d.end_id != null) {
-                            first.nextUntil(getElementByParId(d.end_id)).remove();
+                            first
+                                .nextUntil(getElementByParId(d.end_id))
+                                .remove();
                         } else {
                             first.nextAll(".par").remove();
                         }
@@ -441,7 +528,8 @@ export class ViewCtrl implements IController {
             $timeout(() => {
                 this.document.rebuildSections();
             }, 1000);
-            if (this.liveUpdates != origLiveUpdates) { // if value hase changes, stop and start new poll
+            if (this.liveUpdates != origLiveUpdates) {
+                // if value hase changes, stop and start new poll
                 if (stop) {
                     $interval.cancel(stop);
                     stop = undefined;
@@ -455,21 +543,29 @@ export class ViewCtrl implements IController {
 
     $onInit() {
         setViewCtrl(this);
-        this.scope.$watchGroup([
-            () => this.lectureCtrl.lectureSettings.lectureMode,
-            () => this.selection.start,
-            () => this.selection.end,
-            () => this.editing,
-            () => this.getEditMode(),
-            () => this.getAllowMove()], (newValues, oldValues, scope) => {
-            const par = $(".editline.menuopen").parents(".par");
-            this.parmenuHandler.updatePopupMenuIfOpen(this.parmenuHandler.getPopupAttrs(par.length > 0 ? par : undefined));
-            if (this.editing) {
-                this.notification = "Editor is already open.";
-            } else {
-                this.notification = "";
+        this.scope.$watchGroup(
+            [
+                () => this.lectureCtrl.lectureSettings.lectureMode,
+                () => this.selection.start,
+                () => this.selection.end,
+                () => this.editing,
+                () => this.getEditMode(),
+                () => this.getAllowMove(),
+            ],
+            (newValues, oldValues, scope) => {
+                const par = $(".editline.menuopen").parents(".par");
+                this.parmenuHandler.updatePopupMenuIfOpen(
+                    this.parmenuHandler.getPopupAttrs(
+                        par.length > 0 ? par : undefined
+                    )
+                );
+                if (this.editing) {
+                    this.notification = "Editor is already open.";
+                } else {
+                    this.notification = "";
+                }
             }
-        });
+        );
         this.reviewCtrl.loadDocumentAnnotations();
         // TODO: Currently editline hiding is done by exam mode on backend side but by a general bool on frontend
         if (!this.hideVars.editLine) {
@@ -486,23 +582,32 @@ export class ViewCtrl implements IController {
                 if (!e.ctrlKey) {
                     return;
                 }
-                let abElem: Element | null = $(activeElement).parents("tim-plugin-loader")[0];
+                let abElem: Element | null = $(activeElement).parents(
+                    "tim-plugin-loader"
+                )[0];
                 if (!abElem) {
-                    abElem = $(activeElement).parents(".par")[0]?.querySelector("tim-plugin-loader");
+                    abElem = $(activeElement)
+                        .parents(".par")[0]
+                        ?.querySelector("tim-plugin-loader");
                 }
                 if (abElem) {
                     const tid = abElem.getAttribute("task-id");
                     if (tid) {
                         const p = TaskId.tryParse(tid);
                         if (p.ok) {
-                            const ab = this.getAnswerBrowser(p.result.docTask().toString());
+                            const ab = this.getAnswerBrowser(
+                                p.result.docTask().toString()
+                            );
                             if (ab) {
                                 const changed = await ab.checkKeyPress(e);
 
                                 // If the focus was in a textarea element, it means the focus was inside the plugin
                                 // area (because answerbrowser itself doesn't have any textareas), and so we need to
                                 // re-focus it.
-                                if (changed && activeElement.tagName === "TEXTAREA") {
+                                if (
+                                    changed &&
+                                    activeElement.tagName === "TEXTAREA"
+                                ) {
                                     abElem.querySelector("textarea")?.focus();
                                 }
                             }
@@ -534,7 +639,10 @@ export class ViewCtrl implements IController {
         return this.timTables.get(parId);
     }
 
-    public addParMenuEntry(controller: ICtrlWithMenuFunctionEntry, parId: string) {
+    public addParMenuEntry(
+        controller: ICtrlWithMenuFunctionEntry,
+        parId: string
+    ) {
         this.parMenuEntries.set(parId, controller);
     }
 
@@ -552,7 +660,11 @@ export class ViewCtrl implements IController {
         return this.tableForms.get(taskId);
     }
 
-    public informChangeListeners(taskId: TaskId, state: ChangeType, tag?: string) {
+    public informChangeListeners(
+        taskId: TaskId,
+        state: ChangeType,
+        tag?: string
+    ) {
         this.inputChangeListeners.forEach((listener) => {
             listener.informAboutChanges(taskId, state, tag);
         });
@@ -588,7 +700,7 @@ export class ViewCtrl implements IController {
      * @param {ITimComponent} component The component to be registered.
      * @param {string | undefined} tag for accessing  group of ITimComponents
      */
-    public addTimComponent(component: ITimComponent, tag?: (string | null)) {
+    public addTimComponent(component: ITimComponent, tag?: string | null) {
         // Registering with any other name than docId.taskId breaks
         // form functionality
         const taskId = component.getTaskId();
@@ -635,7 +747,9 @@ export class ViewCtrl implements IController {
      * @returns {ITimComponent | undefined} Matching component if there was one.
      */
     public getTimComponentByName(name: string): ITimComponent | undefined {
-        if (!name) { return undefined; }
+        if (!name) {
+            return undefined;
+        }
         name = this.normalizeTaskId(name);
         return this.timComponents.get(name);
     }
@@ -662,7 +776,9 @@ export class ViewCtrl implements IController {
     public getTimComponentsByArea(area: string): ITimComponent[] {
         const returnList: ITimComponent[] = [];
         for (const [_, v] of this.timComponents) {
-            if (v.belongsToArea(area)) { returnList.push(v); }
+            if (v.belongsToArea(area)) {
+                returnList.push(v);
+            }
         }
         return returnList;
     }
@@ -673,7 +789,10 @@ export class ViewCtrl implements IController {
      * @param opt Additional option how to interpret the regex.
      * @returns {ITimComponent[]} List of ITimComponents where the ID matches the regexp.
      */
-    public getTimComponentsByRegex(re: string, opt: RegexOption): ITimComponent[] {
+    public getTimComponentsByRegex(
+        re: string,
+        opt: RegexOption
+    ): ITimComponent[] {
         const returnList: ITimComponent[] = [];
         let reg: RegExp;
         if (opt == RegexOption.DontPrependCurrentDocId) {
@@ -758,7 +877,10 @@ export class ViewCtrl implements IController {
         }
 
         if (this.formAbs.getSize() > 0) {
-            const fieldsToChange = new Map<DocIdDotName, AnswerBrowserController>();
+            const fieldsToChange = new Map<
+                DocIdDotName,
+                AnswerBrowserController
+            >();
             for (const fab of this.formAbs.entities.values()) {
                 if (!fab.isUseCurrentUser()) {
                     fieldsToChange.set(fab.taskId.docTask(), fab);
@@ -775,7 +897,12 @@ export class ViewCtrl implements IController {
         }
     }
 
-    private handleAnswerSet(ans: IAnswer | undefined, fab: AnswerBrowserController, user: IUser, force: boolean) {
+    private handleAnswerSet(
+        ans: IAnswer | undefined,
+        fab: AnswerBrowserController,
+        user: IUser,
+        force: boolean
+    ) {
         if (ans === undefined) {
             fab.changeUserAndAnswers(user, []);
         } else {
@@ -804,7 +931,10 @@ export class ViewCtrl implements IController {
                     if (UnknownRecord.is(parsed)) {
                         timComp.setAnswer(parsed);
                     } else {
-                        console.warn("selectedAnswer content was not a dict with string keys:", parsed);
+                        console.warn(
+                            "selectedAnswer content was not a dict with string keys:",
+                            parsed
+                        );
                     }
                 } else {
                     timComp.resetField();
@@ -820,7 +950,10 @@ export class ViewCtrl implements IController {
         taskids = widenFields(taskids);
         const formAbMap = new Map<DocIdDotName, AnswerBrowserController>();
         const regularAbMap = new Map<string, AnswerBrowserController>();
-        const currentUserFormAbs = new Map<DocIdDotName, AnswerBrowserController>();
+        const currentUserFormAbs = new Map<
+            DocIdDotName,
+            AnswerBrowserController
+        >();
         for (const t of taskids) {
             const loader = this.getPluginLoader(t);
             if (!loader) {
@@ -848,7 +981,10 @@ export class ViewCtrl implements IController {
             this.getFormAnswersAndUpdate(formAbMap, this.selectedUser);
         }
         if (currentUserFormAbs.size > 0) {
-            this.getFormAnswersAndUpdate(currentUserFormAbs, Users.getCurrent());
+            this.getFormAnswersAndUpdate(
+                currentUserFormAbs,
+                Users.getCurrent()
+            );
         }
         for (const ab of regularAbMap.values()) {
             ab.getAnswersAndUpdate();
@@ -856,11 +992,19 @@ export class ViewCtrl implements IController {
         }
     }
 
-    async getFormAnswersAndUpdate(formAnswerBrowsers: Map<DocIdDotName, AnswerBrowserController>, user: IUser) {
-        const r = await to($http.post<{ answers: { [index: string]: IAnswer | undefined }, userId: number }>("/userAnswersForTasks", {
-            tasks: Array.from(formAnswerBrowsers.keys()),
-            user: user.id,
-        }));
+    async getFormAnswersAndUpdate(
+        formAnswerBrowsers: Map<DocIdDotName, AnswerBrowserController>,
+        user: IUser
+    ) {
+        const r = await to(
+            $http.post<{
+                answers: {[index: string]: IAnswer | undefined};
+                userId: number;
+            }>("/userAnswersForTasks", {
+                tasks: Array.from(formAnswerBrowsers.keys()),
+                user: user.id,
+            })
+        );
         if (!r.ok) {
             console.error("userAnswersForTasks failed");
             return;
@@ -869,7 +1013,10 @@ export class ViewCtrl implements IController {
         if (answerResponse.data.userId == user.id) {
             for (const fab of formAnswerBrowsers.values()) {
                 // Note: here docTask() is correct, not docTaskField().
-                const ans = answerResponse.data.answers[fab.taskId.docTask().toString()];
+                const ans =
+                    answerResponse.data.answers[
+                        fab.taskId.docTask().toString()
+                    ];
                 this.handleAnswerSet(ans, fab, user, true);
             }
         }
@@ -923,11 +1070,19 @@ export class ViewCtrl implements IController {
     }
 
     async beginUpdate() {
-        const response = await to($http.get<{ changed_pars: { [id: string]: string } }>("/getUpdatedPars/" + this.docId));
+        const response = await to(
+            $http.get<{changed_pars: {[id: string]: string}}>(
+                "/getUpdatedPars/" + this.docId
+            )
+        );
         if (!response.ok) {
             return;
         }
-        this.updatePendingPars(new Map<string, string>(Object.entries(response.result.data.changed_pars)));
+        this.updatePendingPars(
+            new Map<string, string>(
+                Object.entries(response.result.data.changed_pars)
+            )
+        );
     }
 
     pendingUpdatesCount() {
@@ -977,7 +1132,9 @@ export class ViewCtrl implements IController {
     }
 
     setHeaderLinks() {
-        if (documentglobals().exam_mode) { return; }
+        if (documentglobals().exam_mode) {
+            return;
+        }
         const pars = $(".parContent");
         pars.each((index, elem) => {
             const p = $(elem);
@@ -985,12 +1142,14 @@ export class ViewCtrl implements IController {
                 const h = $(e);
                 const id = h.attr("id");
                 if (id) {
-                    h.append($("<a>", {
-                        text: "#",
-                        href: "#" + id,
-                        class: "headerlink",
-                        title: "Permanent link",
-                    }));
+                    h.append(
+                        $("<a>", {
+                            text: "#",
+                            href: "#" + id,
+                            class: "headerlink",
+                            title: "Permanent link",
+                        })
+                    );
                 }
             });
         });
@@ -1035,8 +1194,11 @@ export class ViewCtrl implements IController {
      * @param timComp ITimComponent to inspect
      */
     isTimComponentInFormMode(timComp: ITimComponent): boolean {
-        return ((this.docSettings.form_mode && timComp.formBehavior() == FormModeOption.Undecided)
-            || timComp.formBehavior() == FormModeOption.IsForm);
+        return (
+            (this.docSettings.form_mode &&
+                timComp.formBehavior() == FormModeOption.Undecided) ||
+            timComp.formBehavior() == FormModeOption.IsForm
+        );
     }
 
     /**
@@ -1072,7 +1234,7 @@ export class ViewCtrl implements IController {
 
     getAnswerBrowser(taskId: string) {
         taskId = this.normalizeTaskId(taskId);
-        return (this.abs.get(taskId) ?? this.formAbs.get(taskId));
+        return this.abs.get(taskId) ?? this.formAbs.get(taskId);
     }
 
     getAnswerBrowserAsync(tid: DocIdDotName) {

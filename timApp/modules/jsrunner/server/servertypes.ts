@@ -10,7 +10,8 @@ export const UserFieldData = t.intersection([
         groupinfo: t.type({
             membership_end: t.number,
         }),
-    })]);
+    }),
+]);
 
 // export type UserFields = t.type({id: t.Int, fields: t.string});
 

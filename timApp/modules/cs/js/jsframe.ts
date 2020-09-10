@@ -1,10 +1,20 @@
 ﻿import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";
-import {ChangeType, ITimComponent, IUserChanged, ViewCtrl} from "tim/document/viewctrl";
+import {
+    ChangeType,
+    ITimComponent,
+    IUserChanged,
+    ViewCtrl,
+} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {IUser} from "tim/user/IUser";
 import {$http} from "tim/util/ngimport";
-import {defaultErrorMessage, defaultTimeout, parseIframeopts, to} from "tim/util/utils";
+import {
+    defaultErrorMessage,
+    defaultTimeout,
+    parseIframeopts,
+    to,
+} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     AfterViewInit,
@@ -18,7 +28,11 @@ import {
     StaticProvider,
     ViewChild,
 } from "@angular/core";
-import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
+import {
+    BrowserModule,
+    DomSanitizer,
+    SafeResourceUrl,
+} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -27,7 +41,10 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 import {getParId} from "tim/document/parhelpers";
-import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "../../../static/scripts/tim/document/viewutils";
+import {
+    ICtrlWithMenuFunctionEntry,
+    IMenuFunctionEntry,
+} from "../../../static/scripts/tim/document/viewutils";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
@@ -93,28 +110,31 @@ type MessageGet = "getData" | "getDataSave";
 
 type MessageToFrame =
     | {
-    msg: "setData";
-    data: JSFrameData;
-} | { msg: "init" }
-    | { msg: "getData" }
-    | { msg: "getDataSave" }
-    | { msg: "close" }
-    | { msg: "start", fullscreen: boolean};
+          msg: "setData";
+          data: JSFrameData;
+      }
+    | {msg: "init"}
+    | {msg: "getData"}
+    | {msg: "getDataSave"}
+    | {msg: "close"}
+    | {msg: "start"; fullscreen: boolean};
 
 type MessageFromFrame =
     | {
-    msg: "data";
-    data: JSFrameData;
-} | {
-    msg: "datasave";
-    data: JSFrameData;
-} | {
-    msg: "update";
-    data: JSFrameData;
-} | {
-    msg: "frameInited" | "frameClosed";
-};
-
+          msg: "data";
+          data: JSFrameData;
+      }
+    | {
+          msg: "datasave";
+          data: JSFrameData;
+      }
+    | {
+          msg: "update";
+          data: JSFrameData;
+      }
+    | {
+          msg: "frameInited" | "frameClosed";
+      };
 
 /**
  * Returns the given data (un)wrapped so that there is exactly one layer of "c".
@@ -130,7 +150,7 @@ type MessageFromFrame =
  *
  * @param data The data to transform.
  */
-function unwrapAllC(data: unknown): { c: unknown } {
+function unwrapAllC(data: unknown): {c: unknown} {
     while (CProp.is(data) && CProp.is(data.c)) {
         data = data.c;
     }
@@ -190,13 +210,33 @@ function unwrapAllC(data: unknown): { c: unknown } {
         </div>
     `,
 })
-export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeMarkup>,
-    t.TypeOf<typeof JsframeAll>,
-    typeof JsframeAll> implements ITimComponent, IUserChanged, AfterViewInit, OnDestroy, ICtrlWithMenuFunctionEntry {
-    iframesettings?: { allow: string, sandbox: string, src: SafeResourceUrl, width: number, height: number };
+export class JsframeComponent
+    extends AngularPluginBase<
+        t.TypeOf<typeof JsframeMarkup>,
+        t.TypeOf<typeof JsframeAll>,
+        typeof JsframeAll
+    >
+    implements
+        ITimComponent,
+        IUserChanged,
+        AfterViewInit,
+        OnDestroy,
+        ICtrlWithMenuFunctionEntry {
+    iframesettings?: {
+        allow: string;
+        sandbox: string;
+        src: SafeResourceUrl;
+        width: number;
+        height: number;
+    };
     private ab?: AnswerBrowserController;
 
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        public cdr: ChangeDetectorRef
+    ) {
         super(el, http, domSanitizer);
     }
 
@@ -281,8 +321,10 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     private initData: string = "";
     private userName?: string;
 
-
-    private saveResponse: { saved: boolean, message: (string | undefined) } = {saved: false, message: undefined};
+    private saveResponse: {saved: boolean; message: string | undefined} = {
+        saved: false,
+        message: undefined,
+    };
     private channel?: MessageChannel;
     @ViewChild("frame") private frame?: ElementRef<HTMLIFrameElement>;
 
@@ -290,11 +332,15 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         // first we use encodeURIComponent to get percent-encoded UTF-8,
         // then we convert the percent encodings into raw bytes which
         // can be fed into btoa.
-        if (!codeUTF) { return btoa(str); }
-        const s = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+        if (!codeUTF) {
+            return btoa(str);
+        }
+        const s = encodeURIComponent(str).replace(
+            /%([0-9A-F]{2})/g,
             function toSolidBytes(match, p1) {
                 return String.fromCharCode(parseInt("0x" + p1, 16));
-        });
+            }
+        );
         return btoa(s);
     }
 
@@ -320,10 +366,20 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         this.prevdata = data;
         this.currentData = data;
         if (data) {
-            this.initData = "    " + jsobject + "initData = " + JSON.stringify(data) + ";\n";
+            this.initData =
+                "    " +
+                jsobject +
+                "initData = " +
+                JSON.stringify(data) +
+                ";\n";
         }
         if (aa.markup.fielddata) {
-            this.initData += "    " + jsobject + "fieldData = " + JSON.stringify(aa.markup.fielddata) + ";\n";
+            this.initData +=
+                "    " +
+                jsobject +
+                "fieldData = " +
+                JSON.stringify(aa.markup.fielddata) +
+                ";\n";
         }
         // if ( data ) { this.setData(data); }
 
@@ -383,8 +439,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         }
     }
 
-    ngOnDestroy() {
-    }
+    ngOnDestroy() {}
 
     async userChanged(user: IUser) {
         if (user.name == this.userName) {
@@ -399,10 +454,15 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         if (!tid) {
             return;
         }
-        const res = await to($http.get<unknown>(`/jsframe/userChange/${tid.docTask().toString()}/${user.id}`));
+        const res = await to(
+            $http.get<unknown>(
+                `/jsframe/userChange/${tid.docTask().toString()}/${user.id}`
+            )
+        );
         this.initData = "";
-        let data: { c: unknown, fielddata?: unknown } = this.getDataFromMarkup();
-        if (res.result.data) { // there os no more fielddata-attribute
+        let data: {c: unknown; fielddata?: unknown} = this.getDataFromMarkup();
+        if (res.result.data) {
+            // there os no more fielddata-attribute
             if (!data) {
                 data = {c: undefined};
             }
@@ -431,7 +491,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             // return "";
         } // TODO: replace when preview delay and preview from markup ready
         const w = this.markup.width ?? 800; // for some reason if w/h = 2, does not give hints on Chart.js
-        const h = this.markup.height ?? (208 * w / 400);  //  experimental result for Chart.js
+        const h = this.markup.height ?? (208 * w) / 400; //  experimental result for Chart.js
         let src;
         if (this.markup.useurl) {
             const selectedUser = this.viewctrl.selectedUser;
@@ -456,20 +516,30 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
             src = "data:text/html;base64," + datasrc;
         }
 
-        const iframeopts = this.markup.iframeopts ?? "sandbox='allow-scripts allow-same-origin'";
+        const iframeopts =
+            this.markup.iframeopts ??
+            "sandbox='allow-scripts allow-same-origin'";
 
         const sandbox = parseIframeopts(iframeopts).sandbox;
         const allow = parseIframeopts(iframeopts).allow;
         // if (allow) { allow =  'allow="' + allow + '"'; }
         const source = this.domSanitizer.bypassSecurityTrustResourceUrl(src);
-        this.iframesettings = {allow, sandbox, src: source, width: w, height: h};
+        this.iframesettings = {
+            allow,
+            sandbox,
+            src: source,
+            width: w,
+            height: h,
+        };
     }
 
     getHtmlUrl(): string {
         if (this.htmlUrl) {
             return this.htmlUrl;
         }
-        const url = "/iframehtml" + this.pluginMeta.getAnswerUrl().replace("/answer", "");
+        const url =
+            "/iframehtml" +
+            this.pluginMeta.getAnswerUrl().replace("/answer", "");
 
         this.htmlUrl = url;
         return url;
@@ -530,15 +600,19 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
 
         this.console = "";
 
-        const r = await to($http<{
-            web: { error?: string, console?: string },
-        }>({method: "PUT", url: url, data: params, timeout: defaultTimeout},
-        ));
+        const r = await to(
+            $http<{
+                web: {error?: string; console?: string};
+            }>({method: "PUT", url: url, data: params, timeout: defaultTimeout})
+        );
         this.isRunning = false;
 
         if (!r.ok) {
             this.error = r.result.data?.error;
-            this.connectionErrorMessage = this.error ?? this.attrsall.markup.connectionErrorMessage ?? defaultErrorMessage;
+            this.connectionErrorMessage =
+                this.error ??
+                this.attrsall.markup.connectionErrorMessage ??
+                defaultErrorMessage;
             this.saveResponse.saved = false;
             this.c();
             return this.saveResponse;
@@ -612,8 +686,11 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
         if (!taskId) {
             return;
         }
-        this.viewctrl.informChangeListeners(taskId, (this.edited ? ChangeType.Modified : ChangeType.Saved),
-            (this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined));
+        this.viewctrl.informChangeListeners(
+            taskId,
+            this.edited ? ChangeType.Modified : ChangeType.Saved,
+            this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined
+        );
     }
 
     getDataReady<T extends JSFrameData>(data: T, dosave = false) {
@@ -660,7 +737,7 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
     }
 
     isUnSaved() {
-        return this.edited;  // TODO: compare datas
+        return this.edited; // TODO: compare datas
     }
 
     send(obj: MessageToFrame) {
@@ -720,19 +797,11 @@ export class JsframeComponent extends AngularPluginBase<t.TypeOf<typeof JsframeM
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
-    declarations: [
-        JsframeComponent,
-    ],
-    imports: [
-        BrowserModule,
-        HttpClientModule,
-        FormsModule,
-        TimUtilityModule,
-    ],
+    declarations: [JsframeComponent],
+    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
 })
 export class JsframeModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
 const bootstrapFn = (extraProviders: StaticProvider[]) => {

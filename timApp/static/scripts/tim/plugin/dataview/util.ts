@@ -40,10 +40,13 @@ export interface VisibleItems {
 }
 
 export type HTMLElementProps<K extends keyof HTMLElementTagNameMap> = {
-    [k in keyof HTMLElementTagNameMap[K]]: (HTMLElementTagNameMap[K])[k]
+    [k in keyof HTMLElementTagNameMap[K]]: HTMLElementTagNameMap[K][k];
 };
 
-export function el<K extends keyof HTMLElementTagNameMap>(tag: K, props?: Partial<HTMLElementProps<K>>): HTMLElementTagNameMap[K] {
+export function el<K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    props?: Partial<HTMLElementProps<K>>
+): HTMLElementTagNameMap[K] {
     return Object.assign(document.createElement(tag), props);
 }
 
@@ -69,19 +72,32 @@ export function joinCss(obj: Record<string, string>) {
     return result;
 }
 
-export function applyBasicStyle(element: HTMLElement, style: Record<string, string> | null) {
+export function applyBasicStyle(
+    element: HTMLElement,
+    style: Record<string, string> | null
+) {
     if (style != null) {
         Object.assign(element.style, style);
     }
 }
 
 export function viewportsEqual(vp1: Viewport, vp2: Viewport) {
-    const visItemsEqual = (v1: VisibleItems, v2: VisibleItems) => v1.startOrdinal == v2.startOrdinal && v1.count == v2.count;
-    return visItemsEqual(vp1.vertical, vp2.vertical) && visItemsEqual(vp1.horizontal, vp2.horizontal);
+    const visItemsEqual = (v1: VisibleItems, v2: VisibleItems) =>
+        v1.startOrdinal == v2.startOrdinal && v1.count == v2.count;
+    return (
+        visItemsEqual(vp1.vertical, vp2.vertical) &&
+        visItemsEqual(vp1.horizontal, vp2.horizontal)
+    );
 }
 
-export function columnInCache(columnIndex: number, axis: GridAxisManager, cache?: TableDOMCache): cache is TableDOMCache {
-    return cache !== undefined && axis.indexToOrdinal[columnIndex] !== undefined;
+export function columnInCache(
+    columnIndex: number,
+    axis: GridAxisManager,
+    cache?: TableDOMCache
+): cache is TableDOMCache {
+    return (
+        cache !== undefined && axis.indexToOrdinal[columnIndex] !== undefined
+    );
 }
 
 export function px(n: number) {

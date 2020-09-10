@@ -10,7 +10,11 @@ function redirectTo(url: string) {
 export async function loadIdPs() {
     const result = await to($http.get<IDiscoveryFeedEntry[]>("/saml/feed"));
     if (result.ok) {
-        return result.result.data.sort((a, b) => getDisplayNameForCurrLang(a).localeCompare(getDisplayNameForCurrLang(b)));
+        return result.result.data.sort((a, b) =>
+            getDisplayNameForCurrLang(a).localeCompare(
+                getDisplayNameForCurrLang(b)
+            )
+        );
     } else {
         return [];
     }
@@ -28,11 +32,14 @@ export interface IDiscoveryFeedEntry {
 }
 
 export function ssoLogin(entityID: string, addUser?: boolean) {
-    redirectTo("/saml/sso?" + $httpParamSerializer({
-        entityID: entityID,
-        return_to: document.location.toString(),
-        addUser: addUser,
-    }));
+    redirectTo(
+        "/saml/sso?" +
+            $httpParamSerializer({
+                entityID: entityID,
+                return_to: document.location.toString(),
+                addUser: addUser,
+            })
+    );
 }
 
 export function findIdPByScope(idps: IDiscoveryFeedEntry[], tmp: string) {
@@ -40,7 +47,9 @@ export function findIdPByScope(idps: IDiscoveryFeedEntry[], tmp: string) {
 }
 
 function getDisplayNameForCurrLang(idp: IDiscoveryFeedEntry) {
-    const found = idp.displayNames.find((dn) => dn.lang == Users.getCurrentLanguage());
+    const found = idp.displayNames.find(
+        (dn) => dn.lang == Users.getCurrentLanguage()
+    );
     if (found) {
         return found.value;
     }

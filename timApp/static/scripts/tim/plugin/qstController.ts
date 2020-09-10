@@ -4,7 +4,10 @@
 import angular, {IController} from "angular";
 import deepEqual from "deep-equal";
 import {getParId} from "../document/parhelpers";
-import {IPreviewParams, makePreview} from "../document/question/dynamicAnswerSheet";
+import {
+    IPreviewParams,
+    makePreview,
+} from "../document/question/dynamicAnswerSheet";
 import {ChangeType, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {LectureController} from "../lecture/lectureController";
 import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
@@ -23,13 +26,16 @@ interface IQstExtraInfo {
     savedText?: string;
 }
 
-interface IQstAttributes extends IGenericPluginTopLevelFields<IQuestionMarkup & IQstExtraInfo> {
+interface IQstAttributes
+    extends IGenericPluginTopLevelFields<IQuestionMarkup & IQstExtraInfo> {
     state: AnswerTable | null;
     show_result: boolean;
     savedText: string;
 }
 
-class QstController extends PluginBaseCommon implements IController, ITimComponent {
+class QstController
+    extends PluginBaseCommon
+    implements IController, ITimComponent {
     static $inject = ["$element"];
     private error?: string;
     private log?: string;
@@ -87,7 +93,7 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         return this.changes;
     }
 
-    async save(): Promise<{ saved: boolean; message: string | undefined; }> {
+    async save(): Promise<{saved: boolean; message: string | undefined}> {
         if (this.isUnSaved()) {
             return this.doSaveText(false);
         } else {
@@ -99,7 +105,9 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         if (this.vctrl) {
             this.vctrl.addTimComponent(this);
         }
-        this.lctrl = this.vctrl?.lectureCtrl ?? LectureController.createAndInit(this.vctrl);
+        this.lctrl =
+            this.vctrl?.lectureCtrl ??
+            LectureController.createAndInit(this.vctrl);
         this.isLecturer = this.lctrl?.isLecturer || false;
         this.attrsall = JSON.parse(this.json) as IQstAttributes;
         this.preview = makePreview(this.attrsall.markup, {
@@ -109,7 +117,10 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
             enabled: !this.attrsall.markup.invalid,
         });
         this.result = "";
-        this.button = this.attrsall.markup.button ?? this.attrsall.markup.buttonText ?? "Save";
+        this.button =
+            this.attrsall.markup.button ??
+            this.attrsall.markup.buttonText ??
+            "Save";
         this.resetText = this.attrsall.markup.resetText ?? "Reset";
         this.stem = this.attrsall.markup.stem ?? "";
     }
@@ -135,7 +146,9 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         const oldVal = this.changes;
         this.changes = !deepEqual(this.savedAnswer, this.newAnswer);
         if (oldVal != this.changes) {
-            this.updateListeners(this.changes ? ChangeType.Modified : ChangeType.Saved);
+            this.updateListeners(
+                this.changes ? ChangeType.Modified : ChangeType.Saved
+            );
         }
     }
 
@@ -147,7 +160,11 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         if (!taskId) {
             return;
         }
-        this.vctrl.informChangeListeners(taskId, state, (this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined));
+        this.vctrl.informChangeListeners(
+            taskId,
+            state,
+            this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined
+        );
     }
 
     private updateAnswer(at: AnswerTable) {
@@ -183,15 +200,18 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
 
     private async showQuestionNew(parId: string) {
         if (this.lctrl == null || this.lctrl.viewctrl == null) {
-            await showMessageDialog("Cannot show question because not in lecture mode or in a document.");
+            await showMessageDialog(
+                "Cannot show question because not in lecture mode or in a document."
+            );
             return;
         }
-        const result = await to(showQuestionAskDialog(
-            {
+        const result = await to(
+            showQuestionAskDialog({
                 docId: this.lctrl.viewctrl.docId,
                 parId: parId,
                 showAsk: this.lctrl.lectureSettings.inLecture,
-            }));
+            })
+        );
         if (result.ok) {
             this.lctrl.lastQuestion = result.result;
         }
@@ -235,37 +255,51 @@ class QstController extends PluginBaseCommon implements IController, ITimCompone
         }
         const url = this.pluginMeta.getAnswerUrl();
 
-        const r = await to($http<{
-            web: {
-                result: string,
-                show_result: boolean,
-                state: AnswerTable,
-                markup: IQuestionMarkup,
-                error?: string;
-            },
-        }>({
+        const r = await to(
+            $http<{
+                web: {
+                    result: string;
+                    show_result: boolean;
+                    state: AnswerTable;
+                    markup: IQuestionMarkup;
+                    error?: string;
+                };
+            }>({
                 method: "PUT",
                 url,
                 data: params,
                 headers: {"Content-Type": "application/json"},
                 timeout: defaultTimeout,
-            },
-        ));
+            })
+        );
         if (!r.ok) {
             this.isRunning = false;
             this.errors.push(r.result.data?.error);
             console.log(r);
-            this.error = r.result.data?.error ?? this.attrsall.markup.connectionErrorMessage ?? defaultErrorMessage;
-            return {saved: false, message: r.result.data?.error ?? this.attrsall.markup.connectionErrorMessage};
+            this.error =
+                r.result.data?.error ??
+                this.attrsall.markup.connectionErrorMessage ??
+                defaultErrorMessage;
+            return {
+                saved: false,
+                message:
+                    r.result.data?.error ??
+                    this.attrsall.markup.connectionErrorMessage,
+            };
         }
         const data = r.result.data;
         this.isRunning = false;
         let result = data.web.result;
-        if (result == "Saved" && this.attrsall.markup.savedText) { result = this.attrsall.markup.savedText; }
+        if (result == "Saved" && this.attrsall.markup.savedText) {
+            result = this.attrsall.markup.savedText;
+        }
         this.result = result;
         this.log = data.web.error;
         if (data.web.markup && data.web.show_result) {
-            this.preview = makePreview(data.web.markup, {answerTable: data.web.state, enabled: true});
+            this.preview = makePreview(data.web.markup, {
+                answerTable: data.web.state,
+                enabled: true,
+            });
             this.preview.showExplanations = true;
             this.preview.showCorrectChoices = true;
         }

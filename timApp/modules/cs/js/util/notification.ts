@@ -13,7 +13,8 @@ class Notification {
     template: `
         <p *ngFor="let notif of notifications">{{notif.content}}</p>`,
 })
-export class NotificationComponent { // TODO: test
+export class NotificationComponent {
+    // TODO: test
 
     @Input() timeout?: number;
 
@@ -34,7 +35,10 @@ export class NotificationComponent { // TODO: test
         }
         const time = timeout ?? this.timeout;
         if (time) {
-            notification.timeoutHandle =  window.setTimeout(() => this.remove(id), time);
+            notification.timeoutHandle = window.setTimeout(
+                () => this.remove(id),
+                time
+            );
         }
     }
 

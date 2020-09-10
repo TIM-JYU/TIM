@@ -23,7 +23,6 @@ import {IEditor} from "./editor";
         </textarea>`,
 })
 export class NormalEditorComponent implements IEditor {
-
     private content_: string = "";
     rows: number = 1;
     @Input() minRows: number = 1;
@@ -32,7 +31,7 @@ export class NormalEditorComponent implements IEditor {
     @Input() disabled: boolean = false;
     @ViewChild("area") private area!: ElementRef;
 
-    constructor(private cdr: ChangeDetectorRef) { }
+    constructor(private cdr: ChangeDetectorRef) {}
 
     get content(): string {
         return this.content_;
@@ -58,8 +57,10 @@ export class NormalEditorComponent implements IEditor {
     }
 
     ngAfterViewInit() {
-        $(this.area.nativeElement).on("keydown", (event) => { // TODO: check that this gets disabled when not used
-            if (event.which === 9) { // tab key
+        $(this.area.nativeElement).on("keydown", (event) => {
+            // TODO: check that this gets disabled when not used
+            if (event.which === 9) {
+                // tab key
                 event.preventDefault();
                 if (event.shiftKey) {
                     return;
@@ -89,7 +90,9 @@ export class NormalEditorComponent implements IEditor {
 
     doWrap(wrap: number) {
         const r = wrapText(this.content, wrap);
-        if (!r.modified) { return; }
+        if (!r.modified) {
+            return;
+        }
 
         const element = this.area.nativeElement as HTMLTextAreaElement;
         const start = element.selectionStart;

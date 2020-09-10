@@ -24,7 +24,15 @@ import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {documentglobals} from "../util/globals";
 import {$compile, $http, $rootScope} from "../util/ngimport";
-import {angularWait, assertIsText, checkIfElement, getElementParent, log, to, truncate} from "../util/utils";
+import {
+    angularWait,
+    assertIsText,
+    checkIfElement,
+    getElementParent,
+    log,
+    to,
+    truncate,
+} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
 import {
     Annotation,
@@ -47,13 +55,18 @@ import {
  * @copyright 2016 Timber project members
  */
 
-const illegalClasses = ["annotation-info", "highlighted", "editorArea", "previewcontent"];
+const illegalClasses = [
+    "annotation-info",
+    "highlighted",
+    "editorArea",
+    "previewcontent",
+];
 
 function tryCreateRange(
     start: Required<IAnnotationCoordinate>,
     end: Required<IAnnotationCoordinate>,
     startElem: Node,
-    endElem: Node | undefined,
+    endElem: Node | undefined
 ) {
     const range = document.createRange();
     try {
@@ -106,7 +119,9 @@ export class ReviewController {
             // Length check is important - we don't want to lose the previous selection in touch devices.
             if (range && range.toString().length > 0) {
                 this.selectionIsDrawing = false;
-                this.selectText($(range.startContainer).parents(".par")[0] as Element);
+                this.selectText(
+                    $(range.startContainer).parents(".par")[0] as Element
+                );
                 $rootScope.$applyAsync();
             }
         });
@@ -116,7 +131,11 @@ export class ReviewController {
      * Loads the document annotations into the view.
      */
     async loadDocumentAnnotations() {
-        const response = await to($http.get<Record<string, unknown>[]>(`/${this.item.id}/get_annotations`));
+        const response = await to(
+            $http.get<Record<string, unknown>[]>(
+                `/${this.item.id}/get_annotations`
+            )
+        );
         if (!response.ok) {
             return;
         }
@@ -127,7 +146,6 @@ export class ReviewController {
         const annotationsToRemove = [];
 
         for (const a of this.annotations) {
-
             const placeInfo = a.coord;
             const parent = document.getElementById(placeInfo.start.par_id);
 
@@ -144,8 +162,11 @@ export class ReviewController {
                 continue;
             }
 
-            if (parent.getAttribute("t") === placeInfo.start.t && isFullCoord(placeInfo.start) && isFullCoord(placeInfo.end)) {
-
+            if (
+                parent.getAttribute("t") === placeInfo.start.t &&
+                isFullCoord(placeInfo.start) &&
+                isFullCoord(placeInfo.end)
+            ) {
                 try {
                     let elements = parent.querySelector(".parContent");
                     if (elements == null) {
@@ -153,14 +174,17 @@ export class ReviewController {
                             parent,
                             a,
                             AnnotationAddReason.LoadingExisting,
-                            AnnotationPlacement.InMarginOnly);
+                            AnnotationPlacement.InMarginOnly
+                        );
                         return;
                     }
 
                     const startElpath = placeInfo.start.el_path;
 
                     for (const p of startElpath) {
-                        const elementChildren = this.getElementChildren(elements);
+                        const elementChildren = this.getElementChildren(
+                            elements
+                        );
                         if (elementChildren[p] != null) {
                             elements = elementChildren[p];
                         }
@@ -169,17 +193,43 @@ export class ReviewController {
                     const startel = elements.childNodes[placeInfo.start.node];
                     const endel = elements.childNodes[placeInfo.end.node];
 
-                    const range = tryCreateRange(placeInfo.start, placeInfo.end, startel, endel);
+                    const range = tryCreateRange(
+                        placeInfo.start,
+                        placeInfo.end,
+                        startel,
+                        endel
+                    );
                     let added = false;
                     if (range) {
-                        added = this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
+                        added = this.addAnnotationToCoord(
+                            range,
+                            a,
+                            AnnotationAddReason.LoadingExisting
+                        );
                     }
-                    this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, added ? AnnotationPlacement.InMargin : AnnotationPlacement.InMarginOnly);
+                    this.addAnnotationToMargin(
+                        parent,
+                        a,
+                        AnnotationAddReason.LoadingExisting,
+                        added
+                            ? AnnotationPlacement.InMargin
+                            : AnnotationPlacement.InMarginOnly
+                    );
                 } catch (err) {
-                    this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, AnnotationPlacement.InMarginOnly);
+                    this.addAnnotationToMargin(
+                        parent,
+                        a,
+                        AnnotationAddReason.LoadingExisting,
+                        AnnotationPlacement.InMarginOnly
+                    );
                 }
             } else {
-                this.addAnnotationToMargin(parent, a, AnnotationAddReason.LoadingExisting, AnnotationPlacement.InMarginOnly);
+                this.addAnnotationToMargin(
+                    parent,
+                    a,
+                    AnnotationAddReason.LoadingExisting,
+                    AnnotationPlacement.InMarginOnly
+                );
             }
         }
 
@@ -187,7 +237,6 @@ export class ReviewController {
             const index = this.annotations.indexOf(r);
             this.annotations.splice(index, 1);
         }
-
     }
 
     /**
@@ -214,7 +263,10 @@ export class ReviewController {
      * @param attribute - Attribute as a string
      * @returns {Element} First element that has the given attribute
      */
-    getElementParentUntilAttribute(element: Node, attribute: string): Element | null {
+    getElementParentUntilAttribute(
+        element: Node,
+        attribute: string
+    ): Element | null {
         let e = getElementParent(element);
         while (e && !e.hasAttribute(attribute)) {
             e = getElementParent(e);
@@ -289,10 +341,21 @@ export class ReviewController {
             if (a.draw_data) {
                 const targ = par.querySelector(".canvasObjectContainer");
                 if (targ) {
-                    const rect = getDrawingDimensions(a.draw_data, this.drawMinDimensions);
-                    const borderElement = this.createPictureBorder(rect.w, rect.h);
+                    const rect = getDrawingDimensions(
+                        a.draw_data,
+                        this.drawMinDimensions
+                    );
+                    const borderElement = this.createPictureBorder(
+                        rect.w,
+                        rect.h
+                    );
                     targ.appendChild(borderElement);
-                    const ele = this.compilePopOver(targ, borderElement, a, AnnotationAddReason.LoadingExisting) as HTMLElement;
+                    const ele = this.compilePopOver(
+                        targ,
+                        borderElement,
+                        a,
+                        AnnotationAddReason.LoadingExisting
+                    ) as HTMLElement;
                     ele.style.position = "absolute";
                     ele.style.left = rect.x + "px";
                     ele.style.top = rect.y + "px";
@@ -301,20 +364,26 @@ export class ReviewController {
                         textAnnotation.values.color = "transparent";
                     }
                     added = true;
-                } else { // drawn annotation but no canvas found
+                } else {
+                    // drawn annotation but no canvas found
                     this.addAnnotationToMargin(
                         par,
                         a,
                         AnnotationAddReason.LoadingExisting,
-                        AnnotationPlacement.InMarginAndUnknownIfItWillBeAccuratelyPositioned,
+                        AnnotationPlacement.InMarginAndUnknownIfItWillBeAccuratelyPositioned
                     );
                     continue;
                 }
-            } else { // end if (a.draw_data)
+            } else {
+                // end if (a.draw_data)
 
                 const element = par.querySelector(".review pre")?.firstChild;
 
-                if (!isFullCoord(placeInfo.start) || !isFullCoord(placeInfo.end) || !element) {
+                if (
+                    !isFullCoord(placeInfo.start) ||
+                    !isFullCoord(placeInfo.end) ||
+                    !element
+                ) {
                     this.addAnnotationToMargin(
                         par,
                         a,
@@ -322,18 +391,36 @@ export class ReviewController {
                         // If the coordinates exist but the review element does not, we don't know yet if the annotation can be
                         // successfully placed in text.
                         !isFullCoord(placeInfo.start) ||
-                        !isFullCoord(placeInfo.end) ? AnnotationPlacement.InMarginOnly : AnnotationPlacement.InMarginAndUnknownIfItWillBeAccuratelyPositioned,
+                            !isFullCoord(placeInfo.end)
+                            ? AnnotationPlacement.InMarginOnly
+                            : AnnotationPlacement.InMarginAndUnknownIfItWillBeAccuratelyPositioned
                     );
                     continue;
                 }
-                const range = tryCreateRange(placeInfo.start, placeInfo.end, element, undefined);
+                const range = tryCreateRange(
+                    placeInfo.start,
+                    placeInfo.end,
+                    element,
+                    undefined
+                );
                 if (range) {
-                    added = this.addAnnotationToCoord(range, a, AnnotationAddReason.LoadingExisting);
+                    added = this.addAnnotationToCoord(
+                        range,
+                        a,
+                        AnnotationAddReason.LoadingExisting
+                    );
                 } else {
                     log("annotation range invalid, adding to margin only");
                 }
             }
-            this.addAnnotationToMargin(par, a, AnnotationAddReason.LoadingExisting, added ? AnnotationPlacement.InMargin : AnnotationPlacement.InMarginOnly);
+            this.addAnnotationToMargin(
+                par,
+                a,
+                AnnotationAddReason.LoadingExisting,
+                added
+                    ? AnnotationPlacement.InMargin
+                    : AnnotationPlacement.InMarginOnly
+            );
         }
         $rootScope.$applyAsync(); // TODO: run only if we are in Angular zone
     }
@@ -344,8 +431,12 @@ export class ReviewController {
      * @returns {Array} Annotations of the answer
      */
     getAnnotationsByAnswerId(id: number): Annotation[] {
-        const annotations = this.annotations.filter((a) => a.answer != null && a.answer.id === id);
-        annotations.sort((a, b) => (b.coord.start.offset ?? 0) - (a.coord.start.offset ?? 0));
+        const annotations = this.annotations.filter(
+            (a) => a.answer != null && a.answer.id === id
+        );
+        annotations.sort(
+            (a, b) => (b.coord.start.offset ?? 0) - (a.coord.start.offset ?? 0)
+        );
         return annotations;
     }
 
@@ -355,8 +446,16 @@ export class ReviewController {
      * @param annotation - Annotation info
      * @param show - Whether annotation is shown when created or not
      */
-    addAnnotationToCoord(range: Range, annotation: Annotation, show: AnnotationAddReason): boolean {
-        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.AccuratelyPositioned);
+    addAnnotationToCoord(
+        range: Range,
+        annotation: Annotation,
+        show: AnnotationAddReason
+    ): boolean {
+        const {element, scope} = this.createPopOverElement(
+            annotation,
+            show,
+            AnnotationPlacement.AccuratelyPositioned
+        );
         try {
             range.surroundContents(element);
         } catch (err) {
@@ -375,14 +474,22 @@ export class ReviewController {
      * @param annotation - Annotation to wrap
      * @param show - Whether annotation is shown when created or not
      */
-    compilePopOver(container: Element, target: Element, annotation: Annotation, show: AnnotationAddReason): Element {
-        const {element, scope} = this.createPopOverElement(annotation, show, AnnotationPlacement.AccuratelyPositioned);
+    compilePopOver(
+        container: Element,
+        target: Element,
+        annotation: Annotation,
+        show: AnnotationAddReason
+    ): Element {
+        const {element, scope} = this.createPopOverElement(
+            annotation,
+            show,
+            AnnotationPlacement.AccuratelyPositioned
+        );
         element.appendChild(target);
         container.appendChild(element);
         $compile(element)(scope);
         return element;
     }
-
 
     /**
      * Adds an annotation to the given element. The annotation will be placed in the margin.
@@ -391,9 +498,20 @@ export class ReviewController {
      * @param show - Whether annotation is shown when created or not
      * @param reason - The reason why the annotation is put here (not implemented yet)
      */
-    addAnnotationToMargin(el: Element, annotation: Annotation, show: AnnotationAddReason, reason: AnnotationPlacement): void {
-        const {element, scope} = this.createPopOverElement(annotation, show, reason);
-        const text = document.createTextNode("\u00A0" + annotation.getContent() + "\u00A0");
+    addAnnotationToMargin(
+        el: Element,
+        annotation: Annotation,
+        show: AnnotationAddReason,
+        reason: AnnotationPlacement
+    ): void {
+        const {element, scope} = this.createPopOverElement(
+            annotation,
+            show,
+            reason
+        );
+        const text = document.createTextNode(
+            "\u00A0" + annotation.getContent() + "\u00A0"
+        );
         element.appendChild(text);
         addElementToParagraphMargin(el, element);
         $compile(element)(scope);
@@ -428,14 +546,23 @@ export class ReviewController {
      * @param oldElement - Element where the badge was
      * @param newElement - Element where the badge needs to be attached
      */
-    updateVelpBadge(oldElement: Element | undefined, newElement: Element | null): void {
+    updateVelpBadge(
+        oldElement: Element | undefined,
+        newElement: Element | null
+    ): void {
         if (newElement == null) {
             return;
         } else if (oldElement == null) {
-            addElementToParagraphMargin(newElement, this.createVelpBadge(newElement.id));
+            addElementToParagraphMargin(
+                newElement,
+                this.createVelpBadge(newElement.id)
+            );
         } else if (oldElement.id !== newElement.id) {
             this.clearVelpBadge(null);
-            addElementToParagraphMargin(newElement, this.createVelpBadge(newElement.id));
+            addElementToParagraphMargin(
+                newElement,
+                this.createVelpBadge(newElement.id)
+            );
         }
     }
 
@@ -463,10 +590,16 @@ export class ReviewController {
      */
     async deleteAnnotation(id: number) {
         const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
-        const annotationHighlights = annotationParents[0].getElementsByClassName("highlighted");
+        const annotationHighlights = annotationParents[0].getElementsByClassName(
+            "highlighted"
+        );
         const annotation = this.annotations.find((a) => a.id == id);
         this.annotations = this.annotations.filter((a) => a.id !== id);
-        if (annotation?.draw_data && annotation?.answer?.id && annotationParents.length > 1) {
+        if (
+            annotation?.draw_data &&
+            annotation?.answer?.id &&
+            annotationParents.length > 1
+        ) {
             // const canvas = this.getElementParentUntilAttribute(annotationParents[0], "lol");
             const canvas = this.vctrl.getVelpCanvas(annotation.answer.id);
             if (canvas) {
@@ -476,7 +609,10 @@ export class ReviewController {
         } else if (annotationParents.length > 1) {
             let savedHTML = "";
             for (const a of annotationHighlights) {
-                let addHTML = a.innerHTML.replace('<span class="ng-scope">', "");
+                let addHTML = a.innerHTML.replace(
+                    '<span class="ng-scope">',
+                    ""
+                );
                 addHTML = addHTML.replace("</span>", "");
                 savedHTML += addHTML;
             }
@@ -520,9 +656,11 @@ export class ReviewController {
 
         if (this.selectedArea != null) {
             // Check if selection breaks tags, has annotation as a parent or as a child.
-            if (this.isSelectionTagParentsUnequal(this.selectedArea) ||
+            if (
+                this.isSelectionTagParentsUnequal(this.selectedArea) ||
                 this.hasSelectionParentAnnotation(this.selectedArea) ||
-                this.hasSelectionChildrenAnnotation(this.selectedArea)) {
+                this.hasSelectionChildrenAnnotation(this.selectedArea)
+            ) {
                 this.selectedArea = undefined;
             }
         }
@@ -540,7 +678,10 @@ export class ReviewController {
      * @returns {boolean} Whether the HTML tags were broken or not.
      */
     isSelectionTagParentsUnequal(range: Range): boolean {
-        return getElementParent(range.startContainer) !== getElementParent(range.endContainer);
+        return (
+            getElementParent(range.startContainer) !==
+            getElementParent(range.endContainer)
+        );
     }
 
     /**
@@ -552,7 +693,11 @@ export class ReviewController {
         let startcont = getElementParent(range.startContainer);
         while (startcont && !startcont.hasAttribute("t")) {
             startcont = getElementParent(startcont);
-            if (startcont && (this.checkIfAnnotation(startcont) || this.hasAnyIllegalClass(startcont))) {
+            if (
+                startcont &&
+                (this.checkIfAnnotation(startcont) ||
+                    this.hasAnyIllegalClass(startcont))
+            ) {
                 return true;
             }
         }
@@ -606,7 +751,6 @@ export class ReviewController {
      * @returns {boolean} Whether annotation was found or not
      */
     hasElementChildrenAnnotation(element: Element | Node): boolean {
-
         if (this.checkIfAnnotation(element)) {
             return true;
         }
@@ -642,7 +786,8 @@ export class ReviewController {
     }
 
     getSelectedAnswerTaskName() {
-        const a = this.selectedElement && this.getAnswerInfo(this.selectedElement);
+        const a =
+            this.selectedElement && this.getAnswerInfo(this.selectedElement);
         if (a) {
             const p = TaskId.tryParse(a.task_id);
             if (p.ok) {
@@ -655,7 +800,12 @@ export class ReviewController {
         if (!this.selectedElement) {
             return;
         }
-        return truncate(this.selectedElement.querySelector(".parContent")?.textContent?.trim() ?? "", 20);
+        return truncate(
+            this.selectedElement
+                .querySelector(".parContent")
+                ?.textContent?.trim() ?? "",
+            20
+        );
     }
 
     /**
@@ -684,14 +834,12 @@ export class ReviewController {
             return;
         }
 
-        const newAnnotation = new NewAnnotation(
-            velp,
-            Users.getCurrent(),
-            null,
-        );
+        const newAnnotation = new NewAnnotation(velp, Users.getCurrent(), null);
         let coord: IAnnotationInterval;
         if (this.selectionIsDrawing) {
-            const targ = this.selectedElement.querySelector(".canvasObjectContainer");
+            const targ = this.selectedElement.querySelector(
+                ".canvasObjectContainer"
+            );
             if (!this.selectedCanvas || !targ) {
                 return;
             }
@@ -700,32 +848,46 @@ export class ReviewController {
                 return;
             }
             let corners = {x: 0, y: 0, h: 0, w: 0};
-            corners = this.selectedCanvas.getCurrentDrawingDimensions(this.drawMinDimensions);
-            const borderElement = this.createPictureBorder(corners.w, corners.h);
+            corners = this.selectedCanvas.getCurrentDrawingDimensions(
+                this.drawMinDimensions
+            );
+            const borderElement = this.createPictureBorder(
+                corners.w,
+                corners.h
+            );
             let parelement: Element | null = this.selectedElement;
             while (parelement && !parelement.hasAttribute("t")) {
                 parelement = getElementParent(parelement);
             }
             if (!parelement) {
-                showMessageDialog("Could not add annotation (parelement missing)");
+                showMessageDialog(
+                    "Could not add annotation (parelement missing)"
+                );
                 return;
             }
             const answerInfo = this.getAnswerInfo(parelement);
             if (answerInfo != null) {
                 newAnnotation.answer_id = answerInfo.id;
             } else {
-                showMessageDialog("Could not add annotation (answerinfo missing)");
+                showMessageDialog(
+                    "Could not add annotation (answerinfo missing)"
+                );
                 return;
             }
             targ.appendChild(borderElement);
             const ann = await this.addAnnotation(
                 newAnnotation,
                 {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
-                velp,
+                velp
             );
             ann.draw_data = velpDrawing;
 
-            const ele = this.compilePopOver(targ, borderElement, ann, AnnotationAddReason.AddingNew) as HTMLElement;
+            const ele = this.compilePopOver(
+                targ,
+                borderElement,
+                ann,
+                AnnotationAddReason.AddingNew
+            ) as HTMLElement;
             ele.style.position = "absolute";
             ele.style.left = corners.x + "px";
             ele.style.top = corners.y + "px";
@@ -740,7 +902,12 @@ export class ReviewController {
                     t: parelement.getAttribute("t") ?? undefined,
                 },
             };
-            this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.LoadingExisting, AnnotationPlacement.InMargin);
+            this.addAnnotationToMargin(
+                this.selectedElement,
+                ann,
+                AnnotationAddReason.LoadingExisting,
+                AnnotationPlacement.InMargin
+            );
             await angularWait();
 
             const saved = await updateAnnotationServer({
@@ -759,9 +926,10 @@ export class ReviewController {
             this.selectedElement = undefined;
             // end if (this.selectionIsDrawing)
         } else if (this.selectedArea != null) {
-
             let parelement = getElementParent(this.selectedArea.startContainer);
-            const startElement = getElementParent(this.selectedArea.startContainer);
+            const startElement = getElementParent(
+                this.selectedArea.startContainer
+            );
 
             const innerDiv = document.createElement("div");
             const cloned = this.selectedArea.cloneContents();
@@ -778,10 +946,14 @@ export class ReviewController {
             const elementPath = this.getElementPositionInTree(startElement, []);
             const answerInfo = this.getAnswerInfo(startElement);
 
-            const startoffset = this.getRealStartOffset(this.selectedArea.startContainer, this.selectedArea.startOffset);
+            const startoffset = this.getRealStartOffset(
+                this.selectedArea.startContainer,
+                this.selectedArea.startOffset
+            );
             let endOffset = this.selectedArea.endOffset;
             if (innerDiv.childElementCount === 0) {
-                const lastChild = innerDiv.childNodes[innerDiv.childNodes.length - 1];
+                const lastChild =
+                    innerDiv.childNodes[innerDiv.childNodes.length - 1];
                 if (assertIsText(lastChild)) {
                     endOffset = startoffset + lastChild.length;
                 }
@@ -793,13 +965,28 @@ export class ReviewController {
             const ann = await this.addAnnotation(
                 newAnnotation,
                 {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
-                velp,
+                velp
             );
-            const added = this.addAnnotationToCoord(this.selectedArea, ann, AnnotationAddReason.AddingNew);
-            this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.LoadingExisting, added ? AnnotationPlacement.InMargin : AnnotationPlacement.InMarginOnly);
+            const added = this.addAnnotationToCoord(
+                this.selectedArea,
+                ann,
+                AnnotationAddReason.AddingNew
+            );
+            this.addAnnotationToMargin(
+                this.selectedElement,
+                ann,
+                AnnotationAddReason.LoadingExisting,
+                added
+                    ? AnnotationPlacement.InMargin
+                    : AnnotationPlacement.InMarginOnly
+            );
             await angularWait();
 
-            const nodeNums = this.getNodeNumbers(this.selectedArea.startContainer, ann.id, innerDiv);
+            const nodeNums = this.getNodeNumbers(
+                this.selectedArea.startContainer,
+                ann.id,
+                innerDiv
+            );
             coord = {
                 start: {
                     par_id: parelement.id,
@@ -828,9 +1015,7 @@ export class ReviewController {
             }
 
             this.selectedArea = undefined;
-
         } else {
-
             coord = {
                 start: {
                     par_id: this.selectedElement.id,
@@ -848,19 +1033,30 @@ export class ReviewController {
                 newAnnotation.answer_id = answerInfo.id;
             }
             const ann = await this.addAnnotation(newAnnotation, coord, velp);
-            this.addAnnotationToMargin(this.selectedElement, ann, AnnotationAddReason.AddingNew, AnnotationPlacement.InMarginOnly);
+            this.addAnnotationToMargin(
+                this.selectedElement,
+                ann,
+                AnnotationAddReason.AddingNew,
+                AnnotationPlacement.InMarginOnly
+            );
         }
     }
 
-    private async addAnnotation(newAnnotation: NewAnnotation, coord: IAnnotationInterval, velp: IVelp) {
-        const json = await to($http.post<Record<string, unknown>>("/add_annotation", {
-            answer_id: newAnnotation.answer_id,
-            coord: coord,
-            doc_id: this.vctrl.item.id,
-            points: velp.points,
-            velp_id: newAnnotation.velp.id,
-            visible_to: velp.visible_to,
-        }));
+    private async addAnnotation(
+        newAnnotation: NewAnnotation,
+        coord: IAnnotationInterval,
+        velp: IVelp
+    ) {
+        const json = await to(
+            $http.post<Record<string, unknown>>("/add_annotation", {
+                answer_id: newAnnotation.answer_id,
+                coord: coord,
+                doc_id: this.vctrl.item.id,
+                points: velp.points,
+                velp_id: newAnnotation.velp.id,
+                visible_to: velp.visible_to,
+            })
+        );
         if (!json.ok) {
             throw Error(json.result.data.error);
         }
@@ -889,14 +1085,15 @@ export class ReviewController {
      * @returns {Element|null} answerbrowser element or null.
      */
     getAnswerInfo(start: Element): IAnswer | undefined {
-
         if (start.hasAttribute("attrs") && start.hasAttribute("t")) {
             const answ = start.getElementsByTagName("tim-plugin-loader");
             if (answ.length > 0) {
                 const first = answ[0];
                 const isInline = first.classList.contains("inlineplugin");
                 if (isInline && answ.length > 1) {
-                    console.warn("Paragraph has multiple plugins but the first of them was not inlineplugin?");
+                    console.warn(
+                        "Paragraph has multiple plugins but the first of them was not inlineplugin?"
+                    );
                     return;
                 }
                 if (isInline) {
@@ -930,7 +1127,9 @@ export class ReviewController {
     getElementPositionInTree(start: Element, array: number[]): number[] {
         const myparent = getElementParent(start);
         if (myparent == null) {
-            throw new Error("Element position in tree was not found (getElementParent returned null)");
+            throw new Error(
+                "Element position in tree was not found (getElementParent returned null)"
+            );
         }
 
         if (myparent.hasAttribute("t")) {
@@ -941,14 +1140,15 @@ export class ReviewController {
 
         const children = this.getElementChildren(myparent);
         for (const c of children) {
-
             if (c === start) {
                 array.push(count);
                 return this.getElementPositionInTree(myparent, array);
             }
 
             if (this.checkIfAnnotation(c)) {
-                const innerElements = c.getElementsByClassName("highlighted")[0];
+                const innerElements = c.getElementsByClassName(
+                    "highlighted"
+                )[0];
                 const innerChildren = this.getElementChildren(innerElements);
                 if (innerChildren.length > 2) {
                     count += innerChildren.length - 2;
@@ -971,16 +1171,18 @@ export class ReviewController {
      * @returns {int} Start offset according to the "original state" of the DOM.
      */
     getRealStartOffset(el: Node, startoffset: number): number {
-
         const startType = el.nodeName;
         let storedOffset = startoffset;
 
         while (el.previousSibling != null) {
             el = el.previousSibling;
             if (this.checkIfAnnotation(el)) {
-
-                const innerElements = el.getElementsByClassName("highlighted")[0];
-                const lastInnerLastChild = this.getLastChildUntilNull(innerElements);
+                const innerElements = el.getElementsByClassName(
+                    "highlighted"
+                )[0];
+                const lastInnerLastChild = this.getLastChildUntilNull(
+                    innerElements
+                );
                 if (assertIsText(lastInnerLastChild)) {
                     storedOffset += lastInnerLastChild.length;
                 }
@@ -1013,7 +1215,11 @@ export class ReviewController {
      * @param innerElement - Annotation content
      * @returns {Array} array with the start and end node numbers
      */
-    getNodeNumbers(el: Node, aid: number, innerElement: Element): [number, number] {
+    getNodeNumbers(
+        el: Node,
+        aid: number,
+        innerElement: Element
+    ): [number, number] {
         let parent: Node | null = el;
         const lastInnerFirstChild = this.getFirstChildUntilNull(innerElement);
         const lastInnerLastChild = this.getLastChildUntilNull(innerElement);
@@ -1031,21 +1237,22 @@ export class ReviewController {
         let prevNodeName = parent.childNodes[0].nodeName;
 
         for (let i = 0; i < parent.childNodes.length; i++) {
-
             const child = parent.childNodes[i];
 
             if (this.checkIfAnnotation(child)) {
-
                 const aidAttr = child.getAttribute("aid");
                 if (aidAttr && parseInt(aidAttr, 10) === aid) {
-
                     let startnum = num - 1;
                     num += innerElement.childNodes.length;
 
                     if (lastInnerFirstChild.nodeName === prevNodeName) {
                         num--;
                     }
-                    if (i < parent.childNodes.length - 1 && lastInnerLastChild.nodeName === parent.childNodes[i + 1].nodeName) {
+                    if (
+                        i < parent.childNodes.length - 1 &&
+                        lastInnerLastChild.nodeName ===
+                            parent.childNodes[i + 1].nodeName
+                    ) {
                         num--;
                     }
 
@@ -1053,16 +1260,21 @@ export class ReviewController {
                         startnum = 0;
                     }
                     return [startnum, num];
-
                 } else if (checkIfElement(child)) {
-                    const innerEl = child.getElementsByClassName("highlighted")[0];
+                    const innerEl = child.getElementsByClassName(
+                        "highlighted"
+                    )[0];
                     num += innerEl.childNodes.length;
 
                     if (lastInnerFirstChild.nodeName === prevNodeName) {
                         num--;
                     }
 
-                    if (i < parent.childNodes.length - 1 && lastInnerLastChild.nodeName === parent.childNodes[i + 1].nodeName) {
+                    if (
+                        i < parent.childNodes.length - 1 &&
+                        lastInnerLastChild.nodeName ===
+                            parent.childNodes[i + 1].nodeName
+                    ) {
                         num--;
                     }
 
@@ -1082,14 +1294,21 @@ export class ReviewController {
     /**
      * Creates the actual (pop over) annotation element.
      */
-    createPopOverElement(annotation: Annotation, reason: AnnotationAddReason, placement: AnnotationPlacement) {
+    createPopOverElement(
+        annotation: Annotation,
+        reason: AnnotationAddReason,
+        placement: AnnotationPlacement
+    ) {
         const element = document.createElement("annotation");
 
         const bindings: IAnnotationBindings = {
             reason,
             placement,
             annotation,
-            defaultcomment: reason == AnnotationAddReason.AddingNew ? this.getVelpById(annotation.velp)!.default_comment : "",
+            defaultcomment:
+                reason == AnnotationAddReason.AddingNew
+                    ? this.getVelpById(annotation.velp)!.default_comment
+                    : "",
         };
         const scope = Object.assign(this.scope.$new(true), bindings);
         for (const k of Object.keys(bindings)) {
@@ -1107,7 +1326,10 @@ export class ReviewController {
      * @param ac - Annotation to be shown.
      * @param scrollToAnnotation Whether to scroll to annotation if it is not in viewport.
      */
-    async toggleAnnotation(ac: AnnotationComponent | Annotation, scrollToAnnotation: boolean) {
+    async toggleAnnotation(
+        ac: AnnotationComponent | Annotation,
+        scrollToAnnotation: boolean
+    ) {
         let annotation: Annotation;
         if (ac instanceof AnnotationComponent) {
             annotation = ac.annotation;
@@ -1120,19 +1342,28 @@ export class ReviewController {
             return;
         }
 
-
         // We might click a margin annotation, but we still want to open the corresponding inline annotation,
         // if it exists.
-        const prefix = ((isFullCoord(annotation.coord.start) && isFullCoord(annotation.coord.end)) || annotation.draw_data)  &&
-        ((ac instanceof AnnotationComponent && ac.placement !== AnnotationPlacement.InMarginOnly)
-            || ac instanceof Annotation) ? "t" : "m";
+        const prefix =
+            ((isFullCoord(annotation.coord.start) &&
+                isFullCoord(annotation.coord.end)) ||
+                annotation.draw_data) &&
+            ((ac instanceof AnnotationComponent &&
+                ac.placement !== AnnotationPlacement.InMarginOnly) ||
+                ac instanceof Annotation)
+                ? "t"
+                : "m";
 
         let actrl = this.vctrl.getAnnotation(prefix + annotation.id);
         if (!annotation.answer && !actrl) {
             actrl = this.vctrl.getAnnotation("m" + annotation.id);
         }
         if (actrl) {
-            if ((annotation.coord.start.offset == null || actrl.show || !annotation.answer)) {
+            if (
+                annotation.coord.start.offset == null ||
+                actrl.show ||
+                !annotation.answer
+            ) {
                 actrl.toggleAnnotationShow();
                 if (scrollToAnnotation && actrl.show) {
                     actrl.scrollToIfNotInViewport();
@@ -1183,7 +1414,13 @@ export class ReviewController {
             }
         }
 
-        if (!(ab.review && ab.selectedAnswer && ab.selectedAnswer.id === annotation.answer.id)) {
+        if (
+            !(
+                ab.review &&
+                ab.selectedAnswer &&
+                ab.selectedAnswer.id === annotation.answer.id
+            )
+        ) {
             ab.review = true;
             await ab.setAnswerById(annotation.answer.id);
         }
@@ -1222,7 +1459,9 @@ export class ReviewController {
      * @param answerId - Answer for which to find annotations
      */
     drawAnnotationsOnCanvas(canvas: DrawCanvasComponent, answerId: number) {
-        const annotationDrawings = this.getAnnotationsByAnswerId(answerId).reduce((arr: DrawObject[], ann: Annotation) => {
+        const annotationDrawings = this.getAnnotationsByAnswerId(
+            answerId
+        ).reduce((arr: DrawObject[], ann: Annotation) => {
             if (ann.draw_data) {
                 arr = arr.concat(ann.draw_data);
             }
@@ -1240,12 +1479,17 @@ export class ReviewController {
      * @param canvas
      * @param updateArgs
      */
-    updateFromCanvas = (canvas: DrawCanvasComponent, updateArgs: IDrawUpdate) => {
+    updateFromCanvas = (
+        canvas: DrawCanvasComponent,
+        updateArgs: IDrawUpdate
+    ) => {
         if (updateArgs.drawingUpdated) {
             if (canvas.getDrawing().length > 0) {
                 this.selectedArea = undefined;
                 this.selectionIsDrawing = true;
-                const par = $(canvas.canvas.nativeElement).parents(".par")[0] as Element;
+                const par = $(canvas.canvas.nativeElement).parents(
+                    ".par"
+                )[0] as Element;
                 this.selectedElement = par;
                 this.selectedCanvas = canvas;
             } else if (this.selectedCanvas == canvas) {
@@ -1259,7 +1503,14 @@ export class ReviewController {
                 if (!a.draw_data) {
                     continue;
                 }
-                if (isCoordWithinDrawing(a.draw_data, updateArgs.x, updateArgs.y, this.drawMinDimensions)) {
+                if (
+                    isCoordWithinDrawing(
+                        a.draw_data,
+                        updateArgs.x,
+                        updateArgs.y,
+                        this.drawMinDimensions
+                    )
+                ) {
                     const tanncomp = this.vctrl.getAnnotation(`t${a.id}`);
                     if (!tanncomp) {
                     } else {
@@ -1285,7 +1536,11 @@ export class ReviewController {
      */
     toggleAnnotationsInList(anns: AnnotationComponent[]) {
         let found = false;
-        for (let i = this.lastOpenedAnnotation; i < anns.length + this.lastOpenedAnnotation; i++) {
+        for (
+            let i = this.lastOpenedAnnotation;
+            i < anns.length + this.lastOpenedAnnotation;
+            i++
+        ) {
             const a = anns[i % anns.length];
             if (!a.show && !found) {
                 a.toggleAnnotationShow();

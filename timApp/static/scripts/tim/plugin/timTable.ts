@@ -65,10 +65,20 @@ import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
-import {DataViewComponent, DataModelProvider, VirtualScrollingOptions} from "tim/plugin/dataview/data-view.component";
+import {
+    DataViewComponent,
+    DataModelProvider,
+    VirtualScrollingOptions,
+} from "tim/plugin/dataview/data-view.component";
 import {nullable, withDefault} from "tim/plugin/attributes";
 import {onClick} from "../document/eventhandlers";
-import {ChangeType, FormModeOption, ISetAnswerResult, ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {
+    ChangeType,
+    FormModeOption,
+    ISetAnswerResult,
+    ITimComponent,
+    ViewCtrl,
+} from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
 import {ComparatorFilter} from "../util/comparatorfilter";
 import {
@@ -105,12 +115,10 @@ import {
 } from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
-
 function replaceAll(s: string, s1: string, s2: string): string {
     const re = new RegExp(s1, "g");
     return s.replace(re, s2);
 }
-
 
 const sortLang: string = "fi";
 
@@ -194,7 +202,7 @@ export interface IToolbarTemplate {
     style?: Record<string, string>;
     buttonStyle?: Record<string, string>;
     rect?: Record<string, IToolbarTemplate>;
-    area?: (IToolbarTemplate|undefined)[][];
+    area?: (IToolbarTemplate | undefined)[][];
     title?: string;
     onlyEmpty?: boolean;
     toggle?: boolean;
@@ -203,7 +211,7 @@ export interface IToolbarTemplate {
     commands?: string[];
     notInEdit?: boolean;
     favorite?: boolean;
-    closeEdit?: boolean;  // if true, close small editor after done
+    closeEdit?: boolean; // if true, close small editor after done
 }
 
 export interface TimTable {
@@ -233,8 +241,14 @@ export interface TimTable {
     // cellsTosave may include un-rect area (not at the moment but maybe in future
     // colValuesAreSame means in one column all values are same,
     // so that it is possible to save them to one group
-    saveCallBack?: (cellsTosave: CellToSave[], colValuesAreSame: boolean) => void;
-    saveStyleCallBack?: (cellsTosave: CellAttrToSave[], colValuesAreSame: boolean) => void;
+    saveCallBack?: (
+        cellsTosave: CellToSave[],
+        colValuesAreSame: boolean
+    ) => void;
+    saveStyleCallBack?: (
+        cellsTosave: CellAttrToSave[],
+        colValuesAreSame: boolean
+    ) => void;
     cbCallBack?: (cbs: boolean[], n: number, index: number) => void;
     maxWidth?: string; // Possibly obsolete if cell/column layout can be given in data.table.colums
     minWidth?: string;
@@ -248,7 +262,7 @@ export interface TimTable {
     maxCols?: string;
     button?: string;
     autosave?: boolean;
-    disableUnchanged?: boolean
+    disableUnchanged?: boolean;
     // TODO: need self-explanatory name for this attribute
     //  could also use hideBrowser?
     nonUserSpecific?: boolean; // Whether (task-mode) table should react to user changes
@@ -259,7 +273,7 @@ export interface TimTable {
     disableSelect?: boolean;
     savedText?: string;
     connectionErrorMessage?: string;
-    tag?: string
+    tag?: string;
     undo?: {
         button?: string;
         title?: string;
@@ -285,7 +299,8 @@ export const DataViewSettingsType = t.type({
     fixedColumns: withDefault(t.number, 0),
 });
 
-export interface DataViewSettings extends t.TypeOf<typeof DataViewSettingsType> {
+export interface DataViewSettings
+    extends t.TypeOf<typeof DataViewSettingsType> {
     // Currently PyCharm isn't able to analyze types generated via io-ts inside Angular templates,
     // which is why these two are defined twice
     tableWidth: string;
@@ -298,12 +313,13 @@ interface Rng {
     def?: Record<string, string>;
 }
 
-export interface ITable { // extends ITableStyles
+export interface ITable {
+    // extends ITableStyles
     countRow?: number;
     countCol?: number;
-    defrows?: { [index: string]: string };
-    defcols?: { [index: string]: string };
-    defcells?: { [index: string]: string };
+    defrows?: {[index: string]: string};
+    defcols?: {[index: string]: string};
+    defcells?: {[index: string]: string};
     defcolsrange?: Rng[];
     defrowsrange?: Rng[];
     defcellsrange?: Rng[];
@@ -325,12 +341,12 @@ export interface ICellIndex {
 }
 
 export interface ISelectedCells {
-    cells: ICellIndex[];   // List of original cell indecies inside selected area
-    srows: boolean[];     // table for screen indecies selected
-    scol1: number;        // screen index for first selected column
-    scol2: number;        // screen index for last selected column
-    srow1: number;        // screen index for first selected row
-    srow2: number;        // screen index for last selected row
+    cells: ICellIndex[]; // List of original cell indecies inside selected area
+    srows: boolean[]; // table for screen indecies selected
+    scol1: number; // screen index for first selected column
+    scol2: number; // screen index for last selected column
+    srow1: number; // screen index for first selected row
+    srow2: number; // screen index for last selected row
 }
 
 export interface ICellDataEntity {
@@ -341,13 +357,15 @@ const CellTypeR = t.union([t.string, t.number, t.boolean, t.null]);
 export type CellType = t.TypeOf<typeof CellTypeR>;
 export type CellEntity = ICell | CellType;
 
-export interface IRow { // extends IRowStyles
+export interface IRow {
+    // extends IRowStyles
     row?: CellEntity[];
 
     [key: string]: unknown;
 }
 
-export interface IColumn { // extends IColumnStyles
+export interface IColumn {
+    // extends IColumnStyles
     [key: string]: unknown;
 }
 
@@ -356,7 +374,8 @@ export interface ICellCoord {
     col: number;
 }
 
-export interface ICell { // extends ICellStyles
+export interface ICell {
+    // extends ICellStyles
     cell: CellType;
     class?: string;
     editorOpen?: boolean;
@@ -467,7 +486,9 @@ export function isPrimitiveCell(cell: CellEntity): cell is CellType {
 export function colnumToLetters(colIndex: number): string {
     const ASCII_OF_A = 65;
     const ASCII_CHAR_COUNT = 26;
-    const lastChar = String.fromCharCode(ASCII_OF_A + (colIndex % ASCII_CHAR_COUNT));
+    const lastChar = String.fromCharCode(
+        ASCII_OF_A + (colIndex % ASCII_CHAR_COUNT)
+    );
     const remainder = Math.floor(colIndex / ASCII_CHAR_COUNT);
 
     if (remainder == 0) {
@@ -480,11 +501,11 @@ export function colnumToLetters(colIndex: number): string {
 }
 
 interface ICurrentCell {
-    row: number,
-    col: number,
-    editorOpen: boolean,
-    editedCellContent: string,
-    readonly editedCellInitialContent: string,
+    row: number;
+    col: number;
+    editorOpen: boolean;
+    editedCellContent: string;
+    readonly editedCellInitialContent: string;
 }
 
 const emptyStyle = {} as const;
@@ -682,10 +703,18 @@ export enum ClearSort {
     `,
     styleUrls: ["./timTable.scss"],
 })
-export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCheck, AfterViewChecked, AfterViewInit, DataModelProvider {
+export class TimTableComponent
+    implements
+        ITimComponent,
+        OnInit,
+        OnDestroy,
+        DoCheck,
+        AfterViewChecked,
+        AfterViewInit,
+        DataModelProvider {
     error: string = "";
     public viewctrl?: ViewCtrl;
-    public cellDataMatrix: ICell[][] = [];  // this has all table data as original indecies (sort does not affect)
+    public cellDataMatrix: ICell[][] = []; // this has all table data as original indecies (sort does not affect)
     private prevCellDataMatrix: ICell[][] = [];
     public columns: IColumn[] = [];
     @Input() public data!: TimTable;
@@ -702,7 +731,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     currentCell?: ICurrentCell; // the cell currently being edited
     public activeCell?: ICellCoord;
     public startCell?: ICellCoord;
-    private selectedCells: ISelectedCells = {cells: [], srows: [], scol1: 0, scol2: 0, srow1: 0, srow2: 0};
+    private selectedCells: ISelectedCells = {
+        cells: [],
+        srows: [],
+        scol1: 0,
+        scol2: 0,
+        srow1: 0,
+        srow2: 0,
+    };
     public shiftDown = false;
     public cbAllFilter = false;
     public cbs: boolean[] = [];
@@ -710,7 +746,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     public sortDir: number[] = [];
     public sortSymbol: string[] = [];
     public sortSymbolStyle: Record<string, string>[] = [];
-    public sortSymbolStyles: Record<string, string>[] = [{fontSize: "xx-small"}, {fontSize: "smaller"}, {fontSize: "inherit"}];
+    public sortSymbolStyles: Record<string, string>[] = [
+        {fontSize: "xx-small"},
+        {fontSize: "smaller"},
+        {fontSize: "inherit"},
+    ];
     public emptyRing: number[] = [-1, -1, -1]; // keep this and sortSymbolStyles equal length
     public sortSymbols: string[] = [" ▼", "", " ▲"];
     public sortRing: number[] = [];
@@ -718,7 +758,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private currentHiddenRows: number[] = [];
     private rowDelta = 0;
     private colDelta = 0;
-    public nrColStart = 1;  // what number we start column numbers if it is numbered
+    public nrColStart = 1; // what number we start column numbers if it is numbered
     private intRowStart = 1;
     private intRow = false;
     cbFilter = false;
@@ -730,19 +770,27 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     edited = false;
     @ViewChild("editInput") private editInput?: ElementRef<HTMLInputElement>;
     @ViewChild("inlineEditor") private editorDiv!: ElementRef<HTMLDivElement>;
-    @ViewChild("inlineEditorButtons") private editorButtons!: ElementRef<HTMLDivElement>;
+    @ViewChild("inlineEditorButtons") private editorButtons!: ElementRef<
+        HTMLDivElement
+    >;
     @ViewChild("tableElem") private tableElem!: ElementRef<HTMLTableElement>;
-    @ViewChild("timTableRunDiv") private timTableRunDiv!: ElementRef<HTMLDivElement>;
-    @ViewChild("buttonOpenBigEditor") private buttonOpenBigEditor!: ElementRef<HTMLButtonElement>;
+    @ViewChild("timTableRunDiv") private timTableRunDiv!: ElementRef<
+        HTMLDivElement
+    >;
+    @ViewChild("buttonOpenBigEditor") private buttonOpenBigEditor!: ElementRef<
+        HTMLButtonElement
+    >;
     @ViewChild("dataViewComponent") dataViewComponent?: DataViewComponent;
-    @ViewChildren("editInput") private editInputs!: QueryList<ElementRef<HTMLInputElement>>;
+    @ViewChildren("editInput") private editInputs!: QueryList<
+        ElementRef<HTMLInputElement>
+    >;
     dataView?: DataViewSettings | null;
     private editInputStyles: string = "";
     private editInputClass: string = "";
     headersStyle: Record<string, string> | null = null;
     button: string = "Tallenna";
     private noNeedFirstClick = false;
-    hide: HideValues = { editorPosition: true};
+    hide: HideValues = {editorPosition: true};
     disableSelect: boolean = true;
     result?: string;
     connectionErrorMessage?: string;
@@ -752,7 +800,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * or Enter / Tab. Used for saving and retrieving the "coordinate" of a cell that is
      * embedded in another cell through colspan / rowspan so it can be used in navigation.
      */
-    private lastDirection?: { direction: Direction, coord: number };
+    private lastDirection?: {direction: Direction; coord: number};
     private mouseInTable?: boolean;
 
     addRowButtonText: string = "";
@@ -763,7 +811,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private rowStyleCache = new Map<number, Record<string, string>>();
     private shouldSelectInputText = false;
 
-    constructor(private el: ElementRef, public cdr: ChangeDetectorRef, private zone: NgZone) {
+    constructor(
+        private el: ElementRef,
+        public cdr: ChangeDetectorRef,
+        private zone: NgZone
+    ) {
         this.pluginMeta = new PluginMeta($(el.nativeElement));
         // if ( !this.data.hide ) this.data.hide = {};
     }
@@ -793,11 +845,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     get undoTitle() {
-        return  this.data.undo?.title;
+        return this.data.undo?.title;
     }
 
     get undoConfirmation() {
-        return  this.data.undo?.confirmation;
+        return this.data.undo?.confirmation;
     }
 
     private getEditInputElement() {
@@ -821,11 +873,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         this.dataView = this.data.dataView;
 
-        if (typeof this.data.nrColumn === "number") { // for backward compatibility
+        if (typeof this.data.nrColumn === "number") {
+            // for backward compatibility
             this.nrColStart = this.data.nrColumn;
             this.data.nrColumn = true; // nrColumn in this code is supposed to be boolean
         }
-        if (typeof this.data.charRow === "number") { // for backward compatibility
+        if (typeof this.data.charRow === "number") {
+            // for backward compatibility
             this.intRowStart = this.data.charRow;
             this.intRow = true;
             this.data.charRow = true; // charRow in this code is supposed to be boolean
@@ -848,7 +902,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.headersStyle = this.data.headersStyle ?? null;
 
         if (!this.headersStyle) {
-            this.headersStyle = {"backgroundColor": "lightgray", "font-weight": "bold"};
+            this.headersStyle = {
+                backgroundColor: "lightgray",
+                "font-weight": "bold",
+            };
         }
         if (this.data.singleLine) {
             const hs = this.headersStyle;
@@ -900,7 +957,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.addRowButtonText = " " + this.data.addRowButtonText;
             }
             if (this.data.forcedEditMode) {
-                this.forcedEditMode = this.data.forcedEditMode && (this.editRight || this.task);
+                this.forcedEditMode =
+                    this.data.forcedEditMode && (this.editRight || this.task);
                 this.editing = this.forcedEditMode;
             }
 
@@ -932,11 +990,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     ngAfterViewInit() {
-        this.inputSub = this.editInputs.changes.subscribe((val: QueryList<ElementRef<HTMLInputElement>>) => {
-            if (val.length > 0) {
-                this.updateSmallEditorPosition();
+        this.inputSub = this.editInputs.changes.subscribe(
+            (val: QueryList<ElementRef<HTMLInputElement>>) => {
+                if (val.length > 0) {
+                    this.updateSmallEditorPosition();
+                }
             }
-        });
+        );
     }
 
     /**
@@ -978,8 +1038,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return this.totalRows() - this.hiddenRowCount();
     }
 
-    ngDoCheck() {
-    }
+    ngDoCheck() {}
 
     /**
      * Removes listener and cleans up
@@ -1036,21 +1095,27 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     addRow: (offset) => this.handleToolbarAddRow(offset),
                     removeColumn: () => this.handleToolbarRemoveColumn(),
                     removeRow: () => this.handleToolbarRemoveRow(),
-                    closeEditor: (save: boolean) => this.saveCloseSmallEditor(save),
+                    closeEditor: (save: boolean) =>
+                        this.saveCloseSmallEditor(save),
                     isEdit: () => this.isEdit(),
-                }, activeTable: this,
+                },
+                activeTable: this,
             });
         }
     }
 
     private isEdit(): boolean {
-        return !!this.currentCell ;
+        return !!this.currentCell;
     }
 
     // private onClick = (e: MouseEvent) => {
     private onClick(e: JQuery.MouseEventBase) {
         if (this.mouseInTable) {
-            if (this.isInEditMode() && isToolbarEnabled() && !this.hide.toolbar) {
+            if (
+                this.isInEditMode() &&
+                isToolbarEnabled() &&
+                !this.hide.toolbar
+            ) {
                 // this.openToolbar();
             } else {
                 // Hide the toolbar if we're not in edit mode
@@ -1061,7 +1126,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         } else {
             if (!this.eventListenersActive) {
                 return;
-            }  // No need to look anything when already inactive
+            } // No need to look anything when already inactive
             const target = e.target;
 
             if (target) {
@@ -1147,7 +1212,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     public static rowToList(row: ICell[]) {
         const rlist: string[] = [];
         for (const c of row) {
-            rlist.push(c ? c.cell ? c.cell.toString() : "" : "");
+            rlist.push(c ? (c.cell ? c.cell.toString() : "") : "");
         }
         return rlist;
     }
@@ -1190,7 +1255,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param cmpfltrs comparator filters
      * @param row where to check values
      */
-    public static isMatch(regs: RegExp[], cmpfltrs: ComparatorFilter[], row: ICell[]) {
+    public static isMatch(
+        regs: RegExp[],
+        cmpfltrs: ComparatorFilter[],
+        row: ICell[]
+    ) {
         for (let c = 0; c < row.length; c++) {
             if (!regs[c]) {
                 continue;
@@ -1261,7 +1330,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.currentHiddenRows.push(i);
                 continue;
             }
-            if (TimTableComponent.isMatch(regs, cmpfltrs, this.cellDataMatrix[i])) {
+            if (
+                TimTableComponent.isMatch(
+                    regs,
+                    cmpfltrs,
+                    this.cellDataMatrix[i]
+                )
+            ) {
                 continue;
             }
             this.currentHiddenRows.push(i);
@@ -1328,16 +1403,20 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     doSort(col: number, dir: number) {
-        if (col < 0) { return; }
+        if (col < 0) {
+            return;
+        }
         this.lastSortCol = col;
         this.lastSortDir = dir;
         this.sortDir[col] = dir;
 
         const nl = this.sortRing.length - 1;
 
-        if (this.sortRing[nl] != col) { // push old symbols  left and drop leftmost away
+        if (this.sortRing[nl] != col) {
+            // push old symbols  left and drop leftmost away
             const coli = this.sortRing.indexOf(col);
-            if (coli < 0) {  // drop lefmost away
+            if (coli < 0) {
+                // drop lefmost away
                 const last = this.sortRing.shift() ?? -1;
                 if (last >= 0) {
                     this.sortDir[last] = 0;
@@ -1376,19 +1455,39 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     public addRowEnabled() {
         // return !this.task && this.editRight && this.isInEditMode() && !this.lockCellCount
-        return !this.task && this.editRight && this.isInEditMode() && !this.hide.addRow;
+        return (
+            !this.task &&
+            this.editRight &&
+            this.isInEditMode() &&
+            !this.hide.addRow
+        );
     }
 
     public delRowEnabled() {
-        return !this.task && this.editRight && this.isInEditMode() && !this.hide.delRow;
+        return (
+            !this.task &&
+            this.editRight &&
+            this.isInEditMode() &&
+            !this.hide.delRow
+        );
     }
 
     public addColEnabled() {
-        return !this.task && this.editRight && this.isInEditMode() && !this.hide.addCol;
+        return (
+            !this.task &&
+            this.editRight &&
+            this.isInEditMode() &&
+            !this.hide.addCol
+        );
     }
 
     public delColEnabled() {
-        return !this.task && this.editRight && this.isInEditMode() && !this.hide.delCol;
+        return (
+            !this.task &&
+            this.editRight &&
+            this.isInEditMode() &&
+            !this.hide.delCol
+        );
     }
 
     /**
@@ -1456,7 +1555,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 input: {
                     answers: {
                         userdata: this.userdata,
-                        headers: this.data.headers ? this.data.headers : undefined,
+                        headers: this.data.headers
+                            ? this.data.headers
+                            : undefined,
                     },
                 },
             };
@@ -1472,12 +1573,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             }
         }
 
-        const r = await to($http.put<{
-            web: {
-                result: string,
-                error?: string,
-            },
-        }>(url, params, {timeout: defaultTimeout}));
+        const r = await to(
+            $http.put<{
+                web: {
+                    result: string;
+                    error?: string;
+                };
+            }>(url, params, {timeout: defaultTimeout})
+        );
         if (r.ok) {
             this.edited = false;
             this.updateListeners();
@@ -1486,12 +1589,17 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.prevData = clone(this.data);
             let result = r.result.data.web.result;
             const savedText = this.data.savedText;
-            if (result == "Saved" && savedText) { result = savedText; }
+            if (result == "Saved" && savedText) {
+                result = savedText;
+            }
             this.result = result;
             this.error = r.result.data.web.error ?? "";
             // this.result = r.result.data.web.result;
         } else {
-            this.connectionErrorMessage = r.result.data?.error ?? this.data.connectionErrorMessage ?? defaultErrorMessage;
+            this.connectionErrorMessage =
+                r.result.data?.error ??
+                this.data.connectionErrorMessage ??
+                defaultErrorMessage;
         }
         this.isRunning = false;
         return r;
@@ -1596,7 +1704,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const scol = col;
         const srow = this.permTableToScreen[row];
         if (scol == undefined || srow < 0) {
-            return {cells: ret, srows: [], scol1: 0, scol2: 0, srow1: 0, srow2: 0};
+            return {
+                cells: ret,
+                srows: [],
+                scol1: 0,
+                scol2: 0,
+                srow1: 0,
+                srow2: 0,
+            };
         }
 
         let sx1 = scol;
@@ -1616,11 +1731,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         for (let sy = sy1; sy <= sy2; sy++) {
             const y = this.permTable[sy];
-            if ((this.currentHiddenRows.includes(y))) {
+            if (this.currentHiddenRows.includes(y)) {
                 continue;
             }
             for (let sx = sx1; sx <= sx2; sx++) {
-                if ((this.data.hiddenColumns?.includes(sx))) {
+                if (this.data.hiddenColumns?.includes(sx)) {
                     continue;
                 }
                 srows[sy] = true;
@@ -1629,7 +1744,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 ymax = Math.max(y, ymax);
             }
         }
-        return {cells: ret, srows: srows, scol1: sx1, scol2: sx2, srow1: ymin, srow2: ymax};
+        return {
+            cells: ret,
+            srows: srows,
+            scol1: sx1,
+            scol2: sx2,
+            srow1: ymin,
+            srow2: ymax,
+        };
     }
 
     /**
@@ -1641,8 +1763,20 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param {number} col Column index
      * @param {ISelectedCells} selectedCells cells to fill with that content
      */
-    async saveCells(cellContent: string, docId: number, parId: string, row: number, col: number, selectedCells: ISelectedCells) {
-        if (row >= this.cellDataMatrix.length || col >= this.cellDataMatrix[row].length) { return; }
+    async saveCells(
+        cellContent: string,
+        docId: number,
+        parId: string,
+        row: number,
+        col: number,
+        selectedCells: ISelectedCells
+    ) {
+        if (
+            row >= this.cellDataMatrix.length ||
+            col >= this.cellDataMatrix[row].length
+        ) {
+            return;
+        }
         const cellsToSave: CellToSave[] = [];
         if (this.task) {
             // const cells = this.getSelectedCells(row, col);
@@ -1659,18 +1793,22 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             if (this.data.autosave) {
                 await this.sendDataBlockAsync();
             }
-            this.dataViewComponent?.updateCellsContents(selectedCells.cells.map((c) => ({ row: c.y, col: c.x })));
+            this.dataViewComponent?.updateCellsContents(
+                selectedCells.cells.map((c) => ({row: c.y, col: c.x}))
+            );
             return;
         }
 
         for (const c of selectedCells.cells) {
             cellsToSave.push({c: cellContent, row: c.y, col: c.x});
         }
-        const response = await to($http.post<CellResponse[]>("/timTable/saveMultiCell", {
-            docId,
-            parId,
-            cellsToSave: cellsToSave,
-        }));
+        const response = await to(
+            $http.post<CellResponse[]>("/timTable/saveMultiCell", {
+                docId,
+                parId,
+                cellsToSave: cellsToSave,
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -1678,7 +1816,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         for (const c of cellHtmls) {
             this.cellDataMatrix[c.row][c.col].cell = c.cellHtml;
         }
-        this.dataViewComponent?.updateCellsContents(cellHtmls.map((c) => ({ row: c.row, col: c.col })));
+        this.dataViewComponent?.updateCellsContents(
+            cellHtmls.map((c) => ({row: c.row, col: c.col}))
+        );
     }
 
     /**
@@ -1690,11 +1830,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @returns {Promise<string>}
      */
     async getCellData(docId: number, parId: string, row: number, col: number) {
-        const response = await to($http<CellType[]>({
-            url: "/timTable/getCellData",
-            method: "GET",
-            params: {docId, parId, row, col},
-        }));
+        const response = await to(
+            $http<CellType[]>({
+                url: "/timTable/getCellData",
+                method: "GET",
+                params: {docId, parId, row, col},
+            })
+        );
         if (!response.ok) {
             throw Error("getCellData failed");
         }
@@ -1710,13 +1852,33 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param {string} parId Paragraph id
      * @param curr The current cell info
      */
-    async openBigEditorAsync(cell: CellEntity, docId: number, value: string, parId: string, curr: ICurrentCell) {
+    async openBigEditorAsync(
+        cell: CellEntity,
+        docId: number,
+        value: string,
+        parId: string,
+        curr: ICurrentCell
+    ) {
         curr.editorOpen = true;
-        const result = await openEditorSimple(docId, curr.editedCellContent,
-            "Edit table cell", "timTableCell");
+        const result = await openEditorSimple(
+            docId,
+            curr.editedCellContent,
+            "Edit table cell",
+            "timTableCell"
+        );
         curr.editorOpen = false;
-        if (result.type == "save" && result.text != curr.editedCellInitialContent) {
-            await this.saveCells(result.text, docId, parId, curr.row, curr.col, this.selectedCells);
+        if (
+            result.type == "save" &&
+            result.text != curr.editedCellInitialContent
+        ) {
+            await this.saveCells(
+                result.text,
+                docId,
+                parId,
+                curr.row,
+                curr.col,
+                this.selectedCells
+            );
             // ctrl.cellDataMatrix[row][col] = result.text
             curr.editedCellContent = result.text;
             this.closeSmallEditor();
@@ -1740,7 +1902,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (parId === undefined || !this.viewctrl) {
             return;
         }
-        await this.openBigEditorAsync(cell, this.viewctrl.item.id, this.getCellContentString(curr.row, curr.col), parId, curr);
+        await this.openBigEditorAsync(
+            cell,
+            this.viewctrl.item.id,
+            this.getCellContentString(curr.row, curr.col),
+            parId,
+            curr
+        );
     }
 
     /**
@@ -1792,7 +1960,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
 
         let ncols = this.data.table.countCol ?? 0;
-        const nrows = Math.max(this.data.table.rows.length, this.data.table.countRow ?? 0);
+        const nrows = Math.max(
+            this.data.table.rows.length,
+            this.data.table.countRow ?? 0
+        );
 
         for (const row of this.data.table.rows) {
             if (row.row) {
@@ -1801,7 +1972,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
         this.cellDataMatrix.splice(nrows); // truncate matrix in case the number of rows has decreased
         for (let iy = 0; iy < nrows; iy++) {
-            if (!this.cellDataMatrix[iy] || this.cellDataMatrix[iy].length != ncols) {
+            if (
+                !this.cellDataMatrix[iy] ||
+                this.cellDataMatrix[iy].length != ncols
+            ) {
                 this.cellDataMatrix[iy] = [];
                 for (let ix = 0; ix < ncols; ix++) {
                     this.cellDataMatrix[iy][ix] = this.createDummyCell(iy, ix);
@@ -1823,7 +1997,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 }
                 this.applyCellEntityAttributesToICell(itemInRow, cell);
             }
-
         }
         this.ensureColumns();
         if (clearSort == ClearSort.Yes) {
@@ -1836,7 +2009,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param {CellEntity} sourceCell The source CellEntity from which the attributes are taken.
      * @param {ICell} targetCell The ICell instance to which the attributes are applied to.
      */
-    private applyCellEntityAttributesToICell(sourceCell: CellEntity, targetCell: ICell) {
+    private applyCellEntityAttributesToICell(
+        sourceCell: CellEntity,
+        targetCell: ICell
+    ) {
         targetCell.styleCache = undefined;
         if (isPrimitiveCell(sourceCell)) {
             targetCell.cell = this.cellToString(sourceCell);
@@ -1902,7 +2078,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * Also processes rowspan and colspan and sets the table up for rendering.
      */
     private processDataBlockAndSpanInfo() {
-        if (this.data.table.tabledatablock) {   // reads tabledatablock and sets all values to datacellmatrix
+        if (this.data.table.tabledatablock) {
+            // reads tabledatablock and sets all values to datacellmatrix
             this.processDataBlock(this.data.table.tabledatablock.cells);
         }
 
@@ -1971,7 +2148,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @returns {boolean} true if valid
      */
     checkThatAddIsValid(address: ICellCoord): boolean {
-        return (address.col >= 0 && address.row >= 0);
+        return address.col >= 0 && address.row >= 0;
     }
 
     /**
@@ -1987,7 +2164,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         let reversedCharacterPlaceInString = 0;
         let columnIndex = 0;
         for (let charIndex = colValue.length - 1; charIndex >= 0; charIndex--) {
-            columnIndex += (colValue.charCodeAt(charIndex) - charCodeOfA + 1) * Math.pow(asciiCharCount, reversedCharacterPlaceInString);
+            columnIndex +=
+                (colValue.charCodeAt(charIndex) - charCodeOfA + 1) *
+                Math.pow(asciiCharCount, reversedCharacterPlaceInString);
             reversedCharacterPlaceInString++;
         }
         columnIndex = columnIndex - 1;
@@ -2009,7 +2188,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.resizeRowWidth(row, col + 1);
         }
 
-        this.applyCellEntityAttributesToICell(value, this.cellDataMatrix[row][col]);
+        this.applyCellEntityAttributesToICell(
+            value,
+            this.cellDataMatrix[row][col]
+        );
     }
 
     /**
@@ -2072,7 +2254,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     async smallEditorLostFocus(_ev: unknown) {
-        if (this.hide.editorButtons) { // Autosave when no editorButtons
+        if (this.hide.editorButtons) {
+            // Autosave when no editorButtons
             await this.saveCurrentCell();
             // this.closeSmallEditor();
             // TODO: can not use this, because then save is done also for Cancel, BigEditor, Toolbar buttons and so on
@@ -2138,7 +2321,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         if (this.isSomeCellBeingEdited()) {
             return;
-        }  // if active, then the smalleditor has listener
+        } // if active, then the smalleditor has listener
         // if (this.mouseInTable) { }
         if (await this.doKeyUpTable(ev)) {
             this.c();
@@ -2149,8 +2332,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * Handles key up event.
      * @param ev
      */
-    private async doKeyUpTable(ev: KeyboardEvent): Promise<ChangeDetectionHint> {
-        if (isKeyCode(ev, KEY_F2)) { // TODO: change all other keys like this to avoid depreceted warings
+    private async doKeyUpTable(
+        ev: KeyboardEvent
+    ): Promise<ChangeDetectionHint> {
+        if (isKeyCode(ev, KEY_F2)) {
+            // TODO: change all other keys like this to avoid depreceted warings
             if (this.hide.edit) {
                 return ChangeDetectionHint.DoNotTrigger;
             }
@@ -2207,9 +2393,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 return ChangeDetectionHint.NeedToTrigger;
             }
         } else if (handleToolbarKey(ev, this.data.toolbarTemplates)) {
-                ev.preventDefault();
-                return ChangeDetectionHint.NeedToTrigger;
-        } else if (!this.currentCell && (ev.ctrlKey || ev.altKey) && isArrowKey(ev)) {
+            ev.preventDefault();
+            return ChangeDetectionHint.NeedToTrigger;
+        } else if (
+            !this.currentCell &&
+            (ev.ctrlKey || ev.altKey) &&
+            isArrowKey(ev)
+        ) {
             if (await this.handleArrowMovement(ev)) {
                 ev.preventDefault();
                 return ChangeDetectionHint.NeedToTrigger;
@@ -2222,9 +2412,16 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * Handles arrow movement inside table.
      * @param {KeyboardEvent} ev Keyboardevent
      */
-    private async handleArrowMovement(ev: KeyboardEvent): Promise<ChangeDetectionHint> {
+    private async handleArrowMovement(
+        ev: KeyboardEvent
+    ): Promise<ChangeDetectionHint> {
         const parId = this.getOwnParId();
-        if (!(this.editing || this.task) || !this.viewctrl || !parId || this.currentCell?.editorOpen) {
+        if (
+            !(this.editing || this.task) ||
+            !this.viewctrl ||
+            !parId ||
+            this.currentCell?.editorOpen
+        ) {
             return ChangeDetectionHint.DoNotTrigger;
         }
 
@@ -2245,7 +2442,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return ChangeDetectionHint.DoNotTrigger;
     }
 
-    private async doCellMovementN(n: number, direction: Direction, needLastDir?: boolean) {
+    private async doCellMovementN(
+        n: number,
+        direction: Direction,
+        needLastDir?: boolean
+    ) {
         for (let i = 0; i < n; i++) {
             await this.doCellMovement(direction, needLastDir, true);
         }
@@ -2258,7 +2459,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param needLastDir Whether to read x/y from previous direction
      * @param forceOne Prevent selection even Shift is down
      */
-    private async doCellMovement(direction: Direction, needLastDir?: boolean, forceOne: boolean = false): Promise<ChangeDetectionHint> {
+    private async doCellMovement(
+        direction: Direction,
+        needLastDir?: boolean,
+        forceOne: boolean = false
+    ): Promise<ChangeDetectionHint> {
         if (!this.activeCell) {
             return ChangeDetectionHint.DoNotTrigger;
         }
@@ -2279,7 +2484,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         let prevX = x;
         let prevY = y;
         let i = 0;
-        const maxIters = this.cellDataMatrix.length * this.cellDataMatrix[0].length;
+        const maxIters =
+            this.cellDataMatrix.length * this.cellDataMatrix[0].length;
         // Iterate towards direction until next non-locked cell in a non-hidden row or column is found
         // or until iterator arrives at the same cell (or iteration gets stuck)
         while (nextCell && i < maxIters) {
@@ -2293,32 +2499,53 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             }
             // When going right: if returned col was not to the right, then go to next row and restart from col 0.
             // Apply similar logic to other directions.
-            if (direction == Direction.Right && nextCell && nextCell.col <= prevX) {
+            if (
+                direction == Direction.Right &&
+                nextCell &&
+                nextCell.col <= prevX
+            ) {
                 prevY = this.constrainRowIndex(prevY + 1);
                 prevX = 0;
                 nextCell = {row: prevY, col: prevX};
             }
-            if (direction == Direction.Left && nextCell && nextCell.col >= prevX) {
+            if (
+                direction == Direction.Left &&
+                nextCell &&
+                nextCell.col >= prevX
+            ) {
                 prevY = this.constrainRowIndex(prevY - 1);
                 prevX = this.cellDataMatrix[prevY].length - 1;
                 nextCell = {row: prevY, col: prevX};
             }
-            if (direction == Direction.Down && nextCell && nextCell.row <= prevY) {
+            if (
+                direction == Direction.Down &&
+                nextCell &&
+                nextCell.row <= prevY
+            ) {
                 prevY = 0;
                 prevX = this.constrainColumnIndex(prevY, prevX + 1);
                 nextCell = {row: prevY, col: prevX};
             }
-            if (direction == Direction.Up && nextCell && nextCell.row >= prevY) {
+            if (
+                direction == Direction.Up &&
+                nextCell &&
+                nextCell.row >= prevY
+            ) {
                 prevY = this.cellDataMatrix.length - 1;
                 prevX = this.constrainColumnIndex(prevY, prevX - 1);
                 nextCell = {row: prevY, col: prevX};
             }
 
             // Stop iterating if cell is not in hiddenRows/hiddenColumns and is not locked.
-            if (!(this.currentHiddenRows.includes(nextCell.row))
-                && !(this.data.hiddenColumns?.includes(nextCell.col))
-                && !(this.data.lockedCells?.includes(colnumToLetters(nextCell.col) + (nextCell.row + 1)))
-                && !(this.data.lockedColumns?.includes(colnumToLetters(nextCell.col)))
+            if (
+                !this.currentHiddenRows.includes(nextCell.row) &&
+                !this.data.hiddenColumns?.includes(nextCell.col) &&
+                !this.data.lockedCells?.includes(
+                    colnumToLetters(nextCell.col) + (nextCell.row + 1)
+                ) &&
+                !this.data.lockedColumns?.includes(
+                    colnumToLetters(nextCell.col)
+                )
             ) {
                 break;
             }
@@ -2345,16 +2572,22 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param y The original Y coordinate (original row index) of the source cell.
      * @param direction The direction.
      */
-    private getNextCell(x: number, y: number, direction: Direction): ICellCoord | null {
+    private getNextCell(
+        x: number,
+        y: number,
+        direction: Direction
+    ): ICellCoord | null {
         let sourceCell = this.cellDataMatrix[y][x];
         while (sourceCell.underSpanOf) {
-            sourceCell = this.cellDataMatrix[sourceCell.underSpanOf.row][sourceCell.underSpanOf.col];
+            sourceCell = this.cellDataMatrix[sourceCell.underSpanOf.row][
+                sourceCell.underSpanOf.col
+            ];
         }
 
         let nextRow;
         let nextColumn;
         let cell;
-        const sy = this.permTableToScreen[y];  // index in screen
+        const sy = this.permTableToScreen[y]; // index in screen
         switch (direction) {
             case Direction.Up:
                 nextRow = this.constrainRowIndex(sy - 1);
@@ -2369,16 +2602,23 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.lastDirection = {direction: direction, coord: nextRow};
                 break;
             case Direction.Down:
-                const sourceRowspan = sourceCell.rowspan ? sourceCell.rowspan : 1;
+                const sourceRowspan = sourceCell.rowspan
+                    ? sourceCell.rowspan
+                    : 1;
                 nextRow = this.constrainRowIndex(sy + sourceRowspan);
                 nextColumn = this.constrainColumnIndex(nextRow, x);
                 nextRow = this.permTable[nextRow];
                 this.lastDirection = {direction: direction, coord: nextColumn};
                 break;
             case Direction.Right:
-                const sourceColspan = sourceCell.colspan ? sourceCell.colspan : 1;
+                const sourceColspan = sourceCell.colspan
+                    ? sourceCell.colspan
+                    : 1;
                 nextRow = this.constrainRowIndex(sy);
-                nextColumn = this.constrainColumnIndex(nextRow, x + sourceColspan);
+                nextColumn = this.constrainColumnIndex(
+                    nextRow,
+                    x + sourceColspan
+                );
                 nextRow = this.permTable[nextRow];
                 this.lastDirection = {direction: direction, coord: nextRow};
                 break;
@@ -2418,7 +2658,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return columnIndex;
     }
 
-    private setActiveCell(rowi: number, coli: number, forceOne: boolean = false) {
+    private setActiveCell(
+        rowi: number,
+        coli: number,
+        forceOne: boolean = false
+    ) {
         this.clearSmallEditorStyles();
 
         let cell = this.cellDataMatrix[rowi][coli];
@@ -2434,7 +2678,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.selectedCells = this.getSelectedCells(rowi, coli);
         this.openToolbar();
 
-        if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
+        if (
+            cell.renderIndexX === undefined ||
+            cell.renderIndexY === undefined
+        ) {
             return; // we should never be able to get here
         }
         if (this.dataViewComponent) {
@@ -2443,14 +2690,27 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             const sr = this.permTableToScreen[rowi];
             const table = $(this.tableElem.nativeElement);
             // const ry = this.permTable[cell.renderIndexY];
-            const tablecell = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
+            const tablecell = table
+                .children("tbody")
+                .last()
+                .children("tr")
+                .eq(sr + this.rowDelta)
+                .children("td")
+                .eq(cell.renderIndexX + this.colDelta);
 
             const parent = $(this.timTableRunDiv.nativeElement);
             // tablecell[0].scrollIntoView(false);
             const h = tablecell.height();
             const w = tablecell.width();
             if (h != null && w != null) {
-                scrollToViewInsideParent(tablecell[0], parent[0], w, 3 * h, w, h);
+                scrollToViewInsideParent(
+                    tablecell[0],
+                    parent[0],
+                    w,
+                    3 * h,
+                    w,
+                    h
+                );
             }
         }
         this.updateSmallEditorPosition(); // TODO: vesa added here, because somtiems it did not update the pos
@@ -2462,7 +2722,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param {number} coli Column index
      * @param {boolean} forceOne should it force selection just one cell
      */
-    private async openCell(rowi: number, coli: number, forceOne: boolean = false) {
+    private async openCell(
+        rowi: number,
+        coli: number,
+        forceOne: boolean = false
+    ) {
         /*
         const modal: CellEntity = {
             cell: "",
@@ -2493,17 +2757,29 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param event The mouse event, if the cell was clicked.
      * @param forceOne should selection be forced to just one cell
      */
-    private async openCellForEditing(rowi: number, coli: number, event?: MouseEvent, forceOne: boolean = false) {
-
+    private async openCellForEditing(
+        rowi: number,
+        coli: number,
+        event?: MouseEvent,
+        forceOne: boolean = false
+    ) {
         const parId = this.getOwnParId();
 
-        if (!this.isInEditMode() || !this.viewctrl || !parId ||
-            (this.currentCell?.editorOpen)) {
+        if (
+            !this.isInEditMode() ||
+            !this.viewctrl ||
+            !parId ||
+            this.currentCell?.editorOpen
+        ) {
             return;
         }
 
         if (this.currentCell) {
-            if (this.currentCell.row === rowi && this.currentCell.col === coli && this.currentCell.editorOpen) {
+            if (
+                this.currentCell.row === rowi &&
+                this.currentCell.col === coli &&
+                this.currentCell.editorOpen
+            ) {
                 return;
             }
         }
@@ -2511,19 +2787,25 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const cellCol = colnumToLetters(coli);
         const cellCoordinate = cellCol + (rowi + 1);
         this.editorPosition = cellCoordinate;
-        if (this.data.lockedCells?.includes(cellCoordinate)
-            || (this.data.lockedColumns?.includes(cellCol))) {
+        if (
+            this.data.lockedCells?.includes(cellCoordinate) ||
+            this.data.lockedColumns?.includes(cellCol)
+        ) {
             return;
         }
 
         const activeCell = this.activeCell;
-        if (this.hide.edit) {  // if hide-attr contains edit, then no edit
+        if (this.hide.edit) {
+            // if hide-attr contains edit, then no edit
             this.setActiveCell(rowi, coli);
             return;
         }
         const isCurrentCell = !!this.currentCell;
-        if (isCurrentCell || this.noNeedFirstClick ||
-            (activeCell && activeCell.row === rowi && activeCell.col === coli)) {
+        if (
+            isCurrentCell ||
+            this.noNeedFirstClick ||
+            (activeCell && activeCell.row === rowi && activeCell.col === coli)
+        ) {
             if (this.currentCell) {
                 const newvalue = this.currentCell.editedCellContent;
                 if (this.currentCell.editedCellInitialContent != newvalue) {
@@ -2532,11 +2814,17 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             }
             let value;
             if (!this.task) {
-                value = await this.getCellData(this.viewctrl.item.id, parId, rowi, coli);
+                value = await this.getCellData(
+                    this.viewctrl.item.id,
+                    parId,
+                    rowi,
+                    coli
+                );
             } else {
                 value = this.getCellContentString(rowi, coli);
             }
-            if (true || isToolbarOpen()) { // TODO: why toolbar must be open?
+            if (true || isToolbarOpen()) {
+                // TODO: why toolbar must be open?
                 this.currentCell = {
                     row: rowi,
                     col: coli,
@@ -2561,13 +2849,18 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     private async saveCurrentCell() {
         const parId = this.getOwnParId();
 
-        if (this.viewctrl &&
-            parId &&
-            this.currentCell != undefined) {
+        if (this.viewctrl && parId && this.currentCell != undefined) {
             const value = this.currentCell.editedCellContent;
 
             if (this.currentCell.editedCellInitialContent != value) {
-                await this.saveCells(value, this.viewctrl.item.id, parId, this.currentCell.row, this.currentCell.col, this.selectedCells);
+                await this.saveCells(
+                    value,
+                    this.viewctrl.item.id,
+                    parId,
+                    this.currentCell.row,
+                    this.currentCell.col,
+                    this.selectedCells
+                );
                 return true;
             }
         }
@@ -2608,7 +2901,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return;
         }
         if (this.dataViewComponent) {
-            this.dataViewComponent.updateEditorPosition(this.currentCell.row, this.currentCell.col);
+            this.dataViewComponent.updateEditorPosition(
+                this.currentCell.row,
+                this.currentCell.col
+            );
             return;
         }
         let rowi = this.currentCell.row;
@@ -2617,20 +2913,40 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const table = $(this.tableElem.nativeElement);
         if (rowi >= this.cellDataMatrix.length) {
             rowi--;
-            if (rowi < 0) { return; }
+            if (rowi < 0) {
+                return;
+            }
         }
         if (coli >= this.cellDataMatrix[rowi].length) {
             coli--;
-            if (coli < 0) { return; }
+            if (coli < 0) {
+                return;
+            }
         }
         const cell = this.cellDataMatrix[rowi][coli];
-        if (cell.renderIndexX === undefined || cell.renderIndexY === undefined) {
+        if (
+            cell.renderIndexX === undefined ||
+            cell.renderIndexY === undefined
+        ) {
             return; // we should never be able to get here
         }
         // const ry = this.permTable[cell.renderIndexY];
-        const tablecell = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta);
+        const tablecell = table
+            .children("tbody")
+            .last()
+            .children("tr")
+            .eq(sr + this.rowDelta)
+            .children("td")
+            .eq(cell.renderIndexX + this.colDelta);
         // const tableCellOffset = tablecell.offset(); // this gave a wrong result?
-        const tableCellOffset = table.children("tbody").last().children("tr").eq(sr + this.rowDelta).children("td").eq(cell.renderIndexX + this.colDelta).offset();
+        const tableCellOffset = table
+            .children("tbody")
+            .last()
+            .children("tr")
+            .eq(sr + this.rowDelta)
+            .children("td")
+            .eq(cell.renderIndexX + this.colDelta)
+            .offset();
 
         if (!tableCellOffset) {
             return;
@@ -2643,7 +2959,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         inlineEditorDiv.height(1);
         inlineEditorDiv[0].style.position = "relative";
         const toff = table.offset()!;
-        inlineEditorDiv.offset({left: toff.left, top: toff.top + table.height()!});
+        inlineEditorDiv.offset({
+            left: toff.left,
+            top: toff.top + table.height()!,
+        });
         const editinp = $(editInputElement);
 
         if (this.data.editorBottom) {
@@ -2667,7 +2986,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         const inlineEditorButtons = $(this.editorButtons.nativeElement);
         if (this.data.editorButtonsBottom) {
-            inlineEditorButtons.offset({left: toff.left, top: toff.top + table.height()! + 5});
+            inlineEditorButtons.offset({
+                left: toff.left,
+                top: toff.top + table.height()! + 5,
+            });
             return;
         }
         if (this.data.editorButtonsRight) {
@@ -2681,7 +3003,12 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const buttonOpenBigEditor = this.buttonOpenBigEditor.nativeElement;
         const h1 = buttonOpenBigEditor.offsetHeight;
         const h = tablecell.outerHeight() ?? 20;
-        if (editOffset && editOuterHeight && tableCellOffset && editOuterWidth) {
+        if (
+            editOffset &&
+            editOuterHeight &&
+            tableCellOffset &&
+            editOuterWidth
+        ) {
             const mul = sr == 0 ? 1 : 2;
             inlineEditorButtons.offset({
                 left: tableCellOffset.left,
@@ -2698,18 +3025,22 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
         editInputElement.focus();
         if (!this.hide.select) {
-            editInputElement.setSelectionRange(0, editInputElement.value.length);
+            editInputElement.setSelectionRange(
+                0,
+                editInputElement.value.length
+            );
         }
     }
 
     classForCell(rowi: number, coli: number) {
         let cls = this.cellDataMatrix[rowi][coli].class;
-        if (!cls) { cls = ""; }
-        cls += (this.isActiveCell(rowi, coli) ? " activeCell" : "");
-        return  cls;
+        if (!cls) {
+            cls = "";
+        }
+        cls += this.isActiveCell(rowi, coli) ? " activeCell" : "";
+        return cls;
         //                                [class.activeCell]="isActiveCell(rowi, coli)"
     }
-
 
     /**
      * Sets style attributes for cells
@@ -2730,7 +3061,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         const def = this.data.table.defcells;
         if (def) {
-            this.cellDataMatrix[rowi][coli].class = this.applyStyle(styles, def, cellStyles);
+            this.cellDataMatrix[rowi][coli].class = this.applyStyle(
+                styles,
+                def,
+                cellStyles
+            );
         }
 
         const defrange = this.data.table.defcellsrange;
@@ -2748,7 +3083,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
         const cell = this.cellDataMatrix[rowi][coli];
 
-        this.cellDataMatrix[rowi][coli].class = this.applyStyle(styles, cell, cellStyles);
+        this.cellDataMatrix[rowi][coli].class = this.applyStyle(
+            styles,
+            cell,
+            cellStyles
+        );
 
         if (this.data.maxWidth) {
             styles["max-width"] = this.data.maxWidth;
@@ -2769,7 +3108,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param {number} coli The index of the column
      */
     private stylingForCellOfColumn(coli: number) {
-        const styles: { [index: string]: string } = {};
+        const styles: {[index: string]: string} = {};
         const table = this.data.table;
 
         if (!table.columns) {
@@ -2797,7 +3136,12 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param n max value
      * @param def in case no item
      */
-    private static toIndex(r: readonly number[], i: number, n: number, def: number) {
+    private static toIndex(
+        r: readonly number[],
+        i: number,
+        n: number,
+        def: number
+    ) {
         if (r.length <= i) {
             return def;
         }
@@ -2820,7 +3164,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * To prevent another check, mark it checked.
      * @param dr default range to check
      */
-    private checkRange(dr: readonly number[] | number | string | undefined): readonly number[] | undefined {
+    private checkRange(
+        dr: readonly number[] | number | string | undefined
+    ): readonly number[] | undefined {
         const r = dr;
         if (!r) {
             return;
@@ -2854,7 +3200,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param rowi index to check
      * @param coli index to check
      */
-    private checkIndex2(r: readonly number[] | undefined, rown: number, coln: number, rowi: number, coli: number): boolean {
+    private checkIndex2(
+        r: readonly number[] | undefined,
+        rown: number,
+        coln: number,
+        rowi: number,
+        coli: number
+    ): boolean {
         if (!r) {
             return false;
         }
@@ -2884,7 +3236,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param n max_value
      * @param index index to check
      */
-    private checkIndex(r: readonly number[] | undefined, n: number, index: number): boolean {
+    private checkIndex(
+        r: readonly number[] | undefined,
+        n: number,
+        index: number
+    ): boolean {
         if (!r) {
             return false;
         }
@@ -2912,7 +3268,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
         */
 
-        const styles: { [index: string]: string } = {};
+        const styles: {[index: string]: string} = {};
 
         const def = this.data.table.defcols;
         if (def) {
@@ -2947,14 +3303,15 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (cached) {
             return cached;
         }
-        const styles: { [index: string]: string } = {};
+        const styles: {[index: string]: string} = {};
 
         const def = this.data.table.defrows;
         if (def) {
             this.applyStyle(styles, def, rowStyles);
         }
         const defrange = this.data.table.defrowsrange;
-        if (defrange) { // todo: do all this on init
+        if (defrange) {
+            // todo: do all this on init
             const n = this.cellDataMatrix.length;
             for (const dr of defrange) {
                 const r = dr.validrange ?? this.checkRange(dr.range);
@@ -2980,7 +3337,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @returns {{[p: string]: string}}
      */
     stylingForTable(tab: ITable) {
-        const styles: { [index: string]: string } = {};
+        const styles: {[index: string]: string} = {};
         this.applyStyle(styles, tab, tableStyles);
         return styles;
     }
@@ -2995,7 +3352,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param validAttrs A set that contains the accepted style attributes
      * @return posible class
      */
-    private applyStyle(styles: Record<string, string | number>, object: Record<string, unknown> | undefined, validAttrs: Set<string>): string {
+    private applyStyle(
+        styles: Record<string, string | number>,
+        object: Record<string, unknown> | undefined,
+        validAttrs: Set<string>
+    ): string {
         if (!object) {
             return "";
         }
@@ -3052,16 +3413,23 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         }
 
         if (this.isInGlobalAppendMode()) {
-            const response = await to($http.post<TimTable>("/timTable/addUserSpecificRow",
-                {docId, parId}));
+            const response = await to(
+                $http.post<TimTable>("/timTable/addUserSpecificRow", {
+                    docId,
+                    parId,
+                })
+            );
             if (!response.ok) {
                 return;
             }
             this.data = response.result.data;
         } else {
-            const route = this.isInDataInputMode() ? "/timTable/addDatablockRow" : "/timTable/addRow";
-            const response = await to($http.post<TimTable>(route,
-                {docId, parId, rowId}));
+            const route = this.isInDataInputMode()
+                ? "/timTable/addDatablockRow"
+                : "/timTable/addRow";
+            const response = await to(
+                $http.post<TimTable>(route, {docId, parId, rowId})
+            );
             if (!response.ok) {
                 return;
             }
@@ -3099,8 +3467,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return;
         }
 
-        const response = await to($http.post<TimTable>("/timTable/removeRow",
-            {docId, parId, rowId, datablockOnly}));
+        const response = await to(
+            $http.post<TimTable>("/timTable/removeRow", {
+                docId,
+                parId,
+                rowId,
+                datablockOnly,
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -3136,7 +3510,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             return;
         }
 
-        const route = this.isInDataInputMode() ? "/timTable/addDatablockColumn" : "/timTable/addColumn";
+        const route = this.isInDataInputMode()
+            ? "/timTable/addDatablockColumn"
+            : "/timTable/addColumn";
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
         const rowLen = this.cellDataMatrix[0].length;
@@ -3148,8 +3524,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.closeSmallEditor();
         }
 
-        const response = await to($http.post<TimTable>(route,
-            {docId, parId, colId, rowLen}));
+        const response = await to(
+            $http.post<TimTable>(route, {docId, parId, colId, rowLen})
+        );
         if (!response.ok) {
             return;
         }
@@ -3180,8 +3557,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.closeSmallEditor();
         }
 
-        const response = await to($http.post<TimTable>("/timTable/removeColumn",
-            {docId, parId, colId, datablockOnly}));
+        const response = await to(
+            $http.post<TimTable>("/timTable/removeColumn", {
+                docId,
+                parId,
+                colId,
+                datablockOnly,
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -3320,61 +3703,119 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             maxy: -1,
         };
         for (const c of cells) {
-            if (c.x < r.minx) { r.minx = c.x; }
-            if (c.x > r.maxx) { r.maxx = c.x; }
-            if (c.y < r.miny) { r.miny = c.y; }
-            if (c.y > r.maxy) { r.maxy = c.y; }
+            if (c.x < r.minx) {
+                r.minx = c.x;
+            }
+            if (c.x > r.maxx) {
+                r.maxx = c.x;
+            }
+            if (c.y < r.miny) {
+                r.miny = c.y;
+            }
+            if (c.y > r.maxy) {
+                r.maxy = c.y;
+            }
         }
         return r;
     }
 
-    getRectValue(rect: Record<string, IToolbarTemplate>, rectLimits: IRectLimits, c: ICellIndex): IToolbarTemplate {
-        if (rectLimits.minx == rectLimits.maxx && rectLimits.miny == rectLimits.maxy) { return rect.one; }
+    getRectValue(
+        rect: Record<string, IToolbarTemplate>,
+        rectLimits: IRectLimits,
+        c: ICellIndex
+    ): IToolbarTemplate {
+        if (
+            rectLimits.minx == rectLimits.maxx &&
+            rectLimits.miny == rectLimits.maxy
+        ) {
+            return rect.one;
+        }
 
-        if (rectLimits.minx == rectLimits.maxx) { // one column
-            if (rectLimits.miny == c.y) { return rect.c1t; }
-            if (rectLimits.maxy == c.y) { return rect.c1b; }
+        if (rectLimits.minx == rectLimits.maxx) {
+            // one column
+            if (rectLimits.miny == c.y) {
+                return rect.c1t;
+            }
+            if (rectLimits.maxy == c.y) {
+                return rect.c1b;
+            }
             return rect.c1c;
         }
 
-        if (rectLimits.miny == rectLimits.maxy) { // one row
-            if (rectLimits.minx == c.x) { return rect.r1l; }
-            if (rectLimits.maxx == c.x) { return rect.r1r; }
+        if (rectLimits.miny == rectLimits.maxy) {
+            // one row
+            if (rectLimits.minx == c.x) {
+                return rect.r1l;
+            }
+            if (rectLimits.maxx == c.x) {
+                return rect.r1r;
+            }
             return rect.r1c;
         }
 
         // Now we have at least 2x2 rect
-        if (rectLimits.minx == c.x && rectLimits.miny == c.y) { return rect.lt; }
-        if (rectLimits.maxx == c.x && rectLimits.miny == c.y) { return rect.rt; }
-        if (rectLimits.miny == c.y) { return rect.t; }
+        if (rectLimits.minx == c.x && rectLimits.miny == c.y) {
+            return rect.lt;
+        }
+        if (rectLimits.maxx == c.x && rectLimits.miny == c.y) {
+            return rect.rt;
+        }
+        if (rectLimits.miny == c.y) {
+            return rect.t;
+        }
 
-        if (rectLimits.minx == c.x && rectLimits.maxy == c.y) { return rect.lb; }
-        if (rectLimits.maxx == c.x && rectLimits.maxy == c.y) { return rect.rb; }
-        if (rectLimits.maxy == c.y) { return rect.b; }
+        if (rectLimits.minx == c.x && rectLimits.maxy == c.y) {
+            return rect.lb;
+        }
+        if (rectLimits.maxx == c.x && rectLimits.maxy == c.y) {
+            return rect.rb;
+        }
+        if (rectLimits.maxy == c.y) {
+            return rect.b;
+        }
 
-        if (rectLimits.minx == c.x) { return rect.l; }
-        if (rectLimits.maxx == c.x) { return rect.r; }
+        if (rectLimits.minx == c.x) {
+            return rect.l;
+        }
+        if (rectLimits.maxx == c.x) {
+            return rect.r;
+        }
         return rect.c;
     }
 
-    doHandleToolbarSetCell(cell: ICellCoord | undefined, value: IToolbarTemplate,
-                           cellsToSave: CellAttrToSave[], cells: ICellIndex[]) { // , selectedCells: ISelectedCells) {
+    doHandleToolbarSetCell(
+        cell: ICellCoord | undefined,
+        value: IToolbarTemplate,
+        cellsToSave: CellAttrToSave[],
+        cells: ICellIndex[]
+    ) {
+        // , selectedCells: ISelectedCells) {
         // no close your eyes!  This is not for children
-        if (!cell || cell.row >= this.cellDataMatrix.length || cell.col >= this.cellDataMatrix[cell.row].length) { return; }
+        if (
+            !cell ||
+            cell.row >= this.cellDataMatrix.length ||
+            cell.col >= this.cellDataMatrix[cell.row].length
+        ) {
+            return;
+        }
         for (const [key, ss] of Object.entries(value)) {
             try {
                 if (key.startsWith("$$")) {
                     continue;
                 }
                 if (key === "cell" || key === "toggleCell") {
-                    if (!cell) { continue; }
+                    if (!cell) {
+                        continue;
+                    }
                     let newValue = String(ss);
                     let currentKey = key;
                     // this.saveToCell(cell, svalue, selectedCells).then();  // TODO: think if this can be done with same query
                     for (const c of cells) {
                         if (value.onlyEmpty) {
                             const cvalue = this.cellDataMatrix[c.y][c.x];
-                            if (cvalue.cell) { continue; }
+                            if (cvalue.cell) {
+                                continue;
+                            }
                         }
                         if (currentKey === "toggleCell") {
                             const oldvalue = this.cellDataMatrix[c.y][c.x].cell;
@@ -3383,10 +3824,19 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                             }
                             currentKey = "cell"; // no more toggle in next cells, do like this cell
                         }
-                        cellsToSave.push({col: c.x, row: c.y, key: "cell", c: newValue});
+                        cellsToSave.push({
+                            col: c.x,
+                            row: c.y,
+                            key: "cell",
+                            c: newValue,
+                        });
                         this.cellDataMatrix[c.y][c.x].cell = newValue;
                     }
-                    if (this.currentCell && this.currentCell.row == cell.row && this.currentCell.col == cell.col) {
+                    if (
+                        this.currentCell &&
+                        this.currentCell.row == cell.row &&
+                        this.currentCell.col == cell.col
+                    ) {
                         this.currentCell.editedCellContent = newValue;
                     }
                     continue;
@@ -3394,18 +3844,29 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 if (key === "rect") {
                     const rectLimits = this.findRectLimits(cells);
                     const rect = value.rect;
-                    if (!rect) { continue; }
+                    if (!rect) {
+                        continue;
+                    }
                     for (const c of cells) {
                         const ccells = [c];
                         const val = this.getRectValue(rect, rectLimits, c);
-                        if (!val) { continue; }
-                        this.doHandleToolbarSetCell(cell, val, cellsToSave, ccells); // , this.selectedCells);
+                        if (!val) {
+                            continue;
+                        }
+                        this.doHandleToolbarSetCell(
+                            cell,
+                            val,
+                            cellsToSave,
+                            ccells
+                        ); // , this.selectedCells);
                     }
                     continue;
                 }
                 if (key === "area") {
                     const area = value.area;
-                    if (!area || !cell) { continue; }
+                    if (!area || !cell) {
+                        continue;
+                    }
 
                     for (let r = 0; r < area.length; r++) {
                         const cellIdx = {row: cell.row + r, col: cell.col};
@@ -3420,47 +3881,75 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                             if (!val) {
                                 continue;
                             }
-                            this.doHandleToolbarSetCell(cellIdx, val, cellsToSave, ccells); // , selCels);
+                            this.doHandleToolbarSetCell(
+                                cellIdx,
+                                val,
+                                cellsToSave,
+                                ccells
+                            ); // , selCels);
                         }
                     }
                     continue;
                 }
-                function handleStyleList(table: TimTableComponent, vstyle: Record<string, string | string[]> | undefined,
-                                         c: ICellIndex,
-                                         toggle: boolean, areaClearOrSet: number): number {
-                    if (!vstyle) { return areaClearOrSet; }
+                function handleStyleList(
+                    table: TimTableComponent,
+                    vstyle: Record<string, string | string[]> | undefined,
+                    c: ICellIndex,
+                    toggle: boolean,
+                    areaClearOrSet: number
+                ): number {
+                    if (!vstyle) {
+                        return areaClearOrSet;
+                    }
                     // eslint-disable-next-line guard-for-in
                     for (const skey in vstyle) {
                         // sometimes there is extra # in colors?
                         let clearOrSet = 0; // 1 = set, 2 = clear
                         let cellStyle = vstyle[skey];
-                        if (!Array.isArray(cellStyle) && cellStyle.startsWith("##")) {
+                        if (
+                            !Array.isArray(cellStyle) &&
+                            cellStyle.startsWith("##")
+                        ) {
                             cellStyle = cellStyle.substr(1);
                         }
                         let s = cellStyle;
                         let change = false;
-                        if (skey === "class") { // includes so that it is possible to use class1, class2
+                        if (skey === "class") {
+                            // includes so that it is possible to use class1, class2
                             const oldCls = table.cellDataMatrix[c.y][c.x].class;
-                            if (oldCls) { // todo toggle
+                            if (oldCls) {
+                                // todo toggle
                                 let clss;
                                 let newCls = oldCls;
-                                if (Array.isArray(s)) { clss = s; } else { clss = [s]; }
+                                if (Array.isArray(s)) {
+                                    clss = s;
+                                } else {
+                                    clss = [s];
+                                }
 
                                 for (const as1 of clss) {
                                     const s1: string = "" + as1;
-                                    if (!newCls.includes(s1) && areaClearOrSet != 2) { // is not allredy in classes
+                                    if (
+                                        !newCls.includes(s1) &&
+                                        areaClearOrSet != 2
+                                    ) {
+                                        // is not allredy in classes
                                         newCls = newCls + " " + s1;
                                         clearOrSet = 1;
                                     } else if (!toggle && areaClearOrSet != 2) {
                                         // newCls = "";  // no need to do anything because it was there
                                         clearOrSet = 1;
                                     } else {
-
                                         newCls = replaceAll(newCls, s1, "");
                                         clearOrSet = 2;
                                     }
                                 }
-                                if (newCls != oldCls) { s = newCls.trim(); change = true; } else { s = ""; }
+                                if (newCls != oldCls) {
+                                    s = newCls.trim();
+                                    change = true;
+                                } else {
+                                    s = "";
+                                }
                             } else {
                                 if (areaClearOrSet == 2) {
                                     s = "";
@@ -3468,12 +3957,20 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                                 clearOrSet = 1;
                             }
                         } else {
-                            if (toggle && areaClearOrSet == 0 || areaClearOrSet == 2) {
+                            if (
+                                (toggle && areaClearOrSet == 0) ||
+                                areaClearOrSet == 2
+                            ) {
                                 if (areaClearOrSet == 2) {
                                     s = "";
                                 }
-                                const styleCache = table.cellDataMatrix[c.y][c.x].styleCache;
-                                if (styleCache && skey in styleCache && styleCache[skey]) {
+                                const styleCache =
+                                    table.cellDataMatrix[c.y][c.x].styleCache;
+                                if (
+                                    styleCache &&
+                                    skey in styleCache &&
+                                    styleCache[skey]
+                                ) {
                                     s = "";
                                     change = true;
                                     clearOrSet = 2;
@@ -3489,13 +3986,19 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                         }
                         if (s || change) {
                             s = String(s);
-                            cellsToSave.push({col: c.x, row: c.y, key: skey, c: s});
+                            cellsToSave.push({
+                                col: c.x,
+                                row: c.y,
+                                key: skey,
+                                c: s,
+                            });
                         }
                     }
                     return areaClearOrSet;
                 }
 
-                if (key.includes("tyle")) {  // because there is Style and style
+                if (key.includes("tyle")) {
+                    // because there is Style and style
                     let toggle = true;
                     let toggleAreaClearOrSet = 0; // 1 = set, 2 = clear, first set or clear decides what to do
                     let sstyle: Record<string, string | string[]> | undefined;
@@ -3512,13 +4015,23 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     if (key == "toggleStyle") {
                         sstyle = value.toggleStyle;
                     }
-                    if (!sstyle) { continue; }
+                    if (!sstyle) {
+                        continue;
+                    }
                     for (const c of cells) {
                         if (value.onlyEmpty) {
                             const cvalue = this.cellDataMatrix[c.y][c.x];
-                            if (cvalue.cell) { continue; }
+                            if (cvalue.cell) {
+                                continue;
+                            }
                         }
-                        toggleAreaClearOrSet = handleStyleList(this, sstyle, c, toggle, toggleAreaClearOrSet);
+                        toggleAreaClearOrSet = handleStyleList(
+                            this,
+                            sstyle,
+                            c,
+                            toggle,
+                            toggleAreaClearOrSet
+                        );
                         toggle = false; // used only on first round
                     }
                 }
@@ -3530,20 +4043,37 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     async handleToolbarSetCell(value: IToolbarTemplate) {
         const cellsToSave: CellAttrToSave[] = [];
-        this.doHandleToolbarSetCell(this.activeCell, value, cellsToSave, this.selectedCells.cells); // , this.selectedCells);
+        this.doHandleToolbarSetCell(
+            this.activeCell,
+            value,
+            cellsToSave,
+            this.selectedCells.cells
+        ); // , this.selectedCells);
         if (cellsToSave) {
             await this.setCellStyleAttribute(cellsToSave, true);
         }
         if (this.selectedCells.cells.length === 1 && value.delta) {
-           //
+            //
             if (value.delta.x > 0) {
-                await this.doCellMovementN(value.delta.x, Direction.Right, false);
+                await this.doCellMovementN(
+                    value.delta.x,
+                    Direction.Right,
+                    false
+                );
             }
             if (value.delta.x < 0) {
-                await this.doCellMovementN(-value.delta.x, Direction.Left, false);
+                await this.doCellMovementN(
+                    -value.delta.x,
+                    Direction.Left,
+                    false
+                );
             }
             if (value.delta.y > 0) {
-                await this.doCellMovementN(value.delta.y, Direction.Down, false);
+                await this.doCellMovementN(
+                    value.delta.y,
+                    Direction.Down,
+                    false
+                );
             }
             if (value.delta.y < 0) {
                 await this.doCellMovementN(-value.delta.y, Direction.Up, false);
@@ -3575,7 +4105,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             if (key.startsWith("$$")) {
                 continue;
             }
-            if ((key == "cell") || (key == "class" && !val)) {
+            if (key == "cell" || (key == "class" && !val)) {
                 continue;
             }
             if (typeof val !== "string") {
@@ -3592,23 +4122,35 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
     handleToolbarAddToTemplates() {
         const parId = this.getOwnParId();
-        if (!this.activeCell || !this.viewctrl || !parId || this.currentCell?.editorOpen) {
+        if (
+            !this.activeCell ||
+            !this.viewctrl ||
+            !parId ||
+            this.currentCell?.editorOpen
+        ) {
             return;
         }
-        let templ: IToolbarTemplate | undefined = { favorite: true };
-        if (this.selectedCells.cells && this.selectedCells.cells.length > 1) { // do area template
+        let templ: IToolbarTemplate | undefined = {favorite: true};
+        if (this.selectedCells.cells && this.selectedCells.cells.length > 1) {
+            // do area template
             const iy1 = this.selectedCells.srow1;
             const iy2 = this.selectedCells.srow2;
             const ix1 = this.selectedCells.scol1;
             const ix2 = this.selectedCells.scol2;
-            const tempArea: IToolbarTemplate = {text: "", favorite: true,
-                area: new Array(iy2 - iy1 + 1).
-                      fill(undefined).map(() => new Array(ix2 - ix1 + 1).fill(undefined))};
+            const tempArea: IToolbarTemplate = {
+                text: "",
+                favorite: true,
+                area: new Array(iy2 - iy1 + 1)
+                    .fill(undefined)
+                    .map(() => new Array(ix2 - ix1 + 1).fill(undefined)),
+            };
             for (const c of this.selectedCells.cells) {
                 const ix = c.x;
                 const iy = c.y;
                 templ = this.getTemplContent(iy, ix);
-                if (!templ || !tempArea.area) { continue; }
+                if (!templ || !tempArea.area) {
+                    continue;
+                }
                 tempArea.area[iy - iy1][ix - ix1] = templ;
                 if (templ.text) {
                     tempArea.text += templ.text;
@@ -3617,12 +4159,15 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 }
             }
             templ = tempArea;
-        } else { // Just on shell
+        } else {
+            // Just on shell
             const rowId = this.activeCell.row;
             const colId = this.activeCell.col;
             templ = this.getTemplContent(rowId, colId);
         }
-        if (!templ) { return; }
+        if (!templ) {
+            return;
+        }
         if (this.data.toolbarTemplates === undefined) {
             this.data.toolbarTemplates = [];
         }
@@ -3648,17 +4193,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.editInputClass = "";
         // this.getEditInputElement()!.style.cssText = "";
         this.getEditInputElement()!.className = "";
-        const stylesNotToClear = [
-            "position",
-            "top",
-            "left",
-            "width",
-            "height",
-        ];
+        const stylesNotToClear = ["position", "top", "left", "width", "height"];
         for (const key of Object.keys(styleToHtml)) {
             // TODO: For some reason, the index signature of style property is number, so we need a cast.
             // See https://github.com/microsoft/TypeScript/issues/17827
-            const k = key as unknown as number;
+            const k = (key as unknown) as number;
             if (stylesNotToClear.includes(key) || !editInputElement.style[k]) {
                 continue;
             }
@@ -3675,7 +4214,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param cellsToSave list of cells to save
      * @param colValuesAreSame if all values in same col are same
      */
-    async setCellStyleAttribute(cellsToSave: CellAttrToSave[], colValuesAreSame: boolean) {
+    async setCellStyleAttribute(
+        cellsToSave: CellAttrToSave[],
+        colValuesAreSame: boolean
+    ) {
         if (!this.viewctrl || !this.activeCell) {
             return;
         }
@@ -3683,7 +4225,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.clearSmallEditorStyles();
         if (this.currentCell) {
             for (const c of cellsToSave) {
-                if (this.currentCell.row == c.row && this.currentCell.col == c.col) {
+                if (
+                    this.currentCell.row == c.row &&
+                    this.currentCell.col == c.col
+                ) {
                     if (c.key === "class") {
                         this.editInputClass += " " + c.c;
                     } else {
@@ -3694,7 +4239,8 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                     }
                 }
             }
-            this.getEditInputElement()!.style.cssText += " " + this.editInputStyles;
+            this.getEditInputElement()!.style.cssText +=
+                " " + this.editInputStyles;
             this.getEditInputElement()!.className += this.editInputClass;
         }
 
@@ -3719,7 +4265,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
 
-        const response = await to($http.post<TimTable>("/timTable/setCell", {docId, parId, cellsToSave}));
+        const response = await to(
+            $http.post<TimTable>("/timTable/setCell", {
+                docId,
+                parId,
+                cellsToSave,
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -3756,7 +4308,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const srow = this.permTableToScreen[rowi];
         const scol = coli;
 
-        if (scol < this.selectedCells.scol1 || this.selectedCells.scol2 < scol) {
+        if (
+            scol < this.selectedCells.scol1 ||
+            this.selectedCells.scol2 < scol
+        ) {
             return false;
         }
         if (this.selectedCells.srows[srow]) {
@@ -3786,7 +4341,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
      * @param index row number
      */
     showColumn(index: number) {
-        return (!this.data.hiddenColumns || !this.data.hiddenColumns.includes(index));
+        return (
+            !this.data.hiddenColumns || !this.data.hiddenColumns.includes(index)
+        );
     }
 
     async handleClickClearFilters() {
@@ -3822,14 +4379,12 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         const parents = this.element.parents(".area");
         if (parents[0]) {
             const areaList = parents[0].classList;
-            areaList.forEach(
-                (value) => {
-                    const m = value.match(/^area_(\S+)$/);
-                    if (m) {
-                        returnList.push(m[1]);
-                    }
-                },
-            );
+            areaList.forEach((value) => {
+                const m = value.match(/^area_(\S+)$/);
+                if (m) {
+                    returnList.push(m[1]);
+                }
+            });
         }
         return returnList;
     }
@@ -3900,11 +4455,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (!taskId) {
             return;
         }
-        this.viewctrl.informChangeListeners(taskId, (this.edited ? ChangeType.Modified : ChangeType.Saved),
-            (this.data.tag ? this.data.tag : undefined));
+        this.viewctrl.informChangeListeners(
+            taskId,
+            this.edited ? ChangeType.Modified : ChangeType.Saved,
+            this.data.tag ? this.data.tag : undefined
+        );
     }
 
-    setAnswer(_content: { [index: string]: unknown }): ISetAnswerResult {
+    setAnswer(_content: {[index: string]: unknown}): ISetAnswerResult {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 
@@ -3916,10 +4474,14 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         if (!this.userdata) {
             return;
         }
-        if (!this.data.saveAttrs) { this.data.saveAttrs = []; }
+        if (!this.data.saveAttrs) {
+            this.data.saveAttrs = [];
+        }
         const dataType = t.intersection([
             t.type({
-                matrix: t.array(t.array(t.union([CellTypeR, t.type({cell: CellTypeR})]))),
+                matrix: t.array(
+                    t.array(t.union([CellTypeR, t.type({cell: CellTypeR})]))
+                ),
             }),
             t.partial({
                 headers: t.array(t.string),
@@ -3942,7 +4504,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 // this.data.saveAttrs.push("headers");
             }
             for (const [key, value] of Object.entries(data)) {
-                if (key in ["matrix", "headers"]) { continue; }
+                if (key in ["matrix", "headers"]) {
+                    continue;
+                }
                 // @ts-expect-error
                 this.data[key] = value;
                 this.data.saveAttrs.push(key);
@@ -3955,7 +4519,10 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             }
             this.c();
         } else {
-            console.error("timTable.setData: unexpected data format: " + JSON.stringify(data));
+            console.error(
+                "timTable.setData: unexpected data format: " +
+                    JSON.stringify(data)
+            );
         }
     }
 
@@ -3966,8 +4533,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return this.data.headers[columnIndex];
     }
 
-    getDimension(): { rows: number; columns: number; } {
-        return {rows: this.cellDataMatrix.length, columns: this.data.headers?.length ?? 0};
+    getDimension(): {rows: number; columns: number} {
+        return {
+            rows: this.cellDataMatrix.length,
+            columns: this.data.headers?.length ?? 0,
+        };
     }
 
     getRowHeight(rowIndex: number): number | undefined {
@@ -3979,11 +4549,15 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     }
 
     getCellContents(rowIndex: number, columnIndex: number): string {
-        return (this.cellDataMatrix[rowIndex][columnIndex].cell ?? "null").toString();
+        return (
+            this.cellDataMatrix[rowIndex][columnIndex].cell ?? "null"
+        ).toString();
     }
 
     getRowContents(rowIndex: number): string[] {
-        return this.cellDataMatrix[rowIndex].map((c) => (c.cell ?? "null").toString());
+        return this.cellDataMatrix[rowIndex].map((c) =>
+            (c.cell ?? "null").toString()
+        );
     }
 
     setRowFilter(columnIndex: number, value: string): void {
@@ -4006,8 +4580,13 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.cbFilter = state;
     }
 
-    getSortSymbolInfo(columnIndex: number): { symbol: string; style: Record<string, string> } {
-        return {style: this.sortSymbolStyle[columnIndex], symbol: this.sortSymbol[columnIndex]};
+    getSortSymbolInfo(
+        columnIndex: number
+    ): {symbol: string; style: Record<string, string>} {
+        return {
+            style: this.sortSymbolStyle[columnIndex],
+            symbol: this.sortSymbol[columnIndex],
+        };
     }
 
     isPreview(): boolean {
@@ -4017,9 +4596,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
-    declarations: [
-        TimTableComponent,
-    ],
+    declarations: [TimTableComponent],
     imports: [
         BrowserModule,
         HttpClientModule,
@@ -4031,8 +4608,7 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
     exports: [TimTableComponent],
 })
 export class TimTableModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
 const bootstrapFn = (extraProviders: StaticProvider[]) => {

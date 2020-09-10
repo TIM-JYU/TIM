@@ -36,22 +36,22 @@ declare module "ifvisible.js" {
             /**
              * if page idle now?
              */
-            isIdle: boolean,
+            isIdle: boolean;
 
             /**
              * How long was the page idle in milliseconds
              */
-            idleFor: number,
+            idleFor: number;
 
             /**
              * How much time left to become idle in milliseconds
              */
-            timeLeft: number,
+            timeLeft: number;
 
             /**
              * How much time left to become idle represented as percentage
              */
-            timeLeftPer: string
+            timeLeftPer: string;
         }
 
         export interface IfVisible {
@@ -159,5 +159,4 @@ declare module "ifvisible.js" {
     const iv: iVisible.IfVisible;
 
     export = iv;
-
 }

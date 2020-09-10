@@ -21,8 +21,7 @@ export type HeaderIndexItem = [IHeader, IHeader[]];
 export class HeaderIndexerService {
     private headerItems?: IHeaderDisplayIndexItem[];
 
-    constructor() {
-    }
+    constructor() {}
 
     get headers(): IHeaderDisplayIndexItem[] {
         if (!this.headerItems) {

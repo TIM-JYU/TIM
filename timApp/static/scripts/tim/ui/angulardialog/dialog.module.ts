@@ -9,20 +9,8 @@ import {AngularDraggableModule} from "angular2-draggable";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
-    declarations: [
-        DialogContainerComponent,
-        DialogHostDirective,
-        DialogFrame,
-    ],
-    imports: [
-        TimUtilityModule,
-        BrowserModule,
-        AngularDraggableModule,
-    ],
-    exports: [
-        TimUtilityModule,
-        DialogFrame,
-    ],
+    declarations: [DialogContainerComponent, DialogHostDirective, DialogFrame],
+    imports: [TimUtilityModule, BrowserModule, AngularDraggableModule],
+    exports: [TimUtilityModule, DialogFrame],
 })
-export class DialogModule {
-}
+export class DialogModule {}

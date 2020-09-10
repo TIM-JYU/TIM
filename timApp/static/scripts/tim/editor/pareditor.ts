@@ -7,11 +7,25 @@ import {markAsUsed, to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
-import {getCitePar, getElementByParId, getParAttributes} from "../document/parhelpers";
+import {
+    getCitePar,
+    getElementByParId,
+    getParAttributes,
+} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
-import {registerDialogComponentForModule, showMessageDialog} from "../ui/dialog";
+import {
+    registerDialogComponentForModule,
+    showMessageDialog,
+} from "../ui/dialog";
 import {documentglobals, genericglobals} from "../util/globals";
-import {$compile, $http, $injector, $localStorage, $timeout, $upload} from "../util/ngimport";
+import {
+    $compile,
+    $http,
+    $injector,
+    $localStorage,
+    $timeout,
+    $upload,
+} from "../util/ngimport";
 import {AceParEditor} from "./AceParEditor";
 import {EditorType, SelectionRange} from "./BaseParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
@@ -44,7 +58,7 @@ export interface IChoice {
     desc: string;
     name: string;
     title?: string;
-    opts: Array<{desc: string, value: string, title?: string}>;
+    opts: Array<{desc: string; value: string; title?: string}>;
 }
 
 export interface IEditorParams {
@@ -54,18 +68,21 @@ export interface IEditorParams {
     extraData: IExtraData;
     options: {
         deleteMsg?: string;
-        caption: string,
-        localSaveTag: string,
-        showDelete: boolean,
-        showPlugins: boolean,
-        showSettings: boolean,
-        showImageUpload: boolean,
-        touchDevice: boolean,
-        tags: ITag[],
-        choices?: IChoice[],
-        cursorPosition?: number,
+        caption: string;
+        localSaveTag: string;
+        showDelete: boolean;
+        showPlugins: boolean;
+        showSettings: boolean;
+        showImageUpload: boolean;
+        touchDevice: boolean;
+        tags: ITag[];
+        choices?: IChoice[];
+        cursorPosition?: number;
     };
-    previewCb: (text: string, proofread: boolean) => Promise<IPluginInfoResponse>;
+    previewCb: (
+        text: string,
+        proofread: boolean
+    ) => Promise<IPluginInfoResponse>;
     saveCb: (text: string, data: IExtraData) => Promise<{error?: string}>;
     deleteCb: () => Promise<{error?: string}>;
     unreadCb: () => Promise<void>;
@@ -84,7 +101,11 @@ interface IEditorMenu {
 
 type EditorEntry = IEditorMenu | IEditorMenuItem;
 
-export type IEditorResult = {type: "save", text: string} | {type: "delete"} | {type: "markunread"} | {type: "cancel"};
+export type IEditorResult =
+    | {type: "save"; text: string}
+    | {type: "delete"}
+    | {type: "markunread"}
+    | {type: "cancel"};
 
 const MenuItemFileObject = t.intersection([
     t.type({
@@ -111,7 +132,7 @@ const MenuItemObject = t.union([MenuItemDataObject, MenuItemFileObject]);
 export interface IAttachmentData {
     issueNumber: string | number;
     attachmentLetter: string;
-    uploadUrl: string;  // Could be empty string or placeholder.
+    uploadUrl: string; // Could be empty string or placeholder.
     upToDate: boolean; // Whether the stamp data hasn't changed after previous stamping.
 }
 
@@ -168,7 +189,11 @@ type MenuNameAndItems = Array<[string, MenuItemEntries]>;
 
 function getFullscreenElement(): Element | undefined {
     const doc = document as INonStandardFullScreenProperties & Document;
-    return (doc.fullscreenElement ?? doc.webkitFullscreenElement) ?? doc.msFullscreenElement;
+    return (
+        doc.fullscreenElement ??
+        doc.webkitFullscreenElement ??
+        doc.msFullscreenElement
+    );
 }
 
 export interface ISpellWordInfo {
@@ -178,16 +203,19 @@ export interface ISpellWordInfo {
     suggestions: string[];
 }
 
-export class PareditorController extends DialogController<{params: IEditorParams}, IEditorResult> {
+export class PareditorController extends DialogController<
+    {params: IEditorParams},
+    IEditorResult
+> {
     static component = "pareditor";
     static $inject = ["$element", "$scope"] as const;
     private spellcheck = false;
     private deleting = false;
     private editor?: TextAreaParEditor | AceParEditor; // $onInit
-    private file?: File & {progress?: number, error?: string};
+    private file?: File & {progress?: number; error?: string};
     private isIE: boolean = false;
     private oldmeta?: HTMLMetaElement;
-    private wrap!: {n: number, auto: boolean}; // $onInit
+    private wrap!: {n: number; auto: boolean}; // $onInit
     private outofdate: boolean;
     private parCount: number;
     private proeditor!: boolean; // $onInit
@@ -202,11 +230,11 @@ export class PareditorController extends DialogController<{params: IEditorParams
     private activeTab?: string;
     private lastTab?: string;
     private tabs: IEditorTab[];
-    private trdiff?: {old: string, new: string};
+    private trdiff?: {old: string; new: string};
     private activeAttachments?: IAttachmentData[]; // Attachments (with stamps) currently in the editor.
-    private liiteMacroStringBegin = "%%liite(";  // Attachment macro with stamping.
-    private liiteMacroStringEnd = ")%%";  // TODO: May be confused with other macro endings.
-    private perusliiteMacroStringBegin = "%%perusliite(";  // Attachment macro without stamping.
+    private liiteMacroStringBegin = "%%liite("; // Attachment macro with stamping.
+    private liiteMacroStringEnd = ")%%"; // TODO: May be confused with other macro endings.
+    private perusliiteMacroStringBegin = "%%perusliite("; // Attachment macro without stamping.
     private perusliiteMacroStringEnd = ")%%";
     private lastKnownDialogHeight?: number;
 
@@ -214,7 +242,7 @@ export class PareditorController extends DialogController<{params: IEditorParams
         super(element, scope);
         this.storage = localStorage;
 
-        if ((navigator.userAgent.match(/Trident/i))) {
+        if (navigator.userAgent.match(/Trident/i)) {
             this.isIE = true;
         }
 
@@ -322,38 +350,147 @@ ${backTicks}
         this.tabs = [
             {
                 entries: [
-                    {title: "Undo", name: "&#8630;", func: () => this.editor!.undoClicked()},
-                    {title: "Redo", name: "&#8631;", func: () => this.editor!.redoClicked()},
-                    {title: "Move left", name: "&#8592;", func: () => this.editor!.leftClicked()},
-                    {title: "Move right", name: "&#8594;", func: () => this.editor!.rightClicked()},
-                    {title: "Move up", name: "&#8593;", func: () => this.editor!.upClicked()},
-                    {title: "Move down", name: "&#8595;", func: () => this.editor!.downClicked()},
-                    {title: "Move to the beginning of the line", name: "Home", func: () => this.editor!.homeClicked()},
-                    {title: "Move to the end of the line", name: "End", func: () => this.editor!.endClicked()},
-                    {title: "Move to the beginning of the file", name: "Top", func: () => this.editor!.topClicked()},
-                    {title: "Move to the end of the file", name: "Bottom", func: () => this.editor!.bottomClicked()},
-                    {title: "Toggle insert mode on or off", name: "Ins", func: () => this.editor!.insertClicked()},
+                    {
+                        title: "Undo",
+                        name: "&#8630;",
+                        func: () => this.editor!.undoClicked(),
+                    },
+                    {
+                        title: "Redo",
+                        name: "&#8631;",
+                        func: () => this.editor!.redoClicked(),
+                    },
+                    {
+                        title: "Move left",
+                        name: "&#8592;",
+                        func: () => this.editor!.leftClicked(),
+                    },
+                    {
+                        title: "Move right",
+                        name: "&#8594;",
+                        func: () => this.editor!.rightClicked(),
+                    },
+                    {
+                        title: "Move up",
+                        name: "&#8593;",
+                        func: () => this.editor!.upClicked(),
+                    },
+                    {
+                        title: "Move down",
+                        name: "&#8595;",
+                        func: () => this.editor!.downClicked(),
+                    },
+                    {
+                        title: "Move to the beginning of the line",
+                        name: "Home",
+                        func: () => this.editor!.homeClicked(),
+                    },
+                    {
+                        title: "Move to the end of the line",
+                        name: "End",
+                        func: () => this.editor!.endClicked(),
+                    },
+                    {
+                        title: "Move to the beginning of the file",
+                        name: "Top",
+                        func: () => this.editor!.topClicked(),
+                    },
+                    {
+                        title: "Move to the end of the file",
+                        name: "Bottom",
+                        func: () => this.editor!.bottomClicked(),
+                    },
+                    {
+                        title: "Toggle insert mode on or off",
+                        name: "Ins",
+                        func: () => this.editor!.insertClicked(),
+                    },
                 ],
                 name: "Navigation",
             },
-            { // To change keys, change also:  TextAreaParEditor.ts ja AceParEditor.ts and maybe keycodes.ts
+            {
+                // To change keys, change also:  TextAreaParEditor.ts ja AceParEditor.ts and maybe keycodes.ts
                 entries: [
-                    {title: "Indent selection/line", func: () => this.editor!.indentClicked(), name: "&#8649;"},
-                    {title: "Outdent selection/line", func: () => this.editor!.outdentClicked(), name: "&#8647;"},
-                    {title: "Bold (Ctrl-B)", func: () => this.editor!.surroundClicked("**", "**"), name: "<b>B</b>"},
-                    {title: "Italic (Ctrl-I)", func: () => this.editor!.italicSurroundClicked(), name: "<i>I</i>"},
-                    {title: "Underline", func: () => this.editor!.surroundClicked("<u>", "</u>"), name: "<u>U</u>"},
-                    {title: "Strikethrough", func: () => this.editor!.surroundClicked("<s>", "</s>"), name: "<s>Z</s>"},
-                    {title: "Add any style", func: () => this.editor!.styleClicked("Teksti", "red"), name: "Style"},
-                    {title: "Code (Ctrl-O)", func: () => this.editor!.surroundClicked("`", "`"), name: "Code"},
-                    {title: "Code block (Ctrl-Alt-O)", func: () => this.editor!.codeBlockClicked(), name: "Code block"},
-                    {title: "Subscript", func: () => this.editor!.surroundClicked("~", "~"), name: "X_"},
-                    {title: "Superscript", func: () => this.editor!.surroundClicked("^", "^"), name: "X^"},
-                    {title: "Heading 1 (Ctrl-1)", func: () => this.editor!.headerClicked("#"), name: "H1"},
-                    {title: "Heading 2 (Ctrl-2)", func: () => this.editor!.headerClicked("##"), name: "H2"},
-                    {title: "Heading 3 (Ctrl-3)", func: () => this.editor!.headerClicked("###"), name: "H3"},
-                    {title: "Heading 4 (Ctrl-4)", func: () => this.editor!.headerClicked("####"), name: "H4"},
-                    {title: "Heading 5 (Ctrl-5)", func: () => this.editor!.headerClicked("#####"), name: "H5"},
+                    {
+                        title: "Indent selection/line",
+                        func: () => this.editor!.indentClicked(),
+                        name: "&#8649;",
+                    },
+                    {
+                        title: "Outdent selection/line",
+                        func: () => this.editor!.outdentClicked(),
+                        name: "&#8647;",
+                    },
+                    {
+                        title: "Bold (Ctrl-B)",
+                        func: () => this.editor!.surroundClicked("**", "**"),
+                        name: "<b>B</b>",
+                    },
+                    {
+                        title: "Italic (Ctrl-I)",
+                        func: () => this.editor!.italicSurroundClicked(),
+                        name: "<i>I</i>",
+                    },
+                    {
+                        title: "Underline",
+                        func: () => this.editor!.surroundClicked("<u>", "</u>"),
+                        name: "<u>U</u>",
+                    },
+                    {
+                        title: "Strikethrough",
+                        func: () => this.editor!.surroundClicked("<s>", "</s>"),
+                        name: "<s>Z</s>",
+                    },
+                    {
+                        title: "Add any style",
+                        func: () => this.editor!.styleClicked("Teksti", "red"),
+                        name: "Style",
+                    },
+                    {
+                        title: "Code (Ctrl-O)",
+                        func: () => this.editor!.surroundClicked("`", "`"),
+                        name: "Code",
+                    },
+                    {
+                        title: "Code block (Ctrl-Alt-O)",
+                        func: () => this.editor!.codeBlockClicked(),
+                        name: "Code block",
+                    },
+                    {
+                        title: "Subscript",
+                        func: () => this.editor!.surroundClicked("~", "~"),
+                        name: "X_",
+                    },
+                    {
+                        title: "Superscript",
+                        func: () => this.editor!.surroundClicked("^", "^"),
+                        name: "X^",
+                    },
+                    {
+                        title: "Heading 1 (Ctrl-1)",
+                        func: () => this.editor!.headerClicked("#"),
+                        name: "H1",
+                    },
+                    {
+                        title: "Heading 2 (Ctrl-2)",
+                        func: () => this.editor!.headerClicked("##"),
+                        name: "H2",
+                    },
+                    {
+                        title: "Heading 3 (Ctrl-3)",
+                        func: () => this.editor!.headerClicked("###"),
+                        name: "H3",
+                    },
+                    {
+                        title: "Heading 4 (Ctrl-4)",
+                        func: () => this.editor!.headerClicked("####"),
+                        name: "H4",
+                    },
+                    {
+                        title: "Heading 5 (Ctrl-5)",
+                        func: () => this.editor!.headerClicked("#####"),
+                        name: "H5",
+                    },
                 ],
                 name: "Style",
             },
@@ -361,15 +498,29 @@ ${backTicks}
                 entries: [
                     {
                         title: "Add link",
-                        func: () => this.editor!.linkClicked("Linkkiteksti", "Linkkiosoite", false),
+                        func: () =>
+                            this.editor!.linkClicked(
+                                "Linkkiteksti",
+                                "Linkkiosoite",
+                                false
+                            ),
                         name: "Link",
                     },
                     {
                         title: "Add image",
-                        func: () => this.editor!.linkClicked("Kuvateksti", "Kuvasoite", true),
+                        func: () =>
+                            this.editor!.linkClicked(
+                                "Kuvateksti",
+                                "Kuvasoite",
+                                true
+                            ),
                         name: "Image",
                     },
-                    {title: "List item", func: () => this.editor!.listClicked(), name: "List"},
+                    {
+                        title: "List item",
+                        func: () => this.editor!.listClicked(),
+                        name: "List",
+                    },
                     {
                         title: "Slide",
                         items: [
@@ -380,13 +531,17 @@ ${backTicks}
                             },
                             {
                                 name: "Slide fragment",
-                                title: "Content inside the fragment will be hidden and shown when next is clicked in slide view",
-                                func: () => this.editor!.surroundClicked("§§", "§§"),
+                                title:
+                                    "Content inside the fragment will be hidden and shown when next is clicked in slide view",
+                                func: () =>
+                                    this.editor!.surroundClicked("§§", "§§"),
                             },
                             {
                                 name: "Fragment block",
-                                title: "Content inside will show as a fragment and may contain inner slide fragments",
-                                func: () => this.editor!.surroundClicked("<§", "§>"),
+                                title:
+                                    "Content inside will show as a fragment and may contain inner slide fragments",
+                                func: () =>
+                                    this.editor!.surroundClicked("<§", "§>"),
                             },
                         ],
                     },
@@ -401,17 +556,20 @@ ${backTicks}
                         })),
                     },
                     {
-                        title: "Break text to start a new paragraph (Shift-Enter)",
+                        title:
+                            "Break text to start a new paragraph (Shift-Enter)",
                         func: () => this.editor!.paragraphClicked(),
                         name: "Paragraph break",
                     },
                     {
-                        title: "Forces line to end at cursor position (Ctrl-Enter)",
+                        title:
+                            "Forces line to end at cursor position (Ctrl-Enter)",
                         func: () => this.editor!.endLineClicked(),
                         name: "End line",
                     },
                     {
-                        title: "Creates a comment block or sets the line to a comment (Ctrl-Y)",
+                        title:
+                            "Creates a comment block or sets the line to a comment (Ctrl-Y)",
                         func: () => this.editor!.commentClicked(),
                         name: "Comment",
                     },
@@ -425,31 +583,112 @@ ${backTicks}
             },
             {
                 entries: [
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "@"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "#"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "`"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "$"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "€"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "%"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "&"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "{"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "}"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "["},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "]"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "/"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event), name: "\\"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event, "&#173;"), name: "Soft hyphen"},
-                    {title: "", func: ($event) => this.editor!.charClicked($event, "⁞"), name: "Cursor"},
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "@",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "#",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "`",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "$",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "€",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "%",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "&",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "{",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "}",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "[",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "]",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "/",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event),
+                        name: "\\",
+                    },
+                    {
+                        title: "",
+                        func: ($event) =>
+                            this.editor!.charClicked($event, "&#173;"),
+                        name: "Soft hyphen",
+                    },
+                    {
+                        title: "",
+                        func: ($event) => this.editor!.charClicked($event, "⁞"),
+                        name: "Cursor",
+                    },
                 ],
                 name: "Characters",
             },
             {
                 entries: [
-                    {title: "", func: () => this.editor!.surroundClicked("$", "$"), name: "TeX equation"},
-                    {title: "", func: () => this.editor!.surroundClicked("$$", "$$"), name: "TeX block"},
-                    {title: "", func: () => this.editor!.indexClicked(), name: "X&#x2093;"},
-                    {title: "", func: () => this.editor!.powerClicked(), name: "X&#x207f;"},
-                    {title: "", func: () => this.editor!.squareClicked(), name: "&radic;"},
+                    {
+                        title: "",
+                        func: () => this.editor!.surroundClicked("$", "$"),
+                        name: "TeX equation",
+                    },
+                    {
+                        title: "",
+                        func: () => this.editor!.surroundClicked("$$", "$$"),
+                        name: "TeX block",
+                    },
+                    {
+                        title: "",
+                        func: () => this.editor!.indexClicked(),
+                        name: "X&#x2093;",
+                    },
+                    {
+                        title: "",
+                        func: () => this.editor!.powerClicked(),
+                        name: "X&#x207f;",
+                    },
+                    {
+                        title: "",
+                        func: () => this.editor!.squareClicked(),
+                        name: "&radic;",
+                    },
                 ],
                 name: "TeX",
             },
@@ -457,47 +696,67 @@ ${backTicks}
                 entries: [
                     {
                         title: "Auto number headings level",
-                        func: () => this.editor!.insertTemplate("auto_number_headings: 1\n"),
+                        func: () =>
+                            this.editor!.insertTemplate(
+                                "auto_number_headings: 1\n"
+                            ),
                         name: "Heading numbering",
                     },
                     {
                         title: "Use document like a form",
-                        func: () => this.editor!.insertTemplate("form_mode: true\n"),
+                        func: () =>
+                            this.editor!.insertTemplate("form_mode: true\n"),
                         name: "Form mode",
                     },
                     {
                         title: "Styles for this document",
-                        func: () => this.editor!.insertTemplate("css: |!!\n.style {\n\n}\n!!\n"),
+                        func: () =>
+                            this.editor!.insertTemplate(
+                                "css: |!!\n.style {\n\n}\n!!\n"
+                            ),
                         name: "CSS",
                     },
                     {
                         title: "Macro values for document",
-                        func: () => this.editor!.insertTemplate("macros:\n  key: value\n"),
+                        func: () =>
+                            this.editor!.insertTemplate(
+                                "macros:\n  key: value\n"
+                            ),
                         name: "Macros",
                     },
                     {
                         title: "Show task summary in the beginning of the doc",
-                        func: () => this.editor!.insertTemplate("show_task_summary: true\n"),
+                        func: () =>
+                            this.editor!.insertTemplate(
+                                "show_task_summary: true\n"
+                            ),
                         name: "Task summary",
                     },
                     {
-                        title: "Update document automatically at this interval (seconds)",
-                        func: () => this.editor!.insertTemplate("live_updates: 5\n"),
+                        title:
+                            "Update document automatically at this interval (seconds)",
+                        func: () =>
+                            this.editor!.insertTemplate("live_updates: 5\n"),
                         name: "Live update",
                     },
                     {
                         title: "Calculate plugins lazy or not",
-                        func: () => this.editor!.insertTemplate("lazy: false\n"),
+                        func: () =>
+                            this.editor!.insertTemplate("lazy: false\n"),
                         name: "Lazy",
                     },
                     {
                         title: "Global values for the plugins",
-                        func: () => this.editor!.insertTemplate("global_plugin_attrs:\n csPlugin:\n   stem: value\n all:\n   stem: value\n"),
+                        func: () =>
+                            this.editor!.insertTemplate(
+                                "global_plugin_attrs:\n csPlugin:\n   stem: value\n all:\n   stem: value\n"
+                            ),
                         name: "Global plugin",
                     },
                     {
                         title: "SVG images for math",
-                        func: () => this.editor!.insertTemplate("math_type: svg\n"),
+                        func: () =>
+                            this.editor!.insertTemplate("math_type: svg\n"),
                         name: "Math SVG",
                     },
                 ],
@@ -529,12 +788,15 @@ ${backTicks}
             },
         ];
 
-        $(document).on("webkitfullscreenchange fullscreenchange MSFullscreenChange", (event) => {
-            const editor = element[0];
-            if (!getFullscreenElement()) {
-                editor.removeAttribute("style");
+        $(document).on(
+            "webkitfullscreenchange fullscreenchange MSFullscreenChange",
+            (event) => {
+                const editor = element[0];
+                if (!getFullscreenElement()) {
+                    editor.removeAttribute("style");
+                }
             }
-        });
+        );
 
         this.outofdate = false;
         this.parCount = 0;
@@ -548,7 +810,9 @@ ${backTicks}
     getVisibleTabs() {
         // Upload tab is shown separately in the template because
         // it has special content that cannot be placed under "extra".
-        return this.tabs.filter((tab) => (!tab.show || tab.show()) && tab.name !== "Upload");
+        return this.tabs.filter(
+            (tab) => (!tab.show || tab.show()) && tab.name !== "Upload"
+        );
     }
 
     getUploadTab() {
@@ -556,7 +820,9 @@ ${backTicks}
     }
 
     findTab(name: string) {
-        return this.tabs.find((tab) => tab.name.toLowerCase() === name.toLowerCase());
+        return this.tabs.find(
+            (tab) => tab.name.toLowerCase() === name.toLowerCase()
+        );
     }
 
     getTabIndex(tab: IEditorTab) {
@@ -571,7 +837,7 @@ ${backTicks}
     }
 
     wrapValue() {
-        return  this.wrap.n * (this.wrap.auto ? 1 : -1);
+        return this.wrap.n * (this.wrap.auto ? 1 : -1);
     }
 
     $onInit() {
@@ -580,8 +846,10 @@ ${backTicks}
         this.spellcheck = this.getLocalBool("spellcheck", false);
         this.autocomplete = this.getLocalBool("autocomplete", false);
         const saveTag = this.getSaveTag();
-        this.proeditor = this.getLocalBool("proeditor",
-            saveTag === "par" || saveTag === TIM_TABLE_CELL);
+        this.proeditor = this.getLocalBool(
+            "proeditor",
+            saveTag === "par" || saveTag === TIM_TABLE_CELL
+        );
         this.activeTab = this.getLocalValue("editortab") ?? "navigation";
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
@@ -597,7 +865,9 @@ ${backTicks}
                 const meta = $("meta[name='viewport']");
                 this.oldmeta = meta[0] as HTMLMetaElement;
                 meta.remove();
-                $("head").prepend('<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=0">');
+                $("head").prepend(
+                    '<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=0">'
+                );
             }
         }
         this.draggable.setResizeCallback((params) => {
@@ -607,16 +877,26 @@ ${backTicks}
             this.lastKnownDialogHeight = params.h;
             this.refreshEditorSize();
         });
-        const oldMode = window.localStorage.getItem("oldMode" + this.getOptions().localSaveTag) ?? (this.getOptions().touchDevice ? "text" : "ace");
+        const oldMode =
+            window.localStorage.getItem(
+                "oldMode" + this.getOptions().localSaveTag
+            ) ?? (this.getOptions().touchDevice ? "text" : "ace");
         (async () => {
             await this.changeEditor(oldMode);
         })();
-        this.scope.$watch(() => this.autocomplete, () => {
-            this.isAce()?.setAutoCompletion(this.autocomplete);
-        });
+        this.scope.$watch(
+            () => this.autocomplete,
+            () => {
+                this.isAce()?.setAutoCompletion(this.autocomplete);
+            }
+        );
         this.docSettings = documentglobals().docSettings;
 
-        this.activeAttachments = this.updateAttachments(true, undefined, undefined);
+        this.activeAttachments = this.updateAttachments(
+            true,
+            undefined,
+            undefined
+        );
     }
 
     private refreshEditorSize() {
@@ -626,11 +906,16 @@ ${backTicks}
         const cont = this.getEditorContainer()[0];
         const elemHeight = this.element[0].clientHeight;
         const clientBottom = cont.clientTop + cont.clientHeight;
-        const remainingSpace = this.lastKnownDialogHeight - cont.clientTop - (elemHeight - clientBottom);
+        const remainingSpace =
+            this.lastKnownDialogHeight -
+            cont.clientTop -
+            (elemHeight - clientBottom);
         const ace = this.isAce();
         if (ace) {
             let lh = ace.editor.renderer.lineHeight;
-            if (lh <= 0) { lh = 15; } // TODO: get a better value here
+            if (lh <= 0) {
+                lh = 15;
+            } // TODO: get a better value here
             const lines = remainingSpace / lh;
             ace.editor.setOptions({
                 maxLines: Math.max(lines, 5),
@@ -670,18 +955,25 @@ ${backTicks}
     }
 
     initCustomTabs() {
-        const tabs: {[tab: string]: {[menuName: string]: IEditorMenuItem[] | undefined} | undefined} = {};
+        const tabs: {
+            [tab: string]:
+                | {[menuName: string]: IEditorMenuItem[] | undefined}
+                | undefined;
+        } = {};
         for (const [plugin, d] of Object.entries(documentglobals().reqs)) {
             const data = d;
             let currTabs: ReadonlyArray<[string, MenuNameAndItems]>;
             if (EditorTemplateFormatV3.is(data)) {
                 // this needs type casts inside maps because otherwise the types are inferred as plain arrays and not tuples
-                currTabs = Object
-                    .entries(data.editor_tabs)
-                    .map(([k, v]) => [v.text, v.items // editor_tabs is an array, so k is just (unused) index here
-                        .map((m) => [m.text, m.items])]);
+                currTabs = Object.entries(data.editor_tabs).map(([k, v]) => [
+                    v.text,
+                    v.items // editor_tabs is an array, so k is just (unused) index here
+                        .map((m) => [m.text, m.items]),
+                ]);
             } else if (EditorTemplateFormatV2.is(data)) {
-                currTabs = Object.entries({plugins: Object.entries(data.templates)});
+                currTabs = Object.entries({
+                    plugins: Object.entries(data.templates),
+                });
             } else if (EditorTemplateFormatV1.is(data)) {
                 const menus: MenuNameAndItems = [];
                 const menuNames = data.text || [plugin];
@@ -729,7 +1021,11 @@ ${backTicks}
                             };
                         }
                         const existingTab = tabs[tab];
-                        const item = {name: text, title: templateObj.expl ?? "", func: clickfn};
+                        const item = {
+                            name: text,
+                            title: templateObj.expl ?? "",
+                            func: clickfn,
+                        };
                         if (!existingTab) {
                             tabs[tab] = {[menu]: [item]};
                         } else {
@@ -799,7 +1095,6 @@ ${backTicks}
                 previewContent.scrollTop(this.scrollPos);
             }
         }, 25);
-
     }
 
     createTextArea(text: string) {
@@ -819,7 +1114,6 @@ ${backTicks}
         textarea.on("paste", (e) => this.onPaste(e));
         textarea.on("drop", (e) => this.onDrop(e));
         textarea.on("dragover", (e) => this.allowDrop(e));
-
     }
 
     isFinnishDoc() {
@@ -843,11 +1137,22 @@ ${backTicks}
         this.scrollPos = previewDiv.scrollTop() ?? this.scrollPos;
         this.outofdate = true;
         const spellCheckInEffect = this.spellcheck && this.isFinnishDoc();
-        const data = await this.resolve.params.previewCb(text, spellCheckInEffect);
+        const data = await this.resolve.params.previewCb(
+            text,
+            spellCheckInEffect
+        );
         if (spellCheckInEffect) {
-            $injector.loadNewModules([(await import("../document/editing/spell-error.component")).spellModule.name]);
+            $injector.loadNewModules([
+                (await import("../document/editing/spell-error.component"))
+                    .spellModule.name,
+            ]);
         }
-        await ParCompiler.compileAndAppendTo(previewDiv, data, this.scope, this.resolve.params.viewCtrl);
+        await ParCompiler.compileAndAppendTo(
+            previewDiv,
+            data,
+            this.scope,
+            this.resolve.params.viewCtrl
+        );
         if (data.trdiff) {
             const module = await import("angular-diff-match-patch");
             $injector.loadNewModules([module.default]);
@@ -856,9 +1161,11 @@ ${backTicks}
         this.outofdate = false;
         this.parCount = previewDiv.children().length;
         if (spellCheckInEffect) {
-            previewDiv.find(".parContent[ng-non-bindable] tim-spell-error").each((i, e) => {
-                $compile(e)(this.scope);
-            });
+            previewDiv
+                .find(".parContent[ng-non-bindable] tim-spell-error")
+                .each((i, e) => {
+                    $compile(e)(this.scope);
+                });
         }
         this.getEditorContainer().resize();
         this.scope.$applyAsync();
@@ -896,7 +1203,11 @@ ${backTicks}
         if (this.deleting) {
             return;
         }
-        if (!window.confirm(this.getOptions().deleteMsg || "Delete - are you sure?")) {
+        if (
+            !window.confirm(
+                this.getOptions().deleteMsg || "Delete - are you sure?"
+            )
+        ) {
             return;
         }
         this.deleting = true;
@@ -910,7 +1221,11 @@ ${backTicks}
     }
 
     showUnread() {
-        return this.getExtraData().par !== "NEW_PAR" && getElementByParId(this.getExtraData().par).find(".readline.read").length > 0;
+        return (
+            this.getExtraData().par !== "NEW_PAR" &&
+            getElementByParId(this.getExtraData().par).find(".readline.read")
+                .length > 0
+        );
     }
 
     async unreadClicked() {
@@ -952,29 +1267,47 @@ ${backTicks}
         const date = this.getCurrentMeetingDate();
         if (date) {
             const tempAttachments = this.activeAttachments;
-            this.activeAttachments = this.updateAttachments(false, this.activeAttachments, undefined);
-            if (this.activeAttachments && this.docSettings &&
-                this.docSettings.macros && !this.allAttachmentsUpToDate()) {
+            this.activeAttachments = this.updateAttachments(
+                false,
+                this.activeAttachments,
+                undefined
+            );
+            if (
+                this.activeAttachments &&
+                this.docSettings &&
+                this.docSettings.macros &&
+                !this.allAttachmentsUpToDate()
+            ) {
                 let stampFormat = this.docSettings.macros.stampformat;
                 if (stampFormat === undefined) {
                     stampFormat = "";
                 }
                 const customStampModel = this.docSettings.custom_stamp_model;
-                const r = await to(showRestampDialog({
-                    attachments: this.activeAttachments,
-                    customStampModel: customStampModel,
-                    meetingDate: date,
-                    stampFormat: stampFormat,
-                }));
+                const r = await to(
+                    showRestampDialog({
+                        attachments: this.activeAttachments,
+                        customStampModel: customStampModel,
+                        meetingDate: date,
+                        stampFormat: stampFormat,
+                    })
+                );
                 if (r.ok) {
-                    if (r.result === RestampDialogClose.RestampedReturnToEditor) {
+                    if (
+                        r.result === RestampDialogClose.RestampedReturnToEditor
+                    ) {
                         // If restamped and then returned, all are up-to-date.
                         this.saving = false;
-                        this.activeAttachments.forEach((att) => att.upToDate = true);
+                        this.activeAttachments.forEach(
+                            (att) => (att.upToDate = true)
+                        );
                         return;
                     }
-                    if (r.result === RestampDialogClose.NoRestampingReturnToEditor ||
-                        r.result === RestampDialogClose.RestampingFailedReturnToEditor) {
+                    if (
+                        r.result ===
+                            RestampDialogClose.NoRestampingReturnToEditor ||
+                        r.result ===
+                            RestampDialogClose.RestampingFailedReturnToEditor
+                    ) {
                         this.saving = false;
                         // If returned to editor without restamping, return to state prior to saving.
                         this.activeAttachments = tempAttachments;
@@ -991,7 +1324,10 @@ ${backTicks}
             this.saving = false;
             return;
         }
-        const result = await this.resolve.params.saveCb(text, this.getExtraData());
+        const result = await this.resolve.params.saveCb(
+            text,
+            this.getExtraData()
+        );
         if (result.error) {
             await showMessageDialog(result.error);
             this.saving = false;
@@ -1061,8 +1397,12 @@ ${backTicks}
      * @param selectionRange The index range "painted" by the user. Can start and end at same index.
      * @returns Macro start and end indices in SelectionRange, or undefined if selection is not inside the macro.
      */
-    getMacroRange(str: string, beginStr: string, endStr: string,
-                    selectionRange: SelectionRange): SelectionRange | undefined {
+    getMacroRange(
+        str: string,
+        beginStr: string,
+        endStr: string,
+        selectionRange: SelectionRange
+    ): SelectionRange | undefined {
         const selectIndexA = selectionRange[0];
         const selectIndexB = selectionRange[1];
         const partA = str.substring(0, selectIndexA);
@@ -1074,7 +1414,12 @@ ${backTicks}
 
         // If there are any extra macro parts in between or either marcro part wasn't found at all,
         // return undefined.
-        if (interveningIndexA !== -1 || interveningIndexB !== -1 || indexA === -1 || indexB === -1) {
+        if (
+            interveningIndexA !== -1 ||
+            interveningIndexB !== -1 ||
+            indexA === -1 ||
+            indexB === -1
+        ) {
             return undefined;
         }
         return [indexA, selectIndexB + indexB + endStr.length];
@@ -1097,18 +1442,25 @@ ${backTicks}
             editorText,
             this.liiteMacroStringBegin,
             this.liiteMacroStringEnd,
-            selectionRange);
+            selectionRange
+        );
 
         // If there's an attachment macro in the editor (i.e. macroRange is defined), assume need to stamp.
         // Also requires data from preamble to work correctly (dates and knro).
         // If there's no stampFormat set in preamble, uses hard-coded default format.
-        if (macroRange && this.docSettings && this.docSettings.macros && kokousDate) {
+        if (
+            macroRange &&
+            this.docSettings &&
+            this.docSettings.macros &&
+            kokousDate
+        ) {
             autostamp = true;
             try {
                 // Macro begin and end not included.
                 const macroText = editorText.substring(
                     macroRange[0] + this.liiteMacroStringBegin.length,
-                    macroRange[1] - this.liiteMacroStringEnd.length);
+                    macroRange[1] - this.liiteMacroStringEnd.length
+                );
                 macroParams = this.getMacroParamsFromString(macroText);
             } catch {
                 const errorMessage = "Parsing stamp parameters failed";
@@ -1120,14 +1472,20 @@ ${backTicks}
                 stampFormat = "";
             }
             const customStampModel = this.docSettings.custom_stamp_model;
-            attachmentParams = [kokousDate, stampFormat, ...macroParams, customStampModel, autostamp];
+            attachmentParams = [
+                kokousDate,
+                stampFormat,
+                ...macroParams,
+                customStampModel,
+                autostamp,
+            ];
             stamped = this.macroParamsToAttachmentData(macroParams);
             stamped.upToDate = true;
         }
         if (file) {
             this.file.progress = 0;
             this.file.error = undefined;
-            const upload = $upload.upload<{image: string, file: string}>({
+            const upload = $upload.upload<{image: string; file: string}>({
                 data: {
                     attachmentParams: JSON.stringify(attachmentParams),
                     doc_id: this.getExtraData().docId.toString(),
@@ -1138,8 +1496,10 @@ ${backTicks}
             });
             upload.progress((evt) => {
                 if (this.file) {
-                    this.file.progress = Math.min(100, Math.floor(100.0 *
-                        evt.loaded / evt.total));
+                    this.file.progress = Math.min(
+                        100,
+                        Math.floor((100.0 * evt.loaded) / evt.total)
+                    );
                 }
             });
 
@@ -1151,10 +1511,13 @@ ${backTicks}
                     const ed = this.editor!;
                     // This check is needed for uploads in other (non-attachment) plugins.
                     // TODO: Could this be editor.contains(...)?
-                    const isplugin = (ed.editorStartsWith("``` {"));
+                    const isplugin = ed.editorStartsWith("``` {");
                     let start = "[File](";
                     let savedir = "/files/";
-                    if (response.data.image || response.data.file.toString().includes(".svg")) {
+                    if (
+                        response.data.image ||
+                        response.data.file.toString().includes(".svg")
+                    ) {
                         start = "![Image](";
                     }
                     if (response.data.image) {
@@ -1170,7 +1533,8 @@ ${backTicks}
                             editorText,
                             this.perusliiteMacroStringBegin,
                             this.perusliiteMacroStringEnd,
-                            selectionRange);
+                            selectionRange
+                        );
                     }
                     if (isplugin || macroRange || macroRange2) {
                         ed.insertTemplate(this.uploadedFile);
@@ -1180,7 +1544,11 @@ ${backTicks}
                     // Separate from isPlugin so this is ran only when there are attachments with stamps.
                     if (macroRange && kokousDate) {
                         stamped.uploadUrl = this.uploadedFile;
-                        this.activeAttachments = this.updateAttachments(false, this.activeAttachments, stamped);
+                        this.activeAttachments = this.updateAttachments(
+                            false,
+                            this.activeAttachments,
+                            stamped
+                        );
                     }
                 });
             } else {
@@ -1198,7 +1566,9 @@ ${backTicks}
     }
 
     async getTemplate(plugin: string, template: string, index: string) {
-        const response = await to($http.get<string>(`/${plugin}/template/${template}/${index}`));
+        const response = await to(
+            $http.get<string>(`/${plugin}/template/${template}/${index}`)
+        );
         if (!response.ok) {
             return;
         }
@@ -1226,9 +1596,11 @@ ${backTicks}
      */
     fullscreenSupported() {
         const div = this.element[0] as INonStandardFullScreenElement & Element;
-        return div.requestFullscreen != null ||
+        return (
+            div.requestFullscreen != null ||
             div.webkitRequestFullScreen != null ||
-            div.msRequestFullscreen != null;
+            div.msRequestFullscreen != null
+        );
     }
 
     /**
@@ -1238,7 +1610,8 @@ ${backTicks}
         const doc = document as INonStandardFullScreenProperties & Document;
         if (!getFullscreenElement()) {
             let wentFullscreen = true;
-            const div = this.element[0] as INonStandardFullScreenElement & Element;
+            const div = this.element[0] as INonStandardFullScreenElement &
+                Element;
             if (div.requestFullscreen) {
                 div.requestFullscreen();
             } else if (div.webkitRequestFullScreen) {
@@ -1250,9 +1623,12 @@ ${backTicks}
             }
 
             if (wentFullscreen) {
-                div.setAttribute("style", "width: 100%; height: 100%; position: absolute; top: 0px;" +
-                    "padding: 2em 5px 5px 5px; background: rgb(224, 224, 224); -webkit-box-sizing: border-box;" +
-                    "-moz-box-sizing: border-box; box-sizing: border-box;");
+                div.setAttribute(
+                    "style",
+                    "width: 100%; height: 100%; position: absolute; top: 0px;" +
+                        "padding: 2em 5px 5px 5px; background: rgb(224, 224, 224); -webkit-box-sizing: border-box;" +
+                        "-moz-box-sizing: border-box; box-sizing: border-box;"
+                );
             }
         } else {
             if (doc.exitFullscreen) {
@@ -1306,13 +1682,23 @@ ${backTicks}
             editorContainer.append(neweditorElem);
             const neweditor = ace.edit(neweditorElem[0]);
 
-            this.editor = new AceParEditor(ace, neweditor, {
-                wrapFn: () => this.wrapFn(),
-                saveClicked: () => this.saveClicked(),
-                getWrapValue: () => this.wrapValue(),
-            }, (this.getSaveTag() === "addAbove" || this.getSaveTag() === "addBelow") ? "ace/mode/text" : "ace/mode/markdown");
+            this.editor = new AceParEditor(
+                ace,
+                neweditor,
+                {
+                    wrapFn: () => this.wrapFn(),
+                    saveClicked: () => this.saveClicked(),
+                    getWrapValue: () => this.wrapValue(),
+                },
+                this.getSaveTag() === "addAbove" ||
+                this.getSaveTag() === "addBelow"
+                    ? "ace/mode/text"
+                    : "ace/mode/markdown"
+            );
             this.editor.setAutoCompletion(this.autocomplete);
-            this.editor.editor.renderer.$cursorLayer.setBlinking(!genericglobals().IS_TESTING);
+            this.editor.editor.renderer.$cursorLayer.setBlinking(
+                !genericglobals().IS_TESTING
+            );
             /* iPad does not open the keyboard if not manually focused to editable area
              var iOS = /(iPad|iPhone|iPod)/g.test($window.navigator.platform);
              if (!iOS) editor.focus();*/
@@ -1335,8 +1721,12 @@ ${backTicks}
                 return;
             };
             */
-            neweditor.setBehavioursEnabled(this.getLocalBool("acebehaviours", false));
-            neweditor.getSession().setUseWrapMode(this.getLocalBool("acewrap", false));
+            neweditor.setBehavioursEnabled(
+                this.getLocalBool("acebehaviours", false)
+            );
+            neweditor
+                .getSession()
+                .setUseWrapMode(this.getLocalBool("acewrap", false));
             neweditor.setOptions({maxLines: 28});
             this.editor.setEditorText(text);
             this.refreshEditorSize();
@@ -1347,23 +1737,40 @@ ${backTicks}
                 textCompleter: unknown;
                 keyWordCompleter: unknown;
             }
-            const langTools = ace.require("ace/ext/language_tools") as ILanguageTools;
+            const langTools = ace.require(
+                "ace/ext/language_tools"
+            ) as ILanguageTools;
 
-            const r = await to($http.get<{word_list: string}>("/settings/get/word_list", {params: {_: Date.now()}}));
+            const r = await to(
+                $http.get<{word_list: string}>("/settings/get/word_list", {
+                    params: {_: Date.now()},
+                })
+            );
             const wordListStr = r.ok ? r.result.data.word_list : undefined;
             const userWordList = wordListStr ? wordListStr.split("\n") : [];
             const createCompleter = (wordList: string[], context: string) => ({
-                getCompletions(editor: unknown,
-                               session: unknown,
-                               pos: unknown,
-                               prefix: unknown,
-                               callback: (x: null, words: Array<{caption: string, meta: string, value: string}>) => void,
-                               ) {
-                    callback(null, wordList.map((word) => ({
-                        caption: word,
-                        meta: context,
-                        value: word,
-                    })));
+                getCompletions(
+                    editor: unknown,
+                    session: unknown,
+                    pos: unknown,
+                    prefix: unknown,
+                    callback: (
+                        x: null,
+                        words: Array<{
+                            caption: string;
+                            meta: string;
+                            value: string;
+                        }>
+                    ) => void
+                ) {
+                    callback(
+                        null,
+                        wordList.map((word) => ({
+                            caption: word,
+                            meta: context,
+                            value: word,
+                        }))
+                    );
                 },
             });
             langTools.setCompleters([
@@ -1450,7 +1857,7 @@ ${backTicks}
         const s = $(window).scrollTop();
         this.editor!.focus();
         await $timeout();
-        $(window).scrollTop((s ?? this.scrollPos) ?? 0);
+        $(window).scrollTop(s ?? this.scrollPos ?? 0);
     }
 
     private saveOptions() {
@@ -1473,8 +1880,14 @@ ${backTicks}
         }
         this.setLocalValue("proeditor", this.proeditor.toString());
         if (ace) {
-            this.setLocalValue("acewrap", ace.editor.getSession().getUseWrapMode().toString());
-            this.setLocalValue("acebehaviours", ace.editor.getBehavioursEnabled().toString()); // some of these are in editor and some in session?
+            this.setLocalValue(
+                "acewrap",
+                ace.editor.getSession().getUseWrapMode().toString()
+            );
+            this.setLocalValue(
+                "acebehaviours",
+                ace.editor.getBehavioursEnabled().toString()
+            ); // some of these are in editor and some in session?
         }
     }
 
@@ -1500,9 +1913,11 @@ ${backTicks}
      * @param previousAttachments Previous check's data (if there's any).
      * @param stamped Attachment-to-stamp (if there's one), which is up-to-date by default.
      */
-    private updateAttachments(firstCheck: boolean,
-                             previousAttachments: IAttachmentData[] | undefined,
-                             stamped: IAttachmentData | undefined) {
+    private updateAttachments(
+        firstCheck: boolean,
+        previousAttachments: IAttachmentData[] | undefined,
+        stamped: IAttachmentData | undefined
+    ) {
         const attachments = [];
         if (!this.editor) {
             return undefined;
@@ -1512,11 +1927,18 @@ ${backTicks}
         for (const part of pluginSplit) {
             // Do closer check only on paragraphs containing showPdf-plugins and stamped attachment macros
             // (because same plugin type can also contain stampless macros).
-            if (part.length > (this.liiteMacroStringBegin.length + this.liiteMacroStringEnd.length)
-                && part.includes('plugin="showPdf"') && part.includes(this.liiteMacroStringBegin)) {
+            if (
+                part.length >
+                    this.liiteMacroStringBegin.length +
+                        this.liiteMacroStringEnd.length &&
+                part.includes('plugin="showPdf"') &&
+                part.includes(this.liiteMacroStringBegin)
+            ) {
                 const macroText = part.substring(
-                    part.lastIndexOf(this.liiteMacroStringBegin) + this.liiteMacroStringBegin.length,
-                    part.lastIndexOf(this.liiteMacroStringEnd));
+                    part.lastIndexOf(this.liiteMacroStringBegin) +
+                        this.liiteMacroStringBegin.length,
+                    part.lastIndexOf(this.liiteMacroStringEnd)
+                );
                 const macroParams = this.getMacroParamsFromString(macroText);
                 const current = this.macroParamsToAttachmentData(macroParams);
                 // On first editor load attachment is up-to-date.
@@ -1527,9 +1949,12 @@ ${backTicks}
                     // TODO: Does changing attachment order cause problems?
                     if (previousAttachments) {
                         for (const previous of previousAttachments) {
-                            if (previous.uploadUrl === current.uploadUrl &&
-                                previous.attachmentLetter === current.attachmentLetter &&
-                                previous.issueNumber === current.issueNumber) {
+                            if (
+                                previous.uploadUrl === current.uploadUrl &&
+                                previous.attachmentLetter ===
+                                    current.attachmentLetter &&
+                                previous.issueNumber === current.issueNumber
+                            ) {
                                 current.upToDate = true;
                             }
                         }
@@ -1540,9 +1965,11 @@ ${backTicks}
                 }
                 // Stamped attachment is always up-to-date.
                 if (stamped) {
-                    if (stamped.attachmentLetter === current.attachmentLetter &&
+                    if (
+                        stamped.attachmentLetter === current.attachmentLetter &&
                         stamped.issueNumber === current.issueNumber &&
-                        stamped.uploadUrl === current.uploadUrl) {
+                        stamped.uploadUrl === current.uploadUrl
+                    ) {
                         current.upToDate = true;
                     }
                 }
@@ -1578,7 +2005,9 @@ ${backTicks}
      * Picks data relevant for restamping from an array and returns it as an object.
      * @param macroParams Array with attachment letter at index 1, issue number 2 and upload url 3.
      */
-    private macroParamsToAttachmentData(macroParams: unknown[]): IAttachmentData {
+    private macroParamsToAttachmentData(
+        macroParams: unknown[]
+    ): IAttachmentData {
         if (MacroParams.is(macroParams)) {
             return {
                 attachmentLetter: macroParams[1],
@@ -1587,14 +2016,21 @@ ${backTicks}
                 uploadUrl: macroParams[3],
             };
         } else {
-            const err = `Unexpected type of macroParams: ${JSON.stringify(macroParams)}`;
+            const err = `Unexpected type of macroParams: ${JSON.stringify(
+                macroParams
+            )}`;
             void showMessageDialog(err);
             throw new Error(err);
         }
     }
 }
 
-const MacroParams = t.tuple([t.unknown, t.string, t.union([t.string, t.number]), t.string]);
+const MacroParams = t.tuple([
+    t.unknown,
+    t.string,
+    t.union([t.string, t.number]),
+    t.string,
+]);
 
 export const parEditorModule = angular.module("timEditor", []);
 
@@ -1640,9 +2076,6 @@ parEditorModule.component("timEditorEntry", {
     `,
 });
 
-registerDialogComponentForModule(
-    parEditorModule,
-    PareditorController,
-    {templateUrl: "/static/templates/parEditor.html"},
-);
-
+registerDialogComponentForModule(parEditorModule, PareditorController, {
+    templateUrl: "/static/templates/parEditor.html",
+});

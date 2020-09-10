@@ -1,16 +1,20 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["files_", "multipleElements_"] }] */
 import {
-        Component,
-        ViewChild,
-        ViewChildren,
-        ElementRef,
-        Input,
-        Output,
-        EventEmitter,
-        QueryList,
-        ChangeDetectorRef,
-    } from "@angular/core";
-import {HttpClient, HttpEventType, HttpErrorResponse} from "@angular/common/http";
+    Component,
+    ViewChild,
+    ViewChildren,
+    ElementRef,
+    Input,
+    Output,
+    EventEmitter,
+    QueryList,
+    ChangeDetectorRef,
+} from "@angular/core";
+import {
+    HttpClient,
+    HttpEventType,
+    HttpErrorResponse,
+} from "@angular/common/http";
 import {NotificationComponent} from "./notification";
 import {timeString, sizeString} from "./util";
 import {Set} from "./set";
@@ -22,13 +26,13 @@ export interface IFile {
 }
 
 interface IFileSpecificationBase {
-    extensions?: string[],
-    maxSize?: number,
-    upload?: boolean,
+    extensions?: string[];
+    maxSize?: number;
+    upload?: boolean;
 }
 
 export interface IFileSpecification extends IFileSpecificationBase {
-    paths: string[],
+    paths: string[];
 }
 
 export interface IMapping {
@@ -37,7 +41,10 @@ export interface IMapping {
 }
 
 // a function to map loaded files to filenames and whether to upload or load
-export type MappingFunction = (source: FileSelectComponent, filesArray: File[]) => Promise<IMapping[] | undefined>;
+export type MappingFunction = (
+    source: FileSelectComponent,
+    filesArray: File[]
+) => Promise<IMapping[] | undefined>;
 
 class Path {
     parent?: string;
@@ -66,7 +73,6 @@ class Path {
         return (this.parent ?? "") + this.name + (this.extension ?? "");
     }
 }
-
 
 let nextId = 0;
 // TODO: reset input value so same file can be uploaded again
@@ -100,7 +106,8 @@ let nextId = 0;
             </label>
         </ng-container>`,
 })
-export class FileSelectComponent { // TODO: translations
+export class FileSelectComponent {
+    // TODO: translations
     @Input() inputId: string = `file-select-${nextId++}`;
     @Input() id: string = "";
     @Input() path?: string;
@@ -111,9 +118,13 @@ export class FileSelectComponent { // TODO: translations
     @Input() maxSize: number = -1;
     @Input() mappingFunction?: MappingFunction;
     @Output("file") fileEmitter: EventEmitter<IFile> = new EventEmitter(true);
-    @Output("files") filesEmitter: EventEmitter<IFile[]> = new EventEmitter(true);
+    @Output("files") filesEmitter: EventEmitter<IFile[]> = new EventEmitter(
+        true
+    );
     @Output("upload") uploadEmitter: EventEmitter<unknown> = new EventEmitter();
-    @Output("uploadDone") uploadDoneEmitter: EventEmitter<boolean> = new EventEmitter(true);
+    @Output("uploadDone") uploadDoneEmitter: EventEmitter<
+        boolean
+    > = new EventEmitter(true);
 
     @ViewChild("input") inputElement?: ElementRef;
     @ViewChild("error") error?: NotificationComponent;
@@ -136,14 +147,18 @@ export class FileSelectComponent { // TODO: translations
     onFileChange(event: Event) {
         this.clearStatus();
         const target = event.target as HTMLInputElement | null;
-        if (!target) { return; }
+        if (!target) {
+            return;
+        }
 
         this.onFilesGot(target.files);
     }
 
     onDrop(event: DragEvent) {
         this.clearStatus();
-        if (!event.dataTransfer) { return; }
+        if (!event.dataTransfer) {
+            return;
+        }
 
         event.preventDefault();
         this.onFilesGot(event.dataTransfer.files);
@@ -159,7 +174,9 @@ export class FileSelectComponent { // TODO: translations
     }
 
     uploadFiles(files: File[], mappings: IMapping[]) {
-        if (!this.uploadUrl) { return; }
+        if (!this.uploadUrl) {
+            return;
+        }
         if (this.progress) {
             this.addError("File upload already in progress", 3000);
             return;
@@ -175,36 +192,58 @@ export class FileSelectComponent { // TODO: translations
                 }
                 const formdata = new FormData();
                 formdata.append("file", file, mapping.path);
-                const _ = this.http.post(this.uploadUrl!, formdata, { reportProgress: true, observe: "events" }).subscribe(
-                    (event) => {
-                        switch (event.type) {
-                            case HttpEventType.Sent:
-                                this.progress = "Upload starting... ";
-                                break;
-                            case HttpEventType.UploadProgress:
-                                const total = event.total !== undefined ? sizeString(event.total) : "?";
-                                const percentage = event.total ? Math.round(event.loaded / event.total * 100) : "?";
-                                this.progress = `Uploading... ${sizeString(event.loaded)} / ${total} (${percentage} %)`;
-                                break;
-                            case HttpEventType.Response:
-                                this.numUploaded++;
-                                if (file.name == mapping.path) {
-                                    this.loadInfo?.push(`Uploaded ${file.name} at ${timeString()}`); // TODO: push to correct file-select
-                                } else {
-                                    this.loadInfo?.push(`Uploaded ${file.name} as ${mapping.path} at ${timeString()}`); // TODO: push to correct file-select
-                                }
-                                this.uploadEmitter.emit(event.body);
-                                upload(i + 1);
-                                break;
-                            default:
-                                break;
+                const _ = this.http
+                    .post(this.uploadUrl!, formdata, {
+                        reportProgress: true,
+                        observe: "events",
+                    })
+                    .subscribe(
+                        (event) => {
+                            switch (event.type) {
+                                case HttpEventType.Sent:
+                                    this.progress = "Upload starting... ";
+                                    break;
+                                case HttpEventType.UploadProgress:
+                                    const total =
+                                        event.total !== undefined
+                                            ? sizeString(event.total)
+                                            : "?";
+                                    const percentage = event.total
+                                        ? Math.round(
+                                              (event.loaded / event.total) * 100
+                                          )
+                                        : "?";
+                                    this.progress = `Uploading... ${sizeString(
+                                        event.loaded
+                                    )} / ${total} (${percentage} %)`;
+                                    break;
+                                case HttpEventType.Response:
+                                    this.numUploaded++;
+                                    if (file.name == mapping.path) {
+                                        this.loadInfo?.push(
+                                            `Uploaded ${
+                                                file.name
+                                            } at ${timeString()}`
+                                        ); // TODO: push to correct file-select
+                                    } else {
+                                        this.loadInfo?.push(
+                                            `Uploaded ${file.name} as ${
+                                                mapping.path
+                                            } at ${timeString()}`
+                                        ); // TODO: push to correct file-select
+                                    }
+                                    this.uploadEmitter.emit(event.body);
+                                    upload(i + 1);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        },
+                        (error: HttpErrorResponse) => {
+                            this.addError(`Http error: ${error.message}`);
+                            this.progress = undefined;
                         }
-                    },
-                    (error: HttpErrorResponse) => {
-                        this.addError(`Http error: ${error.message}`);
-                        this.progress = undefined;
-                    }
-                );
+                    );
             } else {
                 this.uploadDoneEmitter.emit(this.numUploaded == this.numFiles);
                 this.progress = undefined;
@@ -226,10 +265,12 @@ export class FileSelectComponent { // TODO: translations
             }
 
             if (this.maxSize > 0) {
-                const maxSize = this.maxSize*1000;
+                const maxSize = this.maxSize * 1000;
                 for (const file of files) {
                     if (file.size > maxSize) {
-                        this.addError(`Maximum file size is ${sizeString(maxSize)}`);
+                        this.addError(
+                            `Maximum file size is ${sizeString(maxSize)}`
+                        );
                         return;
                     }
                 }
@@ -239,15 +280,23 @@ export class FileSelectComponent { // TODO: translations
             const filesArray: File[] = Array.from(files);
             if (this.mappingFunction) {
                 mappings = await this.mappingFunction?.(this, filesArray);
-                if (!mappings) { return; }
+                if (!mappings) {
+                    return;
+                }
             } else {
                 const doUpload = !!this.uploadUrl;
-                mappings = filesArray.map((f) => ({path: f.name, upload: doUpload}));
+                mappings = filesArray.map((f) => ({
+                    path: f.name,
+                    upload: doUpload,
+                }));
             }
 
             this.uploadFiles(filesArray, mappings);
 
-            if (this.fileEmitter.observers.length != 0 || this.filesEmitter.observers.length != 0) {
+            if (
+                this.fileEmitter.observers.length != 0 ||
+                this.filesEmitter.observers.length != 0
+            ) {
                 const promises = [];
                 for (let i = 0; i < filesArray.length; i++) {
                     const mapping = mappings[i];
@@ -266,9 +315,15 @@ export class FileSelectComponent { // TODO: translations
                             outFiles.push(f);
                             this.fileEmitter.emit(f);
                             if (file.name == mapping.path) {
-                                this.loadInfo?.push(`Loaded ${file.name} at ${timeString()}`);
+                                this.loadInfo?.push(
+                                    `Loaded ${file.name} at ${timeString()}`
+                                );
                             } else {
-                                this.loadInfo?.push(`Loaded ${file.name} as ${mapping.path} at ${timeString()}`);
+                                this.loadInfo?.push(
+                                    `Loaded ${file.name} as ${
+                                        mapping.path
+                                    } at ${timeString()}`
+                                );
                             }
                             resolve();
                         };
@@ -282,7 +337,9 @@ export class FileSelectComponent { // TODO: translations
                 }
                 await Promise.all(promises);
             } else if (!this.uploadUrl) {
-                this.addError("No file upload or observers present. This is a programming/configuration error.");
+                this.addError(
+                    "No file upload or observers present. This is a programming/configuration error."
+                );
             }
         }
         this.filesEmitter.emit(outFiles);
@@ -309,7 +366,8 @@ export class FileSelectComponent { // TODO: translations
             [mappingFunction]="fileMappings(this)">
         </file-select>`,
 })
-export class FileSelectManagerComponent { // TODO: translations
+export class FileSelectManagerComponent {
+    // TODO: translations
     @Input() allowMultiple: boolean = true;
     @Input() dragAndDrop: boolean = true;
     @Input() uploadUrl?: string;
@@ -318,7 +376,9 @@ export class FileSelectManagerComponent { // TODO: translations
     @Output("file") fileEmitter: EventEmitter<IFile> = new EventEmitter();
     @Output("files") filesEmitter: EventEmitter<IFile[]> = new EventEmitter();
     @Output("upload") uploadEmitter: EventEmitter<unknown> = new EventEmitter();
-    @Output("uploadDone") uploadDoneEmitter: EventEmitter<boolean> = new EventEmitter();
+    @Output("uploadDone") uploadDoneEmitter: EventEmitter<
+        boolean
+    > = new EventEmitter();
 
     private fileSelects: {[key: string]: FileSelectComponent} = {};
 
@@ -329,8 +389,8 @@ export class FileSelectManagerComponent { // TODO: translations
 
     private idToFile: {[key: string]: [number, string | undefined]} = {}; // contains (index, path)-tuples
     fileInfo: {
-        stem: string,
-        id: string,
+        stem: string;
+        id: string;
     }[] = [];
 
     constructor(public cdr: ChangeDetectorRef) {}
@@ -362,7 +422,11 @@ export class FileSelectManagerComponent { // TODO: translations
                 for (let i = 0; i < this.files.length; i++) {
                     for (const path of this.files[i].paths) {
                         const id: string = `${i}.${path}`;
-                        const stem = (this.files.length == 1 && this.files[0].paths.length == 1 ? this.stem : undefined) ?? `Upload ${path} here`;
+                        const stem =
+                            (this.files.length == 1 &&
+                            this.files[0].paths.length == 1
+                                ? this.stem
+                                : undefined) ?? `Upload ${path} here`;
                         nfileInfo.push({
                             stem: stem,
                             id: id,
@@ -371,10 +435,12 @@ export class FileSelectManagerComponent { // TODO: translations
                     }
                 }
             } else {
-                nfileInfo = [{
-                    stem: this.stem ?? "Upload files here",
-                    id: "",
-                }];
+                nfileInfo = [
+                    {
+                        stem: this.stem ?? "Upload files here",
+                        id: "",
+                    },
+                ];
                 nidToFile[""] = [0, undefined];
             }
         }
@@ -401,14 +467,21 @@ export class FileSelectManagerComponent { // TODO: translations
 
     fileMappings(self: FileSelectManagerComponent) {
         // return a list of (index, path) tuples for mapping names for the given files
-        return async (child: FileSelectComponent, filesArray: File[]): Promise<IMapping[] | undefined> => {
+        return async (
+            child: FileSelectComponent,
+            filesArray: File[]
+        ): Promise<IMapping[] | undefined> => {
             await undefined; // dummy for async
 
             if (filesArray.length == 1 && self.multipleElements) {
-                return [{
-                    path: !!self.idToFile[child.id][1] ? self.idToFile[child.id][1] as string : filesArray[0].name,
-                    upload: self.files[self.idToFile[child.id][0]].upload,
-                }];
+                return [
+                    {
+                        path: !!self.idToFile[child.id][1]
+                            ? (self.idToFile[child.id][1] as string)
+                            : filesArray[0].name,
+                        upload: self.files[self.idToFile[child.id][0]].upload,
+                    },
+                ];
             }
 
             const maxFiles = self.files.flatMap((f) => f.paths).length;
@@ -419,52 +492,75 @@ export class FileSelectManagerComponent { // TODO: translations
 
             const canGo: number[][] = Array(filesArray.length).fill([]); // maps filesArray indices to possible self.files indices
             const fileNames: Path[] = [];
-            for (let i = 0; i < filesArray.length; i++) { // first filter by file extensions and names
+            for (let i = 0; i < filesArray.length; i++) {
+                // first filter by file extensions and names
                 const name = filesArray[i].name;
                 const path = new Path(name);
                 fileNames.push(path);
                 for (let j = 0; j < self.files.length; j++) {
                     const paths = self.files[j].paths.map((p) => new Path(p));
-                    if (paths.some((e) => e.name == path.name) ||
-                            !self.files[j].extensions ||
-                            (path.extension && self.files[j].extensions!.some((e) => path.extension!.endsWith(e)))) {
+                    if (
+                        paths.some((e) => e.name == path.name) ||
+                        !self.files[j].extensions ||
+                        (path.extension &&
+                            self.files[j].extensions!.some((e) =>
+                                path.extension!.endsWith(e)
+                            ))
+                    ) {
                         canGo[i].push(j);
                     }
                 }
             }
 
-            const lengthZeroIndex = (list: unknown[][]) => list.findIndex((l) => l.length == 0);
+            const lengthZeroIndex = (list: unknown[][]) =>
+                list.findIndex((l) => l.length == 0);
             const isTooLarge = (file: File, index: number) => {
-                const maxSize = (this.files[index].maxSize ?? this.maxSize)*1000;
+                const maxSize =
+                    (this.files[index].maxSize ?? this.maxSize) * 1000;
                 if (maxSize > 0 && file.size > maxSize) {
-                    child.addError(`${file.name} exceeds the maximum ${sizeString(maxSize)} size limit set for the following files: ${this.files[index].paths.join(", ")}`);
+                    child.addError(
+                        `${file.name} exceeds the maximum ${sizeString(
+                            maxSize
+                        )} size limit set for the following files: ${this.files[
+                            index
+                        ].paths.join(", ")}`
+                    );
                     return true;
                 }
                 return false;
             };
 
             const zeroIndex = lengthZeroIndex(canGo);
-            if (zeroIndex != -1) { // check that all files have a possible mapping
-                child.addError(`Failed to match the extension or name of file ${filesArray[zeroIndex].name} to any of the wanted files.`);
+            if (zeroIndex != -1) {
+                // check that all files have a possible mapping
+                child.addError(
+                    `Failed to match the extension or name of file ${filesArray[zeroIndex].name} to any of the wanted files.`
+                );
                 return;
             }
 
             const mappings: [number, string][] = [];
-            const notAssigned = (JSON.parse(JSON.stringify(self.files)) as IFileSpecification[]).map(
-                (f) => {
-                    const k: IFileSpecificationBase & {paths: Path[]} = f as IFileSpecification & {paths: Path[]};
-                    k.paths = f.paths.map((p) => new Path(p));
-                    return k;
-                }
-            );
+            const notAssigned = (JSON.parse(
+                JSON.stringify(self.files)
+            ) as IFileSpecification[]).map((f) => {
+                const k: IFileSpecificationBase & {
+                    paths: Path[];
+                } = f as IFileSpecification & {paths: Path[]};
+                k.paths = f.paths.map((p) => new Path(p));
+                return k;
+            });
             let numMapped = 0;
             let numMappedLast = -1;
             // while new mappings are found. Former condition is to stop infinite loops in case of bugs
-            while (numMapped < filesArray.length && numMapped != numMappedLast) {
+            while (
+                numMapped < filesArray.length &&
+                numMapped != numMappedLast
+            ) {
                 numMappedLast = numMapped;
 
                 for (let i = 0; i < notAssigned.length; i++) {
-                    const matches = canGo.map((val, index) => [val, index] as [number[], number]) // zip with index
+                    const matches = canGo
+                        .map((val, index) => [val, index] as [number[], number]) // zip with index
                         .filter((val) => !mappings[val[1]]) // remove already mapped ones
                         .filter((val) => val[0].includes(i)); // get all that map to self.files index i
                     if (matches.length == notAssigned[i].paths.length) {
@@ -473,7 +569,10 @@ export class FileSelectManagerComponent { // TODO: translations
                                 return;
                             }
                             canGo[m[1]] = [i];
-                            mappings[m[1]] = [i, notAssigned[i].paths.pop()?.toString() ?? ""];
+                            mappings[m[1]] = [
+                                i,
+                                notAssigned[i].paths.pop()?.toString() ?? "",
+                            ];
                             numMapped++;
                         }
                         continue;
@@ -481,8 +580,11 @@ export class FileSelectManagerComponent { // TODO: translations
 
                     for (let j = 0; j < notAssigned[i].paths.length; j++) {
                         const path = notAssigned[i].paths[j];
-                        const nameMatches = matches.filter((val) => fileNames[val[1]].name == path.name); // find files that match the path
-                        if (nameMatches.length == 1) { // if the only match, assign it
+                        const nameMatches = matches.filter(
+                            (val) => fileNames[val[1]].name == path.name
+                        ); // find files that match the path
+                        if (nameMatches.length == 1) {
+                            // if the only match, assign it
                             if (isTooLarge(filesArray[nameMatches[0][1]], i)) {
                                 return;
                             }
@@ -496,15 +598,24 @@ export class FileSelectManagerComponent { // TODO: translations
                 }
 
                 const zIndex = lengthZeroIndex(canGo);
-                if (zIndex != -1) { // check that all files have a possible mapping
-                    child.addError(`Failed to match file ${filesArray[zIndex].name} to any of the wanted files.`);
+                if (zIndex != -1) {
+                    // check that all files have a possible mapping
+                    child.addError(
+                        `Failed to match file ${filesArray[zIndex].name} to any of the wanted files.`
+                    );
                     return;
                 }
             }
 
-            if (canGo.map((val, index) => [val, index] as [number[], number]).filter((val) => !mappings[val[1]]).length != 0) {
+            if (
+                canGo
+                    .map((val, index) => [val, index] as [number[], number])
+                    .filter((val) => !mappings[val[1]]).length != 0
+            ) {
                 // TODO: open a dialog to user for manually mapping the unmapped (length of matching array in canGo greater than one) files
-                child.addError("Failed to match given files to wanted files. Check the file extensions and try matching the filenames to the wanted ones.");
+                child.addError(
+                    "Failed to match given files to wanted files. Check the file extensions and try matching the filenames to the wanted ones."
+                );
                 return;
             }
 

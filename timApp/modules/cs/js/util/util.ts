@@ -1,8 +1,6 @@
-
 export function countChars(s: string, c: string) {
     let n = 0;
-    for (let i = 0; i < s.length; n += +(c === s[i++])) {
-    }
+    for (let i = 0; i < s.length; n += +(c === s[i++])) {}
     return n;
 }
 
@@ -39,5 +37,8 @@ export function sizeString(inBytes: number): string {
 
 export function timeString(): string {
     const date = new Date();
-    return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+    return `${date
+        .getHours()
+        .toString()
+        .padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
 }

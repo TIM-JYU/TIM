@@ -16,11 +16,17 @@ class ErrorStateCtrl implements IController {
     async $onInit() {
         if (!this.for) {
             if (!this.formCtrl) {
-                throw new Error("tim-error-state doesn't have 'for' attribute or parent form");
+                throw new Error(
+                    "tim-error-state doesn't have 'for' attribute or parent form"
+                );
             }
-            const inputs = this.element.find("input[type='text'], input[type='number'], textarea");
+            const inputs = this.element.find(
+                "input[type='text'], input[type='number'], textarea"
+            );
             if (inputs.length === 0) {
-                throw new Error("no inputs found for tim-error-state, so it needs 'for' attribute");
+                throw new Error(
+                    "no inputs found for tim-error-state, so it needs 'for' attribute"
+                );
             } else if (inputs.length === 1) {
                 const input = inputs[0];
                 const name = input.getAttribute("name");
@@ -29,9 +35,13 @@ class ErrorStateCtrl implements IController {
                 }
                 // formCtrl is not fully initialized yet (it doesn't have the inputs)
                 await $timeout();
-                this.for = this.formCtrl[name] as INgModelController | undefined;
+                this.for = this.formCtrl[name] as
+                    | INgModelController
+                    | undefined;
             } else {
-                throw new Error("multiple inputs found for tim-error-state, so it needs 'for' attribute");
+                throw new Error(
+                    "multiple inputs found for tim-error-state, so it needs 'for' attribute"
+                );
             }
         }
     }
@@ -87,17 +97,19 @@ timApp.component("timErrorMessage", {
 /**
  * Adds 'has-error' class to the element if the given form element is invalid and dirty; otherwise removes it.
  */
-timApp.directive("timErrorState", [() => {
-    return {
-        restrict: "A",
-        bindToController: {
-            for: "=?",
-        },
-        require: {
-            formCtrl: "^form",
-        },
-        controller: ErrorStateCtrl,
-    };
-}]);
+timApp.directive("timErrorState", [
+    () => {
+        return {
+            restrict: "A",
+            bindToController: {
+                for: "=?",
+            },
+            require: {
+                formCtrl: "^form",
+            },
+            controller: ErrorStateCtrl,
+        };
+    },
+]);
 
 export type AlertSeverity = "danger" | "warning" | "success" | "info";

@@ -6,7 +6,10 @@ import {documentglobals} from "../../util/globals";
 import {$timeout} from "../../util/ngimport";
 import {getParId, Paragraph} from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
-import {fetchAndEditQuestion, showQuestionEditDialog} from "./questionController";
+import {
+    fetchAndEditQuestion,
+    showQuestionEditDialog,
+} from "./questionController";
 
 export class QuestionHandler {
     public sc: IScope;
@@ -28,11 +31,18 @@ export class QuestionHandler {
             showMessageDialog("Not a valid paragraph.");
             return;
         }
-        const result = await showQuestionEditDialog({par_id_next: parNextId, qst: true, docId: this.viewctrl.docId});
+        const result = await showQuestionEditDialog({
+            par_id_next: parNextId,
+            qst: true,
+            docId: this.viewctrl.docId,
+        });
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
-        this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddAbove, par: par});
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, {
+            type: EditType.AddAbove,
+            par: par,
+        });
     }
 
     async editQst(e: JQuery.Event, par: Paragraph) {
@@ -52,7 +62,10 @@ export class QuestionHandler {
         if (result.deleted) {
             this.viewctrl.editingHandler.handleDelete(position);
         } else {
-            this.viewctrl.editingHandler.addSavedParToDom(result.data, position);
+            this.viewctrl.editingHandler.addSavedParToDom(
+                result.data,
+                position
+            );
         }
     }
 
@@ -64,11 +77,18 @@ export class QuestionHandler {
             showMessageDialog("Not a valid paragraph.");
             return;
         }
-        const result = await showQuestionEditDialog({par_id_next: parNextId, qst: false, docId: this.viewctrl.docId});
+        const result = await showQuestionEditDialog({
+            par_id_next: parNextId,
+            qst: false,
+            docId: this.viewctrl.docId,
+        });
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
-        this.viewctrl.editingHandler.addSavedParToDom(result.data, {type: EditType.AddBelow, par: par});
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, {
+            type: EditType.AddBelow,
+            par: par,
+        });
     }
 
     async processQuestions() {
@@ -91,7 +111,7 @@ export class QuestionHandler {
                 const nt = parseInt(questionTitle, 10);
                 let nr = "";
                 if (isNaN(nt)) {
-                    nr = (n) + "" + separator + "\r\n";
+                    nr = n + "" + separator + "\r\n";
                 } else {
                     n = nt;
                     const nrt = "" + n;
@@ -114,7 +134,10 @@ export class QuestionHandler {
     }
 
     showQuestions() {
-        return (this.viewctrl.item.rights.teacher && this.viewctrl.lectureCtrl.lectureViewOrInLecture()) ||
-            (documentglobals().editMode && this.viewctrl.item.rights.editable);
+        return (
+            (this.viewctrl.item.rights.teacher &&
+                this.viewctrl.lectureCtrl.lectureViewOrInLecture()) ||
+            (documentglobals().editMode && this.viewctrl.item.rights.editable)
+        );
     }
 }

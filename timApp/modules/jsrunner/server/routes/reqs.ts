@@ -4,7 +4,8 @@ const router = express.Router();
 
 const backTicks = "```";
 
-const templates = [`
+const templates = [
+    `
 ${backTicks} {#runner plugin="jsrunner"}
 groups:
  -
@@ -13,7 +14,8 @@ fields:
 program: |!!
 
 !!
-${backTicks} `, `
+${backTicks} `,
+    `
 ${backTicks}{#runner1 plugin="jsrunner"}
 groups:
  -
@@ -30,14 +32,14 @@ defaultPoints: 5
 program: |!!
 
 !!
-${backTicks} `, `
+${backTicks} `,
+    `
 ${backTicks} {#fields plugin="jsrunner"}
 fieldhelper: true
 docid: true
 open: true
-${backTicks}`]
-
-;
+${backTicks}`,
+];
 
 router.get("/", (req, res, next) => {
     res.json({
@@ -53,12 +55,14 @@ router.get("/", (req, res, next) => {
                             {
                                 data: templates[0].trim(),
                                 text: "JavaScript runner for functions",
-                                expl: "Add basic JavaScript runner task to make functions",
+                                expl:
+                                    "Add basic JavaScript runner task to make functions",
                             },
                             {
                                 data: templates[1].trim(),
                                 text: "Extended JavaScript runner",
-                                expl: "Add extended JavaScript runner task to make functions",
+                                expl:
+                                    "Add extended JavaScript runner task to make functions",
                             },
                             {
                                 data: templates[2].trim(),

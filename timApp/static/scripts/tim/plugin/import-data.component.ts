@@ -4,7 +4,13 @@
 import * as t from "io-ts";
 import {ngStorage} from "ngstorage";
 import {$localStorage} from "tim/util/ngimport";
-import {ApplicationRef, Component, DoBootstrap, NgModule, StaticProvider} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    NgModule,
+    StaticProvider,
+} from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -53,11 +59,13 @@ const ImportDataAll = t.intersection([
         info: Info,
         markup: ImportDataMarkup,
         preview: t.boolean,
-        state: nullable(t.partial({
-            url: t.string,
-            separator: t.string,
-            fields: t.array(t.string),
-        })),
+        state: nullable(
+            t.partial({
+                url: t.string,
+                separator: t.string,
+                fields: t.array(t.string),
+            })
+        ),
     }),
 ]);
 
@@ -168,7 +176,11 @@ interface IFieldSaveResult {
     `,
     styleUrls: ["./import-data.component.scss"],
 })
-export class ImportDataComponent extends AngularPluginBase<t.TypeOf<typeof ImportDataMarkup>, t.TypeOf<typeof ImportDataAll>, typeof ImportDataAll> {
+export class ImportDataComponent extends AngularPluginBase<
+    t.TypeOf<typeof ImportDataMarkup>,
+    t.TypeOf<typeof ImportDataAll>,
+    typeof ImportDataAll
+> {
     isRunning = false;
     importText: string = "";
     error?: string;
@@ -181,7 +193,10 @@ export class ImportDataComponent extends AngularPluginBase<t.TypeOf<typeof Impor
     urlToken: string = "";
     fetchingData = false;
     createMissingUsers = false;
-    private storage!: ngStorage.StorageService & { importToken: null | string; importUrl: null | string };
+    private storage!: ngStorage.StorageService & {
+        importToken: null | string;
+        importUrl: null | string;
+    };
 
     getDefaultMarkup() {
         return {};
@@ -200,10 +215,10 @@ export class ImportDataComponent extends AngularPluginBase<t.TypeOf<typeof Impor
             importUrl: null,
             importToken: null,
         });
-        this.separator = (state?.separator) ?? this.markup.separator;
-        this.url = ((state?.url) ?? this.storage.importUrl) ?? this.markup.url;
+        this.separator = state?.separator ?? this.markup.separator;
+        this.url = state?.url ?? this.storage.importUrl ?? this.markup.url;
         this.urlToken = this.storage.importToken ?? "";
-        this.fields = (((state?.fields) ?? this.markup.fields) ?? []).join("\n");
+        this.fields = (state?.fields ?? this.markup.fields ?? []).join("\n");
     }
 
     getAttributeType() {
@@ -212,7 +227,11 @@ export class ImportDataComponent extends AngularPluginBase<t.TypeOf<typeof Impor
 
     isVisible() {
         const pn = window.location.pathname;
-        return this.markup.showInView || pn.startsWith("/teacher/") || pn.startsWith("/answers/");
+        return (
+            this.markup.showInView ||
+            pn.startsWith("/teacher/") ||
+            pn.startsWith("/answers/")
+        );
     }
 
     async pickFromWWW() {
@@ -221,13 +240,12 @@ export class ImportDataComponent extends AngularPluginBase<t.TypeOf<typeof Impor
 
         this.fetchingData = true;
         const r = await this.httpGet<{
-            data: string,
-            status_code: number,
+            data: string;
+            status_code: number;
         }>("/getproxy", {
-                url: this.url,
-                auth_token: this.urlToken,
-            },
-        );
+            url: this.url,
+            auth_token: this.urlToken,
+        });
         this.fetchingData = false;
         if (!r.ok) {
             this.error = r.result.error.error;
@@ -271,10 +289,10 @@ export class ImportDataComponent extends AngularPluginBase<t.TypeOf<typeof Impor
         this.error = undefined;
         const r = await this.postAnswer<{
             web: {
-                result?: string,
-                error?: string,
-                fieldresult?: IFieldSaveResult,
-            }
+                result?: string;
+                error?: string;
+                fieldresult?: IFieldSaveResult;
+            };
         }>(params);
         this.isRunning = false;
         if (!r.ok) {
@@ -301,24 +319,19 @@ export class ImportDataComponent extends AngularPluginBase<t.TypeOf<typeof Impor
     }
 
     showCreateMissingUsers() {
-        return (this.importResult?.users_missing.length ?? 0) > 0 && this.markup.createMissingUsers;
+        return (
+            (this.importResult?.users_missing.length ?? 0) > 0 &&
+            this.markup.createMissingUsers
+        );
     }
 }
 
 @NgModule({
-    declarations: [
-        ImportDataComponent,
-    ],
-    imports: [
-        BrowserModule,
-        HttpClientModule,
-        FormsModule,
-        TimUtilityModule,
-    ],
+    declarations: [ImportDataComponent],
+    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
 })
 export class ImportDataModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
 const bootstrapFn = (extraProviders: StaticProvider[]) => {

@@ -21,7 +21,9 @@ class TaggedDocumentListCtrl implements IController {
     private allUniqueTags: string[] = [];
     private listDocTags!: Binding<boolean, "<">;
     private tagToolTip: string = "";
-    private storage: ngStorage.StorageService & {tagFilterStorage: null | string};
+    private storage: ngStorage.StorageService & {
+        tagFilterStorage: null | string;
+    };
 
     constructor() {
         this.storage = $localStorage.$default({
@@ -67,16 +69,18 @@ class TaggedDocumentListCtrl implements IController {
         // Changes tag in input field to this in case the tagName is different.
         this.tagFilter = tagName;
 
-        const response = await to($http<ITaggedItem[]>({
-            method: "GET",
-            url: "/tags/getDocs",
-            params: {
-                case_sensitive: this.caseSensitive,
-                exact_search: this.exactMatch,
-                list_doc_tags: this.listDocTags,
-                name: tagName,
-            },
-        }));
+        const response = await to(
+            $http<ITaggedItem[]>({
+                method: "GET",
+                url: "/tags/getDocs",
+                params: {
+                    case_sensitive: this.caseSensitive,
+                    exact_search: this.exactMatch,
+                    list_doc_tags: this.listDocTags,
+                    name: tagName,
+                },
+            })
+        );
         if (!response.ok) {
             return;
         }

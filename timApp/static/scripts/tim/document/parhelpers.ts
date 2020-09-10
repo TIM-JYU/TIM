@@ -10,11 +10,14 @@ export type Area = JQuery;
 export type ParOrArea = JQuery;
 
 export function createNewPar(): Paragraph {
-    return $("<div>", {class: "par new", id: "NEW_PAR", attrs: "{}"})
-        .append($("<div>", {class: "parContent"}).html("New paragraph"));
+    return $("<div>", {class: "par new", id: "NEW_PAR", attrs: "{}"}).append(
+        $("<div>", {class: "parContent"}).html("New paragraph")
+    );
 }
 
-export function getParId(par: Paragraph | null | undefined): string | undefined {
+export function getParId(
+    par: Paragraph | null | undefined
+): string | undefined {
     if (par == null || par.length === 0 || !par.hasClass("par")) {
         return;
     }
@@ -115,7 +118,13 @@ export function getRefAttrs(par: Paragraph) {
     };
 }
 
-export function forEachParagraph(func: (this: HTMLElement, index: number, element: HTMLElement) => void | false) {
+export function forEachParagraph(
+    func: (
+        this: HTMLElement,
+        index: number,
+        element: HTMLElement
+    ) => void | false
+) {
     $(".paragraphs .par").each(func);
 }
 
@@ -166,7 +175,9 @@ export function getPars($parFirst: Paragraph, $parLast: Paragraph): JQuery {
         }
         next = getNextPar(next);
     }
-    return pars.reduce((previousValue, currentValue, currentIndex, array) => previousValue.add(currentValue));
+    return pars.reduce((previousValue, currentValue, currentIndex, array) =>
+        previousValue.add(currentValue)
+    );
 }
 
 export function dereferencePar(par: Paragraph) {
@@ -174,7 +185,11 @@ export function dereferencePar(par: Paragraph) {
         return null;
     }
     if (par.attr("ref-id") && par.attr("ref-doc-id")) {
-        return [par.attr("ref-doc-id"), par.attr("ref-id"), par.attr("ref-t")] as const;
+        return [
+            par.attr("ref-doc-id"),
+            par.attr("ref-id"),
+            par.attr("ref-t"),
+        ] as const;
     }
     const doc = getActiveDocument();
     return [doc.getId(), par.attr("id"), par.attr("t")] as const;
@@ -248,7 +263,11 @@ export const EDITOR_CLASS_DOT = "." + EDITOR_CLASS;
  */
 export function saveCurrentScreenPar() {
     // noinspection CssInvalidPseudoSelector
-    const parId = getParId($(".par:not('.preamble'):not('.collapsed .par')").filter((i, e) => isInViewport(e)).first());
+    const parId = getParId(
+        $(".par:not('.preamble'):not('.collapsed .par')")
+            .filter((i, e) => isInViewport(e))
+            .first()
+    );
     if (parId) {
         // Don't replace if the hash is going to stay the same.
         let hash = getParHash(parId);

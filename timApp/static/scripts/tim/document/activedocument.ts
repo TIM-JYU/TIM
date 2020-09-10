@@ -8,7 +8,9 @@ export function setActiveDocument(d: Document) {
 
 export function getActiveDocument(): Document {
     if (activeDocument == null) {
-        throw new Error("Active document was null; getActiveDocument was probably called before setActiveDocument was called");
+        throw new Error(
+            "Active document was null; getActiveDocument was probably called before setActiveDocument was called"
+        );
     }
     return activeDocument;
 }

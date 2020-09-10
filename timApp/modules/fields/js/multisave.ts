@@ -3,8 +3,19 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {ChangeType, IChangeListener, ITimComponent, RegexOption, ViewCtrl} from "tim/document/viewctrl";
-import {GenericPluginMarkup, IncludeUsersOption, Info, withDefault} from "tim/plugin/attributes";
+import {
+    ChangeType,
+    IChangeListener,
+    ITimComponent,
+    RegexOption,
+    ViewCtrl,
+} from "tim/document/viewctrl";
+import {
+    GenericPluginMarkup,
+    IncludeUsersOption,
+    Info,
+    withDefault,
+} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {Users} from "tim/user/userService";
 import {$http} from "tim/util/ngimport";
@@ -55,7 +66,11 @@ const multisaveAll = t.intersection([
 ]);
 
 export class MultisaveController
-    extends PluginBase<t.TypeOf<typeof multisaveMarkup>, t.TypeOf<typeof multisaveAll>, typeof multisaveAll>
+    extends PluginBase<
+        t.TypeOf<typeof multisaveMarkup>,
+        t.TypeOf<typeof multisaveAll>,
+        typeof multisaveAll
+    >
     implements IChangeListener {
     private isSaved = false;
     private vctrl!: ViewCtrl;
@@ -76,7 +91,11 @@ export class MultisaveController
     }
 
     buttonText() {
-        return super.buttonText() || (this.attrs.emailMode && "Send email") || "Save";
+        return (
+            super.buttonText() ||
+            (this.attrs.emailMode && "Send email") ||
+            "Save"
+        );
     }
 
     get allSavedText() {
@@ -84,7 +103,10 @@ export class MultisaveController
     }
 
     get unsavedText() {
-        return this.attrs.unsavedText?.replace("{count}", this.unsavedTimComps.size.toString());
+        return this.attrs.unsavedText?.replace(
+            "{count}",
+            this.unsavedTimComps.size.toString()
+        );
     }
 
     get savedText() {
@@ -122,12 +144,14 @@ export class MultisaveController
         }
         this.emailMsg = "";
 
-        const _ = await to($http.post<string[]>("/sendemail/", {
-            rcpts: this.emaillist.replace(/\n/g, ";"),
-            subject: this.emailsubject,
-            msg: this.emailbody,
-            bccme: this.emailbccme,
-        }));
+        const _ = await to(
+            $http.post<string[]>("/sendemail/", {
+                rcpts: this.emaillist.replace(/\n/g, ";"),
+                subject: this.emailsubject,
+                msg: this.emailbody,
+                bccme: this.emailbccme,
+            })
+        );
     }
 
     /**
@@ -154,10 +178,18 @@ export class MultisaveController
             }
             bcc += Users.getCurrent().email;
         }
-        window.location.href = "mailto:" + addrs
-            + "?" + "subject=" + this.emailsubject
-            + "&" + "body=" + this.emailbody
-            + "&" + "bcc=" + bcc;
+        window.location.href =
+            "mailto:" +
+            addrs +
+            "?" +
+            "subject=" +
+            this.emailsubject +
+            "&" +
+            "body=" +
+            this.emailbody +
+            "&" +
+            "bcc=" +
+            bcc;
     }
 
     toggleEmailForm() {
@@ -183,7 +215,10 @@ export class MultisaveController
         // TODO: get components from vctrl.timComponentArrays in case of duplicates
         if (this.attrs.fields) {
             for (const i of this.attrs.fields) {
-                const timComponents = this.vctrl.getTimComponentsByRegex(i, RegexOption.PrependCurrentDocId);
+                const timComponents = this.vctrl.getTimComponentsByRegex(
+                    i,
+                    RegexOption.PrependCurrentDocId
+                );
                 for (const v of timComponents) {
                     if (!targets.includes(v)) {
                         targets.push(v);
@@ -217,17 +252,32 @@ export class MultisaveController
         const parents = this.element.parents(".area");
         // parents returns only one element because nested areas are in separate divs
         if (parents[0]) {
-            ownArea = parents[0].classList[parents[0].classList.length - 1].replace("area_", "");
+            ownArea = parents[0].classList[
+                parents[0].classList.length - 1
+            ].replace("area_", "");
         }
 
         // no given followids or areas but the plugin is inside an area
-        if (!this.attrs.fields && !this.attrs.areas && !this.attrs.tags && ownArea) {
+        if (
+            !this.attrs.fields &&
+            !this.attrs.areas &&
+            !this.attrs.tags &&
+            ownArea
+        ) {
             targets = this.vctrl.getTimComponentsByArea(ownArea);
         }
 
         // no given followids / areas and no own area found
-        if (!this.attrs.fields && !this.attrs.areas && !this.attrs.tags && !ownArea) {
-            targets = this.vctrl.getTimComponentsByRegex(".*", RegexOption.DontPrependCurrentDocId);
+        if (
+            !this.attrs.fields &&
+            !this.attrs.areas &&
+            !this.attrs.tags &&
+            !ownArea
+        ) {
+            targets = this.vctrl.getTimComponentsByRegex(
+                ".*",
+                RegexOption.DontPrependCurrentDocId
+            );
         }
         return targets;
     }
@@ -287,7 +337,8 @@ export class MultisaveController
             this.isSaved = true;
         }
 
-        if (this.attrs.jumplink) { // If there is need for jumplink
+        if (this.attrs.jumplink) {
+            // If there is need for jumplink
             const values = [];
             for (const v of componentsToSave) {
                 const value = v.getContent();
@@ -335,7 +386,9 @@ export class MultisaveController
             let reg: RegExp;
             for (const f of this.attrs.fields) {
                 // TODO: Handle fields from other docs pasted as reference
-                reg = new RegExp(`^${this.vctrl.docId + escapeRegExp(".") + f}$`);
+                reg = new RegExp(
+                    `^${this.vctrl.docId + escapeRegExp(".") + f}$`
+                );
                 if (reg.test(docTask)) {
                     this.addNewUnsaved(docTask);
                     return;
@@ -349,7 +402,7 @@ export class MultisaveController
     }
 
     allSaved(): boolean {
-        return (!this.attrs.listener || !this.hasUnsavedTargets);
+        return !this.attrs.listener || !this.hasUnsavedTargets;
     }
 
     getAttributeType() {

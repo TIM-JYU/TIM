@@ -16,7 +16,10 @@ export enum ConsentType {
     CookieAndData = 2,
 }
 
-export class ConsentController extends DialogController<{params: {showDataCollectionOptions: boolean}}, ConsentType | null> {
+export class ConsentController extends DialogController<
+    {params: {showDataCollectionOptions: boolean}},
+    ConsentType | null
+> {
     static $inject = ["$element", "$scope"] as const;
     static component = "timConsent" as const;
     private consent: ConsentType | null = null;
@@ -42,10 +45,8 @@ export class ConsentController extends DialogController<{params: {showDataCollec
     }
 }
 
-registerDialogComponent(ConsentController,
-    {
-        template:
-            `<tim-dialog>
+registerDialogComponent(ConsentController, {
+    template: `<tim-dialog>
     <dialog-header>
     </dialog-header>
     <dialog-body>
@@ -68,9 +69,10 @@ registerDialogComponent(ConsentController,
     </dialog-footer>
 </tim-dialog>
 `,
-    });
+});
 
 export async function showConsentDialog(showDataCollectionOptions: boolean) {
-    return await showDialog(
-        ConsentController, {params: () => ({showDataCollectionOptions})}).result;
+    return await showDialog(ConsentController, {
+        params: () => ({showDataCollectionOptions}),
+    }).result;
 }

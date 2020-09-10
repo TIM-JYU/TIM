@@ -11,10 +11,29 @@ import {
     SimpleChanges,
     ViewChild,
 } from "@angular/core";
-import {BrowserModule, DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
-import {DrawToolbarModule, DrawType, IDrawOptions} from "tim/plugin/drawToolbar";
-import {ILineSegment, IPoint, IRectangleOrEllipse, TuplePoint} from "tim/plugin/imagextypes";
-import {isTouchEvent, MouseOrTouch, numOrStringToNumber, posToRelative, touchEventToTouch} from "tim/util/utils";
+import {
+    BrowserModule,
+    DomSanitizer,
+    SafeResourceUrl,
+} from "@angular/platform-browser";
+import {
+    DrawToolbarModule,
+    DrawType,
+    IDrawOptions,
+} from "tim/plugin/drawToolbar";
+import {
+    ILineSegment,
+    IPoint,
+    IRectangleOrEllipse,
+    TuplePoint,
+} from "tim/plugin/imagextypes";
+import {
+    isTouchEvent,
+    MouseOrTouch,
+    numOrStringToNumber,
+    posToRelative,
+    touchEventToTouch,
+} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 
 interface IRectangle {
@@ -29,7 +48,7 @@ interface IEllipse {
 
 interface IFreeHand {
     type: "freehand";
-    drawData: ILineSegment
+    drawData: ILineSegment;
 }
 
 // TODO: 4th variable for reporting MouseDown, TouchMove etc could be useful for fine-tuning the desired
@@ -49,7 +68,10 @@ export type DrawObject = IRectangle | IEllipse | IFreeHand;
  * @param drawing DrawObject[] to check
  * @param minSize if width/height is less than this, then add extra padding (at both ends)
  */
-export function getDrawingDimensions(drawing: DrawObject[], minSize = 0): { x: number, y: number, w: number, h: number } {
+export function getDrawingDimensions(
+    drawing: DrawObject[],
+    minSize = 0
+): {x: number; y: number; w: number; h: number} {
     let x = Number.MAX_SAFE_INTEGER;
     let y = Number.MAX_SAFE_INTEGER;
     let w = 0;
@@ -57,7 +79,9 @@ export function getDrawingDimensions(drawing: DrawObject[], minSize = 0): { x: n
     for (const obj of drawing) {
         if (obj.type == "freehand") {
             for (const line of obj.drawData.lines) {
-                const width = obj.drawData.w ? numOrStringToNumber(obj.drawData.w) / 2 : 0;
+                const width = obj.drawData.w
+                    ? numOrStringToNumber(obj.drawData.w) / 2
+                    : 0;
                 if (x == null || x > line[0] - width) {
                     x = line[0] - width;
                 }
@@ -106,16 +130,28 @@ export function getDrawingDimensions(drawing: DrawObject[], minSize = 0): { x: n
  * @param y start coordinate
  * @param minSize if width/height is less than this, then add extra padding (at both ends)
  */
-export function isCoordWithinDrawing(drawing: DrawObject[], x: number, y: number, minSize = 0): boolean {
+export function isCoordWithinDrawing(
+    drawing: DrawObject[],
+    x: number,
+    y: number,
+    minSize = 0
+): boolean {
     const dimensions = getDrawingDimensions(drawing);
     const horizontalPadding = dimensions.w < minSize ? minSize : 0;
     const verticalPadding = dimensions.h < minSize ? minSize : 0;
-    return (x > dimensions.x - horizontalPadding && x < dimensions.x + dimensions.w + horizontalPadding
-        && y > dimensions.y - verticalPadding && y < dimensions.y + dimensions.h + verticalPadding);
+    return (
+        x > dimensions.x - horizontalPadding &&
+        x < dimensions.x + dimensions.w + horizontalPadding &&
+        y > dimensions.y - verticalPadding &&
+        y < dimensions.y + dimensions.h + verticalPadding
+    );
 }
 
 // TODO: Repeated from imagex, move
-export function drawFreeHand(ctx: CanvasRenderingContext2D, dr: ILineSegment[]): void {
+export function drawFreeHand(
+    ctx: CanvasRenderingContext2D,
+    dr: ILineSegment[]
+): void {
     ctx.lineJoin = "round";
     for (const seg of dr) {
         if (seg.lines.length < 2) {
@@ -211,9 +247,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     // identifier e.g for associating specific canvas with specific answer review
     public id: number = 0;
 
-    constructor(el: ElementRef<HTMLElement>, private domSanitizer: DomSanitizer) {
-    }
-
+    constructor(
+        el: ElementRef<HTMLElement>,
+        private domSanitizer: DomSanitizer
+    ) {}
 
     ngOnInit() {
         const prevSettings = window.localStorage.getItem("drawCanvasOptions");
@@ -230,7 +267,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      */
     setBg() {
         // This goes to src of img tag, so there should be no XSS danger because imgs cannot execute scripts.
-        this.bgImage = this.domSanitizer.bypassSecurityTrustResourceUrl(this.bgSource);
+        this.bgImage = this.domSanitizer.bypassSecurityTrustResourceUrl(
+            this.bgSource
+        );
     }
 
     ngAfterViewInit() {
@@ -276,7 +315,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     saveSettings() {
-        window.localStorage.setItem("drawCanvasOptions", JSON.stringify(this.drawOptions));
+        window.localStorage.setItem(
+            "drawCanvasOptions",
+            JSON.stringify(this.drawOptions)
+        );
     }
 
     /**
@@ -291,8 +333,14 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      */
     onImgLoad(): void {
         this.imgHeight = this.bgElement.nativeElement.clientHeight;
-        const newWidth = Math.max(this.bgElement.nativeElement.clientWidth, this.wrapper.nativeElement.clientWidth - 50);
-        const newHeight = Math.max(this.bgElement.nativeElement.clientHeight, this.getWrapperHeight() - 5);
+        const newWidth = Math.max(
+            this.bgElement.nativeElement.clientWidth,
+            this.wrapper.nativeElement.clientWidth - 50
+        );
+        const newHeight = Math.max(
+            this.bgElement.nativeElement.clientHeight,
+            this.getWrapperHeight() - 5
+        );
         this.canvas.nativeElement.width = newWidth;
         this.canvas.nativeElement.height = newHeight;
         this.objectContainer.nativeElement.style.width = newWidth + "px";
@@ -319,7 +367,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      * Sets the optional function to call on mouse or drawing update events
      * @param cb function to execute
      */
-    public setUpdateCallback(cb: (arg0: DrawCanvasComponent, arg1: IDrawUpdate) => void) {
+    public setUpdateCallback(
+        cb: (arg0: DrawCanvasComponent, arg1: IDrawUpdate) => void
+    ) {
         this.updateCallback = cb;
     }
 
@@ -336,11 +386,15 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      */
     downEvent(event: Event, e: MouseOrTouch): void {
         const middleOrRightClick = this.middleOrRightClick(e);
-        if (!middleOrRightClick && !(isTouchEvent(event) && !this.drawOptions.enabled)) { // allow inspect element and scrolling
+        if (
+            !middleOrRightClick &&
+            !(isTouchEvent(event) && !this.drawOptions.enabled)
+        ) {
+            // allow inspect element and scrolling
             event.preventDefault();
         }
         const {x, y} = posToRelative(this.canvas.nativeElement, e);
-        if (this.drawOptions.enabled && !(middleOrRightClick)) {
+        if (this.drawOptions.enabled && !middleOrRightClick) {
             this.drawStarted = true;
             this.drawMoved = false;
             this.startX = x;
@@ -364,7 +418,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         const pxy = posToRelative(this.canvas.nativeElement, e);
         const {x, y} = pxy;
 
-        if (this.drawOptions.drawType == DrawType.Ellipse || this.drawOptions.drawType == DrawType.Rectangle) {
+        if (
+            this.drawOptions.drawType == DrawType.Ellipse ||
+            this.drawOptions.drawType == DrawType.Rectangle
+        ) {
             this.redrawAll();
             this.objX = Math.min(x, this.startX);
             this.objY = Math.min(y, this.startY);
@@ -406,7 +463,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
                 const rect: IRectangle = {
                     type: "rectangle",
                     drawData: this.makeFullRectangleOrEllipse(),
-
                 };
                 this.drawData.push(rect);
             } else if (this.freeDrawing) {
@@ -420,7 +476,11 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         }
 
         if (this.updateCallback) {
-            this.updateCallback(this, {x: x, y: y, drawingUpdated: this.drawMoved && this.drawOptions.enabled});
+            this.updateCallback(this, {
+                x: x,
+                y: y,
+                drawingUpdated: this.drawMoved && this.drawOptions.enabled,
+            });
         }
     }
 
@@ -482,7 +542,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
             y: this.objY,
             w: this.objW,
             h: this.objH,
-            fillColor: this.drawOptions.fill ? this.drawOptions.color : undefined,
+            fillColor: this.drawOptions.fill
+                ? this.drawOptions.color
+                : undefined,
         };
     }
 
@@ -505,7 +567,12 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      * Clears the entire canvas
      */
     clear(): void {
-        this.ctx.clearRect(0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
+        this.ctx.clearRect(
+            0,
+            0,
+            this.canvas.nativeElement.width,
+            this.canvas.nativeElement.height
+        );
     }
 
     /**
@@ -570,7 +637,13 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         this.ctx.beginPath();
         this.ctx.scale(ratio, 1);
         const r = Math.min(ellipse.w / ratio, ellipse.h) / 2;
-        this.ctx.arc((ellipse.x + ellipse.w / 2) / ratio, ellipse.y + ellipse.h / 2, r, 0, 2 * Math.PI);
+        this.ctx.arc(
+            (ellipse.x + ellipse.w / 2) / ratio,
+            ellipse.y + ellipse.h / 2,
+            r,
+            0,
+            2 * Math.PI
+        );
         this.ctx.restore();
         if (ellipse.fillColor) {
             this.ctx.fill();
@@ -587,9 +660,19 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         // TODO: Draw border with own settings but custom fill color
         this.ctx.lineJoin = "miter";
         if (rectangle.fillColor) {
-            this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+            this.ctx.fillRect(
+                rectangle.x,
+                rectangle.y,
+                rectangle.w,
+                rectangle.h
+            );
         } else {
-            this.ctx.strokeRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+            this.ctx.strokeRect(
+                rectangle.x,
+                rectangle.y,
+                rectangle.w,
+                rectangle.h
+            );
         }
     }
 
@@ -646,7 +729,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      * Returns dimensions (start coordinate, max width/height) on current drawing progress
      * @param minSize extra padding to add if width/height is below this
      */
-    getCurrentDrawingDimensions(minSize = 0): { x: number, y: number, w: number, h: number } {
+    getCurrentDrawingDimensions(
+        minSize = 0
+    ): {x: number; y: number; w: number; h: number} {
         return getDrawingDimensions(this.getDrawing(), minSize);
     }
 
@@ -656,7 +741,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     storeDrawing() {
         this.persistentDrawData = this.persistentDrawData.concat(this.drawData);
         this.drawData = [];
-
     }
 
     /**
@@ -668,20 +752,13 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         this.persistentDrawData = data;
         this.redrawAll();
     }
-
 }
 
 @NgModule({
-    declarations: [
-        DrawCanvasComponent,
-    ], imports: [
-        BrowserModule,
-        DrawToolbarModule,
-        FormsModule,
-    ],
+    declarations: [DrawCanvasComponent],
+    imports: [BrowserModule, DrawToolbarModule, FormsModule],
     exports: [DrawCanvasComponent],
 })
 export class DrawCanvasModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef) {
-    }
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }

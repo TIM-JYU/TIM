@@ -24,7 +24,10 @@ markAsUsed(focusMe);
 /*
  * Dialog displaying view range options.
  */
-export class ViewRangeEditController extends DialogController<{ params: IItem }, void> {
+export class ViewRangeEditController extends DialogController<
+    {params: IItem},
+    void
+> {
     static component = "viewRangeEditDialog";
     static $inject = ["$element", "$scope"] as const;
     private item!: IItem;
@@ -32,7 +35,7 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
     private viewRangeSetting: number = 20;
     private errorMessage?: string;
     private storage: ngStorage.StorageService & {
-        pieceSize: null | number,
+        pieceSize: null | number;
     };
 
     constructor(protected element: JQLite, protected scope: IScope) {
@@ -83,7 +86,8 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
     private async ok() {
         this.errorMessage = undefined;
         if (!this.viewRangeSetting || this.viewRangeSetting < 1) {
-            this.errorMessage = "Piece size needs to be an integer greater than zero.";
+            this.errorMessage =
+                "Piece size needs to be an integer greater than zero.";
             return;
         }
         this.saveValues();
@@ -92,10 +96,14 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
             const params = getCurrentPartitionURLParams();
             const b = params ? params.get("b") : undefined;
             let beginIndex = 0;
-            if (b)  {
+            if (b) {
                 beginIndex = +b;
             }
-            const range = await getViewRange(this.resolve.params.id, beginIndex, true);
+            const range = await getViewRange(
+                this.resolve.params.id,
+                beginIndex,
+                true
+            );
             if (range) {
                 partitionDocument(range.b, range.e, true);
             }
@@ -114,10 +122,8 @@ export class ViewRangeEditController extends DialogController<{ params: IItem },
     }
 }
 
-registerDialogComponent(ViewRangeEditController,
-    {
-        template:
-            `<tim-dialog class="overflow-visible">
+registerDialogComponent(ViewRangeEditController, {
+    template: `<tim-dialog class="overflow-visible">
     <dialog-header>
     </dialog-header>
     <dialog-body>
@@ -141,7 +147,7 @@ registerDialogComponent(ViewRangeEditController,
     </dialog-footer>
 </tim-dialog>
 `,
-    });
+});
 
 export async function showViewRangeEditDialog(d: IItem) {
     return showDialog(ViewRangeEditController, {params: () => d}).result;

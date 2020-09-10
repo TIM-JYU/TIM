@@ -7,9 +7,11 @@ import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "./attributes";
 import {getErrors} from "./errors";
 import {TaskId} from "./taskid";
 
-export function getDefaults<MarkupType extends IGenericPluginMarkup,
+export function getDefaults<
+    MarkupType extends IGenericPluginMarkup,
     A extends IGenericPluginTopLevelFields<MarkupType>,
-    T extends Type<A>>(runtimeType: T, defaultMarkup: MarkupType) {
+    T extends Type<A>
+>(runtimeType: T, defaultMarkup: MarkupType) {
     const defaults: IGenericPluginTopLevelFields<MarkupType> = {
         info: null,
         markup: defaultMarkup,
@@ -28,10 +30,8 @@ export class PluginMeta {
         private readonly element: JQLite,
         private readonly preview = false,
         private readonly plugintype?: string,
-        private readonly taskid?: string,
-    ) {
-
-    }
+        private readonly taskid?: string
+    ) {}
 
     protected getParentAttr(name: string) {
         return this.element.parent().attr(name);
@@ -90,7 +90,11 @@ export class PluginMeta {
     }
 }
 
-interface PluginInit<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>> {
+interface PluginInit<
+    MarkupType extends IGenericPluginMarkup,
+    A extends IGenericPluginTopLevelFields<MarkupType>,
+    T extends Type<A>
+> {
     attrsall: Readonly<A>;
 
     getAttributeType(): T;
@@ -99,7 +103,11 @@ interface PluginInit<MarkupType extends IGenericPluginMarkup, A extends IGeneric
     readonly json: Binding<string, "@">;
 }
 
-export function baseOnInit<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>>(this: PluginInit<MarkupType, A, T>) {
+export function baseOnInit<
+    MarkupType extends IGenericPluginMarkup,
+    A extends IGenericPluginTopLevelFields<MarkupType>,
+    T extends Type<A>
+>(this: PluginInit<MarkupType, A, T>) {
     const parsed = JSON.parse(atob(this.json)) as unknown;
     const validated = this.getAttributeType().decode(parsed);
     // These can be uncommented for debugging:
@@ -114,7 +122,7 @@ export function baseOnInit<MarkupType extends IGenericPluginMarkup, A extends IG
     }
 }
 
-export type PluginMarkupErrors = Array<{ name: string, type: string }>;
+export type PluginMarkupErrors = Array<{name: string; type: string}>;
 
 /**
  * Functionality that is common to both Angular and old AngularJS plugins.
@@ -136,14 +144,12 @@ export abstract class PluginBaseCommon {
         const parents = this.element.parents(".area");
         if (parents[0]) {
             const areaList = parents[0].classList;
-            areaList.forEach(
-                (value) => {
-                    const m = value.match(/^area_(\S+)$/);
-                    if (m) {
-                        returnList.push(m[1]);
-                    }
-                },
-            );
+            areaList.forEach((value) => {
+                const m = value.match(/^area_(\S+)$/);
+                if (m) {
+                    returnList.push(m[1]);
+                }
+            });
         }
         return returnList;
     }
@@ -190,7 +196,7 @@ export abstract class PluginBaseCommon {
      * ok: true if content was succesfully parsed
      * message: for replying with possible errors
      */
-    setAnswer(content: { [index: string]: unknown }): ISetAnswerResult {
+    setAnswer(content: {[index: string]: unknown}): ISetAnswerResult {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 
@@ -198,9 +204,7 @@ export abstract class PluginBaseCommon {
         return undefined;
     }
 
-    resetChanges(): void {
-
-    }
+    resetChanges(): void {}
 }
 
 /**
@@ -209,8 +213,13 @@ export abstract class PluginBaseCommon {
  * All properties or fields having a one-time binding in template should eventually return a non-undefined value.
  * That's why there are "|| null"s in several places.
  */
-export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A extends IGenericPluginTopLevelFields<MarkupType>, T extends Type<A>>
-    extends PluginBaseCommon implements IController {
+export abstract class PluginBase<
+        MarkupType extends IGenericPluginMarkup,
+        A extends IGenericPluginTopLevelFields<MarkupType>,
+        T extends Type<A>
+    >
+    extends PluginBaseCommon
+    implements IController {
     static $inject = ["$scope", "$element"];
 
     buttonText() {
@@ -270,19 +279,18 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
     markupError?: PluginMarkupErrors;
     pluginMeta: PluginMeta;
 
-    constructor(
-        protected scope: IScope,
-        public element: JQLite) {
+    constructor(protected scope: IScope, public element: JQLite) {
         super();
-        this.attrsall = getDefaults(this.getAttributeType(), this.getDefaultMarkup());
+        this.attrsall = getDefaults(
+            this.getAttributeType(),
+            this.getDefaultMarkup()
+        );
         this.pluginMeta = new PluginMeta(element, this.attrsall.preview);
     }
 
     abstract getDefaultMarkup(): Partial<MarkupType>;
 
-    $postLink() {
-
-    }
+    $postLink() {}
 
     $onInit() {
         const result = baseOnInit.call(this);
@@ -291,7 +299,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
                 this.element,
                 result.preview,
                 this.plugintype,
-                this.taskid,
+                this.taskid
             );
         }
     }
@@ -303,7 +311,7 @@ export abstract class PluginBase<MarkupType extends IGenericPluginMarkup, A exte
  * Shuffles a string array.
  * @param strings Array of strings to be shuffled.
  */
-export function shuffleStrings(strings: string []): string [] {
+export function shuffleStrings(strings: string[]): string[] {
     const result = strings.slice();
     const n = strings.length;
     for (let i = n - 1; i >= 0; i--) {
@@ -320,7 +328,10 @@ export function shuffleStrings(strings: string []): string [] {
  * @param attr attribute to inspect
  * @param defBehavior default option to return if form attribute was not given
  */
-export function getFormBehavior(attr: boolean | undefined, defBehavior: FormModeOption): FormModeOption {
+export function getFormBehavior(
+    attr: boolean | undefined,
+    defBehavior: FormModeOption
+): FormModeOption {
     if (attr == undefined) {
         return defBehavior;
     }

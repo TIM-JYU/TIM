@@ -8,12 +8,27 @@ import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {DndDropEvent, DndModule, EffectAllowed} from "ngx-drag-drop";
-import {ApplicationRef, Component, DoBootstrap, NgModule, OnInit, StaticProvider} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    NgModule,
+    OnInit,
+    StaticProvider,
+} from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ITimComponent} from "../../../static/scripts/tim/document/viewctrl";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "../../../static/scripts/tim/plugin/attributes";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "../../../static/scripts/tim/plugin/attributes";
 import {shuffleStrings} from "../../../static/scripts/tim/plugin/util";
-import {createDowngradedModule, doDowngrade} from "../../../static/scripts/tim/downgrade";
+import {
+    createDowngradedModule,
+    doDowngrade,
+} from "../../../static/scripts/tim/downgrade";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
@@ -101,11 +116,14 @@ interface WordObject {
         <div *ngIf="error" [innerHTML]="error | purify"></div>
         <div *ngIf="footer" class="plgfooter" [textContent]="footer"></div>
     `,
-    styleUrls: [
-        "./drag.scss",
-    ],
+    styleUrls: ["./drag.scss"],
 })
-export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>, t.TypeOf<typeof DragAll>, typeof DragAll>
+export class DragComponent
+    extends AngularPluginBase<
+        t.TypeOf<typeof DragMarkup>,
+        t.TypeOf<typeof DragAll>,
+        typeof DragAll
+    >
     implements OnInit, ITimComponent {
     error?: string;
     trash?: boolean;
@@ -143,11 +161,15 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
             dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride,
         });
 
-        window.addEventListener("touchmove", () => {
-            // This is a fix for ios problems arising in safari 10+.
-            // This is also used for detecting touchscreen to change css layout.
-            this.element.addClass("touchdrag");
-        }, {passive: false});
+        window.addEventListener(
+            "touchmove",
+            () => {
+                // This is a fix for ios problems arising in safari 10+.
+                // This is also used for detecting touchscreen to change css layout.
+                this.element.addClass("touchdrag");
+            },
+            {passive: false}
+        );
 
         if (!this.attrsall.preview) {
             this.vctrl?.addTimComponent(this);
@@ -220,7 +242,7 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
      * Sets words in plugin.
      * @param words The words to be set as draggable words in plugin.
      */
-    setPluginWords(words: string []) {
+    setPluginWords(words: string[]) {
         if (this.shuffle) {
             this.createWordobjs(shuffleStrings(words));
         } else {
@@ -245,7 +267,11 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
         const taskId = this.pluginMeta.getTaskId()?.docTask();
         const word = event.data as WordObject;
         this.wordObjs.splice(event.index ?? 0, 0, word);
-        if (this.markup.autoSave && !this.trash && (!word.taskId || word.taskId != taskId)) {
+        if (
+            this.markup.autoSave &&
+            !this.trash &&
+            (!word.taskId || word.taskId != taskId)
+        ) {
             void this.save();
         }
         word.taskId = taskId;
@@ -266,7 +292,9 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
             },
         };
 
-        const r = await this.postAnswer<{ web: { result: string, error?: string } }>(params);
+        const r = await this.postAnswer<{
+            web: {result: string; error?: string};
+        }>(params);
 
         if (r.ok) {
             const data = r.result;
@@ -283,9 +311,7 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
 }
 
 @NgModule({
-    declarations: [
-        DragComponent,
-    ],
+    declarations: [DragComponent],
     imports: [
         BrowserModule,
         HttpClientModule,
@@ -296,8 +322,7 @@ export class DragComponent extends AngularPluginBase<t.TypeOf<typeof DragMarkup>
     ],
 })
 export class DragModule implements DoBootstrap {
-    ngDoBootstrap(appRef: ApplicationRef): void {
-    }
+    ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
 const bootstrapFn = (extraProviders: StaticProvider[]) => {

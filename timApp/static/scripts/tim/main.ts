@@ -97,7 +97,7 @@ markAsUsed(
     velpSelection,
     viewctrl,
     viewRangeNavigation,
-    markAllAsRead,
+    markAllAsRead
 );
 
 setAngularJSGlobal(angular);
@@ -147,7 +147,9 @@ const themeNameMap: Record<string, string | undefined> = {
 };
 
 function applyThemeClasses() {
-    for (const [name, _] of Object.entries(genericglobals().userPrefs.css_files)) {
+    for (const [name, _] of Object.entries(
+        genericglobals().userPrefs.css_files
+    )) {
         const classname = themeNameMap[name];
         if (classname) {
             document.body.classList.add(classname);
@@ -170,7 +172,7 @@ $(async () => {
     }
     const angularModules: string[] = [];
     for (const m of moduleLoads) {
-        const loaded = await m as { moduleDefs: unknown };
+        const loaded = (await m) as {moduleDefs: unknown};
         const mods = loaded.moduleDefs;
         if (ModuleArray.is(mods)) {
             angularModules.push(...mods.map((mm) => mm.name));
@@ -180,7 +182,11 @@ $(async () => {
     if (StringArray.is(extraAngularModules)) {
         angularModules.push(...extraAngularModules);
     }
-    angular.bootstrap(document, [timApp.name, downgradedModule.name, ...angularModules], {strictDi: false});
+    angular.bootstrap(
+        document,
+        [timApp.name, downgradedModule.name, ...angularModules],
+        {strictDi: false}
+    );
     timLogTime("Angular bootstrap done", "main.ts");
     ParCompiler.processAllMathDelayed($("body"), 1500);
 

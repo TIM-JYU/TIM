@@ -22,7 +22,9 @@ export interface ISettings {
 }
 
 export async function setConsent(c: ConsentType) {
-    const r = await to($http.post<IOkResponse>("/settings/updateConsent", {consent: c}));
+    const r = await to(
+        $http.post<IOkResponse>("/settings/updateConsent", {consent: c})
+    );
     if (r.ok) {
         // Nothing to do.
     } else {
@@ -238,7 +240,9 @@ export class SettingsComponent implements DoCheck {
 
     submit = async () => {
         this.saving = true;
-        const r = await to($http.post<ISettings>("/settings/save", this.settings));
+        const r = await to(
+            $http.post<ISettings>("/settings/save", this.settings)
+        );
         if (r.ok) {
             this.settings = r.result.data;
             this.updateCss();
@@ -258,7 +262,12 @@ export class SettingsComponent implements DoCheck {
     }
 
     updateCss() {
-        document.querySelector('link[rel="stylesheet"]')!.setAttribute("href", `/static/generated/${this.settings.css_combined}.css`);
+        document
+            .querySelector('link[rel="stylesheet"]')!
+            .setAttribute(
+                "href",
+                `/static/generated/${this.settings.css_combined}.css`
+            );
     }
 
     async clearLocalStorage() {
@@ -269,7 +278,9 @@ export class SettingsComponent implements DoCheck {
     }
 
     async addPrintSettings() {
-        const resp = await to($http.get<string>("/static/stylesheets/userPrintSettings.css"));
+        const resp = await to(
+            $http.get<string>("/static/stylesheets/userPrintSettings.css")
+        );
         if (!resp.ok) {
             return;
         }
@@ -287,7 +298,10 @@ export class SettingsComponent implements DoCheck {
     }
 
     showGetAllNotifications() {
-        return this.notifications.length === settingsglobals().notificationLimit && !this.allNotificationsFetched;
+        return (
+            this.notifications.length === settingsglobals().notificationLimit &&
+            !this.allNotificationsFetched
+        );
     }
 
     beginDeleteAccount() {
@@ -296,7 +310,11 @@ export class SettingsComponent implements DoCheck {
     }
 
     async deleteAccount() {
-        if (window.confirm(`Are you sure you want to delete your account (${this.user.name})?`)) {
+        if (
+            window.confirm(
+                `Are you sure you want to delete your account (${this.user.name})?`
+            )
+        ) {
             const r = await to($http.post("/settings/account/delete", {}));
             if (r.ok) {
                 location.href = "/";

@@ -14,15 +14,18 @@ interface ISlideStatus {
 }
 
 async function refresh(rv: IFixedReveal) {
-    if (1 === 1) { // suppress "unreachable code" warning
+    if (1 === 1) {
+        // suppress "unreachable code" warning
         return; // TODO: think this so that things are paired
     }
     const item: IItem = documentglobals().curr_item;
     while (true) {
-        const r = await to($http.get<null | ISlideStatus>("/getslidestatus", {
-            cache: false,
-            params: {doc_id: item.id},
-        }));
+        const r = await to(
+            $http.get<null | ISlideStatus>("/getslidestatus", {
+                cache: false,
+                params: {doc_id: item.id},
+            })
+        );
         if (r.ok) {
             const oldstate = rv.getState() as ISlideStatus;
             let oldh = 0;
@@ -44,8 +47,12 @@ async function refresh(rv: IFixedReveal) {
                 if (data.indexv != null) {
                     newv = data.indexv;
                 }
-                if ((newh != oldh || newv != oldv
-                    || data.indexf != oldstate.indexf) && receiving) {
+                if (
+                    (newh != oldh ||
+                        newv != oldv ||
+                        data.indexf != oldstate.indexf) &&
+                    receiving
+                ) {
                     $log.info("Change slide");
                     rv.slide(newh, newv, data.indexf, "remote");
                 }
@@ -64,12 +71,14 @@ async function updateSlideStatus(h: number, v: number, f: number) {
     }
     receiving = false;
     const item: IItem = documentglobals().curr_item;
-    const r = await to($http.post<IOkResponse>("/setslidestatus", {
-        doc_id: item.id,
-        indexf: f,
-        indexh: h,
-        indexv: v,
-    }));
+    const r = await to(
+        $http.post<IOkResponse>("/setslidestatus", {
+            doc_id: item.id,
+            indexf: f,
+            indexh: h,
+            indexv: v,
+        })
+    );
     if (r.ok) {
     } else {
         console.error("Failed to set slide status");
@@ -93,10 +102,7 @@ async function initReveal(rv: IFixedReveal) {
         viewDistance: 10,
         theme: getURLParameter("theme"), // available themes are in /css/theme
         transition: getURLParameter("transition") ?? "linear", // default/cube/page/concave/zoom/linear/fade/none
-        plugins: [
-            zoom,
-            notes,
-        ],
+        plugins: [zoom, notes],
         maxScale: 1, // csplugins become too wide in fullscreen view without this
     });
 }
@@ -107,7 +113,7 @@ function addControl(
     right: string,
     bottom: string,
     title: string,
-    clickHandler: () => void,
+    clickHandler: () => void
 ) {
     const btn = document.createElement("button");
     btn.classList.add("enabled");
@@ -128,7 +134,9 @@ export async function initSlideView(d: IDocument) {
     const bgUrl = w.background_url;
     const bgColor = w.background_color;
     const hasManage = d.rights.manage;
-    const revealIgnored = import("style-loader!reveal.js/dist/reveal.css" as string);
+    const revealIgnored = import(
+        "style-loader!reveal.js/dist/reveal.css" as string
+    );
     const jyuIgnored = import("style-loader!./jyu.css" as string);
     const rv = (await import("reveal.js")).default;
     if (getURLParameter("controls") == null && hasManage) {
@@ -147,18 +155,34 @@ export async function initSlideView(d: IDocument) {
         return;
     }
 
-    const isSpeakerWindow = window.parent.document.location.pathname.endsWith("/notes.html");
+    const isSpeakerWindow = window.parent.document.location.pathname.endsWith(
+        "/notes.html"
+    );
     if (!isSpeakerWindow) {
-        addControl(ctrls, "fullscreen", ".7em", "6em", "Toggle fullscreen mode (F / ESC)", () => {
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                document.documentElement.requestFullscreen();
+        addControl(
+            ctrls,
+            "fullscreen",
+            ".7em",
+            "6em",
+            "Toggle fullscreen mode (F / ESC)",
+            () => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    document.documentElement.requestFullscreen();
+                }
             }
-        });
-        addControl(ctrls, "list-alt", ".7em", "9.4em", "Open speaker notes (S)", () => {
-            rv.getPlugin("notes").open();
-        });
+        );
+        addControl(
+            ctrls,
+            "list-alt",
+            ".7em",
+            "9.4em",
+            "Open speaker notes (S)",
+            () => {
+                rv.getPlugin("notes").open();
+            }
+        );
     }
     document.addEventListener("fullscreenchange", () => {
         fitCurrentSlide();
@@ -206,7 +230,10 @@ function fitCurrentSlide() {
     const scaleW = (baseW * 1.0) / (innerW * 1.0); // this seems to be always 1
     const scale = Math.min(scaleH, scaleW);
     const oldscale = $(slide).css("transform");
-    if (scale < 1 && (true || oldscale === "none" || oldscale === "matrix(1, 0, 0, 1, 0, 0)")) {
+    if (
+        scale < 1 &&
+        (true || oldscale === "none" || oldscale === "matrix(1, 0, 0, 1, 0, 0)")
+    ) {
         $(slide).css("transform", "scale(" + scale + ")");
         $(slide).css("transform-origin", "50% 0");
     }

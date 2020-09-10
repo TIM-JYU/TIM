@@ -22,18 +22,22 @@ export interface ITile {
 }
 
 interface IParsedData {
-    lectures: [{
-        id: number,
-        name: string,
-        link: string,
-    }];
-    demos: [{
-        id: number;
-        name: string;
-        link: string;
-        maxPoints: number;
-        gotPoints: number;
-    }];
+    lectures: [
+        {
+            id: number;
+            name: string;
+            link: string;
+        }
+    ];
+    demos: [
+        {
+            id: number;
+            name: string;
+            link: string;
+            maxPoints: number;
+            gotPoints: number;
+        }
+    ];
     buttonText: string;
 }
 
@@ -70,10 +74,10 @@ export class GamificationMapCtrl implements IController {
     private image!: HTMLImageElement;
     private tileset!: ITileSet;
 
-    private grayTile!: {x: number, y: number};
-    private roofTile!: {x: number, y: number};
-    private frameTile!: {x: number, y: number};
-    private roofFrameTile!: {x: number, y: number};
+    private grayTile!: {x: number; y: number};
+    private roofTile!: {x: number; y: number};
+    private frameTile!: {x: number; y: number};
+    private roofFrameTile!: {x: number; y: number};
 
     private roofFrameSet!: ITileSet;
     private roofImage!: HTMLImageElement;
@@ -83,8 +87,7 @@ export class GamificationMapCtrl implements IController {
     private errorMessage: string | undefined;
     private loading = false;
 
-    constructor(protected element: JQLite) {
-    }
+    constructor(protected element: JQLite) {}
 
     $onInit() {
         this.parsedData = JSON.parse(this.data) as IParsedData;
@@ -97,7 +100,9 @@ export class GamificationMapCtrl implements IController {
     async loadMap() {
         // Configure data and generate the JSON map file.
         this.loading = true;
-        const r = await to($http.post<IMapResponse>("/generateMap", this.parsedData));
+        const r = await to(
+            $http.post<IMapResponse>("/generateMap", this.parsedData)
+        );
         this.loading = false;
         if (r.ok) {
             this.errorMessage = undefined;
@@ -112,7 +117,6 @@ export class GamificationMapCtrl implements IController {
         } else {
             this.errorMessage = r.result.data.error;
         }
-
     }
 
     /**
@@ -140,35 +144,40 @@ export class GamificationMapCtrl implements IController {
             rectX = this.json.tilewidth * scale;
         }
 
-        if (rectX >= (this.json.tilewidth * this.json.width) * scale - width) {
-            rectX = this.json.tilewidth * this.json.width * scale - this.json.tilewidth * scale - width;
+        if (rectX >= this.json.tilewidth * this.json.width * scale - width) {
+            rectX =
+                this.json.tilewidth * this.json.width * scale -
+                this.json.tilewidth * scale -
+                width;
         }
 
         // Set style settings for info box text elements.
         const title = this.element.find(".mapContainer .infoBoxTitle");
-        const description = this.element.find(".mapContainer .infoBoxDescription");
+        const description = this.element.find(
+            ".mapContainer .infoBoxDescription"
+        );
         title.css({
-            "position": "absolute",
-            "left": (rectX + 10 * tscale) + "px",
-            "top": (rectY + 5 * tscale) + "px",
-            "min-width": (width - 20 * tscale) + "px",
-            "max-width": (width - 20 * tscale) + "px",
-            "max-height": (2 * tscale) + "em",
-            "min-height": (2 * tscale) + "em",
-            "overflow": "hidden",
+            position: "absolute",
+            left: rectX + 10 * tscale + "px",
+            top: rectY + 5 * tscale + "px",
+            "min-width": width - 20 * tscale + "px",
+            "max-width": width - 20 * tscale + "px",
+            "max-height": 2 * tscale + "em",
+            "min-height": 2 * tscale + "em",
+            overflow: "hidden",
             "font-weight": "bold",
-            "font-size": (1.1 * tscale) + "em",
+            "font-size": 1.1 * tscale + "em",
             "z-index": 4,
         });
         description.css({
-            "min-width": (width - 20 * tscale) + "px",
-            "max-width": (width - 20 * tscale) + "px",
-            "max-height": (height - 60 * tscale) + "px",
-            "position": "absolute",
-            "overflow": "auto",
-            "left": (rectX + 10 * tscale) + "px",
-            "top": (rectY + 40 * tscale) + "px",
-            "font-size": (tscale) + "em",
+            "min-width": width - 20 * tscale + "px",
+            "max-width": width - 20 * tscale + "px",
+            "max-height": height - 60 * tscale + "px",
+            position: "absolute",
+            overflow: "auto",
+            left: rectX + 10 * tscale + "px",
+            top: rectY + 40 * tscale + "px",
+            "font-size": tscale + "em",
             "text-align": "left",
             "z-index": 4,
         });
@@ -188,15 +197,34 @@ export class GamificationMapCtrl implements IController {
         }
 
         // Set info box text
-        title.html("<a href='" + this.json.layers[tile.layerNo].properties.site + "'>" +
-            this.json.layers[tile.layerNo].properties.title + "</a>");
+        title.html(
+            "<a href='" +
+                this.json.layers[tile.layerNo].properties.site +
+                "'>" +
+                this.json.layers[tile.layerNo].properties.title +
+                "</a>"
+        );
         if (this.json.layers[tile.layerNo].properties.maxpoints !== 0) {
-            description.html("Dokumentin pisteet: " +
-                rround(this.json.layers[tile.layerNo].properties.studentpoints, 2) + "/" +
-                this.json.layers[tile.layerNo].properties.maxpoints + "<br>Kurssin pisteet yhteensä: " +
-                rround(totalPoints, 2) + "/" + totalMax);
+            description.html(
+                "Dokumentin pisteet: " +
+                    rround(
+                        this.json.layers[tile.layerNo].properties.studentpoints,
+                        2
+                    ) +
+                    "/" +
+                    this.json.layers[tile.layerNo].properties.maxpoints +
+                    "<br>Kurssin pisteet yhteensä: " +
+                    rround(totalPoints, 2) +
+                    "/" +
+                    totalMax
+            );
         } else {
-            description.html("Kurssin pisteet yhteensä: " + rround(totalPoints, 2) + "/" + totalMax);
+            description.html(
+                "Kurssin pisteet yhteensä: " +
+                    rround(totalPoints, 2) +
+                    "/" +
+                    totalMax
+            );
         }
 
         // Draw the box on the canvas
@@ -222,103 +250,207 @@ export class GamificationMapCtrl implements IController {
         }
 
         // if clicked on a "top tile", draw a full frame
-        if (tile.tileset.properties != null &&
-            tile.tileset.properties.frameProperty === 1 && !hasOwnProperty(this.json, tile, 1, 0)) {
+        if (
+            tile.tileset.properties != null &&
+            tile.tileset.properties.frameProperty === 1 &&
+            !hasOwnProperty(this.json, tile, 1, 0)
+        ) {
             /*
              && this.json.layers[tile.layerNo + 1] && this.json.layers[tile.layerNo + 1].data &&
              !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex).toString()))  {
              */
             context.globalAlpha = this.alpha;
-            context.drawImage(this.tileImage, this.grayTile.x, this.grayTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.grayTile.x,
+                this.grayTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 tile.y * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.tileImage, this.grayTile.x, this.grayTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.grayTile.x,
+                this.grayTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.tileImage, this.grayTile.x, this.grayTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.grayTile.x,
+                this.grayTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight * 2) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.roofImage, this.roofTile.x, this.roofTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.roofImage,
+                this.roofTile.x,
+                this.roofTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight * 3) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
             context.globalAlpha = 1;
 
-            context.drawImage(this.tileImage, this.frameTile.x, this.frameTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.frameTile.x,
+                this.frameTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 tile.y * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.tileImage, this.frameTile.x, this.frameTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.frameTile.x,
+                this.frameTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.tileImage, this.frameTile.x, this.frameTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.frameTile.x,
+                this.frameTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight * 2) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.roofImage, this.roofFrameTile.x, this.roofFrameTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.roofImage,
+                this.roofFrameTile.x,
+                this.roofFrameTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight * 3) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
             // If clicked on a bulding with one floor, draw two frame tiles and a roof frame
-        } else if (tile.tileset.properties != null &&
+        } else if (
+            tile.tileset.properties != null &&
             tile.tileset.properties.buildingProperty === 1 && // && this.json.layers[tile.layerNo + 1] &&
-
             !hasOwnProperty(this.json, tile, 1, -this.json.width) &&
-            hasOwnProperty(this.json, tile, -1, 0)) {
+            hasOwnProperty(this.json, tile, -1, 0)
+        ) {
             /*
              !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - this.json.width).toString()) &&
              this.json.layers[tile.layerNo - 1].data.hasOwnProperty((tile.dataIndex).toString())) {
              */
             context.globalAlpha = this.alpha;
 
-            context.drawImage(this.tileImage, this.grayTile.x, this.grayTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.grayTile.x,
+                this.grayTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.tileImage, this.grayTile.x, this.grayTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.grayTile.x,
+                this.grayTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight * 2) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.roofImage, this.roofTile.x, this.roofTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.roofImage,
+                this.roofTile.x,
+                this.roofTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight * 3) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
             context.globalAlpha = 1;
 
-            context.drawImage(this.tileImage, this.frameTile.x, this.frameTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.frameTile.x,
+                this.frameTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.tileImage, this.frameTile.x, this.frameTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.frameTile.x,
+                this.frameTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight * 2) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.roofImage, this.roofFrameTile.x, this.roofFrameTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.roofImage,
+                this.roofFrameTile.x,
+                this.roofFrameTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight * 3) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
             // If clicked on a bulding with two floors, draw one frame tile and a roof frame
-        } else if (tile.tileset.properties != null &&
+        } else if (
+            tile.tileset.properties != null &&
             tile.tileset.properties.buildingProperty === 1 && // this.json.layers[tile.layerNo + 1] &&
             !hasOwnProperty(this.json, tile, 1, -this.json.width) &&
             hasOwnProperty(this.json, tile, -1, this.json.width) &&
-            hasOwnProperty(this.json, tile, -2, this.json.width)) {
+            hasOwnProperty(this.json, tile, -2, this.json.width)
+        ) {
             /*
              !json.layers[tile.layerNo + 1].data.hasOwnProperty((tile.dataIndex - this.json.width).toString()) &&
              this.json.layers[tile.layerNo - 1].data.hasOwnProperty((tile.dataIndex + this.json.width).toString()) &&
@@ -326,57 +458,101 @@ export class GamificationMapCtrl implements IController {
              */
             context.globalAlpha = this.alpha;
 
-            context.drawImage(this.tileImage, this.grayTile.x, this.grayTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.grayTile.x,
+                this.grayTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.roofImage, this.roofTile.x, this.roofTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.roofImage,
+                this.roofTile.x,
+                this.roofTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight * 2) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
             context.globalAlpha = 1;
 
-            context.drawImage(this.tileImage, this.frameTile.x, this.frameTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.tileImage,
+                this.frameTile.x,
+                this.frameTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
-            context.drawImage(this.roofImage, this.roofFrameTile.x, this.roofFrameTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.roofImage,
+                this.roofFrameTile.x,
+                this.roofFrameTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight * 2) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
             // If clicked on a building with three floors and no roof, draw a roof frame
-        } else if (tile.tileset.properties != null &&
+        } else if (
+            tile.tileset.properties != null &&
             tile.tileset.properties.buildingProperty === 1 && // this.json.layers[tile.layerNo + 1] &&
             !hasOwnProperty(this.json, tile, 1, -this.json.width) &&
             hasOwnProperty(this.json, tile, -1, this.json.width) &&
             hasOwnProperty(this.json, tile, -2, this.json.width * 2) &&
-            hasOwnProperty(this.json, tile, -3, this.json.width * 2)) {
-
+            hasOwnProperty(this.json, tile, -3, this.json.width * 2)
+        ) {
             context.globalAlpha = this.alpha;
 
-            context.drawImage(this.roofImage, this.roofTile.x, this.roofTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.roofImage,
+                this.roofTile.x,
+                this.roofTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
 
             context.globalAlpha = 1;
 
-            context.drawImage(this.roofImage, this.roofFrameTile.x, this.roofFrameTile.y,
-                this.tileFrameSet.tilewidth, this.tileFrameSet.tileheight, tile.x * scale,
+            context.drawImage(
+                this.roofImage,
+                this.roofFrameTile.x,
+                this.roofFrameTile.y,
+                this.tileFrameSet.tilewidth,
+                this.tileFrameSet.tileheight,
+                tile.x * scale,
                 (tile.y - this.json.tileheight) * scale,
-                this.tileFrameSet.tilewidth * scale, this.tileFrameSet.tileheight * scale);
+                this.tileFrameSet.tilewidth * scale,
+                this.tileFrameSet.tileheight * scale
+            );
         }
-
     }
 
     /**
      * Function for preloading the images.
      * @param callback Callback function.
      */
-    private loadImages(callback: (images: {[index: number]: HTMLImageElement}) => void) {
+    private loadImages(
+        callback: (images: {[index: number]: HTMLImageElement}) => void
+    ) {
         const images: {[index: number]: HTMLImageElement} = {};
         let loadedImages = 0;
         const onload = () => {
@@ -397,14 +573,22 @@ export class GamificationMapCtrl implements IController {
      * @param canvas Canvas to draw on.
      * @param layer Layer that is being drawn.
      */
-    private drawTilesFromDict(dict: ILayerData, canvas: HTMLCanvasElement, layer: number) {
+    private drawTilesFromDict(
+        dict: ILayerData,
+        canvas: HTMLCanvasElement,
+        layer: number
+    ) {
         // Get all keys from the data dictionarty
         const keys: string[] = Object.keys(dict);
 
         // Go through every key and select appropriate spreadsheet for the tile
         for (const key of keys) {
             for (let j = 0; j < this.json.tilesets.length; j++) {
-                if (this.json.tilesets[j].firstgid + this.json.tilesets[j].tilecount > dict[key]) {
+                if (
+                    this.json.tilesets[j].firstgid +
+                        this.json.tilesets[j].tilecount >
+                    dict[key]
+                ) {
                     this.tileset = this.json.tilesets[j];
                     this.image = this.images[j];
                     break;
@@ -412,11 +596,22 @@ export class GamificationMapCtrl implements IController {
             }
             // Calculate the position for the tile
             const posIndex = +key;
-            const posX = posIndex % this.json.width * this.json.tilewidth;
-            const posY = Math.floor(posIndex / this.json.width) * this.json.tileheight;
+            const posX = (posIndex % this.json.width) * this.json.tilewidth;
+            const posY =
+                Math.floor(posIndex / this.json.width) * this.json.tileheight;
 
             // Create tile object and draw it on the map
-            const t = new Tile(this.json, dict[key], this.tileset, this.image, layer, posIndex, posX, posY, () => scale);
+            const t = new Tile(
+                this.json,
+                dict[key],
+                this.tileset,
+                this.image,
+                layer,
+                posIndex,
+                posX,
+                posY,
+                () => scale
+            );
             t.draw(canvas);
             this.tiles.push(t);
         }
@@ -482,10 +677,12 @@ export class GamificationMapCtrl implements IController {
                 this.clearSelection();
 
                 // If clicked tile is a "top tile" or a building
-                if (tile.tileset.properties != null &&
+                if (
+                    tile.tileset.properties != null &&
                     (tile.tileset.properties.frameProperty === 1 ||
                         tile.tileset.properties.buildingProperty === 1 ||
-                        tile.tileset.properties.buildingProperty === 2)) {
+                        tile.tileset.properties.buildingProperty === 2)
+                ) {
                     if (!tile.active) {
                         if (!this.showAll) {
                             // Activate clicked tile cluster
@@ -498,8 +695,10 @@ export class GamificationMapCtrl implements IController {
                     }
                     // Draw info box over the clicked point
                     this.drawInfo(x, y, tile);
-                } else if (tile.tileset.properties.buildingProperty === 0 &&
-                    tile.tileset.properties.frameProperty === 0) {
+                } else if (
+                    tile.tileset.properties.buildingProperty === 0 &&
+                    tile.tileset.properties.frameProperty === 0
+                ) {
                     if (this.showAll) {
                         this.activateAll();
                         this.drawOnActive();
@@ -521,20 +720,26 @@ export class GamificationMapCtrl implements IController {
         let isNextTo;
 
         for (const t of this.tiles) {
-            isNextTo = (t.x * scale <= (tile.x + this.json.tilewidth * 2) * scale &&
+            isNextTo =
+                t.x * scale <= (tile.x + this.json.tilewidth * 2) * scale &&
                 t.x * scale >= (tile.x - this.json.tilewidth * 2) * scale &&
-                (t.y * scale <= (tile.y + this.json.tileheight * 2) * scale &&
-                    t.y * scale >= (tile.y - this.json.tileheight * 2) * scale));
+                t.y * scale <= (tile.y + this.json.tileheight * 2) * scale &&
+                t.y * scale >= (tile.y - this.json.tileheight * 2) * scale;
 
             // If the iterated tile is a building or a "top tile" and it is next to
             // or above the given tile, call this function in  recursion.
-            if (t.tileset.properties != null &&
+            if (
+                t.tileset.properties != null &&
                 (t.tileset.properties.buildingProperty === 1 ||
-                    t.tileset.properties.frameProperty === 1) && !t.active &&
-                (isNextTo || ((t.layerNo === tile.layerNo + 1 ||
-                    t.layerNo === tile.layerNo - 1) &&
-                    t.x === tile.x && (t.y === tile.y - this.json.tileheight ||
-                        t.y === tile.y + this.json.tileheight)))) {
+                    t.tileset.properties.frameProperty === 1) &&
+                !t.active &&
+                (isNextTo ||
+                    ((t.layerNo === tile.layerNo + 1 ||
+                        t.layerNo === tile.layerNo - 1) &&
+                        t.x === tile.x &&
+                        (t.y === tile.y - this.json.tileheight ||
+                            t.y === tile.y + this.json.tileheight)))
+            ) {
                 this.activateCluster(t);
             }
         }
@@ -545,9 +750,12 @@ export class GamificationMapCtrl implements IController {
      */
     private activateAll() {
         for (const t of this.tiles) {
-            if (t.tileset.properties != null &&
+            if (
+                t.tileset.properties != null &&
                 (t.tileset.properties.buildingProperty === 1 ||
-                    t.tileset.properties.frameProperty === 1) && !t.active) {
+                    t.tileset.properties.frameProperty === 1) &&
+                !t.active
+            ) {
                 t.active = true;
             }
         }
@@ -563,13 +771,20 @@ export class GamificationMapCtrl implements IController {
 
         // Set some attributes for the canvas
         this.middleCanvas.setAttribute("class", "middleCanvas");
-        this.middleCanvas.setAttribute("style", "position: absolute; left: 0; top: 0; z-index: 1;");
+        this.middleCanvas.setAttribute(
+            "style",
+            "position: absolute; left: 0; top: 0; z-index: 1;"
+        );
         this.middleCanvas.width = this.json.width * this.json.tilewidth * scale;
-        this.middleCanvas.height = this.json.height * this.json.tileheight + this.json.tileheight * 3 * scale;
+        this.middleCanvas.height =
+            this.json.height * this.json.tileheight +
+            this.json.tileheight * 3 * scale;
 
         this.element.find(".mapContainer").append(this.middleCanvas);
         const title = this.element.find(".mapContainer .infoBoxTitle");
-        const description = this.element.find(".mapContainer .infoBoxDescription");
+        const description = this.element.find(
+            ".mapContainer .infoBoxDescription"
+        );
 
         // Deactivate currently active tiles
         for (const t of this.tiles) {
@@ -602,19 +817,31 @@ export class GamificationMapCtrl implements IController {
             // Set some attributes for the canvas
             if (j === 0) {
                 canvas.setAttribute("class", "bottomCanvas");
-                canvas.setAttribute("style", "padding-bottom: 1em; z-index: " + j + ";");
+                canvas.setAttribute(
+                    "style",
+                    "padding-bottom: 1em; z-index: " + j + ";"
+                );
                 this.bottomCanvas = canvas;
             } else if (j === 1) {
                 canvas.setAttribute("class", "middleCanvas");
-                canvas.setAttribute("style", "position: absolute; left: 0; top: 0; z-index: " + j + ";");
+                canvas.setAttribute(
+                    "style",
+                    "position: absolute; left: 0; top: 0; z-index: " + j + ";"
+                );
                 this.middleCanvas = canvas;
             } else {
                 canvas.setAttribute("class", "topCanvas");
-                canvas.setAttribute("style", "position: absolute; left: 0; top: 0; z-index: " + j + ";");
+                canvas.setAttribute(
+                    "style",
+                    "position: absolute; left: 0; top: 0; z-index: " + j + ";"
+                );
                 this.topCanvas = canvas;
             }
             canvas.width = this.json.width * this.json.tilewidth * scale;
-            canvas.height = (this.json.height * this.json.tileheight + this.json.tileheight * 3) * scale;
+            canvas.height =
+                (this.json.height * this.json.tileheight +
+                    this.json.tileheight * 3) *
+                scale;
         }
 
         // Canvases used to draw the layers.
@@ -622,7 +849,10 @@ export class GamificationMapCtrl implements IController {
             canvas = document.createElement("canvas");
 
             canvas.width = this.json.width * this.json.tilewidth * scale;
-            canvas.height = (this.json.height * this.json.tileheight + this.json.tileheight * 3) * scale;
+            canvas.height =
+                (this.json.height * this.json.tileheight +
+                    this.json.tileheight * 3) *
+                scale;
             this.canvases.push(canvas);
         }
     }
@@ -631,11 +861,17 @@ export class GamificationMapCtrl implements IController {
         this.images = images;
         // Find tilesets and spreadsheets needed for drawing a frame
         for (let j = 0; j < this.json.tilesets.length; j++) {
-            if (this.json.tilesets[j].properties != null && this.json.tilesets[j].properties.frameProperty === 2) {
+            if (
+                this.json.tilesets[j].properties != null &&
+                this.json.tilesets[j].properties.frameProperty === 2
+            ) {
                 this.tileFrameSet = this.json.tilesets[j];
                 this.tileImage = this.images[j];
             }
-            if (this.json.tilesets[j].properties != null && this.json.tilesets[j].properties.frameProperty === 3) {
+            if (
+                this.json.tilesets[j].properties != null &&
+                this.json.tilesets[j].properties.frameProperty === 3
+            ) {
                 this.roofFrameSet = this.json.tilesets[j];
                 this.roofImage = this.images[j];
             }
@@ -729,7 +965,10 @@ function absolutePosition(element: HTMLElement) {
  * @param offset Number of tiles that come after the searched tile on the spreadsheet
  * @returns {{x: *, y: *}} Position of the tile on spreadsheet
  */
-function findTileImagePos(tileset: ITileSet, offset: number): {x: number, y: number} {
+function findTileImagePos(
+    tileset: ITileSet,
+    offset: number
+): {x: number; y: number} {
     let currentX = 0;
     let currentY = 0;
 
@@ -760,21 +999,29 @@ function findTileImagePos(tileset: ITileSet, offset: number): {x: number, y: num
  * @param {number} datadelta
  * @returns {boolean}
  */
-function hasOwnProperty(json: IMapResponse, tile: ITile, layerdelta: number, datadelta: number): boolean {
+function hasOwnProperty(
+    json: IMapResponse,
+    tile: ITile,
+    layerdelta: number,
+    datadelta: number
+): boolean {
     if (!json.layers[tile.layerNo + layerdelta]) {
         return false;
     }
     if (!json.layers[tile.layerNo + layerdelta].data) {
         return false;
     }
-    return (json.layers[tile.layerNo + layerdelta].data.hasOwnProperty((tile.dataIndex + datadelta).toString()));
+    return json.layers[tile.layerNo + layerdelta].data.hasOwnProperty(
+        (tile.dataIndex + datadelta).toString()
+    );
 }
 
 timApp.component("gamificationMap", {
     bindings: {
         data: "@",
     },
-    controller: GamificationMapCtrl, template: `
+    controller: GamificationMapCtrl,
+    template: `
 <div class="no-highlight hidden-print">
     <button class="timButton"
             ng-click="$ctrl.clickShowMap()"

@@ -58,8 +58,7 @@ export function convertDateStringsToMoments(input: unknown): unknown {
 }
 
 export function angularWait(): IPromise<void> {
-    return $timeout(() => {
-    }, 100);
+    return $timeout(() => {}, 100);
 }
 
 export function assertIsText(n: Node): n is Text {
@@ -69,7 +68,7 @@ export function assertIsText(n: Node): n is Text {
     return true;
 }
 
-export function stringOrNull(x: { toString: () => string }): string {
+export function stringOrNull(x: {toString: () => string}): string {
     if (x != null) {
         return x.toString();
     }
@@ -93,8 +92,10 @@ export function isInViewport(el: Element) {
     return (
         rect.top >= 0 &&
         rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        rect.bottom <=
+            (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <=
+            (window.innerWidth || document.documentElement.clientWidth)
     );
 }
 
@@ -118,9 +119,14 @@ export function scrollToElement(element: Element) {
  * @param marginright
  * @param marginbottom
  */
-export function scrollToViewInsideParent(helement: HTMLElement, hparent: HTMLElement,
-                                         marginleft: number, margintop: number,
-                                         marginright: number, marginbottom: number) {
+export function scrollToViewInsideParent(
+    helement: HTMLElement,
+    hparent: HTMLElement,
+    marginleft: number,
+    margintop: number,
+    marginright: number,
+    marginbottom: number
+) {
     const element = $(helement);
     if (element == null) {
         return false;
@@ -163,9 +169,17 @@ export function scrollToViewInsideParent(helement: HTMLElement, hparent: HTMLEle
     }
 
     const topdy = parentOffset.top - elementOffset.top + margintop;
-    const bottomdy = (elementOffset.top + height) - (parentOffset.top + parentInnerHeight) + marginbottom;
+    const bottomdy =
+        elementOffset.top +
+        height -
+        (parentOffset.top + parentInnerHeight) +
+        marginbottom;
     const leftdx = parentOffset.left - elementOffset.left + marginleft;
-    const rightdx = (elementOffset.left + width) - (parentOffset.left + parentInnerWidth) + marginright;
+    const rightdx =
+        elementOffset.left +
+        width -
+        (parentOffset.left + parentInnerWidth) +
+        marginright;
 
     if (topdy >= 0) {
         parent.scrollTop(parentScrollTop - topdy);
@@ -234,7 +248,10 @@ export interface Coords {
 }
 
 export function dist(coords1: Coords, coords2: Coords) {
-    return Math.sqrt(Math.pow(coords2.left - coords1.left, 2) + Math.pow(coords2.top - coords1.top, 2));
+    return Math.sqrt(
+        Math.pow(coords2.left - coords1.left, 2) +
+            Math.pow(coords2.top - coords1.top, 2)
+    );
 }
 
 export function markPageDirty() {
@@ -301,7 +318,9 @@ export type Result<T, U> = Success<T> | Failure<U>;
  * @param promise Promise to wrap.
  * @returns A promise that resolves to either a success or error.
  */
-export function to<T, U = { data: { error: string } }>(promise: Promise<T> | IPromise<T>): Promise<Result<T, U>> {
+export function to<T, U = {data: {error: string}}>(
+    promise: Promise<T> | IPromise<T>
+): Promise<Result<T, U>> {
     return refreshAngularJS(to2<T, U>(promise as Promise<T>));
 }
 
@@ -309,10 +328,14 @@ export function to<T, U = { data: { error: string } }>(promise: Promise<T> | IPr
  * Same as "to" function, but meant to be called from new Angular.
  * @param promise
  */
-export function to2<T, U = { error: { error: string } }>(promise: Promise<T>): Promise<Result<T, U>> {
-    return promise.then<Success<T>>((data: T) => ({ok: true, result: data})).catch<Failure<U>>((err) => {
-        return {ok: false, result: err as U};
-    });
+export function to2<T, U = {error: {error: string}}>(
+    promise: Promise<T>
+): Promise<Result<T, U>> {
+    return promise
+        .then<Success<T>>((data: T) => ({ok: true, result: data}))
+        .catch<Failure<U>>((err) => {
+            return {ok: false, result: err as U};
+        });
 }
 
 export function refreshAngularJS<T>(p: Promise<T> | IPromise<T>): Promise<T> {
@@ -418,8 +441,7 @@ export function getOutOffsetVisible(el: Element) {
     return bounds;
 }
 
-export const empty = () => {
-};
+export const empty = () => {};
 
 // adapted from https://stackoverflow.com/a/11744120
 export function getViewPortSize() {
@@ -439,7 +461,9 @@ export function getViewPortSize() {
 }
 
 export function isMobileDevice() {
-    const touch = typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !== "undefined";
+    const touch =
+        typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !==
+        "undefined";
     return touch && isScreenSizeOrLower("md");
 }
 
@@ -486,7 +510,9 @@ function getTouchCoords(e: TouchEvent) {
     return {X: 0, Y: 0};
 }
 
-export function getPageXY(e: JQuery.MouseEventBase | JQuery.TouchEventBase | MouseEvent | TouchEvent) {
+export function getPageXY(
+    e: JQuery.MouseEventBase | JQuery.TouchEventBase | MouseEvent | TouchEvent
+) {
     if (e instanceof MouseEvent) {
         return {X: e.pageX, Y: e.pageY};
     } else if (isTouchEvent(e)) {
@@ -497,7 +523,7 @@ export function getPageXY(e: JQuery.MouseEventBase | JQuery.TouchEventBase | Mou
             return {X: e.pageX, Y: e.pageY};
         }
         const o = e.originalEvent;
-        if (!o || !(isTouchEvent(o))) {
+        if (!o || !isTouchEvent(o)) {
             return {X: e.pageX, Y: e.pageY};
         }
         return getTouchCoords(o);
@@ -530,7 +556,9 @@ export function capitalizeFirstLetter(s: string) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export type ToReturn<T, U = { data: { error: string } }> = Promise<Result<IHttpResponse<T>, U>>;
+export type ToReturn<T, U = {data: {error: string}}> = Promise<
+    Result<IHttpResponse<T>, U>
+>;
 export const ToReturn = Promise;
 
 export function injectStyle(url: string) {
@@ -558,7 +586,10 @@ export function numOrStringToNumber(s: number | string) {
     return parseFloat(s);
 }
 
-export function valueOr<T extends Record<string, unknown> | string | number | boolean, K extends T>(v: T | undefined | null, def: K): T {
+export function valueOr<
+    T extends Record<string, unknown> | string | number | boolean,
+    K extends T
+>(v: T | undefined | null, def: K): T {
     return v != null ? v : def;
 }
 
@@ -573,7 +604,9 @@ export function valueDefu(s: string | undefined | null, def: string): string {
 }
 
 export const StringArray = t.array(t.string);
-export const ModuleArray = t.array(t.type({name: t.string, requires: StringArray}));
+export const ModuleArray = t.array(
+    t.type({name: t.string, requires: StringArray})
+);
 export const StringOrNumber = t.union([t.string, t.number]);
 
 export type MouseOrTouch = MouseEvent | Touch;
@@ -582,7 +615,14 @@ export function touchEventToTouch(event: TouchEvent) {
     return event.touches[0] || event.changedTouches[0];
 }
 
-export function isTouchEvent(e: MouseOrTouch | TouchEvent | Event | JQuery.MouseEventBase | JQuery.TouchEventBase): e is TouchEvent {
+export function isTouchEvent(
+    e:
+        | MouseOrTouch
+        | TouchEvent
+        | Event
+        | JQuery.MouseEventBase
+        | JQuery.TouchEventBase
+): e is TouchEvent {
     return (window as ExtendedWindow).TouchEvent && e instanceof TouchEvent;
 }
 
@@ -607,7 +647,7 @@ export function posToRelative(e: Element, p: MouseOrTouch | TouchEvent) {
 let copyHelperElement: HTMLTextAreaElement | undefined;
 
 export function getClipboardHelper(): HTMLTextAreaElement {
-    let e1 = copyHelperElement;  // prevent extra creating and deleting
+    let e1 = copyHelperElement; // prevent extra creating and deleting
     if (e1) {
         return e1;
     }
@@ -652,14 +692,19 @@ export function getCookie(name: string) {
 }
 
 export function getGroupDesc(group: IGroup) {
-    return group.personal_user ? group.personal_user.real_name + " (" + group.name + ")" : group.name;
+    return group.personal_user
+        ? group.personal_user.real_name + " (" + group.name + ")"
+        : group.name;
 }
 
 export function windowAsAny() {
-    return window as unknown as Record<string, unknown>;
+    return (window as unknown) as Record<string, unknown>;
 }
 
-export function createValidator(validityChecker: (s: string) => boolean, name: string): ValidatorFn {
+export function createValidator(
+    validityChecker: (s: string) => boolean,
+    name: string
+): ValidatorFn {
     return (control: AbstractControl) => {
         const viewValue = control.value;
         if (typeof viewValue !== "string") {
@@ -723,7 +768,9 @@ export function truncate(text: string, max: number) {
 }
 
 export function parseIframeopts(iframeopts: string) {
-    const parse = Range.prototype.createContextualFragment.bind(document.createRange());
+    const parse = Range.prototype.createContextualFragment.bind(
+        document.createRange()
+    );
     const parsed = parse(`<div ${iframeopts}></div>`);
     let sandbox = "";
     let allow = "";
@@ -742,7 +789,7 @@ export function parseIframeopts(iframeopts: string) {
 export function seconds2Time(seconds: number) {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds - h * 3600) / 60);
-    const s = seconds - (h * 3600) - (m * 60);
+    const s = seconds - h * 3600 - m * 60;
     return {hours: h, minutes: m, seconds: s};
 }
 
@@ -765,15 +812,20 @@ export function getViewName() {
     return document.location.pathname.split("/")[1];
 }
 
-export function secondsToShortTime(time: number, displayUnits: humanizeDuration.Unit[] = [], locale: string = "en") {
+export function secondsToShortTime(
+    time: number,
+    displayUnits: humanizeDuration.Unit[] = [],
+    locale: string = "en"
+) {
     const DAY_LIMIT = 24 * 60 * 60;
     let prefix = "";
     if (time > DAY_LIMIT && displayUnits.length != 0) {
-        prefix = humanizeDuration(time * 1000, {
-            units: displayUnits,
-            round: true,
-            language: locale,
-        }) + " + ";
+        prefix =
+            humanizeDuration(time * 1000, {
+                units: displayUnits,
+                round: true,
+                language: locale,
+            }) + " + ";
         time %= DAY_LIMIT;
     }
     return `${prefix}${secondsToHHMMSS(time)}`;

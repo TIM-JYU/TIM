@@ -13,7 +13,11 @@ import {IEditor} from "./editor";
     template: `<div #area class="no-popup-menu"></div>`,
 })
 export class ParsonsEditorComponent implements IEditor {
-    private parson?: {join: (str: string) => string, clear: () => void, check: (str: string) => string};
+    private parson?: {
+        join: (str: string) => string;
+        clear: () => void;
+        check: (str: string) => string;
+    };
     private content_?: string;
     @Input() private shuffle: boolean = false;
     @Input() private maxcheck?: number;

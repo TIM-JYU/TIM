@@ -21,8 +21,10 @@ export interface ITimTableEditorToolbarParams {
 
 let instance: TimTableEditorToolbarController | undefined;
 
-export class TimTableEditorToolbarController extends DialogController<{params: ITimTableEditorToolbarParams},
-    void> {
+export class TimTableEditorToolbarController extends DialogController<
+    {params: ITimTableEditorToolbarParams},
+    void
+> {
     static component = "timTableEditorToolbar";
     static $inject = ["$element", "$scope"] as const;
     private colorOpts = {
@@ -53,9 +55,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     /**
      * Checks for changes in the cell background color selector.
      */
-    $doCheck() {
-
-    }
+    $doCheck() {}
 
     public callbacks!: ITimTableToolbarCallbacks; // $onInit
     public activeTable?: TimTableComponent;
@@ -97,7 +97,10 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      * @param callbacks Callbacks for communicating with the table.
      * @param activeTable The object that requested the toolbar to open.
      */
-    public show(callbacks: ITimTableToolbarCallbacks, activeTable: TimTableComponent) {
+    public show(
+        callbacks: ITimTableToolbarCallbacks,
+        activeTable: TimTableComponent
+    ) {
         this.visible = true;
         this.activeTable = activeTable;
         this.hide = this.activeTable.data.hide;
@@ -118,15 +121,16 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      * Sets the text-align value of a cell.
      */
     private setTextAlign(value: string) {
-       //  this.callbacks.setTextAlign(value);
-        this.callbacks.setCell({ style: {textAlign: value}});
+        //  this.callbacks.setTextAlign(value);
+        this.callbacks.setCell({style: {textAlign: value}});
     }
 
     // noinspection JSUnusedLocalSymbols
     /**
      * Sets the cell by template
      */
-    public setCell(value: IToolbarTemplate) { // } Record<string, string>) {
+    public setCell(value: IToolbarTemplate) {
+        // } Record<string, string>) {
         this.callbacks.setCell(value);
     }
 
@@ -135,7 +139,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      * Clears cell format
      */
     private clearFormat() {
-        this.callbacks.setCell({ style: {CLEAR: "ALL"}});
+        this.callbacks.setCell({style: {CLEAR: "ALL"}});
     }
 
     // noinspection JSUnusedLocalSymbols
@@ -146,7 +150,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     // noinspection JSUnusedLocalSymbols
     private changePin() {
         const t = this.activeTable;
-        if (!t) { return; }
+        if (!t) {
+            return;
+        }
         t.shiftDown = !t.shiftDown;
         t.startCell = t.activeCell;
     }
@@ -165,14 +171,26 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      */
     private getCellForToolbar(value: IToolbarTemplate) {
         let v = value.text;
-        if (v === "notext") { return undefined; }
-        if (!v) { v = value.cell; }
-        if (!v) { v = value.toggleCell; }
-        if (!v) { return "\u2003"; } // &#8195  em space &emsp;
+        if (v === "notext") {
+            return undefined;
+        }
+        if (!v) {
+            v = value.cell;
+        }
+        if (!v) {
+            v = value.toggleCell;
+        }
+        if (!v) {
+            return "\u2003";
+        } // &#8195  em space &emsp;
         v = "" + v;
         // v = v.replace('$', '');
-        if (v === value.text && !value.favorite) { return v; }
-        if (v.length <= 5) { return v; }
+        if (v === value.text && !value.favorite) {
+            return v;
+        }
+        if (v.length <= 5) {
+            return v;
+        }
         return v.substr(0, Math.min(v.length, 5)) + "..";
     }
 
@@ -182,9 +200,15 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      */
     private getTitleForToolbar(value: IToolbarTemplate) {
         let v = value.title;
-        if (!v) { v = value.cell; } // &#8195  em space &emsp;
-        if (!v) { v = value.text; } // &#8195  em space &emsp;
-        if (!v) { return null; } // &#8195  em space &emsp;
+        if (!v) {
+            v = value.cell;
+        } // &#8195  em space &emsp;
+        if (!v) {
+            v = value.text;
+        } // &#8195  em space &emsp;
+        if (!v) {
+            return null;
+        } // &#8195  em space &emsp;
         return v;
     }
 
@@ -224,13 +248,21 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
      */
     private getCellStyleForToolbar(value: IToolbarTemplate) {
         let ret = value.style;
-        if (!ret) { ret = value.toggleStyle; }
+        if (!ret) {
+            ret = value.toggleStyle;
+        }
         if (value.buttonStyle) {
             ret = value.buttonStyle;
         }
-        if (!ret) { return ret; }
+        if (!ret) {
+            return ret;
+        }
         let sret = JSON.stringify(ret);
-        sret = sret.replace(/"/g, "").replace("{", "").replace("}", "").replace(/:/g, ": ");
+        sret = sret
+            .replace(/"/g, "")
+            .replace("{", "")
+            .replace("}", "")
+            .replace(/:/g, ": ");
         return sret;
     }
 
@@ -249,7 +281,7 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
     private static onColorPickerClose(color: string) {
         if (instance) {
             instance.previousBackgroundColor = instance.cellBackgroundColor;
-            instance.callbacks.setCell({ style: {backgroundColor: "#" + color}});
+            instance.callbacks.setCell({style: {backgroundColor: "#" + color}});
         }
     }
 
@@ -260,7 +292,9 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
 
     // noinspection JSUnusedLocalSymbols
     private applyBackgroundColor() {
-        this.callbacks.setCell({ style: {backgroundColor: "#" + this.previousBackgroundColor}});
+        this.callbacks.setCell({
+            style: {backgroundColor: "#" + this.previousBackgroundColor},
+        });
     }
 
     // noinspection JSUnusedLocalSymbols
@@ -301,15 +335,16 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
                 rb: {style: {class: "bb br"}},
                 rt: {style: {class: "bt br"}},
                 t: {style: {class: "bt"}},
-            }};
+            },
+        };
         this.setCell(brect);
     }
 
     private removeBorders() {
         const removeBrd = {
-          removeStyle: {
-              class: ["bt", "br", "bl", "bb"],
-          },
+            removeStyle: {
+                class: ["bt", "br", "bl", "bb"],
+            },
         };
         this.setCell(removeBrd);
     }
@@ -323,16 +358,30 @@ export class TimTableEditorToolbarController extends DialogController<{params: I
                 const c = cmd.split(" ");
                 const cmds = c[0];
                 const param = c[1] ?? "";
-                if (cmds === "clearFormat") { this.clearFormat(); }
-                if (cmds === "applyBackgroundColor") { this.applyBackgroundColor(); }
-                if (cmds === "setTextAlign") { this.setTextAlign(param); }
-                if (cmds === "addToTemplates") { this.addToTemplates(); }
-                if (cmds === "borderRect") { this.borderRect(); }
-                if (cmds === "removeBorders") { this.removeBorders(); }
+                if (cmds === "clearFormat") {
+                    this.clearFormat();
+                }
+                if (cmds === "applyBackgroundColor") {
+                    this.applyBackgroundColor();
+                }
+                if (cmds === "setTextAlign") {
+                    this.setTextAlign(param);
+                }
+                if (cmds === "addToTemplates") {
+                    this.addToTemplates();
+                }
+                if (cmds === "borderRect") {
+                    this.borderRect();
+                }
+                if (cmds === "removeBorders") {
+                    this.removeBorders();
+                }
             }
         }
         this.setCell(templ);
-        if (templ.closeEdit) { this.callbacks.closeEditor(true); }
+        if (templ.closeEdit) {
+            this.callbacks.closeEditor(true);
+        }
     }
 }
 
@@ -340,23 +389,33 @@ export function isToolbarEnabled() {
     return true;
 }
 
-export function handleToolbarKey(ev: KeyboardEvent, toolBarTemplates: IToolbarTemplate[] | undefined) {
-    if (!instance || !toolBarTemplates) { return false; }
+export function handleToolbarKey(
+    ev: KeyboardEvent,
+    toolBarTemplates: IToolbarTemplate[] | undefined
+) {
+    if (!instance || !toolBarTemplates) {
+        return false;
+    }
     for (const templ of toolBarTemplates) {
-        if (!templ || !templ.shortcut) { continue; }
+        if (!templ || !templ.shortcut) {
+            continue;
+        }
         const k = templ.shortcut.split("+");
         let key = k[0];
         let ekey = ev.key;
-        if (ekey.charCodeAt(0) === 8211) { ekey = "-"; } // Mac Slash
+        if (ekey.charCodeAt(0) === 8211) {
+            ekey = "-";
+        } // Mac Slash
         let mod = "";
         if (k.length >= 2) {
             mod = k[0];
             key = k[1];
         }
         if (mod === "" && key.length === 1 && instance.callbacks.isEdit()) {
-            continue;  // ei käytetä yhden näppäimen shortcutteja jos ollaan editissä
+            continue; // ei käytetä yhden näppäimen shortcutteja jos ollaan editissä
         }
-        if (templ.chars) { // regexp for keys to use
+        if (templ.chars) {
+            // regexp for keys to use
             if (ekey.match("^" + templ.chars + "$")) {
                 templ.cell = ekey;
                 instance.applyTemplate(templ);
@@ -364,10 +423,17 @@ export function handleToolbarKey(ev: KeyboardEvent, toolBarTemplates: IToolbarTe
             }
             continue;
         }
-        const evmod = (ev.altKey ? "a" : "") + (ev.ctrlKey ? "c" : "") + (ev.shiftKey ? "s" : "");
-        if (mod != evmod) { continue; }
+        const evmod =
+            (ev.altKey ? "a" : "") +
+            (ev.ctrlKey ? "c" : "") +
+            (ev.shiftKey ? "s" : "");
+        if (mod != evmod) {
+            continue;
+        }
         let code = ev.code;
-        if (code.startsWith("Key")) { code = code.substr(3).toLowerCase(); }
+        if (code.startsWith("Key")) {
+            code = code.substr(3).toLowerCase();
+        }
         if (ekey === key || code === key) {
             instance.applyTemplate(templ);
             return true;
@@ -391,7 +457,8 @@ export function openTableEditorToolbar(p: ITimTableEditorToolbarParams) {
                 forceMaximized: false,
                 showMinimizeButton: false,
                 // absolute: true,
-            });
+            }
+        );
     }
 }
 
@@ -403,9 +470,8 @@ export function hideToolbar(closingTable: TimTableComponent) {
     }
 }
 
-registerDialogComponent(TimTableEditorToolbarController,
-    {
-        template: `
+registerDialogComponent(TimTableEditorToolbarController, {
+    template: `
 <tim-dialog class="overflow-visible">
     <dialog-body>
         <div class="row" >
@@ -489,4 +555,4 @@ registerDialogComponent(TimTableEditorToolbarController,
     </dialog-body>
 </tim-dialog>
 `,
-    });
+});

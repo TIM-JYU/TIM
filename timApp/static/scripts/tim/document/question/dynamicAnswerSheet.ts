@@ -27,7 +27,9 @@ import {Binding} from "../../util/utils";
  * @copyright 2015 Timppa project authors
  */
 
-export function getPointsTable(markupPoints?: string): Array<{[points: string]: string}> {
+export function getPointsTable(
+    markupPoints?: string
+): Array<{[points: string]: string}> {
     // Format of markupPoints: 1:1.1;2:1.2;3:1.3||2:3.2
     const pointsTable: Array<{[points: string]: string}> = [];
     if (markupPoints && markupPoints !== "") {
@@ -108,7 +110,13 @@ export function fixQuestionJson(json: IUnprocessedHeaders): IProcessedHeaders {
     }
 
     const defaultFieldType: AnswerFieldType = "text";
-    const blankColumn = {text: "", type: "question", answerFieldType: defaultFieldType, id: 0, rowId: 0};
+    const blankColumn = {
+        text: "",
+        type: "question",
+        answerFieldType: defaultFieldType,
+        id: 0,
+        rowId: 0,
+    };
     let ir = -1;
     for (const r of rows) {
         ir++;
@@ -161,18 +169,21 @@ function createArray(...args: number[]) {
     return arr;
 }
 
-export function makePreview(markup: IAskedJsonJson, {
-    answerTable = [],
-    enabled = false,
-    showExplanations = false,
-    showCorrectChoices = false,
-    userpoints,
-}: Partial<IPreviewParams> = {
-    answerTable: [],
-    enabled: false,
-    showCorrectChoices: false,
-    showExplanations: false,
-}): IPreviewParams {
+export function makePreview(
+    markup: IAskedJsonJson,
+    {
+        answerTable = [],
+        enabled = false,
+        showExplanations = false,
+        showCorrectChoices = false,
+        userpoints,
+    }: Partial<IPreviewParams> = {
+        answerTable: [],
+        enabled: false,
+        showCorrectChoices: false,
+        showExplanations: false,
+    }
+): IPreviewParams {
     return {
         answerTable,
         enabled,
@@ -197,19 +208,24 @@ class AnswerSheetController implements IController {
     private defaultPoints?: number;
     private userpoints?: number;
     private disabled?: boolean;
-    private onAnswerChange!: Binding<() => ((at: AnswerTable) => void) | undefined, "&">;
+    private onAnswerChange!: Binding<
+        () => ((at: AnswerTable) => void) | undefined,
+        "&"
+    >;
 
     constructor(element: JQLite) {
         this.element = element;
     }
 
-    $onInit() {
-
-    }
+    $onInit() {}
 
     $onChanges(onChangesObj: IOnChangesObject) {
-        const qdata = onChangesObj.questiondata as IChangesObject<IPreviewParams> | undefined;
-        const adata = onChangesObj.answertable as IChangesObject<AnswerTable> | undefined;
+        const qdata = onChangesObj.questiondata as
+            | IChangesObject<IPreviewParams>
+            | undefined;
+        const adata = onChangesObj.answertable as
+            | IChangesObject<AnswerTable>
+            | undefined;
         if (qdata) {
             this.createAnswer();
             ParCompiler.processAllMathDelayed(this.element);
@@ -222,8 +238,7 @@ class AnswerSheetController implements IController {
         }
     }
 
-    $doCheck() {
-    }
+    $doCheck() {}
 
     private getHeader() {
         return this.fixText(this.json.questionText);
@@ -245,11 +260,15 @@ class AnswerSheetController implements IController {
         }
         // Return a non-null value as long as a point value was explicitly given in point array or defaultPoints
         if (this.pointsTable.length <= rowIndex) {
-            return this.defaultPoints != null ? this.defaultPoints.toString() : null;
+            return this.defaultPoints != null
+                ? this.defaultPoints.toString()
+                : null;
         }
         const rowPoints = this.pointsTable[rowIndex];
         if (!rowPoints) {
-            return this.defaultPoints != null ? this.defaultPoints.toString() : null;
+            return this.defaultPoints != null
+                ? this.defaultPoints.toString()
+                : null;
         }
         const idxStr = "" + (colIndex + 1);
         if (idxStr in rowPoints) {
@@ -269,14 +288,16 @@ class AnswerSheetController implements IController {
 
     private getInputClass(rowIndex: number, colIndex: number) {
         const pts = this.getPoints(rowIndex, colIndex);
-        return pts != null && parseFloat(pts) > 0 ? "qst-correct" : "qst-normal";
+        return pts != null && parseFloat(pts) > 0
+            ? "qst-correct"
+            : "qst-normal";
     }
 
     private canShowExpl(): boolean {
         if (!this.questiondata) {
             return false;
         }
-        return (this.questiondata.showExplanations) && this.expl != null;
+        return this.questiondata.showExplanations && this.expl != null;
     }
 
     private getExpl(rowIndex: number): string | null {
@@ -291,7 +312,10 @@ class AnswerSheetController implements IController {
     }
 
     private isMatrix() {
-        return this.json.questionType === "matrix" || this.json.questionType === "true-false";
+        return (
+            this.json.questionType === "matrix" ||
+            this.json.questionType === "true-false"
+        );
     }
 
     private isVertical() {
@@ -301,7 +325,10 @@ class AnswerSheetController implements IController {
     private getTableClass(): string | null {
         let totalBorderless = true;
         const data = this.processed;
-        if (this.hasHeaders() || (data.rows.length > 1 && data.rows[0].columns.length > 1)) {
+        if (
+            this.hasHeaders() ||
+            (data.rows.length > 1 && data.rows[0].columns.length > 1)
+        ) {
             totalBorderless = false;
         }
         return totalBorderless ? "total-borderless" : null;
@@ -309,8 +336,11 @@ class AnswerSheetController implements IController {
 
     private hasHeaders(): boolean {
         const data = this.processed;
-        return data.headers &&
-            data.headers.length > 0 && !(data.headers[0].text === "" && data.headers.length === 1);
+        return (
+            data.headers &&
+            data.headers.length > 0 &&
+            !(data.headers[0].text === "" && data.headers.length === 1)
+        );
     }
 
     private getGroupName(rowIndex: number) {
@@ -358,7 +388,10 @@ class AnswerSheetController implements IController {
         if (data.rows.length === 0) {
             return [];
         }
-        const arr: MatrixElement[][] = createArray(data.rows.length, data.rows[0].columns.length);
+        const arr: MatrixElement[][] = createArray(
+            data.rows.length,
+            data.rows[0].columns.length
+        );
         if (this.isMatrix()) {
             if (this.isText() || this.isInputText()) {
                 for (let i = 0; i < arr.length; i++) {
@@ -387,7 +420,9 @@ class AnswerSheetController implements IController {
                 return arr;
             }
             if (table.length !== 1) {
-                throw new Error(`Expected answertable of length 1, got ${table.length}`);
+                throw new Error(
+                    `Expected answertable of length 1, got ${table.length}`
+                );
             }
             const row = table[0];
             for (const val of row) {
@@ -400,7 +435,9 @@ class AnswerSheetController implements IController {
                 } else if (this.isRadio()) {
                     arr[0][0] = value;
                 } else {
-                    throw new Error(`Unexpected input type: ${this.json.answerFieldType}`);
+                    throw new Error(
+                        `Unexpected input type: ${this.json.answerFieldType}`
+                    );
                 }
             }
         }
@@ -411,14 +448,18 @@ class AnswerSheetController implements IController {
         let table: AnswerTable = [];
         if (this.isMatrix()) {
             if (this.isText() || this.isInputText()) {
-                table = matrix.map((row) => row.map((elem) => (elem || "").toString()));
+                table = matrix.map((row) =>
+                    row.map((elem) => (elem || "").toString())
+                );
             } else {
                 for (const row of matrix) {
                     const tableRow: string[] = [];
                     let rowi = 1;
                     for (const val of row) {
                         if (val) {
-                            tableRow.push("" + (this.isCheckbox() ? rowi : val));
+                            tableRow.push(
+                                "" + (this.isCheckbox() ? rowi : val)
+                            );
                         }
                         rowi++;
                     }

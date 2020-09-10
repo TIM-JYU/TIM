@@ -65,9 +65,9 @@ export class CreateItemComponent implements OnInit {
     @Input() itemLocation?: string;
     @Input() itemTitle?: string;
     @Input() itemName?: string;
-    alerts: Array<{type: AlertSeverity, msg: string}> = [];
+    alerts: Array<{type: AlertSeverity; msg: string}> = [];
     @Input() itemType!: string;
-    @Input() private params?: {template?: string, copy?: number};
+    @Input() private params?: {template?: string; copy?: number};
     @Input() force = false;
     creating = false;
     @Input() private template?: string;
@@ -79,7 +79,9 @@ export class CreateItemComponent implements OnInit {
         if (this.fullPath) {
             const str = this.fullPath;
             this.itemLocation = str.substring(0, str.lastIndexOf("/"));
-            this.itemTitle = getURLParameter("title") ?? str.substring(str.lastIndexOf("/") + 1, str.length);
+            this.itemTitle =
+                getURLParameter("title") ??
+                str.substring(str.lastIndexOf("/") + 1, str.length);
         }
         if (this.itemTitle) {
             this.itemName = slugify(this.itemTitle);
@@ -97,7 +99,9 @@ export class CreateItemComponent implements OnInit {
      */
     private async checkExpiredTags() {
         if (this.params?.copy) {
-            const r = await to($http.get<ITaggedItem>(`/tags/getDoc/${this.params.copy}`));
+            const r = await to(
+                $http.get<ITaggedItem>(`/tags/getDoc/${this.params.copy}`)
+            );
             if (r.ok) {
                 const tags = r.result.data.tags;
                 for (const tag of tags) {
@@ -113,12 +117,14 @@ export class CreateItemComponent implements OnInit {
 
     async createItem() {
         this.creating = true;
-        const r = await to($http.post<{path: string}>("/createItem", {
-            item_path: this.itemLocation + "/" + this.itemName,
-            item_type: this.itemType,
-            item_title: this.itemTitle,
-            ...this.params,
-        }));
+        const r = await to(
+            $http.post<{path: string}>("/createItem", {
+                item_path: this.itemLocation + "/" + this.itemName,
+                item_type: this.itemType,
+                item_title: this.itemTitle,
+                ...this.params,
+            })
+        );
 
         if (!r.ok) {
             this.alerts = [];

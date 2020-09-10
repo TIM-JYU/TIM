@@ -1,6 +1,4 @@
-import {
-        Component,
-    } from "@angular/core";
+import {Component} from "@angular/core";
 import {CsBase} from "./csPlugin";
 
 @Component({
@@ -14,7 +12,6 @@ import {CsBase} from "./csPlugin";
     </div>`,
 })
 export class CsErrorComponent extends CsBase {
-
     error?: string;
     own_error?: string;
 

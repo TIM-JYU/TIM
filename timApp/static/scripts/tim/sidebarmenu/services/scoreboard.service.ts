@@ -33,13 +33,20 @@ export class ScoreboardService {
         }
         this.hasScore = true;
 
-        this.currentDocScoreInfo = g.score_infos.find((s) => s.doc.id == g.curr_item.id) ?? null;
+        this.currentDocScoreInfo =
+            g.score_infos.find((s) => s.doc.id == g.curr_item.id) ?? null;
         this.infos = g.score_infos;
         this.total = this.infos.reduce((prev, cur) => prev + cur.total, 0);
-        this.maxTotal = this.infos.reduce((prev, cur) => prev + cur.maxTotal, 0);
+        this.maxTotal = this.infos.reduce(
+            (prev, cur) => prev + cur.maxTotal,
+            0
+        );
     }
 
     get valid(): boolean {
-        return this.hasScore && (this.currentDocScoreInfo != null || this.infos?.length > 0);
+        return (
+            this.hasScore &&
+            (this.currentDocScoreInfo != null || this.infos?.length > 0)
+        );
     }
 }

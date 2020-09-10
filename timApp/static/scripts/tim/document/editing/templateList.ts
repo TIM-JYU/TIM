@@ -10,9 +10,11 @@ class TemplateListCtrl implements IController {
     private templateList: IItem[] = [];
 
     private async loadTemplate(t: IItem) {
-        const r = await to($http.post("/update/" + this.doc.id, {
-            template_name: t.path,
-        }));
+        const r = await to(
+            $http.post("/update/" + this.doc.id, {
+                template_name: t.path,
+            })
+        );
         if (!r.ok) {
             await showMessageDialog(r.result.data.error);
         } else {
@@ -25,13 +27,15 @@ class TemplateListCtrl implements IController {
     }
 
     async getTemplates() {
-        const response = await to($http<IItem[]>({
-            method: "GET",
-            url: "/getTemplates",
-            params: {
-                item_path: this.doc.path,
-            },
-        }));
+        const response = await to(
+            $http<IItem[]>({
+                method: "GET",
+                url: "/getTemplates",
+                params: {
+                    item_path: this.doc.path,
+                },
+            })
+        );
         if (!response.ok) {
             return;
         }

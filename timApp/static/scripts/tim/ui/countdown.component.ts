@@ -39,15 +39,21 @@ export class CountdownComponent implements OnInit {
     timeLeftText?: string;
     lastSync?: moment.Moment;
 
-    constructor(private http: HttpClient) {
-    }
+    constructor(private http: HttpClient) {}
 
     get timeLeft() {
         const clampedCountdown = Math.max(this.currentCountdown, 0);
         // We need time as a whole number so we won't render fractional parts
         const timeS = Math.floor(clampedCountdown);
-        const msPostfix = timeS < DISPLAY_TENTHS_LIMIT ? `,${Math.trunc((clampedCountdown % 1) * 10)}` : "";
-        return `${secondsToShortTime(timeS, this.displayUnits, this.locale)}${msPostfix}`;
+        const msPostfix =
+            timeS < DISPLAY_TENTHS_LIMIT
+                ? `,${Math.trunc((clampedCountdown % 1) * 10)}`
+                : "";
+        return `${secondsToShortTime(
+            timeS,
+            this.displayUnits,
+            this.locale
+        )}${msPostfix}`;
     }
 
     private async getEndDate() {
@@ -65,11 +71,17 @@ export class CountdownComponent implements OnInit {
 
     private async getSyncedEndDate() {
         const start = window.performance.now();
-        const serverTime = await to2(this.http.get<{ time: moment.Moment }>("/time").toPromise());
+        const serverTime = await to2(
+            this.http.get<{time: moment.Moment}>("/time").toPromise()
+        );
         if (!serverTime.ok) {
             return undefined;
         }
-        const remaining = moment(this.endTime).diff(serverTime.result.time, "ms", true);
+        const remaining = moment(this.endTime).diff(
+            serverTime.result.time,
+            "ms",
+            true
+        );
         const end = window.performance.now();
 
         // Attempt to alleviate potential error due to the RTT of the request by subtracting the run time of
@@ -111,8 +123,12 @@ export class CountdownComponent implements OnInit {
         this.updateSyncInterval();
         this.running = true;
         await this.checkCountdown();
-        const getIdealInterval = () => this.currentCountdown < DISPLAY_TENTHS_LIMIT ? TICK_TENTH_SECOND : TICK_SECOND;
-        const padInterval = (interval: number) => interval - moment().valueOf() % interval;
+        const getIdealInterval = () =>
+            this.currentCountdown < DISPLAY_TENTHS_LIMIT
+                ? TICK_TENTH_SECOND
+                : TICK_SECOND;
+        const padInterval = (interval: number) =>
+            interval - (moment().valueOf() % interval);
         const getNextInterval = () => padInterval(getIdealInterval());
         const tick = async () => {
             if (!this.running) {
@@ -139,7 +155,10 @@ export class CountdownComponent implements OnInit {
         const now = moment();
         this.currentCountdown = this.currentEndDate?.diff(now, "s", true) ?? 0;
         this.timeLeftText = formatString(this.template, this.timeLeft);
-        if (this.nextSyncInterval > 0 && now.diff(this.lastSync, "s", true) >= this.nextSyncInterval) {
+        if (
+            this.nextSyncInterval > 0 &&
+            now.diff(this.lastSync, "s", true) >= this.nextSyncInterval
+        ) {
             await this.syncEndDate();
         }
         const timeEnded = this.currentCountdown <= TIMEOUT_EPS;
@@ -161,7 +180,8 @@ export class CountdownComponent implements OnInit {
         }
         this.nextSyncInterval = this.syncInterval;
         if (this.syncIntervalDeviation > 0) {
-            this.nextSyncInterval *= 1 + (2 * Math.random() - 1) * this.syncIntervalDeviation;
+            this.nextSyncInterval *=
+                1 + (2 * Math.random() - 1) * this.syncIntervalDeviation;
         }
     }
 }

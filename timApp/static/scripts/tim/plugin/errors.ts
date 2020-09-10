@@ -11,7 +11,7 @@ function getEssentialContext(c: t.Context) {
     return c;
 }
 
-type MarkupError = Array<{name: string, type: string}>;
+type MarkupError = Array<{name: string; type: string}>;
 
 function isPrefixOfSome(s: string, others: string[]) {
     for (const o of others) {
@@ -31,11 +31,18 @@ export function getErrors(v: Left<t.Errors>): MarkupError {
         .filter((e) => {
             const ind = indexOfFirstName(e.context);
             if (ind >= 0) {
-                return e.context.length >= 3 && e.context[0].key === "" && e.context[ind].key === "markup";
+                return (
+                    e.context.length >= 3 &&
+                    e.context[0].key === "" &&
+                    e.context[ind].key === "markup"
+                );
             }
         })
         .map((error) => getEssentialContext(error.context))
-        .map((error) => [error.slice(indexOfFirstName(error) + 2).map((x) => x.key), error[error.length - 1].type.name]);
+        .map((error) => [
+            error.slice(indexOfFirstName(error) + 2).map((x) => x.key),
+            error[error.length - 1].type.name,
+        ]);
     const errs = new Map<string, Set<string>>();
     const knownKeys = ps.map(([keys, _]) => keys.join("."));
     for (const [keys, typ] of ps) {

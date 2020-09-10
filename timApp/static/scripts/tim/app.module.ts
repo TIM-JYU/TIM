@@ -1,5 +1,10 @@
 import {BrowserModule} from "@angular/platform-browser";
-import {ApplicationRef, DoBootstrap, NgModule, ModuleWithProviders} from "@angular/core";
+import {
+    ApplicationRef,
+    DoBootstrap,
+    NgModule,
+    ModuleWithProviders,
+} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HeaderComponent} from "tim/header/header.component";
 import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";
@@ -72,12 +77,20 @@ import {SideBarMenuModule} from "tim/sidebarmenu/side-bar-menu.module";
         DialogModule,
         NoopAnimationsModule,
         SideBarMenuModule,
-        BsDropdownModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
-        TypeaheadModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
+        BsDropdownModule.forRoot() as ModuleWithProviders<
+            Record<string, unknown>
+        >,
+        TypeaheadModule.forRoot() as ModuleWithProviders<
+            Record<string, unknown>
+        >,
         TooltipModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
     ],
     providers: [
-        {provide: HTTP_INTERCEPTORS, useClass: TimeStampToMomentConverter, multi: true},
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: TimeStampToMomentConverter,
+            multi: true,
+        },
     ],
     bootstrap: [],
 })

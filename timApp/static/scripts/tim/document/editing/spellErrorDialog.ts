@@ -23,8 +23,11 @@ enum SourceType {
     Other,
 }
 
-function computeSourcePosition(editorText: string, info: Readonly<ISpellWordInfo>, type: SourceType) {
-
+function computeSourcePosition(
+    editorText: string,
+    info: Readonly<ISpellWordInfo>,
+    type: SourceType
+) {
     // If the word starts or ends with a non-ascii character, word boundary regex does not work.
     // See https://stackoverflow.com/questions/10590098/javascript-regexp-word-boundaries-unicode-characters
     const nonAsciiRe = /[åäöÅÄÖ]$|^[åäöÅÄÖ]/g;
@@ -38,7 +41,10 @@ function computeSourcePosition(editorText: string, info: Readonly<ISpellWordInfo
         word = word.replace(asciiRe, asciiChar);
     }
 
-    let blocks = type == SourceType.Paragraph ? editorText.split(/(?:\n|^)(?:#-|(?:#+|`{3,}) *{.+})/) : [editorText];
+    let blocks =
+        type == SourceType.Paragraph
+            ? editorText.split(/(?:\n|^)(?:#-|(?:#+|`{3,}) *{.+})/)
+            : [editorText];
     if (blocks[0].trim() == "") {
         blocks = blocks.slice(1);
     }
@@ -63,7 +69,10 @@ function computeSourcePosition(editorText: string, info: Readonly<ISpellWordInfo
     return index + editorText.indexOf(block);
 }
 
-export class SpellErrorDialogController extends DialogController<{ params: ISpellErrorParams }, void> {
+export class SpellErrorDialogController extends DialogController<
+    {params: ISpellErrorParams},
+    void
+> {
     static component = "spellErrorDialogController";
     static $inject = ["$element", "$scope"] as const;
     private suggestions: string[] = [];
@@ -90,7 +99,10 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
         this.suggestions = this.resolve.params.info.suggestions;
         (async () => {
             await this.getDraggable().makeHeightAutomatic();
-            await this.moveTo({X: this.resolve.params.dialogX, Y: this.resolve.params.dialogY});
+            await this.moveTo({
+                X: this.resolve.params.dialogX,
+                Y: this.resolve.params.dialogY,
+            });
             this.selectWord();
             $rootScope.$applyAsync();
         })();
@@ -112,12 +124,18 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
 
     selectWord() {
         this.pare.getEditor()!.focus();
-        const pos = computeSourcePosition(this.pare.getEditor()!.getEditorText(), this.options, this.type);
+        const pos = computeSourcePosition(
+            this.pare.getEditor()!.getEditorText(),
+            this.options,
+            this.type
+        );
         if (pos == undefined) {
             this.wordFindError = true;
             return;
         }
-        this.pare.getEditor()!.setPosition([pos, pos + this.options.word.length]);
+        this.pare
+            .getEditor()!
+            .setPosition([pos, pos + this.options.word.length]);
     }
 
     replaceWord(s: string) {
@@ -134,10 +152,8 @@ export class SpellErrorDialogController extends DialogController<{ params: ISpel
 
 export const dialogModule = angular.module("timSpellErrorDialog", []);
 
-registerDialogComponentForModule(dialogModule, SpellErrorDialogController,
-    {
-        template:
-            `
+registerDialogComponentForModule(dialogModule, SpellErrorDialogController, {
+    template: `
 <tim-dialog class="overflow-visible">
     <dialog-body>
         <div ng-if="$ctrl.suggestions.length > 0">
@@ -167,4 +183,4 @@ registerDialogComponentForModule(dialogModule, SpellErrorDialogController,
     </dialog-footer>
 </tim-dialog>
 `,
-    });
+});

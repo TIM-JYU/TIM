@@ -2,7 +2,15 @@ import {IController, IHttpResponse, IScope} from "angular";
 import moment, {Duration, Moment} from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
-import {Binding, capitalizeFirstLetter, dateFormat, getGroupDesc, markAsUsed, Result, to} from "tim/util/utils";
+import {
+    Binding,
+    capitalizeFirstLetter,
+    dateFormat,
+    getGroupDesc,
+    markAsUsed,
+    Result,
+    to,
+} from "tim/util/utils";
 import {showMessageDialog} from "../ui/dialog";
 import {durationTypes} from "../ui/durationPicker";
 import {IGroup} from "../user/IUser";
@@ -44,13 +52,13 @@ interface IPermissionEditResponse {
 }
 
 const accessOrder = {
-    "view": 1,
-    "copy": 2,
-    "edit": 3,
+    view: 1,
+    copy: 2,
+    edit: 3,
     "see answers": 4,
-    "teacher": 5,
-    "manage": 6,
-    "owner": 7,
+    teacher: 5,
+    manage: 6,
+    owner: 7,
 };
 
 const tips = {
@@ -60,17 +68,17 @@ const tips = {
 class RightsEditorController implements IController {
     static $inject = ["$scope", "$element"];
     private durOpt: {
-        durationType: moment.unitOfTime.Base,
-        durationAmount: number,
+        durationType: moment.unitOfTime.Base;
+        durationAmount: number;
         accessTo?: moment.Moment;
     };
     private timeOpt: {
-        type: string,
-        duration?: moment.Duration,
-        to?: moment.Moment,
-        from?: moment.Moment,
-        durationTo?: moment.Moment,
-        durationFrom?: moment.Moment,
+        type: string;
+        duration?: moment.Duration;
+        to?: moment.Moment;
+        from?: moment.Moment;
+        durationTo?: moment.Moment;
+        durationFrom?: moment.Moment;
     };
     private grouprights?: IRight[];
     private showActiveOnly: boolean;
@@ -182,7 +190,9 @@ class RightsEditorController implements IController {
             }
         }
         if (this.orgs) {
-            this.selectedOrg = this.orgs.find((o) => o.name === genericglobals().homeOrganization + " users");
+            this.selectedOrg = this.orgs.find(
+                (o) => o.name === genericglobals().homeOrganization + " users"
+            );
         }
 
         if (this.massMode) {
@@ -200,7 +210,9 @@ class RightsEditorController implements IController {
                 enableGridMenu: true,
                 enableHorizontalScrollbar: false,
                 isRowSelectable: (row) => {
-                    const i = (row as unknown as uiGrid.IGridRowOf<IItemWithRights>).entity;
+                    const i = ((row as unknown) as uiGrid.IGridRowOf<
+                        IItemWithRights
+                    >).entity;
                     return i.rights.manage;
                 },
                 columnDefs: [
@@ -233,9 +245,15 @@ class RightsEditorController implements IController {
             this.gridReady = true;
         }
 
-        this.scope.$watchGroup([() => this.durOpt.durationAmount, () => this.durOpt.durationType], (newValues, oldValues, scope) => {
-            this.timeOpt.duration = moment.duration(this.durOpt.durationAmount, this.durOpt.durationType);
-        });
+        this.scope.$watchGroup(
+            [() => this.durOpt.durationAmount, () => this.durOpt.durationType],
+            (newValues, oldValues, scope) => {
+                this.timeOpt.duration = moment.duration(
+                    this.durOpt.durationAmount,
+                    this.durOpt.durationType
+                );
+            }
+        );
     }
 
     private async getItemsAndPreprocess() {
@@ -268,7 +286,7 @@ class RightsEditorController implements IController {
     }
 
     async removeConfirm(group: IRight) {
-        if (window.confirm(`Remove ${(this.getConfirmDesc(group))}?`)) {
+        if (window.confirm(`Remove ${this.getConfirmDesc(group)}?`)) {
             this.removingRight = group;
             await this.removeRight(group);
             this.removingRight = undefined;
@@ -276,7 +294,9 @@ class RightsEditorController implements IController {
     }
 
     private getConfirmDesc(group: IRight) {
-        return `${this.findAccessTypeById(group.type)!.name} right from ${getGroupDesc(group.usergroup)}`;
+        return `${
+            this.findAccessTypeById(group.type)!.name
+        } right from ${getGroupDesc(group.usergroup)}`;
     }
 
     get urlRootGet() {
@@ -298,16 +318,24 @@ class RightsEditorController implements IController {
             return;
         }
         this.loading = true;
-        const r = await to($http.get<{grouprights: IRight[], accesstypes: IAccessType[]}>(`/${this.urlRootGet}/get/${this.itemId}`));
+        const r = await to(
+            $http.get<{grouprights: IRight[]; accesstypes: IAccessType[]}>(
+                `/${this.urlRootGet}/get/${this.itemId}`
+            )
+        );
         this.loading = false;
         if (r.ok) {
             const data = r.result.data;
             this.grouprights = data.grouprights;
             if (data.accesstypes) {
                 this.accessTypes = data.accesstypes;
-                this.accessTypes.sort((a1, a2) => accessOrder[a1.name] - accessOrder[a2.name]);
+                this.accessTypes.sort(
+                    (a1, a2) => accessOrder[a1.name] - accessOrder[a2.name]
+                );
                 if (this.restrictRights) {
-                    this.accessTypes = this.accessTypes.filter((a) => this.restrictRights!.includes(a.name));
+                    this.accessTypes = this.accessTypes.filter((a) =>
+                        this.restrictRights!.includes(a.name)
+                    );
                 }
                 if (!this.accessType) {
                     this.accessType = this.accessTypes[0];
@@ -319,16 +347,21 @@ class RightsEditorController implements IController {
     }
 
     async removeRight(right: IRight, refresh = true) {
-        const r = await to($http.put(`/${this.urlRootModify}/remove`, {
-            group: right.usergroup.id,
-            id: this.itemId,
-            item_type: this.defaultItem,
-            type: right.type,
-        }));
+        const r = await to(
+            $http.put(`/${this.urlRootModify}/remove`, {
+                group: right.usergroup.id,
+                id: this.itemId,
+                item_type: this.defaultItem,
+                type: right.type,
+            })
+        );
         return await this.handleResult(r, refresh);
     }
 
-    private async handleResult(r: Result<IHttpResponse<unknown>, {data: {error: string}}>, refresh: boolean) {
+    private async handleResult(
+        r: Result<IHttpResponse<unknown>, {data: {error: string}}>,
+        refresh: boolean
+    ) {
         let result;
         if (r.ok) {
             if (refresh) {
@@ -366,7 +399,12 @@ class RightsEditorController implements IController {
     }
 
     addDisabled() {
-        return this.loading || (this.massMode && this.grid && this.grid.selection.getSelectedRows().length === 0);
+        return (
+            this.loading ||
+            (this.massMode &&
+                this.grid &&
+                this.grid.selection.getSelectedRows().length === 0)
+        );
     }
 
     /**
@@ -375,7 +413,9 @@ class RightsEditorController implements IController {
      */
     paste() {
         // navigator.permissions.query({name: "clipboard-read"});  // does not compile
-        if (!this.confirmExpire) { return; }  // clearInput did not work?
+        if (!this.confirmExpire) {
+            return;
+        } // clearInput did not work?
         this.groupName = "";
         /*
         const input = this.element.filter("#groupName");
@@ -403,14 +443,16 @@ class RightsEditorController implements IController {
             }
             const ids = this.grid.selection.getSelectedRows().map((i) => i.id);
             this.loading = true;
-            const r = await to($http.put<IPermissionEditResponse>(`/permissions/edit`, {
-                ids: ids,
-                time: timeOpt,
-                type: type.id,
-                action: this.actionOption,
-                groups: groupname.split(/[;\n]/),
-                confirm: this.getEffectiveConfirm(),
-            }));
+            const r = await to(
+                $http.put<IPermissionEditResponse>(`/permissions/edit`, {
+                    ids: ids,
+                    time: timeOpt,
+                    type: type.id,
+                    action: this.actionOption,
+                    groups: groupname.split(/[;\n]/),
+                    confirm: this.getEffectiveConfirm(),
+                })
+            );
             if (r.ok) {
                 this.showNotExistWarning(r.result.data.not_exist);
                 this.gridOptions.data = await this.getItemsAndPreprocess();
@@ -431,22 +473,29 @@ class RightsEditorController implements IController {
             }
             if (this.actionOption === ActionOption.Add) {
                 this.loading = true;
-                const r = await to($http.put<IPermissionEditResponse>(`/${this.urlRootModify}/add`,
-                    {
-                        time: timeOpt,
-                        id: this.itemId,
-                        groups: groups,
-                        type: type.id,
-                        confirm: this.getEffectiveConfirm(),
-                        item_type: this.defaultItem,
-                    },
-                ));
+                const r = await to(
+                    $http.put<IPermissionEditResponse>(
+                        `/${this.urlRootModify}/add`,
+                        {
+                            time: timeOpt,
+                            id: this.itemId,
+                            groups: groups,
+                            type: type.id,
+                            confirm: this.getEffectiveConfirm(),
+                            item_type: this.defaultItem,
+                        }
+                    )
+                );
                 this.loading = false;
                 if (r.ok) {
                     this.showNotExistWarning(r.result.data.not_exist);
                     await this.getPermissions();
                     if (this.barcodeMode) {
-                        this.handleSuccessBarcode(type, groups, r.result.data.not_exist);
+                        this.handleSuccessBarcode(
+                            type,
+                            groups,
+                            r.result.data.not_exist
+                        );
                     } else {
                         if (!this.errMsg) {
                             this.cancel();
@@ -459,13 +508,16 @@ class RightsEditorController implements IController {
                 let func;
                 switch (this.actionOption) {
                     case ActionOption.Confirm:
-                        func = (right: IRight) => this.confirmRight(right, false);
+                        func = (right: IRight) =>
+                            this.confirmRight(right, false);
                         break;
                     case ActionOption.Expire:
-                        func = (right: IRight) => this.expireRight(right, false);
+                        func = (right: IRight) =>
+                            this.expireRight(right, false);
                         break;
                     case ActionOption.Remove:
-                        func = (right: IRight) => this.removeRight(right, false);
+                        func = (right: IRight) =>
+                            this.removeRight(right, false);
                         break;
                     default:
                         throw Error("unreachable");
@@ -473,7 +525,9 @@ class RightsEditorController implements IController {
                 const notFound = [];
                 const successes = [];
                 for (const g of groups) {
-                    const right = this.grouprights!.find((r) => r.usergroup.name === g && r.type === type.id);
+                    const right = this.grouprights!.find(
+                        (r) => r.usergroup.name === g && r.type === type.id
+                    );
                     if (right) {
                         const success = await func(right);
                         if (success) {
@@ -484,7 +538,11 @@ class RightsEditorController implements IController {
                     }
                 }
                 if (notFound.length > 0) {
-                    this.reportError(`Some usergroups were not in current ${type.name} rights list: ${notFound.join(", ")}`);
+                    this.reportError(
+                        `Some usergroups were not in current ${
+                            type.name
+                        } rights list: ${notFound.join(", ")}`
+                    );
                 }
                 if (successes.length > 0) {
                     await this.getPermissions();
@@ -504,7 +562,10 @@ class RightsEditorController implements IController {
     }
 
     private getEffectiveConfirm() {
-        return this.requireConfirm && (this.durationSelected() || this.rangeSelected());
+        return (
+            this.requireConfirm &&
+            (this.durationSelected() || this.rangeSelected())
+        );
     }
 
     private clearMessages() {
@@ -512,15 +573,23 @@ class RightsEditorController implements IController {
         this.successMsg = undefined;
     }
 
-    private handleSuccessBarcode(type: IAccessType, requestedGroups: string[], notFoundGroups: string[]) {
+    private handleSuccessBarcode(
+        type: IAccessType,
+        requestedGroups: string[],
+        notFoundGroups: string[]
+    ) {
         this.groupName = "";
         const notExistSet = new Set(notFoundGroups);
         const groups = requestedGroups.filter((g) => !notExistSet.has(g));
         if (groups.length === 0) {
             return;
         }
-        const imperative = capitalizeFirstLetter(this.actionOption + (this.actionOption.endsWith("e") ? "d" : "ed"));
-        this.successMsg = `${imperative} ${type.name} right for: ${groups.join(", ")}`;
+        const imperative = capitalizeFirstLetter(
+            this.actionOption + (this.actionOption.endsWith("e") ? "d" : "ed")
+        );
+        this.successMsg = `${imperative} ${type.name} right for: ${groups.join(
+            ", "
+        )}`;
     }
 
     private showNotExistWarning(r: string[]) {
@@ -538,7 +607,10 @@ class RightsEditorController implements IController {
     }
 
     getPlaceholder() {
-        return "enter username(s)/group name(s) separated by semicolons" + (this.listMode ? " or newlines" : "");
+        return (
+            "enter username(s)/group name(s) separated by semicolons" +
+            (this.listMode ? " or newlines" : "")
+        );
     }
 
     getGroupDesc(group: IRight) {
@@ -551,11 +623,17 @@ class RightsEditorController implements IController {
     }
 
     shouldShowEndTime(group: IRight) {
-        return group.accessible_to != null && moment().diff(group.accessible_to) <= 0;
+        return (
+            group.accessible_to != null &&
+            moment().diff(group.accessible_to) <= 0
+        );
     }
 
     shouldShowEndedTime(group: IRight) {
-        return group.accessible_to != null && moment().diff(group.accessible_to) > 0;
+        return (
+            group.accessible_to != null &&
+            moment().diff(group.accessible_to) > 0
+        );
     }
 
     shouldShowDuration(group: IRight) {
@@ -563,28 +641,37 @@ class RightsEditorController implements IController {
     }
 
     shouldShowUnlockable(group: IRight) {
-        return group.duration != null &&
+        return (
+            group.duration != null &&
             group.duration_from != null &&
             group.accessible_from == null &&
-            moment().diff(group.duration_from) < 0;
+            moment().diff(group.duration_from) < 0
+        );
     }
 
     shouldShowNotUnlockable(group: IRight) {
-        return group.duration != null &&
+        return (
+            group.duration != null &&
             group.duration_to != null &&
             group.accessible_from == null &&
-            moment().diff(group.duration_to) <= 0;
+            moment().diff(group.duration_to) <= 0
+        );
     }
 
     shouldShowNotUnlockableAnymore(group: IRight) {
-        return group.duration != null &&
+        return (
+            group.duration != null &&
             group.duration_to != null &&
             group.accessible_from == null &&
-            moment().diff(group.duration_to) > 0;
+            moment().diff(group.duration_to) > 0
+        );
     }
 
     isObsolete(group: IRight) {
-        return this.shouldShowEndedTime(group) || this.shouldShowNotUnlockableAnymore(group);
+        return (
+            this.shouldShowEndedTime(group) ||
+            this.shouldShowNotUnlockableAnymore(group)
+        );
     }
 
     obsoleteFilterFn = (group: IRight) => {
@@ -597,18 +684,25 @@ class RightsEditorController implements IController {
             return false;
         }
         if (this.shouldShowEndedTime(group)) {
-            this.reportError(`${this.findAccessTypeById(group.type)!.name} right for ${group.usergroup.name} is already expired.`);
+            this.reportError(
+                `${this.findAccessTypeById(group.type)!.name} right for ${
+                    group.usergroup.name
+                } is already expired.`
+            );
             return false;
         }
         if (refresh) {
-            if (this.confirmExpire && !window.confirm(`Expire ${(this.getConfirmDesc(group))}?`)) {
+            if (
+                this.confirmExpire &&
+                !window.confirm(`Expire ${this.getConfirmDesc(group)}?`)
+            ) {
                 return;
             }
         }
         this.loading = true;
         this.expiringRight = group;
-        const r = await to($http.put<IPermissionEditResponse>(`/${this.urlRootModify}/add`,
-            {
+        const r = await to(
+            $http.put<IPermissionEditResponse>(`/${this.urlRootModify}/add`, {
                 time: {
                     ...this.timeOpt,
                     to: moment(),
@@ -619,8 +713,8 @@ class RightsEditorController implements IController {
                 type: group.type,
                 confirm: false,
                 item_type: this.defaultItem,
-            },
-        ));
+            })
+        );
         this.loading = false;
         this.expiringRight = undefined;
         return await this.handleResult(r, refresh);
@@ -629,11 +723,13 @@ class RightsEditorController implements IController {
     async confirmRight(group: IRight, refresh = true) {
         this.confirmingRight = group;
         this.loading = true;
-        const r = await to($http.put("/permissions/confirm", {
-            group: group.usergroup.id,
-            id: this.itemId,
-            type: group.type,
-        }));
+        const r = await to(
+            $http.put("/permissions/confirm", {
+                group: group.usergroup.id,
+                id: this.itemId,
+                type: group.type,
+            })
+        );
         const result = await this.handleResult(r, refresh);
         this.loading = false;
         this.confirmingRight = undefined;
@@ -707,13 +803,15 @@ class RightsEditorController implements IController {
     }
 
     private async getItems() {
-        const r = await to($http.get<IItemWithRights[]>("/getItems", {
-            params: {
-                folder_id: this.itemId,
-                recursive: true,
-                include_rights: true,
-            },
-        }));
+        const r = await to(
+            $http.get<IItemWithRights[]>("/getItems", {
+                params: {
+                    folder_id: this.itemId,
+                    recursive: true,
+                    include_rights: true,
+                },
+            })
+        );
         if (!r.ok) {
             throw Error("getItems failed");
         }
@@ -734,7 +832,9 @@ class RightsEditorController implements IController {
             let groupSep = ", ";
             // Assuming the rights list is ordered by access type.
             if (r.type != currentRight) {
-                str += `${typeSep}${this.findAccessTypeById(r.type)!.name[0]}: `;
+                str += `${typeSep}${
+                    this.findAccessTypeById(r.type)!.name[0]
+                }: `;
                 currentRight = r.type;
                 groupSep = "";
                 typeSep = " | ";
@@ -803,11 +903,17 @@ timApp.component("timSelfExpire", {
 
         async clicked() {
             if (!this.confirm || window.confirm(this.confirm)) {
-                const r = await to($http.post<unknown>("/permissions/selfExpire", {id: this.itemId}));
+                const r = await to(
+                    $http.post<unknown>("/permissions/selfExpire", {
+                        id: this.itemId,
+                    })
+                );
                 if (r.ok) {
                     location.reload();
                 } else {
-                    await showMessageDialog(`Error expiring right: ${r.result.data.error}`);
+                    await showMessageDialog(
+                        `Error expiring right: ${r.result.data.error}`
+                    );
                 }
             }
         }

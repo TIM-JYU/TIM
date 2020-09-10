@@ -12,11 +12,16 @@ class LectureMenuController implements IController {
     private lctrl!: LectureController;
 
     async $onInit() {
-        this.lctrl = this.vctrl?.lectureCtrl ?? LectureController.createAndInit(this.vctrl);
+        this.lctrl =
+            this.vctrl?.lectureCtrl ??
+            LectureController.createAndInit(this.vctrl);
         if (this.lctrl.lecture) {
             this.item = await getItem(this.lctrl.lecture.doc_id);
         }
-        if (!isScreenSizeOrLower("md") || this.lctrl.lectureSettings.inLecture) {
+        if (
+            !isScreenSizeOrLower("md") ||
+            this.lctrl.lectureSettings.inLecture
+        ) {
             this.isOpen = true;
         }
     }

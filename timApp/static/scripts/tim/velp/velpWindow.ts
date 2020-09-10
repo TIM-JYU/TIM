@@ -3,7 +3,15 @@ import {timApp} from "tim/app";
 import {$http} from "../util/ngimport";
 import {Binding, clone, Require, to} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
-import {ILabel, ILabelUI, INewLabel, IVelp, IVelpGroup, IVelpGroupUI, IVelpUI} from "./velptypes";
+import {
+    ILabel,
+    ILabelUI,
+    INewLabel,
+    IVelp,
+    IVelpGroup,
+    IVelpGroupUI,
+    IVelpUI,
+} from "./velptypes";
 
 /**
  * Created by Seppo Tarvainen on 25.11.2016.
@@ -36,8 +44,19 @@ export class VelpWindowController implements IController {
     private velp!: Binding<IVelpUI, "<">;
     private newLabel: INewLabel;
     private labelToEdit: INewLabel;
-    private visibleOptions: {type: string; title: string; values: [number, number, number, number]; names: [string, string, string, string]};
-    private settings: {teacherRightsError: string; labelContentError: string; velpGroupError: string; velpGroupWarning: string; velpContentError: string};
+    private visibleOptions: {
+        type: string;
+        title: string;
+        values: [number, number, number, number];
+        names: [string, string, string, string];
+    };
+    private settings: {
+        teacherRightsError: string;
+        labelContentError: string;
+        velpGroupError: string;
+        velpGroupWarning: string;
+        velpContentError: string;
+    };
     private submitted: boolean;
     private hasEditAccess: boolean;
     private new!: Binding<boolean, "<">;
@@ -59,13 +78,21 @@ export class VelpWindowController implements IController {
             this.hasEditAccess = true;
             this.velpSelection.registerNewVelp(this);
         } else {
-            this.hasEditAccess = this.velpGroups.some((g) => g.edit_access && this.isGroupInVelp(g) || false);
+            this.hasEditAccess = this.velpGroups.some(
+                (g) => (g.edit_access && this.isGroupInVelp(g)) || false
+            );
         }
     }
 
     constructor() {
         this.newLabel = {content: "", selected: true, valid: true, id: null};
-        this.labelToEdit = {content: "", selected: false, edit: false, valid: true, id: null};
+        this.labelToEdit = {
+            content: "",
+            selected: false,
+            edit: false,
+            valid: true,
+            id: null,
+        };
         this.visibleOptions = {
             type: "select",
             title: "Visible to",
@@ -73,10 +100,12 @@ export class VelpWindowController implements IController {
             names: ["Just me", "Document owner", "Teachers", "Everyone"],
         };
         this.settings = {
-            teacherRightsError: "You need to have teacher rights to change points in this document.",
+            teacherRightsError:
+                "You need to have teacher rights to change points in this document.",
             labelContentError: "Label content too short",
             velpGroupError: "Select at least one velp group.",
-            velpGroupWarning: "All selected velp groups are hidden in the current area.",
+            velpGroupWarning:
+                "All selected velp groups are hidden in the current area.",
             velpContentError: "Velp content too short",
         };
         this.submitted = false;
@@ -110,7 +139,9 @@ export class VelpWindowController implements IController {
                 this.velpLocal = clone(this.velp);
                 // TODO: focus velp content textarea
             }
-            this.velpSelection.setVelpToEdit(this.velp, () => this.cancelEdit());
+            this.velpSelection.setVelpToEdit(this.velp, () =>
+                this.cancelEdit()
+            );
         }
     }
 
@@ -125,11 +156,12 @@ export class VelpWindowController implements IController {
         form.$setPristine();
         // this.submitted = true;
 
-        if (this.new) { // add new velp
+        if (this.new) {
+            // add new velp
             this.addVelp();
-        } else { // edit velp
+        } else {
+            // edit velp
             this.editVelp();
-
         }
     }
 
@@ -146,7 +178,6 @@ export class VelpWindowController implements IController {
         if (!this.velp.edit && !this.notAnnotationRights(this.velp.points)) {
             this.onVelpSelect({$VELP: this.velp});
         }
-
     }
 
     /**
@@ -249,7 +280,10 @@ export class VelpWindowController implements IController {
     }
 
     isSomeVelpGroupShown() {
-        if (this.velp.velp_groups == null || this.velp.velp_groups.length === 0) {
+        if (
+            this.velp.velp_groups == null ||
+            this.velp.velp_groups.length === 0
+        ) {
             return true;
         }
 
@@ -267,7 +301,6 @@ export class VelpWindowController implements IController {
      * Adds new label to this velp.
      */
     async addLabel() {
-
         if (this.newLabel.content.length < 1) {
             this.newLabel.valid = false;
             return;
@@ -278,7 +311,9 @@ export class VelpWindowController implements IController {
             language_id: "FI", // TODO: Change to user language
         };
 
-        const json = await to($http.post<{id: number}>("/add_velp_label", data));
+        const json = await to(
+            $http.post<{id: number}>("/add_velp_label", data)
+        );
         if (!json.ok) {
             return;
         }
@@ -298,7 +333,6 @@ export class VelpWindowController implements IController {
      * @param label - Label to edit
      */
     toggleLabelToEdit(label: INewLabel) {
-
         if (this.labelToEdit.edit && label.id === this.labelToEdit.id) {
             this.cancelLabelEdit(label);
             return;
@@ -318,7 +352,13 @@ export class VelpWindowController implements IController {
 
     cancelLabelEdit(label: INewLabel) {
         label.edit = false;
-        this.labelToEdit = {content: "", selected: false, edit: false, valid: true, id: null};
+        this.labelToEdit = {
+            content: "",
+            selected: false,
+            edit: false,
+            valid: true,
+            id: null,
+        };
     }
 
     clearVelpColor() {
@@ -379,7 +419,10 @@ export class VelpWindowController implements IController {
     async editVelp() {
         const defaultVelpGroup = this.velpSelection.getDefaultVelpGroup();
 
-        if (this.isGroupInVelp(defaultVelpGroup) && defaultVelpGroup.id === -1) {
+        if (
+            this.isGroupInVelp(defaultVelpGroup) &&
+            defaultVelpGroup.id === -1
+        ) {
             await this.handleDefaultVelpGroupIssue();
             await this.updateVelpInDatabase();
         } else if (this.velp.velp_groups.length > 0) {
@@ -388,7 +431,12 @@ export class VelpWindowController implements IController {
     }
 
     async updateVelpInDatabase() {
-        await to($http.post("/{0}/update_velp".replace("{0}", this.docId.toString()), this.velp));
+        await to(
+            $http.post(
+                "/{0}/update_velp".replace("{0}", this.docId.toString()),
+                this.velp
+            )
+        );
         this.velpLocal = clone(this.velp);
         this.toggleVelpToEdit();
     }
@@ -398,7 +446,10 @@ export class VelpWindowController implements IController {
      */
     async addVelp() {
         const defaultVelpGroup = this.velpSelection.getDefaultVelpGroup();
-        if (this.isGroupInVelp(defaultVelpGroup) && defaultVelpGroup.id === -1) {
+        if (
+            this.isGroupInVelp(defaultVelpGroup) &&
+            defaultVelpGroup.id === -1
+        ) {
             await this.handleDefaultVelpGroupIssue();
             await this.addNewVelpToDatabase();
         } else if (this.velp.velp_groups.length > 0) {
@@ -411,7 +462,6 @@ export class VelpWindowController implements IController {
      * Adds a new velp to the database. Requires values in `this.newVelp` variable.
      */
     async addNewVelpToDatabase() {
-
         // this.velp.edit = false;
         const data = {
             labels: this.velp.labels,
@@ -456,14 +506,12 @@ export class VelpWindowController implements IController {
          this.submitted.velp = false;
          //this.resetLabels();
          */
-
     }
 
     /**
      *
      */
     async handleDefaultVelpGroupIssue() {
-
         const oldDefaultGroup = this.velpSelection.getDefaultVelpGroup();
 
         const newDefaultGroup = await this.velpSelection.generateDefaultVelpGroup();

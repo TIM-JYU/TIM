@@ -1,7 +1,6 @@
 import {Component, Input} from "@angular/core";
 import {documentglobals} from "tim/util/globals";
 
-
 // NOTE: It's intentional that the two ICU expressions ({ item.isFolder, ... }) are slightly different in whitespace.
 // We want two distinct entries in the translation file because the translations might be different.
 @Component({

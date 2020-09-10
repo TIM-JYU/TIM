@@ -1,4 +1,10 @@
-import {AfterViewInit, Component, DoCheck, OnInit, ViewChild} from "@angular/core";
+import {
+    AfterViewInit,
+    Component,
+    DoCheck,
+    OnInit,
+    ViewChild,
+} from "@angular/core";
 import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
@@ -20,7 +26,7 @@ interface UpdateVisStateOptions {
     tabs?: boolean;
     lastVisState?: boolean;
 }
-const UPDATE_ALL: UpdateVisStateOptions = { lastVisState: true, tabs: true };
+const UPDATE_ALL: UpdateVisStateOptions = {lastVisState: true, tabs: true};
 
 const MENU_BUTTON_ICONS: Record<MenuState, string> = {
     [MenuState.Open]: "menu-hamburger",
@@ -66,8 +72,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     nextGlyphicon: string = MENU_BUTTON_ICONS[this.nextState];
     tabsVisible = false;
 
-    constructor(private tabEntryList: TabEntryListService) {
-    }
+    constructor(private tabEntryList: TabEntryListService) {}
 
     get showMenu() {
         return this.currentMenuState == MenuState.Open;
@@ -120,10 +125,10 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         if (!this.isSm && isScreenSizeOrLower("sm")) {
             this.isSm = true;
             this.lastNonSmState = this.currentMenuState;
-            this.setVisibleState(MenuState.Closed, { tabs: true });
+            this.setVisibleState(MenuState.Closed, {tabs: true});
         } else if (this.isSm && !isScreenSizeOrLower("sm")) {
             this.isSm = false;
-            this.setVisibleState(this.lastNonSmState, { tabs: true });
+            this.setVisibleState(this.lastNonSmState, {tabs: true});
         }
     }
 
@@ -170,7 +175,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
         this.currentTab = tab.id;
         this.lastUsedTab = this.currentTab;
-        this.setVisibleState(MenuState.Open, { lastVisState: true });
+        this.setVisibleState(MenuState.Open, {lastVisState: true});
         void tabContainer.onSelect();
     }
 
@@ -197,7 +202,9 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         if (this.currentTab && this.tabsVisTable[this.currentTab]) {
             return true;
         }
-        const firstDefaultTab = this.tabEntryList.defaultTabOrder.find((id) => this.tabsVisTable[id]);
+        const firstDefaultTab = this.tabEntryList.defaultTabOrder.find(
+            (id) => this.tabsVisTable[id]
+        );
         if (!firstDefaultTab) {
             return false;
         }
@@ -214,7 +221,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         // if it's selected by default. In turn this won't cause lazy loading to occur
         // To fix this, mark all tabs inactive and then search for tab to activate, which will always trigger
         // selectTab event.
-        this.tabs.tabs.forEach((t) => t.active = false);
+        this.tabs.tabs.forEach((t) => (t.active = false));
         if (this.currentMenuState != MenuState.Open) {
             return;
         }
@@ -234,7 +241,9 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     private get nextMobileState(): MenuState {
-        return this.currentMenuState == MenuState.Open ? MenuState.Closed : MenuState.Open;
+        return this.currentMenuState == MenuState.Open
+            ? MenuState.Closed
+            : MenuState.Open;
     }
 
     private get nextDesktopState(): MenuState {
@@ -242,7 +251,9 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     private get nextState() {
-        return isScreenSizeOrLower("sm") ? this.nextMobileState : this.nextDesktopState;
+        return isScreenSizeOrLower("sm")
+            ? this.nextMobileState
+            : this.nextDesktopState;
     }
 
     private updateTabsVisible() {

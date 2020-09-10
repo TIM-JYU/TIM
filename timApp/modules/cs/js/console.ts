@@ -1,15 +1,13 @@
 import {IController} from "angular";
-import {
-    Component,
-    ChangeDetectorRef,
-    ElementRef,
-} from "@angular/core";
+import {Component, ChangeDetectorRef, ElementRef} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
 import {CsBase, Example, ConsolePWD, languageTypes} from "./csPlugin";
 
-function trackByIndex(index: number, o: unknown) { return index; }
+function trackByIndex(index: number, o: unknown) {
+    return index;
+}
 
 @Component({
     selector: "cs-console",
@@ -66,12 +64,23 @@ export class CsConsoleComponent extends CsBase implements IController {
     // content: AttrType;
     examples: Array<t.TypeOf<typeof Example>>;
     examplesVisible: boolean = true;
-    history: Array<{istem: string, ostem: string, input: string, response: string, error?: string}>;
+    history: Array<{
+        istem: string;
+        ostem: string;
+        input: string;
+        response: string;
+        error?: string;
+    }>;
     // savestate: string;
     // path: string;
     // type: string;
 
-    constructor(el: ElementRef<HTMLElement>, http: HttpClient, domSanitizer: DomSanitizer, public cdr: ChangeDetectorRef) {
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        public cdr: ChangeDetectorRef
+    ) {
         super(el, http, domSanitizer);
         this.examples = [];
         this.history = [];
@@ -123,7 +132,9 @@ export class CsConsoleComponent extends CsBase implements IController {
     }
 
     focusOnInput() {
-        const el: HTMLInputElement | null = this.getRootElement().querySelector(".console-input");
+        const el: HTMLInputElement | null = this.getRootElement().querySelector(
+            ".console-input"
+        );
         if (el) {
             el.focus();
         }
@@ -137,17 +148,17 @@ export class CsConsoleComponent extends CsBase implements IController {
         const uargs = "";
         const uinput = "";
 
-        const r = await this.httpPut<{web: {pwd?: string, error?: string, console?: string}}>(url,
-            {
-                input: {
-                    usercode: ucode,
-                    userinput: uinput,
-                    isInput: isInput,
-                    userargs: uargs,
-                    type: ty,
-                },
+        const r = await this.httpPut<{
+            web: {pwd?: string; error?: string; console?: string};
+        }>(url, {
+            input: {
+                usercode: ucode,
+                userinput: uinput,
+                isInput: isInput,
+                userargs: uargs,
+                type: ty,
             },
-        );
+        });
         if (r.ok) {
             const data = r.result;
             let s = "";
@@ -181,14 +192,18 @@ export class CsConsoleComponent extends CsBase implements IController {
 
     async submit(result: string) {
         this.history.push({
-            istem: this.isShell ? this.history.length + " " + this.oldpwd + "$" : "in_" + this.history.length + ": ",
+            istem: this.isShell
+                ? this.history.length + " " + this.oldpwd + "$"
+                : "in_" + this.history.length + ": ",
             ostem: this.isShell ? "" : "out_" + this.history.length + ": ",
             input: this.currentInput,
             response: result,
         });
         this.currentInput = "";
         this.cursor = this.history.length;
-        await new Promise((resolve) => { setTimeout(resolve); });
+        await new Promise((resolve) => {
+            setTimeout(resolve);
+        });
         const el = this.getRootElement().querySelector(".console-output");
         if (el) {
             el.scrollTop = el.scrollHeight;
@@ -201,7 +216,10 @@ export class CsConsoleComponent extends CsBase implements IController {
             this.cursor = this.history.length;
             return;
         }
-        const norm = Math.min(this.history.length - 1, Math.max(0, this.cursor));
+        const norm = Math.min(
+            this.history.length - 1,
+            Math.max(0, this.cursor)
+        );
         this.currentInput = this.history[norm].input;
         this.cursor = norm;
     }

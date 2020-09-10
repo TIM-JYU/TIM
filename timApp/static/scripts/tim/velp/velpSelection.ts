@@ -41,7 +41,6 @@ const sortLang: string = "fi";
  * Controller for velp selection
  */
 export class VelpSelectionController implements IController {
-
     private labels: ILabelUI[];
     private velpGroups: IVelpGroupUI[];
     private newVelp: INewVelp;
@@ -64,7 +63,10 @@ export class VelpSelectionController implements IController {
     private labelAdded: boolean = false;
     public vctrl!: Require<ViewCtrl>;
     private defaultPersonalVelpGroup: IVelpGroup;
-    private onInit!: Binding<(params: {$API: VelpSelectionController}) => void, "&">;
+    private onInit!: Binding<
+        (params: {$API: VelpSelectionController}) => void,
+        "&"
+    >;
     private newVelpCtrl?: VelpWindowController;
 
     // Data
@@ -98,9 +100,22 @@ export class VelpSelectionController implements IController {
             color: null,
             valid_until: null,
         };
-        this.newLabel = {content: "", selected: false, edit: false, valid: true, id: null};
+        this.newLabel = {
+            content: "",
+            selected: false,
+            edit: false,
+            valid: true,
+            id: null,
+        };
         this.labelToEdit = {content: "", selected: false, edit: false, id: -3};
-        this.newVelpGroup = {name: "", target_type: 0, selected: false, id: null, show: false, default: false};
+        this.newVelpGroup = {
+            name: "",
+            target_type: 0,
+            selected: false,
+            id: null,
+            show: false,
+            default: false,
+        };
 
         this.settings = {selectedAllShows: false, selectedAllDefault: false};
         this.submitted = {velp: false, velpGroup: false};
@@ -118,7 +133,12 @@ export class VelpSelectionController implements IController {
             selected: false,
             target_type: null,
         }; // TODO Use route to add this information
-        this.defaultPersonalVelpGroup = {id: -2, name: "Personal-default", target_type: null, default: true};
+        this.defaultPersonalVelpGroup = {
+            id: -2,
+            name: "Personal-default",
+            target_type: null,
+            default: true,
+        };
     }
 
     get rctrl() {
@@ -135,10 +155,17 @@ export class VelpSelectionController implements IController {
         this.advancedOnKey = "advancedOn"; // TODO: should this be document specific?
 
         // Values to store in localstorage:
-        this.order = this.getValuesFromLocalStorage(this.velpOrderingKey, "content");
-        const lbls = JSON.parse(this.getValuesFromLocalStorage(this.velpLabelsKey, "[]"));
+        this.order = this.getValuesFromLocalStorage(
+            this.velpOrderingKey,
+            "content"
+        );
+        const lbls = JSON.parse(
+            this.getValuesFromLocalStorage(this.velpLabelsKey, "[]")
+        );
         this.selectedLabels = t.array(t.number).is(lbls) ? lbls : [];
-        const adv = JSON.parse(this.getValuesFromLocalStorage(this.advancedOnKey, "false"));
+        const adv = JSON.parse(
+            this.getValuesFromLocalStorage(this.advancedOnKey, "false")
+        );
         this.advancedOn = t.boolean.is(adv) ? adv : false;
 
         this.onInit({$API: this});
@@ -151,11 +178,17 @@ export class VelpSelectionController implements IController {
         const p2 = $http.get<IVelpGroup>(`/${docId}/get_default_velp_group`);
         const p4 = $http.get<IVelp[]>(`/${docId}/get_velps`);
         const p5 = $http.get<ILabel[]>(`/${docId}/get_velp_labels`);
-        const p6 = $http.get<IVelpGroupCollection>(`/${docId}/get_velp_group_personal_selections`);
-        const p7 = $http.get<IVelpGroupCollection>(`/${docId}/get_velp_group_default_selections`);
+        const p6 = $http.get<IVelpGroupCollection>(
+            `/${docId}/get_velp_group_personal_selections`
+        );
+        const p7 = $http.get<IVelpGroupCollection>(
+            `/${docId}/get_velp_group_default_selections`
+        );
         // Get default velp group data
         const response2 = await p2;
-        const p3 = $http.get<IVelpGroup & {created_new_group: boolean}>("/get_default_personal_velp_group");
+        const p3 = $http.get<IVelpGroup & {created_new_group: boolean}>(
+            "/get_default_personal_velp_group"
+        );
 
         this.velpGroups = response.data;
 
@@ -163,7 +196,10 @@ export class VelpSelectionController implements IController {
 
         // If doc_default exists already for some reason but isn't a velp group yet, remove it from fetched velp groups
         for (const g of this.velpGroups) {
-            if (g.name === this.defaultVelpGroup.name && this.defaultVelpGroup.id < 0) {
+            if (
+                g.name === this.defaultVelpGroup.name &&
+                this.defaultVelpGroup.id < 0
+            ) {
                 const extraDefaultIndex = this.velpGroups.indexOf(g);
                 this.velpGroups.push(this.defaultVelpGroup);
                 this.velpGroups.splice(extraDefaultIndex, 1);
@@ -184,7 +220,12 @@ export class VelpSelectionController implements IController {
         // Get personal velp group data
         const response3 = await p3;
         const data = response3.data;
-        this.defaultPersonalVelpGroup = {id: data.id, name: data.name, target_type: null, default: true};
+        this.defaultPersonalVelpGroup = {
+            id: data.id,
+            name: data.name,
+            target_type: null,
+            default: true,
+        };
 
         if (data.created_new_group) {
             this.velpGroups.push(data);
@@ -194,11 +235,17 @@ export class VelpSelectionController implements IController {
             this.newVelp.velp_groups.push(this.defaultPersonalVelpGroup.id);
         }
 
-        if (this.defaultPersonalVelpGroup.id < 0 && !this.velpGroupsContain(this.defaultVelpGroup)) {
+        if (
+            this.defaultPersonalVelpGroup.id < 0 &&
+            !this.velpGroupsContain(this.defaultVelpGroup)
+        ) {
             this.velpGroups.push(this.defaultVelpGroup);
         }
 
-        if (this.defaultVelpGroup.id < 0 && !this.velpGroupsContain(this.defaultVelpGroup)) {
+        if (
+            this.defaultVelpGroup.id < 0 &&
+            !this.velpGroupsContain(this.defaultVelpGroup)
+        ) {
             this.velpGroups.push(this.defaultVelpGroup);
         }
 
@@ -282,7 +329,10 @@ export class VelpSelectionController implements IController {
     }
 
     changeSelectedLabels() {
-        window.localStorage.setItem(this.velpLabelsKey, JSON.stringify(this.selectedLabels));
+        window.localStorage.setItem(
+            this.velpLabelsKey,
+            JSON.stringify(this.selectedLabels)
+        );
     }
 
     /**
@@ -316,7 +366,6 @@ export class VelpSelectionController implements IController {
             this.selectedLabels.splice(labelIndex, 1);
         }
         this.changeSelectedLabels(); // Update localstorage
-
     }
 
     setAdvancedOnlocalStorage(value: boolean) {
@@ -328,7 +377,6 @@ export class VelpSelectionController implements IController {
      * @param velp - Velp where the label is to be added.
      */
     async addLabel(velp: IVelp) {
-
         if (this.newLabel.content.length < 1) {
             this.newLabel.valid = false;
             return;
@@ -338,7 +386,9 @@ export class VelpSelectionController implements IController {
             content: this.newLabel.content,
             language_id: "FI", // TODO: Change to user language
         };
-        const response = await to($http.post<{id: number}>("/add_velp_label", data));
+        const response = await to(
+            $http.post<{id: number}>("/add_velp_label", data)
+        );
         if (!response.ok) {
             return;
         }
@@ -388,7 +438,15 @@ export class VelpSelectionController implements IController {
      */
     async generateDefaultVelpGroup(): Promise<IVelpGroup | null> {
         if (this.defaultVelpGroup.edit_access) {
-            const json = await to($http.post<IVelpGroup>("/{0}/create_default_velp_group".replace("{0}", this.docId.toString()), "{}"));
+            const json = await to(
+                $http.post<IVelpGroup>(
+                    "/{0}/create_default_velp_group".replace(
+                        "{0}",
+                        this.docId.toString()
+                    ),
+                    "{}"
+                )
+            );
             if (!json.ok) {
                 return null;
             }
@@ -515,9 +573,18 @@ export class VelpSelectionController implements IController {
      */
     updateVelpList() {
         this.velpGroups.forEach((g) => {
-            if (this.isAttachedToParagraph() && this.rctrl.selectedElement != null) {
-                g.show = this.isVelpGroupShownHere(g.id, this.rctrl.selectedElement.id);
-                g.default = this.isVelpGroupDefaultHere(g.id, this.rctrl.selectedElement.id);
+            if (
+                this.isAttachedToParagraph() &&
+                this.rctrl.selectedElement != null
+            ) {
+                g.show = this.isVelpGroupShownHere(
+                    g.id,
+                    this.rctrl.selectedElement.id
+                );
+                g.default = this.isVelpGroupDefaultHere(
+                    g.id,
+                    this.rctrl.selectedElement.id
+                );
             } else {
                 g.show = this.isVelpGroupShownHere(g.id, "0");
                 g.default = this.isVelpGroupDefaultHere(g.id, "0");
@@ -535,18 +602,27 @@ export class VelpSelectionController implements IController {
         let returnValue;
         // Are we checking for the whole document? This "if" might be unnecessary.
         if (paragraphId === "0") {
-            returnValue = this.lazyIsVelpGroupSelectedInParagraph(groupId, paragraphId);
+            returnValue = this.lazyIsVelpGroupSelectedInParagraph(
+                groupId,
+                paragraphId
+            );
             if (returnValue != null) {
                 return returnValue;
             }
             // Not set for the document, we'll try the defaults instead.
-            returnValue = this.lazyIsVelpGroupDefaultInParagraph(groupId, paragraphId);
+            returnValue = this.lazyIsVelpGroupDefaultInParagraph(
+                groupId,
+                paragraphId
+            );
             if (returnValue != null) {
                 return returnValue;
             }
         } else {
             // First check "selected" attributes for paragraph.
-            returnValue = this.lazyIsVelpGroupSelectedInParagraph(groupId, paragraphId);
+            returnValue = this.lazyIsVelpGroupSelectedInParagraph(
+                groupId,
+                paragraphId
+            );
             if (returnValue != null) {
                 return returnValue;
             }
@@ -569,7 +645,10 @@ export class VelpSelectionController implements IController {
     isVelpGroupDefaultHere(groupId: number, paragraphId: string) {
         let returnValue;
         // First check defaults here
-        returnValue = this.lazyIsVelpGroupDefaultInParagraph(groupId, paragraphId);
+        returnValue = this.lazyIsVelpGroupDefaultInParagraph(
+            groupId,
+            paragraphId
+        );
         if (returnValue != null) {
             return returnValue;
         }
@@ -589,7 +668,10 @@ export class VelpSelectionController implements IController {
      * @returns {boolean} Whether the group is personal default or document default group or not.
      */
     isVelpGroupDefaultFallBack(groupId: number) {
-        return (groupId === this.defaultPersonalVelpGroup.id || groupId === this.defaultVelpGroup.id);
+        return (
+            groupId === this.defaultPersonalVelpGroup.id ||
+            groupId === this.defaultVelpGroup.id
+        );
     }
 
     /**
@@ -600,7 +682,11 @@ export class VelpSelectionController implements IController {
      * @returns true/false/null
      */
     lazyIsVelpGroupSelectedInParagraph(groupId: number, paragraphId: string) {
-        return this.checkCollectionForSelected(groupId, paragraphId, this.groupSelections);
+        return this.checkCollectionForSelected(
+            groupId,
+            paragraphId,
+            this.groupSelections
+        );
     }
 
     /**
@@ -611,7 +697,11 @@ export class VelpSelectionController implements IController {
      * @returns true/false/null
      */
     lazyIsVelpGroupDefaultInParagraph(groupId: number, paragraphId: string) {
-        return this.checkCollectionForSelected(groupId, paragraphId, this.groupDefaults);
+        return this.checkCollectionForSelected(
+            groupId,
+            paragraphId,
+            this.groupDefaults
+        );
     }
 
     /**
@@ -621,7 +711,11 @@ export class VelpSelectionController implements IController {
      * @param collection - Shows or defaults
      * @returns {boolean|null} Whether the collection is selected or not. Null if paragraph is not found.
      */
-    checkCollectionForSelected(groupId: number, paragraphId: string, collection: IVelpGroupCollection) {
+    checkCollectionForSelected(
+        groupId: number,
+        paragraphId: string,
+        collection: IVelpGroupCollection
+    ) {
         if (collection.hasOwnProperty(paragraphId)) {
             const selectionsHere = collection[paragraphId];
             for (const s of selectionsHere) {
@@ -646,8 +740,12 @@ export class VelpSelectionController implements IController {
 
         form.$setPristine();
 
-        const json = await to($http.post<IVelpGroup>("/{0}/create_velp_group".replace("{0}", this.docId.toString()),
-            this.newVelpGroup));
+        const json = await to(
+            $http.post<IVelpGroup>(
+                "/{0}/create_velp_group".replace("{0}", this.docId.toString()),
+                this.newVelpGroup
+            )
+        );
         if (!json.ok) {
             return;
         }
@@ -665,10 +763,12 @@ export class VelpSelectionController implements IController {
      * @param type - "show" or "default"
      */
     changeVelpGroupSelection(group: IVelpGroup, type: VelpGroupSelectionType) {
-
         let targetId: string;
         let targetType: number;
-        if (this.isAttachedToParagraph() && this.rctrl.selectedElement != null) {
+        if (
+            this.isAttachedToParagraph() &&
+            this.rctrl.selectedElement != null
+        ) {
             targetId = this.rctrl.selectedElement.id;
             targetType = 1;
         } else {
@@ -676,15 +776,28 @@ export class VelpSelectionController implements IController {
             targetType = 0;
         }
 
-        const data = Object.assign({target_id: targetId, target_type: targetType, selection_type: type}, group);
+        const data = Object.assign(
+            {
+                target_id: targetId,
+                target_type: targetType,
+                selection_type: type,
+            },
+            group
+        );
 
         if (type === "show") {
-            $http.post("/{0}/change_selection".replace("{0}", this.docId.toString()), data);
+            $http.post(
+                "/{0}/change_selection".replace("{0}", this.docId.toString()),
+                data
+            );
 
             this.groupSelections[targetId] = [];
 
             this.velpGroups.forEach((g) => {
-                this.groupSelections[targetId].push({id: g.id, selected: g.show});
+                this.groupSelections[targetId].push({
+                    id: g.id,
+                    selected: g.show,
+                });
             });
 
             /*
@@ -704,12 +817,18 @@ export class VelpSelectionController implements IController {
              }
              */
         } else if (type === "default") {
-            $http.post("/{0}/change_selection".replace("{0}", this.docId.toString()), data);
+            $http.post(
+                "/{0}/change_selection".replace("{0}", this.docId.toString()),
+                data
+            );
 
             this.groupDefaults[targetId] = [];
 
             this.velpGroups.forEach((g) => {
-                this.groupDefaults[targetId].push({id: g.id, selected: g.default});
+                this.groupDefaults[targetId].push({
+                    id: g.id,
+                    selected: g.default,
+                });
             });
 
             /* if (!this.groupDefaults.hasOwnProperty(group.target_id))
@@ -738,11 +857,13 @@ export class VelpSelectionController implements IController {
      * @param type - "show" or "default"
      */
     changeAllVelpGroupSelections(type: VelpGroupSelectionType) {
-
         let targetID: string;
         let targetType;
 
-        if (this.isAttachedToParagraph() && this.rctrl.selectedElement != null) {
+        if (
+            this.isAttachedToParagraph() &&
+            this.rctrl.selectedElement != null
+        ) {
             targetID = this.rctrl.selectedElement.id;
             targetType = 1;
         } else {
@@ -753,48 +874,67 @@ export class VelpSelectionController implements IController {
         if (type === "show") {
             this.groupSelections[targetID] = [];
             if (!this.settings.selectedAllShows) {
-
                 this.velpGroups.forEach((g) => {
-                    this.groupSelections[targetID].push({id: g.id, selected: false});
+                    this.groupSelections[targetID].push({
+                        id: g.id,
+                        selected: false,
+                    });
                 });
             } else {
                 this.velpGroups.forEach((g) => {
-                    this.groupSelections[targetID].push({id: g.id, selected: true});
+                    this.groupSelections[targetID].push({
+                        id: g.id,
+                        selected: true,
+                    });
                 });
             }
 
-            $http.post("/{0}/change_all_selections".replace("{0}", this.docId.toString()), {
-                target_id: targetID,
-                target_type: targetType,
-                selection: this.settings.selectedAllShows,
-                selection_type: type,
-            });
-
+            $http.post(
+                "/{0}/change_all_selections".replace(
+                    "{0}",
+                    this.docId.toString()
+                ),
+                {
+                    target_id: targetID,
+                    target_type: targetType,
+                    selection: this.settings.selectedAllShows,
+                    selection_type: type,
+                }
+            );
         } else if (type === "default") {
             this.groupDefaults[targetID] = [];
 
             if (!this.settings.selectedAllDefault) {
                 this.velpGroups.forEach((g) => {
-                    this.groupDefaults[targetID].push({id: g.id, selected: false});
+                    this.groupDefaults[targetID].push({
+                        id: g.id,
+                        selected: false,
+                    });
                 });
             } else {
-
                 this.velpGroups.forEach((g) => {
-                    this.groupDefaults[targetID].push({id: g.id, selected: true});
+                    this.groupDefaults[targetID].push({
+                        id: g.id,
+                        selected: true,
+                    });
                 });
             }
 
-            $http.post("/{0}/change_all_selections".replace("{0}", this.docId.toString()), {
-                target_id: targetID,
-                target_type: targetType,
-                selection: this.settings.selectedAllDefault,
-                selection_type: type,
-            });
-
+            $http.post(
+                "/{0}/change_all_selections".replace(
+                    "{0}",
+                    this.docId.toString()
+                ),
+                {
+                    target_id: targetID,
+                    target_type: targetType,
+                    selection: this.settings.selectedAllDefault,
+                    selection_type: type,
+                }
+            );
         }
 
         this.updateVelpList();
-
     }
 
     private isAttachedToParagraph() {
@@ -805,16 +945,26 @@ export class VelpSelectionController implements IController {
      * Sets all velp group show selections to defaults in the current element or in the document.
      */
     async resetCurrentShowsToDefaults() {
-
         let targetID;
-        if (this.isAttachedToParagraph() && this.rctrl.selectedElement != null) {
+        if (
+            this.isAttachedToParagraph() &&
+            this.rctrl.selectedElement != null
+        ) {
             targetID = this.rctrl.selectedElement.id;
         } else {
             targetID = "0";
         }
 
         this.groupSelections[targetID] = clone(this.groupDefaults[targetID]);
-        await to($http.post("/{0}/reset_target_area_selections_to_defaults".replace("{0}", this.docId.toString()), {target_id: targetID}));
+        await to(
+            $http.post(
+                "/{0}/reset_target_area_selections_to_defaults".replace(
+                    "{0}",
+                    this.docId.toString()
+                ),
+                {target_id: targetID}
+            )
+        );
         this.updateVelpList();
     }
 
@@ -824,7 +974,15 @@ export class VelpSelectionController implements IController {
     async resetAllShowsToDefaults() {
         this.groupSelections = clone(this.groupDefaults);
 
-        await to($http.post("/{0}/reset_all_selections_to_defaults".replace("{0}", this.docId.toString()), null));
+        await to(
+            $http.post(
+                "/{0}/reset_all_selections_to_defaults".replace(
+                    "{0}",
+                    this.docId.toString()
+                ),
+                null
+            )
+        );
         this.updateVelpList();
     }
 
@@ -836,16 +994,26 @@ export class VelpSelectionController implements IController {
     checkCheckBoxes(type: VelpGroupSelectionType) {
         let targetID = null;
 
-        if (this.isAttachedToParagraph() && this.rctrl.selectedElement != null) {
+        if (
+            this.isAttachedToParagraph() &&
+            this.rctrl.selectedElement != null
+        ) {
             targetID = this.rctrl.selectedElement.id;
         } else {
             targetID = "0";
         }
 
         if (type === "show" && typeof this.groupSelections[targetID] != null) {
-            return this.groupSelections[targetID].length === this.velpGroups.length;
-        } else if (type === "default" && typeof this.groupDefaults[targetID] != null) {
-            return this.groupDefaults[targetID].length === this.velpGroups.length;
+            return (
+                this.groupSelections[targetID].length === this.velpGroups.length
+            );
+        } else if (
+            type === "default" &&
+            typeof this.groupDefaults[targetID] != null
+        ) {
+            return (
+                this.groupDefaults[targetID].length === this.velpGroups.length
+            );
         }
     }
 
@@ -933,7 +1101,6 @@ export class VelpSelectionController implements IController {
  */
 timApp.filter("filterByLabels", () => {
     return (velps?: IVelp[], labels?: ILabelUI[], advancedOn?: boolean) => {
-
         const selectedVelps: {[index: number]: [IVelp, number]} = {};
         const selectedLabels = [];
 
@@ -951,7 +1118,6 @@ timApp.filter("filterByLabels", () => {
 
         if (velps != null) {
             for (let j = 0; j < velps.length; j++) {
-
                 for (const s of selectedLabels) {
                     if (velps[j].labels?.includes(s)) {
                         if (!(j in selectedVelps)) {
@@ -986,12 +1152,10 @@ timApp.filter("filterByLabels", () => {
 
         return returnVelps;
     };
-
 });
 
 timApp.filter("filterByVelpGroups", () => {
     return (velps?: INewVelp[], groups?: IVelpGroupUI[]) => {
-
         const selected: INewVelp[] = [];
         const checkedGroups = [];
 
@@ -1042,7 +1206,9 @@ timApp.filter("orderByWhenNotEditing", () => {
         if (order === "labels") {
             list = velps;
         } else if (order === "content") {
-            list = velps.sort((v1, v2) => v1.content.localeCompare(v2.content, sortLang));
+            list = velps.sort((v1, v2) =>
+                v1.content.localeCompare(v2.content, sortLang)
+            );
         } else {
             list = velps.sort((v1, v2) => {
                 const v1o = v1[order];

@@ -65,7 +65,8 @@ export class UserMenuComponent {
         void showLoginDialog({showSignup: false, addingToSession: true});
     }
 
-    logout = (user: IUser, logoutFromKorppi = false) => Users.logout(user, logoutFromKorppi);
+    logout = (user: IUser, logoutFromKorppi = false) =>
+        Users.logout(user, logoutFromKorppi);
 
     beginLogout($event: Event) {
         this.logout(this.getCurrentUser());

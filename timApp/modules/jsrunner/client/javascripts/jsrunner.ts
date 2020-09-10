@@ -7,13 +7,26 @@ import {IJsRunner, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {copyToClipboard, to} from "tim/util/utils";
-import {AnswerReturnBrowser, ErrorList, IError, IncludeUsersOption, JsrunnerAll, JsrunnerMarkup} from "../../shared/jsrunnertypes";
+import {
+    AnswerReturnBrowser,
+    ErrorList,
+    IError,
+    IncludeUsersOption,
+    JsrunnerAll,
+    JsrunnerMarkup,
+} from "../../shared/jsrunnertypes";
 import "style-loader!../stylesheets/jsrunner.css";
 
 const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
 export const moduleDefs = [jsrunnerApp];
 
-class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.TypeOf<typeof JsrunnerAll>, typeof JsrunnerAll> implements IJsRunner {
+class JsrunnerController
+    extends PluginBase<
+        t.TypeOf<typeof JsrunnerMarkup>,
+        t.TypeOf<typeof JsrunnerAll>,
+        typeof JsrunnerAll
+    >
+    implements IJsRunner {
     private error?: IError;
     private isRunning = false;
     private output: string = "";
@@ -45,7 +58,10 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     showFieldHelper() {
-        const pluginlist = this.vctrl.getTimComponentsByRegex(".*", RegexOption.DontPrependCurrentDocId);
+        const pluginlist = this.vctrl.getTimComponentsByRegex(
+            ".*",
+            RegexOption.DontPrependCurrentDocId
+        );
         let tasks = "";
         if (this.attrs.docid) {
             for (const plug of pluginlist) {
@@ -85,7 +101,9 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     addError(msg: string) {
-        if (!this.error) { this.error = {msg: ""}; }
+        if (!this.error) {
+            this.error = {msg: ""};
+        }
         this.error.msg += msg;
     }
 
@@ -105,11 +123,16 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
         const paramComps: Record<string, string | undefined> = {};
         if (this.attrsall.markup.paramFields) {
             for (const i of this.attrsall.markup.paramFields) {
-                const timComponents = this.vctrl.getTimComponentsByRegex(i, RegexOption.PrependCurrentDocId);
+                const timComponents = this.vctrl.getTimComponentsByRegex(
+                    i,
+                    RegexOption.PrependCurrentDocId
+                );
                 for (const v of timComponents) {
                     const cname = v.getName();
                     const value = v.getContent();
-                    if (cname) { paramComps[cname] = value; }
+                    if (cname) {
+                        paramComps[cname] = value;
+                    }
                 }
             }
         }
@@ -137,27 +160,39 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
                 if (this.attrsall.markup.updateFields) {
                     this.vctrl.updateFields(this.attrsall.markup.updateFields);
                     if (this.attrs.autoUpdateTables) {
-                        this.vctrl.updateAllTables(this.attrsall.markup.updateFields);
+                        this.vctrl.updateAllTables(
+                            this.attrsall.markup.updateFields
+                        );
                     }
                 }
                 // temp code:
                 const tempd = data.web;
-                if (!tempd.outdata) { return; }
+                if (!tempd.outdata) {
+                    return;
+                }
                 const exportdata = tempd.outdata.exportdata;
-                if (!exportdata) { return; }
+                if (!exportdata) {
+                    return;
+                }
                 for (const edata of exportdata) {
                     const pname = edata.plugin;
-                    if (!pname) { continue; }
+                    if (!pname) {
+                        continue;
+                    }
                     const plugin = this.vctrl.getTimComponentByName(pname);
                     if (!plugin) {
-                        this.addError(`Plugin ${pname} not found. Check plugin names.`);
+                        this.addError(
+                            `Plugin ${pname} not found. Check plugin names.`
+                        );
                         continue;
                     }
                     const save = edata.save == true;
                     if (plugin.setData) {
                         plugin.setData(edata.data, save);
                     } else {
-                        this.addError(`Plugin ${pname} does not have setData method.`);
+                        this.addError(
+                            `Plugin ${pname} does not have setData method.`
+                        );
                     }
                 }
             }
@@ -186,18 +221,24 @@ class JsrunnerController extends PluginBase<t.TypeOf<typeof JsrunnerMarkup>, t.T
     }
 
     isVisible() {
-        if (this.visible >= 0) { return this.visible == 1; }
+        if (this.visible >= 0) {
+            return this.visible == 1;
+        }
         this.visible = 0;
-        if (this.attrs.showInView) { this.visible = 1; return true; }
+        if (this.attrs.showInView) {
+            this.visible = 1;
+            return true;
+        }
         const pn = window.location.pathname;
-        if (pn.match("teacher|answers")) { this.visible = 1; }
+        if (pn.match("teacher|answers")) {
+            this.visible = 1;
+        }
         return this.visible == 1;
     }
 
     runScriptWithUsers(userNames: string[]) {
         this.doCheckFields(false, userNames);
     }
-
 }
 
 jsrunnerApp.component("jsrunnerError", {

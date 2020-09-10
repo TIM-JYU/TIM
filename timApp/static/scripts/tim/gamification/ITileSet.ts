@@ -1,5 +1,5 @@
 export interface ITileSet {
-    tileoffset: {x: number, y: number};
+    tileoffset: {x: number; y: number};
     columns: number;
     firstgid: number;
     image: string;
@@ -7,8 +7,8 @@ export interface ITileSet {
     imagewidth: number;
     margin: number;
     name: string;
-    properties: {buildingProperty: number, frameProperty: number};
-    propertytypes: {buildingProperty: string, frameProperty: string};
+    properties: {buildingProperty: number; frameProperty: number};
+    propertytypes: {buildingProperty: string; frameProperty: string};
     spacing: number;
     tilecount: number;
     tileheight: number;

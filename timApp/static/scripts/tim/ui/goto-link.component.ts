@@ -64,7 +64,8 @@ const VIEW_PATH = "/view/";
 export class GotoLinkComponent implements OnInit {
     @Input() href = "";
     @Input() waitText?: string;
-    @Input() countdownText: string = $localize `:@@gotoOpensIn:Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
+    @Input()
+    countdownText: string = $localize`:@@gotoOpensIn:Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
     @Input() unauthorizedText?: string;
     @Input() pastDueText?: string;
     @Input() timeLang?: string;
@@ -85,8 +86,7 @@ export class GotoLinkComponent implements OnInit {
     error?: GotoError;
     unsavedChangesChecked = false;
 
-    constructor(private http: HttpClient) {
-    }
+    constructor(private http: HttpClient) {}
 
     ngOnInit() {
         if (this.autoOpen) {
@@ -107,7 +107,9 @@ export class GotoLinkComponent implements OnInit {
     }
 
     private getPastDueTime(pastDue: number) {
-        return humanizeDuration(pastDue * 1000, {language: this.timeLang ?? Users.getCurrentLanguage()});
+        return humanizeDuration(pastDue * 1000, {
+            language: this.timeLang ?? Users.getCurrentLanguage(),
+        });
     }
 
     private showError(error: GotoError) {
@@ -121,11 +123,21 @@ export class GotoLinkComponent implements OnInit {
         const path = url.pathname;
 
         // If href points to a valid TIM document, check permissions
-        if (url.hostname == window.location.hostname && path.startsWith(VIEW_PATH)) {
+        if (
+            url.hostname == window.location.hostname &&
+            path.startsWith(VIEW_PATH)
+        ) {
             const docPath = path.substring(VIEW_PATH.length);
-            const accessInfo = await to2(this.http.get<IViewAccessStatus>(`/docViewInfo/${docPath}`).toPromise());
+            const accessInfo = await to2(
+                this.http
+                    .get<IViewAccessStatus>(`/docViewInfo/${docPath}`)
+                    .toPromise()
+            );
             if (accessInfo.ok) {
-                return {unauthorized: !accessInfo.result.can_access, access: accessInfo.result.right};
+                return {
+                    unauthorized: !accessInfo.result.can_access,
+                    access: accessInfo.result.right,
+                };
             }
         }
         return {unauthorized: false, access: undefined};
@@ -141,7 +153,9 @@ export class GotoLinkComponent implements OnInit {
 
     async start() {
         // Allow user to click during countdown or past expiration, but do nothing reasonable.
-        if (this.isCountdown) { return; }
+        if (this.isCountdown) {
+            return;
+        }
 
         this.stopReset();
         this.error = undefined;
@@ -156,12 +170,20 @@ export class GotoLinkComponent implements OnInit {
             return;
         }
 
-        const openTime = this.parseTime(this.openAt, access?.accessible_from ?? access?.duration_from);
-        const closeTime = this.parseTime(this.closeAt, access?.accessible_to ?? access?.duration_to);
+        const openTime = this.parseTime(
+            this.openAt,
+            access?.accessible_from ?? access?.duration_from
+        );
+        const closeTime = this.parseTime(
+            this.closeAt,
+            access?.accessible_to ?? access?.duration_to
+        );
 
         let curTime = moment();
         if (closeTime || openTime) {
-            const serverTime = await to2(this.http.get<{time: Moment}>("/time").toPromise());
+            const serverTime = await to2(
+                this.http.get<{time: Moment}>("/time").toPromise()
+            );
             // Fail silently here and hope the user clicks again so it can retry
             if (!serverTime.ok) {
                 this.linkDisabled = false;
@@ -171,15 +193,23 @@ export class GotoLinkComponent implements OnInit {
         }
 
         if (closeTime?.isValid() && closeTime.isBefore(curTime)) {
-            const pastDue = this.getPastDueTime(closeTime.diff(curTime, "seconds"));
+            const pastDue = this.getPastDueTime(
+                closeTime.diff(curTime, "seconds")
+            );
             this.showError({
-                userMessage: this.pastDueText ? formatString(this.pastDueText, pastDue) : undefined,
+                userMessage: this.pastDueText
+                    ? formatString(this.pastDueText, pastDue)
+                    : undefined,
                 defaultMessage: $localize`:@@gotoErrorExpired:Your access expired ${pastDue}:INTERPOLATION: ago.`,
             });
             return;
         }
 
-        if (!this.unsavedChangesChecked && this.checkUnsaved && vctrlInstance?.checkUnSavedTimComponents()) {
+        if (
+            !this.unsavedChangesChecked &&
+            this.checkUnsaved &&
+            vctrlInstance?.checkUnSavedTimComponents()
+        ) {
             this.showError({
                 userMessage: this.unsavedChangesText,
                 defaultMessage: $localize`:@@gotoErrorUnsaved:You have unsaved changes. Save them or click the link again.`,
@@ -193,7 +223,10 @@ export class GotoLinkComponent implements OnInit {
             this.openTime = openTime?.toISOString();
         }
 
-        if (openTime?.isValid() && openTime.diff(curTime, "seconds", true) <= 0) {
+        if (
+            openTime?.isValid() &&
+            openTime.diff(curTime, "seconds", true) <= 0
+        ) {
             this.startOpenLink();
         } else {
             this.startCountdown();
@@ -220,7 +253,10 @@ export class GotoLinkComponent implements OnInit {
     }
 
     startReset(resetTime: number) {
-         this.resetTimeout = window.setTimeout(() => this.reset(), resetTime * 1000);
+        this.resetTimeout = window.setTimeout(
+            () => this.reset(),
+            resetTime * 1000
+        );
     }
 
     private reset() {
@@ -238,7 +274,9 @@ export class GotoLinkComponent implements OnInit {
     }
 
     startOpenLink() {
-        if (this.isGoing) { return; }
+        if (this.isGoing) {
+            return;
+        }
         this.linkDisabled = true;
         this.linkState = GotoLinkState.Goto;
         const waitTime = Math.random() * Math.max(this.maxWait, 0);

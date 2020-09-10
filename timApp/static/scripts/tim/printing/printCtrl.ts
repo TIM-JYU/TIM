@@ -6,9 +6,7 @@ import {registerDialogComponent, showDialog} from "../ui/dialog";
 import {$http, $localStorage} from "../util/ngimport";
 import {to} from "../util/utils";
 
-export interface ITemplate extends IItem {
-
-}
+export interface ITemplate extends IItem {}
 
 export interface ITemplateParams {
     templates: ITemplate[];
@@ -23,7 +21,9 @@ export interface IPrintParams {
 export class PrintCtrl extends DialogController<{params: IPrintParams}, void> {
     static component = "timPrint";
     static $inject = ["$element", "$scope"] as const;
-    private storage: ngStorage.StorageService & {timPrintingTemplateId: null | number};
+    private storage: ngStorage.StorageService & {
+        timPrintingTemplateId: null | number;
+    };
     private errormsg?: string;
     private notificationmsg?: string;
     private docUrl?: string;
@@ -70,13 +70,11 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, void> {
         let t;
 
         if (this.storage.timPrintingTemplateId && this.templates) {
-
             this.templates.forEach((template) => {
                 if (template.id === this.storage.timPrintingTemplateId) {
                     t = template;
                 }
             });
-
         } else if (this.templates) {
             t = this.templates.find((tmpl) => tmpl.name !== "empty");
         }
@@ -129,13 +127,20 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, void> {
             this.notificationmsg = undefined;
 
             const postURL = "/print/" + this.document.path;
-            const r = await to($http.post<{url: string, errormsg?: string, latex?: string, latexline?: string}>(postURL, {
-                fileType,
-                templateDocId: chosenTemplateId,
-                printPluginsUserCode: pluginsUserCode,
-                removeOldImages,
-                force,
-            }));
+            const r = await to(
+                $http.post<{
+                    url: string;
+                    errormsg?: string;
+                    latex?: string;
+                    latexline?: string;
+                }>(postURL, {
+                    fileType,
+                    templateDocId: chosenTemplateId,
+                    printPluginsUserCode: pluginsUserCode,
+                    removeOldImages,
+                    force,
+                })
+            );
             if (r.ok) {
                 const response = r.result;
                 // console.log(response);
@@ -152,9 +157,10 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, void> {
                 // console.log(this.docUrl);
 
                 this.loading = false;
-
             } else {
-                const reformatted = r.result.data.error.split("\\n").join("<br/>");
+                const reformatted = r.result.data.error
+                    .split("\\n")
+                    .join("<br/>");
                 this.errormsg = reformatted;
                 this.loading = false;
             }
@@ -179,8 +185,9 @@ export class PrintCtrl extends DialogController<{params: IPrintParams}, void> {
     }
 }
 
-registerDialogComponent(PrintCtrl,
-    {templateUrl: "/static/templates/printDialog.html"});
+registerDialogComponent(PrintCtrl, {
+    templateUrl: "/static/templates/printDialog.html",
+});
 
 export async function showPrintDialog(p: IPrintParams) {
     return await showDialog(PrintCtrl, {params: () => p}).result;

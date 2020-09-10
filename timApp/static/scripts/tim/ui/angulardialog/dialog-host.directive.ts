@@ -9,9 +9,14 @@ import {
     ViewContainerRef,
 } from "@angular/core";
 import {to2} from "tim/util/utils";
-import {AngularDialogComponent, IDialogOptions} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {
+    AngularDialogComponent,
+    IDialogOptions,
+} from "tim/ui/angulardialog/angular-dialog-component.directive";
 
-export type DialogConstructor = new (...args: unknown[]) => AngularDialogComponent<unknown, unknown>;
+export type DialogConstructor = new (
+    ...args: unknown[]
+) => AngularDialogComponent<unknown, unknown>;
 
 export interface IDialogInstanceEvent {
     id: number;
@@ -32,13 +37,12 @@ export class DialogHostDirective implements OnInit {
     constructor(
         private componentFactoryResolver: ComponentFactoryResolver,
         private viewContainerRef: ViewContainerRef,
-        private cdr: ChangeDetectorRef,
-    ) {
-    }
+        private cdr: ChangeDetectorRef
+    ) {}
 
     ngOnInit() {
         const componentFactory = this.componentFactoryResolver.resolveComponentFactory(
-            this.timDialogHost,
+            this.timDialogHost
         );
         this.viewContainerRef.clear();
         const ref = this.viewContainerRef.createComponent(componentFactory);

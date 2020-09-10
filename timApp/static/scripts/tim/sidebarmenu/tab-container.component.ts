@@ -5,7 +5,11 @@ import {
     Input,
     ViewChild,
 } from "@angular/core";
-import {TabEntry, MenuTabDirective, OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
+import {
+    TabEntry,
+    MenuTabDirective,
+    OnTabSelect,
+} from "tim/sidebarmenu/menu-tab.directive";
 
 @Component({
     selector: "tab-container",
@@ -18,18 +22,21 @@ export class TabContainerComponent {
     @ViewChild(MenuTabDirective, {static: true}) timMenuTab!: MenuTabDirective;
     private tabComponent?: ComponentRef<unknown>;
 
-    constructor(private cfr: ComponentFactoryResolver) {
-    }
+    constructor(private cfr: ComponentFactoryResolver) {}
 
     private initComponent() {
-        const factory = this.cfr.resolveComponentFactory(this.tabItem.component);
+        const factory = this.cfr.resolveComponentFactory(
+            this.tabItem.component
+        );
         this.tabComponent = this.timMenuTab.vcr.createComponent(factory);
     }
 
     private static hasOnSelect(inst: unknown): inst is OnTabSelect {
-        return typeof inst == "object"
-            && inst != null
-            && typeof (inst as Record<string, unknown>).onSelect == "function";
+        return (
+            typeof inst == "object" &&
+            inst != null &&
+            typeof (inst as Record<string, unknown>).onSelect == "function"
+        );
     }
 
     onSelect() {

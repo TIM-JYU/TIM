@@ -58,15 +58,21 @@ export class AddMemberComponent {
     error?: string;
     @Input() group!: string;
 
-    constructor(private http: HttpClient) {
-    }
+    constructor(private http: HttpClient) {}
 
     async add() {
         this.result = undefined;
         this.error = undefined;
-        const r = await to2(this.http.post<IAddmemberResponse>(`/groups/addmember/${this.group}`, {
-            names: this.users.split("\n").flatMap((n) => n.split(/,|;/)).map((n) => n.replace(/^ *- */, "").trim()),
-        }).toPromise());
+        const r = await to2(
+            this.http
+                .post<IAddmemberResponse>(`/groups/addmember/${this.group}`, {
+                    names: this.users
+                        .split("\n")
+                        .flatMap((n) => n.split(/,|;/))
+                        .map((n) => n.replace(/^ *- */, "").trim()),
+                })
+                .toPromise()
+        );
         if (r.ok) {
             this.result = r.result;
         } else {

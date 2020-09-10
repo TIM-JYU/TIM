@@ -94,10 +94,12 @@ export class BookmarkFolderBoxComponent implements OnInit {
     private async getDocumentData() {
         // Returns a list of ITaggedItems because bookmarks aren't directly linked to
         // document items.
-        const response = await to($http<ITaggedItem[]>({
-            method: "GET",
-            url: `/courses/documents/${this.bookmarkFolderName}`,
-        }));
+        const response = await to(
+            $http<ITaggedItem[]>({
+                method: "GET",
+                url: `/courses/documents/${this.bookmarkFolderName}`,
+            })
+        );
         if (!response.ok) {
             return;
         }
@@ -139,10 +141,12 @@ export class BookmarkFolderBoxComponent implements OnInit {
      * @param {IBookmark} d Bookmark to delete.
      */
     async removeFromList(d: IBookmark) {
-        const response = await to($http.post<IBookmarkGroup[]>("/bookmarks/delete", {
-            group: this.bookmarkFolderName,
-            name: d.name,
-        }));
+        const response = await to(
+            $http.post<IBookmarkGroup[]>("/bookmarks/delete", {
+                group: this.bookmarkFolderName,
+                name: d.name,
+            })
+        );
         if (response.ok) {
             this.bookmarks = response.result.data;
             await this.getBookmarkFolder(this.bookmarkFolderName);
@@ -155,21 +159,26 @@ export class BookmarkFolderBoxComponent implements OnInit {
      * @param {IBookmark} b Bookmark to edit.
      */
     async editFromList(b: IBookmark) {
-        const r = await to(showBookmarkDialog({
-            group: this.bookmarkFolderName,
-            link: b.link,
-            name: b.name,
-        }));
-        if (!r.ok || !r.result.name) {
-            return;
-        }
-        const response = await to($http.post<IBookmarkGroup[]>("/bookmarks/edit", {
-            old: {
+        const r = await to(
+            showBookmarkDialog({
                 group: this.bookmarkFolderName,
                 link: b.link,
                 name: b.name,
-            }, new: r.result,
-        }));
+            })
+        );
+        if (!r.ok || !r.result.name) {
+            return;
+        }
+        const response = await to(
+            $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
+                old: {
+                    group: this.bookmarkFolderName,
+                    link: b.link,
+                    name: b.name,
+                },
+                new: r.result,
+            })
+        );
         if (response.ok) {
             this.bookmarks = response.result.data;
             await this.getBookmarkFolder(this.bookmarkFolderName);
@@ -205,7 +214,10 @@ export class BookmarkFolderBoxComponent implements OnInit {
      */
     private bookmarkIndexOf(bookmark: IBookmark) {
         if (this.documents) {
-            for (const {item, index} of this.documents.map((it, ind) => ({item: it, index: ind}))) {
+            for (const {item, index} of this.documents.map((it, ind) => ({
+                item: it,
+                index: ind,
+            }))) {
                 if (bookmark.link === item.bookmark.link) {
                     return index;
                 }

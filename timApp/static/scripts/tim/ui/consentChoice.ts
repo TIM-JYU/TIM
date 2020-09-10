@@ -24,9 +24,11 @@ timApp.component("timConsentChoice", {
         }
 
         getText(lang: string, allow: boolean) {
-            return lang === "fi" ? `${this.getAllowanceText(lang, allow)} käyttää <a
+            return lang === "fi"
+                ? `${this.getAllowanceText(lang, allow)} käyttää <a
         href="/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6">
-    kerättyä tietoa</a> tieteelliseen tutkimustarkoitukseen anonymisoinnin jälkeen.` : `${this.getAllowanceText(lang, allow)} <a
+    kerättyä tietoa</a> tieteelliseen tutkimustarkoitukseen anonymisoinnin jälkeen.`
+                : `${this.getAllowanceText(lang, allow)} <a
         href="/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6">
     the collected data</a> to be used for scientific research purposes after anonymization.`;
         }
