@@ -148,7 +148,6 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
             this.resetField();
         } else {
             try {
-                // eslint-disable-next-line @typescript-eslint/tslint/config
                 this.userword = content.c;
             } catch (e) {
                 this.userword = "";
@@ -157,7 +156,6 @@ class TextfieldController extends PluginBase<t.TypeOf<typeof TextfieldMarkup>, t
                 this.errormessage = message;
             }
             if (!this.attrs.ignorestyles) {
-                // eslint-disable-next-line @typescript-eslint/tslint/config
                 this.applyStyling(content.styles);
             }
         }

@@ -1408,13 +1408,11 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         return this.currentCell;
     }
 
-    // eslint-disable-next-line @typescript-eslint/tslint/config
     @HostListener("mouseenter")
     public mouseInsideTable() {
         this.mouseInTable = true;
     }
 
-    // eslint-disable-next-line @typescript-eslint/tslint/config
     @HostListener("mouseleave")
     public mouseOutTable() {
         this.mouseInTable = false;
@@ -1479,7 +1477,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 result: string,
                 error?: string,
             },
-            // eslint-disable-next-line @typescript-eslint/tslint/config
         }>(url, params, {timeout: defaultTimeout}));
         if (r.ok) {
             this.edited = false;
@@ -1494,7 +1491,6 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
             this.error = r.result.data.web.error ?? "";
             // this.result = r.result.data.web.result;
         } else {
-            // eslint-disable-next-line @typescript-eslint/tslint/config
             this.connectionErrorMessage = r.result.data?.error ?? this.data.connectionErrorMessage ?? defaultErrorMessage;
         }
         this.isRunning = false;

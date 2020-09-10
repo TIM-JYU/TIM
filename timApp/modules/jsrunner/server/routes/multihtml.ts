@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/tslint/config */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import express from "express";
 
 console.log("multi");

@@ -1,5 +1,4 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "wrap_", "modes_", "fileIndex_", "files_", "modeIndex_", "mayAddFiles_"] }] */
-/* eslint-disable @typescript-eslint/tslint/config -- decorators cause issues on setters */
 import {
     ViewChild,
     Component,

@@ -1155,7 +1155,6 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
     }
 
     async forceUpdateTable() {
-        // eslint-disable-next-line @typescript-eslint/tslint/config
         this.timTable?.dataViewComponent?.startReset();
         this.timTable?.ngOnInit();
         this.ngOnInit();
@@ -1165,7 +1164,6 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
         this.timTable?.handleChangeFilter();
         this.timTable?.c();
         this.tableFetched = true;
-        // eslint-disable-next-line @typescript-eslint/tslint/config
         this.timTable?.dataViewComponent?.endReset();
     }
 

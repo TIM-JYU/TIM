@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/tslint/config */
+﻿/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-member-access */
 import angular from "angular";
 import * as t from "io-ts";
 import {IAnswer} from "tim/answer/IAnswer";

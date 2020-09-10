@@ -198,7 +198,6 @@ class DropdownController extends PluginBase<t.TypeOf<typeof DropdownMarkup>, t.T
             this.resetField();
         } else {
             try {
-                // eslint-disable-next-line @typescript-eslint/tslint/config
                 this.selectedWord = content.c;
             } catch (e) {
                 this.selectedWord = "";

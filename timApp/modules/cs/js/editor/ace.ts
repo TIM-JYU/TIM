@@ -1,5 +1,4 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "languageMode_"] }] */
-/* eslint-disable @typescript-eslint/tslint/config -- decorators cause issues on setters */
 import $ from "jquery";
 import {Ace} from "ace-builds/src-noconflict/ace";
 import {

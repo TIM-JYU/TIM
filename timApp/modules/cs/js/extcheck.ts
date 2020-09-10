@@ -317,7 +317,6 @@ export class OutputContainerComponent implements IOutputContainer {
         }
     }
 
-    /* eslint-disable-next-line @typescript-eslint/tslint/config -- decorators cause issues on setters */
     @Input()
     set data(data: IOutputContainer) {
         if (data.title) {

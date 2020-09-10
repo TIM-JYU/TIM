@@ -572,7 +572,11 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         const r = Math.min(ellipse.w / ratio, ellipse.h) / 2;
         this.ctx.arc((ellipse.x + ellipse.w / 2) / ratio, ellipse.y + ellipse.h / 2, r, 0, 2 * Math.PI);
         this.ctx.restore();
-        ellipse.fillColor ? this.ctx.fill() : this.ctx.stroke();
+        if (ellipse.fillColor) {
+            this.ctx.fill();
+        } else {
+            this.ctx.stroke();
+        }
     }
 
     /**
@@ -582,9 +586,11 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     drawRectangle(rectangle: IRectangleOrEllipse) {
         // TODO: Draw border with own settings but custom fill color
         this.ctx.lineJoin = "miter";
-        rectangle.fillColor ?
-            this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h) :
+        if (rectangle.fillColor) {
+            this.ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+        } else {
             this.ctx.strokeRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+        }
     }
 
     /**

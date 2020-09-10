@@ -65,7 +65,6 @@ export class CountBoardComponent {
         return "";
     }
 
-    /* eslint-disable-next-line @typescript-eslint/tslint/config -- decorators cause issues on setters */
     @Input()
     set options(options: ICountOptions | undefined) {
         this.options_ = options;

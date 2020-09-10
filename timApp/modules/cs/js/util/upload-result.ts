@@ -36,7 +36,6 @@ export class UploadResultComponent { // TODO: test
 
     constructor(private sanitizer: DomSanitizer) { }
 
-    /* eslint-disable-next-line @typescript-eslint/tslint/config -- decorators cause issues on setters */
     @Input()
     set src(src: string) {
         this.src_ = this.sanitizer.bypassSecurityTrustResourceUrl(src);
@@ -45,7 +44,6 @@ export class UploadResultComponent { // TODO: test
         this.name = s ? s.split("/").pop() : "";
     }
 
-    /* eslint-disable-next-line @typescript-eslint/tslint/config -- decorators cause issues on setters */
     @Input()
     set type(type: string) {
         type = type.toLowerCase();

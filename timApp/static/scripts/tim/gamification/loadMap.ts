@@ -159,7 +159,6 @@ export class GamificationMapCtrl implements IController {
         // Set style settings for info box text elements.
         const title = this.element.find(".mapContainer .infoBoxTitle");
         const description = this.element.find(".mapContainer .infoBoxDescription");
-        // noinspection TsLint
         title.css({
             "position": "absolute",
             "left": (rectX + 10 * tscale) + "px",
@@ -173,7 +172,6 @@ export class GamificationMapCtrl implements IController {
             "font-size": (1.1 * tscale) + "em",
             "z-index": 4,
         });
-        // noinspection TsLint
         description.css({
             "min-width": (width - 20 * tscale) + "px",
             "max-width": (width - 20 * tscale) + "px",

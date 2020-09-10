@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/tslint/config */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {readFileSync} from "fs";
 import {parse} from "acorn";
 import express from "express";
@@ -92,14 +92,14 @@ function runner(d: IRunnerData): RunnerResult {
         const dummyTools = new Tools(dummyUser, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
         const gtools = new GTools(currDoc, markup, aliases, dummyTools, saveUsersFields); // create global tools
         // Fake parameters hide the outer local variables so user script won't accidentally touch them.
-        /* eslint-disable no-shadow,no-eval */
+        /* eslint-disable @typescript-eslint/no-shadow,no-eval */
         function runProgram(program: string, pname: string, tools: ToolsBase, saveUsersFields?: never, output?: never, errors?: never,
                             data?: never, d?: never, currDoc?: never, markup?: never, aliases?: never) {
             errorprg = program;
             prgname = pname;
             eval(`function main() {${program}\n} main();`);
         }
-        /* eslint-enable no-shadow,no-eval */
+        /* eslint-enable @typescript-eslint/no-shadow,no-eval */
         if (d.markup.preprogram) {
             runProgram(d.markup.preprogram, "preprogram", gtools);
         }

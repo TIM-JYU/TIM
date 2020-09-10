@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/tslint/config */
+/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-member-access */
 /**
  * Defines the client-side implementation of the JSAV animations plugin.
  * Originally programmed by Mikko Merikivi with help from the GeoGebra plugin by Vesa Lappalainen

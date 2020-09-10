@@ -37,7 +37,6 @@ export abstract class AngularDialogComponent<Params, Result> implements AfterVie
     protected abstract dialogName: string;
     protected extraVerticalSize = 0;
 
-    // eslint-disable-next-line @typescript-eslint/tslint/config
     @HostListener("keydown.esc", ["$event"])
     escPressed(e: KeyboardEvent) {
         this.dismiss();

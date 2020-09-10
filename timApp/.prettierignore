@@ -1,0 +1,5 @@
+*.*
+README
+/modules/cs/mindsim
+/modules/cs/MIRToolbox
+!*.ts

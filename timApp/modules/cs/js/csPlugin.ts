@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/tslint/config,no-underscore-dangle */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access,no-underscore-dangle */
 import {
         Component,
         ViewChild,
@@ -943,7 +943,7 @@ export class CsController extends CsBase implements ITimComponent {
                             if (((listify(this.markup.files)).find((f) => f.source == "uploadByCode" && (f as IUploadByCodeMarkup).path == file.path) as IUploadByCodeMarkup)?.show) {
                                 include = true;
                             }
-                        } else if(this.markup.uploadbycode && file.path == "") {
+                        } else if (this.markup.uploadbycode && file.path == "") {
                             include = true;
                         }
                     }
@@ -998,7 +998,7 @@ export class CsController extends CsBase implements ITimComponent {
     @ViewChild(FileSelectManagerComponent)
     set fileSelectSetter(component: FileSelectManagerComponent | undefined) {
         this.fileSelect = component;
-        if(!component || !this.upload) {
+        if (!component || !this.upload) {
             return;
         }
 
@@ -1461,7 +1461,7 @@ ${fhtml}
             if (r.result.error) {
                 this.fetchError = "Failed to fetch files: " + r.result.error;
                 this.externalFiles = undefined;
-            } else if(r.result.files.length == 0) {
+            } else if (r.result.files.length == 0) {
                 this.fetchError = "No files were received. Make sure they are in the correct place";
                 this.externalFiles = undefined;
             } else {
@@ -1585,18 +1585,18 @@ ${fhtml}
         }
 
         const taskId = this.pluginMeta.getTaskId();
-        if(this.upload && !this.markup.uploadbycode && taskId?.docId) {
+        if (this.upload && !this.markup.uploadbycode && taskId?.docId) {
             this.uploadUrl = `/pluginUpload/${taskId.docId}/${taskId.name}/`;
         }
 
-        this.timeout = valueOr(this.attrsall.timeout, 0)*1000;
+        this.timeout = valueOr(this.attrsall.timeout, 0) * 1000;
         this.userinput = valueOr(this.attrsall.userinput, (this.markup.userinput ?? "").toString());
         this.userargs = valueOr(this.attrsall.userargs, (this.markup.userargs ?? (isText && isArgs ? this.markup.filename ?? "" : "")).toString());
         this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
         this.noeditor = valueOr(this.markup.noeditor, this.isSimcir || (this.type === "upload"));
 
         const wn =  this.markup.wrap ?? (isText ? 70 : -1);
-        this.wrap = { n:wn == -1 ? -1 : Math.abs(wn), auto: wn > 0 };
+        this.wrap = { n: wn == -1 ? -1 : Math.abs(wn), auto: wn > 0 };
 
         this.viewCode = this.markup.viewCode;
 
@@ -1743,7 +1743,9 @@ ${fhtml}
     }
 
     onUploadResponse(resp: unknown) {
-        if (!resp) {return;}
+        if (!resp) {
+            return;
+        }
 
         const response = resp as IUploadResponse;
         if (!this.markup.files) {

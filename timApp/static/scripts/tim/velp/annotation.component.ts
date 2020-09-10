@@ -200,7 +200,6 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
     @ViewChild("inlineSpan") inlineSpan!: ElementRef<HTMLSpanElement>;
     @ViewChild("contentSpan") contentSpan!: ElementRef<HTMLSpanElement>;
 
-    // eslint-disable-next-line @typescript-eslint/tslint/config
     @ViewChild("inlineDiv") set inlineDiv(div: ElementRef<HTMLDivElement>)  {
         if (div && this.isImageAnnotation()) {
             this.adjustAnnotationInPicturePosition(div.nativeElement);

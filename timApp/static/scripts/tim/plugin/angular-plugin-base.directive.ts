@@ -78,19 +78,19 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
         }
     }
 
-    protected httpGet<T>(url: string, params?: Record<string, string | string[]>) {
-        return to2(this.http.get<T>(url, {params}).toPromise());
+    protected httpGet<U>(url: string, params?: Record<string, string | string[]>) {
+        return to2(this.http.get<U>(url, {params}).toPromise());
     }
 
-    protected httpPost<T>(url: string, body: unknown) {
-        return to2(this.http.post<T>(url, body).toPromise());
+    protected httpPost<U>(url: string, body: unknown) {
+        return to2(this.http.post<U>(url, body).toPromise());
     }
 
-    protected httpPut<T>(url: string, body: unknown, headers: HttpHeaders = new HttpHeaders()) {
-        return to2(this.http.put<T>(url, body, {headers: headers}).toPromise());
+    protected httpPut<U>(url: string, body: unknown, headers: HttpHeaders = new HttpHeaders()) {
+        return to2(this.http.put<U>(url, body, {headers: headers}).toPromise());
     }
 
-    protected async postAnswer<T>(answerdata: { input: unknown }, headers: HttpHeaders = new HttpHeaders()) {
+    protected async postAnswer<U>(answerdata: { input: unknown }, headers: HttpHeaders = new HttpHeaders()) {
         const tid = this.pluginMeta.getTaskId();
         if (!tid) {
             throw Error("Task id missing.");
@@ -101,7 +101,7 @@ export abstract class AngularPluginBase<MarkupType extends IGenericPluginMarkup,
             ...answerdata,
             ...data,
         };
-        const result = await this.httpPut<T & IAnswerSaveEvent>(url, finaldata, headers);
+        const result = await this.httpPut<U & IAnswerSaveEvent>(url, finaldata, headers);
         if (result.ok) {
             handleAnswerResponse(dt, {
                 savedNew: result.result.savedNew,
