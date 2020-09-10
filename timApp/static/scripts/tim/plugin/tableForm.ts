@@ -630,7 +630,7 @@ export class TableFormComponent
             return;
         }
         // TODO: Save before reset?
-        type TableFetchResponse = {
+        interface TableFetchResponse {
             aliases: Record<string, string>;
             fields: string[];
             realnamemap: Record<string, string>;
@@ -638,7 +638,7 @@ export class TableFormComponent
             emailmap: Record<string, string>;
             rows: IRowsType;
             styles: t.TypeOf<typeof Styles>;
-        };
+        }
         let prom;
         const tid = this.getTaskId();
         if (!tid) {

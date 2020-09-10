@@ -648,8 +648,8 @@ export class ToolsBase {
         if (!this.useDefComplaint) {
             return def;
         }
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         this.reportError(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             `Found value '${s}' of type ${typeof s}, using default value ${def}`
         );
         return def;
