@@ -101,6 +101,14 @@ module.exports = {
         "@typescript-eslint/switch-exhaustiveness-check": "error",
         "@typescript-eslint/no-shadow": "error",
         "@typescript-eslint/no-unsafe-member-access": "error",
+        "@typescript-eslint/ban-ts-comment": [
+            "error",
+            {
+                "ts-ignore": true,
+                "ts-expect-error": false,
+                minimumDescriptionLength: 0,
+            }
+        ],
         "arrow-body-style": "off",
         "arrow-parens": [
             "error",

@@ -1465,9 +1465,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
         this.error = "";
         if (this.data.saveAttrs) {
             for (const key of this.data.saveAttrs) {
-                // @ts-ignore
+                // @ts-expect-error
                 const value = this.data[key];
-                // @ts-ignore
+                // @ts-expect-error
                 params.input.answers[key] = value;
             }
         }
@@ -3941,11 +3941,9 @@ export class TimTableComponent implements ITimComponent, OnInit, OnDestroy, DoCh
                 this.data.headers = data.headers;
                 // this.data.saveAttrs.push("headers");
             }
-            for (const key in data) {
+            for (const [key, value] of Object.entries(data)) {
                 if (key in ["matrix", "headers"]) { continue; }
-                // @ts-ignore
-                const value = data[key];
-                // @ts-ignore
+                // @ts-expect-error
                 this.data[key] = value;
                 this.data.saveAttrs.push(key);
             }
