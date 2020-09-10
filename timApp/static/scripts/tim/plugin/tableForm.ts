@@ -190,7 +190,7 @@ export class TimEmailComponent {
             msg: this.emailbody,
             bccme: this.emailbccme,
         }));
-        this.emailMsg = "Sent"; // JSON.stringify(response);
+        this.emailMsg = response.ok ? "Sent" : response.result.data.error;
     }
 
     public async sendEmail() {
@@ -1190,7 +1190,6 @@ export class TableFormComponent extends AngularPluginBase<t.TypeOf<typeof TableF
             return;
         }
         const replyRows: Record<string, Record<string, string | null | Record<string, unknown>>> = {};
-        const styleRows: Record<string, Record<string, string>> = {};
         const changedFields = new Set<string>();
         try {
             for (const coord of keys) {

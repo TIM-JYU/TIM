@@ -402,14 +402,14 @@ export class ViewCtrl implements IController {
             this.liveUpdates = response.data.live; // TODO: start new loop by this or stop if None
             const replaceFn = async (d: DiffResult, parId: string) => {
                 const e = getElementByParId(parId);
-                const compiled = await ParCompiler.compileAndReplace(e, d.content, sc);
+                const _ = await ParCompiler.compileAndReplace(e, d.content, sc);
             };
             const afterFn = async (d: DiffResult, parId: string) => {
                 const e = getElementByParId(parId);
-                const compiled = await ParCompiler.compileAndAfter(e, d.content, sc);
+                const _ = await ParCompiler.compileAndAfter(e, d.content, sc);
             };
             const beforeFn = async (d: DiffResult, e: JQuery) => {
-                const compiled = await ParCompiler.compileAndBefore(e, d.content, sc);
+                const _ = await ParCompiler.compileAndBefore(e, d.content, sc);
             };
             for (const d of response.data.diff) {
                 if (d.type === "delete") {
@@ -661,7 +661,7 @@ export class ViewCtrl implements IController {
      */
     public getTimComponentsByArea(area: string): ITimComponent[] {
         const returnList: ITimComponent[] = [];
-        for (const [k, v] of this.timComponents) {
+        for (const [_, v] of this.timComponents) {
             if (v.belongsToArea(area)) { returnList.push(v); }
         }
         return returnList;
@@ -941,7 +941,7 @@ export class ViewCtrl implements IController {
         if (this.pendingUpdatesCount() < 10) {
             this.updatePending();
         } else {
-            const r = await showInputDialog({
+            const _ = await showInputDialog({
                 cancelText: "Dismiss",
                 isInput: InputDialogKind.NoValidator,
                 okText: "Update",

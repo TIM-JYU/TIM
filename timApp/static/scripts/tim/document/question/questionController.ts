@@ -44,14 +44,6 @@ markAsUsed(QuestionMatrixController);
  * @copyright 2015 Timppa project authors
  */
 
-function cleanParId(id: string) {
-    const i = id.lastIndexOf(".");
-    if (i < 0) {
-        return id;
-    }
-    return id.substring(i + 1);
-}
-
 interface IAnswerField {
     label: string;
     value: MatrixType;
@@ -283,7 +275,6 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
 
     private editQuestion(data: IEditQuestionParams) {
         const json = isAskedQuestion(data) ? data.json.json : data.markup;
-        const asked = isAskedQuestion(data);
         if (!isAskedQuestion(data)) {
             this.qst = data.qst;
             this.pluginMarkup = data.markup;
@@ -773,11 +764,9 @@ export class QuestionController extends DialogController<{params: IQuestionDialo
      */
     private createExplanation(): IExplCollection {
         const expl: IExplCollection = {};
-        let n = 0;
         for (const row of this.rows) {
             if (row.expl?.trim()) {
                 expl[row.id] = row.expl.trim();
-                n++;
             }
         }
         return expl;

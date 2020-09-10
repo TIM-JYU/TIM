@@ -132,9 +132,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         const r = TaskId.tryParse(this.taskId);
         if (r.ok) {
             this.parsedTaskId = r.result;
-            // noinspection JSUnusedLocalSymbols
-            const [id, name] = this.taskId.split(".");
-            if (getURLParameter("task") === name) {
+            if (getURLParameter("task") === this.parsedTaskId.name) {
                 this.loadPlugin();
             }
         }

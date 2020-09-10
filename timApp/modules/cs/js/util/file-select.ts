@@ -175,7 +175,7 @@ export class FileSelectComponent { // TODO: translations
                 }
                 const formdata = new FormData();
                 formdata.append("file", file, mapping.path);
-                const obs = this.http.post(this.uploadUrl!, formdata, { reportProgress: true, observe: "events" }).subscribe(
+                const _ = this.http.post(this.uploadUrl!, formdata, { reportProgress: true, observe: "events" }).subscribe(
                     (event) => {
                         switch (event.type) {
                             case HttpEventType.Sent:

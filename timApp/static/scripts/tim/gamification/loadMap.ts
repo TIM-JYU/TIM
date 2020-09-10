@@ -21,18 +21,6 @@ export interface ITile {
     isPointInside(x: number, y: number): boolean;
 }
 
-interface ILayer {
-    data: number[];
-    height: number;
-    name: string;
-    opacity: number;
-    type: string;
-    visible: true;
-    width: number;
-    x: number;
-    y: number;
-}
-
 interface IParsedData {
     lectures: [{
         id: number,
@@ -630,7 +618,7 @@ export class GamificationMapCtrl implements IController {
         }
 
         // Canvases used to draw the layers.
-        for (const layer of this.json.layers) {
+        for (const _ of this.json.layers) {
             canvas = document.createElement("canvas");
 
             canvas.width = this.json.width * this.json.tilewidth * scale;

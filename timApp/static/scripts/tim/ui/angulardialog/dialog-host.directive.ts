@@ -48,7 +48,7 @@ export class DialogHostDirective implements OnInit {
         this.cdr.detectChanges();
         this.instanceCreated.emit(event);
         (async () => {
-            const r = await to2(ref.instance.result);
+            const _ = await to2(ref.instance.result);
             this.instanceClosed.emit(event);
         })();
     }

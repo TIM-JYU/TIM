@@ -296,7 +296,6 @@ export class ReviewController {
                     ele.style.position = "absolute";
                     ele.style.left = rect.x + "px";
                     ele.style.top = rect.y + "px";
-                    const span = ele.querySelector("span");
                     const textAnnotation = this.vctrl.getAnnotation(`t${a.id}`);
                     if (textAnnotation) {
                         textAnnotation.values.color = "transparent";

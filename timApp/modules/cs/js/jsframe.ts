@@ -85,15 +85,10 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
     contentWindow: T;
 }
 
-const FieldDataObj = t.type({
-    fielddata: t.unknown,
-});
-
 const CProp = t.type({
     c: t.unknown,
 });
 
-type MessageType = "init" | MessageGet | "setData";
 type MessageGet = "getData" | "getDataSave";
 
 type MessageToFrame =
@@ -135,7 +130,7 @@ type MessageFromFrame =
  *
  * @param data The data to transform.
  */
-function unwrapAllC<A>(data: unknown): { c: unknown } {
+function unwrapAllC(data: unknown): { c: unknown } {
     while (CProp.is(data) && CProp.is(data.c)) {
         data = data.c;
     }

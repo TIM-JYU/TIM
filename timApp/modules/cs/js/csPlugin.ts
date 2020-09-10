@@ -36,30 +36,6 @@ import {getInt} from "./util/util";
 import {IFile, FileSelectManagerComponent, IFileSpecification} from "./util/file-select";
 import {Set, OrderedSet} from "./util/set";
 
-// js-parsons is unused; just declare a stub to make TS happy
-declare class ParsonsWidget {
-    static _graders: unknown;
-
-    constructor(data: unknown);
-
-    options: {permutation: (n: number) => number[]};
-
-    init(a: string): void;
-
-    show(): void;
-
-    getFeedback(): unknown;
-
-    shuffleLines(): void;
-}
-
-interface AttrType {
-    by: string;
-    byCode: string;
-    examples: string;
-    type: string;
-    path: string;
-}
 
 // TODO better name?
 interface Vid {
@@ -347,7 +323,6 @@ const CountLimit = t.partial({
     max: t.number,
     text: t.string,
 });
-interface ICountLimit extends t.TypeOf<typeof CountLimit> {}
 
 const CountType = t.partial({
     preventSave: t.boolean,
@@ -357,7 +332,6 @@ const CountType = t.partial({
     words: CountLimit,
     chars: CountLimit,
 });
-interface ICountType extends t.TypeOf<typeof CountType> {}
 
 const oneOrArray = <T extends t.Mixed>(type: T) => t.union([type, t.array(type)]);
 const listify = <T>(e: T | T[]) => Array.isArray(e) ? e : [e];
@@ -377,7 +351,6 @@ const CommonMarkup = t.intersection([
     ]),
     t.partial({maxSize: t.number}),
 ]);
-type ICommonMarkup = t.TypeOf<typeof CommonMarkup>;
 
 const EditorMarkupFields = t.intersection([ // no source attribute
     t.type({
@@ -446,7 +419,6 @@ const ExternalSourceMarkup =
             maxTotalSize: t.number,
         }),
     ]);
-interface IExternalSourceMarkup extends t.TypeOf<typeof ExternalSourceMarkup> {}
 
 const FileMarkup =
     t.union([
@@ -456,7 +428,6 @@ const FileMarkup =
         UploadByCodeMarkup,
         ExternalSourceMarkup,
     ]);
-type IFileMarkup = IEditorMarkup | IUploadMarkup | IUploadByCodeMarkup | IExternalSourceMarkup;
 
 const FileSubmission = t.intersection([
     t.type({
@@ -709,39 +680,6 @@ function numOrDef(val: string | number | undefined, def: number) {
         return val;
     }
     return def;
-}
-
-function createIframe(
-    opts: {
-        classname?: string,
-        height?: number,
-        id?: string,
-        sandbox: string | undefined,
-        src: string,
-        width?: number,
-        allowfullscreen?: boolean,
-    }
-) {
-    const f = document.createElement("iframe");
-    if (opts.classname) {
-        f.className = opts.classname;
-    }
-    if (opts.id) {
-        f.id = opts.id;
-    }
-    if (opts.width) {
-        f.width = opts.width.toString();
-    }
-    if (opts.height) {
-        f.height = opts.height.toString();
-    }
-    f.allowFullscreen = opts.allowfullscreen ?? false;
-    f.src = opts.src;
-    const noreadonly = f as unknown as {sandbox: string};
-    if (opts.sandbox !== undefined) {
-        noreadonly.sandbox = opts.sandbox;
-    }
-    return f;
 }
 
 interface IFrameLoad {
@@ -2478,12 +2416,9 @@ ${fhtml}
             spaces += " ";
         }
         let n = 0;
-        let len = 0;
         const st = this.usercode.split("\n");
         for (let i = 0; i < st.length; ++i) {
             let s = st[i];
-            const l = s.length;
-            len += l;
             let j = 0;
             for (; j < s.length; j++) {
                 if (s[j] !== " ") {
@@ -2498,8 +2433,6 @@ ${fhtml}
                 continue;
             } // do not indent empty lines
             s = spaces + s.substring(j);
-            const dl = s.length - l;
-            len += dl;
             st[i] = s;
             n++;
         }

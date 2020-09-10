@@ -101,6 +101,13 @@ module.exports = {
         "@typescript-eslint/switch-exhaustiveness-check": "error",
         "@typescript-eslint/no-shadow": "error",
         "@typescript-eslint/no-unsafe-member-access": "error",
+        "@typescript-eslint/no-unused-vars": [
+            "error", {
+                "vars": "all",
+                "args": "none",
+                "ignoreRestSiblings": false,
+                "varsIgnorePattern": "^(.*[iI]gnored|_)$",
+            }],
         "@typescript-eslint/ban-ts-comment": [
             "error",
             {

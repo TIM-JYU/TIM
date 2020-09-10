@@ -146,7 +146,7 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
     }
 
     private async stopQuestion() {
-        const response = await to($http({
+        const _ = await to($http({
             url: "/stopQuestion",
             method: "POST",
             params: {
@@ -170,7 +170,7 @@ export class AnswerToQuestionController extends DialogController<{ params: IAnsw
 
     private async edit() {
         const asked = await fetchAskedQuestion(this.question.asked_id);
-        const r = await showQuestionEditDialog(asked);
+        const _ = await showQuestionEditDialog(asked);
         if (isAskedQuestion(this.resolve.params.qa)) {
             this.setData(await fetchAskedQuestion(this.question.asked_id));
         } else {

@@ -57,6 +57,7 @@ async function refresh(rv: IFixedReveal) {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function updateSlideStatus(h: number, v: number, f: number) {
     if (getURLParameter("controls") != null) {
         return;
@@ -127,8 +128,8 @@ export async function initSlideView(d: IDocument) {
     const bgUrl = w.background_url;
     const bgColor = w.background_color;
     const hasManage = d.rights.manage;
-    const revealCss = import("style-loader!reveal.js/dist/reveal.css" as string);
-    const jyuCss = import("style-loader!./jyu.css" as string);
+    const revealIgnored = import("style-loader!reveal.js/dist/reveal.css" as string);
+    const jyuIgnored = import("style-loader!./jyu.css" as string);
     const rv = (await import("reveal.js")).default;
     if (getURLParameter("controls") == null && hasManage) {
         refresh(rv);

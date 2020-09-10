@@ -205,7 +205,6 @@ export class ViewRangeInfo {
         const previous = ranges[1];
         const next = ranges[2];
         const last = ranges[3];
-        const filteredRanges = [];
         this.lastIndex = ranges[3].e;
 
         // Remove unnecessary ranges.

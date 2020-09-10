@@ -28,7 +28,6 @@ import * as lectureInfoController from "tim/lecture/lectureInfoController";
 import * as lectureMenu from "tim/lecture/lectureMenu";
 import * as questionAskController from "tim/lecture/questionAskController";
 import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQuestionController";
-import * as bootstrapPanel from "tim/ui/bootstrap-panel.component";
 import * as markAllAsRead from "tim/ui/markAllAsRead";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {LogoComponent} from "tim/ui/logo.component";
@@ -36,7 +35,6 @@ import {LoginMenuComponent} from "tim/user/login-menu.component";
 import * as timRoot from "tim/timRoot";
 import {SettingsComponent} from "tim/user/settings.component";
 import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
-import * as annotation from "tim/velp/annotation.component";
 import {AnnotationComponent} from "tim/velp/annotation.component";
 import * as reviewController from "tim/velp/reviewController";
 import * as velpSelection from "tim/velp/velpSelection";
@@ -149,7 +147,7 @@ const themeNameMap: Record<string, string | undefined> = {
 };
 
 function applyThemeClasses() {
-    for (const [name, used] of Object.entries(genericglobals().userPrefs.css_files)) {
+    for (const [name, _] of Object.entries(genericglobals().userPrefs.css_files)) {
         const classname = themeNameMap[name];
         if (classname) {
             document.body.classList.add(classname);

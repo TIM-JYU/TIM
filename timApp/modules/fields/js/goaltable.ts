@@ -44,10 +44,6 @@ const GoalTableAll = t.intersection([
     }),
 ]);
 
-interface IGoalTableData {
-    answer: {[name: string]: string};
-}
-
 interface GoalLine {
     id: string;
     goal: string;
@@ -290,7 +286,6 @@ class GoalTableController extends PluginBase<t.TypeOf<typeof GoalTableMarkup>,
     // noinspection JSMethodCanBeStatic,JSUnusedLocalSymbols
     private cellTDStyle(row: GoalLine, h: string) {
         const styles: {[index: string]: string} = {};
-        const userSelection: string = row.userSelection;
         if (row.goal === h) {
             styles["background-color"] = "#ffff00";
         }

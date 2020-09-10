@@ -32,7 +32,7 @@ import {
 } from "../parhelpers";
 import {handleUnread} from "../readings";
 import {ViewCtrl} from "../viewctrl";
-import {IMenuFunctionEntry, MenuFunction, MenuFunctionList} from "../viewutils";
+import {IMenuFunctionEntry, MenuFunctionList} from "../viewutils";
 import {EditPosition, EditType, IExtraData, IParResponse, ITags} from "./edittypes";
 import {isManageResponse, showRenameDialog} from "./pluginRenameForm";
 

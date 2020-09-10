@@ -130,20 +130,15 @@ const MenuItemEntriesR = t.union([MenuItemR, t.array(MenuItemR)]);
 type MenuItemEntries = t.TypeOf<typeof MenuItemEntriesR>;
 
 const EditorTabContent = t.record(t.string, MenuItemEntriesR);
-type IEditorTabContent = t.TypeOf<typeof EditorTabContent>;
 
 const EditorTemplateFormatV1 = t.type({
     text: t.array(t.string),
     templates: t.array(t.array(MenuItemR)),
 });
 
-type IEditorTemplateFormatV1 = t.TypeOf<typeof EditorTemplateFormatV1>;
-
 const EditorTemplateFormatV2 = t.type({
     templates: EditorTabContent,
 });
-
-type IEditorTemplateFormatV2 = t.TypeOf<typeof EditorTemplateFormatV2>;
 
 function EditorItem<T extends t.Any>(x: T) {
     return t.intersection([
@@ -157,17 +152,9 @@ function EditorItem<T extends t.Any>(x: T) {
     ]);
 }
 
-interface IEditorItem<T> {
-    text: string;
-    shortcut: string;
-    items: T;
-}
-
 const EditorTemplateFormatV3 = t.type({
     editor_tabs: t.array(EditorItem(t.array(EditorItem(MenuItemEntriesR)))),
 });
-
-type IEditorTemplateFormatV3 = t.TypeOf<typeof EditorTemplateFormatV3>;
 
 interface IEditorTab {
     entries: EditorEntry[];
@@ -1532,7 +1519,6 @@ ${backTicks}
                     part.lastIndexOf(this.liiteMacroStringEnd));
                 const macroParams = this.getMacroParamsFromString(macroText);
                 const current = this.macroParamsToAttachmentData(macroParams);
-                let upToDate;
                 // On first editor load attachment is up-to-date.
                 if (firstCheck) {
                     current.upToDate = true;
@@ -1540,7 +1526,6 @@ ${backTicks}
                     // Others are up to date if they have a match from check.
                     // TODO: Does changing attachment order cause problems?
                     if (previousAttachments) {
-                        upToDate = false;
                         for (const previous of previousAttachments) {
                             if (previous.uploadUrl === current.uploadUrl &&
                                 previous.attachmentLetter === current.attachmentLetter &&

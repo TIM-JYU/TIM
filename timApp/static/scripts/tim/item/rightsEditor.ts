@@ -43,10 +43,6 @@ interface IPermissionEditResponse {
     not_exist: string[];
 }
 
-function isVelpGroupItem(i: IItemWithRights) {
-    return i.path.includes("/velp-groups/") || i.path.endsWith("/velp-groups");
-}
-
 const accessOrder = {
     "view": 1,
     "copy": 2,

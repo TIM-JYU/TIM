@@ -18,7 +18,7 @@ import {ViewCtrl} from "../document/viewctrl";
 import {showMessageDialog} from "../ui/dialog";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
-import {angularWait, clone, isInViewport, Result, scrollToElement, to} from "../util/utils";
+import {clone, isInViewport, Result, scrollToElement, to} from "../util/utils";
 import {Annotation, IAnnotationEditableValues, IAnnotationInterval} from "./velptypes";
 
 /**
@@ -392,7 +392,6 @@ export class AnnotationComponent implements OnDestroy, OnInit, AfterViewInit, IA
 
         // Add comment
         if (this.commentChanged()) {
-            const data = {id: id, content: this.newcomment};
             const r = await to($http.post<Record<string, unknown>>(
                 "/add_annotation_comment",
                 {id: id, content: this.newcomment},

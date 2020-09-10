@@ -9,7 +9,6 @@ import {HttpClient} from "@angular/common/http";
 // https://developer.mozilla.org/en-US/docs/Web/API/Performance/now#Reduced_time_precision
 // Rounding to 1ms seems common, in which case the timeout can happen without 1ms window
 const TIMEOUT_EPS = 0.001;
-const DAY_LIMIT = 24 * 60 * 60;
 const DISPLAY_TENTHS_LIMIT = 10;
 const TICK_SECOND = 1000;
 const TICK_TENTH_SECOND = 100;

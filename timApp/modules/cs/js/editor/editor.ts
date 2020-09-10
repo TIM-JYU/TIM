@@ -217,7 +217,7 @@ export class EditorComponent implements IMultiEditor {
         }
     }
 
-    private initEditor<T extends IEditor>(oldContent: string) {
+    private initEditor(oldContent: string) {
         if (!this.editor) {
             this.content_ = oldContent;
         } else {

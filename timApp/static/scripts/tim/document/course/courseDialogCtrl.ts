@@ -89,7 +89,6 @@ export class CourseDialogController extends DialogController<{params: IItem}, vo
      */
     private async removeCurrentSpecialTags() {
         const docPath = this.resolve.params.path;
-        const data = {tagObject: this.currentSubject};
         const r = await to($http.post(`/tags/setCourseTags/${docPath}`,
             {
                 groups: [],

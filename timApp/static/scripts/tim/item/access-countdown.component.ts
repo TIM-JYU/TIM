@@ -1,7 +1,5 @@
-import {Component, Input, OnInit} from "@angular/core";
-import {documentglobals, settingsglobals} from "tim/util/globals";
-import humanizeDuration from "humanize-duration";
-import {Users} from "tim/user/userService";
+import {Component, Input} from "@angular/core";
+import {documentglobals} from "tim/util/globals";
 
 
 // NOTE: It's intentional that the two ICU expressions ({ item.isFolder, ... }) are slightly different in whitespace.

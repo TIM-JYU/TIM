@@ -1,7 +1,7 @@
 import {IAngularEvent, IController, IScope} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
-import uiGrid, {IFilterOptions, IGridColumnOf, IGridRowOf} from "ui-grid";
+import uiGrid from "ui-grid";
 import {DialogController} from "tim/ui/dialogController";
 import {documentglobals} from "tim/util/globals";
 import {ViewCtrl} from "../document/viewctrl";
@@ -14,10 +14,6 @@ import {showAllAnswers} from "./allAnswersController";
 import {showFeedbackAnswers} from "./feedbackAnswersController";
 
 markAsUsed(allanswersctrl);
-
-interface IFixedFilterOptions extends IFilterOptions {
-    rawTerm?: boolean;
-}
 
 export interface IExportOptions {
     totalPointField: string;

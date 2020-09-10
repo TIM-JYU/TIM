@@ -19,7 +19,6 @@ export function findParentElementFromScript(scriptId: string, parentTopSelector:
     // parentDivSelector: string used as a selector with parentTopSelector to find what element comes first
     //               when scanning up from current script context
     try {
-        let parentElem;
         let elem: HTMLElement | null = document.scripts[document.scripts.length - 1]; // document.currentScript does not work???
         if (!elem) {return document.querySelector(parentDivSelector) ?? document; }
         if (scriptId && scriptId != elem.id) {elem = document.getElementById(scriptId); }

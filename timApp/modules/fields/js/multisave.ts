@@ -122,7 +122,7 @@ export class MultisaveController
         }
         this.emailMsg = "";
 
-        const response = await to($http.post<string[]>("/sendemail/", {
+        const _ = await to($http.post<string[]>("/sendemail/", {
             rcpts: this.emaillist.replace(/\n/g, ";"),
             subject: this.emailsubject,
             msg: this.emailbody,

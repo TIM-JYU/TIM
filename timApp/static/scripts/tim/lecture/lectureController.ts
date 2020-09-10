@@ -474,7 +474,7 @@ export class LectureController {
      * Sends http request to leave the lecture.
      */
     async leaveLecture() {
-        const response = await to($http<ILectureListResponse>({
+        const _ = await to($http<ILectureListResponse>({
             url: "/leaveLecture",
             method: "POST",
             params: {

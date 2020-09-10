@@ -71,7 +71,6 @@ timApp.config([() => {
                     let newUrl = url;
                     const taskIdFull = getTaskIdIfAnswerUrl(url);
                     if (taskIdFull) {
-                        const d = config.data as { abData?: unknown, ref_from?: unknown };
                         const {url: newU, data} = prepareAnswerRequest(taskIdFull, url);
                         config.data = {
                             ...config.data,

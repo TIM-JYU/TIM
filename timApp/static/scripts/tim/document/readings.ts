@@ -96,16 +96,6 @@ async function markParsRead($pars: JQuery) {
     markPageDirty();
 }
 
-async function markAllAsRead() {
-    const doc = getActiveDocument();
-    const r = await to($http.put("/read/" + doc.getId(), {}));
-    if (!r.ok) {
-        await showMessageDialog("Could not mark the document as read.");
-        return;
-    }
-    $(".readline").attr("class", "readline read");
-}
-
 let readPromise: IPromise<unknown> | null = null;
 let readingParId: string | undefined;
 

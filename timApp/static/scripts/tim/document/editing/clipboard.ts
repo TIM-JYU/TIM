@@ -89,7 +89,6 @@ export class ClipboardHandler {
             await showMessageDialog(r.result.data.error);
             return;
         }
-        const doc_ver = r.result.data.doc_ver;
         const pars = r.result.data.pars;
         if (pars.length > 0) {
             const firstPar = pars[0].id;
@@ -243,7 +242,6 @@ export class ClipboardHandler {
             await showMessageDialog(r.result.data.error);
             return;
         }
-        const doc_ver = r.result.data.doc_ver;
         const pars = r.result.data.pars;
         if (pars.length > 0) {
             const firstPar = pars[0].id;
@@ -301,7 +299,6 @@ export class ClipboardHandler {
             this.viewctrl.selection.end = undefined;
 
             if (docId === this.viewctrl.docId) {
-                const doc_ver = r.result.data.doc_ver;
                 const pars = r.result.data.pars;
                 if (pars.length > 0) {
                     const firstPar = pars[0].id;

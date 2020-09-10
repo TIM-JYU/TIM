@@ -1,5 +1,4 @@
 import {IChangesObject, IController, IOnChangesObject} from "angular";
-import $ from "jquery";
 import {timApp} from "tim/app";
 import {ParCompiler} from "../../editor/parCompiler";
 import {
@@ -27,17 +26,6 @@ import {Binding} from "../../util/utils";
  * @licence MIT
  * @copyright 2015 Timppa project authors
  */
-
-function deletePar(s: string) {
-    if (!s.startsWith("<p>")) {
-        return s;
-    }
-    const rs = s.substring(3);
-    if (!rs.endsWith("</p>")) {
-        return s;
-    }
-    return rs.substring(0, rs.length - 4);
-}
 
 export function getPointsTable(markupPoints?: string): Array<{[points: string]: string}> {
     // Format of markupPoints: 1:1.1;2:1.2;3:1.3||2:3.2
@@ -76,7 +64,6 @@ export function minimizeJson(json: IProcessedHeaders): IUnprocessedHeaders {
         }
     }
 
-    let allText = true;
     const rows = json.rows;
 
     for (let i = 0; i < rows.length; i++) {
@@ -84,7 +71,6 @@ export function minimizeJson(json: IProcessedHeaders): IUnprocessedHeaders {
         if (row.id === i + 1 && (!row.type || row.type === "question")) {
             row = row.text; // { text: row.text};
         } else {
-            allText = false;
         }
         result.rows.push(row);
     }

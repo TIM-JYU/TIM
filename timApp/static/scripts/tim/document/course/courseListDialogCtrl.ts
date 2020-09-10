@@ -83,7 +83,7 @@ export class CourseListDialogController extends DialogController<{ params: ICour
     private saveCollapseStates() {
         this.closedSubjects = [];
         if (this.grouped) {
-            for (const {subject, i} of this.grouped.map((s, ind) => ({ subject: s, i: ind }))) {
+            for (const subject of this.grouped) {
                 this.closedSubjects.push(subject.closed);
             }
         }

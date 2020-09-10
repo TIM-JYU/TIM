@@ -13,7 +13,7 @@ import {
     KEY_TAB,
     KEY_Y,
 } from "../util/keycodes";
-import {$log, $timeout} from "../util/ngimport";
+import {$log} from "../util/ngimport";
 import {BaseParEditor, CURSOR, EditorType, focusAfter, IEditorCallbacks, SelectionRange} from "./BaseParEditor";
 
 export class TextAreaParEditor extends BaseParEditor {

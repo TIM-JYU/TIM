@@ -8,7 +8,6 @@ import {INameAreaOptions, showNameAreaDialog} from "./editing/nameArea";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {Area, getArea, getFirstParId, getLastParId, Paragraph, Paragraphs} from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
-import {getEmptyCoords} from "./viewutils";
 
 markAsUsed(nameArea);
 
@@ -102,8 +101,6 @@ export class AreaHandler {
         }
         const pars = getArea(areaName).find(".par");
         const areaPart = $this.parent().filter(".area");
-        const offset = areaPart.offset() ?? getEmptyCoords();
-        const coords = {left: e.pageX - offset.left, top: e.pageY - offset.top};
 
         this.selectedAreaName = areaName;
         $(".area.area_" + areaName).children(className).addClass("menuopen");

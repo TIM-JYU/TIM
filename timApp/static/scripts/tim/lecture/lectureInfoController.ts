@@ -8,7 +8,7 @@ import {isAdmin, Users} from "../user/userService";
 import {lectureinfoglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {showLectureDialog} from "./createLectureCtrl";
-import {IAskedQuestion, ILecture, ILectureMessage, IQuestionAnswer, IQuestionAnswerPlain} from "./lecturetypes";
+import {IAskedQuestion, ILecture, ILectureMessage, IQuestionAnswerPlain} from "./lecturetypes";
 
 markAsUsed(showChart);
 

@@ -49,13 +49,6 @@ const GeogebraAll = t.intersection([
     }),
 ]);
 
-interface IGeogebraData {
-    answer: {[name: string]: string};
-    prefix: string;
-    seed?: number;
-    verifyvar: string;
-}
-
 interface JSFrameWindow extends Window {
     getData(): string;
     setData(state: any): void;
@@ -223,7 +216,6 @@ class GeogebraController extends PluginBase<t.TypeOf<typeof GeogebraMarkup>,
         this.error = "";
         this.isRunning = true;
         const url = this.getTaskUrl();
-        const geogebraData = "";
         data.type = "geogebra";
         const params = {
             input: data,

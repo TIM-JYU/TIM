@@ -99,7 +99,6 @@ export class GitRegComponent extends CsController {
         };
 
         const url = this.pluginMeta.getAnswerUrl();
-        const t0run = performance.now();
         const r = await to2(this.http.put<IRunResponse>(url, params,
             {headers: new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`})}
         ).toPromise());

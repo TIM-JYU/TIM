@@ -26,7 +26,6 @@ enum GotoLinkState {
 }
 
 const VIEW_PATH = "/view/";
-const MOUSE_BUTTON_AUX = 1;
 
 @Component({
     selector: "tim-goto-link",

@@ -345,6 +345,7 @@ export type MandatoryBinding = "<" | "@" | "=" | "&";
 
 export type BindingType = MandatoryBinding | OptionalBinding;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type Binding<T, Type extends BindingType> = T;
 
 export type Require<T> = Binding<T, "<">;
@@ -426,10 +427,8 @@ export function getViewPortSize() {
     if (vw) {
         return {width: vw.width, height: vw.height};
     }
-    const w = window;
     const d = document;
     const e = d.documentElement;
-    const g = d.getElementsByTagName("body")[0];
     // documentElement.client{Width,Height} excludes scrollbars, so it works best.
     if (!e) {
         return {width: 1024, height: 768};

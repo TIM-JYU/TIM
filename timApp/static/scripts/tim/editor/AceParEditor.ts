@@ -1,7 +1,7 @@
 import {Ace} from "ace-builds/src-noconflict/ace";
 import {wrapText} from "tim/document/editing/utils";
 import {IAce} from "tim/editor/ace";
-import {$log, $timeout} from "../util/ngimport";
+import {$log} from "../util/ngimport";
 import {BaseParEditor, CURSOR, EditorType, focusAfter, IEditorCallbacks, SelectionRange} from "./BaseParEditor";
 import AceAjax = Ace;
 import IAceEditor = Ace.Editor;
