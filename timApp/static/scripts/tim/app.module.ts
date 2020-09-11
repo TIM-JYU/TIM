@@ -40,7 +40,7 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {LanguageSelectorComponent} from "tim/user/language-selector.component";
 import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 import {SideBarMenuModule} from "tim/sidebarmenu/side-bar-menu.module";
-import {DirectoryListComponent} from "tim/folder/indexCtrl";
+import {DirectoryListComponent} from "tim/folder/directory-list.component";
 import {TabsModule} from "ngx-bootstrap/tabs";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol

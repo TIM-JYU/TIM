@@ -14,7 +14,6 @@ import * as questionController from "tim/document/question/questionController";
 import * as viewctrl from "tim/document/viewctrl";
 import * as viewRangeNavigation from "tim/document/viewRangeNavigation";
 import {environment} from "tim/environments/environment";
-import * as indexCtrl from "tim/folder/indexCtrl";
 import {FrontPageComponent} from "tim/frontpage/front-page.component";
 import * as loadMap from "tim/gamification/loadMap";
 import * as manageCtrl from "tim/item/manageCtrl";
@@ -63,7 +62,7 @@ import {SidebarMenuComponent} from "tim/sidebarmenu/sidebar-menu.component";
 import BackspaceDisabler from "backspace-disabler";
 import {DrawToolbarComponent} from "tim/plugin/drawToolbar";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
-import {DirectoryListComponent} from "tim/folder/indexCtrl";
+import {DirectoryListComponent} from "tim/folder/directory-list.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -79,7 +78,6 @@ markAsUsed(
     answerToQuestionController,
     bootstrap,
     createLectureCtrl,
-    indexCtrl,
     lectureController,
     lectureInfoController,
     lectureMenu,
