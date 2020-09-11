@@ -42,6 +42,7 @@ import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 import {SideBarMenuModule} from "tim/sidebarmenu/side-bar-menu.module";
 import {DirectoryListComponent} from "tim/folder/directory-list.component";
 import {TabsModule} from "ngx-bootstrap/tabs";
+import {TemplateListComponent} from "tim/document/editing/template-list.component";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -71,6 +72,7 @@ import {TabsModule} from "ngx-bootstrap/tabs";
         LanguageSelectorComponent,
         AccessCountdownComponent,
         DirectoryListComponent,
+        TemplateListComponent,
     ],
     imports: [
         BrowserModule,

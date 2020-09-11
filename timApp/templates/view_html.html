@@ -141,7 +141,7 @@
         {% endif %}
         <view-range-navigation></view-range-navigation>
     </div>
-    <tim-template-list ng-if="$ctrl.item.rights.editable" ng-show="$ctrl.isEmptyDocument()" doc="$ctrl.item"></tim-template-list>
+    <tim-template-list ng-if="$ctrl.item.rights.editable" ng-show="$ctrl.isEmptyDocument()" [doc]="$ctrl.item"></tim-template-list>
     <bootstrap-panel ng-if="$ctrl.item.rights.manage" ng-show="$ctrl.isEmptyDocument()"
                      title="Review document permissions"
                      show-close="true"

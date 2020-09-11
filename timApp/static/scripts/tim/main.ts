@@ -9,7 +9,6 @@ import $ from "jquery";
 import * as answerbrowser from "tim/answer/answerbrowser3";
 import * as userlistController from "tim/answer/userlistController";
 import {timApp} from "tim/app";
-import * as templateList from "tim/document/editing/templateList";
 import * as questionController from "tim/document/question/questionController";
 import * as viewctrl from "tim/document/viewctrl";
 import * as viewRangeNavigation from "tim/document/viewRangeNavigation";
@@ -63,6 +62,7 @@ import BackspaceDisabler from "backspace-disabler";
 import {DrawToolbarComponent} from "tim/plugin/drawToolbar";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {DirectoryListComponent} from "tim/folder/directory-list.component";
+import {TemplateListComponent} from "tim/document/editing/template-list.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -90,7 +90,6 @@ markAsUsed(
     rightsEditor,
     showStatisticsToQuestionController,
     taggedDocumentList,
-    templateList,
     timRoot,
     userlistController,
     velpSelection,
@@ -132,6 +131,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timDrawToolbar", DrawToolbarComponent);
     doDowngrade(dg, "timDrawCanvas", DrawCanvasComponent);
     doDowngrade(dg, "timIndex", DirectoryListComponent);
+    doDowngrade(dg, "timTemplateList", TemplateListComponent);
     return dg;
 }
 
