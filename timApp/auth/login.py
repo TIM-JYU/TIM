@@ -211,7 +211,7 @@ def check_temp_password():
     Sends the real name of the user if the email already exists so that the name field can be prefilled.
     """
     email_or_username, token, = verify_json_params('email', 'token')
-    nu = check_temp_pw(email_or_username, token)
+    nu = check_temp_pw(convert_email_to_lower(email_or_username), token)
     u = User.get_by_email(nu.email)
     if u:
         return json_response({'status': 'name', 'name': u.real_name, 'can_change_name': u.is_email_user})

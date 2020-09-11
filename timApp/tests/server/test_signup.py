@@ -180,6 +180,11 @@ class TestSignUp(TimRouteTest):
             {'email': email})
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('someonecase@example.com',)])
         self.json_post(
+            '/checkTempPass',
+            {'email': email, 'token': test_pws[-1]},
+            expect_content={'status': 'ok'},
+        )
+        self.json_post(
             '/altsignup2',
             {'realname': 'Testing Signup',
              'email': email,
