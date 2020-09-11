@@ -5,6 +5,9 @@ from timApp.timdb.sqa import db
 
 
 class CbCountFieldTest(BrowserTest):
+    def expect_count(self, r, count):
+        self.assertEqual(count, r['web']['count'])
+
     def test_cbcountfield(self):
         self.login_test1()
         d = self.create_doc(initial_par="""
@@ -14,48 +17,48 @@ class CbCountFieldTest(BrowserTest):
         self.test_user_3.grant_access(d, AccessType.view)
         db.session.commit()
         db.session.refresh(d)
-        self.post_answer(
+        r = self.post_answer(
             'cbcountfield', f'{d.id}.t',
             user_input={'c': '1'},
-            expect_content={'savedNew': 1, 'web': {'count': 1, 'result': 'saved'}},
         )
-        self.post_answer(
+        self.expect_count(r, 1)
+        r = self.post_answer(
             'cbcountfield',
             f'{d.id}.t',
             user_input={'c': '1'},
-            expect_content={'savedNew': None, 'web': {'count': 1, 'result': 'saved'}},
         )
-        self.post_answer(
+        self.expect_count(r, 1)
+        r = self.post_answer(
             'cbcountfield',
             f'{d.id}.t',
             user_input={'c': '0'},
-            expect_content={'savedNew': 2, 'web': {'count': 0, 'result': 'saved'}},
         )
-        self.post_answer(
+        self.expect_count(r, 0)
+        r = self.post_answer(
             'cbcountfield',
             f'{d.id}.t',
             user_input={'c': '1'},
-            expect_content={'savedNew': 3, 'web': {'count': 1, 'result': 'saved'}},
         )
+        self.expect_count(r, 1)
         self.login_test2()
-        self.post_answer(
+        r = self.post_answer(
             'cbcountfield',
             f'{d.id}.t',
             user_input={'c': '1'},
-            expect_content={'savedNew': 4, 'web': {'count': 2, 'result': 'saved'}},
         )
-        self.post_answer(
+        self.expect_count(r, 2)
+        r = self.post_answer(
             'cbcountfield',
             f'{d.id}.t',
             user_input={'c': '1'},
-            expect_content={'savedNew': None, 'web': {'count': 2, 'result': 'saved'}},
         )
-        self.post_answer(
+        self.expect_count(r, 2)
+        r = self.post_answer(
             'cbcountfield',
             f'{d.id}.t',
             user_input={'c': '0'},
-            expect_content={'savedNew': 5, 'web': {'count': 1, 'result': 'saved'}},
         )
+        self.expect_count(r, 1)
         self.login_test3()
         r = self.get(d.url, as_tree=True)
         par_id = d.document.get_paragraphs()[0].get_id()
@@ -68,3 +71,14 @@ class CbCountFieldTest(BrowserTest):
                 toplevel={'count': 1},
                 markup={'autoUpdateTables': True}
             ))
+
+    def test_cbcountfield_grouplogin(self):
+        self.login_test1()
+        self.login_test2(add=True)
+        d = self.create_doc(initial_par="""
+#- {#t plugin=cbcountfield}""")
+        r = self.post_answer(
+            'cbcountfield', f'{d.id}.t',
+            user_input={'c': '1'},
+        )
+        self.expect_count(r, 1)

@@ -90,6 +90,11 @@ class InfoModel:
     user_id: str
     valid: bool  # could be False e.g. if answering deadline has passed
 
+    @property
+    def primary_user(self):
+        users = self.user_id.split(';')
+        return users[0]
+
 
 InfoSchema = class_schema(InfoModel)
 

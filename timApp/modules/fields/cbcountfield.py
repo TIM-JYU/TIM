@@ -82,7 +82,7 @@ def cb_answer(args: CbcountfieldAnswerModel) -> CbAnswerResp:
     result = CbAnswerResp(web=web)
     c = args.input.c
 
-    count, previous = get_checked_count(args.markup, args.taskID, args.info.user_id)
+    count, previous = get_checked_count(args.markup, args.taskID, args.info.primary_user)
 
     # Take the current answer into account.
     if previous is None:
@@ -109,7 +109,7 @@ def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: st
         groups = markup.groups
     doc_id = TaskId.parse_doc_id(task_id)
     curr_user = User.get_by_name(user_id)
-    assert curr_user is not None
+    assert curr_user is not None, f'Could not find user {user_id}'
     d = DocEntry.find_by_id(doc_id)
     if not d:
         return 0, None  # TODO handle error properly
