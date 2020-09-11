@@ -91,7 +91,7 @@ class InfoModel:
     valid: bool  # could be False e.g. if answering deadline has passed
 
     @property
-    def primary_user(self):
+    def primary_user(self) -> str:
         users = self.user_id.split(';')
         return users[0]
 
