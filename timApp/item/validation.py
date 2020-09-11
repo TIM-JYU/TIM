@@ -14,6 +14,7 @@ from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.user.usergroup import UserGroup
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.utils import split_location
 
 
@@ -39,8 +40,13 @@ def validate_item(item_path: str,
     if item_path is None:
         abort(400, 'item_path was None')
 
-    if not all(part for part in item_path.split('/')):
+    segments = item_path.split('/')
+
+    if not all(part for part in segments):
         abort(400, f'The {item_type_str} path cannot have empty parts.')
+
+    if any(re.match(r'^\.+$', part) for part in segments):
+        raise RouteException(f'Item path segment cannot consist of merely dots.')
 
     if re.match(r'^(\d)*$', item_path) is not None:
         abort(400, f'The {item_type_str} path can not be a number to avoid confusion with document id.')

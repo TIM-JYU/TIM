@@ -165,6 +165,15 @@ class FolderTest(TimRouteTest):
                                    'error': 'The folder path has invalid characters. Only letters, numbers, '
                                             'underscores and dashes are allowed.'},
                                expect_status=400)
+        for c in ['.', '..', '....']:
+            self.create_folder(
+                self.get_personal_item_path(c),
+                expect_content={
+                    'error': 'Item path segment cannot consist of merely dots.'},
+                expect_status=400)
+
+        # Make sure dot is accepted if there are other chars.
+        self.create_folder(self.get_personal_item_path('a.txt'))
 
     def test_folder_view_perf(self):
         self.login_test3()
