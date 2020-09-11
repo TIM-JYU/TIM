@@ -100,6 +100,14 @@ export class UserListController implements IController {
                 maxWidth: 100,
             },
             {
+                field: "user.code",
+                name: "Student #",
+                cellTooltip: true,
+                headerTooltip: true,
+                visible: false,
+                maxWidth: 70,
+            },
+            {
                 field: "task_count",
                 name: "Tasks",
                 cellTooltip: true,

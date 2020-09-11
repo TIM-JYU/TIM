@@ -402,6 +402,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if ag not in self.groups:
             self.groups.append(ag)
 
+    def get_unique_code(self):
+        return next(iter(self.uniquecodes.values())).code if self.uniquecodes else None
+
     def get_personal_group(self) -> UserGroup:
         return self.personal_group_prop
 
@@ -684,6 +687,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 'id': self.id,
                 'name': self.name,
                 'real_name': self.real_name,
+                'code': self.get_unique_code(),
                 'email': self.email,
             }
         else:
@@ -691,6 +695,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 'id': self.id,
                 'name': f'user{self.id}',
                 'real_name': f'User {self.id}',
+                'code': self.get_unique_code(),
                 'email': f'user{self.id}@example.com',
             }
 
