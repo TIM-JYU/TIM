@@ -737,11 +737,11 @@ export class AnswerBrowserController
             review: this.review,
             user_id: this.user.id,
         };
-        let taskOrAnswer;
+        let taskOrAnswer: Record<string, string | number>;
         if (this.selectedAnswer) {
             taskOrAnswer = {answer_id: this.selectedAnswer.id};
         } else {
-            taskOrAnswer = {task_id: this.taskId};
+            taskOrAnswer = {task_id: this.taskId.docTask().toString()};
         }
         // get new state as long as the previous answer was not explicitly the same as the one before
         // otherwise we might not see the unanswered plugin exactly how the user sees it
