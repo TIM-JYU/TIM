@@ -45,8 +45,18 @@ def validate_item(item_path: str,
     if not all(part for part in segments):
         abort(400, f'The {item_type_str} path cannot have empty parts.')
 
-    if any(re.match(r'^\.+$', part) for part in segments):
-        raise RouteException(f'Item path segment cannot consist of merely dots.')
+    if any('.' in part for part in segments[:-1]):
+        raise RouteException(f'Item path segment cannot have dots.')
+
+    short_name = segments[-1]
+    if item_type == BlockType.Folder:
+        if '.' in short_name:
+            raise RouteException(f'Folder short name cannot have dots.')
+    else:
+        if re.match(r'^\.+$', short_name):
+            raise RouteException(f'Document short name cannot consist of merely dots.')
+        if short_name.startswith('.') or short_name.endswith('.'):
+            raise RouteException(f'Document short name cannot start or end with a dot.')
 
     if re.match(r'^(\d)*$', item_path) is not None:
         abort(400, f'The {item_type_str} path can not be a number to avoid confusion with document id.')

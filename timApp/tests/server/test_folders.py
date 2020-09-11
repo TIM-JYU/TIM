@@ -140,41 +140,6 @@ class FolderTest(TimRouteTest):
                                   'unpublished': False,
                                   'public': True}])
 
-    def test_folders_invalid(self):
-        self.login_test1()
-        invalid = self.get_personal_item_path('/test')
-        invalid2 = "test"
-        invalid3 = "1234"
-        invalid4 = ''
-        self.create_folder(invalid,
-                           expect_content={'error': 'The folder path cannot have empty parts.'},
-                           expect_status=400)
-        self.create_folder(invalid2,
-                           expect_content={'error': 'You cannot create folders in this folder.'},
-                           expect_status=403)
-        self.create_folder(invalid3,
-                           expect_content={
-                               'error': 'The folder path can not be a number to avoid confusion with document id.'},
-                           expect_status=400)
-        self.create_folder(invalid4,
-                           expect_content={'error': 'The folder path cannot have empty parts.'},
-                           expect_status=400)
-        for c in 'ãàáäâåẽèéëêìíïîõòóöôùúüûñç·,:;<>|^~¨"!½#¤%&()=?`@£$€{[]}\\ ':
-            self.create_folder(self.get_personal_item_path(c),
-                               expect_content={
-                                   'error': 'The folder path has invalid characters. Only letters, numbers, '
-                                            'underscores and dashes are allowed.'},
-                               expect_status=400)
-        for c in ['.', '..', '....']:
-            self.create_folder(
-                self.get_personal_item_path(c),
-                expect_content={
-                    'error': 'Item path segment cannot consist of merely dots.'},
-                expect_status=400)
-
-        # Make sure dot is accepted if there are other chars.
-        self.create_folder(self.get_personal_item_path('a.txt'))
-
     def test_folder_view_perf(self):
         self.login_test3()
         self.create_doc(self.get_personal_item_path('perf/x'))
