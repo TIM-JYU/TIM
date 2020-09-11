@@ -40,6 +40,8 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {LanguageSelectorComponent} from "tim/user/language-selector.component";
 import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 import {SideBarMenuModule} from "tim/sidebarmenu/side-bar-menu.module";
+import {DirectoryListComponent} from "tim/folder/indexCtrl";
+import {TabsModule} from "ngx-bootstrap/tabs";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -68,6 +70,7 @@ import {SideBarMenuModule} from "tim/sidebarmenu/side-bar-menu.module";
         SettingsComponent,
         LanguageSelectorComponent,
         AccessCountdownComponent,
+        DirectoryListComponent,
     ],
     imports: [
         BrowserModule,
@@ -84,6 +87,7 @@ import {SideBarMenuModule} from "tim/sidebarmenu/side-bar-menu.module";
             Record<string, unknown>
         >,
         TooltipModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
+        TabsModule.forRoot(),
     ],
     providers: [
         {

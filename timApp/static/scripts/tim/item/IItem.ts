@@ -29,6 +29,7 @@ export interface IItem {
     rights: IRights;
     title: string;
     unpublished: boolean;
+    isFolder: boolean;
 }
 
 export interface IRelevance {
