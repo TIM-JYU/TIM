@@ -1356,8 +1356,9 @@ export class TimTableComponent
         const ccb = cb.cell;
         const va = "" + cca;
         const vb = "" + ccb;
-        const na = parseFloat(va);
-        const nb = parseFloat(vb);
+        // changes:  1,20 -> 1.20,  12:03 -> 12.03 TODO: 12:31:15 not handled correctly
+        const na = parseFloat(va.replace(",", ".").replace(":", "."));
+        const nb = parseFloat(vb.replace(",", ".").replace(":", "."));
         if (isNaN(na) || isNaN(nb)) {
             return va.localeCompare(vb, sortLang) * dir;
         }
