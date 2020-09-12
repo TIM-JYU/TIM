@@ -1,0 +1,4 @@
+export PYTHONUNBUFFERED=1
+export TIM_SETTINGS=debugconfig.py
+export LC_ALL=en_US.UTF-8
+export TIM_HOST=http://localhost
