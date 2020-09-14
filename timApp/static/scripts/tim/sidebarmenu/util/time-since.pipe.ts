@@ -9,7 +9,7 @@ import {Users} from "tim/user/userService";
 export class TimeSincePipe implements PipeTransform {
     transform(date: string): string {
         return secondsToShortTime(
-            moment().diff(date, "seconds"),
+            moment().utc().diff(moment.utc(date), "seconds"),
             ["d"],
             Users.getCurrentLanguage()
         );
