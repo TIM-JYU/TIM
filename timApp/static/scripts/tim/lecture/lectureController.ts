@@ -413,6 +413,7 @@ export class LectureController {
                 if (pl.user.id === p.user.id) {
                     oldUser = true;
                     pl.active = p.active;
+                    pl.activeSeconds = p.activeSeconds;
                     break;
                 }
             }
