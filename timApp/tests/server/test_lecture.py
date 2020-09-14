@@ -95,7 +95,6 @@ class LectureTest(TimRouteTest):
         msg_datetime = dateutil.parser.parse(j['timestamp'])
         resp = self.get_updates(doc.id, -1)
 
-        self.check_time(current_time, resp)
         u = {'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': 'testuser1', 'real_name': 'Test user 1'}
         self.assert_dict_subset(resp, {
             'msgs': [{
@@ -105,9 +104,8 @@ class LectureTest(TimRouteTest):
             'lectureEnding': 100,
             'lectureId': lecture_id,
             'lecturers': [
-                {'active': resp['lecturers'][0]['active'],
-                 'user': u,
-                 'activeSeconds': resp['lecturers'][0]['activeSeconds']}],
+                {'user': u,
+                 'activeSecondsAgo': resp['lecturers'][0]['activeSecondsAgo']}],
             'students': [],
         })
         self.assertIsInstance(resp['ms'], int)
@@ -308,10 +306,6 @@ testuser2;count;1
 
         self.post('/deleteLecture', query_string=lecture_q)
         self.post('/deleteLecture', query_string=lecture_q, expect_status=404)
-
-    def check_time(self, current_time, resp):
-        returned_time = dateutil.parser.parse(resp['lecturers'][0]['active'])
-        self.assertLess(returned_time - current_time, datetime.timedelta(seconds=2))
 
     def test_invalid_max_students(self):
         self.login_test1()

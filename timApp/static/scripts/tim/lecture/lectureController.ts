@@ -412,8 +412,7 @@ export class LectureController {
             for (const pl of peopleList) {
                 if (pl.user.id === p.user.id) {
                     oldUser = true;
-                    pl.active = p.active;
-                    pl.activeSeconds = p.activeSeconds;
+                    pl.activeSecondsAgo = p.activeSecondsAgo;
                     break;
                 }
             }

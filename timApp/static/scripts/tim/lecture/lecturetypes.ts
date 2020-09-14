@@ -151,9 +151,8 @@ export interface IQuestionAnswer {
 }
 
 export interface ILecturePerson {
-    active: string;
     user: IUser;
-    activeSeconds: number;
+    activeSecondsAgo: number;
 }
 
 export function isLectureListResponse(

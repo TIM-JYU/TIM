@@ -526,8 +526,7 @@ def get_lecture_users(lecture: Lecture):
         active = ac.active
         person = {
             "user": ac.user,
-            "active": active,
-            "activeSeconds": int((cur_time - active).total_seconds()),
+            "activeSecondsAgo": int((cur_time - active).total_seconds()),
         }
         if lecture.lecturer == user_id:
             lecturers.append(person)
