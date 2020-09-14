@@ -106,7 +106,8 @@ class LectureTest(TimRouteTest):
             'lectureId': lecture_id,
             'lecturers': [
                 {'active': resp['lecturers'][0]['active'],
-                 'user': u, }],
+                 'user': u,
+                 'activeSeconds': resp['lecturers'][0]['activeSeconds']}],
             'students': [],
         })
         self.assertIsInstance(resp['ms'], int)
