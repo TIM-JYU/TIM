@@ -1,11 +1,13 @@
 """"""
 import json
 from collections import defaultdict, OrderedDict
+from dataclasses import dataclass
 from datetime import datetime
 from operator import itemgetter
 from typing import List, Optional, Dict, Tuple, Iterable, Any
 
 from sqlalchemy import func, Numeric, Float, true
+from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.orm import selectinload, defaultload, Query
 
 from timApp.answer.answer import Answer
@@ -20,20 +22,36 @@ from timApp.util.answerutil import task_ids_to_strlist
 from timApp.velp.annotation_model import Annotation
 
 
-def get_latest_answers_query(task_id: TaskId, users: List[User]):
+@dataclass
+class ExistingAnswersInfo:
+    latest_answer: Optional[Answer]
+    count: int
+
+
+def get_latest_answers_query(task_id: TaskId, users: List[User]) -> Query:
     if task_id.is_global:
         q = Answer.query.filter_by(task_id=task_id.doc_task).order_by(Answer.id.desc())
     else:
-        q = Answer.query.filter_by(task_id=task_id.doc_task).join(User, Answer.users).filter(
-            User.id.in_([u.id for u in users])).order_by(Answer.id.desc())
+        q = (
+            Answer.query
+                .filter_by(task_id=task_id.doc_task)
+                .join(User, Answer.users)
+                .filter(User.id.in_([u.id for u in users]))
+                .group_by(Answer.id)
+                .with_entities(Answer.id)
+                .having((func.array_agg(aggregate_order_by(User.id, User.id))) == sorted([u.id for u in users]))
+                .subquery()
+        )
+        q = Answer.query.filter(Answer.id.in_(q)).order_by(Answer.id.desc())
     return q
 
 
-def is_redundant_answer(content: str, existing_answers: List[Answer], ptype: Optional[PluginType], valid: bool):
-    is_redundant = existing_answers and (existing_answers[0].content == content and existing_answers[0].valid == valid)
+def is_redundant_answer(content: str, existing_answers: ExistingAnswersInfo, ptype: Optional[PluginType], valid: bool):
+    la = existing_answers.latest_answer
+    is_redundant = la and (la.content == content and la.valid == valid)
     if is_redundant:
         return True
-    if not existing_answers and ptype and ptype.type == 'rbfield' and json.loads(content)['c'] == '0':
+    if existing_answers.count == 0 and ptype and ptype.type == 'rbfield' and json.loads(content)['c'] == '0':
         return True
     return False
 
@@ -76,10 +94,10 @@ def save_answer(
         raise TooLargeAnswerException(f'Answer is too large (size is {content_len} but maximum is {max_content_len}).')
     if tags is None:
         tags = []
-    existing_answers = get_common_answers(users, task_id)
-    if is_redundant_answer(content_str, existing_answers, plugintype, valid) and not force_save:
-        if existing_answers:
-            a = existing_answers[0]
+    answerinfo = get_existing_answers_info(users, task_id)
+    if is_redundant_answer(content_str, answerinfo, plugintype, valid) and not force_save:
+        if answerinfo.latest_answer:
+            a = answerinfo.latest_answer
             a.points = points
             a.last_points_modifier = points_given_by
         return None
@@ -216,16 +234,11 @@ def get_all_answer_initial_query(period_from, period_to, task_ids, valid) -> Que
     return q
 
 
-def get_common_answers(users: List[User], task_id: TaskId) -> List[Answer]:
+def get_existing_answers_info(users: List[User], task_id: TaskId) -> ExistingAnswersInfo:
     q = get_latest_answers_query(task_id, users)
-    glo = task_id.is_global
-    def g():
-        user_set = set(users)
-        for a in q:  # type: Answer
-            if not (user_set - set(a.users_all)) or glo:
-                yield a
-
-    return list(g())
+    latest = q.first()
+    count = q.count()
+    return ExistingAnswersInfo(latest_answer=latest, count=count)
 
 
 basic_tally_fields = [

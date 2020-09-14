@@ -104,9 +104,6 @@ class GeogebraController extends PluginBase<
 
     private timer: NodeJS.Timer | undefined;
 
-    private taskUrl: string = "";
-    private htmlUrl: string = "";
-
     $onInit() {
         super.$onInit();
         this.button = this.buttonText();
@@ -151,14 +148,6 @@ class GeogebraController extends PluginBase<
         } // TODO: replace when preview delay and preview from markup ready
         $timeout(0);
         const selectedUser = this.viewctrl.selectedUser;
-        const userId = selectedUser.id;
-        let anr = 0;
-        if (this.ab) {
-            anr = this.ab.findSelectedAnswerIndex();
-            if (anr < 0) {
-                anr = 0;
-            }
-        }
         // const html:string = this.attrs.srchtml;
         // const datasrc = btoa(html);
         let w = this.attrs.width ?? 800;
@@ -169,8 +158,10 @@ class GeogebraController extends PluginBase<
             h = Math.max(w, 1100);
         }
 
-        let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
-        url = url.replace("//", "/");
+        const url = this.pluginMeta.getIframeHtmlUrl(
+            selectedUser,
+            this.ab?.selectedAnswer
+        );
         this.geogebraoutput =
             '<iframe id="jsxFrame-stack-jsxgraph-1-div1"\n' +
             '        class="showGeoGebra geogebraFrame" \n' +
@@ -196,27 +187,6 @@ class GeogebraController extends PluginBase<
         return s;
     }
 
-    getHtmlUrl(): string {
-        if (this.htmlUrl) {
-            return this.htmlUrl;
-        }
-        const url =
-            "/iframehtml" +
-            this.pluginMeta.getAnswerUrl().replace("/answer", "");
-
-        this.htmlUrl = url;
-        return url;
-    }
-
-    getTaskUrl(): string {
-        if (this.taskUrl) {
-            return this.taskUrl;
-        }
-        const url = this.pluginMeta.getAnswerUrl();
-        this.taskUrl = url;
-        return url;
-    }
-
     async runSend(data: any) {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
@@ -225,7 +195,7 @@ class GeogebraController extends PluginBase<
         this.geogebrapeek = false;
         this.error = "";
         this.isRunning = true;
-        const url = this.getTaskUrl();
+        const url = this.pluginMeta.getAnswerUrl();
         data.type = "geogebra";
         const params = {
             input: data,

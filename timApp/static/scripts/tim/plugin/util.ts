@@ -2,6 +2,8 @@ import {IController, IScope} from "angular";
 import {Type} from "io-ts/lib";
 import {FormModeOption, ISetAnswerResult} from "tim/document/viewctrl";
 import {isLeft} from "fp-ts/lib/Either";
+import {IAnswer} from "tim/answer/IAnswer";
+import {IUser} from "tim/user/IUser";
 import {Binding} from "../util/utils";
 import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "./attributes";
 import {getErrors} from "./errors";
@@ -62,27 +64,35 @@ export class PluginMeta {
     }
 
     protected getPlugin() {
-        return this.plugintype ?? this.getParentAttr("data-plugin");
-    }
-
-    public getTaskIdUrl() {
-        const plugin = this.getPlugin();
-        if (!plugin) {
+        let p = this.plugintype ?? this.getParentAttr("data-plugin");
+        if (!p) {
             const message = "Could not find plugin type from HTML";
             alert(message);
             throw new Error(message);
         }
-        let url = plugin;
-        const i = url.lastIndexOf("/");
-        if (i > 0) {
-            url = url.substring(i);
+        const i = p.indexOf("/");
+        if (i >= 0) {
+            p = p.substring(i + 1);
         }
-        url += `/${this.getTaskId()!.docTask().toString()}`;
-        return url;
+        return p;
+    }
+
+    public getTaskIdUrl() {
+        return `/${this.getPlugin()}/${this.getTaskId()!.docTask().toString()}`;
     }
 
     public getAnswerUrl() {
-        return `${this.getTaskIdUrl()}/answer/`; // + window.location.search;
+        return `${this.getTaskIdUrl()}/answer/`;
+    }
+
+    public getIframeHtmlUrl(user: IUser, answer: IAnswer | undefined) {
+        const start = `/iframehtml/${this.getPlugin()}/${this.getTaskId()!
+            .docTask()
+            .toString()}/${user.id}`;
+        if (answer) {
+            return `${start}/${answer.id}`;
+        }
+        return start;
     }
 
     public isPreview() {

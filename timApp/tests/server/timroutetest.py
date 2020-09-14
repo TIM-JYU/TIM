@@ -938,6 +938,7 @@ class TimRouteTest(TimDbTest):
             valid=valid,
         )
         db.session.add(a)
+        return a
 
 
 class TimPluginFix(TimRouteTest):

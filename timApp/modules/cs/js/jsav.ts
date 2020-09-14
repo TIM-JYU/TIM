@@ -51,7 +51,7 @@ const JsavAll = t.intersection([
 /**
  * Methods and properties in JSAV library's Exercise class that we want to be able to use remotely
  */
-interface JSAVExercise extends Object {
+interface JSAVExercise {
     showModelanswer(): void;
 }
 
@@ -103,36 +103,21 @@ class JsavController extends PluginBase<
     public viewCtrl!: ViewCtrl;
     private error: string = "";
     private isRunning: boolean = false;
-    private jsavOutput: string = "";
     private isOpen: boolean = true;
-    private htmlUrl: string = "";
     private button: string = "";
     private modelAnswerButton: string = "";
     private console: string = "";
     private message: string = "";
     private userCode: string = "";
 
-    private taskUrl: string = "";
-
     $onInit() {
         super.$onInit();
         this.button = this.buttonText();
         this.modelAnswerButton = this.modelAnswerButtonText();
-        if (this.attrs.open) {
-            this.isOpen = true;
-        }
+        this.isOpen = this.attrs.open ?? true;
         const aa = this.attrsall;
         this.userCode = aa.usercode ?? "";
         this.message = this.attrs.message ?? "";
-    }
-
-    getTaskUrl(): string {
-        if (this.taskUrl) {
-            return this.taskUrl;
-        }
-        const url = this.pluginMeta.getAnswerUrl();
-        this.taskUrl = url;
-        return url;
     }
 
     /**
@@ -147,7 +132,7 @@ class JsavController extends PluginBase<
         }
         this.error = "";
         this.isRunning = true;
-        const url = this.getTaskUrl();
+        const url = this.pluginMeta.getAnswerUrl();
         data.type = "jsav";
         if (answerChecked) {
             data.model = "y";
@@ -235,45 +220,19 @@ class JsavController extends PluginBase<
         const tid = this.pluginMeta.getTaskId()!;
         const taskId = tid.docTask();
         const ab = this.viewCtrl.getAnswerBrowser(taskId.toString());
-        let anr = 0;
-        if (ab) {
-            anr = ab.findSelectedAnswerIndex();
-        }
         const selectedUser = this.viewCtrl.selectedUser;
-        const userId = selectedUser.id;
-        const w = this.attrs.width ?? 800;
-        const h = this.attrs.height ?? 600;
-        this.jsavOutput =
-            '<iframe id="jsav-iframe1"\n' +
-            '        style="width:calc(' +
-            w +
-            "px + 2px);height:calc(" +
-            h +
-            'px + 2px);border: none;"\n' +
-            '        sandbox="allow-scripts allow-same-origin"\n' +
-            '        class="jsavFrame"\n' +
-            'src="' +
-            this.getHtmlUrl() +
-            "/" +
-            userId +
-            "/" +
-            anr +
-            '"' +
-            "</iframe>";
+        const w = (this.attrs.width ?? 800) + 2;
+        const h = (this.attrs.height ?? 600) + 2;
+        const jsavOutput = `
+<iframe style="width: ${w}px; height:${h}px; border: none;"
+        sandbox="allow-scripts allow-same-origin"
+        class="jsavFrame"
+        src="${this.pluginMeta.getIframeHtmlUrl(
+            selectedUser,
+            ab?.selectedAnswer
+        )}"</iframe>`;
 
-        return $sce.trustAsHtml(this.jsavOutput);
-    }
-
-    getHtmlUrl(): string {
-        if (this.htmlUrl) {
-            return this.htmlUrl;
-        }
-        const url =
-            "/iframehtml" +
-            this.pluginMeta.getAnswerUrl().replace("/answer", "");
-
-        this.htmlUrl = url;
-        return url;
+        return $sce.trustAsHtml(jsavOutput);
     }
 
     getAttributeType() {
@@ -281,16 +240,12 @@ class JsavController extends PluginBase<
     }
 }
 
-const common = {
-    bindings: pluginBindings,
-    controller: JsavController,
-};
-
 /**
  * This is the HTML code that is placed when the JSAV plugin is used in a TIM document.
  */
 jsavApp.component("csJsavRunner", {
-    ...common,
+    bindings: pluginBindings,
+    controller: JsavController,
     require: {
         viewCtrl: "^timView",
     },

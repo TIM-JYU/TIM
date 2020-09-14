@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 
 from timApp.answer.answer import Answer
-from timApp.answer.answers import get_users_for_tasks, save_answer
+from timApp.answer.answers import get_users_for_tasks, save_answer, get_existing_answers_info
 from timApp.plugin.taskid import TaskId
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
@@ -117,3 +117,16 @@ class AnswerTest(TimRouteTest):
             expect_status=400,
             expect_content=f'Answer is too large (size is {json_size} but maximum is 204800).',
         )
+
+    def test_common_answers(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.add_answer(d, 't', 'x1', user=self.test_user_1)
+        self.add_answer(d, 't', 'x2', user=self.test_user_1)
+        self.add_answer(d, 't', 'y1', user=self.test_user_2)
+        a = self.add_answer(d, 't', 'z', user=self.test_user_1)
+        a.users_all.append(self.test_user_2)
+        answers = get_existing_answers_info([self.test_user_1, self.test_user_2], TaskId(doc_id=d.id, task_name='t'))
+        self.assertEqual(1, answers.count)
+        answers = get_existing_answers_info([self.test_user_1], TaskId(doc_id=d.id, task_name='t'))
+        self.assertEqual(3, answers.count)

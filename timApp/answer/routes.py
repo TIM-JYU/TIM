@@ -21,7 +21,7 @@ from webargs.flaskparser import use_args
 from markupmodels import GenericMarkupModel
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
-from timApp.answer.answers import get_common_answers, save_answer, get_all_answers, \
+from timApp.answer.answers import get_existing_answers_info, save_answer, get_all_answers, \
     valid_answers_query, valid_taskid_filter
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access, AccessDenied, \
     verify_admin
@@ -153,15 +153,16 @@ def points_to_float(points: Union[str, float]):
     return float(points)
 
 
-@answers.route("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<int:anr>")
-def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
+@answers.route("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>")
+@answers.route("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<int:answer_id>")
+def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, answer_id: Optional[int] = None):
     """
     Gets the HTML to be used in iframe.
 
     :param plugintype: plugin type
     :param task_id_ext: task id
     :param user_id: the user whose information to get
-    :param anr: answer number from answer browser, 0 = newest
+    :param answer_id: answer id from answer browser
     :return: HTML to be used in iframe
     """
     try:
@@ -174,32 +175,22 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
     ctx_user = User.get_by_id(user_id)
     if not ctx_user:
         raise RouteException('User not found')
-    try:
-        tid.block_id_hint = None  # TODO: this should only be done in preview?
-        vr = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite, context_user=ctx_user)
-        plugin = vr.plugin
-    except (PluginException, TimDbException) as e:
-        return abort(400, str(e))
+    vr = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite, context_user=ctx_user)
+    plugin = vr.plugin
+    answer = None
+    if answer_id is not None:
+        answer, doc_id = verify_answer_access(answer_id, ctx_user.id, require_teacher_if_not_own=True)
 
     if plugin.type != plugintype:
         abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
 
     users = [ctx_user]
 
-    old_answers = get_common_answers(users, tid)
-    """
-    if tid.is_global:
-        answer_map = {}
-        get_globals_for_tasks([tid], answer_map)
-    else:
-        old_answers = get_common_answers(users, tid)
-    """
+    answerinfo = get_existing_answers_info(users, tid)
 
-    info = plugin.get_info(users, len(old_answers))
+    info = plugin.get_info(users, answerinfo.count)
 
-    if anr < 0:
-        anr = 0
-    state = try_load_json(old_answers[anr].content) if len(old_answers) > 0 else None
+    state = try_load_json(answer.content) if answer else None
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,
@@ -216,7 +207,6 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, anr: int):
     if 'iframehtml' not in jsonresp:
         return json_response({'error': 'The key "iframehtml" is missing in plugin response.'}, 400)
     result = jsonresp['iframehtml']
-    db.session.commit()
     return result
 
 
@@ -579,12 +569,12 @@ def post_answer(plugintype: str, task_id_ext: str):
     if users is None:
         users = [User.query.get(u['id']) for u in get_session_users()]
 
-    old_answers = get_common_answers(users, tid)
-    valid, _ = plugin.is_answer_valid(len(old_answers), {})
-    info = plugin.get_info(users, len(old_answers), look_answer=is_teacher and not save_teacher, valid=valid)
+    answerinfo = get_existing_answers_info(users, tid)
+    valid, _ = plugin.is_answer_valid(answerinfo.count, {})
+    info = plugin.get_info(users, answerinfo.count, look_answer=is_teacher and not save_teacher, valid=valid)
 
     # Get the newest answer (state). Only for logged in users.
-    state = try_load_json(old_answers[0].content) if logged_in() and len(old_answers) > 0 else None
+    state = try_load_json(answerinfo.latest_answer.content) if logged_in() and answerinfo.latest_answer else None
 
     preprocessor = answer_call_preprocessors.get(plugin.type)
     if preprocessor:
@@ -683,7 +673,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             set_postoutput(result, output, postoutput)
 
         if (not is_teacher and should_save_answer) or ('savedata' in jsonresp):
-            is_valid, explanation = plugin.is_answer_valid(len(old_answers), tim_info)
+            is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
             if vr.is_expired:
                 fixed_time = receive_time - d.document.get_settings().answer_submit_time_tolerance()
                 if fixed_time < (vr.access.accessible_to or maxdate):

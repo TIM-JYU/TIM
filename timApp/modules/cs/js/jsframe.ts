@@ -316,8 +316,6 @@ export class JsframeComponent
 
     private timer: NodeJS.Timer | undefined;
 
-    private taskUrl: string = "";
-    private htmlUrl: string = "";
     private initData: string = "";
     private userName?: string;
 
@@ -495,17 +493,10 @@ export class JsframeComponent
         let src;
         if (this.markup.useurl) {
             const selectedUser = this.viewctrl.selectedUser;
-            const userId = selectedUser.id;
-            let anr = 0;
-            if (this.ab) {
-                anr = this.ab.findSelectedAnswerIndex();
-                if (anr < 0) {
-                    anr = 0;
-                }
-            }
-            let url = this.getHtmlUrl() + "/" + userId + "/" + anr;
-            url = url.replace("//", "/");
-            src = url;
+            src = this.pluginMeta.getIframeHtmlUrl(
+                selectedUser,
+                this.ab?.selectedAnswer
+            );
         } else {
             let html = this.markup.srchtml ?? "";
             html = html.replace("</body>", communicationJS + "\n</body>");
@@ -531,27 +522,6 @@ export class JsframeComponent
             width: w,
             height: h,
         };
-    }
-
-    getHtmlUrl(): string {
-        if (this.htmlUrl) {
-            return this.htmlUrl;
-        }
-        const url =
-            "/iframehtml" +
-            this.pluginMeta.getAnswerUrl().replace("/answer", "");
-
-        this.htmlUrl = url;
-        return url;
-    }
-
-    getTaskUrl(): string {
-        if (this.taskUrl) {
-            return this.taskUrl;
-        }
-        const url = this.pluginMeta.getAnswerUrl();
-        this.taskUrl = url;
-        return url;
     }
 
     isTask(): boolean {
@@ -582,7 +552,7 @@ export class JsframeComponent
                 this.c();
                 return this.saveResponse;
             }
-            url = this.getTaskUrl();
+            url = this.pluginMeta.getAnswerUrl();
             params = {
                 input: {
                     ...unwrapAllC(data), // Unwrap just in case there is a double "c".
