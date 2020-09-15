@@ -10,7 +10,7 @@ import {LectureController} from "tim/lecture/lectureController";
         <ng-container *ngIf="lctrl.lecturerTable.length > 0; else noLecturers">
             <ul>
                 <li *ngFor="let lecturer of lctrl.lecturerTable">
-                    {{lecturer.user.name}} > {{lecturer.active | timeSince}}
+                    {{lecturer.user.name}} > {{lecturer.activeSecondsAgo | timeSince}}
                 </li>
             </ul>
         </ng-container>
@@ -21,7 +21,7 @@ import {LectureController} from "tim/lecture/lectureController";
         <ng-container *ngIf="lctrl.studentTable.length > 0; else noStudents">
             <ul>
                 <li *ngFor="let student of lctrl.studentTable">
-                    {{student.user.name}} > {{student.active | timeSince}}
+                    {{student.user.name}} > {{student.activeSecondsAgo | timeSince}}
                 </li>
             </ul>
         </ng-container>

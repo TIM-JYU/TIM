@@ -519,13 +519,14 @@ def get_lecture_users(lecture: Lecture):
     students = []
 
     activity = Useractivity.query.filter_by(lecture=lecture).all()
+    cur_time = get_current_time()
 
     for ac in activity:
         user_id = ac.user_id
         active = ac.active
         person = {
             "user": ac.user,
-            "active": active,
+            "activeSecondsAgo": int((cur_time - active).total_seconds()),
         }
         if lecture.lecturer == user_id:
             lecturers.append(person)
