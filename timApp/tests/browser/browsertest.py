@@ -397,6 +397,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
                          data={'email': email, 'password': passw, 'add_user': add},
                          follow_redirects=True, **kwargs)
 
+    def get_uninteractable_element(self):
+        return self.find_element('.breadcrumb .current')
+
 
 def find_button_by_text(root: WebElement, text: str):
     return find_element_by_text(root, text, 'button')

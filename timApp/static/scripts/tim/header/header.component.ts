@@ -55,9 +55,11 @@ interface IItemLink {
                 class="timButton label">
             Add to My courses
         </button>
-        <span *ngFor="let tr of translations">
-            <a class="label label-primary" href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id }}</a>
-        </span>
+        <ng-container *ngIf="translations && translations.length > 1">
+            <span *ngFor="let tr of translations">
+                <a class="label label-primary" href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id || 'language not set' }}</a>&ngsp;
+            </span>
+        </ng-container>
     </div>
     <ng-container *ngIf="!hideVars.headerNav">
         <div class="nav nav-tabs">
@@ -71,7 +73,7 @@ interface IItemLink {
             <li *ngFor="let c of crumbs">
                 <a href="/{{ route }}/{{ c.path }}">{{ c.title }}</a>
             </li>
-            <li class="active">{{ item.title }}</li>
+            <li class="current">{{ item.title }}</li>
         </ol>
     </ng-container>
 </div>

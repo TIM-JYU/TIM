@@ -12,7 +12,7 @@ h4 {
   font-family: "Helvetica", Arial, sans-serif;
 }
 
-:host-context(.theme-blue) h4 {
-  @import "static/stylesheets/themes/bluetheme";
+:host-context(.theme-light) h4 {
+  @import "static/stylesheets/themes/lighttheme";
   background-color: $basic-color;
 }

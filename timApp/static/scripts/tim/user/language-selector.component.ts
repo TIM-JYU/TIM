@@ -7,15 +7,18 @@ const webBrowser = "UseWebBrowser";
 @Component({
     selector: "tim-language-selector",
     template: `
-        <select class="form-control"
-                [(ngModel)]="settings.language"
-                (ngModelChange)="onChange()"
-        >
-            <option [ngValue]="webBrowser" i18n>Use web browser preference</option>
-            <option [ngValue]="'en-US'" i18n>English</option>
-            <option [ngValue]="'fi'" i18n>Finnish</option>
-        </select>
+        <label><ng-container i18n>Language</ng-container>:
+            <select class="form-control"
+                    [(ngModel)]="settings.language"
+                    (ngModelChange)="onChange()"
+            >
+                <option [ngValue]="webBrowser" i18n>Use web browser preference</option>
+                <option [ngValue]="'en-US'" i18n>English</option>
+                <option [ngValue]="'fi'" i18n>Finnish</option>
+            </select>
+        </label>
     `,
+    styleUrls: ["./language-selector.component.scss"],
 })
 export class LanguageSelectorComponent {
     @Input() saveOnChange = false;

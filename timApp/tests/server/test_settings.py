@@ -141,7 +141,7 @@ class SettingsTest(TimRouteTest):
             f'/settings/save',
             {
                 'css_combined': 'xxx',  # doesn't matter
-                'css_files': {'bluetheme': True, 'reunukset': False},
+                'css_files': {'lighttheme': True, 'reunukset': False},
                 'email_exclude': 'users/something\nusers/another',
                 'last_answer_fetch': {},
                 'use_document_word_list': True,
@@ -156,8 +156,8 @@ class SettingsTest(TimRouteTest):
         )
         self.get(f'/settings/get',
                  expect_content={
-                     'css_combined': 'bluetheme',
-                     'css_files': {'bluetheme': True},
+                     'css_combined': 'lighttheme',
+                     'css_files': {'lighttheme': True},
                      'email_exclude': 'users/something\nusers/another',
                      'last_answer_fetch': {},
                      'use_document_word_list': True,
@@ -173,7 +173,7 @@ class SettingsTest(TimRouteTest):
             f'/settings/save',
             {
                 'css_combined': 'xxx',  # doesn't matter
-                'css_files': {'bluetheme': True, 'nonexistent': True},
+                'css_files': {'lighttheme': True, 'nonexistent': True},
                 'email_exclude': 'users/something\nusers/another',
                 'last_answer_fetch': {},
                 'use_document_word_list': True,
@@ -187,8 +187,8 @@ class SettingsTest(TimRouteTest):
         )
         self.get(f'/settings/get',
                  expect_content={
-                     'css_combined': 'bluetheme',
-                     'css_files': {'bluetheme': True},
+                     'css_combined': 'lighttheme',
+                     'css_files': {'lighttheme': True},
                      'email_exclude': 'users/something\nusers/another',
                      'last_answer_fetch': {},
                      'use_document_word_list': True,

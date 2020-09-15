@@ -14,7 +14,7 @@
   }
 }
 
-:host-context(.theme-blue) .root {
-  @import "static/stylesheets/themes/bluetheme";
+:host-context(.theme-light) .root {
+  @import "static/stylesheets/themes/lighttheme";
   border-color: $basic-color;
 }

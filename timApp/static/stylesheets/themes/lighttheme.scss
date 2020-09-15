@@ -1,6 +1,6 @@
 @charset "UTF-8";
-/* Sinisävyinen teema */
-$basic-color: #004494;
+/* Vaaleasävyinen teema */
+$basic-color: #3CC;
 $button-bg-color: $basic-color;
 $editline-bg-color: $basic-color;
 $areacollapse-color: $basic-color;
@@ -15,4 +15,4 @@ $icon-color: $basic-color;
 $icon-hover-color: darken($basic-color, 10%);
 
 $brand-primary: $basic-color;
-$link-color: $brand-primary;
+$link-color: #5588FF;

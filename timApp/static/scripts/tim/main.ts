@@ -142,7 +142,7 @@ if (document.location) {
 }
 
 const themeNameMap: Record<string, string | undefined> = {
-    bluetheme: "theme-blue",
+    lighttheme: "theme-light",
     reunukset: "theme-borders",
 };
 

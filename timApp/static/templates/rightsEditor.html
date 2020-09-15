@@ -51,7 +51,7 @@
             <span class="flex align-center">
             <span class="name" ng-if="!$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></span>
             <s ng-if="$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></s>
-            <a title="Send email to this user" ng-if="right.usergroup.personal_user" href="mailto:{{right.usergroup.personal_user.email}}"><i class="glyphicon glyphicon-envelope"></i></a>
+            <a title="Send email to this user" ng-if="right.usergroup.personal_user" href="mailto:{{right.usergroup.personal_user.email}}"><i class="glyphicon glyphicon-envelope"></i><span class="sr-only">Send email to the user</span></a>
             <span class="label label-success"
                   uib-tooltip="{{ right.accessible_from | timdate }}"
                   ng-if="$ctrl.shouldShowBeginTime(right)">Begins {{ right.accessible_from | timreldate }}</span>

@@ -19,7 +19,8 @@ import {getVisibilityVars} from "tim/timRoot";
                     (click)="displaySearch = !displaySearch"
                     title="Display search panel"
                     i18n-title>
-                <i class="glyphicon glyphicon-search"></i>
+                <i class="glyphicon glyphicon-search"></i>&ngsp;
+                <ng-container i18n>Search</ng-container>
             </button>
             <bootstrap-panel *ngIf="displaySearch" [showClose]="true"
                              class="search-panel"

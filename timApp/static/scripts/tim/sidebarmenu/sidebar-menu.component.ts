@@ -49,6 +49,7 @@ const MENU_BUTTON_ICONS: Record<MenuState, string> = {
                          (selectTab)="onTabSelect($event, tabContainer)">
                         <ng-template tabHeading>
                             <i class="glyphicon glyphicon-{{menuTab.icon}}" title="{{menuTab.title}}"></i>
+                            <span class="sr-only">Open {{menuTab.title}}</span>
                         </ng-template>
                         <tab-container #tabContainer [tabItem]="menuTab"
                                        [class.hidden]="!shouldRender(menuTab.id)"></tab-container>

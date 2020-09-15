@@ -18,7 +18,6 @@ import {to} from "../util/utils";
                 <h1 class="text-center">TIM - The Interactive Material</h1>
             </div>
             <div class="col-lg-3" *ngIf="isLoggedIn()">
-                <ng-container i18n>Language</ng-container>:
                 <tim-language-selector [saveOnChange]="true"></tim-language-selector>
             </div>
         </div>
@@ -39,7 +38,7 @@ import {to} from "../util/utils";
                 </a>
             </div>
             <div class="col-md-4">
-                <h3 i18n>Get started</h3>
+                <h2 i18n>Get started</h2>
                 <button *ngIf="!isLoggedIn()" (click)="openLoginDialog(false)" type="button"
                         class="timButton margin-4" i18n="@@logIn">Log in
                 </button>
@@ -76,20 +75,20 @@ import {to} from "../util/utils";
         </div>
         <div class="row">
             <div class="col-md-7 col-md-offset-3">
-                <h4 i18n>What is TIM?</h4>
+                <h3 i18n>What is TIM?</h3>
                 <p i18n>TIM is a document-based cloud service for producing interactive materials.</p>
             </div>
         </div>
         <div class="row">
             <div class="col-md-3 col-md-offset-3">
-                <h4>TIM</h4>
+                <h3>TIM</h3>
                 <ul class="list-unstyled">
                     <li><a href="{{ getIntroLink() }}" i18n>Introduction</a></li>
                     <li><a href="/view/tim/TIM-ohjeet" i18n>User guide</a><sup *ngIf="notFinnish()"> (F)</sup></li>
                 </ul>
             </div>
             <div class="col-md-4">
-                <h4 i18n>Examples <sup *ngIf="notFinnish()">(F)</sup></h4>
+                <h3 i18n>Examples <sup *ngIf="notFinnish()">(F)</sup></h3>
                 <ul class="list-unstyled">
                     <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista" i18n>TIM's possibilities</a></li>
                     <li><a *ngIf="isLoggedIn()" href="/view/tim/Eri-ohjelmointikielia" i18n>
@@ -100,7 +99,7 @@ import {to} from "../util/utils";
             </div>
         </div>
         <div class="row" *ngIf="notFinnish()">
-            <div class="col-md-4 col-md-offset-4 text-muted text-center" i18n>
+            <div class="col-md-4 col-md-offset-4 text-center" i18n>
                 <sup>(F)</sup> in Finnish
             </div>
         </div>

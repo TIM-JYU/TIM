@@ -28,7 +28,7 @@ autosave: false
         self.wait_until_present('#t2 input')
         input2 = self.find_element_and_move_to('#t2 input')
         input2.send_keys('2.75')
-        self.find_element('.breadcrumb .active').click()
+        self.get_uninteractable_element().click()
         par = self.find_element_avoid_staleness('#pars')
         multisave = self.find_element_avoid_staleness('#t3 multisave-runner')
         self.wait_until_present('#t3 div') # wait for ng-if to finish
@@ -59,7 +59,7 @@ autosave: false
         input2 = self.find_element_and_move_to('#t2 input')
         input2.clear()
         input2.send_keys(' ')
-        self.find_element('.breadcrumb .active').click()
+        self.get_uninteractable_element.click()
         multisave = self.find_element_avoid_staleness('#t3 multisave-runner')
         runbutton = multisave.find_element_by_css_selector('button')
         runbutton.click()

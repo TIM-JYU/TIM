@@ -31,7 +31,7 @@ depends=(
 {% set col_m_xs = col_m_xs|default(12) %}
 
 <!DOCTYPE html>
-<html>
+<html lang="{{ locale }}">
 <head>
     {% block head %}
         <base href="{{ request.path }}">

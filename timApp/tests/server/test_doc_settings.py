@@ -66,11 +66,11 @@ a: c
         })
 
         self.create_preamble_for(d, settings={
-            "themes": ["bluetheme"],
+            "themes": ["lighttheme"],
         })
 
         settings = d.document.get_settings()
         themes = settings.themes()
         themes.sort()
 
-        self.assertListEqual(themes, ["bluetheme", "hide_focus"])
+        self.assertListEqual(themes, ["hide_focus", "lighttheme"])

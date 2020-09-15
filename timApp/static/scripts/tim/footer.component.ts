@@ -5,7 +5,7 @@ import {genericglobals} from "tim/util/globals";
 @Component({
     selector: "tim-footer",
     template: `
-        <footer class="footer hidden-print">
+        <footer class="hidden-print">
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-{{ layout.col_2_lg }} col-lg-offset-{{ layout.col_1_lg }}
@@ -14,7 +14,7 @@ import {genericglobals} from "tim/util/globals";
                             col-sm-{{ layout.col_2_sm }} col-sm-offset-{{ layout.col_1_sm }}">
                         <div class="row">
                             <div class="col-xs-6">
-                                <p class="smallNote">
+                                <p>
                                     <ng-container i18n>TIM last updated</ng-container>:
                                     <ng-container *ngIf="hide.links">{{config.gitLastestCommitTimestamp}}
                                         <br>
@@ -31,7 +31,7 @@ import {genericglobals} from "tim/util/globals";
                                     </ng-container>
                                 </p>
                             </div>
-                            <div class="col-xs-6 text-right smallNote">
+                            <div class="col-xs-6 text-right">
                                 <a *ngIf="!hide.links" href="/view/tim/Rekisteriseloste" i18n>
                                     Privacy policy
                                 </a>

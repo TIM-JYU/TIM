@@ -389,6 +389,11 @@ export class ViewCtrl implements IController {
 
     $postLink() {
         initCssPrint();
+        const parselem = document.getElementById("pars");
+        if (this.item.lang_id && parselem) {
+            // TODO document language ids should be validated
+            parselem.lang = this.item.lang_id;
+        }
 
         this.questionHandler.processQuestions();
         this.setHeaderLinks();

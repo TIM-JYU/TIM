@@ -17,7 +17,7 @@ class DocThemesTest(TimRouteTest):
     def test_theme_overrides(self):
         self.login_test1()
         self.current_user.set_prefs(Preferences(css_files={
-            'bluetheme': True
+            'lighttheme': True
         }))
 
         d = self.create_doc()
@@ -34,4 +34,4 @@ class DocThemesTest(TimRouteTest):
             "override_user_themes": False
         })
         t = self.get(d.url, as_tree=True)
-        self.assertEqual("bluetheme-hide_focus.css", get_theme_style_name(t))
+        self.assertEqual("hide_focus-lighttheme.css", get_theme_style_name(t))

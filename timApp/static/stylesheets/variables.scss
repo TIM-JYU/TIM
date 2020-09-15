@@ -1,6 +1,6 @@
 @charset "UTF-8";
 
-$basic-color: #3CC;
+$basic-color: #004494;
 $basic-color-inverse: invert($basic-color);
 $button-bg-color: $basic-color;
 $button-toggle-color: black;
@@ -60,7 +60,7 @@ $gray: lighten($gray-base, 33.5%);
 $brand-primary: $basic-color;
 $text-color: black;
 $input-color: black;
-$link-color: #5588FF;
+$link-color: $basic-color;
 $link-hover-color: darken($link-color, 15%);
 $input-color-placeholder: $gray;
 $headings-font-weight: 700;

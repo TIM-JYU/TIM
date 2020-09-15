@@ -1,8 +1,3 @@
-from time import sleep
-
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions
-
 from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
 
 
@@ -26,7 +21,7 @@ type: python
         textarea = self.find_element_and_move_to('#py textarea')
         # sleep(0.5)
         textarea.send_keys('print("Hello world!")')
-        self.find_element('.breadcrumb .active').click()
+        self.get_uninteractable_element().click()
         par = self.find_element_avoid_staleness('#py > tim-plugin-loader > div')
         self.assert_same_screenshot(par, ['csplugin/python_before_answer'])
         runbutton = par.find_element_by_css_selector('button')
@@ -52,6 +47,19 @@ type: python
         # TODO: Why is this slightly different from python_before_answer ?
         self.assert_same_screenshot(par, 'csplugin/python_after_answer_switch')
 
+    def make_text_and_answer(self, d):
+        self.goto_document(d)
+        self.wait_until_present('#text textarea')
+        textarea = self.find_element_and_move_to('#text textarea')
+        textarea.send_keys('print("Hello world!")')
+        self.get_uninteractable_element().click()
+        par = self.find_element_avoid_staleness('#text > tim-plugin-loader > div')
+        runbutton = par.find_element_by_css_selector('button')
+        runbutton.click()
+        self.wait_until_present('answerbrowser')
+        self.wait_until_hidden('tim-loading')
+        return textarea, runbutton
+
     def test_csplugin_saveindicators(self):
         """
         Check that savebutton is enabled/disabled by whatever is the current desired logic. For now:
@@ -59,19 +67,6 @@ type: python
         disableUnchanged true: savebutton disabled if saved and input doesn't change
         Also check yellow margin is (un)hidden and savedText (dis)appears
         """
-        def make_text_and_answer(self, d):
-            self.goto_document(d)
-            self.wait_until_present('#text textarea')
-            textarea = self.find_element_and_move_to('#text textarea')
-            # sleep(0.5)
-            textarea.send_keys('print("Hello world!")')
-            self.find_element('.breadcrumb .active').click()
-            par = self.find_element_avoid_staleness('#text > tim-plugin-loader > div')
-            runbutton = par.find_element_by_css_selector('button')
-            runbutton.click()
-            self.wait_until_present('answerbrowser')
-            self.wait_until_hidden('tim-loading')
-            return textarea, runbutton
 
         self.login_browser_quick_test1()
         self.login_test1()
@@ -79,7 +74,7 @@ type: python
 #- {plugin=csPlugin #text}
 type: text
         """)
-        textarea, runbutton = make_text_and_answer(self, d)
+        textarea, runbutton = self.make_text_and_answer(d)
         self.assertTrue(runbutton.is_enabled())
         savedtext = self.find_element('.savedText')
         self.assertTrue( savedtext.is_displayed())
@@ -89,7 +84,7 @@ type: text
 type: text
 disableUnchanged: true
                 """)
-        textarea, runbutton = make_text_and_answer(self, d)
+        textarea, runbutton = self.make_text_and_answer(d)
         self.assertFalse(runbutton.is_enabled())
         savedtext = self.find_element('.savedText')
         self.assertTrue(savedtext.is_displayed())
