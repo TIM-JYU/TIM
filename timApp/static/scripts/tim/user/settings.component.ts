@@ -68,9 +68,8 @@ export class SaveButtonComponent {
         <h1>TIM settings</h1>
         <div class="form">
             <bootstrap-panel title="Preferred language">
-                <div class="flex">
+                <div class="flex cl">
                     <tim-language-selector></tim-language-selector>
-                    &nbsp;
                     <tim-save-button [saved]="submit"></tim-save-button>
                 </div>
             </bootstrap-panel>
