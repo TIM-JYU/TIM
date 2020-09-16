@@ -6,8 +6,5 @@ footer {
     width: 100%;
     height: $footer-height;
     z-index: $footer-z; // make section read mark clickable if it is above footer
-}
-
-p {
     font-size: smaller;
 }
