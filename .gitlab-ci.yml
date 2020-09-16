@@ -1,5 +1,9 @@
 image: tmaier/docker-compose:latest
 
+variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+
 .setup: &setup
   - docker info
   - docker-compose --version
