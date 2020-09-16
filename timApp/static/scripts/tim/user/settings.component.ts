@@ -262,7 +262,11 @@ export class SettingsComponent implements DoCheck {
 
     updateCss() {
         document
-            .querySelector('link[rel="stylesheet"]')!
+            .querySelector(
+                // There are two stylesheets in production (the other is the Angular-generated /js/styles.<hash>.css),
+                // so we need the href match too.
+                'link[rel="stylesheet"][href*="/static/generated/"]'
+            )!
             .setAttribute(
                 "href",
                 `/static/generated/${this.settings.css_combined}.css`
