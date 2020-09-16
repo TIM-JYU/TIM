@@ -63,7 +63,7 @@ code_navigation:
   image: node:lts
   script:
   - cd timApp
-  - npm install
+  - npm install --unsafe-perm
   - npm install -g @sourcegraph/lsif-tsc
   - lsif-tsc -p .
   artifacts:
