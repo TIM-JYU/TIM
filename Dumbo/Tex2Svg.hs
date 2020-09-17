@@ -46,7 +46,14 @@ type MathEnvResult = Either String MathEnv
 
 latexTemplate :: String -> MathType -> String -> MathEnvResult -> String
 latexTemplate preamble _ eqn (Right (MathEnv "tikzpicture")) = unlines
-  [ "\\documentclass[crop,dvisvgm]{standalone}"
+  [
+    -- workaround for l3kernel bug, see
+    -- https://tex.stackexchange.com/questions/529129
+    "\\ExplSyntaxOn"
+  , "\\str_clear:N \\c_sys_backend_str"
+  , "\\ExplSyntaxOff"
+
+  , "\\documentclass[crop,dvisvgm]{standalone}"
   , "\\usepackage{amsmath}"
   , "\\usepackage{amsfonts}"
   , "\\usepackage{amssymb}"
