@@ -27,7 +27,7 @@ texmacros:
 beforemacros
 
 ``` {.latex printing_template=""}
-\documentclass[%%texside%%, %%texfontsize%%,%%texpaper%%,%%texlanguage%%]{ %%texdocumentclass%%}
+\documentclass[%%texside%%, %%texfontsize%%,%%texpaper%%,%%texlanguage%%]%%'{'%%%%texdocumentclass%%}
 \usepackage{extsizes}
 {% if texbibname != "" %}
 \usepackage[backend=biber,sortcites]{biblatex}

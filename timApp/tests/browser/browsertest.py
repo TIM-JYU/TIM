@@ -40,7 +40,7 @@ def ignore_timeout(func):
 
 
 options = webdriver.ChromeOptions()
-options.set_headless()
+options.headless = True
 options.add_argument('--window-size=1024x768')
 
 global_drv = webdriver.Remote(command_executor='http://chrome:4444/wd/hub',

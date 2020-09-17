@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
     APT_CLEANUP="rm -rf /var/lib/apt/lists /dvisvgm-2.4 /usr/share/doc ~/.cache"
@@ -29,7 +29,6 @@ latex-cjk-all \
 latexmk \
 lcdf-typetools \
 lmodern \
-prosper \
 psutils \
 purifyeps \
 t1utils \
@@ -43,11 +42,7 @@ texlive-fonts-extra \
 texlive-fonts-recommended \
 texlive-formats-extra \
 texlive-games \
-texlive-generic-extra \
-texlive-generic-recommended \
-texlive-htmlxml \
 texlive-humanities \
-texlive-lang-african \
 texlive-lang-arabic \
 texlive-lang-chinese \
 texlive-lang-cjk \
@@ -58,7 +53,6 @@ texlive-lang-european \
 texlive-lang-french \
 texlive-lang-german \
 texlive-lang-greek \
-texlive-lang-indic \
 texlive-lang-italian \
 texlive-lang-japanese \
 texlive-lang-korean \
@@ -72,9 +66,7 @@ texlive-latex-recommended \
 texlive-luatex \
 texlive-metapost \
 texlive-music \
-texlive-omega \
 texlive-pictures \
-texlive-plain-extra \
 texlive-pstricks \
 texlive-publishers \
 texlive-science \
@@ -83,7 +75,7 @@ wget \
 && ${APT_CLEANUP}"
 
 # Update dvisvgm so that it supports converting PDFs to SVGs
-RUN bash -c "${APT_INSTALL} gcc g++ libpotrace-dev libgs-dev libkpathsea-dev && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} gcc g++ libpotrace-dev libgs-dev libkpathsea-dev pkg-config libfreetype6-dev make && ${APT_CLEANUP}"
 RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/2.4/dvisvgm-2.4.tar.gz" -qO $FILE && \
  tar -xf $FILE && \
  cd dvisvgm-2.4 && \
@@ -94,8 +86,6 @@ RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/2
  ${APT_CLEANUP}
 
 # Install Python, pip and other necessary packages
-
-RUN bash -c "${APT_INSTALL} software-properties-common && add-apt-repository ppa:deadsnakes/ppa && ${APT_CLEANUP}"
 
 RUN bash -c "${APT_INSTALL} openssh-server python3.8 && ${APT_CLEANUP}"
 
@@ -119,8 +109,6 @@ RUN bash -c "${APT_INSTALL} \
  && ${APT_CLEANUP}"
 
 RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3.8 get-pip.py && rm get-pip.py
-
-ENV LD_LIBRARY_PATH /usr/local/lib
 
 ENV PIP_INSTALL="python3.8 -m pip install"
 RUN bash -c "${PIP_INSTALL} wheel setuptools && ${APT_CLEANUP}"
@@ -150,7 +138,7 @@ git+git://github.com/miracle2k/webassets.git \
 gunicorn \
 humanize \
 isodate \
-libsass==0.19.2 \
+libsass \
 lxml \
 marshmallow \
 marshmallow-enum \
@@ -169,9 +157,9 @@ python3-saml \
 pytz \
 recommonmark \
 responses \
-selenium==3.141.0 \
+selenium==4.0.0a6.post2 \
 sphinx \
-sqlalchemy==1.3.12 \
+sqlalchemy \
 sqlalchemy-utils \
 typing-inspect \
 voikko \
@@ -192,7 +180,6 @@ RUN mkdir /service
 RUN useradd -M agent
 RUN chown -R agent /service
 
-RUN bash -c "${APT_INSTALL} software-properties-common && add-apt-repository ppa:malteworld/ppa && ${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} curl pdftk gpg-agent && ${APT_CLEANUP} && pdftk --version && curl --version"
 
 RUN (curl -sL https://deb.nodesource.com/setup_12.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
@@ -210,11 +197,6 @@ RUN sed -i "s/from werkzeug import cached_property/from werkzeug.utils import ca
 RUN wget -q http://mirrors.ctan.org/support/latexmk/latexmk.pl -O /usr/bin/latexmk
 
 WORKDIR /service
-
-# Make Python 3.8 the default one. We can't do this earlier because it breaks apt-get, which we won't need
-# after building the image.
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2 && \
-    python3 -V
 
 CMD python3 launch.py
 

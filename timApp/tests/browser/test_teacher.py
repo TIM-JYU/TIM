@@ -10,8 +10,6 @@ class TeacherTest(BrowserTest):
 
     def test_first_answer_loading(self):
         """ First loaded answers in teacher view matches the first user that browser selects from a group """
-        warnings.filterwarnings(action="ignore", message="unclosed",
-                                category=ResourceWarning)
 
         def check_col():
             header_row = self.find_element('.ui-grid-header-cell-row')
