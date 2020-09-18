@@ -54,7 +54,7 @@ cd cs
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar -O ComTest.jar.tmp -nv && mv ComTest.jar.tmp ComTest.jar
 
 cd /cs/simcir/check
-wget https://yousource.it.jyu.fi/opetus-ji/logik-py/blobs/raw/master/simcirtest.py -O simcirtest.py.tmp -nv && mv simcirtest.py.tmp simcirtest.py
+wget https://gitlab.jyu.fi/arjuvi/logik-py/-/raw/master/simcirtest.py -O simcirtest.py.tmp -nv && mv simcirtest.py.tmp simcirtest.py
 
 fi
 
