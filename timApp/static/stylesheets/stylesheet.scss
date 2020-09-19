@@ -250,7 +250,8 @@ a .glyphicon {
     .bgreadline  { background: #ff6600c0; }
     .bgreadmodified  { background: #ffff00c0; }
     .obs         { border: 1.00pt solid #000000; padding: 0.1em; background: #e6e6e6;}
-    .note .answer { color: blue; }
+    /* .note .answer TODO: do we dare to use pure .answer?  Otherwise it is not visible in preview */
+    .answer { color: blue; }
     img.smallimage {
         display: inline;
     }
