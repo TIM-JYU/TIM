@@ -3914,22 +3914,39 @@ export class TimTableComponent
                 }
                 function handleStyleList(
                     table: TimTableComponent,
-                    vstyle: Record<string, string | string[]> | undefined,
+                    vstyle1:
+                        | Record<string, string | string[]>
+                        | string
+                        | string[]
+                        | undefined,
                     c: ICellIndex,
                     toggle: boolean,
                     areaClearOrSet: number
                 ): number {
-                    if (!vstyle) {
+                    if (!vstyle1) {
                         return areaClearOrSet;
                     }
+                    let vstyle: Record<string, string | string[]> = {};
+
+                    if (typeof vstyle1 === "string") {
+                        vstyle[vstyle1] = "";
+                    } else if (Array.isArray(vstyle1)) {
+                        for (const s of vstyle1) {
+                            vstyle[s] = "";
+                        }
+                    } else {
+                        vstyle = vstyle1;
+                    }
+
                     // eslint-disable-next-line guard-for-in
                     for (const skey in vstyle) {
                         // sometimes there is extra # in colors?
                         let clearOrSet = 0; // 1 = set, 2 = clear
                         let cellStyle = vstyle[skey];
+                        const scellStyle = "" + vstyle[skey];
                         if (
                             !Array.isArray(cellStyle) &&
-                            cellStyle.startsWith("##")
+                            scellStyle.startsWith("##")
                         ) {
                             cellStyle = cellStyle.substr(1);
                         }
@@ -3987,10 +4004,11 @@ export class TimTableComponent
                                 }
                                 const styleCache =
                                     table.cellDataMatrix[c.y][c.x].styleCache;
+                                const skeyHtml = styleToHtml[skey];
                                 if (
                                     styleCache &&
-                                    skey in styleCache &&
-                                    styleCache[skey]
+                                    skeyHtml in styleCache &&
+                                    styleCache[skeyHtml]
                                 ) {
                                     s = "";
                                     change = true;

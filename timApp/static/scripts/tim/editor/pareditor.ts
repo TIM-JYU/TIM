@@ -331,6 +331,7 @@ ${backTicks}
 
             timTable2x2: `
 ${backTicks} {plugin="timTable"}
+# forcedEditMode: true
 table:
     countRow: 2
     countCol: 2
