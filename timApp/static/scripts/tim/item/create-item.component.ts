@@ -44,7 +44,7 @@ markAsUsed(formErrorMessage, shortNameValidator);
             </div>
             <div class="form-group" timErrorState>
                 <label>
-                    Location: <input [disabled]="force" class="form-control" type="text"
+                    Location: <input size="50" [disabled]="force" class="form-control" type="text"
                                      timLocation [(ngModel)]="itemLocation" name="itemLocation">
                 </label>
                 <tim-error-message></tim-error-message>

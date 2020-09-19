@@ -168,6 +168,8 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              *itertools.chain.from_iterable(path_mappings),
              "-v", f"/tmp/{compose_proj}_uhome/{udir}/:/home/agent/",
              "-w", "/home/agent", dockercontainer, "/cs/rcmd.sh", urndname + ".sh", str(no_x11), str(savestate)]
+    # dargs = ["docker", "exec", "kana",
+    #         "/cs/rcmd.sh", urndname + ".sh", str(no_x11), str(savestate)]
     # print(dargs)
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     errcode = 0
