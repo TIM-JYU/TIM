@@ -31,7 +31,7 @@ import           System.IO.Temp
 import           System.Process
 import           System.Timeout
 import           Text.Blaze                      (toValue)
-import           Text.Blaze.Html.Renderer.String (renderHtml)
+import           Text.Blaze.Html.Renderer.Text (renderHtml)
 import           Text.Blaze.Html5                hiding (head, map, option,
                                                   string, style, title)
 import           Text.Blaze.Html5.Attributes     (class_, src, style,
@@ -271,7 +271,7 @@ renderConversionError eqn e = case e of
 createError :: T.Text -> T.Text -> Inline
 createError eqn le =
   RawInline (Format "html")
-    $  "<details class=\"latex-error\"><summary>"
+    $ T.pack $ "<details class=\"latex-error\"><summary>"
     ++ entity eqn
     ++ "</summary>"
     ++ "<pre>"
@@ -328,6 +328,13 @@ getDVISVGMParams fn _ mt =
   , fn ++ ".xdv"
   ]
 
+compose :: [a -> a] -> a -> a
+compose = foldr (.) id
+
+-- hack for fixing floats in dvisvgm output - haskell doesn't accept leading dot in fractions
+fixFloats :: T.Text -> T.Text
+fixFloats s = compose (map (\x -> T.replace (x <> "=.") (x <> "=0.")) ["width", "height", "depth"]) s
+
 invokeDVISVGM
   :: FilePath
   -> DVISVGMPath
@@ -342,7 +349,7 @@ invokeDVISVGM curTmp dvisvgm fn mt env = do
     (getDVISVGM dvisvgm)
     (getDVISVGMParams fn env mt)
     ""
-  case parseOnly (many1 parseBlock) (LT.toStrict $ LT.pack dvi) of
+  case parseOnly (many1 parseBlock) (fixFloats . LT.toStrict $ LT.pack dvi) of
     Right []       -> throw (UnexpectedError "many1 returned none")
     Right (x : xs) -> pure (x :| xs)
     Left  err      -> throw (CouldNotParseDVISVGM dvi err)
@@ -373,6 +380,7 @@ createSVGImg eb svg eqn =
 wrapMath :: MathType -> Html -> Inline
 wrapMath mt svg =
   RawInline (Format "html")
+    $ LT.toStrict
     $ renderHtml
     $ span
     ! class_ ("mathp " <> (if mt == InlineMath then "inline" else "display"))
@@ -397,8 +405,8 @@ tex2svg T2SR {..} preamble (Math mt math) = do
   case cached of
     Nothing -> withTempDirectory tmp "tex2svg." $ \curTmpDir -> do
       svg' <- catch
-        (doConvert curTmpDir dvisvgm latex (T.unpack preamble) mt math)
-        (\e -> return (renderConversionError math (e :: ConversionError)))
+        (doConvert curTmpDir dvisvgm latex (T.unpack preamble) mt (T.unpack math))
+        (\e -> return (renderConversionError (T.unpack math) (e :: ConversionError)))
       writeCache cacheKey svg'
       return svg'
     Just s -> pure s
