@@ -439,9 +439,6 @@ Sisu.component("sisuAssessmentExport", {
 <div ng-if="$ctrl.assessments">
     <p>
     <span class="red">
-        Arviointien lähettäminen Sisuun tyhjentää Sisusta KAIKKI vahvistamattomat arvioinnit (myös ne, joita ei
-        tässä lähetyksessä lähetetä).
-        Tästä syystä uutta Sisuun lähetystä EI SAA tehdä ennen kuin aikaisemmin lähetetyt on Sisussa vahvistettu.
         Sisussa vahvistettua arvosanaa ei voi enää muuttaa (ei edes hylättyjä).
     </span>
     </p>
