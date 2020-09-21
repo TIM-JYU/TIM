@@ -20,7 +20,7 @@ class MarkdownConverterTest(TimDbTest):
                  ('<h4 id="hello">Hello</h4>', '#### Hello'),
                  ('<h5 id="hello">Hello</h5>', '##### Hello'),
                  ('<h6 id="hello-world">Hello world</h6>', '###### Hello world'),
-                 ('<p id="hello">Hello</p>', '####### Hello'),
+                 ('<p class="heading" id="hello">Hello</p>', '####### Hello'),
                  ('<p>test</p>', 'test')]
 
         for html, md in cases:
