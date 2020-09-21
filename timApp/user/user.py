@@ -358,8 +358,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return user_query_with_joined_groups().filter_by(email=email).first()
 
     @staticmethod
+    def get_by_email_case_insensitive(email: str) -> List['User']:
+        return user_query_with_joined_groups().filter(func.lower(User.email).in_([email])).all()
+
+    @staticmethod
     def get_by_email_case_insensitive_or_username(email_or_username: str) -> List['User']:
-        users = user_query_with_joined_groups().filter(func.lower(User.email).in_([email_or_username])).all()
+        users = User.get_by_email_case_insensitive(email_or_username)
         if users:
             return users
         u = User.get_by_name(email_or_username)
