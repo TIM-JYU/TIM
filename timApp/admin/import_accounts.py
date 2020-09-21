@@ -35,7 +35,7 @@ def import_accounts_impl(file: str, password: Optional[str]) -> Tuple[List[User]
                 if email:
                     users = User.get_by_email_case_insensitive(email)
                     if len(users) > 1:
-                        raise ImportException(f'The email {email} has {len(users)} matches multiple accounts.')
+                        raise ImportException(f'The email {email} matches multiple ({len(users)}) accounts.')
                     if users:
                         u = users[0]
             if not full_name:
