@@ -16,6 +16,7 @@ from timApp.answer.pointsumrule import PointSumRule, PointType
 from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
+from timApp.upload.upload import get_pluginupload
 from timApp.user.user import Consent, User
 from timApp.user.usergroup import UserGroup
 from timApp.util.answerutil import task_ids_to_strlist
@@ -194,7 +195,21 @@ def get_all_answers(task_ids: List[TaskId],
         line = json.loads(a.content)
         answ = str(line)
         if isinstance(line, dict):  # maybe csPlugin?
-            if "usercode" in line:  # is csPlugin
+            files = line.get('uploadedFiles')
+            if isinstance(files, list):
+                if len(files) == 1:
+                    p = files[0]['path']
+                    prefix = '/uploads/'
+                    if p.startswith(prefix):
+                        p = p[len(prefix):]
+                    mt, pu = get_pluginupload(p)
+                    if mt == 'text/plain':
+                        answ = pu.data.decode()
+                    else:
+                        answ = 'ERROR: Uploaded file is binary; cannot show content.'
+                else:
+                    answ = f'ERROR: There are more than 1 file uploads ({len(files)}) in this answer; cannot show content.'
+            elif "usercode" in line:
                 answ = str(line.get("usercode", "-"))
             else:
                 if "points" in line:  # empty csPlugin answer

@@ -4,7 +4,7 @@ import json
 import os
 import posixpath
 from pathlib import Path, PurePosixPath
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from urllib.parse import unquote, urlparse
 
 import magic
@@ -111,24 +111,29 @@ def get_mimetype(p):
 
 @upload.route('/uploads/<path:relfilename>')
 def get_upload(relfilename: str):
+    mt, up = get_pluginupload(relfilename)
+    return send_file(up.filesystem_path.as_posix(), mimetype=mt, add_etags=False)
+
+
+def get_pluginupload(relfilename: str) -> Tuple[str, PluginUpload]:
     slashes = relfilename.count('/')
     if slashes < 2:
-        abort(400)
+        raise RouteException()
     if slashes == 2:
         relfilename += '/'
     if slashes == 3 and not relfilename.endswith('/'):
-        abort(400, 'Incorrect filename specification.')
+        raise RouteException('Incorrect filename specification.')
     block = Block.query.filter((Block.description.startswith(relfilename)) & (
             Block.type_id == BlockType.Upload.value)).order_by(Block.description.desc()).first()
     if not block or (block.description != relfilename and not relfilename.endswith('/')):
-        abort(404, 'The requested upload was not found.')
+        raise RouteException('The requested upload was not found.')
     if not verify_view_access(block, require=False):
         answerupload = block.answerupload.first()
 
         # Answerupload may only be None for early test uploads (before the AnswerUpload model was implemented)
         # or if the upload process was interrupted at a specific point
         if answerupload is None:
-            abort(403)
+            raise AccessDenied()
         answer = answerupload.answer
         if not answer:
             raise RouteException('Upload has not been associated with any answer; it should be re-uploaded')
@@ -140,7 +145,7 @@ def get_upload(relfilename: str):
     up = PluginUpload(block)
     p = up.filesystem_path.as_posix()
     mt = get_mimetype(p)
-    return send_file(p, mimetype=mt, add_etags=False)
+    return mt, up
 
 
 # noinspection PyUnusedLocal

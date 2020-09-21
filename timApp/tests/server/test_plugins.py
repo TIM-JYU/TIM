@@ -272,7 +272,7 @@ class PluginTest(TimRouteTest):
         curr_name = self.current_user.name
         self.assertEqual(f'/uploads/{d.id}/{task_name}/{curr_name}/1/test.txt', ur['file'])
         self.assertEqual(file_content, self.get_no_warn(ur['file']))
-        self.get(ur['file'] + 'x', expect_status=404)
+        self.get(ur['file'] + 'x', expect_status=400)
         self.assertEqual(file_content,
                          self.get_no_warn(f'/uploads/{d.id}/{task_name}/{curr_name}'))
         self.get(f'/uploads/{d.id}/{task_name}', expect_status=400)
