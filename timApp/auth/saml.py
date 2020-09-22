@@ -42,8 +42,7 @@ def validate_node_sign(signature_node, elem, cert=None, fingerprint=None, finger
     """
     Same as OneLogin_Saml2_Utils.validate_node_sign but with the following changes:
 
-    * The empty Reference URI handling has been removed (Haka metadata validation does not work with it).
-    * If the certificate fingerprint does not match, an exception is raised.
+    * If the certificate fingerprint does not match, an exception is raised (to make debugging easier).
     """
     if (cert is None or cert == '') and fingerprint:
         x509_certificate_nodes = OneLogin_Saml2_XML.query(signature_node,
