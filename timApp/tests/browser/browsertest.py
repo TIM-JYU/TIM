@@ -46,6 +46,8 @@ options.add_argument('--window-size=1024x768')
 global_drv = webdriver.Remote(command_executor='http://chrome:4444/wd/hub',
                               desired_capabilities=options.to_capabilities())
 global_drv.implicitly_wait(10)
+global_drv.set_page_load_timeout(20)
+global_drv.set_script_timeout(20)
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
