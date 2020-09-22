@@ -105,6 +105,20 @@ class BrowserTest(TimLiveServer, TimRouteTest):
                 'value': 'eyJfcGVybWFuZW50Ijp0cnVlLCJhbmNob3IiOiIiLCJjYW1lX2Zyb20iOiIvIiwidXNlcl9pZCI6Mn0.DowETw.cyvyDZcvHWr2aKC5agfIW5sUVrU',
             })
 
+    def login_browser_quick_test2(self):
+        """Logs testuser 2 in quickly by directly adding the session cookie to the browser."""
+        self.goto("/empty")
+        self.drv.delete_all_cookies()
+        self.drv.add_cookie(
+            {
+                'expiry': 7648167488,
+                'httpOnly': True,
+                'name': 'session',
+                'path': '/',
+                'secure': False,
+                'value': '.eJwVy0EOhCAMQNG7dG0yahGFy5BaS2ZigEnFlfHu4vL95F8Q_qKJsuQKvuopHVDmb1HwAB0wJQlRS2r8vD40hlp2yS2YwTGamceerWXkaR0nIiTroiFaNtsPy-oitu88RMNvA4_3A1Q0I10.X2nYwA.BJgc6wYpvsB9yFWybREPHUKbCeU',
+            })
+
     def login_browser_test1(self):
         """Logs in as Test user 1."""
         self.drv.delete_all_cookies()

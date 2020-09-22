@@ -1,5 +1,3 @@
-import warnings
-
 from timApp.tests.browser.browsertest import BrowserTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
@@ -17,7 +15,7 @@ class TeacherTest(BrowserTest):
             col_class = username_div.find_element_by_xpath("./../../..").get_attribute('class').split()[-1]
             return col_class
 
-        self.login_browser_test1()
+        self.login_browser_quick_test1()
         self.login_test1()
         nameless_user, _ = User.create_with_group(UserInfo(username="nameless"))
         lowercase_user, _ = User.create_with_group(UserInfo(username="lowercase", full_name="tim lower"))
