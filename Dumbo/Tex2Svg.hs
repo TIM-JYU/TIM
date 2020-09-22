@@ -405,9 +405,12 @@ tex2svg T2SR {..} preamble (Math mt math) = do
   case cached of
     Nothing -> withTempDirectory tmp "tex2svg." $ \curTmpDir -> do
       svg' <- catch
-        (doConvert curTmpDir dvisvgm latex (T.unpack preamble) mt (T.unpack math))
+        (do
+          result <- doConvert curTmpDir dvisvgm latex (T.unpack preamble) mt (T.unpack math)
+          writeCache cacheKey result
+          return result
+          )
         (\e -> return (renderConversionError (T.unpack math) (e :: ConversionError)))
-      writeCache cacheKey svg'
       return svg'
     Just s -> pure s
 
