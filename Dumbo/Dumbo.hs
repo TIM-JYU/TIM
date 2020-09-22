@@ -43,9 +43,9 @@ defaultReader = PDC.TextReader PDC.readMarkdown
 tex2SvgPass :: DumboRTC -> T.Text -> (PDC.Block -> IO PDC.Block)
 tex2SvgPass drtc preamble = walkM (tex2svg (tex2svgRtc drtc) preamble . rawInlinePass) . rawBlockPass
 
-latexMathPass :: (String -> a) -> String -> a -> a
+latexMathPass :: (T.Text -> a) -> T.Text -> a -> a
 latexMathPass d s b =
-  case parseLaTeX $ T.pack s of
+  case parseLaTeX s of
    Left _ -> b
    Right tex -> maybeMath tex
     where maybeMath t | isMath t = d s
@@ -180,11 +180,11 @@ keysConvert rtc target timInput
 plainConvert :: DumboRTC -> OutputFormat -> TIMIFace el -> ConversionElement Text -> IO LT.Text
 plainConvert rtc target timInput cel
  = do
-    let converted = convertElement rtc (mathOption timInput) (mathPreamble timInput) $ cel
-        (currentReader,exts) = case (PDC.getReader (T.unpack (getInputFormat timInput cel))) of
-            Left err -> error err
-            Right (rdr,exts) -> (rdr,readerOpts{PDC.readerExtensions = exts <> PDC.readerExtensions readerOpts })
-    uncurry (convertBlock currentReader exts target) converted
+    let converted = convertElement rtc (mathOption timInput) (mathPreamble timInput) cel
+    result <- PDC.runIO (PDC.getReader (getInputFormat timInput cel))
+    (currentReader, extss) <- PDC.handleError result
+    let opts = readerOpts{PDC.readerExtensions = extss <> PDC.readerExtensions readerOpts }
+    uncurry (convertBlock currentReader opts target) converted
 
 modifyJSON :: OutputFormat -> (PDC.Block -> IO PDC.Block) -> Text -> IO Value
 modifyJSON target pass str = String . stripP . LT.toStrict <$> convertBlock defaultReader readerOpts target pass str
@@ -200,7 +200,7 @@ jsonEditing target pass (String str)
 jsonEditing _ _ x = pure x
 
 convertAsciiMath (PDC.Math a s) =
-  pure $ either (const (PDC.Math a s)) (PDC.Math a) (AsciiMath.compile s)
+  pure $ either (const (PDC.Math a s)) (PDC.Math a) (fmap T.pack $ AsciiMath.compile $ T.unpack s)
 convertAsciiMath x = pure x
 
 mkErr :: String -> String -> Value

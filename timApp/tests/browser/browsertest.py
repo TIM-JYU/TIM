@@ -40,12 +40,14 @@ def ignore_timeout(func):
 
 
 options = webdriver.ChromeOptions()
-options.set_headless()
+options.headless = True
 options.add_argument('--window-size=1024x768')
 
 global_drv = webdriver.Remote(command_executor='http://chrome:4444/wd/hub',
                               desired_capabilities=options.to_capabilities())
 global_drv.implicitly_wait(10)
+global_drv.set_page_load_timeout(20)
+global_drv.set_script_timeout(20)
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
@@ -103,6 +105,20 @@ class BrowserTest(TimLiveServer, TimRouteTest):
                 'path': '/',
                 'secure': False,
                 'value': 'eyJfcGVybWFuZW50Ijp0cnVlLCJhbmNob3IiOiIiLCJjYW1lX2Zyb20iOiIvIiwidXNlcl9pZCI6Mn0.DowETw.cyvyDZcvHWr2aKC5agfIW5sUVrU',
+            })
+
+    def login_browser_quick_test2(self):
+        """Logs testuser 2 in quickly by directly adding the session cookie to the browser."""
+        self.goto("/empty")
+        self.drv.delete_all_cookies()
+        self.drv.add_cookie(
+            {
+                'expiry': 7648167488,
+                'httpOnly': True,
+                'name': 'session',
+                'path': '/',
+                'secure': False,
+                'value': '.eJwVy0EOhCAMQNG7dG0yahGFy5BaS2ZigEnFlfHu4vL95F8Q_qKJsuQKvuopHVDmb1HwAB0wJQlRS2r8vD40hlp2yS2YwTGamceerWXkaR0nIiTroiFaNtsPy-oitu88RMNvA4_3A1Q0I10.X2nYwA.BJgc6wYpvsB9yFWybREPHUKbCeU',
             })
 
     def login_browser_test1(self):

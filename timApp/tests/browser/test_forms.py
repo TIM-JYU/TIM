@@ -31,7 +31,7 @@ class FormTest(BrowserTest):
             val = ele.get_attribute('value')
             self.assertEqual(ans, val)
         try:
-            self.login_browser_test1()
+            self.login_browser_quick_test1()
             self.login_test1()
             d = self.create_doc(initial_par="""
 #- {#a plugin=textfield}
@@ -51,12 +51,12 @@ useCurrentUser: true
             self.test_user_2.grant_access(d, AccessType.teacher)
             db.session.commit()
 
-            self.login_browser_test2()
+            self.login_browser_quick_test2()
             self.goto_document(d)
             wait_fields_loaded()
             send_inputs('[tu2view]')
 
-            self.login_browser_test1()
+            self.login_browser_quick_test1()
             self.goto_document(d, 'teacher')
             wait_fields_loaded()
             check_field_content('a', '[tu1view]')
@@ -74,12 +74,12 @@ useCurrentUser: true
 
             send_inputs('[tu1teacher_to_tu2]')
 
-            self.login_browser_test2()
+            self.login_browser_quick_test2()
             self.goto_document(d)
             wait_fields_loaded()
             check_field_content('a', '[tu2view]')
             check_field_content('GLO_b', '[tu1view][tu2view][tu1teacher_to_tu2]')
             check_field_content('c', '[tu2view][tu1teacher_to_tu2]')
-        except Exception as e:
+        except Exception:
             self.save_screenshot("form_failure")
-            raise e
+            raise

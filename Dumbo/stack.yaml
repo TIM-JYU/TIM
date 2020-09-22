@@ -1,12 +1,17 @@
-flags: {}
+# flags: {}
 packages:
 - '.'
 - './AsciiMath'
-extra-deps: 
-- html-entities-1.1.4.2
-- HaTeX-3.20.0.0@sha256:734e4a017c1c18c332a67be7139b1099a805ddbeeaae11fade723076e4077805
-- wl-pprint-extras-3.5.0.5@sha256:fcccabbab059e15ad3816998dc1f1f750afb480164bd116b147cc8a35a5da0b8
-- containers-0.5.11.0@sha256:28ad7337057442f75bc689315ab4ec7bdf5e6b2c39668f306672cecd82c02798
-- pandoc-2.7.1
-- ipynb-0.1@sha256:5b5240a9793781da557f82891d49cea63d71c8c5d3500fa3eac9fd702046b520
-resolver: lts-13.15
+extra-deps:
+- pandoc-2.10.1@sha256:23d7ec480c7cb86740475a419d6ca4819987b6dd23bbae9b50bc3d42a7ed2f9f,36933
+- commonmark-0.1.0.2@sha256:fbff7a2ade0ce7d699964a87f765e503a3a9e22542c05f0f02ba7aad64e38af4,3278
+- commonmark-extensions-0.2.0.1@sha256:647aa8dba5fd46984ddedc15c3693c9c4d9655503d42006576bd8f0dadf8cd39,3176
+- commonmark-pandoc-0.2.0.0@sha256:84a9f6846d4fe33e9f0dcd938ef1c83162fb4fe81cca66315249e86414aac226,1167
+- hslua-1.1.2@sha256:6c231b2af447430d1ed04f065d40bb6882ece93cc7f32f4051dc99deb69beeae,9694
+- jira-wiki-markup-1.3.2@sha256:b5f0901208a0ee07aff60f5356aeb851b7aa7950c75a18a15fd34247a35886d8,3819
+- pandoc-types-1.21@sha256:b61ed625da4d1a0d8057fcca4c0c5e174c9f45d94b41504db1532f3fc581e945,4037
+- regex-posix-clib-2.7
+flags:
+   regex-posix:
+      _regex-posix-clib: true
+resolver: lts-16.15

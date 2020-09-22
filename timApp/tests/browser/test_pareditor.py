@@ -42,7 +42,10 @@ class ParEditorTest(BrowserTest):
         preview = self.find_element_avoid_staleness('.previewcontent', parent=pareditor)
         self.wait_for_preview_to_finish()
         ActionChains(self.drv).move_to_element(preview).perform()  # avoids having mouse above a toolbar button
-        self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
+        self.assert_same_screenshot(pareditor, [
+            'pareditor/ace_hello_world',
+            'pareditor/ace_hello_world_2',
+        ])
         change_editor_button = get_change_editor_button(pareditor)
         change_editor_button.click()
         self.wait_for_editor_load()
@@ -57,7 +60,10 @@ class ParEditorTest(BrowserTest):
         ActionChains(self.drv).send_keys(Keys.PAGE_DOWN, Keys.BACKSPACE).perform()
         self.wait_for_preview_to_finish()
         ActionChains(self.drv).move_to_element(preview).perform()
-        self.assert_same_screenshot(pareditor, 'pareditor/ace_hello_world')
+        self.assert_same_screenshot(pareditor, [
+            'pareditor/ace_hello_world',
+            'pareditor/ace_hello_world_2',
+        ])
 
     def wait_for_editor_load(self):
         self.wait_until_hidden('.editor-loading')
