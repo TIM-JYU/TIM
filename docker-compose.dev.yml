@@ -109,7 +109,7 @@ services:
   ports:
    - "49996:22"
  chrome:
-  image: selenium/standalone-chrome:3.141.59-zirconium
+  image: selenium/standalone-chrome:4.0.0-alpha-7-prerelease-20200921
   tmpfs:
    - /home/seluser
    - /run/supervisor
