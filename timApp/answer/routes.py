@@ -337,6 +337,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     confirmText: Union[str, Missing] = missing
     timeout: Union[int, Missing] = missing
     updateFields: Union[List[str], Missing] = missing
+    nextRunner: Union[str, Missing] = missing
     timeZoneDiff: Union[int, Missing] = missing
 
     @validates_schema(skip_on_field_errors=True)

@@ -34,6 +34,7 @@ export const JsrunnerMarkup = t.intersection([
         open: t.boolean,
         showInView: t.boolean,
         confirmText: t.string,
+        nextRunner: t.string,
         timeZoneDiff: t.number,
     }),
     GenericPluginMarkup,

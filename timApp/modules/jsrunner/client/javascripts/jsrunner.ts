@@ -165,6 +165,11 @@ class JsrunnerController
                         );
                     }
                 }
+
+                if (this.attrs.nextRunner) {
+                    this.vctrl.runJsRunner(this.attrs.nextRunner, []);
+                }
+
                 // temp code:
                 const tempd = data.web;
                 if (!tempd.outdata) {
