@@ -1507,7 +1507,7 @@ export class TableFormComponent
             return "";
         }
         if (s.startsWith("*")) {
-            return s.substr(1);
+            return s.substr(1).replace("!", "");
         }
         return s;
     }
@@ -1526,14 +1526,17 @@ export class TableFormComponent
         if (timTable == null) {
             return;
         }
-        runner = this.runnerName(runner.split("=")[0]);
+        const runnerName = this.runnerName(runner.split("=")[0]);
         if (this.viewctrl) {
             const selUsers = timTable.getCheckedRows(0, true);
             const users = TableFormComponent.makeUserArray(
                 selUsers,
                 userNameColIndex
             );
-            this.viewctrl.runJsRunner(runner, users);
+            this.viewctrl.runJsRunner(runnerName, users);
+        }
+        if (runner.includes("!")) {
+            this.forceUpdateTable();
         }
     }
 
