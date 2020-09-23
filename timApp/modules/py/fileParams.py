@@ -286,7 +286,9 @@ def get_url_lines(url: str):
 
     check_url_scheme(url)
     try:
-        req = urlopen(url)
+        chrome_req = urllib.request.Request(url, headers={"User-Agent": "Chrome"})
+        req = urllib.request.urlopen(chrome_req)
+
         # ftype = req.headers['content-type']
         lines = req.readlines()
     except:
