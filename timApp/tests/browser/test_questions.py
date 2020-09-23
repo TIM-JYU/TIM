@@ -212,7 +212,11 @@ class QuestionTest(BrowserTest):
             point_elem.send_keys(point)
         for header, elem in zip(headers, header_elems):
             elem.clear()
-            elem.send_keys(header)
+            # For some reason, sending the keys in one batch causes the screenshot test (a few lines below) to fail
+            # frequently in CI because the last 1-2 letters are missing, so we send the keys one by one which seems
+            # to work more reliably.
+            for k in header:
+                elem.send_keys(k)
         matrix = self.drv.find_element_by_css_selector('tim-question-matrix')
         answersheet = self.drv.find_element_by_css_selector('dynamic-answer-sheet')
         questiontext.click()  # move focus out of matrix to get consistent screenshots
