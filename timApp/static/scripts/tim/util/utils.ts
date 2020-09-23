@@ -830,3 +830,7 @@ export function secondsToShortTime(
     }
     return `${prefix}${secondsToHHMMSS(time)}`;
 }
+
+export function timeout(ms?: number) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+}

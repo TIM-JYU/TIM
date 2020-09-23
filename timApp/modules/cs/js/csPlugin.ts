@@ -36,9 +36,12 @@ import {
     to,
     valueDefu,
     valueOr,
+    timeout,
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import deepEqual from "deep-equal";
+import {SimcirConnectorDef, SimcirDeviceInstance} from "../simcir/simcir-all";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {Mode, EditorComponent, EditorFile} from "./editor/editor";
@@ -81,6 +84,11 @@ interface IPwd {
 type IPwdWithoutSetPWD = Pick<IPwd, "savestate" | "path" | "attrs"> & {
     setPWD?(s: string): void;
 };
+
+interface ICsSimcirData {
+    devices: SimcirDeviceInstance[];
+    connectors: SimcirConnectorDef[];
+}
 
 class CWPD {
     pwdHolders: IPwd[] = [];
@@ -923,7 +931,12 @@ export class CsController extends CsBase implements ITimComponent {
     taunoCopy?: TimDefer<string>;
     iframedefer?: TimDefer<IFrameLoad>;
     iframemessageHandler?: (e: MessageEvent) => void;
-    savedvals?: {args: string; input: string; code: string[]};
+    savedvals?: {
+        usercode: string;
+        args: string;
+        input: string;
+        files: string[];
+    };
     preventSave: boolean = false;
     hide: {wrap?: boolean; changed?: boolean} = {};
     savedText: string = "";
@@ -936,6 +949,7 @@ export class CsController extends CsBase implements ITimComponent {
     upload?: boolean;
     uploadByCodeFiles: {path: string; show: boolean | "loaded"}[] = [];
     @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
+    private isSimcirUnsaved?: boolean;
 
     @ViewChild("externalEditor")
     set externalEditorViewSetter(new_value: EditorComponent | undefined) {
@@ -1043,7 +1057,7 @@ export class CsController extends CsBase implements ITimComponent {
             this.editor.setFiles(files.toArray());
 
             if (this.savedvals) {
-                this.savedvals.code = files.toArray().map((f) => f.content);
+                this.savedvals.files = files.toArray().map((f) => f.content);
             }
         } else {
             let usercode: string = this.attrsall.usercode ?? "";
@@ -1061,7 +1075,7 @@ export class CsController extends CsBase implements ITimComponent {
             this.editor.languageMode = this.mode;
 
             if (this.savedvals) {
-                this.savedvals.code = [this.usercode];
+                this.savedvals.usercode = this.usercode;
             }
         }
         this.editor.placeholder = this.placeholder;
@@ -1259,24 +1273,36 @@ export class CsController extends CsBase implements ITimComponent {
         return this.edited;
     }
 
+    log(s: string) {
+        console.log(
+            `csPlugin ${
+                this.getTaskId()?.docTask().toString() ?? "(no taskId)"
+            }, edited: ${this.edited.toString()}, editor: ${
+                this.editor ? "true" : "false"
+            }, ${s}`
+        );
+    }
+
     hasUnSavedInput(): boolean {
         if (this.savedvals == null) {
             return false;
         }
         if (this.editor) {
             const allFiles = this.editor.allFiles;
-            if (allFiles.length != this.savedvals.code.length) {
+            if (allFiles.length != this.savedvals.files.length) {
                 return true;
             }
             for (let i = 0; i < allFiles.length; ++i) {
-                if (allFiles[i].content != this.savedvals.code[i]) {
+                if (allFiles[i].content != this.savedvals.files[i]) {
                     return true;
                 }
             }
         }
         return (
             (this.savedvals.args !== this.userargs ||
-                this.savedvals.input !== this.userinput) &&
+                this.savedvals.input !== this.userinput ||
+                this.savedvals.usercode !== this.usercode ||
+                this.isSimcirUnsaved === true) &&
             this.pluginMeta.getTaskId() !== undefined &&
             !this.nosave
         );
@@ -1286,7 +1312,7 @@ export class CsController extends CsBase implements ITimComponent {
      * Checks whether usercode/args/input differ from previously saved values
      */
     textChanged(): void {
-        this.runError = "";
+        this.runError = undefined;
         const nowUnsaved = this.hasUnSavedInput();
         if (!this.edited && nowUnsaved) {
             this.edited = true;
@@ -1320,11 +1346,13 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     resetChanges(): void {
-        this.usercode =
-            this.savedvals?.code[this.editor?.editorIndex ?? 0] ?? "";
-        this.userargs = this.savedvals ? this.savedvals.args : "";
-        this.userinput = this.savedvals ? this.savedvals.input : "";
+        this.usercode = this.savedvals?.usercode ?? "";
+        this.userargs = this.savedvals?.args ?? "";
+        this.userinput = this.savedvals?.input ?? "";
         this.edited = false;
+        if (this.isSimcir) {
+            this.setCircuitData();
+        }
         this.updateListeners(ChangeType.Saved);
     }
 
@@ -1845,6 +1873,9 @@ ${fhtml}
             });
         }
 
+        if (!this.usercode) {
+            this.usercode = this.attrsall.usercode ?? this.byCode ?? "";
+        }
         this.initSaved();
         this.vctrl.addTimComponent(this);
         // if (this.isText) {
@@ -1852,10 +1883,6 @@ ${fhtml}
         // }
     }
     async ngAfterViewInit() {
-        if (!this.usercode) {
-            this.usercode = this.attrsall.usercode ?? this.byCode ?? "";
-        }
-
         this.preview = this.element.find(".csrunPreview");
         const styleArgs = this.markup["style-args"];
         if (styleArgs) {
@@ -1898,16 +1925,14 @@ ${fhtml}
 
     initSaved() {
         this.savedvals = {
-            code: this.editor?.files.map((f) => f.content ?? f.base) ?? [""],
+            files: this.editor?.files.map((f) => f.content) ?? [""],
             args: this.userargs,
             input: this.userinput,
+            usercode: this.usercode,
         };
         this.edited = false;
+        this.isSimcirUnsaved = false;
         this.updateListeners(ChangeType.Saved);
-    }
-
-    isChanged(): boolean {
-        return this.isUnSaved();
     }
 
     onContentChange(str: string) {
@@ -1918,7 +1943,7 @@ ${fhtml}
         }
         this.copyingFromTauno = false;
         if (this.viewCode) {
-            this.pushShowCodeNow();
+            this.showCodeNow();
         }
         this.countBoard?.count(str);
         if (this.isText) {
@@ -1992,9 +2017,7 @@ ${fhtml}
             return;
         }
 
-        await new Promise((resolve) => {
-            setTimeout(resolve);
-        });
+        await timeout();
         await ParCompiler.processMathJaxAsciiMath(this.element[0]);
     }
 
@@ -2096,7 +2119,7 @@ ${fhtml}
         }
 
         if (this.simcir) {
-            this.usercode = await this.getCircuitData(this.simcir);
+            this.usercode = await this.getSimcirDataString(this.simcir);
         } else if (this.taunoFrame && (!this.muokattu || !this.usercode)) {
             await this.copyTauno();
         }
@@ -2442,37 +2465,18 @@ ${fhtml}
         simcir.setupSimcir(this.simcir, data);
     }
 
-    async getCircuitData(simcirElem: JQuery) {
+    async getSimcirData(simcirElem: JQuery): Promise<ICsSimcirData> {
         const simcir = await loadSimcir();
         const d = simcir.controller(simcirElem.find(".simcir-workspace"));
         const data = d.data();
+        return {
+            devices: data.devices as SimcirDeviceInstance[],
+            connectors: data.connectors as SimcirConnectorDef[],
+        };
+    }
 
-        let buf = "";
-        const print = (s: string) => {
-            buf += s;
-        };
-        const println = (s: string) => {
-            print(s);
-            buf += "\r\n";
-        };
-        const printArray = (array: unknown[]) => {
-            $.each(array, (i, item) => {
-                println(
-                    "    " +
-                        JSON.stringify(item) +
-                        (i + 1 < array.length ? "," : "")
-                );
-            });
-        };
-        println("{");
-        println('  "devices":[');
-        printArray(data.devices);
-        println("  ],");
-        println('  "connectors":[');
-        printArray(data.connectors);
-        println("  ]");
-        print("}");
-        return buf;
+    async getSimcirDataString(simcirElem: JQuery) {
+        return JSON.stringify(await this.getSimcirData(simcirElem));
     }
 
     copyToSimcir() {
@@ -2481,7 +2485,11 @@ ${fhtml}
 
     async copyFromSimcir() {
         if (this.simcir) {
-            this.usercode = await this.getCircuitData(this.simcir);
+            this.usercode = JSON.stringify(
+                await this.getSimcirData(this.simcir),
+                undefined,
+                4
+            );
         }
     }
 
@@ -2492,8 +2500,23 @@ ${fhtml}
         const div = document.createElement("div");
         div.id = v.vid;
         this.simcirElem.appendChild(div);
-        this.simcir = $(this.simcirElem).children().first();
+        const scr = $(this.simcirElem).children().first();
+        this.simcir = scr;
         await this.setCircuitData();
+        scr.find(".simcir-workspace").on("mouseup", async () => {
+            // Simcir's own mouseup hasn't happened yet - timeout hack is for that.
+            await timeout();
+
+            const saved = JSON.parse(this.usercode) as ICsSimcirData;
+            const current = await this.getSimcirData(scr);
+
+            // Ignore device states when checking whether simcir is unsaved.
+            current.devices.forEach((d) => delete d.state);
+            saved.devices.forEach((d) => delete d.state);
+
+            this.isSimcirUnsaved = !deepEqual(saved, current);
+            this.anyChanged();
+        });
         return true;
     }
 
@@ -2535,7 +2558,7 @@ ${fhtml}
         return this.taunoFrame != undefined;
     }
 
-    initCode() {
+    async initCode() {
         this.muokattu = false;
         this.imgURL = "";
         this.runSuccess = false;
@@ -2548,10 +2571,10 @@ ${fhtml}
             this.usercode = this.byCode;
         }
         if (this.isSage) {
-            this.initSage(false);
+            await this.initSage(false);
         }
         if (this.simcir) {
-            this.setCircuitData();
+            await this.setCircuitData();
         }
         this.initSaved();
     }
@@ -2635,13 +2658,6 @@ ${fhtml}
             },
             languages: languages, // sagecell.allLanguages
         });
-    }
-
-    pushShowCodeNow() {
-        if (!this.viewCode) {
-            return;
-        }
-        this.showCodeNow();
     }
 
     get showCodeLink() {

@@ -371,9 +371,7 @@ export class EditorComponent implements IMultiEditor {
     }
 
     get allFiles(): IEditorFile[] {
-        const out = this.files.map(
-            (f) => ({path: f.path, content: f.content ?? f.base} as IEditorFile)
-        );
+        const out = this.files.map((f) => ({path: f.path, content: f.content}));
         if (out) {
             out[this.fileIndex].content = this.content;
         }
@@ -593,7 +591,7 @@ export class EditorComponent implements IMultiEditor {
         content?: string
     ): void;
     addFile(
-        fileorpath: unknown,
+        fileorpath: EditorFile | string,
         base?: string,
         languageMode?: string,
         content?: string
@@ -602,7 +600,7 @@ export class EditorComponent implements IMultiEditor {
         if (fileorpath instanceof EditorFile) {
             file = fileorpath;
         } else {
-            file = new EditorFile(fileorpath as string);
+            file = new EditorFile(fileorpath);
             if (base) {
                 file.base = base;
             }

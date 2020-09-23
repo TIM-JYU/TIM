@@ -368,6 +368,7 @@ export class MultisaveController
         if (!this.attrs.listener) {
             return;
         }
+        this.scope.$evalAsync();
         const docTask = taskId.docTask().toString();
         if (state == ChangeType.Saved) {
             if (this.unsavedTimComps.delete(docTask)) {

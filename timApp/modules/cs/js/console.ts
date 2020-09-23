@@ -3,6 +3,7 @@ import {Component, ChangeDetectorRef, ElementRef} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
+import {timeout} from "tim/util/utils";
 import {CsBase, Example, ConsolePWD, languageTypes} from "./csPlugin";
 
 function trackByIndex(index: number, o: unknown) {
@@ -201,9 +202,7 @@ export class CsConsoleComponent extends CsBase implements IController {
         });
         this.currentInput = "";
         this.cursor = this.history.length;
-        await new Promise((resolve) => {
-            setTimeout(resolve);
-        });
+        await timeout();
         const el = this.getRootElement().querySelector(".console-output");
         if (el) {
             el.scrollTop = el.scrollHeight;

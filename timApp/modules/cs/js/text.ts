@@ -16,10 +16,11 @@ import {CsController} from "./csPlugin";
                 *ngIf="!noeditor || viewCode"
                 [size]="cols"
                 [(ngModel)]="usercode"
-                [attr.placeholder]="placeholder"
+                [placeholder]="placeholder"
+                (ngModelChange)="onContentChange($event)"
                 (keypress)="runCodeIfCR($event)"/>
             <button *ngIf="isRun"
-                    [attr.disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved())"
+                    [disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved())"
                     class = "timButton"
                     title="(Ctrl-S)"
                     (click)="runCode();"

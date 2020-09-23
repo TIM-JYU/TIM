@@ -68,6 +68,7 @@ interface SimcirDeviceInstance extends SimcirDeviceDef {
     id: string;
     x: number;
     y: number;
+    state?: unknown;
 }
 
 interface SimcirDocument {
