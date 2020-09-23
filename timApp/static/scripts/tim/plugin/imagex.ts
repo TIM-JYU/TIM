@@ -1723,7 +1723,7 @@ interface IAnswerResponse {
         </div>
     `,
 })
-class ImageXComponent
+export class ImageXComponent
     extends AngularPluginBase<
         t.TypeOf<typeof ImageXMarkup>,
         t.TypeOf<typeof ImageXAll>,

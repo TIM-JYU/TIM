@@ -32,9 +32,15 @@ import {genericglobals} from "tim/util/globals";
                                 </p>
                             </div>
                             <div class="col-xs-6 text-right">
-                                <a *ngIf="!hide.links" href="/view/tim/Rekisteriseloste" i18n>
-                                    Privacy policy
-                                </a>
+                                <ng-container *ngIf="!hide.links">
+                                    <a href="/view/tim/Rekisteriseloste" i18n>
+                                        Privacy policy
+                                    </a>
+                                    <br>
+                                    <a href="/view/tim/saavutettavuusseloste" i18n>
+                                        Accessibility statement
+                                    </a>
+                                </ng-container>
                             </div>
                         </div>
                     </div>
