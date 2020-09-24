@@ -96,6 +96,7 @@ let nextId = 0;
                     <div>
                         <p *ngIf="!progress && loadInfo.length == 0 && error.length == 0">{{stem}}</p>
                         <ng-container *ngIf="progress">
+                            <tim-loading></tim-loading>
                             <p *ngIf="numFiles > 1">File {{numUploaded+1}} / {{numFiles}}</p>
                             <p>{{progress}}</p>
                         </ng-container>
@@ -213,9 +214,17 @@ export class FileSelectComponent {
                                               (event.loaded / event.total) * 100
                                           )
                                         : "?";
-                                    this.progress = `Uploading... ${sizeString(
-                                        event.loaded
-                                    )} / ${total} (${percentage} %)`;
+                                    if (percentage === 100) {
+                                        // If a large PDF is uploaded, its compression will take some time and so
+                                        // the progress can sit at 100% for some time, so it's better to show a custom
+                                        // message for that.
+                                        this.progress =
+                                            "Post-processing; this may take a while; please wait...";
+                                    } else {
+                                        this.progress = `Uploading... ${sizeString(
+                                            event.loaded
+                                        )} / ${total} (${percentage} %)`;
+                                    }
                                     break;
                                 case HttpEventType.Response:
                                     this.numUploaded++;

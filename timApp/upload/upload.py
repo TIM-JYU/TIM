@@ -9,6 +9,8 @@ from urllib.parse import unquote, urlparse
 
 import magic
 from dataclasses import dataclass
+
+import subprocess
 from flask import Blueprint, request, send_file, Response
 from flask import abort
 from werkzeug.utils import secure_filename
@@ -154,6 +156,55 @@ def pluginupload_file2(doc_id: int, task_id: str, user_id):
     return pluginupload_file(doc_id, task_id)
 
 
+def is_pdf_producer_ghostscript(f: UploadedFile):
+    r = subprocess.run(
+        [
+            'pdftk',
+            f.filesystem_path,
+            'dump_data_utf8',
+        ],
+        capture_output=True,
+    )
+    stdout = r.stdout.decode()
+
+    # If the producer is Ghostscript, InfoValue contains also Ghostscript version, but let's not hardcode it here.
+    result = '\nInfoBegin\nInfoKey: Producer\nInfoValue: GPL Ghostscript ' in stdout
+    return result
+
+
+def compress_pdf(f: UploadedFile):
+
+    # If the PDF producer is Ghostscript, let's assume this PDF has already been compressed.
+    # It's unlikely that any end user uses it.
+    if is_pdf_producer_ghostscript(f):
+        return
+
+    p = f.filesystem_path
+    orig = p.rename(p.with_name(p.stem + '_original.pdf'))
+    subprocess.run([
+        'gs',
+        '-q',
+        '-dNOPAUSE',
+        '-dBATCH',
+        '-dSAFER',
+        '-dSimulateOverprint=true',
+        '-sDEVICE=pdfwrite',
+        '-dPDFSETTINGS=/ebook',
+        '-dEmbedAllFonts=true',
+        '-dSubsetFonts=true',
+        '-dAutoRotatePages=/None',
+        '-dColorImageDownsampleType=/Bicubic',
+        '-dColorImageResolution=150',
+        '-dGrayImageDownsampleType=/Bicubic',
+        '-dGrayImageResolution=150',
+        '-dMonoImageDownsampleType=/Bicubic',
+        '-dMonoImageResolution=150',
+        f'-sOutputFile={p}',
+        orig,
+    ])
+    orig.unlink()
+
+
 @upload.route('/pluginUpload/<int:doc_id>/<task_id>/', methods=['POST'])
 def pluginupload_file(doc_id: int, task_id: str):
     d = get_doc_or_abort(doc_id)
@@ -179,6 +230,8 @@ def pluginupload_file(doc_id: int, task_id: str):
     f.block.set_owner(u.get_personal_group())
     grant_access_to_session_users(f)
     mt = get_mimetype(f.filesystem_path.as_posix())
+    if mt == 'application/pdf':
+        compress_pdf(f)
     db.session.commit()
     return json_response(
         {
