@@ -242,7 +242,7 @@ function getHomeOrgDisplay(s: string): string {
             </span>
             <span *ngIf="finishStatus" i18n>
                 Now you can
-                <a href="." focusMe>refresh</a>
+                <a href="" focusMe>refresh</a>
                 the page to log in.
             </span>
         </div>
