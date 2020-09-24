@@ -9,13 +9,18 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from timApp.admin.datetimetype import DateTimeType
+from timApp.admin.timitemtype import TimDocumentType, TimItemType
 from timApp.answer.answer import Answer, AnswerSaver
-from timApp.answer.answer_models import UserAnswer
-from timApp.document.docentry import DocEntry
+from timApp.answer.answer_models import UserAnswer, AnswerUpload
 from timApp.document.docinfo import DocInfo
+from timApp.folder.folder import Folder
+from timApp.item.block import Block
+from timApp.item.item import Item
 from timApp.timdb.sqa import db
+from timApp.upload.uploadedfile import PluginUpload
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.util.pdftools import is_pdf_producer_ghostscript, compress_pdf
 from timApp.velp.annotation_model import Annotation
 from timApp.velp.velp_models import AnnotationComment
 
@@ -48,11 +53,10 @@ def fix_double_c(dry_run: bool) -> None:
 
 
 @answer_cli.command()
-@click.argument('doc')
+@click.argument('doc', type=TimDocumentType())
 @click.option('--dry-run/--no-dry-run', default=True)
-def clear_all(doc: str, dry_run: bool) -> None:
-    d = get_doc_or_quit(doc)
-    ids = Answer.query.filter(Answer.task_id.startswith(f'{d.id}.')).with_entities(Answer.id)
+def clear_all(doc: DocInfo, dry_run: bool) -> None:
+    ids = Answer.query.filter(Answer.task_id.startswith(f'{doc.id}.')).with_entities(Answer.id)
     cnt = ids.count()
     UserAnswer.query.filter(UserAnswer.answer_id.in_(ids)).delete(synchronize_session=False)
     AnswerSaver.query.filter(AnswerSaver.answer_id.in_(ids)).delete(synchronize_session=False)
@@ -65,16 +69,15 @@ def clear_all(doc: str, dry_run: bool) -> None:
 
 
 @answer_cli.command()
-@click.argument('doc')
+@click.argument('doc', type=TimDocumentType())
 @click.option('--deadline', type=DateTimeType(), required=True)
 @click.option('--group', required=True)
 @click.option('--dry-run/--no-dry-run', default=True)
 @click.option('--may-invalidate/--no-may-invalidate', default=False)
-def revalidate(doc: str, deadline: datetime, group: str, dry_run: bool, may_invalidate: bool) -> None:
-    d = get_doc_or_quit(doc)
+def revalidate(doc: DocInfo, deadline: datetime, group: str, dry_run: bool, may_invalidate: bool) -> None:
     answers: List[Tuple[Answer, str]] = (
         Answer.query
-            .filter(Answer.task_id.startswith(f'{d.id}.'))
+            .filter(Answer.task_id.startswith(f'{doc.id}.'))
             .join(User, Answer.users)
             .join(UserGroup, User.groups)
             .filter(UserGroup.name == group)
@@ -106,25 +109,16 @@ def commit_if_not_dry(dry_run: bool) -> None:
         click.echo('Dry run enabled, nothing changed.')
 
 
-def get_doc_or_quit(doc: str) -> DocInfo:
-    d = DocEntry.find_by_path(doc)
-    if not d:
-        click.echo(f'cannot find document "{doc}"', err=True)
-        sys.exit(1)
-    return d
-
-
 @answer_cli.command()
-@click.argument('doc')
+@click.argument('doc', type=TimDocumentType())
 @click.option('--limit', required=True, type=int)
 @click.option('--to', required=True, type=int)
 @click.option('--dry-run/--no-dry-run', default=True)
-def truncate_large(doc: str, limit: int, to: int, dry_run: bool) -> None:
+def truncate_large(doc: DocInfo, limit: int, to: int, dry_run: bool) -> None:
     if limit < to:
         click.echo('limit must be >= to')
         sys.exit(1)
-    d = get_doc_or_quit(doc)
-    q = Answer.query.filter(Answer.task_id.startswith(f'{d.id}.'))
+    q = Answer.query.filter(Answer.task_id.startswith(f'{doc.id}.'))
     total = q.count()
     anss: List[Answer] = (
         q
@@ -159,3 +153,38 @@ def truncate_large(doc: str, limit: int, to: int, dry_run: bool) -> None:
                     break
     print(f'Truncating {truncated} answers (out of {total}).')
     commit_if_not_dry(dry_run)
+
+
+@answer_cli.command()
+@click.argument('item', type=TimItemType())
+@click.option('--dry-run/--no-dry-run', default=True)
+def compress_uploads(item: Item, dry_run: bool):
+    if isinstance(item, Folder):
+        docs = item.get_all_documents(include_subdirs=True)
+    else:
+        docs = [item]
+    for d in docs:
+        uploads: List[Block] = (
+            Answer.query
+                .filter(Answer.task_id.startswith(f'{d.id}.'))
+                .join(AnswerUpload)
+                .join(Block)
+                .with_entities(Block)
+                .all()
+        )
+        for u in uploads:
+            path = u.description
+            if path.lower().endswith('.pdf'):
+                uf = PluginUpload(u)
+                if is_pdf_producer_ghostscript(uf):
+                    click.echo(f'Skipping already processed PDF {uf.relative_filesystem_path}')
+                else:
+                    if dry_run:
+                        click.echo(f'Would compress PDF {uf.relative_filesystem_path}')
+                        continue
+                    old_size = uf.size
+                    click.echo(f'Compressing PDF {uf.relative_filesystem_path}... ', nl=False)
+                    compress_pdf(uf)
+                    new_size = uf.size
+                    percent = round((old_size - new_size) / old_size * 100)
+                    click.echo(f'done, size: {old_size} -> {new_size} (reduced by {percent}%)')

@@ -121,6 +121,10 @@ class UploadedFile(ItemBase):
         with self.filesystem_path.open(mode='rb') as f:
             return f.read()
 
+    @property
+    def size(self):
+        return os.path.getsize(self.filesystem_path)
+
     @classmethod
     def save_new(cls, file_data: bytes, file_filename: str, block_type: BlockType,
                  upload_info: PluginUploadInfo = None) -> 'UploadedFile':

@@ -2,6 +2,7 @@
 Stamping and merging pdf files with pdftk and pdflatex.
 Visa Naukkarinen
 """
+import subprocess
 import uuid
 from os import remove
 from pathlib import Path
@@ -659,3 +660,56 @@ def stamp_pdfs(
         stamped_pdfs.append(item_stamped_path)
 
     return stamped_pdfs
+
+
+def is_pdf_producer_ghostscript(f: UploadedFile):
+    r = subprocess.run(
+        [
+            'pdftk',
+            f.filesystem_path,
+            'dump_data_utf8',
+        ],
+        capture_output=True,
+    )
+    stdout = r.stdout.decode()
+
+    # If the producer is Ghostscript, InfoValue contains also Ghostscript version, but let's not hardcode it here.
+    result = '\nInfoBegin\nInfoKey: Producer\nInfoValue: GPL Ghostscript ' in stdout
+    return result
+
+
+def compress_pdf_if_not_already(f: UploadedFile):
+
+    # If the PDF producer is Ghostscript, let's assume this PDF has already been compressed.
+    # It's unlikely that any end user uses it.
+    if is_pdf_producer_ghostscript(f):
+        return
+
+    compress_pdf(f)
+
+
+def compress_pdf(f: UploadedFile):
+    p = f.filesystem_path
+    orig = p.rename(p.with_name(p.stem + '_original.pdf'))
+    subprocess.run([
+        'gs',
+        '-q',
+        '-dNOPAUSE',
+        '-dBATCH',
+        '-dSAFER',
+        '-dSimulateOverprint=true',
+        '-sDEVICE=pdfwrite',
+        '-dPDFSETTINGS=/ebook',
+        '-dEmbedAllFonts=true',
+        '-dSubsetFonts=true',
+        '-dAutoRotatePages=/None',
+        '-dColorImageDownsampleType=/Bicubic',
+        '-dColorImageResolution=150',
+        '-dGrayImageDownsampleType=/Bicubic',
+        '-dGrayImageResolution=150',
+        '-dMonoImageDownsampleType=/Bicubic',
+        '-dMonoImageResolution=150',
+        f'-sOutputFile={p}',
+        orig,
+    ])
+    orig.unlink()
