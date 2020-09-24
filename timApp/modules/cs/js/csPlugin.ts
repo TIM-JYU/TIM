@@ -1925,9 +1925,11 @@ ${fhtml}
 
     initSaved() {
         this.savedvals = {
-            files: this.editor?.files.map((f) => f.content) ?? [""],
+            files: this.editor?.files.map((f) => f.content) ?? [this.usercode],
             args: this.userargs,
             input: this.userinput,
+
+            // NOTE: "type: text/tiny" needs this because there is no editor in that case.
             usercode: this.usercode,
         };
         this.edited = false;
