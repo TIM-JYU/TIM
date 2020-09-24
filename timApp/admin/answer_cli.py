@@ -1,7 +1,7 @@
 import json
 import sys
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Tuple, Sequence
 
 import click
 from flask.cli import AppGroup
@@ -158,11 +158,13 @@ def truncate_large(doc: DocInfo, limit: int, to: int, dry_run: bool) -> None:
 @answer_cli.command()
 @click.argument('item', type=TimItemType())
 @click.option('--dry-run/--no-dry-run', default=True)
-def compress_uploads(item: Item, dry_run: bool):
+def compress_uploads(item: Item, dry_run: bool) -> None:
     if isinstance(item, Folder):
-        docs = item.get_all_documents(include_subdirs=True)
-    else:
+        docs: Sequence[DocInfo] = item.get_all_documents(include_subdirs=True)
+    elif isinstance(item, DocInfo):
         docs = [item]
+    else:
+        raise Exception('Unknown item type')
     for d in docs:
         uploads: List[Block] = (
             Answer.query
