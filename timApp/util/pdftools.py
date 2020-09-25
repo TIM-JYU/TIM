@@ -17,7 +17,7 @@ from timApp.auth.accesshelper import verify_view_access
 from timApp.document.docparagraph import DocParagraph
 from timApp.timdb.dbaccess import get_files_path
 from timApp.upload.uploadedfile import UploadedFile
-from timApp.util.logger import log_error
+from timApp.util.logger import log_error, log_warning
 from timApp.util.utils import temp_folder_path, cache_folder_path
 
 merged_file_folder = cache_folder_path / "merged_attachments"
@@ -691,7 +691,24 @@ def compress_pdf_if_not_already(f: UploadedFile):
 def compress_pdf(f: UploadedFile):
     p = f.filesystem_path
     orig = p.rename(p.with_name(p.stem + '_original.pdf'))
-    subprocess.run([
+    stdout = run_ghostscript(orig, p)
+    if '**** Error:' in stdout:
+        log_warning(f'GS errored when converting {p}; trying with pdftops')
+        subprocess.run([
+            'pdftops',
+            orig,
+        ])
+        psfile = orig.with_suffix('.ps')
+        stdout = run_ghostscript(psfile, p)
+        if stdout:
+            log_warning(f'GS output from PS conversion: {stdout}')
+        psfile.unlink()
+
+    orig.unlink()
+
+
+def run_ghostscript(inputfile: Path, outputfile: Path) -> str:
+    result = subprocess.run([
         'gs',
         '-q',
         '-dNOPAUSE',
@@ -709,7 +726,8 @@ def compress_pdf(f: UploadedFile):
         '-dGrayImageResolution=150',
         '-dMonoImageDownsampleType=/Bicubic',
         '-dMonoImageResolution=150',
-        f'-sOutputFile={p}',
-        orig,
-    ])
-    orig.unlink()
+        f'-sOutputFile={outputfile}',
+        inputfile,
+    ], capture_output=True)
+    stdout = result.stdout.decode()
+    return stdout
