@@ -609,7 +609,9 @@ def tableform_get_fields(
         for key, content in rows[username].items():
             if type(content) is dict:
                 rows[username][key] = json.dumps(content)
-        realnames[username] = f['user'].real_name
+        rn = f['user'].real_name
+        if rn is not None:
+            realnames[username] = rn
         email = f['user'].email
         if email is not None:
             emails[username] = email
