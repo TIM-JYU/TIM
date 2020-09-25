@@ -326,6 +326,8 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
             reader = csv.reader(data, delimiter=',')
             student_id_email_map = {}
             for row in reader:
+                if len(row) < 3:
+                    return args.make_answer_error(f'Too few columns ({len(row)}) in CSV row: "{row}"')
                 studentid = row[1]
                 email = row[2]
                 student_id_email_map[studentid] = email
