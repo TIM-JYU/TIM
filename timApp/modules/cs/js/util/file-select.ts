@@ -249,7 +249,8 @@ export class FileSelectComponent {
                             }
                         },
                         (error: HttpErrorResponse) => {
-                            this.addError(`Http error: ${error.message}`);
+                            const err = error as {error: {error: string}};
+                            this.addError(err.error.error);
                             this.progress = undefined;
                         }
                     );

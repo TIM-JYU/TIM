@@ -688,17 +688,28 @@ def compress_pdf_if_not_already(f: UploadedFile):
     compress_pdf(f)
 
 
+class CompressionError(Exception):
+    pass
+
+
 def compress_pdf(f: UploadedFile):
     p = f.filesystem_path
     orig = p.rename(p.with_name(p.stem + '_original.pdf'))
     stdout = run_ghostscript(orig, p)
     if '**** Error:' in stdout:
         log_warning(f'GS errored when converting {p}; trying with pdftops')
-        subprocess.run([
-            'pdftops',
-            orig,
-        ])
+        pdftopsresult = subprocess.run(
+            [
+                'pdftops',
+                orig,
+            ],
+            capture_output=True,
+        )
         psfile = orig.with_suffix('.ps')
+        pdftops_stderr = pdftopsresult.stderr.decode()
+        if pdftops_stderr and not psfile.exists():
+            orig.rename(p)
+            raise CompressionError()
         stdout = run_ghostscript(psfile, p)
         if stdout:
             log_warning(f'GS output from PS conversion: {stdout}')

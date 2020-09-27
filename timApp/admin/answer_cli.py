@@ -20,7 +20,7 @@ from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import PluginUpload
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.pdftools import is_pdf_producer_ghostscript, compress_pdf
+from timApp.util.pdftools import is_pdf_producer_ghostscript, compress_pdf, CompressionError
 from timApp.velp.annotation_model import Annotation
 from timApp.velp.velp_models import AnnotationComment
 
@@ -196,7 +196,11 @@ def compress_uploads(item: Item, dry_run: bool) -> None:
                         click.echo(f'PDF {uf.relative_filesystem_path} content is not PDF; skipping.')
                         continue
                     click.echo(f'Compressing PDF {uf.relative_filesystem_path}... ', nl=False)
-                    compress_pdf(uf)
+                    try:
+                        compress_pdf(uf)
+                    except CompressionError:
+                        click.echo(f'Failed to compress PDF {uf.relative_filesystem_path}; it may be corrupted.')
+                        continue
                     new_size = uf.size
                     percent = round((old_size - new_size) / old_size * 100)
                     click.echo(f'done, size: {old_size} -> {new_size} (reduced by {percent}%)')

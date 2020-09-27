@@ -32,7 +32,7 @@ from timApp.upload.uploadedfile import PluginUpload, PluginUploadInfo, UploadedF
 from timApp.util.flask.requesthelper import use_model, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
-    PdfError, stamp_pdfs, create_tex_file, stamp_model_default_path, compress_pdf_if_not_already
+    PdfError, stamp_pdfs, create_tex_file, stamp_model_default_path, compress_pdf_if_not_already, CompressionError
 
 upload = Blueprint('upload',
                    __name__,
@@ -131,7 +131,13 @@ def pluginupload_file(doc_id: int, task_id: str):
     f.block.set_owner(u.get_personal_group())
     grant_access_to_session_users(f)
     if f.is_content_pdf:
-        compress_pdf_if_not_already(f)
+        try:
+            compress_pdf_if_not_already(f)
+        except CompressionError:
+            raise RouteException(
+                f'Failed to post-process {f.filesystem_path.name}. '
+                f'Please make sure the PDF is not broken.'
+            )
     db.session.commit()
     return json_response(
         {
