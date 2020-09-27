@@ -850,10 +850,14 @@ def find_java_package(s):
 
 # Etsii C# luokan nimen tiedostosta
 def find_cs_class(s):
+    # TODO: better check if class is inside namespace
     c = "Peli"
     r = re.search("public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
     if r:
         c = r.group(1)
+    r = re.search("namespace\s*([a-zA-Z0-9_]+)", s, flags=re.M)
+    if r:
+        c = r.group(1) + "." + c
 
     return c
 

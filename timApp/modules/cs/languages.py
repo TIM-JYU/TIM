@@ -78,11 +78,13 @@ class Language:
         :param sourcecodes: source code as a string or list of files ({path: str, content: str})
         """
         self.query = query
+        self.markup = {}
         self.stdin = None
         self.query = query
         self.user_id = '--'
         if query.jso:
             self.user_id = df(query.jso.get('info'), {}).get('user_id', '--')
+            self.markup = query.jso.get('markup', {})
         self.rndname = generate_filename()
         self.delete_tmp = True
         self.opt = get_param(query, "opt", "")
@@ -473,7 +475,9 @@ class Jypeli(CS, Modifier):
         if sourcecode.find(" Main(") >= 0:
             mainfile = ""
         else:
-            classname = find_cs_class(sourcecode)
+            classname = self.markup.get("classname", None)
+            if not classname:
+                classname = find_cs_class(sourcecode)
             if classname != "Peli":
                 maincode = codecs.open(mainfile, 'r', "utf-8").read()
                 maincode = re.sub("Peli", classname, maincode, flags=re.M)
