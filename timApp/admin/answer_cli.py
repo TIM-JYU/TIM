@@ -184,7 +184,13 @@ def compress_uploads(item: Item, dry_run: bool) -> None:
                     if dry_run:
                         click.echo(f'Would compress PDF {uf.relative_filesystem_path}')
                         continue
-                    old_size = uf.size
+                    try:
+                        old_size = uf.size
+                    except FileNotFoundError:
+                        click.echo(f'PDF {uf.relative_filesystem_path} not found.')
+                        continue
+                    if old_size == 0:
+                        click.echo(f'PDF {uf.relative_filesystem_path} has size 0; skipping.')
                     click.echo(f'Compressing PDF {uf.relative_filesystem_path}... ', nl=False)
                     compress_pdf(uf)
                     new_size = uf.size
