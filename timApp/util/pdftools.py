@@ -696,7 +696,11 @@ def compress_pdf(f: UploadedFile):
     p = f.filesystem_path
     orig = p.rename(p.with_name(p.stem + '_original.pdf'))
     stdout = run_ghostscript(orig, p)
-    if '**** Error:' in stdout:
+
+    # It seems Ghostscript can silently fail by leaving the output file empty,
+    # and without printing anything to stdout or stderr,
+    # so we need to check for the file size here.
+    if '**** Error:' in stdout or f.size == 0:
         log_warning(f'GS errored when converting {p}; trying with pdftops')
         pdftopsresult = subprocess.run(
             [
