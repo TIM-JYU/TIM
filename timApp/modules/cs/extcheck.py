@@ -77,9 +77,9 @@ class ExtCheck(Language):
 
     def run(self, result, sourcelines, points_rule):
         if isinstance(self.command, list):
-            self.command = [c.replace("points_rule", json.dumps(points_rule)) for c in self.command]
+            self.command = [c.replace("points_rule", json.dumps(points_rule)).replace("timeout", str(self.timeout)) for c in self.command]
         else:
-            self.command = self.command.replace("points_rule", json.dumps(points_rule))
+            self.command = self.command.replace("points_rule", json.dumps(points_rule)).replace("timeout", str(self.timeout))
 
         code, out, err, pwddir = self.runself(self.command)
         if code == -9:
