@@ -440,6 +440,15 @@ class CS(Language):
         self.sourcefilename = "/tmp/%s/%s.cs" % (self.basename, self.filename)
         self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
 
+    def get_sourcefiles(self, main=None):
+        sourcefiles = self.markup.get("sourcefiles", None)
+        if not sourcefiles:
+            sourcefiles = self.sourcefilename
+        if main:
+            sourefiles = main + " " + sourcefiles
+        return sourcefiles
+
+
     def before_save(self, s):
         mockconsole = get_param(self.query, "mockconsole", True)
         if mockconsole:
@@ -448,8 +457,11 @@ class CS(Language):
         return s
 
     def get_cmdline(self):
-        cmdline = "%s /r:System.Numerics.dll /out:%s %s /cs/jypeli/TIMconsole.cs" % (
-            self.compiler, self.exename, self.sourcefilename)
+        options = ""
+        if self.just_compile:
+            options = "/target:library"
+        cmdline = "%s /r:System.Numerics.dll /out:%s %s %s /cs/jypeli/TIMconsole.cs" % (
+            self.compiler, self.exename, options, self.get_sourcefiles())
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
@@ -471,6 +483,9 @@ class Jypeli(CS, Modifier):
 
     def get_cmdline(self):
         mainfile = "/cs/jypeli/Ohjelma.cs"
+        options = ""
+        if self.just_compile:
+            options = "/target:library"
         sourcecode = self.sourcefiles[0].content
         if sourcecode.find(" Main(") >= 0:
             mainfile = ""
@@ -491,7 +506,7 @@ class Jypeli(CS, Modifier):
         cmdline = ("%s /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
                    "/r:/cs/jypeli/Jypeli.Physics2d.dll  "
                    "/r:System.Numerics.dll /r:System.Drawing.dll %s %s") % (
-                      self.compiler, self.exename, mainfile, self.sourcefilename)
+                      self.compiler, self.exename, options, self.get_sourcefiles(mainfile))
         # /r:/cs/jypeli/Tao.Sdl.dll  /r:/cs/jypeli/OpenTK.dll
         return cmdline
 

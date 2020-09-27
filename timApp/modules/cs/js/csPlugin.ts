@@ -692,6 +692,7 @@ const CsMarkupDefaults = t.type({
     isHtml: withDefault(t.boolean, false),
     jsparsons: withDefault(t.string, "JS-Parsons"),
     justSave: withDefault(t.boolean, false),
+    justCompile: withDefault(t.boolean, false),
     lang: withDefault(t.string, "fi"),
     maxrows: withDefault(t.Integer, 100),
     maxSize: withDefault(t.number, 50),
@@ -1608,6 +1609,9 @@ ${fhtml}
             this.markup.justSave
         ) {
             return this.english ? "Save" : "Tallenna";
+        }
+        if (this.markup.justCompile) {
+            return this.english ? "Compile" : "Käännä";
         }
         return this.english ? "Run" : "Aja";
     }

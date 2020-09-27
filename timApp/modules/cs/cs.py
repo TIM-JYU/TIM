@@ -1451,6 +1451,9 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             # ########################## Compiling programs ###################################################
             log(self)
             cmdline = ""
+            if get_param(query, "justCompile", False) and "comtest" not in str(
+                    ttype):  # str(ttype) to include _comtest types
+                language.just_compile = True
 
             if is_doc:
                 # doxygen
@@ -1575,8 +1578,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             #    code, out, err, pwddir = (0, "", ("Compiled " + language.filename), "")
 
             else:  # run cmd wins all other run types
-                if get_param(query, "justCompile", False) and "comtest" not in str(ttype): # str(ttype) to include _comtest types
-                    language.just_compile = True
                 language.set_stdin(userinput)
                 runcommand = get_param(query, "cmd", "")
                 if "run" not in ttype and (runcommand or get_param(query, "cmds", "")) and not is_test:
