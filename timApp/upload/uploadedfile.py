@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 from typing import Optional, NamedTuple, Union
 
+import magic
 from werkzeug.utils import secure_filename
 
 from timApp.answer.answer_models import AnswerUpload
@@ -125,6 +126,14 @@ class UploadedFile(ItemBase):
     def size(self):
         return os.path.getsize(self.filesystem_path)
 
+    @property
+    def content_mimetype(self):
+        return get_mimetype(self.filesystem_path.as_posix())
+
+    @property
+    def is_content_pdf(self):
+        return self.content_mimetype == 'application/pdf'
+
     @classmethod
     def save_new(cls, file_data: bytes, file_filename: str, block_type: BlockType,
                  upload_info: PluginUploadInfo = None) -> 'UploadedFile':
@@ -183,3 +192,51 @@ CLASS_MAPPING = {
     BlockType.Image: UploadedFile,
     BlockType.Upload: PluginUpload,
 }
+
+WHITELIST_MIMETYPES = {
+    'application/pdf',
+    'image/gif',
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/svg+xml',
+    'text/plain',
+    'text/xml',
+    'application/octet-stream',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+    'application/vnd.ms-word.document.macroEnabled.12',
+    'application/vnd.ms-word.template.macroEnabled.12',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+    'application/vnd.ms-excel.sheet.macroEnabled.12',
+    'application/vnd.ms-excel.template.macroEnabled.12',
+    'application/vnd.ms-excel.addin.macroEnabled.12',
+    'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.openxmlformats-officedocument.presentationml.template',
+    'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+    'application/vnd.ms-powerpoint.addin.macroEnabled.12',
+    'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
+    'application/vnd.ms-powerpoint.template.macroEnabled.12',
+    'application/vnd.ms-powerpoint.slideshow.macroEnabled.12',
+    'application/vnd.ms-access',
+}
+
+
+def get_mimetype(p):
+    mime = magic.Magic(mime=True)
+    mt = mime.from_file(p)
+    if mt == 'image/svg':
+        mt += '+xml'
+    if isinstance(mt, bytes):
+        mt = mt.decode('utf-8')
+    if mt not in WHITELIST_MIMETYPES:
+        if mt.startswith('text/'):
+            mt = 'text/plain'
+        else:
+            mt = 'application/octet-stream'
+    return mt

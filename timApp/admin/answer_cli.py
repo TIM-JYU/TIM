@@ -192,6 +192,9 @@ def compress_uploads(item: Item, dry_run: bool) -> None:
                     if old_size == 0:
                         click.echo(f'PDF {uf.relative_filesystem_path} has size 0; skipping.')
                         continue
+                    if not uf.is_content_pdf:
+                        click.echo(f'PDF {uf.relative_filesystem_path} content is not PDF; skipping.')
+                        continue
                     click.echo(f'Compressing PDF {uf.relative_filesystem_path}... ', nl=False)
                     compress_pdf(uf)
                     new_size = uf.size
