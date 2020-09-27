@@ -4,6 +4,7 @@ import time
 import uuid
 from pathlib import PurePath, PureWindowsPath
 from subprocess import PIPE, Popen
+from typing import List
 
 from tim_common.fileParams import *
 
@@ -94,6 +95,24 @@ def get_user_mappings(root_dir, mounts):
         if mapping:
             user_mappings.append(mapping)
     return user_mappings
+
+
+class RunCleaner:
+    def __init__(self, p: Popen, container: str, files: List[str]):
+        self.p = p
+        self.files = files
+        self.container = container
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, traceback):
+        if self.p.returncode is None:
+            self.p.kill()
+            subprocess.run(["docker", "kill",  self.container])
+
+        for file in self.files:
+            remove(file)
 
 
 # noinspection PyBroadException
@@ -196,72 +215,59 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     errcode = 0
     errtxt = ""
-    try:
-        stdout, stderr = p.communicate(timeout=timeout)
-        # print("stdout: ", stdout[:100])
-        # print("stderr: ", stderr)
-        # print("Run2 done!")
-        try:
-            pwddir = codecs.open(cwd + '/pwd.txt', 'r', "utf-8").read()  # .encode("utf-8")
-        except:
-            pwddir = ""
-        # print("pwddir=", pwddir)
-        err = stderr.decode()
 
-        if stderr and err.find("Compile error") < 0:
-            remove(cwd + "/" + stdoutf)
-            remove(cwd + "/" + stderrf)
+    with RunCleaner(p, tmpname, [cwd + "/" + stdoutf, cwd + "/" + stderrf, cwd + "/pwd.txt"]):
+        try:
+            stdout, stderr = p.communicate(timeout=timeout)
+            # print("stdout: ", stdout[:100])
+            # print("stderr: ", stderr)
+            # print("Run2 done!")
+            try:
+                pwddir = codecs.open(cwd + '/pwd.txt', 'r', "utf-8").read()  # .encode("utf-8")
+            except:
+                pwddir = ""
+            # print("pwddir=", pwddir)
             err = stderr.decode()
-            if "File size limit" in err:
-                err = "File size limit exceeded"
-                pass
-            if "Killed" in err:
-                err = "Timeout. Too long loop?"
-                pass
-            # errcode = -3
-            # errtxt = "Run error: " + str(err) + "\n"
-            return -3, '', ("Run error: " + str(err)), pwddir
-        try:
-            try:
-                stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read()  # luetaan stdin ja err
-            except UnicodeDecodeError:
-                stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read()  # luetaan stdin ja err
-        except:
-            stdout = ""
 
-        try:
+            if stderr and err.find("Compile error") < 0:
+                err = stderr.decode()
+                if "File size limit" in err:
+                    err = "File size limit exceeded"
+                if "Killed" in err:
+                    err = "Timeout. Too long loop?"
+                # errcode = -3
+                # errtxt = "Run error: " + str(err) + "\n"
+                return -3, '', ("Run error: " + str(err)), pwddir
             try:
-                stderr = err + codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read()
-            except UnicodeDecodeError:
+                try:
+                    stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read()  # luetaan stdin ja err
+                except UnicodeDecodeError:
+                    stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read()  # luetaan stdin ja err
+            except:
+                stdout = ""
+
+            try:
                 try:
                     stderr = err + codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read()
                 except UnicodeDecodeError:
-                    stderr = err + codecs.open(cwd + "/" + stderrf, 'r', "iso-8859-15").read()
-        except:
-            stderr = err
+                    try:
+                        stderr = err + codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read()
+                    except UnicodeDecodeError:
+                        stderr = err + codecs.open(cwd + "/" + stderrf, 'r', "iso-8859-15").read()
+            except:
+                stderr = err
 
-        remove(cwd + "/" + stdoutf)
-        remove(cwd + "/" + stderrf)
-        remove(cwd + '/pwd.txt')
-        # print(stdout)
-        # print("stderr", stderr)
-    except subprocess.TimeoutExpired:
-        # p.kill()
-        remove(cwd + "/" + stdoutf)
-        remove(cwd + "/" + stderrf)
-        remove(cwd + '/pwd.txt')
-        os.system("docker rm -f " + tmpname)
-        return -9, '', '', pwddir
-    except IOError as e:
-        remove(cwd + "/" + stdoutf)
-        remove(cwd + "/" + stderrf)
-        remove(cwd + '/pwd.txt')
-        return -2, '', ("IO Error" + str(e)), pwddir
+            # print(stdout)
+            # print("stderr", stderr)
+        except subprocess.TimeoutExpired:
+            return -9, '', '', pwddir
+        except IOError as e:
+            return -2, '', ("IO Error" + str(e)), pwddir
     return errcode, stdout, errtxt + stderr, pwddir
 
 def run2_subdir(args, dir=None, cwd=None, *kargs, **kwargs):
     """run2 but inside subdirectory cwd with dir as root.
-    
+
     :param args: command and arguments
     :param dir: root directory to be included in run
     :param cwd: working directory relative to dir
@@ -270,7 +276,7 @@ def run2_subdir(args, dir=None, cwd=None, *kargs, **kwargs):
     """
     if dir is None:
         return run2(args, cwd=cwd, *kargs, **kwargs)
-    
+
     if cwd and cwd[0] == "/":
         cwd = os.path.normpath(cwd.replace(dir, "/home/agent/"))
     if isinstance(args, str):
