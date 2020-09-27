@@ -68,7 +68,7 @@ def rb_reqs() -> PluginReqs:
                         'text': 'Check/Radio/Drop',
                         'items': [
                             {
-                                'data': '#- {defaultplugin="rbfield" readonly="view" }\n',
+                                'data': '#- {defaultplugin="rbfield" }\n',
                                 'text': 'defaultplugin/rbfield',
                                 'expl': 'Attribuutit kappaleelle jossa inline pallukka-kenttä (rbfield)',
                             },

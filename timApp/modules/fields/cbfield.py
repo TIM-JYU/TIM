@@ -67,7 +67,7 @@ def cb_reqs() -> PluginReqs:
                         'text': 'Check/Radio/Drop',
                         'items': [
                             {
-                                'data': '#- {defaultplugin="cbfield" readonly="view" }\n',
+                                'data': '#- {defaultplugin="cbfield"}\n',
                                 'text': 'defaultplugin/cbfield',
                                 'expl': 'Attribuutit kappaleelle jossa inline ruksi-kenttä (cbfield)',
                             },
