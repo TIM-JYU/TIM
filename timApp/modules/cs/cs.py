@@ -1023,6 +1023,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 timeout = int(timeout)
             except:
                 timeout = 20
+        timeout = timeout+2.5 # +2.5 because we want languages to realize the timeout first
         try:
             signal.signal(signal.SIGALRM, signal_handler)
             signal.alarm(timeout)  # Ten seconds
