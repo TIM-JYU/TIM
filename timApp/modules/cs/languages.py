@@ -487,7 +487,7 @@ class Jypeli(CS, Modifier):
         if self.just_compile:
             options = "/target:library"
         sourcecode = self.sourcefiles[0].content
-        if sourcecode.find(" Main(") >= 0:
+        if sourcecode.find(" Main(") >= 0 or self.just_compile:
             mainfile = ""
         else:
             classname = self.markup.get("classname", None)
