@@ -79,9 +79,32 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
     return p.returncode, stdout.decode(), stderr.decode()
 
 
+def get_user_mappings(root_dir, mounts):
+    """
+    Return list of needed docker volume mappings to map under user directory
+    At the moment this is "static", so every new mapping need to be added
+    to know_user_mappings by admin
+    :param root_dir: what is the root dircetory to map
+    :param mounts: list of keys to mount
+    :return: docker volume mount list
+    """
+    user_mappings = []
+    # TODO: add mapping command to this list
+    know_user_mappings = {
+        "ohj1Content" : ["-v", f"{root_dir.as_posix()}/timApp/static/ohj1/Content:/home/agent/Content:ro"]
+    }
+    for mnt_name in mounts:
+        mapping = know_user_mappings.get(mnt_name)
+        if mapping:
+            user_mappings.append(mapping)
+    return user_mappings
+
+
 # noinspection PyBroadException
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
-         extra="", ulimit=None, no_x11=False, savestate="", dockercontainer=f"timimages/cs3:{CS3_TAG}", compile_commandline = ""):
+         extra="", ulimit=None, no_x11=False, savestate="",
+         dockercontainer=f"timimages/cs3:{CS3_TAG}", compile_commandline = "",
+         mounts = []):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
     run inside docker.
 
@@ -164,8 +187,11 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     path_mappings = [["-v", f"{root_dir.as_posix()}/timApp/modules/cs/{p}:/cs/{p}:ro"] for p in
                      ["rcmd.sh", "cpp", "java", "jypeli", "doxygen", "mathcheck", "fs", "data", "simcir", "MIRToolbox"]]
 
+    user_mappings = get_user_mappings(root_dir, mounts)
+
     dargs = ["docker", "run", "--name", tmpname, "--rm=true",
              *itertools.chain.from_iterable(path_mappings),
+             *itertools.chain.from_iterable(user_mappings),
              "-v", f"/tmp/{compose_proj}_uhome/{udir}/:/home/agent/",
              "-w", "/home/agent", dockercontainer, "/cs/rcmd.sh", urndname + ".sh", str(no_x11), str(savestate)]
     # dargs = ["docker", "exec", "kana",

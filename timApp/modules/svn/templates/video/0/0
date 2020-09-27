@@ -3,7 +3,7 @@ Video with big icon
 ``` {plugin="showVideo"}
 footer: "Video footer here"
 #iframe: true
-width: 400
-height: 300
+width: 800
+height: 600
 file: VIDEOURLHERE
 ```

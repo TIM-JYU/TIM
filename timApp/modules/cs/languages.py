@@ -313,6 +313,8 @@ class Language:
         if self.just_compile:
             args = []
 
+        mounts = self.query.jso.get('markup', {}).get('mounts',[])
+
         code, out, err, pwddir = run2_subdir(args,
                                     dir=self.rootpath,
                                     cwd=df(cwd, self.prgpath),
@@ -328,7 +330,9 @@ class Language:
                                     no_x11=df(no_x11, self.no_x11),
                                     savestate=df(savestate, self.savestate),
                                     dockercontainer=df(dockercontainer, self.dockercontainer),
-                                    compile_commandline=self.compile_commandline)
+                                    compile_commandline=self.compile_commandline,
+                                    mounts=mounts
+                                    )
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
         return code, out, err, pwddir

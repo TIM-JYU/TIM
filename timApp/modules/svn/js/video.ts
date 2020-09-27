@@ -14,7 +14,7 @@ const videoApp = angular.module("videoApp", ["ngSanitize"]);
 export const moduleDefs = [videoApp];
 
 function muunna(value: string | number | undefined): number | undefined {
-    if (!value) {
+    if (value === null || value === undefined) {
         return undefined;
     }
     if (typeof value == "number") {
