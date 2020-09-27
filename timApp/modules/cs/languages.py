@@ -445,7 +445,7 @@ class CS(Language):
         if not sourcefiles:
             sourcefiles = self.sourcefilename
         if main:
-            sourefiles = main + " " + sourcefiles
+            sourcefiles = main + " " + sourcefiles
         return sourcefiles
 
 
