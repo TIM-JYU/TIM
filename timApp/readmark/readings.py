@@ -72,10 +72,10 @@ def mark_read(usergroup_id: int,
 
 def mark_all_read(usergroup_id: int,
                   doc: Document):
-    existing = {r.par_id: r for r in get_readings_query(usergroup_id, doc).filter(
+    existing = {(r.par_id, r.doc_id): r for r in get_readings_query(usergroup_id, doc).filter(
         ReadParagraph.type == ReadParagraphType.click_red)}
     for par in doc:
-        e = existing.get(par.get_id())
+        e = existing.get((par.get_id(), doc.doc_id))
         if e and e.par_hash == par.get_hash():
             continue
         mark_read(usergroup_id, doc, par)

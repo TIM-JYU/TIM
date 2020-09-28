@@ -259,3 +259,23 @@ testuser2,3,0,0,0,0
         d = self.create_doc(initial_par='test')
         parid = d.document.get_paragraphs()[0].get_id()
         self.mark_as_unread(d, parid, expect_status=400)
+
+    def test_mark_all_read_par_id_conflict(self):
+        """
+        Situation:
+         * 2 documents
+         * both have 2 paragraphs with same ids
+         * one of the documents has a ref paragraph to the other
+         * make sure "mark all read" works for both
+        """
+        self.login_test1()
+        d = self.create_doc(initial_par='x')
+        d2 = self.create_doc()
+        d2.document.add_text(d.document.export_markdown())
+        par = d.document.get_paragraphs()[0]
+        d2.document.add_paragraph_obj(par.create_reference(d2.document))
+        self.assertEqual(par.get_id(), d2.document.get_paragraphs()[0].get_id())
+        self.json_put(f'/read/{d.id}')
+        self.json_put(f'/read/{d2.id}')
+        self.check_readlines(self.get_readings(d), (READ,))
+        self.check_readlines(self.get_readings(d2), (READ, READ,))
