@@ -55,6 +55,9 @@ class ImportDataMarkupModel(GenericMarkupModel):
     createMissingUsers: Union[bool, Missing] = missing
     addUsersToGroup: Union[str, Missing] = missing
 
+    # A hint for TIM where the imported data comes from. Currently "A+" is recognized.
+    importSource: Union[str, Missing] = missing
+
 
 @dataclass
 class ImportDataInputModel:
@@ -322,7 +325,7 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
 
     mu = []
     if org:
-        if isinstance(args.input.url, str) and args.input.url.startswith('https://plus.cs.aalto.fi/api/v2/courses/'):
+        if org == 'aalto.fi' and args.markup.importSource == 'A+':
             reader = csv.reader(data, delimiter=',')
             student_id_email_map = {}
             for row in reader:

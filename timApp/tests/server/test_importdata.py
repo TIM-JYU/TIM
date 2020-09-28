@@ -189,6 +189,7 @@ allowMissing: true
 useurl: true
 useurltoken: true
 joinProperty: studentID(aalto.fi)
+importSource: A+
 prefilter: |!!
 res = [];
 let nr = 0;
@@ -234,7 +235,6 @@ return res;
         UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
         123,12345X,matti.meikalainen@aalto.fi,aalto,5,200,1.0,4,700,1.0
                 """.strip(),
-                'url': 'https://plus.cs.aalto.fi/api/v2/courses/12345/aggregatedata/',
                 'createMissingUsers': True,
             },
             'You do not have permission to create users.',
@@ -249,10 +249,9 @@ return res;
 UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
 123,12345X,matti.meikalainen@aalto.fi,aalto,5,200,1.0,4,700,1.0
         """.strip(),
-                'url': 'https://plus.cs.aalto.fi/api/v2/courses/12345/aggregatedata/',
                 'createMissingUsers': True,
             },
-            {'savedNew': 9,
+            {
              'web': field_result(
                  changed=8,
                  created_users=[
@@ -272,10 +271,8 @@ UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
         UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
         123,12345X,matti.meikalainen@aalto.fi,aalto,5,200,1.0,4,700,1.0
                 """.strip(),
-                'url': 'https://plus.cs.aalto.fi/api/v2/courses/12345/aggregatedata/',
             },
             {
-                'savedNew': None,
                 'web': field_result(unchanged=8),
             }
             ,
@@ -297,7 +294,6 @@ UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
         UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
         123,12345Z,,aalto,5,200,1.0,4,700,1.0
                 """.strip(),
-                'url': 'https://plus.cs.aalto.fi/api/v2/courses/12345/aggregatedata/',
                 'createMissingUsers': True,
             },
             'Invalid email: ""'
