@@ -595,7 +595,15 @@ def post_answer(plugintype: str, task_id_ext: str):
 
     if 'savedata' in jsonresp:
         siw = answer_call_data.get("markup", {}).get("showInView", False)
-        saveresult = save_fields(jsonresp, d, allow_non_teacher=siw)
+        add_group = None
+        if plugin.type == 'importData':
+            add_group = plugin.values.get('addUsersToGroup')
+        saveresult = save_fields(
+            jsonresp,
+            d,
+            allow_non_teacher=siw,
+            add_users_to_group=add_group,
+        )
 
         # TODO: Could report the result to other plugins too.
         if plugin.type == 'importData':
@@ -984,6 +992,7 @@ def save_fields(
         jsonresp: FieldSaveRequest,
         current_doc: Optional[DocInfo] = None,
         allow_non_teacher: bool = False,
+        add_users_to_group: Optional[str] = None,
 ) -> FieldSaveResult:
     save_obj = jsonresp.get('savedata')
     ignore_missing = jsonresp.get('ignoreMissing', False)
@@ -1009,6 +1018,13 @@ def save_fields(
     tasks = set()
     doc_map: Dict[int, DocInfo] = {}
     user_map: Dict[int, User] = {u.id: u for u in User.query.filter(User.id.in_(x['user'] for x in save_obj)).all()}
+
+    # We need this separate "add_users_to_group" parameter because the plugin may have reported missing users.
+    # They are created above, so the plugin cannot report them with "groups" in jsonresp because the user IDs are not
+    # known until now.
+    if add_users_to_group:
+        handle_jsrunner_groups({'add': {add_users_to_group: [k for k in user_map.keys()]}})
+
     for item in save_obj:
         task_u = item['fields']
         for tid in task_u.keys():

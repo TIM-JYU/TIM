@@ -377,14 +377,10 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
         ]
     elif missing_users:
         return args.make_answer_error('missingUsers not implemented when joinProperty is "id"')
-    groups = None
-    if isinstance(args.markup.addUsersToGroup, str):
-        groups = {'add': {args.markup.addUsersToGroup: [u['user'] for u in rows]}}
     jsonresp: ImportDataAnswerResp = {
         'ignoreMissing': args.markup.ignoreMissing,
         'allowMissing': args.markup.allowMissing,
         'savedata': rows,
-        'groups': groups,
         'createMissingUsers': args.input.createMissingUsers,
         'missingUsers': mu,
         'web': {
