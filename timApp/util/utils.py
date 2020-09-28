@@ -319,3 +319,9 @@ cache_folder_path = Path('/cache')
 
 def is_valid_email(email: str) -> bool:
     return re.match('^[\w.-]+@([\w-]+\.)+[\w-]+$', email) is not None
+
+
+def approximate_real_name(email: str) -> str:
+    nameparts = email.split('@')[0].split('.')
+    approx_name = f'{nameparts[-1].title()} {nameparts[0].title()}'
+    return approx_name

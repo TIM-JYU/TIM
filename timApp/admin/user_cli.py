@@ -18,11 +18,12 @@ from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import move_document
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
-from timApp.user.personaluniquecode import SchacPersonalUniqueCode
+from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.user import User, UserInfo, deleted_user_suffix
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import check_password_hash
 from timApp.util.flask.requesthelper import RouteException
+from timApp.util.utils import approximate_real_name
 
 
 def create_user_info_set(u: User) -> Set[str]:
@@ -243,6 +244,31 @@ def fix_aalto_student_ids() -> None:
         )])
     db.session.commit()
     click.echo(f'Updated {len(users_to_fix)} users.')
+
+
+@user_cli.command()
+@click.option(
+    '--csvfile',
+    type=click.File(),
+    required=True,
+    help='Aalto CSV file (A+ format)',
+)
+def fix_aalto_users(csvfile: TextIOWrapper) -> None:
+    for row in csv.reader(csvfile, delimiter=','):
+        rowlen = len(row)
+        if rowlen != 43:
+            click.echo(f'Wrong column count in row: {rowlen} {row}')
+            return
+        studentid = row[1]
+        email = row[2]
+        real_name = approximate_real_name(email)
+        puc = PersonalUniqueCode.find_by_student_id(studentid, 'aalto.fi')
+        if not puc:
+            click.echo(f'StudentID {studentid} not found')
+            continue
+        u: User = puc.user
+        u.update_info(UserInfo(full_name=real_name, email=email, username=email))
+    db.session.commit()
 
 
 @user_cli.command('import')

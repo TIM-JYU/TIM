@@ -1,7 +1,6 @@
 """Answer-related routes."""
 import json
 import re
-import dateutil.tz
 
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -64,7 +63,7 @@ from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, \
     ALL_ANSWERED_WILDCARD, GetFieldsAccess
 from timApp.util.logger import log_info
-from timApp.util.utils import get_current_time
+from timApp.util.utils import get_current_time, approximate_real_name
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
 from timApp.util.utils import local_timezone
 from utils import Missing
@@ -936,8 +935,7 @@ def create_missing_users(users: List[MissingUser]) -> Tuple[List[UserFieldEntry]
         if ui.full_name is None and ui.email is not None:
             # Approximate real name with the help of email.
             # This won't be fully accurate, but we can't do better.
-            nameparts = ui.email.split('@')[0].split('.')
-            ui.full_name = f'{nameparts[-1].title()} {nameparts[0].title()}'
+            ui.full_name = approximate_real_name(ui.email)
         u = create_or_update_user(ui, update_username=False)
         created_users.append(u)
     db.session.flush()
