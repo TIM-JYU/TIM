@@ -267,7 +267,13 @@ def fix_aalto_users(csvfile: TextIOWrapper) -> None:
             click.echo(f'StudentID {studentid} not found')
             continue
         u: User = puc.user
-        u.update_info(UserInfo(full_name=real_name, email=email, username=email))
+        eu = User.get_by_email_case_insensitive(email)
+        if len(eu) == 1:
+            puc.user = eu[0]
+        elif eu:
+            raise Exception(f'Multiple users found for email: {email}')
+        else:
+            u.update_info(UserInfo(full_name=real_name, email=email, username=email))
     db.session.commit()
 
 
