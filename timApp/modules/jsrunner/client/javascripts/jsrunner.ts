@@ -1,12 +1,11 @@
 /**
  * Defines the client-side implementation of JavaScript runner plugin.
  */
-import angular from "angular";
 import * as t from "io-ts";
 import {IJsRunner, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
-import {copyToClipboard, to} from "tim/util/utils";
+import {copyToClipboard, markAsUsed, to} from "tim/util/utils";
 import {
     AnswerReturnBrowser,
     ErrorList,
@@ -16,8 +15,11 @@ import {
     JsrunnerMarkup,
 } from "../../shared/jsrunnertypes";
 import "style-loader!../stylesheets/jsrunner.css";
+import {jsrunnerApp} from "./jsrunnerapp";
+import * as jsrunnererror from "./jsrunnererror";
 
-const jsrunnerApp = angular.module("jsrunnerApp", ["ngSanitize"]);
+markAsUsed(jsrunnererror);
+
 export const moduleDefs = [jsrunnerApp];
 
 class JsrunnerController
@@ -245,29 +247,6 @@ class JsrunnerController
         this.doCheckFields(false, userNames);
     }
 }
-
-jsrunnerApp.component("jsrunnerError", {
-    bindings: {
-        e: "<",
-    },
-    controller: class {
-        showTrace = false;
-
-        toggleStackTrace() {
-            this.showTrace = !this.showTrace;
-        }
-    },
-    template: `
-<tim-alert severity="danger">
-  <span>{{ $ctrl.e.user }}:</span>
-  <div ng-repeat="err in $ctrl.e.errors">
-    <span>{{ err.msg }}</span>
-    <button ng-if="err.stackTrace" class="timButton btn-sm" ng-click="$ctrl.toggleStackTrace()">Stack trace</button>
-    <pre ng-if="err.stackTrace && $ctrl.showTrace">{{ err.stackTrace }}</pre>
-  </div>
-</tim-alert>
-    `,
-});
 
 jsrunnerApp.component("jsRunner", {
     bindings: pluginBindings,
