@@ -1,8 +1,6 @@
 """Helper script for quickly doing most mechanical refactorings required when converting
 an AngularJS component to an Angular component."""
 
-# TODO: Currently supports only TIM dialogs (DialogControllers).
-
 import re
 import sys
 from dataclasses import dataclass
@@ -13,8 +11,8 @@ class TypeScriptSrcEditor:
     src: str
 
     def add_imports(self, s):
-        imp = "\nimport {"
-        self.src = self.src.replace(imp, s + imp, 1)
+        imp = r"\n?(import \{)"
+        self.regex_replace(imp, s + r'\n\1', count=1)
 
     def delete_line(self, s):
         self.src = re.sub(f' *{re.escape(s)}.*\n', '', self.src)
@@ -30,8 +28,8 @@ class TypeScriptSrcEditor:
         for r in re.findall(s, self.src, re.DOTALL):
             yield r
 
-    def regex_replace(self, pat, to, flags=0):
-        self.src = re.sub(pat, to, self.src, flags=flags)
+    def regex_replace(self, pat, to, flags=0, count=0):
+        self.src = re.sub(pat, to, self.src, count=count, flags=flags)
 
 
 def main():
@@ -58,9 +56,11 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";""")
     if is_dialog:
         comp_name_orig = s.search('protected dialogName = "(\w+)"( as const)?;')
         comp_name = re.sub(r'Dialog$', '', comp_name_orig)
+        module_var = None
     else:
-        comp_name_orig = 'TODO'
-        comp_name = 'TODO'
+        comp_name_orig = s.search(r'\w+\.component\("(\w+)", (.|\n)+\)')
+        comp_name = comp_name_orig
+        module_var = s.search(r'(\w+)\.component\("\w+", (.|\n)+\)')
     comp_name = re.sub(r'^tim', '', comp_name)
 
     if comp_name_orig != comp_name:
@@ -74,12 +74,17 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";""")
         with open(template_url, encoding='utf8') as f:
             template = f.read()
 
-    s.replace(
-        '\nexport class',
-        f'\n@Component({{selector: "tim-{comp_selector}-dialog", template: `{template}`}})\nexport class',
+    suffix = '-dialog' if is_dialog else ''
+    s.regex_replace(
+        '\n(export )?class',
+        f'\n@Component({{selector: "tim-{comp_selector}{suffix}", template: `{template}`}})\nexport class',
     )
 
     s.replace('$onInit', 'ngOnInit')
+    s.replace(', IScope', '')
+    s.delete_line('import * as focusMe')
+    s.delete_line('markAsUsed(focusMe);')
+    s.replace('markAsUsed, ', '')
     if is_dialog:
         s.delete_line('super.ngOnInit();')
         s.delete_line('static $inject = ["$element", "$scope"] as const;')
@@ -87,7 +92,6 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";""")
 
         s.regex_replace(r'\nregisterDialogComponent\((.|\n)+\}\);', '')
         s.delete_line('import {registerDialogComponent,')
-        s.replace(', IScope', '')  # delete import
 
         s.regex_replace(
             r"""
@@ -95,8 +99,8 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";""")
             (await )?
             showDialog\(\s*
               (?P<comp>\w+),\s*
-                 \{\s*params:\s*\(\)\s*=>\s*
-                     (?P<param>\w+|\({\w+}\))(\s*,\s*)?\}(\s*,\s*)?
+                 \{\s*(params:\s*\(\)\s*=>\s*
+                     (?P<param>\w+|\({\w+}\))(\s*,\s*)?)?\}(\s*,\s*)?
                    (\{[^}]*\})?\s*
             \)\s*
                  (?P<res>.result)?(?P<comma>;)?""",
@@ -112,6 +116,15 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";""")
             s.replace(f'<dialog-{part}>', f'<ng-container {part}>')
             s.replace(f'</dialog-{part}>', '</ng-container>')
         s.regex_replace(r'export function (show|open)', r'export async function \1')
+    else:
+        s.regex_replace(rf'\n{module_var}\.component\((.|\n)+\}}\);', '')
+        s.delete_line(f'import {{{module_var}}}')
+        s.delete_line('static $inject')
+        s.delete_line('private scope: IScope;')
+        s.delete_line('this.scope = scope;')
+        s.regex_replace('(, )?scope: IScope', '')
+        s.replace(' implements IController', '')
+        s.delete_line('import {IController}')
 
     s.regex_replace(
         r'constructor\(protected element: JQLite, protected scope: IScope\) \{',
@@ -124,6 +137,8 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";""")
 
     # collect all controller references
     controller_vars = list(s.search_all(r'\$ctrl\.(\w+)'))
+    if is_dialog:
+        controller_vars.append('getTitle')
 
     # fix template syntax
     s.replace('$ctrl.', '')
@@ -147,7 +162,11 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";""")
     s.replace('ng-bind-html', '[innerHtml]')
     s.replace('ng-href', 'href')
     s.replace('ng-value', '[ngValue]')
+    s.replace('ng-bind', '[innerText]')
+    s.replace('tim-location', 'timLocation')
+    s.replace('ng-change', '(ngModelChange)')
     s.regex_replace(r'focus-me="\w+"', 'focusMe')
+    s.regex_replace(r'<form name="(\w+)"', r'<form #\1')
 
     for var in controller_vars:
         s.regex_replace(f'(private|protected) (async )?({var})', r'\2\3')
