@@ -21,7 +21,7 @@ export interface ISearchResultDisplay {
 }
 
 export class SearchResultController extends DialogController<
-    {ctrl: SearchBoxComponent},
+    {params: SearchBoxComponent},
     void
 > {
     static component = "timSearchResults";
@@ -55,7 +55,7 @@ export class SearchResultController extends DialogController<
 
     $onInit() {
         super.$onInit();
-        this.updateAttributes(this.resolve.ctrl);
+        this.updateAttributes(this.resolve.params);
         if (this.searchComponent) {
             this.searchComponent.registerResultsDialog(this);
         }
@@ -376,7 +376,7 @@ export function showSearchResultDialog(r: SearchBoxComponent) {
     void to(
         showDialog(
             SearchResultController,
-            {ctrl: () => r},
+            {params: () => r},
             {showMinimizeButton: false}
         ).result
     );
