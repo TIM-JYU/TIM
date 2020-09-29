@@ -2,14 +2,10 @@ import {IAngularEvent, IController, IScope} from "angular";
 import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import uiGrid from "ui-grid";
-import {DialogController} from "tim/ui/dialogController";
 import {documentglobals} from "tim/util/globals";
+import {showKorppiExportDialog} from "tim/answer/korppiExportDialog";
 import {ViewCtrl} from "../document/viewctrl";
-import {
-    registerDialogComponent,
-    showDialog,
-    showMessageDialog,
-} from "../ui/dialog";
+import {showMessageDialog} from "../ui/dialog";
 import {IUser, IUserListEntry} from "../user/IUser";
 import {withComparatorFilters} from "../util/comparatorfilter";
 import {$timeout} from "../util/ngimport";
@@ -426,35 +422,3 @@ timApp.component("timUserList", {
     No answerers.
 </div>`,
 });
-
-export class KorppiExportCtrl extends DialogController<void, IExportOptions> {
-    static component = "timKorppiExport";
-    static $inject = ["$element", "$scope"] as const;
-    private options: IExportOptions = {
-        totalPointField: "",
-        velpPointField: "",
-        taskPointField: "",
-        copy: false,
-    };
-
-    protected getTitle() {
-        return "Export to Korppi";
-    }
-
-    ok() {
-        this.close(this.options);
-    }
-
-    copy() {
-        this.options.copy = true;
-        this.close(this.options);
-    }
-}
-
-registerDialogComponent(KorppiExportCtrl, {
-    templateUrl: "/static/templates/korppiExport.html",
-});
-
-function showKorppiExportDialog() {
-    return showDialog(KorppiExportCtrl, {}).result;
-}
