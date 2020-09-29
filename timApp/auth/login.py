@@ -33,7 +33,7 @@ from timApp.user.users import create_anonymous_user
 from timApp.user.userutils import create_password_hash, check_password_hash
 from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr, use_model, RouteException
 from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response, error_generic
-from timApp.util.logger import log_error, log_warning
+from timApp.util.logger import log_error, log_warning, log_info
 from timApp.util.utils import is_valid_email
 
 login_page = Blueprint('login_page',
@@ -270,6 +270,7 @@ def alt_signup(m: AltSignupModel):
     session.pop('user_id', None)
 
     try:
+        log_info(f'Sending temp password {password} to {email}')
         send_email(email, 'Your new TIM password', f'Your password is {password}')
         if current_app.config['TESTING']:
             test_pws.append(password)
@@ -398,11 +399,15 @@ def alt_login():
             if old_hash != user.pass_:
                 db.session.commit()
             return finish_login()
+        else:
+            log_warning(f'Failed login (wrong password): {email_or_username}')
     elif not users:
+        log_warning(f'Failed login (account not found): {email_or_username}')
         # Protect from timing attacks.
         for _ in range(2):
             check_password_hash('', '$2b$12$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu')
     else:
+        log_warning(f'Failed login (multiple accounts): {email_or_username}')
         raise RouteException('AmbiguousAccount')
 
     error_msg = "EmailOrPasswordNotMatch"
