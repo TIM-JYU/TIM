@@ -55,7 +55,7 @@ def get_note(note_id):
     note = get_comment_and_check_exists(note_id)
     if not has_note_edit_access(note):
         return abort(403)
-    return json_response({'text': note.content, 'extraData': note})
+    return json_response({'text': note.content, 'extraData': note}, date_conversion=True)
 
 
 @dataclass

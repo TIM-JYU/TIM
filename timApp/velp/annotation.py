@@ -80,7 +80,7 @@ def add_annotation(m: AddAnnotationModel) -> Response:
     db.session.add(ann)
     ann.set_position_info(m.coord)
     db.session.commit()
-    return json_response(ann)
+    return json_response(ann, date_conversion=True)
 
 
 def validate_color(color: Optional[str]) -> None:
@@ -163,7 +163,7 @@ def update_annotation(m: UpdateAnnotationModel) -> Response:
         ann.draw_data = to_json_str(drawing)
 
     db.session.commit()
-    return json_response(ann)
+    return json_response(ann, date_conversion=True)
 
 
 def is_color_hex_string(s: str) -> bool:
@@ -221,7 +221,7 @@ def add_comment_route(m: AddAnnotationCommentModel) -> Response:
     a.comments.append(AnnotationComment(content=m.content, commenter_id=commenter.id))
     # TODO: Send email to annotator if commenter is not the annotator.
     db.session.commit()
-    return json_response(a)
+    return json_response(a, date_conversion=True)
 
 
 @annotations.route("/<int:doc_id>/get_annotations", methods=['GET'])
@@ -234,4 +234,4 @@ def get_annotations(doc_id: int) -> Response:
     verify_view_access(d)
 
     results = get_annotations_with_comments_in_document(get_current_user_object(), d)
-    return no_cache_json_response(results)
+    return no_cache_json_response(results, date_conversion=True)

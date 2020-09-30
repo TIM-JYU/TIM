@@ -265,7 +265,7 @@ def getproxy(m: GetProxyModel):
 
 @app.route("/time")
 def get_time():
-    return json_response({'time': get_current_time()})
+    return json_response({'time': get_current_time()}, date_conversion=True)
 
 
 @app.route("/getTemplates")
@@ -276,7 +276,7 @@ def get_templates():
         abort(404)
     verify_edit_access(d)
     templates = get_templates_for_folder(d.parent)
-    return json_response(templates)
+    return json_response(templates, date_conversion=True)
 
 
 def update_user_course_bookmarks():

@@ -193,7 +193,7 @@ def get_tags(doc):
         abort(404)
     verify_view_access(d)
     tags = d.block.tags
-    return json_response(tags)
+    return json_response(tags, date_conversion=True)
 
 
 @tags_blueprint.route('/getAllTags', methods=["GET"])
@@ -208,7 +208,7 @@ def get_all_tags():
     tags_unique = set()
     for tag in tags:
         tags_unique.add(tag.name)
-    return json_response(sorted(list(tags_unique)))
+    return json_response(sorted(list(tags_unique)), date_conversion=True)
 
 
 @tags_blueprint.route('/getDocs')
@@ -251,7 +251,7 @@ def get_tagged_documents():
 
     docs = get_documents(filter_user=get_current_user_object(), custom_filter=custom_filter,
                          query_options=query_options)
-    return json_response(docs)
+    return json_response(docs, date_conversion=True)
 
 
 @tags_blueprint.route("/getDoc/<int:doc_id>")
@@ -266,4 +266,4 @@ def get_tagged_document_by_id(doc_id):
                          query_options=joinedload(DocEntry._block).joinedload(Block.tags))
     if not docs:
         abort(404, "Document not found or not accessible!")
-    return json_response(docs[0])
+    return json_response(docs[0], date_conversion=True)

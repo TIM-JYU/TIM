@@ -449,7 +449,7 @@ def get_permissions(item_id):
         'grouprights': grouprights,
         'accesstypes': AccessTypeModel.query.all(),
         'orgs': UserGroup.get_organizations(),
-    })
+    }, date_conversion=True)
 
 
 @manage_page.route("/defaultPermissions/<object_type>/get/<int:folder_id>")
@@ -457,7 +457,7 @@ def get_default_document_permissions(folder_id, object_type):
     f = get_folder_or_abort(folder_id)
     verify_manage_access(f)
     grouprights = get_default_rights_holders(f, BlockType.from_str(object_type))
-    return json_response({'grouprights': grouprights})
+    return json_response({'grouprights': grouprights}, date_conversion=True)
 
 
 @manage_page.route("/defaultPermissions/add", methods=["PUT"])

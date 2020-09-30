@@ -89,7 +89,9 @@ def get_lecture_info():
             "isLecturer": is_lecturer,
             "messages": messages,
             "questions": lecture_questions,
-        })
+        },
+        date_conversion=True,
+    )
 
 
 @lecture_routes.route('/getLectureAnswerTotals/<int:lecture_id>')
@@ -116,7 +118,7 @@ def get_all_messages():
     """
     lecture = get_lecture_from_request(check_access=False)
     messages = lecture.messages.order_by(Message.timestamp.asc()).all()
-    return json_response(messages)
+    return json_response(messages, date_conversion=True)
 
 
 @dataclass
@@ -136,7 +138,7 @@ def get_updates(m: GetUpdatesModel):
     ret = do_get_updates(m)
     db.session.commit()
     # taketime("after update")
-    return json_response(ret)
+    return json_response(ret, date_conversion=True)
 
 
 @lecture_routes.before_request
@@ -303,7 +305,7 @@ def get_question_manually():
     """Route to use to get question manually (instead of getting question in /getUpdates)."""
     lecture = get_current_lecture_or_abort()
     new_question = get_new_question(lecture, None, None, True)
-    return json_response(new_question)
+    return json_response(new_question, date_conversion=True)
 
 
 def hide_points_and_try_shuffle_question(question: AskedQuestion, user_id: int):
@@ -402,7 +404,7 @@ def send_message():
     msg = Message(message=new_message, user_id=get_current_user_id())
     lecture.messages.append(msg)
     db.session.commit()
-    return json_response(msg)
+    return json_response(msg, date_conversion=True)
 
 
 def get_lecture_session_data():
@@ -436,7 +438,7 @@ def check_lecture():
 
     if lecture:
         if lecture.is_running:
-            return json_response(lecture_dict(lecture))
+            return json_response(lecture_dict(lecture), date_conversion=True)
         else:
             leave_lecture(lecture)
             empty_lecture(lecture)
@@ -460,7 +462,7 @@ def start_future_lecture():
     lecture.start_time = time_now
     switch_to_lecture(lecture)
     db.session.commit()
-    return json_response(lecture_dict(lecture))
+    return json_response(lecture_dict(lecture), date_conversion=True)
 
 
 @lecture_routes.route('/getAllLecturesFromDocument', methods=['GET'])
@@ -484,7 +486,13 @@ def get_all_lectures():
             future_lectures.append(lecture)
 
     return json_response(
-        {"currentLectures": current_lectures, "futureLectures": future_lectures, "pastLectures": past_lectures})
+        {
+            "currentLectures": current_lectures,
+            "futureLectures": future_lectures,
+            "pastLectures": past_lectures,
+        },
+        date_conversion=True,
+    )
 
 
 @lecture_routes.route('/showLectureInfo/<int:lecture_id>', methods=['GET'])
@@ -505,13 +513,16 @@ def show_lecture_info(lecture_id):
 @lecture_routes.route('/showLectureInfoGivenName')
 def show_lecture_info_given_name():
     lecture = get_lecture_from_request(check_access=False)
-    return json_response(lecture.to_json(show_password=is_lecturer_of(lecture) or get_current_user_object().is_admin))
+    return json_response(
+        lecture.to_json(show_password=is_lecturer_of(lecture) or get_current_user_object().is_admin),
+        date_conversion=True,
+    )
 
 
 @lecture_routes.route('/getLectureByCode')
 def lecture_needs_password():
     lecture = get_lecture_from_request(check_access=False)
-    return json_response(lecture)
+    return json_response(lecture, date_conversion=True)
 
 
 def get_lecture_users(lecture: Lecture):
@@ -561,7 +572,9 @@ def get_running_lectures(doc_id=None):
             "isLecturer": is_lecturer,
             "lectures": current_lectures,
             "futureLectures": future_lectures,
-        })
+        },
+        date_conversion=True,
+    )
 
 
 @lecture_routes.route('/createLecture', methods=['POST'])
@@ -602,7 +615,7 @@ def create_lecture():
     if start_time <= current_time <= end_time and not get_current_lecture():
         switch_to_lecture(lecture)
     db.session.commit()
-    return json_response(lecture)
+    return json_response(lecture, date_conversion=True)
 
 
 def empty_lecture(lec: Lecture):
@@ -720,7 +733,9 @@ def join_lecture():
         {
             "correctPassword": correct_password,
             **lecture_dict(lecture),
-        })
+        },
+        date_conversion=True,
+    )
 
 
 def update_activity(lecture: Lecture, u: User):
@@ -827,7 +842,7 @@ def ask_question():
     rq = Runningquestion(lecture=lecture, asked_question=question, ask_time=question.asked_time, end_time=question.end_time)
     db.session.add(rq)
     db.session.commit()
-    return json_response(question)
+    return json_response(question, date_conversion=True)
 
 
 @lecture_routes.route('/showAnswerPoints', methods=['POST'])
@@ -854,7 +869,7 @@ def show_points():
     new_question = get_new_question(lecture, current_question_id, current_points_id)
     db.session.commit()
     if new_question is not None:
-        return json_response(new_question)
+        return json_response(new_question, date_conversion=True)
     return empty_response()
 
 
@@ -899,7 +914,7 @@ def get_question_by_par_id():
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
     question = get_question_data_from_document(d, par_id, edit)
-    return json_response(question)
+    return json_response(question, date_conversion=True)
 
 
 @lecture_routes.route("/getAskedQuestionById", methods=['GET'])
@@ -909,7 +924,7 @@ def get_asked_question_by_id():
     asked_id = int(request.args.get('asked_id'))
     question = get_asked_question(asked_id)
     verify_is_lecturer(question.lecture)
-    return json_response(question)
+    return json_response(question, date_conversion=True)
 
 
 @lecture_routes.route("/getQuestionAnswer", methods=['GET'])
@@ -921,7 +936,7 @@ def get_question_answer_by_id():
     if not ans:
         abort(404, 'Answer not found')
     verify_is_lecturer(ans.asked_question.lecture)
-    return json_response(ans)
+    return json_response(ans, date_conversion=True)
 
 
 @lecture_routes.route("/stopQuestion", methods=['POST'])
@@ -958,7 +973,10 @@ def get_lecture_answers():
     after = get_option(request, 'after', default=question.asked_time, cast=dateutil.parser.parse)
 
     lecture_answers = question.answers.filter(LectureAnswer.answered_on > after).order_by(LectureAnswer.answered_on.asc()).all()
-    return json_response([a.to_json(include_question=False, include_user=False) for a in lecture_answers])
+    return json_response(
+        [a.to_json(include_question=False, include_user=False) for a in lecture_answers],
+        date_conversion=True,
+    )
 
 
 @lecture_routes.route("/answerToQuestion", methods=['PUT'])

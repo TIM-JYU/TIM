@@ -26,11 +26,11 @@ def safe_redirect(url: str, **values) -> Response:
 
 def json_response(
         jsondata: Any,
-        status_code=200,
+        status_code: int = 200,
         headers: Optional[Dict[str, str]] = None,
-        no_date_conversion=False,  # TODO should be True by default
+        date_conversion: bool = False,
 ) -> Response:
-    if no_date_conversion:
+    if not date_conversion:
         if headers is None:
             headers = {}
         headers['No-Date-Conversion'] = 'true'
@@ -60,10 +60,10 @@ def to_dict(jsondata):
     return json.loads(to_json_str(jsondata))
 
 
-def no_cache_json_response(data: Any) -> Response:
+def no_cache_json_response(data: Any, date_conversion: bool = False) -> Response:
     """Returns a JSON response that prevents any caching of the result.
     """
-    response = json_response(data)
+    response = json_response(data, date_conversion=date_conversion)
     return add_no_cache_headers(response)
 
 

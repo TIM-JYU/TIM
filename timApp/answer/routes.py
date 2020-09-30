@@ -305,7 +305,7 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
             get_useranswers_for_task(user, tids, answer_map)
         if gtids:
             get_globals_for_tasks(gtids, answer_map)
-        return json_response({"answers": answer_map, "userId": user_id}, no_date_conversion=True)
+        return json_response({"answers": answer_map, "userId": user_id})
     except Exception as e:
         return abort(400, str(e))
 
@@ -781,7 +781,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     except:
         pass
 
-    return json_response(result, no_date_conversion=True)
+    return json_response(result)
 
 
 def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocInfo, plugin: Plugin):
@@ -1538,7 +1538,7 @@ def get_jsframe_data(task_id, user_id):
     curr_user = get_current_user_object()
     try:
         vals = get_plug_vals(doc, tid, curr_user, user)
-        return json_response(vals, no_date_conversion=True)
+        return json_response(vals)
     except Exception as e:
         return abort(400, str(e))
         # return json_response({})
