@@ -45,7 +45,6 @@ import {TabsModule} from "ngx-bootstrap/tabs";
 import {TemplateListComponent} from "tim/document/editing/template-list.component";
 import {ConsentChoiceComponent} from "tim/ui/consent-choice.component";
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [
         CreateItemComponent,

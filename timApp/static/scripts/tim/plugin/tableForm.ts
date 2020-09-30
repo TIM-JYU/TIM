@@ -1545,7 +1545,6 @@ export class TableFormComponent
     }
 }
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [TableFormComponent, TimEmailComponent],
     imports: [

@@ -765,7 +765,6 @@ export class JsframeComponent
     }
 }
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [JsframeComponent],
     imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],

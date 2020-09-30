@@ -63,7 +63,6 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
     }
 }
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [SpellErrorComponent],
     imports: [BrowserModule],

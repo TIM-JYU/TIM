@@ -4633,7 +4633,6 @@ export class TimTableComponent
     }
 }
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [TimTableComponent],
     imports: [

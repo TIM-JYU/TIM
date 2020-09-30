@@ -17,7 +17,6 @@ import {LoadingComponent} from "./loadingIndicator";
 import {MarkupErrorComponent} from "./markup-error.component";
 import {CloseButtonComponent} from "./close-button.component";
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [
         MarkupErrorComponent,

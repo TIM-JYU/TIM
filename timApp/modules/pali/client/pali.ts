@@ -209,7 +209,6 @@ export class PaliComponent
     }
 }
 
-// noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
     declarations: [PaliComponent],
     imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
