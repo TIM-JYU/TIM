@@ -477,7 +477,7 @@ def fetch_rows(m: FetchTableDataModel) -> Response:
         value_or_default(markup.showInView, False),
         group_filter_type=include_users,
     )
-    return json_response(r, headers={"No-Date-Conversion": "true"})
+    return json_response(r, no_date_conversion=True)
 
 
 def load_tableform_markup(plug: Plugin) -> TableFormMarkupModel:
@@ -513,7 +513,7 @@ def fetch_rows_preview(m: FetchTableDataModelPreview) -> Response:
         allow_non_teacher=True
         #  TODO: group_filter_type = plug.values.get("includeUsers"),
     )
-    return json_response(r, headers={"No-Date-Conversion": "true"})
+    return json_response(r, no_date_conversion=True)
 
 
 @dataclass
@@ -561,7 +561,7 @@ def update_fields(m: UpdateFieldsModel) -> Response:
     r['rows'] = rows
     r['styles'] = styles
     r['fields'] = field_names
-    return json_response(r, headers={"No-Date-Conversion": "true"})
+    return json_response(r, no_date_conversion=True)
 
 
 class TableFormObj(TypedDict):

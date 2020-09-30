@@ -24,7 +24,16 @@ def safe_redirect(url: str, **values) -> Response:
     return redirect(url_for('indexPage'))
 
 
-def json_response(jsondata: Any, status_code=200, headers: Optional[Dict[str, str]]=None) -> Response:
+def json_response(
+        jsondata: Any,
+        status_code=200,
+        headers: Optional[Dict[str, str]] = None,
+        no_date_conversion=False,  # TODO should be True by default
+) -> Response:
+    if no_date_conversion:
+        if headers is None:
+            headers = {}
+        headers['No-Date-Conversion'] = 'true'
     response = Response(to_json_str(jsondata), mimetype='application/json', headers=headers)
     response.status_code = status_code
     return response
