@@ -396,6 +396,46 @@
           <context context-type="linenumber">9</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="fb01abd6fd0fa55e2cc554c12550d3f1900e6a36" datatype="html">
+        <source>
+                    I allow
+                    <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>
+                        the collected data
+                    <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
+                    to be used for scientific research purposes after anonymization.
+                </source>
+        <target state="translated">
+                    Sallin käyttää
+                    <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>
+                        kerättyä tietoa
+                    <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
+                    tieteelliseen tutkimustarkoitukseen anonymisoinnin jälkeen.
+                </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
+          <context context-type="linenumber">7</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="90bae798b31b0ccfdbd2bfe0b60098b6144fdf14" datatype="html">
+        <source>
+                    I do not allow
+                    <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>
+                        the collected data
+                    <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
+                    to be used for scientific research purposes after anonymization.
+                </source>
+        <target state="translated">
+                    En salli käyttää
+                    <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>
+                        kerättyä tietoa
+                    <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
+                    tieteelliseen tutkimustarkoitukseen anonymisoinnin jälkeen.
+                </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
+          <context context-type="linenumber">19</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="bookmarksTabTitle" datatype="html">
         <source>Bookmarks</source>
         <target state="translated">Kirjanmerkit</target>

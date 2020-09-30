@@ -6,10 +6,9 @@ import {IScope} from "angular";
 import * as focusMe from "tim/ui/focusMe";
 import {DialogController} from "tim/ui/dialogController";
 import {markAsUsed} from "../util/utils";
-import * as ccheckbox from "./consentChoice";
 import {registerDialogComponent, showDialog} from "./dialog";
 
-markAsUsed(focusMe, ccheckbox);
+markAsUsed(focusMe);
 
 export enum ConsentType {
     CookieOnly = 1,
@@ -59,7 +58,7 @@ registerDialogComponent(ConsentController, {
         sivustoa hyväksyt <a href="/view/tim/Rekisteriseloste">tietosuojalausekkeen</a>.
         <div ng-if="$ctrl.showDataCollection()">
             <hr>
-            <tim-consent-choice consent="$ctrl.consent">
+            <tim-consent-choice [consent]="$ctrl.consent">
 
             </tim-consent-choice>
         </div>

@@ -43,6 +43,7 @@ import {SideBarMenuModule} from "tim/sidebarmenu/side-bar-menu.module";
 import {DirectoryListComponent} from "tim/folder/directory-list.component";
 import {TabsModule} from "ngx-bootstrap/tabs";
 import {TemplateListComponent} from "tim/document/editing/template-list.component";
+import {ConsentChoiceComponent} from "tim/ui/consent-choice.component";
 
 // noinspection AngularInvalidImportedOrDeclaredSymbol
 @NgModule({
@@ -73,6 +74,7 @@ import {TemplateListComponent} from "tim/document/editing/template-list.componen
         AccessCountdownComponent,
         DirectoryListComponent,
         TemplateListComponent,
+        ConsentChoiceComponent,
     ],
     imports: [
         BrowserModule,
