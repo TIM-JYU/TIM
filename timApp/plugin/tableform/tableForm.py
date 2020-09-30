@@ -58,6 +58,14 @@ class DataViewSettingsModel:
     tableWidth: Union[str, Missing] = missing
     fixedColumns: Union[int, Missing] = missing
 
+@dataclass
+class RunScriptModel:
+     script: str
+     button: Optional[str] = None
+     all: bool = False
+     update: bool = False
+     repeat: Optional[int] = None
+
 
 @dataclass
 class TableFormMarkupModel(GenericMarkupModel):
@@ -94,7 +102,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     report: Union[bool, Missing] = missing
     reportButton: Union[str, Missing, None] = missing
     reportFilter: Union[str, Missing, None] = missing
-    runScripts: Union[List[str], Missing] = missing
+    runScripts: Union[List[Union[str, RunScriptModel]], Missing] = missing
     saveStyles: Union[bool, Missing] = True
     separator: Union[str, Missing, None] = missing
     showToolbar: Union[bool, Missing, None] = missing
