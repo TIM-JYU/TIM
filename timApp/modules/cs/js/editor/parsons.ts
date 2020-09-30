@@ -19,12 +19,12 @@ export class ParsonsEditorComponent implements IEditor {
         check: (str: string) => string;
     };
     private content_?: string;
-    @Input() private shuffle: boolean = false;
-    @Input() private maxcheck?: number;
-    @Input() private notordermatters: boolean = false;
-    @Input() private base: string = "";
-    @Input() private styleWords: string = "";
-    @Input() private words: boolean = false;
+    @Input() shuffle: boolean = false;
+    @Input() maxcheck?: number;
+    @Input() notordermatters: boolean = false;
+    @Input() base: string = "";
+    @Input() styleWords: string = "";
+    @Input() words: boolean = false;
     @ViewChild("area") area!: ElementRef;
 
     ngOnChanges(changes: SimpleChanges) {

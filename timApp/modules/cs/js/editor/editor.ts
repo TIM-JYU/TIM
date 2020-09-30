@@ -296,7 +296,7 @@ export class EditorComponent implements IMultiEditor {
     }
 
     @Input()
-    private set wrap(wrap: {n: number; auto: boolean} | undefined) {
+    set wrap(wrap: {n: number; auto: boolean} | undefined) {
         this.wrap_ = wrap;
         if (this.wrap_ && this.wrap_.n <= 0) {
             this.wrap_ = undefined;

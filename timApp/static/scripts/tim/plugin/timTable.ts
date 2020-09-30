@@ -725,7 +725,7 @@ export class TimTableComponent
     private editing = false;
     private forcedEditMode = false;
     task = false;
-    @Input() private taskid?: TaskId;
+    @Input() taskid?: TaskId;
     private isRunning = false;
     public taskBorders = false;
     currentCell?: ICurrentCell; // the cell currently being edited
