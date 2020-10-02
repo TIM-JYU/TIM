@@ -75,7 +75,7 @@ def clear_all(doc: DocInfo, dry_run: bool) -> None:
     commit_if_not_dry(dry_run)
 
 
-def delete_answers_with_ids(ids) -> AnswerDeleteResult:
+def delete_answers_with_ids(ids: List[int]) -> AnswerDeleteResult:
     if not isinstance(ids, list):
         raise TypeError('ids should be a list of answer ids')
     d_ua = UserAnswer.query.filter(UserAnswer.answer_id.in_(ids)).delete(synchronize_session=False)
@@ -244,7 +244,7 @@ class DeleteResult:
     adr: AnswerDeleteResult
 
     @property
-    def remaining(self):
+    def remaining(self) -> int:
         return self.total - self.deleted
 
 
@@ -270,7 +270,7 @@ def delete_old_answers(d: DocInfo, tasks: List[str]) -> DeleteResult:
 @click.argument('item', type=TimItemType())
 @click.option('--task', '-t', multiple=True)
 @click.option('--dry-run/--no-dry-run', default=True)
-def delete_old(item: Item, task: List[str], dry_run: bool):
+def delete_old(item: Item, task: List[str], dry_run: bool) -> None:
     """Deletes all older than latest answers from the specified tasks.
 
     This is useful especially for deleting field history in documents where jsrunner is used a lot.
