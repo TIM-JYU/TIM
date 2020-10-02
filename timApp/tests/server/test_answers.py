@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List
 
+from timApp.admin.answer_cli import delete_old_answers
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_users_for_tasks, save_answer, get_existing_answers_info
 from timApp.plugin.taskid import TaskId
@@ -130,3 +131,46 @@ class AnswerTest(TimRouteTest):
         self.assertEqual(1, answers.count)
         answers = get_existing_answers_info([self.test_user_1], TaskId(doc_id=d.id, task_name='t'))
         self.assertEqual(3, answers.count)
+
+    def test_delete_old_answers(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.add_answer(d, 't1', 'x1', user=self.test_user_1)
+        self.add_answer(d, 't2', 'x1', user=self.test_user_1)
+        self.add_answer(d, 't1', 'y1', user=self.test_user_1)
+        self.add_answer(d, 't2', 'y1', user=self.test_user_1)
+        self.add_answer(d, 't2', 'y1inv', user=self.test_user_1, valid=False)
+
+        self.add_answer(d, 't1', 'x2', user=self.test_user_2)
+        self.add_answer(d, 't2', 'x2', user=self.test_user_2)
+        self.add_answer(d, 't1', 'y2', user=self.test_user_2)
+        self.add_answer(d, 't2', 'y2', user=self.test_user_2)
+        self.add_answer(d, 't2', 'y2inv', user=self.test_user_2, valid=False)
+        db.session.commit()
+        r = delete_old_answers(d, ['t1', 't2'])
+        db.session.commit()
+        self.assertEqual(8, r.total)
+        self.assertEqual(4, r.deleted)
+        self.assertEqual(4, r.adr.answer)
+        self.assertEqual(0, r.adr.answersaver)
+        r = delete_old_answers(d, ['t1', 't2'])
+        self.assertEqual(4, r.total)
+        self.assertEqual(0, r.deleted)
+        self.assertEqual(0, r.adr.answer)
+        self.assertEqual(0, r.adr.answersaver)
+
+        anss: List[Answer] = self.test_user_1.get_answers_for_task(f'{d.id}.t1').all()
+        self.assertEqual(1, len(anss))
+        self.assertEqual('y1', anss[0].content_as_json.get('c'))
+        anss: List[Answer] = self.test_user_1.get_answers_for_task(f'{d.id}.t2').all()
+        self.assertEqual(2, len(anss))
+        self.assertEqual('y1inv', anss[0].content_as_json.get('c'))
+        self.assertEqual('y1', anss[1].content_as_json.get('c'))
+
+        anss: List[Answer] = self.test_user_2.get_answers_for_task(f'{d.id}.t1').all()
+        self.assertEqual(1, len(anss))
+        self.assertEqual('y2', anss[0].content_as_json.get('c'))
+        anss: List[Answer] = self.test_user_2.get_answers_for_task(f'{d.id}.t2').all()
+        self.assertEqual(2, len(anss))
+        self.assertEqual('y2inv', anss[0].content_as_json.get('c'))
+        self.assertEqual('y2', anss[1].content_as_json.get('c'))

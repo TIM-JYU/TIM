@@ -1,5 +1,6 @@
 import json
 import sys
+from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Tuple, Sequence
 
@@ -12,10 +13,12 @@ from timApp.admin.datetimetype import DateTimeType
 from timApp.admin.timitemtype import TimDocumentType, TimItemType
 from timApp.answer.answer import Answer, AnswerSaver
 from timApp.answer.answer_models import UserAnswer, AnswerUpload
+from timApp.answer.answers import valid_answers_query
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.item import Item
+from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import PluginUpload
 from timApp.user.user import User
@@ -52,20 +55,43 @@ def fix_double_c(dry_run: bool) -> None:
     commit_if_not_dry(dry_run)
 
 
+@dataclass
+class AnswerDeleteResult:
+    useranswer: int
+    answersaver: int
+    annotation: int
+    annotationcomment: int
+    answer: int
+
+
 @answer_cli.command()
 @click.argument('doc', type=TimDocumentType())
 @click.option('--dry-run/--no-dry-run', default=True)
 def clear_all(doc: DocInfo, dry_run: bool) -> None:
-    ids = Answer.query.filter(Answer.task_id.startswith(f'{doc.id}.')).with_entities(Answer.id)
-    cnt = ids.count()
-    UserAnswer.query.filter(UserAnswer.answer_id.in_(ids)).delete(synchronize_session=False)
-    AnswerSaver.query.filter(AnswerSaver.answer_id.in_(ids)).delete(synchronize_session=False)
-    anns = Annotation.query.filter(Annotation.answer_id.in_(ids))
-    AnnotationComment.query.filter(AnnotationComment.annotation_id.in_(anns.with_entities(Annotation.id))).delete(synchronize_session=False)
-    anns.delete(synchronize_session=False)
-    Answer.query.filter(Answer.id.in_(ids)).delete(synchronize_session=False)
+    ids = Answer.query.filter(Answer.task_id.startswith(f'{doc.id}.')).with_entities(Answer.id).all()
+    cnt = len(ids)
+    delete_answers_with_ids(ids)
     click.echo(f'Total {cnt}')
     commit_if_not_dry(dry_run)
+
+
+def delete_answers_with_ids(ids) -> AnswerDeleteResult:
+    if not isinstance(ids, list):
+        raise TypeError('ids should be a list of answer ids')
+    d_ua = UserAnswer.query.filter(UserAnswer.answer_id.in_(ids)).delete(synchronize_session=False)
+    d_as = AnswerSaver.query.filter(AnswerSaver.answer_id.in_(ids)).delete(synchronize_session=False)
+    anns = Annotation.query.filter(Annotation.answer_id.in_(ids))
+    d_acs = AnnotationComment.query.filter(AnnotationComment.annotation_id.in_(anns.with_entities(Annotation.id))).delete(
+        synchronize_session=False)
+    d_anns = anns.delete(synchronize_session=False)
+    d_ans = Answer.query.filter(Answer.id.in_(ids)).delete(synchronize_session=False)
+    return AnswerDeleteResult(
+        useranswer=d_ua,
+        answersaver=d_as,
+        annotation=d_anns,
+        annotationcomment=d_acs,
+        answer=d_ans,
+    )
 
 
 @answer_cli.command()
@@ -159,12 +185,7 @@ def truncate_large(doc: DocInfo, limit: int, to: int, dry_run: bool) -> None:
 @click.argument('item', type=TimItemType())
 @click.option('--dry-run/--no-dry-run', default=True)
 def compress_uploads(item: Item, dry_run: bool) -> None:
-    if isinstance(item, Folder):
-        docs: Sequence[DocInfo] = item.get_all_documents(include_subdirs=True)
-    elif isinstance(item, DocInfo):
-        docs = [item]
-    else:
-        raise Exception('Unknown item type')
+    docs = collect_docs(item)
     for d in docs:
         uploads: List[Block] = (
             Answer.query
@@ -204,3 +225,58 @@ def compress_uploads(item: Item, dry_run: bool) -> None:
                     new_size = uf.size
                     percent = round((old_size - new_size) / old_size * 100)
                     click.echo(f'done, size: {old_size} -> {new_size} (reduced by {percent}%)')
+
+
+def collect_docs(item: Item) -> Sequence[DocInfo]:
+    if isinstance(item, Folder):
+        docs: Sequence[DocInfo] = item.get_all_documents(include_subdirs=True)
+    elif isinstance(item, DocInfo):
+        docs = [item]
+    else:
+        raise Exception('Unknown item type')
+    return docs
+
+
+@dataclass
+class DeleteResult:
+    total: int
+    deleted: int
+    adr: AnswerDeleteResult
+
+    @property
+    def remaining(self):
+        return self.total - self.deleted
+
+
+def delete_old_answers(d: DocInfo, tasks: List[str]) -> DeleteResult:
+    base_query = (
+        valid_answers_query([TaskId(doc_id=d.id, task_name=t) for t in tasks])
+            .join(User, Answer.users)
+    )
+    latest = (
+        base_query
+            .group_by(Answer.task_id, User.id)
+            .with_entities(func.max(Answer.id))
+    )
+    todelete = base_query.filter(Answer.id.notin_(latest)).with_entities(Answer.id)
+    tot = base_query.count()
+    del_tot = todelete.count()
+    adr = delete_answers_with_ids(todelete.all())
+    r = DeleteResult(total=tot, deleted=del_tot, adr=adr)
+    return r
+
+
+@answer_cli.command()
+@click.argument('item', type=TimItemType())
+@click.option('--task', '-t', multiple=True)
+@click.option('--dry-run/--no-dry-run', default=True)
+def delete_old(item: Item, task: List[str], dry_run: bool):
+    """Deletes all older than latest answers from the specified tasks.
+
+    This is useful especially for deleting field history in documents where jsrunner is used a lot.
+    """
+    docs = collect_docs(item)
+    for d in docs:
+        r = delete_old_answers(d, task)
+        click.echo(f'Deleting {r.deleted} of {r.total} answers from {d.path}, remaining {r.remaining}. {r.adr}')
+    commit_if_not_dry(dry_run)
