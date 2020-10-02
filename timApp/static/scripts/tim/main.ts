@@ -11,7 +11,7 @@ import * as userlistController from "tim/answer/userlistController";
 import {timApp} from "tim/app";
 import * as questionController from "tim/document/question/questionController";
 import * as viewctrl from "tim/document/viewctrl";
-import * as viewRangeNavigation from "tim/document/viewRangeNavigation";
+import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
 import {environment} from "tim/environments/environment";
 import {FrontPageComponent} from "tim/frontpage/front-page.component";
 import * as loadMap from "tim/gamification/loadMap";
@@ -96,7 +96,6 @@ markAsUsed(
     userlistController,
     velpSelection,
     viewctrl,
-    viewRangeNavigation,
     markAllAsRead
 );
 
@@ -134,6 +133,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timDrawCanvas", DrawCanvasComponent);
     doDowngrade(dg, "timIndex", DirectoryListComponent);
     doDowngrade(dg, "timTemplateList", TemplateListComponent);
+    doDowngrade(dg, "timViewRangeNavigation", ViewRangeNavigationComponent);
     return dg;
 }
 

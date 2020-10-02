@@ -102,7 +102,7 @@
     <p style="visibility: hidden;"><span class="math inline">\({{dtm}}\)</span></p>
     {% endif %}
     <div class="paragraphs" ng-click="$ctrl.notesHandler.setNotePadge($event)" >
-        <view-range-navigation></view-range-navigation>
+        <tim-view-range-navigation></tim-view-range-navigation>
         {% if task_info and task_info.show %}
             <div class="taskSummary">
                 <span> 
@@ -139,7 +139,7 @@
             <velp-selection ng-if="$ctrl.showVelpSelection()">
             </velp-selection>
         {% endif %}
-        <view-range-navigation></view-range-navigation>
+        <tim-view-range-navigation></tim-view-range-navigation>
     </div>
     <tim-template-list ng-if="$ctrl.item.rights.editable" ng-show="$ctrl.isEmptyDocument()" [doc]="$ctrl.item"></tim-template-list>
     <bootstrap-panel ng-if="$ctrl.item.rights.manage" ng-show="$ctrl.isEmptyDocument()"

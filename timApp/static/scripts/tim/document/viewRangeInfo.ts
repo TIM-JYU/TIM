@@ -61,14 +61,13 @@ export async function unpartitionDocument() {
 /**
  * Partition document by reloading. If there's existing partitioning, replace it,
  * otherwise add to url parameters.
- * @param b First shown par index.
- * @param e Last shown par index.
+ * @param range The view range.
  * @param loadPreamble Load preamble at the beginning of each part.
  */
-export function partitionDocument(b: number, e: number, loadPreamble: boolean) {
+export function partitionDocument(range: IViewRange, loadPreamble: boolean) {
     const params = getUrlParams();
-    params.set("b", b.toString());
-    params.set("e", e.toString());
+    params.set("b", range.b.toString());
+    params.set("e", range.e.toString());
     params.set("preamble", loadPreamble.toString());
     params.delete("size"); // to prevent collision between e and size
     setURLSearchParams(params);
@@ -164,7 +163,7 @@ export async function toggleViewRange(docId: number, pieceSize: number) {
         await setPieceSize(pieceSize);
         const range = await getViewRange(docId, 0, true);
         if (range) {
-            partitionDocument(range.b, range.e, true);
+            partitionDocument(range, true);
         } else {
             await unpartitionDocument();
         }

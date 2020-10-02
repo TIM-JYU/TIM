@@ -44,6 +44,8 @@ import {DirectoryListComponent} from "tim/folder/directory-list.component";
 import {TabsModule} from "ngx-bootstrap/tabs";
 import {TemplateListComponent} from "tim/document/editing/template-list.component";
 import {ConsentChoiceComponent} from "tim/ui/consent-choice.component";
+import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
+import {ViewRangeEditDialogComponent} from "tim/document/view-range-edit-dialog.component";
 
 @NgModule({
     declarations: [
@@ -74,6 +76,8 @@ import {ConsentChoiceComponent} from "tim/ui/consent-choice.component";
         DirectoryListComponent,
         TemplateListComponent,
         ConsentChoiceComponent,
+        ViewRangeNavigationComponent,
+        ViewRangeEditDialogComponent,
     ],
     imports: [
         BrowserModule,

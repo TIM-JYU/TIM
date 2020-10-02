@@ -18,7 +18,7 @@ import {
     IViewRange,
     toggleViewRange,
 } from "tim/document/viewRangeInfo";
-import {showViewRangeEditDialog} from "tim/document/viewRangeEditDialog";
+import {showViewRangeEditDialog} from "tim/document/view-range-edit-dialog.component";
 import {getStorage, IOkResponse, to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/dialog";

@@ -80,7 +80,7 @@ export class IndexTabComponent implements OnInit {
                 headerId
             );
             if (headerRange) {
-                partitionDocument(headerRange.b, headerRange.e, true);
+                partitionDocument(headerRange, true);
             }
         }
         evt.stopPropagation();
