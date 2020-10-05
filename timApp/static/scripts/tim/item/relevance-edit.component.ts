@@ -6,9 +6,8 @@
  * the relevance threshold value can be changed by user.
  */
 
-import {IController} from "angular";
-import {Binding, to} from "tim/util/utils";
-import {timApp} from "../app";
+import {Component, Input} from "@angular/core";
+import {to} from "tim/util/utils";
 import {$http} from "../util/ngimport";
 import {IItem, IRelevance} from "./IItem";
 
@@ -27,16 +26,46 @@ export interface IRelevanceResponse {
     relevance: IRelevance;
 }
 
-class RelevanceCtrl implements IController {
-    static $inject = ["$element", "$scope"];
-    private item!: Binding<IItem, "<">;
-    private relevance: number | undefined;
-    private isDefault: boolean = false;
-    private isInherited: boolean = false;
-    private errorMessage: string | undefined;
-    private suggestions = relevanceSuggestions;
+@Component({
+    selector: "tim-relevance-edit",
+    template: `
+        <p>View and set relevance value denoting item priority in search results</p>
+        <div class="input-group">
+            <input class="form-control" [(ngModel)]="relevance"
+                   type="number"
+                   title="Enter a new relevance value"
+                   placeholder="Enter relevance value"
+                   [typeaheadMinLength]="0"
+                   [typeahead]="suggestions">
+        </div>
+        <div *ngIf="isDefault" class="alert alert-info">
+            <span class="glyphicon glyphicon-exclamation-sign"></span>
+            Default relevance value. This may be affected by changes in parent directories.
+        </div>
+        <div *ngIf="isInherited" class="alert alert-info">
+            <span class="glyphicon glyphicon-exclamation-sign"></span>
+            Relevance value was inherited from a parent directory.
+        </div>
+        <div *ngIf="errorMessage" class="alert alert-info">
+            <span class="glyphicon glyphicon-exclamation-sign"></span> {{errorMessage}}
+        </div>
+        <div>
+            <button class="timButton" (click)="saveClicked()" title="Save new relevance value">Save</button>
+            <button class="timButton" (click)="resetClicked()" [disabled]="isDefault"
+                    title="Return default relevance value">Reset
+            </button>
+        </div>
+    `,
+})
+export class RelevanceEditComponent {
+    @Input() item!: IItem;
+    relevance: number | undefined;
+    isDefault: boolean = false;
+    isInherited: boolean = false;
+    errorMessage: string | undefined;
+    suggestions = relevanceSuggestions;
 
-    $onInit() {
+    ngOnInit() {
         void this.getRelevance();
     }
 
@@ -93,11 +122,11 @@ class RelevanceCtrl implements IController {
         void this.getRelevance();
     }
 
-    private async resetClicked() {
+    async resetClicked() {
         await this.resetRelevance();
     }
 
-    private async saveClicked() {
+    async saveClicked() {
         if (this.relevance != null) {
             await this.setRelevance(this.relevance);
         } else {
@@ -106,36 +135,3 @@ class RelevanceCtrl implements IController {
         }
     }
 }
-
-timApp.component("relevanceEdit", {
-    bindings: {
-        focusField: "<",
-        item: "<",
-    },
-    controller: RelevanceCtrl,
-    template: `
-        <p>View and set relevance value denoting item priority in search results</p>
-        <div class="input-group">
-            <input class="form-control" ng-model="$ctrl.relevance" type="number"
-                title="Enter a new relevance value" placeholder="Enter relevance value" typeahead-min-length="0"
-                uib-typeahead="s.value as s.name for s in $ctrl.suggestions | orderBy:'-value'">
-        </div>
-        <p></p>
-        <div ng-if="$ctrl.isDefault" class="alert alert-info">
-             <span class="glyphicon glyphicon-exclamation-sign"></span>
-             Default relevance value. This may be affected by changes in parent directories.
-        </div>
-        <div ng-if="$ctrl.isInherited" class="alert alert-info">
-             <span class="glyphicon glyphicon-exclamation-sign"></span>
-             Relevance value was inherited from a parent directory.
-        </div>
-        <div ng-if="$ctrl.errorMessage" class="alert alert-info">
-            <span class="glyphicon glyphicon-exclamation-sign"></span> {{$ctrl.errorMessage}}
-        </div>
-        <div>
-            <button class="timButton" ng-click="$ctrl.saveClicked()" title="Save new relevance value">Save</button>
-            <button class="timButton" ng-click="$ctrl.resetClicked()" ng-disabled="$ctrl.isDefault"
-                title="Return default relevance value">Reset</button>
-        </div>
-    `,
-});

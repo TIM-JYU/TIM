@@ -16,7 +16,6 @@ import {environment} from "tim/environments/environment";
 import {FrontPageComponent} from "tim/frontpage/front-page.component";
 import * as loadMap from "tim/gamification/loadMap";
 import * as manageCtrl from "tim/item/manageCtrl";
-import * as relevanceEdit from "tim/item/relevanceEdit";
 import * as rightsEditor from "tim/item/rightsEditor";
 import * as taggedDocumentList from "tim/item/taggedDocumentList";
 import * as answerToQuestionController from "tim/lecture/answerToQuestionController";
@@ -87,7 +86,6 @@ markAsUsed(
     manageCtrl,
     questionAskController,
     questionController,
-    relevanceEdit,
     reviewController,
     rightsEditor,
     selfExpire,

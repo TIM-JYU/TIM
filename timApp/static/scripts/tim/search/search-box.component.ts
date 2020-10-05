@@ -5,7 +5,7 @@
 import {ngStorage} from "ngstorage";
 import {Component, Input, OnDestroy, OnInit} from "@angular/core";
 import {DocumentOrFolder, IItem, ITag, ITaggedItem} from "../item/IItem";
-import {relevanceSuggestions} from "../item/relevanceEdit";
+import {relevanceSuggestions} from "../item/relevance-edit.component";
 import {someglobals} from "../util/globals";
 import {$http, $localStorage} from "../util/ngimport";
 import {to} from "../util/utils";

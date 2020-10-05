@@ -11,7 +11,7 @@ import {
     redirectToItem,
 } from "tim/item/IItem";
 import {isDocumentGlobals, someglobals} from "tim/util/globals";
-import {showRelevanceEditDialog} from "tim/item/relevanceEditDialog";
+import {showRelevanceEditDialog} from "tim/item/relevance-edit-dialog.component";
 import {showTagSearchDialog} from "tim/item/tagSearchCtrl";
 import {
     getCurrentViewRange,
@@ -31,7 +31,7 @@ import {
     TEACHERS_GROUPNAME,
 } from "tim/user/IUser";
 import {IDocSettings} from "tim/document/IDocSettings";
-import {IRelevanceResponse} from "tim/item/relevanceEdit";
+import {IRelevanceResponse} from "tim/item/relevance-edit.component";
 import {showMergePdfDialog} from "tim/document/minutes/mergePdfCtrl";
 import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
 

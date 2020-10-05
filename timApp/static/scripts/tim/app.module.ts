@@ -47,6 +47,8 @@ import {ConsentChoiceComponent} from "tim/ui/consent-choice.component";
 import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
 import {ViewRangeEditDialogComponent} from "tim/document/view-range-edit-dialog.component";
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
+import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
+import {RelevanceEditDialogComponent} from "tim/item/relevance-edit-dialog.component";
 
 @NgModule({
     declarations: [
@@ -80,6 +82,8 @@ import {HelpParContent} from "tim/document/editing/help-par-content.component";
         ViewRangeNavigationComponent,
         ViewRangeEditDialogComponent,
         HelpParContent,
+        RelevanceEditComponent,
+        RelevanceEditDialogComponent,
     ],
     imports: [
         BrowserModule,
