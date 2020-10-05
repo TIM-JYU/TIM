@@ -26,6 +26,11 @@ function clamp(val: number, min: number, max: number) {
     return val;
 }
 
+enum SizeNeedsRefresh {
+    Yes,
+    No,
+}
+
 @Directive()
 export abstract class AngularDialogComponent<Params, Result>
     implements AfterViewInit {
@@ -60,11 +65,13 @@ export abstract class AngularDialogComponent<Params, Result>
         }
         this.frame.closeFn = () => this.dismiss();
         const TwoTuple = t.tuple([t.number, t.number]);
+        let snr = SizeNeedsRefresh.No;
         if (this.dialogOptions?.resetSize) {
             this.frame.resizable.resetSize();
         } else {
             const savedSize = getStorage(this.getSizeKey());
             if (TwoTuple.is(savedSize)) {
+                snr = SizeNeedsRefresh.Yes;
                 this.frame.resizable
                     .getSize()
                     .set({width: savedSize[0], height: savedSize[1]});
@@ -74,25 +81,38 @@ export abstract class AngularDialogComponent<Params, Result>
         if (TwoTuple.is(savedPos)) {
             this.frame.setPos({x: savedPos[0], y: savedPos[1]});
         }
-        this.fixPosSizeInbounds();
-        this.frame.resizable.doResize();
+        const fixpossnr = this.fixPosSizeInbounds();
+        if (
+            snr === SizeNeedsRefresh.Yes ||
+            fixpossnr === SizeNeedsRefresh.Yes
+        ) {
+            // We don't want to call this unconditionally because it may make the initial size of the dialog too small.
+            // It happens at least it the dialog has some asynchronous initialization.
+            this.frame.resizable.doResize();
+        }
     }
 
-    fixPosSizeInbounds() {
+    fixPosSizeInbounds(): SizeNeedsRefresh {
         const vp = getViewPortSize();
 
         // First clamp the frame so it fits inside the viewport
-        let {width, height} = this.frame!.resizable.getSize();
-        width = Math.min(width, vp.width);
-        height = Math.min(height + this.extraVerticalSize, vp.height);
+        const {width, height} = this.frame!.resizable.getSize();
+        const newWidth = Math.min(width, vp.width);
+        const newHeight = Math.min(height + this.extraVerticalSize, vp.height);
 
         // Then clamp x/y so that the element is at least within the viewport
         let {x, y} = this.frame!.resizable.getPos();
-        x = clamp(x, 0, vp.width - width);
-        y = clamp(y, 0, vp.height - height);
+        x = clamp(x, 0, vp.width - newWidth);
+        y = clamp(y, 0, vp.height - newHeight);
 
-        this.frame!.resizable.getSize().set({width, height});
+        this.frame!.resizable.getSize().set({
+            width: newWidth,
+            height: newHeight,
+        });
         this.frame!.setPos({x, y});
+        return newWidth !== width || newHeight !== height
+            ? SizeNeedsRefresh.Yes
+            : SizeNeedsRefresh.No;
     }
 
     close(r: Result) {
