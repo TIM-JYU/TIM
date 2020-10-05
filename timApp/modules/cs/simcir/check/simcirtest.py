@@ -814,15 +814,23 @@ def testaa(testidata, oikeadata, maksimipisteet, hyvportit = [], tulosta = True)
 
 if __name__ == '__main__':
     import sys
-
-    if len(sys.argv) == 4:
-        p,v = testaa(sys.argv[1], sys.argv[2], float(sys.argv[3]))
-    elif len(sys.argv) == 5:
-        p,v = testaa(sys.argv[1], sys.argv[2], float(sys.argv[3]), sys.argv[4])
-    elif len(sys.argv) == 6:
-        p,v = testaa(sys.argv[1], sys.argv[2], float(sys.argv[3]), sys.argv[4], sys.argv[5])
-    else:
-        sys.stdout.write('wrong number or arguments')
+    import ast
+    # simcirtest.py [teksti - testattava vastaus] [telsti - oikea kytkentä] [float - pisteet] [array - hyväksyttävät portit] [Boolean - tulostetaanko]
+    try: 
+        if len(sys.argv) == 4:
+            p,v = testaa(sys.argv[1], sys.argv[2], float(sys.argv[3]))
+        elif len(sys.argv) == 5:
+            p,v = testaa(sys.argv[1], sys.argv[2], float(sys.argv[3]), ast.literal_eval(sys.argv[4]))
+        elif len(sys.argv) == 6:
+            p,v = testaa(sys.argv[1], sys.argv[2], float(sys.argv[3]), ast.literal_eval(sys.argv[4]), ast.literal_eval(sys.argv[5]))
+        else:
+            sys.stdout.write('Wrong number or arguments, teacher made a mistake, inform teacher')
+            exit()
+    except ValueError:
+        sys.stdout.write('Hyväksyttävät portit listassa ei ole string tyyppejä')
+        exit()
+    except SyntaxError:
+        sys.stdout.write('Hyväksyttävät portit lista pitää olla lainausmerkeissä, jos siinä useampia portteja')
         exit()
     sys.stdout.write('Pisteet: ' + str(p) + '\n')
     sys.stdout.write(v+ '\n')
