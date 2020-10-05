@@ -64,6 +64,7 @@ import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {DirectoryListComponent} from "tim/folder/directory-list.component";
 import {TemplateListComponent} from "tim/document/editing/template-list.component";
 import * as selfExpire from "tim/item/selfExpire";
+import {HelpParContent} from "tim/document/editing/help-par-content.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -134,6 +135,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timIndex", DirectoryListComponent);
     doDowngrade(dg, "timTemplateList", TemplateListComponent);
     doDowngrade(dg, "timViewRangeNavigation", ViewRangeNavigationComponent);
+    doDowngrade(dg, "timHelpParContent", HelpParContent);
     return dg;
 }
 

@@ -46,6 +46,7 @@ import {TemplateListComponent} from "tim/document/editing/template-list.componen
 import {ConsentChoiceComponent} from "tim/ui/consent-choice.component";
 import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
 import {ViewRangeEditDialogComponent} from "tim/document/view-range-edit-dialog.component";
+import {HelpParContent} from "tim/document/editing/help-par-content.component";
 
 @NgModule({
     declarations: [
@@ -78,6 +79,7 @@ import {ViewRangeEditDialogComponent} from "tim/document/view-range-edit-dialog.
         ConsentChoiceComponent,
         ViewRangeNavigationComponent,
         ViewRangeEditDialogComponent,
+        HelpParContent,
     ],
     imports: [
         BrowserModule,

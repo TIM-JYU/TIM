@@ -63,7 +63,6 @@ import {ReviewController} from "../velp/reviewController";
 import {diffDialog} from "./diffDialog";
 import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
-import * as helpPar from "./editing/helpPar";
 import {onClick} from "./eventhandlers";
 import {IDocSettings} from "./IDocSettings";
 import {ParRefController} from "./parRef";
@@ -72,7 +71,7 @@ import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
 import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "./viewutils";
 
-markAsUsed(ngs, popupMenu, interceptor, helpPar, ParRefController);
+markAsUsed(ngs, popupMenu, interceptor, ParRefController);
 
 export interface IChangeListener {
     informAboutChanges: (
