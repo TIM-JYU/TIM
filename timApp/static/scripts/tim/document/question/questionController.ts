@@ -60,8 +60,6 @@ interface IAnswerField {
 }
 
 export interface IExtendedColumn extends IColumn {
-    id: number;
-    rowId: number;
     points: string;
 }
 
@@ -414,26 +412,22 @@ export class QuestionController extends DialogController<
                 ) {
                     if (this.question.matrixType !== "textArea") {
                         if (pointsTable.length > i) {
-                            if ((j + 1).toString() in pointsTable[i]) {
-                                columnPoints =
-                                    pointsTable[i][(j + 1).toString()];
+                            const index = (j + 1).toString();
+                            if (index in pointsTable[i]) {
+                                columnPoints = pointsTable[i][index];
                             }
                         }
                     }
                 } else {
                     if (pointsTable.length > 0) {
-                        if ((i + 1).toString() in pointsTable[0]) {
-                            columnPoints = pointsTable[0][(i + 1).toString()];
+                        if (idString in pointsTable[0]) {
+                            columnPoints = pointsTable[0][idString];
                         }
                     }
                 }
                 columns[j] = {
                     id: j,
-                    rowId: i,
-                    text: jsonColumns[j].text,
                     points: columnPoints,
-                    type: jsonColumns[j].type,
-                    answerFieldType: jsonColumns[j].answerFieldType,
                 };
             }
             rows[i].columns = columns;
@@ -619,14 +613,10 @@ export class QuestionController extends DialogController<
         }
         this.columnHeaders.splice(loc, 0, {type: "header", id: loc, text: ""});
         // add new column to columns
-        for (let i = 0; i < this.rows.length; i++) {
-            this.rows[i].columns.splice(loc, 0, {
+        for (const item of this.rows) {
+            item.columns.splice(loc, 0, {
                 id: location,
-                rowId: i,
-                text: "",
                 points: "",
-                type: "answer",
-                answerFieldType: this.question.answerFieldType,
             });
         }
     }
@@ -636,12 +626,8 @@ export class QuestionController extends DialogController<
         if (this.rows.length > 0) {
             for (let j = 0; j < this.rows[0].columns.length; j++) {
                 columns[j] = {
-                    answerFieldType: this.question.answerFieldType,
                     id: j,
                     points: "",
-                    rowId: location,
-                    text: "",
-                    type: "answer",
                 };
             }
         }
@@ -932,10 +918,6 @@ export class QuestionController extends DialogController<
             for (const c of r.columns) {
                 const column: IColumn = {
                     id: c.id,
-                    type: c.type,
-                    rowId: row.id,
-                    text: "",
-                    answerFieldType: "text",
                 };
                 columnsJson.push(column);
             }

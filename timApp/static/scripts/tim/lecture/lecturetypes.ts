@@ -64,10 +64,6 @@ export interface IHeader {
 
 export interface IColumn {
     id: number;
-    rowId: number;
-    text: string;
-    type: string;
-    answerFieldType: AnswerFieldType; // TODO useless field?
 }
 
 export interface IRow extends IHeader {
