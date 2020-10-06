@@ -185,7 +185,7 @@ class DrawIO(JSframe):
                 state['c'] = bytes(c, 'ISO-8859-1').decode('utf-8') # TODO: miksi näin pitää tehdä???
         """
         ma = self.query.jso['markup']
-        hosturl = ma.get("hosturl", 'https://www.draw.io/')
+        hosturl = ma.get("hosturl", 'https://embed.diagrams.net/')
         ma["hosturl"] = hosturl
         readyhtml = get_by_id(ma, "readyHtml", None)
         srchtml = get_by_id(ma, "srchtml", None)

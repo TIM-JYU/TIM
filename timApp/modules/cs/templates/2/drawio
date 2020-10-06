@@ -1,0 +1,6 @@
+DrawIO kuva
+DrawIO:lla piirrettävä tavallinen kuva
+``` {plugin="csPlugin"}
+task: false
+type: drawio
+```
