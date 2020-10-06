@@ -919,6 +919,10 @@ tim-tape .outputvalues {
     overflow: hidden;
     text-align: right;
 }
+tim-tape .output {
+    display: flex;
+    direction: rtl;
+}
 tim-tape .inputvalues {
     width: 150px;
     overflow: hidden;
@@ -997,9 +1001,9 @@ tim-tape .commandListContainer {
         <div class="tapeAndRobotDiv">
             <div class="outputbelt" >
                 <div class="outputvalues">
-                    <span class="output">
-                    <div ng-repeat="n in $ctrl.state.output track by $index" class="tapeItem">{{n}}</div>
-                    </span>
+                    <div class="output">
+                    <div ng-repeat="n in $ctrl.state.output | orderBy:reverse:true track by $index" class="tapeItem">{{n}}</div>
+                    </div>
                </div>
                 <img src="/static/images/tape/output.png" />
                 <span>Output</span>
