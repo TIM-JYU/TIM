@@ -102,7 +102,7 @@ pointsRule:
         self.assertEqual(3.25, summs[0]['total'])
         self.assertEqual(2, summs[1]['total'])
 
-        d.document.add_setting('point_sum_rule', {'scoreboard': {'point_count_method': 'max'}})
+        d.document.add_setting('point_sum_rule', {'point_count_method': 'max'})
 
         r = self.get(d.url, as_tree=True)
         summs = self.get_js_variable(r, 'score_infos')
@@ -111,8 +111,8 @@ pointsRule:
         self.assertEqual(2, summs[1]['total'])
 
         settings = {
+            'point_count_method': 'max',
             'scoreboard': {
-                'point_count_method': 'max',
                 'groups': ['1st', '2nd'],
             },
             'groups': {'1st': 't|t2', '2nd': 't3|t4'},
@@ -141,8 +141,8 @@ pointsRule:
         )
 
         settings = {
+            'point_count_method': 'max',
             'scoreboard': {
-                'point_count_method': 'max',
                 'groups': ['1st', '2nd', '*'],
             },
             'groups': {'1st': 't|t2', '2nd': 't4'},

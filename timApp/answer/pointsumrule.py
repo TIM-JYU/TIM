@@ -67,7 +67,6 @@ class Group:
 @dataclass(frozen=True)
 class ScoreboardOptions:
     groups: List[str] = field(default_factory=list)
-    point_count_method: PointCountMethod = PointCountMethod.latest
 
 
 @dataclass(frozen=True)
@@ -82,6 +81,7 @@ class PointSumRuleModel:
     count: CountModel = CountModel(best=9999)
     scoreboard: ScoreboardOptions = ScoreboardOptions()
     include_groupless: bool = True
+    point_count_method: PointCountMethod = PointCountMethod.latest
 
 
 PointSumRuleSchema = class_schema(PointSumRuleModel)
@@ -108,6 +108,7 @@ class PointSumRule:
 
         self.scoreboard = pr.scoreboard
         self.include_groupless = pr.include_groupless
+        self.point_count_method = pr.point_count_method
         self.total = data.get('total', None)
         self.hide = data.get('hide', None)
         self.sort = data.get('sort', True)

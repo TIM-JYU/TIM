@@ -62,7 +62,7 @@ def get_score_infos(
             continue
 
         point_sum_rule = doc.get_settings().point_sum_rule()
-        count_method = point_sum_rule.scoreboard.point_count_method if point_sum_rule else PointCountMethod.latest
+        count_method = point_sum_rule.point_count_method if point_sum_rule else PointCountMethod.latest
 
         # cycle through all tasks in current document, resolving user's progress on each scored assignment
         point_dict: Dict[str, TaskScoreInfo] = {}
