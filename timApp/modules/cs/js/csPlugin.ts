@@ -2292,13 +2292,14 @@ ${fhtml}
             ) {
                 // let savedText = "saved";
                 // this.savedText = data.web.error ?? "saved";
-                this.savedText = this.attrsall.markup.savedText ?? "saved";
+                this.savedText = this.attrsall.markup.savedText ?? "Saved";
                 // this.preventSave = true;
-                if (data.web.error === "Saved") {
+                if (data.web.error === this.savedText) {
                     data.web.error = "";
                 }
             }
-            if (data.web.error === "Saved" && data.web.console) {
+            if (data.web.error === this.savedText) {
+                // } && data.web.console) {
                 data.web.error = "";
             }
             if (data.web.pwd) {
