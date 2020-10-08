@@ -951,6 +951,7 @@ export class CsController extends CsBase implements ITimComponent {
     uploadByCodeFiles: {path: string; show: boolean | "loaded"}[] = [];
     @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
     private isSimcirUnsaved?: boolean;
+    private clearSaved: boolean = false;
 
     @ViewChild("externalEditor")
     set externalEditorViewSetter(new_value: EditorComponent | undefined) {
@@ -1317,6 +1318,9 @@ export class CsController extends CsBase implements ITimComponent {
         const nowUnsaved = this.hasUnSavedInput();
         if (!this.edited && nowUnsaved) {
             this.edited = true;
+            if (this.clearSaved) {
+                this.savedText = "";
+            }
             this.updateListeners(ChangeType.Modified);
         } else if (this.edited && !nowUnsaved) {
             this.edited = false;
@@ -1768,6 +1772,8 @@ ${fhtml}
     ngOnInit() {
         super.ngOnInit();
 
+        this.clearSaved = !!this.attrsall.markup.savedText;
+
         this.upload =
             this.type === "upload" ||
             this.markup.upload ||
@@ -1952,7 +1958,7 @@ ${fhtml}
             this.showCodeNow();
         }
         this.countBoard?.count(str);
-        if (this.isText) {
+        if (this.isText || this.clearSaved) {
             this.savedText = "";
         }
 
