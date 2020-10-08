@@ -2280,7 +2280,10 @@ ${fhtml}
             const runtime = (data.web.runtime ?? "").trim();
             this.oneruntime = "" + tsruntime + " " + runtime.split(" ", 1)[0];
             this.runtime = "\nWhole: " + tsruntime + "\ncsPlugin: " + runtime;
-            if (this.isText && data.savedNew) {
+            if (
+                (this.isText || this.attrsall.markup.savedText) &&
+                data.savedNew
+            ) {
                 // let savedText = "saved";
                 // this.savedText = data.web.error ?? "saved";
                 this.savedText = this.attrsall.markup.savedText ?? "saved";
