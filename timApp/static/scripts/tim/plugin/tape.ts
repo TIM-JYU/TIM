@@ -88,9 +88,9 @@ class Output extends Command {
 
     public execute(params: CommandParameters<unknown>) {
         if (params.state.hand != null) {
-            params.state.output.push(params.state.hand);
+            params.state.output.unshift(params.state.hand);
             while (params.state.output.length > 6) {
-                params.state.output.splice(0, 1);
+                params.state.output.pop();
             }
             params.state.hand = undefined;
         }
@@ -996,13 +996,17 @@ tim-tape .commandListContainer {
    width: 150px;
 }
 
+tim-tape .tapeItem {
+   direction: ltr;
+}
+
 </style>
     <div class="no-highlight robotMainDiv">
         <div class="tapeAndRobotDiv">
             <div class="outputbelt" >
                 <div class="outputvalues">
                     <div class="output">
-                    <div ng-repeat="n in $ctrl.state.output | orderBy:reverse:true track by $index" class="tapeItem">{{n}}</div>
+                    <div ng-repeat="n in $ctrl.state.output track by $index" class="tapeItem">{{n}}</div>
                     </div>
                </div>
                 <img src="/static/images/tape/output.png" />
