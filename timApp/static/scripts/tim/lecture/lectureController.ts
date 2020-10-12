@@ -33,8 +33,8 @@ import {
     isOpenInAnotherTab,
     QUESTION_STORAGE,
     showQuestionAnswerDialog,
-} from "./answerToQuestionController";
-import {showLectureDialog} from "./createLectureCtrl";
+} from "./answer-to-question-dialog.component";
+import {showLectureDialog} from "./lecture-dialog.component";
 import {showLectureEnding} from "./lectureEnding";
 import {
     alreadyAnswered,
@@ -65,7 +65,7 @@ import {
 } from "./lecturetypes";
 import * as wall from "./lectureWall";
 import {LectureWallController, showLectureWall} from "./lectureWall";
-import {askQuestion} from "./questionAskController";
+import {askQuestion} from "./question-preview-dialog.component";
 
 markAsUsed(wall);
 
@@ -85,7 +85,7 @@ export class LectureController {
     public lectures: ILecture[];
     public lectureSettings: ILectureSettings;
     private lectureEndingDialogState: LectureEndingDialogState;
-    private futureLectures: ILecture[];
+    futureLectures: ILecture[];
     private lectureEnded: boolean;
     public lecturerTable: ILecturePerson[];
     private newMessagesAmount: number;
@@ -356,6 +356,7 @@ export class LectureController {
      */
     async toggleLecture() {
         const result = await showLectureDialog(this.viewctrl!.item);
+        console.log("hoh");
         if (result != null) {
             await this.checkIfInLecture();
         }
@@ -479,7 +480,7 @@ export class LectureController {
     /**
      * Gets lectureInfo and shows editLecture dialog
      */
-    async editLecture(lectureId: string) {
+    async editLecture(lectureId: number) {
         const params = {lecture_id: lectureId};
         const response = await to(
             $http<ILecture>({

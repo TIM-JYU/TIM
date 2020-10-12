@@ -2,12 +2,12 @@ import {IController} from "angular";
 import {timApp} from "tim/app";
 import * as showChart from "tim/lecture/showChartDirective";
 import {markAsUsed, to} from "tim/util/utils";
-import {showQuestionEditDialog} from "../document/question/questionController";
+import {showQuestionEditDialog} from "../document/question/question-edit-dialog.component";
 import {IUser} from "../user/IUser";
 import {isAdmin, Users} from "../user/userService";
 import {lectureinfoglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
-import {showLectureDialog} from "./createLectureCtrl";
+import {showLectureDialog} from "./lecture-dialog.component";
 import {
     IAskedQuestion,
     ILecture,

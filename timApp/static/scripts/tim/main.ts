@@ -9,7 +9,6 @@ import $ from "jquery";
 import * as answerbrowser from "tim/answer/answerbrowser3";
 import * as userlistController from "tim/answer/userlistController";
 import {timApp} from "tim/app";
-import * as questionController from "tim/document/question/questionController";
 import * as viewctrl from "tim/document/viewctrl";
 import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
 import {environment} from "tim/environments/environment";
@@ -18,12 +17,8 @@ import * as loadMap from "tim/gamification/loadMap";
 import * as manageCtrl from "tim/item/manageCtrl";
 import * as rightsEditor from "tim/item/rightsEditor";
 import * as taggedDocumentList from "tim/item/taggedDocumentList";
-import * as answerToQuestionController from "tim/lecture/answerToQuestionController";
-import * as createLectureCtrl from "tim/lecture/createLectureCtrl";
-import * as lectureController from "tim/lecture/lectureController";
 import * as lectureInfoController from "tim/lecture/lectureInfoController";
-import * as lectureMenu from "tim/lecture/lectureMenu";
-import * as questionAskController from "tim/lecture/questionAskController";
+import {LectureMenuComponent} from "tim/lecture/lectureMenu";
 import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQuestionController";
 import * as markAllAsRead from "tim/ui/markAllAsRead";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
@@ -33,7 +28,6 @@ import * as timRoot from "tim/timRoot";
 import {SettingsComponent} from "tim/user/settings.component";
 import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
 import {AnnotationComponent} from "tim/velp/annotation.component";
-import * as reviewController from "tim/velp/reviewController";
 import * as velpSelection from "tim/velp/velpSelection";
 import {staticDynamicImport} from "tim/staticDynamicImport";
 import {AppModule} from "tim/app.module";
@@ -64,6 +58,7 @@ import {DirectoryListComponent} from "tim/folder/directory-list.component";
 import {TemplateListComponent} from "tim/document/editing/template-list.component";
 import * as selfExpire from "tim/item/selfExpire";
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
+import {DurationPickerComponent} from "tim/ui/duration-picker.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -76,17 +71,10 @@ if (environment.production) {
 
 markAsUsed(
     answerbrowser,
-    answerToQuestionController,
     bootstrap,
-    createLectureCtrl,
-    lectureController,
     lectureInfoController,
-    lectureMenu,
     loadMap,
     manageCtrl,
-    questionAskController,
-    questionController,
-    reviewController,
     rightsEditor,
     selfExpire,
     showStatisticsToQuestionController,
@@ -134,6 +122,8 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timTemplateList", TemplateListComponent);
     doDowngrade(dg, "timViewRangeNavigation", ViewRangeNavigationComponent);
     doDowngrade(dg, "timHelpParContent", HelpParContent);
+    doDowngrade(dg, "timLectureMenu", LectureMenuComponent);
+    doDowngrade(dg, "timDurationPicker", DurationPickerComponent);
     return dg;
 }
 

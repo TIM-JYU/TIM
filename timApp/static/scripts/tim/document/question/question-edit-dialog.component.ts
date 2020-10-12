@@ -1,4 +1,6 @@
-import {IFormController, IScope} from "angular";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import {Component, ViewChild} from "@angular/core";
 import * as t from "io-ts";
 import $ from "jquery";
 import moment from "moment";
@@ -8,17 +10,17 @@ import {
     IPreviewParams,
     makePreview,
     minimizeJson,
-} from "tim/document/question/dynamicAnswerSheet";
+} from "tim/document/question/answer-sheet.component";
+import {getStorage, setStorage, to} from "tim/util/utils";
 import {
-    dateFormat,
-    getStorage,
-    markAsUsed,
-    setStorage,
-    to,
-} from "tim/util/utils";
-import {KEY_R, KEY_S} from "tim/util/keycodes";
-import {DialogController} from "tim/ui/dialogController";
-import {ParCompiler} from "../../editor/parCompiler";
+    KEY_DOWN,
+    KEY_ENTER,
+    KEY_LEFT,
+    KEY_R,
+    KEY_RIGHT,
+    KEY_S,
+    KEY_UP,
+} from "tim/util/keycodes";
 import {
     IAskedJsonJson,
     IAskedQuestion,
@@ -30,18 +32,13 @@ import {
     IRow,
     MatrixType,
     QuestionType,
-} from "../../lecture/lecturetypes";
-import {IGenericPluginMarkup} from "../../plugin/attributes";
-import {
-    registerDialogComponent,
-    showDialog,
-    showMessageDialog,
-} from "../../ui/dialog";
-import {$http, $timeout} from "../../util/ngimport";
+} from "tim/lecture/lecturetypes";
+import {IGenericPluginMarkup} from "tim/plugin/attributes";
+import {showMessageDialog} from "tim/ui/dialog";
+import {$http} from "tim/util/ngimport";
+import {NgForm} from "@angular/forms";
+import {QuestionMatrixComponent} from "tim/document/question/question-matrix.component";
 import {IParResponse} from "../editing/edittypes";
-import {QuestionMatrixController} from "./questionMatrix";
-
-markAsUsed(QuestionMatrixController);
 
 /**
  * Controller for creating and editing questions
@@ -63,7 +60,7 @@ export interface IExtendedColumn extends IColumn {
     points: string;
 }
 
-interface IExtendedRow extends IRow {
+export interface IExtendedRow extends IRow {
     expl: string;
     id: number;
     text: string;
@@ -174,38 +171,165 @@ export async function deleteQuestionWithConfirm(
     return null;
 }
 
-export class QuestionController extends DialogController<
-    {params: IQuestionDialogParams},
+@Component({
+    selector: "tim-edit-question-dialog",
+    template: `
+        <tim-dialog-frame *ngIf="!isAskedQuestion()">
+            <ng-container header>
+                {{ getTitle() }}
+            </ng-container>
+            <ng-container body>
+                <form #f (keydown)="formKeyDown($event)">
+                    <div class="form-group form-horz-flex" timErrorState>
+                        <label for="question">Question text</label>
+                        <textarea class="form-control" required name="question" id="question"
+                                  [(ngModel)]="question.questionText"
+                                  (ngModelChange)="changeQuestionTitle(question.questionText)"></textarea>
+                        <tim-error-message></tim-error-message>
+                    </div>
+                    <div class="form-group form-horz-flex" timErrorState>
+                        <label for="title">
+                            Question title</label>
+                        <input class="form-control"
+                               required name="title" id="title" type="text" [(ngModel)]="question.questionTitle"
+                               (focus)="titleFocused($event)"
+                               (ngModelChange)="titleIsChanged()"/>
+                        <tim-error-message></tim-error-message>
+                    </div>
+
+                    <div class="form-group form-horz-flex">
+                        <label for="qtype">Question type</label>
+                        <select class="form-control"
+                                name="type"
+                                id="qtype"
+                                [(ngModel)]="question.questionType"
+                                required
+                                (ngModelChange)="createMatrix(question.questionType)">
+                            <option value="" disabled selected> -- select question type --</option>
+                            <option value="radio-vertical">Multiple choice (radio button)</option>
+                            <option value="checkbox-vertical">Multiple choice (checkbox)</option>
+                            <option value="true-false">True/False</option>
+                            <option value="matrix">Many rows and columns</option>
+                            <option value="likert">5 choices likert scale</option>
+                            <option value="textarea">One text area</option>
+                        </select>
+                    </div>
+                    <label for="defaultPoints">Default points for answers</label>
+                    <input [(ngModel)]="defaultPoints"
+                           id="defaultPoints"
+                           name="defaultPoints"
+                           class="form-control"
+                           placeholder="Default point value for fields"
+                           type="number"
+                           step="0.1"/>
+                    <label> Randomize rows <input type="checkbox"
+                                                  name="randomization"
+                                                  [(ngModel)]="randomization"/></label>
+                    <div class="form-group" *ngIf="randomization">
+                        Number of rows to select (in addition to locked rows)
+                        <input [(ngModel)]="randomizedRows"
+                               id="randomizedRows"
+                               name="randomizedRows"
+                               class="form-control"
+                               type="number"
+                               step="1"/>
+                    </div>
+                    <div class="form-group"
+                         *ngIf="question.questionType == 'matrix' || question.questionType == 'likert'">
+                        <label for="answerType">Answer type</label>
+                        <select id="answerType"
+                                required
+                                name="answerType"
+                                class="form-control"
+                                [(ngModel)]="question.matrixType">
+                            <option value="" disabled selected> -- select answer type --</option>
+                            <option *ngFor="let item of answerFieldTypes" [value]="item.value">{{item.label}}</option>
+                        </select>
+                    </div>
+                    <tim-question-matrix *ngIf="question.questionType" [qctrl]="this"></tim-question-matrix>
+                    <div class="checkbox">
+                        <label><input type="checkbox" [(ngModel)]="qst" name="documentQuestion"/> Document
+                            question</label>
+                    </div>
+                    <div class="form-group form-horz-flex"
+                         *ngIf="qst">
+                        <label for="answerLimit">Answer limit</label>
+                        <input [(ngModel)]="pluginMarkup.answerLimit //noinspection UnresolvedVariable"
+                               id="answerLimit"
+                               name="answerLimit"
+                               class="form-control"
+                               placeholder="Maximum number of allowed answer attempts"
+                               type="number"
+                               min="1"
+                               step="1"/>
+                    </div>
+                    <div class="form-horz-flex" *ngIf="!qst">
+                        <label>
+                            Duration
+                        </label>
+                        <tim-duration-picker [(amount)]="ui.durationAmount"
+                                             [(type)]="ui.durationType"></tim-duration-picker>
+                    </div>
+                </form>
+                <bootstrap-panel title="Preview">
+                    <tim-answer-sheet [questiondata]="previewParams"></tim-answer-sheet>
+                </bootstrap-panel>
+                <tim-alert *ngIf="customError">{{ customError }}</tim-alert>
+            </ng-container>
+            <ng-container footer>
+                <button *ngIf="!isNew()"
+                        class="btn btn-danger"
+                        (click)="deleteQuestion()">Delete</button> 
+                <button class="timButton saveButton" (click)="createQuestion(false)" title="Ctrl-S">Save</button>
+                <button class="timButton" (click)="dismiss()">Cancel</button>
+            </ng-container>
+        </tim-dialog-frame>
+        <tim-dialog-frame *ngIf="isAskedQuestion()">
+            <ng-container header>
+                {{ getTitle() }}
+            </ng-container>
+            <ng-container body>
+                <form>
+                    <h5 [innerHtml]="question.questionText"></h5>
+                    <div *ngIf="question.questionType">
+                        <tim-question-matrix [qctrl]="this"></tim-question-matrix>
+                    </div>
+                    <tim-alert *ngIf="customError">{{ customError }}</tim-alert>
+                </form>
+            </ng-container>
+            <ng-container footer>
+                <button class="timButton" (click)="createQuestion(false)" title="Ctrl-S">Save</button>
+                <button class="timButton" (click)="dismiss()">Cancel</button>
+            </ng-container>
+        </tim-dialog-frame>
+    `,
+})
+export class QuestionEditDialogComponent extends AngularDialogComponent<
+    IQuestionDialogParams,
     IQuestionDialogResult
 > {
-    static component = "timEditQuestion";
-    static $inject = ["$element", "$scope"] as const;
-    private answerFieldTypes: IAnswerField[];
-    private dateTimeOptions: EonasdanBootstrapDatetimepicker.SetOptions;
-    private question: IAskedJsonJson;
-    private ui: IQuestionUI;
-    private rows: IExtendedRow[];
-    private columns: Array<unknown>; // TODO give accurate type
-    private columnHeaders: IHeader[];
+    protected dialogName = "editQuestion";
+    answerFieldTypes: IAnswerField[];
+    question: IAskedJsonJson;
+    ui: IQuestionUI;
+    rows: IExtendedRow[];
+    columnHeaders: IHeader[];
     private titleChanged: boolean = false;
     private oldMarkupJson: string;
     private oldHeaders?: string[];
-    private previewParams: IPreviewParams;
-    private customError: string | undefined;
-    private f?: IFormController;
-    private qst = false;
-    private pluginMarkup: IGenericPluginMarkup = {};
-    private defaultPoints?: number;
-    private randomization = false;
-    private randomizedRows?: number;
+    previewParams: IPreviewParams;
+    customError: string | undefined;
+    @ViewChild("f") f?: NgForm;
+    @ViewChild(QuestionMatrixComponent)
+    questionMatrix!: QuestionMatrixComponent;
+    qst = false;
+    pluginMarkup: IGenericPluginMarkup = {};
+    defaultPoints?: number;
+    randomization = false;
+    randomizedRows?: number;
 
-    constructor(element: JQLite, protected scope: IScope) {
-        super(element, scope);
-
-        this.dateTimeOptions = {
-            format: dateFormat,
-            showTodayButton: true,
-        };
+    constructor() {
+        super();
 
         this.question = {
             answerFieldType: "text",
@@ -223,7 +347,6 @@ export class QuestionController extends DialogController<
         };
 
         this.rows = [];
-        this.columns = [];
         this.columnHeaders = [];
         this.setTime();
         this.answerFieldTypes = [
@@ -241,35 +364,19 @@ export class QuestionController extends DialogController<
     }
 
     public getTitle() {
-        return isNewQuestion(this.resolve.params)
-            ? "Create a question"
-            : "Edit question";
+        return isNewQuestion(this.data) ? "Create a question" : "Edit question";
     }
 
-    $onInit() {
-        super.$onInit();
-        if (isNewQuestion(this.resolve.params)) {
-            this.newQuestion(this.resolve.params);
+    isNew() {
+        return isNewQuestion(this.data);
+    }
+
+    ngOnInit() {
+        if (isNewQuestion(this.data)) {
+            this.newQuestion(this.data);
         } else {
-            this.editQuestion(this.resolve.params);
+            this.editQuestion(this.data);
         }
-    }
-
-    private async $postLink() {
-        await $timeout();
-        this.addKeyListeners();
-        // ParCompiler.processAllMath($element.parent());
-        ParCompiler.processAllMathDelayed(this.element.parent(), 1000);
-
-        /*
-         this.questionForm.addEventListener( "keydown", function(event) {
-         // $("#question-form").keypress(function(event) {
-         var c = String.fromCharCode(event.keyCode);
-         if ( (event.which == 115 && event.ctrlKey) || (event.which == 19) ) { // ctrl-s
-         event.preventDefault();
-         }
-         });
-         */
     }
 
     private putBackQuotations(x: string) {
@@ -307,8 +414,8 @@ export class QuestionController extends DialogController<
         }
     }
 
-    private isAskedQuestion() {
-        return isAskedQuestion(this.resolve.params);
+    isAskedQuestion() {
+        return isAskedQuestion(this.data);
     }
 
     private editQuestion(data: IEditQuestionParams) {
@@ -452,7 +559,7 @@ export class QuestionController extends DialogController<
         if (!id || !id.startsWith("r")) {
             return 0;
         }
-        const edits = this.element.find(".questiontext");
+        const edits = this.questionMatrix.textareas.map((x) => x.nativeElement);
         const ind = parseInt(id.substr(1), 10) + dir - 1;
         if (ind < 0) {
             return 0;
@@ -461,49 +568,43 @@ export class QuestionController extends DialogController<
             this.addRow(-1);
             edits[ind - 2].focus();
             edits[ind - 1].focus();
-            this.element.find("#r" + (ind + 1)).focus();
+            const idStr = (ind + 1).toString();
+            edits.find((e) => e.id === idStr)!.focus();
             return 0;
         }
         edits[ind].focus();
         return 0;
     }
 
-    private addKeyListeners() {
-        const questionForm = this.element.find("form")[0];
-
-        questionForm.addEventListener("keydown", (event: KeyboardEvent) => {
-            if (event.ctrlKey || event.metaKey) {
-                switch (event.keyCode) {
-                    case 37: // left
-                        return;
-                    case 38: // up
-                        return this.moveToElement(event, -1);
-                    case 39: // right
-                        return;
-                    case 13: // down
-                    case 40: // down
-                        return this.moveToElement(event, +1);
-                }
-
-                switch (event.which) {
-                    case KEY_S:
-                        event.preventDefault();
-                        this.createQuestion(false);
-                        break;
-                    case KEY_R:
-                        event.preventDefault();
-                        this.createQuestion(true);
-                        break;
-                }
+    formKeyDown(event: KeyboardEvent) {
+        if (event.ctrlKey || event.metaKey) {
+            switch (event.keyCode) {
+                case KEY_LEFT:
+                    return;
+                case KEY_UP:
+                    return this.moveToElement(event, -1);
+                case KEY_RIGHT:
+                    return;
+                case KEY_ENTER:
+                case KEY_DOWN:
+                    return this.moveToElement(event, +1);
+                case KEY_S:
+                    event.preventDefault();
+                    this.createQuestion(false);
+                    break;
+                case KEY_R:
+                    event.preventDefault();
+                    this.createQuestion(true);
+                    break;
             }
-        });
+        }
     }
 
     /**
      * A function for creating a matrix.
      * @param type The answer type of the matrix.
      */
-    private createMatrix(type: QuestionType) {
+    createMatrix(type: QuestionType) {
         if (!this.oldHeaders) {
             this.oldHeaders = [];
         }
@@ -605,7 +706,7 @@ export class QuestionController extends DialogController<
      * A function to add a column to an existing matrix.
      * @param loc The index in the matrix where to add the new column.
      */
-    private addCol(loc: number) {
+    addCol(loc: number) {
         let location = loc;
         if (loc === -1) {
             location = this.rows[0].columns.length;
@@ -638,7 +739,7 @@ export class QuestionController extends DialogController<
      * The function adds a row to an existing matrix
      * @param loc The index in the matrix where to add the new row.
      */
-    private addRow(loc: number) {
+    addRow(loc: number) {
         let location = loc;
         if (loc === -1) {
             location = this.rows.length;
@@ -664,7 +765,7 @@ export class QuestionController extends DialogController<
      * A function to delete a row from a matrix.
      * @param indexToBeDeleted The index of the row to be deleted.
      */
-    private delRow(indexToBeDeleted: number) {
+    delRow(indexToBeDeleted: number) {
         if (this.rows.length > 1) {
             if (indexToBeDeleted === -1) {
                 this.rows.splice(-1, 1);
@@ -682,7 +783,7 @@ export class QuestionController extends DialogController<
      * A function to delete a column from a matrix.
      * @param indexToBeDeleted Index of the column to be deleted.
      */
-    private delCol(indexToBeDeleted: number) {
+    delCol(indexToBeDeleted: number) {
         for (const r of this.rows) {
             if (indexToBeDeleted === -1) {
                 r.columns.splice(-1, 1);
@@ -856,7 +957,7 @@ export class QuestionController extends DialogController<
             timeLimit = undefined;
         }
 
-        if (this.customError != null || this.f?.$invalid) {
+        if (this.customError != null || this.f?.invalid) {
             if (this.question.questionTitle === "Untitled") {
                 this.question.questionTitle = "";
             }
@@ -952,7 +1053,7 @@ export class QuestionController extends DialogController<
         return questionjson;
     }
 
-    private async $doCheck() {
+    private async ngDoCheck() {
         this.createJson();
         const currJson = JSON.stringify(this.question);
         if (currJson !== this.oldMarkupJson) {
@@ -990,9 +1091,9 @@ export class QuestionController extends DialogController<
     /**
      * Validates and saves the question into the database.
      */
-    private async createQuestion(ask: boolean) {
+    async createQuestion(ask: boolean) {
         const questionjson = this.createJson();
-        const p = this.resolve.params;
+        const p = this.data;
         if (!questionjson) {
             return;
         }
@@ -1065,34 +1166,34 @@ export class QuestionController extends DialogController<
         );
     }
 
-    private async deleteQuestion() {
-        if (isNewQuestion(this.resolve.params)) {
+    async deleteQuestion() {
+        if (isNewQuestion(this.data)) {
             await showMessageDialog(
                 "Not editing a question - there is nothing to delete."
             );
             return;
         }
-        if (isAskedQuestion(this.resolve.params)) {
+        if (isAskedQuestion(this.data)) {
             await showMessageDialog(
                 "Editing an asked question - cannot delete now."
             );
             return;
         }
-        const docId = this.resolve.params.docId;
-        const parId = this.resolve.params.parId;
+        const docId = this.data.docId;
+        const parId = this.data.parId;
         const data = await deleteQuestionWithConfirm(docId, parId);
         if (data != null) {
             this.close({data, deleted: true, ask: false, type: "edit"});
         }
     }
 
-    private explFocus($event: Event) {
+    explFocus($event: Event) {
         if ($event.target) {
             $($event.target).parent().addClass("explFocus");
         }
     }
 
-    private explBlur($event: Event) {
+    explBlur($event: Event) {
         if ($event.target) {
             $($event.target).parent().removeClass("explFocus");
         }
@@ -1102,27 +1203,24 @@ export class QuestionController extends DialogController<
      * Changes the question title field to match the question if user hasn't defined title
      * @param question of question
      */
-    private changeQuestionTitle(question: string) {
+    changeQuestionTitle(question: string) {
         if (!this.titleChanged) {
             this.question.questionTitle = question;
         }
     }
 
-    private titleIsChanged() {
+    titleIsChanged() {
         this.titleChanged = true;
     }
-}
 
-registerDialogComponent(
-    QuestionController,
-    {templateUrl: "/static/templates/question.html"},
-    "qctrl"
-);
+    titleFocused(event: FocusEvent) {
+        (event.target as HTMLInputElement).select();
+    }
+}
 
 export async function showQuestionEditDialog(
     params: IQuestionDialogParams
 ): Promise<IQuestionDialogResult> {
-    return showDialog(QuestionController, {
-        params: () => params,
-    }).result;
+    return (await angularDialog.open(QuestionEditDialogComponent, params))
+        .result;
 }

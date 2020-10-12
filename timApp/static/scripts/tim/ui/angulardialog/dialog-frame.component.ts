@@ -1,8 +1,8 @@
 /* eslint-disable no-underscore-dangle */
-import {Component, ViewChild} from "@angular/core";
+import {Component, ElementRef, ViewChild} from "@angular/core";
 import {ISize} from "tim/util/utils";
 import {Size} from "angular2-draggable/lib/models/size";
-import {Position, IPosition} from "angular2-draggable/lib/models/position";
+import {IPosition, Position} from "angular2-draggable/lib/models/position";
 import {AngularDraggableDirective} from "angular2-draggable";
 
 export interface IAngularResizableDirectivePublic {
@@ -47,6 +47,7 @@ class ResizableDraggableWrapper {
                  [bounds]="bounds"
                  #resizable="ngResizable"
                  #draggable="ngDraggable"
+                 #dragelem
                  [preventDefaultEvent]="true"
                  [handle]="draghandle"
                  [position]="position"
@@ -94,6 +95,7 @@ export class DialogFrame {
     @ViewChild("resizable")
     private ngResizable!: IAngularResizableDirectivePublic;
     @ViewChild("draggable") private ngDraggable!: AngularDraggableDirective;
+    @ViewChild("dragelem") dragelem!: ElementRef<HTMLElement>;
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};
 

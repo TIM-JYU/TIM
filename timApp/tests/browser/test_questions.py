@@ -2,13 +2,14 @@ from time import sleep
 from typing import List, Tuple, Dict, Union, Optional
 
 from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver import ActionChains
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
 
 from timApp.answer.answer import Answer
 from timApp.document.yamlblock import YamlBlock
-from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text, find_by_ngmodel, find_all_by_ngmodel, \
-    find_by_ngclick
+from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text, find_by_attr_name
 
 ChoiceList = List[Tuple[str, str]]
 ElementList = List[WebElement]
@@ -38,21 +39,21 @@ def create_yaml(field_type: str,
 
 
 def get_matrix_fields(dialog: WebElement) -> Tuple[ElementList, ElementList, ElementList, ElementList]:
-    choice_elems = find_all_by_ngmodel(dialog, 'row.text')
-    reason_elems = find_all_by_ngmodel(dialog, 'row.expl')
-    point_elems = find_all_by_ngmodel(dialog, 'column.points')
-    header_elems = find_all_by_ngmodel(dialog, '$ctrl.qctrl.columnHeaders[$index].text')
+    choice_elems = dialog.find_elements(By.CSS_SELECTOR, 'textarea[id^="r"]')
+    reason_elems = dialog.find_elements(By.CSS_SELECTOR, 'textarea[placeholder="Optional: Explain why answer is right/wrong"]')
+    point_elems = dialog.find_elements(By.CSS_SELECTOR, 'input[placeholder="pts"]')
+    header_elems = dialog.find_elements(By.CSS_SELECTOR, 'th textarea')
     return choice_elems, header_elems, point_elems, reason_elems
 
 
 def adjust_matrix_size(dialog: WebElement, missing_choices: int, rowcol: str):
-    addbutton = find_by_ngclick(dialog, f'$ctrl.qctrl.add{rowcol}(-1)')
+    addbutton = dialog.find_element(By.CSS_SELECTOR, f'.add{rowcol}')
     if missing_choices > 0:
         for i in range(missing_choices):
             addbutton.click()
     elif missing_choices < 0:
         for i in range(-missing_choices):
-            delbutton = find_by_ngclick(dialog, f'$ctrl.qctrl.del{rowcol}($index)')
+            delbutton = dialog.find_element(By.CSS_SELECTOR, f'.del{rowcol}')
             delbutton.click()
 
 
@@ -176,20 +177,20 @@ class QuestionTest(BrowserTest):
         d = self.create_doc(initial_par='test')
         self.goto_document(d, view='lecture')
         self.find_element('.glyphicon-option-horizontal').click()
-        par = self.drv.find_elements_by_css_selector('.editline')[1]
+        par = self.drv.find_elements(By.CSS_SELECTOR, '.editline')[1]
         par.click()
         find_button_by_text(par, 'Add question above').click()
         sleep(0.5)
-        dialog = self.drv.find_element_by_css_selector('tim-edit-question')
-        questiontext = find_by_ngmodel(dialog, 'qctrl.question.questionText')
+        dialog = self.drv.find_element(By.CSS_SELECTOR, 'tim-edit-question-dialog')
+        questiontext = find_by_attr_name(dialog, 'question')
         questiontext.send_keys('Is Moon made of cheese?')
-        questiontitle = find_by_ngmodel(dialog, 'qctrl.question.questionTitle')
+        questiontitle = find_by_attr_name(dialog, 'title')
         questiontitle.click()
         questiontitle.send_keys('Moon problem')
-        questionselect = Select(find_by_ngmodel(dialog, 'qctrl.question.questionType'))
+        questionselect = Select(find_by_attr_name(dialog, 'type'))
         questionselect.select_by_visible_text(type_choice)
         if answer_type_choice:
-            answertypeselect = Select(find_by_ngmodel(dialog, 'qctrl.question.matrixType'))
+            answertypeselect = Select(find_by_attr_name(dialog, 'answerType'))
             answertypeselect.select_by_visible_text(answer_type_choice)
         choice_elems, header_elems, point_elems, reason_elems = get_matrix_fields(dialog)
         diffs = {
@@ -217,16 +218,21 @@ class QuestionTest(BrowserTest):
             # to work more reliably.
             for k in header:
                 elem.send_keys(k)
-        matrix = self.drv.find_element_by_css_selector('tim-question-matrix')
-        answersheet = self.drv.find_element_by_css_selector('dynamic-answer-sheet')
-        questiontext.click()  # move focus out of matrix to get consistent screenshots
+        matrix = self.drv.find_element(By.CSS_SELECTOR, 'tim-question-matrix')
+        answersheet = self.drv.find_element(By.CSS_SELECTOR, 'tim-answer-sheet')
+
+        # Avoid hovering the header row (otherwise the +/- buttons will show up)
+        # or focusing any text boxes to get consistent screenshots.
+        self.scroll_into_view(answersheet)
+        ActionChains(self.drv).move_to_element(answersheet).click().perform()
+
         self.assert_same_screenshot(matrix, f'questions/question_matrix_{questiontype}',
                                     move_to_element=True, attempts=2)
         self.assert_same_screenshot(answersheet, f'questions/answer_sheet_{questiontype}',
                                     move_to_element=True, attempts=2)
-        find_button_by_text(dialog, 'Save').click()
-        self.wait_until_hidden('tim-edit-question')
-        qst = self.find_element_and_move_to('qst-runner')
+        dialog.find_element(By.CSS_SELECTOR, '.saveButton').click()
+        self.wait_until_hidden('tim-edit-question-dialog')
+        qst = self.find_element_and_move_to('tim-qst')
         self.assert_same_screenshot(qst, f'questions/qst_{questiontype}', attempts=2)
         d.document.clear_mem_cache()
         qst_par = d.document.get_paragraphs()[0]
@@ -234,24 +240,24 @@ class QuestionTest(BrowserTest):
 
         self.assertEqual(expected_yaml, YamlBlock.from_markdown(qst_md))
         if answer_type_choice == 'Text area':
-            textareas = qst.find_elements_by_css_selector('textarea')
+            textareas = qst.find_elements(By.CSS_SELECTOR, 'textarea')
             textareas[0].click()
             for answer, area in zip(answer_choices, textareas):
                 area.send_keys(answer)
         else:
-            labels = qst.find_elements_by_css_selector('label')
+            labels = qst.find_elements(By.CSS_SELECTOR, 'label')
             for i in answer_choices:
                 labels[i].click()
         savebtn = find_button_by_text(qst, 'Save')
         savebtn.click()
-        self.wait_until_text_present('qst-runner', 'Saved')
+        self.wait_until_text_present('tim-qst', 'Saved')
 
         # Move mouse out of button to prevent flaky screenshot.
-        header = self.drv.find_element_by_css_selector('qst-runner h5')
+        header = self.drv.find_element(By.CSS_SELECTOR, 'tim-qst h5')
         header.click()
 
         while True:
-            qst = self.drv.find_element_by_css_selector('qst-runner')
+            qst = self.drv.find_element(By.CSS_SELECTOR, 'tim-qst')
             try:
                 self.assert_same_screenshot(qst, f'questions/qst_{questiontype}_answered')
                 break

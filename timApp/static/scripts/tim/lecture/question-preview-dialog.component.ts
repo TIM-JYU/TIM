@@ -1,27 +1,21 @@
-import {IScope} from "angular";
-import * as answerSheet from "tim/document/question/dynamicAnswerSheet";
-import {markAsUsed, to} from "tim/util/utils";
-import {DialogController} from "tim/ui/dialogController";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import {Component} from "@angular/core";
+import {to} from "tim/util/utils";
 import {
     IPreviewParams,
     makePreview,
-} from "../document/question/dynamicAnswerSheet";
+} from "../document/question/answer-sheet.component";
 import {
     deleteQuestionWithConfirm,
     fetchAndEditQuestion,
     fetchAskedQuestion,
     fetchQuestion,
     showQuestionEditDialog,
-} from "../document/question/questionController";
-import {
-    registerDialogComponent,
-    showDialog,
-    showMessageDialog,
-} from "../ui/dialog";
+} from "../document/question/question-edit-dialog.component";
+import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {IAskedQuestion, IUniqueParId} from "./lecturetypes";
-
-markAsUsed(answerSheet);
 
 /**
  * FILL WITH SUITABLE TEXT
@@ -76,29 +70,51 @@ export async function askQuestion(p: AskParams) {
     return response.result.data;
 }
 
-export class QuestionPreviewController extends DialogController<
-    {params: QuestionPreviewParams},
+@Component({
+    selector: "tim-ask-question-dialog",
+    template: `
+        <tim-dialog-frame>
+            <ng-container header>
+                {{ getTitle() }}
+            </ng-container>
+            <ng-container body *ngIf="questiondata">
+            <span *ngIf="getTimeLimit()">
+            Time limit: {{ getTimeLimit() }} seconds
+            </span>
+                <span *ngIf="!questiondata.markup.timeLimit">
+            No time limit.
+            </span>
+                <p *ngIf="questiondata.markup.randomizedRows !== undefined">
+                    {{printRandomizationInfo()}}
+                </p>
+                <tim-answer-sheet [questiondata]="questiondata"></tim-answer-sheet>
+            </ng-container>
+            <ng-container footer>
+                <!-- <button (click)="deleteQuestion()" class="btn btn-danger pull-left">Delete</button> -->
+                <button *ngIf="showAsk()" (click)="ask()" class="timButton">Ask</button>&nbsp;&nbsp;
+                <button (click)="editQuestion()" class="timButton">Edit</button>
+                <button (click)="dismiss()" class="timButton">Close</button>
+            </ng-container>
+        </tim-dialog-frame>
+    `,
+})
+export class QuestionPreviewDialogComponent extends AngularDialogComponent<
+    QuestionPreviewParams,
     IAskedQuestion
 > {
-    static component = "timAskQuestion";
-    static $inject = ["$element", "$scope"] as const;
-    private questiondata?: IPreviewParams;
-
-    constructor(protected element: JQLite, protected scope: IScope) {
-        super(element, scope);
-    }
+    protected dialogName = "askQuestion";
+    questiondata?: IPreviewParams;
 
     public getTitle() {
         return "Ask a question";
     }
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
         (async () => {
-            if (!isReasking(this.resolve.params)) {
+            if (!isReasking(this.data)) {
                 const data = await fetchQuestion(
-                    this.resolve.params.docId,
-                    this.resolve.params.parId,
+                    this.data.docId,
+                    this.data.parId,
                     false
                 );
                 this.questiondata = makePreview(data.markup, {
@@ -107,9 +123,7 @@ export class QuestionPreviewController extends DialogController<
                     showExplanations: false,
                 });
             } else {
-                const data = await fetchAskedQuestion(
-                    this.resolve.params.askedId
-                );
+                const data = await fetchAskedQuestion(this.data.askedId);
                 this.questiondata = makePreview(data.json.json, {
                     enabled: false,
                     showCorrectChoices: false,
@@ -119,52 +133,46 @@ export class QuestionPreviewController extends DialogController<
         })();
     }
 
-    private showAsk() {
-        return this.resolve.params.showAsk;
+    showAsk() {
+        return this.data.showAsk;
     }
 
-    private async editQuestion() {
-        if (!isReasking(this.resolve.params)) {
-            await fetchAndEditQuestion(
-                this.resolve.params.docId,
-                this.resolve.params.parId
-            );
+    async editQuestion() {
+        if (!isReasking(this.data)) {
+            await fetchAndEditQuestion(this.data.docId, this.data.parId);
         } else {
             await showQuestionEditDialog(
-                await fetchAskedQuestion(this.resolve.params.askedId)
+                await fetchAskedQuestion(this.data.askedId)
             );
         }
         this.dismiss();
     }
 
-    private async ask() {
+    async ask() {
         if (!this.questiondata) {
             await showMessageDialog("Question has not been loaded yet.");
             return;
         }
-        const p = this.resolve.params;
+        const p = this.data;
         const question = await askQuestion(p);
         this.close(question);
     }
 
     private async deleteQuestion() {
-        if (!isReasking(this.resolve.params)) {
-            await deleteQuestionWithConfirm(
-                this.resolve.params.docId,
-                this.resolve.params.parId
-            );
+        if (!isReasking(this.data)) {
+            await deleteQuestionWithConfirm(this.data.docId, this.data.parId);
             this.dismiss();
         }
     }
 
-    private getTimeLimit() {
+    getTimeLimit() {
         if (!this.questiondata) {
             return undefined;
         }
         return this.questiondata.markup.timeLimit;
     }
 
-    private printRandomizationInfo(): string {
+    printRandomizationInfo(): string {
         if (!this.questiondata || !this.questiondata.markup.randomizedRows) {
             return "";
         }
@@ -191,35 +199,7 @@ export class QuestionPreviewController extends DialogController<
     }
 }
 
-registerDialogComponent(QuestionPreviewController, {
-    template: `
-<tim-dialog>
-    <dialog-header>
-        Question
-    </dialog-header>
-    <dialog-body>
-<span ng-if="$ctrl.getTimeLimit()">
-            Time limit: {{ $ctrl.getTimeLimit() }} seconds
-            </span>
-        <span ng-if="!$ctrl.questiondata.markup.timeLimit">
-            No time limit.
-            </span>
-        <p ng-if="$ctrl.questiondata.markup.randomizedRows">
-            {{::$ctrl.printRandomizationInfo()}}
-        </p>
-        <dynamic-answer-sheet questiondata="$ctrl.questiondata"></dynamic-answer-sheet>
-    </dialog-body>
-    <dialog-footer>
-        <!-- <button ng-click="deleteQuestion()" class="btn btn-danger pull-left">Delete</button> -->
-        <button ng-show="$ctrl.showAsk()" ng-click="$ctrl.ask()" class="timButton">Ask</button>&nbsp;&nbsp;
-        <button ng-click="$ctrl.editQuestion()" class="timButton">Edit</button>
-        <button ng-click="$ctrl.dismiss()" class="timButton">Close</button>
-    </dialog-footer>
-</tim-dialog>
-`,
-});
-
 export async function showQuestionAskDialog(p: QuestionPreviewParams) {
-    return await showDialog(QuestionPreviewController, {params: () => p})
+    return await (await angularDialog.open(QuestionPreviewDialogComponent, p))
         .result;
 }

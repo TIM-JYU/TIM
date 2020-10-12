@@ -9,7 +9,7 @@ import {ViewCtrl} from "../viewctrl";
 import {
     fetchAndEditQuestion,
     showQuestionEditDialog,
-} from "./questionController";
+} from "./question-edit-dialog.component";
 
 export class QuestionHandler {
     public sc: IScope;

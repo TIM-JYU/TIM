@@ -12,10 +12,20 @@ import {SaveButtonComponent} from "tim/user/settings.component";
 import {TimeLeftComponent} from "tim/ui/time-left.component";
 import {GotoLinkComponent} from "tim/ui/goto-link.component";
 import {CountdownComponent} from "tim/ui/countdown.component";
+import {DurationPickerComponent} from "tim/ui/duration-picker.component";
+import {ErrorMessageComponent} from "tim/ui/error-message.component";
+import {
+    RelativeTimestampPipe,
+    TimDatePipe,
+} from "tim/ui/relative-timestamp.pipe";
+import {DatepickerModule} from "ngx-bootstrap/datepicker";
+import {TimepickerModule} from "ngx-bootstrap/timepicker";
+import {DatetimePopupModule} from "ngx-bootstrap-datetime-popup";
 import {PluginFrameComponent} from "./plugin-frame.component";
 import {LoadingComponent} from "./loadingIndicator";
 import {MarkupErrorComponent} from "./markup-error.component";
 import {CloseButtonComponent} from "./close-button.component";
+import {DatetimePickerComponent} from "./datetime-picker/datetime-picker.component";
 
 @NgModule({
     declarations: [
@@ -34,6 +44,11 @@ import {CloseButtonComponent} from "./close-button.component";
         GotoLinkComponent,
         CountdownComponent,
         TimeLeftComponent,
+        DurationPickerComponent,
+        ErrorMessageComponent,
+        TimDatePipe,
+        RelativeTimestampPipe,
+        DatetimePickerComponent,
     ],
     exports: [
         MarkupErrorComponent,
@@ -51,7 +66,18 @@ import {CloseButtonComponent} from "./close-button.component";
         GotoLinkComponent,
         CountdownComponent,
         TimeLeftComponent,
+        DurationPickerComponent,
+        ErrorMessageComponent,
+        TimDatePipe,
+        RelativeTimestampPipe,
+        DatetimePickerComponent,
     ],
-    imports: [CommonModule, FormsModule],
+    imports: [
+        CommonModule,
+        FormsModule,
+        DatepickerModule.forRoot(),
+        TimepickerModule.forRoot(),
+        DatetimePopupModule,
+    ],
 })
 export class TimUtilityModule {}

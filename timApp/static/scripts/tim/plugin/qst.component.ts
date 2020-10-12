@@ -1,22 +1,34 @@
-/**
- * Created by vesal on 28.12.2016.
- */
-import angular, {IController} from "angular";
 import deepEqual from "deep-equal";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    Input,
+    NgModule,
+    StaticProvider,
+} from "@angular/core";
+import {FormsModule} from "@angular/forms";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {BrowserModule} from "@angular/platform-browser";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {getParId} from "../document/parhelpers";
 import {
+    AnswerSheetModule,
     IPreviewParams,
     makePreview,
-} from "../document/question/dynamicAnswerSheet";
+} from "../document/question/answer-sheet.component";
 import {ChangeType, ITimComponent, ViewCtrl} from "../document/viewctrl";
-import {LectureController} from "../lecture/lectureController";
 import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
-import {showQuestionAskDialog} from "../lecture/questionAskController";
+import {showQuestionAskDialog} from "../lecture/question-preview-dialog.component";
 import {showMessageDialog} from "../ui/dialog";
-import {$http} from "../util/ngimport";
-import {Binding, defaultErrorMessage, defaultTimeout, to} from "../util/utils";
+import {defaultErrorMessage, to, to2} from "../util/utils";
+import {TimUtilityModule} from "../ui/tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "../downgrade";
+import {vctrlInstance} from "../document/viewctrlinstance";
+import {handleAnswerResponse} from "../document/interceptor";
 import {IGenericPluginTopLevelFields} from "./attributes";
-import {PluginBaseCommon, pluginBindings, PluginMeta} from "./util";
+import {PluginBaseCommon, PluginMeta} from "./util";
 
 // Represents fields that are not actually stored in plugin markup but that are added by TIM alongside markup
 // in view route so that extra information can be passed to qst component. TODO: they should not be inside markup.
@@ -33,40 +45,65 @@ interface IQstAttributes
     savedText: string;
 }
 
-class QstController
-    extends PluginBaseCommon
-    implements IController, ITimComponent {
-    static $inject = ["$element"];
-    private error?: string;
-    private log?: string;
-    private isRunning: boolean = false;
-    private result?: string;
-    private taskId?: string;
-    private errors: string[];
-    private vctrl?: ViewCtrl;
-    private lctrl!: LectureController;
-    private isLecturer: boolean = false;
-    private preclass: string;
-    private plugin?: string;
-    private json!: Binding<string, "@">;
-    private cursor: string;
-    attrsall!: IQstAttributes; // $onInit
-    private preview!: IPreviewParams; // $onInit
-    private button: string = "";
-    private resetText: string = "";
-    private stem: string = "";
+@Component({
+    selector: "tim-qst",
+    template: `
+        <div class="csRunDiv qst no-popup-menu" *ngIf="isTask()">
+            <h4 *ngIf="getHeader()" [innerHtml]="getHeader()"></h4>
+            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
+            <tim-answer-sheet
+                    [questiondata]="preview"
+                    (onAnswerChange)="updateAnswer($event)">
+            </tim-answer-sheet>
+            <button class="timButton" [innerHtml]="button" *ngIf="button"
+                    [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
+                    (click)="saveText()"></button>
+            <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges()">
+                &nbsp;{{undoButton}}
+            </a>
+
+            &nbsp;&nbsp;
+            <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
+                <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
+            </a>
+            &ngsp;
+            <span *ngIf="result">{{result}}</span>
+            <p class="plgfooter" [innerHtml]="getFooter()"></p>
+            <div *ngIf="error" class="error" style="font-size: 12px" [innerHtml]="error"></div>
+        </div>
+        <div *ngIf="!isTask()">
+            <a class="questionAddedNew" (click)="questionClicked()">
+                <span class="glyphicon glyphicon-question-sign" title="{{getQuestionTitle()}}"></span>
+            </a>
+            <p class="questionNumber" [innerText]="getQuestionTitleShort()"></p>
+        </div>
+        <div *ngIf="log" class="qstLog" [innerHtml]="log"></div>
+    `,
+})
+export class QstComponent extends PluginBaseCommon implements ITimComponent {
+    error?: string;
+    log?: string;
+    isRunning: boolean = false;
+    result?: string;
+    errors: string[];
+    private vctrl!: ViewCtrl;
+    @Input() json!: string;
+    attrsall!: IQstAttributes; // ngOnInit
+    preview!: IPreviewParams; // ngOnInit
+    button: string = "";
+    stem: string = "";
     private savedAnswer?: AnswerTable;
     private newAnswer?: AnswerTable;
     private changes = false;
     protected pluginMeta: PluginMeta;
+    element: JQuery;
 
-    constructor(public element: JQLite) {
+    constructor(element: ElementRef, private http: HttpClient) {
         super();
-        this.pluginMeta = new PluginMeta(element);
-        this.updateAnswer = this.updateAnswer.bind(this);
+        const el = $(element.nativeElement);
+        this.element = el;
+        this.pluginMeta = new PluginMeta(el);
         this.errors = [];
-        this.preclass = "qst";
-        this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
     }
 
     getContent() {
@@ -101,14 +138,11 @@ class QstController
         }
     }
 
-    public $onInit() {
-        if (this.vctrl) {
+    ngOnInit() {
+        this.vctrl = vctrlInstance!;
+        if (!this.pluginMeta.isPreview()) {
             this.vctrl.addTimComponent(this);
         }
-        this.lctrl =
-            this.vctrl?.lectureCtrl ??
-            LectureController.createAndInit(this.vctrl);
-        this.isLecturer = this.lctrl?.isLecturer || false;
         this.attrsall = JSON.parse(this.json) as IQstAttributes;
         this.preview = makePreview(this.attrsall.markup, {
             answerTable: this.attrsall.state ?? [],
@@ -121,24 +155,18 @@ class QstController
             this.attrsall.markup.button ??
             this.attrsall.markup.buttonText ??
             "Save";
-        this.resetText = this.attrsall.markup.resetText ?? "Reset";
         this.stem = this.attrsall.markup.stem ?? "";
     }
 
-    public $postLink() {
-        this.plugin = this.element.parent().attr("data-plugin");
-        this.taskId = this.element.parent().attr("id");
-    }
-
-    private getHeader() {
+    getHeader() {
         return this.attrsall.markup.header;
     }
 
-    private getFooter() {
+    getFooter() {
         return this.attrsall.markup.footer;
     }
 
-    private isTask() {
+    isTask() {
         return this.attrsall.markup.isTask;
     }
 
@@ -167,8 +195,8 @@ class QstController
         );
     }
 
-    private updateAnswer(at: AnswerTable) {
-        // updateAnswer is called always at least once from dynamicAnswerSheet (see the $onChanges in that file).
+    updateAnswer(at: AnswerTable) {
+        // updateAnswer is called always at least once from dynamicAnswerSheet (see the ngOnChanges in that file).
         // Upon first call, we record the currently saved answer.
         if (this.newAnswer === undefined) {
             this.savedAnswer = at;
@@ -180,15 +208,15 @@ class QstController
         }
     }
 
-    private getQuestionTitle() {
+    getQuestionTitle() {
         return this.attrsall.markup.questionTitle;
     }
 
-    private getQuestionTitleShort() {
+    getQuestionTitleShort() {
         return this.attrsall.markup.questionTitle;
     }
 
-    private questionClicked() {
+    questionClicked() {
         const par = this.element.parents(".par");
         const parId = getParId(par);
         if (!parId) {
@@ -199,21 +227,15 @@ class QstController
     }
 
     private async showQuestionNew(parId: string) {
-        if (this.lctrl == null || this.lctrl.viewctrl == null) {
-            await showMessageDialog(
-                "Cannot show question because not in lecture mode or in a document."
-            );
-            return;
-        }
         const result = await to(
             showQuestionAskDialog({
-                docId: this.lctrl.viewctrl.docId,
+                docId: this.vctrl.docId,
                 parId: parId,
-                showAsk: this.lctrl.lectureSettings.inLecture,
+                showAsk: this.vctrl.lectureCtrl.lectureSettings.inLecture,
             })
         );
         if (result.ok) {
-            this.lctrl.lastQuestion = result.result;
+            this.vctrl.lectureCtrl.lastQuestion = result.result;
         }
     }
 
@@ -222,15 +244,15 @@ class QstController
         this.result = "";
     }
 
-    private saveText() {
+    saveText() {
         this.doSaveText(false);
     }
 
-    private checkQstMode() {
-        return this.lctrl?.viewctrl?.item.rights.teacher;
+    hasTeacherRight() {
+        return this.vctrl.item.rights.teacher;
     }
 
-    private isInvalid() {
+    isInvalid() {
         return this.attrsall.markup.invalid;
     }
 
@@ -255,40 +277,39 @@ class QstController
         }
         const url = this.pluginMeta.getAnswerUrl();
 
-        const r = await to(
-            $http<{
-                web: {
-                    result: string;
-                    show_result: boolean;
-                    state: AnswerTable;
-                    markup: IQuestionMarkup;
-                    error?: string;
-                };
-            }>({
-                method: "PUT",
-                url,
-                data: params,
-                headers: {"Content-Type": "application/json"},
-                timeout: defaultTimeout,
-            })
+        const r = await to2(
+            this.http
+                .put<{
+                    web: {
+                        result: string;
+                        show_result: boolean;
+                        state: AnswerTable;
+                        markup?: IQuestionMarkup;
+                        error?: string;
+                    };
+                    savedNew: number | false;
+                }>(url, params, {})
+                .toPromise()
         );
+        this.isRunning = false;
         if (!r.ok) {
-            this.isRunning = false;
-            this.errors.push(r.result.data?.error);
-            console.log(r);
+            this.errors.push(r.result.error.error);
             this.error =
-                r.result.data?.error ??
+                r.result.error.error ??
                 this.attrsall.markup.connectionErrorMessage ??
                 defaultErrorMessage;
             return {
                 saved: false,
                 message:
-                    r.result.data?.error ??
+                    r.result.error.error ??
                     this.attrsall.markup.connectionErrorMessage,
             };
         }
-        const data = r.result.data;
-        this.isRunning = false;
+        const data = r.result;
+        handleAnswerResponse(
+            this.pluginMeta.getTaskId()!.docTask().toString(),
+            data
+        );
         let result = data.web.result;
         if (result == "Saved" && this.attrsall.markup.savedText) {
             result = this.attrsall.markup.savedText;
@@ -325,48 +346,27 @@ class QstController
         });
         this.checkChanges();
     }
-
-    protected getElement() {
-        return this.element;
-    }
 }
 
-const qstApp = angular.module("qstApp", ["ngSanitize"]);
-export const moduleDefs = [qstApp];
+@NgModule({
+    declarations: [QstComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        AnswerSheetModule,
+    ],
+})
+export class QstModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
 
-qstApp.component("qstRunner", {
-    bindings: pluginBindings,
-    controller: QstController,
-    require: {
-        vctrl: "?^timView",
-    },
-    template: `
-<div class="csRunDiv qst no-popup-menu" ng-if="$ctrl.isTask()">
-    <h4 ng-if="::$ctrl.getHeader()" ng-bind-html="::$ctrl.getHeader()"></h4>
-    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
-    <dynamic-answer-sheet
-            questiondata="$ctrl.preview"
-            on-answer-change="$ctrl.updateAnswer"></dynamic-answer-sheet>
-    <button class="timButton" ng-bind-html="$ctrl.button" ng-if="$ctrl.button" ng-disabled="$ctrl.isRunning || $ctrl.isInvalid() || ($ctrl.disableUnchanged && !$ctrl.isUnSaved())"
-            ng-click="$ctrl.saveText()"></button>
-    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.tryResetChanges();">
-        &nbsp;{{::$ctrl.undoButton}}
-    </a>
+const bootstrapFn = (extraProviders: StaticProvider[]) => {
+    const platformRef = platformBrowserDynamic(extraProviders);
+    return platformRef.bootstrapModule(QstModule);
+};
 
-    &nbsp;&nbsp;
-    <a class="questionAddedNew" ng-show="$ctrl.checkQstMode() && !$ctrl.isInvalid()" ng-click="$ctrl.questionClicked()">
-        <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
-    </a>
-    <span ng-show="$ctrl.result">{{$ctrl.result}}</span>
-    <p class="plgfooter" ng-bind-html="::$ctrl.getFooter()"></p>
-    <div ng-if="$ctrl.error" class="error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
-</div>
-<div ng-if="!$ctrl.isTask()">
-    <a class="questionAddedNew" ng-click="$ctrl.questionClicked()">
-        <span class="glyphicon glyphicon-question-sign" title="{{$ctrl.getQuestionTitle()}}"></span>
-    </a>
-    <p class="questionNumber" ng-bind="$ctrl.getQuestionTitleShort()"></p>
-</div>
-<div ng-if="$ctrl.log" class="qstLog"  ng-bind-html="$ctrl.log"></div>
-`,
-});
+const angularJsModule = createDowngradedModule(bootstrapFn);
+doDowngrade(angularJsModule, "timQst", QstComponent);
+export const moduleDefs = [angularJsModule];

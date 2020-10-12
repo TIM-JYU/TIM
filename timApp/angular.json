@@ -73,7 +73,8 @@
               "complex.js",
               "object.assign",
               "which-typed-array",
-              "object-is"
+              "object-is",
+              "ngx-bootstrap-datetime-popup"
             ],
             "i18nMissingTranslation": "error",
             "outputPath": "static/scripts/build",

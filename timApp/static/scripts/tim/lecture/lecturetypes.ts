@@ -1,7 +1,7 @@
 import moment, {Moment} from "moment";
 import {IItem} from "../item/IItem";
 import {IGenericPluginMarkup} from "../plugin/attributes";
-import {DurationChoice} from "../ui/durationPicker";
+import {DurationChoice} from "../ui/duration-picker.component";
 import {IUser} from "../user/IUser";
 
 export interface IExplCollection {
@@ -114,6 +114,7 @@ export interface ILectureOptions {
     poll_interval_t: number;
     long_poll: boolean;
     long_poll_t: boolean;
+    teacher_poll: string;
 }
 
 export interface ILecture {

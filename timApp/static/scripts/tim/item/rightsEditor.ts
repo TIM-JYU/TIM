@@ -11,7 +11,7 @@ import {
     Result,
     to,
 } from "tim/util/utils";
-import {durationTypes} from "../ui/durationPicker";
+import {durationTypes} from "../ui/duration-picker.component";
 import {IGroup} from "../user/IUser";
 import {genericglobals, itemglobals} from "../util/globals";
 import {$http, $timeout} from "../util/ngimport";

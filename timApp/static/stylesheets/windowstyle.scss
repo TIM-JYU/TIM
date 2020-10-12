@@ -59,16 +59,16 @@
   text-align: left !important;
 }
 
-qst-runner label {
+tim-qst label {
   margin-bottom: 5px;
   font-weight: normal;
 }
 
-qst-runner .answer-sheet-table {
+tim-qst .answer-sheet-table {
   margin-left: 2em;
 }
 
-qst-runner button.timButton {
+tim-qst button.timButton {
   margin-left: 2em;
 }
 
@@ -177,7 +177,7 @@ tim-question-matrix {
   }
 }
 
-dynamic-answer-sheet {
+tim-answer-sheet {
     display: block;
     padding-left: 1em;
     .table {

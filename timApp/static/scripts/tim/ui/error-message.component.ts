@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, Input, Optional} from "@angular/core";
 import {NgModel} from "@angular/forms";
 import {InputService} from "./input.service";
 import {formErrorMessages} from "./formErrorMessages";
@@ -12,10 +12,12 @@ import {formErrorMessages} from "./formErrorMessages";
     `,
 })
 export class ErrorMessageComponent {
-    constructor(private inputService: InputService) {
-        (async () => {
-            this.for = await inputService.defer.promise;
-        })();
+    constructor(@Optional() private inputService?: InputService) {
+        if (inputService) {
+            (async () => {
+                this.for = await inputService.defer.promise;
+            })();
+        }
     }
 
     getMessage() {
@@ -25,5 +27,5 @@ export class ErrorMessageComponent {
         return formErrorMessages[Object.keys(this.for.errors)[0]];
     }
 
-    for?: NgModel;
+    @Input() for?: NgModel;
 }

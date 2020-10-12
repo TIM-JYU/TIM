@@ -17,7 +17,7 @@ export function staticDynamicImport(s: string) {
         case "tim/document/slide":
             return import("tim/document/slide");
         case "qst":
-            return import("tim/plugin/qstController");
+            return import("tim/plugin/qst.component");
         case "tape":
             return import("tim/plugin/tape");
         case "importData":

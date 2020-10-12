@@ -1,22 +1,15 @@
 import {BrowserModule} from "@angular/platform-browser";
-import {
-    ApplicationRef,
-    DoBootstrap,
-    NgModule,
-    ModuleWithProviders,
-} from "@angular/core";
+import {ApplicationRef, DoBootstrap, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HeaderComponent} from "tim/header/header.component";
 import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";
 import {CreateItemComponent} from "tim/item/create-item.component";
 import {ErrorStateDirective} from "tim/ui/error-state.directive";
-import {ErrorMessageComponent} from "tim/ui/error-message.component";
 import {ShortNameDirective} from "tim/ui/short-name.directive";
 import {LocationDirective} from "tim/ui/location.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converter.service";
 import {AnnotationComponent} from "tim/velp/annotation.component";
-import {RelativeTimestampPipe} from "tim/ui/relative-timestamp.pipe";
 import {SignatureComponent} from "tim/ui/signature.component";
 import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
 import {BookmarkDialogComponent} from "tim/bookmark/bookmark-dialog.component";
@@ -49,17 +42,27 @@ import {ViewRangeEditDialogComponent} from "tim/document/view-range-edit-dialog.
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
 import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {RelevanceEditDialogComponent} from "tim/item/relevance-edit-dialog.component";
+import {QuestionPreviewDialogComponent} from "tim/lecture/question-preview-dialog.component";
+import {AnswerToQuestionDialogComponent} from "tim/lecture/answer-to-question-dialog.component";
+import {ProgressbarModule} from "ngx-bootstrap/progressbar";
+import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
+import {QuestionEditDialogComponent} from "tim/document/question/question-edit-dialog.component";
+import {QuestionMatrixComponent} from "tim/document/question/question-matrix.component";
+import {LectureDialogComponent} from "tim/lecture/lecture-dialog.component";
+import {AccordionModule} from "ngx-bootstrap/accordion";
+import {DatepickerModule} from "ngx-bootstrap/datepicker";
+import {TimepickerModule} from "ngx-bootstrap/timepicker";
+import {DatetimePopupModule} from "ngx-bootstrap-datetime-popup";
+import {LectureMenuComponent} from "tim/lecture/lectureMenu";
 
 @NgModule({
     declarations: [
         CreateItemComponent,
-        ErrorMessageComponent,
         ErrorStateDirective,
         HeaderComponent,
         LocationDirective,
         ShortNameDirective,
         AnnotationComponent,
-        RelativeTimestampPipe,
         SignatureComponent,
         VelpSummaryComponent,
         BookmarkDialogComponent,
@@ -84,6 +87,12 @@ import {RelevanceEditDialogComponent} from "tim/item/relevance-edit-dialog.compo
         HelpParContent,
         RelevanceEditComponent,
         RelevanceEditDialogComponent,
+        QuestionPreviewDialogComponent,
+        AnswerToQuestionDialogComponent,
+        QuestionEditDialogComponent,
+        QuestionMatrixComponent,
+        LectureDialogComponent,
+        LectureMenuComponent,
     ],
     imports: [
         BrowserModule,
@@ -93,14 +102,16 @@ import {RelevanceEditDialogComponent} from "tim/item/relevance-edit-dialog.compo
         DialogModule,
         NoopAnimationsModule,
         SideBarMenuModule,
-        BsDropdownModule.forRoot() as ModuleWithProviders<
-            Record<string, unknown>
-        >,
-        TypeaheadModule.forRoot() as ModuleWithProviders<
-            Record<string, unknown>
-        >,
-        TooltipModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
+        AnswerSheetModule,
+        BsDropdownModule.forRoot(),
+        TypeaheadModule.forRoot(),
+        TooltipModule.forRoot(),
         TabsModule.forRoot(),
+        ProgressbarModule.forRoot(),
+        AccordionModule.forRoot(),
+        DatepickerModule.forRoot(),
+        TimepickerModule.forRoot(),
+        DatetimePopupModule,
     ],
     providers: [
         {

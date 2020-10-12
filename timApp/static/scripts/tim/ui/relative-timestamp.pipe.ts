@@ -7,3 +7,10 @@ export class RelativeTimestampPipe implements PipeTransform {
         return value.fromNow();
     }
 }
+
+@Pipe({name: "timdate"})
+export class TimDatePipe implements PipeTransform {
+    transform(value: Moment): string {
+        return value.format("DD.MM.YYYY HH:mm:ss");
+    }
+}

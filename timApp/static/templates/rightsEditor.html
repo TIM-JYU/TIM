@@ -187,10 +187,10 @@
                             </div>
                         </div>
                     </div>
-                    <tim-duration-picker amount="$ctrl.durOpt.durationAmount"
-                                         disabled="$ctrl.forceDuration"
+                    <tim-duration-picker [(amount)]="$ctrl.durOpt.durationAmount"
+                                         [disabled]="$ctrl.forceDuration"
                                          ng-show="$ctrl.durationSelected()"
-                                         type="$ctrl.durOpt.durationType">
+                                         [(type)]="$ctrl.durOpt.durationType">
                     </tim-duration-picker>
                     <div class="form-group" ng-show="$ctrl.durationSelected()">
                         <div class="col-md-12">Duration unlockable from:

@@ -82,12 +82,12 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def login_browser_as(self, email: str, password: str, name: str):
         self.client.__exit__(None, None, None)
         self.goto('')
-        elem = self.drv.find_element_by_xpath('//tim-login-menu/button')
+        elem = self.drv.find_element(By.XPATH, '//tim-login-menu/button')
         elem.click()
         elem = self.find_element("tim-login-dialog")
-        elem.find_element_by_xpath("//input[@type='text']").send_keys(email)
-        elem.find_element_by_xpath("//input[@type='password']").send_keys(password)
-        login = elem.find_element_by_css_selector('.flex.cl.align-center > .timButton')  # Log in button
+        elem.find_element(By.XPATH, "//input[@type='text']").send_keys(email)
+        elem.find_element(By.XPATH, "//input[@type='password']").send_keys(password)
+        login = elem.find_element(By.CSS_SELECTOR, '.flex.cl.align-center > .timButton')  # Log in button
         login.click()
         self.wait.until(ec.text_to_be_present_in_element((By.XPATH, self.login_dropdown_path), name))
         self.client.__enter__()
@@ -182,7 +182,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         if move_to_element:
             # It seems like move_to_element is no longer enough (at least in some cases)
             # to get the element fully visible, so we have to use JS.
-            self.drv.execute_script("arguments[0].scrollIntoView();", element)
+            self.scroll_into_view(element)
             # ActionChains(self.drv).move_to_element(element).perform()
         src_base64 = self.drv.get_screenshot_as_base64()
         im = Image(blob=b64decode(src_base64))
@@ -207,6 +207,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         elif isinstance(filename_or_file, BytesIO):
             im.save(file=filename_or_file)
         return im
+
+    def scroll_into_view(self, element: WebElement):
+        self.drv.execute_script("arguments[0].scrollIntoView();", element)
 
     def save_im(self, im, filename_or_file):
         os.makedirs(os.path.dirname(os.path.join(self.screenshot_dir, filename_or_file)), exist_ok=True)
@@ -335,9 +338,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             raise Exception('selector or xpath must be given')
         root = parent or self.drv
         if selector:
-            return root.find_element_by_css_selector(selector)
+            return root.find_element(By.CSS_SELECTOR, selector)
         else:
-            return root.find_element_by_xpath(xpath)
+            return root.find_element(By.XPATH, xpath)
 
     def find_element_avoid_staleness(
             self,
@@ -422,19 +425,19 @@ def find_button_by_text(root: WebElement, text: str):
 
 
 def find_element_by_text(root: WebElement, text: str, element: str='*') -> WebElement:
-    return root.find_element_by_xpath(f"//{element}[contains(text(),'{text}')]")
+    return root.find_element(By.XPATH, f"//{element}[contains(text(),'{text}')]")
 
 
-def find_by_ngmodel(element: WebElement, model: str, tagname='*') -> WebElement:
-    return element.find_element_by_css_selector(f'{tagname}[ng-model="{model}"]')
+def find_by_attr_name(element: WebElement, model: str, tagname='*') -> WebElement:
+    return element.find_element(By.CSS_SELECTOR, f'{tagname}[name="{model}"]')
 
 
 def find_by_ngclick(element: WebElement, value: str, tagname='*') -> WebElement:
-    return element.find_element_by_css_selector(f'{tagname}[ng-click="{value}"]')
+    return element.find_element(By.CSS_SELECTOR, f'{tagname}[ng-click="{value}"]')
 
 
 def find_all_by_ngmodel(element: WebElement, model: str, tagname='*') -> List[WebElement]:
-    return element.find_elements_by_css_selector(f'{tagname}[ng-model="{model}"]')
+    return element.find_elements(By.CSS_SELECTOR, f'{tagname}[ng-model="{model}"]')
 
 
 def warn_about_socket_timeout():

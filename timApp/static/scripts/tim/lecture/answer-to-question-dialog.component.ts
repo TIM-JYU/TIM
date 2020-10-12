@@ -1,21 +1,19 @@
-import {IScope} from "angular";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import {Component, OnDestroy} from "@angular/core";
 import moment, {Moment} from "moment";
-import {DialogController} from "tim/ui/dialogController";
+import deepEqual from "deep-equal";
 import {
     IPreviewParams,
     makePreview,
-} from "../document/question/dynamicAnswerSheet";
+} from "../document/question/answer-sheet.component";
 import {
     fetchAskedQuestion,
     showQuestionEditDialog,
-} from "../document/question/questionController";
-import {
-    registerDialogComponent,
-    showDialog,
-    showMessageDialog,
-} from "../ui/dialog";
-import {$http, $timeout} from "../util/ngimport";
-import {getStorage, setStorage, to} from "../util/utils";
+} from "../document/question/question-edit-dialog.component";
+import {showMessageDialog} from "../ui/dialog";
+import {$http} from "../util/ngimport";
+import {getStorage, setStorage, timeout, to} from "../util/utils";
 import {
     AnswerTable,
     IAskedQuestion,
@@ -60,43 +58,85 @@ export type IAnswerQuestionResult =
     | {type: "reask"}
     | {type: "reask_as_new"};
 
-export let currentQuestion: AnswerToQuestionController | undefined;
+export let currentQuestion: AnswerToQuestionDialogComponent | undefined;
 
 export const QUESTION_STORAGE = "lectureQuestion";
 
-export class AnswerToQuestionController extends DialogController<
-    {params: IAnswerQuestionParams},
-    IAnswerQuestionResult
-> {
-    static component = "timAnswerQuestion";
-    static $inject = ["$element", "$scope"] as const;
-    private barFilled?: number;
-    private progressText?: string;
-    private isLecturer = false;
+@Component({
+    selector: "tim-answer-question-dialog",
+    template: `
+        <tim-dialog-frame>
+            <ng-container header>
+                {{ getTitle() }}
+            </ng-container>
+            <ng-container body>
+                <tim-answer-sheet
+                        [questiondata]="preview"
+                        (onAnswerChange)="updateAnswer($event)">
+                </tim-answer-sheet>
+                <progressbar
+                        *ngIf="progressMax"
+                        [max]="progressMax"
+                        [value]="barFilled">
+                    {{ progressText }}
+                </progressbar>
+            </ng-container>
+            <ng-container footer>
+                <button *ngIf="isLecturer && questionEnded" class="timButton" (click)="edit()">
+                    Edit points
+                </button>
+                <button *ngIf="isLecturer && questionEnded" class="timButton" (click)="askAsNew()">
+                    Ask as new
+                </button>
+                <button *ngIf="isLecturer && questionEnded" class="timButton" (click)="reAsk()">
+                    Reask
+                </button>
+                <button *ngIf="!questionEnded && !answered && !gotResult && answer"
+                        class="answerButton timButton"
+                        (click)="answerToQuestion()">
+                    Answer
+                </button>
+
+                <br/>
+
+                <button *ngIf="isLecturer" class="timButton" (click)="showAnswers()">Show answers</button>
+                <button *ngIf="isLecturer && questionEnded" class="timButton" (click)="showPoints()">
+                    Show points
+                </button>
+                <button *ngIf="(isLecturer && questionEnded) || result" class="timButton"
+                        (click)="close()">Close
+                </button>
+                <button *ngIf="isLecturer && !questionEnded" class="timButton" (click)="stopQuestion()">
+                    End question
+                </button>
+            </ng-container>
+        </tim-dialog-frame>
+    `,
+})
+export class AnswerToQuestionDialogComponent
+    extends AngularDialogComponent<IAnswerQuestionParams, IAnswerQuestionResult>
+    implements OnDestroy {
+    protected dialogName = "AnswerQuestion";
+    barFilled = 0;
+    progressText?: string;
+    isLecturer = false;
     private askedTime?: Moment;
     private endTime?: Moment;
-    private progressMax?: number;
-    private answered = false;
-    private buttonText: string = "Answer";
-    private result?: boolean;
-    private question!: IAskedQuestion; // $onInit
-    private preview!: IPreviewParams; // $onInit
-    private questionEnded: boolean = false;
-    private answer?: AnswerTable;
+    progressMax?: number;
+    answered = false;
+    gotResult?: boolean;
+    private question!: IAskedQuestion; // ngOnInit
+    preview!: IPreviewParams; // ngOnInit
+    questionEnded: boolean = false;
+    answer?: AnswerTable;
     private defaultUpdateInterval = 500;
 
-    constructor(protected element: JQLite, protected scope: IScope) {
-        super(element, scope);
-        this.updateAnswer = this.updateAnswer.bind(this);
-    }
-
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
         if (currentQuestion) {
             throw new Error("Question window was already open.");
         }
         currentQuestion = this;
-        this.setData(this.resolve.params.qa);
+        this.setData(this.data.qa);
     }
 
     public getQuestion() {
@@ -104,19 +144,19 @@ export class AnswerToQuestionController extends DialogController<
     }
 
     public hasResult() {
-        return this.result;
+        return this.gotResult;
     }
 
     public getTitle() {
         return "Answer question";
     }
 
-    private $onDestroy() {
+    ngOnDestroy() {
         currentQuestion = undefined;
         setStorage(QUESTION_STORAGE, null);
     }
 
-    private async answerToQuestion() {
+    async answerToQuestion() {
         const response = await to(
             $http<{questionLate?: string}>({
                 url: "/answerToQuestion",
@@ -136,6 +176,7 @@ export class AnswerToQuestionController extends DialogController<
             await showMessageDialog(answer.questionLate);
         }
         this.answered = true;
+        this.disableAnswerSheet();
         if (!this.isLecturer) {
             super.close({type: "answered"});
         }
@@ -144,6 +185,7 @@ export class AnswerToQuestionController extends DialogController<
     private disableAnswerSheet() {
         this.preview = makePreview(this.preview.markup, {
             answerTable: this.answer,
+            enabled: false,
         });
     }
 
@@ -151,7 +193,7 @@ export class AnswerToQuestionController extends DialogController<
         if (this.isLecturer && !this.questionEnded) {
             this.stopQuestion();
         }
-        if (this.result) {
+        if (this.gotResult) {
             super.close({
                 type: "pointsclosed",
                 askedId: this.question.asked_id,
@@ -165,7 +207,7 @@ export class AnswerToQuestionController extends DialogController<
         this.close();
     }
 
-    private async stopQuestion() {
+    async stopQuestion() {
         const _ = await to(
             $http({
                 url: "/stopQuestion",
@@ -178,27 +220,27 @@ export class AnswerToQuestionController extends DialogController<
         // Don't call endQuestion here; it will come from lectureController.
     }
 
-    private async showAnswers() {
+    async showAnswers() {
         await showStatisticsDialog(this.question);
     }
 
-    private reAsk() {
+    reAsk() {
         super.close({type: "reask"});
     }
 
-    private askAsNew() {
+    askAsNew() {
         super.close({type: "reask_as_new"});
     }
 
-    private async edit() {
+    async edit() {
         const asked = await fetchAskedQuestion(this.question.asked_id);
         const _ = await showQuestionEditDialog(asked);
-        if (isAskedQuestion(this.resolve.params.qa)) {
+        if (isAskedQuestion(this.data.qa)) {
             this.setData(await fetchAskedQuestion(this.question.asked_id));
         } else {
             const resp = await to(
                 $http.get<IQuestionAnswer>("/getQuestionAnswer", {
-                    params: {id: this.resolve.params.qa.answer_id},
+                    params: {id: this.data.qa.answer_id},
                 })
             );
             if (!resp.ok) {
@@ -208,7 +250,7 @@ export class AnswerToQuestionController extends DialogController<
         }
     }
 
-    private async showPoints() {
+    async showPoints() {
         const response = await to(
             $http<IGetNewQuestionResponse>({
                 url: "/showAnswerPoints",
@@ -224,7 +266,7 @@ export class AnswerToQuestionController extends DialogController<
         }
         const d = response.result.data;
         if (questionAnswerReceived(d)) {
-            this.result = true;
+            this.gotResult = true;
             this.preview = makePreview(d.data.asked_question.json.json, {
                 answerTable: d.data.answer,
                 showCorrectChoices: true,
@@ -232,14 +274,14 @@ export class AnswerToQuestionController extends DialogController<
                 userpoints: d.data.points,
             });
         } else if (questionAsked(d)) {
-            this.result = true;
+            this.gotResult = true;
             this.preview = makePreview(d.data.json.json, {
                 showCorrectChoices: true,
                 showExplanations: true,
             });
         } else {
             // This case happens if the lecturer did not answer the question himself.
-            this.result = true;
+            this.gotResult = true;
             this.preview = makePreview(this.question.json.json, {
                 showCorrectChoices: true,
                 showExplanations: true,
@@ -288,18 +330,18 @@ export class AnswerToQuestionController extends DialogController<
             if (this.barFilled >= this.progressMax) {
                 await this.endQuestion();
             }
-            await $timeout(updateInterval);
+            await timeout(updateInterval);
         }
     }
 
-    private updateAnswer(at: AnswerTable) {
+    updateAnswer(at: AnswerTable) {
         this.answer = at;
     }
 
     public async endQuestion() {
         this.endTime = moment();
         this.updateMaxProgress();
-        this.barFilled = this.progressMax;
+        this.barFilled = this.progressMax ?? 0;
         this.progressText = "Time's up";
         this.questionEnded = true;
         if (!this.isLecturer) {
@@ -312,16 +354,20 @@ export class AnswerToQuestionController extends DialogController<
 
     public setData(data: QuestionOrAnswer) {
         if (isAskedQuestion(data)) {
-            this.question = data;
-            this.result = false;
-            this.preview = makePreview(this.question.json.json, {
-                enabled: true,
-            });
-            this.questionEnded = false;
-            this.answered = false;
+            if (deepEqual(data, this.question) && this.preview) {
+                return;
+            } else {
+                this.question = data;
+                this.gotResult = false;
+                this.preview = makePreview(this.question.json.json, {
+                    enabled: true,
+                });
+                this.questionEnded = false;
+                this.answered = false;
+            }
         } else {
             this.question = data.asked_question;
-            this.result = true;
+            this.gotResult = true;
             this.preview = makePreview(this.question.json.json, {
                 answerTable: data.answer,
                 showCorrectChoices: true,
@@ -338,9 +384,9 @@ export class AnswerToQuestionController extends DialogController<
                 .clone()
                 .add(this.question.json.json.timeLimit, "seconds");
         }
-        this.isLecturer = this.resolve.params.isLecturer;
+        this.isLecturer = this.data.isLecturer;
 
-        if (!this.result) {
+        if (!this.gotResult) {
             this.barFilled = 0;
             if (this.endTime) {
                 this.progressText = "";
@@ -359,57 +405,8 @@ export class AnswerToQuestionController extends DialogController<
     }
 }
 
-registerDialogComponent(AnswerToQuestionController, {
-    template: `
-<tim-dialog>
-    <dialog-header>
-        Answer question
-    </dialog-header>
-    <dialog-body>
-        <dynamic-answer-sheet
-                questiondata="$ctrl.preview"
-                on-answer-change="$ctrl.updateAnswer">
-        </dynamic-answer-sheet>
-        <uib-progressbar
-                max="$ctrl.progressMax"
-                value="$ctrl.barFilled">
-            {{ $ctrl.progressText }}
-        </uib-progressbar>
-    </dialog-body>
-    <dialog-footer>
-        <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.edit()">
-            Edit points
-        </button>
-        <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.askAsNew()">
-            Ask as new
-        </button>
-        <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.reAsk()">
-            Reask
-        </button>
-        <button ng-show="!$ctrl.questionEnded && !$ctrl.answered && !$ctrl.result && $ctrl.answer"
-                class="answerButton timButton"
-                ng-click="$ctrl.answerToQuestion()">{{$ctrl.buttonText}}
-        </button>
-
-        <br/>
-
-        <button ng-show="$ctrl.isLecturer" class="timButton" ng-click="$ctrl.showAnswers()">Show answers</button>
-        <button ng-show="$ctrl.isLecturer && $ctrl.questionEnded" class="timButton" ng-click="$ctrl.showPoints()">
-            Show points
-        </button>
-        <button ng-show="($ctrl.isLecturer && $ctrl.questionEnded) || $ctrl.result" class="timButton"
-                ng-click="$ctrl.close()">Close
-        </button>
-        <button ng-show="$ctrl.isLecturer && !$ctrl.questionEnded" class="timButton" ng-click="$ctrl.stopQuestion()">
-            End question
-        </button>
-    </dialog-footer>
-</tim-dialog>
-`,
-});
-
 export async function showQuestionAnswerDialog(p: IAnswerQuestionParams) {
-    return await showDialog(AnswerToQuestionController, {params: () => p})
+    return await (await angularDialog.open(AnswerToQuestionDialogComponent, p))
         .result;
 }
 

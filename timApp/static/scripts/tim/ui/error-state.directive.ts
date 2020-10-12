@@ -30,7 +30,7 @@ export class ErrorStateDirective implements AfterContentInit, OnDestroy {
             });
             this.i.defer.resolve(this.c);
         } else {
-            this.i.defer.reject();
+            this.i.defer.reject("timErrorState: Failed to find ngModel");
         }
     }
 

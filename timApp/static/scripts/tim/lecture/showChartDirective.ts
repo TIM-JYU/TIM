@@ -2,7 +2,7 @@ import {IChangesObject, IController, IOnChangesObject} from "angular";
 import Chart, {ChartData, ChartType} from "chart.js";
 import $ from "jquery";
 import {timApp} from "tim/app";
-import {fixQuestionJson} from "tim/document/question/dynamicAnswerSheet";
+import {fixQuestionJson} from "tim/document/question/answer-sheet.component";
 import {Overwrite} from "type-zoo";
 import {assertNotNull, clone, truncate} from "../util/utils";
 import {

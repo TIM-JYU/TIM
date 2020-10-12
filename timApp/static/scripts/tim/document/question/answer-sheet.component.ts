@@ -1,6 +1,15 @@
-import {IChangesObject, IController, IOnChangesObject} from "angular";
-import {timApp} from "tim/app";
-import {ParCompiler} from "../../editor/parCompiler";
+import {
+    Component,
+    ElementRef,
+    EventEmitter,
+    Input,
+    NgModule,
+    NgZone,
+    OnChanges,
+    Output,
+    SimpleChanges,
+} from "@angular/core";
+import {ParCompiler} from "tim/editor/parCompiler";
 import {
     AnswerFieldType,
     AnswerTable,
@@ -10,11 +19,13 @@ import {
     IProcessedHeaders,
     IRow,
     IUnprocessedHeaders,
-} from "../../lecture/lecturetypes";
-import {Binding} from "../../util/utils";
+} from "tim/lecture/lecturetypes";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {BrowserModule} from "@angular/platform-browser";
 
 /**
- * Created by localadmin on 25.5.2015.
  * Directive for dynamic answer sheet. Sheet to answer lecture questions.
  * If preview parameter is used, inputs are disable and there is no progressbar or answer button
  * @author Matias Berg
@@ -87,8 +98,7 @@ function fixLineBreaks(s: string) {
     // var result = s.replace(" < "," &lt; ");
     // result = result.replace(" > "," &gt; ");
     const parts = s.split("!!");
-    const result = parts[0];
-    return result;
+    return parts[0];
     // return s.replace("\n","<br />");
 }
 
@@ -196,40 +206,86 @@ export function makePreview(
 
 type MatrixElement = string | number;
 
-class AnswerSheetController implements IController {
-    static $inject = ["$element"];
-    private element: JQLite;
-    private questiondata?: Binding<IPreviewParams, "<">;
-    private json!: IAskedJsonJson; // TODO decide if undefined should be valid
-    private processed!: IProcessedHeaders; // TODO decide if undefined should be valid
-    private answerMatrix: MatrixElement[][] = [];
+@Component({
+    selector: "tim-answer-sheet",
+    template: `
+        <form *ngIf="json">
+            <h5 [innerHtml]="getHeader()"></h5>
+            <p *ngIf="userpoints != null && questionHasPoints()">Points received: {{ userpoints }}</p>
+            <table class="table" [ngClass]="getTableClass()">
+                <tbody>
+                <tr *ngIf="hasHeaders()" class="answer-heading-row">
+                    <th *ngIf="isMatrix()"></th>
+                    <th *ngFor="let h of processed.headers" [innerHtml]="fixText(h.text)"></th>
+                    <th *ngIf="canShowExpl()"></th>
+                </tr>
+                <tr *ngFor="let row of processed.rows; let rowi = index">
+                    <td *ngIf="isMatrix()" [innerHtml]="fixText(row.text)"></td>
+                    <td *ngFor="let col of row.columns; let coli = index;">
+                        <label>
+                            <input *ngIf="isRadio()"
+                                   [ngClass]="getInputClass(rowi, coli)"
+                                   [attr.disabled]="disabled || null"
+                                   type="radio"
+                                   [(ngModel)]="answerMatrix[isMatrix() ? rowi : 0][0]"
+                                   (ngModelChange)="signalUpdate()"
+                                   [name]="getGroupName(rowi)"
+                                   [value]="getInputValue(rowi, coli)">
+                            <input *ngIf="isCheckbox()"
+                                   [ngClass]="getInputClass(rowi, coli)"
+                                   [attr.disabled]="disabled || null"
+                                   type="checkbox"
+                                   [checked]="answerMatrix[rowi][coli] === 1"
+                                   (change)="checkBoxChanged(rowi, coli, $event)"
+                                   [name]="getGroupName(rowi)">
+                            <textarea
+                                    class="form-control"
+                                    *ngIf="isText()"
+                                    [attr.disabled]="disabled || null"
+                                    [(ngModel)]="answerMatrix[rowi][coli]"
+                                    [ngModelOptions]="{standalone: true}"
+                                    (ngModelChange)="signalUpdate()"></textarea>
+                            <input *ngIf="isInputText()"
+                                   [ngClass]="getInputClass(rowi, coli)"
+                                   [attr.disabled]="disabled || null"
+                                   [(ngModel)]="answerMatrix[rowi][coli]"
+                                   [ngModelOptions]="{standalone: true}"
+                                   (ngModelChange)="signalUpdate()"
+                                   type="text"
+                                   size="3">
+                            &ngsp;<span [innerHtml]="getLabelText(row)"></span></label>
+                        <p *ngIf="getPoints(rowi, coli) as p" class="qst-points" [innerText]="p"></p>
+                    </td>
+                    <td *ngIf="getExpl(rowi) as p" [innerHtml]="p" class="explanation"></td>
+                </tr>
+                </tbody>
+            </table>
+        </form>
+    `,
+})
+export class AnswerSheetComponent implements OnChanges {
+    private readonly element: JQLite;
+    @Input() questiondata?: IPreviewParams;
+    json!: IAskedJsonJson; // TODO decide if undefined should be valid
+    processed!: IProcessedHeaders; // TODO decide if undefined should be valid
+    answerMatrix: MatrixElement[][] = [];
     private expl?: IExplCollection;
     private pointsTable: Array<{[p: string]: string}> = [];
     private defaultPoints?: number;
-    private userpoints?: number;
-    private disabled?: boolean;
-    private onAnswerChange!: Binding<
-        () => ((at: AnswerTable) => void) | undefined,
-        "&"
-    >;
+    userpoints?: number;
+    disabled = false;
+    @Output() onAnswerChange: EventEmitter<AnswerTable> = new EventEmitter();
+    private customDomUpdateInProgress = false;
 
-    constructor(element: JQLite) {
-        this.element = element;
+    constructor(element: ElementRef, private zone: NgZone) {
+        this.element = $(element.nativeElement);
     }
 
-    $onInit() {}
-
-    $onChanges(onChangesObj: IOnChangesObject) {
-        const qdata = onChangesObj.questiondata as
-            | IChangesObject<IPreviewParams>
-            | undefined;
-        const adata = onChangesObj.answertable as
-            | IChangesObject<AnswerTable>
-            | undefined;
+    ngOnChanges(onChangesObj: SimpleChanges) {
+        const qdata = onChangesObj.questiondata;
+        const adata = onChangesObj.answertable;
         if (qdata) {
             this.createAnswer();
-            ParCompiler.processAllMathDelayed(this.element);
-
             // Do a fake update; without this "no answer" is not registered properly if the user never clicks
             // the answer sheet.
             this.signalUpdate();
@@ -238,17 +294,26 @@ class AnswerSheetController implements IController {
         }
     }
 
-    $doCheck() {}
+    ngAfterViewChecked() {
+        if (this.customDomUpdateInProgress) {
+            return;
+        }
+        this.customDomUpdateInProgress = true;
+        void this.zone.runOutsideAngular(async () => {
+            await ParCompiler.processAllMath(this.element);
+            this.customDomUpdateInProgress = false;
+        });
+    }
 
-    private getHeader() {
+    getHeader() {
         return this.fixText(this.json.questionText);
     }
 
-    private fixText(s: string) {
+    fixText(s: string) {
         return fixLineBreaks(s);
     }
 
-    private getPoints(rowIndex: number, colIndex: number): string | null {
+    getPoints(rowIndex: number, colIndex: number): string | null {
         if (!this.questiondata) {
             return null;
         }
@@ -279,28 +344,28 @@ class AnswerSheetController implements IController {
         return null;
     }
 
-    private getLabelText(row: IRow): string {
+    getLabelText(row: IRow): string {
         if (this.isMatrix()) {
             return "";
         }
         return row.text;
     }
 
-    private getInputClass(rowIndex: number, colIndex: number) {
+    getInputClass(rowIndex: number, colIndex: number) {
         const pts = this.getPoints(rowIndex, colIndex);
         return pts != null && parseFloat(pts) > 0
             ? "qst-correct"
             : "qst-normal";
     }
 
-    private canShowExpl(): boolean {
+    canShowExpl(): boolean {
         if (!this.questiondata) {
             return false;
         }
         return this.questiondata.showExplanations && this.expl != null;
     }
 
-    private getExpl(rowIndex: number): string | null {
+    getExpl(rowIndex: number): string | null {
         if (!this.canShowExpl() || !this.expl) {
             return null;
         }
@@ -311,7 +376,7 @@ class AnswerSheetController implements IController {
         return null;
     }
 
-    private isMatrix() {
+    isMatrix() {
         return (
             this.json.questionType === "matrix" ||
             this.json.questionType === "true-false"
@@ -322,7 +387,7 @@ class AnswerSheetController implements IController {
         return !this.isMatrix();
     }
 
-    private getTableClass(): string | null {
+    getTableClass(): string {
         let totalBorderless = true;
         const data = this.processed;
         if (
@@ -331,10 +396,10 @@ class AnswerSheetController implements IController {
         ) {
             totalBorderless = false;
         }
-        return totalBorderless ? "total-borderless" : null;
+        return totalBorderless ? "total-borderless" : "";
     }
 
-    private hasHeaders(): boolean {
+    hasHeaders(): boolean {
         const data = this.processed;
         return (
             data.headers &&
@@ -343,7 +408,7 @@ class AnswerSheetController implements IController {
         );
     }
 
-    private getGroupName(rowIndex: number) {
+    getGroupName(rowIndex: number) {
         if (this.isMatrix()) {
             return "group" + rowIndex;
         } else {
@@ -351,7 +416,7 @@ class AnswerSheetController implements IController {
         }
     }
 
-    private getInputValue(rowIndex: number, colIndex: number) {
+    getInputValue(rowIndex: number, colIndex: number) {
         if (this.isMatrix()) {
             return colIndex + 1;
         } else {
@@ -379,11 +444,11 @@ class AnswerSheetController implements IController {
         this.userpoints = params.userpoints;
     }
 
-    private questionHasPoints() {
+    questionHasPoints() {
         return this.questiondata?.markup.points != null;
     }
 
-    private answerMatrixFromTable(table: AnswerTable): MatrixElement[][] {
+    answerMatrixFromTable(table: AnswerTable): MatrixElement[][] {
         const data = this.processed;
         if (data.rows.length === 0) {
             return [];
@@ -483,91 +548,38 @@ class AnswerSheetController implements IController {
         return table;
     }
 
-    private isText() {
+    isText() {
         return this.json.answerFieldType === "text";
     }
 
-    private isInputText() {
+    isInputText() {
         return this.json.answerFieldType === "inputText";
     }
 
-    private isRadio() {
+    isRadio() {
         return this.json.answerFieldType === "radio";
     }
 
-    private isCheckbox() {
+    isCheckbox() {
         return this.json.answerFieldType === "checkbox";
     }
 
-    private signalUpdate() {
-        const c = this.onAnswerChange();
-        if (c) {
-            c(this.tableFromAnswerMatrix(this.answerMatrix));
-        }
+    signalUpdate() {
+        this.onAnswerChange.emit(this.tableFromAnswerMatrix(this.answerMatrix));
+    }
+
+    checkBoxChanged(rowi: number, coli: number, event: Event) {
+        this.answerMatrix[rowi][coli] = (event.target as HTMLInputElement)
+            .checked
+            ? 1
+            : 0;
+        this.signalUpdate();
     }
 }
 
-timApp.component("dynamicAnswerSheet", {
-    bindings: {
-        onAnswerChange: "&",
-        questiondata: "<",
-    },
-    controller: AnswerSheetController,
-    template: `
-<form ng-if="$ctrl.json">
-    <h5 ng-bind-html="$ctrl.getHeader()"></h5>
-    <p ng-if="$ctrl.userpoints != null && $ctrl.questionHasPoints()">Points received: {{ $ctrl.userpoints }}</p>
-    <table class="table" ng-class="$ctrl.getTableClass()">
-        <tbody>
-        <tr ng-if="$ctrl.hasHeaders()" class="answer-heading-row">
-            <th ng-if="$ctrl.isMatrix()"></th>
-            <th ng-repeat="h in $ctrl.processed.headers" ng-bind-html="$ctrl.fixText(h.text)"></th>
-            <th ng-if="$ctrl.canShowExpl()"></th>
-        </tr>
-        <tr ng-repeat="row in $ctrl.processed.rows track by $index" ng-init="rowi = $index">
-            <td ng-if="$ctrl.isMatrix()" ng-bind-html="$ctrl.fixText(row.text)"></td>
-            <td ng-repeat="col in row.columns track by $index" ng-init="coli = $index">
-                <label>
-                    <input ng-if="$ctrl.isRadio()"
-                           ng-class="$ctrl.getInputClass(rowi, coli)"
-                           ng-disabled="$ctrl.disabled"
-                           ng-change="$ctrl.signalUpdate()"
-                           type="radio"
-                           ng-model="$ctrl.answerMatrix[$ctrl.isMatrix() ? rowi : 0][0]"
-                           name="{{$ctrl.getGroupName(rowi)}}"
-                           ng-value="$ctrl.getInputValue(rowi, coli)">
-                    <input ng-if="$ctrl.isCheckbox()"
-                           ng-class="$ctrl.getInputClass(rowi, coli)"
-                           ng-disabled="$ctrl.disabled"
-                           ng-change="$ctrl.signalUpdate()"
-                           type="checkbox"
-                           ng-model="$ctrl.answerMatrix[rowi][coli]"
-                           name="{{$ctrl.getGroupName(rowi)}}"
-                           ng-true-value="1"
-                           ng-false-value="0">
-                    <textarea
-                            class="form-control"
-                            ng-if="$ctrl.isText()"
-                            ng-disabled="$ctrl.disabled"
-                            ng-change="$ctrl.signalUpdate()"
-                            ng-model="$ctrl.answerMatrix[rowi][coli]">
-</textarea>
-                    <input ng-if="$ctrl.isInputText()"
-                           ng-class="$ctrl.getInputClass(rowi, coli)"
-                           ng-disabled="$ctrl.disabled"
-                           ng-change="$ctrl.signalUpdate()"
-                           type="text"
-                           size="{{$ctrl.json.size || 3}}"
-                           name="{{$ctrl.getGroupName(rowi)}}"
-                           ng-model="$ctrl.answerMatrix[rowi][coli]"
-                           ng-value="$ctrl.answerMatrix[rowi][coli]">
-                    <span ng-bind-html="$ctrl.getLabelText(row, col)"></span></label>
-                <p ng-if="(p = $ctrl.getPoints(rowi, coli)) != null" class="qst-points" ng-bind="p"></p>
-            </td>
-            <td ng-if="p = $ctrl.getExpl(rowi)" ng-bind-html="p" class="explanation"></td>
-        </tr>
-        </tbody>
-    </table>
-</form>
-`,
-});
+@NgModule({
+    declarations: [AnswerSheetComponent],
+    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+    exports: [AnswerSheetComponent],
+})
+export class AnswerSheetModule {}

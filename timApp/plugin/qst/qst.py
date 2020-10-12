@@ -230,7 +230,7 @@ def is_review(jso):
 @dataclass
 class QstHtmlModel(GenericHtmlModel[QstInputModel, QstMarkupModel, QstStateModel]):
     def get_component_html_name(self) -> str:
-        return 'qst-runner'
+        return 'tim-qst'
 
     def get_static_html(self) -> str:
         return render_static_qst(self)
@@ -637,7 +637,7 @@ def qst_get_html(jso, review):
 
     attrs = json.dumps(jso, sort_keys=True)
 
-    runner = 'qst-runner'
+    runner = 'tim-qst'
     s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
     return s
 
