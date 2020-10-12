@@ -247,6 +247,22 @@ class JumpIfNeg extends Jump {
     }
 }
 
+class JumpIfEmpty extends Jump {
+    constructor() {
+        super("JUMPIFEMPTY", "E");
+    }
+
+    public execute(params: CommandParameters<unknown>) {
+        if (params.state.input.length === 0) {
+            this.jumpToLabel(params);
+        }
+    }
+
+    public getParameterName() {
+        return "Label";
+    }
+}
+
 // </editor-fold>
 
 /**
@@ -301,6 +317,7 @@ export interface TapeAttrs {
     hidePresetMem: boolean;
     hideTextMode: boolean;
     hideCopyAll: boolean;
+    useJumpIfEmpty: boolean;
 }
 
 function isiOS(): boolean {
@@ -373,6 +390,10 @@ export class TapeController implements IController {
 
     $onInit() {
         this.iOS = isiOS();
+        if (this.data.useJumpIfEmpty) {
+            this.possibleCommandList.push(new JumpIfEmpty());
+        }
+
         this.inputString = "";
         if (this.data.presetInput) {
             this.inputString = this.data.presetInput.toString();
