@@ -30,6 +30,7 @@ export interface IAskedJsonBase {
     questionType: QuestionType;
     randomizedRows?: number;
     timeLimit?: number;
+    size?: number;
 }
 
 export interface IAskedJsonJson extends IUnprocessedHeaders, IAskedJsonBase {}

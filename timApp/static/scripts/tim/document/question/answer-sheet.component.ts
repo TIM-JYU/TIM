@@ -252,7 +252,7 @@ type MatrixElement = string | number;
                                    [ngModelOptions]="{standalone: true}"
                                    (ngModelChange)="signalUpdate()"
                                    type="text"
-                                   size="3">
+                                   [size]="json.size || 3">
                             &ngsp;<span [innerHtml]="getLabelText(row)"></span></label>
                         <p *ngIf="getPoints(rowi, coli) as p" class="qst-points" [innerText]="p"></p>
                     </td>
