@@ -27,6 +27,7 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {vctrlInstance} from "../document/viewctrlinstance";
 import {handleAnswerResponse} from "../document/interceptor";
+import {PurifyModule} from "../util/purify.module";
 import {IGenericPluginTopLevelFields} from "./attributes";
 import {PluginBaseCommon, PluginMeta} from "./util";
 
@@ -49,8 +50,8 @@ interface IQstAttributes
     selector: "tim-qst",
     template: `
         <div class="csRunDiv qst no-popup-menu" *ngIf="isTask()">
-            <h4 *ngIf="getHeader()" [innerHtml]="getHeader()"></h4>
-            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
+            <h4 *ngIf="getHeader()" [innerHtml]="getHeader() | purify"></h4>
+            <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
             <tim-answer-sheet
                     [questiondata]="preview"
                     (onAnswerChange)="updateAnswer($event)">
@@ -68,7 +69,7 @@ interface IQstAttributes
             </a>
             &ngsp;
             <span *ngIf="result">{{result}}</span>
-            <p class="plgfooter" [innerHtml]="getFooter()"></p>
+            <p class="plgfooter" [innerHtml]="getFooter() | purify"></p>
             <div *ngIf="error" class="error" style="font-size: 12px" [innerHtml]="error"></div>
         </div>
         <div *ngIf="!isTask()">
@@ -356,6 +357,7 @@ export class QstComponent extends PluginBaseCommon implements ITimComponent {
         FormsModule,
         TimUtilityModule,
         AnswerSheetModule,
+        PurifyModule,
     ],
 })
 export class QstModule implements DoBootstrap {
