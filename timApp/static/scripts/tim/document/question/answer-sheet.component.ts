@@ -24,6 +24,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
+import {PurifyModule} from "tim/util/purify.module";
 
 /**
  * Directive for dynamic answer sheet. Sheet to answer lecture questions.
@@ -210,17 +211,17 @@ type MatrixElement = string | number;
     selector: "tim-answer-sheet",
     template: `
         <form *ngIf="json">
-            <h5 [innerHtml]="getHeader()"></h5>
+            <h5 [innerHtml]="getHeader() | purify"></h5>
             <p *ngIf="userpoints != null && questionHasPoints()">Points received: {{ userpoints }}</p>
             <table class="table" [ngClass]="getTableClass()">
                 <tbody>
                 <tr *ngIf="hasHeaders()" class="answer-heading-row">
                     <th *ngIf="isMatrix()"></th>
-                    <th *ngFor="let h of processed.headers" [innerHtml]="fixText(h.text)"></th>
+                    <th *ngFor="let h of processed.headers" [innerHtml]="fixText(h.text) | purify"></th>
                     <th *ngIf="canShowExpl()"></th>
                 </tr>
                 <tr *ngFor="let row of processed.rows; let rowi = index">
-                    <td *ngIf="isMatrix()" [innerHtml]="fixText(row.text)"></td>
+                    <td *ngIf="isMatrix()" [innerHtml]="fixText(row.text) | purify"></td>
                     <td *ngFor="let col of row.columns; let coli = index;">
                         <label>
                             <input *ngIf="isRadio()"
@@ -253,10 +254,10 @@ type MatrixElement = string | number;
                                    (ngModelChange)="signalUpdate()"
                                    type="text"
                                    [size]="json.size || 3">
-                            &ngsp;<span [innerHtml]="getLabelText(row)"></span></label>
+                            &ngsp;<span [innerHtml]="getLabelText(row) | purify"></span></label>
                         <p *ngIf="getPoints(rowi, coli) as p" class="qst-points" [innerText]="p"></p>
                     </td>
-                    <td *ngIf="getExpl(rowi) as p" [innerHtml]="p" class="explanation"></td>
+                    <td *ngIf="getExpl(rowi) as p" [innerHtml]="p | purify" class="explanation"></td>
                 </tr>
                 </tbody>
             </table>
@@ -579,7 +580,13 @@ export class AnswerSheetComponent implements OnChanges {
 
 @NgModule({
     declarations: [AnswerSheetComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        PurifyModule,
+    ],
     exports: [AnswerSheetComponent],
 })
 export class AnswerSheetModule {}
