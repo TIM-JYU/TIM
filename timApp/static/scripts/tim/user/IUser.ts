@@ -40,3 +40,9 @@ export interface IGroupWithSisuPath extends IGroup {
     sisugroup_path: string | null;
     admin_doc?: IDocument;
 }
+
+export const sortLang = "fi";
+
+export function sortByRealName(a: IUser, b: IUser) {
+    return (a.real_name ?? "").localeCompare(b.real_name ?? "", sortLang);
+}

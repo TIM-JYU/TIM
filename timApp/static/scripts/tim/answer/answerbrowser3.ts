@@ -14,7 +14,7 @@ import {
 } from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
 import {showMessageDialog} from "../ui/dialog";
-import {IUser} from "../user/IUser";
+import {IUser, sortByRealName} from "../user/IUser";
 import {isAdmin, Users} from "../user/userService";
 import {documentglobals} from "../util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
@@ -1026,6 +1026,7 @@ export class AnswerBrowserController
             return;
         }
         this.users = r.result.data;
+        this.users.sort(sortByRealName);
     }
 
     showError(response: {data: {error: string}}) {

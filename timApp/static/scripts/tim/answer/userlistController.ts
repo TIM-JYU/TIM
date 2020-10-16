@@ -6,7 +6,7 @@ import {documentglobals} from "tim/util/globals";
 import {showKorppiExportDialog} from "tim/answer/korppiExportDialog";
 import {ViewCtrl} from "../document/viewctrl";
 import {showMessageDialog} from "../ui/dialog";
-import {IUser, IUserListEntry} from "../user/IUser";
+import {IUser, IUserListEntry, sortByRealName, sortLang} from "../user/IUser";
 import {withComparatorFilters} from "../util/comparatorfilter";
 import {$timeout} from "../util/ngimport";
 import {
@@ -27,8 +27,6 @@ export interface IExportOptions {
     taskPointField: string;
     copy: boolean;
 }
-
-const sortLang = "fi";
 
 function numericSort(a: number | null, b: number | null) {
     if (a === b) {
@@ -73,10 +71,7 @@ export class UserListController implements IController {
         let smallFieldWidth = 59;
 
         function nameCompare(a: IUserListEntry, b: IUserListEntry) {
-            return (a.user.real_name ?? "").localeCompare(
-                b.user.real_name ?? "",
-                sortLang
-            );
+            return sortByRealName(a.user, b.user);
         }
 
         this.viewctrl.users.sort(nameCompare);
