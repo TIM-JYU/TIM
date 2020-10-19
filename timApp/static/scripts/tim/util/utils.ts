@@ -6,7 +6,7 @@ import humanizeDuration from "humanize-duration";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
-const blacklist = new Set(["name", "title", "completionDate"]);
+const blacklist = new Set(["name", "title", "completionDate", "message"]);
 export const UnknownRecord = t.record(t.string, t.unknown);
 const UnknownRecordOrArray = t.union([UnknownRecord, t.array(t.unknown)]);
 
