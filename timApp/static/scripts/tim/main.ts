@@ -16,7 +16,6 @@ import {FrontPageComponent} from "tim/frontpage/front-page.component";
 import * as loadMap from "tim/gamification/loadMap";
 import * as manageCtrl from "tim/item/manageCtrl";
 import * as rightsEditor from "tim/item/rightsEditor";
-import * as taggedDocumentList from "tim/item/taggedDocumentList";
 import * as markAllAsRead from "tim/ui/markAllAsRead";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {LogoComponent} from "tim/ui/logo.component";
@@ -73,7 +72,6 @@ markAsUsed(
     manageCtrl,
     rightsEditor,
     selfExpire,
-    taggedDocumentList,
     timRoot,
     userlistController,
     velpSelection,

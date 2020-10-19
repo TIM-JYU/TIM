@@ -11,7 +11,6 @@ import {
     redirectToItem,
 } from "tim/item/IItem";
 import {isDocumentGlobals, someglobals} from "tim/util/globals";
-import {showTagSearchDialog} from "tim/item/tagSearchCtrl";
 import {
     getCurrentViewRange,
     IViewRange,
@@ -34,6 +33,7 @@ import {showMergePdfDialog} from "tim/document/minutes/mergePdfCtrl";
 import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
 import {showViewRangeEditDialog} from "tim/document/showViewRangeEditDialog";
 import {showRelevanceEditDialog} from "tim/item/showRelevanceEditDialog";
+import {showTagSearchDialog} from "tim/item/showTagSearchDialog";
 
 const DEFAULT_PIECE_SIZE = 20;
 
