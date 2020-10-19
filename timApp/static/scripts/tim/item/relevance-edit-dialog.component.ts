@@ -3,8 +3,12 @@
  */
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {Component} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {FormsModule} from "@angular/forms";
+import {BrowserModule} from "@angular/platform-browser";
+import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
+import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import {IItem} from "./IItem";
 
 @Component({
@@ -34,7 +38,13 @@ export class RelevanceEditDialogComponent extends AngularDialogComponent<
     }
 }
 
-export async function showRelevanceEditDialog(d: IItem) {
-    return await (await angularDialog.open(RelevanceEditDialogComponent, d))
-        .result;
-}
+@NgModule({
+    declarations: [RelevanceEditDialogComponent, RelevanceEditComponent],
+    imports: [
+        BrowserModule,
+        DialogModule,
+        FormsModule,
+        TypeaheadModule.forRoot(),
+    ],
+})
+export class ViewRangeEditDialogModule {}

@@ -16,6 +16,7 @@ export function doDowngrade(
             propagateDigest,
         }) as Injectable<IDirectiveFactory>
     );
+    return m;
 }
 
 export function createDowngradedModule<T>(

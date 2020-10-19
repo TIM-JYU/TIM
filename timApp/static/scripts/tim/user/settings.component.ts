@@ -1,10 +1,10 @@
+import {HttpClient} from "@angular/common/http";
 import {Component, DoCheck, Input} from "@angular/core";
 import {DocumentOrFolder} from "tim/item/IItem";
 import {ConsentType} from "../ui/consent";
 import {showMessageDialog} from "../ui/dialog";
 import {settingsglobals} from "../util/globals";
-import {$http, $timeout} from "../util/ngimport";
-import {IOkResponse, to} from "../util/utils";
+import {IOkResponse, timeout, to2} from "../util/utils";
 import {IFullUser} from "./IUser";
 
 export interface ISettings {
@@ -21,14 +21,16 @@ export interface ISettings {
     auto_mark_all_read: boolean;
 }
 
-export async function setConsent(c: ConsentType) {
-    const r = await to(
-        $http.post<IOkResponse>("/settings/updateConsent", {consent: c})
+export async function setConsent(http: HttpClient, c: ConsentType) {
+    const r = await to2(
+        http
+            .post<IOkResponse>("/settings/updateConsent", {consent: c})
+            .toPromise()
     );
     if (r.ok) {
         // Nothing to do.
     } else {
-        void showMessageDialog(r.result.data.error);
+        void showMessageDialog(r.result.error.error);
     }
 }
 
@@ -221,7 +223,7 @@ export class SettingsComponent implements DoCheck {
     deletingAccount = false;
     deleteConfirmName = "";
 
-    constructor() {
+    constructor(private http: HttpClient) {
         this.user = settingsglobals().current_user;
         this.consent = this.user.consent;
         this.settings = settingsglobals().userPrefs;
@@ -239,14 +241,16 @@ export class SettingsComponent implements DoCheck {
 
     submit = async () => {
         this.saving = true;
-        const r = await to(
-            $http.post<ISettings>("/settings/save", this.settings)
+        const r = await to2(
+            this.http
+                .post<ISettings>("/settings/save", this.settings)
+                .toPromise()
         );
         if (r.ok) {
-            this.settings = r.result.data;
+            this.settings = r.result;
             this.updateCss();
         } else {
-            void showMessageDialog(r.result.data.error);
+            void showMessageDialog(r.result.error.error);
         }
         this.saving = false;
     };
@@ -256,7 +260,7 @@ export class SettingsComponent implements DoCheck {
             return;
         }
         this.saving = true;
-        await setConsent(this.consent);
+        await setConsent(this.http, this.consent);
         this.saving = false;
     }
 
@@ -276,27 +280,31 @@ export class SettingsComponent implements DoCheck {
     async clearLocalStorage() {
         window.localStorage.clear();
         this.storageClear = true;
-        await $timeout(3000);
+        await timeout(3000);
         this.storageClear = false;
     }
 
     async addPrintSettings() {
-        const resp = await to(
-            $http.get<string>("/static/stylesheets/userPrintSettings.css")
+        const resp = await to2(
+            this.http
+                .get<string>("/static/stylesheets/userPrintSettings.css")
+                .toPromise()
         );
         if (!resp.ok) {
             return;
         }
-        this.settings.custom_css = resp.result.data;
+        this.settings.custom_css = resp.result;
     }
 
     async getAllNotifications() {
-        const resp = await to($http.get<INotification[]>("/notify/all"));
+        const resp = await to2(
+            this.http.get<INotification[]>("/notify/all").toPromise()
+        );
         if (resp.ok) {
-            this.notifications = resp.result.data;
+            this.notifications = resp.result;
             this.allNotificationsFetched = true;
         } else {
-            void showMessageDialog(resp.result.data.error);
+            void showMessageDialog(resp.result.error.error);
         }
     }
 
@@ -318,11 +326,13 @@ export class SettingsComponent implements DoCheck {
                 `Are you sure you want to delete your account (${this.user.name})?`
             )
         ) {
-            const r = await to($http.post("/settings/account/delete", {}));
+            const r = await to2(
+                this.http.post("/settings/account/delete", {}).toPromise()
+            );
             if (r.ok) {
                 location.href = "/";
             } else {
-                await showMessageDialog(r.result.data.error);
+                await showMessageDialog(r.result.error.error);
             }
         }
     }

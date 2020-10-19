@@ -59,7 +59,7 @@ export class DialogContainerComponent {
     }
 
     add<P, R>(
-        dialog: new (...args: unknown[]) => AngularDialogComponent<P, R>,
+        dialog: new (...args: never[]) => AngularDialogComponent<P, R>,
         params: P,
         dialogOptions?: IDialogOptions
     ): Promise<AngularDialogComponent<P, R>> {

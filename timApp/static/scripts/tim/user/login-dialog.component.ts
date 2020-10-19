@@ -5,9 +5,11 @@
 import * as focusMe from "tim/ui/focusMe";
 import * as onEnter from "tim/ui/onEnter";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, ElementRef, ViewChild} from "@angular/core";
-import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {FormsModule} from "@angular/forms";
+import {BrowserModule} from "@angular/platform-browser";
 import {saveCurrentScreenPar} from "../document/parhelpers";
 import {genericglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
@@ -19,7 +21,11 @@ import {
     ToReturn,
 } from "../util/utils";
 import * as hakaLogin from "./haka-login.component";
-import {IDiscoveryFeedEntry, loadIdPs} from "./haka-login.component";
+import {
+    HakaLoginComponent,
+    IDiscoveryFeedEntry,
+    loadIdPs,
+} from "./haka-login.component";
 import {Users} from "./userService";
 
 interface INameResponse {
@@ -28,14 +34,12 @@ interface INameResponse {
     can_change_name: boolean;
 }
 
-interface ILoginParams {
+export interface ILoginParams {
     showSignup: boolean;
     addingToSession: boolean;
 }
 
 markAsUsed(focusMe, onEnter, hakaLogin);
-
-let instance: AngularDialogComponent<ILoginParams, void> | undefined;
 
 const orgNames: Record<string, string | undefined> = {
     "aalto.fi": "Aalto",
@@ -472,18 +476,8 @@ export class LoginDialogComponent extends AngularDialogComponent<
     }
 }
 
-/**
- * Open login dialog if no other instances are opened.
- */
-export async function showLoginDialog(params: ILoginParams) {
-    if (instance) {
-        return;
-    }
-    const dialog = angularDialog.open(LoginDialogComponent, params, {
-        resetSize: true,
-    });
-    instance = await dialog;
-    await to(instance.result);
-    instance = undefined;
-    return;
-}
+@NgModule({
+    declarations: [LoginDialogComponent, HakaLoginComponent],
+    imports: [BrowserModule, DialogModule, FormsModule],
+})
+export class LoginDialogModule {}

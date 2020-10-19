@@ -1,9 +1,9 @@
 import {Pipe, PipeTransform} from "@angular/core";
 import {ReadonlyMoment} from "tim/util/utils";
 
-@Pipe({name: "relative_time"})
-export class RelativeTimestampPipe implements PipeTransform {
+@Pipe({name: "timtime"})
+export class TimePipe implements PipeTransform {
     transform(value: ReadonlyMoment): string {
-        return value.fromNow();
+        return value.format("HH:mm:ss");
     }
 }

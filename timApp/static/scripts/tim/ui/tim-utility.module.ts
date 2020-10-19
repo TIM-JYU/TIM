@@ -14,18 +14,16 @@ import {GotoLinkComponent} from "tim/ui/goto-link.component";
 import {CountdownComponent} from "tim/ui/countdown.component";
 import {DurationPickerComponent} from "tim/ui/duration-picker.component";
 import {ErrorMessageComponent} from "tim/ui/error-message.component";
-import {
-    RelativeTimestampPipe,
-    TimDatePipe,
-} from "tim/ui/relative-timestamp.pipe";
+import {RelativeTimestampPipe} from "tim/ui/relative-timestamp.pipe";
 import {DatepickerModule} from "ngx-bootstrap/datepicker";
 import {TimepickerModule} from "ngx-bootstrap/timepicker";
 import {DatetimePopupModule} from "ngx-bootstrap-datetime-popup";
+import {DatePipe} from "tim/ui/date.pipe";
+import {TimePipe} from "tim/ui/time.pipe";
 import {PluginFrameComponent} from "./plugin-frame.component";
 import {LoadingComponent} from "./loadingIndicator";
 import {MarkupErrorComponent} from "./markup-error.component";
 import {CloseButtonComponent} from "./close-button.component";
-import {DatetimePickerComponent} from "./datetime-picker/datetime-picker.component";
 
 @NgModule({
     declarations: [
@@ -46,9 +44,9 @@ import {DatetimePickerComponent} from "./datetime-picker/datetime-picker.compone
         TimeLeftComponent,
         DurationPickerComponent,
         ErrorMessageComponent,
-        TimDatePipe,
+        DatePipe,
         RelativeTimestampPipe,
-        DatetimePickerComponent,
+        TimePipe,
     ],
     exports: [
         MarkupErrorComponent,
@@ -68,9 +66,9 @@ import {DatetimePickerComponent} from "./datetime-picker/datetime-picker.compone
         TimeLeftComponent,
         DurationPickerComponent,
         ErrorMessageComponent,
-        TimDatePipe,
+        DatePipe,
         RelativeTimestampPipe,
-        DatetimePickerComponent,
+        TimePipe,
     ],
     imports: [
         CommonModule,

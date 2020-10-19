@@ -1,7 +1,9 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component} from "@angular/core";
-import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import {Component, NgModule} from "@angular/core";
 import {IBookmark} from "tim/bookmark/bookmark.service";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {BrowserModule} from "@angular/platform-browser";
+import {FormsModule} from "@angular/forms";
 
 @Component({
     selector: "tim-bookmark-dialog",
@@ -112,6 +114,8 @@ export class BookmarkDialogComponent extends AngularDialogComponent<
     }
 }
 
-export async function showBookmarkDialog(bookmark: IBookmark) {
-    return (await angularDialog.open(BookmarkDialogComponent, bookmark)).result;
-}
+@NgModule({
+    declarations: [BookmarkDialogComponent],
+    imports: [BrowserModule, DialogModule, FormsModule],
+})
+export class BookmarkDialogModule {}

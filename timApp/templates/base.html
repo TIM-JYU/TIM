@@ -7,7 +7,9 @@ depends=(
         <link rel="stylesheet" href="{{ ASSET_URL }}">
     {% endassets %}
 {%- endmacro %}
-{% set lecture_assets = in_lecture or lecture_mode or request.endpoint == 'lecture.show_lecture_info' %}
+
+{% set is_lecture_info = request.endpoint == 'lecture.show_lecture_info' %}
+{% set show_lecture_menu = in_lecture or lecture_mode or is_lecture_info %}
 
 {# Set default column widths if they are not defined in a child template #}
 {% set col_1_lg = col_1_lg|default(2) %}
@@ -49,6 +51,10 @@ depends=(
             var IS_TESTING = {{ config.TESTING|tojson }};
             var ANGULARMODULES = {{ (jsMods or [])|tojson }};
             var JSMODULES = {{ (js or [])|tojson }};
+
+            {% if show_lecture_menu %}JSMODULES.push("lectureMenu");{% endif %}
+            {% if is_lecture_info %}JSMODULES.push("lectureInfo");{% endif %}
+
             var userPrefs = {{ prefs|tojson }};
             var current_user = {{ current_user.to_json(full=True)|tojson }};
             var other_users = {{ other_users|tojson }};
@@ -176,7 +182,7 @@ depends=(
                                 col-xs-{{ col_m_xs }} col-xs-offset-{{ (12 - col_m_xs) // 2 }}
                                 col-sm-{{ col_m_sm }} col-sm-offset-{{ (12 - col_m_sm) // 2 }}">
                         <div class="material">
-                            {% if lecture_assets %}
+                            {% if show_lecture_menu %}
                                 <tim-lecture-menu></tim-lecture-menu>
                             {% endif %}
                             {% block content %}{% endblock %}

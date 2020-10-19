@@ -1,8 +1,20 @@
-import {Component} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    NgModule,
+    NgZone,
+} from "@angular/core";
+import {BrowserModule} from "@angular/platform-browser";
+import {AccordionModule} from "ngx-bootstrap/accordion";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ViewCtrl} from "../document/viewctrl";
 import {getItem, IItem} from "../item/IItem";
 import {isScreenSizeOrLower} from "../util/utils";
+import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {LectureController} from "./lectureController";
 
 @Component({
@@ -117,8 +129,13 @@ export class LectureMenuComponent {
     isOpen = false;
     lctrl!: LectureController;
 
+    constructor(private zone: NgZone) {}
+
     async ngOnInit() {
         this.vctrl = vctrlInstance;
+        if (this.vctrl) {
+            this.vctrl.lectureCtrl.registerLectureMenu(this);
+        }
         this.lctrl =
             this.vctrl?.lectureCtrl ??
             LectureController.createAndInit(this.vctrl);
@@ -132,4 +149,33 @@ export class LectureMenuComponent {
             this.isOpen = true;
         }
     }
+
+    checkChanges() {
+        this.zone.run(() => {});
+    }
 }
+
+@NgModule({
+    declarations: [LectureMenuComponent],
+    imports: [
+        BrowserModule,
+        TimUtilityModule,
+        AccordionModule.forRoot(),
+        NoopAnimationsModule,
+    ],
+})
+export class LectureMenuModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
+
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                LectureMenuModule
+            )
+        ),
+        "timLectureMenu",
+        LectureMenuComponent
+    ),
+];

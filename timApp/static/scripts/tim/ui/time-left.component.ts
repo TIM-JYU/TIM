@@ -1,7 +1,9 @@
-import {Component, Input} from "@angular/core";
+import {Component, Input, OnChanges, SimpleChanges} from "@angular/core";
 import {showMessageDialog} from "tim/ui/dialog";
 import {documentglobals} from "tim/util/globals";
 import {ITimeLeftSettings} from "tim/document/IDocSettings";
+import {Moment} from "moment";
+import moment from "moment";
 
 const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
     sync_interval: 10 * 60,
@@ -17,7 +19,7 @@ const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
     selector: "tim-time-left",
     template: `
         <span class="label label-default" [class.low-time]="isLowTime" [class.glow]="isGlowing" i18n>
-            Time left: <tim-countdown [displayUnits]="['d']" [endTime]="endTime"
+            Time left: <tim-countdown [displayUnits]="['d', 'h', 'm', 's']" [endTime]="endTimeMoment"
                                       [lowTimeThreshold]="settings.low_time_threshold"
                                       [syncInterval]="syncInterval"
                                       [syncIntervalDeviation]="syncIntervalDeviation"
@@ -35,7 +37,7 @@ const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
     `,
     styleUrls: ["./time-left.component.scss"],
 })
-export class TimeLeftComponent {
+export class TimeLeftComponent implements OnChanges {
     @Input() endTime?: string;
     showLowTimeMessage = true;
     isLowTime = false;
@@ -47,6 +49,15 @@ export class TimeLeftComponent {
     };
     syncInterval = this.settings.sync_interval;
     syncIntervalDeviation = this.settings.sync_interval_deviation;
+    endTimeMoment?: Moment;
+
+    ngOnChanges(c: SimpleChanges) {
+        if (c.endTime) {
+            this.endTimeMoment = c.endTime.currentValue
+                ? moment(c.endTime.currentValue)
+                : undefined;
+        }
+    }
 
     onLowTime() {
         this.isLowTime = true;

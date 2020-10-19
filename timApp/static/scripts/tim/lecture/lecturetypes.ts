@@ -1,4 +1,5 @@
 import moment, {Moment} from "moment";
+import {ReadonlyMoment} from "tim/util/utils";
 import {IItem} from "../item/IItem";
 import {IGenericPluginMarkup} from "../plugin/attributes";
 import {DurationChoice} from "../ui/duration-picker.component";
@@ -96,14 +97,14 @@ export interface IAskedQuestion {
     lecture_id: number;
     doc_id: number;
     par_id: string;
-    asked_time: Moment;
+    asked_time: ReadonlyMoment;
     json: IAskedJson;
 }
 
 export interface ILectureMessage {
     msg_id: number;
     user: IUser;
-    timestamp: Moment;
+    timestamp: ReadonlyMoment;
     message: string;
 }
 
@@ -118,12 +119,12 @@ export interface ILectureOptions {
     teacher_poll: string;
 }
 
-export interface ILecture {
+export interface ILecture<TimeType = ReadonlyMoment> {
     doc_id: number;
     lecture_id: number;
     lecture_code: string;
-    start_time: Moment;
-    end_time: Moment;
+    start_time: TimeType;
+    end_time: TimeType;
     password: string;
     options: ILectureOptions;
     is_full: boolean;
@@ -135,7 +136,7 @@ export interface IQuestionAnswerPlain {
     user_id: number;
     points: number;
     answer: AnswerTable;
-    answered_on: Moment;
+    answered_on: ReadonlyMoment;
     asked_id: number;
 }
 
@@ -266,7 +267,7 @@ export function isEmptyResponse(
 
 export interface INoUpdatesResponse {
     ms: number;
-    question_end_time?: Moment | null;
+    question_end_time?: ReadonlyMoment | null;
 }
 
 export function hasUpdates(r: IUpdateResponse): r is IGotUpdatesResponse {

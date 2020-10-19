@@ -1,7 +1,7 @@
 import {Component} from "@angular/core";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
+import {showLoginDialog} from "tim/user/showLoginDialog";
 import {IUser} from "./IUser";
-import {showLoginDialog} from "./login-dialog.component";
 import {Users} from "./userService";
 
 /**

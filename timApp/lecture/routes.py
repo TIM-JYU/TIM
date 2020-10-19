@@ -3,7 +3,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import timedelta
 from random import randrange
-from typing import List, Optional
+from typing import List, Optional, Any
 
 import dateutil.parser
 from flask import Blueprint, render_template, g
@@ -45,6 +45,11 @@ from timApp.util.utils import get_current_time
 lecture_routes = Blueprint('lecture',
                            __name__,
                            url_prefix='')
+
+
+@dataclass
+class AskedIdModel:
+    asked_id: int
 
 
 def is_lecturer_of(l: Lecture):
@@ -396,12 +401,17 @@ def check_if_lecture_is_ending(lecture: Lecture):
     return lecture_ending
 
 
+@dataclass
+class SendMessageModel:
+    message: str
+
+
 @lecture_routes.route('/sendMessage', methods=['POST'])
-def send_message():
+@use_model(SendMessageModel)
+def send_message(m: SendMessageModel):
     """Route to add message to database."""
-    new_message = request.args.get("message")
     lecture = get_current_lecture_or_abort()
-    msg = Message(message=new_message, user_id=get_current_user_id())
+    msg = Message(message=m.message, user_id=get_current_user_id())
     lecture.messages.append(msg)
     db.session.commit()
     return json_response(msg, date_conversion=True)
@@ -672,9 +682,15 @@ def extend_lecture():
     return ok_response()
 
 
+@dataclass
+class DeleteLectureModel:
+    lecture_id: int
+
+
 @lecture_routes.route('/deleteLecture', methods=['POST'])
-def delete_lecture():
-    lecture = get_lecture_from_request()
+@use_model(DeleteLectureModel)
+def delete_lecture(m: DeleteLectureModel):
+    lecture = get_lecture_from_request(lecture_id=m.lecture_id)
     with db.session.no_autoflush:
         empty_lecture(lecture)
         Message.query.filter_by(lecture_id=lecture.lecture_id).delete()
@@ -686,8 +702,8 @@ def delete_lecture():
     return get_running_lectures(lecture.doc_id)
 
 
-def get_lecture_from_request(check_access=True) -> Lecture:
-    lecture_id = get_option(request, 'lecture_id', None, cast=int)
+def get_lecture_from_request(check_access=True, lecture_id: Optional[int] = None) -> Lecture:
+    lecture_id = get_option(request, 'lecture_id', lecture_id, cast=int)
     if not lecture_id:
         lecture_code = get_option(request, 'lecture_code', None)
         doc_id = get_option(request, 'doc_id', None)
@@ -845,13 +861,17 @@ def ask_question():
     return json_response(question, date_conversion=True)
 
 
+class ShowAnswerPointsModel(AskedIdModel):
+    current_question_id: Optional[int] = None
+    current_points_id: Optional[int] = None
+
+
 @lecture_routes.route('/showAnswerPoints', methods=['POST'])
-def show_points():
-    if 'asked_id' not in request.args:
-        raise RouteException('missing argument(s)')
+@use_model(ShowAnswerPointsModel)
+def show_points(m: ShowAnswerPointsModel):
     lecture = get_current_lecture_or_abort()
     verify_is_lecturer(lecture)
-    asked_id = int(request.args.get('asked_id'))
+    asked_id = m.asked_id
     q = get_asked_question(asked_id)
     if not q:
         return abort(404)
@@ -860,12 +880,8 @@ def show_points():
     sp = Showpoints(asked_question=q)
     db.session.add(sp)
 
-    current_question_id = None
-    current_points_id = None
-    if 'current_question_id' in request.args:
-        current_question_id = int(request.args.get('current_question_id'))
-    if 'current_points_id' in request.args:
-        current_points_id = int(request.args.get('current_points_id'))
+    current_question_id = m.current_question_id
+    current_points_id = m.current_points_id
     new_question = get_new_question(lecture, current_question_id, current_points_id)
     db.session.commit()
     if new_question is not None:
@@ -940,11 +956,10 @@ def get_question_answer_by_id():
 
 
 @lecture_routes.route("/stopQuestion", methods=['POST'])
-def stop_question():
+@use_model(AskedIdModel)
+def stop_question(m: AskedIdModel):
     """Route to stop question from running."""
-    if not request.args.get("asked_id"):
-        raise RouteException('missing argument(s)')
-    asked_id = int(request.args.get('asked_id'))
+    asked_id = m.asked_id
     aq = get_asked_question(asked_id)
     if not aq:
         return abort(404, 'Asked question not found')
@@ -979,17 +994,16 @@ def get_lecture_answers():
     )
 
 
-@lecture_routes.route("/answerToQuestion", methods=['PUT'])
-def answer_to_question():
-    if not request.args.get("asked_id") or not request.args.get('input'):
-        raise RouteException("missing asked_id or input")
+@dataclass
+class AnswerToQuestionModel(AskedIdModel):
+    input: List[List[str]]
 
-    asked_id = int(request.args.get("asked_id"))
-    req_input = json.loads(request.args.get("input"))
-    answer = req_input.get('answers')
-    if answer is None:
-        # The data SHOULD have (empty) answers array even if the user does not touch the answer sheet.
-        raise RouteException('Missing answers in input')
+
+@lecture_routes.route("/answerToQuestion", methods=['PUT'])
+@use_model(AnswerToQuestionModel)
+def answer_to_question(m: AnswerToQuestionModel):
+    asked_id = m.asked_id
+    answer = m.input
     lecture = get_current_lecture_or_abort()
     lecture_id = lecture.lecture_id
     u = get_current_user_object()

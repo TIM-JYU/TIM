@@ -11,31 +11,28 @@
  */
 
 import ifvisible from "ifvisible.js";
-import moment from "moment";
-import {
-    clone,
-    getURLParameter,
-    markAsUsed,
-    setStorage,
-    to,
-    truncate,
-} from "tim/util/utils";
+import {clone, getURLParameter, setStorage, to, truncate} from "tim/util/utils";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {ViewCtrl} from "../document/viewctrl";
-import {IModalInstance, showMessageDialog} from "../ui/dialog";
-import {Users} from "../user/userService";
-import {someglobals} from "../util/globals";
-import {$http, $log, $rootScope, $timeout} from "../util/ngimport";
+import {
+    showLectureDialog,
+    showLectureEnding,
+    showLectureWall,
+    showQuestionAnswerDialog,
+} from "tim/lecture/showLectureDialogs";
+import {LectureMenuComponent} from "tim/lecture/lecture-menu.component";
+import {askQuestion} from "tim/lecture/askQuestion";
 import {
     currentQuestion,
     getAskedQuestionFromQA,
-    IAnswerQuestionResult,
     isOpenInAnotherTab,
     QUESTION_STORAGE,
-    showQuestionAnswerDialog,
-} from "./answer-to-question-dialog.component";
-import {showLectureDialog} from "./lecture-dialog.component";
-import {showLectureEnding} from "./lectureEnding";
+} from "tim/lecture/currentQuestion";
+import {ViewCtrl} from "../document/viewctrl";
+import {showMessageDialog} from "../ui/dialog";
+import {Users} from "../user/userService";
+import {someglobals} from "../util/globals";
+import {$http, $log, $rootScope, $timeout} from "../util/ngimport";
+import {IAnswerQuestionResult} from "./answer-to-question-dialog.component";
 import {
     alreadyAnswered,
     hasLectureEnded,
@@ -63,11 +60,7 @@ import {
     questionAsked,
     questionHasAnswer,
 } from "./lecturetypes";
-import * as wall from "./lectureWall";
-import {LectureWallController, showLectureWall} from "./lectureWall";
-import {askQuestion} from "./question-preview-dialog.component";
-
-markAsUsed(wall);
+import {LectureWallDialogComponent} from "./lecture-wall-dialog.component";
 
 enum LectureEndingDialogState {
     NotAnswered,
@@ -95,10 +88,12 @@ export class LectureController {
     viewctrl?: ViewCtrl;
     private wallMessages: ILectureMessage[];
     private wallName: string;
-    private wallInstance: IModalInstance<LectureWallController> | undefined;
+    private wallInstance?: LectureWallDialogComponent;
     // The last asked question that was initiated *from this tab* by the lecturer.
     // So this field should NOT be updated in the poll method.
     lastQuestion: IAskedQuestion | undefined;
+    private wallInstancePromise?: Promise<LectureWallDialogComponent>;
+    private lectureMenu?: LectureMenuComponent;
 
     constructor(vctrl: ViewCtrl | undefined) {
         this.viewctrl = vctrl;
@@ -158,8 +153,14 @@ export class LectureController {
         if (!this.lecture) {
             return;
         }
-        if (this.lectureSettings.useWall && !this.wallInstance) {
-            this.wallInstance = showLectureWall(this.wallMessages);
+        if (
+            this.lectureSettings.useWall &&
+            !this.wallInstance &&
+            !this.wallInstancePromise
+        ) {
+            this.wallInstancePromise = showLectureWall(this.wallMessages);
+            this.wallInstance = await this.wallInstancePromise;
+            this.wallInstancePromise = undefined;
             await to(this.wallInstance.result);
             this.lectureSettings.useWall = false;
         } else if (!this.lectureSettings.useWall) {
@@ -356,7 +357,6 @@ export class LectureController {
      */
     async toggleLecture() {
         const result = await showLectureDialog(this.viewctrl!.item);
-        console.log("hoh");
         if (result != null) {
             await this.checkIfInLecture();
         }
@@ -400,6 +400,7 @@ export class LectureController {
             this.addPeopleToList(response.students, this.studentTable);
             this.addPeopleToList(response.lecturers, this.lecturerTable);
         }
+        this.lectureMenu?.checkChanges();
     }
 
     /**
@@ -446,6 +447,7 @@ export class LectureController {
         for (const l of answer.futureLectures) {
             this.futureLectures.push(l);
         }
+        this.lectureMenu?.checkChanges();
     }
 
     /**
@@ -455,7 +457,7 @@ export class LectureController {
      */
     async extendLecture(minutes: number) {
         const lecture = this.lectureOrThrow();
-        const endTimeDate = moment(lecture.end_time).add(minutes, "minutes");
+        const endTimeDate = lecture.end_time.clone().add(minutes, "minutes");
         $log.info("extending lecture");
         $log.info(endTimeDate);
         const r = await to(
@@ -676,6 +678,9 @@ export class LectureController {
                 "Wall - " +
                 this.lecture.lecture_code +
                 this.newMessagesAmountText;
+            if (answer.msgs.length > 0) {
+                this.wallInstance?.checkChanges();
+            }
 
             let pollInterval = answer.ms;
             if (isNaN(pollInterval) || pollInterval < 1000) {
@@ -803,5 +808,9 @@ export class LectureController {
         } else if (questionAsked(answer) || questionAnswerReceived(answer)) {
             this.showQuestion(answer);
         }
+    }
+
+    registerLectureMenu(menu: LectureMenuComponent) {
+        this.lectureMenu = menu;
     }
 }

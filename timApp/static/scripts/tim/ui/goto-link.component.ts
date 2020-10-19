@@ -79,7 +79,7 @@ export class GotoLinkComponent implements OnInit {
     @Input() unsavedChangesText?: string;
     @Input() autoOpen: boolean = false;
     @Input() stopAfterCountdown: boolean = false;
-    openTime?: string;
+    openTime?: Moment;
     linkDisabled = false;
     linkState = GotoLinkState.Ready;
     resetTimeout?: number;
@@ -220,7 +220,7 @@ export class GotoLinkComponent implements OnInit {
         }
 
         if (openTime?.isValid()) {
-            this.openTime = openTime?.toISOString();
+            this.openTime = openTime;
         }
 
         if (

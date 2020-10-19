@@ -1,10 +1,11 @@
-import {IChangesObject, IController, IOnChangesObject} from "angular";
-import Chart, {ChartData, ChartType} from "chart.js";
-import $ from "jquery";
-import {timApp} from "tim/app";
+import {Component, Input, NgModule, OnChanges} from "@angular/core";
+import {ChartData, ChartDataSets, ChartOptions, ChartType} from "chart.js";
 import {fixQuestionJson} from "tim/document/question/answer-sheet.component";
 import {Overwrite} from "type-zoo";
-import {assertNotNull, clone, truncate} from "../util/utils";
+import {Changes} from "tim/util/angularchanges";
+import {BrowserModule} from "@angular/platform-browser";
+import {ChartsModule} from "ng2-charts";
+import {clone, truncate} from "../util/utils";
 import {
     IAskedQuestion,
     IQuestionAnswer,
@@ -88,7 +89,7 @@ function qstFormatLabel(str: string, maxwidth: number, maxrows: number) {
     return sections;
 }
 
-function qstShortText(s: string): string | string[] {
+function qstShortText(s: string): string {
     const parts = s.split("!!");
     let text = "";
     if (parts.length >= 2) {
@@ -115,16 +116,16 @@ function qstShortText(s: string): string | string[] {
     if (typeof result === "string") {
         return truncate(text, max);
     } else {
-        return result.map((row) => truncate(row, max));
+        return result.map((row) => truncate(row, max)).join(" ");
     }
 }
 
 function timGetLSIntValue(key: string, def: number): number {
-    let val: string | null | number = window.localStorage.getItem(key);
-    if (val == null) {
-        val = def;
+    const valStr = window.localStorage.getItem(key);
+    if (valStr == null) {
+        return def;
     }
-    val = parseInt(val.toString(), 10);
+    let val = parseInt(valStr.toString(), 10);
     if (isNaN(val)) {
         val = def;
     }
@@ -146,7 +147,7 @@ function* enumAnswers(answers: AnswerList): Iterable<[number, string[]]> {
 }
 
 interface IDataSet {
-    label: string | string[];
+    label: string;
     fill: string;
     borderColor: string | string[];
     pointBackgroundColor: string;
@@ -158,22 +159,47 @@ interface IDataSet {
     borderWidth?: number;
 }
 
-type TimChartData = Overwrite<ChartData, {datasets: IDataSet[]}>;
-type ChartConfig = Overwrite<Chart.ChartConfiguration, {data: TimChartData}>;
-type TimChart = Overwrite<Chart, {data: TimChartData}>;
+interface ChartConfig {
+    type: ChartType;
+    data: Overwrite<
+        ChartData,
+        {datasets: IDataSet[]; labels: Array<string | string[]>}
+    >;
+    options: ChartOptions;
+}
 
-const chartTypes: ChartType[] = ["bar", "horizontalBar"];
-
-class ChartController implements IController {
-    static $inject = ["$element"];
-    private isText = false;
-    private div?: JQuery<HTMLDivElement>;
-    private chartIndex: number;
-    private question?: IAskedQuestion;
-    private answers?: AnswerList;
+@Component({
+    selector: "tim-answer-chart",
+    template: `
+        <div *ngIf="!isText && chartData" style="flex: 1; min-height: 0">
+            <!--suppress TypeScriptUnresolvedVariable -->
+            <canvas baseChart
+                    [datasets]="chartData.datasets"
+                    [labels]="chartData.config.data.labels"
+                    [options]="chartData.config.options"
+                    [legend]="chartData.config.options.legend?.display || false"
+                    [chartType]="chartTypes[chartIndex]">
+            </canvas>
+        </div>
+        <div *ngIf="isText">
+            <p *ngFor="let t of textAnswers" [innerText]="t"></p>
+        </div>
+        <p *ngIf="answers">Total points: {{ getTotalPoints() }}</p>
+        <div *ngIf="!isText">
+            <button class="timButton btn-xs" (click)="toggle()">Change chart orientation</button>
+        </div>
+    `,
+    styleUrls: ["./answer-chart.component.scss"],
+})
+export class AnswerChartComponent implements OnChanges {
+    isText = false;
+    chartIndex = qstChartIndex;
+    @Input() question?: IAskedQuestion;
+    @Input() answers?: AnswerList;
     private chartConfig?: ChartConfig;
-    private answerChart?: TimChart;
+    chartData?: {config: ChartConfig; datasets: ChartDataSets[]};
     private lastAnswerCount = 0;
+    chartTypes: ChartType[] = ["bar", "horizontalBar"];
 
     // TODO: If more than 12 choices this will break. Refactor to better format.
     private basicSets: IDataSet[] = [
@@ -299,23 +325,11 @@ class ChartController implements IController {
             data: [],
         },
     ];
-    private element: JQLite;
-    private textAnswers: string[] = [];
+    textAnswers: string[] = [];
 
-    constructor(element: JQLite) {
-        this.chartIndex = qstChartIndex;
-        this.element = element;
-    }
-
-    $onInit() {}
-
-    $onChanges(onChangesObj: IOnChangesObject) {
-        const qdata = onChangesObj.question as
-            | IChangesObject<IAskedQuestion>
-            | undefined;
-        const adata = onChangesObj.answers as
-            | IChangesObject<AnswerList>
-            | undefined;
+    ngOnChanges(onChangesObj: Changes<this, "question" | "answers">) {
+        const qdata = onChangesObj.question;
+        const adata = onChangesObj.answers;
         if (qdata) {
             this.createChart();
         } else if (adata) {
@@ -323,26 +337,21 @@ class ChartController implements IController {
         }
     }
 
-    $doCheck() {
+    ngDoCheck() {
         if (this.answers && this.lastAnswerCount !== this.answers.length) {
             this.lastAnswerCount = this.answers.length;
             this.update();
         }
     }
 
-    $postLink() {
-        this.div = this.element.find(".canvasContainer") as JQuery<
-            HTMLDivElement
-        >;
-        assertNotNull(this.div);
-        this.createChart();
-    }
-
-    intScale(value: number, axis: number): number | undefined {
+    intScale(
+        value: number | string,
+        axis: number
+    ): string | number | undefined {
         if (axis == this.chartIndex) {
             return value;
         }
-        if (value % 1 === 0) {
+        if (typeof value === "number" && value % 1 === 0) {
             return value;
         }
     }
@@ -361,8 +370,8 @@ class ChartController implements IController {
         dataSets[index].borderWidth = 1;
     }
 
-    async createChart() {
-        if (!this.question || !this.div) {
+    createChart() {
+        if (!this.question) {
             return;
         }
 
@@ -425,13 +434,7 @@ class ChartController implements IController {
                             ticks: {
                                 min: 0,
                                 callback: (value) => {
-                                    // According to http://www.chartjs.org/docs/latest/axes/labelling.html#creating-custom-tick-formats,
-                                    // this callback is allowed to return undefined. Type definition is not accurate,
-                                    // so we use "as number".
-                                    return this.intScale(
-                                        value as number,
-                                        0
-                                    ) as number;
+                                    return this.intScale(value, 0);
                                 },
                             },
                         },
@@ -441,10 +444,7 @@ class ChartController implements IController {
                             ticks: {
                                 min: 0,
                                 callback: (value) => {
-                                    return this.intScale(
-                                        value as number,
-                                        1
-                                    ) as number;
+                                    return this.intScale(value, 1);
                                 },
                             },
                         },
@@ -453,7 +453,7 @@ class ChartController implements IController {
             },
         };
 
-        await this.changeType();
+        this.update();
     }
 
     toggle() {
@@ -461,30 +461,9 @@ class ChartController implements IController {
         if (qstChartIndex != this.chartIndex) {
             qstChartIndex = this.chartIndex;
         }
-        qstChartIndex = (qstChartIndex + 1) % chartTypes.length;
+        qstChartIndex = (qstChartIndex + 1) % this.chartTypes.length;
         this.chartIndex = qstChartIndex;
         window.localStorage.setItem("qstChartIndex", qstChartIndex.toString());
-        this.changeType();
-    }
-
-    async changeType() {
-        if (!this.chartConfig || !this.div) {
-            return;
-        }
-        if (this.answerChart) {
-            this.answerChart.destroy();
-        }
-        this.div.empty();
-        if (!this.isText) {
-            const newType = chartTypes[qstChartIndex];
-            const ctx: JQuery<HTMLCanvasElement> = $(`<canvas><canvas>`);
-            this.div.append(ctx);
-            const config = clone(this.chartConfig);
-            config.type = newType;
-            const chart = (await import("chart.js")).Chart;
-            this.answerChart = new chart(ctx, config) as TimChart;
-        }
-        this.update();
     }
 
     update() {
@@ -500,7 +479,7 @@ class ChartController implements IController {
                 }
             }
         } else {
-            if (!this.answerChart || !this.chartConfig) {
+            if (!this.chartConfig) {
                 return;
             }
             const datasets = clone(this.chartConfig.data.datasets);
@@ -534,8 +513,7 @@ class ChartController implements IController {
                     }
                 }
             }
-            this.answerChart.data.datasets = datasets;
-            this.answerChart.update();
+            this.chartData = {config: this.chartConfig, datasets: datasets};
         }
     }
 
@@ -547,22 +525,9 @@ class ChartController implements IController {
     }
 }
 
-timApp.component("showChartDirective", {
-    bindings: {
-        answers: "<",
-        question: "<",
-    },
-    controller: ChartController,
-    template: `
-<div ng-show="!$ctrl.isText" class="canvasContainer" style="flex: 1; min-height: 0">
-
-</div>
-<div ng-show="$ctrl.isText">
-    <p ng-repeat="t in $ctrl.textAnswers" ng-bind="t"></p>
-</div>
-<p ng-show="$ctrl.answers">Total points: {{ $ctrl.getTotalPoints() }}</p>
-<div ng-show="!$ctrl.isText">
-    <button class="timButton btn-xs" ng-click="$ctrl.toggle()">Change chart orientation</button>
-</div>
-    `,
-});
+@NgModule({
+    declarations: [AnswerChartComponent],
+    imports: [BrowserModule, ChartsModule],
+    exports: [AnswerChartComponent],
+})
+export class AnswerChartModule {}

@@ -120,7 +120,7 @@ export interface IDocumentGlobals extends IItemGlobals {
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {
-    lecture: ILecture;
+    lecture: ILecture<string>;
     inLecture: boolean;
 }
 

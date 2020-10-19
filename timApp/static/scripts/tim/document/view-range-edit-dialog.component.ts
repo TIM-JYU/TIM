@@ -3,10 +3,11 @@
  */
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {Component} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {ngStorage} from "ngstorage";
-import {to2} from "tim/util/utils";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {FormsModule} from "@angular/forms";
+import {BrowserModule} from "@angular/platform-browser";
 import {IItem} from "../item/IItem";
 import {$localStorage} from "../util/ngimport";
 import {
@@ -143,8 +144,8 @@ export class ViewRangeEditDialogComponent extends AngularDialogComponent<
     }
 }
 
-export async function showViewRangeEditDialog(d: IItem) {
-    return to2(
-        (await angularDialog.open(ViewRangeEditDialogComponent, d)).result
-    );
-}
+@NgModule({
+    declarations: [ViewRangeEditDialogComponent],
+    imports: [BrowserModule, DialogModule, FormsModule],
+})
+export class ViewRangeEditDialogModule {}

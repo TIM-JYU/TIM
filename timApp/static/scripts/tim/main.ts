@@ -17,9 +17,6 @@ import * as loadMap from "tim/gamification/loadMap";
 import * as manageCtrl from "tim/item/manageCtrl";
 import * as rightsEditor from "tim/item/rightsEditor";
 import * as taggedDocumentList from "tim/item/taggedDocumentList";
-import * as lectureInfoController from "tim/lecture/lectureInfoController";
-import {LectureMenuComponent} from "tim/lecture/lectureMenu";
-import * as showStatisticsToQuestionController from "tim/lecture/statisticsToQuestionController";
 import * as markAllAsRead from "tim/ui/markAllAsRead";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {LogoComponent} from "tim/ui/logo.component";
@@ -44,7 +41,7 @@ import {DialogComponent} from "tim/ui/dialog.component";
 import {CloseButtonComponent} from "tim/ui/close-button.component";
 import {DialogContainerComponent} from "tim/ui/angulardialog/dialog-container.component";
 import {AddMemberComponent} from "tim/ui/add-member.component";
-import {TimFooterComponent} from "tim/footer.component";
+import {FooterComponent} from "tim/footer.component";
 import {SiteHeaderComponent} from "tim/header/site-header.component";
 import {TimeLeftComponent} from "tim/ui/time-left.component";
 import {CountdownComponent} from "tim/ui/countdown.component";
@@ -72,12 +69,10 @@ if (environment.production) {
 markAsUsed(
     answerbrowser,
     bootstrap,
-    lectureInfoController,
     loadMap,
     manageCtrl,
     rightsEditor,
     selfExpire,
-    showStatisticsToQuestionController,
     taggedDocumentList,
     timRoot,
     userlistController,
@@ -104,7 +99,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timCloseButton", CloseButtonComponent);
     doDowngrade(dg, "timDialogContainer", DialogContainerComponent);
     doDowngrade(dg, "timAddMember", AddMemberComponent);
-    doDowngrade(dg, "timFooter", TimFooterComponent);
+    doDowngrade(dg, "timFooter", FooterComponent);
     doDowngrade(dg, "timLoginMenu", LoginMenuComponent);
     doDowngrade(dg, "timLogo", LogoComponent);
     doDowngrade(dg, "bootstrapPanel", BootstrapPanelComponent);
@@ -122,7 +117,6 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timTemplateList", TemplateListComponent);
     doDowngrade(dg, "timViewRangeNavigation", ViewRangeNavigationComponent);
     doDowngrade(dg, "timHelpParContent", HelpParContent);
-    doDowngrade(dg, "timLectureMenu", LectureMenuComponent);
     doDowngrade(dg, "timDurationPicker", DurationPickerComponent);
     return dg;
 }

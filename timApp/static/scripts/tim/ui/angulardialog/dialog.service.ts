@@ -17,14 +17,15 @@ export class DialogService {
         angularDialog = this;
     }
 
-    open<P, R>(
-        dialog: new (...args: unknown[]) => AngularDialogComponent<P, R>,
+    open<P, R, Dialog extends AngularDialogComponent<P, R>>(
+        dialog: new (...args: never[]) => AngularDialogComponent<P, R>,
         params: P,
         dialogOptions?: IDialogOptions
-    ): Promise<AngularDialogComponent<P, R>> {
+    ): Promise<Dialog> {
         if (!this.container) {
             throw Error("DialogContainerComponent has not been registered.");
         }
+        // @ts-expect-error
         return this.container.add(dialog, params, dialogOptions);
     }
 

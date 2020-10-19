@@ -1,6 +1,6 @@
 import angular, {IHttpResponse, IPromise} from "angular";
 import * as t from "io-ts";
-import moment from "moment";
+import moment, {Moment, MomentInput, unitOfTime} from "moment";
 import {AbstractControl, ValidatorFn} from "@angular/forms";
 import humanizeDuration from "humanize-duration";
 import {IGroup} from "../user/IUser";
@@ -787,16 +787,36 @@ export function parseIframeopts(iframeopts: string) {
 }
 
 export function seconds2Time(seconds: number) {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds - h * 3600) / 60);
-    const s = seconds - h * 3600 - m * 60;
-    return {hours: h, minutes: m, seconds: s};
+    const d = moment.duration(seconds, "s");
+    return {hours: d.hours(), minutes: d.minutes(), seconds: d.seconds()};
 }
 
-export function secondsToHHMMSS(time: number) {
-    const {hours, minutes, seconds} = seconds2Time(time);
-    const pad = (tt: number) => `${tt < 10 ? "0" : ""}${tt}`;
-    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+const pad = (tt: number) => `${tt < 10 ? "0" : ""}${tt}`;
+
+export function secondsToHHMMSS(
+    time: number,
+    displayUnits: humanizeDuration.Unit[]
+) {
+    const d = seconds2Time(time);
+    const hours = d.hours;
+    let minutes = d.minutes;
+    let seconds = d.seconds;
+    let s = "";
+    let shouldPadSeconds = false;
+    if (displayUnits.includes("h")) {
+        s += pad(hours) + ":";
+        shouldPadSeconds = true;
+    } else {
+        minutes += hours * 60;
+    }
+    if (displayUnits.includes("m")) {
+        s += pad(minutes) + ":";
+        shouldPadSeconds = true;
+    } else {
+        seconds += minutes * 60;
+    }
+    s += shouldPadSeconds ? pad(seconds) : seconds;
+    return s;
 }
 
 /**
@@ -813,24 +833,36 @@ export function getViewName() {
 }
 
 export function secondsToShortTime(
-    time: number,
+    secs: number,
     displayUnits: humanizeDuration.Unit[] = [],
     locale: string = "en"
 ) {
-    const DAY_LIMIT = 24 * 60 * 60;
+    const SECS_IN_DAY = 24 * 60 * 60;
     let prefix = "";
-    if (time > DAY_LIMIT && displayUnits.length != 0) {
+    if (secs > SECS_IN_DAY && displayUnits.length != 0) {
         prefix =
-            humanizeDuration(time * 1000, {
+            humanizeDuration(secs * 1000, {
                 units: displayUnits,
                 round: true,
                 language: locale,
             }) + " + ";
-        time %= DAY_LIMIT;
+        secs %= SECS_IN_DAY;
     }
-    return `${prefix}${secondsToHHMMSS(time)}`;
+    return `${prefix}${secondsToHHMMSS(secs, displayUnits)}`;
 }
 
 export function timeout(ms?: number) {
     return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
+
+/**
+ * Represents an immutable Moment object. Not perfect, but prevents some bugs.
+ */
+export type ReadonlyMoment = Omit<Moment, "add" | "subtract" | "set"> & {
+    isSame(m: ReadonlyMoment | MomentInput): boolean;
+    diff(
+        b: ReadonlyMoment | MomentInput,
+        unitOfTime?: unitOfTime.Diff,
+        precise?: boolean
+    ): number;
+};

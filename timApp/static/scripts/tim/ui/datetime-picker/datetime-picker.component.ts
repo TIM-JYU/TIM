@@ -2,12 +2,18 @@ import {
     Component,
     EventEmitter,
     Input,
+    NgModule,
     OnChanges,
     OnInit,
     Output,
     SimpleChanges,
 } from "@angular/core";
+import {FormsModule} from "@angular/forms";
+import {BrowserModule} from "@angular/platform-browser";
 import moment from "moment";
+import {DatetimePopupModule} from "ngx-bootstrap-datetime-popup";
+import {DatepickerModule} from "ngx-bootstrap/datepicker";
+import {TimepickerModule} from "ngx-bootstrap/timepicker";
 
 const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
 
@@ -63,3 +69,16 @@ export class DatetimePickerComponent implements OnInit, OnChanges {
 
     onFocus(event: FocusEvent) {}
 }
+
+@NgModule({
+    declarations: [DatetimePickerComponent],
+    imports: [
+        BrowserModule,
+        DatepickerModule.forRoot(),
+        TimepickerModule.forRoot(),
+        DatetimePopupModule,
+        FormsModule,
+    ],
+    exports: [DatetimePickerComponent],
+})
+export class DatetimePickerModule {}

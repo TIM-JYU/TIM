@@ -4,6 +4,8 @@ import {ISize} from "tim/util/utils";
 import {Size} from "angular2-draggable/lib/models/size";
 import {IPosition, Position} from "angular2-draggable/lib/models/position";
 import {AngularDraggableDirective} from "angular2-draggable";
+import {Subject} from "rxjs";
+import {IResizeEvent} from "angular2-draggable/lib/models/resize-event";
 
 export interface IAngularResizableDirectivePublic {
     _currSize: Size;
@@ -51,6 +53,8 @@ class ResizableDraggableWrapper {
                  [preventDefaultEvent]="true"
                  [handle]="draghandle"
                  [position]="position"
+                 (stopped)="onPosChange($event)"
+                 (rzStop)="onSizeChange($event)"
                  class="modal-dialog modal-md"
                  style="pointer-events: auto">
                 <div #draghandle
@@ -70,7 +74,7 @@ class ResizableDraggableWrapper {
                     </tim-close-button>
                 </div>
                 <div class="draggable-content modal-content" [class.minimized]="areaMinimized">
-                    <div id="modal-body" class="modal-body">
+                    <div #body id="modal-body" class="modal-body">
                         <ng-content select="[body]"></ng-content>
                     </div>
                     <div class="modal-footer">
@@ -96,8 +100,10 @@ export class DialogFrame {
     private ngResizable!: IAngularResizableDirectivePublic;
     @ViewChild("draggable") private ngDraggable!: AngularDraggableDirective;
     @ViewChild("dragelem") dragelem!: ElementRef<HTMLElement>;
+    @ViewChild("body") modalBody!: ElementRef<HTMLElement>;
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};
+    sizeOrPosChanged = new Subject<void>();
 
     ngAfterViewInit() {
         this.resizable = new ResizableDraggableWrapper(
@@ -112,6 +118,10 @@ export class DialogFrame {
 
     setPos(p: IPosition) {
         this.position = p;
+    }
+
+    getPos() {
+        return this.position;
     }
 
     toggleDetach() {}
@@ -133,5 +143,13 @@ export class DialogFrame {
             ((this.oldSize.width - minimizedWidth) / 2) *
             (this.areaMinimized ? 1 : -1);
         res.doResize();
+    }
+
+    onSizeChange(e: IResizeEvent) {
+        this.sizeOrPosChanged.next();
+    }
+
+    onPosChange(e: IPosition) {
+        this.sizeOrPosChanged.next();
     }
 }

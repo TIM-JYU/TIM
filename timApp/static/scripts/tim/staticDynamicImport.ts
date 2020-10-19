@@ -60,6 +60,10 @@ export function staticDynamicImport(s: string) {
         case "/mcq/script2.js":
         case "/mcq/SimpleDirective.js":
             return import("tim/plugin/mmcq");
+        case "lectureMenu":
+            return import("tim/lecture/lecture-menu.component");
+        case "lectureInfo":
+            return import("tim/lecture/lecture-info.component");
     }
     throw Error(`Module was not statically known: ${s}`);
 }

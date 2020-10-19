@@ -50,7 +50,7 @@ import {genericglobals} from "tim/util/globals";
     `,
     styleUrls: ["./footer.component.scss"],
 })
-export class TimFooterComponent {
+export class FooterComponent {
     hide = getVisibilityVars();
     config = genericglobals().config;
     layout = genericglobals().layout;

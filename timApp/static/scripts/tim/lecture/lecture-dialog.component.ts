@@ -1,13 +1,18 @@
 import moment from "moment";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {Component} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {KEY_S} from "tim/util/keycodes";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {FormsModule} from "@angular/forms";
+import {BrowserModule} from "@angular/platform-browser";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {AccordionModule} from "ngx-bootstrap/accordion";
 import {getItem, IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {DurationChoice} from "../ui/duration-picker.component";
-import {$http} from "../util/ngimport";
-import {to} from "../util/utils";
+import {to2} from "../util/utils";
+import {DatetimePickerModule} from "../ui/datetime-picker/datetime-picker.component";
 import {ILecture, ILectureFormParams, ILectureOptions} from "./lecturetypes";
 
 /**
@@ -188,7 +193,7 @@ export class LectureDialogComponent extends AngularDialogComponent<
     advancedOpen = false;
     showPicker = false;
 
-    constructor() {
+    constructor(private http: HttpClient) {
         super();
         this.showEarlyJoin = true;
         this.useDate = false;
@@ -217,7 +222,6 @@ export class LectureDialogComponent extends AngularDialogComponent<
         this.earlyJoining = false;
         this.lectureCode = data.lecture_code;
         this.lectureId = data.lecture_id;
-        console.log(data.start_time.toISOString());
         this.startTime = data.start_time.toDate();
         this.endTime = data.end_time.toDate();
         this.useDate = true;
@@ -356,18 +360,30 @@ export class LectureDialogComponent extends AngularDialogComponent<
             options: this.options,
         };
         this.submittingLecture = true;
-        const r = await to(
-            $http.post<ILecture>("/createLecture", lectureParams)
+        const r = await to2(
+            this.http
+                .post<ILecture>("/createLecture", lectureParams)
+                .toPromise()
         );
         this.submittingLecture = false;
         if (!r.ok) {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
             return;
         }
-        this.close(r.result.data);
+        this.close(r.result);
     }
 }
 
-export async function showLectureDialog(item: IItem | ILecture) {
-    return (await angularDialog.open(LectureDialogComponent, item)).result;
-}
+@NgModule({
+    declarations: [LectureDialogComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        DialogModule,
+        AccordionModule.forRoot(),
+        DatetimePickerModule,
+    ],
+})
+export class LectureDialogModule {}

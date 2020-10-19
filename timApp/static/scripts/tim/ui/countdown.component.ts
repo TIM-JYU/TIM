@@ -1,9 +1,22 @@
-import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
+import {
+    Component,
+    EventEmitter,
+    Input,
+    OnChanges,
+    OnInit,
+    Output,
+} from "@angular/core";
 import humanizeDuration from "humanize-duration";
-import {formatString, secondsToShortTime, to2} from "tim/util/utils";
+import {
+    formatString,
+    ReadonlyMoment,
+    secondsToShortTime,
+    to2,
+} from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import moment from "moment";
 import {HttpClient} from "@angular/common/http";
+import {Changes} from "tim/util/angularchanges";
 
 // Most browsers don't report precise time to mitigate potential time-based attacks/tracking:
 // https://developer.mozilla.org/en-US/docs/Web/API/Performance/now#Reduced_time_precision
@@ -17,17 +30,18 @@ const TICK_TENTH_SECOND = 100;
     selector: "tim-countdown",
     template: `{{timeLeftText}}`,
 })
-export class CountdownComponent implements OnInit {
-    @Input() endTime?: string;
+export class CountdownComponent implements OnInit, OnChanges {
+    @Input() endTime?: ReadonlyMoment;
     @Input() seconds?: number;
-    @Input() displayUnits: humanizeDuration.Unit[] = [];
-    @Input() noAutoStart: boolean = false;
+    @Input() displayUnits: humanizeDuration.Unit[] = ["h", "m", "s"];
+    @Input() autoStart = true;
     @Input() template: string = "{0}";
-    @Input() lowTimeThreshold: number = -1;
+    @Input() lowTimeThreshold?: number;
     @Input() syncInterval: number = -1;
     @Input() syncIntervalDeviation: number = 0;
     @Output() onFinish: EventEmitter<void> = new EventEmitter<void>();
     @Output() onLowTime: EventEmitter<void> = new EventEmitter<void>();
+    @Output() onTick = new EventEmitter<number>();
 
     nextSyncInterval = -1;
     running = false;
@@ -61,7 +75,7 @@ export class CountdownComponent implements OnInit {
             return moment().add(this.seconds, "s");
         }
         if (this.endTime) {
-            const endDate = await this.getSyncedEndDate();
+            const endDate = await this.getSyncedTime(this.endTime);
             if (endDate) {
                 return endDate;
             }
@@ -69,7 +83,7 @@ export class CountdownComponent implements OnInit {
         return moment();
     }
 
-    private async getSyncedEndDate() {
+    private async getSyncedTime(time: ReadonlyMoment) {
         const start = window.performance.now();
         const serverTime = await to2(
             this.http.get<{time: moment.Moment}>("/time").toPromise()
@@ -77,11 +91,7 @@ export class CountdownComponent implements OnInit {
         if (!serverTime.ok) {
             return undefined;
         }
-        const remaining = moment(this.endTime).diff(
-            serverTime.result.time,
-            "ms",
-            true
-        );
+        const remaining = time.diff(serverTime.result.time, "ms", true);
         const end = window.performance.now();
 
         // Attempt to alleviate potential error due to the RTT of the request by subtracting the run time of
@@ -96,7 +106,7 @@ export class CountdownComponent implements OnInit {
         if (!this.endTime) {
             return;
         }
-        const endDate = await this.getSyncedEndDate();
+        const endDate = await this.getSyncedTime(this.endTime);
         // Update the end date only if it was synced successfully with the server
         if (endDate) {
             this.currentEndDate = endDate;
@@ -105,10 +115,19 @@ export class CountdownComponent implements OnInit {
     }
 
     ngOnInit() {
-        if (this.noAutoStart) {
+        if (!this.autoStart) {
             return;
         }
         void this.start();
+    }
+
+    ngOnChanges(c: Changes<this, "endTime">) {
+        if (
+            c.endTime?.currentValue &&
+            !c.endTime.currentValue.isSame(c.endTime.previousValue)
+        ) {
+            void this.syncEndDate();
+        }
     }
 
     start() {
@@ -131,6 +150,7 @@ export class CountdownComponent implements OnInit {
             interval - (moment().valueOf() % interval);
         const getNextInterval = () => padInterval(getIdealInterval());
         const tick = async () => {
+            this.onTick.emit(this.currentCountdown);
             if (!this.running) {
                 return;
             }
@@ -162,7 +182,11 @@ export class CountdownComponent implements OnInit {
             await this.syncEndDate();
         }
         const timeEnded = this.currentCountdown <= TIMEOUT_EPS;
-        if (!this.isLowTime && this.currentCountdown < this.lowTimeThreshold) {
+        if (
+            !this.isLowTime &&
+            this.lowTimeThreshold &&
+            this.currentCountdown < this.lowTimeThreshold
+        ) {
             this.onLowTime.emit();
             this.isLowTime = true;
             await this.syncEndDate();

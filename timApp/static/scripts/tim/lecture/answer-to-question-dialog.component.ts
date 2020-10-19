@@ -1,9 +1,19 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {Component, OnDestroy} from "@angular/core";
-import moment, {Moment} from "moment";
+import {Component, NgModule, NgZone, OnDestroy, ViewChild} from "@angular/core";
 import deepEqual from "deep-equal";
+import {CountdownComponent} from "tim/ui/countdown.component";
+import {HttpClient} from "@angular/common/http";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {BrowserModule} from "@angular/platform-browser";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {ProgressbarModule} from "ngx-bootstrap/progressbar";
 import {
+    currentQuestion,
+    QUESTION_STORAGE,
+    setCurrentQuestion,
+} from "tim/lecture/currentQuestion";
+import {
+    AnswerSheetModule,
     IPreviewParams,
     makePreview,
 } from "../document/question/answer-sheet.component";
@@ -12,8 +22,7 @@ import {
     showQuestionEditDialog,
 } from "../document/question/question-edit-dialog.component";
 import {showMessageDialog} from "../ui/dialog";
-import {$http} from "../util/ngimport";
-import {getStorage, setStorage, timeout, to} from "../util/utils";
+import {ReadonlyMoment, setStorage, to2} from "../util/utils";
 import {
     AnswerTable,
     IAskedQuestion,
@@ -24,7 +33,7 @@ import {
     questionAsked,
     QuestionOrAnswer,
 } from "./lecturetypes";
-import {showStatisticsDialog} from "./statisticsToQuestionController";
+import {showStatisticsDialog} from "./showLectureDialogs";
 
 /**
  * Created by hajoviin on 22.4.2015
@@ -43,24 +52,12 @@ export interface IAnswerQuestionParams {
     isLecturer: boolean;
 }
 
-export function getAskedQuestionFromQA(qa: QuestionOrAnswer): IAskedQuestion {
-    if (isAskedQuestion(qa)) {
-        return qa;
-    } else {
-        return qa.asked_question;
-    }
-}
-
 export type IAnswerQuestionResult =
     | {type: "pointsclosed"; askedId: number}
     | {type: "closed"}
     | {type: "answered"}
     | {type: "reask"}
     | {type: "reask_as_new"};
-
-export let currentQuestion: AnswerToQuestionDialogComponent | undefined;
-
-export const QUESTION_STORAGE = "lectureQuestion";
 
 @Component({
     selector: "tim-answer-question-dialog",
@@ -74,12 +71,20 @@ export const QUESTION_STORAGE = "lectureQuestion";
                         [questiondata]="preview"
                         (onAnswerChange)="updateAnswer($event)">
                 </tim-answer-sheet>
-                <progressbar
-                        *ngIf="progressMax"
-                        [max]="progressMax"
-                        [value]="barFilled">
-                    {{ progressText }}
-                </progressbar>
+                <div class="flex cl align-center">
+                    <tim-countdown (onTick)="timerTick($event)"
+                                   [endTime]="endTime"
+                                   [displayUnits]="['s']"
+                                   [autoStart]="false"
+                                   template="{0} s"
+                    ></tim-countdown>
+                    <progressbar
+                            *ngIf="progressMax"
+                            [max]="progressMax"
+                            [value]="barFilled">
+                        <ng-container *ngIf="questionEnded">Time's up</ng-container>
+                    </progressbar>
+                </div>
             </ng-container>
             <ng-container footer>
                 <button *ngIf="isLecturer && questionEnded" class="timButton" (click)="edit()">
@@ -118,10 +123,7 @@ export class AnswerToQuestionDialogComponent
     implements OnDestroy {
     protected dialogName = "AnswerQuestion";
     barFilled = 0;
-    progressText?: string;
-    isLecturer = false;
-    private askedTime?: Moment;
-    private endTime?: Moment;
+    endTime?: ReadonlyMoment;
     progressMax?: number;
     answered = false;
     gotResult?: boolean;
@@ -129,14 +131,23 @@ export class AnswerToQuestionDialogComponent
     preview!: IPreviewParams; // ngOnInit
     questionEnded: boolean = false;
     answer?: AnswerTable;
-    private defaultUpdateInterval = 500;
+    @ViewChild(CountdownComponent) private countdownTimer?: CountdownComponent;
+
+    constructor(private http: HttpClient, private zone: NgZone) {
+        super();
+    }
 
     ngOnInit() {
         if (currentQuestion) {
             throw new Error("Question window was already open.");
         }
-        currentQuestion = this;
+        setCurrentQuestion(this);
         this.setData(this.data.qa);
+    }
+
+    ngAfterViewInit() {
+        super.ngAfterViewInit();
+        this.maybeStartTimer();
     }
 
     public getQuestion() {
@@ -152,26 +163,24 @@ export class AnswerToQuestionDialogComponent
     }
 
     ngOnDestroy() {
-        currentQuestion = undefined;
+        setCurrentQuestion(undefined);
         setStorage(QUESTION_STORAGE, null);
     }
 
     async answerToQuestion() {
-        const response = await to(
-            $http<{questionLate?: string}>({
-                url: "/answerToQuestion",
-                method: "PUT",
-                params: {
+        const response = await to2(
+            this.http
+                .put<{questionLate?: string}>("/answerToQuestion", {
                     asked_id: this.question.asked_id,
                     buster: new Date().getTime(),
-                    input: {answers: this.answer},
-                },
-            })
+                    input: this.answer,
+                })
+                .toPromise()
         );
         if (!response.ok) {
             return;
         }
-        const answer = response.result.data;
+        const answer = response.result;
         if (answer.questionLate) {
             await showMessageDialog(answer.questionLate);
         }
@@ -191,7 +200,7 @@ export class AnswerToQuestionDialogComponent
 
     public close() {
         if (this.isLecturer && !this.questionEnded) {
-            this.stopQuestion();
+            void this.stopQuestion();
         }
         if (this.gotResult) {
             super.close({
@@ -208,16 +217,14 @@ export class AnswerToQuestionDialogComponent
     }
 
     async stopQuestion() {
-        const _ = await to(
-            $http({
-                url: "/stopQuestion",
-                method: "POST",
-                params: {
+        const _ = await to2(
+            this.http
+                .post("/stopQuestion", {
                     asked_id: this.question.asked_id,
-                },
-            })
+                })
+                .toPromise()
         );
-        // Don't call endQuestion here; it will come from lectureController.
+        // Don't call endQuestion here; it will come from timerTick.
     }
 
     async showAnswers() {
@@ -238,33 +245,35 @@ export class AnswerToQuestionDialogComponent
         if (isAskedQuestion(this.data.qa)) {
             this.setData(await fetchAskedQuestion(this.question.asked_id));
         } else {
-            const resp = await to(
-                $http.get<IQuestionAnswer>("/getQuestionAnswer", {
-                    params: {id: this.data.qa.answer_id},
-                })
+            const resp = await to2(
+                this.http
+                    .get<IQuestionAnswer>("/getQuestionAnswer", {
+                        params: {
+                            id: this.data.qa.answer_id.toString(),
+                        },
+                    })
+                    .toPromise()
             );
             if (!resp.ok) {
                 return;
             }
-            this.setData(resp.result.data);
+            this.setData(resp.result);
         }
     }
 
     async showPoints() {
-        const response = await to(
-            $http<IGetNewQuestionResponse>({
-                url: "/showAnswerPoints",
-                method: "POST",
-                params: {
+        const response = await to2(
+            this.http
+                .post<IGetNewQuestionResponse>("/showAnswerPoints", {
                     asked_id: this.question.asked_id,
                     current_question_id: this.question.asked_id, // TODO useless parameter
-                },
-            })
+                })
+                .toPromise()
         );
         if (!response.ok) {
             return;
         }
-        const d = response.result.data;
+        const d = response.result;
         if (questionAnswerReceived(d)) {
             this.gotResult = true;
             this.preview = makePreview(d.data.asked_question.json.json, {
@@ -280,7 +289,7 @@ export class AnswerToQuestionDialogComponent
                 showExplanations: true,
             });
         } else {
-            // This case happens if the lecturer did not answer the question himself.
+            // This case happens if the lecturer did not answer the question.
             this.gotResult = true;
             this.preview = makePreview(this.question.json.json, {
                 showCorrectChoices: true,
@@ -289,60 +298,29 @@ export class AnswerToQuestionDialogComponent
         }
     }
 
-    /**
-     * Changes question end time.
-     */
-    public updateEndTime(time: Moment | null) {
-        if (time != null) {
-            this.endTime = time.clone();
-        } else {
-            this.endTime = undefined;
-        }
+    private checkChanges() {
+        this.zone.run(() => {});
+    }
+
+    public updateEndTime(time: ReadonlyMoment | null) {
+        this.endTime = time?.clone();
         const maxProgressBeforeUpdate = this.progressMax;
         this.updateMaxProgress();
         if (maxProgressBeforeUpdate == null && this.progressMax != null) {
-            this.start(this.defaultUpdateInterval);
+            this.countdownTimer!.start();
         }
+        this.checkChanges();
         // TODO: controller has no option to call /extendQuestion
         // else if (maxProgressBeforeUpdate != null && this.progressMax == null) {
         //     // reset bar here
         // }
     }
 
-    private start(updateInterval: number) {
-        void this.updateBar(updateInterval);
-    }
-
-    /**
-     * Updates progressbar and time left text
-     */
-    private async updateBar(updateInterval: number) {
-        // TODO: Problem with inactive tab.
-        while (
-            !this.closed &&
-            !this.questionEnded &&
-            !(!this.endTime || !this.progressMax)
-        ) {
-            const now = moment();
-            const timeLeft = this.endTime.diff(now);
-            this.barFilled = this.endTime.diff(this.askedTime) - timeLeft;
-            this.progressText = Math.max(timeLeft / 1000, 0).toFixed(0) + " s";
-            if (this.barFilled >= this.progressMax) {
-                await this.endQuestion();
-            }
-            await timeout(updateInterval);
-        }
-    }
-
     updateAnswer(at: AnswerTable) {
         this.answer = at;
     }
 
-    public async endQuestion() {
-        this.endTime = moment();
-        this.updateMaxProgress();
-        this.barFilled = this.progressMax ?? 0;
-        this.progressText = "Time's up";
+    private async endQuestion() {
         this.questionEnded = true;
         if (!this.isLecturer) {
             if (!this.answered) {
@@ -377,39 +355,58 @@ export class AnswerToQuestionDialogComponent
             this.questionEnded = true;
             this.answered = true;
         }
-        this.askedTime = this.question.asked_time.clone();
 
         if (this.question.json.json.timeLimit) {
-            this.endTime = this.askedTime
+            this.endTime = this.question.asked_time
                 .clone()
                 .add(this.question.json.json.timeLimit, "seconds");
         }
-        this.isLecturer = this.data.isLecturer;
+        this.maybeStartTimer();
+    }
 
-        if (!this.gotResult) {
+    get isLecturer() {
+        return this.data.isLecturer;
+    }
+
+    private maybeStartTimer() {
+        if (!this.gotResult && this.countdownTimer) {
             this.barFilled = 0;
             if (this.endTime) {
-                this.progressText = "";
                 this.updateMaxProgress();
-                this.start(this.defaultUpdateInterval);
+                this.countdownTimer.start();
             }
         }
     }
 
     private updateMaxProgress() {
         if (this.endTime) {
-            this.progressMax = this.endTime.diff(this.askedTime);
+            this.progressMax = this.endTime.diff(
+                this.question.asked_time,
+                "s",
+                true
+            );
         } else {
             this.progressMax = undefined;
         }
     }
+
+    timerTick(remaining: number) {
+        const max = this.progressMax!;
+        this.barFilled = max - remaining;
+        if (this.barFilled >= max) {
+            void this.endQuestion();
+        }
+    }
 }
 
-export async function showQuestionAnswerDialog(p: IAnswerQuestionParams) {
-    return await (await angularDialog.open(AnswerToQuestionDialogComponent, p))
-        .result;
-}
-
-export function isOpenInAnotherTab(qa: QuestionOrAnswer) {
-    return getStorage(QUESTION_STORAGE) === getAskedQuestionFromQA(qa).asked_id;
-}
+@NgModule({
+    declarations: [AnswerToQuestionDialogComponent],
+    imports: [
+        BrowserModule,
+        TimUtilityModule,
+        DialogModule,
+        AnswerSheetModule,
+        ProgressbarModule.forRoot(),
+    ],
+})
+export class AnswerToQuestionDialogModule {}

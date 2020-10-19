@@ -168,9 +168,9 @@ class LectureTest(TimRouteTest):
         resp = self.get_updates(doc.id, msg_id, True, aid)
         self.assertIsNone(resp.get('extra'))
 
-        self.json_put('/answerToQuestion', query_string={'input': json.dumps({'answers': [['0']]}), 'asked_id': aid},
+        self.json_put('/answerToQuestion', json_data={'input': [['0']], 'asked_id': aid},
                       expect_content=self.ok_resp)
-        self.json_put('/answerToQuestion', query_string={'input': json.dumps({'answers': [['0']]}), 'asked_id': aid},
+        self.json_put('/answerToQuestion', json_data={'input': [['0']], 'asked_id': aid},
                       expect_content={'alreadyAnswered': 'You have already answered to question. Your first answer '
                                                          'is saved.'})
 
@@ -187,7 +187,7 @@ class LectureTest(TimRouteTest):
         resp = self.get_updates(doc.id, msg_id, True, aid)
         original_end_time = dateutil.parser.parse(resp['question_end_time'])
 
-        self.json_put('/answerToQuestion', query_string={'input': json.dumps({'answers': [['2']]}), 'asked_id': aid},
+        self.json_put('/answerToQuestion', json_data={'input': [['2']], 'asked_id': aid},
                       expect_content=self.ok_resp)
 
         resp = self.get_updates(doc.id, msg_id, True, aid)
@@ -384,11 +384,11 @@ testuser2;count;1
                                   query_string=dict(doc_id=doc.id, par_id=par_id))
             aid = resp['asked_id']
             self.json_put('/answerToQuestion',
-                          query_string={'input': json.dumps({'answers': lecturer_answer}), 'asked_id': aid},
+                          json_data={'input': lecturer_answer, 'asked_id': aid},
                           expect_content=self.ok_resp)
             self.login_test2()
             self.json_put('/answerToQuestion',
-                          query_string={'input': json.dumps({'answers': student_answer}), 'asked_id': aid},
+                          json_data={'input': student_answer, 'asked_id': aid},
                           expect_content=self.ok_resp)
             self.login_test1()
             resp = self.get('/getLectureAnswers', query_string=dict(asked_id=aid))

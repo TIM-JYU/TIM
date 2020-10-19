@@ -17,6 +17,7 @@ import {
     timeout,
 } from "tim/util/utils";
 import * as t from "io-ts";
+import {Subscription} from "rxjs";
 
 export interface IDialogOptions {
     resetSize?: boolean;
@@ -57,6 +58,7 @@ export abstract class AngularDialogComponent<Params, Result>
     protected abstract dialogName: string;
     protected extraVerticalSize = 0;
     protected closed = false;
+    private sub?: Subscription;
 
     @HostListener("keydown.esc", ["$event"])
     escPressed(e: KeyboardEvent) {
@@ -72,6 +74,10 @@ export abstract class AngularDialogComponent<Params, Result>
         return this.dialogName;
     }
 
+    ngOnDestroy() {
+        this.sub?.unsubscribe();
+    }
+
     ngAfterViewInit() {
         if (!this.frame) {
             throw Error(
@@ -79,6 +85,9 @@ export abstract class AngularDialogComponent<Params, Result>
             );
         }
         this.frame.closeFn = () => this.dismiss();
+        this.sub = this.frame.sizeOrPosChanged.subscribe(() => {
+            this.savePosSize();
+        });
         const TwoTuple = t.tuple([t.number, t.number]);
         let snr = SizeNeedsRefresh.No;
         let sizehint = null;
@@ -127,8 +136,9 @@ export abstract class AngularDialogComponent<Params, Result>
         this.extraVerticalSize = 0;
 
         // Then clamp x/y so that the element is at least within the viewport
-        let {x, y} = this.frame.resizable.getPos();
-        x = clamp(x, 0, vp.width - newWidth);
+        let {x, y} = this.frame.getPos();
+        const xOrigin = vp.width / 2 - width / 2;
+        x = clamp(x, 0 - xOrigin, vp.width - newWidth - xOrigin);
         y = clamp(y, 0, vp.height - newHeight);
 
         this.frame.resizable.getSize().set({
@@ -156,7 +166,11 @@ export abstract class AngularDialogComponent<Params, Result>
 
     private savePosSize() {
         const {width, height} = this.frame.resizable.getSize();
-        setStorage(this.getSizeKey(), [width, height]);
+
+        // Height can sometimes be zero, at least when the dialog is minimized.
+        if (height > 0) {
+            setStorage(this.getSizeKey(), [width, height]);
+        }
 
         const {x, y} = this.frame.resizable.getPos();
         setStorage(this.getPosKey(), [x, y]);

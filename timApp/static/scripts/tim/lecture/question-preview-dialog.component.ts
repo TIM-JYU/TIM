@@ -1,8 +1,15 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {Component} from "@angular/core";
-import {to} from "tim/util/utils";
+import {Component, NgModule} from "@angular/core";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {BrowserModule} from "@angular/platform-browser";
 import {
+    AskParams,
+    askQuestion,
+    IShowAsk,
+    isReasking,
+} from "tim/lecture/askQuestion";
+import {
+    AnswerSheetModule,
     IPreviewParams,
     makePreview,
 } from "../document/question/answer-sheet.component";
@@ -14,61 +21,9 @@ import {
     showQuestionEditDialog,
 } from "../document/question/question-edit-dialog.component";
 import {showMessageDialog} from "../ui/dialog";
-import {$http} from "../util/ngimport";
-import {IAskedQuestion, IUniqueParId} from "./lecturetypes";
-
-/**
- * FILL WITH SUITABLE TEXT
- * @author Matias Berg
- * @author Bek Eljurkaev
- * @author Minna Lehtomäki
- * @author Juhani Sihvonen
- * @author Hannu Viinikainen
- * @licence MIT
- * @copyright 2015 Timppa project authors
- */
-
-export interface IShowAsk {
-    showAsk: boolean;
-}
-
-export interface IAskNew extends IUniqueParId {}
-
-export interface IReAsk {
-    askedId: number;
-}
-
-export type AskParams = IAskNew | IReAsk;
-
-function isReasking(p: AskParams): p is IReAsk {
-    return (p as IReAsk).askedId != null;
-}
+import {IAskedQuestion} from "./lecturetypes";
 
 export type QuestionPreviewParams = AskParams & IShowAsk;
-
-export async function askQuestion(p: AskParams) {
-    const args = isReasking(p)
-        ? {
-              asked_id: p.askedId,
-          }
-        : {
-              doc_id: p.docId,
-              par_id: p.parId,
-          };
-    const response = await to(
-        $http.post<IAskedQuestion>(
-            "/askQuestion",
-            {},
-            {
-                params: {buster: new Date().getTime(), ...args},
-            }
-        )
-    );
-    if (!response.ok) {
-        throw Error("askQuestion failed");
-    }
-    return response.result.data;
-}
 
 @Component({
     selector: "tim-ask-question-dialog",
@@ -199,7 +154,8 @@ export class QuestionPreviewDialogComponent extends AngularDialogComponent<
     }
 }
 
-export async function showQuestionAskDialog(p: QuestionPreviewParams) {
-    return await (await angularDialog.open(QuestionPreviewDialogComponent, p))
-        .result;
-}
+@NgModule({
+    declarations: [QuestionPreviewDialogComponent],
+    imports: [BrowserModule, DialogModule, AnswerSheetModule],
+})
+export class QuestionPreviewDialogModule {}

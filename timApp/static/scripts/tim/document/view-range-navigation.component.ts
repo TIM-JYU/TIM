@@ -5,8 +5,8 @@
 
 import {Component} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {showViewRangeEditDialog} from "tim/document/showViewRangeEditDialog";
 import {ViewCtrl} from "./viewctrl";
-import {showViewRangeEditDialog} from "./view-range-edit-dialog.component";
 import {IViewRange, partitionDocument} from "./viewRangeInfo";
 
 @Component({

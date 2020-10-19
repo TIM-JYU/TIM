@@ -1,17 +1,18 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {Component, ViewChild} from "@angular/core";
+import {Component, NgModule, ViewChild} from "@angular/core";
 import * as t from "io-ts";
 import $ from "jquery";
 import moment from "moment";
 import {
+    AnswerSheetModule,
     fixQuestionJson,
     getPointsTable,
     IPreviewParams,
     makePreview,
     minimizeJson,
 } from "tim/document/question/answer-sheet.component";
-import {getStorage, setStorage, to} from "tim/util/utils";
+import {getStorage, setStorage, to, to2} from "tim/util/utils";
 import {
     KEY_DOWN,
     KEY_ENTER,
@@ -36,8 +37,12 @@ import {
 import {IGenericPluginMarkup} from "tim/plugin/attributes";
 import {showMessageDialog} from "tim/ui/dialog";
 import {$http} from "tim/util/ngimport";
-import {NgForm} from "@angular/forms";
+import {FormsModule, NgForm} from "@angular/forms";
 import {QuestionMatrixComponent} from "tim/document/question/question-matrix.component";
+import {HttpClient} from "@angular/common/http";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {BrowserModule} from "@angular/platform-browser";
 import {IParResponse} from "../editing/edittypes";
 
 /**
@@ -328,7 +333,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
     randomization = false;
     randomizedRows?: number;
 
-    constructor() {
+    constructor(private http: HttpClient) {
         super();
 
         this.question = {
@@ -1064,15 +1069,17 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
 
     private async updatePreview() {
         const mdStr = JSON.stringify(this.question, null, 4);
-        const response = await to(
-            $http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", {
-                text: mdStr,
-            })
+        const response = await to2(
+            this.http
+                .post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", {
+                    text: mdStr,
+                })
+                .toPromise()
         );
         if (!response.ok) {
             throw Error("getQuestionMD failed");
         }
-        this.previewParams = makePreview(response.result.data.md, {
+        this.previewParams = makePreview(response.result.md, {
             enabled: false,
             showCorrectChoices: true,
             showExplanations: true,
@@ -1129,21 +1136,23 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
         this.pluginMarkup.answerLimit =
             this.pluginMarkup.answerLimit ?? undefined;
 
-        const r = await to(
-            $http.post<IParResponse>(route, {
-                docId,
-                ...params,
-                question: {
-                    ...this.pluginMarkup, // this also retains the other attributes that are not visible in edit dialog
-                    ...this.question,
-                },
-            })
+        const r = await to2(
+            this.http
+                .post<IParResponse>(route, {
+                    docId,
+                    ...params,
+                    question: {
+                        ...this.pluginMarkup, // this also retains the other attributes that are not visible in edit dialog
+                        ...this.question,
+                    },
+                })
+                .toPromise()
         );
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             this.close({data, deleted: false, ask, type: "edit"});
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 
@@ -1217,6 +1226,18 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
         (event.target as HTMLInputElement).select();
     }
 }
+
+@NgModule({
+    declarations: [QuestionEditDialogComponent, QuestionMatrixComponent],
+    imports: [
+        BrowserModule,
+        TimUtilityModule,
+        DialogModule,
+        AnswerSheetModule,
+        FormsModule,
+    ],
+})
+export class LectureWallDialogModule {}
 
 export async function showQuestionEditDialog(
     params: IQuestionDialogParams
