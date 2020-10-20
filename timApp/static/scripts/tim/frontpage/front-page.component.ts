@@ -2,7 +2,7 @@ import {IController} from "angular";
 import {Component} from "@angular/core";
 import {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {showLoginDialog} from "tim/user/showLoginDialog";
-import {showCourseListDialog} from "../document/course/courseListDialogCtrl";
+import {showCourseListDialog} from "tim/document/course/showCourseDialog";
 import {ICourseSettings} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";

@@ -2,10 +2,9 @@
  * Dialog for displaying active courses grouped by their subjects.
  */
 
-import {IScope} from "angular";
-import {ngStorage} from "ngstorage";
-import {to} from "tim/util/utils";
-import {DialogController} from "tim/ui/dialogController";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {Component, NgModule} from "@angular/core";
+import {TimStorage, to2} from "tim/util/utils";
 import {
     getCourseCode,
     ICourseSettings,
@@ -13,10 +12,18 @@ import {
     ITaggedItem,
     tagIsExpired,
     TagType,
-} from "../../item/IItem";
-import {registerDialogComponent, showDialog} from "../../ui/dialog";
-import {KEY_ENTER} from "../../util/keycodes";
-import {$http, $localStorage} from "../../util/ngimport";
+} from "tim/item/IItem";
+import {
+    HTTP_INTERCEPTORS,
+    HttpClient,
+    HttpClientModule,
+} from "@angular/common/http";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {FormsModule} from "@angular/forms";
+import {BrowserModule} from "@angular/platform-browser";
+import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converter.service";
+import * as t from "io-ts";
 
 export interface ICourseListParams {
     settings: ICourseSettings;
@@ -29,52 +36,98 @@ export interface IGroupedCourses {
     subsubjects: IGroupedCourses[];
 }
 
-/**
- * Tag search dialog's controller.
- */
-export class CourseListDialogController extends DialogController<
-    {params: ICourseListParams},
+@Component({
+    selector: "tim-course-list-dialog",
+    template: `
+        <tim-dialog-frame>
+            <ng-container header>
+                {{ getTitle() }}
+            </ng-container>
+            <ng-container body>
+                <h5>Listing available courses
+                    <a>
+                        <i (click)="toggleAll()"
+                           class="glyphicon"
+                           [ngClass]="toggleCollapseAll ? 'glyphicon-minus-sign' : 'glyphicon-plus-sign'"></i>
+                    </a>
+                </h5>
+                <div class="input-group">
+                    <input class="form-control"
+                           [(ngModel)]="filterText"
+                           placeholder="Input filter word"
+                           title="Filter by course code and title"
+                           (keydown.enter)="enterPressed()">
+                    <span class="input-group-addon btn" (click)="refresh()" title="Filter courses">
+            <i class="glyphicon glyphicon-search"></i></span>
+                </div>
+                <div>
+                    <ul class="list-unstyled" *ngIf="grouped.length > 0" id="courses">
+                        <ng-container *ngFor="let subject of grouped">
+                            <li *ngIf="subject.docs.length > 0"><span class="cursor-pointer"
+                                                                      (click)="subject.closed = !subject.closed">
+                    <a><span style="width: 1.3em;" class="glyphicon"
+                             [ngClass]="subject.closed ? 'glyphicon-plus' : 'glyphicon-minus'"></span></a>
+                    <span>{{subject.subject | capitalize}} <i>({{subject.docs.length}}
+                        <ng-container
+                                [ngPlural]="subject.docs.length">
+                            <ng-template ngPluralCase="=1">course</ng-template>
+                            <ng-template ngPluralCase="other">courses</ng-template>
+                        </ng-container>)</i></span>
+                </span>
+                                <ul class="list-unstyled" *ngIf="!subject.closed">
+                                    <ng-container *ngFor="let course of subject.docs">
+                                        <li *ngIf="courseCode(course)">
+                                            <a href="/view/{{course.path}}" title="Open {{course.title}}">
+                                                <span class="btn-xs btn-primary">{{courseCode(course)}}</span>
+                                                {{course.title}}
+                                            </a></li>
+                                    </ng-container>
+                                </ul>
+                            </li>
+                        </ng-container>
+                    </ul>
+                    <span *ngIf="grouped.length == 0">No documents found!</span>
+                </div>
+            </ng-container>
+            <ng-container footer>
+                <button class="timButton" (click)="dismiss()">Close</button>
+            </ng-container>
+        </tim-dialog-frame>
+    `,
+})
+export class CourseListDialogComponent extends AngularDialogComponent<
+    ICourseListParams,
     void
 > {
-    static component = "timCourseListDialog";
-    static $inject = ["$element", "$scope"] as const;
+    protected dialogName = "CourseList";
     private docList: ITaggedItem[] = [];
     private subjects: ISubjectList | undefined;
-    private grouped: IGroupedCourses[];
+    grouped: IGroupedCourses[] = [];
     private closedSubjects: boolean[] = [];
-    private storage: ngStorage.StorageService & {
-        subjectsStorage: null | boolean[];
-    };
-    private toggleCollapseAll: boolean = false;
-    private filterText: string = "";
+    toggleCollapseAll: boolean;
+    filterText: string = "";
+    storage = new TimStorage("openSubjects", t.array(t.boolean));
 
-    constructor(protected element: JQLite, protected scope: IScope) {
-        super(element, scope);
-        this.storage = $localStorage.$default({
-            subjectsStorage: null,
-        });
-        this.grouped = [];
+    constructor(private http: HttpClient) {
+        super();
         this.toggleCollapseAll = !this.allClosed(this.grouped);
     }
 
     /**
-     * Show tag list when dialog loads and focus on tag-field.
+     * Show tag list when dialog loads and focus on tag field.
      */
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
         (async () => {
             await this.getDocumentsByTag("", false, true);
-            this.subjects = this.resolve.params.settings.course_subjects;
-            if (this.storage.subjectsStorage) {
-                this.closedSubjects = this.storage.subjectsStorage;
-            }
+            this.subjects = this.data.settings.course_subjects;
+            this.closedSubjects = this.storage.get() ?? [];
             this.groupBySubject();
             this.loadCollapseStates();
             this.toggleCollapseAll = !this.allClosed(this.grouped);
         })();
     }
 
-    $onDestroy() {
+    ngOnDestroy() {
         this.saveCollapseStates();
     }
 
@@ -106,12 +159,9 @@ export class CourseListDialogController extends DialogController<
                 this.closedSubjects.push(subject.closed);
             }
         }
-        this.storage.subjectsStorage = this.closedSubjects;
+        this.storage.set(this.closedSubjects);
     }
 
-    /**
-     * Dialog title.
-     */
     public getTitle() {
         return "Available courses";
     }
@@ -128,21 +178,21 @@ export class CourseListDialogController extends DialogController<
         exactMatch: boolean,
         listDocTags: boolean
     ) {
-        const response = await to(
-            $http<ITaggedItem[]>({
-                method: "GET",
-                params: {
-                    exact_search: exactMatch,
-                    list_doc_tags: listDocTags,
-                    name: tagName,
-                },
-                url: "/tags/getDocs",
-            })
+        const response = await to2(
+            this.http
+                .get<ITaggedItem[]>("/tags/getDocs", {
+                    params: {
+                        exact_search: exactMatch.toString(),
+                        list_doc_tags: listDocTags.toString(),
+                        name: tagName,
+                    },
+                })
+                .toPromise()
         );
         if (!response.ok) {
             return;
         }
-        this.docList = response.result.data;
+        this.docList = response.result;
     }
 
     /**
@@ -210,7 +260,11 @@ export class CourseListDialogController extends DialogController<
                     this.grouped.push({
                         subject: s,
                         closed: close,
-                        docs: documents,
+                        docs: documents.sort((a, b) =>
+                            (getCourseCode(a.tags, true) ?? "").localeCompare(
+                                getCourseCode(b.tags, true) ?? ""
+                            )
+                        ),
                         subsubjects: [],
                     });
                     close = true;
@@ -226,14 +280,14 @@ export class CourseListDialogController extends DialogController<
      * @param {ITaggedItem} d Document with tags.
      * @returns {string} Coursecode or undefined, if non-existent or expired.
      */
-    private courseCode(d: ITaggedItem) {
+    courseCode(d: ITaggedItem) {
         return getCourseCode(d.tags, true);
     }
 
     /**
      * Collapse or open all subjects.
      */
-    private toggleAll() {
+    toggleAll() {
         for (const item of this.grouped) {
             item.closed = this.toggleCollapseAll;
         }
@@ -243,83 +297,33 @@ export class CourseListDialogController extends DialogController<
     /**
      * Update course list according to filter word.
      */
-    private refresh() {
+    refresh() {
         this.grouped = [];
         this.groupBySubject();
         this.toggleCollapseAll = false;
         this.toggleAll();
     }
 
-    /**
-     * Filter when Enter is pressed.
-     * @param event Keyboard event.
-     */
-    private keyPressed(event: KeyboardEvent) {
-        if (event.which === KEY_ENTER) {
-            this.refresh();
-        }
-    }
-
-    /**
-     * "some string" -> "Some string"
-     * @param {string} str String to capitalize.
-     * @returns {string} Capitalized string.
-     */
-    private firstToUpper(str: string) {
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    enterPressed() {
+        this.refresh();
     }
 }
 
-registerDialogComponent(CourseListDialogController, {
-    template: `<tim-dialog>
-    <dialog-header>
-    </dialog-header>
-    <dialog-body>
-    <div>
-        <div class="col-md-8">
-            <h5>Listing available courses <a><i ng-click="$ctrl.toggleAll()" class="glyphicon"
-            ng-class="$ctrl.toggleCollapseAll ? 'glyphicon-minus-sign' : 'glyphicon-plus-sign'"></i></a></h5>
-        </div>
-        <div class="input-group col-md-4">
-            <input class="form-control" ng-model="$ctrl.filterText" placeholder="Input filter word"
-            title="Filter by course code and title" ng-keypress="$ctrl.keyPressed($event)">
-            <span class="input-group-addon btn" ng-click="$ctrl.refresh()" title="Filter courses">
-            <i class="glyphicon glyphicon-search"></i></span>
-        </div>
-    </div>
-    <div>
-        <h5></h5>
-        <ul class="list-unstyled" ng-if="$ctrl.grouped.length > 0" id="courses">
-            <li ng-repeat="subject in $ctrl.grouped" ng-if="subject.docs.length > 0">
-                <span class="cursor-pointer" ng-click="subject.closed = !subject.closed">
-                    <a><span style="width: 1.3em;" class="glyphicon"
-                    ng-class="subject.closed ? 'glyphicon-plus' : 'glyphicon-minus'"></span></a>
-                    <span>{{$ctrl.firstToUpper(subject.subject)}} <i>({{subject.docs.length}} <ng-pluralize
-                    count="subject.docs.length"
-                    when="{'1': 'course', 'other': 'courses'}"></ng-pluralize>)</i></span>
-                </span>
-                <ul class="list-unstyled" ng-hide="subject.closed">
-                    <li ng-repeat="course in subject.docs | orderBy:$ctrl.courseCode"
-                    ng-if="$ctrl.courseCode(course)" style="text-indent: 20px;">
-                        <a href="/view/{{course.path}}" title="Open {{course.title}}">
-                        <span class="btn-xs btn-primary">{{$ctrl.courseCode(course)}}</span>
-                         {{course.title}}
-                        </a>
-                    </li>
-                </ul>
-            </li>
-        </ul>
-    <span ng-if="$ctrl.grouped.length == 0">No documents found!</span>
-    </div>
-    </dialog-body>
-    <dialog-footer>
-        <button class="timButton" ng-click="$ctrl.dismiss()">Close</button>
-    </dialog-footer>
-</tim-dialog>
-`,
-});
-
-export async function showCourseListDialog(d: ICourseListParams) {
-    return await showDialog(CourseListDialogController, {params: () => d})
-        .result;
-}
+@NgModule({
+    declarations: [CourseListDialogComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        DialogModule,
+    ],
+    providers: [
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: TimeStampToMomentConverter,
+            multi: true,
+        },
+    ],
+})
+export class CourseListDialogModule {}

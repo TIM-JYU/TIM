@@ -20,6 +20,7 @@ import {TimepickerModule} from "ngx-bootstrap/timepicker";
 import {DatetimePopupModule} from "ngx-bootstrap-datetime-popup";
 import {DatePipe} from "tim/ui/date.pipe";
 import {TimePipe} from "tim/ui/time.pipe";
+import {CapitalizePipe} from "tim/ui/capitalize.pipe";
 import {PluginFrameComponent} from "./plugin-frame.component";
 import {LoadingComponent} from "./loadingIndicator";
 import {MarkupErrorComponent} from "./markup-error.component";
@@ -47,6 +48,7 @@ import {CloseButtonComponent} from "./close-button.component";
         DatePipe,
         RelativeTimestampPipe,
         TimePipe,
+        CapitalizePipe,
     ],
     exports: [
         MarkupErrorComponent,
@@ -69,6 +71,7 @@ import {CloseButtonComponent} from "./close-button.component";
         DatePipe,
         RelativeTimestampPipe,
         TimePipe,
+        CapitalizePipe,
     ],
     imports: [
         CommonModule,

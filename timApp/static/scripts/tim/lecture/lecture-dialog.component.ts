@@ -185,8 +185,8 @@ export class LectureDialogComponent extends AngularDialogComponent<
     password: string;
     earlyJoining: boolean;
     showEarlyJoin: boolean;
-    startTime: Date;
-    endTime: Date;
+    startTime?: Date = new Date();
+    endTime?: Date;
     private item?: IItem;
     options: ILectureOptions;
     submittingLecture = false;
@@ -208,8 +208,6 @@ export class LectureDialogComponent extends AngularDialogComponent<
             teacher_poll: "",
         };
 
-        this.startTime = new Date();
-        this.endTime = new Date();
         this.earlyJoining = true;
     }
 

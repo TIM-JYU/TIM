@@ -22,11 +22,12 @@ const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
     template: `
         <div class="input-group">
             <input class="form-control"
+                   [placeholder]="placeholder"
                    (focus)="onFocus($event)"
                    (mouseup)="onFocus($event)"
                    [ngModel]="timeStr"
                    (ngModelChange)="timeStrModelChanged($event)"/>
-            <datetime-popup [value]="time"
+            <datetime-popup [value]="time || currDate"
                             (valueChange)="popupChanged($event)"
                             [(showPopup)]="showPicker"></datetime-popup>
             <span class="input-group-addon" (click)="showPicker = true">
@@ -39,8 +40,10 @@ const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
 export class DatetimePickerComponent implements OnInit, OnChanges {
     showPicker = false;
     timeStr!: string;
-    @Input() time!: Date;
-    @Output() timeChange = new EventEmitter<Date>();
+    @Input() time!: Date | undefined;
+    @Input() placeholder?: string = "";
+    @Output() timeChange = new EventEmitter<Date | undefined>();
+    currDate = new Date();
 
     ngOnInit() {
         this.updatetimeStr();
@@ -53,12 +56,14 @@ export class DatetimePickerComponent implements OnInit, OnChanges {
     }
 
     timeStrModelChanged(s: string) {
-        this.time = moment(s, datetimeFormat).toDate();
+        this.time = s ? moment(s, datetimeFormat).toDate() : undefined;
         this.timeChange.emit(this.time);
     }
 
     updatetimeStr() {
-        this.timeStr = moment(this.time).format(datetimeFormat);
+        this.timeStr = this.time
+            ? moment(this.time).format(datetimeFormat)
+            : "";
     }
 
     popupChanged(value: Date) {

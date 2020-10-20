@@ -3,6 +3,7 @@ import * as t from "io-ts";
 import moment, {Moment, MomentInput, unitOfTime} from "moment";
 import {AbstractControl, ValidatorFn} from "@angular/forms";
 import humanizeDuration from "humanize-duration";
+import {isLeft} from "fp-ts/lib/Either";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
@@ -542,10 +543,38 @@ export function setStorage(key: string, value: unknown) {
 
 export function getStorage(key: string): unknown {
     const s = window.localStorage.getItem(key);
-    if (!s) {
+    if (s === null) {
         return s;
     }
-    return JSON.parse(s);
+    try {
+        return JSON.parse(s);
+    } catch (e) {
+        return null;
+    }
+}
+
+export function getTypedStorage<T>(
+    key: string,
+    decoder: t.Type<T>
+): T | undefined {
+    const r = decoder.decode(getStorage(key));
+    if (isLeft(r)) {
+        return undefined;
+    } else {
+        return r.right;
+    }
+}
+
+export class TimStorage<T> {
+    constructor(private key: string, private decoder: t.Type<T>) {}
+
+    set(value: T) {
+        setStorage(this.key, value);
+    }
+
+    get() {
+        return getTypedStorage(this.key, this.decoder);
+    }
 }
 
 // from https://stackoverflow.com/a/1026087
