@@ -4,15 +4,13 @@
 
 import {ngStorage} from "ngstorage";
 import {Component, Input, OnDestroy, OnInit} from "@angular/core";
+import {showSearchResultDialog} from "tim/search/showSearchResultDialog";
 import {DocumentOrFolder, IItem, ITag, ITaggedItem} from "../item/IItem";
 import {relevanceSuggestions} from "../item/relevance-edit.component";
 import {someglobals} from "../util/globals";
 import {$http, $localStorage} from "../util/ngimport";
 import {to} from "../util/utils";
-import {
-    SearchResultController,
-    showSearchResultDialog,
-} from "./searchResultsCtrl";
+import {SearchResultsDialogComponent} from "./search-results-dialog.component";
 
 /**
  * All data title/word search route returns.
@@ -229,7 +227,7 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         optionsStorage: null | boolean[];
     };
     folderSuggestions: string[] = []; // A list of folder path suggestions.
-    private resultsDialog: SearchResultController | undefined; // The most recent search result dialog.
+    private resultsDialog: SearchResultsDialogComponent | undefined; // The most recent search result dialog.
     maxDocResults = 1000;
     private timeWarningLimit = 20; // Gives a warning about long search time if over this.
     private timeout = 120; // Default timeout for search.
@@ -333,9 +331,11 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
 
     /**
      * Sets a search result controller.
-     * @param {SearchResultController} resultsDialog The currently active search result window.
+     * @param {SearchResultsDialogComponent} resultsDialog The currently active search result window.
      */
-    registerResultsDialog(resultsDialog: SearchResultController | undefined) {
+    registerResultsDialog(
+        resultsDialog: SearchResultsDialogComponent | undefined
+    ) {
         this.resultsDialog = resultsDialog;
     }
 
