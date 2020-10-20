@@ -18,12 +18,12 @@ import {AnswerChartModule} from "tim/lecture/answer-chart.component";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {FormsModule} from "@angular/forms";
 import {AngularDraggableModule} from "angular2-draggable";
-import {showQuestionEditDialog} from "../document/question/question-edit-dialog.component";
 import {IUser} from "../user/IUser";
 import {isAdmin, Users} from "../user/userService";
 import {lectureinfoglobals} from "../util/globals";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {TimeStampToMomentConverter} from "../util/time-stamp-to-moment-converter.service";
+import {showQuestionEditDialog} from "../document/question/showQuestionEditDialog";
 import {showLectureDialog} from "./showLectureDialogs";
 import {
     IAskedQuestion,

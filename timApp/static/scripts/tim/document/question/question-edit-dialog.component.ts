@@ -1,5 +1,4 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import {Component, NgModule, ViewChild} from "@angular/core";
 import * as t from "io-ts";
 import $ from "jquery";
@@ -43,6 +42,7 @@ import {HttpClient} from "@angular/common/http";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule} from "@angular/platform-browser";
+import {deleteQuestionWithConfirm} from "tim/document/question/fetchQuestion";
 import {IParResponse} from "../editing/edittypes";
 
 /**
@@ -108,72 +108,6 @@ function isAskedQuestion(
     params: IQuestionDialogParams
 ): params is IAskedQuestion {
     return (params as IAskedQuestion).asked_id != null;
-}
-
-export async function fetchQuestion(
-    docId: number,
-    parId: string,
-    edit: boolean = true
-): Promise<IQuestionParagraph> {
-    const response = await to(
-        $http<IQuestionParagraph>({
-            url: "/getQuestionByParId",
-            method: "GET",
-            params: {par_id: parId, doc_id: docId, edit},
-        })
-    );
-    if (!response.ok) {
-        throw Error("getQuestionByParId failed");
-    }
-    return response.result.data;
-}
-
-export async function fetchAskedQuestion(
-    askedId: number
-): Promise<IAskedQuestion> {
-    const response = await to(
-        $http<IAskedQuestion>({
-            url: "/getAskedQuestionById",
-            method: "GET",
-            params: {asked_id: askedId},
-        })
-    );
-    if (!response.ok) {
-        throw Error("getQuestionByParId failed");
-    }
-    return response.result.data;
-}
-
-export async function fetchAndEditQuestion(
-    docId: number,
-    parId: string,
-    edit: boolean = true
-) {
-    const q = await fetchQuestion(docId, parId, edit);
-    if (q.isPreamble) {
-        await showMessageDialog("Cannot edit a question in preamble.");
-        return undefined;
-    }
-    return await showQuestionEditDialog(q);
-}
-
-export async function deleteQuestionWithConfirm(
-    docId: number,
-    parId: string
-): Promise<IParResponse | null> {
-    const confirmDi = window.confirm(
-        "Are you sure you want to delete this question?"
-    );
-    if (confirmDi) {
-        const response = await to(
-            $http.post<IParResponse>(`/deleteParagraph/${docId}`, {par: parId})
-        );
-        if (!response.ok) {
-            throw Error("getQuestionByParId failed");
-        }
-        return response.result.data;
-    }
-    return null;
 }
 
 @Component({
@@ -1237,11 +1171,4 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
         FormsModule,
     ],
 })
-export class LectureWallDialogModule {}
-
-export async function showQuestionEditDialog(
-    params: IQuestionDialogParams
-): Promise<IQuestionDialogResult> {
-    return (await angularDialog.open(QuestionEditDialogComponent, params))
-        .result;
-}
+export class QuestionEditDialogModule {}

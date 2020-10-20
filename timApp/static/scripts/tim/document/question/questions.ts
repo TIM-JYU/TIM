@@ -1,15 +1,13 @@
 import {IScope} from "angular";
 import $ from "jquery";
 import {EditPosition, EditType} from "tim/document/editing/edittypes";
+import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
+import {fetchAndEditQuestion} from "tim/document/question/fetchQuestion";
 import {showMessageDialog} from "../../ui/dialog";
 import {documentglobals} from "../../util/globals";
 import {$timeout} from "../../util/ngimport";
 import {getParId, Paragraph} from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
-import {
-    fetchAndEditQuestion,
-    showQuestionEditDialog,
-} from "./question-edit-dialog.component";
 
 export class QuestionHandler {
     public sc: IScope;

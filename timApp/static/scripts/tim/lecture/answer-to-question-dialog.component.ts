@@ -12,15 +12,13 @@ import {
     QUESTION_STORAGE,
     setCurrentQuestion,
 } from "tim/lecture/currentQuestion";
+import {fetchAskedQuestion} from "tim/document/question/fetchQuestion";
+import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
 import {
     AnswerSheetModule,
     IPreviewParams,
     makePreview,
 } from "../document/question/answer-sheet.component";
-import {
-    fetchAskedQuestion,
-    showQuestionEditDialog,
-} from "../document/question/question-edit-dialog.component";
 import {showMessageDialog} from "../ui/dialog";
 import {ReadonlyMoment, setStorage, to2} from "../util/utils";
 import {

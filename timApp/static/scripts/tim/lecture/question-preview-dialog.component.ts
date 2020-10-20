@@ -9,17 +9,17 @@ import {
     isReasking,
 } from "tim/lecture/askQuestion";
 import {
-    AnswerSheetModule,
-    IPreviewParams,
-    makePreview,
-} from "../document/question/answer-sheet.component";
-import {
     deleteQuestionWithConfirm,
     fetchAndEditQuestion,
     fetchAskedQuestion,
     fetchQuestion,
-    showQuestionEditDialog,
-} from "../document/question/question-edit-dialog.component";
+} from "tim/document/question/fetchQuestion";
+import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
+import {
+    AnswerSheetModule,
+    IPreviewParams,
+    makePreview,
+} from "../document/question/answer-sheet.component";
 import {showMessageDialog} from "../ui/dialog";
 import {IAskedQuestion} from "./lecturetypes";
 
