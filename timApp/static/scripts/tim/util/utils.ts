@@ -839,10 +839,10 @@ export function secondsToShortTime(
 ) {
     const SECS_IN_DAY = 24 * 60 * 60;
     let prefix = "";
-    if (secs > SECS_IN_DAY && displayUnits.length != 0) {
+    if (secs > SECS_IN_DAY) {
         prefix =
             humanizeDuration(secs * 1000, {
-                units: displayUnits,
+                units: ["d"],
                 round: true,
                 language: locale,
             }) + " + ";
