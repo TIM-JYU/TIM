@@ -80,7 +80,6 @@
     "tslib": "^2.0.1",
     "type-zoo": "^3.4.1",
     "typescript-json-serializer": "^2.4.0",
-    "url-search-params-polyfill": "^8.1.0",
     "zone.js": "~0.11.1"
   },
   "devDependencies": {

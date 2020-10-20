@@ -66,8 +66,6 @@ import "core-js/es/set";
 import "core-js/es/string";
 import "core-js/es/symbol";
 
-import "url-search-params-polyfill";
-
 /** *************************************************************************************************
  * Zone JS is required by default for Angular itself.
  */
