@@ -82,3 +82,10 @@ lint:
   - cd modules/jsrunner/server
   - npm install --unsafe-perm
   - npm run lint
+  - cd ../../..
+  - npm install -g webpack-bundle-analyzer
+  - npm run statshtml
+  artifacts:
+    name: webpack_stats
+    paths:
+    - timApp/report.html
