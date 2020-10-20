@@ -1,5 +1,15 @@
-import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import {
+    HttpClient,
+    HttpClientModule,
+    HTTP_INTERCEPTORS,
+} from "@angular/common/http";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    NgModule,
+    NgZone,
+} from "@angular/core";
 import moment from "moment";
 import {to2} from "tim/util/utils";
 import {BrowserModule} from "@angular/platform-browser";
@@ -13,6 +23,7 @@ import {IUser} from "../user/IUser";
 import {isAdmin, Users} from "../user/userService";
 import {lectureinfoglobals} from "../util/globals";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
+import {TimeStampToMomentConverter} from "../util/time-stamp-to-moment-converter.service";
 import {showLectureDialog} from "./showLectureDialogs";
 import {
     IAskedQuestion,
@@ -140,7 +151,7 @@ export class LectureInfoComponent {
     answerMap: {[index: number]: IQuestionAnswerPlain[]} = {};
     messages: ILectureMessage[] = [];
 
-    constructor(private http: HttpClient) {
+    constructor(private http: HttpClient, private zone: NgZone) {
         const g = lectureinfoglobals();
         this.inLecture = g.inLecture;
         this.lecture = {
@@ -201,6 +212,12 @@ export class LectureInfoComponent {
         this.questions.forEach(
             (q) => (this.answerMap[q.asked_id] = this.getAnswers(q))
         );
+        this.checkChanges();
+    }
+
+    private checkChanges() {
+        // Not clear why this is needed.
+        this.zone.run(() => {});
     }
 
     async editPoints(askedId: number) {
@@ -275,6 +292,13 @@ export class LectureInfoComponent {
         AnswerChartModule,
         LectureWallContentModule,
         AngularDraggableModule,
+    ],
+    providers: [
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: TimeStampToMomentConverter,
+            multi: true,
+        },
     ],
 })
 export class LectureInfoModule implements DoBootstrap {
