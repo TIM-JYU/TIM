@@ -26,6 +26,14 @@ tim-dialog {
     }
 }
 
+tim-dialog-frame {
+    &.overflow-visible {
+        .modal-body {
+            overflow-y: visible;
+        }
+    }
+}
+
 .modal-body {
     overflow-y: auto;
     flex: 1;

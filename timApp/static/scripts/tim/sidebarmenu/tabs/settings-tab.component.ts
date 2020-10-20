@@ -3,7 +3,6 @@ import {Users, UserService} from "tim/user/userService";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {LectureController} from "tim/lecture/lectureController";
-import {showTagDialog} from "tim/item/tagCtrl";
 import {
     DocumentOrFolder,
     IDocument,
@@ -34,6 +33,7 @@ import {showViewRangeEditDialog} from "tim/document/showViewRangeEditDialog";
 import {showRelevanceEditDialog} from "tim/item/showRelevanceEditDialog";
 import {showTagSearchDialog} from "tim/item/showTagSearchDialog";
 import {showCourseDialog} from "tim/document/course/showCourseDialog";
+import {showTagDialog} from "tim/item/showTagDialog";
 
 const DEFAULT_PIECE_SIZE = 20;
 
