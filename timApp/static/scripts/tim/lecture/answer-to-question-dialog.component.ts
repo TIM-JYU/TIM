@@ -108,7 +108,7 @@ export type IAnswerQuestionResult =
                 <button *ngIf="isLecturer && questionEnded" class="timButton" (click)="showPoints()">
                     Show points
                 </button>
-                <button *ngIf="(isLecturer && questionEnded) || result" class="timButton"
+                <button *ngIf="(isLecturer && questionEnded) || gotResult" class="timButton"
                         (click)="close()">Close
                 </button>
                 <button *ngIf="isLecturer && !questionEnded" class="timButton" (click)="stopQuestion()">
