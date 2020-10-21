@@ -70,6 +70,10 @@ export abstract class AngularDialogComponent<Params, Result>
         return this.resultDefer.promise;
     }
 
+    isClosed() {
+        return this.closed;
+    }
+
     getSavePrefix() {
         return this.dialogName;
     }

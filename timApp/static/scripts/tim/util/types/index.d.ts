@@ -2,7 +2,6 @@
 declare module "angular-messages";
 declare module "angular-ui-grid";
 declare module "angular-eonasdan-datetimepicker";
-declare module "angularjs-color-picker";
 declare module "bootstrap-sass";
 declare module "angular-touch";
 declare module "angular-drag-and-drop-lists";

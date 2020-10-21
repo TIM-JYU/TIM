@@ -12,3 +12,9 @@
 .minimized {
   visibility: hidden;
 }
+
+.modal-footer {
+  &:empty {
+    display: none;
+  }
+}

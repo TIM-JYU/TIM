@@ -71,6 +71,13 @@ import {
     VirtualScrollingOptions,
 } from "tim/plugin/dataview/data-view.component";
 import {nullable, withDefault} from "tim/plugin/attributes";
+import {
+    handleToolbarKey,
+    hideToolbar,
+    isToolbarEnabled,
+    isToolbarOpen,
+    showTableEditorToolbar,
+} from "tim/plugin/toolbarUtils";
 import {onClick} from "../document/eventhandlers";
 import {
     ChangeType,
@@ -106,13 +113,6 @@ import {
     to,
 } from "../util/utils";
 import {TaskId} from "./taskid";
-import {
-    handleToolbarKey,
-    hideToolbar,
-    isToolbarEnabled,
-    isToolbarOpen,
-    openTableEditorToolbar,
-} from "./timTableEditorToolbar";
 import {PluginMeta} from "./util";
 
 function replaceAll(s: string, s1: string, s2: string): string {
@@ -186,6 +186,13 @@ export interface HideValues {
     delCol?: boolean;
     needFirstClick?: boolean;
     sort?: boolean;
+    colorPicker?: boolean;
+    alignLeft?: boolean;
+    alignCenter?: boolean;
+    alignRight?: boolean;
+    addToTemplates?: boolean;
+    clearFormat?: boolean;
+    changePin?: boolean;
 }
 
 export interface IToolbarTemplate {
@@ -1088,7 +1095,7 @@ export class TimTableComponent
         // return;
         this.addEventListeners();
         if (this.isInEditMode() && isToolbarEnabled() && !this.hide.toolbar) {
-            openTableEditorToolbar({
+            showTableEditorToolbar({
                 callbacks: {
                     setCell: (val) => this.handleToolbarSetCell(val),
                     addToTemplates: () => this.handleToolbarAddToTemplates(),

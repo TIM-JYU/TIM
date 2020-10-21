@@ -9,7 +9,6 @@ import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
 import ngSanitize from "angular-sanitize";
 import uibootstrap from "angular-ui-bootstrap";
-import colorpicker from "angularjs-color-picker";
 import humanizeDuration from "humanize-duration";
 import moment, {Moment} from "moment";
 import ngFileUpload from "ng-file-upload";
@@ -28,8 +27,7 @@ markAsUsed(
     ngSanitize,
     uibootstrap,
     ngFileUpload,
-    ngStorage,
-    colorpicker
+    ngStorage
 );
 
 // timApp's Angular modules:
@@ -44,7 +42,6 @@ export const timApp = angular.module("timApp", [
     "ui.bootstrap",
     "ngFileUpload",
     "ngStorage",
-    "color.picker",
 ]);
 
 interface IDelegate {

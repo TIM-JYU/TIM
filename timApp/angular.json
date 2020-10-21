@@ -31,7 +31,6 @@
               "angular-sanitize",
               "angular-ui-bootstrap",
               "angular-ui-grid",
-              "angularjs-color-picker",
               "bootstrap",
               "chart.js",
               "deep-equal",
@@ -103,8 +102,6 @@
             ],
             "styles": [
               "node_modules/angular-ui-grid/ui-grid.min.css",
-              "node_modules/angularjs-color-picker/dist/angularjs-color-picker.min.css",
-              "node_modules/angularjs-color-picker/dist/themes/angularjs-color-picker-bootstrap.min.css",
               "node_modules/katex/dist/katex.min.css",
               "node_modules/mobile-drag-drop/default.css"
             ],
