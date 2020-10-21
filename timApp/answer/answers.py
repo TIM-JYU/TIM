@@ -6,6 +6,7 @@ from datetime import datetime
 from operator import itemgetter
 from typing import List, Optional, Dict, Tuple, Iterable, Any
 
+from bs4 import UnicodeDammit
 from sqlalchemy import func, Numeric, Float, true
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.orm import selectinload, defaultload, Query
@@ -204,7 +205,10 @@ def get_all_answers(task_ids: List[TaskId],
                         p = p[len(prefix):]
                     mt, pu = get_pluginupload(p)
                     if mt == 'text/plain':
-                        answ = pu.data.decode()
+                        try:
+                            answ = pu.data.decode()
+                        except UnicodeDecodeError:
+                            answ = UnicodeDammit(pu.data).unicode_markup
                     else:
                         answ = 'ERROR: Uploaded file is binary; cannot show content.'
                 else:
