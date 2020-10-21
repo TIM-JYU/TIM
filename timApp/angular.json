@@ -105,7 +105,6 @@
               "node_modules/angular-ui-grid/ui-grid.min.css",
               "node_modules/angularjs-color-picker/dist/angularjs-color-picker.min.css",
               "node_modules/angularjs-color-picker/dist/themes/angularjs-color-picker-bootstrap.min.css",
-              "node_modules/angular-bootstrap-colorpicker/css/colorpicker.min.css",
               "node_modules/katex/dist/katex.min.css",
               "node_modules/mobile-drag-drop/default.css"
             ],
