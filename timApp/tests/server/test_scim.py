@@ -1155,6 +1155,17 @@ class ScimTest(TimRouteTest):
         )
         self.json_post(
             '/scim/Groups', {
+                'externalId': 'otm-0f84661e-e6f5-4b3d-b7f3-b5701348f3b4-otm-039b5509-763e-4509-8e59-f98173f4a2f0-students',
+                'displayName': 'MATA280 P2 2020-12-16--2020-12-16: Matematiikan ja tilastotieteen tentit 16.12.2020: Opiskelijat',
+                'members': add_name_parts([
+                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['korppiguy']
+                ]),
+            },
+            auth=a,
+            expect_status=201,
+        )
+        self.json_post(
+            '/scim/Groups', {
                 'externalId': 'jy-f7d67fab-1f2a-4d01-x687-0910f1bbdfda-students',
                 'displayName': 'MATP211 P1 2019-08-01--2019-12-31: Kaikki opiskelijat',
                 'members': add_name_parts([
