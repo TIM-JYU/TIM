@@ -17,6 +17,7 @@ import {
     StaticProvider,
     ViewChild,
 } from "@angular/core";
+
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
@@ -49,6 +50,23 @@ import {
     TimTableComponent,
     TimTableModule,
 } from "./timTable";
+
+const RunScriptModel = t.type({
+    script: nullable(t.string),
+    button: nullable(t.string),
+    all: nullable(t.boolean),
+    update: nullable(t.boolean),
+    interval: nullable(t.number),
+});
+
+interface RunScriptModelType extends t.TypeOf<typeof RunScriptModel> {}
+
+interface RunScriptType extends RunScriptModelType {
+    handle?: number;
+    running?: number;
+}
+
+// interface RunScriptsType extends t.TypeOf<typeof t.array(t.union([t.string, RunScriptModel]))> {}
 
 const TableFormMarkup = t.intersection([
     t.partial({
@@ -87,7 +105,8 @@ const TableFormMarkup = t.intersection([
             insertMenu: t.boolean,
         }),
         sisugroups: t.string,
-        runScripts: t.array(t.string),
+        // runScripts: t.array(t.union([t.string, RunScriptModel])),
+        runScripts: t.array(t.union([t.string, RunScriptModel])),
         dataView: nullable(DataViewSettingsType),
     }),
     GenericPluginMarkup,
@@ -291,9 +310,9 @@ export class TimEmailComponent {
                 <ng-container *ngIf="runScripts">
                     <button class="timButton"
                             *ngFor="let s of runScripts"
-                            [hidden]="!s.startsWith('*') && !cbCount"
+                            [hidden]="!s.all && !cbCount"
                             (click)="runJsRunner(s)">
-                        {{runnerButton(s)}}
+                        {{s.button}}
                     </button>
                 </ng-container>
                 <button class="timButton"
@@ -388,6 +407,9 @@ export class TableFormComponent
     private taskLocations: Record<string, string> = {};
     private changedCells: string[] = []; // Use same type as data.userdata?
     private clearStylesCells = new Set<string>();
+
+    runScripts?: RunScriptType[];
+
     userlist: string = "";
     listSep: string = "-";
     listName: boolean = false;
@@ -432,7 +454,7 @@ export class TableFormComponent
         return this.markup.forceUpdateButtonText;
     }
 
-    get runScripts() {
+    get xrunScripts() {
         return this.markup.runScripts;
     }
 
@@ -474,6 +496,7 @@ export class TableFormComponent
         return false;
     }
 
+    // noinspection JSUnusedLocalSymbols
     constructor(
         el: ElementRef,
         http: HttpClient,
@@ -484,8 +507,88 @@ export class TableFormComponent
         // cdr.detach();
     }
 
+    parseRunScripts(
+        scripts: (RunScriptModelType | string)[],
+        oldScripts: RunScriptType[] | undefined
+    ) {
+        if (oldScripts) {
+            for (const sr of oldScripts) {
+                if (sr.handle) {
+                    window.clearInterval(sr.handle);
+                }
+            }
+        }
+        const runScripts = [];
+
+        for (const r of scripts) {
+            let s: string | undefined | null = "";
+            const rs: RunScriptType = {
+                script: "",
+                button: null,
+                all: null,
+                update: null,
+                interval: null,
+                handle: undefined,
+                running: 0,
+            };
+            if (typeof r === "string") {
+                if (r.length == 0) {
+                    continue;
+                }
+                s = r;
+            } else {
+                s = r.script;
+                rs.button = r.button;
+                rs.all = r.all;
+                rs.update = r.update;
+                rs.interval = r.interval;
+            }
+            let script = "";
+            if (s) {
+                const parts = s.split("=");
+                script = parts[0].replace("!", "").replace("*", "");
+                rs.script = script;
+                rs.button = rs.button ?? (parts.length > 1 ? parts[1] : script);
+                rs.all = rs.all ?? s.startsWith("*"); // compatible with old format:  "*name!=buttontext"
+                rs.update = rs.update ?? s.includes("!");
+            }
+            if (script || rs.interval) {
+                runScripts.push(rs);
+                if (rs.interval && rs.interval > 0) {
+                    // if (rs.interval < 10) rs.interval = 10; // at least 5 sec
+                    rs.handle = window.setInterval(() => {
+                        if (rs.running) {
+                            return;
+                        }
+                        rs.running = 1;
+                        const tt:
+                            | TimTableComponent
+                            | undefined = this.getTimTable();
+                        if (!tt) {
+                            return;
+                        }
+                        if (tt.isPreview() || !this.showTable) {
+                            return;
+                        }
+                        this.runJsRunner(rs);
+                        rs.running = 0;
+                    }, rs.interval * 1000);
+                }
+            }
+        }
+        return runScripts;
+    }
+
     ngOnInit() {
         super.ngOnInit();
+
+        if (this.markup.runScripts) {
+            this.runScripts = this.parseRunScripts(
+                this.markup.runScripts,
+                this.runScripts
+            );
+        }
+
         const tid = this.getTaskId();
         this.viewctrl = vctrlInstance; // TODO: Make an Angular service for getting ViewCtrl.
         if (this.viewctrl && tid) {
@@ -994,7 +1097,7 @@ export class TableFormComponent
             emails: this.markup.emails,
             reportFilter: this.markup.reportFilter,
         };
-        let filterParams = {};
+        let filterParams;
         const selUsers = timTable.getCheckedRows(0, false);
         const users = TableFormComponent.makeUserArray(
             selUsers,
@@ -1321,7 +1424,7 @@ export class TableFormComponent
         globalChangedFields: Set<string> | undefined = undefined
     ) {
         // this.error = "... saving ...";
-        let keys: string[] = [];
+        let keys: string[];
         if (cells && cells.length > 0) {
             keys = cells;
         } else {
@@ -1378,7 +1481,7 @@ export class TableFormComponent
                 //     throw new Error("cell was boolean?");
 
                 // TODO: If attr (auto)updatefields...
-                if (true && this.viewctrl) {
+                if (this.viewctrl) {
                     if (
                         this.viewctrl.selectedUser.name ==
                         this.userLocations[numberPlace]
@@ -1502,32 +1605,13 @@ export class TableFormComponent
         }
     }
 
-    runnerName(s: string) {
-        if (s.length == 0) {
-            return "";
-        }
-        if (s.startsWith("*")) {
-            return s.substr(1).replace("!", "");
-        }
-        return s;
-    }
-
-    runnerButton(s: string) {
-        const parts = s.split("=");
-        const runner = this.runnerName(parts[0]);
-        if (parts.length == 1) {
-            return "Run " + runner;
-        }
-        return parts[1];
-    }
-
-    runJsRunner(runner: string) {
+    runJsRunner(runner: RunScriptType) {
         const timTable = this.getTimTable();
         if (timTable == null) {
             return;
         }
-        const runnerName = this.runnerName(runner.split("=")[0]);
-        if (this.viewctrl) {
+        const runnerName = runner.script;
+        if (this.viewctrl && runnerName) {
             const selUsers = timTable.getCheckedRows(0, true);
             const users = TableFormComponent.makeUserArray(
                 selUsers,
@@ -1535,8 +1619,10 @@ export class TableFormComponent
             );
             this.viewctrl.runJsRunner(runnerName, users);
         }
-        if (runner.includes("!")) {
-            this.forceUpdateTable();
+        if (runner.update) {
+            if (!timTable.isSomeCellBeingEdited()) {
+                this.forceUpdateTable();
+            }
         }
     }
 

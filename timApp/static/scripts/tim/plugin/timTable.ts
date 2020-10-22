@@ -219,6 +219,10 @@ export interface IToolbarTemplate {
     notInEdit?: boolean;
     favorite?: boolean;
     closeEdit?: boolean; // if true, close small editor after done
+    column?: number[];
+    columnName?: string[];
+    toColIndex?: number;
+    toColName?: string;
 }
 
 export interface TimTable {
@@ -1106,6 +1110,12 @@ export class TimTableComponent
                     closeEditor: (save: boolean) =>
                         this.saveCloseSmallEditor(save),
                     isEdit: () => this.isEdit(),
+                    getColumn: () => this.getColumn(),
+                    getColumnName: () => this.getColumnName(),
+                    setToColumnByIndex: (col: number) =>
+                        this.setToColumnByIndex(col),
+                    setToColumnByName: (name: string) =>
+                        this.setToColumnByName(name),
                 },
                 activeTable: this,
             });
@@ -4085,6 +4095,42 @@ export class TimTableComponent
                 // continue;
             } // for key
         }
+    }
+
+    getColumn() {
+        if (!this.activeCell) {
+            return -1;
+        }
+        return this.activeCell.col;
+    }
+
+    getColumnName() {
+        const col = this.getColumn();
+        if (col < 0) return "";
+        if (!this.data) return "";
+        if (!this.data.headers) return "";
+        return this.data.headers[col];
+    }
+
+    setToColumnByIndex(col: number) {
+        if (!this.activeCell) {
+            return -1;
+        }
+        if (col < 0) return -1;
+        const row = this.cellDataMatrix[this.activeCell.row]; // TODO: check if sorted rowindex?
+        if (col >= row.length) {
+            return -1;
+        }
+
+        this.activeCell.col = col;
+        return col;
+    }
+
+    setToColumnByName(name: string) {
+        if (!this.data) return -1;
+        if (!this.data.headers) return -1;
+        const col = this.data.headers.indexOf(name);
+        return this.setToColumnByIndex(col);
     }
 
     async handleToolbarSetCell(value: IToolbarTemplate) {

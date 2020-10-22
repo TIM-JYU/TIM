@@ -17,6 +17,10 @@ export interface ITimTableToolbarCallbacks {
     removeRow: () => void;
     closeEditor: (save: boolean) => void;
     isEdit: () => boolean;
+    getColumn: () => number;
+    getColumnName: () => string;
+    setToColumnByIndex: (col: number) => number;
+    setToColumnByName: (name: string) => number;
 }
 
 export interface ITimTableEditorToolbarParams {
@@ -388,6 +392,28 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
     public applyTemplate(templ: IToolbarTemplate) {
         if (templ.notInEdit && this.callbacks.isEdit()) {
             return;
+        }
+        if (templ.column) {
+            const col = this.callbacks.getColumn();
+            if (!templ.column.includes(col)) {
+                return;
+            }
+        }
+        if (templ.columnName) {
+            const colName = this.callbacks.getColumnName();
+            if (!templ.columnName.includes(colName)) {
+                return;
+            }
+        }
+        if (templ.toColName) {
+            if (this.callbacks.setToColumnByName(templ.toColName) < 0) {
+                return;
+            }
+        }
+        if (templ.toColIndex) {
+            if (this.callbacks.setToColumnByIndex(templ.toColIndex) < 0) {
+                return;
+            }
         }
         if (templ.commands) {
             for (const cmd of templ.commands) {

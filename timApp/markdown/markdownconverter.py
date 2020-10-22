@@ -211,6 +211,9 @@ def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str] = 
                 local_macros_yaml = text[beg+len(startstr):end]
                 local_macros = YamlBlock.from_markdown(local_macros_yaml).values
                 macros = {**macros, **local_macros}
+        guser = g.get("user")
+        if guser:
+            macros.update({'loggedUsername': guser.name})
         conv = env.from_string(text).render(macros)
         return conv
     except TemplateSyntaxError as e:

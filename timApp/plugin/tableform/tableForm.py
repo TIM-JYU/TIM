@@ -60,11 +60,11 @@ class DataViewSettingsModel:
 
 @dataclass
 class RunScriptModel:
-     script: str
+     script: Optional[str] = None
      button: Optional[str] = None
-     all: bool = False
-     update: bool = False
-     repeat: Optional[int] = None
+     all: Optional[bool] = None
+     update: Optional[bool] = None
+     interval: Optional[int] = None
 
 
 @dataclass
