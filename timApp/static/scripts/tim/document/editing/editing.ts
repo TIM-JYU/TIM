@@ -19,7 +19,7 @@ import {
 } from "tim/util/utils";
 import {openEditor} from "tim/editor/pareditorOpen";
 import {getCurrentEditor} from "tim/editor/editorScope";
-import {showDiffDialog} from "../diffDialog";
+import {showDiffDialog} from "tim/document/showDiffDialog";
 import {onClick} from "../eventhandlers";
 import {
     canEditPar,

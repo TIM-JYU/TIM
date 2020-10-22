@@ -30,6 +30,7 @@ import {TimDefer} from "tim/util/timdefer";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
+import {diffDialog} from "tim/document/showDiffDialog";
 import {
     AnswerBrowserController,
     PluginLoaderCtrl,
@@ -60,7 +61,6 @@ import {
 } from "../util/ngimport";
 import {AnnotationComponent} from "../velp/annotation.component";
 import {ReviewController} from "../velp/reviewController";
-import {diffDialog} from "./diffDialog";
 import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
 import {onClick} from "./eventhandlers";

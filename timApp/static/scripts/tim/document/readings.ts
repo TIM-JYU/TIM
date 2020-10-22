@@ -3,6 +3,11 @@ import $ from "jquery";
 import moment from "moment";
 import {getActiveDocument} from "tim/document/activedocument";
 import {genericglobals} from "tim/util/globals";
+import {
+    diffDialog,
+    setDiffDialog,
+    showDiffDialog,
+} from "tim/document/showDiffDialog";
 import {IItem} from "../item/IItem";
 import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
@@ -15,7 +20,6 @@ import {
     posToRelative,
     to,
 } from "../util/utils";
-import {diffDialog, setDiffDialog, showDiffDialog} from "./diffDialog";
 import {EditPosition, EditType} from "./editing/edittypes";
 import {onClick, onMouseOver, onMouseOverOut} from "./eventhandlers";
 import {canSeeSource, dereferencePar, getArea, getParId} from "./parhelpers";
@@ -185,7 +189,7 @@ async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
             if (diffDialog) {
                 diffDialog.close();
             }
-            setDiffDialog(await mi.dialogInstance.promise);
+            setDiffDialog(mi);
             await to(mi.result);
             setDiffDialog(undefined);
         }
