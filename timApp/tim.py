@@ -239,6 +239,7 @@ def ping():
 class GetProxyModel:
     url: str
     auth_token: Optional[str] = None
+    raw: bool = False
 
 
 @app.route("/getproxy")
@@ -259,6 +260,8 @@ def getproxy(m: GetProxyModel):
         r = requests.get(m.url, headers=headers)
     except (MissingSchema, InvalidURL):
         raise RouteException('Invalid URL')
+    if m.raw:
+        return Response(r.content, status=r.status_code, mimetype=r.headers['Content-Type'])
 
     return json_response({'data': r.text, 'status_code': r.status_code})
 
