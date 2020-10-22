@@ -1426,7 +1426,9 @@ def get_all_answers_plain(task_id):
 
 
 def get_all_answers_list_plain(task_ids: List[TaskId]):
-    all_answers = get_all_answers_as_list(task_ids)
+    all_answers, format_opt = get_all_answers_as_list(task_ids)
+    if format_opt == 'json':
+        return json_response(all_answers)
     jointext = "\n"
     print_opt = get_option(request, 'print', 'all')
     print_answers = print_opt == "all" or print_opt == "answers"
@@ -1455,6 +1457,7 @@ def get_all_answers_as_list(task_ids: List[TaskId]):
     sort_opt = get_option(request, 'sort', 'task')
     print_opt = get_option(request, 'print', 'all')
     period_opt = get_option(request, 'period', 'whenever')
+    format_opt = get_option(request, 'format', 'text')
     consent = get_consent_opt()
     printname = name_opt == 'both'
 
@@ -1477,14 +1480,9 @@ def get_all_answers_as_list(task_ids: List[TaskId]):
                                   print_opt,
                                   period_from,
                                   period_to,
+                                  format_opt,
                                   consent=consent)
-    return all_answers
-
-
-@answers.route("/allAnswers/<task_id>")
-def get_all_answers_route(task_id):
-    all_answers = get_all_answers_as_list(task_id)
-    return json_response(all_answers)
+    return all_answers, format_opt
 
 
 class GraphData(TypedDict):

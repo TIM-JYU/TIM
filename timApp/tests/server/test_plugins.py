@@ -397,28 +397,28 @@ type: upload
         date_re = r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}'
         self.assertRegex(text, fr"""
 {TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
-\[True, False, False\]
+\[true, false, false\]
 
 ----------------------------------------------------------------------------------
 {'Test user 2'}; {'testuser2'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
-\[True, True, True\]
+\[true, true, true\]
 
 ----------------------------------------------------------------------------------
 {TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id2)}; {date_re}; 1; 1\.0
-\[True, False\]
+\[true, false\]
 
 ----------------------------------------------------------------------------------
 {'Test user 2'}; {'testuser2'}; {re.escape(task_id2)}; {date_re}; 1; 2\.0
-\[False, False\]
+\[false, false\]
 """.strip())
         text2 = self.get(f'/allAnswersPlain/{task_id}')
         self.assertRegex(text2, fr"""
 {TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
-\[True, False, False\]
+\[true, false, false\]
 
 ----------------------------------------------------------------------------------
 {'Test user 2'}; {'testuser2'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
-\[True, True, True\]
+\[true, true, true\]
         """.strip())
         self.assertEqual('', self.get(f'/allAnswersPlain/{task_id}', query_string={'consent': 'true'}))
 
@@ -431,6 +431,19 @@ type: upload
         self.assertGreater(len(all_text), len(text))
         invalid_age = self.get(f'/allDocumentAnswersPlain/{doc.path}', query_string={'age': 'asd'})
         self.assertEqual(invalid_age, text)
+
+        # test JSON format
+        res = self.get(f'/allDocumentAnswersPlain/{doc.id}', query_string={'format': 'json'})
+        for r in res:
+            self.assertEqual(1, r['count'])
+        expected = [
+            '[true, false, false]',
+            '[true, true, true]',
+            '[true, false]',
+            '[false, false]',
+        ]
+        self.assertEqual(expected, [r['answer']['content'] for r in res])
+        self.assertEqual(expected, [r['resolved_content'] for r in res])
 
     def test_save_points(self):
         cannot_give_custom = {'error': 'You cannot give yourself custom points in this task.'}

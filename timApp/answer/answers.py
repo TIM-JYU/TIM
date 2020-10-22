@@ -21,6 +21,7 @@ from timApp.upload.upload import get_pluginupload
 from timApp.user.user import Consent, User
 from timApp.user.usergroup import UserGroup
 from timApp.util.answerutil import task_ids_to_strlist
+from timApp.util.flask.requesthelper import RouteException
 from timApp.velp.annotation_model import Annotation
 
 
@@ -130,9 +131,11 @@ def get_all_answers(task_ids: List[TaskId],
                     print_opt: str,
                     period_from: datetime,
                     period_to: datetime,
+                    data_format: str,
                     consent: Optional[Consent]) -> List[str]:
     """Gets all answers to the specified tasks.
 
+    :param data_format: The data format to use, currently supports "text" and "json".
     :param period_from: The minimum answering time for answers.
     :param period_to: The maximum answering time for answers.
     :param sort: Sorting order for answers.
@@ -194,7 +197,7 @@ def get_all_answers(task_ids: List[TaskId],
             name = "user" + str(cnt)
         header = name + "; " + a.task_id + "; " + str(a.answered_on) + "; " + n + "; " + points
         line = json.loads(a.content)
-        answ = str(line)
+        answ = json.dumps(line)
         if isinstance(line, dict):  # maybe csPlugin?
             files = line.get('uploadedFiles')
             if isinstance(files, list):
@@ -219,22 +222,27 @@ def get_all_answers(task_ids: List[TaskId],
                 if "points" in line:  # empty csPlugin answer
                     answ = ""
 
-        res = ""
-        if printname and not hide_names:
-            header = str(u.real_name) + "; " + header
-        if print_header:
-            res = header
-        if print_answers:
-            res += lf + answ
-        if print_opt == "korppi":
-            res = name + ";"
-            taskid = a.task_id
-            i = taskid.find(".")
-            if i >= 0:
-                taskid = taskid[i + 1:]
-            res += taskid + ";" + answ.replace("\n", "\\n")
+        if data_format == 'text':
+            res = ""
+            if printname and not hide_names:
+                header = str(u.real_name) + "; " + header
+            if print_header:
+                res = header
+            if print_answers:
+                res += lf + answ
+            if print_opt == "korppi":
+                res = name + ";"
+                taskid = a.task_id
+                i = taskid.find(".")
+                if i >= 0:
+                    taskid = taskid[i + 1:]
+                res += taskid + ";" + answ.replace("\n", "\\n")
 
-        result.append(res)
+            result.append(res)
+        elif data_format == 'json':
+            result.append(dict(user=u, answer=a, count=int(n), resolved_content=answ))
+        else:
+            raise RouteException(f'Unknown data format option: {data_format}')
     return result
 
 
