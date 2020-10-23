@@ -10,6 +10,7 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {IItem} from "../item/IItem";
 import {$localStorage} from "../util/ngimport";
+import {TimUtilityModule} from "../ui/tim-utility.module";
 import {
     getCurrentPartitionURLParams,
     getPieceSize,
@@ -146,6 +147,6 @@ export class ViewRangeEditDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [ViewRangeEditDialogComponent],
-    imports: [BrowserModule, DialogModule, FormsModule],
+    imports: [BrowserModule, DialogModule, FormsModule, TimUtilityModule],
 })
 export class ViewRangeEditDialogModule {}

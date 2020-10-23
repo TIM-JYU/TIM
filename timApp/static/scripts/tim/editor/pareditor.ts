@@ -5,6 +5,7 @@ import rangyinputs from "rangyinputs";
 import {setCurrentEditor} from "tim/editor/editorScope";
 import {markAsUsed, to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
+import {showRestampDialog} from "tim/editor/showRestampDialog";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {
@@ -29,7 +30,7 @@ import {
 import {AceParEditor} from "./AceParEditor";
 import {EditorType, SelectionRange} from "./BaseParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
-import {RestampDialogClose, showRestampDialog} from "./restampDialog";
+import {RestampDialogClose} from "./restamp-dialog.component";
 import {TextAreaParEditor} from "./TextAreaParEditor";
 
 markAsUsed(rangyinputs);

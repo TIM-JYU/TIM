@@ -10,6 +10,7 @@ import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {saveCurrentScreenPar} from "../document/parhelpers";
 import {genericglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
@@ -478,6 +479,6 @@ export class LoginDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [LoginDialogComponent, HakaLoginComponent],
-    imports: [BrowserModule, DialogModule, FormsModule],
+    imports: [BrowserModule, DialogModule, FormsModule, TimUtilityModule],
 })
 export class LoginDialogModule {}
