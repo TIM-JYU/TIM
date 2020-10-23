@@ -869,13 +869,14 @@ export function secondsToShortTime(
     const SECS_IN_DAY = 24 * 60 * 60;
     let prefix = "";
     if (secs > SECS_IN_DAY) {
+        const rem = secs % SECS_IN_DAY;
         prefix =
-            humanizeDuration(secs * 1000, {
+            humanizeDuration((secs - rem) * 1000, {
                 units: ["d"],
                 round: true,
                 language: locale,
             }) + " + ";
-        secs %= SECS_IN_DAY;
+        secs = rem;
     }
     return `${prefix}${secondsToHHMMSS(secs, displayUnits)}`;
 }
