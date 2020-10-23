@@ -9,6 +9,7 @@ export interface IDiffParams {
     left: string;
     right: string;
     title: string;
+    showToolbar: boolean;
     pos?: Pos;
 }
 
@@ -20,7 +21,12 @@ export interface IDiffParams {
                 {{data.title}}
             </ng-container>
             <ng-container body>
-                <td-ngx-text-diff [left]="data.left" [right]="data.right"></td-ngx-text-diff>
+                <td-ngx-text-diff [left]="data.left"
+                                  [right]="data.right"
+                                  outerContainerClass="hide-diff-rownums"
+                                  format="LineByLine"
+                                  [showToolbar]="data.showToolbar">
+                </td-ngx-text-diff>
             </ng-container>
         </tim-dialog-frame>
     `,

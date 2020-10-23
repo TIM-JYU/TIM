@@ -1380,3 +1380,11 @@ tim-user-list {
 .text-color-normal {
     color: $text-color;
 }
+
+.hide-diff-rownums {
+    td {
+        &.line-number-col, &.line-number-col-left {
+            display: none;
+        }
+    }
+}

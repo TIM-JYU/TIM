@@ -185,6 +185,7 @@ async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
                 left: oldr.result.data.text,
                 right: newbr.result.data.text,
                 title: "Changes",
+                showToolbar: true,
             });
             if (diffDialog) {
                 diffDialog.close();

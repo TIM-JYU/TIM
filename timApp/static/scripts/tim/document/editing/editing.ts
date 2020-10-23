@@ -750,6 +750,7 @@ This will delete the whole ${
                                 left: text,
                                 right: text,
                                 title: "Source",
+                                showToolbar: false,
                             });
                         } else {
                             await showMessageDialog(
