@@ -91,6 +91,10 @@ PROXY_WHITELIST = [
     'korppi.jyu.fi',
     'plus.cs.aalto.fi',
 ]
+
+# Whitelist of /getproxy domains that don't require login.
+PROXY_WHITELIST_NO_LOGIN = {}
+
 SISU_ASSESSMENTS_URL = 'https://s2s.apitest.jyu.fi/assessments/'
 SISU_CERT_PATH = '/service/certs/sisu.pem'
 

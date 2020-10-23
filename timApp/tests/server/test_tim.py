@@ -332,6 +332,8 @@ class TimTest(TimRouteTest):
         self.get('/getproxy', query_string={'url': 'http://users.jyu.fi'}, expect_status=400,
                  expect_content='URL domain not whitelisted: users.jyu.fi')
         self.get('/getproxy', query_string={'url': 'https://korppi.jyu.fi'})
+        self.logout()
+        self.get('/getproxy', query_string={'url': 'https://korppi.jyu.fi'}, expect_status=403)
 
     def test_par_info(self):
         self.login_test1()

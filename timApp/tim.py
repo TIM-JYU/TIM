@@ -245,7 +245,6 @@ class GetProxyModel:
 @app.route("/getproxy")
 @use_model(GetProxyModel)
 def getproxy(m: GetProxyModel):
-    verify_logged_in()
     parsed = urlparse(m.url)
     if not parsed.scheme:
         raise RouteException('Unknown URL scheme')
@@ -253,6 +252,8 @@ def getproxy(m: GetProxyModel):
         raise RouteException(f'URL scheme not allowed: {parsed.scheme}')
     if parsed.netloc not in app.config['PROXY_WHITELIST']:
         raise RouteException(f'URL domain not whitelisted: {parsed.netloc}')
+    if parsed.netloc not in app.config['PROXY_WHITELIST_NO_LOGIN']:
+        verify_logged_in()
     headers = {}
     if m.auth_token:
         headers['Authorization'] = f'Token {m.auth_token}'
