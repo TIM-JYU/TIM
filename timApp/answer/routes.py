@@ -1440,8 +1440,9 @@ def get_all_answers_list_plain(task_ids: List[TaskId]):
 
 def get_all_answers_as_list(task_ids: List[TaskId]):
     verify_logged_in()
+    format_opt = get_option(request, 'format', 'text')
     if not task_ids:
-        return []
+        return [], format_opt
     doc_ids = set()
     d = None
     for tid in task_ids:
