@@ -657,6 +657,39 @@ This will delete the whole ${
         return this.viewctrl.getParMenuEntry(parId)?.getMenuEntry();
     }
 
+    getViewSourceEditorMenuEntry(par?: Paragraph): IMenuFunctionEntry {
+        const entry: IMenuFunctionEntry = {
+            desc: "",
+            func: empty,
+            show: false,
+        };
+        entry.desc = "View source";
+        entry.show =
+            par != null &&
+            !isHelpPar(par) &&
+            canSeeSource(this.viewctrl.item, par);
+        entry.func = async (e: JQuery.Event, p: Paragraph) => {
+            const parId = getParId(p);
+            if (!parId) {
+                await showMessageDialog("Could not get paragraph id");
+                return;
+            }
+            const r = await this.getBlock(parId);
+            if (r.ok) {
+                const text = r.result.data.text;
+                await showDiffDialog({
+                    left: text,
+                    right: text,
+                    title: "Source",
+                    showToolbar: false,
+                });
+            } else {
+                await showMessageDialog("Failed to get paragraph markdown");
+            }
+        };
+        return entry;
+    }
+
     getEditorFunctions(par?: Paragraph): MenuFunctionList {
         const parEditable =
             (!par && this.viewctrl.item.rights.editable) ||
@@ -669,6 +702,7 @@ This will delete the whole ${
             : undefined;
         if (this.viewctrl.editing) {
             return [
+                this.getViewSourceEditorMenuEntry(par),
                 {
                     func: () => this.goToEditor(),
                     desc: "Go to editor",
@@ -734,36 +768,7 @@ This will delete the whole ${
                         par != null &&
                         !isHelpPar(par),
                 },
-                {
-                    func: async (e: JQuery.Event, p: Paragraph) => {
-                        const parId = getParId(p);
-                        if (!parId) {
-                            await showMessageDialog(
-                                "Could not get paragraph id"
-                            );
-                            return;
-                        }
-                        const r = await this.getBlock(parId);
-                        if (r.ok) {
-                            const text = r.result.data.text;
-                            await showDiffDialog({
-                                left: text,
-                                right: text,
-                                title: "Source",
-                                showToolbar: false,
-                            });
-                        } else {
-                            await showMessageDialog(
-                                "Failed to get paragraph markdown"
-                            );
-                        }
-                    },
-                    desc: "View source",
-                    show:
-                        par != null &&
-                        !isHelpPar(par) &&
-                        canSeeSource(this.viewctrl.item, par),
-                },
+                this.getViewSourceEditorMenuEntry(par),
                 {
                     func: (e, p) => {
                         if (!par) {
