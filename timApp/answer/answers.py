@@ -197,7 +197,7 @@ def get_all_answers(task_ids: List[TaskId],
             name = "user" + str(cnt)
         header = name + "; " + a.task_id + "; " + str(a.answered_on) + "; " + n + "; " + points
         line = json.loads(a.content)
-        answ = json.dumps(line, ensure_ascii=False) # TODO: ensure_ascii=False
+        answ = json.dumps(line) # , ensure_ascii=False) # TODO: ei toimi
         if isinstance(line, dict):  # maybe csPlugin?
             files = line.get('uploadedFiles')
             if isinstance(files, list):
