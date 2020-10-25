@@ -267,7 +267,7 @@ export class UserListController implements IController {
                     order: 30,
                 },
                 {
-                    title: "Answers as plain text",
+                    title: "Answers as plain text/JSON",
                     action: async ($event: IAngularEvent) => {
                         await showAllAnswers({
                             url:
