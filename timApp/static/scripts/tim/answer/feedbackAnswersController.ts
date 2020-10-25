@@ -116,7 +116,7 @@ export class FeedbackAnswersCtrl extends DialogController<
             periodFrom: this.options.periodFrom.toDate(),
             periodTo: this.options.periodTo.toDate(),
         };
-        this.storage.allAnswersOptions = {
+        this.storage.feedbackAnswersOptions = {
             ...this.options,
             periodFrom: this.options.periodFrom.valueOf(),
             periodTo: this.options.periodTo.valueOf(),

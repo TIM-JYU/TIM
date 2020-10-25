@@ -13,6 +13,7 @@ interface IOptions<T> {
     periodFrom: T;
     periodTo: T;
     consent: string;
+    format: string;
 }
 
 export interface IAllAnswersParams {
@@ -53,10 +54,18 @@ export class AllAnswersCtrl extends DialogController<
             periodFrom: null,
             periodTo: null,
             consent: "any",
+            format: "text",
         };
         this.storage = $localStorage.$default({
             allAnswersOptions: defs,
         });
+
+        // Repair old wrong values
+        const allowedFormats = ["text", "json"];
+
+        if (!allowedFormats.includes(this.storage.allAnswersOptions.format)) {
+            this.storage.allAnswersOptions.format = "text";
+        }
 
         this.options = {
             ...this.storage.allAnswersOptions,
@@ -114,6 +123,7 @@ export class AllAnswersCtrl extends DialogController<
             periodFrom: this.options.periodFrom.valueOf(),
             periodTo: this.options.periodTo.valueOf(),
         };
+        // toSerialize.format = toSerialize.allFormat;
         window.open(
             this.resolve.params.url + "?" + $httpParamSerializer(toSerialize),
             "_blank"
