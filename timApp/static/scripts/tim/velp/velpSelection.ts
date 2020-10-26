@@ -4,8 +4,8 @@ import {timApp} from "tim/app";
 import {Binding, clone, markAsUsed, Require, to} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velp-summary.component";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ViewCtrl} from "../document/viewctrl";
-import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {
     ILabel,

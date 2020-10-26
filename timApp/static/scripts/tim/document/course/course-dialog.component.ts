@@ -128,10 +128,7 @@ export class CourseDialogComponent extends AngularDialogComponent<IItem, void> {
         })();
     }
 
-    /**
-     * Dialog title.
-     */
-    public getTitle() {
+    getTitle() {
         return "Set as a course";
     }
 

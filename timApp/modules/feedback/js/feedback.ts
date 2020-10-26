@@ -4,7 +4,6 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {EditMode} from "tim/document/popupMenu";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -16,6 +15,7 @@ import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {documentglobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
+import {EditMode} from "tim/document/popup-menu-dialog.component";
 
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
 export const moduleDefs = [feedbackApp];

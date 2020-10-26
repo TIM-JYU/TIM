@@ -1,11 +1,12 @@
 import {IAngularEvent, IController, IScope} from "angular";
-import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import uiGrid from "ui-grid";
 import {documentglobals} from "tim/util/globals";
-import {showKorppiExportDialog} from "tim/answer/korppiExportDialog";
+import {showKorppiExportDialog} from "tim/answer/showKorppiExportDialog";
+import {showFeedbackAnswers} from "tim/answer/showFeedbackAnswers";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
 import {ViewCtrl} from "../document/viewctrl";
-import {showMessageDialog} from "../ui/dialog";
 import {IUser, IUserListEntry, sortByRealName, sortLang} from "../user/IUser";
 import {withComparatorFilters} from "../util/comparatorfilter";
 import {$timeout} from "../util/ngimport";
@@ -13,13 +14,8 @@ import {
     Binding,
     copyToClipboard,
     getURLParameter,
-    markAsUsed,
     Require,
 } from "../util/utils";
-import {showAllAnswers} from "./allAnswersController";
-import {showFeedbackAnswers} from "./feedbackAnswersController";
-
-markAsUsed(allanswersctrl);
 
 export interface IExportOptions {
     totalPointField: string;
@@ -269,7 +265,7 @@ export class UserListController implements IController {
                 {
                     title: "Answers as plain text/JSON",
                     action: async ($event: IAngularEvent) => {
-                        await showAllAnswers({
+                        await showAllAnswersDialog({
                             url:
                                 "/allDocumentAnswersPlain/" +
                                 this.viewctrl.item.id,

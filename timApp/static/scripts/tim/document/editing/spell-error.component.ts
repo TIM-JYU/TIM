@@ -13,12 +13,11 @@ import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import $ from "jquery";
-import {showDialog} from "../../ui/dialog";
-import {$injector} from "../../util/ngimport";
-import {
+import {angularDialog} from "../../ui/angulardialog/dialog.service";
+import type {
     ISpellErrorParams,
-    SpellErrorDialogController,
-} from "./spellErrorDialog";
+    SpellErrorDialogComponent as SpellErrorDialogComponentType,
+} from "./spell-error-dialog.component";
 
 @Component({
     selector: "tim-spell-error",
@@ -30,7 +29,7 @@ import {
 export class SpellErrorComponent implements OnInit, OnDestroy {
     @Input() private sugg!: string[];
     @Input() private count?: number;
-    private dlg?: SpellErrorDialogController;
+    private dlg?: SpellErrorDialogComponentType;
 
     constructor(private e: ElementRef<HTMLElement>) {}
 
@@ -57,7 +56,7 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
             dialogX: e.clientX,
             dialogY: e.clientY,
         });
-        this.dlg = await d.dialogInstance.promise;
+        this.dlg = await d;
         await to(d.result);
         this.dlg = undefined;
     }
@@ -72,9 +71,14 @@ export class SpellModule implements DoBootstrap {
 }
 
 async function showSpellErrorDialog(s: ISpellErrorParams) {
-    const file = await import("./spellErrorDialog");
-    $injector.loadNewModules([file.dialogModule.name]);
-    return showDialog(file.SpellErrorDialogController, {params: () => s});
+    const {SpellErrorDialogComponent} = await import(
+        "./spell-error-dialog.component"
+    );
+    return angularDialog.open<
+        ISpellErrorParams,
+        void,
+        SpellErrorDialogComponentType
+    >(SpellErrorDialogComponent, s);
 }
 
 export const spellModule = createDowngradedModule((extraProviders) => {

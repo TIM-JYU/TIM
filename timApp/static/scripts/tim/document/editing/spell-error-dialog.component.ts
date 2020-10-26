@@ -2,14 +2,16 @@
  * Dialog for showing suggestions for spelling errors.
  */
 
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {Component, NgModule} from "@angular/core";
 import {ISpellWordInfo, PareditorController} from "tim/editor/pareditor";
-import {registerDialogComponentForModule} from "tim/ui/dialog";
 import {copyToClipboard} from "tim/util/utils";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {$rootScope} from "tim/util/ngimport";
-import {DialogController} from "tim/ui/dialogController";
-import angular from "angular";
-import {getCurrentEditor} from "../../editor/editorScope";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {BrowserModule} from "@angular/platform-browser";
+import {getCurrentEditor} from "tim/editor/editorScope";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 export interface ISpellErrorParams {
     info: ISpellWordInfo;
@@ -69,20 +71,54 @@ function computeSourcePosition(
     return index + editorText.indexOf(block);
 }
 
-export class SpellErrorDialogController extends DialogController<
-    {params: ISpellErrorParams},
+@Component({
+    selector: "tim-spell-error-dialog",
+    template: `
+        <tim-dialog-frame class="overflow-visible">
+            <ng-container header>
+                Sanan {{options.word}} oikeinkirjoitus
+            </ng-container>
+            <ng-container body>
+                <div *ngIf="suggestions.length > 0">
+                    Ehdotukset:
+                    <ul *ngFor="let sug of suggestions">
+                        <li title="Korvaa '{{options.word}}' sanalla '{{sug}}'">
+                            <a (click)="replaceWord(sug); $event.stopPropagation()">{{sug}}</a>
+                        </li>
+                    </ul>
+                </div>
+                <div *ngIf="suggestions.length == 0">Ei ehdotuksia.</div>
+                <tim-alert *ngIf="wordFindError">
+                    Sanaa '{{options.word}}' ei löydy markdown-tekstistä.
+                </tim-alert>
+                <tim-alert *ngIf="copied" severity="info">
+                    Sana '{{copied}}' kopioitu leikepöydälle.
+                </tim-alert>
+            </ng-container>
+            <ng-container footer>
+                <button class="timButton"
+                        (click)="ignoreWord(); $event.stopPropagation()"
+                        [disabled]="wordFindError"
+                        title="Älä huomioi sanaa jatkossa">
+                    Ohita sana
+                </button>
+                <button class="timButton" (click)="dismiss()">Peruuta</button>
+            </ng-container>
+        </tim-dialog-frame>
+    `,
+})
+export class SpellErrorDialogComponent extends AngularDialogComponent<
+    ISpellErrorParams,
     void
 > {
-    static component = "spellErrorDialogController";
-    static $inject = ["$element", "$scope"] as const;
-    private suggestions: string[] = [];
+    protected dialogName = "spellError";
+    suggestions: string[] = [];
     private pare!: PareditorController;
     private type!: SourceType;
-    private wordFindError = false;
-    private copied?: string;
+    wordFindError = false;
+    copied?: string;
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
         const editor = getCurrentEditor();
         if (!editor) {
             throw Error("No editor was open");
@@ -96,24 +132,22 @@ export class SpellErrorDialogController extends DialogController<
         } else {
             this.type = SourceType.Other; // Can be e.g. timTable cell editor.
         }
-        this.suggestions = this.resolve.params.info.suggestions;
-        (async () => {
-            await this.getDraggable().makeHeightAutomatic();
-            await this.moveTo({
-                X: this.resolve.params.dialogX,
-                Y: this.resolve.params.dialogY,
-            });
-            this.selectWord();
-            $rootScope.$applyAsync();
-        })();
+        this.suggestions = this.data.info.suggestions;
+        this.selectWord();
+        $rootScope.$applyAsync();
+    }
+
+    async ngAfterViewInit() {
+        super.ngAfterViewInit();
+        this.frame.setPos({
+            x: this.data.dialogX - this.xOrigin!,
+            y: this.data.dialogY,
+        });
+        await this.setHeightAutomatic();
     }
 
     get options() {
-        return this.resolve.params.info;
-    }
-
-    public getTitle() {
-        return `Sanan '${this.options.word}' oikeinkirjoitus`;
+        return this.data.info;
     }
 
     ignoreWord() {
@@ -150,37 +184,8 @@ export class SpellErrorDialogController extends DialogController<
     }
 }
 
-export const dialogModule = angular.module("timSpellErrorDialog", []);
-
-registerDialogComponentForModule(dialogModule, SpellErrorDialogController, {
-    template: `
-<tim-dialog class="overflow-visible">
-    <dialog-body>
-        <div ng-if="$ctrl.suggestions.length > 0">
-            Ehdotukset:
-            <ul ng-repeat="sug in $ctrl.suggestions">
-                <li title="Korvaa '{{$ctrl.options.word}}' sanalla '{{sug}}'">
-                    <a ng-click="$ctrl.replaceWord(sug); $event.stopPropagation()">{{sug}}</a>
-                </li>
-            </ul>
-        </div>
-        <div ng-if="$ctrl.suggestions.length == 0">Ei ehdotuksia.</div>
-        <tim-alert ng-if="$ctrl.wordFindError">
-            Sanaa '{{$ctrl.options.word}}' ei löydy markdown-tekstistä.
-        </tim-alert>
-        <tim-alert ng-if="$ctrl.copied" severity="info">
-            Sana '{{$ctrl.copied}}' kopioitu leikepöydälle.
-        </tim-alert>
-    </dialog-body>
-    <dialog-footer>
-        <button class="timButton"
-                ng-click="$ctrl.ignoreWord(); $event.stopPropagation()"
-                ng-disabled="$ctrl.wordFindError"
-                title="Älä huomioi sanaa jatkossa">
-            Ohita sana
-        </button>
-        <button class="timButton" ng-click="$ctrl.dismiss()">Peruuta</button>
-    </dialog-footer>
-</tim-dialog>
-`,
-});
+@NgModule({
+    declarations: [SpellErrorDialogComponent],
+    imports: [BrowserModule, DialogModule, TimUtilityModule],
+})
+export class SpellErrorDialogModule {}

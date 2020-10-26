@@ -1,10 +1,11 @@
 import {IController, IScope, ITranscludeFunction} from "angular";
-import * as allanswersctrl from "tim/answer/allAnswersController";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import {TaskId} from "tim/plugin/taskid";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
 import {dereferencePar, getParId, Paragraph} from "../document/parhelpers";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
@@ -13,7 +14,6 @@ import {
     IGenericPluginMarkup,
 } from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
-import {showMessageDialog} from "../ui/dialog";
 import {IUser, sortByRealName} from "../user/IUser";
 import {isAdmin, Users} from "../user/userService";
 import {documentglobals} from "../util/globals";
@@ -24,12 +24,10 @@ import {
     getURLParameter,
     getUrlParams,
     isInViewport,
-    markAsUsed,
     Require,
     scrollToElement,
     to,
 } from "../util/utils";
-import {showAllAnswers} from "./allAnswersController";
 import {IAnswer} from "./IAnswer";
 
 /*
@@ -52,8 +50,6 @@ import {IAnswer} from "./IAnswer";
  *     - TODO: if hideBrowser: false, then show browser
  *
  */
-
-markAsUsed(allanswersctrl);
 
 timLogTime("answerbrowser3 load", "answ");
 
@@ -1308,7 +1304,7 @@ export class AnswerBrowserController
     }
 
     async getAllAnswers() {
-        await showAllAnswers({
+        await showAllAnswersDialog({
             url: `/allAnswersPlain/${this.taskId.docTask().toString()}`,
             identifier: this.taskId.docTask().toString(),
             allTasks: false,

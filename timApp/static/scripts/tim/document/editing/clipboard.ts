@@ -1,5 +1,6 @@
 import {IScope} from "angular";
-import {showMessageDialog} from "../../ui/dialog";
+import {MenuFunctionList} from "tim/document/viewutils";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {Users} from "../../user/userService";
 import {documentglobals} from "../../util/globals";
 import {$http} from "../../util/ngimport";
@@ -51,7 +52,7 @@ export class ClipboardHandler {
         this.viewctrl = view;
     }
 
-    async showPasteMenu(e: JQuery.MouseEventBase, parOrArea: ParOrArea) {
+    async showPasteMenu(e: MouseEvent, parOrArea: ParOrArea) {
         this.viewctrl.parmenuHandler.showPopupMenu(e, parOrArea, {
             actions: await this.getPasteFunctions(),
             contenturl: "/clipboard",
@@ -60,7 +61,7 @@ export class ClipboardHandler {
         });
     }
 
-    showMoveMenu(e: JQuery.MouseEventBase, parOrArea: ParOrArea) {
+    showMoveMenu(e: MouseEvent, parOrArea: ParOrArea) {
         this.viewctrl.parmenuHandler.showPopupMenu(e, parOrArea, {
             actions: this.getMoveFunctions(),
             contenturl: "/clipboard",
@@ -69,19 +70,19 @@ export class ClipboardHandler {
         });
     }
 
-    pasteContentAbove(e: JQuery.Event, par: Paragraph) {
+    pasteContentAbove(e: MouseEvent, par: Paragraph) {
         this.pasteAbove(e, par, false);
     }
 
-    pasteRefAbove(e: JQuery.Event, par: Paragraph) {
+    pasteRefAbove(e: MouseEvent, par: Paragraph) {
         this.pasteAbove(e, par, true);
     }
 
-    pasteContentBelow(e: JQuery.Event, par: Paragraph) {
+    pasteContentBelow(e: MouseEvent, par: Paragraph) {
         this.pasteBelow(e, par, false);
     }
 
-    pasteRefBelow(e: JQuery.Event, par: Paragraph) {
+    pasteRefBelow(e: MouseEvent, par: Paragraph) {
         this.pasteBelow(e, par, true);
     }
 
@@ -110,7 +111,7 @@ export class ClipboardHandler {
         }
     }
 
-    async moveAbove(e: JQuery.Event, parOrArea: ParOrArea) {
+    async moveAbove(e: MouseEvent, parOrArea: ParOrArea) {
         const r = await to(
             $http.post<IParResponse>(
                 "/clipboard/paste/" + this.viewctrl.docId,
@@ -131,7 +132,7 @@ export class ClipboardHandler {
         this.deleteFromSource();
     }
 
-    async moveBelow(e: JQuery.Event, parOrArea: ParOrArea) {
+    async moveBelow(e: MouseEvent, parOrArea: ParOrArea) {
         const r = await to(
             $http.post<IParResponse>(
                 "/clipboard/paste/" + this.viewctrl.docId,
@@ -153,7 +154,7 @@ export class ClipboardHandler {
     }
 
     async pasteAbove(
-        e: JQuery.Event,
+        e: MouseEvent,
         parOrArea: ParOrArea | undefined,
         asRef: boolean
     ) {
@@ -182,7 +183,7 @@ export class ClipboardHandler {
         );
     }
 
-    async pasteBelow(e: JQuery.Event, parOrArea: ParOrArea, asRef: boolean) {
+    async pasteBelow(e: MouseEvent, parOrArea: ParOrArea, asRef: boolean) {
         const r = await to(
             $http.post<IParResponse>(
                 "/clipboard/paste/" + this.viewctrl.docId,
@@ -235,50 +236,46 @@ export class ClipboardHandler {
         }
     }
 
-    async getPasteFunctions() {
+    async getPasteFunctions(): Promise<MenuFunctionList> {
         await this.updateClipboardStatus();
         return [
             {
-                func: (e: JQuery.Event, p: Paragraph) =>
-                    this.pasteRefAbove(e, p),
+                func: (e, p) => this.pasteRefAbove(e, p),
                 desc: "Above, as a reference",
                 show: this.viewctrl.clipMeta.allowPasteRef,
             },
             {
-                func: (e: JQuery.Event, p: Paragraph) =>
-                    this.pasteContentAbove(e, p),
+                func: (e, p) => this.pasteContentAbove(e, p),
                 desc: "Above, as content",
                 show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {
-                func: (e: JQuery.Event, p: Paragraph) =>
-                    this.pasteRefBelow(e, p),
+                func: (e, p) => this.pasteRefBelow(e, p),
                 desc: "Below, as a reference",
                 show: this.viewctrl.clipMeta.allowPasteRef,
             },
             {
-                func: (e: JQuery.Event, p: Paragraph) =>
-                    this.pasteContentBelow(e, p),
+                func: (e, p) => this.pasteContentBelow(e, p),
                 desc: "Below, as content",
                 show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {
-                func: (e: JQuery.Event, p: Paragraph) => {},
+                func: (e, p) => {},
                 desc: "Cancel",
                 show: true,
             },
         ];
     }
 
-    getMoveFunctions() {
+    getMoveFunctions(): MenuFunctionList {
         return [
             {
-                func: (e: JQuery.Event, p: Paragraph) => this.moveAbove(e, p),
+                func: (e, p) => this.moveAbove(e, p),
                 desc: "Above",
                 show: this.viewctrl.clipMeta.allowPasteContent,
             },
             {
-                func: (e: JQuery.Event, p: Paragraph) => this.moveBelow(e, p),
+                func: (e, p) => this.moveBelow(e, p),
                 desc: "Below",
                 show: this.viewctrl.clipMeta.allowPasteContent,
             },
@@ -286,7 +283,7 @@ export class ClipboardHandler {
         ];
     }
 
-    async cutPar(e: JQuery.Event, par: Paragraph) {
+    async cutPar(e: MouseEvent, par: Paragraph) {
         const docParId = [this.viewctrl.docId, par.attr("id")];
 
         const r = await to(
@@ -318,7 +315,7 @@ export class ClipboardHandler {
         }
     }
 
-    async copyPar(e: JQuery.Event, par: Paragraph) {
+    async copyPar(e: MouseEvent, par: Paragraph) {
         const docParId = dereferencePar(par);
         if (!docParId) {
             return;
@@ -342,7 +339,7 @@ export class ClipboardHandler {
     }
 
     async copyOrCutArea(
-        e: JQuery.Event,
+        e: MouseEvent,
         parOrArea: ParOrArea,
         overrideDocId: number,
         cut: boolean
@@ -420,11 +417,11 @@ export class ClipboardHandler {
         }
     }
 
-    cutArea(e: JQuery.Event, parOrArea: ParOrArea) {
+    cutArea(e: MouseEvent, parOrArea: ParOrArea) {
         this.copyOrCutArea(e, parOrArea, this.viewctrl.docId, true);
     }
 
-    copyArea(e: JQuery.Event, parOrArea: ParOrArea) {
+    copyArea(e: MouseEvent, parOrArea: ParOrArea) {
         this.copyOrCutArea(e, parOrArea, this.viewctrl.docId, false);
     }
 }

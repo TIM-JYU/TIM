@@ -1,9 +1,9 @@
 import {IController, IScope} from "angular";
-// import {ui} from "angular";
 import * as t from "io-ts";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
+import {Pos} from "tim/ui/pos";
 import {$compile} from "../util/ngimport";
 import {
     Binding,
@@ -77,11 +77,6 @@ timApp.directive("timDraggableFixed", [
     },
 ]);
 
-export interface Pos {
-    X: number;
-    Y: number;
-}
-
 interface IResizeStates {
     up: boolean;
     down: boolean;
@@ -125,8 +120,8 @@ export class DraggableController implements IController {
         right: false,
         left: false,
     };
-    private lastPos: Pos = {X: 0, Y: 0};
-    private lastPageXYPos = {X: 0, Y: 0};
+    private lastPos: Pos = {x: 0, y: 0};
+    private lastPageXYPos: Pos = {x: 0, y: 0};
     private handle?: HTMLElement;
     private closeFn?: () => void;
     private caption?: Binding<string, "<">;
@@ -603,8 +598,8 @@ export class DraggableController implements IController {
 
     private doMove(pos: Pos) {
         const delta = {
-            X: pos.X - this.lastPos.X,
-            Y: pos.Y - this.lastPos.Y,
+            X: pos.x - this.lastPos.x,
+            Y: pos.y - this.lastPos.y,
         };
 
         if (this.setTop) {
@@ -624,8 +619,8 @@ export class DraggableController implements IController {
     moveResize = async (e: MouseEvent | TouchEvent) => {
         const pos = this.getPageXY(e);
         const delta = {
-            X: pos.X - this.lastPos.X,
-            Y: pos.Y - this.lastPos.Y,
+            X: pos.x - this.lastPos.x,
+            Y: pos.y - this.lastPos.y,
         };
 
         // If the top and left styles have not been set, resizing behaves illogically.

@@ -1,10 +1,10 @@
 import {IScope} from "angular";
 import $ from "jquery";
-import * as nameArea from "tim/document/editing/nameArea";
-import {markAsUsed, to} from "tim/util/utils";
-import {showMessageDialog} from "../ui/dialog";
+import {to} from "tim/util/utils";
+import {showNameAreaDialog} from "tim/document/editing/showNameAreaDialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {$http, $timeout} from "../util/ngimport";
-import {INameAreaOptions, showNameAreaDialog} from "./editing/nameArea";
+import {INameAreaOptions} from "./editing/name-area-dialog.component";
 import {onClick, onMouseOverOut} from "./eventhandlers";
 import {
     Area,
@@ -15,8 +15,6 @@ import {
     Paragraphs,
 } from "./parhelpers";
 import {ViewCtrl} from "./viewctrl";
-
-markAsUsed(nameArea);
 
 function selectArea(areaName: string, className: string, selected: boolean) {
     const selection = $(".area.area_" + areaName).children(className);
@@ -61,15 +59,15 @@ export class AreaHandler {
         });
 
         onClick(".areaeditline1", ($this, e) =>
-            this.onAreaEditClicked($this, e, ".areaeditline1")
+            this.onAreaEditClicked($this, e.originalEvent!, ".areaeditline1")
         );
 
         onClick(".areaeditline2", ($this, e) =>
-            this.onAreaEditClicked($this, e, ".areaeditline2")
+            this.onAreaEditClicked($this, e.originalEvent!, ".areaeditline2")
         );
 
         onClick(".areaeditline3", ($this, e) =>
-            this.onAreaEditClicked($this, e, ".areaeditline3")
+            this.onAreaEditClicked($this, e.originalEvent!, ".areaeditline3")
         );
 
         onClick(".areaexpand, .areacollapse", ($this, e) => {
@@ -108,11 +106,7 @@ export class AreaHandler {
         });
     }
 
-    onAreaEditClicked(
-        $this: JQuery,
-        e: JQuery.MouseEventBase,
-        className: string
-    ) {
+    onAreaEditClicked($this: JQuery, e: MouseEvent, className: string) {
         this.viewctrl.closePopupIfOpen();
         const areaName = $this.attr("data-area");
         if (!areaName) {
@@ -132,11 +126,7 @@ export class AreaHandler {
         }, 80);
     }
 
-    showAreaOptionsWindow(
-        e: JQuery.MouseEventBase,
-        $area: Area,
-        $pars: Paragraphs
-    ) {
+    showAreaOptionsWindow(e: MouseEvent, $area: Area, $pars: Paragraphs) {
         this.viewctrl.parmenuHandler.showPopupMenu(
             e,
             $pars,
@@ -145,11 +135,11 @@ export class AreaHandler {
         );
     }
 
-    startArea(e: JQuery.Event, par: Paragraph) {
+    startArea(e: MouseEvent, par: Paragraph) {
         this.viewctrl.editingHandler.extendSelection(par);
     }
 
-    async nameArea(e: JQuery.Event, $pars: Paragraphs) {
+    async nameArea(e: MouseEvent, $pars: Paragraphs) {
         if (!this.viewctrl.selection.pars) {
             return;
         }
@@ -181,7 +171,7 @@ export class AreaHandler {
         this.viewctrl.selection.end = undefined;
     }
 
-    async removeAreaMarking(e: JQuery.Event, $pars: Paragraph) {
+    async removeAreaMarking(e: MouseEvent, $pars: Paragraph) {
         const areaName = this.selectedAreaName;
         if (!areaName) {
             await showMessageDialog("Could not get area name");

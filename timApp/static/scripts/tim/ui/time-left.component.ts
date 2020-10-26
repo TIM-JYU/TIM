@@ -1,9 +1,9 @@
 import {Component, Input, OnChanges, SimpleChanges} from "@angular/core";
-import {showMessageDialog} from "tim/ui/dialog";
 import {documentglobals} from "tim/util/globals";
 import {ITimeLeftSettings} from "tim/document/IDocSettings";
 import {Moment} from "moment";
 import moment from "moment";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 
 const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
     sync_interval: 10 * 60,

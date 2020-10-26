@@ -1,7 +1,7 @@
 import angular, {IController} from "angular";
 import {$http} from "tim/util/ngimport";
 import {to} from "tim/util/utils";
-import {showMessageDialog} from "../ui/dialog";
+import {showMessageDialog} from "../ui/showMessageDialog";
 
 const mcqMod = angular.module("MCQ", []);
 

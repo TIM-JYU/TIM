@@ -1,5 +1,5 @@
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {saveCurrentScreenPar} from "../document/parhelpers";
-import {showMessageDialog} from "../ui/dialog";
 import {genericglobals, Locale} from "../util/globals";
 import {$http, $httpParamSerializer} from "../util/ngimport";
 import {to, ToReturn} from "../util/utils";

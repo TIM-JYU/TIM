@@ -8,8 +8,8 @@ import {
     setDiffDialog,
     showDiffDialog,
 } from "tim/document/showDiffDialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {IItem} from "../item/IItem";
-import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout} from "../util/ngimport";
 import {

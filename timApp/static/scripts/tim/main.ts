@@ -34,7 +34,7 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {setAngularJSGlobal} from "@angular/upgrade/static";
 import {MarkupErrorComponent} from "tim/ui/markup-error.component";
-import {LoadingComponent} from "tim/ui/loadingIndicator";
+import {LoadingComponent} from "tim/ui/loading.component";
 import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
 import {DialogComponent} from "tim/ui/dialog.component";
 import {CloseButtonComponent} from "tim/ui/close-button.component";

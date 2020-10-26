@@ -1,7 +1,7 @@
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
-import {showMessageDialog} from "tim/ui/dialog";
 import {timApp} from "tim/app";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 
 export class SelfExpireController {
     private confirm?: string;

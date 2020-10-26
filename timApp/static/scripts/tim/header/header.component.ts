@@ -5,6 +5,7 @@ import {TagService} from "tim/item/tag.service";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
 import {HttpClient} from "@angular/common/http";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {IDocSettings} from "../document/IDocSettings";
 import {
     DocumentOrFolder,
@@ -14,7 +15,6 @@ import {
     ITranslation,
     TagType,
 } from "../item/IItem";
-import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {genericglobals, someglobals} from "../util/globals";
 import {capitalizeFirstLetter, getViewName, to} from "../util/utils";

@@ -15,12 +15,12 @@ import {
     fetchQuestion,
 } from "tim/document/question/fetchQuestion";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {
     AnswerSheetModule,
     IPreviewParams,
     makePreview,
 } from "../document/question/answer-sheet.component";
-import {showMessageDialog} from "../ui/dialog";
 import {IAskedQuestion} from "./lecturetypes";
 
 export type QuestionPreviewParams = AskParams & IShowAsk;

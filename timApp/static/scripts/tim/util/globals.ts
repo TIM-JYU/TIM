@@ -2,7 +2,7 @@ import {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {HeaderIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
 import {IDocScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
 import {IDocSettings} from "../document/IDocSettings";
-import {EditMode} from "../document/popupMenu";
+import {EditMode} from "../document/popup-menu-dialog.component";
 import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
 import {
     DocumentOrFolder,

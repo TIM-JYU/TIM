@@ -3,7 +3,7 @@ import $ from "jquery";
 import {EditPosition, EditType} from "tim/document/editing/edittypes";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
 import {fetchAndEditQuestion} from "tim/document/question/fetchQuestion";
-import {showMessageDialog} from "../../ui/dialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {documentglobals} from "../../util/globals";
 import {$timeout} from "../../util/ngimport";
 import {getParId, Paragraph} from "../parhelpers";
@@ -23,7 +23,7 @@ export class QuestionHandler {
     }
 
     // Opens pop-up window to create question.
-    async addQuestionQst(e: JQuery.Event, par: Paragraph) {
+    async addQuestionQst(e: MouseEvent, par: Paragraph) {
         const parNextId = getParId(par);
         if (!parNextId) {
             showMessageDialog("Not a valid paragraph.");
@@ -43,7 +43,7 @@ export class QuestionHandler {
         });
     }
 
-    async editQst(e: JQuery.Event, par: Paragraph) {
+    async editQst(e: MouseEvent, par: Paragraph) {
         const parId = getParId(par);
         if (!parId) {
             showMessageDialog("Not a valid paragraph.");
@@ -69,7 +69,7 @@ export class QuestionHandler {
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
-    async addQuestion(e: JQuery.Event, par: Paragraph) {
+    async addQuestion(e: MouseEvent, par: Paragraph) {
         const parNextId = getParId(par.next());
         if (!parNextId) {
             showMessageDialog("Not a valid paragraph.");

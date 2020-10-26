@@ -6,6 +6,7 @@ import {setCurrentEditor} from "tim/editor/editorScope";
 import {markAsUsed, to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
 import {showRestampDialog} from "tim/editor/showRestampDialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {
@@ -14,10 +15,7 @@ import {
     getParAttributes,
 } from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
-import {
-    registerDialogComponentForModule,
-    showMessageDialog,
-} from "../ui/dialog";
+import {registerDialogComponentForModule} from "../ui/dialog";
 import {documentglobals, genericglobals} from "../util/globals";
 import {
     $compile,

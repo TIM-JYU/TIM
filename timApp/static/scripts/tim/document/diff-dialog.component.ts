@@ -3,7 +3,7 @@ import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {NgxTextDiffModule} from "ngx-text-diff";
-import {Pos} from "../ui/draggable";
+import {Pos} from "tim/ui/pos";
 
 export interface IDiffParams {
     left: string;

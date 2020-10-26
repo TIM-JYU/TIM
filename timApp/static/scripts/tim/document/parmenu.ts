@@ -1,6 +1,7 @@
 import {IScope} from "angular";
 import $ from "jquery";
-import {showMessageDialog} from "../ui/dialog";
+import {showPopupMenu} from "tim/document/showPopupMenu";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {Coords, dist, getPageXY, to} from "../util/utils";
 import {onClick} from "./eventhandlers";
 import {
@@ -11,7 +12,7 @@ import {
     isPreamble,
     Paragraph,
 } from "./parhelpers";
-import {EditMode, showPopupMenu} from "./popupMenu";
+import {EditMode} from "./popup-menu-dialog.component";
 import {ViewCtrl} from "./viewctrl";
 import {getEmptyCoords, MenuFunctionList} from "./viewutils";
 
@@ -92,7 +93,13 @@ export class ParmenuHandler {
                     $(".par.selected").removeClass("selected");
                     $(".par.lightselect").removeClass("lightselect");
                     this.viewctrl.closePopupIfOpen();
-                    this.toggleActionButtons(e, par, toggle1, toggle2, coords);
+                    this.toggleActionButtons(
+                        e.originalEvent!,
+                        par,
+                        toggle1,
+                        toggle2,
+                        coords
+                    );
                 }
                 this.viewctrl.reviewCtrl.selectText(par[0]);
                 sc.$apply();
@@ -131,7 +138,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
                 }
 
                 if (!this.viewctrl.actionsDisabled) {
-                    this.showOptionsWindow(e, par);
+                    this.showOptionsWindow(e.originalEvent!, par);
                 }
                 return false;
             },
@@ -147,7 +154,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
     }
 
     async showPopupMenu(
-        e: JQuery.MouseEventBase,
+        e: MouseEvent,
         $pars: Paragraph,
         attrs: {
             actions: MenuFunctionList;
@@ -164,7 +171,6 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
             contenturl: attrs.contenturl,
             editbutton: attrs.editbutton,
             editcontext: editcontext,
-            pos: pos,
             save: attrs.save,
             srcid: selectionToStr($pars),
             vctrl: this.viewctrl,
@@ -172,15 +178,16 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         if (this.updatePopupMenuIfOpen(p)) {
             return;
         }
-        const mi = showPopupMenu(p);
-        this.viewctrl.registerPopupMenu(await mi.dialogInstance.promise);
-        await to(mi.result);
+        const mi = showPopupMenu(p, pos);
+        const dlg = await mi;
+        this.viewctrl.registerPopupMenu(dlg);
+        await to(dlg.result);
         const editline = $(".menuopen");
         editline.removeClass("menuopen");
     }
 
     toggleActionButtons(
-        e: JQuery.MouseEventBase,
+        e: MouseEvent,
         par: Paragraph,
         toggle1: boolean,
         toggle2: boolean,
@@ -193,7 +200,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
             return;
         }
 
-        const target = $(e.target) as JQuery;
+        const target = $(e.target as HTMLElement);
         if (checkIfIgnored(["answerbrowser"], ["no-highlight"], target)) {
             return false;
         }
@@ -225,7 +232,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         }
     }
 
-    showOptionsWindow(e: JQuery.MouseEventBase, par: Paragraph) {
+    showOptionsWindow(e: MouseEvent, par: Paragraph) {
         const result = this.getPopupAttrs(par);
         par.children(".editline").addClass("menuopen");
         this.showPopupMenu(e, par, result, "par");

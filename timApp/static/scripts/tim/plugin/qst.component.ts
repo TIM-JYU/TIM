@@ -20,7 +20,6 @@ import {
 } from "../document/question/answer-sheet.component";
 import {ChangeType, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
-import {showMessageDialog} from "../ui/dialog";
 import {defaultErrorMessage, to, to2} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
@@ -28,6 +27,7 @@ import {vctrlInstance} from "../document/viewctrlinstance";
 import {handleAnswerResponse} from "../document/interceptor";
 import {PurifyModule} from "../util/purify.module";
 import {showQuestionAskDialog} from "../lecture/showLectureDialogs";
+import {showMessageDialog} from "../ui/showMessageDialog";
 import {IGenericPluginTopLevelFields} from "./attributes";
 import {PluginBaseCommon, PluginMeta} from "./util";
 

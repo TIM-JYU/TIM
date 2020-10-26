@@ -1,8 +1,7 @@
-import {IController, IScope, IModule} from "angular";
+import {IController, IModule, IScope} from "angular";
 import "angular-ui-bootstrap";
 import {TimDefer} from "tim/util/timdefer";
 import {DialogController} from "tim/ui/dialogController";
-import {timApp} from "../app";
 import {$templateCache, $uibModal} from "../util/ngimport";
 import {markAsUsed} from "../util/utils";
 import * as dg from "./draggable";
@@ -10,30 +9,6 @@ import * as dg from "./draggable";
 type IModalInstanceService = angular.ui.bootstrap.IModalInstanceService;
 
 markAsUsed(dg);
-
-class MessageDialogController extends DialogController<
-    {message: string},
-    unknown
-> {
-    static $inject = ["$element", "$scope"] as const;
-    static readonly component = "timMessageDialog";
-
-    constructor(protected element: JQLite, protected scope: IScope) {
-        super(element, scope);
-    }
-
-    public getTitle() {
-        return "Message";
-    }
-
-    public ok() {
-        this.close({});
-    }
-
-    public getMessage() {
-        return this.resolve.message;
-    }
-}
 
 interface IServiceMap {
     $element: JQLite;
@@ -46,21 +21,6 @@ type MapServiceNames<Names extends readonly [...ServiceName[]]> = {
         ? IServiceMap[Names[K]]
         : never;
 };
-
-export function registerDialogComponent<
-    T extends DialogController<unknown, unknown>,
-    ServiceNames extends readonly [...ServiceName[]]
->(
-    controller: {component: string; $inject: ServiceNames} & (new (
-        ...args: MapServiceNames<ServiceNames>
-    ) => T),
-    tmpl:
-        | {template: string; templateUrl?: never}
-        | {templateUrl: string; template?: never},
-    controllerAs: string = "$ctrl"
-) {
-    registerDialogComponentForModule(timApp, controller, tmpl, controllerAs);
-}
 
 export function registerDialogComponentForModule<
     T extends DialogController<unknown, unknown>,
@@ -89,26 +49,6 @@ export function registerDialogComponentForModule<
         },
         ...tmpl,
     });
-}
-
-registerDialogComponent(MessageDialogController, {
-    template: `
-<tim-dialog>
-    <dialog-header>
-        Message
-    </dialog-header>
-    <dialog-body ng-bind-html="$ctrl.getMessage()">
-
-    </dialog-body>
-    <dialog-footer>
-        <button class="timButton" type="button" ng-click="$ctrl.ok()">OK</button>
-    </dialog-footer>
-</tim-dialog>
-        `,
-});
-
-export function showMessageDialog(message: string) {
-    return showDialog(MessageDialogController, {message: () => message}).result;
 }
 
 export interface IModalInstance<T extends DialogController<unknown, unknown>>

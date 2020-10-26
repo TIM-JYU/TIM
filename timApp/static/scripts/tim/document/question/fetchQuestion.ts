@@ -2,8 +2,8 @@ import {IParResponse} from "tim/document/editing/edittypes";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
 import {IAskedQuestion, IQuestionParagraph} from "tim/lecture/lecturetypes";
-import {showMessageDialog} from "tim/ui/dialog";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 
 export async function fetchQuestion(
     docId: number,

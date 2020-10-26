@@ -17,9 +17,8 @@ import {
 } from "tim/document/viewRangeInfo";
 import {getStorage, IOkResponse, to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
-import {showMessageDialog} from "tim/ui/dialog";
 import {getActiveDocument} from "tim/document/activedocument";
-import {ITemplateParams, showPrintDialog} from "tim/printing/printCtrl";
+import {ITemplateParams} from "tim/printing/print-dialog.component";
 import {
     ADMIN_GROUPNAME,
     IGroupWithSisuPath,
@@ -27,13 +26,16 @@ import {
 } from "tim/user/IUser";
 import {IDocSettings} from "tim/document/IDocSettings";
 import {IRelevanceResponse} from "tim/item/relevance-edit.component";
-import {showMergePdfDialog} from "tim/document/minutes/mergePdfCtrl";
-import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
 import {showViewRangeEditDialog} from "tim/document/showViewRangeEditDialog";
 import {showRelevanceEditDialog} from "tim/item/showRelevanceEditDialog";
 import {showTagSearchDialog} from "tim/item/showTagSearchDialog";
 import {showCourseDialog} from "tim/document/course/showCourseDialog";
 import {showTagDialog} from "tim/item/showTagDialog";
+import {showPrintDialog} from "tim/printing/showPrintDialog";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {showMergePdfDialog} from "tim/document/minutes/showMergePdfDialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 
 const DEFAULT_PIECE_SIZE = 20;
 

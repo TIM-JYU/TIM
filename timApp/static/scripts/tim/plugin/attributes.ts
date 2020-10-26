@@ -99,6 +99,10 @@ export function nullable<T extends t.Any>(type: T) {
     return t.union([t.null, type]);
 }
 
+export function maybeUndefined<T extends t.Any>(type: T) {
+    return t.union([t.undefined, type]);
+}
+
 export const IncludeUsersOption = t.keyof({
     current: null,
     all: null,

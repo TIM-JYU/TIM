@@ -1,6 +1,7 @@
+$draghandle-height: 20px;
+
 .draghandle {
   position: absolute;
-  top: -20px;
   z-index: 1;
 }
 
@@ -17,4 +18,18 @@
   &:empty {
     display: none;
   }
+}
+
+.modal-dialog {
+  margin: 0 auto 0;
+}
+
+.modal-body {
+  max-height: 90vh;
+}
+
+.draggable-content {
+  padding-top: $draghandle-height;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
 }

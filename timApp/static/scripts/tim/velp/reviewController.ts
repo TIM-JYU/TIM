@@ -17,11 +17,11 @@ import {
     IDrawUpdate,
     isCoordWithinDrawing,
 } from "tim/plugin/drawCanvas";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IItem} from "../item/IItem";
-import {showMessageDialog} from "../ui/dialog";
 import {documentglobals} from "../util/globals";
 import {$compile, $http, $rootScope} from "../util/ngimport";
 import {

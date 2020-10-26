@@ -1,9 +1,9 @@
 import {IController} from "angular";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {timApp} from "../app";
 import {to} from "../util/utils";
 import {getActiveDocument} from "../document/activedocument";
 import {$http} from "../util/ngimport";
-import {showMessageDialog} from "./dialog";
 
 export class MarkAllAsReadCtrl implements IController {
     private buttonText?: string;

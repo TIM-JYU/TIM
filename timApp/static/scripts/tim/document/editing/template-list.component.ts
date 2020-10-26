@@ -1,8 +1,8 @@
 import {to2} from "tim/util/utils";
 import {IItem} from "tim/item/IItem";
-import {showMessageDialog} from "tim/ui/dialog";
 import {Component, Input, OnInit} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 
 @Component({
     selector: "tim-template-list",

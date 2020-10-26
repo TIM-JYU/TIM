@@ -1,12 +1,10 @@
-import {IScope} from "angular";
 import $ from "jquery";
 import {documentglobals} from "../../util/globals";
-import {EditMode} from "../popupMenu";
+import {EditMode} from "../popup-menu-dialog.component";
 
 export function watchEditMode(
     newVal: EditMode | null,
-    oldVal: string | null | undefined,
-    $scope: IScope
+    oldVal: string | null | undefined
 ) {
     documentglobals().editMode = newVal;
     $(".editmode").removeClass("editmode");

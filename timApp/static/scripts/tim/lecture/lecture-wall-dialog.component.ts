@@ -14,7 +14,7 @@ import {ILectureMessage} from "./lecturetypes";
 @Component({
     selector: "tim-lecture-wall-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [autoHeight]="false">
             <ng-container header>
                 {{ getTitle() }}
             </ng-container>

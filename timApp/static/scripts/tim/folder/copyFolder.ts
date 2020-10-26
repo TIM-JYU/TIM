@@ -1,7 +1,7 @@
 import {IController, IScope} from "angular";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {timApp} from "../app";
 import {IFolder, IItem} from "../item/IItem";
-import {showMessageDialog} from "../ui/dialog";
 import {$http} from "../util/ngimport";
 import {Binding, to} from "../util/utils";
 

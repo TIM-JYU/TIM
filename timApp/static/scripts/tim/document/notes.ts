@@ -4,9 +4,10 @@ import {Moment} from "moment";
 import {openEditor} from "tim/editor/pareditorOpen";
 import {getCurrentEditor} from "tim/editor/editorScope";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {IPluginInfoResponse} from "../editor/parCompiler";
 import {PareditorController} from "../editor/pareditor";
-import {IModalInstance, showMessageDialog} from "../ui/dialog";
+import {IModalInstance} from "../ui/dialog";
 import {documentglobals} from "../util/globals";
 import {$compile, $http} from "../util/ngimport";
 import {isMobileDevice, to} from "../util/utils";
@@ -227,7 +228,7 @@ export class NotesHandler {
         this.viewctrl.editing = false;
     }
 
-    showNoteWindow(e: JQuery.Event, par: Paragraph) {
+    showNoteWindow(e: MouseEvent, par: Paragraph) {
         this.toggleNoteEditor(par);
     }
 

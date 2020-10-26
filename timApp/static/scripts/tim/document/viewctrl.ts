@@ -14,7 +14,6 @@ import {
     saveCurrentScreenPar,
 } from "tim/document/parhelpers";
 import {ParmenuHandler} from "tim/document/parmenu";
-import * as popupMenu from "tim/document/popupMenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
 import {setViewCtrl} from "tim/document/viewctrlinstance";
@@ -28,9 +27,10 @@ import {
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
-import {InputDialogKind, showInputDialog} from "tim/ui/inputDialog";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {diffDialog} from "tim/document/showDiffDialog";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {
     AnswerBrowserController,
     PluginLoaderCtrl,
@@ -66,12 +66,12 @@ import {PendingCollection} from "./editing/edittypes";
 import {onClick} from "./eventhandlers";
 import {IDocSettings} from "./IDocSettings";
 import {ParRefController} from "./parRef";
-import {PopupMenuController} from "./popupMenu";
+import {PopupMenuDialogComponent} from "./popup-menu-dialog.component";
 import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
 import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "./viewutils";
 
-markAsUsed(ngs, popupMenu, interceptor, ParRefController);
+markAsUsed(ngs, interceptor, ParRefController);
 
 export interface IChangeListener {
     informAboutChanges: (
@@ -164,7 +164,7 @@ export enum FormModeOption {
 
 export class ViewCtrl implements IController {
     private hideVars: IVisibilityVars = getVisibilityVars();
-    private notification: string = "";
+    notification: string = "";
     private videoElements = new Map<string, HTMLVideoElement>();
     clipMeta: IClipboardMeta = {
         allowPasteContent: false,
@@ -222,7 +222,7 @@ export class ViewCtrl implements IController {
     public editingHandler: EditingHandler;
     public notesHandler: NotesHandler;
     public parmenuHandler: ParmenuHandler;
-    public popupmenu?: PopupMenuController;
+    public popupmenu?: PopupMenuDialogComponent;
     public viewRangeInfo: ViewRangeInfo;
 
     // For search box.
@@ -1167,14 +1167,14 @@ export class ViewCtrl implements IController {
         return documentglobals().allowMove;
     }
 
-    registerPopupMenu(param: PopupMenuController) {
+    registerPopupMenu(param: PopupMenuDialogComponent) {
         this.popupmenu = param;
     }
 
-    async closePopupIfOpen() {
+    closePopupIfOpen() {
         if (this.popupmenu) {
             this.popupmenu.close();
-            await this.popupmenu.closePromise();
+            // await this.popupmenu.closePromise();
             this.popupmenu = undefined;
         }
     }

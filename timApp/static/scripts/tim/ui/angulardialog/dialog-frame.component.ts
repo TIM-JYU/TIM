@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import {Component, ElementRef, ViewChild} from "@angular/core";
+import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {ISize} from "tim/util/utils";
 import {Size} from "angular2-draggable/lib/models/size";
 import {IPosition, Position} from "angular2-draggable/lib/models/position";
@@ -33,6 +33,10 @@ class ResizableDraggableWrapper {
         this.ngResizable.doResize();
     }
 
+    boundsCheck() {
+        this.ngDraggable.boundsCheck();
+    }
+
     resetSize() {
         this.ngResizable.resetSize();
     }
@@ -42,9 +46,9 @@ class ResizableDraggableWrapper {
     selector: "tim-dialog-frame",
     template: `
         <div class="modal no-pointer-events in" role="dialog"
-             [ngStyle]="{'z-index': 1050 + index*10, display: 'block'}" tabindex="-1" #bounds>
+             [ngStyle]="{'z-index': 1050 + index*10, display: 'block', position: anchor}" tabindex="-1" #bounds>
             <div [ngDraggable]
-                 [ngResizable]="!areaMinimized"
+                 [ngResizable]="canResize && !areaMinimized"
                  [inBounds]="true"
                  [bounds]="bounds"
                  #resizable="ngResizable"
@@ -55,7 +59,7 @@ class ResizableDraggableWrapper {
                  [position]="position"
                  (stopped)="onPosChange($event)"
                  (rzStop)="onSizeChange($event)"
-                 class="modal-dialog modal-md"
+                 class="modal-dialog modal-{{size}}"
                  style="pointer-events: auto">
                 <div #draghandle
                      class="draghandle drag"
@@ -65,7 +69,7 @@ class ResizableDraggableWrapper {
                     </p>
                     <i *ngIf="detachable" (click)="toggleDetach()" title="Attach"
                        class="glyphicon glyphicon-arrow-left"></i>
-                    <i *ngIf="click" title="Minimize dialog" (click)="toggleMinimize()"
+                    <i *ngIf="minimizable" title="Minimize dialog" (click)="toggleMinimize()"
                        class="glyphicon"
                        [class.glyphicon-minus]="!areaMinimized"
                        [class.glyphicon-unchecked]="areaMinimized"
@@ -91,7 +95,16 @@ class ResizableDraggableWrapper {
 })
 export class DialogFrame {
     detachable = false;
-    click = true;
+    @Input() minimizable = true;
+    @Input() canResize = true;
+
+    // If true, indicates that there may be some asynchronous loading going on when opening the dialog.
+    // This info is only used when initializing the position of the dialog.
+    // TODO: replace with something better.
+    @Input() mightBeAsync = true;
+
+    @Input() anchor: "absolute" | "fixed" = "fixed";
+    @Input() autoHeight = true;
     closeFn?: () => void;
     index = 1;
     areaMinimized = false;
@@ -101,6 +114,7 @@ export class DialogFrame {
     @ViewChild("draggable") private ngDraggable!: AngularDraggableDirective;
     @ViewChild("dragelem") dragelem!: ElementRef<HTMLElement>;
     @ViewChild("body") modalBody!: ElementRef<HTMLElement>;
+    @Input() size: "sm" | "md" | "lg" | "xs" = "md"; // xs is custom TIM style
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};
     sizeOrPosChanged = new Subject<void>();

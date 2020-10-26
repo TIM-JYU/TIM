@@ -22,7 +22,7 @@ import {DatePipe} from "tim/ui/date.pipe";
 import {TimePipe} from "tim/ui/time.pipe";
 import {CapitalizePipe} from "tim/ui/capitalize.pipe";
 import {PluginFrameComponent} from "./plugin-frame.component";
-import {LoadingComponent} from "./loadingIndicator";
+import {LoadingComponent} from "./loading.component";
 import {MarkupErrorComponent} from "./markup-error.component";
 import {CloseButtonComponent} from "./close-button.component";
 

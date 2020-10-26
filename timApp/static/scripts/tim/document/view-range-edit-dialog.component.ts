@@ -100,10 +100,7 @@ export class ViewRangeEditDialogComponent extends AngularDialogComponent<
         this.storage.pieceSize = this.viewRangeSetting;
     }
 
-    /*
-     * Dialog title.
-     */
-    public getTitle() {
+    getTitle() {
         return "Edit view range";
     }
 

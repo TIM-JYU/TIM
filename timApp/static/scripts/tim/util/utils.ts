@@ -4,6 +4,7 @@ import moment, {Moment, MomentInput, unitOfTime} from "moment";
 import {AbstractControl, ValidatorFn} from "@angular/forms";
 import humanizeDuration from "humanize-duration";
 import {isLeft} from "fp-ts/lib/Either";
+import {Pos} from "tim/ui/pos";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
@@ -495,45 +496,45 @@ export function debugTextToHeader(s: string) {
     }
 }
 
-function getTouchCoords(e: TouchEvent) {
+function getTouchCoords(e: TouchEvent): Pos {
     if (e.touches.length) {
         return {
-            X: e.touches[0].pageX,
-            Y: e.touches[0].pageY,
+            x: e.touches[0].pageX,
+            y: e.touches[0].pageY,
         };
     }
     if (e.changedTouches.length) {
         return {
-            X: e.changedTouches[0].pageX,
-            Y: e.changedTouches[0].pageY,
+            x: e.changedTouches[0].pageX,
+            y: e.changedTouches[0].pageY,
         };
     }
-    return {X: 0, Y: 0};
+    return {x: 0, y: 0};
 }
 
 export function getPageXY(
     e: JQuery.MouseEventBase | JQuery.TouchEventBase | MouseEvent | TouchEvent
-) {
+): Pos {
     if (e instanceof MouseEvent) {
-        return {X: e.pageX, Y: e.pageY};
+        return {x: e.pageX, y: e.pageY};
     } else if (isTouchEvent(e)) {
         return getTouchCoords(e);
     }
     if (e.pageX == 0 && e.pageY == 0) {
         if (!windowAsAny().TouchEvent) {
-            return {X: e.pageX, Y: e.pageY};
+            return {x: e.pageX, y: e.pageY};
         }
         const o = e.originalEvent;
         if (!o || !isTouchEvent(o)) {
-            return {X: e.pageX, Y: e.pageY};
+            return {x: e.pageX, y: e.pageY};
         }
         return getTouchCoords(o);
     }
     if (e.pageX === undefined || e.pageY === undefined) {
-        return {X: 0, Y: 0};
+        return {x: 0, y: 0};
     }
 
-    return {X: e.pageX, Y: e.pageY};
+    return {x: e.pageX, y: e.pageY};
 }
 
 export function setStorage(key: string, value: unknown) {
@@ -553,9 +554,9 @@ export function getStorage(key: string): unknown {
     }
 }
 
-export function getTypedStorage<T>(
+export function getTypedStorage<T, O = T>(
     key: string,
-    decoder: t.Type<T>
+    decoder: t.Type<T, O>
 ): T | undefined {
     const r = decoder.decode(getStorage(key));
     if (isLeft(r)) {
@@ -565,15 +566,15 @@ export function getTypedStorage<T>(
     }
 }
 
-export class TimStorage<T> {
-    constructor(private key: string, private decoder: t.Type<T>) {}
+export class TimStorage<T, O = T> {
+    constructor(private key: string, private codec: t.Type<T, O>) {}
 
     set(value: T) {
-        setStorage(this.key, value);
+        setStorage(this.key, this.codec.encode(value));
     }
 
     get() {
-        return getTypedStorage(this.key, this.decoder);
+        return getTypedStorage(this.key, this.codec);
     }
 }
 

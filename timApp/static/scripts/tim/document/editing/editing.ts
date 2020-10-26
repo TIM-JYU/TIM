@@ -7,7 +7,7 @@ import {
     ParCompiler,
 } from "tim/editor/parCompiler";
 import {PareditorController} from "tim/editor/pareditor";
-import {IModalInstance, showMessageDialog} from "tim/ui/dialog";
+import {IModalInstance} from "tim/ui/dialog";
 import {documentglobals} from "tim/util/globals";
 import {$http, $timeout} from "tim/util/ngimport";
 import {
@@ -20,6 +20,11 @@ import {
 import {openEditor} from "tim/editor/pareditorOpen";
 import {getCurrentEditor} from "tim/editor/editorScope";
 import {showDiffDialog} from "tim/document/showDiffDialog";
+import {
+    isManageResponse,
+    showRenameDialog,
+} from "tim/document/editing/showRenameDialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {onClick} from "../eventhandlers";
 import {
     canEditPar,
@@ -50,7 +55,6 @@ import {
     IParResponse,
     ITags,
 } from "./edittypes";
-import {isManageResponse, showRenameDialog} from "./pluginRenameForm";
 
 export interface IParEditorOptions {
     forcedClasses?: string[];
@@ -134,23 +138,39 @@ export class EditingHandler {
             onClick(".addAbove", ($this, e) => {
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addAbove");
-                return this.showAddParagraphAbove(e, par, options);
+                return this.showAddParagraphAbove(
+                    e.originalEvent!,
+                    par,
+                    options
+                );
             });
 
             onClick(".addBelow", ($this, e) => {
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
-                return this.showAddParagraphBelow(e, par, options);
+                return this.showAddParagraphBelow(
+                    e.originalEvent!,
+                    par,
+                    options
+                );
             });
 
             onClick(".pasteBottom", ($this, e) => {
                 this.viewctrl.closePopupIfOpen();
-                this.viewctrl.clipboardHandler.pasteAbove(e, undefined, false);
+                this.viewctrl.clipboardHandler.pasteAbove(
+                    e.originalEvent!,
+                    undefined,
+                    false
+                );
             });
 
             onClick(".pasteRefBottom", ($this, e) => {
                 this.viewctrl.closePopupIfOpen();
-                this.viewctrl.clipboardHandler.pasteAbove(e, undefined, true);
+                this.viewctrl.clipboardHandler.pasteAbove(
+                    e.originalEvent!,
+                    undefined,
+                    true
+                );
             });
         }
     }
@@ -448,11 +468,11 @@ This will delete the whole ${
         }
     }
 
-    showEditWindow(e: JQuery.Event, par: Paragraph) {
+    showEditWindow(e: MouseEvent, par: Paragraph) {
         this.toggleParEditor({type: EditType.Edit, pars: par}, {area: false});
     }
 
-    beginAreaEditing(e: JQuery.Event, par: Paragraph) {
+    beginAreaEditing(e: MouseEvent, par: Paragraph) {
         if (!this.viewctrl.selection.pars) {
             showMessageDialog(
                 "Selection was null when trying to edit an area."
@@ -470,7 +490,7 @@ This will delete the whole ${
      * @param {Event} e
      * @param {Paragraph} par The table paragraph.
      */
-    toggleTableEditor(e: JQuery.Event, par: Paragraph) {
+    toggleTableEditor(e: MouseEvent, par: Paragraph) {
         const parId = getParId(par);
 
         if (parId == null) {
@@ -497,7 +517,7 @@ This will delete the whole ${
     }
 
     showAddParagraphAbove(
-        e: JQuery.Event,
+        e: MouseEvent,
         par: Paragraph,
         options: IParEditorOptions = {}
     ) {
@@ -506,7 +526,7 @@ This will delete the whole ${
     }
 
     showAddParagraphBelow(
-        e: JQuery.Event,
+        e: MouseEvent,
         par: Paragraph,
         options: IParEditorOptions = {}
     ) {
@@ -576,7 +596,7 @@ This will delete the whole ${
         editor.scrollIntoView();
     }
 
-    closeAndSave(e: JQuery.MouseEventBase, par: Paragraph) {
+    closeAndSave(e: MouseEvent, par: Paragraph) {
         const editor = this.getParEditor();
         if (!editor) {
             void showMessageDialog("Editor is no longer open.");
@@ -586,7 +606,7 @@ This will delete the whole ${
         this.viewctrl.parmenuHandler.showOptionsWindow(e, par);
     }
 
-    closeWithoutSaving(e: JQuery.MouseEventBase, par: Paragraph) {
+    closeWithoutSaving(e: MouseEvent, par: Paragraph) {
         const editor = this.getParEditor();
         if (!editor) {
             void showMessageDialog("Editor is no longer open.");
@@ -668,7 +688,7 @@ This will delete the whole ${
             par != null &&
             !isHelpPar(par) &&
             canSeeSource(this.viewctrl.item, par);
-        entry.func = async (e: JQuery.Event, p: Paragraph) => {
+        entry.func = async (e: MouseEvent, p: Paragraph) => {
             const parId = getParId(p);
             if (!parId) {
                 await showMessageDialog("Could not get paragraph id");
@@ -709,12 +729,12 @@ This will delete the whole ${
                     show: true,
                 },
                 {
-                    func: (e, p: Paragraph) => this.closeAndSave(e, p),
+                    func: (e, p) => this.closeAndSave(e, p),
                     desc: "Close editor and save",
                     show: true,
                 },
                 {
-                    func: (e, p: Paragraph) => this.closeWithoutSaving(e, p),
+                    func: (e, p) => this.closeWithoutSaving(e, p),
                     desc: "Close editor and cancel",
                     show: true,
                 },
@@ -726,32 +746,29 @@ This will delete the whole ${
         ) {
             return [
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
-                        this.beginAreaEditing(e, p),
+                    func: (e, p) => this.beginAreaEditing(e, p),
                     desc: "Edit area",
                     show: true,
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
-                        this.viewctrl.areaHandler.nameArea(e, p),
+                    func: (e, p) => this.viewctrl.areaHandler.nameArea(e, p),
                     desc: "Name area",
                     show: true,
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
+                    func: (e, p) =>
                         this.viewctrl.clipboardHandler.cutArea(e, p),
                     desc: "Cut area",
                     show: parEditable,
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
+                    func: (e, p) =>
                         this.viewctrl.clipboardHandler.copyArea(e, p),
                     desc: "Copy area",
                     show: true,
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
-                        this.viewctrl.areaHandler.cancelArea(),
+                    func: (e, p) => this.viewctrl.areaHandler.cancelArea(),
                     desc: "Cancel area",
                     show: true,
                 },
@@ -760,7 +777,7 @@ This will delete the whole ${
         } else {
             return [
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
+                    func: (e, p) =>
                         this.viewctrl.notesHandler.showNoteWindow(e, p),
                     desc: "Comment/note",
                     show:
@@ -788,20 +805,17 @@ This will delete the whole ${
                     show: par != null && isReference(par),
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
-                        this.showAddParagraphAbove(e, p),
+                    func: (e, p) => this.showAddParagraphAbove(e, p),
                     desc: "Add paragraph above",
                     show: this.viewctrl.item.rights.editable,
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
-                        this.showEditWindow(e, p),
+                    func: (e, p) => this.showEditWindow(e, p),
                     desc: "Edit",
                     show: parEditable,
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
-                        this.toggleTableEditor(e, p),
+                    func: (e, p) => this.toggleTableEditor(e, p),
                     desc: "Edit table",
                     show:
                         parEditable &&
@@ -810,20 +824,18 @@ This will delete the whole ${
                         !isReference(par),
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
-                        this.toggleTableEditor(e, p),
+                    func: (e, p) => this.toggleTableEditor(e, p),
                     desc: "Close table editor",
                     show: parEditable && timTableEditMode === true,
                 },
                 ...(customParMenuEntry ? [customParMenuEntry] : []),
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
-                        this.viewctrl.clipboardHandler.cutPar(e, p),
+                    func: (e, p) => this.viewctrl.clipboardHandler.cutPar(e, p),
                     desc: "Cut",
                     show: documentglobals().editMode === "par" && parEditable,
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
+                    func: (e, p) =>
                         this.viewctrl.clipboardHandler.copyPar(e, p),
                     desc: "Copy",
                     show:
@@ -847,28 +859,27 @@ This will delete the whole ${
                     show: documentglobals().allowMove,
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
+                    func: (e, p) =>
                         this.viewctrl.areaHandler.removeAreaMarking(e, p),
                     desc: "Remove area marking",
                     show: documentglobals().editMode === "area",
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
+                    func: (e, p) =>
                         this.viewctrl.questionHandler.addQuestionQst(e, p),
                     desc: "Add question above",
                     show: /* this.viewctrl.lectureMode && */ this.viewctrl.item
                         .rights.editable,
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
-                        this.viewctrl.questionHandler.editQst(e, p),
+                    func: (e, p) => this.viewctrl.questionHandler.editQst(e, p),
                     desc: "Edit question",
                     show:
                         /* this.viewctrl.lectureMode && */ parEditable &&
                         qstPar, // TODO: Condition also that par is a question
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
+                    func: (e, p) =>
                         this.viewctrl.questionHandler.addQuestion(e, p),
                     desc: "Create lecture question",
                     show:
@@ -876,8 +887,7 @@ This will delete the whole ${
                         this.viewctrl.item.rights.editable,
                 },
                 {
-                    func: (e: JQuery.Event, p: Paragraph) =>
-                        this.viewctrl.areaHandler.startArea(e, p),
+                    func: (e, p) => this.viewctrl.areaHandler.startArea(e, p),
                     desc: "Start selecting area",
                     show:
                         documentglobals().editMode === "par" &&
@@ -888,17 +898,15 @@ This will delete the whole ${
         }
     }
 
-    getAddParagraphFunctions() {
+    getAddParagraphFunctions(): MenuFunctionList {
         return [
             {
-                func: (e: JQuery.Event, p: Paragraph) =>
-                    this.showAddParagraphAbove(e, p),
+                func: (e, p) => this.showAddParagraphAbove(e, p),
                 desc: "Above",
                 show: true,
             },
             {
-                func: (e: JQuery.Event, p: Paragraph) =>
-                    this.showAddParagraphBelow(e, p),
+                func: (e, p) => this.showAddParagraphBelow(e, p),
                 desc: "Below",
                 show: true,
             },

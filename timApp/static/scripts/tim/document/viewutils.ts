@@ -2,7 +2,7 @@ import {Coords} from "../util/utils";
 import {Paragraph} from "./parhelpers";
 
 export type MenuFunction = (
-    e: JQuery.MouseEventBase,
+    e: MouseEvent,
     par: Paragraph,
     coords?: Coords
 ) => unknown;

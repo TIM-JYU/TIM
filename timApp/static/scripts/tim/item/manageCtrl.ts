@@ -1,12 +1,12 @@
 import {IController, IFormController, IHttpResponse} from "angular";
 import {timApp} from "tim/app";
-import {IChangelogEntry, IManageResponse} from "../document/editing/edittypes";
 import {
     isManageResponse,
     showRenameDialog,
-} from "../document/editing/pluginRenameForm";
+} from "tim/document/editing/showRenameDialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {IChangelogEntry, IManageResponse} from "../document/editing/edittypes";
 import * as copyFolder from "../folder/copyFolder";
-import {showMessageDialog} from "../ui/dialog";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
 import {manageglobals} from "../util/globals";

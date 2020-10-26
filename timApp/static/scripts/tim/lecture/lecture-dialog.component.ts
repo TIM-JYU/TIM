@@ -9,10 +9,10 @@ import {BrowserModule} from "@angular/platform-browser";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {AccordionModule} from "ngx-bootstrap/accordion";
 import {getItem, IItem} from "../item/IItem";
-import {showMessageDialog} from "../ui/dialog";
 import {DurationChoice} from "../ui/duration-picker.component";
 import {to2} from "../util/utils";
 import {DatetimePickerModule} from "../ui/datetime-picker/datetime-picker.component";
+import {showMessageDialog} from "../ui/showMessageDialog";
 import {ILecture, ILectureFormParams, ILectureOptions} from "./lecturetypes";
 
 /**

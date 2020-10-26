@@ -34,7 +34,6 @@ import {
     QuestionType,
 } from "tim/lecture/lecturetypes";
 import {IGenericPluginMarkup} from "tim/plugin/attributes";
-import {showMessageDialog} from "tim/ui/dialog";
 import {$http} from "tim/util/ngimport";
 import {FormsModule, NgForm} from "@angular/forms";
 import {QuestionMatrixComponent} from "tim/document/question/question-matrix.component";
@@ -43,6 +42,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {deleteQuestionWithConfirm} from "tim/document/question/fetchQuestion";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {IParResponse} from "../editing/edittypes";
 
 /**

@@ -14,12 +14,12 @@ import {
 } from "tim/lecture/currentQuestion";
 import {fetchAskedQuestion} from "tim/document/question/fetchQuestion";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {
     AnswerSheetModule,
     IPreviewParams,
     makePreview,
 } from "../document/question/answer-sheet.component";
-import {showMessageDialog} from "../ui/dialog";
 import {ReadonlyMoment, setStorage, to2} from "../util/utils";
 import {
     AnswerTable,

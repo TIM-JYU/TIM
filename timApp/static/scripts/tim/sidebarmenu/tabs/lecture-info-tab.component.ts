@@ -4,9 +4,9 @@ import {ILecture, ILectureListResponse2} from "tim/lecture/lecturetypes";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {LectureController} from "tim/lecture/lectureController";
-import {showMessageDialog} from "tim/ui/dialog";
 import {to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 
 @Component({
     selector: "lecture-info-tab",

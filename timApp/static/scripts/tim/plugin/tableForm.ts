@@ -27,8 +27,9 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TaskId} from "tim/plugin/taskid";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {ViewCtrl} from "../document/viewctrl";
-import {InputDialogKind, showInputDialog} from "../ui/inputDialog";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {

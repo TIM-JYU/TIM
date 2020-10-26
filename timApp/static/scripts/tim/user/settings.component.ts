@@ -1,8 +1,8 @@
 import {HttpClient} from "@angular/common/http";
 import {Component, DoCheck, Input} from "@angular/core";
 import {DocumentOrFolder} from "tim/item/IItem";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ConsentType} from "../ui/consent";
-import {showMessageDialog} from "../ui/dialog";
 import {settingsglobals} from "../util/globals";
 import {IOkResponse, timeout, to2} from "../util/utils";
 import {IFullUser} from "./IUser";

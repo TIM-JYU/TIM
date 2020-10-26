@@ -2,7 +2,6 @@ import {Component, OnInit} from "@angular/core";
 import {genericglobals} from "tim/util/globals";
 import {to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
-import {showMessageDialog} from "tim/ui/dialog";
 import {
     BookmarkService,
     IBookmark,
@@ -11,6 +10,7 @@ import {
 import {RootCtrl} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
 import {showBookmarkDialog} from "tim/bookmark/showBookmarkDialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 
 @Component({
     selector: "bookmarks-list",

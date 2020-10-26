@@ -27,8 +27,8 @@ import {
     isOpenInAnotherTab,
     QUESTION_STORAGE,
 } from "tim/lecture/currentQuestion";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ViewCtrl} from "../document/viewctrl";
-import {showMessageDialog} from "../ui/dialog";
 import {Users} from "../user/userService";
 import {someglobals} from "../util/globals";
 import {$http, $log, $rootScope, $timeout} from "../util/ngimport";

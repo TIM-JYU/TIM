@@ -1,9 +1,9 @@
 import {getUrlParams} from "tim/util/utils";
 import {genericglobals, isDocumentGlobals, someglobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
-import {showMessageDialog} from "tim/ui/dialog";
 import {BookmarksComponent} from "tim/sidebarmenu/util/bookmarks.component";
 import {setRoot} from "tim/rootinstance";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {timApp} from "./app";
 
 export interface IVisibilityVars {

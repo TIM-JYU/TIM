@@ -22,8 +22,8 @@ import {
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {deserialize} from "typescript-json-serializer";
 import {DrawObject} from "tim/plugin/drawCanvas";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ViewCtrl} from "../document/viewctrl";
-import {showMessageDialog} from "../ui/dialog";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
 import {clone, isInViewport, Result, scrollToElement, to} from "../util/utils";

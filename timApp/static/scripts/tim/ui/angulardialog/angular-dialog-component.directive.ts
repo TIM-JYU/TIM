@@ -18,9 +18,11 @@ import {
 } from "tim/util/utils";
 import * as t from "io-ts";
 import {Subscription} from "rxjs";
+import {Pos} from "tim/ui/pos";
 
 export interface IDialogOptions {
     resetSize?: boolean;
+    pos?: Pos;
 }
 
 function clamp(val: number, min: number, max: number) {
@@ -59,6 +61,8 @@ export abstract class AngularDialogComponent<Params, Result>
     protected extraVerticalSize = 0;
     protected closed = false;
     private sub?: Subscription;
+    protected xOrigin?: number;
+    private bodyObserver?: MutationObserver;
 
     @HostListener("keydown.esc", ["$event"])
     escPressed(e: KeyboardEvent) {
@@ -80,6 +84,7 @@ export abstract class AngularDialogComponent<Params, Result>
 
     ngOnDestroy() {
         this.sub?.unsubscribe();
+        this.bodyObserver?.disconnect();
     }
 
     ngAfterViewInit() {
@@ -88,12 +93,20 @@ export abstract class AngularDialogComponent<Params, Result>
                 "All AngularDialogComponents must have tim-angular-dialog component in their template."
             );
         }
+        if (this.frame.autoHeight) {
+            this.bodyObserver = new MutationObserver(async (record) => {
+                await this.setHeightAutomatic();
+            });
+            this.bodyObserver.observe(this.frame.modalBody.nativeElement, {
+                childList: true,
+                subtree: true,
+            });
+        }
         this.frame.closeFn = () => this.dismiss();
         this.sub = this.frame.sizeOrPosChanged.subscribe(() => {
             this.savePosSize();
         });
         const TwoTuple = t.tuple([t.number, t.number]);
-        let snr = SizeNeedsRefresh.No;
         let sizehint = null;
         if (this.dialogOptions?.resetSize) {
             this.frame.resizable.resetSize();
@@ -101,7 +114,6 @@ export abstract class AngularDialogComponent<Params, Result>
             const savedSize = getStorage(this.getSizeKey());
             if (TwoTuple.is(savedSize)) {
                 sizehint = {width: savedSize[0], height: savedSize[1]};
-                snr = SizeNeedsRefresh.Yes;
                 this.frame.resizable.getSize().set(sizehint);
             }
         }
@@ -110,24 +122,38 @@ export abstract class AngularDialogComponent<Params, Result>
             this.frame.setPos({x: savedPos[0], y: savedPos[1]});
         }
 
-        const fixpossnr = this.fixPosSizeInbounds(sizehint);
-        if (
-            snr === SizeNeedsRefresh.Yes ||
-            fixpossnr === SizeNeedsRefresh.Yes
-        ) {
-            // We don't want to call this unconditionally because it may make the initial size of the dialog too small.
-            // It happens at least it the dialog has some asynchronous initialization.
-            this.frame.resizable.doResize();
+        this.fixPosSizeInbounds(sizehint);
+        this.frame.resizable.doResize();
+        if (this.dialogOptions?.pos) {
+            if (this.dialogOptions.pos) {
+                this.frame.setPos({
+                    x: this.dialogOptions.pos.x - this.xOrigin!,
+                    y: this.dialogOptions.pos.y,
+                });
+            }
         }
         (async () => {
-            await timeout(500);
+            if (this.frame.mightBeAsync) {
+                await timeout(500);
+            } else {
+                await timeout(0);
+            }
             this.fixPosSizeInbounds(null);
             this.frame.resizable.doResize();
+            if (this.frame.autoHeight) {
+                await this.setHeightAutomatic();
+            }
         })();
     }
 
     fixPosSizeInbounds(sizeHint: ISize | null): SizeNeedsRefresh {
-        const vp = getViewPortSize();
+        const vp =
+            this.frame.anchor === "fixed"
+                ? getViewPortSize()
+                : {
+                      width: document.documentElement.scrollWidth,
+                      height: document.documentElement.scrollHeight,
+                  };
 
         // First clamp the frame so it fits inside the viewport
         const {width, height} =
@@ -142,6 +168,7 @@ export abstract class AngularDialogComponent<Params, Result>
         // Then clamp x/y so that the element is at least within the viewport
         let {x, y} = this.frame.getPos();
         const xOrigin = vp.width / 2 - width / 2;
+        this.xOrigin = xOrigin;
         x = clamp(x, 0 - xOrigin, vp.width - newWidth - xOrigin);
         y = clamp(y, 0, vp.height - newHeight);
 
@@ -176,8 +203,12 @@ export abstract class AngularDialogComponent<Params, Result>
             setStorage(this.getSizeKey(), [width, height]);
         }
 
-        const {x, y} = this.frame.resizable.getPos();
-        setStorage(this.getPosKey(), [x, y]);
+        try {
+            const {x, y} = this.frame.resizable.getPos();
+            setStorage(this.getPosKey(), [x, y]);
+        } catch {
+            console.warn("resizable.getPos threw an error");
+        }
     }
 
     private getPosKey() {
@@ -186,5 +217,15 @@ export abstract class AngularDialogComponent<Params, Result>
 
     private getSizeKey() {
         return `${this.getSavePrefix()}Size`;
+    }
+
+    protected async setHeightAutomatic() {
+        this.frame.dragelem.nativeElement.style.height = "auto";
+        await this.ensureFullyInViewport();
+    }
+
+    protected async ensureFullyInViewport() {
+        await timeout();
+        this.frame.resizable.boundsCheck();
     }
 }
