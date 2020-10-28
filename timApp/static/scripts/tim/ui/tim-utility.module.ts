@@ -15,9 +15,6 @@ import {CountdownComponent} from "tim/ui/countdown.component";
 import {DurationPickerComponent} from "tim/ui/duration-picker.component";
 import {ErrorMessageComponent} from "tim/ui/error-message.component";
 import {RelativeTimestampPipe} from "tim/ui/relative-timestamp.pipe";
-import {DatepickerModule} from "ngx-bootstrap/datepicker";
-import {TimepickerModule} from "ngx-bootstrap/timepicker";
-import {DatetimePopupModule} from "ngx-bootstrap-datetime-popup";
 import {DatePipe} from "tim/ui/date.pipe";
 import {TimePipe} from "tim/ui/time.pipe";
 import {CapitalizePipe} from "tim/ui/capitalize.pipe";
@@ -73,12 +70,6 @@ import {CloseButtonComponent} from "./close-button.component";
         TimePipe,
         CapitalizePipe,
     ],
-    imports: [
-        CommonModule,
-        FormsModule,
-        DatepickerModule.forRoot(),
-        TimepickerModule.forRoot(),
-        DatetimePopupModule,
-    ],
+    imports: [CommonModule, FormsModule],
 })
 export class TimUtilityModule {}
