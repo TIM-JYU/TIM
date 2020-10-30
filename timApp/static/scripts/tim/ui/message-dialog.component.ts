@@ -11,7 +11,7 @@ import {BrowserModule} from "@angular/platform-browser";
                 Message
             </ng-container>
             <ng-container body>
-                {{data}}
+                <span [innerHTML]="data"></span>
             </ng-container>
             <ng-container footer>
                 <button class="timButton" type="button" (click)="close({})">OK</button>
