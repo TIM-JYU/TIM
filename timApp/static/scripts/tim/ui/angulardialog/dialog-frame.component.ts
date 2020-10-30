@@ -61,10 +61,9 @@ class ResizableDraggableWrapper {
                  (rzStop)="onSizeChange($event)"
                  class="modal-dialog modal-{{size}}"
                  style="pointer-events: auto">
-                <div #draghandle
-                     class="draghandle drag"
+                <div class="draghandle"
                      [ngClass]="{attached: !canDrag()}">
-                    <p class="drag">
+                    <p #draghandle>
                         <ng-content select="[header]"></ng-content>
                     </p>
                     <i *ngIf="detachable" (click)="toggleDetach()" title="Attach"
