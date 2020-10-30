@@ -4,6 +4,7 @@ import re
 import sre_constants
 import subprocess
 import time
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Match, Union, Tuple
@@ -24,7 +25,7 @@ from timApp.item.block import Block
 from timApp.item.routes import get_document_relevance
 from timApp.item.tag import Tag
 from timApp.timdb.dbaccess import get_files_path
-from timApp.util.flask.requesthelper import get_option
+from timApp.util.flask.requesthelper import get_option, use_model
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
 from timApp.util.utils import get_error_message, cache_folder_path
@@ -45,16 +46,22 @@ RAW_CONTENT_FILE_PATH = SEARCH_CACHE_FOLDER / "all.log"
 DEFAULT_RELEVANCE = 10
 
 
+@dataclass
+class GetFoldersModel:
+    folder: str
+
+
 @search_routes.route('getFolders')
-def get_subfolders():
+@use_model(GetFoldersModel)
+def get_subfolders(m: GetFoldersModel):
     """
     Returns subfolders of the starting folder.
-    Options:
-    folder = Starting folder.
     :return: Response containing a list of subfolder paths.
     """
-    root_path = request.args.get('folder', '')
-    folders = Folder.query.filter(Folder.location.like(root_path + '%'))
+    root_path = m.folder
+    if root_path == '':
+        return json_response([])
+    folders = Folder.query.filter(Folder.location.like(root_path + '%')).limit(50)
     folders_viewable = [root_path]
     for folder in folders:
         if has_view_access(folder):
