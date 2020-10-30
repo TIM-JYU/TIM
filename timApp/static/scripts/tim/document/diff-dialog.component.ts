@@ -23,7 +23,7 @@ export interface IDiffParams {
             <ng-container body>
                 <td-ngx-text-diff [left]="data.left"
                                   [right]="data.right"
-                                  outerContainerClass="hide-diff-rownums"
+                                  outerContainerClass="view-source"
                                   format="LineByLine"
                                   [showToolbar]="data.showToolbar">
                 </td-ngx-text-diff>

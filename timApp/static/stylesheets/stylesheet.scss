@@ -1381,10 +1381,14 @@ tim-user-list {
     color: $text-color;
 }
 
-.hide-diff-rownums {
+td-ngx-text-diff .view-source {
     td {
-        &.line-number-col, &.line-number-col-left {
+        &.line-number-col, &.line-number-col-left, &.prefix-col {
             display: none;
+        }
+        &.content-col {
+            font-family: "courier new", courier, monospace;
+            line-height: unset;
         }
     }
 }
