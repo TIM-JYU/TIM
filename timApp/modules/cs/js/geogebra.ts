@@ -163,7 +163,7 @@ class GeogebraController extends PluginBase<
             this.ab?.selectedAnswer
         );
         this.geogebraoutput =
-            '<iframe id="jsxFrame-stack-jsxgraph-1-div1"\n' +
+            '<iframe id="jsxFrame-geogebra-div1"\n' +
             '        class="showGeoGebra geogebraFrame" \n' +
             '        style="width:calc(' +
             w +

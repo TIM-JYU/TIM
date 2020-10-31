@@ -174,12 +174,23 @@ class JsavController extends PluginBase<
     }
 
     /**
+     * Return IFrame window
+     */
+    getIFrame(): CustomFrame<JSFrameWindow> {
+        // const frameElem = this.element.find(".jsFrameContainer")[0];
+        // const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+        // return f;  // TODO:  Miksi tämä ei toimi?
+        return this.element
+            .find(".jsFrameContainer")
+            .children()[0] as CustomFrame<JSFrameWindow>;
+    }
+
+    /**
      * This asks the getData function to get the state and then saves the state in TIM's database
      * @param answerChecked Whether the user has looked at the model answer
      */
     getData(answerChecked: boolean) {
-        const frameElem = this.element.find(".jsFrameContainer")[0];
-        const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+        const f = this.getIFrame();
         if (!f.contentWindow.getData) {
             return;
         }
@@ -195,8 +206,7 @@ class JsavController extends PluginBase<
      */
     modelAnswer() {
         this.console = "";
-        const frameElem = this.element.find(".jsFrameContainer")[0];
-        const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+        const f = this.getIFrame();
 
         if (f.contentWindow.exercise) {
             this.getData(true);
@@ -223,9 +233,11 @@ class JsavController extends PluginBase<
         const selectedUser = this.viewCtrl.selectedUser;
         const w = (this.attrs.width ?? 800) + 2;
         const h = (this.attrs.height ?? 600) + 2;
+        // noinspection CssInvalidPropertyValue
         const jsavOutput = `
 <iframe style="width: ${w}px; height:${h}px; border: none;"
-        sandbox="allow-scripts allow-same-origin"
+        id="sxFrame-jsav-div1"
+        sandbox="allow-scripts allow-same-origin  allow-popups"
         class="jsavFrame"
         src="${this.pluginMeta.getIframeHtmlUrl(
             selectedUser,
