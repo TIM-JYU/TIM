@@ -167,6 +167,7 @@ class JsavController extends PluginBase<
             this.error = r.result.data.web.error;
             return;
         }
+
         if (r.result.data.web.console) {
             this.console = r.result.data.web.console;
             return;
@@ -189,7 +190,7 @@ class JsavController extends PluginBase<
      * This asks the getData function to get the state and then saves the state in TIM's database
      * @param answerChecked Whether the user has looked at the model answer
      */
-    getData(answerChecked: boolean) {
+    async getData(answerChecked: boolean) {
         const f = this.getIFrame();
         if (!f.contentWindow.getData) {
             return;
@@ -198,18 +199,18 @@ class JsavController extends PluginBase<
         if (s.message) {
             this.message = s.message;
         }
-        this.runSend(s, answerChecked);
+        await this.runSend(s, answerChecked);
     }
 
     /**
      * This shows the model answer
      */
-    modelAnswer() {
+    async modelAnswer() {
         this.console = "";
         const f = this.getIFrame();
 
         if (f.contentWindow.exercise) {
-            this.getData(true);
+            await this.getData(true);
             f.contentWindow.exercise.showModelanswer();
         } else {
             this.console = this.english

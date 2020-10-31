@@ -1371,6 +1371,7 @@ class Jsav(Language):
 
         if self.model:
             data['model'] = "y"
+            result["tim_info"]["noupdate"] = True
             result["tim_info"]["valid"] = False
             result["tim_info"]["validMsg"] = "Et voi enää saada pisteitä kun katsoit vastauksen"
 

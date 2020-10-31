@@ -618,6 +618,8 @@ def post_answer(plugintype: str, task_id_ext: str):
             text_to_add = dumbo_result[0]
         obj[key] = text_to_add
 
+    noupdate = False  #  if true do not send new id
+
     if not get_task:
         add_reply(result['web'], '-replyImage')
         add_reply(result['web'], '-replyMD', True)
@@ -627,6 +629,8 @@ def post_answer(plugintype: str, task_id_ext: str):
         save_object = jsonresp['save']
         tags = []
         tim_info = jsonresp.get('tim_info', {})
+        if tim_info.get("noupdate", False):
+            noupdate = True
         points = tim_info.get('points', None)
         multiplier = plugin.points_multiplier()
         if multiplier and points is not None:
@@ -733,6 +737,9 @@ def post_answer(plugintype: str, task_id_ext: str):
                 )
             else:
                 result['savedNew'] = None
+            if noupdate:
+                result['savedNew'] = None
+
             if not is_valid:
                 result['error'] = explanation
         elif save_teacher:
