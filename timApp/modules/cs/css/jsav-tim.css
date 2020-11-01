@@ -20,3 +20,7 @@
 .jsavoutput {
     padding-right: 3.5em;
 }
+
+.jsavmodelanswer .jsavcounter {
+    width: max-content;
+}
