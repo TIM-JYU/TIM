@@ -262,7 +262,12 @@ def getproxy(m: GetProxyModel):
     except (MissingSchema, InvalidURL):
         raise RouteException('Invalid URL')
     if m.raw:
-        return Response(r.content, status=r.status_code, mimetype=r.headers['Content-Type'])
+        return Response(
+            r.content,
+            status=r.status_code,
+            mimetype=r.headers['Content-Type'],
+            headers={'Content-Security-Policy': 'sandbox allow-scripts'}
+        )
 
     return json_response({'data': r.text, 'status_code': r.status_code})
 
