@@ -8,12 +8,20 @@ import {Pos} from "tim/ui/pos";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
-const blacklist = new Set(["name", "title", "completionDate", "message"]);
+const blacklist = new Set([
+    "name",
+    "title",
+    "completionDate",
+    "message",
+    "rows", // question data
+]);
 export const UnknownRecord = t.record(t.string, t.unknown);
 const UnknownRecordOrArray = t.union([UnknownRecord, t.array(t.unknown)]);
 
 export const defaultErrorMessage = "Syntax error or no reply from server?";
 export const defaultTimeout = 20000;
+
+const timestampFormat = "YYYY-MM-DDTHH:mm:ss.SSSSSSZ";
 
 // adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html
 export function convertDateStringsToMoments(input: unknown): unknown {
@@ -26,7 +34,7 @@ export function convertDateStringsToMoments(input: unknown): unknown {
         converted = [];
         for (const value of input) {
             if (typeof value === "string") {
-                const m = moment(value, moment.ISO_8601, true);
+                const m = moment(value, timestampFormat, true);
                 if (m.isValid()) {
                     converted.push(m);
                 } else {
@@ -39,20 +47,19 @@ export function convertDateStringsToMoments(input: unknown): unknown {
     } else {
         converted = {};
         for (const [key, value] of Object.entries(input)) {
-            if (typeof value === "string") {
-                // ignore strings and keys that are most likely not intended to be interpreted as timestamps
-                if (!blacklist.has(key)) {
-                    const m = moment(value, moment.ISO_8601, true);
+            if (!blacklist.has(key)) {
+                if (typeof value === "string") {
+                    const m = moment(value, timestampFormat, true);
                     if (m.isValid()) {
                         converted[key] = m;
                     } else {
                         converted[key] = value;
                     }
                 } else {
-                    converted[key] = value;
+                    converted[key] = convertDateStringsToMoments(value);
                 }
             } else {
-                converted[key] = convertDateStringsToMoments(value);
+                converted[key] = value;
             }
         }
     }

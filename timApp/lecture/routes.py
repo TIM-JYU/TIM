@@ -930,7 +930,7 @@ def get_question_by_par_id():
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
     question = get_question_data_from_document(d, par_id, edit)
-    return json_response(question, date_conversion=True)
+    return json_response(question)
 
 
 @lecture_routes.route("/getAskedQuestionById", methods=['GET'])
