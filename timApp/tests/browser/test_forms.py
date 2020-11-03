@@ -21,7 +21,7 @@ class FormTest(BrowserTest):
             field.send_keys(ans)
             field = self.find_element_and_move_to('#c .textfieldNoSaveDiv input')
             field.send_keys(ans)
-            multisave = self.find_element_avoid_staleness('#save multisave-runner')
+            multisave = self.find_element_avoid_staleness('#save tim-multisave')
             runbutton = multisave.find_element_by_css_selector('button')
             runbutton.click()
             self.wait_until_present('p.savedtext')

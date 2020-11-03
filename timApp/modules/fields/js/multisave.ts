@@ -120,6 +120,7 @@ const multisaveAll = t.intersection([
     <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
 </span>
     `,
+    styleUrls: ["./multisave.component.scss"],
 })
 export class MultisaveComponent
     extends AngularPluginBase<

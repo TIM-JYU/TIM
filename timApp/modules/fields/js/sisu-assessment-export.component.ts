@@ -384,7 +384,7 @@ class AssessmentTableModel implements DataModelProvider {
                 <input type="text"
                        class="form-control"
                        bsDatepicker
-                       [bsValue]="completionDate">
+                       [(bsValue)]="completionDate">
                 &ngsp;
                 <button class="timButton"
                         [disabled]="loading || numSelectedAssessments() === 0"

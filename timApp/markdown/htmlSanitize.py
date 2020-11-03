@@ -81,7 +81,7 @@ TIM_SAFE_TAGS = [
     'mcq',
     'mmcq',
     'pali-runner',
-    'multisave-runner',
+    'tim-multisave',
     'small-video-runner',
     'textfield-runner',
     'cbcountfield-runner',

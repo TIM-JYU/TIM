@@ -30,7 +30,7 @@ autosave: false
         input2.send_keys('2.75')
         self.get_uninteractable_element().click()
         par = self.find_element_avoid_staleness('#pars')
-        multisave = self.find_element_avoid_staleness('#t3 multisave-runner')
+        multisave = self.find_element_avoid_staleness('#t3 tim-multisave')
         self.wait_until_present('#t3 div') # wait for ng-if to finish
         self.assert_same_screenshot(par, ['textfield/fields_before_answer'])
         runbutton = multisave.find_element_by_css_selector('button')
@@ -60,7 +60,7 @@ autosave: false
         input2.clear()
         input2.send_keys(' ')
         self.get_uninteractable_element.click()
-        multisave = self.find_element_avoid_staleness('#t3 multisave-runner')
+        multisave = self.find_element_avoid_staleness('#t3 tim-multisave')
         runbutton = multisave.find_element_by_css_selector('button')
         runbutton.click()
         self.goto_document(d)
