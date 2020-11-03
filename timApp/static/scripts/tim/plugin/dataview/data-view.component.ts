@@ -258,7 +258,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() tableStyle: Record<string, string> = {};
     @Input() headerStyle: Record<string, string> | null = {};
     @Input() columnIdStart: number = 1;
-    @Input() tableMaxHeight: string = "2000em";
+    @Input() tableMaxHeight: string = "85vh";
     @Input() tableMaxWidth: string = "max-content";
     @Input() fixedColumnCount: number = 0;
     @Input() columnFilters: string[] = [];
