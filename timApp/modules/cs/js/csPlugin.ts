@@ -1359,6 +1359,7 @@ export class CsController extends CsBase implements ITimComponent {
             this.setCircuitData();
         }
         this.updateListeners(ChangeType.Saved);
+        this.cdr.detectChanges();
     }
 
     get english() {

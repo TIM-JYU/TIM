@@ -2,7 +2,14 @@
  * Defines the client-side implementation of a plugin that calls other plugins' save methods.
  */
 import * as t from "io-ts";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    NgZone,
+} from "@angular/core";
 import {
     ChangeType,
     IChangeListener,
@@ -22,9 +29,9 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {HttpClientModule} from "@angular/common/http";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {
     GroupType,
@@ -102,8 +109,12 @@ const multisaveAll = t.intersection([
         {{buttonText()}}
     </button>
     &nbsp;
-    <a href="" *ngIf="(undoButton && (!listener || !allSaved()))" title="{{undoTitle}}"
-       (click)="resetChanges();">{{undoButton}}</a>
+    <button class="btn btn-default"
+            *ngIf="(undoButton && (!listener || !allSaved()))"
+            [title]="undoTitle"
+            (click)="resetChanges()">
+        {{undoButton}}
+    </button>
     <p class="savedtext" *ngIf="isSaved && allSaved()">{{savedText}}</p>
     </div>
     <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
@@ -122,6 +133,15 @@ export class MultisaveComponent
     savedFields: number = 0;
     private unsavedTimComps: Set<string> = new Set<string>();
     private hasUnsavedTargets: boolean = false;
+
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private zone: NgZone
+    ) {
+        super(el, http, domSanitizer);
+    }
 
     getDefaultMarkup() {
         return {};
@@ -298,7 +318,7 @@ export class MultisaveComponent
                 }
             }
             if (duplicatedFieldsToUpdate.length > 0) {
-                this.vctrl.updateFields(duplicatedFieldsToUpdate);
+                await this.vctrl.updateFields(duplicatedFieldsToUpdate);
             }
         }
         if (this.savedFields !== 0) {
@@ -336,7 +356,12 @@ export class MultisaveComponent
         if (!this.markup.listener) {
             return;
         }
-        // this.scope.$evalAsync(); // TODO
+        this.zone.run(() => {
+            this.doInform(taskId, state, tag);
+        });
+    }
+
+    private doInform(taskId: TaskId, state: ChangeType, tag?: string) {
         const docTask = taskId.docTask().toString();
         if (state == ChangeType.Saved) {
             if (this.unsavedTimComps.delete(docTask)) {
