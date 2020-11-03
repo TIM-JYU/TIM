@@ -16,9 +16,7 @@ import {
     Info,
     withDefault,
 } from "tim/plugin/attributes";
-import {Users} from "tim/user/userService";
-import {$http} from "tim/util/ngimport";
-import {escapeRegExp, scrollToElement, to} from "tim/util/utils";
+import {escapeRegExp, scrollToElement} from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -38,9 +36,6 @@ const multisaveMarkup = t.intersection([
         allSavedText: t.string,
         areas: t.array(t.string),
         tags: t.array(t.string),
-        emailPreMsg: t.string,
-        emailRecipients: t.array(t.string),
-        emailSubject: t.string,
         fields: t.array(t.string),
         followid: t.string,
         group: GroupType,
@@ -55,7 +50,6 @@ const multisaveMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         // all withDefaults should come here; NOT in t.partial
-        emailMode: withDefault(t.boolean, false),
         autoUpdateDuplicates: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
         nosave: withDefault(t.boolean, false),
@@ -103,7 +97,7 @@ const multisaveAll = t.intersection([
     <div *ngIf="!livefeed || !allSaved()">
     <button class="timButton"
             [disabled]="(markup.disableUnchanged && listener && allSaved())"
-            *ngIf="!showEmailForm && buttonText() && !markup.destCourse"
+            *ngIf="buttonText() && !markup.destCourse"
             (click)="save()">
         {{buttonText()}}
     </button>
@@ -112,33 +106,6 @@ const multisaveAll = t.intersection([
        (click)="resetChanges();">{{undoButton}}</a>
     <p class="savedtext" *ngIf="isSaved && allSaved()">{{savedText}}</p>
     </div>
-    <div class="csRunDiv multisaveEmail" style="padding: 1em;" *ngIf="showEmailForm"> <!-- email -->
-        <tim-close-button (click)="toggleEmailForm()"></tim-close-button>
-        <p><textarea [(ngModel)]="emaillist" rows="4" cols="40"></textarea>
-        <p>
-        <p>
-            <label title="Send so that names are not visible (works only non-TIM send)">
-                <input type="checkbox"
-                       [(ngModel)]="emailbcc">BCC</label>&nbsp;
-            <label title="Send also a copy for me">
-                <input type="checkbox"
-                       [(ngModel)]="emailbccme">BCC also for me</label>&nbsp;
-            <label title="Send using TIM. Every mail is sent as a personal mail.">
-                <input type="checkbox"
-                       [(ngModel)]="emailtim">use
-                TIM to send</label>&nbsp;
-        </p>
-        <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
-        <p>eMail content:</p>
-        <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
-        <p>
-            <button class="timButton"
-                    (click)="sendEmail()">
-                Send
-            </button>
-            <span class="savedtext" *ngIf="emailMsg">Sent!</span>
-        </p>
-    </div> <!-- email-->
     <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
 </span>
     `,
@@ -153,14 +120,6 @@ export class MultisaveComponent
     isSaved = false;
     vctrl!: ViewCtrl;
     savedFields: number = 0;
-    showEmailForm: boolean = false;
-    emaillist: string | undefined = "";
-    emailsubject: string | undefined = "";
-    emailbody: string | undefined = "";
-    emailbcc: boolean = false;
-    emailbccme: boolean = true;
-    emailtim: boolean = true;
-    emailMsg: string = "";
     private unsavedTimComps: Set<string> = new Set<string>();
     private hasUnsavedTargets: boolean = false;
 
@@ -169,11 +128,7 @@ export class MultisaveComponent
     }
 
     buttonText() {
-        return (
-            super.buttonText() ||
-            (this.markup.emailMode && "Send email") ||
-            "Save"
-        );
+        return super.buttonText() ?? "Save";
     }
 
     get allSavedText() {
@@ -213,77 +168,9 @@ export class MultisaveComponent
     ngOnInit() {
         super.ngOnInit();
         this.vctrl = vctrlInstance!;
-        if (this.markup.emailRecipients) {
-            this.emaillist = this.markup.emailRecipients.join("\n");
-        }
         if (this.markup.listener && this.vctrl) {
             this.vctrl.addChangeListener(this);
         }
-        this.emailbody = this.markup.emailPreMsg;
-        this.emailsubject = this.markup.emailSubject;
-    }
-
-    async sendEmailTim() {
-        if (!this.emaillist || !this.emailsubject) {
-            return;
-        }
-        this.emailMsg = "";
-
-        const _ = await to(
-            $http.post<string[]>("/sendemail/", {
-                rcpts: this.emaillist.replace(/\n/g, ";"),
-                subject: this.emailsubject,
-                msg: this.emailbody,
-                bccme: this.emailbccme,
-            })
-        );
-    }
-
-    /**
-     * TODO: Generic - move and import
-     */
-    public async sendEmail() {
-        if (!this.emaillist || !this.emailsubject) {
-            return;
-        }
-        if (this.emailtim) {
-            await this.sendEmailTim();
-            return;
-        }
-        // TODO: iPad do not like ;
-        let addrs = this.emaillist.replace(/\n/g, ",");
-        let bcc = "";
-        if (this.emailbcc) {
-            bcc = addrs;
-            addrs = "";
-        }
-        if (this.emailbccme) {
-            if (bcc) {
-                bcc += ",";
-            }
-            bcc += Users.getCurrent().email;
-        }
-        window.location.href =
-            "mailto:" +
-            addrs +
-            "?" +
-            "subject=" +
-            this.emailsubject +
-            "&" +
-            "body=" +
-            this.emailbody +
-            "&" +
-            "bcc=" +
-            bcc;
-    }
-
-    toggleEmailForm() {
-        const tid = this.pluginMeta.getTaskId();
-        // For now only tasks can send email
-        if (!tid) {
-            return;
-        }
-        this.showEmailForm = !this.showEmailForm;
     }
 
     findTargetTasks(): ITimComponent[] {
@@ -376,10 +263,6 @@ export class MultisaveComponent
      *   plugin in the same document
      */
     async save() {
-        if (this.markup.emailMode) {
-            this.toggleEmailForm();
-            return;
-        }
         const componentsToSave = this.findTargetTasks();
 
         const promises = [];
