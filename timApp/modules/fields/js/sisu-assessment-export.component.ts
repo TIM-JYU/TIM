@@ -178,7 +178,7 @@ class AssessmentTableModel implements DataModelProvider {
     private selectedFilter = false;
 
     constructor(
-        private assessments: IAssessmentExt[],
+        public assessments: IAssessmentExt[],
         private getDataView: () => DataViewComponent | undefined
     ) {
         this.colFilters = Array(colGetters.length);
@@ -353,9 +353,9 @@ class AssessmentTableModel implements DataModelProvider {
             <button class="timButton"
                     [disabled]="loading"
                     (click)="togglePreviewAssessments()">
-                {{ assessments ? 'Sulje esikatselu' : 'Esikatsele arviointeja' }}
+                {{ model ? 'Sulje esikatselu' : 'Esikatsele arviointeja' }}
             </button>
-            <tim-loading *ngIf="loading && !assessments"></tim-loading>
+            <tim-loading *ngIf="loading && !model"></tim-loading>
         </div>
         <div *ngIf="model">
             <p>
@@ -403,7 +403,6 @@ class AssessmentTableModel implements DataModelProvider {
     `,
 })
 export class SisuAssessmentExportComponent {
-    assessments?: IAssessmentExt[];
     completionDate = new Date();
     okAssessments?: number;
     errAssessments?: number;
@@ -466,7 +465,7 @@ export class SisuAssessmentExportComponent {
     }
 
     async sendAssessments() {
-        if (!this.model || !this.assessments) {
+        if (!this.model) {
             return;
         }
         const data = await this.callSendGrades({
@@ -482,11 +481,11 @@ export class SisuAssessmentExportComponent {
         this.errAssessments = data.assessment_errors.length;
         const all = getAssessments(data);
         const indexMap = new Map<string, number>();
-        this.assessments.forEach((a, i) => indexMap.set(a.user.name, i));
+        this.model.assessments.forEach((a, i) => indexMap.set(a.user.name, i));
         for (const a of all) {
             const index = indexMap.get(a.user.name);
             if (index !== undefined) {
-                this.assessments[index] = a;
+                this.model.assessments[index] = a;
             } else {
                 console.warn(
                     `sendAssessments returned a user that did not exist in preview: ${a.user.name}`
@@ -504,15 +503,15 @@ export class SisuAssessmentExportComponent {
     }
 
     async togglePreviewAssessments() {
-        if (this.assessments) {
-            this.assessments = undefined;
+        if (this.model) {
+            this.model = undefined;
             return;
         }
         const data = await this.callSendGrades({partial: true, dryRun: true});
         if (!data) {
             return;
         }
-        this.assessments = getAssessments(data);
+        const assessments = getAssessments(data);
         const defaults = new Set(data.default_selection);
         const gradeHasChanged = (a: IAssessmentExt) =>
             StringOrNumber.is(a.sentGrade) &&
@@ -520,7 +519,7 @@ export class SisuAssessmentExportComponent {
             a.sentGrade &&
             a.gradeId &&
             a.sentGrade.toString() !== a.gradeId.toString();
-        const changedGrades = this.assessments.filter(gradeHasChanged);
+        const changedGrades = assessments.filter(gradeHasChanged);
         const hasChangedGrades = changedGrades.length > 0;
         const creditHasChanged = (a: IAssessmentExt) =>
             StringOrNumber.is(a.sentCredit) &&
@@ -528,11 +527,11 @@ export class SisuAssessmentExportComponent {
             a.sentCredit &&
             a.completionCredits &&
             a.sentCredit.toString() !== a.completionCredits.toString();
-        const changedCredits = this.assessments.filter(creditHasChanged);
+        const changedCredits = assessments.filter(creditHasChanged);
         const hasChangedCredits = changedCredits.length > 0;
         const alreadyConfirmed = (a: IAssessmentExt) =>
             a.error?.startsWith("Sisu: Aikaisempi vahvistettu suoritus");
-        this.notSendableButChanged = this.assessments
+        this.notSendableButChanged = assessments
             .filter(
                 (a) =>
                     alreadyConfirmed(a) &&
@@ -545,13 +544,13 @@ export class SisuAssessmentExportComponent {
                     StringOrNumber.is(a.gradeId) &&
                     !failGrades.has(a.gradeId.toString())
             );
-        this.notSendable = this.assessments.filter(alreadyConfirmed);
+        this.notSendable = assessments.filter(alreadyConfirmed);
 
         this.model = new AssessmentTableModel(
-            this.assessments,
+            assessments,
             () => this.dataView!
         );
-        const indexMap = this.assessments.reduce(
+        const indexMap = assessments.reduce(
             (p, c, i) => p.set(c.user.id, i),
             new Map<number, number>()
         );
