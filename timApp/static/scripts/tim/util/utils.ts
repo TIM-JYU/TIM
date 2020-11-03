@@ -21,7 +21,10 @@ const UnknownRecordOrArray = t.union([UnknownRecord, t.array(t.unknown)]);
 export const defaultErrorMessage = "Syntax error or no reply from server?";
 export const defaultTimeout = 20000;
 
-const timestampFormat = "YYYY-MM-DDTHH:mm:ss.SSSSSSZ";
+const timestampFormats = [
+    "YYYY-MM-DDTHH:mm:ss.SSSSSSZ",
+    "YYYY-MM-DDTHH:mm:ssZ",
+];
 
 // adapted from http://aboutcode.net/2013/07/27/json-date-parsing-angularjs.html
 export function convertDateStringsToMoments(input: unknown): unknown {
@@ -34,7 +37,7 @@ export function convertDateStringsToMoments(input: unknown): unknown {
         converted = [];
         for (const value of input) {
             if (typeof value === "string") {
-                const m = moment(value, timestampFormat, true);
+                const m = moment(value, timestampFormats, true);
                 if (m.isValid()) {
                     converted.push(m);
                 } else {
@@ -49,7 +52,7 @@ export function convertDateStringsToMoments(input: unknown): unknown {
         for (const [key, value] of Object.entries(input)) {
             if (!blacklist.has(key)) {
                 if (typeof value === "string") {
-                    const m = moment(value, timestampFormat, true);
+                    const m = moment(value, timestampFormats, true);
                     if (m.isValid()) {
                         converted[key] = m;
                     } else {
