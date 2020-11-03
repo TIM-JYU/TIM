@@ -75,7 +75,7 @@ export class ComparatorFilter {
         return new ComparatorFilter(s);
     }
 
-    public isMatch(s: string): boolean {
+    public test(s: string): boolean {
         let n: NumStr = "";
         try {
             n = parseFloat(s);
@@ -111,7 +111,7 @@ export function withComparatorFilters<T>(
         cellValue = cellValue.toString();
         const comp = ComparatorFilter.makeNumFilter(searchTerm);
         if (comp) {
-            return comp.isMatch(cellValue);
+            return comp.test(cellValue);
         } else {
             return new RegExp(searchTerm, "i").test(cellValue);
         }

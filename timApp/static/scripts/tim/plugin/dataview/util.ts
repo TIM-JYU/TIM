@@ -1,5 +1,6 @@
 import {GridAxisManager} from "tim/plugin/dataview/gridAxisManager";
 import {TableDOMCache} from "tim/plugin/dataview/tableDOMCache";
+import {TimDefer} from "tim/util/timdefer";
 
 export interface CellIndex {
     x: number;
@@ -54,14 +55,18 @@ export function clamp(val: number, min: number, max: number): number {
     return Math.max(Math.min(val, max), min);
 }
 
-export function runMultiFrame(iter: Generator): void {
+export async function runMultiFrame(iter: Generator) {
+    const p = new TimDefer();
     const cb = () => {
         const result = iter.next();
         if (!result.done) {
             requestAnimationFrame(cb);
+        } else {
+            p.resolve();
         }
     };
     requestAnimationFrame(cb);
+    return p.promise;
 }
 
 export function joinCss(obj: Record<string, string>) {

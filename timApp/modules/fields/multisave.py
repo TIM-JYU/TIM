@@ -53,7 +53,7 @@ class MultisaveInputModel:
 class MultisaveHtmlModel(GenericHtmlModel[MultisaveInputModel, MultisaveMarkupModel, MultisaveStateModel]):
 
     def get_component_html_name(self) -> str:
-        return 'multisave-runner'
+        return 'tim-multisave'
 
     def get_static_html(self) -> str:
         return render_static_multisave(self)

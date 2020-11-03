@@ -1,8 +1,8 @@
 /**
  * Defines the client-side implementation of a plugin that calls other plugins' save methods.
  */
-import angular from "angular";
 import * as t from "io-ts";
+import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
 import {
     ChangeType,
     IChangeListener,
@@ -16,15 +16,22 @@ import {
     Info,
     withDefault,
 } from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {Users} from "tim/user/userService";
 import {$http} from "tim/util/ngimport";
 import {escapeRegExp, scrollToElement, to} from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
-import {GroupType, Sisu} from "./sisuassessmentexport";
-
-const multisaveApp = angular.module("multisaveApp", ["ngSanitize", Sisu.name]);
-export const moduleDefs = [multisaveApp];
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {BrowserModule} from "@angular/platform-browser";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {
+    GroupType,
+    SisuAssessmentExportModule,
+} from "./sisu-assessment-export.component";
 
 const multisaveMarkup = t.intersection([
     t.partial({
@@ -65,24 +72,95 @@ const multisaveAll = t.intersection([
     }),
 ]);
 
-export class MultisaveController
-    extends PluginBase<
+// noinspection TypeScriptUnresolvedVariable
+@Component({
+    selector: "tim-multisave",
+    template: `
+        <span class="no-popup-menu">
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <tim-sisu-assessment-export
+            *ngIf="markup.destCourse"
+            [docId]="vctrl.item.id"
+            [destCourse]="markup.destCourse"
+            [includeUsers]="markup.includeUsers"
+            [testOnly]="markup.testOnly"
+            [group]="markup.group">
+    </tim-sisu-assessment-export>
+    <div *ngIf="livefeed"> <!-- unsaved fields -->
+        <div *ngIf="!allSaved()">
+            {{unsavedText}}
+            <ul>
+                <li *ngFor="let tag of unsaveds">
+                    <a href="" (click)="scrollTo(tag)">{{tag.getName()}}</a>
+                </li>
+            </ul>
+        </div>
+        <div *ngIf="allSaved()">
+            {{allSavedText}}
+        </div>
+    </div> <!-- unsaved fields -->
+    <div *ngIf="!livefeed || !allSaved()">
+    <button class="timButton"
+            [disabled]="(markup.disableUnchanged && listener && allSaved())"
+            *ngIf="!showEmailForm && buttonText() && !markup.destCourse"
+            (click)="save()">
+        {{buttonText()}}
+    </button>
+    &nbsp;
+    <a href="" *ngIf="(undoButton && (!listener || !allSaved()))" title="{{undoTitle}}"
+       (click)="resetChanges();">{{undoButton}}</a>
+    <p class="savedtext" *ngIf="isSaved && allSaved()">{{savedText}}</p>
+    </div>
+    <div class="csRunDiv multisaveEmail" style="padding: 1em;" *ngIf="showEmailForm"> <!-- email -->
+        <tim-close-button (click)="toggleEmailForm()"></tim-close-button>
+        <p><textarea [(ngModel)]="emaillist" rows="4" cols="40"></textarea>
+        <p>
+        <p>
+            <label title="Send so that names are not visible (works only non-TIM send)">
+                <input type="checkbox"
+                       [(ngModel)]="emailbcc">BCC</label>&nbsp;
+            <label title="Send also a copy for me">
+                <input type="checkbox"
+                       [(ngModel)]="emailbccme">BCC also for me</label>&nbsp;
+            <label title="Send using TIM. Every mail is sent as a personal mail.">
+                <input type="checkbox"
+                       [(ngModel)]="emailtim">use
+                TIM to send</label>&nbsp;
+        </p>
+        <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
+        <p>eMail content:</p>
+        <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
+        <p>
+            <button class="timButton"
+                    (click)="sendEmail()">
+                Send
+            </button>
+            <span class="savedtext" *ngIf="emailMsg">Sent!</span>
+        </p>
+    </div> <!-- email-->
+    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+</span>
+    `,
+})
+export class MultisaveComponent
+    extends AngularPluginBase<
         t.TypeOf<typeof multisaveMarkup>,
         t.TypeOf<typeof multisaveAll>,
         typeof multisaveAll
     >
     implements IChangeListener {
-    private isSaved = false;
-    private vctrl!: ViewCtrl;
-    private savedFields: number = 0;
-    private showEmailForm: boolean = false;
-    private emaillist: string | undefined = "";
-    private emailsubject: string | undefined = "";
-    private emailbody: string | undefined = "";
-    private emailbcc: boolean = false;
-    private emailbccme: boolean = true;
-    private emailtim: boolean = true;
-    private emailMsg: string = "";
+    isSaved = false;
+    vctrl!: ViewCtrl;
+    savedFields: number = 0;
+    showEmailForm: boolean = false;
+    emaillist: string | undefined = "";
+    emailsubject: string | undefined = "";
+    emailbody: string | undefined = "";
+    emailbcc: boolean = false;
+    emailbccme: boolean = true;
+    emailtim: boolean = true;
+    emailMsg: string = "";
     private unsavedTimComps: Set<string> = new Set<string>();
     private hasUnsavedTargets: boolean = false;
 
@@ -93,49 +171,56 @@ export class MultisaveController
     buttonText() {
         return (
             super.buttonText() ||
-            (this.attrs.emailMode && "Send email") ||
+            (this.markup.emailMode && "Send email") ||
             "Save"
         );
     }
 
     get allSavedText() {
-        return this.attrs.allSavedText;
+        return this.markup.allSavedText;
     }
 
     get unsavedText() {
-        return this.attrs.unsavedText?.replace(
+        return this.markup.unsavedText?.replace(
             "{count}",
             this.unsavedTimComps.size.toString()
         );
     }
 
     get savedText() {
-        return this.attrs.savedText ?? "Saved";
+        return this.markup.savedText ?? "Saved";
     }
 
     get listener() {
-        return this.attrs.listener;
+        return this.markup.listener;
     }
 
     get livefeed() {
-        return this.attrs.livefeed;
+        return this.markup.livefeed;
     }
 
     get unsaveds() {
-        const arr = Array.from(this.unsavedTimComps);
-        return arr.map((name) => this.vctrl.getTimComponentByName(name));
+        const ret = [];
+        for (const name of this.unsavedTimComps) {
+            const c = this.vctrl.getTimComponentByName(name);
+            if (c) {
+                ret.push(c);
+            }
+        }
+        return ret;
     }
 
-    $onInit() {
-        super.$onInit();
-        if (this.attrs.emailRecipients) {
-            this.emaillist = this.attrs.emailRecipients.join("\n");
+    ngOnInit() {
+        super.ngOnInit();
+        this.vctrl = vctrlInstance!;
+        if (this.markup.emailRecipients) {
+            this.emaillist = this.markup.emailRecipients.join("\n");
         }
-        if (this.attrs.listener && this.vctrl) {
+        if (this.markup.listener && this.vctrl) {
             this.vctrl.addChangeListener(this);
         }
-        this.emailbody = this.attrs.emailPreMsg;
-        this.emailsubject = this.attrs.emailSubject;
+        this.emailbody = this.markup.emailPreMsg;
+        this.emailsubject = this.markup.emailSubject;
     }
 
     async sendEmailTim() {
@@ -213,8 +298,8 @@ export class MultisaveController
             return targets;
         }
         // TODO: get components from vctrl.timComponentArrays in case of duplicates
-        if (this.attrs.fields) {
-            for (const i of this.attrs.fields) {
+        if (this.markup.fields) {
+            for (const i of this.markup.fields) {
                 const timComponents = this.vctrl.getTimComponentsByRegex(
                     i,
                     RegexOption.PrependCurrentDocId
@@ -227,8 +312,8 @@ export class MultisaveController
             }
         }
 
-        if (this.attrs.areas) {
-            for (const i of this.attrs.areas) {
+        if (this.markup.areas) {
+            for (const i of this.markup.areas) {
                 const timComponents = this.vctrl.getTimComponentsByArea(i);
                 for (const v of timComponents) {
                     if (!targets.includes(v)) {
@@ -237,8 +322,8 @@ export class MultisaveController
                 }
             }
         }
-        if (this.attrs.tags) {
-            for (const i of this.attrs.tags) {
+        if (this.markup.tags) {
+            for (const i of this.markup.tags) {
                 const timComponents = this.vctrl.getTimComponentsByTag(i);
                 for (const v of timComponents) {
                     if (!targets.includes(v)) {
@@ -259,9 +344,9 @@ export class MultisaveController
 
         // no given followids or areas but the plugin is inside an area
         if (
-            !this.attrs.fields &&
-            !this.attrs.areas &&
-            !this.attrs.tags &&
+            !this.markup.fields &&
+            !this.markup.areas &&
+            !this.markup.tags &&
             ownArea
         ) {
             targets = this.vctrl.getTimComponentsByArea(ownArea);
@@ -269,9 +354,9 @@ export class MultisaveController
 
         // no given followids / areas and no own area found
         if (
-            !this.attrs.fields &&
-            !this.attrs.areas &&
-            !this.attrs.tags &&
+            !this.markup.fields &&
+            !this.markup.areas &&
+            !this.markup.tags &&
             !ownArea
         ) {
             targets = this.vctrl.getTimComponentsByRegex(
@@ -291,7 +376,7 @@ export class MultisaveController
      *   plugin in the same document
      */
     async save() {
-        if (this.attrs.emailMode) {
+        if (this.markup.emailMode) {
             this.toggleEmailForm();
             return;
         }
@@ -318,10 +403,10 @@ export class MultisaveController
             }
             savedIndex++;
         }
-        if (this.attrs.autoUpdateTables) {
+        if (this.markup.autoUpdateTables) {
             this.vctrl.updateAllTables(fieldsToUpdate);
         }
-        if (this.attrs.autoUpdateDuplicates) {
+        if (this.markup.autoUpdateDuplicates) {
             const duplicatedFieldsToUpdate = [];
             for (const field of fieldsToUpdate) {
                 const duplicates = this.vctrl.getTimComponentArray(field);
@@ -337,7 +422,7 @@ export class MultisaveController
             this.isSaved = true;
         }
 
-        if (this.attrs.jumplink) {
+        if (this.markup.jumplink) {
             // If there is need for jumplink
             const values = [];
             for (const v of componentsToSave) {
@@ -345,17 +430,17 @@ export class MultisaveController
                 values.push(value);
             }
 
-            let link = this.attrs.jumplink;
+            let link = this.markup.jumplink;
             for (let i = 0; i < values.length; i++) {
                 link = link.replace("{" + i + "}", values[i] ?? "");
             }
-            const target = this.attrs.jumptarget ?? "_self";
+            const target = this.markup.jumptarget ?? "_self";
             window.open(link, target);
         }
     }
 
     public getTags(): string[] | undefined {
-        return this.attrs.tags;
+        return this.markup.tags;
     }
 
     private addNewUnsaved(taskId: string) {
@@ -365,10 +450,10 @@ export class MultisaveController
     }
 
     public informAboutChanges(taskId: TaskId, state: ChangeType, tag?: string) {
-        if (!this.attrs.listener) {
+        if (!this.markup.listener) {
             return;
         }
-        this.scope.$evalAsync();
+        // this.scope.$evalAsync(); // TODO
         const docTask = taskId.docTask().toString();
         if (state == ChangeType.Saved) {
             if (this.unsavedTimComps.delete(docTask)) {
@@ -379,13 +464,13 @@ export class MultisaveController
             return;
         }
         // TODO: check here if taskId already in this.unsavedTimComps to ignore input spam?
-        if (this.attrs.tags && tag && this.attrs.tags.includes(tag)) {
+        if (this.markup.tags && tag && this.markup.tags.includes(tag)) {
             this.addNewUnsaved(docTask);
             return;
         }
-        if (this.attrs.fields) {
+        if (this.markup.fields) {
             let reg: RegExp;
-            for (const f of this.attrs.fields) {
+            for (const f of this.markup.fields) {
                 // TODO: Handle fields from other docs pasted as reference
                 reg = new RegExp(
                     `^${this.vctrl.docId + escapeRegExp(".") + f}$`
@@ -396,14 +481,14 @@ export class MultisaveController
                 }
             }
         }
-        if (!this.attrs.areas && !this.attrs.fields && !this.attrs.tags) {
+        if (!this.markup.areas && !this.markup.fields && !this.markup.tags) {
             // TODO: Check if task in this.areas or in multisave's own area?
             this.addNewUnsaved(docTask);
         }
     }
 
     allSaved(): boolean {
-        return !this.attrs.listener || !this.hasUnsavedTargets;
+        return !this.markup.listener || !this.hasUnsavedTargets;
     }
 
     getAttributeType() {
@@ -427,72 +512,28 @@ export class MultisaveController
     }
 }
 
-multisaveApp.component("multisaveRunner", {
-    bindings: pluginBindings,
-    controller: MultisaveController,
-    require: {
-        vctrl: "^timView",
-    },
-    template: `
-<span class="no-popup-menu">
-    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <sisu-assessment-export ng-if="$ctrl.attrs.destCourse"
-                            doc-id="$ctrl.vctrl.item.id"
-                            dest-course="$ctrl.attrs.destCourse"
-                            include-users="$ctrl.attrs.includeUsers"
-                            test-only="$ctrl.attrs.testOnly"
-                            group="$ctrl.attrs.group">
-    </sisu-assessment-export>
-    <div ng-if="$ctrl.livefeed"> <!-- unsaved fields -->
-        <div ng-if="!$ctrl.allSaved()">
-            {{$ctrl.unsavedText}}
-            <ul>
-                <li ng-repeat="tag in $ctrl.unsaveds">
-                    <a href="" ng-click="$ctrl.scrollTo(tag)">{{tag.getName()}}</a>
-                </li>
-            </ul>
-        </div>
-        <div ng-if="$ctrl.allSaved()">
-            {{::$ctrl.allSavedText}}
-        </div>
-    </div> <!-- unsaved fields -->
-    <div ng-if="!$ctrl.livefeed || !$ctrl.allSaved()">
-    <button class="timButton"
-            ng-disabled="($ctrl.disableUnchanged && $ctrl.listener && $ctrl.allSaved())"
-            ng-if="!$ctrl.showEmailForm && $ctrl.buttonText() && !$ctrl.attrs.destCourse"
-            ng-click="$ctrl.save()">
-        {{::$ctrl.buttonText()}}
-    </button>
-    &nbsp;
-    <a href="" ng-if="($ctrl.undoButton && (!$ctrl.listener || !$ctrl.allSaved()))" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.resetChanges();">{{$ctrl.undoButton}}</a>
-    <p class="savedtext" ng-if="$ctrl.isSaved && $ctrl.allSaved()">{{::$ctrl.savedText}}</p>
-    </div>
-    <div class="csRunDiv multisaveEmail" style="padding: 1em;" ng-if="$ctrl.showEmailForm"> <!-- email -->
-        <tim-close-button ng-click="$ctrl.toggleEmailForm()"></tim-close-button>
-        <p><textarea ng-model="$ctrl.emaillist" rows="4" cols="40"></textarea>
-        <p>
-        <p>
-            <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox"
-                                                                                               ng-model="$ctrl.emailbcc">BCC</label>&nbsp;
-            <label title="Send also a copy for me"><input type="checkbox"
-                                                          ng-model="$ctrl.emailbccme">BCC also for me</label>&nbsp;
-            <label title="Send using TIM. Every mail is sent as a personal mail."><input type="checkbox"
-                                                                                         ng-model="$ctrl.emailtim">use
-                TIM to send</label>&nbsp;
-        </p>
-        <p>Subject: <input ng-model="$ctrl.emailsubject" size="60"></p>
-        <p>eMail content:</p>
-        <p><textarea ng-model="$ctrl.emailbody" rows="10" cols="70"></textarea></p>
-        <p>
-            <button class="timButton"
-                    ng-click="$ctrl.sendEmail()">
-                Send
-            </button>
-            <span class="savedtext" ng-if="$ctrl.emailMsg">Sent!</span>
-        </p>
-    </div> <!-- email-->
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</span>
-`,
-});
+@NgModule({
+    declarations: [MultisaveComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        SisuAssessmentExportModule,
+    ],
+})
+export class MultisaveModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
+
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                MultisaveModule
+            )
+        ),
+        "timMultisave",
+        MultisaveComponent
+    ),
+];

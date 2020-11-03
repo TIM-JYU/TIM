@@ -10,9 +10,11 @@ import {
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import moment from "moment";
 import {DatetimePopupModule} from "ngx-bootstrap-datetime-popup";
 import {DatepickerModule} from "ngx-bootstrap/datepicker";
+import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {TimepickerModule} from "ngx-bootstrap/timepicker";
 
 const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
@@ -79,6 +81,8 @@ export class DatetimePickerComponent implements OnInit, OnChanges {
     declarations: [DatetimePickerComponent],
     imports: [
         BrowserModule,
+        NoopAnimationsModule,
+        BsDropdownModule.forRoot(),
         DatepickerModule.forRoot(),
         TimepickerModule.forRoot(),
         DatetimePopupModule,

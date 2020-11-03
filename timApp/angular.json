@@ -57,6 +57,7 @@
               "style-loader!../css/viewhide.css",
               "style-loader!../stylesheets/jsrunner.css",
               "style-loader!reveal.js/dist/reveal.css",
+              "style-loader!node_modules/ngx-bootstrap/datepicker/bs-datepicker.css",
               "object-keys",
               "regexp.prototype.flags",
               "is-regex",

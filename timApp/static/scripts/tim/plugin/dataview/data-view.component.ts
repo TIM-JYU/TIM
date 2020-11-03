@@ -44,9 +44,11 @@ import {
     ChangeDetectorRef,
     Component,
     ElementRef,
+    EventEmitter,
     Input,
     NgZone,
     OnInit,
+    Output,
     Renderer2,
     ViewChild,
 } from "@angular/core";
@@ -55,6 +57,7 @@ import {showCopyWidthsDialog} from "tim/plugin/dataview/copy-table-width-dialog.
 import {GridAxisManager} from "tim/plugin/dataview/gridAxisManager";
 import {TableDOMCache} from "tim/plugin/dataview/tableDOMCache";
 import {scrollToViewInsideParent} from "tim/util/utils";
+import {Changes} from "tim/util/angularchanges";
 import {
     applyBasicStyle,
     CellIndex,
@@ -74,6 +77,8 @@ import {
  * General interface for an object that provides the data model for DataViewComponent.
  */
 export interface DataModelProvider {
+    isRowSelectable(rowIndex: number): boolean;
+
     getDimension(): {rows: number; columns: number};
 
     getColumnHeaderContents(columnIndex: number): string;
@@ -256,6 +261,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() tableMaxHeight: string = "2000em";
     @Input() tableMaxWidth: string = "max-content";
     @Input() fixedColumnCount: number = 0;
+    @Input() columnFilters: string[] = [];
+    @Input() selectedIndices = new Set<number>();
+    @Output() selectedIndicesChange = new EventEmitter<Set<number>>();
     showSlowLoadMessage = false;
     sizeComputationTime = 0;
     isLoading = true;
@@ -263,7 +271,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     visibleRows: number = 0;
     idHeaderCellWidth: string = "";
     cbAllVisibleRows = false;
-    cbFilter = false;
+    @Input() cbFilter = false;
     isVirtual: boolean = false;
     dataViewWidth = "100%";
     @ViewChild("headerContainer") private headerContainer!: ElementRef<
@@ -741,7 +749,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.scrollDiff = {horizontal: 0, vertical: 0};
 
         // Reset all the axes, should be pretty fast
-        this.ngOnInit();
+        this.doInit();
         // Resets the whole table data, might take more time!
         // TODO: maybe run diff between data and insert/remove items as needed? Going to be faster but much more logic.
         this.initView();
@@ -751,7 +759,40 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     // region Initialization
 
-    ngOnInit(): void {
+    ngOnChanges(
+        c: Changes<this, "selectedIndices" | "columnFilters" | "cbFilter">
+    ) {
+        if (c.selectedIndices) {
+            for (const i of c.selectedIndices.currentValue) {
+                this.modelProvider.setRowChecked(i, true);
+            }
+        }
+        if (c.columnFilters) {
+            for (let i = 0; i < c.columnFilters.currentValue.length; ++i) {
+                this.modelProvider.setRowFilter(
+                    i,
+                    c.columnFilters.currentValue[i]
+                );
+            }
+        }
+        if (c.cbFilter) {
+            this.modelProvider.setSelectedFilter(c.cbFilter.currentValue);
+        }
+        if (
+            (c.cbFilter && !c.cbFilter.isFirstChange()) ||
+            (c.selectedIndices && !c.selectedIndices.isFirstChange()) ||
+            (c.columnFilters && !c.columnFilters.isFirstChange())
+        ) {
+            this.updateVisible();
+            this.updateAllSelected();
+        }
+    }
+
+    ngOnInit() {
+        this.doInit();
+    }
+
+    doInit(): void {
         this.dataViewWidth = this.tableMaxWidth;
         this.vScroll = {
             ...DEFAULT_VIRTUAL_SCROLL_SETTINGS,
@@ -794,9 +835,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.updateTableSummary();
     }
 
-    ngAfterViewInit(): void {
-        this.initView();
-
+    async ngAfterViewInit() {
         // Scrolling can cause change detection on some cases, which slows down the table
         // Since scrolling is
         // * Only used in vscrolling mode
@@ -820,12 +859,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 this.handleWindowResize();
             });
         });
+        await this.initView();
+        this.modelProvider.handleChangeFilter();
+        this.updateVisible();
     }
 
-    private initView() {
+    private async initView() {
         this.initTableCaches();
         // Run table building in multiple frames to ensure layout happens so that size of elements is known
-        runMultiFrame(this.buildTable());
+        await runMultiFrame(this.buildTable());
     }
 
     async showTableWidthExportDialog(evt: MouseEvent) {
@@ -850,17 +892,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.idTableCache = new TableDOMCache(
             this.idBody.nativeElement,
             "td",
-            (cell, rowIndex, columnIndex) => {
-                if (columnIndex == 0) {
+            (cell, rowOrdinal, colOrdinal) => {
+                if (colOrdinal == 0) {
                     cell.className = "nrcolumn";
                     return;
                 }
                 cell.className = "cbColumn";
-                cell.appendChild(
-                    el("input", {
-                        type: "checkbox",
-                    })
-                );
+                const cb = el("input", {
+                    type: "checkbox",
+                });
+                cell.appendChild(cb);
+                const rowIndex = this.rowAxis.visibleItems[rowOrdinal];
+                cb.checked = this.selectedIndices.has(rowIndex);
+                cb.disabled = !this.modelProvider.isRowSelectable(rowIndex);
             }
         );
         const makeHeader = (cell: HTMLTableCellElement) => {
@@ -884,12 +928,19 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 makeHeader
             );
         }
-        const makeFilter = (cell: HTMLTableCellElement) => {
-            cell.appendChild(
-                el("input", {
-                    type: "text",
-                })
-            );
+        const makeFilter = (
+            cell: HTMLTableCellElement,
+            rowOrdinal: number,
+            colOrdinal: number
+        ) => {
+            const inp = el("input", {
+                type: "text",
+            });
+            cell.appendChild(inp);
+            const f = this.columnFilters[this.colAxis.visibleItems[colOrdinal]];
+            if (f) {
+                inp.value = f;
+            }
         };
         this.filterTableCache = new TableDOMCache(
             this.filterBody.nativeElement,

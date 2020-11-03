@@ -66,8 +66,8 @@ import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
 import {
-    DataViewComponent,
     DataModelProvider,
+    DataViewComponent,
     VirtualScrollingOptions,
 } from "tim/plugin/dataview/data-view.component";
 import {nullable, withDefault} from "tim/plugin/attributes";
@@ -78,6 +78,7 @@ import {
     isToolbarOpen,
     showTableEditorToolbar,
 } from "tim/plugin/toolbarUtils";
+import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
 import {onClick} from "../document/eventhandlers";
 import {
     ChangeType,
@@ -87,7 +88,6 @@ import {
     ViewCtrl,
 } from "../document/viewctrl";
 import {ParCompiler} from "../editor/parCompiler";
-import {ComparatorFilter} from "../util/comparatorfilter";
 import {
     getKeyCode,
     isArrowKey,
@@ -767,7 +767,7 @@ export class TimTableComponent
     public sortRing: number[] = [];
     public sortDirRing: number[] = [];
     // ["🢓", "", "🢑"];  // this small does not work in iPad/Android
-    private currentHiddenRows: number[] = [];
+    private currentHiddenRows = new Set<number>();
     private rowDelta = 0;
     private colDelta = 0;
     public nrColStart = 1; // what number we start column numbers if it is numbered
@@ -988,7 +988,7 @@ export class TimTableComponent
             }
             this.viewctrl.addTable(this, parId);
         }
-        this.currentHiddenRows = (this.data.hiddenRows ?? []).slice();
+        this.currentHiddenRows = new Set(this.data.hiddenRows);
         onClick("body", ($this, e) => {
             this.onClick(e);
         });
@@ -1043,7 +1043,7 @@ export class TimTableComponent
     }
 
     hiddenRowCount() {
-        return this.currentHiddenRows.length;
+        return this.currentHiddenRows.size;
     }
 
     visibleRowCount() {
@@ -1196,7 +1196,7 @@ export class TimTableComponent
         if (rowi == -1) {
             const b = this.cbAllFilter;
             for (let i = 0; i < this.cellDataMatrix.length; i++) {
-                if (this.currentHiddenRows.includes(i)) {
+                if (this.currentHiddenRows.has(i)) {
                     continue;
                 }
                 this.cbs[i] = b;
@@ -1215,7 +1215,7 @@ export class TimTableComponent
     private countCBs(rowi: number) {
         let n = 0;
         for (let i = 0; i < this.cellDataMatrix.length; i++) {
-            if (this.currentHiddenRows.includes(i)) {
+            if (this.currentHiddenRows.has(i)) {
                 continue;
             }
             if (this.cbs[i]) {
@@ -1255,7 +1255,7 @@ export class TimTableComponent
     public getCheckedRows(startFrom: number, visible: boolean) {
         const crows = [];
         for (let i = startFrom; i < this.cellDataMatrix.length; i++) {
-            if (this.currentHiddenRows.includes(i) && visible) {
+            if (this.currentHiddenRows.has(i) && visible) {
                 continue;
             }
             if (this.cbs[i]) {
@@ -1263,47 +1263,6 @@ export class TimTableComponent
             }
         }
         return crows;
-    }
-
-    /**
-     * Check if all regexp's in regs matches to row values. It's kind of and
-     * over all regs if tehere is some condition
-     * TODO: add value compare by < and > operators
-     * @param regs list of regexp to check
-     * @param cmpfltrs comparator filters
-     * @param row where to check values
-     */
-    public static isMatch(
-        regs: RegExp[],
-        cmpfltrs: ComparatorFilter[],
-        row: ICell[]
-    ) {
-        for (let c = 0; c < row.length; c++) {
-            if (!regs[c]) {
-                continue;
-            }
-            const cell = row[c].cell;
-            if (cell == null) {
-                continue;
-            }
-            const s: string = cell.toString().toLowerCase();
-            if (!regs[c].test(s)) {
-                return false;
-            }
-        }
-        for (let c = 0; c < row.length; c++) {
-            if (!cmpfltrs[c]) {
-                continue;
-            }
-            const s = row[c].cell;
-            if (s == null) {
-                continue;
-            }
-            if (cmpfltrs[c] && !cmpfltrs[c].isMatch(s.toString())) {
-                return false;
-            }
-        }
-        return true;
     }
 
     async handleChangeFilter() {
@@ -1320,45 +1279,17 @@ export class TimTableComponent
         this.disableStartCell();
         // TODO check if better way to save than just making saveAndCloseSmallEditor public and calling it
         // this.saveAndCloseSmallEditor();
-        this.currentHiddenRows = (this.data.hiddenRows ?? []).slice();
-
-        let isFilter = false;
-        const regs = [];
-        const cmpfltrs = [];
-        for (let c = 0; c < this.filters.length; c++) {
-            if (!this.filters[c]) {
-                continue;
-            }
-            isFilter = true;
-            const fltr = this.filters[c];
-            const cmpfltr = ComparatorFilter.makeNumFilter(fltr);
-            if (cmpfltr) {
-                cmpfltrs[c] = cmpfltr;
-            } else {
-                regs[c] = new RegExp(fltr.toLowerCase());
-            }
-        }
-        if (!this.cbFilter && !isFilter) {
-            this.dataViewComponent?.updateVisible();
-            return;
-        }
-
-        for (let i = 0; i < this.cellDataMatrix.length; i++) {
-            if (this.cbFilter && !this.cbs[i]) {
-                this.currentHiddenRows.push(i);
-                continue;
-            }
-            if (
-                TimTableComponent.isMatch(
-                    regs,
-                    cmpfltrs,
-                    this.cellDataMatrix[i]
-                )
-            ) {
-                continue;
-            }
-            this.currentHiddenRows.push(i);
-        }
+        const hidden = computeHiddenRowsFromFilters(
+            this.cellDataMatrix,
+            (i) => this.cbs[i],
+            this.filters,
+            this.cbFilter,
+            (c: ICell[], colIndex) => c[colIndex].cell
+        );
+        this.currentHiddenRows = new Set([
+            ...(this.data.hiddenRows ?? []),
+            ...hidden,
+        ]);
         this.countCBs(-1);
         this.dataViewComponent?.updateVisible();
     }
@@ -1769,7 +1700,7 @@ export class TimTableComponent
 
         for (let sy = sy1; sy <= sy2; sy++) {
             const y = this.permTable[sy];
-            if (this.currentHiddenRows.includes(y)) {
+            if (this.currentHiddenRows.has(y)) {
                 continue;
             }
             for (let sx = sx1; sx <= sx2; sx++) {
@@ -2576,7 +2507,7 @@ export class TimTableComponent
 
             // Stop iterating if cell is not in hiddenRows/hiddenColumns and is not locked.
             if (
-                !this.currentHiddenRows.includes(nextCell.row) &&
+                !this.currentHiddenRows.has(nextCell.row) &&
                 !this.data.hiddenColumns?.includes(nextCell.col) &&
                 !this.data.lockedCells?.includes(
                     colnumToLetters(nextCell.col) + (nextCell.row + 1)
@@ -4425,7 +4356,7 @@ export class TimTableComponent
      */
     showRow(index: number) {
         // return this.currentHiddenRows.includes(this.data.table.rows[index]);
-        return !this.currentHiddenRows.includes(index);
+        return !this.currentHiddenRows.has(index);
     }
 
     /**
@@ -4683,6 +4614,10 @@ export class TimTableComponent
 
     isPreview(): boolean {
         return this.data.isPreview;
+    }
+
+    isRowSelectable(rowIndex: number): boolean {
+        return true;
     }
 }
 
