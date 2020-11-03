@@ -367,6 +367,7 @@ class AssessmentTableModel implements DataModelProvider {
             <p *ngIf="testOnly"><i>Tämä plugin on vain demo. Arvosanojen lähettäminen ei oikeasti tee mitään.</i></p>
             <tim-data-view [modelProvider]="model"
                            [selectedIndices]="model.checkedRows"
+                           tableMaxHeight="60vh"
                            [cbFilter]="initialSelectedFilter">
             </tim-data-view>
             <p>{{ numSelectedAssessments() }} arviointia valittu.</p>
