@@ -27,9 +27,13 @@ export function isMatch<T>(
     return true;
 }
 
-export function buildFilters(filters: string[]) {
+export function buildFilters(filters: (string | undefined)[]) {
     const filterObjs = [];
     for (const f of filters) {
+        if (!f) {
+            filterObjs.push(new RegExp(""));
+            continue;
+        }
         const cmpfltr = ComparatorFilter.makeNumFilter(f);
         filterObjs.push(cmpfltr ?? new RegExp(f.toLowerCase()));
     }
@@ -39,7 +43,7 @@ export function buildFilters(filters: string[]) {
 export function computeHiddenRowsFromFilters<T>(
     data: T[],
     isChecked: (rowIndex: number) => boolean,
-    filters: string[],
+    filters: (string | undefined)[],
     checkedFilter: boolean,
     contentGetter: (c: T, colIndex: number) => CellType
 ) {

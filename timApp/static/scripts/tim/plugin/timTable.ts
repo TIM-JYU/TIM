@@ -753,7 +753,7 @@ export class TimTableComponent
     public shiftDown = false;
     public cbAllFilter = false;
     public cbs: boolean[] = [];
-    public filters: string[] = [];
+    public filters: (string | undefined)[] = [];
     public sortDir: number[] = [];
     public sortSymbol: string[] = [];
     public sortSymbolStyle: Record<string, string>[] = [];
