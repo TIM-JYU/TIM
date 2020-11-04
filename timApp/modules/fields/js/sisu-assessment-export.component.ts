@@ -219,7 +219,25 @@ class AssessmentTableModel implements DataModelProvider {
     }
 
     getColumnWidth(columnIndex: number): number | undefined {
-        return undefined;
+        switch (columnIndex) {
+            case 8:
+                // The explicit error column size is a workaround for a Firefox issue with dataview.
+                // The issue can (sometimes) be reproduced as follows:
+                //
+                //  * Ensure the table has at least one row with an error message.
+                //  * Type something to some column filter so that the table becomes empty.
+                //  * Clear the column filter.
+                //
+                // Assuming the bug gets reproduced, the error column becomes slightly narrower than what it was before
+                // filtering, and word wrapping occurs in at least one of the error cells. That means that the row
+                // height gets larger, but the corresponding checkbox row height does not get updated, so the checkboxes
+                // seem to be visually out of sync with the data. (The row numbers and checkboxes are a separate table
+                // element in dataview component.)
+                //
+                // To work around this, we give an explicit size for the error column so that the column won't
+                // become narrower.
+                return 340;
+        }
     }
 
     getDimension(): {rows: number; columns: number} {
