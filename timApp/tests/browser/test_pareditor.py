@@ -45,6 +45,7 @@ class ParEditorTest(BrowserTest):
         self.assert_same_screenshot(pareditor, [
             'pareditor/ace_hello_world',
             'pareditor/ace_hello_world_2',
+            'pareditor/ace_hello_world_3',
         ])
         change_editor_button = get_change_editor_button(pareditor)
         change_editor_button.click()
@@ -63,6 +64,7 @@ class ParEditorTest(BrowserTest):
         self.assert_same_screenshot(pareditor, [
             'pareditor/ace_hello_world',
             'pareditor/ace_hello_world_2',
+            'pareditor/ace_hello_world_3',
         ])
 
     def wait_for_editor_load(self):
