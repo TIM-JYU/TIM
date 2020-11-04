@@ -1,0 +1,12 @@
+:host ::ng-deep {
+  td.nrcolumn {
+    font-size: smaller;
+    text-align: right;
+  }
+
+  .activeCell {
+    // Don't use border style here - it takes up size in layout and so it makes the table move a little.
+    outline: 2.5px dotted #33cccc;
+    outline-offset: -1.25px;
+  }
+}

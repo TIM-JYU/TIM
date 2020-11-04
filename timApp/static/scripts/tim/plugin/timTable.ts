@@ -712,7 +712,7 @@ export enum ClearSort {
             <pre class="error" *ngIf="error" [innerText]="error"></pre>
         </div>
     `,
-    styleUrls: ["./timTable.scss"],
+    styleUrls: ["./timTable.scss", "./table-common.scss"],
 })
 export class TimTableComponent
     implements
