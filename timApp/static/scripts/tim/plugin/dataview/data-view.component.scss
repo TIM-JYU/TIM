@@ -194,3 +194,16 @@ table {
   }
 }
 
+:host ::ng-deep {
+  tbody.content {
+    &.nowrap {
+      td {
+        white-space: nowrap;
+      }
+    }
+
+    td {
+      overflow: hidden;
+    }
+  }
+}

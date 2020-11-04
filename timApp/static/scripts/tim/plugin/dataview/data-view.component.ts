@@ -235,7 +235,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
             <div class="data" [style.maxHeight]="tableMaxHeight" #mainDataContainer>
                 <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
                        #mainDataTable>
-                    <tbody class="content" #mainDataBody></tbody>
+                    <tbody class="content" #mainDataBody [class.nowrap]="noWrap"></tbody>
                 </table>
                 <ng-container *ngIf="editorInData">
                     <ng-container *ngTemplateOutlet="editor"></ng-container>
@@ -263,6 +263,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() fixedColumnCount: number = 0;
     @Input() columnFilters: string[] = [];
     @Input() selectedIndices = new Set<number>();
+    @Input() noWrap = false;
     @Output() selectedIndicesChange = new EventEmitter<Set<number>>();
     showSlowLoadMessage = false;
     sizeComputationTime = 0;
@@ -1814,7 +1815,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const idealWidth = this.idealColWidths[columnIndex];
         if (colWidth) {
             cell.style.minWidth = px(colWidth);
-            cell.style.overflow = "hidden";
             if (this.colAxis.isVirtual) {
                 cell.style.width = px(colWidth);
                 cell.style.maxWidth = px(colWidth);
