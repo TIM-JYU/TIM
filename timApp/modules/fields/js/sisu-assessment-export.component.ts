@@ -364,6 +364,11 @@ class AssessmentTableModel implements DataModelProvider {
     }
 }
 
+// TODO virtual scrolling mode does not seem to work for dataview in this use case.
+//  Specific bugs include at least:
+//  * The method getCellContents(...) is called with undefined rowIndex, causing an exception
+//  * Giving explicit error column size causes another exception inside dataview (in method getHeaderColumnWidth):
+//     TypeError: cache.getCell(...) is undefined
 @Component({
     selector: "tim-sisu-assessment-export",
     template: `
@@ -387,6 +392,7 @@ class AssessmentTableModel implements DataModelProvider {
                            [selectedIndices]="model.checkedRows"
                            [headerStyle]="{backgroundColor: 'rgb(240, 240, 240)', fontWeight: 'bold', whiteSpace: 'nowrap'}"
                            [tableStyle]="{fontSize: 'smaller'}"
+                           [virtualScrolling]="{enabled: false}"
                            tableMaxHeight="60vh"
                            [cbFilter]="initialSelectedFilter">
             </tim-data-view>
