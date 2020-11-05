@@ -1,4 +1,5 @@
-bycodebegin/end
-Inserts tiles for user code begin and end
-// BYCODEBEGIN
-// BYCODEEND
+fullprogram
+Inserts fullprogram attribute
+fullprogram: |!!
+
+!!
