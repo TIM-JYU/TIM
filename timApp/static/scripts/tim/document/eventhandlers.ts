@@ -15,9 +15,17 @@ function fixPageCoords(e: JQuery.MouseEventBase) {
     return e;
 }
 
+export interface OnClickArg {
+    target: Element;
+    originalEvent: MouseEvent;
+    pageX: number;
+    pageY: number;
+    type: string;
+}
+
 export function onClick(
     className: string,
-    func: (obj: JQuery, e: JQuery.MouseEventBase) => unknown,
+    func: (obj: JQuery, e: OnClickArg) => unknown,
     overrideModalCheck = false
 ) {
     let downEvent: JQuery.MouseEventBase | undefined;
@@ -70,21 +78,38 @@ export function onClick(
     const isIOS = /iphone|ipad/gi.test(navigator.appVersion);
     const eventName = isIOS ? "touchend" : "mouseup";
     $document.on(eventName, className, (e) => {
-        if (downEvent != null) {
-            func($(e.currentTarget), downEvent);
+        if (downEvent?.originalEvent) {
+            func($(e.currentTarget), {
+                originalEvent: downEvent.originalEvent,
+                target: downEvent.target,
+                pageX: downEvent.pageX,
+                pageY: downEvent.pageY,
+                type: downEvent.type,
+            });
             downEvent = undefined;
         }
     });
-
-    // When the element has focus, allow clicking by pressing Enter.
-    $(document).on("keypress", className, (e) => {
-        const kbE = e.originalEvent;
-        if (!kbE || kbE.keyCode != KEY_ENTER) {
-            return;
-        }
-        $(e.currentTarget).trigger("click");
-        // func($(e.currentTarget), ne);
-    });
+    if (className != "html") {
+        // When the element has focus, allow clicking by pressing Enter.
+        $(document).on("keypress", className, (e) => {
+            const kbE = e.originalEvent;
+            if (!kbE || kbE.keyCode != KEY_ENTER) {
+                return;
+            }
+            const t = e.target as HTMLElement;
+            const rect = t.getBoundingClientRect();
+            func($(e.currentTarget), {
+                type: "click",
+                target: e.target,
+                originalEvent: new MouseEvent("click", {
+                    clientX: rect.x,
+                    clientY: rect.y,
+                }),
+                pageX: rect.x,
+                pageY: rect.y,
+            });
+        });
+    }
 }
 
 export function onMouseOver(className: string, func: MouseFn) {

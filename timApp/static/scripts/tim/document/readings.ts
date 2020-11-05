@@ -21,7 +21,12 @@ import {
     to,
 } from "../util/utils";
 import {EditPosition, EditType} from "./editing/edittypes";
-import {onClick, onMouseOver, onMouseOverOut} from "./eventhandlers";
+import {
+    onClick,
+    OnClickArg,
+    onMouseOver,
+    onMouseOverOut,
+} from "./eventhandlers";
 import {canSeeSource, dereferencePar, getArea, getParId} from "./parhelpers";
 
 export const readClasses = {
@@ -149,7 +154,7 @@ function queueParagraphForReading() {
     }, 300 * numWords);
 }
 
-async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
+async function handleSeeChanges(elem: JQuery, e: OnClickArg) {
     const par = elem.parents(".par");
     const derefData = dereferencePar(par);
     if (!derefData) {
@@ -197,7 +202,7 @@ async function handleSeeChanges(elem: JQuery, e: JQuery.Event) {
     }
 }
 
-async function readlineHandler(elem: JQuery, e: JQuery.MouseEventBase) {
+async function readlineHandler(elem: JQuery, e: OnClickArg) {
     if ((e.target as HTMLElement).tagName === "BUTTON") {
         return;
     }

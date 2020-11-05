@@ -5,7 +5,7 @@ import angular from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {onClick} from "../document/eventhandlers";
+import {onClick, OnClickArg} from "../document/eventhandlers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IRights} from "../user/IRights";
 import {genericglobals} from "../util/globals";
@@ -402,7 +402,7 @@ class TimMenuController extends PluginBase<
      * Closes the menu structure if mouse is outside all menu elements.
      * @param e Click event.
      */
-    private onClick(e: JQuery.Event) {
+    private onClick(e: OnClickArg) {
         // console.log("onClick, " + e.type);
         // Detect touch screen when touch event happens.
         this.touchMode = e.type.includes("touch");

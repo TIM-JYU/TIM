@@ -79,7 +79,7 @@ import {
     showTableEditorToolbar,
 } from "tim/plugin/toolbarUtils";
 import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
-import {onClick} from "../document/eventhandlers";
+import {onClick, OnClickArg} from "../document/eventhandlers";
 import {
     ChangeType,
     FormModeOption,
@@ -1126,8 +1126,7 @@ export class TimTableComponent
         return !!this.currentCell;
     }
 
-    // private onClick = (e: MouseEvent) => {
-    private onClick(e: JQuery.MouseEventBase) {
+    private onClick(e: OnClickArg) {
         if (this.mouseInTable) {
             if (
                 this.isInEditMode() &&

@@ -295,7 +295,7 @@ export class ViewCtrl implements IController {
             "html",
             ($this, e) => {
                 // Clicking anywhere
-                const tagName = (e.target as Element).tagName.toLowerCase();
+                const tagName = e.target.tagName.toLowerCase();
                 const jqTarget = $(e.target);
                 const ignoreTags = ["button", "input", "label", "i"];
                 const ignoreClasses = [

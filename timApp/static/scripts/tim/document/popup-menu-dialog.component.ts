@@ -39,8 +39,10 @@ export interface IPopupParams {
                     <div class="error" *ngIf="vctrl.notification" [innerText]="vctrl.notification"></div>
                     <div class="pastePreview" *ngIf="content" [innerHtml]="content"></div>
 
-                    <div class="flex rw align-center" *ngFor="let f of actions">
+                    <div class="flex rw align-center" *ngFor="let f of actions; let first = first">
                         <button class="timButton btn-sm flex-grow-5"
+                                focusMe
+                                [enable]="first"
                                 [innerText]="f.desc"
                                 (click)="callFunc($event, f)">
                         </button>

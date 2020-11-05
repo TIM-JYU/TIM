@@ -59,15 +59,15 @@ export class AreaHandler {
         });
 
         onClick(".areaeditline1", ($this, e) =>
-            this.onAreaEditClicked($this, e.originalEvent!, ".areaeditline1")
+            this.onAreaEditClicked($this, e.originalEvent, ".areaeditline1")
         );
 
         onClick(".areaeditline2", ($this, e) =>
-            this.onAreaEditClicked($this, e.originalEvent!, ".areaeditline2")
+            this.onAreaEditClicked($this, e.originalEvent, ".areaeditline2")
         );
 
         onClick(".areaeditline3", ($this, e) =>
-            this.onAreaEditClicked($this, e.originalEvent!, ".areaeditline3")
+            this.onAreaEditClicked($this, e.originalEvent, ".areaeditline3")
         );
 
         onClick(".areaexpand, .areacollapse", ($this, e) => {

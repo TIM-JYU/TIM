@@ -94,7 +94,7 @@ export class ParmenuHandler {
                     $(".par.lightselect").removeClass("lightselect");
                     this.viewctrl.closePopupIfOpen();
                     this.toggleActionButtons(
-                        e.originalEvent!,
+                        e.originalEvent,
                         par,
                         toggle1,
                         toggle2,
@@ -138,7 +138,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
                 }
 
                 if (!this.viewctrl.actionsDisabled) {
-                    this.showOptionsWindow(e.originalEvent!, par);
+                    this.showOptionsWindow(e.originalEvent, par);
                 }
                 return false;
             },

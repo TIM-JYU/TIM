@@ -139,7 +139,7 @@ export class EditingHandler {
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addAbove");
                 return this.showAddParagraphAbove(
-                    e.originalEvent!,
+                    e.originalEvent,
                     par,
                     options
                 );
@@ -149,7 +149,7 @@ export class EditingHandler {
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
                 return this.showAddParagraphBelow(
-                    e.originalEvent!,
+                    e.originalEvent,
                     par,
                     options
                 );
@@ -158,7 +158,7 @@ export class EditingHandler {
             onClick(".pasteBottom", ($this, e) => {
                 this.viewctrl.closePopupIfOpen();
                 this.viewctrl.clipboardHandler.pasteAbove(
-                    e.originalEvent!,
+                    e.originalEvent,
                     undefined,
                     false
                 );
@@ -167,7 +167,7 @@ export class EditingHandler {
             onClick(".pasteRefBottom", ($this, e) => {
                 this.viewctrl.closePopupIfOpen();
                 this.viewctrl.clipboardHandler.pasteAbove(
-                    e.originalEvent!,
+                    e.originalEvent,
                     undefined,
                     true
                 );
