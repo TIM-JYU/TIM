@@ -90,21 +90,34 @@ def validate_node_sign(signature_node, elem, cert=None, fingerprint=None, finger
 OneLogin_Saml2_Utils.validate_node_sign = validate_node_sign
 
 
+def do_validate_metadata(idp_metadata_xml: str, fingerprint: str) -> None:
+    try:
+        if not OneLogin_Saml2_Utils.validate_metadata_sign(
+            idp_metadata_xml,
+            validatecert=False,
+            fingerprint=fingerprint,
+            raise_exceptions=True,
+            fingerprintalg='sha256',
+        ):
+            raise RouteException('Failed to validate Haka metadata')
+    except OneLogin_Saml2_ValidationError as e:
+        raise RouteException(f'Failed to validate Haka metadata: {e}')
+
+
 def init_saml_auth(req, entity_id: str, try_new_cert: bool) -> OneLogin_Saml2_Auth:
     idp_metadata_xml = get_haka_metadata()
     idp_data = OneLogin_Saml2_IdPMetadataParser.parse(idp_metadata_xml, entity_id=entity_id)
     if 'idp' not in idp_data:
         raise RouteException(f'IdP not found from Haka metadata: {entity_id}')
     try:
-        if not OneLogin_Saml2_Utils.validate_metadata_sign(
-                idp_metadata_xml,
-                validatecert=False,
-                fingerprint=app.config['HAKA_METADATA_FINGERPRINT'],
-                raise_exceptions=True,
-        ):
-            raise RouteException('Failed to validate Haka metadata')
-    except (FingerPrintException, OneLogin_Saml2_ValidationError) as e:
-        raise RouteException(f'Failed to validate Haka metadata: {e}')
+        do_validate_metadata(idp_metadata_xml, app.config['HAKA_METADATA_FINGERPRINT'])
+    except FingerPrintException as e:
+        log_warning(f'{e} - trying with new fingerprint')
+        try:
+            do_validate_metadata(idp_metadata_xml, app.config['HAKA_METADATA_FINGERPRINT_NEW'])
+        except FingerPrintException as e:
+            raise RouteException(f'Failed to validate Haka metadata: {e}')
+
     saml_path = app.config['SAML_PATH']
     if try_new_cert:
         saml_path += '/new'

@@ -100,12 +100,14 @@ SISU_CERT_PATH = '/service/certs/sisu.pem'
 
 SAML_PATH = '/service/timApp/auth/saml/dev'
 HAKA_METADATA_URL = 'https://haka.funet.fi/metadata/haka_test_metadata_signed.xml'
-HAKA_METADATA_FINGERPRINT = 'a5956f3e3ad011be4a5f7ac549ac49d1a31fd65c'
+HAKA_METADATA_FINGERPRINT = '811dd04e5bde0976be6c7aa6a62e2e633d3de37807642e6c532019674545d019'
 
 # In production, copy these to prodconfig.py and remove the "_PROD" suffix.
 SAML_PATH_PROD = '/service/timApp/auth/saml/prod'
 HAKA_METADATA_URL_PROD = 'https://haka.funet.fi/metadata/haka-metadata.xml'
-HAKA_METADATA_FINGERPRINT_PROD = '6212391dfbd2874425a7fdd5ac8dd0bd5cd50d2f'
+HAKA_METADATA_FINGERPRINT_PROD = '70a9058262190cc23f8b0b14d6f0b7c0c74648e8b979bf4258eb7e23674a52f8'
+# Fingerprint for the upcoming (1.12.2020) v5 certificate.
+HAKA_METADATA_FINGERPRINT_NEW_PROD = 'a2c1eff331849cbfbfc920924861e03c8a56414ec003bf919e7f1b1a7dbc3169'
 
 HOME_ORGANIZATION = 'jyu.fi'
 
