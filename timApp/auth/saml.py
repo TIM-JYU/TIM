@@ -111,8 +111,6 @@ def init_saml_auth(req, entity_id: str, try_new_cert: bool) -> OneLogin_Saml2_Au
     osett = OneLogin_Saml2_Settings(custom_base_path=saml_path, sp_validation_only=True)
     sp = osett.get_sp_data()
 
-    # merge_settings has incorrect type annotations
-    # noinspection PyTypeChecker
     settings = OneLogin_Saml2_IdPMetadataParser.merge_settings({'sp': sp}, idp_data)
     auth = OneLogin_Saml2_Auth(req, settings, custom_base_path=saml_path)
     return auth
