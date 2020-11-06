@@ -28,19 +28,24 @@ export interface IDiffParams {
                                   format="LineByLine"
                                   [showToolbar]="data.showToolbar">
                 </td-ngx-text-diff>
+            </ng-container>
+            <div footer style="text-align: left">
                 <button class="btn btn-default"
                         (click)="copy(data.left)">Copy
-                    <ng-container *ngIf="!isSame()">left</ng-container>
+                    <ng-container *ngIf="!isSame()">old</ng-container>
                 </button>
                 &ngsp;
                 <button *ngIf="!isSame()"
                         class="btn btn-default"
                         (click)="copy(data.right)">
-                    Copy right
+                    Copy new
                 </button>
                 &ngsp;
                 <ng-container *ngIf="copied">Copied</ng-container>
-            </ng-container>
+                <button class="btn btn-default pull-right" (click)="close(undefined)">
+                    Close
+                </button>
+            </div>
         </tim-dialog-frame>
     `,
 })
