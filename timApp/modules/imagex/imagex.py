@@ -1,6 +1,6 @@
 """
 Module for serving TIM imagex plugin.
-See: https://tim.it.jyu.fi/view/tim/TIMin%20kehitys/Plugin%20development
+See: https://tim.jyu.fi/view/tim/TIMin%20kehitys/Plugin%20development
 Serving from local port 5000
 """
 import json

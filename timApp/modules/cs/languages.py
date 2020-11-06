@@ -523,7 +523,7 @@ class Jypeli(CS, Modifier):
         wait_file(self.imgsource)
         run(["convert", "-flip", self.imgsource, self.imgdest], cwd=self.prgpath, timeout=20)
         remove(self.imgsource)
-        # print("*** Screenshot: https://tim.it.jyu.fi/csgenerated/%s\n" % self.pure_imgdest)
+        # print("*** Screenshot: https://tim.jyu.fi/csgenerated/%s\n" % self.pure_imgdest)
         out = re.sub('Number of joysticks:.*\n.*', "", out)
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
