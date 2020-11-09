@@ -1,10 +1,10 @@
 """Routes for manage view."""
 import re
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Generator, List, Optional
 
-from dataclasses import dataclass, field
 from flask import Blueprint, render_template
 from flask import abort
 from flask import redirect

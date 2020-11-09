@@ -103,7 +103,6 @@ export class LectureController {
         this.showPoll = true;
         this.lectures = [];
         this.futureLectures = [];
-        this.isLecturer = false;
         this.studentTable = [];
         this.lecturerTable = [];
         this.lectureEndingDialogState = LectureEndingDialogState.NotAnswered;
@@ -111,8 +110,9 @@ export class LectureController {
         this.wallMessages = [];
 
         const g = someglobals();
+        this.isLecturer = g.lectureInfo.is_lecturer;
         this.lectureSettings = {
-            inLecture: "in_lecture" in g ? g.in_lecture : false,
+            inLecture: g.lectureInfo.in_lecture,
             lectureMode: "lectureMode" in g ? g.lectureMode : false,
             useAnswers: true,
             useQuestions: true,

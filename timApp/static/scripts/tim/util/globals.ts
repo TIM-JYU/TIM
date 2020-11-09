@@ -71,6 +71,7 @@ export interface IGenericGlobals {
     homeOrganization: string;
     config: IConfig;
     layout: ILayout;
+    lectureInfo: {in_lecture: boolean; is_lecturer: boolean};
 }
 
 export interface IItemGlobals extends IGenericGlobals {
@@ -96,7 +97,6 @@ export interface IDocumentGlobals extends IItemGlobals {
     editMode: EditMode | null;
     hideLinks: boolean;
     hideTopButtons: boolean;
-    in_lecture: boolean;
     index: HeaderIndexItem[];
     lectureMode: boolean;
     liveUpdates: number;

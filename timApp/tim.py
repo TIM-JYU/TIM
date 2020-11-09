@@ -26,7 +26,8 @@ from timApp.answer.routes import answers
 from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
 from timApp.auth.login import login_page
 from timApp.auth.saml import saml
-from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, logged_in, current_user_in_lecture
+from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, logged_in
+from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.bookmark.routes import bookmarks, add_to_course_bookmark
 from timApp.defaultconfig import SECRET_KEY
@@ -200,9 +201,10 @@ def get_locale():
 
 @app.context_processor
 def inject_user() -> dict:
-    """"Injects the user object to all templates."""
+    """"Injects user-related info to all templates."""
     r = dict(
         current_user=get_current_user_object(),
+        lecture_info=get_current_lecture_info(),
         other_users=get_other_users_as_list(),
         locale=get_locale(),
     )
@@ -310,10 +312,10 @@ def update_user_course_bookmarks():
 @app.route("/fi")
 @app.route("/")
 def start_page():
-    in_lecture = current_user_in_lecture()
     update_user_course_bookmarks()
-    return render_template('start.html',
-                           in_lecture=in_lecture)
+    return render_template(
+        'start.html',
+    )
 
 
 @app.before_request

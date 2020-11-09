@@ -9,7 +9,7 @@ depends=(
 {%- endmacro %}
 
 {% set is_lecture_info = request.endpoint == 'lecture.show_lecture_info' %}
-{% set show_lecture_menu = in_lecture or lecture_mode or is_lecture_info %}
+{% set show_lecture_menu = lecture_info.in_lecture or lecture_mode or is_lecture_info %}
 
 {# Set default column widths if they are not defined in a child template #}
 {% set col_1_lg = col_1_lg|default(2) %}
@@ -60,6 +60,7 @@ depends=(
             var other_users = {{ other_users|tojson }};
             var bookmarks = {{ bookmarks|tojson }};
             var locale = {{locale|tojson}};
+            var lectureInfo = {{lecture_info|tojson}};
 
             var layout = {};
             layout.col_1_lg = {{col_1_lg|tojson}};

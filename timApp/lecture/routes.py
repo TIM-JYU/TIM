@@ -3,7 +3,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import timedelta
 from random import randrange
-from typing import List, Optional, Any
+from typing import List, Optional
 
 import dateutil.parser
 from flask import Blueprint, render_template, g
@@ -17,8 +17,7 @@ from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import verify_ownership, get_doc_or_abort
 from timApp.auth.login import log_in_as_anonymous
-from timApp.auth.sessioninfo import get_current_user_id, logged_in, get_current_user_object, \
-    current_user_in_lecture
+from timApp.auth.sessioninfo import get_current_user_id, logged_in, get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.post_process import has_ownership
 from timApp.document.randutils import hashfunc
@@ -26,6 +25,7 @@ from timApp.lecture.askedjson import get_asked_json_by_hash, AskedJson
 from timApp.lecture.askedquestion import AskedQuestion, get_asked_question, user_activity_lock
 from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer, get_totals
+from timApp.lecture.lectureutils import is_lecturer_of, verify_is_lecturer, get_current_lecture_info
 from timApp.lecture.message import Message
 from timApp.lecture.question import Question
 from timApp.lecture.question_utils import calculate_points_from_json_answer, create_points_table, \
@@ -50,16 +50,6 @@ lecture_routes = Blueprint('lecture',
 @dataclass
 class AskedIdModel:
     asked_id: int
-
-
-def is_lecturer_of(l: Lecture):
-    return l.lecturer == get_current_user_id()
-
-
-def verify_is_lecturer(l: Lecture):
-    u = get_current_user_object()
-    if not is_lecturer_of(l) and not u.is_admin:
-        raise RouteException('Only lecturer can perform this action.')
 
 
 @lecture_routes.route('/getLectureInfo')
@@ -428,12 +418,12 @@ def get_lecture_session_data():
 
 
 def lecture_dict(lecture: Lecture):
-    is_lecturer = is_lecturer_of(lecture)
-    lecturers, students = get_lecture_users(lecture) if is_lecturer else ([], [])
+    info = get_current_lecture_info()
+    lecturers, students = get_lecture_users(lecture) if info.is_lecturer else ([], [])
     return {
         "lecture": lecture,
-        "isInLecture": current_user_in_lecture(),
-        "isLecturer": is_lecturer,
+        "isInLecture": info.in_lecture,
+        "isLecturer": info.is_lecturer,
         "lecturers": lecturers,
         "students": students,
         **get_lecture_session_data(),
@@ -455,7 +445,7 @@ def check_lecture():
             db.session.commit()
     doc_id = request.args.get('doc_id')
     if doc_id is not None:
-        return get_running_lectures(int(doc_id))
+        return json_response(get_running_lectures(int(doc_id)), date_conversion=True)
     else:
         return empty_response()
 
@@ -512,11 +502,9 @@ def show_lecture_info(lecture_id):
         raise RouteException('Lecture not found')
 
     doc = DocEntry.find_by_id(lecture.doc_id)
-    lectures = get_current_user_object().lectures.all()
     return render_template("lectureInfo.html",
                            item=doc,
                            lecture=lecture,
-                           in_lecture=len(lectures) > 0,
                            translations=doc.translations)
 
 
@@ -577,14 +565,11 @@ def get_running_lectures(doc_id=None):
             current_lectures.append(lecture)
         else:
             future_lectures.append(lecture)
-    return json_response(
-        {
-            "isLecturer": is_lecturer,
-            "lectures": current_lectures,
-            "futureLectures": future_lectures,
-        },
-        date_conversion=True,
-    )
+    return {
+        "isLecturer": is_lecturer,
+        "lectures": current_lectures,
+        "futureLectures": future_lectures,
+    }
 
 
 @lecture_routes.route('/createLecture', methods=['POST'])
@@ -640,7 +625,7 @@ def end_lecture():
     lecture.end_time = now
     empty_lecture(lecture)
     db.session.commit()
-    return get_running_lectures(lecture.doc_id)
+    return json_response(get_running_lectures(lecture.doc_id), date_conversion=True)
 
 
 def clean_dictionaries_by_lecture(lecture: Lecture):
@@ -699,7 +684,7 @@ def delete_lecture(m: DeleteLectureModel):
         db.session.delete(lecture)
     db.session.commit()
 
-    return get_running_lectures(lecture.doc_id)
+    return json_response(get_running_lectures(lecture.doc_id), date_conversion=True)
 
 
 def get_lecture_from_request(check_access=True, lecture_id: Optional[int] = None) -> Lecture:

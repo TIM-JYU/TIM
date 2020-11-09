@@ -1,7 +1,7 @@
 import {
+    HTTP_INTERCEPTORS,
     HttpClient,
     HttpClientModule,
-    HTTP_INTERCEPTORS,
 } from "@angular/common/http";
 import {
     ApplicationRef,

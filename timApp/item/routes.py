@@ -23,8 +23,8 @@ from timApp.answer.answers import add_missing_users_from_group, get_points_by_ru
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
-from timApp.auth.sessioninfo import get_current_user_object, logged_in, current_user_in_lecture, \
-    save_last_page
+from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
+from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
@@ -271,10 +271,8 @@ def items_route(args: GetItemsModel):
 @view_page.route("/view")
 def index_page():
     save_last_page()
-    in_lecture = current_user_in_lecture()
     return render_template('index.html',
                            items=get_items(''),
-                           in_lecture=in_lecture,
                            item=Folder.get_root())
 
 
@@ -489,7 +487,6 @@ def view(item_path, template_name, route="view"):
     if route == 'lecture' and has_edit_access(doc_info):
         no_question_auto_numbering = doc_settings.auto_number_questions()
 
-    is_in_lecture = current_user_in_lecture()
     current_list_user: Optional[User] = None
     # teacher view sorts user by real name and selects the lowest - ensure first loaded answer matches the user
     if user_list:
@@ -635,7 +632,6 @@ def view(item_path, template_name, route="view"):
         jsMods=angular_module_names,
         doc_css=doc_css,
         start_index=view_range.start_index,
-        in_lecture=is_in_lecture,
         group=usergroup,
         translations=doc_info.translations,
         reqs=reqs,

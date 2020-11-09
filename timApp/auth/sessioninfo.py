@@ -54,7 +54,7 @@ def get_session_usergroup_ids():
     return [User.get_by_id(u['id']).get_personal_group().id for u in get_session_users()]
 
 
-def get_current_user_id():
+def get_current_user_id() -> int:
     uid = session.get('user_id')
     return uid if uid is not None else 0
 
@@ -69,11 +69,6 @@ def get_current_user_group_object():
 
 def logged_in() -> bool:
     return get_current_user_id() != 0
-
-
-def current_user_in_lecture():
-    lectures = get_current_user_object().lectures.all()
-    return bool(lectures and lectures[0].is_running)
 
 
 def save_last_page():

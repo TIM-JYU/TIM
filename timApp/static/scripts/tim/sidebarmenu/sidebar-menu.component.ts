@@ -10,7 +10,6 @@ import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
 import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
 import {getStorage, isScreenSizeOrLower, setStorage} from "tim/util/utils";
-import {LectureController} from "tim/lecture/lectureController";
 import {ISettings} from "tim/user/settings.component";
 import {genericglobals} from "tim/util/globals";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
@@ -62,7 +61,6 @@ const MENU_BUTTON_ICONS: Record<MenuState, string> = {
 export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     private currentTab?: string;
     private settings: ISettings = genericglobals().userPrefs;
-    private lctrl = LectureController.instance;
     private currentMenuState: MenuState = MenuState.Open;
     private isSm = isScreenSizeOrLower("sm");
     private lastNonSmState = this.lastVisState;
@@ -188,7 +186,10 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         this.setVisibleState(this.nextState, UPDATE_ALL);
     }
 
-    setVisibleState(newState: MenuState, updateOpts?: UpdateVisStateOptions) {
+    private setVisibleState(
+        newState: MenuState,
+        updateOpts?: UpdateVisStateOptions
+    ) {
         this.currentMenuState = newState;
         if (updateOpts?.lastVisState) {
             this.lastVisState = newState;

@@ -14,7 +14,7 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ViewCtrl} from "../document/viewctrl";
 import {getItem, IItem} from "../item/IItem";
 import {isScreenSizeOrLower} from "../util/utils";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
+import {createDowngradedModule, Digest, doDowngrade} from "../downgrade";
 import {LectureController} from "./lectureController";
 
 @Component({
@@ -176,6 +176,7 @@ export const moduleDefs = [
             )
         ),
         "timLectureMenu",
-        LectureMenuComponent
+        LectureMenuComponent,
+        Digest.Propagate
     ),
 ];
