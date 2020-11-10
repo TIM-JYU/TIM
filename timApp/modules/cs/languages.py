@@ -1,16 +1,13 @@
+import requests
+
 from subprocess import check_output
 from typing import Optional
-
-import requests
-import re
 
 from points import *
 from run import *
 from os.path import splitext
-from pathlib import Path
 from modifiers import Modifier
 from traceback import print_exc
-from dataclasses import dataclass, field
 
 sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
@@ -71,11 +68,12 @@ def is_compile_error(out, err):
 
 class Language:
     ttype = "_language"
-    def __init__(self, query: Optional[QueryClass], sourcefiles = ""):
+
+    def __init__(self, query: Optional[QueryClass], sourcefiles=""):
         """
         :param self: object reference
         :param query: query to use
-        :param sourcecodes: source code as a string or list of files ({path: str, content: str})
+        :param sourcefiles: source code as a string or list of files ({path: str, content: str})
         """
         self.query = query
         self.markup = {}
@@ -205,7 +203,7 @@ class Language:
         self.sourcefiles[0].fileext = val
 
     def extensions(self):
-        return None, "", "" # list of the extensions or None for all, default fileext, default filedext
+        return None, "", ""  # list of the extensions or None for all, default fileext, default filedext
 
     def check_extensions(self, extensions):
         if extensions is not None:
@@ -315,26 +313,26 @@ class Language:
         if self.just_compile:
             args = []
 
-        mounts = self.query.jso.get('markup', {}).get('mounts',[])
+        mounts = self.query.jso.get('markup', {}).get('mounts', [])
 
         code, out, err, pwddir = run2_subdir(args,
-                                    dir=self.rootpath,
-                                    cwd=df(cwd, self.prgpath),
-                                    shell=df(shell, False),
-                                    kill_tree=df(kill_tree, True),
-                                    timeout=df(timeout, self.timeout),
-                                    env=df(env, self.env),
-                                    stdin=df(stdin, self.stdin),
-                                    uargs=uargs,
-                                    code=df(code, "utf-8"),
-                                    extra=df(extra, ""),
-                                    ulimit=df(ulimit, self.ulimit),
-                                    no_x11=df(no_x11, self.no_x11),
-                                    savestate=df(savestate, self.savestate),
-                                    dockercontainer=df(dockercontainer, self.dockercontainer),
-                                    compile_commandline=self.compile_commandline,
-                                    mounts=mounts
-                                    )
+                                             dir=self.rootpath,
+                                             cwd=df(cwd, self.prgpath),
+                                             shell=df(shell, False),
+                                             kill_tree=df(kill_tree, True),
+                                             timeout=df(timeout, self.timeout),
+                                             env=df(env, self.env),
+                                             stdin=df(stdin, self.stdin),
+                                             uargs=uargs,
+                                             code=df(code, "utf-8"),
+                                             extra=df(extra, ""),
+                                             ulimit=df(ulimit, self.ulimit),
+                                             no_x11=df(no_x11, self.no_x11),
+                                             savestate=df(savestate, self.savestate),
+                                             dockercontainer=df(dockercontainer, self.dockercontainer),
+                                             compile_commandline=self.compile_commandline,
+                                             mounts=mounts
+                                             )
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
         return code, out, err, pwddir
@@ -393,12 +391,13 @@ class Language:
     @staticmethod
     def supports_multifiles():
         """Whether the class supports multiple files as sourcecode"""
-        return False # technically True but we want to default to False for now
+        return False  # technically True but we want to default to False for now
 
 
 class LanguageError(Language):
-    ttype="_error"
-    def __init__(self, query, error_str, sourcecode = ""):
+    ttype = "_error"
+
+    def __init__(self, query, error_str, sourcecode=""):
         try:
             super().__init__(query, sourcecode)
         except Exception as e:
@@ -448,7 +447,6 @@ class CS(Language):
             sourcefiles = main + " " + sourcefiles
         return sourcefiles
 
-
     def before_save(self, s):
         mockconsole = get_param(self.query, "mockconsole", True)
         if mockconsole:
@@ -467,7 +465,12 @@ class CS(Language):
     def run(self, result, sourcelines, points_rule):
         # result["tim_info"]["valid"] = False  # kokeilu että valit toimii
         # result["tim_info"]["validMsg"] = "Et voi enää saada pisteitä kun katsoit vastauksen"
-        return self.runself(["mono", "-O=all", self.pure_exename])
+        code, out, err, pwddir = self.runself(["mono", "-O=all", self.pure_exename])
+        if err.find("Unhandled Exception:") >= 0:
+            if err.find("StackOverflowException") >= 0:
+                err = err[0:300]
+
+        return code, out, err, pwddir
 
 
 class Jypeli(CS, Modifier):
@@ -583,6 +586,10 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
         if eri < 0:
             eri = out.find("Test Error")
         if is_compile_error(out, err):
+            return code, out, err, pwddir
+        if out.find("Unhandled exceptions:") >= 0:
+            if out.find("StackOverflowException:") >= 0:
+                out = out[0:300]
             return code, out, err, pwddir
         give_points(points_rule, "testrun")
         self.run_points_given = True
@@ -844,7 +851,8 @@ class CC(Language):
         return self.runself([self.pure_exename])
 
     def sources(self):
-        return " ".join(file.path for file in self.sourcefiles if any(file.path.endswith(ext) for ext in self.source_extensions))
+        return " ".join(
+            file.path for file in self.sourcefiles if any(file.path.endswith(ext) for ext in self.source_extensions))
 
     @staticmethod
     def supports_multifiles():
